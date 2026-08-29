@@ -1,6 +1,6 @@
 # MIE 446 — Code-to-Print Wing
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Ehsan-Roohi/MIE446-Code-to-Print-Wing/blob/main/notebooks/MIE446_Code_to_Print_Wing.ipynb)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/main/notebooks/MIE446_Code_to_Print_Wing.ipynb)
 
 This repository is the student starter package for the Fall 2026 MIE 446 Aerospace Structures team project. In teams of three, students use a reproducible Python/CadQuery workflow to design, verify, export, print, assemble, inspect, and defend a small parametric semi-wing.
 

@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=75", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mie446-code-to-print-wing"
+version = "1.0.0"
+description = "Colab-ready parametric wing generator for the MIE 446 Code-to-Print Wing Project"
+readme = "README.md"
+requires-python = ">=3.11,<3.13"
+dependencies = [
+  "cadquery==2.8.0",
+  "cadquery-ocp==7.9.3.1.1",
+  "numpy>=2.0,<3",
+  "plotly>=5.24,<7",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.3,<10",
+]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+addopts = "-ra"
+testpaths = ["tests"]
+markers = [
+  "slow: builds and exports full CadQuery geometry",
+]
+

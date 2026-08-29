@@ -22,6 +22,20 @@ def test_invalid_tip_chord_is_rejected() -> None:
         WingParameters(tip_chord_mm=170.0)
 
 
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [("skin_mm", 0.4), ("trailing_edge_mm", 0.4), ("rib_thickness_mm", 0.4)],
+)
+def test_sub_nozzle_features_are_rejected(field: str, value: float) -> None:
+    parameters = WingParameters(**{field: value})
+    assert not validate_wing(parameters=parameters).passed
+
+
+def test_oversized_nominal_module_is_rejected_by_analysis() -> None:
+    parameters = WingParameters(semi_span_mm=650.0, module_count=2)
+    assert not validate_wing(parameters=parameters).passed
+
+
 def test_oversized_spar_is_rejected_by_validation() -> None:
     parameters = WingParameters(spars=(SparSpec(0.60, rod_diameter_mm=12.0),))
     assert not validate_wing(parameters=parameters).passed

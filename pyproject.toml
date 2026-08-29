@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "mie446-code-to-print-wing"
-version = "1.0.0"
+version = "1.1.0"
 description = "Colab-ready parametric wing generator for the MIE 446 Code-to-Print Wing Project"
 readme = "README.md"
 requires-python = ">=3.11,<3.13"
@@ -32,4 +32,3 @@ testpaths = ["tests"]
 markers = [
   "slow: builds and exports full CadQuery geometry",
 ]
-

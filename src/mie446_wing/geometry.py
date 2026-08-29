@@ -200,7 +200,7 @@ def build_wing(parameters: WingParameters | None = None) -> WingBuild:
 def make_fit_coupon(
     parameters: WingParameters | None = None,
     clearances_mm: tuple[float, ...] = (0.15, 0.25, 0.35),
-) -> tuple[cq.Shape, dict[str, float]]:
+) -> tuple[cq.Shape, dict[str, float | str]]:
     """Create a horizontal-hole coupon for selecting rod clearance before design freeze."""
 
     parameters = parameters or WingParameters()
@@ -210,7 +210,11 @@ def make_fit_coupon(
     width = 14.0
     height = max(10.0, rod_diameter + 6.0)
     coupon: cq.Shape = cq.Solid.makeBox(length, width, height)
-    mapping: dict[str, float] = {}
+    mapping: dict[str, float | str] = {
+        "physical_marker_legend": (
+            "Hole 1 has one top-face dimple, Hole 2 has two, and Hole 3 has three."
+        )
+    }
     for index, clearance in enumerate(clearances_mm, start=1):
         if clearance <= 0:
             raise ValueError("coupon clearances must be positive")
@@ -223,8 +227,18 @@ def make_fit_coupon(
             cq.Vector(0.0, 1.0, 0.0),
         )
         coupon = coupon.cut(hole)
+        for marker_index in range(index):
+            marker_x = x + (marker_index - (index - 1) / 2.0) * 2.4
+            marker = cq.Solid.makeCylinder(
+                0.65,
+                0.8,
+                cq.Vector(marker_x, width - 2.0, height),
+                cq.Vector(0.0, 0.0, -1.0),
+            )
+            coupon = coupon.cut(marker)
         mapping[f"hole_{index}_diameter_mm"] = diameter
         mapping[f"hole_{index}_radial_clearance_mm"] = clearance
+        mapping[f"hole_{index}_physical_marker"] = f"{index} top-face dimple(s)"
     if not coupon.isValid():
         raise RuntimeError("fit coupon geometry is invalid")
     return coupon.clean(), mapping

@@ -2,7 +2,7 @@
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/main/notebooks/MIE446_Code_to_Print_Wing.ipynb)
 
-This repository is the student starter package for the Fall 2026 MIE 446 Aerospace Structures team project. In teams of three, students use a reproducible Python/CadQuery workflow to design, verify, export, print, assemble, inspect, and defend a small parametric semi-wing.
+This repository is the guided design tool for the Fall 2026 MIE 446 Aerospace Structures team project. In teams of three, students enter engineering specifications in one Colab form; the notebook performs the calculations, CAD generation, validation, visualization and traceable export automatically.
 
 The model is a **non-flying fabrication demonstrator**. It is not a flight article, and the project makes no claim about aerodynamic performance, structural load capacity, airworthiness, or safety for flight. No force test or flight test is part of this code.
 
@@ -51,19 +51,20 @@ The baseline analytical regression values are:
 
 ## Start in Google Colab
 
-Click the badge at the top of this page. The notebook deliberately uses two stages:
+Click the badge at the top of this page. Students do not need to write CadQuery code. The notebook has six consecutively numbered steps and one editable form.
 
-1. **Coupon stage:** edit the clearly marked `STUDENT DESIGN CELL`, run through the fit-coupon export cell only, download the coupon, and physically test the course-issued rod.
-2. **Design-freeze stage:** record the selected clearance, set `FIT_COUPON_PHYSICALLY_CHECKED = True`, increment `REVISION`, and then run the notebook from the design cell onward.
-3. Run the analytical checks before building CAD.
-4. Build and inspect the interactive model.
-5. Run the full validation report.
-6. Export and download the verified ZIP archive.
-7. Inspect every layer in Creality Print before releasing a print.
+Before the first run, use **File → Save a copy in Drive** so the completed form persists between the coupon and final-wing sessions.
 
-Colab uses a temporary virtual machine. Download the output ZIP before closing the session. The notebook pins CadQuery `2.8.0` and `cadquery-ocp` `7.9.3.1.1` so the course environment does not change during the semester.
+1. Choose **Coupon Only**, enter the team and wing values, and select **Runtime → Run all**.
+2. Download and print the fit coupon; measure the course rod and record the selected clearance.
+3. Choose **Final Wing**, increment the revision, complete the coupon and engineering-response fields, and select **Runtime → Run all** again.
+4. Download the verified submission ZIP and inspect every module in Creality Print before releasing a print.
 
-Each export directory must be empty. Increment `REVISION` for a new design run; this prevents an obsolete module from being mixed into a later ZIP archive.
+Both modes finish without an intentional error: Coupon Only skips the expensive 3D wing, while Final Wing builds and exports it only after the physical coupon record is complete. Repeated runs use isolated temporary output folders, so old modules cannot enter a new archive.
+
+The coupon ZIP also contains `wing_parameters.json`, its Team/Revision manifest, and a mapping for the physical one-, two-, and three-dimple hole markers. Keep this ZIP with the project record.
+
+The notebook uses the tagged course release `v1.1.0` and pins CadQuery `2.8.0` plus `cadquery-ocp` `7.9.3.1.1` so the computational environment does not change during the semester.
 
 ## What students are expected to change and understand
 
@@ -72,18 +73,19 @@ Students are not expected to rewrite the CAD kernel. Each team is responsible fo
 - choosing and justifying an instructor-approved NACA four-digit profile;
 - changing design parameters within the project limits;
 - predicting the result of at least one controlled parameter change before running it;
-- adding or improving at least one meaningful test;
-- checking that the generated model is valid, connected, traceable, and printable;
+- interpreting the automatic checks for validity, connectivity, traceability and printer envelope;
 - printing the rod fit coupon and recording the selected clearance;
 - diagnosing model or print failures and changing one cause at a time;
-- explaining how each important parameter reaches the final geometry;
-- defending all submitted code and engineering decisions individually.
+- explaining how each important input changes the geometry and analytical quantities;
+- independently checking AI-assisted results and defending the team's own changes and engineering decisions.
 
 ## AI use
 
 AI is explicitly permitted for brainstorming, code generation, refactoring, debugging, test development, documentation, and technical critique. AI use does not reduce the grade when it is disclosed, understood, and independently verified.
 
-Every team must maintain a concise AI Use and Validation Log. For each material use, record the tool and purpose, affected file/function or claim, student changes, independent check, and verdict: **Accept**, **Accept with Limitations**, or **Reject**. Do not submit fabricated measurements, citations, test records, or code that the team cannot run and explain. AI is not permitted during a restricted individual defense.
+Every team must maintain a concise AI Use and Validation Log. For each material use, record the tool and purpose, affected file/function or claim, student changes, independent check, and verdict: **Accept**, **Accept with Limitations**, or **Reject**. If there were several uses, summarize them concisely in the form fields and separate the items with semicolons. Do not submit fabricated measurements, citations, test records, or code that the team cannot run and explain. AI is not permitted during a restricted individual defense.
+
+The Colab form creates the required structured AI record without asking students to write a Python dictionary. If no material AI was used, `ai_use_log.json` is empty and `student_design_record.json` contains the explicit team declaration.
 
 See [AI_USE_LOG_TEMPLATE.md](AI_USE_LOG_TEMPLATE.md).
 
@@ -113,6 +115,9 @@ A successful export contains:
 - `validation_report.json`
 - `fit_coupon_mapping.json`
 - `ai_use_log.json`
+- `student_design_record.json` with the self-reported coupon record and engineering responses
+- `Design_Summary.md` with readable analytical, comparison and 3D-validation tables
+- `Design_Overview.html` with the interactive airfoil and semi-wing planform
 - `manifest.json` with units, estimated mass, rod lengths, and SHA-256 hashes for every submitted artifact except the manifest itself
 
 Passing the code checks is necessary but not sufficient. Students must still inspect the slicer preview, confirm dimensions and orientation, supervise the first layers, measure the printed parts, and document limitations.

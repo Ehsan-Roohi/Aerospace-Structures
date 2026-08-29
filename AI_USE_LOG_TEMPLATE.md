@@ -4,16 +4,14 @@ Team: ________
 Revision: ________  
 Members: ________
 
-Use one row for each material AI-assisted result. A full chat transcript is not required unless the instructor requests it.
+The Colab form is the authoritative submission method. Use this page only as a planning worksheet or local backup. Summarize all material AI-assisted work in one consolidated row; separate multiple tools or uses with semicolons. A full chat transcript is not required unless the instructor requests it.
 
-| Date | Tool | Purpose / task given to AI | File, function, or claim affected | What the team changed | Independent check and evidence | Error or limitation found | Verdict |
-|---|---|---|---|---|---|---|---|
-| YYYY-MM-DD |  |  |  |  |  |  | Accept / Accept with Limitations / Reject |
+| Tool(s) | Purpose(s) / task(s) given to AI | Code or claim affected | What the team changed | Independent check and evidence | Error or limitation found | Verdict |
+|---|---|---|---|---|---|---|
+|  |  |  |  |  |  | Accept / Accept with Limitations / Reject |
 
-## Required team reflection
+If there was no material AI use, leave the AI log empty and select `AI_USED = False`; the notebook records the team's explicit declaration in `student_design_record.json`.
 
-1. Identify one AI suggestion that the team rejected or substantially revised. Why?
-2. Identify one test that would fail if an important part of the code were wrong.
-3. State the most important limitation of the generated geometry.
-4. Confirm that every member can run and explain the submitted code: Yes / No
+## Engineering understanding recorded elsewhere in the Colab form
 
+The same form separately records the team's prediction, comparison with the computed result, interpretation, a print defect the code cannot detect, and team-member names. Students must be able to explain their inputs, checks, decisions, and any code they or AI changed; they are not expected to reproduce the instructor's CAD kernel line by line.

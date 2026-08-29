@@ -157,19 +157,26 @@ def export_fit_coupon(
 
     team = _safe_token(team, "team")
     revision = _safe_token(revision, "revision")
-    destination = _prepare_empty_destination(output_dir)
+    parameters_json = json.dumps(parameters.to_dict(), indent=2)
     coupon, mapping = make_fit_coupon(parameters)
+    destination = _prepare_empty_destination(output_dir)
     coupon_path = destination / f"MIE446_{team}_Rod_Fit_Coupon_{revision}.stl"
     mapping_path = destination / "fit_coupon_mapping.json"
+    parameters_path = destination / "wing_parameters.json"
     _export_shape(coupon, coupon_path)
     mapping_path.write_text(json.dumps(mapping, indent=2), encoding="utf-8")
+    parameters_path.write_text(parameters_json, encoding="utf-8")
     manifest: dict[str, Any] = {
         "course": "MIE 446 Aerospace Structures",
         "purpose": "Rod fit coupon before design freeze",
         "units": "millimetres",
         "team": team,
         "revision": revision,
-        "files": [_file_record(coupon_path), _file_record(mapping_path)],
+        "files": [
+            _file_record(coupon_path),
+            _file_record(mapping_path),
+            _file_record(parameters_path),
+        ],
     }
     (destination / "fit_coupon_manifest.json").write_text(
         json.dumps(manifest, indent=2), encoding="utf-8"
@@ -184,12 +191,33 @@ def export_build(
     team: str = "Team00",
     revision: str = "R01",
     ai_log: list[dict[str, Any]],
+    student_record: dict[str, Any] | None = None,
+    design_summary_markdown: str | None = None,
+    design_overview_html: str | None = None,
 ) -> dict[str, Any]:
     """Export a validated build and return its machine-readable manifest."""
 
     team = _safe_token(team, "team")
     revision = _safe_token(revision, "revision")
     validated_ai_log = _validated_ai_log(ai_log)
+    if student_record is not None and not isinstance(student_record, dict):
+        raise ValueError("student_record must be a dictionary")
+    try:
+        serialized_student_record = (
+            json.dumps(student_record, indent=2) if student_record is not None else None
+        )
+    except (TypeError, ValueError) as exc:
+        raise ValueError(f"student_record must contain JSON-compatible values: {exc}") from exc
+    if design_summary_markdown is not None and (
+        not isinstance(design_summary_markdown, str)
+        or not design_summary_markdown.strip()
+    ):
+        raise ValueError("design_summary_markdown must be non-empty text")
+    if design_overview_html is not None and (
+        not isinstance(design_overview_html, str)
+        or not design_overview_html.strip()
+    ):
+        raise ValueError("design_overview_html must be non-empty text")
     destination = _prepare_empty_destination(output_dir)
 
     report = validate_wing(build)
@@ -228,6 +256,21 @@ def export_build(
     ai_log_path = destination / "ai_use_log.json"
     ai_log_path.write_text(json.dumps(validated_ai_log, indent=2), encoding="utf-8")
     exported.append(ai_log_path)
+
+    if student_record is not None:
+        student_record_path = destination / "student_design_record.json"
+        student_record_path.write_text(serialized_student_record, encoding="utf-8")
+        exported.append(student_record_path)
+
+    if design_summary_markdown is not None:
+        summary_path = destination / "Design_Summary.md"
+        summary_path.write_text(design_summary_markdown.strip() + "\n", encoding="utf-8")
+        exported.append(summary_path)
+
+    if design_overview_html is not None:
+        overview_path = destination / "Design_Overview.html"
+        overview_path.write_text(design_overview_html, encoding="utf-8")
+        exported.append(overview_path)
 
     manifest: dict[str, Any] = {
         "course": "MIE 446 Aerospace Structures",

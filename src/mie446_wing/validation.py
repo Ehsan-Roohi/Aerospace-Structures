@@ -97,6 +97,38 @@ def validate_wing(
             "positive analytical trapezoid area",
         ),
         ValidationCheck(
+            "nominal module span",
+            parameters.semi_span_mm / parameters.module_count
+            <= K2_PRO_BUILD_VOLUME_MM[1],
+            round(parameters.semi_span_mm / parameters.module_count, 3),
+            f"<= {K2_PRO_BUILD_VOLUME_MM[1]:.0f} mm before slicer orientation",
+        ),
+        ValidationCheck(
+            "maximum chord",
+            max(parameters.root_chord_mm, parameters.tip_chord_mm)
+            <= K2_PRO_BUILD_VOLUME_MM[0],
+            round(max(parameters.root_chord_mm, parameters.tip_chord_mm), 3),
+            f"<= {K2_PRO_BUILD_VOLUME_MM[0]:.0f} mm before slicer orientation",
+        ),
+        ValidationCheck(
+            "skin thickness",
+            parameters.skin_mm >= 0.8,
+            round(parameters.skin_mm, 3),
+            ">= 0.8 mm for the course 0.4 mm nozzle",
+        ),
+        ValidationCheck(
+            "trailing-edge thickness",
+            parameters.trailing_edge_mm >= 0.8,
+            round(parameters.trailing_edge_mm, 3),
+            ">= 0.8 mm for the course 0.4 mm nozzle",
+        ),
+        ValidationCheck(
+            "rib thickness",
+            parameters.rib_thickness_mm >= 0.8,
+            round(parameters.rib_thickness_mm, 3),
+            ">= 0.8 mm for the course 0.4 mm nozzle",
+        ),
+        ValidationCheck(
             "spar sleeve surface clearance",
             _minimum_spar_surface_clearance(parameters) >= 0.6,
             round(_minimum_spar_surface_clearance(parameters), 3),

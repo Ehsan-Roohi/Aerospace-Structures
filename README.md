@@ -17,9 +17,10 @@ The starter converts a compact set of engineering parameters into printable geom
 3. subtracts a conservative inner cavity to form a printable skin;
 4. adds ribs and two sleeves for course-issued carbon rods;
 5. cuts the rod-clearance holes after all internal features are joined;
-6. divides the wing into one to three non-overlapping printer modules;
+6. divides the wing into two or three non-overlapping printer modules that fit the nominal 300 × 300 × 300 mm K2 Pro envelope;
 7. checks analytical values, B-rep validity, connectivity, mass, and segmentation;
-8. exports STEP, STL, 3MF, a fit coupon, configuration files, checksums, and a validation report.
+8. exports STEP, STL, 3MF, a fit coupon, configuration files, checksums, and a validation report;
+9. creates the ZIP only after its contents and SHA-256 hashes match the manifest.
 
 Coordinate convention: `x` is chordwise from leading to trailing edge, `y` is spanwise from root to tip, and `z` is the airfoil-thickness direction. Every model dimension is in **millimetres**. STL files do not store units, so import them into the slicer as millimetres at 100% scale.
 
@@ -32,7 +33,7 @@ Coordinate convention: `x` is chordwise from leading to trailing edge, `y` is sp
 | Root chord | 160 mm |
 | Tip chord | 100 mm |
 | Skin / trailing edge | 1.2 / 1.2 mm |
-| Printable modules | 3 maximum |
+| Printable modules | 2 or 3 |
 | Carbon rods | two 4 mm rods; clearance selected by coupon |
 | Material | course-approved regular PLA Pro |
 | Maximum final printed mass | 300 g |
@@ -50,17 +51,19 @@ The baseline analytical regression values are:
 
 ## Start in Google Colab
 
-Click the badge at the top of this page. In Colab:
+Click the badge at the top of this page. The notebook deliberately uses two stages:
 
-1. select **Runtime → Run all**;
-2. edit only the clearly marked `STUDENT DESIGN CELL` first;
-3. run the analytical checks before building CAD;
-4. build and inspect the interactive model;
-5. run the full validation report;
-6. export and download the ZIP archive;
-7. inspect every layer in Creality Print before releasing a print.
+1. **Coupon stage:** edit the clearly marked `STUDENT DESIGN CELL`, run through the fit-coupon export cell only, download the coupon, and physically test the course-issued rod.
+2. **Design-freeze stage:** record the selected clearance, set `FIT_COUPON_PHYSICALLY_CHECKED = True`, increment `REVISION`, and then run the notebook from the design cell onward.
+3. Run the analytical checks before building CAD.
+4. Build and inspect the interactive model.
+5. Run the full validation report.
+6. Export and download the verified ZIP archive.
+7. Inspect every layer in Creality Print before releasing a print.
 
 Colab uses a temporary virtual machine. Download the output ZIP before closing the session. The notebook pins CadQuery `2.8.0` and `cadquery-ocp` `7.9.3.1.1` so the course environment does not change during the semester.
+
+Each export directory must be empty. Increment `REVISION` for a new design run; this prevents an obsolete module from being mixed into a later ZIP archive.
 
 ## What students are expected to change and understand
 
@@ -109,6 +112,7 @@ A successful export contains:
 - `planform_metrics.json`
 - `validation_report.json`
 - `fit_coupon_mapping.json`
-- `manifest.json` with units, estimated mass, rod lengths, file sizes, and SHA-256 hashes
+- `ai_use_log.json`
+- `manifest.json` with units, estimated mass, rod lengths, and SHA-256 hashes for every submitted artifact except the manifest itself
 
 Passing the code checks is necessary but not sufficient. Students must still inspect the slicer preview, confirm dimensions and orientation, supervise the first layers, measure the printed parts, and document limitations.

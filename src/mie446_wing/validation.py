@@ -10,7 +10,7 @@ from typing import Any
 import numpy as np
 
 from .airfoil import surface_ordinates_at
-from .config import WingParameters
+from .config import K2_PRO_BUILD_VOLUME_MM, WingParameters
 from .geometry import WingBuild
 from .metrics import calculate_planform_metrics
 
@@ -86,9 +86,9 @@ def validate_wing(
     checks: list[ValidationCheck] = [
         ValidationCheck(
             "module count",
-            1 <= parameters.module_count <= 3,
+            parameters.module_count in (2, 3),
             parameters.module_count,
-            "between 1 and 3",
+            "2 or 3 for the 300 mm K2 Pro build envelope",
         ),
         ValidationCheck(
             "semi-wing area",
@@ -111,8 +111,22 @@ def validate_wing(
         module_volume = sum(module.Volume() for module in build.modules)
         volume_error = abs(module_volume - complete_volume) / complete_volume
         mass_g = complete_volume / 1000.0 * parameters.pla_density_g_cm3
-        expected_module_span = parameters.semi_span_mm / parameters.module_count
-        module_span_lengths = [module.BoundingBox().ylen for module in build.modules]
+        module_dimensions = [
+            (
+                module.BoundingBox().xlen,
+                module.BoundingBox().ylen,
+                module.BoundingBox().zlen,
+            )
+            for module in build.modules
+        ]
+        sorted_envelope = sorted(K2_PRO_BUILD_VOLUME_MM)
+        modules_fit_envelope = all(
+            all(
+                dimension <= limit + 0.05
+                for dimension, limit in zip(sorted(dimensions), sorted_envelope, strict=True)
+            )
+            for dimensions in module_dimensions
+        )
         checks.extend(
             [
                 ValidationCheck(
@@ -158,10 +172,10 @@ def validate_wing(
                     f"<= {parameters.maximum_printed_mass_g:.1f} g",
                 ),
                 ValidationCheck(
-                    "module span dimensions",
-                    all(length <= expected_module_span + 0.05 for length in module_span_lengths),
-                    [round(length, 3) for length in module_span_lengths],
-                    f"each <= {expected_module_span + 0.05:.3f} mm",
+                    "printer build envelope",
+                    modules_fit_envelope,
+                    [tuple(round(value, 3) for value in item) for item in module_dimensions],
+                    "each module can be oriented inside 300 x 300 x 300 mm; slicer check required",
                 ),
             ]
         )

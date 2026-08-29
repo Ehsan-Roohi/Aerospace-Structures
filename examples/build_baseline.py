@@ -12,10 +12,9 @@ def main() -> None:
     print(report.summary())
     report.raise_for_failure()
     destination = Path("outputs") / "baseline"
-    manifest = export_build(build, destination, team="Team00", revision="R01")
-    print(f"Exported {len(manifest['files'])} geometry files to {destination.resolve()}")
+    manifest = export_build(build, destination, team="Team00", revision="R01", ai_log=[])
+    print(f"Exported {len(manifest['files'])} traceable files to {destination.resolve()}")
 
 
 if __name__ == "__main__":
     main()
-

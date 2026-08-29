@@ -10,6 +10,7 @@ from typing import Any
 
 
 _NACA4 = re.compile(r"^(?:NACA\s*)?(\d{4})$", re.IGNORECASE)
+K2_PRO_BUILD_VOLUME_MM = (300.0, 300.0, 300.0)
 
 
 def normalize_naca4(code: str) -> str:
@@ -105,8 +106,8 @@ class WingParameters:
 
         if self.tip_chord_mm > self.root_chord_mm:
             raise ValueError("tip_chord_mm cannot exceed root_chord_mm in this starter project")
-        if not 1 <= self.module_count <= 3:
-            raise ValueError("module_count must be 1, 2, or 3")
+        if self.module_count not in (2, 3):
+            raise ValueError("module_count must be 2 or 3 for the 300 mm K2 Pro build envelope")
         if self.interior_rib_count < 0:
             raise ValueError("interior_rib_count cannot be negative")
         if self.interface_rib_offset_mm <= self.rib_thickness_mm:

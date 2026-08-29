@@ -12,6 +12,11 @@ def test_more_than_three_modules_is_rejected() -> None:
         WingParameters(module_count=4)
 
 
+def test_one_module_is_rejected_by_printer_envelope_rule() -> None:
+    with pytest.raises(ValueError, match="module_count"):
+        WingParameters(module_count=1)
+
+
 def test_invalid_tip_chord_is_rejected() -> None:
     with pytest.raises(ValueError, match="tip_chord"):
         WingParameters(tip_chord_mm=170.0)
@@ -27,4 +32,3 @@ def test_interface_ribs_do_not_sit_on_cut_plane() -> None:
     stations = parameters.rib_stations_mm()
     assert all(abs(station - 150.0) > 1.0 for station in stations)
     assert all(abs(station - 300.0) > 1.0 for station in stations)
-

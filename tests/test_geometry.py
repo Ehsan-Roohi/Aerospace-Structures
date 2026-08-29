@@ -135,7 +135,7 @@ def test_design_summary_formats_student_record_as_tables(baseline_build) -> None
     )
     summary = built_project.design_summary(
         {
-            "course_release": "v1.1.0",
+            "course_release": "v1.1.1",
             "team_id": "Team99",
             "team_members": "A, B, C",
             "revision": "R02",

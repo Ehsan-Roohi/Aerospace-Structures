@@ -56,7 +56,7 @@ def _execution_namespace(tmp_path: Path) -> tuple[dict, list[Path], list[str]]:
         return str(tmp_path / f"{next(counter):02d}_{prefix}")
 
     namespace = {
-        "COURSE_RELEASE": "v1.1.0",
+        "COURSE_RELEASE": "v1.1.1",
         "Path": Path,
         "date": date,
         "tempfile": SimpleNamespace(mkdtemp=mkdtemp),

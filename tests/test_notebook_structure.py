@@ -61,7 +61,10 @@ def test_notebook_supports_safe_coupon_and_final_run_all_modes() -> None:
 
     assert 'WORKFLOW_STAGE = "Coupon Only"' in notebook_text
     assert '["Coupon Only", "Final Wing"]' in notebook_text
-    assert 'COURSE_RELEASE = "v1.1.0"' in notebook_text
+    assert 'COURSE_RELEASE = "v1.1.1"' in notebook_text
+    assert 'if not (3, 11) <= python_version < (3, 14):' in notebook_text
+    assert '"-q"' not in notebook_text
+    assert 'if install_result.returncode != 0:' in notebook_text
     assert "tempfile.mkdtemp" in notebook_text
     assert 'AI_USE_DECLARATION = "Choose before submission"' in notebook_text
     assert 'missing_submission_fields.append("AI_USE_DECLARATION")' in notebook_text

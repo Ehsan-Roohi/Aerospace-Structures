@@ -64,7 +64,7 @@ Both modes finish without an intentional error: Coupon Only skips the expensive 
 
 The coupon ZIP also contains `wing_parameters.json`, its Team/Revision manifest, and a mapping for the physical one-, two-, and three-dimple hole markers. Keep this ZIP with the project record.
 
-The notebook uses the tagged course release `v1.1.0` and pins CadQuery `2.8.0` plus `cadquery-ocp` `7.9.3.1.1` so the computational environment does not change during the semester.
+The notebook uses the tagged course release `v1.1.1` and pins CadQuery `2.8.0` plus `cadquery-ocp` `7.9.3.1.1` so the computational environment does not change during the semester. Release 1.1.1 supports the current Colab Python 3.13 runtime.
 
 ## What students are expected to change and understand
 
@@ -91,7 +91,7 @@ See [AI_USE_LOG_TEMPLATE.md](AI_USE_LOG_TEMPLATE.md).
 
 ## Local installation
 
-The supported course runtime is Python 3.11 or 3.12.
+The supported course runtime is Python 3.11, 3.12 or 3.13. GitHub Actions tests the full project on Python 3.12 and 3.13.
 
 ```bash
 python -m venv .venv

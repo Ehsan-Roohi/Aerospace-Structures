@@ -63,4 +63,6 @@ def test_notebook_supports_safe_coupon_and_final_run_all_modes() -> None:
     assert '["Coupon Only", "Final Wing"]' in notebook_text
     assert 'COURSE_RELEASE = "v1.1.0"' in notebook_text
     assert "tempfile.mkdtemp" in notebook_text
+    assert 'AI_USE_DECLARATION = "Choose before submission"' in notebook_text
+    assert 'missing_submission_fields.append("AI_USE_DECLARATION")' in notebook_text
     assert not re.search(r"\bassert\s+COUPON_CONFIRMED\b", notebook_text)

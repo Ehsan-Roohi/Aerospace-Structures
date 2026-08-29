@@ -85,7 +85,7 @@ AI is explicitly permitted for brainstorming, code generation, refactoring, debu
 
 Every team must maintain a concise AI Use and Validation Log. For each material use, record the tool and purpose, affected file/function or claim, student changes, independent check, and verdict: **Accept**, **Accept with Limitations**, or **Reject**. If there were several uses, summarize them concisely in the form fields and separate the items with semicolons. Do not submit fabricated measurements, citations, test records, or code that the team cannot run and explain. AI is not permitted during a restricted individual defense.
 
-The Colab form creates the required structured AI record without asking students to write a Python dictionary. If no material AI was used, `ai_use_log.json` is empty and `student_design_record.json` contains the explicit team declaration.
+The Colab form creates the required structured AI record without asking students to write a Python dictionary. Before export, every team must explicitly choose either **No material AI use** or **Material AI used**. If the first option is selected, `ai_use_log.json` is empty and `student_design_record.json` contains the team's declaration.
 
 See [AI_USE_LOG_TEMPLATE.md](AI_USE_LOG_TEMPLATE.md).
 

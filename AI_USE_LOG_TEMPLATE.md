@@ -10,7 +10,7 @@ The Colab form is the authoritative submission method. Use this page only as a p
 |---|---|---|---|---|---|---|
 |  |  |  |  |  |  | Accept / Accept with Limitations / Reject |
 
-If there was no material AI use, leave the AI log empty and select `AI_USED = False`; the notebook records the team's explicit declaration in `student_design_record.json`.
+If there was no material AI use, leave the AI detail fields empty and explicitly choose **No material AI use** in the required declaration dropdown; the notebook records that declaration in `student_design_record.json`.
 
 ## Engineering understanding recorded elsewhere in the Colab form
 

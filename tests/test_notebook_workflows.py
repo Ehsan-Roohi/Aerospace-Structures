@@ -95,6 +95,32 @@ def test_coupon_only_run_all_is_clean_and_rerunnable(tmp_path: Path) -> None:
         assert "fit_coupon_mapping.json" in handle.namelist()
 
 
+def test_final_export_requires_an_explicit_ai_declaration(tmp_path: Path) -> None:
+    namespace, downloads, messages = _execution_namespace(tmp_path)
+    sources = _code_sources()
+    form = _replace_form_defaults(
+        sources[1],
+        {
+            "WORKFLOW_STAGE": "Final Wing",
+            "TEAM_ID": "Team07",
+            "TEAM_MEMBERS": "Student A; Student B; Student C",
+            "REVISION": "R02",
+            "AIRFOIL_CHOICE_REASON": "A cambered baseline for comparison.",
+            "PREDICTED_AREA_CHANGE": "decrease",
+            "PREDICTED_ASPECT_RATIO_CHANGE": "increase",
+            "PREDICTION_EXPLANATION": "Span is fixed while area decreases.",
+            "RESULT_INTERPRETATION": "The computed trend agrees.",
+            "PRINT_DEFECT_CODE_CANNOT_DETECT": "Poor first-layer adhesion.",
+        },
+    )
+    exec(compile(form, "notebook step 2", "exec"), namespace)
+    namespace["built_project"] = SimpleNamespace(project=namespace["project"])
+    exec(compile(sources[5], "notebook step 6", "exec"), namespace)
+
+    assert downloads == []
+    assert any("AI_USE_DECLARATION" in message for message in messages)
+
+
 @pytest.mark.slow
 def test_final_wing_run_all_builds_verified_submission(tmp_path: Path) -> None:
     namespace, downloads, messages = _execution_namespace(tmp_path)
@@ -116,6 +142,7 @@ def test_final_wing_run_all_builds_verified_submission(tmp_path: Path) -> None:
             "PREDICTION_EXPLANATION": "Span is fixed while trapezoid area decreases.",
             "RESULT_INTERPRETATION": "The automatic result agrees with the prediction.",
             "PRINT_DEFECT_CODE_CANNOT_DETECT": "Poor first-layer adhesion.",
+            "AI_USE_DECLARATION": "No material AI use",
         },
     )
 

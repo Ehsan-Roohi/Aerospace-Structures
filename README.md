@@ -1,8 +1,71 @@
-# MIE 446 — Code-to-Print Wing
+# MIE 446 — Aerospace Structures
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/main/notebooks/MIE446_Code_to_Print_Wing.ipynb)
+**Fall 2026 · University of Massachusetts Amherst · Course repository**
 
-This repository is the guided design tool for the Fall 2026 MIE 446 Aerospace Structures team project. In teams of three, students enter engineering specifications in one Colab form; the notebook performs the calculations, CAD generation, validation, visualization and traceable export automatically.
+[![Repository tests](https://github.com/Ehsan-Roohi/Aerospace-Structures/actions/workflows/tests.yml/badge.svg)](https://github.com/Ehsan-Roohi/Aerospace-Structures/actions/workflows/tests.yml)
+
+MIE 446 connects aircraft loads and classical structural mechanics to a reproducible, code-generated physical wing. The course begins with an aerospace bridge for students who have not taken a prior aerospace course, develops analytical tools for stress, beams, energy methods, aircraft loads and thin-walled structures, and concludes with a team design-and-fabrication project.
+
+The central question is:
+
+> **What makes an engineering answer trustworthy?**
+
+Students learn to frame a physical problem, predict behavior before calculation, choose a defensible model, solve transparently, audit human or AI-generated results, and communicate a decision with its confidence and limitations.
+
+Canvas remains the authoritative source for announcements, due dates, submissions, accommodations, printer reservations and restricted course information.
+
+## Start here
+
+| Resource | Purpose | Launch |
+|---|---|---|
+| **Lecture 01 — From Airfoil Geometry to Trustworthy Wing Loads** | A 75-minute interactive introduction to aircraft forces, general flight-path equilibrium, airfoil geometry, NACA 4-digit sections, aerodynamic coefficients, stall-model limits and wing load paths. | [![Open Lecture 01 in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/main/notebooks/MIE446_Lecture_01_Trust_Forces_Airfoils.ipynb) |
+| **Code-to-Print Wing Project** | A guided design tool that generates, checks, segments and exports a printable parametric semi-wing. | [![Open Wing Project in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/main/notebooks/MIE446_Code_to_Print_Wing.ipynb) |
+
+Students should open a notebook with the Colab button, select **File → Save a copy in Drive**, complete predictions before revealing results, and retain their own engineering record.
+
+## Course organization
+
+The semester moves through four connected phases:
+
+1. **Aerospace bridge:** aircraft forces, flight-path equations, airfoils, finite-wing geometry and load paths.
+2. **Mechanics core:** stress transformation, three-dimensional stress, beam loading and deflection, energy methods and structural idealization.
+3. **Wing structures:** maneuver and landing loads, V–n diagrams, booms, stringers, skins, shear flow, torsion and shear center.
+4. **Build, inspect and defend:** parametric CAD, print preparation, fabrication, dimensional and fit evidence, revision and technical communication.
+
+See the [public course guide](COURSE.md) for learning outcomes, assessment structure, the weekly roadmap and the AI-use framework. See the [notebook index](notebooks/README.md) for launch instructions and notebook status.
+
+## Assessment at a glance
+
+| Component | Weight |
+|---|---:|
+| Six individual homework assignments | 52.5% |
+| One individual midterm examination | 17.5% |
+| Team wing project and presentation | 30.0% |
+
+## AI and engineering judgment
+
+Generative AI is permitted for learning, brainstorming, code development, debugging, documentation and critique when the assigned activity allows it. Students must disclose material use, understand what they submit and independently verify consequential claims or code. AI use is restricted during the individual midterm and any explicitly restricted individual defense.
+
+The shared evidence language is:
+
+> **Claim — Evidence — Check — Confidence — Limitation**
+
+## Repository map
+
+```text
+notebooks/                         Interactive lectures and the guided project
+notebooks/assets/                  Figures embedded in course notebooks
+src/mie446_wing/                   Parametric geometry and validation package
+tests/                             Automated regression and workflow tests
+examples/                          Local baseline build example
+docs/                              Repository figures and supporting assets
+scripts/                           Maintenance and release utilities
+AI_USE_LOG_TEMPLATE.md             Team AI-use and validation record
+```
+
+## Code-to-Print Wing Project
+
+In teams of three, students enter engineering specifications in one Colab form; the notebook performs the calculations, CAD generation, validation, visualization and traceable export automatically.
 
 The model is a **non-flying fabrication demonstrator**. It is not a flight article, and the project makes no claim about aerodynamic performance, structural load capacity, airworthiness, or safety for flight. No force test or flight test is part of this code.
 
@@ -51,7 +114,7 @@ The baseline analytical regression values are:
 
 ## Start in Google Colab
 
-Click the badge at the top of this page. Students do not need to write CadQuery code. The notebook has six consecutively numbered steps and one editable form.
+Use the **Code-to-Print Wing Project** Colab badge in the Start here table. Students do not need to write CadQuery code. The notebook has six consecutively numbered steps and one editable form.
 
 Before the first run, use **File → Save a copy in Drive** so the completed form persists between the coupon and final-wing sessions.
 

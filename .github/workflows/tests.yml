@@ -25,3 +25,5 @@ jobs:
         run: python -m pip install -e ".[dev]"
       - name: Run tests
         run: python -m pytest
+      - name: Audit course notebooks and navigation
+        run: python scripts/audit_course_hub.py

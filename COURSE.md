@@ -39,6 +39,7 @@ By the end of the course, students should be able to:
 | Notebook | Main ideas | Launch |
 |---|---|---|
 | Lecture 01 — From Airfoil Geometry to Trustworthy Wing Loads | Four forces, general flight-path equations, airfoil geometry, pressure and shear traction, NACA 4-digit geometry, force coefficients, stall-model limits and structural load paths | [![Open Lecture 01 in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/main/notebooks/MIE446_Lecture_01_Trust_Forces_Airfoils.ipynb) |
+| Lecture 02 — Finite Wings, Geometry and Load Paths | Planform metrics, sweep and dihedral, induced-drag assumptions, equal-force spanwise distributions, load paths, cantilever root reactions and a project geometry bridge | [![Open Lecture 02 in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/main/notebooks/MIE446_Lecture_02_Finite_Wings_and_Load_Paths.ipynb) |
 | Code-to-Print Wing Project | Parametric wing definition, prediction, geometry checks, coupon gate, CadQuery construction, print segmentation and traceable export | [![Open Wing Project in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/main/notebooks/MIE446_Code_to_Print_Wing.ipynb) |
 
 Additional course notebooks will be added to the [notebook index](notebooks/README.md) as they are released.

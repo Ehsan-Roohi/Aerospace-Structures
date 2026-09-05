@@ -9,6 +9,12 @@ These notebooks support the Fall 2026 MIE 446 Aerospace Structures course. They 
 | Interactive lecture | [Lecture 01 — From Airfoil Geometry to Trustworthy Wing Loads](MIE446_Lecture_01_Trust_Forces_Airfoils.ipynb) | Predict, vary inputs, interpret figures and state model limitations | [![Open Lecture 01 in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/main/notebooks/MIE446_Lecture_01_Trust_Forces_Airfoils.ipynb) |
 | Guided project | [Code-to-Print Wing](MIE446_Code_to_Print_Wing.ipynb) | Define a team design, document predictions and AI use, complete the physical coupon gate, generate verified geometry and export the submission archive | [![Open Wing Project in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/main/notebooks/MIE446_Code_to_Print_Wing.ipynb) |
 
+### Lecture 02 — Finite Wings, Geometry and Load Paths
+
+[![Open Lecture 02 in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/main/notebooks/MIE446_Lecture_02_Finite_Wings_and_Load_Paths.ipynb)
+
+[View the notebook](MIE446_Lecture_02_Finite_Wings_and_Load_Paths.ipynb). This 75-minute lesson connects span, chord, taper, aspect ratio, sweep and dihedral to induced drag, spanwise load distributions, structural load paths and cantilever root reactions. Students predict, change simple form inputs, verify equations and audit an AI-generated claim. Optional derivations are after-class material. No CAD installation is required.
+
 ## Recommended Colab workflow
 
 1. Open the notebook using its **Open in Colab** button.

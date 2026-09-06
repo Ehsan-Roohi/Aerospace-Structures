@@ -1,187 +1,69 @@
-# MIE 446 — Aerospace Structures
+# MIE 446 · Aerospace Structures
 
-**Fall 2026 · University of Massachusetts Amherst · Course repository**
+**University of Massachusetts Amherst · Fall 2026**<br>
+Tuesday & Thursday · 11:30 a.m.–12:45 p.m. · ELAB 323<br>
+Dr. Ehsan Roohi Golkhatmi · [roohie@umass.edu](mailto:roohie@umass.edu)
+
+## Open for class
+
+**[Syllabus](SYLLABUS.md)** · **[Weekly schedule](SYLLABUS.md#7-weekly-schedule--fall-2026)** · **[Lecture notebooks](#lecture-notebooks)** · **[Wing project](PROJECT.md)** · **[Homework](ASSIGNMENTS.md)** · **[Printing](PRINTING.md)**
+
+This is the classroom home for released MIE 446 learning materials. Open a lecture below, save your own copy in Google Drive, and work through the predictions, theory and experiments. No prior aerospace course is assumed.
+
+> **What makes an engineering answer trustworthy?**<br>
+> Learn to frame the problem, predict behavior, justify the model, check the evidence and defend the decision—even when AI supplies the calculation or code.
+
+## Lecture notebooks
+
+| Lecture | What we study | Open and run |
+|---|---|---|
+| **01 · Aircraft forces and airfoils** | Flight-path equilibrium, airfoil geometry, NACA sections, aerodynamic coefficients, stall and load paths · 75 min | [![Open Lecture 01 in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/main/notebooks/MIE446_Lecture_01_Trust_Forces_Airfoils.ipynb) |
+| **02 · Finite wings and load paths** | Span, chord, taper, aspect ratio, sweep, dihedral, induced drag, distributed loads and root reactions · 75 min | [![Open Lecture 02 in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/main/notebooks/MIE446_Lecture_02_Finite_Wings_and_Load_Paths.ipynb) |
+
+Lectures 01 and 02 are released. Later lecture notebooks will appear here when ready; the [syllabus schedule](SYLLABUS.md#7-weekly-schedule--fall-2026) describes the full semester, not a list of already-published notebooks.
+
+### Your classroom workflow
+
+1. Click **Open in Colab** and choose **File → Save a copy in Drive**.
+2. Run the setup cell, then proceed from top to bottom.
+3. Record a prediction **before** revealing the result. Change the marked inputs and rerun the affected cells.
+4. Explain the result using **Claim — Evidence — Check — Confidence — Limitation**.
+5. Keep your own notebook; submit only through the assigned Canvas link.
+
+[Notebook index and troubleshooting](notebooks/README.md)
+
+## Design and build a wing
+
+<img src="docs/baseline_preview.png" alt="Code-generated baseline semi-wing with printed shell, ribs and rod interfaces" width="640">
+
+Teams of three use a guided form to define a parametric semi-wing, verify its geometry, print a rod-fit coupon, build approved modules and document the assembled result. Students may use AI for code assistance, but must understand and independently verify the work.
+
+**This is a non-flying fabrication demonstrator. There is no force test or flight test.** Assessment focuses on reproducibility, geometry, dimensional and fit evidence, fabrication quality, revision and individual understanding.
+
+[![Open Wing Project in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/main/notebooks/MIE446_Code_to_Print_Wing.ipynb)
+
+**[Project guide and code documentation](PROJECT.md)** · [Project rubric](SYLLABUS.md#4-project-brief--code-to-print-cantilever-wing) · [Printing checklist](PRINTING.md) · [AI-use log template](AI_USE_LOG_TEMPLATE.md)
+
+## Assessment and course support
+
+| Component | Course weight | Details |
+|---|---:|---|
+| Six individual homeworks | 52.5% total; 8.75% each | [Checklist, dates and oral-check format](ASSIGNMENTS.md) |
+| One individual midterm | 17.5% | October 27; [exam policy](SYLLABUS.md#midterm) |
+| Team wing project and presentation | 30% | [Milestones, evidence and individual defense](SYLLABUS.md#5-project-workflow-and-deliverables) |
+
+There is no final examination. See the [full syllabus](SYLLABUS.md) for grading, extensions, accommodations, academic integrity and University statements.
+
+AI use is **permitted with disclosure and verification**, except during the midterm or another explicitly restricted component. The course develops teamwork, hands-on experience, creativity, empathy, human communication, critical thinking and lifelong learning. [Read the complete AI statement](SYLLABUS.md#ai-statement-learning-and-engineering-judgment-in-the-age-of-ai).
+
+[Teaching team and contacts](SYLLABUS.md#2-people-communication-and-resources) · [Guest events](SYLLABUS.md#guest-learning-events) · [Course overview](COURSE.md)
+
+## What stays in Canvas
+
+Use GitHub for classroom navigation, the web syllabus, released notebooks, project code and public checklists. Use Canvas for announcements, authoritative deadline changes, assignment question sheets until released here, submissions, grades, office-hour updates, oral-check rotations, printer reservations and private access information. No student submissions, answer keys or room access codes are published here.
+
+## Code and maintenance
+
+[Source package](src/mie446_wing) · [Tests](tests) · [Local installation](PROJECT.md#local-installation) · [Output package](PROJECT.md#output-package)
 
 [![Repository tests](https://github.com/Ehsan-Roohi/Aerospace-Structures/actions/workflows/tests.yml/badge.svg)](https://github.com/Ehsan-Roohi/Aerospace-Structures/actions/workflows/tests.yml)
-
-MIE 446 connects aircraft loads and classical structural mechanics to a reproducible, code-generated physical wing. The course begins with an aerospace bridge for students who have not taken a prior aerospace course, develops analytical tools for stress, beams, energy methods, aircraft loads and thin-walled structures, and concludes with a team design-and-fabrication project.
-
-The central question is:
-
-> **What makes an engineering answer trustworthy?**
-
-Students learn to frame a physical problem, predict behavior before calculation, choose a defensible model, solve transparently, audit human or AI-generated results, and communicate a decision with its confidence and limitations.
-
-Canvas remains the authoritative source for announcements, due dates, submissions, accommodations, printer reservations and restricted course information.
-
-## Start here
-
-| Resource | Purpose | Launch |
-|---|---|---|
-| **Lecture 01 — From Airfoil Geometry to Trustworthy Wing Loads** | A 75-minute interactive introduction to aircraft forces, general flight-path equilibrium, airfoil geometry, NACA 4-digit sections, aerodynamic coefficients, stall-model limits and wing load paths. | [![Open Lecture 01 in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/main/notebooks/MIE446_Lecture_01_Trust_Forces_Airfoils.ipynb) |
-| **Lecture 02 — Finite Wings, Geometry and Load Paths** | A 75-minute theory-to-experiment lesson on planform geometry, sweep, dihedral, induced drag, load distributions and root bending, with a bridge to the printed-wing project. | [![Open Lecture 02 in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/main/notebooks/MIE446_Lecture_02_Finite_Wings_and_Load_Paths.ipynb) |
-| **Code-to-Print Wing Project** | A guided design tool that generates, checks, segments and exports a printable parametric semi-wing. | [![Open Wing Project in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/main/notebooks/MIE446_Code_to_Print_Wing.ipynb) |
-
-Students should open a notebook with the Colab button, select **File → Save a copy in Drive**, complete predictions before revealing results, and retain their own engineering record.
-
-## Course organization
-
-The semester moves through four connected phases:
-
-1. **Aerospace bridge:** aircraft forces, flight-path equations, airfoils, finite-wing geometry and load paths.
-2. **Mechanics core:** stress transformation, three-dimensional stress, beam loading and deflection, energy methods and structural idealization.
-3. **Wing structures:** maneuver and landing loads, V–n diagrams, booms, stringers, skins, shear flow, torsion and shear center.
-4. **Build, inspect and defend:** parametric CAD, print preparation, fabrication, dimensional and fit evidence, revision and technical communication.
-
-See the [public course guide](COURSE.md) for learning outcomes, assessment structure, the weekly roadmap and the AI-use framework. See the [notebook index](notebooks/README.md) for launch instructions and notebook status.
-
-## Assessment at a glance
-
-| Component | Weight |
-|---|---:|
-| Six individual homework assignments | 52.5% |
-| One individual midterm examination | 17.5% |
-| Team wing project and presentation | 30.0% |
-
-## AI and engineering judgment
-
-Generative AI is permitted for learning, brainstorming, code development, debugging, documentation and critique when the assigned activity allows it. Students must disclose material use, understand what they submit and independently verify consequential claims or code. AI use is restricted during the individual midterm and any explicitly restricted individual defense.
-
-The shared evidence language is:
-
-> **Claim — Evidence — Check — Confidence — Limitation**
-
-## Repository map
-
-```text
-notebooks/                         Interactive lectures and the guided project
-notebooks/assets/                  Figures embedded in course notebooks
-src/mie446_wing/                   Parametric geometry and validation package
-tests/                             Automated regression and workflow tests
-examples/                          Local baseline build example
-docs/                              Repository figures and supporting assets
-scripts/                           Maintenance and release utilities
-AI_USE_LOG_TEMPLATE.md             Team AI-use and validation record
-```
-
-## Code-to-Print Wing Project
-
-In teams of three, students enter engineering specifications in one Colab form; the notebook performs the calculations, CAD generation, validation, visualization and traceable export automatically.
-
-The model is a **non-flying fabrication demonstrator**. It is not a flight article, and the project makes no claim about aerodynamic performance, structural load capacity, airworthiness, or safety for flight. No force test or flight test is part of this code.
-
-![Tested baseline semi-wing generated by the repository](docs/baseline_preview.png)
-
-## What the code does
-
-The starter converts a compact set of engineering parameters into printable geometry:
-
-1. generates a four-digit NACA airfoil with a printable blunt trailing edge;
-2. lofts root-to-tip sections into a tapered semi-wing;
-3. subtracts a conservative inner cavity to form a printable skin;
-4. adds ribs and two sleeves for course-issued carbon rods;
-5. cuts the rod-clearance holes after all internal features are joined;
-6. divides the wing into two or three non-overlapping printer modules that fit the nominal 300 × 300 × 300 mm K2 Pro envelope;
-7. checks analytical values, B-rep validity, connectivity, mass, and segmentation;
-8. exports STEP, STL, 3MF, a fit coupon, configuration files, checksums, and a validation report;
-9. creates the ZIP only after its contents and SHA-256 hashes match the manifest.
-
-Coordinate convention: `x` is chordwise from leading to trailing edge, `y` is spanwise from root to tip, and `z` is the airfoil-thickness direction. Every model dimension is in **millimetres**. STL files do not store units, so import them into the slicer as millimetres at 100% scale.
-
-## Course baseline
-
-| Parameter | Baseline |
-|---|---:|
-| NACA profile | 2412 |
-| Physical semi-span | 450 mm |
-| Root chord | 160 mm |
-| Tip chord | 100 mm |
-| Skin / trailing edge | 1.2 / 1.2 mm |
-| Printable modules | 2 or 3 |
-| Carbon rods | two 4 mm rods; clearance selected by coupon |
-| Material | course-approved regular PLA Pro |
-| Maximum final printed mass | 300 g |
-
-The baseline analytical regression values are:
-
-| Check | Expected value |
-|---|---:|
-| Semi-wing planform area | 58,500 mm² |
-| Equivalent full span | 900 mm |
-| Equivalent full-wing area | 117,000 mm² |
-| Taper ratio | 0.625 |
-| Aspect ratio | 6.9230769 |
-| Mean aerodynamic chord | 132.3077 mm |
-
-## Start in Google Colab
-
-Use the **Code-to-Print Wing Project** Colab badge in the Start here table. Students do not need to write CadQuery code. The notebook has six consecutively numbered steps and one editable form.
-
-Before the first run, use **File → Save a copy in Drive** so the completed form persists between the coupon and final-wing sessions.
-
-1. Choose **Coupon Only**, enter the team and wing values, and select **Runtime → Run all**.
-2. Download and print the fit coupon; measure the course rod and record the selected clearance.
-3. Choose **Final Wing**, increment the revision, complete the coupon and engineering-response fields, and select **Runtime → Run all** again.
-4. Download the verified submission ZIP and inspect every module in Creality Print before releasing a print.
-
-Both modes finish without an intentional error: Coupon Only skips the expensive 3D wing, while Final Wing builds and exports it only after the physical coupon record is complete. Repeated runs use isolated temporary output folders, so old modules cannot enter a new archive.
-
-The coupon ZIP also contains `wing_parameters.json`, its Team/Revision manifest, and a mapping for the physical one-, two-, and three-dimple hole markers. Keep this ZIP with the project record.
-
-The notebook uses the tagged course release `v1.1.1` and pins CadQuery `2.8.0` plus `cadquery-ocp` `7.9.3.1.1` so the computational environment does not change during the semester. Release 1.1.1 supports the current Colab Python 3.13 runtime.
-
-## What students are expected to change and understand
-
-Students are not expected to rewrite the CAD kernel. Each team is responsible for:
-
-- choosing and justifying an instructor-approved NACA four-digit profile;
-- changing design parameters within the project limits;
-- predicting the result of at least one controlled parameter change before running it;
-- interpreting the automatic checks for validity, connectivity, traceability and printer envelope;
-- printing the rod fit coupon and recording the selected clearance;
-- diagnosing model or print failures and changing one cause at a time;
-- explaining how each important input changes the geometry and analytical quantities;
-- independently checking AI-assisted results and defending the team's own changes and engineering decisions.
-
-## AI use
-
-AI is explicitly permitted for brainstorming, code generation, refactoring, debugging, test development, documentation, and technical critique. AI use does not reduce the grade when it is disclosed, understood, and independently verified.
-
-Every team must maintain a concise AI Use and Validation Log. For each material use, record the tool and purpose, affected file/function or claim, student changes, independent check, and verdict: **Accept**, **Accept with Limitations**, or **Reject**. If there were several uses, summarize them concisely in the form fields and separate the items with semicolons. Do not submit fabricated measurements, citations, test records, or code that the team cannot run and explain. AI is not permitted during a restricted individual defense.
-
-The Colab form creates the required structured AI record without asking students to write a Python dictionary. Before export, every team must explicitly choose either **No material AI use** or **Material AI used**. If the first option is selected, `ai_use_log.json` is empty and `student_design_record.json` contains the team's declaration.
-
-See [AI_USE_LOG_TEMPLATE.md](AI_USE_LOG_TEMPLATE.md).
-
-## Local installation
-
-The supported course runtime is Python 3.11, 3.12 or 3.13. GitHub Actions tests the full project on Python 3.12 and 3.13.
-
-```bash
-python -m venv .venv
-python -m pip install --upgrade pip
-python -m pip install -e ".[dev]"
-python -m pytest
-python examples/build_baseline.py
-```
-
-CadQuery is a Python parametric CAD system based on OpenCascade. Installation and export behavior are documented in the [official CadQuery documentation](https://cadquery.readthedocs.io/).
-
-## Output package
-
-A successful export contains:
-
-- `MIE446_Team##_Wing_Complete_R##.step`
-- one `.stl` and one `.3mf` per printable module
-- a horizontal-hole rod fit coupon
-- `wing_parameters.json`
-- `planform_metrics.json`
-- `validation_report.json`
-- `fit_coupon_mapping.json`
-- `ai_use_log.json`
-- `student_design_record.json` with the self-reported coupon record and engineering responses
-- `Design_Summary.md` with readable analytical, comparison and 3D-validation tables
-- `Design_Overview.html` with the interactive airfoil and semi-wing planform
-- `manifest.json` with units, estimated mass, rod lengths, and SHA-256 hashes for every submitted artifact except the manifest itself
-
-Passing the code checks is necessary but not sufficient. Students must still inspect the slicer preview, confirm dimensions and orientation, supervise the first layers, measure the printed parts, and document limitations.

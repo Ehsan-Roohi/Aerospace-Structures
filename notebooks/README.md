@@ -1,5 +1,7 @@
 # MIE 446 Notebook Index
 
+[Course home](../README.md) · [Syllabus](../SYLLABUS.md) · [Homework](../ASSIGNMENTS.md) · [Project guide](../PROJECT.md)
+
 These notebooks support the Fall 2026 MIE 446 Aerospace Structures course. They are designed to run in Google Colab without a local installation.
 
 ## Available notebooks

@@ -9,8 +9,22 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 NOTEBOOK_DIR = ROOT / "notebooks"
-MARKDOWN_FILES = [ROOT / "README.md", ROOT / "COURSE.md", NOTEBOOK_DIR / "README.md"]
-LOCAL_LINK = re.compile(r"(?<!!)\[[^]]+\]\((?!https?://|#)([^)]+)\)")
+MARKDOWN_FILES = sorted(ROOT.glob("*.md")) + [NOTEBOOK_DIR / "README.md"]
+LOCAL_LINK = re.compile(r"\[[^]]+\]\((?![a-zA-Z][\w+.-]*:)([^)]+)\)")
+HTML_IMAGE = re.compile(r'<img\b[^>]*\bsrc="(?!https?://)([^"]+)"')
+
+
+def heading_ids(text: str) -> set[str]:
+    """GitHub-style heading slugs for the course's plain Markdown headings."""
+    result: set[str] = set()
+    for heading in re.findall(r"^#{1,6}\s+(.+)$", text, flags=re.MULTILINE):
+        slug = re.sub(r"[^\w\- ]", "", heading.strip().lower()).replace(" ", "-")
+        candidate, suffix = slug, 1
+        while candidate in result:
+            candidate = f"{slug}-{suffix}"
+            suffix += 1
+        result.add(candidate)
+    return result
 COLAB_NOTEBOOK = re.compile(
     r"https://colab\.research\.google\.com/github/Ehsan-Roohi/"
     r"Aerospace-Structures/blob/main/(notebooks/[^)]+\.ipynb)"
@@ -46,10 +60,14 @@ def audit_markdown_links() -> list[str]:
         text = path.read_text(encoding="utf-8")
         missing: list[str] = []
 
-        for target in LOCAL_LINK.findall(text):
-            clean_target = target.split("#", 1)[0]
-            if clean_target and not (path.parent / clean_target).resolve().exists():
+        for target in LOCAL_LINK.findall(text) + HTML_IMAGE.findall(text):
+            clean_target, _, fragment = target.partition("#")
+            destination = (path.parent / clean_target).resolve() if clean_target else path
+            if not destination.exists():
                 missing.append(target)
+            elif fragment and destination.suffix == ".md":
+                if fragment not in heading_ids(destination.read_text(encoding="utf-8")):
+                    missing.append(target)
 
         for target in COLAB_NOTEBOOK.findall(text):
             if not (ROOT / target).exists():
@@ -57,7 +75,7 @@ def audit_markdown_links() -> list[str]:
 
         if missing:
             raise AssertionError(f"Broken links in {path.relative_to(ROOT)}: {missing}")
-        reports.append(f"PASS {path.relative_to(ROOT)}: local and Colab targets exist")
+        reports.append(f"PASS {path.relative_to(ROOT)}: local files, images, heading anchors and Colab targets exist")
     return reports
 
 

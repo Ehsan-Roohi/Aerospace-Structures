@@ -2,6 +2,10 @@
 
 ## Public Course Guide for Fall 2026
 
+[Course home](README.md) · **[Full student syllabus](SYLLABUS.md)** · [Homework checklist](ASSIGNMENTS.md) · [Project guide](PROJECT.md)
+
+This page is an overview. The full web syllabus includes dated schedules, teaching contacts, grading rubrics and course policies.
+
 MIE 446 is a three-credit, in-person course at the University of Massachusetts Amherst. It connects classical structural mechanics to the analysis, computational definition and fabrication of a small wing demonstrator. No prior aerospace course is assumed; the opening unit introduces the aircraft and airfoil language needed for the structural work that follows.
 
 Canvas is the authoritative source for meeting logistics, due dates, submissions, accommodations, grades, printer reservations and restricted course materials.

@@ -4,7 +4,7 @@
 
 [Course home](README.md) · [Lecture notebooks](notebooks/README.md) · [Project guide](PROJECT.md) · [Homework checklist](ASSIGNMENTS.md)
 
-> Web edition of the final course syllabus, published September 6, 2026. Canvas carries authoritative announcements, deadline changes, submissions and private access details. The dated schedule below is the syllabus schedule; confirm event logistics in Canvas.
+> Web edition of the current course syllabus, updated September 7, 2026. Canvas carries authoritative announcements, deadline changes, submissions and private access details. The dated schedule below is the syllabus schedule; confirm event logistics in Canvas.
 
 ## Contents
 

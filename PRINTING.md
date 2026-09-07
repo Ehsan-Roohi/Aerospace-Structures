@@ -27,4 +27,4 @@ The baseline final printed-wing budget is **300 g** of approved PLA Pro, plus co
 
 The printer room is **Engineering Laboratory, Room 104 / 104A**. Door access information is issued privately after training and is never published in this repository.
 
-[Full syllabus fabrication requirements](SYLLABUS.md#6-elab-fabrication-requirements) · [Project outputs and validation](PROJECT.md#output-package)
+[Full syllabus fabrication requirements](SYLLABUS.md#6-elab-fabrication-requirements) · [Project inspection and build acceptance](PROJECT.md#7-physical-inspection-and-build-acceptance)

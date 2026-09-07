@@ -2,7 +2,7 @@
 
 **University of Massachusetts Amherst · Fall 2026**<br>
 Tuesday & Thursday · 11:30 a.m.–12:45 p.m. · ELAB 323<br>
-Dr. Ehsan Roohi Golkhatmi · [roohie@umass.edu](mailto:roohie@umass.edu)
+Dr. Ehsan Roohi Golkhatmi · Gunness Laboratory, Room 1 · [roohie@umass.edu](mailto:roohie@umass.edu)
 
 ## Open for class
 
@@ -40,7 +40,7 @@ Teams of three use a guided form to define a parametric semi-wing, verify its ge
 
 **This is a non-flying fabrication demonstrator. There is no force test or flight test.** Assessment focuses on reproducibility, geometry, dimensional and fit evidence, fabrication quality, revision and individual understanding.
 
-[![Open Wing Project in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/main/notebooks/MIE446_Code_to_Print_Wing.ipynb)
+[![Open stable Wing Project v1.1.1 in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/v1.1.1/notebooks/MIE446_Code_to_Print_Wing.ipynb)
 
 **[Project guide and code documentation](PROJECT.md)** · [Project rubric](SYLLABUS.md#4-project-brief--code-to-print-cantilever-wing) · [Printing checklist](PRINTING.md) · [AI-use log template](AI_USE_LOG_TEMPLATE.md)
 
@@ -64,6 +64,6 @@ Use GitHub for classroom navigation, the web syllabus, released notebooks, proje
 
 ## Code and maintenance
 
-[Source package](src/mie446_wing) · [Tests](tests) · [Local installation](PROJECT.md#local-installation) · [Output package](PROJECT.md#output-package)
+[Source package](src/mie446_wing) · [Tests](tests) · [Project troubleshooting](PROJECT.md#11-troubleshooting-the-guided-notebook) · [Final ZIP contents](PROJECT.md#step-6-export-and-download-the-submission)
 
 [![Repository tests](https://github.com/Ehsan-Roohi/Aerospace-Structures/actions/workflows/tests.yml/badge.svg)](https://github.com/Ehsan-Roohi/Aerospace-Structures/actions/workflows/tests.yml)

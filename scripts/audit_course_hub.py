@@ -27,7 +27,7 @@ def heading_ids(text: str) -> set[str]:
     return result
 COLAB_NOTEBOOK = re.compile(
     r"https://colab\.research\.google\.com/github/Ehsan-Roohi/"
-    r"Aerospace-Structures/blob/main/(notebooks/[^)]+\.ipynb)"
+    r"Aerospace-Structures/blob/(?:main|v\d+\.\d+\.\d+)/(notebooks/[^)]+\.ipynb)"
 )
 
 

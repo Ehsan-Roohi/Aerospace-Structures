@@ -1,4 +1,4 @@
-# Code to Print Wing Project
+# Code-to-Print Wing, Machine Vision, and Damage Diagnostics
 
 **MIE 446 Aerospace Structures · Fall 2026 · Student project guide**
 
@@ -6,7 +6,9 @@
 
 [![Open stable Wing Project v1.1.1 in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/v1.1.1/notebooks/MIE446_Code_to_Print_Wing.ipynb)
 
-> Web edition of the current project guide. Canvas carries authoritative deadlines, submission links, team assignments, printer reservations and private access information.
+> Web edition aligned with the updated September 3, 2026 syllabus. Canvas carries authoritative deadlines, submission links, team assignments, printer reservations, calibration files, shared diagnostic data and private access information.
+
+![Project workflow: design and fabricate a wing, inspect the unloaded team wing with Jetson machine vision, and analyze controlled damage evidence from a separate sacrificial specimen](docs/project_workflow.svg)
 
 ## Project at a glance
 
@@ -14,7 +16,11 @@
 |---|---:|---|---|
 | 3 students | 30% | Non-flying semi-wing | v1.1.1 |
 
-**Your task** — Use the guided notebook to define and understand a parametric wing, make a prediction before seeing the comparison, print and test a rod-fit coupon, generate a validated 3D semi-wing, print and inspect the modules, and defend the team's decisions. You edit one form; the notebook performs the analysis, CAD construction, validation, and file packaging.
+**Your task** — Use the guided notebook to define and understand a parametric wing, make a prediction before seeing the comparison, print and test a rod-fit coupon, generate a validated 3D semi-wing, print and inspect the modules, perform an unloaded Jetson-camera dimensional cross-check, analyze shared before/after damage data from a separate sacrificial specimen, and defend the team's decisions. You configure instructor-provided workflows; you are not expected to write CAD, vision, or data-acquisition software from scratch.
+
+<img src="https://d29g4g2dyqv443.cloudfront.net/sites/default/files/akamai/embedded/images/jetsonNano/jetson_orin_nano-devkit-front_top-right-trimmed.jpg" alt="NVIDIA Jetson Orin Nano Super Developer Kit used at the shared external inspection station" width="430">
+
+Shared inspection computer: **NVIDIA Jetson Orin Nano Super Developer Kit**. [Official NVIDIA product page and image source](https://developer.nvidia.com/embedded/jetson-developer-kits).
 
 Open in Google Colab: [stable course notebook (v1.1.1)](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/v1.1.1/notebooks/MIE446_Code_to_Print_Wing.ipynb)
 
@@ -32,9 +38,9 @@ This is an analytical aerospace-structures project connected to a physical build
 - Use a physical fit coupon to choose a rod-hole clearance from evidence rather than assumption.
 - Trace one input through plots, CAD geometry, printable modules, validation records, and the final archive.
 - Use AI responsibly for coding or critique while independently checking and explaining the result.
-- Work in a three-person team, inspect the physical artifact honestly, and communicate limitations.
+- Work in a three-person team, inspect the physical artifact honestly, interpret multiple damage indicators critically, and communicate uncertainty and limitations.
 
-**Project boundary** — The artifact is a non-flying fabrication demonstrator. The notebook and the completed print do not certify structural capacity, aerodynamic performance, flight safety, or airworthiness. No load test, aerodynamic performance test, or flight activity is part of this assignment.
+**Project boundary** — The team artifact is a non-flying fabrication demonstrator. Each submitted team wing remains unloaded and undamaged. It is not flown, cracked, or tested to failure and does not certify structural capacity, aerodynamic performance, flight safety, or airworthiness. Controlled damage is introduced only by the instructor/TA on a designated sacrificial wing-box specimen behind the prescribed safety controls.
 
 ## 2. Inputs, fixed settings, and design limits
 
@@ -171,7 +177,7 @@ Use the separate MIE 446 3D Printing Quick-Start Guide and the current machine-s
 
 ## 7. Physical inspection and build acceptance
 
-Because no force-measurement system is available for this project, the build is evaluated through reproducibility, dimensional and fit evidence, fabrication quality, traceability, and engineering explanation. Appearance alone is not enough.
+The team wing is evaluated through reproducibility, dimensional and fit evidence, fabrication quality, calibrated manual/machine-vision agreement, traceability, and engineering explanation. Appearance alone is not enough.
 
 | Inspection | Evidence required |
 | --- | --- |
@@ -185,6 +191,33 @@ Because no force-measurement system is available for this project, the build is 
 | Disposition | The team records Accept, Revise, or Reprint Request and supports it with photographs, measurements, and limitations. |
 
 **A failed print can still show strong engineering.** Preserve the evidence, identify a plausible cause, distinguish CAD/slicer/physical causes, change one controlled feature, and obtain authorization before reprinting. Do not hide failed attempts or fabricate measurements.
+
+### 7A. Unloaded Jetson machine-vision inspection of every team wing
+
+This station provides an external, non-contact dimensional cross-check; it does not load the wing and does not replace the signed manual inspection.
+
+1. Place the unloaded assembled wing on the approved flat reference or alignment jig.
+2. Put the 600 mm ruler and ArUco/checkerboard target in the same plane as the wing. Add removable paper markers at the root, seams, and tip.
+3. Fix the USB camera and run the instructor-provided Python/OpenCV workflow on the shared Jetson Orin Nano Super.
+4. Inspect the lens-corrected overlay for semi-span, root/tip chord, seam regions, and gross alignment.
+5. Compare automated values with ruler, jig, and digital-caliper measurements. Report differences and uncertainty from perspective, calibration, lighting, resolution, and edge detection.
+6. Save one calibration image, one annotated inspection image, and one concise CSV/log using the same team and revision identifiers as the released geometry.
+
+The manual measurement and instructor judgment remain authoritative. A computer-vision overlay is evidence to audit, not proof that the structure is safe.
+
+### 7B. Shared structural-health-monitoring demonstration
+
+The instructor/TA performs this demonstration on a **separate sacrificial 3D-printed wing-box specimen**. Students analyze the supplied data; they do not damage their team wing or operate inside the protected loading area.
+
+| Evidence channel | Hardware / data | Student interpretation |
+| --- | --- | --- |
+| Static response | 10 kg load cell + HX711 and camera-based tip deflection | Compare the before/after force–deflection slope as a stiffness indicator; check zero, units, linear range, and repeatability. |
+| Dynamic response | ADXL343 accelerometer time history | Estimate or interpret the dominant natural frequency; check sampling rate, duration, windowing, and whether the change exceeds uncertainty. |
+| Visible damage | USB-microscope images before and after controlled damage | Identify and compare crack location/extent qualitatively; distinguish real change from focus, lighting, scale, and registration artifacts. |
+
+The required engineering decision is not “the AI found a crack.” It is: **Which indicator or combination of indicators supports a credible damage claim, with what confidence and limitations?** A single noisy change is insufficient. Teams reconcile mechanics expectations, sensor checks, before/after evidence, and uncertainty.
+
+Safety controls are mandatory: slow loading, a secured clamp/fixture, clear polycarbonate shielding, eye protection, and instructor/TA control of damage introduction. No submitted team wing is loaded or tested to failure.
 
 ## 8. AI use, coding, and individual understanding
 
@@ -208,6 +241,8 @@ Because no force-measurement system is available for this project, the build is 
 - How a chosen form value appears in the plots, CAD model, module files, and printed part.
 - What the automatic checks establish, what they do not establish, and what independent check the team performed.
 - What AI contributed, what the team changed, and why the final verdict was Accept, Accept with Limitations, or Reject.
+- Why Jetson measurements may differ from manual measurements and whether the difference is credible within uncertainty.
+- How stiffness, dominant frequency, and microscope crack evidence should change with damage—and what alternative explanation could create a false indication.
 
 For the normal project workflow, do not edit the hidden notebook cells. Students are not expected to write a CAD kernel. If the team proposes an optional code extension, keep it separate from the released workflow, obtain approval, test it, disclose any AI assistance, and be prepared to explain it.
 
@@ -217,7 +252,7 @@ For the normal project workflow, do not edit the hidden notebook cells. Students
 | --- | --- |
 | Analysis and verification | Form values, equations, predictions, independent checks, clean-run evidence, AI validation |
 | Design for additive manufacturing | CAD/module review, interfaces, orientation, layer inspection, mass/time budget |
-| Fabrication and documentation | Reservation readiness, print log, photographs, measurements, fit evidence, archive |
+| Fabrication, inspection, and data | Reservation readiness, print log, photographs, manual/Jetson measurements, calibration, diagnostic interpretation, archive |
 
 Roles rotate so that no student remains only the analyst, only the computer operator, or only the printer operator. Each artifact must be cross-checked by a teammate who did not create it.
 
@@ -226,18 +261,20 @@ Roles rotate so that no student remains only the analyst, only the computer oper
 - Print log: machine/profile/material, start/end information, first-layer result, actual mass, defects, corrective actions, and any reprint authorization.
 - Photographs of team/revision identification, coupon test, first layer, completed modules, dimensions/fit, and final assembly.
 - Build Acceptance Checklist with the team's disposition: Accept, Revise, or Reprint Request.
+- Calibration target image, one annotated Jetson/OpenCV image, manual measurement comparison, and concise inspection CSV/log.
+- Assigned before/after force–deflection, acceleration, and microscope-crack analysis from the shared sacrificial-specimen demonstration.
 - Final technical report, concise team presentation, and one individual technical response from every student.
 
 ## 10. Grading rubric (30% of course)
 
 | Category | Weight | What earns credit |
 | --- | --- | --- |
-| Milestones and design reviews | 5% | On-time gates; requirements and decisions; role/contribution evidence; response to feedback |
+| Milestones and design reviews | 5% | On-time gates; requirements and decisions; role/contribution evidence; inspection/calibration plan; response to feedback |
 | Reproducible workflow and design rationale | 8% | Correct form use; analysis; predictions; clean run; traceability; independent verification; AI validation |
-| Fabrication and build acceptance | 8% | Coupon evidence; print readiness; safe process; dimensional/fit checks; print quality; honest revision evidence |
-| Final technical report | 5% | Clear claim-evidence-check-confidence-limitation argument; figures; uncertainty; decisions; lessons learned |
-| Team presentation | 1.5% | Concise engineering story, readable visuals, coordinated explanation, evidence-based conclusions |
-| Individual defense | 2.5% | Explains inputs, calculations, validation and AI use; predicts a controlled change; identifies limitations |
+| Fabrication, inspection, and build acceptance | 8% | Coupon evidence; print readiness; safe process; dimensional/fit checks; calibrated vision-to-manual comparison; annotated image/CSV; honest revision evidence |
+| Final technical report | 5% | Clear claim-evidence-check-confidence-limitation argument integrating geometry, manufacturing, inspection uncertainty, stiffness/frequency trends, and crack evidence |
+| Team presentation | 1.5% | Concise engineering story, readable visuals, coordinated explanation, evidence-based diagnostic conclusions |
+| Individual defense | 2.5% | Explains inputs, calculations, validation, sensor evidence and AI use; predicts a controlled change; identifies limitations |
 
 A polished print with weak understanding, undisclosed AI use, missing evidence, or non-reproducible results earns limited credit. The goal is a defensible engineering process, not syntax memorization or a flawless first print.
 
@@ -265,9 +302,10 @@ A polished print with weak understanding, undisclosed AI use, missing evidence, 
 - [ ] All automatic build and export checks passed; at least one important result has an independent check.
 - [ ] AI use is explicitly declared; material use includes the affected item, student change, independent check, limitation, and verdict.
 - [ ] Every module was opened in the correct K2 Pro / 0.4 mm / regular PLA Pro profile at millimetres and 100% scale, and every layer was inspected.
-- [ ] The physical build was measured and inspected without a force test; defects and failed attempts were documented honestly.
-- [ ] The notebook ZIP, slicer file, logs, photographs, report, presentation, and physical parts use consistent team/revision identifiers.
-- [ ] Every team member can explain the airfoil, wing quantities, coupon choice, validation limits, AI contribution, and one controlled design change.
+- [ ] The unloaded team wing was measured manually and with the calibrated Jetson-camera workflow; the annotated image, CSV/log, uncertainty, defects, and failed attempts were documented honestly.
+- [ ] The team analyzed the assigned before/after force–deflection, acceleration, and microscope-crack evidence from the separate sacrificial specimen without claiming more than the data support.
+- [ ] The notebook ZIP, slicer file, inspection/diagnostic logs, photographs, report, presentation, and physical parts use consistent team/revision identifiers.
+- [ ] Every team member can explain the airfoil, wing quantities, coupon choice, validation limits, manual/vision disagreement, diagnostic indicators, AI contribution, and one controlled design change.
 - [ ] All final files open correctly and the Canvas submission was checked before the posted deadline.
 
-Success: reproduce, explain, verify, fabricate safely, inspect honestly, and show how evidence changed the design. Understanding and judgment matter more than a flawless print.
+Success: reproduce, explain, verify, fabricate safely, inspect honestly, diagnose cautiously, and show how evidence changed the engineering decision. Understanding and judgment matter more than a flawless print.

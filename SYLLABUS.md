@@ -2,7 +2,7 @@
 
 **Fall 2026 · Student syllabus**
 
-[Course home](README.md) · [Lecture notebooks](notebooks/README.md) · [Project guide](PROJECT.md) · [Homework checklist](ASSIGNMENTS.md)
+[Course home](README.md) · [Download Word syllabus](docs/MIE_446_Aerospace_Structures_Fall_2026_Syllabus_Updated.docx) · [Lecture notebooks](notebooks/README.md) · [Project guide](PROJECT.md) · [Homework checklist](ASSIGNMENTS.md)
 
 > Web edition of the current course syllabus, updated September 7, 2026. Canvas carries authoritative announcements, deadline changes, submissions and private access details. The dated schedule below is the syllabus schedule; confirm event logistics in Canvas.
 
@@ -11,7 +11,7 @@
 - [Purpose and learning outcomes](#1-purpose-scope-and-learning-outcomes)
 - [People, communication and resources](#2-people-communication-and-resources)
 - [Assessment and evidence of learning](#3-assessment-and-evidence-of-learning)
-- [Project brief and grading](#4-project-brief--code-to-print-cantilever-wing)
+- [Project brief and grading](#4-project-brief--code-to-print-wing--fabrication-machine-vision-inspection-and-damage-diagnostics)
 - [Project workflow and deliverables](#5-project-workflow-and-deliverables)
 - [Fabrication requirements](#6-elab-fabrication-requirements)
 - [Weekly schedule and homework map](#7-weekly-schedule--fall-2026)
@@ -35,7 +35,7 @@ Aerospace structures are light because they must fly, yet they must safely carry
 
 ### Signature experience
 
-Teams of three will write code that generates a small parametric wing, verifies its geometry, exports printable components, and produces a documented physical build. Teams will be evaluated through reproducible code, print-readiness evidence, dimensional and fit inspection, fabrication quality, revision history, and a technical defense. The project deliberately excludes propulsion, electronics, controls, a fuselage, force testing, and free flight so the work remains achievable and centered on structural understanding and engineering judgment.
+Teams of three will use instructor-provided code to generate a small parametric wing, verify its geometry, export printable components, and produce a documented physical build. After assembly, every team will complete an unloaded, non-contact inspection with the shared Jetson-camera station and analyze a supervised structural-health-monitoring demonstration performed on a separate sacrificial specimen. Teams will be evaluated through reproducible configuration and verification, calibrated manual/vision measurements, annotated images and data logs, print and assembly quality, interpretation of before/after damage evidence, uncertainty, revision history, and technical defense.
 
 ### Central question: What makes an engineering answer trustworthy?
 
@@ -59,7 +59,7 @@ The course surveys classical structural mechanics in an aerospace setting. Topic
 
 - Construct and interpret shear-force, bending-moment, torque, and V-n diagrams; analyze idealized and thin-walled wing sections.
 
-- Write transparent code, apply additive-manufacturing constraints, fabricate a wing, and document dimensional compliance, interface fit, print quality, and assembly readiness.
+- Use and explain instructor-provided parametric and measurement code, apply additive-manufacturing constraints, fabricate a wing, and document dimensional compliance, interface fit, machine-vision inspection, print quality, and assembly readiness.
 
 - Audit human-, computational-, and AI-generated results using dimensions, equilibrium, boundary and limiting cases, independent estimates, sensitivity, and physical evidence; diagnose plausible errors and their consequences.
 
@@ -74,7 +74,7 @@ The course surveys classical structural mechanics in an aerospace setting. Topic
 | Aero bridge | NACA exercise; prediction-before-calculation; checked load map | NACA coding exercise; load map |
 | Mechanics core | HW 1-5 judgment records; worked/AI-solution audit; midterm | HW 1–5; midterm |
 | Wing structures | HW 6; analytical baseline; validated code; design reviews | HW 6; design reviews |
-| Build–inspect–learn | Parametric CAD, slicing, fabrication, dimensional/fit inspection, revision | Code, wing, print log, acceptance evidence, report, presentation |
+| Build–inspect–learn | Parametric geometry, slicing, fabrication, calibrated manual/machine-vision inspection, and shared damage diagnostics | Configured code, wing, print log, annotated inspection image/CSV, diagnostic analysis, report, presentation |
 
 ### The engineering reasoning cycle
 
@@ -145,7 +145,7 @@ The Sept. 25 event is outside class and optional. Attendance plus a 150-word tec
 | --- | --- | --- |
 | Homework 1–6 | 6 × 8.75% | 52.5% |
 | Midterm examination | Equivalent to two homework units | 17.5% |
-| Team wing project and presentation | Milestones, reproducible code, fabrication, build acceptance, report, and presentation | 30.0% |
+| Team wing fabrication, inspection, diagnostics, report, and presentation | Milestones, instructor-provided code verification, fabrication, calibrated inspection, shared damage-data analysis, report, and presentation | 30.0% |
 | Total |  | 100% |
 
 There is one in-class midterm (Tuesday, Oct. 27) and no final examination. The university final-exam period may be used only if a formally approved make-up is required.
@@ -164,7 +164,7 @@ Each homework submission is individual and contains four connected artifacts org
 
 #### Judgment progression across the six homework assignments
 
-HW 1: read the structure and predict  HW 2: choose and justify the model  HW 3: verify independently  HW 4: audit and correct a polished but flawed AI-generated solution  HW 5: analyze sensitivity and design trade-offs  HW 6: reconcile hand analysis, code/AI-assisted analysis, and project design/manufacturing evidence
+HW 1: read the structure and predict  HW 2: choose and justify the model  HW 3: verify independently  HW 4: audit and correct a polished but flawed AI-generated solution  HW 5: analyze sensitivity and design trade-offs  HW 6: reconcile hand analysis, code/AI-assisted analysis, project evidence, calibrated vision inspection, and shared damage-diagnostic data
 
 #### Why the one-slide brief is feasible in a class of about 65
 
@@ -187,26 +187,27 @@ The midterm is individual and closed to generative AI and unauthorized online as
 
 UMass undergraduate grading does not use A+ or D−. Any end-of-term adjustment will be uniform and will never lower a student’s earned letter grade.
 
-## 4. Project brief — Code-to-Print Cantilever Wing
+## 4. Project brief — Code-to-Print Wing — Fabrication, Machine-Vision Inspection, and Damage Diagnostics
 
-**Design intent** — Build one code-generated, non-flying wing demonstrator. Success means that reproducible code, verified geometry, print evidence, interface fit, fabrication quality, and documented decisions support build acceptance.
+**Design intent** — Build and verify one code-generated, non-flying wing; inspect the completed team wing without contact and without load using calibrated machine vision; and interpret a shared before/after-damage demonstration on a separate sacrificial wing-box specimen. Success requires traceable geometry, manufacturing evidence, measurement agreement and uncertainty, physically plausible diagnostic trends, and a defensible engineering decision.
 
 ### Team formation
 
-The instructor will form teams of three using a short skills/availability survey; roles rotate among analysis/code, CAD/design-for-additive-manufacturing, and fabrication/documentation. If enrollment is not divisible by three, the instructor will make the smallest necessary exception and adjust roles and workload. Team preferences are considered but not guaranteed. A confidential contribution record and peer check protect individual accountability.
+The instructor will form teams of three using a short skills/availability survey; roles rotate among geometry/code and verification, CAD/design-for-additive-manufacturing, fabrication and build documentation, and measurement/data interpretation. All members must understand the complete workflow and answer individual technical questions. If enrollment is not divisible by three, the instructor will make the smallest necessary exception and adjust roles and workload. Team preferences are considered but not guaranteed. A confidential contribution record and peer check protect individual accountability.
 
 ### Common design envelope
 
 | Constraint | Baseline requirement |
 | --- | --- |
-| Artifact | One code-generated wing demonstrator; no propulsion, electronics, controls, fuselage, force test, or flight activity |
+| Artifact | One code-generated, non-flying wing demonstrator. Each team wing remains unloaded and undamaged; no propulsion, onboard electronics, controls, fuselage, flight activity, or force-to-failure test |
 | Geometry | Semi-span 450 mm; root chord 160 mm; tip chord 100 mm; instructor-approved NACA 4-digit section |
 | Construction | Three or fewer printed modules; printed shell/ribs with interfaces for course-issued carbon-fiber rods |
 | Material budget | Up to 300 g regular PLA Pro per final wing, plus course-issued rods and supervised 5-minute epoxy when assigned |
-| Code | Python/CadQuery starter framework; design variables → airfoil/wing geometry, STL/3MF, and verification outputs |
-| Engineering checks | Clean regeneration; units; planform metrics; bounding boxes; watertight solids; printable thickness; build-envelope and mass checks |
-| Build acceptance | Complete labeled modules; approved dimensions; dry-fit interfaces; aligned assembly; no major cracks, warping, separation, or missing features; complete evidence archive |
-| Evaluation | Understanding, reproducibility, traceability, print quality, fit, documented revision, communication, and individual defense—not a beauty contest |
+| Code | Instructor-provided Python/CadQuery wing-generation code plus supervised Python/OpenCV and data-acquisition workflows; teams configure inputs, run cleanly, verify outputs, explain the logic, and preserve a reproducible record |
+| Engineering checks | Units; planform metrics; bounding boxes; watertight solids; printable thickness; build-envelope/mass checks; camera calibration; manual-to-vision agreement; load-cell zero/sanity check; accelerometer sampling and frequency sanity check |
+| Build acceptance | Complete labeled modules; approved dimensions; dry-fit interfaces; aligned assembly; no major cracks, warping, separation, or missing features; manual and Jetson-camera evidence; complete archive |
+| Inspection and diagnostics | Required unloaded Jetson-camera inspection for every team wing. Shared instructor-led demonstration uses force, camera tip-deflection, acceleration, and microscope evidence on a sacrificial specimen before and after controlled damage. |
+| Evaluation | Understanding, reproducibility, traceability, print quality, fit, calibrated inspection, interpretation of diagnostic evidence, uncertainty, revision, communication, and individual defense—not a beauty contest |
 
 ### Minimum code behavior
 
@@ -220,17 +221,25 @@ The instructor will form teams of three using a short skills/availability survey
 
 - Run automated unit/sanity tests; compare at least one code case with a hand calculation or known limiting case; and independently verify any AI-assisted technical claim or code segment.
 
-- Produce a Design and Fabrication Memo using Claim - Evidence - Check - Confidence - Limitation; reconcile the hand geometry checks, coded output, slicer evidence, printed components, dimensional/fit inspection, and revision history.
+- Produce a Design, Fabrication, and Inspection Memo using Claim - Evidence - Check - Confidence - Limitation; reconcile hand geometry checks, coded output, slicer evidence, printed components, manual/machine-vision measurements, shared damage indicators, uncertainty, and revision history.
+
+### Required post-build inspection and diagnostic activities
+
+**Team-wing inspection (required).** Place the unloaded assembled wing in the alignment jig with ruler and ArUco/checkerboard references. Use the shared Jetson Orin Nano Super, Logitech webcam, camera stand, and instructor-provided Python/OpenCV workflow to estimate semi-span, root/tip chord, seams, and gross alignment. Compare against ruler and digital-caliper measurements and submit calibration evidence, one annotated image, a CSV/log, differences, uncertainty, and at least one identified failure mode.
+
+**Shared structural-health-monitoring demonstration (required analysis).** Using a separate sacrificial 3D-printed wing-box specimen, the instructor/TA will acquire force with the 10 kg load cell and HX711, camera-based tip deflection, ADXL343 acceleration, and USB-microscope crack images before and after controlled damage. Teams will compute or interpret stiffness from the force-deflection slope, dominant natural frequency from the acceleration record, and qualitative crack change; then decide which indicators provide credible evidence of damage and which do not.
+
+**Safety and specimen boundary.** No submitted team wing will be loaded, cracked, or tested to failure. Controlled damage is introduced only by the instructor on designated sacrificial specimens; loading is slow, clamped, shielded with clear polycarbonate, and performed with required eye protection. Students do not alter the fixture, damage a specimen, or enter the protected loading area without explicit authorization.
 
 ### Project grading (30% of course)
 
 | Element | Evidence | Weight |
 | --- | --- | --- |
-| Milestones and design reviews | Requirements, concept, decisions, role evidence | 5% |
-| Reproducible code and design rationale | Correct variables, geometry, verification checks, files, and README | 8% |
-| Fabrication and build acceptance | Safe process, print quality, dimensional/fit checks, assembled wing, and evidence archive | 8% |
-| Final technical report | Concise technical argument, figures, uncertainty, decisions, and lessons learned | 5% |
-| Presentation and individual defense | Team story, clear visuals, questions, peer evidence | 4% |
+| Milestones and design reviews | Requirements, concept, role evidence, inspection plan, calibration plan, and risk controls | 5% |
+| Reproducible workflow and design rationale | Correct parameters, geometry, instructor-provided code configuration, verification checks, files, and README | 8% |
+| Fabrication, inspection, and build acceptance | Safe process, print/assembly quality, manual and calibrated machine-vision evidence, annotated image/CSV, and evidence archive | 8% |
+| Final technical report | Concise technical argument integrating geometry, manufacturing, inspection uncertainty, and before/after force-deflection, vibration, and crack evidence | 5% |
+| Presentation and individual defense | Team story, clear visuals, diagnostic interpretation, questions, and peer evidence | 4% |
 
 ## 5. Project workflow and deliverables
 
@@ -238,28 +247,27 @@ The instructor will form teams of three using a short skills/availability survey
 | --- | --- |
 | Sept. 17 | Skills/availability survey and team preferences |
 | Sept. 22 | Instructor posts teams; team charter and role rotation begin |
-| Oct. 15 | Requirements + concept memo: geometry bounds, interfaces, first clean code run |
-| Oct. 22 | Code checkpoint: parameterized airfoil/wing, planform metrics, unit/sanity and bounding-box checks |
-| Nov. 12 | Design review: geometry, interface details, code verification, and print-risk register |
-| Nov. 19 | Print-readiness review: frozen STL/3MF, every-layer preview, mass/time budget, and assembly plan |
-| Nov. 20–Dec. 3 | Team-specific fabrication and assembly slots; exact reservations are posted in Canvas |
-| Dec. 3–8 | Dimensional/fit inspection, build acceptance, authorized revision or reprint, and final evidence archive |
-| Dec. 8, 10, 15 | Project presentations and individual technical questions |
-| Dec. 15, 5:00 p.m. | Final report, code repository/archive, manufacturing files, print log, and acceptance evidence due |
+| Oct. 15 | Code checkpoint: parameterized airfoil/wing, planform metrics, unit/sanity and bounding-box checks; review of instructor-provided inspection workflow |
+| Oct. 22 | Design review: geometry, interfaces, code verification, print-risk register, and draft manual/vision measurement plan |
+| Nov. 12 | Print-readiness review: frozen STL/3MF, every-layer preview, mass/time budget, assembly plan, and inspection target placement |
+| Nov. 19 | Team-specific fabrication and assembly slots; exact reservations are posted in Canvas |
+| Nov. 20–Dec. 3 | Manual and Jetson-camera inspection, build acceptance, shared damage-diagnostics demonstration/data analysis, authorized revision or reprint, and final evidence archive |
+| Dec. 3–8 | Project presentations, diagnostic evidence synthesis, and individual technical questions |
+| Dec. 8, 10, 15 | Final report, configured code/archive, manufacturing files, print log, annotated inspection image/CSV, diagnostic analysis, and acceptance evidence due |
 
 **Printer reservations** — Team-specific machine and supervision slots will be posted in Canvas after coordination with ELab and the other course using the printers. Only assigned slots are authorized; Canvas is the authoritative schedule.
 
 ### Submission package
 
-- Source code/notebook, environment file, README, and a clean run that reproduces geometry and plots.
+- Instructor-provided source code/notebooks plus the team's configuration, environment file, README, and clean runs that reproduce geometry, plots, inspection output, and assigned diagnostic analysis.
 
-- STL/3MF files, slicer project, G-code only when requested, screenshots of layer inspection, and print log.
+- STL/3MF files, slicer project, G-code only when requested, every-layer screenshots, print log, calibration target image, manual measurements, one annotated vision image, and concise CSV/log.
 
-- Design and Fabrication Memo with requirements, parameters, code checks, dimensional evidence, slicer evidence, build-acceptance results, uncertainty, limitations, and justified revisions.
+- Design, Fabrication, and Inspection Memo with requirements, parameters, code checks, dimensional and slicer evidence, manual-to-vision comparison, uncertainty, limitations, build-acceptance results, diagnostic interpretation, and justified revisions.
 
-- Completed wing, signed build-acceptance checklist, print log, first-layer and completed-part photographs, actual mass, dry-fit evidence, and revision record for any failed attempt.
+- Completed unloaded wing, signed build-acceptance checklist, print log, first-layer and completed-part photographs, actual mass, dry-fit and alignment evidence, and revision record for any failed attempt.
 
-- Final report and a concise team presentation in which every member answers an individual technical question.
+- Final report and concise team presentation that connect mechanics predictions, manufacturing evidence, calibrated inspection, and shared before/after damage evidence; every member answers an individual technical question.
 
 ### Recommended team operating rhythm
 
@@ -267,8 +275,7 @@ The instructor will form teams of three using a short skills/availability survey
 | --- | --- |
 | Plan | One measurable team goal; owner and due date for each action |
 | Integrate | Code and geometry reviewed by a teammate who did not create them |
-| Verify | One independent check; one risk updated in the design log |
-| Reflect | Brief contribution record and decision rationale |
+| Verify and reflect | One independent physics/manual check; one calibration or sensor sanity check when applicable; one risk updated in the design log; brief contribution record and decision rationale |
 
 ### Failure is data; avoid preventable failure
 
@@ -321,9 +328,10 @@ Use the Creality K2 Pro + CFS or an Ender Pro only as assigned by ELab staff, wi
 | Regular 1.75 mm PLA Pro | Use the assigned material/profile and remain within the approved project mass budget |
 | Course-issued carbon-fiber rods/interfaces | Use the dimensions posted in Canvas and verify dry fit before any adhesive |
 | 5-minute epoxy and shared consumables | Use only when assigned, under supervision, and with required lab controls |
+| Shared inspection and diagnostic station | Use only during assigned supervised sessions: Jetson Orin Nano Super, webcam/stand, ruler/calibration target, digital caliper, load cell/HX711, ADXL343 accelerometer, breadboard/jumpers, USB microscope, clamps, clear shield, and safety glasses |
 | Personal purchases or substitutions | Not required; obtain written approval before bringing another material, chemical, or tool |
 
-The course supplies the approved PLA Pro, course-issued rods/interfaces, supervised adhesive, and shared consumables. Students should not purchase or substitute structural or printer materials unless the instructor gives written approval. The complete machine workflow and acceptance checklist are provided in the separate MIE 446 3D Printing Quick-Start Guide on Canvas.
+The course supplies approved PLA Pro, course-issued rods/interfaces, supervised adhesive, shared fabrication consumables, and one shared inspection/diagnostic station. The instructor provides the baseline wing-generation, machine-vision, and data-acquisition code. Students should not purchase or substitute structural materials, electronics, chemicals, or tools unless the instructor gives written approval. The complete machine workflow, inspection instructions, and acceptance checklist are provided on Canvas.
 
 ## 7. Weekly schedule — Fall 2026
 
@@ -343,9 +351,9 @@ Dates and topics below are the working instructional sequence. Canvas will carry
 | 10 Nov. 10/12 | Wing structural idealization; booms/stringers/skins; DfAM; printer orientation and coupon checks | HW 4 due Nov. 12; design review |
 | 11 Nov. 17/19 | Thin-walled open/closed sections; shear flow, torsion, shear center; print-readiness studio | HW 5 due Nov. 19; print gate |
 | 12 Nov. 24/26 | No regular MIE 446 meetings: Nov. 24 follows a Wednesday schedule; Thanksgiving recess | Approved print slots only if shared schedule permits |
-| 13 Dec. 1/3 | Fabrication, assembly, dimensional and fit inspection, uncertainty, failure analysis, and hand-code/AI-build reconciliation | HW 6 due Dec. 3 |
-| 14 Dec. 8/10 | Build acceptance, project synthesis, and team presentations | Presentation groups A–N |
-| 15 Dec. 15 | Team presentations, individual questions, and course synthesis | Final project package due 5:00 p.m. |
+| 13 Dec. 1/3 | Fabrication, assembly, manual and Jetson machine-vision inspection, calibration and uncertainty; shared force-deflection, vibration, and crack demonstration; hand-code/AI-build reconciliation | HW 6 due Dec. 3; inspection evidence and shared diagnostic analysis |
+| 14 Dec. 8/10 | Build acceptance, diagnostic evidence synthesis, and team presentations | Presentation groups A–N |
+| 15 Dec. 15 | Team presentations, individual questions, lessons from inspection/damage indicators, and course synthesis | Final project package due 5:00 p.m. |
 
 ### Homework map
 
@@ -356,7 +364,7 @@ Dates and topics below are the working instructional sequence. Canvas will carry
 | HW 3 | Verify independently: wing-beam shear/moment, bending, deflection, strain energy, limiting/alternate check | Oct. 22 |
 | HW 4 | Audit AI reasoning: virtual work/Castigliano plus correction of a plausible but flawed generated solution | Nov. 12 |
 | HW 5 | Sensitivity and trade-offs: maneuver/landing loads, V-n diagram, computational exercise | Nov. 19 |
-| HW 6 | Integrated trust case: wing-box shear/torsion/shear center; hand-code/AI validation and project design/manufacturing evidence | Dec. 3 |
+| HW 6 | Integrated trust case: wing-box shear/torsion/shear center; hand-code/AI validation; design/manufacturing evidence; calibrated vision inspection; and interpretation of shared damage-diagnostic data | Dec. 3 |
 
 ## 8. Course policies
 

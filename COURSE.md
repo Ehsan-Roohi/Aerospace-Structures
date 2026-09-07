@@ -74,15 +74,15 @@ Each homework submission combines an analytical solution, an Engineering Judgmen
 | 10 | Wing structural idealization; booms, stringers and skins; design for additive manufacturing; printer and coupon checks | Design review |
 | 11 | Thin-walled open and closed sections; shear flow; torsion; shear center | Print-readiness gate |
 | 12 | University schedule and Thanksgiving recess | Approved print slots only if scheduled |
-| 13 | Fabrication, assembly, dimensional and fit inspection, uncertainty, failure analysis and hand–code–AI–build reconciliation | Homework 6 and build evidence |
-| 14 | Build acceptance, project synthesis and team presentations | Presentation groups |
-| 15 | Team presentations, individual questions and course synthesis | Final project package |
+| 13 | Fabrication, assembly, manual and Jetson machine-vision inspection; shared force–deflection, vibration and crack demonstration; hand–code–AI–build reconciliation | Homework 6, inspection evidence and diagnostic analysis |
+| 14 | Build acceptance, diagnostic evidence synthesis and team presentations | Presentation groups |
+| 15 | Team presentations, individual questions, lessons from damage indicators and course synthesis | Final project package |
 
 ## Signature project
 
-Teams of three use the guided notebook to define and understand a parametric semi-wing, print and test a rod-fit coupon, generate validated printable modules, inspect the physical build and defend the resulting engineering decisions.
+Teams of three use instructor-provided workflows to define and understand a parametric semi-wing, print and test a rod-fit coupon, generate validated printable modules, inspect the unloaded physical build with manual and Jetson-camera measurements, analyze shared before/after damage data, and defend the resulting engineering decisions.
 
-The artifact is a **non-flying fabrication demonstrator**. It excludes propulsion, electronics, controls, a fuselage, force testing and flight. Evaluation emphasizes understanding, reproducibility, traceability, print quality, dimensional and interface evidence, documented revision, communication and individual defense.
+The team artifact is a **non-flying fabrication demonstrator**. Student-built wings remain unloaded and undamaged: they exclude propulsion, onboard electronics, controls, a fuselage, force-to-failure testing and flight. Controlled damage is introduced only by the instructor/TA on a separate sacrificial specimen. Evaluation emphasizes understanding, reproducibility, traceability, print quality, calibrated inspection, interpretation of stiffness/frequency/crack evidence, uncertainty, communication and individual defense.
 
 The baseline design uses a NACA 4-digit section, a 450 mm semi-span, 160 mm root chord, 100 mm tip chord, printed skin and ribs, two course-issued carbon rods and no more than 300 g of approved PLA Pro.
 

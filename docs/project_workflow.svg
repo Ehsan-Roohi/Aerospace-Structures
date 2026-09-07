@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="820" viewBox="0 0 1440 820" role="img" aria-labelledby="title desc">
+  <title id="title">MIE 446 wing fabrication, machine-vision inspection, and damage-diagnostics workflow</title>
+  <desc id="desc">Teams design and print an unloaded wing, inspect it with a shared Jetson camera station, and separately analyze before-and-after damage data from an instructor-controlled sacrificial specimen.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="11" markerHeight="11" refX="9" refY="3.5" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,7 L10,3.5 z" fill="#5c6670"/></marker>
+    <filter id="shadow" x="-15%" y="-15%" width="130%" height="140%"><feDropShadow dx="0" dy="5" stdDeviation="6" flood-color="#111827" flood-opacity="0.13"/></filter>
+  </defs>
+  <rect width="1440" height="820" fill="#f7f9fc"/>
+  <text x="720" y="52" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="32" font-weight="700" fill="#172b4d">MIE 446 Project: Build • Inspect • Diagnose</text>
+  <text x="720" y="86" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="18" fill="#52606d">Two evidence streams, one defensible engineering decision</text>
+
+  <path d="M238 194 H278 M448 194 H488 M658 194 H698 M868 194 H908 M1078 194 H1118" stroke="#5c6670" stroke-width="4" marker-end="url(#arrow)"/>
+  <g filter="url(#shadow)" font-family="Arial, Helvetica, sans-serif">
+    <g><rect x="68" y="124" width="170" height="140" rx="18" fill="white" stroke="#245b8a" stroke-width="3"/><circle cx="102" cy="158" r="19" fill="#245b8a"/><text x="102" y="165" text-anchor="middle" font-size="19" font-weight="700" fill="white">1</text><path d="M100 213 C122 178 172 178 205 213 C171 198 132 198 100 213 Z" fill="#dbeafe" stroke="#245b8a" stroke-width="3"/><text x="153" y="239" text-anchor="middle" font-size="17" font-weight="700" fill="#172b4d">Configure wing</text><text x="153" y="258" text-anchor="middle" font-size="13" fill="#52606d">Inputs + predictions</text></g>
+    <g><rect x="278" y="124" width="170" height="140" rx="18" fill="white" stroke="#d96b20" stroke-width="3"/><circle cx="312" cy="158" r="19" fill="#d96b20"/><text x="312" y="165" text-anchor="middle" font-size="19" font-weight="700" fill="white">2</text><path d="M309 218 L337 188 L362 204 L410 171" fill="none" stroke="#d96b20" stroke-width="5" stroke-linecap="round"/><text x="363" y="239" text-anchor="middle" font-size="17" font-weight="700" fill="#172b4d">Verify code</text><text x="363" y="258" text-anchor="middle" font-size="13" fill="#52606d">Physics + sanity checks</text></g>
+    <g><rect x="488" y="124" width="170" height="140" rx="18" fill="white" stroke="#267b52" stroke-width="3"/><circle cx="522" cy="158" r="19" fill="#267b52"/><text x="522" y="165" text-anchor="middle" font-size="19" font-weight="700" fill="white">3</text><rect x="530" y="184" width="86" height="30" rx="5" fill="#dcfce7" stroke="#267b52" stroke-width="3"/><circle cx="551" cy="199" r="6" fill="white" stroke="#267b52" stroke-width="2"/><circle cx="573" cy="199" r="6" fill="white" stroke="#267b52" stroke-width="2"/><circle cx="595" cy="199" r="6" fill="white" stroke="#267b52" stroke-width="2"/><text x="573" y="239" text-anchor="middle" font-size="17" font-weight="700" fill="#172b4d">Coupon gate</text><text x="573" y="258" text-anchor="middle" font-size="13" fill="#52606d">Print • fit • record</text></g>
+    <g><rect x="698" y="124" width="170" height="140" rx="18" fill="white" stroke="#245b8a" stroke-width="3"/><circle cx="732" cy="158" r="19" fill="#245b8a"/><text x="732" y="165" text-anchor="middle" font-size="19" font-weight="700" fill="white">4</text><path d="M742 213 L783 177 L830 213 L783 225 Z M783 177 V225" fill="#dbeafe" stroke="#245b8a" stroke-width="3"/><text x="783" y="239" text-anchor="middle" font-size="17" font-weight="700" fill="#172b4d">Generate CAD</text><text x="783" y="258" text-anchor="middle" font-size="13" fill="#52606d">Validate + export</text></g>
+    <g><rect x="908" y="124" width="170" height="140" rx="18" fill="white" stroke="#a92333" stroke-width="3"/><circle cx="942" cy="158" r="19" fill="#a92333"/><text x="942" y="165" text-anchor="middle" font-size="19" font-weight="700" fill="white">5</text><rect x="960" y="176" width="68" height="48" rx="5" fill="#fee2e2" stroke="#a92333" stroke-width="3"/><path d="M971 176 V163 H1017 V176 M970 198 H1018" fill="none" stroke="#a92333" stroke-width="3"/><text x="993" y="239" text-anchor="middle" font-size="17" font-weight="700" fill="#172b4d">Slice + print</text><text x="993" y="258" text-anchor="middle" font-size="13" fill="#52606d">Assemble unloaded wing</text></g>
+    <g><rect x="1118" y="124" width="254" height="140" rx="18" fill="white" stroke="#267b52" stroke-width="3"/><circle cx="1152" cy="158" r="19" fill="#267b52"/><text x="1152" y="165" text-anchor="middle" font-size="19" font-weight="700" fill="white">6</text><path d="M1182 180 H1240 V218 H1182 Z M1251 173 L1293 190 V211 L1251 226 Z" fill="#dcfce7" stroke="#267b52" stroke-width="3"/><text x="1245" y="239" text-anchor="middle" font-size="17" font-weight="700" fill="#172b4d">Manual build acceptance</text><text x="1245" y="258" text-anchor="middle" font-size="13" fill="#52606d">Dimensions • fit • defects</text></g>
+  </g>
+
+  <path d="M1245 264 V336 H410 V374" fill="none" stroke="#245b8a" stroke-width="4" marker-end="url(#arrow)"/>
+  <path d="M1245 264 V336 H1030 V374" fill="none" stroke="#7b3f98" stroke-width="4" marker-end="url(#arrow)"/>
+  <text x="720" y="324" text-anchor="middle" font-family="Arial" font-size="16" font-weight="700" fill="#172b4d">After fabrication, the learning evidence separates into two controlled activities</text>
+
+  <g filter="url(#shadow)" font-family="Arial, Helvetica, sans-serif">
+    <rect x="105" y="374" width="610" height="232" rx="22" fill="white" stroke="#245b8a" stroke-width="4"/><path d="M127 374 H693 Q715 374 715 396 V426 H105 V396 Q105 374 127 374" fill="#245b8a"/>
+    <text x="410" y="408" text-anchor="middle" font-size="21" font-weight="700" fill="white">A • Every team wing — unloaded Jetson inspection</text>
+    <text x="135" y="460" font-size="16" font-weight="700" fill="#172b4d">Jetson Orin Nano Super + USB camera + OpenCV</text>
+    <text x="135" y="491" font-size="15" fill="#52606d">• Calibrate with ruler and ArUco/checkerboard in the wing plane</text>
+    <text x="135" y="520" font-size="15" fill="#52606d">• Overlay semi-span, chords, seams and gross alignment</text>
+    <text x="135" y="549" font-size="15" fill="#52606d">• Compare with ruler/caliper; quantify uncertainty and limitations</text>
+    <text x="135" y="578" font-size="15" font-weight="700" fill="#245b8a">Output: calibration image + annotated image + CSV/log</text>
+
+    <rect x="725" y="374" width="610" height="232" rx="22" fill="white" stroke="#7b3f98" stroke-width="4"/><path d="M747 374 H1313 Q1335 374 1335 396 V426 H725 V396 Q725 374 747 374" fill="#7b3f98"/>
+    <text x="1030" y="408" text-anchor="middle" font-size="21" font-weight="700" fill="white">B • Sacrificial specimen — controlled damage demo</text>
+    <text x="755" y="460" font-size="16" font-weight="700" fill="#172b4d">Instructor/TA operates fixture; teams analyze shared data</text>
+    <text x="755" y="491" font-size="15" fill="#52606d">• Load cell + camera deflection → stiffness trend</text>
+    <text x="755" y="520" font-size="15" fill="#52606d">• ADXL343 acceleration → dominant-frequency trend</text>
+    <text x="755" y="549" font-size="15" fill="#52606d">• USB microscope → before/after crack evidence</text>
+    <text x="755" y="578" font-size="15" font-weight="700" fill="#7b3f98">Output: checked indicators + confidence + limitations</text>
+  </g>
+
+  <path d="M410 606 V668 H655" fill="none" stroke="#245b8a" stroke-width="4" marker-end="url(#arrow)"/>
+  <path d="M1030 606 V668 H785" fill="none" stroke="#7b3f98" stroke-width="4" marker-end="url(#arrow)"/>
+  <g filter="url(#shadow)" font-family="Arial, Helvetica, sans-serif"><rect x="570" y="640" width="300" height="112" rx="22" fill="#172b4d"/><text x="720" y="681" text-anchor="middle" font-size="21" font-weight="700" fill="white">Synthesize + defend</text><text x="720" y="710" text-anchor="middle" font-size="15" fill="#bfdbfe">Claim • Evidence • Check</text><text x="720" y="735" text-anchor="middle" font-size="15" fill="#bfdbfe">Confidence • Limitation</text></g>
+  <path d="M570 714 C390 786 212 750 162 610" fill="none" stroke="#d96b20" stroke-width="4" stroke-dasharray="10 9" marker-end="url(#arrow)"/>
+  <text x="338" y="782" text-anchor="middle" font-family="Arial" font-size="16" font-weight="700" fill="#d96b20">Evidence may require revision</text>
+  <text x="1128" y="782" text-anchor="middle" font-family="Arial" font-size="15" font-weight="700" fill="#a92333">Student-built wings are never loaded, cracked, or tested to failure</text>
+</svg>

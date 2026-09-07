@@ -25,7 +25,7 @@
 | Meetings | Tuesday & Thursday, 11:30 a.m.–12:45 p.m. |
 | Classroom | Engineering Laboratory (ELAB), Room 323 |
 | Instructor | Dr. Ehsan Roohi Golkhatmi • roohie@umass.edu |
-| Office | Gunness Laboratory, Room 7 • appointment hours posted in Canvas; additional times by appointment |
+| Office | Gunness Laboratory, Room 1 • appointment hours posted in Canvas; additional times by appointment |
 | Prerequisite | MIE 313 — Design of Mechanical Components |
 | Course site | Canvas is the authoritative source for announcements and submissions |
 
@@ -108,10 +108,9 @@ Lifelong learning: Students document debugging, seek feedback, revise after fail
 
 | Role | Name | Email | Availability |
 | --- | --- | --- | --- |
-| Instructor | Dr. Ehsan Roohi Golkhatmi | roohie@umass.edu | Gunness 7; hours in Canvas |
+| Instructor | Dr. Ehsan Roohi Golkhatmi | roohie@umass.edu | Gunness 1; hours in Canvas |
 | Undergraduate teaching assistant | Ava Towfigh | atowfigh@umass.edu | Hours in Canvas |
 | Undergraduate teaching assistant | Lev Kudriavtsev | lkudriavtsev@umass.edu | Hours in Canvas |
-| ELab / printer coordination | Jim Lagrant | jlagrant@umass.edu | ELab scheduling and safety |
 
 Technical questions are best handled in class or office hours. Send grading and accommodation questions to the instructor, not to the full class. Allow two business days for email responses.
 

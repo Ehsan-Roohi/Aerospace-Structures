@@ -194,16 +194,68 @@ The team wing is evaluated through reproducibility, dimensional and fit evidence
 
 ### 7A. Unloaded Jetson machine-vision inspection of every team wing
 
-This station provides an external, non-contact dimensional cross-check; it does not load the wing and does not replace the signed manual inspection.
+**The question:** Does the wing you assembled match the dimensions you released for printing? At this station, you photograph your unloaded wing, convert image distances into millimetres, and compare those measurements with the design and your manual inspection.
 
-1. Place the unloaded assembled wing on the approved flat reference or alignment jig.
-2. Put the 600 mm ruler and ArUco/checkerboard target in the same plane as the wing. Add removable paper markers at the root, seams, and tip.
-3. Fix the USB camera and run the instructor-provided Python/OpenCV workflow on the shared Jetson Orin Nano Super.
-4. Inspect the lens-corrected overlay for semi-span, root/tip chord, seam regions, and gross alignment.
-5. Compare automated values with ruler, jig, and digital-caliper measurements. Report differences and uncertainty from perspective, calibration, lighting, resolution, and edge detection.
-6. Save one calibration image, one annotated inspection image, and one concise CSV/log using the same team and revision identifiers as the released geometry.
+The **NVIDIA Jetson Orin Nano Super is the station computer**. The Logitech USB webcam captures the image; the instructor-provided Python workflow uses **OpenCV**, a computer-vision library, to process it. The Jetson stays beside the jig. Nothing is installed on the wing. You use the prepared workflow and explain its results; you do not need to train an AI model or write vision software.
 
-The manual measurement and instructor judgment remain authoritative. A computer-vision overlay is evidence to audit, not proof that the structure is safe.
+#### What the station looks like
+
+![Inspection station schematic: fixed overhead webcam views an unloaded wing and reference target; USB carries images to the Jetson and an annotated image is displayed](docs/inspection_station.svg)
+
+*Figure 7A-1. Course schematic, not a photograph of the installed equipment. Keep the complete wing and references in view. The camera measures visible geometry; the wing remains unloaded.*
+
+<details>
+<summary>Identify the real Jetson connectors — official NVIDIA diagram</summary>
+
+<img src="https://docs.nvidia.com/jetson/orin-nano-devkit/user-guide/latest/_images/jetson-orin-nano-qtr_numbered.png" alt="Official NVIDIA numbered diagram of the Jetson Orin Nano developer kit connectors" width="650">
+
+*Source: [NVIDIA developer-kit hardware layout](https://docs.nvidia.com/jetson/orin-nano-devkit/user-guide/latest/hardware_layout.html). In this diagram, **6** identifies the USB Type-A ports for the webcam, **7** the DisplayPort monitor connection, and **8** the power jack. The shared station is prepared by course staff.*
+
+</details>
+
+#### What you will measure
+
+| Item | Where to look | Independent check |
+| --- | --- | --- |
+| Semi-span | Root station to tip station, along the span direction | 600 mm ruler and the same endpoints |
+| Root and tip chord | Leading edge to trailing edge at each end station | Ruler or caliper where its range permits |
+| Module seams | The joints between printed modules | Close visual inspection and manual gap/offset checks |
+| Gross alignment | Discontinuities in the outline or marker positions | Approved jig and manual inspection |
+
+Use matching endpoints and directions in the image, design, and manual measurement. An oblique edge length is not the semi-span. A top view can flag a suspicious joint, but cannot establish three-dimensional twist, hidden layer adhesion, internal cracks, or load capacity.
+
+#### At the station: six steps
+
+1. **Identify and position the wing.** Bring the final design dimensions and signed manual inspection. Record team ID and revision. Seat the unloaded assembly in the approved flat reference or alignment jig without forcing it straight. Add removable paper markers at the root, seams, and tip without hiding the edges you need to measure.
+2. **Set the reference.** Include the 600 mm ruler and the staff-supplied ArUco/checkerboard target. An ArUco marker is a coded square whose corners the software can locate; a checkerboard provides a grid of known points. Use the supplied target dimensions and calibration file. A resized printout changes the scale. Follow the staff arrangement so reference points and measured features lie as close as practical to the same measurement plane. The curved wing surface is not all in one plane; record any remaining height mismatch.
+3. **Check the camera image.** Use the fixed stand, even lighting, and a clear background. Keep the whole wing and target visible and sharply focused. Staff will provide the launch instructions and compatible camera/calibration settings on Canvas. Check the camera identity, image resolution, and calibration file before capture. Changes in focus, zoom, resolution, or camera pose may require staff to recheck the lens calibration or plane mapping.
+4. **Check scale before measuring the wing.** Load the lens calibration and follow the prepared workflow for the reference-plane correction. Lens correction addresses optical distortion; plane correction addresses the tilted view of a flat reference. Neither removes errors caused by features at a different height. Verify a known ruler interval that was **not** used to set the scale, preferably in another part of the image. If that check fails the station criterion, correct the setup before trusting wing dimensions. See [OpenCV's calibration explanation](https://docs.opencv.org/4.13.0/dc/dbb/tutorial_py_calibration.html) and [marker-detection illustrations](https://docs.opencv.org/4.13.0/d5/dae/tutorial_aruco_detection.html).
+5. **Audit the overlay and compare.** Confirm that measurement endpoints sit on the intended wing edges, not on a shadow, marker, or ruler. Compare vision with manual values and compare the physical dimensions with the released design. Repeat a capture to check stability. Discuss perspective/height mismatch, calibration, lighting, pixel resolution, and edge selection as possible uncertainty sources. Use the current Canvas tolerances; close agreement between two methods does not by itself mean the build meets its design tolerance.
+6. **Save the evidence and make a decision.** Save a calibration/reference image, an annotated inspection image, and a concise comma-separated-values (CSV) file or log with the same team and revision as the released geometry. Record the measurement comparison, uncertainty, at least one failure mode, and your supported disposition: **Accept, Revise, or Reprint Request**. Preserve failed captures when they explain a limitation or correction.
+
+#### How pixels become millimetres
+
+![Illustrative rectified wing image with semi-span and chord measurement arrows, module seam, and a separate known-length reference](docs/inspection_measurements.svg)
+
+*Figure 7A-2. Simplified measurement overlay. The arrows identify measurement directions; the drawing is not to scale and is not experimental data. The scale relation below applies to a lens-corrected, rectified plane.*
+
+Suppose a **100 mm reference interval** spans **400 pixels** in the corrected image. The scale is 100 / 400 = **0.25 mm per pixel**. If the wing's root-to-tip span covers 1,600 pixels, the estimated semi-span is 1,600 × 0.25 = **400 mm**. The software performs this calculation; your job is to check that its reference and endpoints are right.
+
+**Illustrative comparison only — replace these values with your measurements:**
+
+| Quantity | Released design (mm) | Manual (mm) | Vision (mm) | Vision − manual (mm) |
+| --- | ---: | ---: | ---: | ---: |
+| Semi-span | 400.0 | 399.5 | 400.0 | +0.5 |
+| Root chord | 200.0 | 199.8 | 200.3 | +0.5 |
+| Tip chord | 120.0 | 119.7 | 119.5 | −0.2 |
+
+A positive difference means vision reads larger than manual measurement. These numbers alone do not justify acceptance: state the uncertainty of each method and apply the course tolerance sheet. At 0.25 mm per pixel, a two-pixel error in the **measured distance** already changes the answer by 0.5 mm. Repeated images help assess repeatability, but cannot reveal a shared scale bias by themselves.
+
+Your log should include team/revision, image names, camera/settings and calibration identifier, quantity/endpoints, design/manual/vision values in mm, signed difference, uncertainty estimate and basis, observed defects, and disposition. Record only the precision your measurement supports.
+
+**Before leaving, explain:** If every dimension reads too large, would you first suspect printing or image scale? If only one seam looks wrong, what would you inspect manually? Which important structural defects could this camera miss?
+
+The manual measurement and instructor judgment remain authoritative. Keep 7A focused on unloaded dimensional inspection; the force, vibration, and crack evidence belong to the separate sacrificial-specimen demonstration in 7B.
 
 ### 7B. Shared structural-health-monitoring demonstration
 

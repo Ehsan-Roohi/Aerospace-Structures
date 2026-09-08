@@ -2,7 +2,7 @@
 
 **MIE 446 Aerospace Structures · Fall 2026 · Student project guide**
 
-[Course home](README.md) · [Syllabus](SYLLABUS.md) · [Homework](ASSIGNMENTS.md) · [Printing checklist](PRINTING.md)
+[Course home](README.md) · [Syllabus](SYLLABUS.md) · [Homework](ASSIGNMENTS.md) · [Creality printing guide](PRINTING.md) · [Printable PDF guide](docs/MIE_446_3D_Printing_Quick_Start_Guide_Fall_2026.pdf)
 
 [![Open stable Wing Project v1.1.1 in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/v1.1.1/notebooks/MIE446_Code_to_Print_Wing.ipynb)
 
@@ -173,7 +173,7 @@ The tool verifies the required written responses and AI declaration, then downlo
 - Supervise the first layers. Stop and notify staff for adhesion loss, failed extrusion, nozzle drag, part shift, collision, smoke, unusual odor/noise, or any unsafe condition.
 - After cooling, remove and label parts safely. Record actual mass, inspect dimensions and defects, and dry-fit rods/modules before any authorized assembly.
 
-Use the separate MIE 446 3D Printing Quick-Start Guide and the current machine-specific SOP for detailed printer operation. Canvas is authoritative for training, reservations, assigned machines, approved tolerances, and staff supervision.
+Use the [MIE 446 Creality K2 Pro 3D Printing Guide](PRINTING.md), the [downloadable Word guide](docs/MIE_446_3D_Printing_Quick_Start_Guide_Fall_2026.docx), and the current machine-specific SOP for detailed printer operation. Canvas is authoritative for training, reservations, assigned machines, approved tolerances, and staff supervision.
 
 ## 7. Physical inspection and build acceptance
 

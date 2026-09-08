@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="520" viewBox="0 0 1400 520" role="img" aria-labelledby="title desc">
+  <title id="title">MIE 446 Creality K2 Pro release workflow</title>
+  <desc id="desc">A seven-step flow from regenerating the CAD model through physical inspection and documentation, with stop gates after geometry, slicing, and the first layer.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#303030"/>
+    </marker>
+    <style>
+      .title{font:700 30px Arial,sans-serif;fill:#111}.subtitle{font:18px Arial,sans-serif;fill:#444}
+      .box{fill:#fff;stroke:#444;stroke-width:2;rx:14}.gate{fill:#f2f2f2;stroke:#111;stroke-width:2.5;rx:14}
+      .num{font:700 20px Arial,sans-serif;fill:#fff}.label{font:700 18px Arial,sans-serif;fill:#111}.small{font:15px Arial,sans-serif;fill:#333}
+      .arrow{stroke:#303030;stroke-width:3;fill:none;marker-end:url(#arrow)}.stop{font:700 15px Arial,sans-serif;fill:#8b0000}
+    </style>
+  </defs>
+  <rect width="1400" height="520" fill="#ffffff"/>
+  <text x="40" y="54" class="title">Creality K2 Pro release workflow</text>
+  <text x="40" y="84" class="subtitle">Do not skip a gate; each gate prevents a different class of wasted print or unsafe restart.</text>
+
+  <g transform="translate(40 135)">
+    <rect class="box" width="165" height="150"/>
+    <circle cx="28" cy="28" r="18" fill="#17365d"/><text x="22" y="35" class="num">1</text>
+    <text x="18" y="72" class="label">Regenerate</text><text x="18" y="98" class="small">Clean code/CAD run</text><text x="18" y="120" class="small">Record parameters</text>
+  </g>
+  <path class="arrow" d="M210 210 H245"/>
+  <g transform="translate(250 135)">
+    <rect class="gate" width="165" height="150"/>
+    <circle cx="28" cy="28" r="18" fill="#17365d"/><text x="22" y="35" class="num">2</text>
+    <text x="18" y="72" class="label">Geometry gate</text><text x="18" y="98" class="small">Units and solid</text><text x="18" y="120" class="small">Features and fit coupon</text>
+  </g>
+  <path class="arrow" d="M420 210 H455"/>
+  <g transform="translate(460 135)">
+    <rect class="box" width="165" height="150"/>
+    <circle cx="28" cy="28" r="18" fill="#17365d"/><text x="22" y="35" class="num">3</text>
+    <text x="18" y="72" class="label">Export</text><text x="18" y="98" class="small">3MF or binary STL</text><text x="18" y="120" class="small">Recheck bounding box</text>
+  </g>
+  <path class="arrow" d="M630 210 H665"/>
+  <g transform="translate(670 135)">
+    <rect class="gate" width="165" height="150"/>
+    <circle cx="28" cy="28" r="18" fill="#17365d"/><text x="22" y="35" class="num">4</text>
+    <text x="18" y="72" class="label">Slicer gate</text><text x="18" y="98" class="small">Exact K2 Pro profile</text><text x="18" y="120" class="small">Inspect every layer</text>
+  </g>
+  <path class="arrow" d="M840 210 H875"/>
+  <g transform="translate(880 135)">
+    <rect class="box" width="165" height="150"/>
+    <circle cx="28" cy="28" r="18" fill="#17365d"/><text x="22" y="35" class="num">5</text>
+    <text x="18" y="72" class="label">Readback</text><text x="18" y="98" class="small">Operator reads fields</text><text x="18" y="120" class="small">Teammate verifies</text>
+  </g>
+  <path class="arrow" d="M1050 210 H1085"/>
+  <g transform="translate(1090 135)">
+    <rect class="gate" width="165" height="150"/>
+    <circle cx="28" cy="28" r="18" fill="#17365d"/><text x="22" y="35" class="num">6</text>
+    <text x="18" y="72" class="label">First-layer gate</text><text x="18" y="98" class="small">Direct supervision</text><text x="18" y="120" class="small">Stop on abnormality</text>
+  </g>
+  <path class="arrow" d="M1260 210 H1290 V340 H1225"/>
+  <g transform="translate(1060 330)">
+    <rect class="box" width="195" height="130"/>
+    <circle cx="28" cy="28" r="18" fill="#17365d"/><text x="22" y="35" class="num">7</text>
+    <text x="18" y="70" class="label">Inspect and record</text><text x="18" y="96" class="small">Accept, Revise, or</text><text x="18" y="118" class="small">Reprint Request</text>
+  </g>
+  <text x="250" y="320" class="stop">STOP if the solid, units, or coupon do not pass.</text>
+  <text x="670" y="320" class="stop">STOP if a required feature disappears in Preview.</text>
+  <text x="1040" y="490" class="stop">No automatic restart or unscheduled reprint.</text>
+</svg>

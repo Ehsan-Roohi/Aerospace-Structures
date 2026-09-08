@@ -6,7 +6,7 @@ Dr. Ehsan Roohi Golkhatmi · Gunness Laboratory, Room 1 · [roohie@umass.edu](ma
 
 ## Open for class
 
-**[Syllabus](SYLLABUS.md)** · **[Download Word syllabus](docs/MIE_446_Aerospace_Structures_Fall_2026_Syllabus_Updated.docx)** · **[Weekly schedule](SYLLABUS.md#7-weekly-schedule--fall-2026)** · **[Lecture notebooks](#lecture-notebooks)** · **[Wing project](PROJECT.md)** · **[Homework](ASSIGNMENTS.md)** · **[Creality printing guide](PRINTING.md)**
+**[Syllabus](SYLLABUS.md)** · **[Download Word syllabus](docs/MIE_446_Aerospace_Structures_Fall_2026_Syllabus_Updated.docx)** · **[Weekly schedule](SYLLABUS.md#7-weekly-schedule--fall-2026)** · **[Lecture notebooks](#lecture-notebooks)** · **[Wing project](PROJECT.md)** · **[Homework](ASSIGNMENTS.md)** · **[Offline OrcaSlicer + USB guide](PRINTING.md)**
 
 This is the classroom home for released MIE 446 learning materials. Open a lecture below, save your own copy in Google Drive, and work through the predictions, theory and experiments. No prior aerospace course is assumed.
 
@@ -46,7 +46,7 @@ Every team then performs an **unloaded, non-contact dimensional inspection** wit
 
 [![Open stable Wing Project v1.1.1 in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/v1.1.1/notebooks/MIE446_Code_to_Print_Wing.ipynb)
 
-**[Project guide and code documentation](PROJECT.md)** · [Project rubric](SYLLABUS.md#4-project-brief--code-to-print-wing--fabrication-machine-vision-inspection-and-damage-diagnostics) · **[Creality K2 Pro printing guide](PRINTING.md)** ([Word](docs/MIE_446_3D_Printing_Quick_Start_Guide_Fall_2026.docx) · [PDF](docs/MIE_446_3D_Printing_Quick_Start_Guide_Fall_2026.pdf)) · [AI-use log template](AI_USE_LOG_TEMPLATE.md)
+**[Project guide and code documentation](PROJECT.md)** · [Project rubric](SYLLABUS.md#4-project-brief--code-to-print-wing--fabrication-machine-vision-inspection-and-damage-diagnostics) · **[Offline OrcaSlicer + USB guide](PRINTING.md)** ([Word](docs/MIE_446_3D_Printing_Quick_Start_Guide_Fall_2026.docx) · [PDF](docs/MIE_446_3D_Printing_Quick_Start_Guide_Fall_2026.pdf)) · [AI-use log template](AI_USE_LOG_TEMPLATE.md)
 
 ## Assessment and course support
 

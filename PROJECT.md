@@ -2,7 +2,7 @@
 
 **MIE 446 Aerospace Structures · Fall 2026 · Student project guide**
 
-[Course home](README.md) · [Syllabus](SYLLABUS.md) · [Homework](ASSIGNMENTS.md) · [Creality printing guide](PRINTING.md) · [Printable PDF guide](docs/MIE_446_3D_Printing_Quick_Start_Guide_Fall_2026.pdf)
+[Course home](README.md) · [Syllabus](SYLLABUS.md) · [Homework](ASSIGNMENTS.md) · [Offline OrcaSlicer + USB guide](PRINTING.md) · [Printable PDF guide](docs/MIE_446_3D_Printing_Quick_Start_Guide_Fall_2026.pdf)
 
 [![Open stable Wing Project v1.1.1 in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/v1.1.1/notebooks/MIE446_Code_to_Print_Wing.ipynb)
 
@@ -165,15 +165,15 @@ The tool verifies the required written responses and AI declaration, then downlo
 ## 6. From final ZIP to the 3D printer
 
 - Extract a working copy of the final ZIP. Do not rename files so aggressively that team and revision traceability is lost.
-- Import every module into the current staff-approved Creality K2 Pro profile. Select the assigned machine, 0.4 mm nozzle, and regular PLA Pro.
+- Open the validated course template in **OrcaSlicer** and import every STL/3MF module as geometry. Verify the exact **Creality K2 Pro**, 0.4 mm nozzle, and approved regular PLA profile. Do not substitute or guess another machine profile.
 - Confirm millimetres and 100% scale. Compare the slicer X/Y/Z dimensions with the notebook's bounding-box record.
 - Choose the approved orientation and inspect every layer. Confirm that shells, ribs, rod sleeves, holes, trailing edge, and module interfaces remain present and continuous.
 - Check estimated mass and print time. Do not release a build above the 300 g course limit or a build that exceeds the assigned reservation.
-- Complete the staff/course print-release gate. Use only the assigned reservation and never reuse G-code from another printer or nozzle.
+- Complete the staff/course print-release gate. Export the machine-specific G-code locally, copy it to the course-approved USB drive, safely eject the drive, and select the exact file at the printer. The printer is not connected to a course server; do not use Send Print, cloud, or LAN printing. Never reuse G-code from another printer or nozzle.
 - Supervise the first layers. Stop and notify staff for adhesion loss, failed extrusion, nozzle drag, part shift, collision, smoke, unusual odor/noise, or any unsafe condition.
 - After cooling, remove and label parts safely. Record actual mass, inspect dimensions and defects, and dry-fit rods/modules before any authorized assembly.
 
-Use the [MIE 446 Creality K2 Pro 3D Printing Guide](PRINTING.md), the [downloadable Word guide](docs/MIE_446_3D_Printing_Quick_Start_Guide_Fall_2026.docx), and the current machine-specific SOP for detailed printer operation. Canvas is authoritative for training, reservations, assigned machines, approved tolerances, and staff supervision.
+Use the [MIE 446 offline OrcaSlicer + USB guide](PRINTING.md), the [downloadable Word guide](docs/MIE_446_3D_Printing_Quick_Start_Guide_Fall_2026.docx), and the current machine-specific SOP for detailed operation. Canvas is authoritative for the approved K2 Pro OrcaSlicer profile/template, training, reservations, assigned machines, tolerances, and staff supervision.
 
 ## 7. Physical inspection and build acceptance
 

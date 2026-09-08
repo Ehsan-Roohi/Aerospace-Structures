@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1400" height="520" viewBox="0 0 1400 520" role="img" aria-labelledby="title desc">
-  <title id="title">MIE 446 Creality K2 Pro release workflow</title>
-  <desc id="desc">A seven-step flow from regenerating the CAD model through physical inspection and documentation, with stop gates after geometry, slicing, and the first layer.</desc>
+  <title id="title">MIE 446 offline OrcaSlicer and USB release workflow</title>
+  <desc id="desc">A seven-step flow from regenerating the CAD model through OrcaSlicer slicing, USB transfer, physical inspection, and documentation, with stop gates after geometry, slicing, and the first layer.</desc>
   <defs>
     <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
       <path d="M0,0 L0,6 L9,3 z" fill="#303030"/>
@@ -13,7 +13,7 @@
     </style>
   </defs>
   <rect width="1400" height="520" fill="#ffffff"/>
-  <text x="40" y="54" class="title">Creality K2 Pro release workflow</text>
+  <text x="40" y="54" class="title">Offline OrcaSlicer + USB release workflow</text>
   <text x="40" y="84" class="subtitle">Do not skip a gate; each gate prevents a different class of wasted print or unsafe restart.</text>
 
   <g transform="translate(40 135)">
@@ -43,7 +43,7 @@
   <g transform="translate(880 135)">
     <rect class="box" width="165" height="150"/>
     <circle cx="28" cy="28" r="18" fill="#17365d"/><text x="22" y="35" class="num">5</text>
-    <text x="18" y="72" class="label">Readback</text><text x="18" y="98" class="small">Operator reads fields</text><text x="18" y="120" class="small">Teammate verifies</text>
+    <text x="18" y="72" class="label">USB release</text><text x="18" y="98" class="small">Two-person readback</text><text x="18" y="120" class="small">Export, copy, eject</text>
   </g>
   <path class="arrow" d="M1050 210 H1085"/>
   <g transform="translate(1090 135)">

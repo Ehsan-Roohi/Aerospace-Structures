@@ -120,7 +120,7 @@ Technical questions are best handled in class or office hours. Send grading and 
 
 - Python 3 with the instructor starter environment (Jupyter + CadQuery). OpenSCAD may be used only with prior approval because the supported workflow is Python/CadQuery.
 
-- Creality Print with the exact machine/nozzle profile assigned by ELab staff; a laptop capable of running the course environment.
+- OrcaSlicer with the validated Creality K2 Pro / 0.4 mm course profile supplied by the instructional team; a laptop capable of running the course environment.
 
 - No required textbook. Selected readings and examples will be posted in Canvas. Useful references include T. H. G. Megson, Aircraft Structures for Engineering Students, and a standard mechanics-of-materials text.
 

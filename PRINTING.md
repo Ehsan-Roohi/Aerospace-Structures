@@ -154,6 +154,9 @@ AI tools may help explain slicer settings, check units, diagnose a warning, revi
 
 Do not ask an AI system to write, repair, or adapt final printer G-code. Generate the printer file in OrcaSlicer from a validated profile and inspect the resulting toolpaths yourself.
 
-## Reference file
+## Sample files
 
-The [reference OrcaSlicer/K2 Pro G-code](docs/printing/examples/reference-k2pro-orcaslicer.gcode) is provided only for inspecting file structure and profile identifiers. It is **not approved for printing or reuse**. Every model requires newly generated G-code for its exact printer, nozzle, material, firmware configuration, geometry, and slicer settings.
+- **[Sample parametric wing-generation notebook](notebooks/MIE446_Code_to_Print_Wing.ipynb)** — an executable Python/CadQuery example that generates printable geometry and exports model files.
+- **[Reference OrcaSlicer/K2 Pro G-code](docs/printing/examples/reference-k2pro-orcaslicer.gcode)** — a complete slicer output for inspecting the file header, printer/profile identifiers, and G-code structure.
+
+These files are learning examples. The reference G-code is **not approved for printing or reuse**, and it should not be assumed to correspond to a newly generated model. Every model requires new G-code for its exact geometry, printer, nozzle, material, firmware configuration, orientation, and slicer settings.

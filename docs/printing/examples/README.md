@@ -2,6 +2,8 @@
 
 This folder contains a reference G-code file for inspecting the header, printer identifier, profile metadata, and structure of an OrcaSlicer output.
 
+The accompanying [sample parametric geometry notebook](../../../notebooks/MIE446_Code_to_Print_Wing.ipynb) demonstrates an executable Python/CadQuery workflow for generating and exporting printable model geometry.
+
 ## Do not print the sample
 
 `reference-k2pro-orcaslicer.gcode` is **not approved for printing or reuse**. G-code is specific to its geometry, machine, nozzle, material profile, firmware configuration, and slicer settings. Do not run it, rename it as another user's file, hand-edit it, or use AI to adapt it.

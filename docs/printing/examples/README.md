@@ -4,9 +4,9 @@ This folder contains a reference G-code file for inspecting the header, printer 
 
 ## Do not print the sample
 
-`reference-k2pro-orcaslicer.gcode` is **not approved for printing or submission**. G-code is specific to its geometry, machine, nozzle, material profile, firmware configuration, and slicer settings. Do not run it, rename it as a team submission, hand-edit it, or use AI to adapt it.
+`reference-k2pro-orcaslicer.gcode` is **not approved for printing or reuse**. G-code is specific to its geometry, machine, nozzle, material profile, firmware configuration, and slicer settings. Do not run it, rename it as another user's file, hand-edit it, or use AI to adapt it.
 
-Generate a new file in OrcaSlicer from the team's checked geometry and the current validated Creality K2 Pro / 0.4 mm course profile. Inspect every layer and complete the release checklist before copying the new `.gcode` file to USB.
+Generate a new file in OrcaSlicer from the checked geometry and the validated profile for the exact printer, nozzle, material, and firmware configuration. Inspect every layer and complete the release checklist before copying the new `.gcode` file to USB.
 
 ## File integrity
 

@@ -85,11 +85,20 @@ Change only settings you understand and are authorized to modify. When troublesh
 
 ### Why Preview matters
 
-The images below illustrate how a process-setting change alters internal toolpaths and material use. They are examples for learning, not settings to copy.
+The **Prepare** view shows the shape of the imported model. **Preview** shows the toolpaths the printer will actually attempt to deposit after OrcaSlicer has converted that model into layers. A feature can look correct in CAD or Prepare and still disappear after slicing because it is too thin for the selected nozzle and process profile, lies outside the build area, intersects another body incorrectly, or requires support. **Only features that appear as toolpaths in Preview can be printed.**
 
-| Preview without infill | Preview with light infill |
-|---|---|
-| ![Layer preview without infill](docs/printing/orcaslicer-preview-no-infill.png) | ![Layer preview with light infill](docs/printing/orcaslicer-preview-light-infill.png) |
+![Annotated diagram explaining perimeter and infill toolpaths and the first-, middle-, and final-layer checks](docs/printing/orcaslicer-preview-explained.svg)
+
+In the diagram, the blue lines are perimeter toolpaths. Panel A has closed walls but an intentionally hollow interior. Panel B has the same walls plus orange sparse-infill paths. Infill changes the internal structure and material use, but it cannot repair a missing, open, or undersized perimeter.
+
+Use the layer slider to inspect the **entire print**, not just one attractive middle layer:
+
+- **First layer:** confirm the correct footprint, continuous bed-contact paths, and no detached islands.
+- **Middle layers:** confirm that walls, holes, internal features, supports, and infill remain present and continuous.
+- **Final layers:** confirm that top surfaces close and no required feature disappears or ends early.
+- **Across all layers:** watch for unexpected gaps, floating paths, missing thin walls, support that cannot be removed, and travel moves that indicate a slicing problem.
+
+If a required feature is missing in Preview, return to the model or the validated slicer profile and correct the cause before exporting G-code. Do not assume the printer will create geometry that the Preview does not show.
 
 ## Generate the G-code
 

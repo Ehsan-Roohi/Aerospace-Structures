@@ -225,7 +225,7 @@ The instructor will form teams of three using a short skills/availability survey
 
 ### Required post-build inspection and diagnostic activities
 
-**Team-wing inspection (required).** Place the unloaded assembled wing in the alignment jig with ruler and ArUco/checkerboard references. Use the shared Jetson Orin Nano Super, Logitech webcam, camera stand, and instructor-provided Python/OpenCV workflow to estimate semi-span, root/tip chord, seams, and gross alignment. Compare against ruler and digital-caliper measurements and submit calibration evidence, one annotated image, a CSV/log, differences, uncertainty, and at least one identified failure mode.
+**Team-wing inspection (required).** Place the unloaded assembled wing in the alignment jig with ruler and ArUco/checkerboard references. Use the shared Seeed Studio reComputer Super J3011 (Jetson Orin Nano 8GB), Logitech webcam, camera stand, and instructor-provided Python/OpenCV workflow to estimate semi-span, root/tip chord, seams, and gross alignment. Compare against ruler and digital-caliper measurements and submit calibration evidence, one annotated image, a CSV/log, differences, uncertainty, and at least one identified failure mode.
 
 **Shared structural-health-monitoring demonstration (required analysis).** Using a separate sacrificial 3D-printed wing-box specimen, the instructor/TA will acquire force with the 10 kg load cell and HX711, camera-based tip deflection, ADXL343 acceleration, and USB-microscope crack images before and after controlled damage. Teams will compute or interpret stiffness from the force-deflection slope, dominant natural frequency from the acceleration record, and qualitative crack change; then decide which indicators provide credible evidence of damage and which do not.
 
@@ -328,7 +328,7 @@ Use the Creality K2 Pro + CFS or an Ender Pro only as assigned by ELab staff, wi
 | Regular 1.75 mm PLA Pro | Use the assigned material/profile and remain within the approved project mass budget |
 | Course-issued carbon-fiber rods/interfaces | Use the dimensions posted in Canvas and verify dry fit before any adhesive |
 | 5-minute epoxy and shared consumables | Use only when assigned, under supervision, and with required lab controls |
-| Shared inspection and diagnostic station | Use only during assigned supervised sessions: Jetson Orin Nano Super, webcam/stand, ruler/calibration target, digital caliper, load cell/HX711, ADXL343 accelerometer, breadboard/jumpers, USB microscope, clamps, clear shield, and safety glasses |
+| Shared inspection and diagnostic station | Use only during assigned supervised sessions: Seeed Studio reComputer Super J3011 (Jetson Orin Nano 8GB), webcam/stand, ruler/calibration target, digital caliper, load cell/HX711, ADXL343 accelerometer, breadboard/jumpers, USB microscope, clamps, clear shield, and safety glasses |
 | Personal purchases or substitutions | Not required; obtain written approval before bringing another material, chemical, or tool |
 
 The course supplies approved PLA Pro, course-issued rods/interfaces, supervised adhesive, shared fabrication consumables, and one shared inspection/diagnostic station. The instructor provides the baseline wing-generation, machine-vision, and data-acquisition code. Students should not purchase or substitute structural materials, electronics, chemicals, or tools unless the instructor gives written approval. The complete machine workflow, inspection instructions, and acceptance checklist are provided on Canvas.

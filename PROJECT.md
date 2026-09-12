@@ -18,9 +18,9 @@
 
 **Your task** — Use the guided notebook to define and understand a parametric wing, make a prediction before seeing the comparison, print and test a rod-fit coupon, generate a validated 3D semi-wing, print and inspect the modules, perform an unloaded Jetson-camera dimensional cross-check, analyze shared before/after damage data from a separate sacrificial specimen, and defend the team's decisions. You configure instructor-provided workflows; you are not expected to write CAD, vision, or data-acquisition software from scratch.
 
-<img src="https://d29g4g2dyqv443.cloudfront.net/sites/default/files/akamai/embedded/images/jetsonNano/jetson_orin_nano-devkit-front_top-right-trimmed.jpg" alt="NVIDIA Jetson Orin Nano Super Developer Kit used at the shared external inspection station" width="430">
+Shared inspection computer: **Seeed Studio reComputer Super J3011**, purchased for the course on September 12, 2026. It uses an **NVIDIA Jetson Orin Nano 8GB** module and replaces the originally proposed NVIDIA developer kit. [Purchased model and specifications](https://www.microcenter.com/product/711326/seeed-studio-recomputer-super-j3011-advanced-edge-ai-computer-with-nvidia-jetson-orin-nano?storeid=121).
 
-Shared inspection computer: **NVIDIA Jetson Orin Nano Super Developer Kit**. [Official NVIDIA product page and image source](https://developer.nvidia.com/embedded/jetson-developer-kits).
+The system includes 8GB LPDDR5 memory, a 128GB NVMe SSD, and JetPack 6.2 as listed by the supplier. Its advertised maximum AI throughput is 67 TOPS in Super mode; that rating is not a measurement-accuracy specification. The inspection workflow still requires camera calibration and independent dimensional checks.
 
 Open in Google Colab: [stable course notebook (v1.1.1)](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/v1.1.1/notebooks/MIE446_Code_to_Print_Wing.ipynb)
 
@@ -196,7 +196,7 @@ The team wing is evaluated through reproducibility, dimensional and fit evidence
 
 **The question:** Does the wing you assembled match the dimensions you released for printing? At this station, you photograph your unloaded wing, convert image distances into millimetres, and compare those measurements with the design and your manual inspection.
 
-The **NVIDIA Jetson Orin Nano Super is the station computer**. The Logitech USB webcam captures the image; the instructor-provided Python workflow uses **OpenCV**, a computer-vision library, to process it. The Jetson stays beside the jig. Nothing is installed on the wing. You use the prepared workflow and explain its results; you do not need to train an AI model or write vision software.
+The **Seeed Studio reComputer Super J3011 (Jetson Orin Nano 8GB) is the station computer**. The Logitech USB webcam captures the image; the instructor-provided Python workflow uses **OpenCV**, a computer-vision library, to process it. The Jetson stays beside the jig. Nothing is installed on the wing. You use the prepared workflow and explain its results; you do not need to train an AI model or write vision software.
 
 #### What the station looks like
 
@@ -204,14 +204,17 @@ The **NVIDIA Jetson Orin Nano Super is the station computer**. The Logitech USB 
 
 *Figure 7A-1. Course schematic, not a photograph of the installed equipment. Keep the complete wing and references in view. The camera measures visible geometry; the wing remains unloaded.*
 
-<details>
-<summary>Identify the real Jetson connectors — official NVIDIA diagram</summary>
+#### Connections on the purchased J3011 Super
 
-<img src="https://docs.nvidia.com/jetson/orin-nano-devkit/user-guide/latest/_images/jetson-orin-nano-qtr_numbered.png" alt="Official NVIDIA numbered diagram of the Jetson Orin Nano developer kit connectors" width="650">
+| Connection | Station use |
+| --- | --- |
+| USB Type-A | Logitech USB webcam; keyboard and mouse as needed |
+| HDMI | Monitor for the live image and measurement overlay |
+| Ethernet | Wired network when needed |
+| Supplied 19V adapter | Power the computer; the adapter requires a separate US-to-IEC C5 power lead |
+| Internal 128GB NVMe SSD | System, software, calibration files, and inspection records |
 
-*Source: [NVIDIA developer-kit hardware layout](https://docs.nvidia.com/jetson/orin-nano-devkit/user-guide/latest/hardware_layout.html). In this diagram, **6** identifies the USB Type-A ports for the webcam, **7** the DisplayPort monitor connection, and **8** the power jack. The shared station is prepared by course staff.*
-
-</details>
+Course staff prepare and verify the camera and software before student sessions. For any system reinstall, use instructions and an image intended for the Seeed carrier board. The connector numbering and DisplayPort instructions for the original NVIDIA developer kit do not apply to this computer.
 
 #### What you will measure
 

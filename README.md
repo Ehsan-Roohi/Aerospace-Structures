@@ -6,7 +6,7 @@ Dr. Ehsan Roohi Golkhatmi · Gunness Laboratory, Room 1 · [roohie@umass.edu](ma
 
 ## Open for class
 
-**[Syllabus](SYLLABUS.md)** · **[Download Word syllabus](docs/MIE_446_Aerospace_Structures_Fall_2026_Syllabus_Updated.docx)** · **[Weekly schedule](SYLLABUS.md#7-weekly-schedule--fall-2026)** · **[Lecture notebooks](#lecture-notebooks)** · **[Wing project](PROJECT.md)** · **[Homework](ASSIGNMENTS.md)** · **[General OrcaSlicer + USB guide](PRINTING.md)**
+**[Syllabus](SYLLABUS.md)** · **[Download Word syllabus](docs/MIE_446_Aerospace_Structures_Fall_2026_Syllabus_Updated.docx)** · **[Weekly schedule](SYLLABUS.md#7-weekly-schedule--fall-2026)** · **[Lecture notebooks](#lecture-notebooks)** · **[Wing project](PROJECT.md)** · **[Register a three-person team](https://forms.gle/L5BMny8WEP4zpokFA)** · **[Homework](ASSIGNMENTS.md)** · **[General OrcaSlicer + USB guide](PRINTING.md)**
 
 This is the classroom home for released MIE 446 learning materials. Open a lecture below, save your own copy in Google Drive, and work through the predictions, theory and experiments. No prior aerospace course is assumed.
 
@@ -33,6 +33,12 @@ Lectures 01 and 02 are released. Later lecture notebooks will appear here when r
 [Notebook index and troubleshooting](notebooks/README.md)
 
 ## Design and build a wing
+
+### Team registration
+
+Form a team of exactly three students. After all members agree, one team contact should submit the form once for the entire group:
+
+**[Register your three-person team](https://forms.gle/L5BMny8WEP4zpokFA)**
 
 <img src="docs/baseline_preview.png" alt="Code-generated baseline semi-wing with printed shell, ribs and rod interfaces" width="640">
 

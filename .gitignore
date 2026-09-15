@@ -8,7 +8,7 @@ build/
 dist/
 outputs/
 *.stl
+!docs/printing/examples/reference-glider-model.stl
 *.step
 *.3mf
 *.zip
-

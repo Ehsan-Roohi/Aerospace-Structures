@@ -166,6 +166,7 @@ Do not ask an AI system to write, repair, or adapt final printer G-code. Generat
 ## Sample files
 
 - **[Sample parametric wing-generation notebook](notebooks/MIE446_Code_to_Print_Wing.ipynb)** — an executable Python/CadQuery example that generates printable geometry and exports model files.
-- **[Reference OrcaSlicer/K2 Pro G-code](docs/printing/examples/reference-k2pro-orcaslicer.gcode)** — a complete slicer output for inspecting the file header, printer/profile identifiers, and G-code structure.
+- **[Download the sample glider STL](https://raw.githubusercontent.com/Ehsan-Roohi/Aerospace-Structures/main/docs/printing/examples/reference-glider-model.stl)** — the model used to create the reference slicer output.
+- **[Download the matching OrcaSlicer/K2 Pro G-code](https://raw.githubusercontent.com/Ehsan-Roohi/Aerospace-Structures/main/docs/printing/examples/reference-k2pro-orcaslicer.gcode)** — a complete slicer output for inspecting the file header, printer/profile identifiers, and G-code structure.
 
-These files are learning examples. The reference G-code is **not approved for printing or reuse**, and it should not be assumed to correspond to a newly generated model. Every model requires new G-code for its exact geometry, printer, nozzle, material, firmware configuration, orientation, and slicer settings.
+These files are a matched learning pair. The reference G-code is **not approved for printing or reuse**. Import the STL into OrcaSlicer and generate new G-code for the exact printer, nozzle, material, firmware configuration, orientation, and slicer settings.

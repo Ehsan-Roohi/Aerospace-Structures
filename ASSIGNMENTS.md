@@ -2,13 +2,23 @@
 
 [Course home](README.md) · [Full syllabus](SYLLABUS.md) · [Notebooks](notebooks/README.md) · [Project](PROJECT.md)
 
-This page is a quick checklist from the final syllabus, not an assignment question sheet. Obtain the assigned problems, designated judgment-record problem, submission links and any deadline updates in Canvas.
+This page collects released assignment files and the submission checklist. Canvas remains the authoritative location for deadlines, submission links, and announcements.
+
+## Released assignment files
+
+### Homework 1 - Surface pressure, lift, and pressure drag
+
+- **[Download the homework PDF](assignments/homework-01/MIE446_HW1_Surface_Pressure.pdf)**
+- **[Download the NACA 2412 Excel dataset](assignments/homework-01/MIE446_HW1_NACA2412_Data.xlsx)**
+- [Download the Overleaf/LaTeX source](assignments/homework-01/MIE446_HW1_Surface_Pressure.tex)
+
+The PDF and Excel workbook use a uniform black-and-white format suitable for printing. Complete the work individually and submit only through Canvas.
 
 ## Six homework portfolios
 
 | Assignment | Main focus | Syllabus due date, 2026 |
 |---|---|---|
-| HW 1 | Load paths, free-body diagrams, predictions, equilibrium and a code plot | October 1 |
+| HW 1 | NACA 2412 geometry, surface-pressure integration, lift, pressure drag and discrete panel sums | October 1 |
 | HW 2 | 2D/3D stress transformation, principal stresses and constitutive assumptions | October 13 |
 | HW 3 | Beam shear/moment, bending, deflection, strain energy and independent checks | October 22 |
 | HW 4 | Virtual work/Castigliano and correction of a plausible but flawed AI solution | November 12 |

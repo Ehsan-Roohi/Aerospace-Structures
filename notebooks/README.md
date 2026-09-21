@@ -19,6 +19,13 @@ These notebooks support the Fall 2026 MIE 446 Aerospace Structures course. They 
 
 ## Recommended Colab workflow
 
+### Numerical wing structural design — two sessions and a design studio
+
+[Open the complete numerical design notebook in Colab](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/main/notebooks/MIE446_Wing_Structural_Design_Numerical.ipynb).
+The notebook teaches the equilibrium and constitutive equations before running calculations. Its studio adds three load cases, web shear and cap buckling screens, whole-span NACA clearance, an independent NumPy beam FEM, mass/constraint maps, a Pareto frontier, seeded uncertainty trials, and a ZIP export of inputs, results, coordinates and a report template. Saved figures are visible before execution. All calculations run inside the notebook; external CAD/FEA installations and physical tests are not required.
+
+Start at the top with **Run all** for a baseline. After changing the studio input panel, rerun every studio cell below it. Numerical agreement verifies the implementation under shared assumptions; it is not experimental validation of a real wing.
+
 1. Open the notebook using its **Open in Colab** button.
 2. In Colab, choose **File → Save a copy in Drive** before changing any inputs.
 3. Run the setup cell first. Do not continue if the environment check fails.

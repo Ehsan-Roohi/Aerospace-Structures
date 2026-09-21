@@ -6,7 +6,7 @@ Dr. Ehsan Roohi Golkhatmi · Gunness Laboratory, Room 1 · [roohie@umass.edu](ma
 
 ## Open for class
 
-**[Syllabus](SYLLABUS.md)** · **[Download Word syllabus](docs/MIE_446_Aerospace_Structures_Fall_2026_Syllabus_Updated.docx)** · **[Weekly schedule](SYLLABUS.md#7-weekly-schedule--fall-2026)** · **[Lecture notebooks](#lecture-notebooks)** · **[Wing project](PROJECT.md)** · **[Register a three-person team](https://forms.gle/L5BMny8WEP4zpokFA)** · **[Homework 1 PDF](assignments/homework-01/MIE446_HW1_Surface_Pressure.pdf)** · **[Homework 1 Excel data](assignments/homework-01/MIE446_HW1_NACA2412_Data.xlsx)** · **[All homework](ASSIGNMENTS.md)** · **[General OrcaSlicer + USB guide](PRINTING.md)**
+**[Syllabus](SYLLABUS.md)** · **[Download Word syllabus](docs/MIE_446_Aerospace_Structures_Fall_2026_Syllabus_Updated.docx)** · **[Weekly schedule](SYLLABUS.md#7-weekly-schedule--fall-2026)** · **[Lecture notebooks](#lecture-notebooks)** · **[Gimli Glider case study](GIMLI_GLIDER.md)** · **[Wing project](PROJECT.md)** · **[Register a three-person team](https://forms.gle/L5BMny8WEP4zpokFA)** · **[Homework 1 PDF](assignments/homework-01/MIE446_HW1_Surface_Pressure.pdf)** · **[Homework 1 Excel data](assignments/homework-01/MIE446_HW1_NACA2412_Data.xlsx)** · **[All homework](ASSIGNMENTS.md)** · **[General OrcaSlicer + USB guide](PRINTING.md)**
 
 This is the classroom home for released MIE 446 learning materials. Open a lecture below, save your own copy in Google Drive, and work through the predictions, theory and experiments. No prior aerospace course is assumed.
 
@@ -22,6 +22,10 @@ This is the classroom home for released MIE 446 learning materials. Open a lectu
 | **Numerical wing structural design** | Complete theory-to-code module: distributed load, shear, bending moment, stress, deflection, closed-section torsion, NACA clearance, convergence and constrained mass reduction | [![Open Numerical Wing Design in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/main/notebooks/MIE446_Wing_Structural_Design_Numerical.ipynb) |
 
 Lectures 01 and 02 are released. Later lecture notebooks will appear here when ready; the [syllabus schedule](SYLLABUS.md#7-weekly-schedule--fall-2026) describes the full semester, not a list of already-published notebooks.
+
+### Engineering case study
+
+**[The Gimli Glider: an aerospace-structures case study](GIMLI_GLIDER.md)** follows Air Canada Flight 143 from a failed fuel-quantity defense to a 17-minute unpowered glide and emergency landing. It connects unit discipline, system redundancy, landing loads, changing load paths, local damage, crashworthiness and occupant survival. The reading includes licensed historical photographs, original engineering diagrams, discussion questions, the official investigation report and video links.
 
 ### Your classroom workflow
 

@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="420" viewBox="0 0 1200 420" role="img" aria-labelledby="title desc">
+  <title id="title">Failure chain that led to the Gimli Glider fuel exhaustion</title>
+  <desc id="desc">Five connected blocks show the failed fuel indication system, manual measurement, mixed units, insufficient fuel, and dual engine flameout.</desc>
+  <defs>
+    <style>
+      .bg{fill:#f7f8fa}.box{fill:#fff;stroke:#5b2c6f;stroke-width:3}.warn{fill:#fff3f0;stroke:#a61b1b;stroke-width:3}.t{font:700 24px Arial,sans-serif;fill:#24142b}.s{font:18px Arial,sans-serif;fill:#3d3441}.arrow{stroke:#7a3f91;stroke-width:5;fill:none;marker-end:url(#m)}
+    </style>
+    <marker id="m" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 z" fill="#7a3f91"/></marker>
+  </defs>
+  <rect class="bg" width="1200" height="420" rx="20"/>
+  <text x="600" y="48" text-anchor="middle" class="t">A technical fault became a system-level accident</text>
+  <g transform="translate(30 105)"><rect class="box" width="190" height="190" rx="18"/><text x="95" y="54" text-anchor="middle" class="t">FQIS fault</text><text x="95" y="92" text-anchor="middle" class="s"><tspan x="95">Fuel quantity</tspan><tspan x="95" dy="28">display unavailable</tspan></text></g>
+  <path class="arrow" d="M225 200 H265"/>
+  <g transform="translate(270 105)"><rect class="box" width="190" height="190" rx="18"/><text x="95" y="54" text-anchor="middle" class="t">Manual check</text><text x="95" y="92" text-anchor="middle" class="s"><tspan x="95">Dripstick gives</tspan><tspan x="95" dy="28">fuel volume</tspan><tspan x="95" dy="28">in litres</tspan></text></g>
+  <path class="arrow" d="M465 200 H505"/>
+  <g transform="translate(510 105)"><rect class="warn" width="190" height="190" rx="18"/><text x="95" y="54" text-anchor="middle" class="t">Unit mismatch</text><text x="95" y="92" text-anchor="middle" class="s"><tspan x="95">1.77 lb/L used</tspan><tspan x="95" dy="28">as though it were</tspan><tspan x="95" dy="28">kg/L</tspan></text></g>
+  <path class="arrow" d="M705 200 H745"/>
+  <g transform="translate(750 105)"><rect class="warn" width="190" height="190" rx="18"/><text x="95" y="54" text-anchor="middle" class="t">Underfuelled</text><text x="95" y="92" text-anchor="middle" class="s"><tspan x="95">About 10,100 kg</tspan><tspan x="95" dy="28">instead of</tspan><tspan x="95" dy="28">22,300 kg</tspan></text></g>
+  <path class="arrow" d="M945 200 H985"/>
+  <g transform="translate(990 105)"><rect class="warn" width="180" height="190" rx="18"/><text x="90" y="54" text-anchor="middle" class="t">Fuel exhaustion</text><text x="90" y="92" text-anchor="middle" class="s"><tspan x="90">Both engines</tspan><tspan x="90" dy="28">stop at</tspan><tspan x="90" dy="28">41,000 ft</tspan></text></g>
+  <text x="600" y="360" text-anchor="middle" class="s">The arithmetic error mattered because multiple technical and organizational defenses had already failed.</text>
+</svg>

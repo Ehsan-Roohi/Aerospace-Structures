@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="520" viewBox="0 0 1200 520" role="img" aria-labelledby="title desc">
+  <title id="title">Simplified glide and emergency landing sequence</title>
+  <desc id="desc">An aircraft descends from 41,000 feet toward Gimli with a 17-minute unpowered glide, a forward slip, and a nose gear collapse after touchdown.</desc>
+  <defs>
+    <style>.sky{fill:#eef5fb}.ground{fill:#d9d0c4}.runway{fill:#555}.line{stroke:#8b1e3f;stroke-width:6;stroke-dasharray:14 10;fill:none}.t{font:700 25px Arial,sans-serif;fill:#26142c}.s{font:19px Arial,sans-serif;fill:#3b3440}.tag{fill:#fff;stroke:#633574;stroke-width:2}</style>
+  </defs>
+  <rect class="sky" width="1200" height="430"/><rect class="ground" y="430" width="1200" height="90"/><rect class="runway" x="660" y="438" width="500" height="42" rx="4"/>
+  <path class="line" d="M90 95 C370 130 510 270 690 405 C810 455 940 458 1110 458"/>
+  <g transform="translate(55 58)"><rect class="tag" width="245" height="92" rx="14"/><text x="18" y="36" class="t">41,000 ft</text><text x="18" y="69" class="s">Both engines stop</text></g>
+  <g transform="translate(350 160)"><rect class="tag" width="275" height="112" rx="14"/><text x="18" y="36" class="t">Unpowered glide</text><text x="18" y="70" class="s">RAT supplies limited</text><text x="18" y="96" class="s">hydraulic power</text></g>
+  <g transform="translate(650 290)"><rect class="tag" width="280" height="112" rx="14"/><text x="18" y="36" class="t">High and fast</text><text x="18" y="70" class="s">Forward slip increases drag</text><text x="18" y="96" class="s">without a powered go-around</text></g>
+  <g transform="translate(915 325)"><rect class="tag" width="250" height="102" rx="14"/><text x="18" y="36" class="t">Touchdown</text><text x="18" y="70" class="s">Nose gear collapses;</text><text x="18" y="94" class="s">all 69 survive</text></g>
+  <text x="860" y="505" class="s">Former RCAF runway / active motorsport strip</text>
+</svg>

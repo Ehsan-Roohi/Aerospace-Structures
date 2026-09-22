@@ -1,6 +1,26 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="520" viewBox="0 0 1200 520">
-<defs><marker id="a" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L9,3 L0,6 Z" fill="#b42318"/></marker><style>text{font-family:Arial,sans-serif;fill:#172b4d}.t{font-size:30px;font-weight:bold}.s{font-size:23px}.e{stroke:#243b53;stroke-width:5;fill:none}.r{stroke:#b42318;stroke-width:6;marker-end:url(#a)}.d{stroke:#496b86;stroke-width:3;stroke-dasharray:10 8}</style></defs>
-<rect width="1200" height="520" fill="#f7fbfe"/><text x="600" y="48" text-anchor="middle" class="t">A force can translate the airplane and also rotate it about the CG</text>
-<path class="e" fill="#d9eaf2" d="M170 280 Q350 180 700 235 L980 180 930 260 1050 300 690 300 Q360 350 170 280Z"/><circle cx="560" cy="275" r="26" fill="#f9a825" stroke="#9b5b00" stroke-width="4"/><text x="560" y="283" text-anchor="middle" class="s">CG</text>
-<line x1="790" y1="330" x2="790" y2="150" class="r"/><text x="820" y="155" class="s">Tail force F</text><line x1="560" y1="375" x2="790" y2="375" class="d"/><line x1="560" y1="360" x2="560" y2="390" class="e"/><line x1="790" y1="360" x2="790" y2="390" class="e"/><text x="675" y="418" text-anchor="middle" class="s">lever arm d</text>
-<path d="M480 215 A105 105 0 0 1 650 190" class="r"/><text x="565" y="120" text-anchor="middle" class="t">Moment magnitude = F d</text><text x="565" y="470" text-anchor="middle" class="s">Take moments about the CG: weight has zero lever arm about this point.</text></svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="600" viewBox="0 0 1280 600">
+  <defs>
+    <marker id="arrow" markerWidth="11" markerHeight="11" refX="9" refY="3.5" orient="auto"><path d="M0,0 L10,3.5 L0,7 Z" fill="#b42318"/></marker>
+    <style>text{font-family:Arial,sans-serif;fill:#172b4d}.title{font-size:31px;font-weight:bold}.label{font-size:24px;font-weight:bold}.note{font-size:21px}.air{stroke:#243b53;stroke-width:5;fill:#dcecf4}.force{stroke:#b42318;stroke-width:6;marker-end:url(#arrow)}.dash{stroke:#496b86;stroke-width:3;stroke-dasharray:10 8}.arc{stroke:#b42318;stroke-width:6;fill:none;marker-end:url(#arrow)}</style>
+  </defs>
+  <rect width="1280" height="600" fill="#f7fbfe"/>
+  <text x="640" y="48" text-anchor="middle" class="title">A moment is produced by a real force acting away from the CG</text>
+  <text x="640" y="82" text-anchor="middle" class="note">Illustrative case: the wing lift line is ahead of the center of gravity</text>
+  <path class="air" d="M145 330 Q340 210 725 265 L1030 195 970 285 1120 335 700 335 Q350 390 145 330 Z"/>
+  <path d="M635 260 L780 190 L865 215 L730 285 Z" fill="#91b8cd" stroke="#243b53" stroke-width="4"/>
+  <text x="750" y="175" text-anchor="middle" class="note">wing</text>
+  <circle cx="650" cy="330" r="30" fill="#f9a825" stroke="#9b5b00" stroke-width="4"/>
+  <text x="650" y="338" text-anchor="middle" class="label">CG</text>
+  <line x1="500" y1="305" x2="500" y2="125" class="force"/>
+  <text x="420" y="132" text-anchor="middle" class="label">wing lift L</text>
+  <text x="420" y="160" text-anchor="middle" class="note">acts upward</text>
+  <line x1="500" y1="440" x2="650" y2="440" class="dash"/>
+  <line x1="500" y1="422" x2="500" y2="458" stroke="#243b53" stroke-width="4"/>
+  <line x1="650" y1="422" x2="650" y2="458" stroke="#243b53" stroke-width="4"/>
+  <text x="575" y="483" text-anchor="middle" class="label">lever arm d</text>
+  <path d="M530 250 A145 145 0 0 1 720 210" class="arc"/>
+  <text x="650" y="126" text-anchor="middle" class="label">nose-up moment caused by L</text>
+  <text x="650" y="154" text-anchor="middle" class="note">M = L d</text>
+  <rect x="155" y="510" width="970" height="54" rx="12" fill="#ffffff" stroke="#496b86" stroke-width="2"/>
+  <text x="640" y="544" text-anchor="middle" class="note">The curved arrow is not an extra load. It is the turning effect of the upward lift force about the CG.</text>
+</svg>

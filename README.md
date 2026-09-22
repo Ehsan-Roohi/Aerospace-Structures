@@ -6,6 +6,10 @@ Dr. Ehsan Roohi Golkhatmi · Gunness Laboratory, Room 1 · [roohie@umass.edu](ma
 
 ## Open for class
 
+**[Open Lecture 01 — updated figures and static margin](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/54f4c1df1c6f04d5f2e723b686eececbaf5a4875/notebooks/MIE446_Lecture_01_Trust_Forces_Airfoils.ipynb)**
+
+FAA control-surface illustrations, a dimensioned trim example, and static-margin diagrams with an interactive calculation.
+
 **[Syllabus](SYLLABUS.md)** · **[Download Word syllabus](docs/MIE_446_Aerospace_Structures_Fall_2026_Syllabus_Updated.docx)** · **[Weekly schedule](SYLLABUS.md#7-weekly-schedule--fall-2026)** · **[Lecture notebooks](#lecture-notebooks)** · **[Gimli Glider case study](GIMLI_GLIDER.md)** · **[Wing project](PROJECT.md)** · **[Register a three-person team](https://forms.gle/L5BMny8WEP4zpokFA)** · **[Homework 1 PDF](assignments/homework-01/MIE446_HW1_Surface_Pressure.pdf)** · **[Homework 1 Excel data](assignments/homework-01/MIE446_HW1_NACA2412_Data.xlsx)** · **[All homework](ASSIGNMENTS.md)** · **[General OrcaSlicer + USB guide](PRINTING.md)**
 
 This is the classroom home for released MIE 446 learning materials. Open a lecture below, save your own copy in Google Drive, and work through the predictions, theory and experiments. No prior aerospace course is assumed.
@@ -17,7 +21,7 @@ This is the classroom home for released MIE 446 learning materials. Open a lectu
 
 | Lecture | What we study | Open and run |
 |---|---|---|
-| **01 · Aircraft forces and airfoils** | Flight-path equilibrium, airfoil geometry, NACA sections, aerodynamic coefficients, stall and load paths · 75 min | [![Open Lecture 01 in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/main/notebooks/MIE446_Lecture_01_Trust_Forces_Airfoils.ipynb) |
+| **01 · Aircraft forces and airfoils** | Flight-path equilibrium, flight controls, CG, trim and static margin; airfoil geometry, NACA sections, aerodynamic coefficients, stall and load paths · Multi-session lecture | [![Open Lecture 01 in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/54f4c1df1c6f04d5f2e723b686eececbaf5a4875/notebooks/MIE446_Lecture_01_Trust_Forces_Airfoils.ipynb) |
 | **02 · Finite wings and load paths** | Span, chord, taper, aspect ratio, sweep, dihedral, induced drag, distributed loads and root reactions · 75 min | [![Open Lecture 02 in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/main/notebooks/MIE446_Lecture_02_Finite_Wings_and_Load_Paths.ipynb) |
 | **Numerical wing structural design** | Two teaching sessions + design studio: theory, schematics, signed load cases, bending/shear/torsion, cap buckling, whole-span fit, independent beam FEM, Pareto search, uncertainty and downloadable CAD/report data. No lab or Excel required. | [![Open Numerical Wing Design in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/main/notebooks/MIE446_Wing_Structural_Design_Numerical.ipynb) |
 

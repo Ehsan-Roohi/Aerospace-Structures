@@ -1,0 +1,88 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1170" viewBox="0 0 1200 1170" role="img" aria-labelledby="title desc">
+<title id="title">Static margin: CG position and restoring response</title><desc id="desc">Same neutral point at 40 percent MAC; CG at 25, 40 and 55 percent MAC. Three chord rulers show positive, zero and negative static margin.</desc>
+<defs><marker id="blue" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto-start-reverse"><path d="M0 0L8 4L0 8Z" fill="#176a91"/></marker><marker id="red" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto-start-reverse"><path d="M0 0L8 4L0 8Z" fill="#b62f3b"/></marker><marker id="gray" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto-start-reverse"><path d="M0 0L8 4L0 8Z" fill="#657781"/></marker><marker id="green" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto-start-reverse"><path d="M0 0L8 4L0 8Z" fill="#237653"/></marker></defs>
+<rect width="1200" height="1170" fill="white"/><g font-family="Arial, sans-serif" fill="#17324d">
+<text x="40" y="46" font-size="31" fill="#17324d" font-weight="bold" text-anchor="start">Static margin: where is the CG relative to the neutral point?</text>
+<text x="40" y="83" font-size="21" fill="#17324d" font-weight="normal" text-anchor="start">x increases aft. Compare all positions on the same mean aerodynamic chord (MAC).</text>
+<g transform="translate(130 175) scale(0.85)" fill="#e4edf2" stroke="#17324d" stroke-width="2.5"><path d="M0 10Q12 -17 80 -20L158 -43Q187 -48 216 -15L605 4L642 13L590 25L210 39L53 31Q5 29 0 10Z"/><path d="M570 3L588 -77L608 -79L625 9Z"/><path d="M551 20L642 16L656 25L555 33Z"/><path d="M182 18L313 19L350 33L196 35Z" fill="#c7dbe6"/><path d="M91 -19L159 -39L179 -39L180 -14Z" fill="#94bccd"/><path d="M185 -39Q204 -33 214 -15L186 -14Z" fill="#94bccd"/><path d="M-5 -29V47" stroke="#657781" stroke-width="5"/><path d="M610 -77L615 -27L625 9" fill="none" stroke="#94a8b5"/></g>
+<text x="50" y="160" font-size="19" fill="#17324d" font-weight="bold" text-anchor="start">NOSE</text>
+<text x="765" y="160" font-size="19" fill="#17324d" font-weight="bold" text-anchor="start">TAIL</text>
+<text x="835" y="143" font-size="20" fill="#b62f3b" font-weight="bold" text-anchor="start">CG: mass balance point</text>
+<text x="835" y="174" font-size="19" fill="#657781" font-weight="normal" text-anchor="start">NP: zero static-slope CG location</text>
+<text x="40" y="235" font-size="22" fill="#17324d" font-weight="bold" text-anchor="start">Illustrative NP = 40% MAC; only the CG changes between these cases.</text>
+<rect x="35" y="266" width="1130" height="215" rx="12" fill="#f4f7fa" stroke="#d3dce3"/>
+<text x="58" y="300" font-size="25" fill="#237653" font-weight="bold" text-anchor="start">STABLE  •  SM = +15%</text>
+<path d="M82 392L622 392" fill="none" stroke="#17324d" stroke-width="3" marker-end="url(#gray)"/>
+<path d="M82 387L82 398" fill="none" stroke="#657781" stroke-width="2"/>
+<text x="82" y="423" font-size="18" fill="#17324d" font-weight="normal" text-anchor="middle">0%</text>
+<path d="M217.0 387L217.0 398" fill="none" stroke="#657781" stroke-width="2"/>
+<text x="217.0" y="423" font-size="18" fill="#17324d" font-weight="normal" text-anchor="middle">25%</text>
+<path d="M298.0 387L298.0 398" fill="none" stroke="#657781" stroke-width="2"/>
+<text x="298.0" y="423" font-size="18" fill="#17324d" font-weight="normal" text-anchor="middle">40%</text>
+<path d="M379.0 387L379.0 398" fill="none" stroke="#657781" stroke-width="2"/>
+<text x="379.0" y="423" font-size="18" fill="#17324d" font-weight="normal" text-anchor="middle">55%</text>
+<path d="M622 387L622 398" fill="none" stroke="#657781" stroke-width="2"/>
+<text x="622" y="423" font-size="18" fill="#17324d" font-weight="normal" text-anchor="middle">100% MAC</text>
+<path d="M298.0 351L298.0 392" fill="none" stroke="#657781" stroke-width="2" stroke-dasharray="6 6"/>
+<circle cx="217.0" cy="392" r="8" fill="#b62f3b" stroke="white" stroke-width="2"/>
+<circle cx="298.0" cy="392" r="6" fill="#657781" stroke="white" stroke-width="2"/>
+<text x="217.0" y="356" font-size="22" fill="#b62f3b" font-weight="bold" text-anchor="middle">CG</text>
+<text x="298.0" y="335" font-size="22" fill="#657781" font-weight="bold" text-anchor="middle">NP</text>
+<path d="M217.0 454L298.0 454" fill="none" stroke="#237653" stroke-width="2"/>
+<path d="M217.0 447L217.0 461" fill="none" stroke="#237653" stroke-width="2"/>
+<path d="M298.0 447L298.0 461" fill="none" stroke="#237653" stroke-width="2"/>
+<text x="257.5" y="440" font-size="21" fill="#237653" font-weight="normal" text-anchor="middle">15% MAC</text>
+<text x="700" y="342" font-size="19" fill="#17324d" font-weight="normal" text-anchor="start">After a small increase in angle of attack:</text>
+<text x="700" y="380" font-size="21" fill="#237653" font-weight="bold" text-anchor="start">Restoring nose-down moment</text>
+<text x="700" y="415" font-size="19" fill="#17324d" font-weight="normal" text-anchor="start">Cmα &lt; 0: opposes the disturbance</text>
+<text x="700" y="448" font-size="21" fill="#17324d" font-weight="normal" text-anchor="start">CG is ahead of NP</text>
+<rect x="35" y="503" width="1130" height="215" rx="12" fill="#f4f7fa" stroke="#d3dce3"/>
+<text x="58" y="537" font-size="25" fill="#657781" font-weight="bold" text-anchor="start">NEUTRAL  •  SM = 0%</text>
+<path d="M82 629L622 629" fill="none" stroke="#17324d" stroke-width="3" marker-end="url(#gray)"/>
+<path d="M82 624L82 635" fill="none" stroke="#657781" stroke-width="2"/>
+<text x="82" y="660" font-size="18" fill="#17324d" font-weight="normal" text-anchor="middle">0%</text>
+<path d="M217.0 624L217.0 635" fill="none" stroke="#657781" stroke-width="2"/>
+<text x="217.0" y="660" font-size="18" fill="#17324d" font-weight="normal" text-anchor="middle">25%</text>
+<path d="M298.0 624L298.0 635" fill="none" stroke="#657781" stroke-width="2"/>
+<text x="298.0" y="660" font-size="18" fill="#17324d" font-weight="normal" text-anchor="middle">40%</text>
+<path d="M379.0 624L379.0 635" fill="none" stroke="#657781" stroke-width="2"/>
+<text x="379.0" y="660" font-size="18" fill="#17324d" font-weight="normal" text-anchor="middle">55%</text>
+<path d="M622 624L622 635" fill="none" stroke="#657781" stroke-width="2"/>
+<text x="622" y="660" font-size="18" fill="#17324d" font-weight="normal" text-anchor="middle">100% MAC</text>
+<path d="M298.0 588L298.0 629" fill="none" stroke="#657781" stroke-width="2" stroke-dasharray="6 6"/>
+<circle cx="298.0" cy="629" r="9" fill="#805ba5" stroke="white" stroke-width="2"/>
+<text x="298.0" y="582" font-size="22" fill="#805ba5" font-weight="bold" text-anchor="middle">CG = NP</text>
+<text x="700" y="579" font-size="19" fill="#17324d" font-weight="normal" text-anchor="start">After a small increase in angle of attack:</text>
+<text x="700" y="617" font-size="21" fill="#657781" font-weight="bold" text-anchor="start">No first-order restoring moment</text>
+<text x="700" y="652" font-size="19" fill="#17324d" font-weight="normal" text-anchor="start">Cmα = 0: neutral in this linear model</text>
+<text x="700" y="685" font-size="21" fill="#17324d" font-weight="normal" text-anchor="start">CG coincides with NP</text>
+<rect x="35" y="740" width="1130" height="215" rx="12" fill="#f4f7fa" stroke="#d3dce3"/>
+<text x="58" y="774" font-size="25" fill="#b62f3b" font-weight="bold" text-anchor="start">UNSTABLE  •  SM = −15%</text>
+<path d="M82 866L622 866" fill="none" stroke="#17324d" stroke-width="3" marker-end="url(#gray)"/>
+<path d="M82 861L82 872" fill="none" stroke="#657781" stroke-width="2"/>
+<text x="82" y="897" font-size="18" fill="#17324d" font-weight="normal" text-anchor="middle">0%</text>
+<path d="M217.0 861L217.0 872" fill="none" stroke="#657781" stroke-width="2"/>
+<text x="217.0" y="897" font-size="18" fill="#17324d" font-weight="normal" text-anchor="middle">25%</text>
+<path d="M298.0 861L298.0 872" fill="none" stroke="#657781" stroke-width="2"/>
+<text x="298.0" y="897" font-size="18" fill="#17324d" font-weight="normal" text-anchor="middle">40%</text>
+<path d="M379.0 861L379.0 872" fill="none" stroke="#657781" stroke-width="2"/>
+<text x="379.0" y="897" font-size="18" fill="#17324d" font-weight="normal" text-anchor="middle">55%</text>
+<path d="M622 861L622 872" fill="none" stroke="#657781" stroke-width="2"/>
+<text x="622" y="897" font-size="18" fill="#17324d" font-weight="normal" text-anchor="middle">100% MAC</text>
+<path d="M298.0 825L298.0 866" fill="none" stroke="#657781" stroke-width="2" stroke-dasharray="6 6"/>
+<circle cx="379.0" cy="866" r="8" fill="#b62f3b" stroke="white" stroke-width="2"/>
+<circle cx="298.0" cy="866" r="6" fill="#657781" stroke="white" stroke-width="2"/>
+<text x="379.0" y="830" font-size="22" fill="#b62f3b" font-weight="bold" text-anchor="middle">CG</text>
+<text x="298.0" y="809" font-size="22" fill="#657781" font-weight="bold" text-anchor="middle">NP</text>
+<path d="M298.0 928L379.0 928" fill="none" stroke="#b62f3b" stroke-width="2"/>
+<path d="M298.0 921L298.0 935" fill="none" stroke="#b62f3b" stroke-width="2"/>
+<path d="M379.0 921L379.0 935" fill="none" stroke="#b62f3b" stroke-width="2"/>
+<text x="338.5" y="914" font-size="21" fill="#b62f3b" font-weight="normal" text-anchor="middle">15% MAC</text>
+<text x="700" y="816" font-size="19" fill="#17324d" font-weight="normal" text-anchor="start">After a small increase in angle of attack:</text>
+<text x="700" y="854" font-size="21" fill="#b62f3b" font-weight="bold" text-anchor="start">Destabilizing nose-up moment</text>
+<text x="700" y="889" font-size="19" fill="#17324d" font-weight="normal" text-anchor="start">Cmα &gt; 0: reinforces the disturbance</text>
+<text x="700" y="922" font-size="21" fill="#17324d" font-weight="normal" text-anchor="start">CG is aft of NP</text>
+<rect x="35" y="996" width="1130" height="134" rx="12" fill="#edf3f6" stroke="#d3dce3"/>
+<text x="58" y="1034" font-size="28" fill="#17324d" font-weight="bold" text-anchor="start">SM = (xNP − xCG) / c̄</text>
+<text x="58" y="1076" font-size="24" fill="#17324d" font-weight="normal" text-anchor="start">Positive example: (0.40c̄ − 0.25c̄) / c̄ = 0.15 = 15%</text>
+<text x="58" y="1110" font-size="20" fill="#17324d" font-weight="normal" text-anchor="start">These positions illustrate the definition; they do not prescribe an operating CG range.</text></g></svg>

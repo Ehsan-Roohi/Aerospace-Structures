@@ -86,6 +86,58 @@ The contemporary *Flight* description reports a wooden duct framework covered wi
 
 *Original load-path interpretation. Boxes represent structural functions, not verified joint locations, member sizes or an as-built drawing.*
 
+### 3.1 Read the duct as a thin-walled shell with a frame
+
+![Conceptual duct cross-section: double skins, frames, engine mount and pressure arrows](docs/case-studies/stipa-caproni/duct-section.svg)
+
+*Original structural schematic. The historical record describes an inner skeleton with plywood inner and outer surfaces; this drawing identifies structural functions, not verified dimensions, frame spacing or materials specifications.*
+
+The duct is best understood as a **shell-and-frame system**. The inner and outer skins create aerodynamic surfaces; frames keep the section shape; longitudinal members and skins transfer load between frames. In a local panel between supports, a pressure difference $\Delta p$ creates distributed transverse load. A useful first scaling is
+
+$$
+q_p=\Delta p\,b,
+$$
+
+where $b$ is the tributary panel width and $q_p$ has units N/m along a supporting member. The actual panel load path depends on curvature, frame spacing, skin stiffness and how the skin is fastened. It is not enough to multiply a single pressure by one frontal area and call the result “duct lift.”
+
+Curvature can be structurally helpful because membrane action can develop, but the practical checks remain local: skin buckling under compression, wrinkling near concentrated fittings, frame ovalization, cutout reinforcement, and load transfer through adhesive or fasteners. The inlet and exit rims are especially significant because they terminate shell load paths and sit near changing flow and geometry.
+
+### 3.2 The wing is externally braced—not merely a beam
+
+![Conceptual free-body diagram of a wire-braced wing](docs/case-studies/stipa-caproni/braced-wing.svg)
+
+*Original teaching schematic. Force directions are illustrative; the true wire angle, attachment positions and member stiffness must be known before calculating a load split.*
+
+For a wing panel, the external lift $L$ must be balanced by a combination of root reactions and brace forces. A tension-only wire can carry load in one direction; its force magnitude rises quickly as its angle $\theta$ becomes shallow:
+
+$$
+T\sin\theta\approx L_{\mathrm{brace\ share}}.
+$$
+
+This equation is a **free-body starting point**, not the structural solution. The wing spar, compression struts, wires and attachments share load according to their geometry and stiffness. The brace can reduce root bending, while introducing substantial axial tension in the wire and compression/bending in its supporting members. The load case can reverse under gust, maneuver or ground handling; a different wire may become active.
+
+### 3.3 Engine thrust, torque and weight enter at one support system
+
+![Engine mount forces and moments transferred to the duct framework](docs/case-studies/stipa-caproni/engine-mount.svg)
+
+*Original teaching schematic. It is a generic engine-mount free-body diagram, not a drawing of the historical steel-tube frame.*
+
+The engine mount must transmit at least three different actions: engine weight, propulsive thrust and reaction torque. If a propeller shaft delivers power $P$ at angular speed $\Omega$, its nominal shaft-torque magnitude is
+
+$$
+Q_{\mathrm{shaft}}=\frac{P}{\Omega}.
+$$
+
+The engine structure sees the equal-and-opposite reaction torque. In an ideal symmetric multi-member mount, a torque is resisted by a force couple, not by one isolated force. Engine vibration and gyroscopic moments add cyclic loads. Thus a light-looking internal mount can become a governing connection problem even when the surrounding shell has plenty of global stiffness.
+
+### 3.4 Landing and tail loads are not secondary
+
+![Landing and tail attachment loads pass into the central duct structure](docs/case-studies/stipa-caproni/attachments.svg)
+
+*Original teaching schematic. The exact landing-gear and tail attachment geometry is intentionally not claimed.*
+
+At landing, a vertical ground reaction may be several times aircraft weight over a short time. An offset ground reaction also makes a bending moment at its attachment. The tail, positioned in accelerated slipstream, carries aerodynamic load and a lever arm relative to the center structure. These are concentrated loads introduced into a thin shell; their design requires local reinforcement and a path into multiple frames or longerons rather than one small patch of plywood.
+
 | Component | Structural question to ask | Potential issue to investigate—not a documented failure |
 |---|---|---|
 | Inner/outer duct skins and supporting framework | How does distributed pressure reach the supports? | Panel bending, local buckling, joint and adhesive loads |
@@ -95,6 +147,15 @@ The contemporary *Flight* description reports a wooden duct framework covered wi
 | Landing-gear attachments | How are concentrated ground reactions spread into a lightweight shell/frame? | Local crushing, bending and asymmetric landing loads |
 
 **A large hollow shape is not automatically heavy or strong.** Separating material from a bending neutral axis can improve stiffness per unit mass, but skins, joints, cutouts and local instability must still be checked. Nor is this open duct a sealed pressure vessel: do not blindly apply a uniform internal-pressure cylinder formula to its nonuniform aerodynamic loading.
+
+### 3.5 A structural-analysis sequence for this aircraft
+
+1. Define critical load cases: level flight, maneuver/gust, maximum-power climb, sideslip, landing and engine vibration.
+2. Build separate free-body diagrams for wing, duct, engine mount, tail and landing gear. Declare every sign convention and known/unknown reaction.
+3. Transfer distributed aerodynamic pressures into panel and frame loads; transfer concentrated attachments through local reinforcements.
+4. Solve global equilibrium first, then member forces and shell-panel stresses/instability. Check joints independently.
+5. Compare stiffness as well as strength: duct ovalization, wing twist, engine alignment and control-surface alignment can change aerodynamic behavior before material failure.
+6. Document uncertainty. Photographs establish visible geometry, not thickness, glue condition, material allowables, load spectra or certification margins.
 
 ### Bending, shear and torsion: distinct actions
 

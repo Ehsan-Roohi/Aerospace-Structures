@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="610" viewBox="0 0 1100 610" role="img" aria-labelledby="t d">
+<title id="t">Powered duct and external wing: different force-producing surfaces</title><desc id="d">Conceptual duct section with left-to-right flow, a powered propeller and separate wing pressure forces. Forward thrust points left.</desc>
+<defs><marker id="a" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto-start-reverse"><path d="M0 0L8 4L0 8Z" fill="#17617c"/></marker></defs>
+<rect width="1100" height="610" fill="white"/><g font-family="Arial,sans-serif" fill="#172c3e">
+<text x="36" y="40" font-size="27" font-weight="bold">A powered duct is not a passive Venturi</text>
+<text x="36" y="70" font-size="18">Conceptual longitudinal section · not to scale · not an as-built drawing</text>
+<path d="M240 160 Q400 95 570 145 L820 180 L820 210 Q610 160 440 195 Q330 205 240 200Z" fill="#dce8ec" stroke="#253f50" stroke-width="3"/>
+<path d="M240 345 Q430 390 590 355 L820 315 L820 285 Q600 335 430 300 Q330 290 240 300Z" fill="#dce8ec" stroke="#253f50" stroke-width="3"/>
+<path d="M290 210V290" stroke="#ad5923" stroke-width="12"/><circle cx="290" cy="250" r="12" fill="#ad5923"/>
+<g stroke="#17617c" stroke-width="4" marker-end="url(#a)"><path d="M55 250H230"/><path d="M340 250H470"/><path d="M525 250H690"/><path d="M845 250H1010"/><path d="M220 410H70"/></g>
+<text x="44" y="224" font-size="19">Incoming air</text><text x="862" y="224" font-size="19">Exit flow</text>
+<text x="335" y="231" font-size="16">Effective flow area excludes engine/support blockage</text>
+<path d="M290 205V102H430" fill="none" stroke="#ad5923" stroke-width="2"/><text x="440" y="107" font-size="18">Propeller adds shaft work to the flow</text>
+<text x="360" y="378" font-size="18">Pressure acts on BOTH inner and outer walls</text>
+<text x="44" y="444" font-size="18">Forward thrust</text>
+<path d="M650 518 Q750 450 965 520 Q820 508 650 518Z" fill="#dce8ec" stroke="#253f50" stroke-width="3"/>
+<path d="M785 486V430" stroke="#17617c" stroke-width="4" marker-end="url(#a)"/>
+<text x="804" y="450" font-size="18">Wing lift</text>
+<text x="610" y="562" font-size="18">External wing shown separately: pressure difference</text>
+<text x="36" y="515" font-size="19">Flow acceleration ≠ energy creation</text><text x="36" y="547" font-size="19">Axial pressure change ≠ automatic vertical lift</text>
+<text x="36" y="591" font-size="15">MIE 446 · Force magnitudes and detailed geometry are intentionally not represented.</text></g></svg>

@@ -6,7 +6,7 @@ Course edition: MIE 446, Aerospace Structures, UMass Amherst · 23 September 202
 
 **Source:** [Zoomit: OpenAI چگونه مسئله ناویر-استوکس را در ۸۸ ساعت حل کرد؟](https://www.zoomit.ir/fundamental-science/466926-openai-navier-stokes-solution-featured/)
 
-The translation below follows the complete article body in the supplied PDF and Markdown, including its section summaries, emphasized statements, figure captions and conclusion. Site navigation, advertisements, reader comments and unrelated recommendations are excluded. The original illustrations are retained, with English captions and explanations of Persian labels. The [supplement](#supplement-technical-clarifications-and-additional-resources) is editorial material added for this course; it also identifies statements in the article that need qualification or updating. The headline and historical claims below are translated as written, rather than presented as an independent certification of the proof.
+The translation below follows the complete article body in the supplied PDF and Markdown, including its section summaries, emphasized statements, figure captions and conclusion. Site navigation, advertisements, reader comments and unrelated recommendations are excluded. All article visuals are included: the seven diagrams containing Persian text have been redrawn with English titles, labels, legends and notes; the photographs, cover and video still are retained. The [supplement](#supplement-technical-clarifications-and-additional-resources) is editorial material added for this course; it also identifies statements in the article that need qualification or updating. The headline and historical claims below are translated as written, rather than presented as an independent certification of the proof.
 
 ![Navier–Stokes equations alongside a digital representation of complex fluid motion](docs/case-studies/navier-stokes/zoomit/01-cover.jpg)
 
@@ -92,7 +92,7 @@ Viscosity becomes far more influential precisely at these smaller scales. Simply
 
 Energy also depends on how much fluid is moving at that speed. If the speed doubles, the energy of the same quantity of fluid quadruples. But if the volume involved simultaneously falls to one quarter, the energy does not change.
 
-![Three stages of increasingly concentrated velocity and energy profiles](docs/case-studies/navier-stokes/zoomit/04-energy-concentration.jpg)
+![Three stages of increasingly concentrated velocity and energy profiles](docs/case-studies/navier-stokes/english/04-energy-concentration.png)
 
 *As the flow becomes concentrated in a smaller volume, its maximum speed can increase without bound while total energy remains bounded. This one-dimensional example was designed to explain the idea; it is not a Navier–Stokes simulation.*
 
@@ -114,7 +114,7 @@ The volume tends to zero and the energy remains bounded, while the velocity exce
 
 To make infinite fluid speed possible, OpenAI's AI designed a very particular physical structure. Imagine a cylindrical region with a vertical axis through its center and fluid rotating around that axis.
 
-![Spaghetti vortex with radial inflow and axial motion](docs/case-studies/navier-stokes/zoomit/05-spaghetti-vortex.jpg)
+![Spaghetti vortex with radial inflow and axial motion](docs/case-studies/navier-stokes/english/05-spaghetti-vortex.png)
 
 *Radial inflow draws the vortex toward its axis, while incompressibility drives fluid upward and downward along it. The result is a narrow, elongated filament that rotates faster as the singularity time approaches.*
 
@@ -142,7 +142,7 @@ The narrowing vortex seems like an ideal model for approaching infinite speed. M
 
 To cancel that residual, OpenAI introduces families of extremely small waves and loops around the vortex core. As time advances and the core narrows, these oscillations also become finer and their frequency increases.
 
-![A zero-mean oscillation and its nonzero squared mean](docs/case-studies/navier-stokes/zoomit/07-nonlinear-oscillations.jpg)
+![A zero-mean oscillation and its nonzero squared mean](docs/case-studies/navier-stokes/english/07-nonlinear-oscillations.png)
 
 *Oscillations with zero mean produce a nonzero effect in the nonlinear part of the equation. In OpenAI's proposed construction, that effect is used to cancel the residual. This is a simple illustration of quadratic nonlinear terms.*
 
@@ -176,21 +176,21 @@ In OpenAI's proposed construction, the vortex-core radius decreases in proportio
 
 As τ decreases, both the radius and the length shrink. The radius, however, decreases faster, so the core becomes more elongated and filament-like even while it is getting smaller. At the same time, the principal flow speeds increase. The rotational speed around the axis and the speed along it grow approximately in proportion to τ⁻¹ᐟ²⁻ʰ.
 
-![Original velocity scaling card](docs/case-studies/navier-stokes/zoomit/08-velocity.jpg)
+![English velocity scaling card](docs/case-studies/navier-stokes/english/08-velocity.png)
 
-*English translation of the card: “Flow velocity.” The negative exponent makes the velocity grow as τ approaches zero; this scaling describes the principal rotational and axial speeds. U → ∞.*
+*Card explanation: “Flow velocity.” The negative exponent makes the velocity grow as τ approaches zero; this scaling describes the principal rotational and axial speeds. U → ∞.*
 
 $$U\propto\tau^{-1/2-h}.$$
 
-![Original vortex-core size scaling card](docs/case-studies/navier-stokes/zoomit/09-core-size.jpg)
+![English vortex-core size scaling card](docs/case-studies/navier-stokes/english/09-core-size.png)
 
-*English translation of the card: “Core size.” Both dimensions shrink, but the radial dimension shrinks faster. “The core becomes thinner.”*
+*Card explanation: “Core size.” Both dimensions shrink, but the radial dimension shrinks faster. “The core becomes thinner.”*
 
 $$\ell_r\propto\tau^{1/2},\qquad\ell_z\propto\tau^{1/2-h}.$$
 
-![Original core-energy scaling card](docs/case-studies/navier-stokes/zoomit/10-core-energy.jpg)
+![English core-energy scaling card](docs/case-studies/navier-stokes/english/10-core-energy.png)
 
-*English translation of the card: “Core energy.” For sufficiently small h, the exponent remains positive and the collapsing core's energy decreases. Ecore → 0.*
+*Card explanation: “Core energy.” For sufficiently small h, the exponent remains positive and the collapsing core's energy decreases. Ecore → 0.*
 
 $$E_{\mathrm{core}}\propto\tau^{1/2-3h}.$$
 
@@ -212,7 +212,7 @@ According to the project documentation, a group of nearly 100 OpenAI agents work
 
 The proposed Euler mechanism uses a multistage chain. The agents began with a large shear flow, in which layers slide past one another, and placed a small oscillation on top of it.
 
-![Successive generations of a self-similar Euler cascade](docs/case-studies/navier-stokes/zoomit/11-euler-cascade.jpg)
+![Successive generations of a self-similar Euler cascade](docs/case-studies/navier-stokes/english/11-euler-cascade.png)
 
 *In a self-similar cascade, each generation of flow amplifies a smaller, faster oscillation. The intervals between generations continually decrease, and the velocity gradient grows without bound in finite time.*
 
@@ -332,4 +332,6 @@ For a course exercise, distinguish three questions: Is a mathematical statement 
 
 ### Image provenance
 
-All 11 article images, including the cover, three formula cards and the video still, were extracted from the user-supplied Zoomit PDF. Two instances of the same wing-vortex image were consolidated. Formula cards split across PDF pages were rejoined; their original lettering is retained. English captions and figure guides accompany the originals. Source credit “NASA” is retained for the wing-vortex photograph, and “ucmerced.edu” for the vortex image. Other illustrations are credited to the supplied Zoomit article; no new authorship or license is claimed for them. The video itself was not included in either supplied file, so its original player and related English lectures are linked rather than described as a locally archived video.
+The cover, two photographs and video still were extracted from the supplied Zoomit PDF. The seven scientific diagrams containing Persian text were redrawn for this English edition: energy concentration, the spaghetti vortex, nonlinear oscillations, three scaling cards and the Euler cascade. Their scientific relationships, numerical examples and explanatory content follow the supplied article; all titles, labels, legends and notes inside the new diagrams are English. The Gaussian and sine-wave curves are plotted from their illustrative equations. The vortex and cascade remain conceptual schematics, not numerical reconstructions of the proof.
+
+Source credit “NASA” is retained for the wing-vortex photograph, and “ucmerced.edu” for the vortex image. The English diagrams are adaptations of the figures in Pooyesh Pourmohammad's Zoomit article, credited above. The [figure-generation script](scripts/render_navier_stokes_english_figures.py) and [vector SVG versions](docs/case-studies/navier-stokes/english/) are included. The video itself was not included in either supplied file; its original player and related English lectures are linked.

@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 400" role="img" aria-labelledby="title desc">
+<title id="title">A conceptual vortex undergoing concentration and axial stretching</title>
+<desc id="desc">Three schematic stages, not numerical data, show a wide rotating region becoming thinner and longer toward a putative finite-time singularity.</desc>
+<defs><linearGradient id="bg" x2="1" y2="1"><stop stop-color="#0b1931"/><stop offset="1" stop-color="#173955"/></linearGradient><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8" fill="#80d7ed"/></marker></defs>
+<rect width="980" height="400" rx="20" fill="url(#bg)"/>
+<text x="40" y="45" fill="#fff" font-size="25" font-family="Arial">Conceptual vortex concentration</text>
+<text x="40" y="73" fill="#b7cad9" font-size="15" font-family="Arial">Illustration only — no computed field or proof geometry is reproduced</text>
+<g fill="none" stroke="#ffbd73" stroke-width="5">
+<ellipse cx="170" cy="213" rx="76" ry="85"/><ellipse cx="170" cy="213" rx="49" ry="62"/><ellipse cx="170" cy="213" rx="23" ry="34"/>
+<ellipse cx="492" cy="213" rx="48" ry="113"/><ellipse cx="492" cy="213" rx="29" ry="79"/><ellipse cx="492" cy="213" rx="12" ry="43"/>
+<ellipse cx="808" cy="213" rx="25" ry="143"/><ellipse cx="808" cy="213" rx="15" ry="103"/><ellipse cx="808" cy="213" rx="6" ry="55"/>
+</g>
+<g fill="#fff" font-size="17" font-family="Arial" text-anchor="middle"><text x="170" y="375">Broad rotating region</text><text x="492" y="375">Narrower and longer</text><text x="808" y="375">Further concentration</text></g>
+<g stroke="#80d7ed" stroke-width="3" marker-end="url(#arrow)"><path d="M278 210H379"/><path d="M600 210H706"/></g>
+<g fill="#80d7ed" font-size="14" font-family="Arial"><text x="295" y="196">time</text><text x="619" y="196">time</text></g>
+</svg>

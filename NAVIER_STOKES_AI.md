@@ -1,98 +1,335 @@
-# Navier–Stokes, finite-time blowup, and an AI-assisted proof: a guided reading
+# How did OpenAI solve the Navier–Stokes problem in 88 hours?
 
-**MIE 446 · Aerospace Structures · UMass Amherst · 23 September 2026**
+**Full English translation of the supplied Zoomit article, with its illustrations and a supplementary technical section**  
+Original author: **Pooyesh Pourmohammad** · Zoomit · 10 September 2026  
+Course edition: MIE 446, Aerospace Structures, UMass Amherst · 23 September 2026
 
-This original English reading accompanies [Zoomit's Persian feature](https://www.zoomit.ir/fundamental-science/466926-openai-navier-stokes-solution-featured/). It is written for our class; it is **not a translation or reproduction** of the article or its photographs. The primary sources are the [OpenAI announcement and paper](https://openai.com/index/navier-stokes-solution/) and the [Clay Mathematics Institute's problem page](https://www.claymath.org/millennium/navier-stokes-equation/). Links to lectures and the formal proof appear below.
+**Source:** [Zoomit: OpenAI چگونه مسئله ناویر-استوکس را در ۸۸ ساعت حل کرد؟](https://www.zoomit.ir/fundamental-science/466926-openai-navier-stokes-solution-featured/)
 
-> **The engineering question:** What does a mathematical breakdown in a continuum model tell us about the limits of that model, and what would it *not* tell us about the safety or structure of an aircraft?
+The translation below follows the complete article body in the supplied PDF and Markdown, including its section summaries, emphasized statements, figure captions and conclusion. Site navigation, advertisements, reader comments and unrelated recommendations are excluded. The original illustrations are retained, with English captions and explanations of Persian labels. The [supplement](#supplement-technical-clarifications-and-additional-resources) is editorial material added for this course; it also identifies statements in the article that need qualification or updating. The headline and historical claims below are translated as written, rather than presented as an independent certification of the proof.
 
-![Original schematic of vortex concentration](docs/case-studies/navier-stokes/vortex-concentration.svg)
+![Navier–Stokes equations alongside a digital representation of complex fluid motion](docs/case-studies/navier-stokes/zoomit/01-cover.jpg)
 
-*Figure 1. An original, conceptual illustration of a rotating region becoming narrower and longer. It is not a numerical solution, a faithful rendering of the OpenAI construction, or a visualization of an aircraft flow.*
+*Cover illustration from the supplied Zoomit article; Zoomit branding retained.*
 
-## 1. Why this problem belongs in an aerospace course
+## Translation of the Zoomit article
 
-Air flowing over a wing exerts pressure and viscous forces. Those forces become distributed structural loads, then bending, shear and torsion in the wing. A useful calculation therefore has two links: a **flow model** that estimates aerodynamic loading and a **structural model** that transmits that loading through the airframe. Both links require assumptions about scale, material behavior, boundary conditions and uncertainty.
+**OpenAI says its 10,000 AI agents have found a way to construct a singularity in the Navier–Stokes equations, a claim that has stirred debate and disagreement among mathematicians.**
 
-The Navier–Stokes equations are central to the continuum description of fluid motion. A mathematical question about their solutions is not the same as a routine CFD run. CFD approximates a particular flow on a finite mesh and over a finite time. The Millennium Prize problem asks whether certain three-dimensional solutions that begin smoothly can remain smooth for all time, or whether a counterexample can be rigorously constructed. A converged simulation would not prove either universal statement.
+Many mathematicians, both famous and little known, have spent years of their lives solving equations, making discoveries or developing theories. But on 1 September 2026, an experiment began whose scale and speed were unprecedented in the history of research, bearing little resemblance to the working methods of classical mathematicians.
 
-For an aircraft wing, a singular mathematical solution would not mean that ordinary flow past a wing suddenly reaches infinite speed. It would show that a set of continuum equations admits a particular breakdown under specified initial conditions and forcing. Real gas behavior, compressibility, molecular scales and the way a physical force could be applied are separate questions. The result matters to how we understand model limits; it is not a revised design load factor.
+It was neither a single person nor even a research team at a prestigious university. Instead, a group of approximately 10,000 AI agents from OpenAI worked simultaneously and in parallel on one of mathematics' most famous and difficult unsolved problems.
 
-## 2. What the equations actually say
+The agents were not simply executing code that the company's researchers had specified. [According to OpenAI, as reported by Zoomit](https://www.zoomit.ir/ai-articles/466816-openai-navier-stokes-millennium-prize-problem/), they operated like a vast, autonomous research organization, divided into clusters and groups. They explored different ideas, exchanged messages, wrote code, criticized one another's hypotheses and immediately passed promising findings from one group to others.
 
-For a fluid of constant density ρ with zero divergence of velocity, a useful form is
+### Audio summary
 
-```text
-∂u/∂t + (u · ∇)u = -∇p/ρ + ν∇²u + f,
-∇ · u = 0.
-```
+[Listen to the original Persian audio summary](https://api2.zoomit.ir/media/6aa247c7420fe43083954feb). The source labels it as AI-generated.
 
-Here **u** is velocity, **p** is pressure, **ν** is kinematic viscosity, and **f** is an applied force per unit mass. The left side describes local acceleration and transport of momentum by the flow. Pressure redistributes momentum. Viscosity acts on velocity gradients; in ordinary situations it tends to smooth small-scale variations. An external force can add momentum without being itself singular.
+The [figures reported for this operation](https://openai.com/index/navier-stokes-solution/) are astonishing enough on their own. In only 88 hours, these artificial researchers exchanged 2.7 million messages within their network and generated a remarkable 130 billion tokens, producing a [165-page proof](https://cdn.openai.com/pdf/32d9f210-8b73-45e0-91bc-82a30aef8a9a/navier-stokes.pdf).
 
-This incompressible, constant-density setting should not be confused with the compressible flows we study near shocks, nor with a full model of an aircraft and its flexible structure. The Millennium Prize formulation by Charles Fefferman spells out several permitted settings and outcomes. In particular, its alternatives **C and D** describe a breakdown construction involving a smooth force. Read the [official formulation](https://www.claymath.org/wp-content/uploads/2022/02/MPPc.pdf) before judging whether a claimed counterexample fits the stated problem.
+Over the next 17 hours, the entire argument was checked in the Lean proof assistant and received its seal of approval. OpenAI says its agents have solved one of the seven Millennium Prize Problems, a puzzle that has frustrated some of humanity's brightest minds for decades.
 
-A **smooth initial condition** has no singularity built into it at the start. A **finite-time blowup** means a specified quantity becomes unbounded as time approaches a finite limit in the mathematical model. In the OpenAI paper, the claim is unbounded velocity while total kinetic energy remains bounded. Finite energy does not imply that velocity is bounded at every point: energy is an integral over space, and an increasingly narrow high-speed region can have a bounded integral.
+But what exactly is the million-dollar Navier–Stokes problem, and why has the familiar behavior of fluids defeated so many mathematicians over the years? What problem, precisely, have the AI agents solved?
 
-## 3. What OpenAI reported
+## The million-dollar problem: what is Navier–Stokes, really?
 
-On 8 September 2026, OpenAI released [*Finite Time Blowup for Navier–Stokes*](https://cdn.openai.com/pdf/32d9f210-8b73-45e0-91bc-82a30aef8a9a/navier-stokes.pdf), together with a [Lean formalization](https://github.com/openai/NavierStokesAndEuler). The paper states that, for every positive viscosity, it constructs a three-dimensional incompressible solution that starts **from rest**, is driven by a **smooth force compactly supported in space and time**, and develops unbounded velocity in finite time while kinetic energy stays bounded. “For every positive viscosity” is a mathematical quantifier in this construction; it does not turn the example into every physically occurring flow.
+**Summary:** The Navier–Stokes equations describe the motion of liquids and gases. The million-dollar problem asks whether a flow that begins in a smooth state always remains smooth, or whether it can reach a singularity in finite time, meaning that fluid velocity in the mathematical model increases without bound. OpenAI says it has constructed an example showing that this can happen.
 
-The reported mechanism involves a rotating region that concentrates while extending along its axis. Viscosity resists gradients, so constructing a blowup while keeping the force smooth and the energy finite is the difficult part. The 166-page PDF contains a theorem, a proof outline, a leading-order flow, successive corrections, a forcing construction and appendices. A classroom sketch cannot establish those steps. Consult the paper for the exact domains, regularity conditions and estimates.
+When you stir a cup of tea with a spoon and then remove it, the liquid continues to rotate for a few moments. But the small vortex gradually weakens, and the tea's surface soon becomes still because the liquid's internal friction, or viscosity, dissipates some of its kinetic energy.
 
-OpenAI says a coordinated system of approximately **10,000 agents** worked on its Navier–Stokes effort, reaching the proposed result about **88 hours** after launch. It reports **2.7 million messages** and around **130 billion output tokens** for that effort, followed by approximately **17 hours** of Lean formalization and verification using GPT-6 Astra. These are OpenAI's reported process figures, not independently measured fluid-mechanics data.
+Liquids and gases are constantly moving, rotating, colliding and changing speed. Yet their behavior is not always as simple as that of a cup of tea. In more complex flows, vortices can stretch one another, become thinner and rotate more intensely.
 
-![Original comparison of equation and forcing settings](docs/case-studies/navier-stokes/four-settings.svg)
+![Colored smoke reveals a vortex behind an aircraft wing](docs/case-studies/navier-stokes/zoomit/02-wing-vortex.jpg)
 
-*Figure 2. Original teaching diagram. Euler removes viscosity; adding a smooth external force changes the mathematical setting. A result for one cell cannot be transferred automatically to another.*
+*Colored smoke reveals the vortex formed behind an aircraft wing, an example of the flows described by the Navier–Stokes equations. Credit in the source: NASA.*
 
-## 4. Why the Euler result is part of the story
+Can viscosity always restrain this intensification of motion, or might the speed in a small region exceed every bound? This apparently simple question leads us to the Navier–Stokes problem, one of the seven Millennium Prize Problems for which OpenAI now says it has found a solution.
 
-The Euler equations can be viewed formally as the inviscid version of the momentum equation above: set viscosity to zero. OpenAI reports that a smaller group of nearly 100 agents first obtained an **unforced Euler** blowup result over roughly 50 hours. The team then shifted more resources to Navier–Stokes and used insights from the Euler work. The fact that a related inviscid problem admits a construction does not automatically solve the viscous problem: a term that vanishes in Euler remains present in Navier–Stokes, often becoming consequential near steep gradients.
+> Viscosity is the fluid's brake, but can it prevent infinite speed?
 
-There is also concurrent human research. In his [public statement](https://cims.nyu.edu/~tristanb/statement.pdf), mathematician Tristan Buckmaster describes work with Levent Alpöge on **forced Euler**, building on ideas developed by Diego Córdoba and Luis Martínez-Zoroa. OpenAI acknowledges priority for Buckmaster and Alpöge's forced Euler result and says its agents did not see the pair's unpublished work before public release. Buckmaster raises questions about the chronology and possible use of private Codex inputs while saying he does not know whether their data was used. OpenAI later stated that an investigation found those Codex prompts could not have influenced its internal model, including through training. These are different parties' accounts; avoid presenting an unresolved accusation as an established finding.
+The Navier–Stokes equations describe how velocity and pressure at every point in a fluid change over time. Just as Newton's second law tells us how the forces acting on an object change its motion, these equations describe how pressure, viscosity and external forces change the motion of a fluid.
 
-## 5. What Lean verifies, and what still needs scrutiny
+The fluid's own motion makes the calculation more difficult. For example, when a stream of water carries a vortex along, that vortex also changes the direction and speed of the surrounding water. The equations must describe this mutual interaction as well.
 
-Lean is a proof assistant. A successful formal check means that encoded statements follow from their encoded assumptions and the mathematical foundations used by the formalization. That is a substantial check against gaps in a long argument. It does not, by itself, decide whether a theorem's hypotheses match the precise Clay formulation or whether every physical interpretation in a press account is justified. Mathematicians must inspect both the formal statement and its relationship to the published theorem and official problem.
+### What factors matter when solving the Navier–Stokes problem?
 
-As of this reading's date, [Clay still lists Navier–Stokes as an active problem](https://www.claymath.org/millennium/navier-stokes-equation/). OpenAI says it does **not intend to claim the Millennium Prize** for this result. Independent scrutiny, dissemination and the prize's [formal rules](https://www.claymath.org/millennium-problems/rules/) are separate from the announcement. Thus “OpenAI published a proposed proof” is a careful description of the public record; “Clay awarded the prize” would be false.
+To investigate the Millennium Prize problem, mathematicians consider a three-dimensional, incompressible fluid: each portion retains its volume as it moves. The initial state must also be smooth, meaning that velocity and its variations are regular and continuous everywhere, with no singularity present at the outset.
 
-| Statement | What the sources support | What it does not establish |
-|---|---|---|
-| A proof PDF and Lean project were released | A public mathematical claim and machine-checked formalization | Automatic acceptance by Clay |
-| A smooth forced flow is claimed to blow up | One constructed setting under exact assumptions | Every unforced or practical flow blows up |
-| Kinetic energy remains bounded | An integral quantity stays finite | Speed stays bounded at every point |
-| AI agents produced the reported work | OpenAI's account of its process | Independence of every idea without examining provenance |
+Calling a fluid smooth does not mean that it must be at rest or contain no vortices. Even a turbulent and complex flow can sometimes satisfy these conditions.
 
-## 6. Class connection: from fluid result to structural judgment
+Mathematicians must then determine how long that smoothness lasts. Do the equations continue to describe fluid velocity and pressure by smooth functions at any arbitrarily distant future time? Or can the flow reach a singularity in finite time, a state in which the speed in a small region grows beyond every bound?
 
-Imagine that a team obtains CFD pressure coefficients for a wing. We must ask how pressure was integrated into loads, whether the pressure field is resolved, whether a relevant flow regime and boundary conditions were used, and whether structural stress and deflection were checked independently. A mathematically elegant result about Navier–Stokes regularity does not replace these checks.
+A singularity does not simply mean a very high speed. Whatever number we choose as an upper limit, the speed exceeds it as the singularity time approaches.
 
-Conversely, the story is a useful reminder that computer output requires layers of verification. A green CFD residual, a smooth contour plot and an AI-written derivation each answer a different question. For our course, a defensible load claim requires traceable assumptions, units, grid or model sensitivity as appropriate, and a load path that can be inspected. A formal proof checks logic for a mathematical statement. Neither substitutes for the other.
+![A composite image of intertwined vortices revealed by small bubbles](docs/case-studies/navier-stokes/zoomit/03-vortex-knots.jpg)
 
-**Discussion prompts**
+*A composite image of intertwined vortices at different scales; small bubbles reveal the flow structure. Credit in the source: ucmerced.edu.*
 
-1. Which term in the equation distinguishes Euler from Navier–Stokes? Why might that term matter more as a vortex becomes narrower?
-2. How can the speed at a point grow without bound while the spatial integral of kinetic energy remains finite?
-3. Give one question you would ask about the mathematical theorem, one about its formalization, and one about its physical interpretation.
-4. A CFD package predicts a new wing pressure peak. What checks would you perform before using that peak to size the spar?
-5. Compare the sentence “a proposed proof has been formalized” with “the prize has been awarded.” What extra evidence is needed for the second?
+Viscosity acts like a brake, opposing large differences in the speeds at which neighboring portions of a liquid or gas move past one another. Yet the motion of the flow itself can stretch vortices and small rotating structures, making them spin more intensely and rapidly. Can viscosity always prevent a singularity?
 
-## Figures, animations and video
+> Mathematicians must begin with a three-dimensional, incompressible fluid whose initial flow is completely smooth.
 
-The two figures above were drawn for this course and may be reused with attribution to **MIE 446, UMass Amherst**. They are *schematic*: they do not reconstruct the published solution. The following media remain on their creators' sites; no third-party photo or video has been copied into this repository.
+As a fluid moves, it also carries other parts of the flow with it and changes their speed and direction. This effect is called nonlinear transport: the part of the equation in which the flow velocity multiplies its own spatial variation.
 
-- **Research visualization:** [OpenAI's announcement](https://openai.com/index/navier-stokes-solution/) includes a visualization of local incompressible motion, a link to its PDF and a link to the specific Lean repository. View the animation alongside the paper's physical-description section. The image is the author's interpretation of its construction, not experimental footage.
-- **Introductory lecture:** [Javier Gómez-Serrano, “Navier-Stokes Existence or Breakdown” (Clay Mathematics Institute, March 2026)](https://www.claymath.org/lectures/navier-stokes-existence-or-breakdown/) — a pre-announcement explanation of the mathematical question. [Watch on YouTube](https://www.youtube.com/watch?v=3j1VW9REm7s).
-- **Further lecture:** [Peter Constantin, “On the Navier-Stokes Equations” (Clay Mathematics Institute)](https://www.claymath.org/lectures/on-the-navier-stokes-equations/).
-- **Contemporary reporting:** [Nature, “AI cracked the Navier–Stokes challenge. What does that mean for physics?”](https://www.nature.com/articles/d41586-026-02922-6) may require institutional access.
+There are two possible routes to solving the problem. One is to prove that, in the absence of an external force, every smooth initial flow satisfying the problem's conditions remains smooth forever. The other is to construct a flow that begins smoothly but whose speed grows beyond every bound in finite time.
 
-## Sources and attribution
+Even one flow with this behavior would be sufficient, provided all the conditions of the problem are satisfied. This second route allows an external force, but the force itself must remain smooth. One cannot apply an infinite force to the fluid and then attribute its unbounded speed to the behavior of the equations.
 
-- [Zoomit, “How did OpenAI solve the Navier–Stokes problem in 88 hours?” (Persian, 10 September 2026)](https://www.zoomit.ir/fundamental-science/466926-openai-navier-stokes-solution-featured/) — related journalism; this reading is independently written.
-- [OpenAI, “On the Navier–Stokes Millennium Prize Problem” (8 September 2026; concurrent-work update dated 10 September)](https://openai.com/index/navier-stokes-solution/).
-- [OpenAI, *Finite Time Blowup for Navier–Stokes* (full paper)](https://cdn.openai.com/pdf/32d9f210-8b73-45e0-91bc-82a30aef8a9a/navier-stokes.pdf).
-- [Clay Mathematics Institute, active Navier–Stokes problem page](https://www.claymath.org/millennium/navier-stokes-equation/) and [Fefferman's official problem statement](https://www.claymath.org/wp-content/uploads/2022/02/MPPc.pdf).
-- [Tristan Buckmaster, statement on work with Levent Alpöge](https://cims.nyu.edu/~tristanb/statement.pdf).
+OpenAI took the second route. In its proposed model, the fluid is initially at rest and an external force sets it in motion. The flow then concentrates in a small region and its speed tends to infinity, while the external force remains smooth throughout.
 
-*Prepared as an original course reading. Source and status checked 23 September 2026.*
+## The mathematics of singularity: can fluid speed reach infinity?
+
+**Summary:** OpenAI aims to make velocity grow to infinity without making the flow's energy infinite as well. It does this by concentrating very high speed in a small portion of the fluid and continually shrinking that portion. The speed can therefore keep increasing while total energy remains bounded.
+
+Why should a flow approach infinity and a singularity at all? Imagine vortex tubes. When a vortex is stretched in a fluid, it becomes longer and thinner, and its rotation speeds up. This resembles an ice skater who spins much faster after pulling their arms toward their chest.
+
+In a turbulent or complex flow, large structures stretch and amplify vortices and smaller fluctuations, transferring energy toward finer scales. Physical intuition alone, however, is not enough to prove a singularity. This process can concentrate velocity differences into smaller and smaller regions, but shrinking the vortex introduces a serious difficulty.
+
+> As vortices are squeezed, the fluid's rotation becomes much faster.
+
+Viscosity becomes far more influential precisely at these smaller scales. Simply making a vortex smaller and faster is therefore not enough to overcome it. How, then, can the maximum speed of a flow tend to infinity while its total energy remains bounded?
+
+Energy also depends on how much fluid is moving at that speed. If the speed doubles, the energy of the same quantity of fluid quadruples. But if the volume involved simultaneously falls to one quarter, the energy does not change.
+
+![Three stages of increasingly concentrated velocity and energy profiles](docs/case-studies/navier-stokes/zoomit/04-energy-concentration.jpg)
+
+*As the flow becomes concentrated in a smaller volume, its maximum speed can increase without bound while total energy remains bounded. This one-dimensional example was designed to explain the idea; it is not a Navier–Stokes simulation.*
+
+*English figure guide: “Stage 1 — spread out”: example width 1.6, maximum speed 0.79. “Stage 2 — more concentrated”: width 0.8, maximum speed 1.12. “Stage 3 — highly concentrated”: width 0.4, maximum speed 1.58. The upper row is “Velocity,” the lower row “Energy density,” and each panel gives “Normalized total energy: 1.00.” The example formula is u_w(x) = w^(-1/2) exp[−x²/(2w²)], with ∫u_w² dx = √π. The footer reads: “Halving the width raises the velocity peak; the area under the energy curve does not change.”*
+
+A visual example may make this apparent contradiction easier to understand. Imagine a graph with a bump that is being squeezed, becoming taller and narrower at every instant. Its height can keep increasing and its width decreasing, while the area beneath the bump, representing energy, remains bounded.
+
+Translated into fluid mechanics, the height represents the square of the fluid speed, while the width represents the volume of fluid involved.
+
+> Intense concentration is the subtle mathematical device used to break through the historic Navier–Stokes impasse.
+
+You may already know that kinetic energy is approximately proportional to speed squared multiplied by volume. If fluid motion becomes concentrated into an extremely small volume instead of spreading out, its speed can reach infinity without the system's total energy becoming mathematically infinite.
+
+The volume tends to zero and the energy remains bounded, while the velocity exceeds all bounds. This intense concentration is the central mathematical device in OpenAI's argument and its claimed counterexample.
+
+## The spaghetti vortex: examining a singularity
+
+**Summary:** OpenAI designs a vortex that becomes progressively thinner and more elongated. As it narrows, its rotation speeds up and it approaches the conditions needed for a singularity. But the increasing influence of viscosity at small scales can still obstruct this process.
+
+To make infinite fluid speed possible, OpenAI's AI designed a very particular physical structure. Imagine a cylindrical region with a vertical axis through its center and fluid rotating around that axis.
+
+![Spaghetti vortex with radial inflow and axial motion](docs/case-studies/navier-stokes/zoomit/05-spaghetti-vortex.jpg)
+
+*Radial inflow draws the vortex toward its axis, while incompressibility drives fluid upward and downward along it. The result is a narrow, elongated filament that rotates faster as the singularity time approaches.*
+
+*English figure guide: “Spaghetti vortex”; “The core narrows, its rotation intensifies, and the flow stretches along the axis.” Labels: “Fluid enters from the surroundings,” “Axial stretching,” and “Faster rotation near the core.” The cyan legend means “Slower motion away from the core,” and the orange legend means “Faster rotation near the core.” The footer identifies this as a conceptual illustration of radial flow and axial stretching, not a numerical reconstruction of the proof.*
+
+Now suppose the surrounding fluid is drawn toward the central axis. We have already introduced incompressibility: the fluid cannot simply pile up and compress along that axis. When flow rushes inward from the sides, it must also move vertically along the axis, upward and downward.
+
+This process forms a vortex that becomes progressively narrower in the radial direction and more elongated along the axis. A structure resembling a very long strand appears, hence the accessible “spaghetti” metaphor used to describe the research.
+
+> The spaghetti-shaped structure rotates rapidly to overcome the restraining effect of viscosity.
+
+A strong feedback loop then develops. Fluid is drawn inward, and that concentration increases its rate of rotation, just as with the ice skater.
+
+But remember that viscosity, the restraining, frictional effect, becomes more influential at small scales and continues trying to halt the process. The spaghetti vortex alone is therefore insufficient to prove the result.
+
+[![Still image from the video embedded in the supplied article](docs/case-studies/navier-stokes/zoomit/06-video-poster.jpg)](https://www.zoomit.ir/fundamental-science/466926-openai-navier-stokes-solution-featured/)
+
+*Video in the original article: “OpenAI — Navier–Stokes Solution.” The supplied PDF preserves this still image; the supplied Markdown has a video placeholder without a playable media URL. Click the image to open the original article's player. Additional English video links appear in the supplement.*
+
+## Battling the residual: tiny oscillations that outwitted the equation
+
+**Summary:** Because the main vortex is not an exact solution of the Navier–Stokes equations and leaves a residual, OpenAI adds extremely fine oscillations to the flow. The equation's nonlinear character allows these oscillations to produce a real effect despite their zero mean, canceling the residual. The vortex can then continue toward a singularity without an unbounded external force.
+
+The narrowing vortex seems like an ideal model for approaching infinite speed. Mathematically, however, inserting the proposed velocity field into the complete Navier–Stokes equations does not satisfy them exactly: the two sides are not equal. A residual appears, principally at the interface between the vortex core and the calm surrounding flow.
+
+To cancel that residual, OpenAI introduces families of extremely small waves and loops around the vortex core. As time advances and the core narrows, these oscillations also become finer and their frequency increases.
+
+![A zero-mean oscillation and its nonzero squared mean](docs/case-studies/navier-stokes/zoomit/07-nonlinear-oscillations.jpg)
+
+*Oscillations with zero mean produce a nonzero effect in the nonlinear part of the equation. In OpenAI's proposed construction, that effect is used to cancel the residual. This is a simple illustration of quadratic nonlinear terms.*
+
+*English figure guide: left, “Raw wave”: “The positive and negative parts cancel each other,” with “Wave mean equals zero.” The center reads “Multiply the wave by itself.” Right, “After squaring”: “Both sides of the wave become positive,” with “New mean equals one half.” Lower panel, “Application in the proposed argument”: “The amplitude and shape of the oscillations are adjusted so that their mean effect opposes the residual.” The labels “Residual” and “Mean effect of oscillations” point toward approximately zero.*
+
+These oscillations work because the Navier–Stokes equations are nonlinear. Suppose an oscillation alternates between +1 and −1. Its mean is clearly zero. But in a nonlinear equation, quantities are raised to powers or multiplied by one another.
+
+The squares of +1 and −1 both equal 1. Thus an oscillation whose mean appears to be zero produces a real, nonzero effect when it enters the equation's nonlinear structure.
+
+> Small waves exploit the equations' nonlinear nature to delicately restore balance to the system.
+
+That nonzero effect is used to cancel the residual produced by the vortex core. Imagine a balance with the core's residual on one side and the effective flow contribution generated by these fine oscillations on the other.
+
+The residual grows as the singularity time approaches. Meanwhile, the fine oscillations produce an opposing effect through the nonlinear part of the equation. Their parameters are adjusted so that the two contributions cancel with very high precision.
+
+This cancellation allows the external force required to satisfy the equation to remain smooth and bounded, even as the vortex core continues to narrow and its speed tends to infinity.
+
+## Countdown to singularity, τ: when the remaining time tends to zero
+
+**Summary:** As the singularity approaches and the remaining time, τ, decreases, the vortex core becomes more concentrated and narrower while the speed inside rises sharply. This process ultimately permits unbounded velocity growth without violating the system's bounded total energy.
+
+Now that we have seen how the vortex works, let us examine its mathematical structure over time. First, we need a key variable called tau, τ. It represents the time remaining until the singularity forms:
+
+$$\tau=T-t,$$
+
+where T is the singularity time and t is the current time. As the singularity approaches, τ becomes smaller and ultimately tends to zero.
+
+In OpenAI's proposed construction, the vortex-core radius decreases in proportion to τ¹ᐟ². Its extent along the axis also shrinks, but more slowly, in proportion to τ¹ᐟ²⁻ʰ, where h is a small positive number less than one hundredth.
+
+> As the singularity time approaches, the vortex-core radius decreases much faster than its length.
+
+As τ decreases, both the radius and the length shrink. The radius, however, decreases faster, so the core becomes more elongated and filament-like even while it is getting smaller. At the same time, the principal flow speeds increase. The rotational speed around the axis and the speed along it grow approximately in proportion to τ⁻¹ᐟ²⁻ʰ.
+
+![Original velocity scaling card](docs/case-studies/navier-stokes/zoomit/08-velocity.jpg)
+
+*English translation of the card: “Flow velocity.” The negative exponent makes the velocity grow as τ approaches zero; this scaling describes the principal rotational and axial speeds. U → ∞.*
+
+$$U\propto\tau^{-1/2-h}.$$
+
+![Original vortex-core size scaling card](docs/case-studies/navier-stokes/zoomit/09-core-size.jpg)
+
+*English translation of the card: “Core size.” Both dimensions shrink, but the radial dimension shrinks faster. “The core becomes thinner.”*
+
+$$\ell_r\propto\tau^{1/2},\qquad\ell_z\propto\tau^{1/2-h}.$$
+
+![Original core-energy scaling card](docs/case-studies/navier-stokes/zoomit/10-core-energy.jpg)
+
+*English translation of the card: “Core energy.” For sufficiently small h, the exponent remains positive and the collapsing core's energy decreases. Ecore → 0.*
+
+$$E_{\mathrm{core}}\propto\tau^{1/2-3h}.$$
+
+Because the velocity exponent is negative, the speeds increase as τ approaches zero and ultimately grow without bound. In contrast, the core's total kinetic energy, which depends on its volume and the square of its speed, varies in proportion to τ¹ᐟ²⁻³ʰ.
+
+When h is sufficiently small, this energy exponent remains positive. The core's energy therefore stays bounded as τ approaches zero, even while the speed reaches infinity. This is the same idea as squeezing a graph into an infinitesimally small region.
+
+## The Euler prelude: why did the agents start with an ideal fluid?
+
+**Summary:** The agents first tackled the Euler equations, the version of Navier–Stokes without viscosity. They constructed a chain in which each oscillation strengthened the next, smaller one, and the process repeated at an accelerating rate. Success with this simpler model supplied key insights and tools for the main Navier–Stokes project.
+
+Solving Navier–Stokes directly, with viscosity stubbornly present, was like climbing a cliff without a hook or handhold. The AI team therefore chose an easier starting point: what would happen if friction were removed from the system?
+
+Removing the viscous term from the Navier–Stokes equations gives the Euler equations, which describe an ideal fluid with no internal friction. Without viscosity, constructing a mechanism that drives speed toward infinity becomes more straightforward computationally.
+
+> Removing viscosity makes it easier to construct a mechanism that drives velocity to infinity.
+
+According to the project documentation, a group of nearly 100 OpenAI agents worked on Euler alongside the effort on the Millennium Prize Problems. Once that group succeeded, OpenAI allocated more resources to Navier–Stokes.
+
+The proposed Euler mechanism uses a multistage chain. The agents began with a large shear flow, in which layers slide past one another, and placed a small oscillation on top of it.
+
+![Successive generations of a self-similar Euler cascade](docs/case-studies/navier-stokes/zoomit/11-euler-cascade.jpg)
+
+*In a self-similar cascade, each generation of flow amplifies a smaller, faster oscillation. The intervals between generations continually decrease, and the velocity gradient grows without bound in finite time.*
+
+*English figure guide: “Generation 1 — large scale — small gradient”; “Generation 2 — smaller scale — larger gradient”; “Generation 3 — very small scale — steep gradient”; “Later generations — continuing to finer scales — unbounded growth.” The lower panel reads: “The time between generations is compressed. Successive stages occur faster and accumulate before a specified time.” T is the “accumulation time,” and the bottom summary is “Smaller scale + shorter time → larger velocity gradient.”*
+
+The large main flow stretches the small oscillation and strengthens its velocity gradient. After a time, the amplified oscillation itself plays the role of a shear flow for an even smaller oscillation.
+
+The second oscillation is strengthened in turn and acts on a third. This repeats, with each stage smaller and faster than the previous one, preparing the conditions for the next. Such a chain is called a self-similar cascade.
+
+The time intervals between generations keep decreasing until infinitely many stages of the cascade occur within a finite time interval. Meanwhile, velocity variations concentrate at smaller and smaller scales. Under this compression of time, the maximum velocity gradient must tend to infinity.
+
+The smaller group's Euler result was subsequently transferred to the larger Navier–Stokes project. Ideas and techniques from this stage formed part of the foundation for the work of the approximately 10,000 agents tackling Navier–Stokes.
+
+## The Lean proof assistant checks the logic
+
+After the agents completed their reasoning, formalization began. In Lean, every mathematical argument is converted into a sequence of fully formal, precise steps. The system checks whether each conclusion really follows from the preceding premises under the rules of logic.
+
+> Lean verified the proof's logic in 17 hours.
+
+Formalizing 165 pages of proof in 17 hours and obtaining verification is itself a remarkable achievement, minimizing the likelihood of the ordinary human errors that can appear in a long chain of calculations. But machine verification of the code's logical structure is not the same as acceptance of the proof by the mathematical community.
+
+Lean tells us whether the reasoning follows logically from the stated assumptions. It does not tell us whether the starting assumptions and definitions correspond exactly to the Clay Institute's problem. For example, are the AI's definitions of smoothness, domain and initial conditions precisely those required for the million-dollar prize?
+
+**Related reading linked by Zoomit:**
+
+- [Solving the equation of the century: how is Google unraveling the 200-year-old Navier–Stokes puzzle?](https://www.zoomit.ir/science/443567-solving-navier-stokes-problem-featured/)
+- [The hardest unsolved mathematical problems: from the Riemann hypothesis to P versus NP](https://www.zoomit.ir/science/147715-math-unsolved-easy-open-problem/)
+
+## It remains unclear whether the Clay Institute will accept the proof
+
+As soon as OpenAI announced its claim, skepticism and debate spread through mathematicians' social networks. While the public awaited a historic victory, the relevant institutions adopted a cautious position. At present, the Clay Institute still lists Navier–Stokes among its unsolved problems.
+
+For a proof to be recognized as a solution to a Millennium Prize Problem, it must pass through several stages, including formal publication in a qualifying scientific journal, a prescribed period for scrutiny by mathematicians and, ultimately, broad acceptance within the mathematical community.
+
+Some academics and mathematicians have also questioned the originality of the ideas. Did the neural network produce genuinely new mathematical insight, or did its extraordinary processing speed simply assemble existing human papers, techniques and achievements into a formal framework?
+
+## Who found the solution first?
+
+The path to the current Navier–Stokes proof began between 2023 and 2025 with the work of two prominent Spanish mathematicians, Diego Córdoba and Luis Martínez-Zoroa. They developed a method for constructing singularities through a cascade of vortices, although they could not make the external force satisfy the Millennium Prize problem's stringent conditions.
+
+Later, Tristan Buckmaster of New York University and Levent Alpöge of Anthropic continued along this research path with the help of language models. They obtained results for the Euler equations and a version close to the Navier–Stokes problem. News of their progress reached OpenAI and, according to the company, motivated the project that eventually produced its Navier–Stokes proof.
+
+Almost simultaneously with OpenAI's announcement, [Buckmaster published an account of his joint work with Alpöge](https://cims.nyu.edu/~tristanb/statement.pdf), raising questions about the origin of the new solution. He argued that choosing the version of Navier–Stokes with smooth external forcing was not an obvious route that everyone would naturally pursue.
+
+Buckmaster and Alpöge had entered drafts and ideas into Codex and Claude while developing their research. Buckmaster asked whether their research data might somehow have influenced the new model or the company's solution. He emphasized, however, that he had no evidence for the suggestion and could not conclusively rule it out either.
+
+OpenAI responded that its researchers and agents had not seen Buckmaster and Alpöge's work before it was made public and had not accessed any specific user's data to solve the problem. The company [did not rule out the possibility that the pair's Codex data had influenced improvements to its models](https://openai.com/index/navier-stokes-solution/), although it considered that unlikely.
+
+The uncertainties surrounding the origins of OpenAI's achievement opened a wider debate about scientific credit. When researchers entrust unpublished ideas to AI tools, how should the company behind those tools establish the independence of a solution, the origin of its ideas and each researcher's contribution?
+
+> If the mathematical community confirms OpenAI's proof, what the company's agents accomplished in 88 hours will mark a point of no return in the history of science.
+
+Perhaps the real significance of this achievement will ultimately be determined neither by the million-dollar prize nor by formulas describing fluid singularities. AI has shown that it can reproduce the cycle of collaborative scientific research: dividing work, generating initial ideas, criticizing hypotheses, transferring insights between research clusters and finally producing a unified result.
+
+**End of the translated article.**
+
+---
+
+## Supplement: technical clarifications and additional resources
+
+**The material below is added for this course and is not part of Zoomit's article.** It preserves the historical translation while clarifying its mathematics and providing links for further study.
+
+### 1. Axial stretching and a shrinking core are compatible
+
+The source uses “longer” and “more elongated” in its physical description, then states that both core dimensions shrink. These are compatible if “more elongated” describes the aspect ratio, not an increasing absolute core length. Using the article's scaling,
+
+$$\frac{\ell_z}{\ell_r}\propto\tau^{-h}\longrightarrow\infty.$$
+
+For positive h smaller than 1/2, both dimensions tend to zero, but the radial dimension shrinks faster. Also, a characteristic core length and the separation of particular material particles are different quantities. The relative geometry should not be confused with the motion of a fixed group of particles.
+
+### 2. Deriving the energy exponent
+
+This is a scaling calculation from the relationships printed in the supplied article, not an independent proof of its flow construction. For a roughly cylindrical core at constant density,
+
+$$V_{\mathrm{core}}\sim\ell_r^2\ell_z
+\sim\tau^{3/2-h},\qquad U^2\sim\tau^{-1-2h}.$$
+
+Consequently,
+
+$$E_{\mathrm{core}}\sim\rho U^2V_{\mathrm{core}}
+\sim\tau^{1/2-3h}.$$
+
+The exponent is positive when h < 1/6; the article's smaller range 0 < h < 0.01 satisfies that condition. Thus this scaling gives core energy tending to zero while the maximum speed grows. It says nothing by itself about the energy in the entire surrounding flow. For h = 0.005, reducing τ by a factor of 100 multiplies the characteristic speed by about 10.23, the radial scale by 0.10, the axial scale by 0.1023 and the core energy by about 0.107.
+
+### 3. Zero mean is not zero nonlinear effect
+
+For the simple periodic function q(x) = a sin(kx), its mean over one period is zero, while the mean of q² is a²/2. In a vector momentum equation, the relevant quadratic object is a tensor such as the average of **w** ⊗ **w**, not just a scalar square. Its divergence can contribute to the averaged momentum balance. The sine-wave example explains how a nonzero quadratic effect is possible; it does not demonstrate that a prescribed residual can be canceled while maintaining incompressibility and all required estimates.
+
+### 4. Velocity blowup and gradient blowup must be distinguished
+
+The translation retains the Euler section's language about infinite velocity. The [released Lean repository](https://github.com/openai/NavierStokesAndEuler) describes its unforced Euler result more specifically: the velocity's C¹ norm becomes unbounded, and the time integral of the vorticity's L∞ norm diverges. That statement should not be paraphrased automatically as pointwise velocity becoming infinite. The same repository describes its Navier–Stokes results separately for the whole space and the periodic torus. Exact theorem statements matter when comparing the two equations.
+
+### 5. A dated correction to the data-use paragraph
+
+The supplied Zoomit text says that OpenAI did not rule out influence through training. OpenAI's [announcement, with an update dated 10 September 2026](https://openai.com/index/navier-stokes-solution/), now states that its investigation found Buckmaster's Codex prompts could not have influenced the internal system, including through training. This is OpenAI's stated finding; it is not an independent audit conducted for this course. The historical translation remains unchanged above so readers can distinguish the supplied article from this update.
+
+The [Clay page](https://www.claymath.org/millennium/navier-stokes-equation/) was still marked “Active” when checked on 23 September 2026. OpenAI also states that it does not intend to claim the Millennium Prize. Consult [Clay's rules](https://www.claymath.org/millennium-problems/rules/) for the official recognition process.
+
+### 6. Implications for aerospace engineering
+
+A mathematical counterexample concerns the precise continuum equations, domain, initial data and forcing in its theorem. It does not supply a new pressure distribution for a real wing or demonstrate a failure of a particular aircraft. Practical load prediction still requires a suitable flow model, convergence evidence, sensible boundary conditions and appropriate validation. Pressure and shear loads must then be transferred into structural bending, torsion and stress calculations.
+
+For a course exercise, distinguish three questions: Is a mathematical statement logically established? Does the mathematical model describe the physical situation of interest? Is a particular numerical calculation an accurate approximation to that model? Lean, physical validation and mesh/time-step studies address different parts of that assessment.
+
+### 7. Videos and primary references
+
+| Resource | What to use it for |
+|---|---|
+| [Original Zoomit article and embedded player](https://www.zoomit.ir/fundamental-science/466926-openai-navier-stokes-solution-featured/) | Original Persian presentation and the video represented by the still above |
+| [OpenAI's announcement and visualization](https://openai.com/index/navier-stokes-solution/) | The team's account of the construction and research process |
+| [Javier Gómez-Serrano: Navier–Stokes Existence or Breakdown — YouTube](https://www.youtube.com/watch?v=3j1VW9REm7s) · [Clay lecture page](https://www.claymath.org/lectures/navier-stokes-existence-or-breakdown/) | A lecture given at Harvard on 11 March 2026, before the announcement, explaining the underlying mathematical problem |
+| [Peter Constantin: On the Navier–Stokes Equations — Clay video page](https://www.claymath.org/lectures/on-the-navier-stokes-equations/) | Further mathematical background |
+| [Full Navier–Stokes proof PDF](https://cdn.openai.com/pdf/32d9f210-8b73-45e0-91bc-82a30aef8a9a/navier-stokes.pdf) | Exact theorem, physical description and proof; the PDF has 166 physical pages, with references beginning at printed page 165 |
+| [Lean formalizations and checking instructions](https://github.com/openai/NavierStokesAndEuler) | Formal theorem statements and instructions for checking the certificates |
+| [Fefferman's official problem formulation](https://www.claymath.org/wp-content/uploads/2022/02/MPPc.pdf) | The assumptions and alternatives in the Millennium Prize problem |
+| [Buckmaster's statement](https://cims.nyu.edu/~tristanb/statement.pdf) | His account of the concurrent research and priority questions |
+
+### Image provenance
+
+All 11 article images, including the cover, three formula cards and the video still, were extracted from the user-supplied Zoomit PDF. Two instances of the same wing-vortex image were consolidated. Formula cards split across PDF pages were rejoined; their original lettering is retained. English captions and figure guides accompany the originals. Source credit “NASA” is retained for the wing-vortex photograph, and “ucmerced.edu” for the vortex image. Other illustrations are credited to the supplied Zoomit article; no new authorship or license is claimed for them. The video itself was not included in either supplied file, so its original player and related English lectures are linked rather than described as a locally archived video.

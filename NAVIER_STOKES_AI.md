@@ -441,7 +441,7 @@ U=\tau^{-1/2-h},\qquad
 E_c=U^2r_c^2\ell_z=\tau^{1/2-3h}.
 $$
 
-The default in the inspected JavaScript is (h=0.006). Its pulse is a teaching function, (a(v)=\sin^2(\pi v)\exp(-\nu v^2)), and its cancellation example explicitly assigns a residual (0.4\,10^{-3k}). That final expression is a chosen visual progression, not a numerical convergence result. These details help students interpret the animation without confusing it with a solved velocity field.
+The default in the inspected JavaScript is $h=0.006$. Its pulse is a teaching function, $a(v)=\sin^2(\pi v)\exp(-\nu v^2)$, and its cancellation example explicitly assigns a residual $0.4\,10^{-3k}$. That final expression is a chosen visual progression, not a numerical convergence result. These details help students interpret the animation without confusing it with a solved velocity field.
 
 The gCLM solver evolves the reduced equation
 
@@ -450,7 +450,7 @@ $$
 \qquad u_x=H(\omega),
 $$
 
-where (H) is the periodic Hilbert transform. Its diffusion substep is exact for pure diffusion, but that fact does not make the combined nonlinear time integration exact. A classroom reproduction should compare against the included CLM analytical solution and vary both resolution and timestep before interpreting rapid growth. Reaching the configured final time with the label `no_blowup` only describes that numerical run.
+where $H$ is the periodic Hilbert transform. Its diffusion substep is exact for pure diffusion, but that fact does not make the combined nonlinear time integration exact. A classroom reproduction should compare against the included CLM analytical solution and vary both resolution and timestep before interpreting rapid growth. Reaching the configured final time with the label `no_blowup` only describes that numerical run.
 
 The inspected Burgers network minimizes a sampled residual based on
 

@@ -417,3 +417,47 @@ $$
 This tests a mechanism within an idealized Euler model. It should be presented separately from Christov's prescribed Navier–Stokes-inspired vortex and from any claim about a complete PDE solution.
 
 The [OpenAI NavierStokesAndEuler repository](https://github.com/openai/NavierStokesAndEuler) remains the primary source for the proposed mathematical constructions. It serves a different purpose from the educational notebooks and numerical demonstrations listed here.
+
+
+### 3. Additional repositories: visualization, reduced models and formal code
+
+*Extended source review, 23 September 2026.* Four additional repositories broaden the comparison beyond the four projects above. The README and the specific source file linked in each row were inspected. These projects were **not executed or compiled for this report**; numerical performance and formal-build claims made upstream remain attributed to their authors.
+
+| Additional repository | Source inspected and what it does | Relevance and limits |
+|---|---|---|
+| [emerardd/ns-blowup-atlas](https://github.com/emerardd/ns-blowup-atlas) | [src/physics.js](https://github.com/emerardd/ns-blowup-atlas/blob/main/src/physics.js) computes normalized core radius, axial length, speed, volume and energy, plus an illustrative pulse and scalar cancellation example. The README describes six interactive Three.js chapters and an English interface. | Closest to a classroom visual companion for the article. The [English exhibit linked by the project](https://ns.emerard.com/en/) lets readers explore the proposed scaling. Its streamlines and particle motion are illustrative; its residual reduction is prescribed, not measured from the PDE. The hosted exhibit was not browser-tested in this review. |
+| [ravanova/blowup-search](https://github.com/ravanova/blowup-search) | [solver/gclm.py](https://github.com/ravanova/blowup-search/blob/main/solver/gclm.py) implements a periodic, one-dimensional generalized Constantin–Lax–Majda model using Fourier differentiation, quadratic dealiasing, RK4 for nonlinear terms and a separate exact diffusion step. It records amplitude, timestep and conservation diagnostics. | A useful numerical comparison with Christov's prescribed field: this file evolves a reduced PDE. The reduced model is not three-dimensional Navier–Stokes. The source's `blowup_candidate` label is triggered by a finite amplification threshold; it is not a proof of a singularity. |
+| [Dibyakanti/PINNs-Solving-Burgers-Near-Finite-Time-Blow-Up](https://github.com/Dibyakanti/PINNs-Solving-Burgers-Near-Finite-Time-Blow-Up) | [models/burgers1d.py](https://github.com/Dibyakanti/PINNs-Solving-Burgers-Near-Finite-Time-Blow-Up/blob/main/models/burgers1d.py) defines a PyTorch tanh network and uses automatic differentiation to form the inviscid Burgers residual. The README supplies training commands and links the authors' [2024 paper](https://doi.org/10.1088/2632-2153/ad51cd). | A related scientific-machine-learning exercise on approximation near a singular time, rather than a reproduction of the 2026 construction. It makes the distinction between minimizing a sampled PDE residual and establishing a continuum result concrete. Training and paper results were not reproduced here. |
+| [mathzhuonichi/blowup_density](https://github.com/mathzhuonichi/blowup_density) | [PeriodicDensityDichotomy.lean](https://github.com/mathzhuonichi/blowup_density/blob/main/formalization/NSFormalization/Paper1/PeriodicDensityDichotomy.lean) contains formal statements and proofs concerning nearby singular forces, local-flow witnesses and lifespan bounds. The repository accompanies *Density of Forces Producing Navier–Stokes Blowup*. | Relevant to the forcing and formal-verification discussion. This is mathematical source code, not a flow simulator. The inspected module distinguishes statements with a supplied local-flow hypothesis from a zero-initial-data construction. The README's claims about complete theorem closure and successful Lean checking have not been independently established by this review. |
+
+#### What the inspected code makes explicit
+
+In NS Atlas, the normalization sets the proportionality coefficients to one and uses
+
+$$
+r_c=\tau^{1/2},\qquad
+\ell_z=\tau^{1/2-h},\qquad
+U=\tau^{-1/2-h},\qquad
+E_c=U^2r_c^2\ell_z=\tau^{1/2-3h}.
+$$
+
+The default in the inspected JavaScript is (h=0.006). Its pulse is a teaching function, (a(v)=\sin^2(\pi v)\exp(-\nu v^2)), and its cancellation example explicitly assigns a residual (0.4\,10^{-3k}). That final expression is a chosen visual progression, not a numerical convergence result. These details help students interpret the animation without confusing it with a solved velocity field.
+
+The gCLM solver evolves the reduced equation
+
+$$
+\omega_t+a u\omega_x=\omega u_x+\nu\omega_{xx},
+\qquad u_x=H(\omega),
+$$
+
+where (H) is the periodic Hilbert transform. Its diffusion substep is exact for pure diffusion, but that fact does not make the combined nonlinear time integration exact. A classroom reproduction should compare against the included CLM analytical solution and vary both resolution and timestep before interpreting rapid growth. Reaching the configured final time with the label `no_blowup` only describes that numerical run.
+
+The inspected Burgers network minimizes a sampled residual based on
+
+$$
+f_\theta=\partial_t u_\theta+u_\theta\partial_x u_\theta.
+$$
+
+There is no viscous second-derivative term in this implementation. An appropriate exercise would compare prediction error and derivative error with an independent reference as the evaluation time approaches the singular time, rather than treating a small training loss as sufficient evidence of accuracy.
+
+For the present course, NS Atlas is the most direct additional visual resource; the gCLM solver provides a reduced-PDE experiment, and the Burgers PINN provides an AI-focused extension. The Lean repository is best used for a separate discussion of theorem statements, hypotheses and what a successful proof-assistant build actually checks. No new simulation outputs from these four repositories are included in the report.

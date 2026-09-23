@@ -1,0 +1,102 @@
+{
+  "h": 0.05,
+  "divergence_symbolic": "0",
+  "all_particle_integrations_success": true,
+  "particles": 8,
+  "swirl_log_slope": -0.5500000000001102,
+  "expected_swirl_log_slope": -0.55,
+  "energy_log_slope": 0.3777748845335959,
+  "leading_energy_log_slope": 0.35,
+  "tau_start": 0.3,
+  "tau_end": 0.0001,
+  "speed_start": 1.3259709355898686,
+  "speed_end": 108.38038634643489,
+  "energy_start": 7.719339996665305,
+  "energy_end": 0.3747287558092423,
+  "finite_diagnostics": true,
+  "runtime_seconds": 22.309622049331665,
+  "versions": {
+    "python": "3.12.14",
+    "numpy": "2.3.5",
+    "scipy": "1.17.0",
+    "sympy": "1.14.0",
+    "matplotlib": "3.10.8"
+  },
+  "cells": [
+    {
+      "cell": 3,
+      "status": "ok",
+      "stdout": ""
+    },
+    {
+      "cell": 16,
+      "status": "ok",
+      "stdout": ""
+    },
+    {
+      "cell": 18,
+      "status": "ok",
+      "stdout": ""
+    },
+    {
+      "cell": 20,
+      "status": "ok",
+      "stdout": "expanded form agrees with the integral: True\n"
+    },
+    {
+      "cell": 22,
+      "status": "ok",
+      "stdout": ""
+    },
+    {
+      "cell": 24,
+      "status": "ok",
+      "stdout": ""
+    },
+    {
+      "cell": 27,
+      "status": "ok",
+      "stdout": ""
+    },
+    {
+      "cell": 30,
+      "status": "ok",
+      "stdout": ""
+    },
+    {
+      "cell": 34,
+      "status": "ok",
+      "stdout": ""
+    },
+    {
+      "cell": 35,
+      "status": "ok",
+      "stdout": ""
+    },
+    {
+      "cell": 36,
+      "status": "ok",
+      "stdout": ""
+    },
+    {
+      "cell": 39,
+      "status": "ok",
+      "stdout": ""
+    },
+    {
+      "cell": 40,
+      "status": "ok",
+      "stdout": ""
+    },
+    {
+      "cell": 41,
+      "status": "ok",
+      "stdout": ""
+    },
+    {
+      "cell": 44,
+      "status": "ok",
+      "stdout": ""
+    }
+  ]
+}

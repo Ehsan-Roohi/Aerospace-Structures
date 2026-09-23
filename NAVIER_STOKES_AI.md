@@ -335,3 +335,85 @@ For a course exercise, distinguish three questions: Is a mathematical statement 
 The cover, two photographs and video still were extracted from the supplied Zoomit PDF. The seven scientific diagrams containing Persian text were redrawn for this English edition: energy concentration, the spaghetti vortex, nonlinear oscillations, three scaling cards and the Euler cascade. Their scientific relationships, numerical examples and explanatory content follow the supplied article; all titles, labels, legends and notes inside the new diagrams are English. The Gaussian and sine-wave curves are plotted from their illustrative equations. The vortex and cascade remain conceptual schematics, not numerical reconstructions of the proof.
 
 Source credit “NASA” is retained for the wing-vortex photograph, and “ucmerced.edu” for the vortex image. The English diagrams are adaptations of the figures in Pooyesh Pourmohammad's Zoomit article, credited above. The [figure-generation script](scripts/render_navier_stokes_english_figures.py) and [vector SVG versions](docs/case-studies/navier-stokes/english/) are included. The video itself was not included in either supplied file; its original player and related English lectures are linked.
+
+
+## Computational companion: executed notebook and related code
+
+*Added 23 September 2026. This section is supplementary course material, separate from the translated Zoomit article.*
+
+### 1. Christov's collapsing-vortex notebook: code and execution
+
+Ivan C. Christov's [original notebook](https://github.com/ichristov/intermediate-fluid-mechanics/blob/0f93a34750531e42e8806e5a11c46ac56769e669/extras/NS_blowup_vortex.ipynb) provides an educational visualization of a prescribed, axisymmetric, incompressible velocity field. Its swirl and axial velocities are chosen analytically; radial velocity follows from continuity. Particle trajectories are integrated with SciPy. **It does not solve the Navier–Stokes momentum equations, reconstruct the claimed proof, or establish finite-time blowup.**
+
+The full [course notebook](computational/navier-stokes/NS_blowup_vortex.ipynb), [execution script](computational/navier-stokes/run_notebook.py), [reproduction instructions](computational/navier-stokes/README.md) and [GPL-3.0 license](computational/navier-stokes/LICENSE) are included in this repository. [Open the notebook in Google Colab](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/main/computational/navier-stokes/NS_blowup_vortex.ipynb).
+
+All scientific cells were executed headlessly in a shared Python namespace. Only unused widget imports, IPython setup and rich display were omitted; plot size and output export were adapted. The scientific formulas and parameters were retained. Four figures and a 50-frame animation were generated from this execution, rather than copied from upstream outputs.
+
+| Check or diagnostic | Result from this run |
+|---|---:|
+| Illustrative parameter, h | 0.05 |
+| Symbolic velocity divergence | Exactly 0 |
+| Successful particle integrations | 8 of 8 |
+| Fitted maximum-swirl exponent versus remaining time, τ | −0.550000 |
+| Expected exponent for this prescribed field | −0.55 |
+| Diagnostic interval, τ | 0.3 to 0.0001 |
+| Maximum swirl over that interval | 1.32597 to 108.38039 |
+| Energy inside the selected shrinking core | 7.71934 to 0.37473 |
+| Fitted core-energy exponent over that interval | 0.377775 |
+| Leading asymptotic core-energy exponent | 0.35 |
+
+The fitted energy exponent need not equal 0.35 over a finite interval: this field's core energy contains contributions proportional to τ^0.35 and τ^0.45. These checks establish consistency with the prescribed model, not validation of the Navier–Stokes equations. The notebook deliberately uses h = 0.05, whereas the discussed construction specifies a much smaller range, h < 0.01. Its finite, shrinking-core energy must not be mistaken for finite whole-space energy: the toy field lacks the necessary axial localization.
+
+The run used Python 3.12.14, NumPy 2.3.5, SciPy 1.17.0, SymPy 1.14.0 and Matplotlib 3.10.8. Full [execution metrics](computational/navier-stokes/results/run_metrics.json) and [diagnostic data as CSV](computational/navier-stokes/results/scaling_data.csv) are available for inspection.
+
+#### Swirl profiles
+
+![Executed notebook: swirl profiles in physical and similarity coordinates](computational/navier-stokes/results/swirl_profiles.png)
+
+*Physical profiles narrow and grow as the remaining time decreases; the rescaled profiles reveal the imposed similarity structure. These are samples of an analytical velocity field.*
+
+#### Meridional flow
+
+![Executed notebook: meridional velocity field at successive remaining times](computational/navier-stokes/results/meridional_flow.png)
+
+*The radial and axial components illustrate inward motion and axial stretching. Symbolic cancellation in the divergence verifies incompressibility, which alone is insufficient to satisfy momentum balance.*
+
+#### Particle trajectories
+
+![Executed notebook: eight particle trajectories](computational/navier-stokes/results/particle_paths.png)
+
+*Eight trajectories obtained by integrating the prescribed velocity field. All eight numerical integrations reported success; this is an ODE calculation, not a fluid PDE simulation.*
+
+#### Speed and core energy
+
+![Executed notebook: increasing swirl speed and decreasing shrinking-core energy](computational/navier-stokes/results/speed_and_energy.png)
+
+*Increasing pointwise speed can coexist with decreasing energy in a shrinking region. The energy curve here concerns only the selected core.*
+
+#### Animated core collapse
+
+![Executed notebook: physical and rescaled views of the collapsing core](computational/navier-stokes/results/core_collapse.gif)
+
+*Fifty frames from τ = 0.05 to 10^−6. The fixed physical plotting grid under-resolves the narrow core at late times (roughly τ below 5 × 10^−5); the rescaled panel remains useful for interpreting its structure. The animation never reaches τ = 0 and cannot demonstrate a singularity.*
+
+### 2. Related public GitHub implementations
+
+The repositories below were found through GitHub search and reviewed at the README and relevant source-code level on 23 September 2026. **Only Christov's notebook was executed for this report.** The other projects are linked to their original code; their results and build instructions have not been independently reproduced here. Repository descriptions are not evidence that a mathematical proof is correct.
+
+| Project and source code | What the code implements | How it relates to this report |
+|---|---|---|
+| [pmocz/euler-blowup-viz](https://github.com/pmocz/euler-blowup-viz) — [amplification.py](https://github.com/pmocz/euler-blowup-viz/blob/main/sim/amplification.py) | Idealized ray/transverse-amplitude ODE integration and its scalar reduction, alongside finite-stage cascade and flow visualizations. The source includes a consistency check between the full and scalar ODE formulations. | Useful for the related **Euler** amplification mechanism. It is not a full Euler direct numerical simulation or a blowup proof. |
+| [james-coder/navier-stokes-blowup](https://github.com/james-coder/navier-stokes-blowup) — [observatory.py](https://github.com/james-coder/navier-stokes-blowup/blob/main/src/ns_blowup/observatory.py) | A Python/JAX research package with periodic-flow solvers and a separate observatory for similarity scales and selected components, including outer heat-flow diagnostics. | The repository explicitly distinguishes implemented components from the incomplete blowup construction. Periodic solver tests do not validate the proposed whole-space singular solution. |
+| [minfx-ai/navier-stokes-blowup](https://github.com/minfx-ai/navier-stokes-blowup) — [shader.wgsl](https://github.com/minfx-ai/navier-stokes-blowup/blob/master/src/shader.wgsl) | Rust/egui/WGPU visualization with procedural particle motion, core scaling, annular pulses and an exterior region. | Useful as an interactive conceptual illustration. Procedural profiles and animation choices are not reconstructed solution fields or momentum-equation verification. |
+| [nagamachia/navier-stokes-blowup-reproduction](https://github.com/nagamachia/navier-stokes-blowup-reproduction) — [similarity_coordinates.hpp](https://github.com/nagamachia/navier-stokes-blowup-reproduction/blob/main/include/similarity_coordinates.hpp) | C++20/FFTW work on selected construction components and periodic spectral benchmarks. The linked code solves the implicit similarity-coordinate equation by bisection. | A partial computational reproduction effort; the README identifies missing constructive profiles and does not provide a complete numerical realization of the blowup solution. |
+
+For a focused follow-up exercise, Mocz's [amplification code](https://github.com/pmocz/euler-blowup-viz/blob/main/sim/amplification.py) is a useful complement: it integrates an idealized amplitude system and compares it with the scalar equation
+
+$$
+\frac{d}{dx}\left[(1+x^4)\frac{dV}{dx}\right]
+=\left(\frac{2}{\beta}-2x^2\right)V.
+$$
+
+This tests a mechanism within an idealized Euler model. It should be presented separately from Christov's prescribed Navier–Stokes-inspired vortex and from any claim about a complete PDE solution.
+
+The [OpenAI NavierStokesAndEuler repository](https://github.com/openai/NavierStokesAndEuler) remains the primary source for the proposed mathematical constructions. It serves a different purpose from the educational notebooks and numerical demonstrations listed here.

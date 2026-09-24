@@ -75,7 +75,7 @@ class Figure:
 def trim_figure():
     f = Figure(850, 'Pitch trim: the worked example', 'Nose left, tail right. CG ahead of wing force. Upward wing lift, downward weight and downward tail force. Dimensions match the example.')
     f.text(40,48,'Pitch trim: match every force to the worked example',32,bold=True)
-    f.text(40,86,'Side view  •  nose to the left  •  distances measured aft from CG',22)
+    f.text(40,86,'Steady, level, trimmed flight  •  nose left  •  wing lift represented at AC',22)
     f.aircraft(92,330,1.5)
     cg, wing, tail = 370, 412.6, 938
     f.text(90,270,'NOSE',20,bold=True)
@@ -84,6 +84,8 @@ def trim_figure():
     f.line(cg,345,cg,510,RED,5,arrow='red')
     f.line(tail,369,tail,485,BLUE,5,arrow='blue')
     f.dot(cg,345)
+    f.dot(wing,357,BLUE,6)
+    f.text(440,404,'AC: wing aerodynamic center',19,BLUE)
     f.text(330,315,'CG',23,RED,bold=True)
     f.text(480,165,'Wing lift  Lw = 10,946 N',25,BLUE,bold=True)
     f.line(470,171,wing+4,179,BLUE)
@@ -100,16 +102,17 @@ def trim_figure():
     f.line(tail,568,tail,613,GRAY,1.5,True)
     f.dimension(cg,tail,608,'dt = 4.00 m')
     # Nose-down couple is counterclockwise in a nose-left side view.
-    f.parts.append(f'<path d="M951 209 A40 40 0 0 0 875 209" fill="none" stroke="{GRAY}" stroke-width="3" marker-end="url(#gray)"/>')
-    f.text(913,137,'M₀ = −500 N m',22,GRAY,anchor='middle')
-    f.text(913,166,'Nose-down couple',19,GRAY,anchor='middle')
+    f.parts.append(f'<path d="M467 335 A57 57 0 0 0 374 313" fill="none" stroke="{GRAY}" stroke-width="3" marker-end="url(#gray)"/>')
+    f.text(590,246,'M₀ = M_ac = −500 N m',22,GRAY)
+    f.text(590,275,'Wing pressure: nose-down couple',19,GRAY)
+    f.line(580,278,455,303,GRAY,2)
     f.rect(35,653,1130,160)
     f.text(58,690,'Force check',22,bold=True)
     f.text(260,690,'10,946 − 946 − 10,000 = 0 N',24)
     f.text(58,735,'Moment check',22,bold=True)
     f.text(260,735,'−500 − (0.30 × 10,946) + (4.00 × 946) ≈ 0 N m',23)
     f.text(58,781,'Nose-up positive. Values rounded; arrow lengths are not scaled to force magnitude.',20)
-    f.save('Trim_Worked_Example_v2.svg')
+    f.save('Trim_Worked_Example_v3.svg')
 
 
 def margin_figure():

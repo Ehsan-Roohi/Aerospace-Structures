@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="850" viewBox="0 0 1200 850" role="img" aria-labelledby="title desc">
+<title id="title">Pitch trim: the worked example</title><desc id="desc">Nose left, tail right. CG ahead of wing force. Upward wing lift, downward weight and downward tail force. Dimensions match the example.</desc>
+<defs><marker id="blue" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto-start-reverse"><path d="M0 0L8 4L0 8Z" fill="#176a91"/></marker><marker id="red" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto-start-reverse"><path d="M0 0L8 4L0 8Z" fill="#b62f3b"/></marker><marker id="gray" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto-start-reverse"><path d="M0 0L8 4L0 8Z" fill="#657781"/></marker><marker id="green" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto-start-reverse"><path d="M0 0L8 4L0 8Z" fill="#237653"/></marker></defs>
+<rect width="1200" height="850" fill="white"/><g font-family="Arial, sans-serif" fill="#17324d">
+<text x="40" y="48" font-size="32" fill="#17324d" font-weight="bold" text-anchor="start">Pitch trim: match every force to the worked example</text>
+<text x="40" y="86" font-size="22" fill="#17324d" font-weight="normal" text-anchor="start">Steady, level, trimmed flight  •  nose left  •  wing lift represented at AC</text>
+<g transform="translate(92 330) scale(1.5)" fill="#e4edf2" stroke="#17324d" stroke-width="2.5"><path d="M0 10Q12 -17 80 -20L158 -43Q187 -48 216 -15L605 4L642 13L590 25L210 39L53 31Q5 29 0 10Z"/><path d="M570 3L588 -77L608 -79L625 9Z"/><path d="M551 20L642 16L656 25L555 33Z"/><path d="M182 18L313 19L350 33L196 35Z" fill="#c7dbe6"/><path d="M91 -19L159 -39L179 -39L180 -14Z" fill="#94bccd"/><path d="M185 -39Q204 -33 214 -15L186 -14Z" fill="#94bccd"/><path d="M-5 -29V47" stroke="#657781" stroke-width="5"/><path d="M610 -77L615 -27L625 9" fill="none" stroke="#94a8b5"/></g>
+<text x="90" y="270" font-size="20" fill="#17324d" font-weight="bold" text-anchor="start">NOSE</text>
+<text x="990" y="215" font-size="20" fill="#17324d" font-weight="bold" text-anchor="start">TAIL</text>
+<path d="M412.6 357L412.6 170" fill="none" stroke="#176a91" stroke-width="5" marker-end="url(#blue)"/>
+<path d="M370 345L370 510" fill="none" stroke="#b62f3b" stroke-width="5" marker-end="url(#red)"/>
+<path d="M938 369L938 485" fill="none" stroke="#176a91" stroke-width="5" marker-end="url(#blue)"/>
+<circle cx="370" cy="345" r="8" fill="#b62f3b" stroke="white" stroke-width="2"/>
+<circle cx="412.6" cy="357" r="6" fill="#176a91" stroke="white" stroke-width="2"/>
+<text x="440" y="404" font-size="19" fill="#176a91" font-weight="normal" text-anchor="start">AC: wing aerodynamic center</text>
+<text x="330" y="315" font-size="23" fill="#b62f3b" font-weight="bold" text-anchor="start">CG</text>
+<text x="480" y="165" font-size="25" fill="#176a91" font-weight="bold" text-anchor="start">Wing lift  Lw = 10,946 N</text>
+<path d="M470 171L416.6 179" fill="none" stroke="#176a91" stroke-width="2"/>
+<text x="285" y="552" font-size="24" fill="#b62f3b" font-weight="bold" text-anchor="start">W = 10,000 N</text>
+<text x="810" y="526" font-size="24" fill="#176a91" font-weight="bold" text-anchor="start">Lt = −946 N</text>
+<text x="810" y="555" font-size="21" fill="#176a91" font-weight="normal" text-anchor="start">Tail downforce</text>
+<path d="M370 295L370 120" fill="none" stroke="#657781" stroke-width="1.5" stroke-dasharray="6 6"/>
+<path d="M412.6 300L412.6 120" fill="none" stroke="#657781" stroke-width="1.5" stroke-dasharray="6 6"/>
+<path d="M370 132L412.6 132" fill="none" stroke="#657781" stroke-width="2"/>
+<path d="M370 125L370 139" fill="none" stroke="#657781" stroke-width="2"/>
+<path d="M412.6 125L412.6 139" fill="none" stroke="#657781" stroke-width="2"/>
+<text x="391.3" y="118" font-size="21" fill="#657781" font-weight="normal" text-anchor="middle"></text>
+<text x="170" y="142" font-size="21" fill="#17324d" font-weight="normal" text-anchor="start">dw = 0.30 m</text>
+<path d="M318 137L367 132" fill="none" stroke="#657781" stroke-width="2"/>
+<path d="M370 565L370 613" fill="none" stroke="#657781" stroke-width="1.5" stroke-dasharray="6 6"/>
+<path d="M938 568L938 613" fill="none" stroke="#657781" stroke-width="1.5" stroke-dasharray="6 6"/>
+<path d="M370 608L938 608" fill="none" stroke="#657781" stroke-width="2"/>
+<path d="M370 601L370 615" fill="none" stroke="#657781" stroke-width="2"/>
+<path d="M938 601L938 615" fill="none" stroke="#657781" stroke-width="2"/>
+<text x="654.0" y="594" font-size="21" fill="#657781" font-weight="normal" text-anchor="middle">dt = 4.00 m</text>
+<path d="M467 335 A57 57 0 0 0 374 313" fill="none" stroke="#657781" stroke-width="3" marker-end="url(#gray)"/>
+<text x="590" y="246" font-size="22" fill="#657781" font-weight="normal" text-anchor="start">M₀ = M_ac = −500 N m</text>
+<text x="590" y="275" font-size="19" fill="#657781" font-weight="normal" text-anchor="start">Wing pressure: nose-down couple</text>
+<path d="M580 278L455 303" fill="none" stroke="#657781" stroke-width="2"/>
+<rect x="35" y="653" width="1130" height="160" rx="12" fill="#f4f7fa" stroke="#d3dce3"/>
+<text x="58" y="690" font-size="22" fill="#17324d" font-weight="bold" text-anchor="start">Force check</text>
+<text x="260" y="690" font-size="24" fill="#17324d" font-weight="normal" text-anchor="start">10,946 − 946 − 10,000 = 0 N</text>
+<text x="58" y="735" font-size="22" fill="#17324d" font-weight="bold" text-anchor="start">Moment check</text>
+<text x="260" y="735" font-size="23" fill="#17324d" font-weight="normal" text-anchor="start">−500 − (0.30 × 10,946) + (4.00 × 946) ≈ 0 N m</text>
+<text x="58" y="781" font-size="20" fill="#17324d" font-weight="normal" text-anchor="start">Nose-up positive. Values rounded; arrow lengths are not scaled to force magnitude.</text></g></svg>

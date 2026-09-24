@@ -8,7 +8,7 @@ These notebooks support the Fall 2026 MIE 446 Aerospace Structures course. They 
 
 | Type | Notebook | Student work | Launch |
 |---|---|---|---|
-| Interactive lecture | [Lecture 01 — From Airfoil Geometry to Trustworthy Wing Loads](MIE446_Lecture_01_Trust_Forces_Airfoils.ipynb) | Updated FAA control figures, trim and static margin; predict, vary inputs and interpret results | [![Open Lecture 01 in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/54f4c1df1c6f04d5f2e723b686eececbaf5a4875/notebooks/MIE446_Lecture_01_Trust_Forces_Airfoils.ipynb) |
+| Interactive lecture | [Lecture 01 — From Airfoil Geometry to Trustworthy Wing Loads](MIE446_Lecture_01_Trust_Forces_Airfoils.ipynb) | Updated FAA control figures, trim and static margin; predict, vary inputs and interpret results | [![Open Lecture 01 in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/cc562f4f129ed4921c804e7dba9bdd0bb8f71419/notebooks/MIE446_Lecture_01_Trust_Forces_Airfoils.ipynb) |
 | Guided project | [Code-to-Print Wing](MIE446_Code_to_Print_Wing.ipynb) | Define a team design, document predictions and AI use, complete the physical coupon gate, generate verified geometry and export the submission archive | [![Open stable Wing Project v1.1.1 in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/v1.1.1/notebooks/MIE446_Code_to_Print_Wing.ipynb) |
 
 ### Lecture 02 — Finite Wings, Geometry and Load Paths

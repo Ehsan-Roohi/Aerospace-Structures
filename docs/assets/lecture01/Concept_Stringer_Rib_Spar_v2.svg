@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1300" height="650" viewBox="0 0 1300 650" role="img" aria-labelledby="title desc">
+<title id="title">Wing structural members: spars, ribs and stringers</title>
+<desc id="desc">Two thick red spanwise spars, three brown chordwise ribs, and three thin gold spanwise stringers. Each leader ends in a matching dot on an unobstructed segment of its member. Leaders are labels, not force vectors.</desc>
+<style>text{font-family:Arial,sans-serif;fill:#172b4d}.title{font-size:30px;font-weight:bold}.label{font-size:24px;font-weight:bold}.note{font-size:21px}.leader{fill:none;stroke-width:2.5;stroke-linejoin:round}</style>
+<rect width="1300" height="650" fill="white"/>
+<text x="650" y="48" text-anchor="middle" class="title">Wing structure: identify the member and its direction</text>
+<path d="M100 480 L1170 390 L1080 145 L180 225 Z" fill="#e6f1f6" stroke="#355c7d" stroke-width="4"/>
+<g stroke="#d69d00" stroke-width="10"><line x1="220" y1="300" x2="1100" y2="225"/><line x1="185" y1="385" x2="1140" y2="310"/><line x1="160" y1="440" x2="1160" y2="365"/></g>
+<g stroke="#9a6b45" stroke-width="12" fill="none"><path d="M350 210 Q430 335 320 460"/><path d="M650 185 Q730 310 625 430"/><path d="M930 165 Q1000 285 920 405"/></g>
+<g stroke="#b42318" stroke-width="20"><line x1="180" y1="260" x2="1125" y2="180"/><line x1="180" y1="420" x2="1150" y2="345"/></g>
+<text x="60" y="105" class="label" style="fill:#805333">RIB — brown, chordwise frame</text>
+<text x="60" y="135" class="note">Maintains airfoil shape; transfers local loads.</text>
+<path d="M80 150 L80 335 L382.5 335" class="leader" stroke="#805333"/>
+<circle cx="382.5" cy="335" r="7" fill="#805333" stroke="white" stroke-width="2"/>
+<text x="735" y="100" class="label" style="fill:#b42318">SPAR — red, spanwise beam</text>
+<text x="735" y="130" class="note">Carries major bending and shear loads.</text>
+<path d="M850 143 L850 203.28" class="leader" stroke="#b42318"/>
+<circle cx="850" cy="203.28" r="7" fill="#b42318" stroke="white" stroke-width="2"/>
+<text x="540" y="548" class="label" style="fill:#886300">STRINGER — gold, spanwise stiffener</text>
+<text x="540" y="580" class="note">Stiffens the skin and helps carry axial stress.</text>
+<path d="M800 520 L800 392" class="leader" stroke="#886300"/>
+<circle cx="800" cy="392" r="7" fill="#886300" stroke="white" stroke-width="2"/>
+<text x="60" y="628" font-size="18">Simplified cutaway; skin omitted for visibility. Thin leader lines identify parts; they are not load vectors.</text>
+</svg>

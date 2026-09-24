@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="780" viewBox="0 0 1400 780" role="img" aria-labelledby="title desc">
+<title id="title">Internal actions at a wing cut</title><desc id="desc">Separate shear and bending side views of an isolated outboard segment and a torsion cross-section. Applied upward loads are blue; resisting cut actions are red, orange and purple.</desc>
+<defs><marker id="blue" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#2376a4"/></marker><marker id="red" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#bd2929"/></marker><marker id="orange" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#b75b00"/></marker><marker id="purple" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#773ea1"/></marker></defs>
+<style>text{font-family:Arial,sans-serif;fill:#17324d}.h{font-size:25px;font-weight:bold}.t{font-size:20px}.small{font-size:18px}.load{stroke:#2376a4;stroke-width:3;marker-end:url(#blue)}.cut{stroke:#56616b;stroke-width:2;stroke-dasharray:7 5}</style>
+<rect width="1400" height="780" fill="white"/>
+<text x="45" y="45" font-size="32" font-weight="bold">Cut the wing, then balance the OUTBOARD segment</text>
+<text x="45" y="80" class="t">At the cut: one transverse force, one bending moment, and one torque about the span.</text>
+<g fill="#f5f8fb" stroke="#ccd5dd"><rect x="25" y="115" width="440" height="600" rx="14"/><rect x="480" y="115" width="440" height="600" rx="14"/><rect x="935" y="115" width="440" height="600" rx="14"/></g>
+<text x="45" y="155" class="h">1. SHEAR Vz — force</text><text x="45" y="186" class="t">Side view: span →, vertical ↑</text>
+<path d="M125 330L425 330L425 370L125 370Z" fill="#dcecf7" stroke="#17324d" stroke-width="3"/>
+<path d="M125 225V445" class="cut"/><text x="80" y="218" class="small">CUT</text><text x="389" y="407" class="small">TIP</text>
+<path d="M200 330V250M265 330V260M330 330V270M400 330V280" fill="none" stroke="#2376a4" stroke-width="3"/>
+<path d="M200 290V250" class="load"/><path d="M265 300V260" class="load"/><path d="M330 310V270" class="load"/><path d="M400 320V280" class="load"/>
+<text x="192" y="231" class="t" style="fill:#2376a4">Upward load qz</text>
+<path d="M125 350V477" stroke="#bd2929" stroke-width="5" marker-end="url(#red)"/><text x="145" y="469" class="h" style="fill:#bd2929">Vz</text>
+<text x="45" y="540" class="t">Cut force balances total upward load.</text><text x="45" y="579" class="h">Vz = total outboard force</text><text x="45" y="620" class="t">Units: N</text><text x="45" y="671" class="small">Bending moment omitted in this panel.</text>
+<text x="500" y="155" class="h">2. BENDING Mx — moment</text><text x="500" y="186" class="t">Side view: rotation in this plane</text>
+<path d="M580 330L880 330L880 370L580 370Z" fill="#dcecf7" stroke="#17324d" stroke-width="3"/>
+<path d="M580 225V440" class="cut"/><text x="530" y="218" class="small">CUT</text><text x="847" y="407" class="small">TIP</text>
+<path d="M680 330V270" class="load"/><path d="M755 330V270" class="load"/><path d="M830 330V270" class="load"/>
+<path d="M530 350A50 50 0 1 1 580 400" fill="none" stroke="#b75b00" stroke-width="4" marker-end="url(#orange)"/>
+<text x="595" y="440" class="h" style="fill:#b75b00">Mx: clockwise at cut</text>
+<path d="M580 477H830M580 468V486M830 468V486" fill="none" stroke="#56616b" stroke-width="2"/><text x="640" y="506" class="small">Spanwise lever arm</text>
+<text x="500" y="550" class="t">Each load × distance from the cut.</text><text x="500" y="589" class="h">Mx = sum of those moments</text><text x="500" y="630" class="t">Units: N m</text><text x="500" y="671" class="small">Shear force omitted in this panel.</text>
+<text x="955" y="155" class="h">3. TORSION Ty — torque</text><text x="955" y="186" class="t">Look along span at the cut section</text>
+<path d="M995 350Q1090 282 1310 350Q1120 382 995 350Z" fill="#dcecf7" stroke="#17324d" stroke-width="3"/>
+<circle cx="1100" cy="350" r="6" fill="#17324d"/><text x="965" y="444" class="small">SC: shear center</text><path d="M1010 419L1092 359" stroke="#17324d" fill="none"/>
+<path d="M1245 350V239" class="load"/><text x="1190" y="226" class="t" style="fill:#2376a4">Upward force</text>
+<path d="M1100 290H1245M1100 282V298M1245 282V298" stroke="#56616b" stroke-width="2" fill="none"/><text x="1170" y="278" class="t">e</text>
+<path d="M1050 350A50 50 0 1 1 1100 400" fill="none" stroke="#773ea1" stroke-width="4" marker-end="url(#purple)"/>
+<text x="1090" y="480" class="h" style="fill:#773ea1">Ty: resisting torque</text>
+<text x="955" y="520" class="t">Offset e creates twisting about span.</text><text x="955" y="553" class="t">Aerodynamic couples also contribute.</text><text x="955" y="597" class="h">Ty = total outboard torque</text><text x="955" y="630" class="t">Units: N m</text><text x="955" y="671" class="small">Pure torsion view; other actions omitted.</text>
+<text x="45" y="755" class="t">Views are separated for clarity. The cut force and both moments act together; opposite cut faces have opposite actions.</text>
+</svg>

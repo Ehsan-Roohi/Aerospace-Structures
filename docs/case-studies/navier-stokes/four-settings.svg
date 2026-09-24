@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1020 420" role="img" aria-labelledby="title desc">
+<title id="title">Four different questions and the proposed forced Navier–Stokes construction</title>
+<desc id="desc">A two by two chart compares Euler and Navier-Stokes, forced and unforced. It highlights the claimed OpenAI construction in the forced Navier-Stokes cell.</desc>
+<rect width="1020" height="420" rx="18" fill="#f5f8fb"/>
+<text x="38" y="48" font-family="Arial" font-size="26" fill="#10273a">Which equation, and which forcing?</text>
+<text x="38" y="74" font-family="Arial" font-size="15" fill="#486272">These mathematical settings are related, but results in one cell do not automatically settle another.</text>
+<g font-family="Arial" font-size="19" text-anchor="middle"><text x="375" y="120" fill="#163a51">Euler: no viscosity</text><text x="780" y="120" fill="#163a51">Navier–Stokes: viscosity</text></g>
+<g font-family="Arial" font-size="18" fill="#163a51"><text x="38" y="207">No external</text><text x="38" y="231">forcing</text><text x="38" y="326">Smooth external</text><text x="38" y="350">forcing</text></g>
+<g stroke="#b4c8d7" stroke-width="2" fill="#fff"><rect x="185" y="139" width="383" height="114" rx="12"/><rect x="590" y="139" width="383" height="114" rx="12"/><rect x="185" y="276" width="383" height="114" rx="12"/></g>
+<rect x="590" y="276" width="383" height="114" rx="12" fill="#d9f4e9" stroke="#348969" stroke-width="3"/>
+<g font-family="Arial" font-size="16" fill="#263f51"><text x="206" y="175">OpenAI reported a separate Euler result</text><text x="206" y="203">from a smaller agent group.</text><text x="611" y="175">The unforced problem is a distinct</text><text x="611" y="203">mathematical setting.</text><text x="206" y="311">Buckmaster and Alpöge reported a</text><text x="206" y="339">forced Euler result.</text><text x="611" y="311">OpenAI claims finite-time blowup with</text><text x="611" y="339">smooth forcing and positive viscosity.</text></g>
+<text x="612" y="372" font-family="Arial" font-size="14" fill="#267254">Independent mathematical review remains relevant.</text>
+</svg>

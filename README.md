@@ -47,6 +47,15 @@ Lectures 01 and 02 are released. Later lecture notebooks will appear here when r
 
 Three-person teams are already assigned. The project begins in class on September 29. The remaining Lecture 1 material, hand calculations, coupon fit test and pre-print review occur before the first supervised wing-module build on October 13. See the [four-meeting teaching plan](SYLLABUS.md#class-plan-before-october-fabrication) and [revised project milestones](SYLLABUS.md#5-project-workflow-and-deliverables). October 12 is a University holiday; ELab coupon and production slots require staff authorization and are assigned in Canvas.
 
+### September 29 wing-design packet
+
+Use these English, Times New Roman, black-text PDFs for the accelerated pre-build sequence. The worksheet and fit/release record are fillable; retain a copy for your team. Canvas remains authoritative for submission deadlines and supervised ELab appointments.
+
+- [Team Wing Layout — R01 (student worksheet)](docs/course-packets/2026-09-29/MIE446_Team_Wing_Layout_R01.pdf)
+- [September 29 Wing Lecture Guide (instructor)](docs/course-packets/2026-09-29/MIE446_September_29_Instructor_Guide.pdf)
+- [Coupon Fit and R02 Release Record (team and staff form)](docs/course-packets/2026-09-29/MIE446_Coupon_Fit_and_R02_Release_Record.pdf)
+
+
 <img src="docs/baseline_preview.png" alt="Code-generated baseline semi-wing with printed shell, ribs and rod interfaces" width="640">
 
 ![MIE 446 workflow from parametric wing design and fabrication to unloaded Jetson inspection and shared damage diagnostics](docs/project_workflow.svg)

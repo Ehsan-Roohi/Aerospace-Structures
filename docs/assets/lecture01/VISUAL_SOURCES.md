@@ -19,6 +19,14 @@ aircraft. Their general arrangement depicts a conventional light airplane.
 
 ## Original MIE 446 teaching figures
 
+- `MIE446_L01_Airframe_Map.png`: original schematic top view locating flap,
+  aileron, spoiler, slat, horizontal tail, elevator, fin and rudder. Typical
+  locations only; it is not the geometry of a particular airplane.
+- `MIE446_L01_Wing_Structure.png`: original transparent-skin semi-wing diagram
+  locating root, tip, spars, ribs, stringers, wing box and example control
+  attachment regions. It is not the students' printed-wing CAD.
+- `MIE446_L01_Wing_Devices.png`: original schematic comparison of aileron,
+  flap, spoiler and slat. Deflections and load arrows are qualitative.
 - `Trim_Worked_Example_v2.svg` / `.png`: side-view force diagram matching the
   notebook's example, with CG ahead of the wing force, tail downforce, dimensions
   and numerical equilibrium checks. The aircraft outline and force lengths are
@@ -27,11 +35,12 @@ aircraft. Their general arrangement depicts a conventional light airplane.
   neutral point and three CG locations. The 40% neutral-point location is teaching
   data, not a claimed property of an actual airplane.
 
-Reproduce the crops and original SVGs with
+Reproduce the earlier FAA crops and SVGs with
 `scripts/build_lecture01_visual_revision.py`; it requires `pypdfium2` and a local
 copy of the FAA chapter at `tmp/lecture01-figures/faa-ch6.pdf`. Render SVGs to PNG
 with an SVG renderer such as Sharp. The notebook displays PNG versions for consistent
-rendering across notebook viewers.
+rendering across notebook viewers. The three `MIE446_L01_*.png` diagrams are
+original raster teaching figures added separately for the wing anatomy studio.
 
 For background on static margin, see [NACA TN 1670](https://ntrs.nasa.gov/api/citations/19930082297/downloads/19930082297.pdf).
 For the distinction between natural stability and active stabilization, see

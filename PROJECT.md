@@ -6,7 +6,7 @@
 
 [![Open stable Wing Project v1.1.1 in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/v1.1.1/notebooks/MIE446_Code_to_Print_Wing.ipynb)
 
-> Web edition aligned with the updated September 3, 2026 syllabus. Canvas carries authoritative deadlines, submission links, team assignments, printer reservations, calibration files, shared diagnostic data and private access information.
+> Web edition aligned with the revised September 26, 2026 syllabus. Canvas carries authoritative deadlines, submission links, team assignments, printer reservations, calibration files, shared diagnostic data and private access information.
 
 ![Project workflow: design and fabricate a wing, inspect the unloaded team wing with Jetson machine vision, and analyze controlled damage evidence from a separate sacrificial specimen](docs/project_workflow.svg)
 
@@ -28,6 +28,8 @@ Course repository: [Aerospace Structures on GitHub](https://github.com/Ehsan-Roo
 
 First action: choose File > Save a copy in Drive. Work only in your saved copy so the team inputs and written responses persist.
 
+**October fabrication schedule.** Teams are already assigned. The project begins in class September 29; the [four-meeting pre-build plan](SYLLABUS.md#class-plan-before-october-fabrication) completes the hand calculations, coupon-only run, supervised physical fit test and print-release review by October 8–9. Supervised wing-module fabrication starts October 13 for teams with an approved R02 package and assigned ELab slot. A software-valid model alone does not authorize printing. October 12 is a University holiday; Canvas carries actual coupon appointments and printer reservations.
+
 ## 1. What you will learn and produce
 
 This is an analytical aerospace-structures project connected to a physical build. The notebook reduces routine coding so that the team can focus on engineering meaning, verification, fabrication judgment, collaboration, and communication. A successful project is not simply a clean-looking print.
@@ -44,7 +46,7 @@ This is an analytical aerospace-structures project connected to a physical build
 
 ## 2. Inputs, fixed settings, and design limits
 
-Your team chooses the airfoil and the principal wing dimensions in the form. Safety-, interface-, and course-standard settings remain fixed so that all teams work within a common manufacturing envelope.
+Your team chooses an instructor-approved airfoil and enters the principal wing dimensions in the form. For the accelerated October production release, the class baseline is a 450 mm semi-span with 160 mm root and 100 mm tip chord; another geometry requires instructor approval before print release. Safety-, interface-, and course-standard settings remain fixed so that all teams work within a common manufacturing envelope.
 
 | Type | Requirement |
 | --- | --- |

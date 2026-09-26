@@ -2,7 +2,7 @@
 
 [Course home](README.md) · [Full syllabus](SYLLABUS.md) · [Notebooks](notebooks/README.md) · [Project](PROJECT.md)
 
-This page collects released assignment files and the submission checklist. Canvas remains the authoritative location for deadlines, submission links, and announcements.
+This page collects released assignment files, the revised September 26 syllabus due dates, and the submission checklist. Canvas remains the authoritative location for deadlines, submission links, and announcements.
 
 ## Released assignment files
 
@@ -19,11 +19,11 @@ The PDF and Excel workbook use a uniform black-and-white format suitable for pri
 | Assignment | Main focus | Syllabus due date, 2026 |
 |---|---|---|
 | HW 1 | NACA 2412 geometry, surface-pressure integration, lift, pressure drag and discrete panel sums | October 1 |
-| HW 2 | 2D/3D stress transformation, principal stresses and constitutive assumptions | October 13 |
-| HW 3 | Beam shear/moment, bending, deflection, strain energy and independent checks | October 22 |
-| HW 4 | Virtual work/Castigliano and correction of a plausible but flawed AI solution | November 12 |
-| HW 5 | Maneuver/landing loads, V–n diagrams, sensitivity and trade-offs | November 19 |
-| HW 6 | Wing-box shear/torsion/shear center and reconciliation with project evidence | December 3 |
+| HW 2 | 2D/3D stress transformation, principal stresses and constitutive assumptions | November 5 |
+| HW 3 | Beam shear/moment, bending, deflection, strain energy and independent checks | November 12 |
+| HW 4 | Virtual work/Castigliano and correction of a plausible but flawed AI solution | November 19 |
+| HW 5 | Maneuver/landing loads, V–n diagrams, sensitivity and trade-offs | December 3 |
+| HW 6 | Wing-box shear/torsion/shear center and reconciliation with project evidence | December 10 |
 
 Each homework is individual and worth **8.75%** of the course. The six together contribute **52.5%**.
 
@@ -55,4 +55,4 @@ A narrated recording is an approved absence/accessibility alternative, not a rou
 
 The individual midterm is **October 27**, worth **17.5%**, equivalent to two homework units. Generative AI and unauthorized online assistance are not permitted. The formula-sheet policy and sample format will be posted at least one week before the exam.
 
-The syllabus provides two 48-hour individual homework extension passes, activated in writing before the deadline. They do not apply to the midterm, oral rotation, project safety gates, printer reservations or final presentation. See [all deadline and accommodation provisions](SYLLABUS.md#deadlines-and-extensions) before using a pass.
+The syllabus provides two 24-hour individual homework extension passes, activated in writing before the deadline. They do not apply to the midterm, oral rotation, project safety gates, printer reservations or final presentation. See [all deadline and accommodation provisions](SYLLABUS.md#deadlines-and-extensions) before using a pass.

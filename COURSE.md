@@ -62,21 +62,21 @@ Each homework submission combines an analytical solution, an Engineering Judgmen
 
 | Week | Topics and learning activities | Major public milestone or event |
 |---:|---|---|
-| 1 | Trustworthy engineering answers; aircraft forces; airfoil geometry; pressure, lift, drag and moment; NACA 4-digit studio | Starter environment check |
-| 2 | Finite-wing geometry; span, chord, aspect ratio, taper, sweep and dihedral; lift distribution; skin–rib–spar load paths | Team survey |
-| 3 | External and internal loads; equilibrium; normal and shear stress and strain; wing free-body diagrams | Teams formed; optional Dr. Avshalom Manela seminar |
-| 4 | Stress transformation; Mohr's circle; principal stresses; aerospace failure questions; audit of a polished worked or AI-generated solution | Homework 1 |
-| 5 | Three-dimensional stress tensor; principal values and directions; constitutive law; plane stress and plane strain | Homework 2 studio |
-| 6 | Beam shear and moment; bending stress; slope and deflection; project load case and requirements | Concept memo |
-| 7 | Strain energy; virtual work; Castigliano's theorem; determinate and indeterminate structures; model-validity review | Code checkpoint |
-| 8 | Individual midterm; electric-propulsion guest class with Dr. Michael Tsay of Busek | Midterm and guest class |
-| 9 | Aircraft maneuver and landing loads; V–n diagrams | Homework 4 preparation |
-| 10 | Wing structural idealization; booms, stringers and skins; design for additive manufacturing; printer and coupon checks | Design review |
-| 11 | Thin-walled open and closed sections; shear flow; torsion; shear center | Print-readiness gate |
-| 12 | University schedule and Thanksgiving recess | Approved print slots only if scheduled |
-| 13 | Fabrication, assembly, manual and Jetson machine-vision inspection; shared force–deflection, vibration and crack demonstration; hand–code–AI–build reconciliation | Homework 6, inspection evidence and diagnostic analysis |
-| 14 | Build acceptance, diagnostic evidence synthesis and team presentations | Presentation groups |
-| 15 | Team presentations, individual questions, lessons from damage indicators and course synthesis | Final project package |
+| 1 | Trustworthy engineering answers; aircraft forces; airfoil geometry; pressure, lift, drag and moment; NACA four-digit studio | Starter environment check |
+| 2 | Finite-wing geometry and skin-rib-spar load paths; already assigned teams prepare for project launch | Teams active |
+| 3 | External and internal loads; equilibrium; normal and shear stress and strain; wing FBDs | Optional Dr. Avshalom Manela seminar |
+| 4 | Finish Lecture 1 wing anatomy, devices and load paths; hand-calculate semi-wing geometry, taper, area and aspect ratio | HW 1 due Oct. 1; project calculation sheet |
+| 5 | NACA section, rods, modules, fit coupon and print constraints; cantilever FBD, virtual-load shear/root moment and print-release review | Coupon R01 and pre-print gate Oct. 8–9 |
+| 6 | Supervised wing-module fabrication starts Oct. 13; beam shear/moment, bending stress, slope and deflection | First-print evidence |
+| 7 | 2D/3D stress transformation, Mohr's circle, principal stresses and constitutive assumptions | As-built checkpoint Oct. 22 |
+| 8 | Individual midterm; electric-propulsion guest class with Dr. Michael Tsay of Busek | Midterm Oct. 27 and guest class |
+| 9 | Nov. 3 no class; strain energy and virtual work on Nov. 5 | HW 2 due Nov. 5 |
+| 10 | Castigliano, maneuver/landing loads and V–n diagrams; wing idealization and assembly review | HW 3 due Nov. 12 |
+| 11 | Thin-walled wing-box shear flow, torsion and shear center; compare model with printed geometry | HW 4 due Nov. 19; Nov. 16 lab slot |
+| 12 | University schedule and Thanksgiving recess | Approved inspection/correction slots only |
+| 13 | Manual and Jetson machine-vision inspection; shared force-deflection, vibration and crack demonstration | HW 5 due Dec. 3 |
+| 14 | Build acceptance, diagnostic synthesis and team presentations | HW 6 due Dec. 10 |
+| 15 | Team presentations, individual questions, lessons from damage indicators and course synthesis | Final project package Dec. 15 |
 
 ## Signature project
 

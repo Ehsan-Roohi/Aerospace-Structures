@@ -12,7 +12,7 @@ This page collects released assignment files, the revised September 26 syllabus 
 - **[Download the NACA 2412 Excel dataset](assignments/homework-01/MIE446_HW1_NACA2412_Data.xlsx)**
 - [Download the Overleaf/LaTeX source](assignments/homework-01/MIE446_HW1_Surface_Pressure.tex)
 
-The PDF and Excel workbook use a uniform black-and-white format suitable for printing. Complete the work individually and submit only through Canvas.
+The September 28 revision removes the proof and extra physical-check subpart, explains numerical integration step by step, and simplifies the tabulated-data calculation to direct panel sums. The PDF and Excel workbook use a uniform black-and-white format suitable for printing. Complete the work individually and submit only through Canvas.
 
 ## Six homework portfolios
 

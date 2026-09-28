@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>MIE 446 Homework 1 - Revised</title>
+<style>
+  @page { size: letter; margin: 0.62in 0.70in 0.60in; }
+  * { box-sizing: border-box; }
+  body { color:#000; background:#fff; font-family:"Times New Roman",serif; font-size:10.2pt; line-height:1.18; margin:0; }
+  h1 { font-size:18pt; line-height:1.05; margin:0 0 3pt; }
+  h2 { font-size:12pt; border-bottom:0.65pt solid #000; padding-bottom:2pt; margin:10pt 0 5pt; break-after:avoid; }
+  h3 { font-size:10.7pt; margin:8pt 0 3pt; break-after:avoid; }
+  p { margin:3pt 0; }
+  .subtitle { font-size:12pt; margin:0 0 8pt; }
+  .topline { border-top:1pt solid #000; padding-top:6pt; }
+  .identity { width:100%; border-collapse:collapse; margin:8pt 0 6pt; }
+  .identity td { width:50%; padding:0 12pt 4pt 0; }
+  .blank { display:inline-block; border-bottom:0.6pt solid #000; width:145pt; height:10pt; }
+  .small { font-size:9.3pt; }
+  .note { border:0.7pt solid #000; padding:5pt 8pt; margin:7pt 0; break-inside:avoid; }
+  .guide { border-left:2pt solid #000; padding-left:8pt; margin:5pt 0; font-size:9.8pt; line-height:1.15; }
+  .guide math { font-size:10.3pt; }
+  table.data { width:100%; border-collapse:collapse; margin:5pt 0; }
+  .data th,.data td { border-bottom:0.5pt solid #777; padding:3pt 5pt; text-align:left; vertical-align:top; }
+  .data th { border-top:0.8pt solid #000; border-bottom:0.8pt solid #000; }
+  .data .right { text-align:right; }
+  ol { list-style:none; margin:4pt 0; padding:0; }
+  li { padding-left:0; margin:0 0 4pt; break-inside:avoid; }
+  .eq { text-align:center; margin:3pt 0; break-inside:avoid; }
+  math { font-size:11.3pt; }
+  .eq.long math { font-size:10.5pt; }
+  .twoeq { display:flex; justify-content:space-evenly; gap:12pt; margin:3pt 0; break-inside:avoid; }
+  .twoeq math { font-size:11pt; }
+  .pagebreak { break-before:page; }
+  .q2 { break-before:page; }
+  .avoid { break-inside:avoid; }
+  .footer { margin-top:9pt; border-top:0.5pt solid #555; padding-top:3pt; font-size:8.6pt; }
+  a { color:#000; text-decoration:underline; }
+  svg { display:block; margin:4pt auto; }
+</style>
+</head>
+<body>
+<h1>Homework 1: Surface Pressure, Lift, and Pressure Drag</h1>
+<p class="subtitle">NACA 2412 at &alpha; = 5&deg; &nbsp; | &nbsp; Revised September 28, 2026</p>
+<div class="topline">
+<table class="identity"><tr><td>Name: <span class="blank"></span></td><td>UMass ID: <span class="blank"></span></td></tr><tr><td>Due: see Canvas</td><td>Section: <span class="blank"></span></td></tr></table>
+</div>
+
+<h2>Purpose and model</h2>
+<p>Compute the two-dimensional pressure force on a NACA 2412 airfoil. Question 1 uses continuous geometry and pressure functions. Question 2 uses 101 supplied stations to compute the same force by summing straight-panel contributions. No derivation of the pressure-force formulas is required.</p>
+<div class="note"><b>Model statement.</b> The supplied pressure distribution is an instructional surrogate for attached flow at &alpha; = 5&deg;. It gives a plausible suction peak and lift trend, but it is not measured pressure-tap data or a universal NACA 2412 pressure law. Only pressure forces are included: the computed drag is pressure drag, not total drag.</div>
+
+<h2>Given conditions and conventions</h2>
+<table class="data"><tr><th>Quantity</th><th>Value</th><th>Quantity</th><th>Value</th></tr>
+<tr><td>Airfoil</td><td>NACA 2412</td><td>Angle of attack</td><td>&alpha; = 5.0&deg;</td></tr>
+<tr><td>Chord</td><td>c = 0.500 m</td><td>Reference span</td><td>b = 1.000 m</td></tr>
+<tr><td>Freestream speed</td><td>V<sub>&infin;</sub> = 30.0 m/s</td><td>Density</td><td>&rho;<sub>&infin;</sub> = 1.225 kg/m<sup>3</sup></td></tr>
+<tr><td>Static pressure</td><td>p<sub>&infin;</sub> = 101325 Pa</td><td>Dynamic pressure</td><td>q<sub>&infin;</sub> = &frac12;&rho;<sub>&infin;</sub>V<sub>&infin;</sub><sup>2</sup></td></tr></table>
+<p>Write X = x/c and Y = y/c. Positive x points from leading edge to trailing edge; positive y points upward. Subscripts u and l denote upper and lower surfaces.</p>
+<div class="eq"><math display="block"><mrow><msub><mi>C</mi><mi>p</mi></msub><mo>=</mo><mfrac><mrow><mi>p</mi><mo>&minus;</mo><msub><mi>p</mi><mo>&infin;</mo></msub></mrow><msub><mi>q</mi><mo>&infin;</mo></msub></mfrac></mrow></math></div>
+<p>Positive C<sub>N</sub> points upward normal to the chord. Positive C<sub>A</sub> points along the chord from leading edge to trailing edge. Rotate these coefficients into wind axes:</p>
+<div class="twoeq">
+<math><mrow><msub><mi>C</mi><mi>L</mi></msub><mo>=</mo><msub><mi>C</mi><mi>N</mi></msub><mi>cos</mi><mi>&alpha;</mi><mo>&minus;</mo><msub><mi>C</mi><mi>A</mi></msub><mi>sin</mi><mi>&alpha;</mi></mrow></math>
+<math><mrow><msub><mi>C</mi><mrow><mi>D</mi><mo>,</mo><mi>p</mi></mrow></msub><mo>=</mo><msub><mi>C</mi><mi>N</mi></msub><mi>sin</mi><mi>&alpha;</mi><mo>+</mo><msub><mi>C</mi><mi>A</mi></msub><mi>cos</mi><mi>&alpha;</mi></mrow></math>
+</div>
+
+<h2>NACA 2412 geometry for both questions</h2>
+<p>Use m = 0.02, p = 0.40 and t = 0.12. The following common-x approximation supplies upper and lower ordinates.</p>
+<div class="eq long"><math display="block"><mrow><msub><mi>Y</mi><mi>c</mi></msub><mo stretchy="false">(</mo><mi>X</mi><mo stretchy="false">)</mo><mo>=</mo><mo>{</mo><mtable columnalign="left left"><mtr><mtd><mfrac><mi>m</mi><msup><mi>p</mi><mn>2</mn></msup></mfrac><mo stretchy="false">(</mo><mn>2</mn><mi>pX</mi><mo>&minus;</mo><msup><mi>X</mi><mn>2</mn></msup><mo stretchy="false">)</mo></mtd><mtd><mn>0</mn><mo>&le;</mo><mi>X</mi><mo>&le;</mo><mi>p</mi></mtd></mtr><mtr><mtd><mfrac><mi>m</mi><msup><mrow><mo stretchy="false">(</mo><mn>1</mn><mo>&minus;</mo><mi>p</mi><mo stretchy="false">)</mo></mrow><mn>2</mn></msup></mfrac><mo stretchy="false">[</mo><mn>1</mn><mo>&minus;</mo><mn>2</mn><mi>p</mi><mo>+</mo><mn>2</mn><mi>pX</mi><mo>&minus;</mo><msup><mi>X</mi><mn>2</mn></msup><mo stretchy="false">]</mo></mtd><mtd><mi>p</mi><mo>&lt;</mo><mi>X</mi><mo>&le;</mo><mn>1</mn></mtd></mtr></mtable></mrow></math></div>
+<div class="eq long"><math display="block"><mrow><msub><mi>Y</mi><mi>t</mi></msub><mo stretchy="false">(</mo><mi>X</mi><mo stretchy="false">)</mo><mo>=</mo><mn>5</mn><mi>t</mi><mo stretchy="false">(</mo><mn>0.2969</mn><msqrt><mi>X</mi></msqrt><mo>&minus;</mo><mn>0.1260</mn><mi>X</mi><mo>&minus;</mo><mn>0.3516</mn><msup><mi>X</mi><mn>2</mn></msup><mo>+</mo><mn>0.2843</mn><msup><mi>X</mi><mn>3</mn></msup><mo>&minus;</mo><mn>0.1036</mn><msup><mi>X</mi><mn>4</mn></msup><mo stretchy="false">)</mo></mrow></math></div>
+<div class="twoeq"><math><mrow><msub><mi>Y</mi><mi>u</mi></msub><mo>=</mo><msub><mi>Y</mi><mi>c</mi></msub><mo>+</mo><msub><mi>Y</mi><mi>t</mi></msub></mrow></math><math><mrow><msub><mi>Y</mi><mi>l</mi></msub><mo>=</mo><msub><mi>Y</mi><mi>c</mi></msub><mo>&minus;</mo><msub><mi>Y</mi><mi>t</mi></msub></mrow></math></div>
+<p>The derivatives below are supplied for numerical integration. Students need not derive them.</p>
+<div class="eq long"><math display="block"><mrow><mfrac><mrow><mi>d</mi><msub><mi>Y</mi><mi>c</mi></msub></mrow><mrow><mi>d</mi><mi>X</mi></mrow></mfrac><mo>=</mo><mo>{</mo><mtable columnalign="left left"><mtr><mtd><mfrac><mrow><mn>2</mn><mi>m</mi></mrow><msup><mi>p</mi><mn>2</mn></msup></mfrac><mo stretchy="false">(</mo><mi>p</mi><mo>&minus;</mo><mi>X</mi><mo stretchy="false">)</mo></mtd><mtd><mn>0</mn><mo>&le;</mo><mi>X</mi><mo>&le;</mo><mi>p</mi></mtd></mtr><mtr><mtd><mfrac><mrow><mn>2</mn><mi>m</mi></mrow><msup><mrow><mo stretchy="false">(</mo><mn>1</mn><mo>&minus;</mo><mi>p</mi><mo stretchy="false">)</mo></mrow><mn>2</mn></msup></mfrac><mo stretchy="false">(</mo><mi>p</mi><mo>&minus;</mo><mi>X</mi><mo stretchy="false">)</mo></mtd><mtd><mi>p</mi><mo>&lt;</mo><mi>X</mi><mo>&le;</mo><mn>1</mn></mtd></mtr></mtable></mrow></math></div>
+<div class="eq long"><math display="block"><mrow><mfrac><mrow><mi>d</mi><msub><mi>Y</mi><mi>t</mi></msub></mrow><mrow><mi>d</mi><mi>X</mi></mrow></mfrac><mo>=</mo><mn>5</mn><mi>t</mi><mo stretchy="false">(</mo><mfrac><mn>0.2969</mn><mrow><mn>2</mn><msqrt><mi>X</mi></msqrt></mrow></mfrac><mo>&minus;</mo><mn>0.1260</mn><mo>&minus;</mo><mn>0.7032</mn><mi>X</mi><mo>+</mo><mn>0.8529</mn><msup><mi>X</mi><mn>2</mn></msup><mo>&minus;</mo><mn>0.4144</mn><msup><mi>X</mi><mn>3</mn></msup><mo stretchy="false">)</mo></mrow></math></div>
+<p>Therefore dY<sub>u</sub>/dX = dY<sub>c</sub>/dX + dY<sub>t</sub>/dX and dY<sub>l</sub>/dX = dY<sub>c</sub>/dX &minus; dY<sub>t</sub>/dX.</p>
+
+<h2>Question 1 - Continuous surface integration [45 points]</h2>
+<p>Use this smooth pressure-loading model for 0 &le; X &le; 1:</p>
+<div class="eq long"><math display="block"><mrow><msub><mi>C</mi><mn>0</mn></msub><mo stretchy="false">(</mo><mi>X</mi><mo stretchy="false">)</mo><mo>=</mo><mo stretchy="false">(</mo><mn>1</mn><mo>&minus;</mo><mi>X</mi><mo stretchy="false">)</mo><mo stretchy="false">[</mo><msup><mi>e</mi><mrow><mo>&minus;</mo><mi>X</mi><mo>/</mo><mn>0.010</mn></mrow></msup><mo>+</mo><mn>0.20</mn><mo stretchy="false">(</mo><mn>1</mn><mo>&minus;</mo><msup><mi>e</mi><mrow><mo>&minus;</mo><mi>X</mi><mo>/</mo><mn>0.020</mn></mrow></msup><mo stretchy="false">)</mo><mo stretchy="false">]</mo></mrow></math></div>
+<div class="eq long"><math display="block"><mrow><mi>&Delta;</mi><msub><mi>C</mi><mi>p</mi></msub><mo stretchy="false">(</mo><mi>X</mi><mo stretchy="false">)</mo><mo>=</mo><mn>0.721896</mn><mfrac><mrow><mo stretchy="false">(</mo><mn>1</mn><mo>&minus;</mo><msup><mi>e</mi><mrow><mo>&minus;</mo><mi>X</mi><mo>/</mo><mn>0.010</mn></mrow></msup><mo stretchy="false">)</mo><mo stretchy="false">(</mo><mn>1</mn><mo>&minus;</mo><mi>X</mi><mo stretchy="false">)</mo></mrow><msqrt><mrow><mi>X</mi><mo>+</mo><mn>0.020</mn></mrow></msqrt></mfrac></mrow></math></div>
+<div class="twoeq"><math><mrow><msub><mi>C</mi><mrow><mi>p</mi><mo>,</mo><mi>u</mi></mrow></msub><mo>=</mo><msub><mi>C</mi><mn>0</mn></msub><mo>&minus;</mo><mn>0.80</mn><mi>&Delta;</mi><msub><mi>C</mi><mi>p</mi></msub></mrow></math><math><mrow><msub><mi>C</mi><mrow><mi>p</mi><mo>,</mo><mi>l</mi></mrow></msub><mo>=</mo><msub><mi>C</mi><mn>0</mn></msub><mo>+</mo><mn>0.20</mn><mi>&Delta;</mi><msub><mi>C</mi><mi>p</mi></msub></mrow></math></div>
+<p>Use p<sub>u</sub> = p<sub>&infin;</sub> + q<sub>&infin;</sub>C<sub>p,u</sub> and p<sub>l</sub> = p<sub>&infin;</sub> + q<sub>&infin;</sub>C<sub>p,l</sub> if dimensional pressures are needed.</p>
+
+<ol type="a">
+<li><b>1a.</b> Decode the four digits of NACA 2412. Calculate q<sub>&infin;</sub> and state its units.</li>
+<li><b>1b.</b> Plot Y<sub>u</sub> and Y<sub>l</sub> on equal axes. Separately plot C<sub>p,u</sub> and C<sub>p,l</sub> versus X with the conventional inverted C<sub>p</sub> axis. Label the leading-edge suction region and the pressure difference that produces positive lift.</li>
+<li><b>1c.</b> Numerically evaluate the supplied pressure-force integrals for C<sub>N</sub> and C<sub>A</sub>. Do not derive these formulas. Follow the numerical-integration guide below and document your method and convergence.</li>
+</ol>
+<div class="eq long"><math display="block"><mrow><msub><mi>C</mi><mi>N</mi></msub><mo>=</mo><msubsup><mo>&int;</mo><mn>0</mn><mn>1</mn></msubsup><mo stretchy="false">(</mo><msub><mi>C</mi><mrow><mi>p</mi><mo>,</mo><mi>l</mi></mrow></msub><mo>&minus;</mo><msub><mi>C</mi><mrow><mi>p</mi><mo>,</mo><mi>u</mi></mrow></msub><mo stretchy="false">)</mo><mi>dX</mi></mrow></math></div>
+<div class="eq long"><math display="block"><mrow><msub><mi>C</mi><mi>A</mi></msub><mo>=</mo><msubsup><mo>&int;</mo><mn>0</mn><mn>1</mn></msubsup><mo stretchy="false">[</mo><msub><mi>C</mi><mrow><mi>p</mi><mo>,</mo><mi>u</mi></mrow></msub><mfrac><mrow><mi>d</mi><msub><mi>Y</mi><mi>u</mi></msub></mrow><mrow><mi>d</mi><mi>X</mi></mrow></mfrac><mo>&minus;</mo><msub><mi>C</mi><mrow><mi>p</mi><mo>,</mo><mi>l</mi></mrow></msub><mfrac><mrow><mi>d</mi><msub><mi>Y</mi><mi>l</mi></msub></mrow><mrow><mi>d</mi><mi>X</mi></mrow></mfrac><mo stretchy="false">]</mo><mi>dX</mi></mrow></math></div>
+<div class="guide">
+<h3>Numerical-integration guide for 1c</h3>
+<p><b>Why the leading edge needs care.</b> The thickness slope contains 1/&radic;X, which is undefined at X = 0. The area under it is finite, but a numerical routine must not evaluate that raw slope at X = 0.</p>
+<p><b>Recommended route.</b> Set X = s<sup>2</sup>, so dX = 2s ds and 0 &le; s &le; 1. This places more X-points near the leading edge and removes the endpoint difficulty. Define the transformed normal and axial integrands as:</p>
+<div class="eq long"><math display="block"><mrow><msub><mi>g</mi><mi>N</mi></msub><mo stretchy="false">(</mo><mi>s</mi><mo stretchy="false">)</mo><mo>=</mo><mn>2</mn><mi>s</mi><mo stretchy="false">[</mo><msub><mi>C</mi><mrow><mi>p</mi><mo>,</mo><mi>l</mi></mrow></msub><mo stretchy="false">(</mo><msup><mi>s</mi><mn>2</mn></msup><mo stretchy="false">)</mo><mo>&minus;</mo><msub><mi>C</mi><mrow><mi>p</mi><mo>,</mo><mi>u</mi></mrow></msub><mo stretchy="false">(</mo><msup><mi>s</mi><mn>2</mn></msup><mo stretchy="false">)</mo><mo stretchy="false">]</mo></mrow></math></div>
+<div class="eq long"><math display="block"><mrow><msub><mi>g</mi><mi>A</mi></msub><mo stretchy="false">(</mo><mi>s</mi><mo stretchy="false">)</mo><mo>=</mo><mn>2</mn><mi>s</mi><mo stretchy="false">[</mo><msub><mi>C</mi><mrow><mi>p</mi><mo>,</mo><mi>u</mi></mrow></msub><mo stretchy="false">(</mo><msup><mi>s</mi><mn>2</mn></msup><mo stretchy="false">)</mo><msub><mi>Y</mi><mi>u</mi></msub><mo>&prime;</mo><mo stretchy="false">(</mo><msup><mi>s</mi><mn>2</mn></msup><mo stretchy="false">)</mo><mo>&minus;</mo><msub><mi>C</mi><mrow><mi>p</mi><mo>,</mo><mi>l</mi></mrow></msub><mo stretchy="false">(</mo><msup><mi>s</mi><mn>2</mn></msup><mo stretchy="false">)</mo><msub><mi>Y</mi><mi>l</mi></msub><mo>&prime;</mo><mo stretchy="false">(</mo><msup><mi>s</mi><mn>2</mn></msup><mo stretchy="false">)</mo><mo stretchy="false">]</mo></mrow></math></div>
+<p>Here a prime means dY/dX, evaluated at X = s<sup>2</sup>. At the single endpoint s = 0, use the finite limits g<sub>N</sub>(0) = 0 and g<sub>A</sub>(0) = 10t(0.2969) = 0.35628; do not calculate 0 &times; &infin;.</p>
+<p><b>Compute and check.</b> Use the composite trapezoidal rule for each g on s<sub>j</sub> = j/N, j = 0, ..., N:</p>
+<div class="eq long"><math display="block"><mrow><mi>I</mi><mo stretchy="false">[</mo><mi>g</mi><mo stretchy="false">]</mo><mo>&asymp;</mo><mfrac><mn>1</mn><mi>N</mi></mfrac><mo stretchy="false">(</mo><mfrac><mn>1</mn><mn>2</mn></mfrac><mi>g</mi><mo stretchy="false">(</mo><mn>0</mn><mo stretchy="false">)</mo><mo>+</mo><munderover><mo>&sum;</mo><mrow><mi>j</mi><mo>=</mo><mn>1</mn></mrow><mrow><mi>N</mi><mo>&minus;</mo><mn>1</mn></mrow></munderover><mi>g</mi><mo stretchy="false">(</mo><mfrac><mi>j</mi><mi>N</mi></mfrac><mo stretchy="false">)</mo><mo>+</mo><mfrac><mn>1</mn><mn>2</mn></mfrac><mi>g</mi><mo stretchy="false">(</mo><mn>1</mn><mo stretchy="false">)</mo><mo stretchy="false">)</mo></mrow></math></div>
+<p>Here I[g] means the integral of g from s = 0 to 1. Apply the rule once with N = 1000 and again with N = 2000. Compare the two C<sub>N</sub> values and the two C<sub>A</sub> values. Report both discretizations and their absolute differences. A difference below 10<sup>&minus;4</sup> for each coefficient is adequate for this assignment.</p>
+<p><b>What is adaptive quadrature?</b> It is software that estimates integration error and automatically uses smaller intervals where a function changes rapidly. You are not asked to implement it. If you choose a library such as <code>scipy.integrate.quad</code>, apply it to g<sub>N</sub> and g<sub>A</sub> on 0 &le; s &le; 1, state the requested tolerance, and repeat with a tighter tolerance to demonstrate convergence.</p>
+</div>
+<ol type="a" start="4"><li><b>1d.</b> Use C<sub>N</sub> and C<sub>A</sub> to calculate C<sub>L</sub>, C<sub>D,p</sub>, and the forces per unit span. Report coefficients to four significant figures, forces with units, and do not call pressure drag total drag.</li></ol>
+<div class="twoeq"><math><mrow><msup><mi>L</mi><mo>&prime;</mo></msup><mo>=</mo><msub><mi>q</mi><mo>&infin;</mo></msub><mi>c</mi><msub><mi>C</mi><mi>L</mi></msub></mrow></math><math><mrow><msubsup><mi>D</mi><mi>p</mi><mo>&prime;</mo></msubsup><mo>=</mo><msub><mi>q</mi><mo>&infin;</mo></msub><mi>c</mi><msub><mi>C</mi><mrow><mi>D</mi><mo>,</mo><mi>p</mi></mrow></msub></mrow></math></div>
+
+<h2 class="q2">Question 2 - Tabulated data and panel sums [45 points]</h2>
+<p>Use the companion workbook <b>MIE446_HW1_NACA2412_Data.xlsx</b>. The <b>Data</b> sheet supplies 101 stations (X, Y<sub>u</sub>, Y<sub>l</sub>, p<sub>u</sub>, p<sub>l</sub>) from X = 0 to 1. Preserve the supplied data columns. Consecutive stations define 100 straight panels; panel i connects stations i and i + 1.</p>
+<ol type="a">
+<li><b>2a.</b> Add columns for C<sub>p,u,i</sub> and C<sub>p,l,i</sub> calculated from the dimensional pressures and the given p<sub>&infin;</sub> and q<sub>&infin;</sub>.</li>
+<li><b>2b.</b> For each of the 100 panels, calculate the mean upper and lower C<sub>p</sub> values, the changes in X, Y<sub>u</sub>, and Y<sub>l</sub>, and the two force contributions below. Show one row per panel and keep the formulas visible. No finite-difference surface slopes are needed.</li>
+</ol>
+<div class="twoeq"><math><mrow><msub><mover><mi>C</mi><mo>&OverBar;</mo></mover><mrow><mi>p</mi><mo>,</mo><mi>u</mi><mo>,</mo><mi>i</mi></mrow></msub><mo>=</mo><mfrac><mrow><msub><mi>C</mi><mrow><mi>p</mi><mo>,</mo><mi>u</mi><mo>,</mo><mi>i</mi></mrow></msub><mo>+</mo><msub><mi>C</mi><mrow><mi>p</mi><mo>,</mo><mi>u</mi><mo>,</mo><mi>i</mi><mo>+</mo><mn>1</mn></mrow></msub></mrow><mn>2</mn></mfrac></mrow></math><math><mrow><mi>&Delta;</mi><msub><mi>X</mi><mi>i</mi></msub><mo>=</mo><msub><mi>X</mi><mrow><mi>i</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>&minus;</mo><msub><mi>X</mi><mi>i</mi></msub></mrow></math></div>
+<p>Use the same mean formula for the lower surface. The force contributions are:</p>
+<div class="eq long"><math display="block"><mrow><mi>&Delta;</mi><msub><mi>C</mi><mrow><mi>N</mi><mo>,</mo><mi>i</mi></mrow></msub><mo>=</mo><mfrac><mrow><mo stretchy="false">(</mo><msub><mi>C</mi><mrow><mi>p</mi><mo>,</mo><mi>l</mi><mo>,</mo><mi>i</mi></mrow></msub><mo>&minus;</mo><msub><mi>C</mi><mrow><mi>p</mi><mo>,</mo><mi>u</mi><mo>,</mo><mi>i</mi></mrow></msub><mo stretchy="false">)</mo><mo>+</mo><mo stretchy="false">(</mo><msub><mi>C</mi><mrow><mi>p</mi><mo>,</mo><mi>l</mi><mo>,</mo><mi>i</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>&minus;</mo><msub><mi>C</mi><mrow><mi>p</mi><mo>,</mo><mi>u</mi><mo>,</mo><mi>i</mi><mo>+</mo><mn>1</mn></mrow></msub><mo stretchy="false">)</mo></mrow><mn>2</mn></mfrac><mi>&Delta;</mi><msub><mi>X</mi><mi>i</mi></msub></mrow></math></div>
+<div class="eq long"><math display="block"><mrow><mi>&Delta;</mi><msub><mi>C</mi><mrow><mi>A</mi><mo>,</mo><mi>i</mi></mrow></msub><mo>=</mo><msub><mover><mi>C</mi><mo>&OverBar;</mo></mover><mrow><mi>p</mi><mo>,</mo><mi>u</mi><mo>,</mo><mi>i</mi></mrow></msub><mo stretchy="false">(</mo><msub><mi>Y</mi><mrow><mi>u</mi><mo>,</mo><mi>i</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>&minus;</mo><msub><mi>Y</mi><mrow><mi>u</mi><mo>,</mo><mi>i</mi></mrow></msub><mo stretchy="false">)</mo><mo>&minus;</mo><msub><mover><mi>C</mi><mo>&OverBar;</mo></mover><mrow><mi>p</mi><mo>,</mo><mi>l</mi><mo>,</mo><mi>i</mi></mrow></msub><mo stretchy="false">(</mo><msub><mi>Y</mi><mrow><mi>l</mi><mo>,</mo><mi>i</mi><mo>+</mo><mn>1</mn></mrow></msub><mo>&minus;</mo><msub><mi>Y</mi><mrow><mi>l</mi><mo>,</mo><mi>i</mi></mrow></msub><mo stretchy="false">)</mo></mrow></math></div>
+<ol type="a" start="3"><li><b>2c.</b> Sum the 100 contributions for C<sub>N</sub> and C<sub>A</sub>. Rotate them into C<sub>L</sub> and C<sub>D,p</sub>, then calculate L&prime; and D<sub>p</sub>&prime;. Compare C<sub>L</sub> and C<sub>D,p</sub> with Question 1 using the percentage-difference formula below.</li></ol>
+<div class="twoeq"><math><mrow><msub><mi>C</mi><mi>N</mi></msub><mo>&asymp;</mo><munderover><mo>&sum;</mo><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mn>100</mn></munderover><mi>&Delta;</mi><msub><mi>C</mi><mrow><mi>N</mi><mo>,</mo><mi>i</mi></mrow></msub></mrow></math><math><mrow><msub><mi>C</mi><mi>A</mi></msub><mo>&asymp;</mo><munderover><mo>&sum;</mo><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mn>100</mn></munderover><mi>&Delta;</mi><msub><mi>C</mi><mrow><mi>A</mi><mo>,</mo><mi>i</mi></mrow></msub></mrow></math></div>
+<div class="eq"><math display="block"><mrow><mtext>Percentage difference (%)</mtext><mo>=</mo><mn>100</mn><mo>&times;</mo><mfrac><mrow><mo>|</mo><mtext>panel result</mtext><mo>&minus;</mo><mtext>continuous result</mtext><mo>|</mo></mrow><mrow><mo>|</mo><mtext>continuous result</mtext><mo>|</mo></mrow></mfrac></mrow></math></div>
+<ol type="a" start="4"><li><b>2d.</b> In two or three sentences, compare the lift and pressure-drag differences. Pressure drag can be more sensitive to panel resolution because its two wind-axis terms partly cancel. Do not infer skin-friction drag from the pressure data.</li></ol>
+
+<h2>Submission and grading [10 points for communication]</h2>
+<p>Submit through Canvas: (1) one PDF with plots, results, units, numerical-convergence table, and the Question 1-Question 2 comparison; (2) the completed workbook with original data intact and panel formulas visible; (3) one Claim-Evidence-Check summary slide in PPTX and PDF; and (4) a brief AI-use disclosure. Show your own reasoning. AI may help with syntax or debugging, but it cannot substitute for independent verification.</p>
+<table class="data"><tr><th>Criterion</th><th class="right">Points</th></tr>
+<tr><td>Q1: NACA and pressure interpretation; correctly labeled plots</td><td class="right">18</td></tr>
+<tr><td>Q1: supplied integrals, documented convergence, coefficients and forces</td><td class="right">27</td></tr>
+<tr><td>Q2: pressure coefficients and traceable panel contributions</td><td class="right">20</td></tr>
+<tr><td>Q2: panel sums, rotation, comparison and interpretation</td><td class="right">25</td></tr>
+<tr><td>Readable work, units, summary slide and AI disclosure</td><td class="right">10</td></tr>
+<tr><th>Total</th><th class="right">100</th></tr></table>
+
+<h2>References</h2>
+<p class="small">E. N. Jacobs, K. E. Ward and R. M. Pinkerton, <i>The Characteristics of 78 Related Airfoil Sections from Tests in the Variable-Density Wind Tunnel</i>, NACA Report 460, <a href="https://ntrs.nasa.gov/citations/19930091108">NASA NTRS</a>. &nbsp; NASA OpenVSP Ground School, <a href="https://www.nasa.gov/reference/openvsp-cross-sections/">NACA 4-Series Airfoil</a>. &nbsp; NASA Glenn Research Center, <a href="https://www1.grc.nasa.gov/beginners-guide-to-aeronautics/lift-equation/">Lift Equation</a>.</p>
+<div class="footer">MIE 446 Aerospace Structures &nbsp; | &nbsp; Homework 1, revised September 28, 2026 &nbsp; | &nbsp; Canvas controls deadlines and submissions.</div>
+</body>
+</html>
+

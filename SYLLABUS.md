@@ -1,10 +1,10 @@
 # MIE 446 Aerospace Structures
 
-**Fall 2026 · Student syllabus**
+**Fall 2026 · Student syllabus · Revised September 26, 2026**
 
 [Course home](README.md) · [Download Word syllabus](docs/MIE_446_Aerospace_Structures_Fall_2026_Syllabus_Updated.docx) · [Lecture notebooks](notebooks/README.md) · [Project guide](PROJECT.md) · [Homework checklist](ASSIGNMENTS.md)
 
-> Web edition of the current course syllabus, updated September 7, 2026. Canvas carries authoritative announcements, deadline changes, submissions and private access details. The dated schedule below is the syllabus schedule; confirm event logistics in Canvas.
+> Web edition of the current course syllabus, revised September 26, 2026. Canvas carries authoritative announcements, deadline changes, submissions and private access details. The dated schedule below is the syllabus schedule; confirm event logistics in Canvas.
 
 ## Contents
 
@@ -174,7 +174,7 @@ Homework rubric: engineering judgment record and transparent reasoning 40%; mech
 
 ### Midterm
 
-The midterm is individual and closed to generative AI and unauthorized online assistance. It measures the internal understanding needed to supervise any analytical or AI tool, not algebraic speed alone. The intended balance is approximately 20% qualitative prediction/ranking/sketches; 25% framing, free-body diagrams, model choice, and assumptions; 25% concise analytical solution; 20% audit of a plausible but incorrect worked solution; and 10% interpretation, transfer, or design consequence. A formula sheet policy and sample format will be posted at least one week in advance.
+The October 27 midterm is individual and closed to generative AI and unauthorized online assistance, but open to other permitted resources. It covers material taught through October 22; the detailed scope and practice problems will be posted in Canvas. It measures the internal understanding needed to supervise any analytical or AI tool, not algebraic speed alone. The intended balance is approximately 20% qualitative prediction/ranking/sketches; 25% framing, free-body diagrams, model choice, and assumptions; 25% concise analytical solution; 20% audit of a plausible but incorrect worked solution; and 10% interpretation, transfer, or design consequence. A formula sheet policy and sample format will be posted at least one week in advance.
 
 ### Letter grades
 
@@ -191,23 +191,25 @@ UMass undergraduate grading does not use A+ or D−. Any end-of-term adjustment 
 
 **Design intent** — Build and verify one code-generated, non-flying wing; inspect the completed team wing without contact and without load using calibrated machine vision; and interpret a shared before/after-damage demonstration on a separate sacrificial wing-box specimen. Success requires traceable geometry, manufacturing evidence, measurement agreement and uncertainty, physically plausible diagnostic trends, and a defensible engineering decision.
 
-### Team formation
+### Assigned project teams
 
-The instructor will form teams of three using a short skills/availability survey; roles rotate among geometry/code and verification, CAD/design-for-additive-manufacturing, fabrication and build documentation, and measurement/data interpretation. All members must understand the complete workflow and answer individual technical questions. If enrollment is not divisible by three, the instructor will make the smallest necessary exception and adjust roles and workload. Team preferences are considered but not guaranteed. A confidential contribution record and peer check protect individual accountability.
+Three-person teams have already been assigned. The wing project begins in class on September 29. Roles rotate among geometry and verification, CAD and design for additive manufacturing, fabrication and documentation, and measurement and data interpretation. Every member must understand the complete workflow and answer individual technical questions. A confidential contribution record and peer check protect individual accountability.
 
 ### Common design envelope
 
 | Constraint | Baseline requirement |
 | --- | --- |
 | Artifact | One code-generated, non-flying wing demonstrator. Each team wing remains unloaded and undamaged; no propulsion, onboard electronics, controls, fuselage, flight activity, or force-to-failure test |
-| Geometry | Semi-span 450 mm; root chord 160 mm; tip chord 100 mm; instructor-approved NACA 4-digit section |
-| Construction | Three or fewer printed modules; printed shell/ribs with interfaces for course-issued carbon-fiber rods |
+| Geometry | One 450 mm semi-wing; 160 mm root chord; 100 mm tip chord; an instructor-approved NACA four-digit section. Full-wing quantities are mirrored-wing analytical equivalents. |
+| Construction | Two or three printed modules; shell and ribs; two course-issued 4 mm rods at x/c = 0.30 and 0.60. Any departure requires instructor approval before print release. |
 | Material budget | Up to 300 g regular PLA Pro per final wing, plus course-issued rods and supervised 5-minute epoxy when assigned |
 | Code | Instructor-provided Python/CadQuery wing-generation code plus supervised Python/OpenCV and data-acquisition workflows; teams configure inputs, run cleanly, verify outputs, explain the logic, and preserve a reproducible record |
 | Engineering checks | Units; planform metrics; bounding boxes; watertight solids; printable thickness; build-envelope/mass checks; camera calibration; manual-to-vision agreement; load-cell zero/sanity check; accelerometer sampling and frequency sanity check |
 | Build acceptance | Complete labeled modules; approved dimensions; dry-fit interfaces; aligned assembly; no major cracks, warping, separation, or missing features; manual and Jetson-camera evidence; complete archive |
 | Inspection and diagnostics | Required unloaded Jetson-camera inspection for every team wing. Shared instructor-led demonstration uses force, camera tip-deflection, acceleration, and microscope evidence on a sacrificial specimen before and after controlled damage. |
 | Evaluation | Understanding, reproducibility, traceability, print quality, fit, calibrated inspection, interpretation of diagnostic evidence, uncertainty, revision, communication, and individual defense—not a beauty contest |
+
+Fabrication starts on **Tuesday, October 13**, in assigned, supervised ELab slots. A team may release its first wing module only after a physical rod-fit coupon, documented calculation check, clean notebook run, slicer review and staff print approval. October 13 is a production start, not a promise that all teams finish printing that day.
 
 ### Minimum code behavior
 
@@ -245,15 +247,16 @@ The instructor will form teams of three using a short skills/availability survey
 
 | Target date | Deliverable or gate |
 | --- | --- |
-| Sept. 17 | Skills/availability survey and team preferences |
-| Sept. 22 | Instructor posts teams; team charter and role rotation begin |
-| Oct. 15 | Code checkpoint: parameterized airfoil/wing, planform metrics, unit/sanity and bounding-box checks; review of instructor-provided inspection workflow |
-| Oct. 22 | Design review: geometry, interfaces, code verification, print-risk register, and draft manual/vision measurement plan |
-| Nov. 12 | Print-readiness review: frozen STL/3MF, every-layer preview, mass/time budget, assembly plan, and inspection target placement |
-| Nov. 19 | Team-specific fabrication and assembly slots; exact reservations are posted in Canvas |
-| Nov. 20–Dec. 3 | Manual and Jetson-camera inspection, build acceptance, shared damage-diagnostics demonstration/data analysis, authorized revision or reprint, and final evidence archive |
-| Dec. 3–8 | Project presentations, diagnostic evidence synthesis, and individual technical questions |
-| Dec. 8, 10, 15 | Final report, configured code/archive, manufacturing files, print log, annotated inspection image/CSV, diagnostic analysis, and acceptance evidence due |
+| Sept. 22 | Three-person teams already assigned; project roles and shared folders confirmed. |
+| Sept. 29–Oct. 1 | Project launch and manual geometry, planform and load-path calculations. |
+| Oct. 6–8 | Supervised coupon-only run, physical fit test, rod measurement and R01 record. Staff schedules the short coupon appointments. |
+| Oct. 8–9 | Pre-print review: calculation sheet, coupon evidence, R02 clean run, module dimensions, CAD mass, all-layer slicer review, safety training and assigned printer slot. |
+| Oct. 13 | Supervised wing-module fabrication begins for released teams. Teams without a passed coupon or release complete the missing gate first. |
+| Oct. 22 | Reproducibility and as-built checkpoint: parameter trace, file/revision consistency, print log, independent check and current risks. |
+| Oct. 26; Nov. 2 | Follow-up ELab slots for remaining modules, authorized corrections or reprints and dimensional checks; reservations are posted in Canvas. |
+| Nov. 12; Nov. 16 | Design and assembly review, dry fit, alignment plan, supervised assembly or authorized correction and early manual inspection. |
+| Dec. 1–3 | Build acceptance and calibrated manual/Jetson inspection; shared damage-diagnostics demonstration and data analysis. |
+| Dec. 8, 10, 15 | Team presentations and individual technical questions; final package due Dec. 15 at 5:00 p.m. |
 
 **Printer reservations** — Team-specific machine and supervision slots will be posted in Canvas after coordination with ELab and the other course using the printers. Only assigned slots are authorized; Canvas is the authoritative schedule.
 
@@ -335,36 +338,49 @@ The course supplies approved PLA Pro, course-issued rods/interfaces, supervised 
 
 ## 7. Weekly schedule — Fall 2026
 
-Dates and topics below are the working instructional sequence. Canvas will carry the authoritative assignment files and printer sign-ups. Material may shift by one meeting to support learning, but graded due dates will not move earlier without consent.
+The four 75-minute meetings before fabrication are specified below. October 12 is a University holiday; there is no regular class that day. Coupon appointments outside class require ELab authorization and supervision. The revised due dates below supersede the earlier syllabus schedule; Canvas provides submission links and team-specific printer reservations. No team may bypass a safety or print-release condition because of the accelerated calendar.
+
+### Class plan before October fabrication
+
+Meetings run from 11:30 a.m. to 12:45 p.m. The remaining part of Lecture 1 is completed on September 29. Its fuselage and monocoque extensions become reading rather than delaying the wing calculation and print-release work.
+
+| Meeting | In-class sequence and time | Evidence at end of meeting |
+| --- | --- | --- |
+| Tue. Sept. 29 | 11:30–11:40 retrieve tail-to-wing vocabulary; 11:40–12:05 finish Lecture 1 wing parts and devices (7A–7A-4), including a brief spoileron/wing-tip-rudder distinction; 12:05–12:25 trace skin-rib-rod/root load paths and the 7C wing cut; 12:25–12:40 map those parts to the team semi-wing; 12:40–12:45 exit check. | Labeled half-wing, root-to-tip load path and one unanswered design question. |
+| Thu. Oct. 1 | 11:30–11:40 retrieval and units; 11:40–12:05 semi-span, chord law, taper, projected semi-wing area, mirrored full-wing area and aspect ratio; 12:05–12:25 hand calculation for the 450/160/100 mm baseline; 12:25–12:40 independent peer check against the guided notebook; 12:40–12:45 exit check. | Signed geometry sheet with units and a separately checked result. HW 1 due. |
+| Tue. Oct. 6 | 11:30–11:40 decode an approved NACA four-digit section; 11:40–12:00 place the fixed rods, ribs and module cuts and check build-envelope and wall limits; 12:00–12:20 distinguish radial from diametral clearance and predict coupon-hole sizes; 12:20–12:40 run Coupon Only and plan the supervised physical fit test; 12:40–12:45 exit check. | Coupon R01 archive and booked staff-supervised coupon test; measured fit record follows the physical print. |
+| Thu. Oct. 8 | 11:30–11:45 draw the cantilever free-body diagram for one instructor-specified virtual load (no load is applied to the student wing); 11:45–12:05 check shear/root moment, module dimensions and CAD/slicer mass; 12:05–12:35 peer review coupon evidence, R02 clean run, every-layer preview and revision trace; 12:35–12:45 staff release or written correction list. | Pre-print release packet or explicit hold. No final-wing print without a physical coupon and staff authorization. |
+
+**Required before the first wing module:** semi-wing and full-wing geometry with units; rod and module locations; a one-half-wing free-body diagram and independently checked shear/root-moment demand for the assigned virtual load; measured rod diameter and physical coupon fit; a clean final-wing R02 run; CAD mass at or below 300 g; checked module bounds and every slicer layer; safety authorization and a team-specific printer reservation. A missing coupon or failed check keeps the team in the coupon/prototype workflow.
 
 | Week / dates | Topics and learning activities | Due / event |
 | --- | --- | --- |
-| 1 Sept. 8/10 | Central question: what makes an answer trustworthy? Why aircraft structures are different; four forces; airfoil geometry, angle of attack, pressure, lift/drag/moment; NACA 4-digit coding studio; prediction-before-calculation routine | Starter environment check |
-| 2 Sept. 15/17 | Finite-wing geometry: span, chord, aspect ratio, taper, sweep, dihedral; lift distribution; skin–rib–spar load paths; cantilever idealization | Team survey Sept. 17 |
-| 3 Sept. 22/24 | External/internal loads; equilibrium; normal/shear stress and strain; wing free-body diagrams | Teams posted Sept. 22; Fri. Sept. 25 optional Manela seminar |
-| 4 Sept. 29/Oct. 1 | Stress transformation; Mohr's circle; principal stresses; aerospace failure questions; paired audit of a correct-looking worked/AI solution | HW 1 due Oct. 1 |
-| 5 Oct. 6/8 | Three-dimensional stress tensor; principal values/directions; constitutive law; plane stress/plane strain | HW 2 work session |
-| 6 Oct. 13/15 | Beam shear/moment, bending stress, slope/deflection; project load case and requirements | HW 2 due Oct. 13; concept memo Oct. 15 |
-| 7 Oct. 20/22 | Strain energy, virtual work, Castigliano; determinate/indeterminate structures; model-validity and solution-audit review | HW 3 due Oct. 22; code checkpoint |
-| 8 Oct. 27/29 | Midterm; guest class on electric propulsion, industry practice, and internship/career pathways | Midterm Oct. 27; Dr. Tsay Oct. 29 |
-| 9 Nov. 3/5 | Nov. 3: no class (University schedule); aircraft maneuver/landing loads and V–n diagrams | HW 4 preparation |
-| 10 Nov. 10/12 | Wing structural idealization; booms/stringers/skins; DfAM; printer orientation and coupon checks | HW 4 due Nov. 12; design review |
-| 11 Nov. 17/19 | Thin-walled open/closed sections; shear flow, torsion, shear center; print-readiness studio | HW 5 due Nov. 19; print gate |
-| 12 Nov. 24/26 | No regular MIE 446 meetings: Nov. 24 follows a Wednesday schedule; Thanksgiving recess | Approved print slots only if shared schedule permits |
-| 13 Dec. 1/3 | Fabrication, assembly, manual and Jetson machine-vision inspection, calibration and uncertainty; shared force-deflection, vibration, and crack demonstration; hand-code/AI-build reconciliation | HW 6 due Dec. 3; inspection evidence and shared diagnostic analysis |
-| 14 Dec. 8/10 | Build acceptance, diagnostic evidence synthesis, and team presentations | Presentation groups A–N |
-| 15 Dec. 15 | Team presentations, individual questions, lessons from inspection/damage indicators, and course synthesis | Final project package due 5:00 p.m. |
+| 1 Sept. 8/10 | Central question: trustworthy answers; aircraft forces; airfoil geometry; pressure, lift, drag and moment; NACA four-digit studio. | Starter environment check. |
+| 2 Sept. 15/17 | Finite-wing geometry, skin-rib-spar load paths and cantilever idealization; existing three-person teams prepare for project launch. | Teams already assigned; no new team-formation task. |
+| 3 Sept. 22/24 | External and internal loads, equilibrium, stress and strain, and wing free-body diagrams. | Existing teams active; Sept. 25 optional Manela seminar. |
+| 4 Sept. 29/Oct. 1 | Sept. 29: finish Lecture 1 wing anatomy, devices, spoileron comparison and structural load paths. Oct. 1: semi-wing geometry, taper, area, aspect ratio and independent hand check. | HW 1 due Oct. 1; team calculation sheet started. |
+| 5 Oct. 6/8 | Oct. 6: NACA section, rods, modules, printer constraints and physical fit coupon. Oct. 8: cantilever FBD, virtual-load shear and root moment, peer audit and print-release review. | Coupon R01 and fit record by Oct. 8; pre-print package reviewed Oct. 8–9. |
+| 6 Oct. 13/15 | Oct. 13: supervised wing-module fabrication launch in assigned slots, with beam-equilibrium studio for waiting teams. Oct. 15: beam shear/moment, bending stress, slope and deflection; inspect first-print evidence. | Wing construction starts Oct. 13 only for released teams. |
+| 7 Oct. 20/22 | Two- and three-dimensional stress transformation; Mohr's circle, principal stresses and directions; constitutive and plane-stress assumptions; audit a flawed solution. | As-built and reproducibility checkpoint Oct. 22. |
+| 8 Oct. 27/29 | Midterm Oct. 27; guest class Oct. 29 on electric propulsion, industry practice and internship/career pathways. | Midterm Oct. 27; Dr. Tsay Oct. 29. |
+| 9 Nov. 3/5 | Nov. 3: no class. Nov. 5: strain energy, virtual work and a beam-model validity check. | HW 2 due Nov. 5. |
+| 10 Nov. 10/12 | Nov. 10: Castigliano and determinate/indeterminate structures. Nov. 12: maneuver and landing loads, V–n diagrams, wing structural idealization and assembly review. | HW 3 due Nov. 12; design and assembly review. |
+| 11 Nov. 17/19 | Thin-walled wing-box idealization, shear flow, torsion and shear center; compare model with printed geometry and inspection evidence. | HW 4 due Nov. 19; Nov. 16 supervised assembly/inspection slot. |
+| 12 Nov. 24/26 | No regular MIE 446 meetings: Nov. 24 follows a Wednesday schedule; Thanksgiving recess. | Approved inspection or correction slots only if shared schedule permits. |
+| 13 Dec. 1/3 | Manual and calibrated Jetson machine-vision inspection, uncertainty, build acceptance and shared force-deflection, vibration and crack demonstration. | HW 5 due Dec. 3; inspection and diagnostic evidence. |
+| 14 Dec. 8/10 | Build acceptance, diagnostic synthesis, team presentations and individual technical questions. | HW 6 due Dec. 10; presentation groups assigned in Canvas. |
+| 15 Dec. 15 | Team presentations, individual questions, lessons from inspection/damage indicators and course synthesis. | Final project package due 5:00 p.m. |
 
 ### Homework map
 
 | Assignment | Primary focus | Due |
 | --- | --- | --- |
 | HW 1 | Read the structure: airfoil/wing load path, FBD, pre-calculation predictions, equilibrium, code plot | Oct. 1 |
-| HW 2 | Choose the model: 2D/3D stress transformation, principal stresses, constitutive assumptions and validity | Oct. 13 |
-| HW 3 | Verify independently: wing-beam shear/moment, bending, deflection, strain energy, limiting/alternate check | Oct. 22 |
-| HW 4 | Audit AI reasoning: virtual work/Castigliano plus correction of a plausible but flawed generated solution | Nov. 12 |
-| HW 5 | Sensitivity and trade-offs: maneuver/landing loads, V-n diagram, computational exercise | Nov. 19 |
-| HW 6 | Integrated trust case: wing-box shear/torsion/shear center; hand-code/AI validation; design/manufacturing evidence; calibrated vision inspection; and interpretation of shared damage-diagnostic data | Dec. 3 |
+| HW 2 | Choose the model: 2D/3D stress transformation, principal stresses, constitutive assumptions and validity | Nov. 5 |
+| HW 3 | Verify independently: wing-beam shear/moment, bending, deflection, strain energy, limiting/alternate check | Nov. 12 |
+| HW 4 | Audit AI reasoning: virtual work/Castigliano plus correction of a plausible but flawed generated solution | Nov. 19 |
+| HW 5 | Sensitivity and trade-offs: maneuver/landing loads, V-n diagram, computational exercise | Dec. 3 |
+| HW 6 | Integrated trust case: wing-box shear/torsion/shear center; hand-code/AI validation; design/manufacturing evidence; calibrated vision inspection; and interpretation of shared damage-diagnostic data | Dec. 10 |
 
 ## 8. Course policies
 
@@ -374,7 +390,7 @@ Regular attendance is expected because studios, oral checks, design reviews, spe
 
 ### Deadlines and extensions
 
-Each student may use two 48-hour homework extensions during the semester without giving a reason; activate the extension in writing before the deadline. The passes do not apply to the midterm, oral rotation, project safety gates, printer reservations, fabrication/assembly appointments, or the final presentation. Beyond the passes, late individual work loses 10% of the earned score per 24 hours unless an approved circumstance or accommodation applies. Contact the instructor before a project deadline whenever possible; team safety and printer capacity may require an alternate deliverable rather than a shifted machine slot.
+Each student may use two 24-hour homework extensions during the semester without giving a reason; activate the extension in writing before the deadline. The passes do not apply to the midterm, oral rotation, project safety gates, printer reservations, fabrication/assembly appointments, or the final presentation. Beyond the passes, late individual work loses 10% of the earned score per 24 hours unless an approved circumstance or accommodation applies. Contact the instructor before a project deadline whenever possible; team safety and printer capacity may require an alternate deliverable rather than a shifted machine slot.
 
 ### Religious observance
 

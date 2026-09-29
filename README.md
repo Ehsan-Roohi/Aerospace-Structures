@@ -6,7 +6,7 @@ Dr. Ehsan Roohi Golkhatmi · Gunness Laboratory, Room 1 · [roohie@umass.edu](ma
 
 ## Open for class
 
-**[Syllabus](SYLLABUS.md)** · **[Download Word syllabus](docs/MIE_446_Aerospace_Structures_Fall_2026_Syllabus_Updated.docx)** · **[Weekly schedule](SYLLABUS.md#7-weekly-schedule--fall-2026)** · **[Lecture notebooks](#lecture-notebooks)** · **[Stipa-Caproni: the Venturi-fuselage aircraft](STIPA_CAPRONI.md)** · **[Gimli Glider case study](GIMLI_GLIDER.md)** · **[Navier–Stokes and AI reading](NAVIER_STOKES_AI.md)** · **[Wing project](PROJECT.md)** · **[Register a three-person team](https://forms.gle/L5BMny8WEP4zpokFA)** · **[Homework 1 PDF](assignments/homework-01/MIE446_HW1_Surface_Pressure.pdf)** · **[Homework 1 Excel data](assignments/homework-01/MIE446_HW1_NACA2412_Data.xlsx)** · **[All homework](ASSIGNMENTS.md)** · **[General OrcaSlicer + USB guide](PRINTING.md)**
+**[Syllabus](SYLLABUS.md)** · **[Download Word syllabus](docs/MIE_446_Aerospace_Structures_Fall_2026_Syllabus_Updated.docx)** · **[Weekly schedule](SYLLABUS.md#7-weekly-schedule--fall-2026)** · **[Lecture notebooks](#lecture-notebooks)** · **[Stipa-Caproni: the Venturi-fuselage aircraft](STIPA_CAPRONI.md)** · **[Gimli Glider case study](GIMLI_GLIDER.md)** · **[Navier–Stokes and AI reading](NAVIER_STOKES_AI.md)** · **[Wing project](PROJECT.md)** · **[Homework 1 PDF](assignments/homework-01/MIE446_HW1_Surface_Pressure.pdf)** · **[Homework 1 Excel data](assignments/homework-01/MIE446_HW1_NACA2412_Data.xlsx)** · **[All homework](ASSIGNMENTS.md)** · **[General OrcaSlicer + USB guide](PRINTING.md)**
 
 This is the classroom home for released MIE 446 learning materials. Open a lecture below, save your own copy in Google Drive, and work through the predictions, theory and experiments. No prior aerospace course is assumed.
 
@@ -17,7 +17,7 @@ This is the classroom home for released MIE 446 learning materials. Open a lectu
 
 | Lecture | What we study | Open and run |
 |---|---|---|
-| **01 · Aircraft forces and airfoils** | Flight-path equilibrium, flight controls, CG, trim and static margin; airfoil geometry, NACA sections, aerodynamic coefficients, stall and load paths · Multi-session lecture | [![Open Lecture 01 in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/0039add31894c7a69937a17fbdbd1b8e10bc72c7/notebooks/MIE446_Lecture_01_Trust_Forces_Airfoils.ipynb) |
+| **01 · Aircraft forces and airfoils** | Flight-path equilibrium, flight controls, CG, trim and static margin; airfoil geometry, NACA sections, wing and empennage anatomy, spoilerons versus Lilienthal's wing-tip rudder, four aircraft photographs, stall and structural load paths · Multi-session lecture | [![Open Lecture 01 in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/main/notebooks/MIE446_Lecture_01_Trust_Forces_Airfoils.ipynb) |
 | **02 · Finite wings and load paths** | Span, chord, taper, aspect ratio, sweep, dihedral, induced drag, distributed loads and root reactions · 75 min | [![Open Lecture 02 in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/main/notebooks/MIE446_Lecture_02_Finite_Wings_and_Load_Paths.ipynb) |
 | **Numerical wing structural design** | Two teaching sessions + design studio: theory, schematics, signed load cases, bending/shear/torsion, cap buckling, whole-span fit, independent beam FEM, Pareto search, uncertainty and downloadable CAD/report data. No lab or Excel required. | [![Open Numerical Wing Design in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/main/notebooks/MIE446_Wing_Structural_Design_Numerical.ipynb) |
 
@@ -43,11 +43,18 @@ Lectures 01 and 02 are released. Later lecture notebooks will appear here when r
 
 ## Design and build a wing
 
-### Team registration
+### Assigned teams and October build
 
-Form a team of exactly three students. After all members agree, one team contact should submit the form once for the entire group:
+Three-person teams are already assigned. The project begins in class on September 29. The remaining Lecture 1 material, hand calculations, coupon fit test and pre-print review occur before the first supervised wing-module build on October 13. See the [four-meeting teaching plan](SYLLABUS.md#class-plan-before-october-fabrication) and [revised project milestones](SYLLABUS.md#5-project-workflow-and-deliverables). October 12 is a University holiday; ELab coupon and production slots require staff authorization and are assigned in Canvas.
 
-**[Register your three-person team](https://forms.gle/L5BMny8WEP4zpokFA)**
+### September 29 wing-design packet
+
+Use these English, Times New Roman, black-text PDFs for the accelerated pre-build sequence. The worksheet and fit/release record are fillable; retain a copy for your team. Canvas remains authoritative for submission deadlines and supervised ELab appointments.
+
+- [Team Wing Layout — R01 (student worksheet)](docs/course-packets/2026-09-29/MIE446_Team_Wing_Layout_R01.pdf)
+- [September 29 Wing Lecture Guide (instructor)](docs/course-packets/2026-09-29/MIE446_September_29_Instructor_Guide.pdf)
+- [Coupon Fit and R02 Release Record (team and staff form)](docs/course-packets/2026-09-29/MIE446_Coupon_Fit_and_R02_Release_Record.pdf)
+
 
 <img src="docs/baseline_preview.png" alt="Code-generated baseline semi-wing with printed shell, ribs and rod interfaces" width="640">
 

@@ -91,3 +91,13 @@ and licenses when reusing them.
 | `MIE446_L01_Example_B737_Descent.jpg` | [Qantas Boeing 737-800 in descent](https://commons.wikimedia.org/wiki/File:Qantas_Boeing_737-800_spoiler_deployed_for_descent.jpg) | Jg4817 | [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/) |
 | `MIE446_L01_Example_A319_Landing.jpg` | [EasyJet Airbus A319 during landing](https://commons.wikimedia.org/wiki/File:EasyJet_A319_wing_spoilers.jpg) | John Haslam | [CC BY 2.0](https://creativecommons.org/licenses/by/2.0/) |
 | `MIE446_L01_Example_Capstan_Airbrake.jpg` | [Slingsby T.49 Capstan airbrakes](https://commons.wikimedia.org/wiki/File:Airbrakes_on_Capstan.jpg) | TSRL | [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/) |
+
+## Expanded comparative wing photo gallery
+
+- `Mu22_Glider_Wing.jpg` — Members of Akaflieg München e.V.; [source](https://commons.wikimedia.org/wiki/File:Akaflieg_Mue22a_Flaeche.jpg); [CC BY-SA/3.0](https://creativecommons.org/licenses/by-sa/3.0/); Unmodified source image.
+- `K7_Glider_Wing.jpg` — Allan Gillis; [source](https://commons.wikimedia.org/wiki/File:Schleicher_K7_C-GALN_wing_recovering.jpg); Public domain (released by photographer); Unmodified source image.
+- `REP_Uncovered_Wing.jpg` — Mikaël Restoux / Deep silence; [source](https://commons.wikimedia.org/wiki/File:WingStructure.JPG); [CC BY/2.5](https://creativecommons.org/licenses/by/2.5/); Unmodified source image.
+- `Comet_Internal_Wing_Display.jpg` — Clemens Vasters; [source](https://commons.wikimedia.org/wiki/File:DeHavilland_Comet_4C_-_Stripped_Wing_(6661501103)_(3).jpg); [CC BY/2.0](https://creativecommons.org/licenses/by/2.0/); Resized only.
+- `DLR_Wing_Demonstrator.jpg` — DLR German Aerospace Center; [source](https://commons.wikimedia.org/wiki/File:Innenansicht_eines_Leichtbau-Fl%C3%BCgeldemonstrators_(7486564206).jpg); [CC BY/2.0](https://creativecommons.org/licenses/by/2.0/); Unmodified source image.
+- `Tu154_Rear_Spar.jpg` — Vivan755; [source](https://commons.wikimedia.org/wiki/File:Tu-154B-wing-rear-longeron.jpg); [CC BY-SA/4.0](https://creativecommons.org/licenses/by-sa/4.0/); Unmodified source image.
+- `A380_Wing_Test.jpg` — IABG Dresden; [source](https://commons.wikimedia.org/wiki/File:IABG_Test_Setup_A380_Dresden_bent_wing.jpg); Reuse permitted with attribution; see source permission statement; Unmodified source image.

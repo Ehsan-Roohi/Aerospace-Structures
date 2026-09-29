@@ -1,5 +1,19 @@
 # Lecture 01: controls, trim and static margin figures
 
+## Wing-identification companion views (September 2026)
+
+- `NASA_Wing_Structures.svg` and `.png`: NASA educational wing-components artwork,
+  retrieved from [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Wing_structures.svg),
+  whose source is NASA's *Wing Design* educational publication. Public domain
+  (NASA attribution on the file record). PNG rasterized on white; labels retained.
+- `NASA_Wright_Wing.gif` and `.png`: NASA Glenn photograph of a Wright wing model,
+  from [Wing Geometry](https://www1.grc.nasa.gov/beginners-guide-to-aeronautics/wing-geometry/).
+  This is a model of historical fabric-covered construction, not a photograph of
+  a modern metal wing. Source: https://www1.grc.nasa.gov/wp-content/uploads/wing.gif.
+- `Wing_Box_Section.svg` and `.png`: original course schematic of a section
+  between rib stations; simplified rectangular box, not an actual aircraft section.
+  Shows spar webs/caps and upper/lower skin-attached stringer cross-sections.
+
 ## FAA control-surface illustrations
 
 The following figures were extracted from the Federal Aviation Administration's

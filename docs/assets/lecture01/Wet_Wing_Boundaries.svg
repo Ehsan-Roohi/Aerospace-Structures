@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="820" viewBox="0 0 1400 820" role="img" aria-labelledby="title desc">
+<title id="title">Two-spar wing and fuel tank boundaries</title><desc id="desc">Illustrative plan view labels front and rear spars, wet bays, dry bays, sealed end rib and separate trailing-edge control support. Detail contrasts an internal rib with openings and a sealed tank boundary.</desc>
+<rect width="1400" height="820" fill="white"/>
+<g font-family="Arial,sans-serif" fill="#17324d">
+<text x="40" y="45" font-size="30" font-weight="bold">A clearly labeled example: two main spars and selected wet bays</text>
+<text x="40" y="82" font-size="21">Plan view, upper skin removed. This is an illustrative layout, not the hidden geometry of FAA Figure 3-7.</text>
+<path d="M130 135H1230L1270 435H130Z" fill="#f3f7fa" stroke="#506878" stroke-width="3"/>
+<rect x="130" y="195" width="680" height="150" fill="#bae0f2"/>
+<path d="M130 195H1240M130 345H1255" stroke="#b42318" stroke-width="10"/>
+<path d="M130 195V345M810 195V345" stroke="#254a6d" stroke-width="10"/>
+<g stroke="#8b765e" stroke-width="5"><path d="M300 195V345M470 195V345M640 195V345M980 195V345M1140 195V345"/></g>
+<path d="M130 390H1262" stroke="#7e6a54" stroke-width="4" stroke-dasharray="8 5"/>
+<text x="410" y="164" font-size="22">LEADING EDGE (forward)</text>
+<text x="870" y="228" font-size="22" fill="#b42318">FRONT SPAR</text>
+<text x="870" y="335" font-size="22" fill="#b42318">REAR SPAR</text>
+<text x="340" y="276" font-size="25" font-weight="bold">FUEL: selected sealed bays</text>
+<text x="871" y="280" font-size="23">DRY STRUCTURAL BAYS</text>
+<text x="30" y="260" font-size="21" transform="rotate(-90 30 260)">ROOT</text>
+<text x="1300" y="270" font-size="21">TIP</text>
+<text x="280" y="425" font-size="21">Flap / aileron region (not a fuel tank in this example)</text>
+<path d="M810 350L810 467L590 467" fill="none" stroke="#254a6d" stroke-width="2"/>
+<text x="240" y="495" font-size="21">Sealed end rib: boundary between wet and dry space</text>
+<path d="M1170 392L1170 463" stroke="#7e6a54" stroke-width="2"/>
+<text x="880" y="490" font-size="19">Separate control-support member</text>
+<text x="880" y="517" font-size="19">is not automatically a second rear main spar.</text>
+<rect x="40" y="550" width="635" height="205" rx="12" fill="#f3f7fa"/>
+<rect x="700" y="550" width="660" height="205" rx="12" fill="#f3f7fa"/>
+<text x="60" y="581" font-size="23" font-weight="bold">Internal rib within one wet compartment</text>
+<rect x="80" y="612" width="250" height="70" fill="#8b765e"/>
+<g fill="#bae0f2"><ellipse cx="120" cy="647" rx="22" ry="23"/><ellipse cx="205" cy="647" rx="22" ry="23"/><ellipse cx="290" cy="647" rx="22" ry="23"/></g>
+<text x="350" y="637" font-size="19">Openings may allow fuel flow.</text>
+<text x="350" y="669" font-size="19">Baffles limit fuel motion.</text>
+<text x="60" y="723" font-size="19">An internal rib need not divide the tank into isolated cells.</text>
+<text x="720" y="581" font-size="23" font-weight="bold">Sealed tank boundary</text>
+<rect x="740" y="612" width="235" height="70" fill="#254a6d"/>
+<circle cx="860" cy="647" r="22" fill="#e5edf5" stroke="#17324d" stroke-width="4"/>
+<text x="990" y="633" font-size="19">Ports / covers can exist,</text>
+<text x="990" y="662" font-size="19">but must preserve sealing.</text>
+<text x="720" y="723" font-size="19">No uncontrolled open hole into the adjacent dry space.</text>
+<text x="40" y="793" font-size="20">Tank extent, number of spars, vents and sealed penetrations depend on the aircraft. Do not infer them from color.</text>
+</g></svg>

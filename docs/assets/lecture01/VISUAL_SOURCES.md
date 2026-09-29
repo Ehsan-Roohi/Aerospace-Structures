@@ -1,5 +1,18 @@
 # Lecture 01: controls, trim and static margin figures
 
+## Real wing and tank photographs
+
+- `Piper_PA18_Uncovered_Wing.jpg`: Christoph von Blücher, 19 August 2007,
+  [original file record](https://commons.wikimedia.org/wiki/File:WingPiperPA18partialuncovered.JPG),
+  used under [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/).
+  Unmodified; original marks 1 = spars, 2 = ribs. This image retains its own license.
+- `USAF_Fuel_Tank_Interior_Display.jpg`: U.S. Air Force / Airman 1st Class Tom Brading,
+  photo 130307-F-NK398-670, 7 March 2013. C-17 extraction training exercise.
+  [Source](https://commons.wikimedia.org/wiki/File:Inside_a_fuel_tank_(13151954573).jpg).
+  Public domain in the United States; resized and JPEG-compressed for notebook display.
+- `Wet_Wing_Boundaries.svg` / `.png`: original course teaching diagram, illustrative
+  two-spar plan and wet/dry boundary comparison, not an aircraft-specific tank plan.
+
 ## Wing-identification companion views (September 2026)
 
 - `NASA_Wing_Structures.svg` and `.png`: NASA educational wing-components artwork,

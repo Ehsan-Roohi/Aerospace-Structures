@@ -101,3 +101,7 @@ and licenses when reusing them.
 - `DLR_Wing_Demonstrator.jpg` — DLR German Aerospace Center; [source](https://commons.wikimedia.org/wiki/File:Innenansicht_eines_Leichtbau-Fl%C3%BCgeldemonstrators_(7486564206).jpg); [CC BY/2.0](https://creativecommons.org/licenses/by/2.0/); Unmodified source image.
 - `Tu154_Rear_Spar.jpg` — Vivan755; [source](https://commons.wikimedia.org/wiki/File:Tu-154B-wing-rear-longeron.jpg); [CC BY-SA/4.0](https://creativecommons.org/licenses/by-sa/4.0/); Unmodified source image.
 - `A380_Wing_Test.jpg` — IABG Dresden; [source](https://commons.wikimedia.org/wiki/File:IABG_Test_Setup_A380_Dresden_bent_wing.jpg); Reuse permitted with attribution; see source permission statement; Unmodified source image.
+
+## FAST 52 supplied-PDF excerpts
+
+`FAST52_Rib_Map.png`, `FAST52_Real_Wing.png`, and `FAST52_Access_Panel.png`: excerpts rendered/cropped from user-provided FAST52.pdf, printed pp. 28–29 (PDF page 15). © Airbus S.A.S. 2013, all rights reserved; not covered by the repository code license. No open reuse license is asserted. Source: [Airbus FAST 52](https://www.aircraft.airbus.com/sites/g/files/jlcbta126/files/2022-04/FAST52.pdf). Used for the accompanying source-specific educational discussion.

@@ -17,6 +17,12 @@ structural load path. A [standalone HTML companion](../docs/lecture01-control-me
 is included for local browser viewing after downloading the repository; the
 same content is embedded in the Colab notebook above.
 
+Section **7A-12** now explains X-47B spoiler/trailing-edge yaw coordination and
+B-2 split drag rudders, with aircraft photographs, a three-part mechanism sketch,
+structural load paths and a worked differential-drag moment check. The
+[finless yaw HTML companion](../docs/lecture01-finless-yaw.html) contains the same
+section for local browser viewing. B-2 is explicitly identified as crewed, not a UAV.
+
 ### Lecture 02 — Finite Wings, Geometry and Load Paths
 
 [![Open Lecture 02 in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/main/notebooks/MIE446_Lecture_02_Finite_Wings_and_Load_Paths.ipynb)

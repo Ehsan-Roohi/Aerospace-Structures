@@ -2,8 +2,8 @@
 <title id="title">Wing-box cross-section: stringers attach to both skins</title><desc id="desc">Idealized rectangular wing box viewed along the span between ribs. Blue upper and lower skins, two red spar webs with caps, and gold T stringer sections attached to the inside of each skin.</desc>
 <rect width="1300" height="760" fill="white"/>
 <g font-family="Arial,sans-serif" fill="#17324d">
-<text x="55" y="50" font-size="31" font-weight="bold">Look along the span: the stringers are attached to the skins</text>
-<text x="55" y="88" font-size="21">Idealized wing BOX section between ribs; leading- and trailing-edge structures omitted.</text>
+<text x="55" y="50" font-size="31" font-weight="bold">WING BOX — cross-section viewed along the span</text>
+<text x="55" y="88" font-size="21">Idealized two-spar box, cut between ribs. This is NOT the complete airfoil section.</text>
 <path d="M300 250H1000V450H300Z" fill="#f4f8fb" stroke="none"/>
 <path d="M285 246H1015M285 454H1015" stroke="#2376a4" stroke-width="10"/>
 <g stroke="#b42318" fill="none"><path d="M300 258V442M1000 258V442" stroke-width="10"/><path d="M277 257H323M277 443H323M977 257H1023M977 443H1023" stroke-width="12"/></g>
@@ -15,10 +15,11 @@
 <text x="55" y="197" fill="#b42318">Spar CAP</text><path d="M170 203L279 257" stroke="#b42318" stroke-width="2"/>
 <text x="765" y="192" fill="#886300">Upper stringers</text><path d="M855 200L865 255" stroke="#886300" stroke-width="2"/>
 <text x="765" y="513" fill="#886300">Lower stringers</text><path d="M860 487L865 445" stroke="#886300" stroke-width="2"/>
-<text x="448" y="346" font-size="23" font-weight="bold">Span extends into / out of this page.</text>
-<text x="427" y="379" font-size="20">Gold T shapes are cross-sections of long stringers.</text></g>
+<text x="430" y="323" font-size="25" font-weight="bold">CLOSED WING-BOX SECTION</text>
+<text x="374" y="357" font-size="19">Blue skins + red spar webs form the closed perimeter.</text>
+<text x="431" y="391" font-size="20">The span extends into / out of this page.</text></g>
 <rect x="45" y="586" width="1210" height="132" rx="12" fill="#f4f8fb"/>
 <text x="65" y="620" font-size="21">SPAR = web + upper/lower caps in this schematic. The web connects the upper and lower regions.</text>
 <text x="65" y="657" font-size="21">STRINGER = small skin stiffener. Upper and lower rows follow their respective inner skin surfaces.</text>
-<text x="65" y="694" font-size="20">Ribs lie at span stations and frame the section. Real airfoil contours, joints and stiffener profiles vary.</text>
+<text x="65" y="694" font-size="20">Ribs frame the box at other span stations; none is shown at this cut. Leading/trailing edges are omitted.</text>
 </g></svg>

@@ -19,11 +19,17 @@ The figure is a cutaway, not a fabrication drawing: the end of a colored patch d
 
 Use the original labels in this NASA drawing to distinguish the major spanwise members from the chordwise frames. The layout is an example, not a prescription for every aircraft. [NASA artwork and public-domain attribution record](https://commons.wikimedia.org/wiki/File:Wing_structures.svg).
 
-#### Where are the upper and lower stringers?
+#### This is a wing box: cross-section viewed along the span
 
 <p align="center"><img src="https://raw.githubusercontent.com/Ehsan-Roohi/Aerospace-Structures/main/docs/assets/lecture01/Wing_Box_Section.png" alt="Cross-section of a wing box with stringers attached to both upper and lower skin; spar webs and caps shown separately" width="1200"></p>
 
-This original schematic shows a cut **normal to the span**, between ribs. Each small gold T is the end view of a long stringer. Stringers run generally spanwise, approximately alongside the spars, while staying attached to the inner upper or lower skin; they are not free rods suspended in the cavity. Exact alignment and cross-section depend on the design. A spar has a much deeper web and associated caps; a stringer reinforces a local strip of skin. The closed wing box is formed by upper/lower skin and front/rear spar webs. Rib stations support and preserve its section shape.
+**Yes: this is an idealized cross-section of a two-spar wing box, not the entire wing or airfoil.** The **upper skin, lower skin, front spar web and rear spar web** form the closed structural perimeter. The spar caps and the skin-mounted stringers reinforce it; the gold T shapes alone do not make a wing box.
+
+This original schematic shows a cut **normal to the span**, between ribs. **No rib is shown in this cut**: ribs frame the box at other spanwise stations. Leading- and trailing-edge structures lie outside this simplified box and are omitted. Real wing boxes usually follow curved/tapered wing geometry rather than this exact rectangle.
+
+**Why a closed box?** The connected skins and webs provide a closed path for torsional shear flow; skins, caps and stringers also share bending-related axial loads. This is a conventional structural concept, not a drawing or validation of our printed two-rod demonstrator.
+
+ Each small gold T is the end view of a long stringer. Stringers run generally spanwise, approximately alongside the spars, while staying attached to the inner upper or lower skin; they are not free rods suspended in the cavity. Exact alignment and cross-section depend on the design. A spar has a much deeper web and associated caps; a stringer reinforces a local strip of skin. The closed wing box is formed by upper/lower skin and front/rear spar webs. Rib stations support and preserve its section shape.
 
 #### Photograph of a physical model: spars versus ribs
 

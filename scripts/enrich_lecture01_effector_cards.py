@@ -2,6 +2,8 @@
 
 Only the existing 7A-11 markdown cell and a revision marker are changed. Its
 section title, elevon equations, activity and all other notebook cells survive.
+Use normal-flow blocks rather than tables: notebook renderers may impose
+nowrap on table cells or sanitize inline layout styles, clipping the lesson.
 """
 from pathlib import Path
 from html import escape
@@ -112,18 +114,16 @@ def cards_html():
         '<p style="font-family:Times New Roman,Times,serif;color:#000"><b>Read one mechanism at a time.</b> Each photograph is paired with a visual reading guide and a structural explanation. Click a photo to enlarge it. These examples include research UAVs, crewed test aircraft and a wind-tunnel model; their labels identify which is which. A photograph establishes visible hardware, not an entire flight-control law.</p>']
     for c in CARDS:
         parts.append(f'<h4 id="effector-{c["key"]}" style="font-family:Times New Roman,Times,serif;color:#000">{c["title"]}</h4>')
-        parts.append(f'''<table class="effector-card" width="100%" style="table-layout:fixed;font-family:Times New Roman,Times,serif;color:#000;border-collapse:collapse;margin-bottom:24px"><tr>
-<td width="46%" valign="top" style="padding:10px;vertical-align:top;border:1px solid #aaa">
-<a href="{RAW}{c['photo']}"><img src="{RAW}{c['photo']}" alt="{escape(c['alt'])}" width="460" style="width:100%;max-width:560px;height:auto"></a>
+        parts.append(f'''<div class="effector-card" style="font-family:Times New Roman,Times,serif;color:#000;white-space:normal;overflow-wrap:break-word;margin-bottom:24px">
+<p><a href="{RAW}{c['photo']}"><img src="{RAW}{c['photo']}" alt="{escape(c['alt'])}" width="100%" style="display:block;width:100%;max-width:700px;height:auto"></a></p>
 <p><b>Photo reading:</b> {c['caption']}</p>
 <p style="font-size:0.9em">{c['credit']}. <a style="color:#000" href="{c['source']}">Photo source / credit</a>. <a style="color:#000" href="{c['evidence']}">{c['evidence_name']}</a>.</p>
-</td><td width="54%" valign="top" style="padding:10px;vertical-align:top;border:1px solid #aaa">
 <p><b>1. Locate the hardware.</b> {c['look']}</p>
 <p><b>2. Describe the change.</b> {c['motion']}</p>
 <p><b>3. Explain the force and moment.</b> {c['force']}</p>
 <p><b>4. Follow the structural load.</b> {c['structure']}</p>
 <p><b>Quick check:</b> {c['check']}</p>
-</td></tr></table>''')
+</div>''')
     parts.append('<p style="font-family:Times New Roman,Times,serif;color:#000"><b>Three distinctions to keep:</b> spoiler versus asymmetric spoileron use; differential thrust magnitude versus vectored thrust direction; and a physical effector versus the software that commands it. Use the body-axis cross product in 7A-3b whenever a moment sign is uncertain.</p>')
     parts.append(END)
     return '\n\n'.join(parts)
@@ -141,7 +141,7 @@ def enrich_notebook(notebook):
     text = before + cards_html() + after
     text = text.replace('width="1250"', 'width="1000" style="max-width:100%;height:auto"')
     target['source'] = text.splitlines(keepends=True)
-    notebook.setdefault('metadata', {}).setdefault('mie446', {})['effector_photo_cards_revision'] = '2026-10-01'
+    notebook.setdefault('metadata', {}).setdefault('mie446', {})['effector_photo_cards_revision'] = '2026-10-01-responsive'
     return notebook
 
 if __name__ == '__main__':

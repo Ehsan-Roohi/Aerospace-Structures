@@ -16,6 +16,8 @@ real photograph, visual-identification guide, force/moment explanation and
 structural load path. A [standalone HTML companion](../docs/lecture01-control-mechanisms.html)
 is included for local browser viewing after downloading the repository; the
 same content is embedded in the Colab notebook above.
+The eight photo guides use a single-column layout (photo, caption, explanation)
+so notebook table styling cannot clip long text or push it off-screen.
 
 Section **7A-12** now explains X-47B spoiler/trailing-edge yaw coordination and
 B-2 split drag rudders, with aircraft photographs, a three-part mechanism sketch,

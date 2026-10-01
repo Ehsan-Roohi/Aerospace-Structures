@@ -159,7 +159,10 @@ the notebook's numerical activity output additionally requires IPython.
 
 ## Real-hardware reading cards for section 7A-11 — October 1, 2026
 
-Eight side-by-side photo/explanation cards replace the wide mechanism table.
+Eight photo/explanation cards replace the wide mechanism table. A subsequent
+October 1 rendering fix stacks each photo, caption and explanation in normal
+document flow: Colab's table rendering could clip the earlier side-by-side
+version. Content and photo attribution are unchanged; no table layout is needed.
 The existing X-48B, MQ-9 and 737 photographs retain the credits above. The five
 additional NASA photographs below are downloaded without pixel edits; display
 size is set in HTML, and clicking opens the full repository image.

@@ -46,3 +46,15 @@ def test_interface_ribs_do_not_sit_on_cut_plane() -> None:
     stations = parameters.rib_stations_mm()
     assert all(abs(station - 150.0) > 1.0 for station in stations)
     assert all(abs(station - 300.0) > 1.0 for station in stations)
+
+
+def test_three_module_baseline_has_seven_documented_ribs() -> None:
+    assert WingParameters().rib_stations_mm() == pytest.approx(
+        (112.5, 146.0, 154.0, 225.0, 296.0, 304.0, 337.5)
+    )
+
+
+def test_two_modules_replace_middle_candidate_with_interface_pair() -> None:
+    assert WingParameters(module_count=2).rib_stations_mm() == pytest.approx(
+        (112.5, 221.0, 229.0, 337.5)
+    )

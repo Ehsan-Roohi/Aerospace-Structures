@@ -154,6 +154,8 @@ def test_final_wing_run_all_builds_verified_submission(tmp_path: Path) -> None:
         names = set(handle.namelist())
         assert {"manifest.json", "Design_Summary.md", "Design_Overview.html"} <= names
         student_record = json.loads(handle.read("student_design_record.json"))
+        assert student_record["rib_count"] == 7
+        assert student_record["rib_stations_mm"] == [112.5, 146.0, 154.0, 225.0, 296.0, 304.0, 337.5]
         assert student_record["engineering_responses"]["area_prediction_matches"]
         assert student_record["engineering_responses"][
             "aspect_ratio_prediction_matches"

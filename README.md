@@ -45,11 +45,11 @@ Lectures 01 and 02 are released. Later lecture notebooks will appear here when r
 
 ### Assigned teams and October build
 
-Three-person teams are already assigned. The project begins in class on September 29. The remaining Lecture 1 material, hand calculations, coupon fit test and pre-print review occur before the first supervised wing-module build on October 13. See the [four-meeting teaching plan](SYLLABUS.md#class-plan-before-october-fabrication) and [revised project milestones](SYLLABUS.md#5-project-workflow-and-deliverables). October 12 is a University holiday; ELab coupon and production slots require staff authorization and are assigned in Canvas.
+Three-person teams are already assigned. **Three meetings remain before the October 13 build: October 1, 6 and 8.** Finish Lecture 1 and the seven-rib R01 layout on October 1; use October 6 for geometry/load checks and coupon evidence; complete R02 and slicer review on October 8. See the [three-meeting teaching plan](SYLLABUS.md#class-plan-before-october-fabrication) and [project milestones](SYLLABUS.md#5-project-workflow-and-deliverables). Physical coupon printing/testing requires an earlier authorized appointment; if the first printer access is October 13, start with the coupon, not final wing modules. Canvas assigns supervised ELab slots.
 
 ### September 29 wing-design packet
 
-Use these English, Times New Roman, black-text PDFs for the accelerated pre-build sequence. The worksheet and fit/release record are fillable; retain a copy for your team. Canvas remains authoritative for submission deadlines and supervised ELab appointments.
+Use the fillable worksheet and fit/release record below, retaining a copy for your team. **Their original timing is superseded by the October 1/6/8 plan above.** On R01, mark all seven baseline ribs using the updated [project explanation](PROJECT.md#why-the-baseline-has-seven-ribs). The September 29 instructor guide is retained as a previous lesson plan, not the current timetable. Canvas remains authoritative for submissions and supervised appointments.
 
 - [Team Wing Layout — R01 (student worksheet)](docs/course-packets/2026-09-29/MIE446_Team_Wing_Layout_R01.pdf)
 - [September 29 Wing Lecture Guide (instructor)](docs/course-packets/2026-09-29/MIE446_September_29_Instructor_Guide.pdf)
@@ -66,7 +66,7 @@ Every team then performs an **unloaded, non-contact dimensional inspection** wit
 
 **Student-built wings are not loaded, cracked, flown or tested to failure.** Assessment focuses on reproducibility, geometry, calibrated inspection, diagnostic reasoning, uncertainty, fabrication evidence, revision and individual understanding.
 
-[![Open stable Wing Project v1.1.1 in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/v1.1.1/notebooks/MIE446_Code_to_Print_Wing.ipynb)
+[![Open updated Wing Project in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/main/notebooks/MIE446_Code_to_Print_Wing.ipynb)
 
 **[Project guide and code documentation](PROJECT.md)** · [Project rubric](SYLLABUS.md#4-project-brief--code-to-print-wing--fabrication-machine-vision-inspection-and-damage-diagnostics) · **[General OrcaSlicer + USB guide](PRINTING.md)** ([Word](docs/OrcaSlicer_Offline_USB_3D_Printing_Guide.docx) · [PDF](docs/OrcaSlicer_Offline_USB_3D_Printing_Guide.pdf)) · [AI-use log template](AI_USE_LOG_TEMPLATE.md)
 

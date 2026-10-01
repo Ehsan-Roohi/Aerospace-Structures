@@ -69,3 +69,13 @@ def test_notebook_supports_safe_coupon_and_final_run_all_modes() -> None:
     assert 'AI_USE_DECLARATION = "Choose before submission"' in notebook_text
     assert 'missing_submission_fields.append("AI_USE_DECLARATION")' in notebook_text
     assert not re.search(r"\bassert\s+COUPON_CONFIRMED\b", notebook_text)
+
+
+def test_layout_is_explained_before_inputs_and_reported_from_actual_parameters() -> None:
+    sources = ["".join(c["source"]) for c in _notebook()["cells"]]
+    theory = next(i for i, s in enumerate(sources) if "### Why the baseline has seven ribs" in s)
+    form = next(i for i, s in enumerate(sources) if "#@title STUDENT INPUT FORM" in s)
+    assert theory < form
+    assert "stations = p.rib_stations_mm()" in "\n".join(sources)
+    assert "### Actual rib layout: {len(stations)} ribs" in "\n".join(sources)
+    assert "October 13" in "\n".join(sources)

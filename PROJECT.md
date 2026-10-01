@@ -4,7 +4,7 @@
 
 [Course home](README.md) · [Syllabus](SYLLABUS.md) · [Homework](ASSIGNMENTS.md) · [General OrcaSlicer + USB guide](PRINTING.md) · [Printable PDF guide](docs/OrcaSlicer_Offline_USB_3D_Printing_Guide.pdf)
 
-[![Open stable Wing Project v1.1.1 in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/v1.1.1/notebooks/MIE446_Code_to_Print_Wing.ipynb)
+[![Open updated Wing Project in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/main/notebooks/MIE446_Code_to_Print_Wing.ipynb)
 
 > Web edition aligned with the revised September 26, 2026 syllabus. Canvas carries authoritative deadlines, submission links, team assignments, printer reservations, calibration files, shared diagnostic data and private access information.
 
@@ -22,13 +22,13 @@ Shared inspection computer: **Seeed Studio reComputer Super J3011**, purchased f
 
 The system includes 8GB LPDDR5 memory, a 128GB NVMe SSD, and JetPack 6.2 as listed by the supplier. Its advertised maximum AI throughput is 67 TOPS in Super mode; that rating is not a measurement-accuracy specification. The inspection workflow still requires camera calibration and independent dimensional checks.
 
-Open in Google Colab: [stable course notebook (v1.1.1)](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/v1.1.1/notebooks/MIE446_Code_to_Print_Wing.ipynb)
+Open in Google Colab: [updated teaching notebook (CAD engine pinned to v1.1.1)](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/main/notebooks/MIE446_Code_to_Print_Wing.ipynb)
 
 Course repository: [Aerospace Structures on GitHub](https://github.com/Ehsan-Roohi/Aerospace-Structures)
 
 First action: choose File > Save a copy in Drive. Work only in your saved copy so the team inputs and written responses persist.
 
-**October fabrication schedule.** Teams are already assigned. The project begins in class September 29; the [four-meeting pre-build plan](SYLLABUS.md#class-plan-before-october-fabrication) completes the hand calculations, coupon-only run, supervised physical fit test and print-release review by October 8–9. Supervised wing-module fabrication starts October 13 for teams with an approved R02 package and assigned ELab slot. A software-valid model alone does not authorize printing. October 12 is a University holiday; Canvas carries actual coupon appointments and printer reservations.
+**October fabrication schedule (updated September 30).** Teams are already assigned. The [three remaining meetings on October 1, 6 and 8](SYLLABUS.md#class-plan-before-october-fabrication) cover Lecture 1 completion/R01, simple hand checks/coupon evidence, then R02 and slicer review. Physical coupon printing and testing must be completed in an authorized supervised appointment before the Final Wing run. Supervised wing-module fabrication starts October 13 for teams with an approved R02 package and assigned ELab slot. If October 13 is the first printer access, begin with the coupon and postpone final modules until release. A software-valid model alone does not authorize printing; Canvas carries actual appointments.
 
 ## 1. What you will learn and produce
 
@@ -51,7 +51,7 @@ Your team chooses an instructor-approved airfoil and enters the principal wing d
 | Type | Requirement |
 | --- | --- |
 | Team chooses | NACA code; semi-span; root and tip chord; skin and rib thickness; 2 or 3 modules; one of the coupon-tested clearances |
-| Course fixed | Two 4 mm rods at x/c = 0.30 and 0.60; 1.2 mm sleeve wall; 1.2 mm trailing edge; three interior ribs |
+| Course fixed | Two 4 mm rods at x/c = 0.30 and 0.60; 1.2 mm sleeve wall; 1.2 mm trailing edge; three interior rib candidates plus paired interface ribs (seven ribs in the three-module baseline; see below) |
 | Material/profile | Regular course-issued 1.75 mm PLA Pro; assigned Creality K2 Pro; 0.4 mm nozzle; current staff-approved profile |
 | Mass limit | Calculated CAD mass of the final printed set must be at or below 300 g |
 | Physical artifact | One semi-wing; any full-wing area, span, or aspect ratio is an analytical symmetric-wing equivalent only |
@@ -109,7 +109,23 @@ Complete the one student form. A green 'Form accepted' message means the basic c
 
 ### Step 3. Preview and understand the design
 
-The tool interprets the NACA code, calculates area, taper ratio, aspect ratio and mean aerodynamic chord, and plots the root airfoil and planform with rods, ribs, and module cuts. It then compares the requested tip-chord case with the current design.
+The tool interprets the NACA code, calculates area, taper ratio, aspect ratio and mean aerodynamic chord, and plots the root airfoil and planform with rods, ribs, and module cuts. It then compares the requested tip-chord case with the current design. The notebook exposes the geometry arithmetic and reports the actual rib stations used by the CAD rule.
+
+#### Why the baseline has seven ribs
+
+The baseline is a 450 mm semi-wing split into three 150 mm modules. Three interior rib candidates lie at 112.5, 225 and 337.5 mm from the root. Each module seam (150 and 300 mm) gets a rib 4 mm on either side, adding 146, 154, 296 and 304 mm. Total: **3 interior + 4 interface ribs = 7 ribs**. These positions are rib mid-planes; the baseline rib thickness is 1.6 mm.
+
+| Module | Span interval (mm) | Rib stations from root (mm) |
+|---|---|---|
+| 1 | 0–150 | 112.5, 146 |
+| 2 | 150–300 | 154, 225, 296 |
+| 3 | 300–450 | 304, 337.5 |
+
+The paired ribs support the section locally near each module split; they do not connect separate modules by themselves or certify joint strength. Root/tip skin end caps are separate features and are not included in this count. Draw these seven baseline stations and both seams on the initial R01 worksheet before running CAD; update the sketch to the actual stations if an alternative configuration is approved.
+
+Seven is a **baseline construction rule, not a strength-optimized result**. For changed geometry/module settings, the code suppresses interior candidates close to seams and merges nearby stations. Two 225 mm modules, for example, have four ribs (112.5, 221, 229, 337.5 mm), because the central candidate is replaced by the seam pair. Use the actual station table in the notebook, not a universal rib-count formula.
+
+The structural-design numerical notebook studies an idealized beam/box model; its numerical mesh elements are not these printed ribs. Agreement between analytical and numerical beam calculations does not validate the shell, rods, interfaces, or layer bonding of the printed wing. These remain separate manufacturing and model-limit checks.
 
 Before the comparison is revealed, select the predicted direction for area and aspect ratio and write the reasoning.
 
@@ -339,7 +355,7 @@ A polished print with weak understanding, undisclosed AI use, missing evidence, 
 
 | Message or symptom | What to do |
 | --- | --- |
-| First setup cell fails | Use the stable v1.1.1 link. In Colab choose Runtime > Disconnect and delete runtime, reopen the link, then Run all. v1.1.1 supports Python 3.11-3.13. If it still fails, copy the entire error including the pip lines above the final message. |
+| First setup cell fails | Use the updated teaching-notebook link above; its CAD engine remains pinned to v1.1.1. In Colab choose Runtime > Disconnect and delete runtime, reopen the link, then Run all. The engine supports Python 3.11-3.13. If it still fails, copy the entire error including the pip lines above the final message. |
 | Form rejected | Correct the named field. Check positive lengths, tip <= root <= 300 mm, module length <= 300 mm, thicknesses >= 0.8 mm, and module count 2 or 3. |
 | Prediction not yet recorded | Return to Step 2, select both prediction directions, write the explanation, rerun Step 2, then rerun Step 3. |
 | Final Wing waiting for coupon record | This is the expected physical gate. Complete all coupon fields, use YYYY-MM-DD, and make REVISION different from COUPON_REVISION; rerun Steps 2-4. |

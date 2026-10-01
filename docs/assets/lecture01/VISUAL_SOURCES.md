@@ -109,3 +109,41 @@ and licenses when reusing them.
 ## FAST 52 supplied-PDF excerpts
 
 `FAST52_Rib_Map.png`, `FAST52_Real_Wing.png`, and `FAST52_Access_Panel.png`: excerpts rendered/cropped from user-provided FAST52.pdf, printed pp. 28–29 (PDF page 15). © Airbus S.A.S. 2013, all rights reserved; not covered by the repository code license. No open reuse license is asserted. Source: [Airbus FAST 52](https://www.aircraft.airbus.com/sites/g/files/jlcbta126/files/2022-04/FAST52.pdf). Used for the accompanying source-specific educational discussion.
+
+## Lilienthal and modern UAV control atlas — October 1, 2026
+
+All new diagram text is black Times New Roman. Photographs retain their natural
+appearance. The schematic geometry is qualitative; it is not aircraft CAD.
+
+| Asset | Source and credit | Reuse / changes |
+|---|---|---|
+| `Controls_Lilienthal_Full_1895.jpg` | P. W. Preobrashenski, 1895 / Otto-Lilienthal-Museum; [file record](https://commons.wikimedia.org/wiki/File:Otto-Lilienthal-Museum_id_F0158b.jpg) | Public domain; JPEG recompressed, full view retained |
+| `Controls_Lilienthal_Experimental_View.jpg` | Richard Neuhauss historical photograph, 1895; annotations credited to Beilich; [file record](https://commons.wikimedia.org/wiki/File:Otto_Lilientahl%27s_Experimental_Monoplane.tif) | Source record specifies [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/); TIFF converted to JPEG, existing annotations retained |
+| `Controls_Lilienthal_Warping_Letter.jpg` | Otto Lilienthal, 3 October 1895; Deutsches Museum archive 1932-1/11; [file record](https://commons.wikimedia.org/wiki/File:Lilienthal_experimental_device_1895_detail.gif) | Public domain; GIF converted to JPEG |
+| `Controls_MQ9_Vtail.jpg` | U.S. Air Force / Staff Sgt. Brian Ferguson; [file record](https://commons.wikimedia.org/wiki/File:MQ-9_Reaper_in_flight_(2007).jpg) | Public domain in the United States; resized/recompressed |
+| `Controls_X48B_Winglets.jpg` | NASA / Carla Thomas; [NASA image article](https://www.nasa.gov/image-article/x-48b-first-flight/); actual page image filename `254008main_ED07-0164-1_full.jpg` | NASA photograph, public domain in the United States; recompressed |
+| `Controls_X36_Tailless.jpg` | NASA / Carla Thomas, 30 October 1997; [NASA source](https://www.nasa.gov/aeronautics/x-36-tailless-fighter/), photo `EC97-44294-2` | NASA photograph, public domain in the United States; recompressed |
+| `Controls_X47B_Finless.jpg` | U.S. Air Force / Rob Densmore, 4 February 2011; [file record](https://commons.wikimedia.org/wiki/File:X-47B_110204-F-1162D-119.jpg) | Public domain in the United States; resized/recompressed |
+
+`Controls_Lilienthal_Tail_and_Tip_Map`, `Controls_Architecture_Comparison`, and
+`Controls_Modern_Effectors` (SVG and PNG) are original teaching diagrams generated
+by `scripts/expand_lecture01_control_atlas.py`. A post viewed from above is shown
+as a dot; a vertical vane remains vertical as it pivots. The V-tail sketch is a
+projection of inclined surfaces. Command arrows in the elevon sketches are not
+force arrows; the V-tail arrows represent illustrative local normal forces.
+
+Aircraft-specific claims are grounded in [Raffel et al.](https://doi.org/10.2514/1.C037047),
+[NASA X-48 facts](https://www.nasa.gov/wp-content/uploads/2021/09/171791main_FS-090-DFRC.pdf),
+[NASA X-36](https://www.nasa.gov/aeronautics/x-36-tailless-fighter/), the cited USAF
+ruddervator report and [BAE Systems' MAGMA experiment](https://www.baesystems.com/en-uk/article/magma-the-future-of-flight).
+No aircraft-specific X-47B surface allocation is inferred from its photograph.
+The original elevon form is a command-mixing and saturation illustration, not a
+flight-dynamics model or one of these aircraft's control laws. MAGMA is shown by
+an original mechanism schematic and a link to the manufacturer's actual photo;
+the manufacturer's copyrighted photo is not redistributed here.
+
+Rebuild the sourced photos with `scripts/fetch_lecture01_control_photos.py`.
+The actual source URLs, credits and reuse metadata are retained in
+`CONTROL_PHOTO_SOURCES.json`. Preserve the photo licenses independently of the
+repository code license. Rendering the diagrams requires Matplotlib; saving
+the notebook's numerical activity output additionally requires IPython.

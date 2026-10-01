@@ -1,0 +1,655 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns:xlink="http://www.w3.org/1999/xlink" width="841.505057pt" height="901.437125pt" viewBox="0 0 841.505057 901.437125" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ <metadata>
+  <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+   <cc:Work>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:format>image/svg+xml</dc:format>
+    <dc:creator>
+     <cc:Agent>
+      <dc:title>Matplotlib v3.11.2, https://matplotlib.org/</dc:title>
+     </cc:Agent>
+    </dc:creator>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="figure_1">
+  <g id="patch_1">
+   <path d="M 0 901.437125
+L 841.505057 901.437125
+L 841.505057 0
+L 0 0
+z
+" style="fill: #ffffff"/>
+  </g>
+  <g id="axes_1">
+   <g id="patch_2">
+    <path d="M 39.744599 254.566377
+L 282.349796 254.566377
+L 282.349796 246.874017
+L 39.744599 246.874017
+z
+" clip-path="url(#pa1c1a32a13)" style="fill: #ebebeb; stroke: #000000; stroke-width: 1.3; stroke-linejoin: miter"/>
+   </g>
+   <g id="line2d_1">
+    <path d="M 27.9102 250.720197
+L 353.356195 250.720197
+" clip-path="url(#pa1c1a32a13)" style="fill: none; stroke-dasharray: 3.7,1.6; stroke-dashoffset: 0; stroke: #000000"/>
+   </g>
+   <g id="text_1">
+    <text style="font-size: 13px; font-family: 'Times New Roman'; text-anchor: end" x="155.721718" y="264.033897" transform="rotate(-0 155.721718 264.033897)">CG</text>
+   </g>
+   <g id="text_2">
+    <text style="font-size: 13px; font-family: 'Times New Roman'; text-anchor: middle" x="42.703199" y="239.477518" transform="rotate(-0 42.703199 239.477518)">Left wing</text>
+   </g>
+   <g id="text_3">
+    <text style="font-size: 13px; font-family: 'Times New Roman'; text-anchor: middle" x="279.391196" y="239.477518" transform="rotate(-0 279.391196 239.477518)">Right wing</text>
+   </g>
+   <g id="patch_3">
+    <path d="M 281.389479 250.720197
+Q 311.935663 250.720197 339.127746 250.720197
+" style="fill: none; stroke: #000000; stroke-width: 3; stroke-linecap: round"/>
+    <path d="M 335.127746 248.720197
+L 339.127746 250.720197
+L 335.127746 252.720197
+z
+" style="stroke: #000000; stroke-width: 3; stroke-linecap: round"/>
+   </g>
+   <g id="text_4">
+    <!-- $F_y=+10$ N -->
+    <g transform="translate(300.101395 206.341198)">
+     <text>
+      <tspan x="0" y="-0.1875" style="font-style: italic; font-size: 16px; font-family: 'STIXGeneral'">F</tspan>
+      <tspan x="9.776016" y="2.2125" style="font-style: italic; font-size: 11.2px; font-family: 'STIXGeneral'">y</tspan>
+      <tspan x="18.66883" y="-0.1875" style="font-size: 16px; font-family: 'STIXGeneral'">=</tspan>
+      <tspan x="32.828852" y="-0.1875" style="font-size: 16px; font-family: 'STIXGeneral'">+</tspan>
+      <tspan x="43.788874" y="-0.1875" style="font-size: 16px; font-family: 'STIXGeneral'">1</tspan>
+      <tspan x="51.788889" y="-0.1875" style="font-size: 16px; font-family: 'STIXGeneral'">0</tspan>
+      <tspan x="59.788904" y="-0.1875" style="font-size: 16px; font-family: 'Times New Roman'"> </tspan>
+      <tspan x="63.788904" y="-0.1875" style="font-size: 16px; font-family: 'Times New Roman'">N</tspan>
+     </text>
+    </g>
+   </g>
+   <g id="text_5">
+    <text style="font-size: 15px; font-family: 'Times New Roman'; text-anchor: start" x="19.0344" y="108.7074" transform="rotate(-0 19.0344 108.7074)">Force line passes through the CG.</text>
+   </g>
+   <g id="text_6">
+    <!-- $M_x=0$ -->
+    <g transform="translate(131.857198 349.833296)">
+     <text>
+      <tspan x="0" y="-0.796875" style="font-style: italic; font-size: 21px; font-family: 'STIXGeneral'">M</tspan>
+      <tspan x="17.49292" y="2.353125" style="font-style: italic; font-size: 14.7px; font-family: 'STIXGeneral'">x</tspan>
+      <tspan x="29.164691" y="-0.796875" style="font-size: 21px; font-family: 'STIXGeneral'">=</tspan>
+      <tspan x="47.749625" y="-0.796875" style="font-size: 21px; font-family: 'STIXGeneral'">0</tspan>
+     </text>
+    </g>
+   </g>
+   <g id="text_7">
+    <text style="font-size: 15px; font-family: 'Times New Roman'; text-anchor: middle" x="161.047198" y="379.419295" transform="rotate(-0 161.047198 379.419295)">y = 4 m is NOT a moment arm for Fy.</text>
+   </g>
+   <g id="text_8">
+    <text style="font-size: 19px; font-family: 'Times New Roman'; text-anchor: middle" x="187.674597" y="64.08" transform="rotate(-0 187.674597 64.08)">A. Same CG height / x = 0 — rear view</text>
+   </g>
+   <g id="patch_4">
+    <path d="M 161.047198 254.566377
+C 162.067216 254.566377 163.045595 254.16112 163.766858 253.439857
+C 164.48812 252.718595 164.893378 251.740216 164.893378 250.720197
+C 164.893378 249.700179 164.48812 248.7218 163.766858 248.000537
+C 163.045595 247.279275 162.067216 246.874017 161.047198 246.874017
+C 160.027179 246.874017 159.0488 247.279275 158.327538 248.000537
+C 157.606275 248.7218 157.201018 249.700179 157.201018 250.720197
+C 157.201018 251.740216 157.606275 252.718595 158.327538 253.439857
+C 159.0488 254.16112 160.027179 254.566377 161.047198 254.566377
+z
+" clip-path="url(#pa1c1a32a13)"/>
+   </g>
+   <g id="patch_5">
+    <path d="M 279.391196 254.270517
+C 280.332752 254.270517 281.235871 253.896433 281.901651 253.230653
+C 282.567432 252.564872 282.941516 251.661753 282.941516 250.720197
+C 282.941516 249.778642 282.567432 248.875523 281.901651 248.209742
+C 281.235871 247.543962 280.332752 247.169877 279.391196 247.169877
+C 278.44964 247.169877 277.546521 247.543962 276.88074 248.209742
+C 276.21496 248.875523 275.840876 249.778642 275.840876 250.720197
+C 275.840876 251.661753 276.21496 252.564872 276.88074 253.230653
+C 277.546521 253.896433 278.44964 254.270517 279.391196 254.270517
+z
+" clip-path="url(#pa1c1a32a13)"/>
+   </g>
+  </g>
+  <g id="axes_2">
+   <g id="patch_6">
+    <path d="M 501.546861 240.365098
+L 619.89086 231.489298
+L 738.234858 240.365098
+L 738.234858 264.033897
+L 619.89086 253.678797
+L 501.546861 264.033897
+z
+" clip-path="url(#p707b86c074)" style="fill: #f0f0f0; stroke: #000000; stroke-width: 1.3; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_7">
+    <path d="M 613.38194 324.685196
+L 613.38194 188.589598
+L 619.89086 167.879399
+L 626.399779 188.589598
+L 626.399779 324.685196
+z
+" clip-path="url(#p707b86c074)" style="fill: #f0f0f0; stroke: #000000; stroke-width: 1.3; stroke-linejoin: miter"/>
+   </g>
+   <g id="line2d_2">
+    <path d="M 486.753862 250.720197
+L 812.199857 250.720197
+" clip-path="url(#p707b86c074)" style="fill: none; stroke-dasharray: 3.7,1.6; stroke-dashoffset: 0; stroke: #000000"/>
+   </g>
+   <g id="text_9">
+    <text style="font-size: 13px; font-family: 'Times New Roman'; text-anchor: end" x="614.56538" y="264.033897" transform="rotate(-0 614.56538 264.033897)">CG</text>
+   </g>
+   <g id="patch_8">
+    <path d="M 619.89086 162.922877
+Q 619.89086 147.170243 619.89086 132.75925
+" style="fill: none; stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+    <path d="M 617.89086 136.75925
+L 619.89086 132.75925
+L 621.89086 136.75925
+z
+" style="stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+   </g>
+   <g id="text_10">
+    <text style="font-size: 13px; font-family: 'Times New Roman'; text-anchor: start" x="628.766659" y="142.731299" transform="rotate(-0 628.766659 142.731299)">+x / nose</text>
+   </g>
+   <g id="patch_9">
+    <path d="M 740.233141 250.720197
+Q 770.779325 250.720197 797.971408 250.720197
+" style="fill: none; stroke: #000000; stroke-width: 3; stroke-linecap: round"/>
+    <path d="M 793.971408 248.720197
+L 797.971408 250.720197
+L 793.971408 252.720197
+z
+" style="stroke: #000000; stroke-width: 3; stroke-linecap: round"/>
+   </g>
+   <g id="text_11">
+    <!-- $F_y=+10$ N -->
+    <g transform="translate(758.945057 206.341198)">
+     <text>
+      <tspan x="0" y="-0.1875" style="font-style: italic; font-size: 16px; font-family: 'STIXGeneral'">F</tspan>
+      <tspan x="9.776016" y="2.2125" style="font-style: italic; font-size: 11.2px; font-family: 'STIXGeneral'">y</tspan>
+      <tspan x="18.66883" y="-0.1875" style="font-size: 16px; font-family: 'STIXGeneral'">=</tspan>
+      <tspan x="32.828852" y="-0.1875" style="font-size: 16px; font-family: 'STIXGeneral'">+</tspan>
+      <tspan x="43.788874" y="-0.1875" style="font-size: 16px; font-family: 'STIXGeneral'">1</tspan>
+      <tspan x="51.788889" y="-0.1875" style="font-size: 16px; font-family: 'STIXGeneral'">0</tspan>
+      <tspan x="59.788904" y="-0.1875" style="font-size: 16px; font-family: 'Times New Roman'"> </tspan>
+      <tspan x="63.788904" y="-0.1875" style="font-size: 16px; font-family: 'Times New Roman'">N</tspan>
+     </text>
+    </g>
+   </g>
+   <g id="text_12">
+    <text style="font-size: 15px; font-family: 'Times New Roman'; text-anchor: start" x="477.878062" y="108.7074" transform="rotate(-0 477.878062 108.7074)">Force line passes through the CG.</text>
+   </g>
+   <g id="text_13">
+    <!-- $M_z=0$ -->
+    <g transform="translate(591.12086 349.833296)">
+     <text>
+      <tspan x="0" y="-0.796875" style="font-style: italic; font-size: 21px; font-family: 'STIXGeneral'">M</tspan>
+      <tspan x="17.49292" y="2.353125" style="font-style: italic; font-size: 14.7px; font-family: 'STIXGeneral'">z</tspan>
+      <tspan x="28.356192" y="-0.796875" style="font-size: 21px; font-family: 'STIXGeneral'">=</tspan>
+      <tspan x="46.941126" y="-0.796875" style="font-size: 21px; font-family: 'STIXGeneral'">0</tspan>
+     </text>
+    </g>
+   </g>
+   <g id="text_14">
+    <text style="font-size: 15px; font-family: 'Times New Roman'; text-anchor: middle" x="619.89086" y="379.419295" transform="rotate(-0 619.89086 379.419295)">y = 4 m is NOT a moment arm for Fy.</text>
+   </g>
+   <g id="text_15">
+    <text style="font-size: 19px; font-family: 'Times New Roman'; text-anchor: middle" x="646.518259" y="64.08" transform="rotate(-0 646.518259 64.08)">A. Same CG height / x = 0 — plan view</text>
+   </g>
+   <g id="patch_10">
+    <path d="M 619.89086 254.566377
+C 620.910878 254.566377 621.889257 254.16112 622.610519 253.439857
+C 623.331782 252.718595 623.73704 251.740216 623.73704 250.720197
+C 623.73704 249.700179 623.331782 248.7218 622.610519 248.000537
+C 621.889257 247.279275 620.910878 246.874017 619.89086 246.874017
+C 618.870841 246.874017 617.892462 247.279275 617.1712 248.000537
+C 616.449937 248.7218 616.04468 249.700179 616.04468 250.720197
+C 616.04468 251.740216 616.449937 252.718595 617.1712 253.439857
+C 617.892462 254.16112 618.870841 254.566377 619.89086 254.566377
+z
+" clip-path="url(#p707b86c074)"/>
+   </g>
+   <g id="patch_11">
+    <path d="M 738.234858 254.270517
+C 739.176414 254.270517 740.079532 253.896433 740.745313 253.230653
+C 741.411094 252.564872 741.785178 251.661753 741.785178 250.720197
+C 741.785178 249.778642 741.411094 248.875523 740.745313 248.209742
+C 740.079532 247.543962 739.176414 247.169877 738.234858 247.169877
+C 737.293302 247.169877 736.390183 247.543962 735.724402 248.209742
+C 735.058622 248.875523 734.684538 249.778642 734.684538 250.720197
+C 734.684538 251.661753 735.058622 252.564872 735.724402 253.230653
+C 736.390183 253.896433 737.293302 254.270517 738.234858 254.270517
+z
+" clip-path="url(#p707b86c074)"/>
+   </g>
+  </g>
+  <g id="axes_3">
+   <g id="patch_12">
+    <path d="M 39.744599 699.598982
+L 282.349796 699.598982
+L 282.349796 691.906622
+L 39.744599 691.906622
+z
+" clip-path="url(#pc959edb843)" style="fill: #ebebeb; stroke: #000000; stroke-width: 1.3; stroke-linejoin: miter"/>
+   </g>
+   <g id="line2d_3">
+    <path d="M 27.9102 710.545802
+L 353.356195 710.545802
+" clip-path="url(#pc959edb843)" style="fill: none; stroke-dasharray: 3.7,1.6; stroke-dashoffset: 0; stroke: #000000"/>
+   </g>
+   <g id="line2d_4">
+    <path d="M 72.289199 695.752802
+L 72.289199 710.545802
+" clip-path="url(#pc959edb843)" style="fill: none; stroke: #000000; stroke-width: 3; stroke-linecap: square"/>
+   </g>
+   <g id="line2d_5">
+    <path d="M 72.289199 710.545802
+L 152.171398 710.545802
+" clip-path="url(#pc959edb843)" style="fill: none; stroke-dasharray: 1,1.65; stroke-dashoffset: 0; stroke: #000000"/>
+   </g>
+   <g id="line2d_6">
+    <path d="M 221.635778 653.328222
+L 219.927471 650.987476
+L 218.128787 648.715443
+L 216.242486 646.515609
+L 214.271463 644.391352
+L 212.218744 642.345931
+L 210.087479 640.382487
+L 207.880941 638.504033
+L 205.602515 636.713453
+L 203.255699 635.013495
+L 200.844096 633.406768
+L 198.371406 631.895739
+L 195.841427 630.482727
+L 193.25804 629.169901
+L 190.625211 627.959276
+L 187.946981 626.85271
+L 185.227462 625.851902
+L 182.470828 624.958388
+L 179.681309 624.173539
+L 176.863188 623.49856
+L 174.020791 622.934488
+L 171.15848 622.482187
+L 168.280648 622.142353
+L 165.391714 621.915507
+L 162.496111 621.801996
+L 159.598284 621.801996
+L 156.702681 621.915507
+L 153.813747 622.142353
+L 150.935915 622.482187
+L 148.073604 622.934488
+L 145.231207 623.49856
+L 142.413086 624.173539
+L 139.623567 624.958388
+L 136.866933 625.851902
+L 134.147414 626.85271
+L 131.469184 627.959276
+L 128.836356 629.169901
+L 126.252969 630.482727
+L 123.722989 631.895739
+L 121.250299 633.406768
+L 118.838696 635.013495
+L 116.49188 636.713453
+L 114.213455 638.504033
+L 112.006916 640.382487
+L 109.875651 642.345931
+L 107.822932 644.391352
+L 105.851909 646.515609
+L 103.965608 648.715443
+L 102.166924 650.987476
+L 100.458618 653.328222
+" clip-path="url(#pc959edb843)" style="fill: none; stroke: #000000; stroke-width: 1.8; stroke-linecap: square"/>
+   </g>
+   <g id="text_16">
+    <text style="font-size: 13px; font-family: 'Times New Roman'; text-anchor: end" x="155.721718" y="709.066502" transform="rotate(-0 155.721718 709.066502)">CG</text>
+   </g>
+   <g id="text_17">
+    <text style="font-size: 13px; font-family: 'Times New Roman'; text-anchor: middle" x="42.703199" y="684.510123" transform="rotate(-0 42.703199 684.510123)">Left wing</text>
+   </g>
+   <g id="text_18">
+    <text style="font-size: 13px; font-family: 'Times New Roman'; text-anchor: middle" x="279.391196" y="684.510123" transform="rotate(-0 279.391196 684.510123)">Right wing</text>
+   </g>
+   <g id="patch_13">
+    <path d="M 281.389479 710.545802
+Q 311.935663 710.545802 339.127746 710.545802
+" style="fill: none; stroke: #000000; stroke-width: 3; stroke-linecap: round"/>
+    <path d="M 335.127746 708.545802
+L 339.127746 710.545802
+L 335.127746 712.545802
+z
+" style="stroke: #000000; stroke-width: 3; stroke-linecap: round"/>
+   </g>
+   <g id="text_19">
+    <!-- $F_y=+10$ N -->
+    <g transform="translate(300.101395 666.166803)">
+     <text>
+      <tspan x="0" y="-0.1875" style="font-style: italic; font-size: 16px; font-family: 'STIXGeneral'">F</tspan>
+      <tspan x="9.776016" y="2.2125" style="font-style: italic; font-size: 11.2px; font-family: 'STIXGeneral'">y</tspan>
+      <tspan x="18.66883" y="-0.1875" style="font-size: 16px; font-family: 'STIXGeneral'">=</tspan>
+      <tspan x="32.828852" y="-0.1875" style="font-size: 16px; font-family: 'STIXGeneral'">+</tspan>
+      <tspan x="43.788874" y="-0.1875" style="font-size: 16px; font-family: 'STIXGeneral'">1</tspan>
+      <tspan x="51.788889" y="-0.1875" style="font-size: 16px; font-family: 'STIXGeneral'">0</tspan>
+      <tspan x="59.788904" y="-0.1875" style="font-size: 16px; font-family: 'Times New Roman'"> </tspan>
+      <tspan x="63.788904" y="-0.1875" style="font-size: 16px; font-family: 'Times New Roman'">N</tspan>
+     </text>
+    </g>
+   </g>
+   <g id="text_20">
+    <text style="font-size: 15px; font-family: 'Times New Roman'; text-anchor: start" x="16.0758" y="553.740005" transform="rotate(-0 16.0758 553.740005)">Force line is 0.5 m BELOW the CG.</text>
+   </g>
+   <g id="text_21">
+    <text style="font-size: 14px; font-family: 'Times New Roman'; text-anchor: start" x="16.0758" y="587.763904" transform="rotate(-0 16.0758 587.763904)">z = +0.5 m; +z points down</text>
+   </g>
+   <g id="patch_14">
+    <path d="M 104.611558 648.082377
+Q 103.156609 649.920216 102.950797 650.18019
+" style="fill: none; stroke: #000000; stroke-width: 1.8; stroke-linecap: round"/>
+    <path d="M 107.001696 648.285402
+L 102.950797 650.18019
+L 103.865507 645.802598
+z
+" style="stroke: #000000; stroke-width: 1.8; stroke-linecap: round"/>
+   </g>
+   <g id="text_22">
+    <!-- $M_x=-zF_y=-5$ N m -->
+    <g transform="translate(75.147198 793.386601)">
+     <text>
+      <tspan x="0" y="-0.234375" style="font-style: italic; font-size: 20px; font-family: 'STIXGeneral'">M</tspan>
+      <tspan x="59.175945" y="-0.234375" style="font-style: italic; font-size: 20px; font-family: 'STIXGeneral'">z</tspan>
+      <tspan x="66.955943" y="-0.234375" style="font-style: italic; font-size: 20px; font-family: 'STIXGeneral'">F</tspan>
+      <tspan x="16.659988" y="2.765625" style="font-style: italic; font-size: 14px; font-family: 'STIXGeneral'">x</tspan>
+      <tspan x="79.175929" y="2.765625" style="font-style: italic; font-size: 14px; font-family: 'STIXGeneral'">y</tspan>
+      <tspan x="27.775981" y="-0.234375" style="font-size: 20px; font-family: 'STIXGeneral'">=</tspan>
+      <tspan x="45.475963" y="-0.234375" style="font-size: 20px; font-family: 'STIXGeneral'">−</tspan>
+      <tspan x="90.291922" y="-0.234375" style="font-size: 20px; font-family: 'STIXGeneral'">=</tspan>
+      <tspan x="107.991904" y="-0.234375" style="font-size: 20px; font-family: 'STIXGeneral'">−</tspan>
+      <tspan x="121.691885" y="-0.234375" style="font-size: 20px; font-family: 'STIXGeneral'">5</tspan>
+      <tspan x="131.69187" y="-0.234375" style="font-size: 20px; font-family: 'Times New Roman'"> </tspan>
+      <tspan x="136.69187" y="-0.234375" style="font-size: 20px; font-family: 'Times New Roman'">N</tspan>
+      <tspan x="151.135229" y="-0.234375" style="font-size: 20px; font-family: 'Times New Roman'"> </tspan>
+      <tspan x="156.135229" y="-0.234375" style="font-size: 20px; font-family: 'Times New Roman'">m</tspan>
+     </text>
+    </g>
+   </g>
+   <g id="text_23">
+    <text style="font-size: 15px; font-family: 'Times New Roman'; text-anchor: middle" x="161.047198" y="824.4519" transform="rotate(-0 161.047198 824.4519)">Negative roll: left wing tends to go down.</text>
+   </g>
+   <g id="text_24">
+    <text style="font-size: 19px; font-family: 'Times New Roman'; text-anchor: middle" x="187.674597" y="509.112605" transform="rotate(-0 187.674597 509.112605)">B. Aft and below the CG — rear view</text>
+   </g>
+   <g id="patch_15">
+    <path d="M 161.047198 699.598982
+C 162.067216 699.598982 163.045595 699.193725 163.766858 698.472462
+C 164.48812 697.7512 164.893378 696.772821 164.893378 695.752802
+C 164.893378 694.732784 164.48812 693.754405 163.766858 693.033142
+C 163.045595 692.31188 162.067216 691.906622 161.047198 691.906622
+C 160.027179 691.906622 159.0488 692.31188 158.327538 693.033142
+C 157.606275 693.754405 157.201018 694.732784 157.201018 695.752802
+C 157.201018 696.772821 157.606275 697.7512 158.327538 698.472462
+C 159.0488 699.193725 160.027179 699.598982 161.047198 699.598982
+z
+" clip-path="url(#pc959edb843)"/>
+   </g>
+   <g id="patch_16">
+    <path d="M 279.391196 714.096122
+C 280.332752 714.096122 281.235871 713.722038 281.901651 713.056257
+C 282.567432 712.390477 282.941516 711.487358 282.941516 710.545802
+C 282.941516 709.604246 282.567432 708.701127 281.901651 708.035347
+C 281.235871 707.369566 280.332752 706.995482 279.391196 706.995482
+C 278.44964 706.995482 277.546521 707.369566 276.88074 708.035347
+C 276.21496 708.701127 275.840876 709.604246 275.840876 710.545802
+C 275.840876 711.487358 276.21496 712.390477 276.88074 713.056257
+C 277.546521 713.722038 278.44964 714.096122 279.391196 714.096122
+z
+" clip-path="url(#pc959edb843)"/>
+   </g>
+  </g>
+  <g id="axes_4">
+   <g id="patch_17">
+    <path d="M 501.546861 685.397703
+L 619.89086 676.521903
+L 738.234858 685.397703
+L 738.234858 709.066502
+L 619.89086 698.711402
+L 501.546861 709.066502
+z
+" clip-path="url(#p8d82de8c59)" style="fill: #f0f0f0; stroke: #000000; stroke-width: 1.3; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_18">
+    <path d="M 613.38194 769.717801
+L 613.38194 633.622203
+L 619.89086 612.912004
+L 626.399779 633.622203
+L 626.399779 769.717801
+z
+" clip-path="url(#p8d82de8c59)" style="fill: #f0f0f0; stroke: #000000; stroke-width: 1.3; stroke-linejoin: miter"/>
+   </g>
+   <g id="line2d_7">
+    <path d="M 486.753862 784.510801
+L 812.199857 784.510801
+" clip-path="url(#p8d82de8c59)" style="fill: none; stroke-dasharray: 3.7,1.6; stroke-dashoffset: 0; stroke: #000000"/>
+   </g>
+   <g id="line2d_8">
+    <path d="M 619.89086 695.752802
+L 738.234858 784.510801
+" clip-path="url(#p8d82de8c59)" style="fill: none; stroke-dasharray: 1.3,2.145; stroke-dashoffset: 0; stroke: #000000; stroke-width: 1.3"/>
+   </g>
+   <g id="line2d_9">
+    <path d="M 670.785267 660.116155
+L 669.350289 658.149928
+L 667.839395 656.24142
+L 666.254902 654.39356
+L 664.599242 652.609184
+L 662.874958 650.89103
+L 661.084696 649.241737
+L 659.231204 647.663836
+L 657.317326 646.159749
+L 655.346001 644.731784
+L 653.320254 643.382134
+L 651.243195 642.11287
+L 649.118012 640.925939
+L 646.947967 639.823166
+L 644.736391 638.80624
+L 642.486678 637.876725
+L 640.202282 637.036046
+L 637.886709 636.285494
+L 635.543513 635.626221
+L 633.176292 635.059239
+L 630.788678 634.585418
+L 628.384337 634.205486
+L 625.966958 633.920025
+L 623.540253 633.729474
+L 621.107947 633.634125
+L 618.673772 633.634125
+L 616.241466 633.729474
+L 613.814761 633.920025
+L 611.397382 634.205486
+L 608.993041 634.585418
+L 606.605427 635.059239
+L 604.238206 635.626221
+L 601.89501 636.285494
+L 599.579437 637.036046
+L 597.295041 637.876725
+L 595.045329 638.80624
+L 592.833752 639.823166
+L 590.663707 640.925939
+L 588.538524 642.11287
+L 586.461465 643.382134
+L 584.435718 644.731784
+L 582.464393 646.159749
+L 580.550515 647.663836
+L 578.697023 649.241737
+L 576.906761 650.89103
+L 575.182477 652.609184
+L 573.526817 654.39356
+L 571.942324 656.24142
+L 570.43143 658.149928
+L 568.996452 660.116155
+" clip-path="url(#p8d82de8c59)" style="fill: none; stroke: #000000; stroke-width: 1.8; stroke-linecap: square"/>
+   </g>
+   <g id="text_25">
+    <text style="font-size: 13px; font-family: 'Times New Roman'; text-anchor: end" x="614.56538" y="709.066502" transform="rotate(-0 614.56538 709.066502)">CG</text>
+   </g>
+   <g id="patch_19">
+    <path d="M 619.89086 607.955482
+Q 619.89086 592.202848 619.89086 577.791855
+" style="fill: none; stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+    <path d="M 617.89086 581.791855
+L 619.89086 577.791855
+L 621.89086 581.791855
+z
+" style="stroke: #000000; stroke-width: 1.2; stroke-linecap: round"/>
+   </g>
+   <g id="text_26">
+    <text style="font-size: 13px; font-family: 'Times New Roman'; text-anchor: start" x="628.766659" y="587.763904" transform="rotate(-0 628.766659 587.763904)">+x / nose</text>
+   </g>
+   <g id="patch_20">
+    <path d="M 740.233141 784.510801
+Q 770.779325 784.510801 797.971408 784.510801
+" style="fill: none; stroke: #000000; stroke-width: 3; stroke-linecap: round"/>
+    <path d="M 793.971408 782.510801
+L 797.971408 784.510801
+L 793.971408 786.510801
+z
+" style="stroke: #000000; stroke-width: 3; stroke-linecap: round"/>
+   </g>
+   <g id="text_27">
+    <!-- $F_y=+10$ N -->
+    <g transform="translate(758.945057 740.131802)">
+     <text>
+      <tspan x="0" y="-0.1875" style="font-style: italic; font-size: 16px; font-family: 'STIXGeneral'">F</tspan>
+      <tspan x="9.776016" y="2.2125" style="font-style: italic; font-size: 11.2px; font-family: 'STIXGeneral'">y</tspan>
+      <tspan x="18.66883" y="-0.1875" style="font-size: 16px; font-family: 'STIXGeneral'">=</tspan>
+      <tspan x="32.828852" y="-0.1875" style="font-size: 16px; font-family: 'STIXGeneral'">+</tspan>
+      <tspan x="43.788874" y="-0.1875" style="font-size: 16px; font-family: 'STIXGeneral'">1</tspan>
+      <tspan x="51.788889" y="-0.1875" style="font-size: 16px; font-family: 'STIXGeneral'">0</tspan>
+      <tspan x="59.788904" y="-0.1875" style="font-size: 16px; font-family: 'Times New Roman'"> </tspan>
+      <tspan x="63.788904" y="-0.1875" style="font-size: 16px; font-family: 'Times New Roman'">N</tspan>
+     </text>
+    </g>
+   </g>
+   <g id="patch_21">
+    <path d="M 537.050061 698.87255
+Q 537.050061 740.133193 537.050061 781.393835
+" style="fill: none; stroke: #000000; stroke-linecap: round"/>
+    <path d="M 535.050061 702.87255
+L 537.050061 698.87255
+L 539.050061 702.87255
+" style="fill: none; stroke: #000000; stroke-linecap: round"/>
+    <path d="M 539.050061 777.393835
+L 537.050061 781.393835
+L 535.050061 777.393835
+" style="fill: none; stroke: #000000; stroke-linecap: round"/>
+   </g>
+   <g id="text_28">
+    <g id="patch_22">
+     <path d="M 506.643774 748.45606
+L 531.953149 748.45606
+L 531.953149 731.807544
+L 506.643774 731.807544
+z
+" style="fill: #ffffff"/>
+    </g>
+    <text style="font-size: 14px; font-family: 'Times New Roman'; text-anchor: middle" x="519.298461" y="743.474575" transform="rotate(-0 519.298461 743.474575)">3 m</text>
+   </g>
+   <g id="text_29">
+    <text style="font-size: 14px; font-family: 'Times New Roman'; text-anchor: start" x="474.919462" y="550.781405" transform="rotate(-0 474.919462 550.781405)">Force line is 3 m AFT of the CG: x = −3 m.</text>
+   </g>
+   <g id="patch_23">
+    <path d="M 572.285834 655.961126
+Q 571.261917 657.254501 571.487138 656.97001
+" style="fill: none; stroke: #000000; stroke-width: 1.8; stroke-linecap: round"/>
+    <path d="M 575.538037 655.075223
+L 571.487138 656.97001
+L 572.401847 652.592419
+z
+" style="stroke: #000000; stroke-width: 1.8; stroke-linecap: round"/>
+   </g>
+   <g id="text_30">
+    <!-- $M_z=xF_y=-30$ N m -->
+    <g transform="translate(535.69086 814.096801)">
+     <text>
+      <tspan x="0" y="-0.484375" style="font-style: italic; font-size: 20px; font-family: 'STIXGeneral'">M</tspan>
+      <tspan x="44.705969" y="-0.484375" style="font-style: italic; font-size: 20px; font-family: 'STIXGeneral'">x</tspan>
+      <tspan x="53.585959" y="-0.484375" style="font-style: italic; font-size: 20px; font-family: 'STIXGeneral'">F</tspan>
+      <tspan x="16.659988" y="2.515625" style="font-style: italic; font-size: 14px; font-family: 'STIXGeneral'">z</tspan>
+      <tspan x="65.805945" y="2.515625" style="font-style: italic; font-size: 14px; font-family: 'STIXGeneral'">y</tspan>
+      <tspan x="27.005988" y="-0.484375" style="font-size: 20px; font-family: 'STIXGeneral'">=</tspan>
+      <tspan x="76.921938" y="-0.484375" style="font-size: 20px; font-family: 'STIXGeneral'">=</tspan>
+      <tspan x="94.621919" y="-0.484375" style="font-size: 20px; font-family: 'STIXGeneral'">−</tspan>
+      <tspan x="108.321901" y="-0.484375" style="font-size: 20px; font-family: 'STIXGeneral'">3</tspan>
+      <tspan x="118.321886" y="-0.484375" style="font-size: 20px; font-family: 'STIXGeneral'">0</tspan>
+      <tspan x="128.32187" y="-0.484375" style="font-size: 20px; font-family: 'Times New Roman'"> </tspan>
+      <tspan x="133.32187" y="-0.484375" style="font-size: 20px; font-family: 'Times New Roman'">N</tspan>
+      <tspan x="147.76523" y="-0.484375" style="font-size: 20px; font-family: 'Times New Roman'"> </tspan>
+      <tspan x="152.76523" y="-0.484375" style="font-size: 20px; font-family: 'Times New Roman'">m</tspan>
+     </text>
+    </g>
+   </g>
+   <g id="text_31">
+    <text style="font-size: 15px; font-family: 'Times New Roman'; text-anchor: middle" x="619.89086" y="839.2449" transform="rotate(-0 619.89086 839.2449)">Negative yaw: nose tends to turn left.</text>
+   </g>
+   <g id="text_32">
+    <text style="font-size: 19px; font-family: 'Times New Roman'; text-anchor: middle" x="646.518259" y="509.112605" transform="rotate(-0 646.518259 509.112605)">B. Aft and below the CG — plan view</text>
+   </g>
+   <g id="patch_24">
+    <path d="M 619.89086 699.598982
+C 620.910878 699.598982 621.889257 699.193725 622.610519 698.472462
+C 623.331782 697.7512 623.73704 696.772821 623.73704 695.752802
+C 623.73704 694.732784 623.331782 693.754405 622.610519 693.033142
+C 621.889257 692.31188 620.910878 691.906622 619.89086 691.906622
+C 618.870841 691.906622 617.892462 692.31188 617.1712 693.033142
+C 616.449937 693.754405 616.04468 694.732784 616.04468 695.752802
+C 616.04468 696.772821 616.449937 697.7512 617.1712 698.472462
+C 617.892462 699.193725 618.870841 699.598982 619.89086 699.598982
+z
+" clip-path="url(#p8d82de8c59)"/>
+   </g>
+   <g id="patch_25">
+    <path d="M 738.234858 788.061121
+C 739.176414 788.061121 740.079532 787.687037 740.745313 787.021256
+C 741.411094 786.355476 741.785178 785.452357 741.785178 784.510801
+C 741.785178 783.569245 741.411094 782.666126 740.745313 782.000346
+C 740.079532 781.334565 739.176414 780.960481 738.234858 780.960481
+C 737.293302 780.960481 736.390183 781.334565 735.724402 782.000346
+C 735.058622 782.666126 734.684538 783.569245 734.684538 784.510801
+C 734.684538 785.452357 735.058622 786.355476 735.724402 787.021256
+C 736.390183 787.687037 737.293302 788.061121 738.234858 788.061121
+z
+" clip-path="url(#p8d82de8c59)"/>
+   </g>
+  </g>
+  <g id="text_33">
+   <text style="font-size: 22px; font-family: 'Times New Roman'; text-anchor: middle" x="403.146428" y="22.486562" transform="rotate(-0 403.146428 22.486562)">3. A side force: perpendicular distance matters, not just spanwise position</text>
+  </g>
+  <g id="text_34">
+   <text style="font-size: 16px; font-family: 'Times New Roman'; text-anchor: middle" x="403.146428" y="890.784" transform="rotate(-0 403.146428 890.784)">A: r = (0, 4, 0) m → M = (0, 0, 0).    B: r = (−3, 4, 0.5) m → M = (−5, 0, −30) N m.</text>
+  </g>
+ </g>
+ <defs>
+  <clipPath id="pa1c1a32a13">
+   <rect x="7.2" y="82.08" width="360.949194" height="322.487395"/>
+  </clipPath>
+  <clipPath id="p707b86c074">
+   <rect x="466.043662" y="82.08" width="360.949194" height="322.487395"/>
+  </clipPath>
+  <clipPath id="pc959edb843">
+   <rect x="7.2" y="527.112605" width="360.949194" height="322.487395"/>
+  </clipPath>
+  <clipPath id="p8d82de8c59">
+   <rect x="466.043662" y="527.112605" width="360.949194" height="322.487395"/>
+  </clipPath>
+ </defs>
+</svg>

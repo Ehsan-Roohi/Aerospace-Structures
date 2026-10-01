@@ -15,6 +15,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.patches import Polygon, Circle, Rectangle, Arc
 from matplotlib import font_manager
+from lecture01_vane_moment_schematics import build_diagrams, insert_schematics
 
 ROOT = Path(__file__).resolve().parents[1]
 ASSETS = ROOT / "docs/assets/lecture01"
@@ -77,6 +78,7 @@ def wing(ax, cx=5, cy=3.5):
 
 
 def diagrams():
+    build_diagrams()
     times = Path("C:/Windows/Fonts/times.ttf")
     if times.exists():
         font_manager.fontManager.addfont(str(times))
@@ -285,6 +287,7 @@ The historical paper calls the tip devices **wing-tip rudders, or roll spoileron
 
 **Teach the name:** “a vertically pivoting wing-tip rudder used asymmetrically as a roll spoileron.” Ask what changes the wing's aerodynamic forces before drawing a roll arrow.
 ''')
+    physics["source"] = insert_schematics("".join(physics["source"])).splitlines(keepends=True)
     architecture = cell("markdown","l01-controls-architecture",f'''
 ### 7A-7. Modern UAVs: separate the tail layout from the control mechanism
 

@@ -11,6 +11,12 @@ These notebooks support the Fall 2026 MIE 446 Aerospace Structures course. They 
 | Interactive lecture | [Lecture 01 — From Airfoil Geometry to Trustworthy Wing Loads](MIE446_Lecture_01_Trust_Forces_Airfoils.ipynb) | FAA controls/empennage, wing anatomy and load paths; Lilienthal tail and tip-vane photographs; MQ-9, X-48B, X-36 and X-47B photo atlas; elevons, ruddervators, finless control, thrust vectoring and MAGMA; interactive elevon mixing; trim/static margin | [![Open Lecture 01 in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/main/notebooks/MIE446_Lecture_01_Trust_Forces_Airfoils.ipynb) |
 | Guided project | [Code-to-Print Wing](MIE446_Code_to_Print_Wing.ipynb) | Define a team design, document predictions and AI use, complete the physical coupon gate, generate verified geometry and export the submission archive | [![Open updated Wing Project in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/main/notebooks/MIE446_Code_to_Print_Wing.ipynb) |
 
+Lecture 01 section **7A-11** now pairs each of eight control mechanisms with a
+real photograph, visual-identification guide, force/moment explanation and
+structural load path. A [standalone HTML companion](../docs/lecture01-control-mechanisms.html)
+is included for local browser viewing after downloading the repository; the
+same content is embedded in the Colab notebook above.
+
 ### Lecture 02 — Finite Wings, Geometry and Load Paths
 
 [![Open Lecture 02 in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/main/notebooks/MIE446_Lecture_02_Finite_Wings_and_Load_Paths.ipynb)

@@ -16,6 +16,7 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Polygon, Circle, Rectangle, Arc
 from matplotlib import font_manager
 from lecture01_vane_moment_schematics import build_diagrams, insert_schematics
+from enrich_lecture01_effector_cards import enrich_notebook
 
 ROOT = Path(__file__).resolve().parents[1]
 ASSETS = ROOT / "docs/assets/lecture01"
@@ -480,6 +481,7 @@ def main():
     finally:
         plt.show,ipdisplay.display=old_show,old_display
     mixer["outputs"]=outputs
+    enrich_notebook(notebook)
     # Match the repository's existing notebook serialization to keep diffs focused.
     NB.write_text(json.dumps(notebook,ensure_ascii=False,indent=1)+"\n",encoding="utf-8")
     print(f"Updated current Lecture 01: {len(notebook['cells'])} cells; 3 original diagrams; source-linked photo atlas.")

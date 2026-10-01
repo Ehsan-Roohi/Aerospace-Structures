@@ -156,3 +156,27 @@ The actual source URLs, credits and reuse metadata are retained in
 `CONTROL_PHOTO_SOURCES.json`. Preserve the photo licenses independently of the
 repository code license. Rendering the diagrams requires Matplotlib; saving
 the notebook's numerical activity output additionally requires IPython.
+
+## Real-hardware reading cards for section 7A-11 — October 1, 2026
+
+Eight side-by-side photo/explanation cards replace the wide mechanism table.
+The existing X-48B, MQ-9 and 737 photographs retain the credits above. The five
+additional NASA photographs below are downloaded without pixel edits; display
+size is set in HTML, and clicking opens the full repository image.
+
+| Asset | Source and credit | What the photograph establishes |
+|---|---|---|
+| `Controls_X48C_Split_Open.jpg` | [NASA / Carla Thomas, ED12-0255-59](https://www.nasa.gov/image-article/x-48c-deploys-split-ailerons/) | Split ailerons open for post-landing braking, not evidence of an asymmetric yaw command |
+| `Controls_Centurion_Motors.jpg` | [NASA, EC98-44803-115](https://www.nasa.gov/reference/centurion/) | Outboard propeller locations; the source text, not the still photo, establishes differential-power yaw control |
+| `Controls_HARV_Ground_Test.jpg` | [NASA, EC91-0075-33](https://www.nasa.gov/reference/f-18-harv/) | Actual external vectoring vanes and exhaust during a ground test |
+| `Controls_AMELIA_Blowing.jpg` | [NASA / Dominic Hart, ACD12-0003-019](https://www.nasa.gov/aeronautics/amelias-innovations-inspire-unusual-dedication/) | A physical circulation-control model and smoke-visualization setup; smoke is a tracer, not the slot supply jet |
+| `Controls_F8_Flight_Computer.jpg` | [NASA, E-24741](https://www.nasa.gov/image-detail/amf-e-24741/) | Installed digital fly-by-wire electronics; not a modern control-allocation algorithm |
+
+These NASA photographs are public domain in the United States. Credits and
+exact download URLs/hashes are in `EFFECTOR_PHOTO_SOURCES.json`. Rebuild the
+downloads with `scripts/fetch_lecture01_effector_photos.py`; update the notebook
+and its local HTML companion with `scripts/enrich_lecture01_effector_cards.py`.
+The original atlas builder also invokes the enrichment step, so it does not
+silently restore the old table. The card text is original course explanation;
+aircraft-specific claims link to NASA, USAF or FAA documentation. The generic
+mechanics statements do not prescribe the named aircraft's control law.

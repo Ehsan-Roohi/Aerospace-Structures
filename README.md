@@ -10,6 +10,11 @@ Dr. Ehsan Roohi Golkhatmi · Gunness Laboratory, Room 1 · [roohie@umass.edu](ma
 
 This is the classroom home for released MIE 446 learning materials. Open a lecture below, save your own copy in Google Drive, and work through the predictions, theory and experiments. No prior aerospace course is assumed.
 
+**Homework 2 is available:** [step-by-step guide (PDF)](assignments/homework-02/MIE446_HW2_Control_Forces_Moments.pdf)
+and [student package with MATLAB and Excel starters](assignments/homework-02/MIE446_HW2_Student_Pack.zip).
+Use the [Lecture 1 reading map](assignments/homework-02/README.md) for the Lilienthal,
+force/moment and modern-control sections.
+
 > **What makes an engineering answer trustworthy?**<br>
 > Learn to frame the problem, predict behavior, justify the model, check the evidence and defend the decision—even when AI supplies the calculation or code.
 

@@ -14,12 +14,29 @@ This page collects released assignment files, the revised September 26 syllabus 
 
 The September 28 revision removes the proof and extra physical-check subpart, explains numerical integration step by step, and simplifies the tabulated-data calculation to direct panel sums. The PDF and Excel workbook use a uniform black-and-white format suitable for printing. Complete the work individually and submit only through Canvas.
 
+### Homework 2 - Flight-control forces, moments, and structural load paths
+
+- **[Download the illustrated step-by-step guide (PDF)](assignments/homework-02/MIE446_HW2_Control_Forces_Moments.pdf)**
+- **[Download the complete student package (ZIP)](assignments/homework-02/MIE446_HW2_Student_Pack.zip)**
+- [Download the Excel starter](assignments/homework-02/MIE446_HW2_Excel_Starter.xlsx)
+- [Download the MATLAB starter](assignments/homework-02/MIE446_HW2_Starter.m)
+- [Assignment overview and Lecture 1 reading map](assignments/homework-02/README.md)
+
+The October 1 release connects Lilienthal's control experiments to the Lecture 1
+force/moment schematics, spanwise numerical integration, modern elevon mixing,
+and local structural load paths. Each question includes specific notebook
+references, MATLAB commands, Excel cell instructions and independent checks.
+The released handout is the current HW2 specification. Discuss and cross-check
+within your existing three-person team, then submit your own independently
+authored report, MATLAB script and Excel workbook through Canvas, together with
+the course-required one-slide brief, README and process/AI-use note.
+
 ## Six homework portfolios
 
 | Assignment | Main focus | Syllabus due date, 2026 |
 |---|---|---|
 | HW 1 | NACA 2412 geometry, surface-pressure integration, lift, pressure drag and discrete panel sums | October 1 |
-| HW 2 | 2D/3D stress transformation, principal stresses and constitutive assumptions | November 5 |
+| HW 2 | Lilienthal control evidence, force/moment integration, lateral-force geometry, elevon mixing and structural load paths | November 5 |
 | HW 3 | Beam shear/moment, bending, deflection, strain energy and independent checks | November 12 |
 | HW 4 | Virtual work/Castigliano and correction of a plausible but flawed AI solution | November 19 |
 | HW 5 | Maneuver/landing loads, V–n diagrams, sensitivity and trade-offs | December 3 |

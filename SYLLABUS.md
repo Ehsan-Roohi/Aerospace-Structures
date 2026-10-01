@@ -377,11 +377,15 @@ Meetings run from 11:30 a.m. to 12:45 p.m. Finish the remaining Lecture 1 wing m
 | Assignment | Primary focus | Due |
 | --- | --- | --- |
 | HW 1 | Read the structure: airfoil/wing load path, FBD, pre-calculation predictions, equilibrium, code plot | Oct. 1 |
-| HW 2 | Choose the model: 2D/3D stress transformation, principal stresses, constitutive assumptions and validity | Nov. 5 |
+| HW 2 | Choose and check the control-load model: Lilienthal evidence, MATLAB/Excel force and moment integration, lateral-force geometry, elevon mixing and local structural load paths | Nov. 5 |
 | HW 3 | Verify independently: wing-beam shear/moment, bending, deflection, strain energy, limiting/alternate check | Nov. 12 |
 | HW 4 | Audit AI reasoning: virtual work/Castigliano plus correction of a plausible but flawed generated solution | Nov. 19 |
 | HW 5 | Sensitivity and trade-offs: maneuver/landing loads, V-n diagram, computational exercise | Dec. 3 |
 | HW 6 | Integrated trust case: wing-box shear/torsion/shear center; hand-code/AI validation; design/manufacturing evidence; calibrated vision inspection; and interpretation of shared damage-diagnostic data | Dec. 10 |
+
+The [released Homework 2 guide and starter files](assignments/homework-02/README.md)
+give the current assignment specification and the exact Lecture 1 reading route.
+Canvas carries the authoritative submission deadline and any announced changes.
 
 ## 8. Course policies
 

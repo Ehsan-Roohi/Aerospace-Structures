@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<title>MIE 446 Homework 2 — Flight-Control Forces, Moments, and Structural Load Paths</title>
+<style>
+@page{size:letter;margin:0.58in 0.65in 0.55in}
+*{box-sizing:border-box}body{font-family:"Times New Roman",Times,serif;color:#000;background:#fff;font-size:11pt;line-height:1.24;margin:0}a{color:#000;text-decoration:underline}h1{font-size:23pt;line-height:1.08;margin:0 0 9pt}h2{font-size:16pt;line-height:1.1;margin:0 0 9pt;border-bottom:1px solid #000;padding-bottom:5pt}h3{font-size:12pt;margin:10pt 0 4pt}p{margin:5pt 0}table{width:100%;border-collapse:collapse;margin:7pt 0;font-size:10.5pt}th,td{text-align:left;vertical-align:top;padding:4pt 5pt;border-bottom:0.5pt solid #888}th{border-top:1pt solid #000;border-bottom:1pt solid #000}code,pre{font-family:"Times New Roman",Times,serif;color:#000;font-size:10.5pt}code{white-space:nowrap}pre{white-space:pre-wrap;border:0.7pt solid #777;padding:7pt;margin:7pt 0;line-height:1.21}ol,ul{margin:5pt 0;padding-left:20pt}li{margin-bottom:5pt}.page{break-before:page;position:relative}.page:first-child{break-before:auto}.kicker{font-size:10pt;margin-bottom:6pt}.lead{font-size:13pt}.box{border:0.8pt solid #000;padding:7pt 9pt;margin:8pt 0;break-inside:avoid}.small{font-size:9.5pt}.caption{font-size:9.3pt;line-height:1.18}.eq{text-align:center;margin:6pt 0;break-inside:avoid}img{display:block;max-width:100%;height:auto;margin:6pt auto}.compact td,.compact th{padding:3pt 4pt}.footer{border-top:0.5pt solid #888;padding-top:4pt;margin-top:10pt;font-size:9pt}.step{font-weight:bold}h2,h3{break-after:avoid}table,pre,figure{break-inside:avoid}mjx-container{color:#000!important}mjx-container[display="true"]{margin:0.45em 0!important}figure{margin:7pt 0}.line{display:inline-block;border-bottom:1px solid #000;min-width:150pt;height:13pt}@media screen{body{max-width:8.5in;margin:auto;padding:0.6in}.page{padding-bottom:0.5in;margin-bottom:0.4in;border-bottom:1px solid #999}}@media print{.page{padding:0}.screen-only{display:none}}
+</style>
+<script>window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg:{fontCache:'none'},options:{enableMenu:false}};</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-svg.js"></script>
+</head><body>
+
+<section class="page" id="start">
+<p class="kicker">MIE 446 · Aerospace Structures · Homework 2 · Due: see Canvas</p>
+<h1>Flight-Control Forces, Moments,<br>and Structural Load Paths</h1>
+<p class="lead">From Lilienthal’s wing-tip devices to modern elevons</p>
+<p>Name: <span class="line"></span> &nbsp; Team: <span class="line" style="min-width:65pt"></span></p>
+<p><b>The question:</b> When a control device changes an aerodynamic force, which aircraft moments change, and where does the structure receive the load?</p>
+<p>Homework 1 integrated pressure around a two-dimensional airfoil. Here you integrate force along a wing, calculate moments about the center of gravity (CG), and examine how two elevons share pitch and roll commands. The same sequence applies throughout: <b>predict → sketch → compute → cross-check → explain.</b></p>
+<div class="box"><b>How to work.</b> Use your existing three-person wing team to discuss figures and independently cross-check calculations. Rotate the roles of predictor, calculator, and checker. <b>Each student submits an individually authored report, MATLAB file, and Excel workbook.</b> Identify collaborators and explain any shared data-reading procedure. Include the individual reflection at the end of the handout. Due date and submission location are on Canvas.</div>
+<table><tr><th>Part</th><th>Task</th><th>Points</th></tr><tr><td>1</td><td>Read historical evidence; compare control mechanisms</td><td>15</td></tr><tr><td>2</td><td>Integrate spanwise force and moment increments in MATLAB and Excel</td><td>35</td></tr><tr><td>3</td><td>Calculate the moment of a side force at three locations</td><td>20</td></tr><tr><td>4</td><td>Mix elevon commands, impose limits, and calculate moments</td><td>20</td></tr><tr><td>5</td><td>Trace structural loads and calculate local string tension</td><td>10</td></tr></table>
+<p class="small">Question points organize the technical tasks. Final evaluation follows the course homework rubric; the standard judgment record, one-slide brief, README and AI-use note are included in the submission instructions.</p>
+<h3>Download and open before starting</h3>
+<ol><li>Open <a href="https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/main/notebooks/MIE446_Lecture_01_Trust_Forces_Airfoils.ipynb">Lecture 1 in Google Colab</a>. Use <b>File → Save a copy in Drive</b> if you plan to change its controls.</li>
+<li>Download <a href="MIE446_HW2_Starter.m">MIE446_HW2_Starter.m</a> and <a href="MIE446_HW2_Excel_Starter.xlsx">MIE446_HW2_Excel_Starter.xlsx</a> into one HW2 folder. Keep original copies. Rename working copies with your surname.</li>
+<li>Open the MATLAB file in the Editor. Set the Current Folder to your HW2 folder. Run the first setup section, then use <b>Run Section</b> for each numbered section. In MATLAB Online, upload the file first.</li>
+<li>Open the Excel workbook and save your own copy. Cells designated for student work are intentionally blank. Enter <b>formulas</b>, not results copied from MATLAB.</li></ol>
+<p class="small">The starter uses standard MATLAB functions and no add-on toolbox. <code>NaN</code> means “unfinished”; the original starter prints guidance instead of exporting an incomplete result. A file that runs with NaN entries is not a completed submission. The lecture notebook uses Python; your assessed computation here uses MATLAB and Excel.</p>
+<p class="footer">1 · Start here. Keep this handout beside the lecture notebook and your two computation files.</p>
+</section>
+
+<section class="page" id="axes">
+<p class="kicker">Preparation · Read before calculating any moment</p><h2>Coordinate axes and moment reference points</h2>
+<p><b>Notebook route:</b> find <b>2D. Aircraft rotations</b>, <b>2E. Center of gravity</b>, then <a href="https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/main/notebooks/MIE446_Lecture_01_Trust_Forces_Airfoils.ipynb"><b>7A-3b. A vertical vane is not automatically a pure-yaw device</b></a>. Use Ctrl+F (Command+F on Mac) to find the section title. Read Figure 7A-3b-1 before the equations.</p>
+<img src="assets/HW2_Body_Axes.png" alt="Plan and rear views showing body axes and positive roll and yaw" style="max-height:200pt;object-fit:contain">
+<p class="caption">Lecture 1, Figure 7A-3b-1. Aircraft right means the pilot’s right looking forward. An axis drawn into the page is not absent.</p>
+<p>Use a right-handed body-axis system: <b>+x forward, +y right, +z down</b>. Positive \(M_x\) tends to lower the right wing; positive \(M_y\) tends to raise the nose; positive \(M_z\) tends to turn the nose right. A moment tendency does not by itself predict the complete flight trajectory.</p>
+<div class="eq">\[\mathbf M_{CG}=\mathbf r\times\mathbf F,\quad \mathbf r=(x,y,z).\]
+\[M_x=yF_z-zF_y,\quad M_y=zF_x-xF_z,\quad M_z=xF_y-yF_x.\]</div>
+<p>The coordinates in \(\mathbf r\) run <b>from the CG to the force application point</b>. Use metres and newtons, giving N·m. A positive coordinate locates a point; it is not automatically the perpendicular lever arm of every force component.</p>
+<div class="box"><b>Do not carry coordinate signs between different problems without checking.</b> HW1’s airfoil coordinates had x from leading edge to trailing edge and y upward. Parts 2–4 here use body axes and moments about the CG. Part 5 instead supplies a local resisting torque about a pivot. The historical paper reports its own aerodynamic-axis coefficients; retain those labels and signs in Part 1. A lowercase roll coefficient \(c_l\) is not the lift coefficient \(C_L\).</div>
+<h3>Practice example — different numbers from the assessed cases</h3>
+<p>A force \(\mathbf F=(0,0,3)\) N acts at \(\mathbf r=(0.20,0,0)\) m. Then \(M_x=0\), \(M_y=-(0.20)(3)=-0.60\) N·m, and \(M_z=0\). Sketch why a downward force ahead of the CG produces a nose-down tendency.</p>
+<pre>r_demo = [0.20, 0, 0];       % row vector, m
+F_demo = [0, 0, 3];          % row vector, N
+M_demo = cross(r_demo,F_demo); % returns [Mx My Mz]</pre>
+<p class="small"><code>cross(F_demo,r_demo)</code> gives the opposite sign. Use the physical definition \(\mathbf r\times\mathbf F\), not whichever order produces the expected answer.</p>
+<p class="footer">2 · State both the coordinate convention and the moment reference point.</p>
+</section>
+
+<section class="page" id="part1">
+<p class="kicker">Part 1 · Historical evidence and modern control mechanisms · 15 points</p><h2>Read the device, then read the measurement</h2>
+<p><b>Notebook route:</b> <b>7A-3</b> (device names), <b>7A-3a</b> (Lilienthal’s tail), <b>7A-3b</b> (moments), and <b>7A-7–7A-13</b> (modern UAV examples). Open <a href="https://elib.dlr.de/191143/1/JoA_Paper_Lilienthal_Flight_Controls.pdf">Raffel et al., “Flight Controls of Otto Lilienthal’s Experimental Monoplane from 1895”</a>. Read the device description and <b>Section II.C, Controllability</b>; inspect <b>Figures 11 and 12</b>. You need not summarize the whole paper.</p>
+<h3>1A. Identify the hardware [4 points]</h3>
+<ol><li>Choose one historical photograph or the lecture’s labeled conceptual plan view. Record its source. Label the <b>aft horizontal tail, aft vertical tail, wing-tip vane,</b> and one <b>control-linkage route</b>. If a component is hidden in your photograph, say “not visible in this view” and add a separate labeled sketch.</li>
+<li>Write two or three sentences distinguishing <b>tail presence</b>, <b>surface motion</b>, and <b>control purpose</b>. Explain why the existence of a wing-tip rudder does not imply absence of an aft tail.</li></ol>
+<h3>1B. Extract and interpret six pairs of coefficients [7 points]</h3>
+<ol><li>In Figure 11, locate the roll-coefficient axis and the two marker series: <b>circles: spoileron, 90°</b>; <b>crosses: wing warping</b>. In Figure 12, find the corresponding yaw-coefficient series. <b>Do not use the square rudder markers</b> in this comparison.</li>
+<li>At \(\alpha=6^\circ,10^\circ,14^\circ\), read the marker center for each mechanism. Use the nearest grid ticks to estimate the value. Read the <b>measured markers</b>, not the dashed fitted/trend line. Keep the plotted sign. Report sensible precision: graph reading does not justify many decimals.</li>
+<li>Enter the six rows in the Excel <b>Paper</b> sheet, rows <b>7:12</b>. Columns A/B identify angle and mechanism; enter roll coefficient in C, yaw coefficient in D, reading tolerance in E, and figure/marker notes in F. In E, write separate roll and yaw tolerances if their plot scales differ, for example “roll ±…; yaw ±…”.</li>
+<li>Use grid spacing and marker width to justify your tolerance. Compare one row with a teammate’s independent reading. If values differ by more than the declared reading tolerance, revisit the figure together and record the resolution.</li>
+<li>Explain the observed difference between the two mechanisms’ roll–yaw coupling over these selected points. Cite the figure and test configuration. Do not claim a universal response at every angle of attack or every spoileron deflection.</li></ol>
+<p><b>Keep these coefficients nondimensional.</b> Record the paper’s coefficient labels and axis convention. No conversion to N·m is required; such a conversion would require its reference dimensions and coefficient definitions.</p>
+<h3>1C. Compare two modern examples [4 points]</h3>
+<p>Choose <b>one of MQ-9 or X-48B</b> and <b>one of X-36, X-47B, or MAGMA</b> from the notebook. Make a two-row table with: aircraft; visible tail/canard/winglet arrangement; one <b>documented</b> control mechanism; physical quantity it changes; and structure receiving the reaction. Cite the relevant notebook section and its linked source. If a photograph alone cannot establish a mechanism, state that limitation instead of guessing.</p>
+<p class="box"><b>Submit for Part 1:</b> one annotated figure; the six-row coefficient table with tolerances; a short coupling explanation; and the two-aircraft comparison. Aim for about one to two report pages.</p>
+<p class="footer">3 · Observed hardware, measured data, and an instructional model are different kinds of evidence.</p>
+</section>
+
+<section class="page" id="part2model">
+<p class="kicker">Part 2 · Spanwise force and moment integration · 35 points</p><h2>Define the model before entering equations</h2>
+<p><b>Notebook route:</b> <b>5. From nondimensional coefficients to forces and moment</b> for dynamic pressure; <b>7A-3b</b> and its Figure 7A-3b-2 for signs; <b>7A-5. Predict the forces; audit the load path</b> for the physical mechanism.</p>
+<table class="compact"><tr><th>Input</th><th>Value</th><th>Input</th><th>Value</th></tr><tr><td>Density \(\rho\)</td><td>1.225 kg/m³</td><td>Baseline speed \(V\)</td><td>15 m/s</td></tr><tr><td>Half-span \(s_{\max}\)</td><td>0.450 m</td><td>Activation station \(a\)</td><td>0.300 m</td></tr><tr><td>Root chord \(c_r\)</td><td>0.160 m</td><td>Tip chord \(c_t\)</td><td>0.100 m</td></tr><tr><td>Lift-loss factor \(A_z\)</td><td>0.30</td><td>Drag-increase factor \(A_x\)</td><td>0.10</td></tr></table>
+<p>Let \(s\) measure distance along the <b>right</b> half-wing. Use a linearly tapered chord and an activation function that grows from zero at \(a\) to one at the tip:</p>
+<div class="eq">\[c(s)=c_r+(c_t-c_r)\frac{s}{s_{\max}},\qquad q=\frac12\rho V^2,\]
+\[g(s)=\begin{cases}0,&0\le s\lt a,\\[2pt]\dfrac{s-a}{s_{\max}-a},&a\le s\le s_{\max}.\end{cases}\]</div>
+<p>The supplied <b>force increments per unit span</b> are</p>
+<div class="eq">\[\Delta f_z(s)=q\,c(s)A_zg(s),\qquad \Delta f_x(s)=-q\,c(s)A_xg(s).\]</div>
+<p>They have units N/m, because Pa × m = N/m. Here \(\Delta f_z\gt 0\) means <b>loss of upward lift relative to the baseline</b>; it does not mean the complete wing lift acts downward. The added drag points aft, so \(\Delta f_x\lt 0\).</p>
+<div class="box"><b>Model boundary.</b> These prescribed laws are an educational model, not measured Lilienthal data. For the moment calculation, idealize every force application point as \(\mathbf r(s)=(0,s,0)\) relative to the CG. The model dimensions resemble a small printed wing, but this is not a strength validation, a wing-root reaction calculation, or a prediction of its flight performance.</div>
+<h3>Excel input-cell map — WingLoads sheet</h3>
+<table class="compact"><tr><th>Input cell</th><th>Meaning</th><th>Input cell</th><th>Meaning</th></tr><tr><td>B5</td><td>\(\rho\)</td><td>B6</td><td>\(V\)</td></tr><tr><td>B7</td><td>\(s_{\max}\)</td><td>B8 / B9</td><td>Root / tip chord</td></tr><tr><td>B10</td><td>Activation \(a\)</td><td>B11 / B12</td><td>\(A_z\) / \(A_x\)</td></tr><tr><td>B13</td><td>Intervals, 90</td><td>B14</td><td>Dynamic pressure \(q\)</td></tr></table>
+<p class="footer">4 · Model definition · All dimensional calculations use body axes and SI units.</p>
+</section>
+
+<section class="page" id="part2geometry">
+<p class="kicker">Part 2A · Geometry, forces, and moment integrals · 5 points</p><h2>Locate the active region and the force line</h2>
+<img src="assets/HW2_Wing_Model.png" alt="Educational tapered half-wing geometry and spanwise activation function" style="max-height:235pt;object-fit:contain">
+<p class="caption">Instructional geometry. The application line \(\mathbf r=(0,s,0)\) is a declared force-reference idealization; it does not specify the actual aerodynamic center of a real wing.</p>
+<h3>Predict, then write the four integrals</h3>
+<p>Sketch the right half-wing and CG in plan and rear views. Mark the active region and both force increments. Predict the signs of all four results before running code:</p>
+<div class="eq">\[\Delta F_z=\int_0^{s_{\max}}\Delta f_z\,ds,\qquad\Delta F_x=\int_0^{s_{\max}}\Delta f_x\,ds,\]
+\[\Delta M_x=\int_0^{s_{\max}}s\Delta f_z\,ds,\qquad\Delta M_z=-\int_0^{s_{\max}}s\Delta f_x\,ds.\]</div>
+<p>Explain why the force integrals have units N and the moment integrals N·m. No derivation of the cross-product formula or exact antiderivative is required.</p>
+<p><b>Write the prediction before calculating:</b> which wing tends to move down, and which way does the nose tend to turn? Explain which force component creates each tendency. Then use the formulas to test your reasoning.</p>
+<p><b>Optional visual check:</b> point to the first station at which \(g\) is nonzero and compare the shapes you expect for chord and load. The activation function grows outward while the chord decreases; the load is their product, not either curve alone.</p>
+<p class="footer">5 · Keep force per unit span, resultant force, and moment as distinct quantities.</p>
+</section>
+
+<section class="page" id="part2matlab">
+<p class="kicker">Part 2B · MATLAB baseline · 10 of the 35 Part 2 points</p><h2>Build arrays, then integrate them</h2>
+<p>Open <b>Sections 2A–2C</b> of the starter. Replace each complete right-hand side marked TODO; leave the supplied variable name in place. Run the setup and Section 2A before Section 2B.</p>
+<ol><li><b>Create the station grid.</b> The supplied line <code>s = linspace(0,halfSpan,N+1).';</code> creates 91 stations for 90 intervals. <code>linspace</code> includes both endpoints; <code>.'</code> makes a column vector. In the Command Window, enter <code>size(s)</code>, <code>s(1)</code>, and <code>s(end)</code>. Verify size 91-by-1 and endpoints 0 and 0.450 m.</li>
+<li><b>Calculate dynamic pressure.</b> Replace <code>q = NaN</code> using \(q=\tfrac12\rho V^2\). MATLAB uses <code>^</code> for a scalar power.</li>
+<li><b>Calculate chord at every station.</b> Translate \(c_r+(c_t-c_r)s/s_{\max}\) into MATLAB with the supplied names <code>rootChord</code>, <code>tipChord</code>, and <code>halfSpan</code>. Check <code>c(1)</code> and <code>c(end)</code> against the input table.</li>
+<li><b>Activate only the outer region.</b> Use <code>max(0,(s-activation)/(halfSpan-activation))</code> for <code>g</code>. Elementwise comparison with zero removes negative values inboard. This expression is used only on the supplied grid \(0\le s\le s_{\max}\). Check <code>min(g)</code>, <code>max(g)</code>, and <code>g(s&lt;activation)</code>.</li>
+<li><b>Calculate both load arrays.</b> Use the force laws in the Part 2 model definition. The product of two station arrays needs <code>.*</code>, for example <code>c .* g</code>. Ordinary <code>c*g</code> is matrix multiplication and is not the operation required here. Use <code>./</code> for elementwise division and <code>.^</code> for elementwise powers if needed.</li>
+<li><b>Build the two moment integrands.</b> Fill <code>mxDensity</code> with <code>s .* fz</code> and <code>mzDensity</code> with <code>-s .* fx</code>. Their units are N; integrating over metres gives N·m.</li>
+<li><b>Apply the trapezoidal rule.</b> The syntax is <code>trapz(stations,values)</code>. Fill <code>Fz = trapz(s,fz);</code>, then apply the same pattern to <code>fx</code>, <code>mxDensity</code>, and <code>mzDensity</code>. <b>Do not use <code>trapz(fz)</code></b>: that assumes station spacing of one rather than 0.005 m.</li>
+<li><b>Run Section 2C.</b> When your values are finite, it displays the result table, saves station data using <code>table</code> and <code>writetable</code>, and draws three plots using <code>subplot</code> and <code>plot</code>. Read each axis label and explain the zero-load region. Open the output folder printed by the setup.</li></ol>
+<h3>A small completed example of <code>trapz</code></h3>
+<pre>s_demo = [0; 0.2; 0.4];  % m
+f_demo = [0; 3; 6];      % N/m
+F_demo = trapz(s_demo,f_demo);</pre>
+<p>The two trapezoids are \(0.2(0+3)/2=0.3\) N and \(0.2(3+6)/2=0.9\) N, so MATLAB returns 1.2 N. Your assessed calculation uses the same procedure with 90 intervals.</p>
+<p class="footer">6 · Inspect the arrays and units before trusting the final four numbers.</p>
+</section>
+
+<section class="page" id="part2checks">
+<p class="kicker">Part 2C · Refinement and speed study · 10 of the 35 Part 2 points</p><h2>Check sensitivity to grid spacing and speed</h2>
+<h3>2C-1. Refine the grid [5 points]</h3>
+<ol><li>Keep the baseline \(V=15\) m/s. In starter <b>Section 2D</b>, <code>sFine</code> contains 181 stations for \(N=180\) intervals.</li>
+<li>Recompute <code>cFine</code>, <code>gFine</code>, <code>fzFine</code>, and <code>fxFine</code> on <code>sFine</code>. Copy the physical laws, then replace the coarse variable names with their fine-grid counterparts. Do not combine 181 station locations with 91 force values.</li>
+<li>Store the four fine-grid integrals in a row in this order: <code>[DeltaFz, DeltaFx, DeltaMx, DeltaMz]</code>. In the starter this row is named <code>fine</code>; the corresponding coarse row is <code>baseline</code>.</li>
+<li>For each quantity \(Q\), calculate</li></ol>
+<div class="eq">\[\text{relative change (percent)}=100\frac{|Q_{180}-Q_{90}|}{|Q_{180}|}.\]</div>
+<p>Use <code>100*abs(fine-baseline)./abs(fine)</code>. All four reference magnitudes are nonzero for this model. A change below <b>0.1%</b> is adequate here. State whether each result passes. Grid agreement checks numerical resolution; it does not validate the aerodynamic model.</p>
+<h3>2C-2. Predict and test speed scaling [5 points]</h3>
+<ol><li>Before running starter <b>Section 2E</b>, predict the ratio of every force and moment at 10 and 20 m/s relative to 15 m/s. Write your prediction as \((V/15)^2\) and evaluate it.</li>
+<li>The supplied loop is <code>for j = 1:numel(speeds)</code>, where <code>speeds = [10;15;20]</code>. At each iteration, use <code>speeds(j)</code> to calculate a new dynamic pressure <code>qj</code>.</li>
+<li>Recompute <code>fzj</code> and <code>fxj</code> using <code>qj</code> and the coarse \(N=90\) geometry. Compute all four integrals again. Store the row in <code>speedResults(j,:)</code>; the colon means “all four columns.”</li>
+<li>Make a table of speed and the four results. Divide each 10 and 20 m/s result by the matching 15 m/s result. Compare with the ratios predicted in Step 1. Keep geometry and coefficients fixed during this experiment.</li>
+<li>Explain in two sentences why the results scale with \(V^2\) <b>within this model</b> and which assumption could make that scaling fail for a real control device.</li></ol>
+<h3>Checks you can make without an answer key</h3>
+<p>Inboard of 0.300 m both load increments should be zero. Changing speed must not change the chord or activation curves. The resultant forces should retain their predicted signs. Because the two load laws share the same spatial shape, the factor ratio \(A_z/A_x\) also constrains the ratios \(\Delta F_z/(-\Delta F_x)\) and \(\Delta M_x/\Delta M_z\); calculate and explain this check.</p>
+<p class="box"><b>Submit from MATLAB:</b> labeled load plots; the four baseline results with units; a four-row \(N=90\) versus \(N=180\) convergence table; and the speed table with predicted and computed ratios. Include your completed script, not screenshots of code alone.</p>
+<p class="footer">7 · Change one modeling input at a time and explain what the comparison actually tests.</p>
+</section>
+
+<section class="page" id="part2excel">
+<p class="kicker">Part 2D · Independent Excel integration · 10 of the 35 Part 2 points</p><h2>Build the trapezoids in the WingLoads sheet</h2>
+<p>Use the supplied <b>WingLoads</b> sheet. Inputs are in B5:B13; B14 is for dynamic pressure. Keep \(V=15\) m/s and \(N=90\) for the submitted baseline. There are 91 station rows, <b>21:111</b>; A is station index, B is \(s\) in metres. A/B are already filled.</p>
+<p class="small">Use the Excel input-cell map in the Part 2 model definition (page 4); fixed input references use dollar signs.</p>
+<ol><li>Click <b>B14</b> and type <code>=0.5*B5*B6^2</code>. Press Enter. Confirm the result is positive and has units Pa.</li>
+<li>Enter the following formulas in row 21, then select <b>C21:H111</b> and use <b>Home → Fill → Down</b> (or Ctrl+D). Absolute references such as <code>$B$8</code> remain fixed; <code>B21</code> changes with the station row.</li></ol>
+<table class="compact"><tr><th>Cell</th><th>Quantity</th><th>Formula</th></tr><tr><td>C21</td><td>Chord</td><td><code>=$B$8+($B$9-$B$8)*B21/$B$7</code></td></tr><tr><td>D21</td><td>Activation</td><td><code>=MAX(0,(B21-$B$10)/($B$7-$B$10))</code></td></tr><tr><td>E21</td><td>\(\Delta f_z\)</td><td><code>=$B$14*C21*$B$11*D21</code></td></tr><tr><td>F21</td><td>\(\Delta f_x\)</td><td><code>=-$B$14*C21*$B$12*D21</code></td></tr><tr><td>G21</td><td>Roll integrand</td><td><code>=B21*E21</code></td></tr><tr><td>H21</td><td>Yaw integrand</td><td><code>=-B21*F21</code></td></tr></table>
+<ol start="3"><li>Rows represent <b>stations</b>; a trapezoid spans two adjacent stations. Leave the supplied “n.a.” entries in I21:L21 unchanged because row 21 has no preceding interval. Enter the first interval’s formulas in row 22:</li></ol>
+<table class="compact"><tr><th>Cell</th><th>Trapezoid contribution</th><th>Formula</th></tr><tr><td>I22</td><td>\(\Delta F_z\)</td><td><code>=(B22-B21)*(E22+E21)/2</code></td></tr><tr><td>J22</td><td>\(\Delta F_x\)</td><td><code>=(B22-B21)*(F22+F21)/2</code></td></tr><tr><td>K22</td><td>\(\Delta M_x\)</td><td><code>=(B22-B21)*(G22+G21)/2</code></td></tr><tr><td>L22</td><td>\(\Delta M_z\)</td><td><code>=(B22-B21)*(H22+H21)/2</code></td></tr></table>
+<ol start="4"><li>Fill <b>I22:L111</b> down. Sum I22:I111 in <b>E5</b>, J22:J111 in <b>E6</b>, K22:K111 in <b>E7</b>, and L22:L111 in <b>E8</b>. Example: <code>=SUM(I22:I111)</code>. Include all 90 intervals.</li>
+<li>Make a four-row comparison table in your report: quantity, MATLAB \(N=90\), Excel, absolute difference. Agreement within \(10^{-9}\) N for forces and \(10^{-9}\) N·m for moments is adequate; retain full precision during computation. Copy the full-precision MATLAB baseline printed by the script (or the exported <code>Q2_baseline_totals.csv</code>) into F5:F8. Enter <code>=E5-F5</code> in G5 and fill through G8. Report <code>ABS(G5)</code> and its counterparts as absolute differences. Do not copy rounded display values.</li>
+<li>Create one Excel <b>XY Scatter with lines</b> chart using B21:B111 as numerical x and E21:E111 as y. Label axes with units. Do not use a category-axis Line chart. Save the workbook with formulas visible when a cell is selected.</li></ol>
+<p class="small">If your Excel uses semicolons between function arguments, replace the comma in MAX accordingly. Changing B13 alone does not create extra station rows; grid refinement is assessed in MATLAB.</p>
+<p class="footer">8 · Do not paste the MATLAB results into Excel’s calculation cells.</p>
+</section>
+
+<section class="page" id="part3">
+<p class="kicker">Part 3 · Side-force geometry · 20 points</p><h2>Does an outboard side force necessarily roll the aircraft?</h2>
+<p><b>Notebook route:</b> return to <b>7A-3b</b>, especially <b>Figure 7A-3b-3 — Same side force, different lines of action</b>. The lecture’s numbers are different from the assessed values below.</p>
+<p>Apply the same force \(\mathbf F=(0,2,0)\) N at each location relative to the CG:</p>
+<table><tr><th>Case</th><th>x (m)</th><th>y (m)</th><th>z (m)</th><th>Before calculation</th></tr><tr><td>A</td><td>0</td><td>0.35</td><td>0</td><td>Does the force line pass through the CG?</td></tr><tr><td>B</td><td>−0.15</td><td>0.35</td><td>+0.04</td><td>Aft of and below the CG</td></tr><tr><td>C</td><td>−0.15</td><td>0.35</td><td>−0.04</td><td>Aft of and above the CG</td></tr></table>
+<h3>3A. Sketch and predict [6 points]</h3>
+<ol><li>For each case, draw a <b>plan view and rear view</b>. Mark the CG, positive axes, application point, force arrow, and the extended line of action. Sketches may be schematic; write the actual offsets beside them.</li><li>Without multiplying numbers, predict which moment components are zero and the signs of the nonzero components. State which component should reverse between B and C and why.</li></ol>
+<h3>3B. Calculate three ways [9 points]</h3>
+<ol><li>Use the three component formulas in the coordinate-convention section. Show the substituted numbers for <b>Case B</b> by hand, including units; tabulate A/B/C.</li>
+<li>In MATLAB starter <b>Section 3</b>, the rows of <code>rCases</code> are A/B/C. In the loop, <code>rCases(j,:)</code> selects the current row. Replace the TODO with <code>cross(rCases(j,:),Fside)</code>. Compare all components against the hand calculation.</li>
+<li>In Excel <b>Controls</b>, rows <b>7:9</b> contain the same cases. Columns B/C/D hold x/y/z; E/F/G hold \(F_x/F_y/F_z\). Enter the formulas below in row 7 and fill through row 9.</li></ol>
+<table><tr><th>Cell</th><th>Component</th><th>Formula</th></tr><tr><td>H7</td><td>\(M_x\)</td><td><code>=C7*G7-D7*F7</code></td></tr><tr><td>I7</td><td>\(M_y\)</td><td><code>=D7*E7-B7*G7</code></td></tr><tr><td>J7</td><td>\(M_z\)</td><td><code>=B7*F7-C7*E7</code></td></tr></table>
+<h3>3C. Explain the geometry [5 points]</h3>
+<p>Answer in your own words: (i) Why is the outboard distance \(y=0.35\) m not sufficient by itself to create roll from this force? (ii) Which perpendicular arm controls roll and which controls yaw? (iii) Give one application point that produces nonzero yaw but zero roll for this same force. Verify your proposed point with <code>cross</code>.</p>
+<p class="box"><b>Submit:</b> six small view sketches; a prediction table; the hand calculation for B; a three-case moment table checked in MATLAB and Excel; and the three geometric explanations. The zero-moment case still has a nonzero resultant force.</p>
+<p class="footer">9 · A force can create translation without creating a moment about the chosen reference point.</p>
+</section>
+
+<section class="page" id="part4model">
+<p class="kicker">Part 4 · Elevon mixing and control limits · 20 points</p><h2>Two surfaces share pitch and roll commands</h2>
+<p><b>Notebook route:</b> <a href="https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/main/notebooks/MIE446_Lecture_01_Trust_Forces_Airfoils.ipynb"><b>7A-11. What does each modern effector actually move or change?</b></a> Read the generic elevon mixer, then try the following <b>“7A-11. Elevon mixer — predict before running”</b> code cell. Use it to understand commands; the extra force model below is supplied for HW2.</p>
+<p>Positive local deflection means <b>trailing edge up</b> on each side. Let \(P\) request nose-up pitch and \(R\) request right-wing-down roll, in this instructional configuration:</p>
+<div class="eq">\[\delta_L=P-R,\qquad\delta_R=P+R,\qquad -15^\circ\le\delta_{L,R,\mathrm{limited}}\le15^\circ.\]</div>
+<table><tr><th>Case</th><th>P (deg)</th><th>R (deg)</th><th>What to look for</th></tr><tr><td>1</td><td>8</td><td>0</td><td>Common-mode command</td></tr><tr><td>2</td><td>0</td><td>5</td><td>Differential command</td></tr><tr><td>3</td><td>8</td><td>5</td><td>Combined command</td></tr><tr><td>4</td><td>12</td><td>8</td><td>A command may exceed the actuator limit</td></tr></table>
+<h3>4A. Predict surface motion [4 points]</h3>
+<p>Sketch left and right trailing-edge motion for each case <b>before running the notebook or MATLAB</b>. Calculate requested \(\delta_L,\delta_R\). Mark any value outside ±15°. A negative deflection means trailing edge down. These are surface commands, not aircraft pitch or bank angles.</p>
+<h3>4B. Convert commands to force increments [8 points]</h3>
+<p>For this exercise only, use the linear gain \(k=0.05\) N/deg and application points:</p>
+<div class="eq">\[\mathbf r_L=(-0.15,-0.35,0)\ \mathrm m,\qquad\mathbf r_R=(-0.15,+0.35,0)\ \mathrm m,\]
+\[\Delta\mathbf F_L=(0,0,k\delta_L),\qquad\Delta\mathbf F_R=(0,0,k\delta_R).\]</div>
+<p>Evaluate these force vectors twice: first using the requested deflections and then using the limited deflections. Positive \(\Delta F_z\) is a downward force increment. Because both force application points lie aft of the CG, the signs are consistent with the teaching mixer.</p>
+<div class="eq">\[\Delta\mathbf M_{\mathrm{total}}=\mathbf r_L\times\Delta\mathbf F_L+\mathbf r_R\times\Delta\mathbf F_R.\]</div>
+<p>Find all three components; do not omit \(M_z\) simply because you expect it to vanish. Show one complete hand calculation for <b>Case 3 before limiting</b> and check all four cases with MATLAB and Excel.</p>
+<div class="box"><b>What this model includes.</b> A fixed linear force-per-degree gain, two fixed force application points, and symmetric actuator limits. It omits changes in drag, nonlinear aerodynamics, and aircraft motion. It is not the flight-control law of any named UAV, and a zero yaw result here does not establish zero yaw coupling for real elevons.</div>
+<p class="footer">10 · First calculate local surface motion; then calculate its forces and moments.</p>
+</section>
+
+<section class="page" id="part4tools">
+<p class="kicker">Part 4 continued · MATLAB and Excel implementation</p><h2>Apply the limit to each surface separately</h2>
+<h3>MATLAB: complete Sections 4A and 4B</h3>
+<ol><li>The rows of <code>commands</code> are the four cases. In the supplied loop, <code>P</code> and <code>R</code> are already read from the current row. Set <code>requested(j,:)</code> to <code>[P-R, P+R]</code>.</li>
+<li>Use <code>min(max(requested(j,:),-limit),limit)</code> to obtain the two limited deflections. The inner <code>max</code> prevents a value below −15; the outer <code>min</code> prevents a value above +15. Test the expression on <code>[-18, 7, 21]</code> separately so you understand the clipping.</li>
+<li>Create row force vectors <code>[0,0,k*delta]</code> for each side, using the matching requested or limited deflection. Compute <code>cross(rLeft,FLeft)</code> plus <code>cross(rRight,FRight)</code>. Store the requested and limited moment rows separately.</li>
+<li>Recover the two attained command channels using the formulas below. The starter then exports a table and draws a grouped bar chart for Case 4 using <code>bar(...,'grouped')</code>. The two rows of the bar-chart data correspond to the two surfaces.</li></ol>
+<div class="eq">\[P_{\mathrm{attained}}=\frac{\delta_{L,\mathrm{limited}}+\delta_{R,\mathrm{limited}}}{2},\qquad R_{\mathrm{attained}}=\frac{\delta_{R,\mathrm{limited}}-\delta_{L,\mathrm{limited}}}{2}.\]</div>
+<p><b>Read the output:</b> requested and limited angles are in degrees; force increments are in newtons; moments are in N·m. The recovered P/R values are mixed commands, not measured attitude angles. Compare Case 4 before and after clipping without changing any geometry or gain.</p>
+<p class="footer">11 · MATLAB implementation · Check the two surface limits before interpreting command coupling.</p>
+</section>
+
+<section class="page" id="part4excel">
+<p class="kicker">Part 4 continued · Independent Excel check and interpretation</p><h2>Compare requested and attainable moments</h2>
+<h3>Excel: Controls sheet, rows 22:25 and 45:48</h3>
+<p>B14 is the limit, B15 the gain, B16:B18 the left x/y/z coordinates, and E16:E18 the right x/y/z coordinates. B/C in each case row contain P/R. For the main table, enter row 22 formulas and fill through row 25. For the comparison table (header in row 44), enter row 45 formulas referencing Case 1 in row 22, then fill through row 48:</p>
+<table class="compact"><tr><th>Cell</th><th>Meaning</th><th>Formula</th></tr><tr><td>D22 / E22</td><td>Requested left / right</td><td><code>=B22-C22</code> / <code>=B22+C22</code></td></tr><tr><td>F22 / G22</td><td>Limited left / right</td><td><code>=MIN(MAX(D22,-$B$14),$B$14)</code><br><code>=MIN(MAX(E22,-$B$14),$B$14)</code></td></tr><tr><td>H22 / I22</td><td>Limited \(\Delta F_{z,L/R}\)</td><td><code>=$B$15*F22</code> / <code>=$B$15*G22</code></td></tr><tr><td>J22</td><td>Limited total \(M_x\)</td><td><code>=$B$17*H22+$E$17*I22</code></td></tr><tr><td>K22</td><td>Limited total \(M_y\)</td><td><code>=-$B$16*H22-$E$16*I22</code></td></tr><tr><td>L22</td><td>Limited total \(M_z\)</td><td>Enter the formula implied by the force vectors.</td></tr><tr><td>B45</td><td>Requested total \(M_x\)</td><td><code>=$B$17*$B$15*D22+$E$17*$B$15*E22</code></td></tr><tr><td>C45</td><td>Requested total \(M_y\)</td><td><code>=-$B$16*$B$15*D22-$E$16*$B$15*E22</code></td></tr><tr><td>D45</td><td>Requested total \(M_z\)</td><td>Enter the formula implied by the force vectors.</td></tr><tr><td>E45 / F45</td><td>Attained P / R</td><td><code>=(F22+G22)/2</code> / <code>=(G22-F22)/2</code></td></tr></table>
+<h3>4C. Explain saturation [8 points]</h3>
+<p>For Case 4, compare requested versus limited deflections, attained P/R channels, and \(M_x/M_y\). Explain why limiting one physical surface changes <b>both</b> command channels. Which cases should remain unchanged by the limit? Explain why the attained channels are not measured aircraft attitude angles. Submit your prediction sketches, one hand calculation, result table, Case 4 chart, and explanation.</p>
+<p class="footer">12 · A surface limit constrains combinations of commands, not just one abstract channel.</p>
+</section>
+
+<section class="page" id="part5">
+<p class="kicker">Part 5 · Structural load paths and local mechanism load · 10 points</p><h2>Follow the reactions into the airframe</h2>
+<p><b>Notebook route:</b> <b>7A-1. Wing structure</b>, <b>7A-5. Predict the forces; audit the load path</b>, and <a href="https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/main/notebooks/MIE446_Lecture_01_Trust_Forces_Airfoils.ipynb"><b>7A-14. Bring the control mechanism back to Aerospace Structures</b></a>. Use the wing-anatomy figures to identify the physical members receiving each reaction.</p>
+<h3>5A. Draw two load-path sketches [5 points]</h3>
+<p>Draw one <b>modern upper-surface spoiler</b> and one <b>vertically pivoting wing-tip vane</b>. On each sketch:</p>
+<ol><li>Identify the moving part, its hinge or pivot, and the nearby wing structure. Show an aerodynamic force arrow acting on the moving part.</li><li>Draw the load route from the moving part through its hinge/bracket or pivot/post into local structure, then toward the wing root.</li><li>Add the <b>separate actuation branch</b>: actuator and anchor for the spoiler; string/control rod and its support for the vane. Label the reaction where that branch attaches to the structure.</li><li>Circle one connection that could require local reinforcement. State what additional information you would need to calculate its stress, such as geometry, material properties, or reaction distribution.</li></ol>
+<p>Use arrows and labels, not an unannotated aircraft photo. Avoid sending all load through the actuator alone or through the hinge alone without drawing the other branch.</p>
+<div class="box" style="height:155pt"><b>Sketch planning space.</b> Lay out the aerodynamic-load and actuator-reaction branches for both mechanisms. Label the local structure receiving each branch.</div>
+<p class="footer">13 · Structural load paths · Distinguish aerodynamic force input from actuator or string reaction.</p>
+</section>
+
+<section class="page" id="part5torque">
+<p class="kicker">Part 5 continued · Local mechanism torque and string tension</p><h2>Use the perpendicular moment arm</h2>
+<img src="assets/HW2_Control_Lever.png" alt="String force and perpendicular lever arm balancing a provided resisting moment about a local pivot" style="max-height:190pt;object-fit:contain">
+<h3>5B. Calculate string tension from a supplied local torque [3 points]</h3>
+<p>A simple vane mechanism must resist a <b>local</b> torque \(H=0.12\) N·m about its pivot. A string supplies balancing torque through a perpendicular moment arm \(d_\perp\). Assume static torque balance and neglect friction for this calculation:</p>
+<div class="eq">\[T=\frac{H}{d_\perp},\qquad d_\perp=0.010,\ 0.020,\ 0.030\ \mathrm m.\]</div>
+<ol><li>Sketch the pivot, string-force line, and the <b>perpendicular distance</b> between them. The perpendicular distance is not necessarily the attachment radius.</li><li>In MATLAB starter <b>Section 5</b>, replace the TODO with <code>H ./ d</code>. Explain why elementwise division gives one tension for each arm.</li><li>In Excel <b>Controls</b>, H is in <b>B30</b>; moment arms are in <b>B34:B36</b>. Enter <code>=$B$30/B34</code> in <b>C34</b> and fill through C36. Compare with MATLAB and report tension in newtons.</li><li>Explain what happens to tension when the perpendicular arm is doubled, keeping H fixed.</li></ol>
+<h3>5C. Distinguish two moments [2 points]</h3>
+<p>Can you take the aircraft’s global rolling moment from Part 2 and automatically use it as \(H\) in the string-tension equation? Explain using the different reference axes and free bodies. Name one additional measurement or geometric detail needed to connect a device’s aerodynamic load to its local resisting torque.</p>
+<div class="box"><b>Bridge to your printed wing:</b> identify one location where a moving device would introduce a new fitting or reinforcement requirement. A labeled conceptual sketch is sufficient; this homework does not add a moving-control mechanism to the scheduled fabrication deliverables.</div>
+<p class="footer">14 · A global aircraft moment and a local hinge or pivot torque answer different questions.</p>
+</section>
+
+<section class="page" id="submission">
+<p class="kicker">Submission · Check the reasoning and the files</p><h2>Make your result easy to reproduce</h2>
+<p>Submit your individually authored <b>Surname_HW2_Report.pdf</b>, <b>Surname_HW2.m</b>, and <b>Surname_HW2.xlsx</b>, together with the course-required <b>Claim–Evidence–Check slide (.pptx and .pdf)</b> and a short <b>README</b>. Submit through Canvas; keep graded work out of the public repository. Include the plots and key tables in the PDF so a reader can follow your reasoning without opening the software. Keep full computation precision; round only displayed results to a sensible number of significant figures.</p>
+<table class="compact"><tr><th>Part</th><th>Evidence required in your report</th><th>Points</th></tr><tr><td>1</td><td>Hardware labels; six pairs of paper coefficients with reading tolerances; coupling explanation; two-UAV comparison</td><td>15</td></tr><tr><td>2</td><td>Predictions and sketches; baseline plots/results; grid-refinement table; speed-scaling check; MATLAB–Excel comparison</td><td>35</td></tr><tr><td>3</td><td>Six view sketches; predicted signs; one hand calculation; three-case table; geometric explanations</td><td>20</td></tr><tr><td>4</td><td>Surface-motion predictions; one hand calculation; requested/limited force–moment results; saturation chart and explanation</td><td>20</td></tr><tr><td>5</td><td>Two structural load paths; local torque sketch and tension table; global/local moment distinction</td><td>10</td></tr></table>
+<h3>Individual reflection and team cross-check record</h3>
+<p>Add a short paragraph naming your collaborators and recording one cross-check you performed independently. Then, in about <b>150–200 words</b>, explain (i) a force/moment sign you initially found difficult, (ii) how a sketch or independent calculation resolved it, and (iii) one result that depends on a simplifying model. This reflection supports the reasoning marks above; it is not an extra calculation problem or a separate team report.</p>
+<h3>Before submitting</h3>
+<ol><li>Save, close, and reopen your MATLAB file. Run it from the top. Confirm that no assessed variable remains NaN, all result tables appear, and files are saved in <code>hw2_outputs</code> next to the script.</li><li>Open the Excel workbook and click representative cells from each part. Confirm that they contain formulas referencing the intended inputs. Verify the baseline input speed is restored to 15 m/s.</li><li>Check that every plot has a descriptive title or caption and labeled axes with units. Check that every moment table states its reference point and coordinate convention.</li><li>Read every prediction beside its computed result. If your prediction was wrong, explain the correction; do not silently remove the original reasoning.</li><li>Ensure you distinguish historical measurements, figure-reading estimates, and the supplied educational force laws. Include source references for copied figures.</li></ol>
+<p class="footer">15 · Your interpretation and independent checks are part of the engineering result.</p>
+</section>
+
+<section class="page" id="policy-and-help">
+<p class="kicker">Course portfolio requirements · Troubleshooting and references</p>
+<h2>Finish the standard homework portfolio</h2>
+<p>The question points organize the technical tasks. Final evaluation follows the established course rubric: <b>engineering judgment 40%; mechanics and numerical correctness 25%; independent verification 20%; one-slide communication 10%; reproducibility, attribution and AI disclosure 5%</b>. These are the normal course requirements, not extra problem points.</p>
+<h3>Engineering Judgment Record: use Part 2</h3>
+<p>Designate a short subsection of your report as <b>“Part 2 — Engineering Judgment Record.”</b> Reuse the work you already completed: state the system, prescribed loads, assumed application line, prediction, model assumptions and limitations; show at least two independent checks. Suitable checks include dimensional consistency, the MATLAB–Excel comparison, a limiting case, and the speed-scaling check. Distinguish numerical agreement from validation of the force law. No new calculation is needed.</p>
+<h3>One Claim–Evidence–Check slide</h3>
+<p>Create one slide in PowerPoint and export the same slide as PDF. Use one result from this homework. Include a clear claim, a readable figure or numerical result supporting it, an independent check, your confidence, and the principal limitation. Synthesize the reasoning rather than pasting a collage of screenshots. Follow the existing Canvas rotation for oral checks; this handout does not assign an additional presentation.</p>
+<h3>README and process / AI-use note</h3>
+<p>In a short README text file, state your MATLAB version, Excel version, filenames, how to run the script, and where the outputs appear. Add a process and AI-use note to the report or README: tools used, their contributions, changes you made, errors found, and how you verified the result. If applicable, write <b>“No generative AI used.”</b> Identify collaborators and sources. Keep your original predictions and explain any corrections.</p>
+<h3>If something goes wrong</h3>
+<table class="compact"><tr><th>Symptom</th><th>First check</th></tr><tr><td>MATLAB matrix-size error</td><td>Use column station arrays; inspect <code>size</code>; use <code>.*</code> for stationwise products.</td></tr><tr><td>Force is off by a factor related to grid spacing</td><td>Pass both arguments to <code>trapz(s,f)</code>; include interval width in every Excel trapezoid.</td></tr><tr><td>Signs disagree between methods</td><td>Use <code>cross(r,F)</code>; check +z down and the minus sign in the yaw integrand.</td></tr><tr><td>Excel formulas change input references when filled</td><td>Use dollar signs for fixed cells; allow station row references to change.</td></tr><tr><td>Excel matches MATLAB but units are wrong</td><td>Numerical agreement is insufficient: distinguish N/m, N, and N·m.</td></tr><tr><td>Only Case 4 gives unexpected coupling</td><td>Inspect each surface’s requested and limited angle before recomputing force and moment.</td></tr></table>
+<p class="small"><b>MATLAB function references:</b> <a href="https://www.mathworks.com/help/matlab/ref/trapz.html">trapz</a>, <a href="https://www.mathworks.com/help/matlab/ref/cross.html">cross</a>, <a href="https://www.mathworks.com/help/matlab/ref/double.linspace.html">linspace</a>, and <a href="https://www.mathworks.com/help/matlab/ref/exportgraphics.html">exportgraphics</a> (optional figure export in R2020a or later). The supplied starter uses <code>print</code> to save its PNG plots.</p><p class="footer">16 · Submit a reproducible portfolio with an explicit claim, check and limitation.</p>
+</section>
+</body></html>

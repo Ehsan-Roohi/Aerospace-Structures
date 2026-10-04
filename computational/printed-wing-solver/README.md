@@ -52,7 +52,7 @@ The student notebook downloads `printed_wing_solver.py` from the `main` branch w
 
 ## Wing Lab: the same solver as a 3-D browser app
 
-[`docs/wing-lab.html`](../../docs/wing-lab.html) is a single-file browser app in the style of an FEA package: study tree, property panel, 3-D viewport with stress, displacement and factor-of-safety fringe plots, deformed shape, exploded and see-through views, section clipping, animated modes, diagrams, checks, a joint comparison, a predict-then-run exercise and a design challenge. Download it and open it in any modern browser (it loads three.js from a CDN).
+[Launch Wing Lab online](https://ehsan-roohi.github.io/Aerospace-Structures/wing-lab.html) — no download or installation required. Wing Lab is a single-file browser app in the style of an FEA package: study tree, property panel, 3-D viewport with stress, displacement and factor-of-safety fringe plots, deformed shape, exploded and see-through views, section clipping, animated modes, diagrams, checks, a joint comparison, a predict-then-run exercise and a design challenge. Internet access is required to load three.js from a CDN. Alternatively, download [`docs/wing-lab.html`](../../docs/wing-lab.html) and open it in a modern browser.
 
 Its engine, [`web/engine.js`](web/engine.js), is a JavaScript port of `printed_wing_solver.py`. The shell section is meshed with a mapped ring of triangles instead of `sectionproperties`; everything else follows the Python code line by line. The port is checked against the Python solver:
 

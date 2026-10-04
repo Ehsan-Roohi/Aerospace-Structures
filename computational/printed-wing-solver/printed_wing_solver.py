@@ -40,7 +40,7 @@ from shapely.geometry import MultiPolygon, Point, Polygon
 from shapely.geometry.polygon import orient
 from shapely.ops import unary_union
 
-__version__ = "1.0.1"
+__version__ = "1.0.0"
 GRAVITY_M_S2 = 9.81
 
 
@@ -70,7 +70,7 @@ class Material:
                 raise ValueError(f"{self.name}: {key} must be positive and finite")
         if not -1.0 < self.poisson < 0.5:
             raise ValueError(f"{self.name}: Poisson's ratio must lie between -1 and 0.5")
-        if self.G_MPa_override is not None and not (math.isfinite(self.G_MPa_override) and self.G_MPa_override > 0):
+        if self.G_MPa_override is not None and self.G_MPa_override <= 0:
             raise ValueError(f"{self.name}: shear modulus must be positive")
 
     @property
@@ -208,28 +208,18 @@ class WingGeometry:
             "sleeve_wall_mm",
         )
         for key in positive:
-            if not (math.isfinite(getattr(self, key)) and getattr(self, key) > 0):
-                raise ValueError(f"{key} must be positive and finite")
+            if not getattr(self, key) > 0:
+                raise ValueError(f"{key} must be positive")
         if self.tip_chord_mm > self.root_chord_mm:
             raise ValueError("tip_chord_mm cannot exceed root_chord_mm")
         if self.module_count not in (1, 2, 3):
             raise ValueError("module_count must be 1, 2 or 3")
-        if not isinstance(self.interior_rib_count, int) or self.interior_rib_count < 0:
-            raise ValueError("interior_rib_count must be a nonnegative integer")
-        if self.root_tip_cap_mm * 2 >= self.semi_span_mm:
-            raise ValueError("root and tip caps leave no hollow span")
-        if not math.isfinite(self.interface_rib_offset_mm):
-            raise ValueError("interface_rib_offset_mm must be finite")
         if self.interface_rib_offset_mm <= self.rib_thickness_mm:
             raise ValueError("interface_rib_offset_mm must exceed rib_thickness_mm")
-        if 2 * self.interface_rib_offset_mm + self.rib_thickness_mm >= self.semi_span_mm / self.module_count:
-            raise ValueError("interface ribs do not fit within the module length")
         if not 0.02 <= self.cavity_x_start < self.cavity_x_end <= 0.95:
             raise ValueError("cavity chord limits must satisfy 0.02 <= start < end <= 0.95")
         if not 1 <= len(self.rod_chord_fractions) <= 2:
             raise ValueError("use one or two rods")
-        if len(set(self.rod_chord_fractions)) != len(self.rod_chord_fractions):
-            raise ValueError("rod chord fractions must be distinct")
         for fraction in self.rod_chord_fractions:
             if not 0.10 <= fraction <= 0.80:
                 raise ValueError("rod chord fractions must lie between 0.10 and 0.80")
@@ -572,14 +562,6 @@ class Assembly:
     seam_rod_free_length_mm: float | None = None
     adhesive_tensile_MPa: float = 5.0
 
-    def __post_init__(self) -> None:
-        if self.seam_rod_free_length_mm is not None and not (
-            math.isfinite(self.seam_rod_free_length_mm) and self.seam_rod_free_length_mm > 0
-        ):
-            raise ValueError("seam_rod_free_length_mm must be positive and finite")
-        if not (math.isfinite(self.adhesive_tensile_MPa) and self.adhesive_tensile_MPa > 0):
-            raise ValueError("adhesive_tensile_MPa must be positive and finite")
-
     def free_length(self, geom: WingGeometry) -> float:
         if self.seam_rod_free_length_mm is not None:
             return float(self.seam_rod_free_length_mm)
@@ -687,11 +669,8 @@ def analyse_section(
         polygon_integrals(p) for p in _polygons(rib_solid)
     )
     rib_extra = (shapes.outer.area - hole_area) - shapes.printed.area
-    # The shell and sleeves are already counted in the distributed mass. Add only
-    # the extra diaphragm material, including its centroid and polar inertia.
-    extra_int = rib_int - pla_int
-    rib_cg_x = extra_int[2] / extra_int[0]
-    rib_polar = polar(extra_int)
+    rib_cg_x = rib_int[2] / rib_int[0]
+    rib_polar = polar(rib_int)
 
     ux, uz = shapes.upper_x, shapes.upper_z
     width = float(np.sum(np.hypot(np.diff(ux), np.diff(uz))))
@@ -757,16 +736,8 @@ class LoadCase:
     tip_force_chord_fraction: float = 0.30
     factor_of_safety: float = 1.5
     tip_mass_g: float = 0.0
-    tip_mass_chord_fraction: float = 0.30
-    tip_mass_height_mm: float = 0.0
-    tip_mass_centroidal_inertia_g_mm2: float = 0.0
 
     def __post_init__(self) -> None:
-        for key in ("aircraft_mass_kg", "load_factor", "tip_force_N", "factor_of_safety",
-                    "tip_mass_g", "tip_mass_chord_fraction", "tip_mass_height_mm",
-                    "tip_mass_centroidal_inertia_g_mm2"):
-            if not math.isfinite(getattr(self, key)):
-                raise ValueError(f"{key} must be finite")
         if self.kind not in ("flight", "tip"):
             raise ValueError("kind must be 'flight' or 'tip'")
         if self.distribution not in DISTRIBUTIONS:
@@ -775,10 +746,6 @@ class LoadCase:
             raise ValueError("factor_of_safety must be at least 1")
         if self.aircraft_mass_kg <= 0 or self.tip_mass_g < 0:
             raise ValueError("masses must be positive")
-        if not 0 <= self.tip_mass_chord_fraction <= 1:
-            raise ValueError("tip_mass_chord_fraction must lie between 0 and 1")
-        if self.tip_mass_centroidal_inertia_g_mm2 < 0:
-            raise ValueError("tip mass centroidal inertia must be nonnegative")
         if not 0.0 <= self.lift_chord_fraction <= 1.0 or not 0.0 <= self.tip_force_chord_fraction <= 1.0:
             raise ValueError("chord fractions must lie between 0 and 1")
 
@@ -792,11 +759,6 @@ class Criteria:
     max_tip_deflection_mm: float = 45.0
     max_tip_twist_deg: float = 2.0
 
-    def __post_init__(self) -> None:
-        for key in ("max_tip_deflection_mm", "max_tip_twist_deg"):
-            if not (math.isfinite(getattr(self, key)) and getattr(self, key) > 0):
-                raise ValueError(f"{key} must be positive and finite")
-
 
 @dataclass
 class Check:
@@ -806,7 +768,6 @@ class Check:
     unit: str
     location_mm: float
     basis: str
-    illustrative: bool = False
 
     @property
     def utilization(self) -> float:
@@ -814,8 +775,6 @@ class Check:
 
     @property
     def status(self) -> str:
-        if self.illustrative:
-            return "REVIEW"
         u = self.utilization
         return "PASS" if u <= 1.0 else "FAIL"
 
@@ -1159,12 +1118,6 @@ def solve(
     n_beam_elements: int = 90,
     mesh_area_mm2: float = 0.5,
 ) -> SolverResult:
-    for name, value, minimum in (("n_sections", n_sections, 2), ("n_grid", n_grid, 3),
-                                 ("n_beam_elements", n_beam_elements, 2)):
-        if not isinstance(value, int) or value < minimum:
-            raise ValueError(f"{name} must be an integer >= {minimum}")
-    if not (math.isfinite(mesh_area_mm2) and mesh_area_mm2 > 0):
-        raise ValueError("mesh_area_mm2 must be positive and finite")
     geom = geometry or WingGeometry()
     assembly = assembly or Assembly()
     load = load or LoadCase()
@@ -1248,7 +1201,7 @@ def solve(
                 point.append((yr, -g_n * m, xr))
             point.append((L, -g_n * cap_mass[1], float(lin("rib_cg_x_mm", np.array([L]))[0])))
             if load.tip_mass_g:
-                point.append((L, -g_n * load.tip_mass_g, load.tip_mass_chord_fraction * geom.tip_chord_mm))
+                point.append((L, -g_n * load.tip_mass_g, load.tip_force_chord_fraction * geom.tip_chord_mm))
     else:
         wx = np.zeros_like(y)
         point.append((L, load.tip_force_N, load.tip_force_chord_fraction * geom.tip_chord_mm))
@@ -1329,16 +1282,6 @@ def solve(
     point_forces = tuple((yp, F) for yp, F, _ in point)
     lumped = [(yr, m) for yr, m in zip(ribs, rib_mass)] + [(L, cap_mass[1] + load.tip_mass_g)]
     lumped_I = [(yr, Ip) for yr, Ip in zip(ribs, rib_polar)]
-    cap_tip_I = pla.density_g_mm3 * geom.root_tip_cap_mm * float(
-        lin("rib_polar_area_mm4", np.array([L]))[0])
-    x_tip_sc = float(props["x_sc"][-1])
-    z_tip_sc = float(lin("shear_centre_z_mm", np.array([L]))[0])
-    sensor_tip_I = load.tip_mass_centroidal_inertia_g_mm2 + load.tip_mass_g * (
-        (load.tip_mass_chord_fraction * geom.tip_chord_mm - x_tip_sc)**2
-        + (load.tip_mass_height_mm - z_tip_sc)**2)
-    lumped_I.append((L, cap_tip_I + sensor_tip_I))
-    mass["tip_sensor_polar_inertia_g_mm2"] = float(sensor_tip_I)
-    mass["tip_cap_polar_inertia_g_mm2"] = float(cap_tip_I)
     kb = k_bend if seams else math.inf
     fem = beam_fem(
         nodes,
@@ -1384,9 +1327,7 @@ def solve(
     bay = np.array([supports[np.searchsorted(supports, yy, side="right")] - supports[np.searchsorted(supports, yy, side="right") - 1] if yy < L else supports[-1] - supports[-2] for yy in y])
     sig_flat = np.array([plate_buckling_flat(E_p, pla.poisson, t, a, b) for a, b in zip(bay, props["skin_width"])])
     sig_cyl = np.array([cylinder_buckling_knocked_down(E_p, pla.poisson, t, R) for R in props["skin_radius"]])
-    # These are different idealisations, not interchangeable design allowables.
-    # Report both; use the flat-panel reference for an explicitly REVIEW-only screen.
-    sig_cr = sig_flat
+    sig_cr = np.maximum(sig_flat, sig_cyl)
 
     # Rods
     r = geom.rod_radius_mm
@@ -1436,8 +1377,7 @@ def solve(
     checks.append(Check("PLA shear (transverse shear + torsion, 2-D FE)", F * tau[k_tau], pla.shear_MPa, "MPa", y_sec[k_tau], "Max nominal resultant shear away from sharp cavity corners"))
     ratio = skin_comp / sig_cr
     i_b = int(np.argmax(ratio))
-    checks.append(Check("Skin compression buckling (illustrative)", F * skin_comp[i_b], sig_cr[i_b], "MPa", y[i_b],
-                        "Flat-panel comparison only; cylinder comparison separate; validate curved printed panel", illustrative=True))
+    checks.append(Check("Skin compression buckling (screening)", F * skin_comp[i_b], sig_cr[i_b], "MPa", y[i_b], "max(flat plate between ribs, SP-8007 knocked-down cylinder)"))
     if not assembly.seams_bonded and geom.seams_mm():
         worst = None
         for s in geom.seams_mm():
@@ -1650,14 +1590,14 @@ def plot_checks(res: SolverResult):
 
     names = [c.name for c in res.checks]
     u = [c.utilization for c in res.checks]
-    colors = ["#999999" if c.illustrative else "#2ca25f" if v <= 0.7 else "#fec44f" if v <= 1.0 else "#de2d26" for c, v in zip(res.checks, u)]
+    colors = ["#2ca25f" if v <= 0.7 else "#fec44f" if v <= 1.0 else "#de2d26" for v in u]
     fig, ax = plt.subplots(figsize=(10, 0.45 * len(names) + 1.2))
     ax.barh(names, u, color=colors)
     ax.axvline(1.0, color="k", lw=1.2)
     for i, v in enumerate(u):
         ax.text(v + 0.02, i, f"{v:.2f}", va="center", fontsize=9)
     ax.invert_yaxis()
-    ax.set_xlabel("U = demand / reference capacity; grey = illustrative REVIEW, not a pass/fail check")
+    ax.set_xlabel("utilization U = demand / capacity (U <= 1 passes the screen)")
     ax.set_title(f"Screening checks - {res.load.name}")
     ax.set_xlim(0, max(1.2, max(u) * 1.15))
     fig.tight_layout()

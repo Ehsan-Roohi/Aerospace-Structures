@@ -1,0 +1,1339 @@
+<title>MIE 446 Wing Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Semi+Condensed:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: an FEA workbench — command ribbon on top; study tree | 3-D viewport | property panel; results dock below. Stacks to one column on phones. */
+:root {
+  color-scheme: dark;
+  --bg: #0b1017;
+  --panel: #111922;
+  --panel-2: #16212c;
+  --raise: #1c2935;
+  --line: #253445;
+  --fg: #dce5ee;
+  --muted: #8a9bac;
+  --faint: #5d6e80;
+  --accent: #4ea6ff;
+  --accent-soft: rgba(78, 166, 255, 0.14);
+  --accent-ink: #061322;
+  --fixture: #33c587;
+  --load: #d25ad6;
+  --good: #33c587;
+  --warn: #efb03b;
+  --bad: #f05b6c;
+  --vp-top: #1b2a39;
+  --vp-bottom: #06090d;
+  --vp-ink: #c8d4df;
+  --shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  --font-ui: "Barlow", "Segoe UI", system-ui, sans-serif;
+  --font-label: "Barlow Semi Condensed", "Arial Narrow", "Segoe UI", sans-serif;
+  --font-data: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #e3e9ef; --panel: #f7f9fb; --panel-2: #eef2f6; --raise: #ffffff; --line: #cbd6e1;
+    --fg: #142130; --muted: #566778; --faint: #8394a5; --accent: #0b6fd8; --accent-soft: rgba(11, 111, 216, 0.1);
+    --accent-ink: #ffffff; --good: #148a59; --warn: #b7760a; --bad: #cc2f43;
+    --vp-top: #b4c5d6; --vp-bottom: #f1f5f9; --vp-ink: #1c2a38; --shadow: 0 10px 30px rgba(30, 50, 70, 0.15);
+  }
+}
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg: #e3e9ef; --panel: #f7f9fb; --panel-2: #eef2f6; --raise: #ffffff; --line: #cbd6e1;
+  --fg: #142130; --muted: #566778; --faint: #8394a5; --accent: #0b6fd8; --accent-soft: rgba(11, 111, 216, 0.1);
+  --accent-ink: #ffffff; --good: #148a59; --warn: #b7760a; --bad: #cc2f43;
+  --vp-top: #b4c5d6; --vp-bottom: #f1f5f9; --vp-ink: #1c2a38; --shadow: 0 10px 30px rgba(30, 50, 70, 0.15);
+}
+
+[hidden] { display: none !important; }
+html, body { height: 100%; }
+body { background: var(--bg); color: var(--fg); font: 14px/1.42 var(--font-ui); -webkit-font-smoothing: antialiased; }
+* { box-sizing: border-box; }
+button, input, select { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+#app {
+  height: 100%;
+  padding: 12px 16px;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: 238px minmax(0, 1fr) 312px;
+  grid-template-rows: auto minmax(0, 1fr) minmax(240px, 37%);
+  grid-template-areas: "bar bar bar" "tree view pm" "dock dock dock";
+}
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; min-width: 0; min-height: 0; }
+
+/* ---------- command bar ---------- */
+.bar { grid-area: bar; position: relative; display: flex; flex-wrap: wrap; align-items: stretch; gap: 10px 14px; padding: 8px 10px; }
+.brand { display: flex; align-items: center; gap: 10px; padding-right: 14px; border-right: 1px solid var(--line); flex: none; }
+.brand svg { width: 38px; height: 22px; }
+.brand b { font: 700 19px/1 var(--font-label); letter-spacing: 0.02em; display: block; }
+.brand small { font: 500 11px/1.2 var(--font-label); color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; }
+.group { display: flex; flex-direction: column; gap: 4px; flex: none; padding-right: 14px; border-right: 1px solid var(--line); }
+.group:last-of-type { border-right: 0; }
+.group > span { font: 600 10px/1 var(--font-label); letter-spacing: 0.12em; text-transform: uppercase; color: var(--faint); }
+.group .row { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+.tool { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 10px; border-radius: 7px; border: 1px solid transparent; background: transparent; cursor: pointer; font: 600 13px/1 var(--font-label); letter-spacing: 0.02em; white-space: nowrap; }
+.tool:hover { background: var(--panel-2); border-color: var(--line); }
+.tool[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+.tool svg { width: 16px; height: 16px; flex: none; }
+.run { background: var(--accent); color: var(--accent-ink); border-radius: 8px; padding: 0 16px; height: 100%; min-height: 44px; border: 0; font: 700 15px/1 var(--font-label); letter-spacing: 0.04em; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
+.run:hover { filter: brightness(1.08); }
+.run.stale { animation: pulse 1.6s ease-in-out infinite; }
+@keyframes pulse { 50% { box-shadow: 0 0 0 6px var(--accent-soft); } }
+.status { display: flex; flex-direction: column; justify-content: center; gap: 2px; min-width: 150px; font-size: 12px; color: var(--muted); margin-left: auto; padding-left: 6px; }
+.chip { display: inline-flex; align-items: center; gap: 6px; font: 600 11px/1 var(--font-label); letter-spacing: 0.06em; text-transform: uppercase; padding: 4px 8px; border-radius: 99px; border: 1px solid currentColor; width: fit-content; }
+.chip.ok { color: var(--good); } .chip.warn { color: var(--warn); } .chip.bad { color: var(--bad); } .chip.idle { color: var(--muted); }
+.range { display: flex; align-items: center; gap: 6px; height: 32px; font: 600 12px/1 var(--font-label); color: var(--muted); }
+.range input { width: 92px; accent-color: var(--accent); }
+
+/* ---------- study tree ---------- */
+.tree { grid-area: tree; display: flex; flex-direction: column; overflow: hidden; }
+.panel-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 12px 8px; border-bottom: 1px solid var(--line); font: 700 12px/1 var(--font-label); letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+.tree ul { list-style: none; margin: 0; padding: 6px 6px 10px; overflow: auto; flex: 1; }
+.tree li ul { padding: 0 0 0 18px; overflow: visible; }
+.node { display: flex; align-items: center; gap: 8px; width: 100%; text-align: left; padding: 5px 8px; border-radius: 6px; border: 0; background: transparent; cursor: pointer; line-height: 1.25; }
+.node:hover { background: var(--panel-2); }
+.node[aria-current="true"] { background: var(--accent-soft); color: var(--accent); }
+.node .glyph { width: 16px; height: 16px; flex: none; }
+.node .lbl { min-width: 0; }
+.node .lbl b { font-weight: 600; display: block; }
+.node .lbl i { font-style: normal; color: var(--muted); font-size: 12px; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.node .warnmark { margin-left: auto; color: var(--warn); font: 700 12px var(--font-label); }
+
+/* ---------- viewport ---------- */
+.view { grid-area: view; position: relative; overflow: hidden; background: linear-gradient(180deg, var(--vp-top), var(--vp-bottom)); }
+#gl { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+.overlay { position: absolute; pointer-events: none; color: var(--vp-ink); }
+.infocol { left: 14px; top: 12px; display: flex; flex-direction: column; gap: 10px; max-width: calc(100% - 380px); }
+.plotinfo { font: 12px/1.5 var(--font-data); text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25); }
+.plotinfo b { font-weight: 500; color: var(--vp-ink); opacity: 0.65; }
+.legend { display: flex; gap: 8px; font: 11px/1 var(--font-data); margin-top: -4px; }
+.legend .bar-c { width: 16px; border: 1px solid rgba(0, 0, 0, 0.35); display: flex; flex-direction: column; }
+.legend .bar-c div { flex: 1; }
+.legend .ticks { display: flex; flex-direction: column; justify-content: space-between; }
+.legend .ticks span { transform: translateY(-50%); }
+.legend .ticks span:first-child { transform: translateY(0); }
+.legend .ticks span:last-child { transform: translateY(0); }
+.legend-title { font: 600 12px/1 var(--font-label); letter-spacing: 0.03em; }
+.legend-title:empty { display: none; }
+.hud { position: absolute; right: 12px; top: 12px; display: flex; flex-direction: column; align-items: flex-end; gap: 5px; max-width: calc(100% - 24px); }
+.hud-row { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 4px; background: color-mix(in srgb, var(--panel) 80%, transparent); border: 1px solid var(--line); border-radius: 8px; padding: 4px; backdrop-filter: blur(8px); }
+.hud button { background: transparent; border: 1px solid transparent; border-radius: 6px; padding: 5px 8px; font: 600 11.5px/1 var(--font-label); letter-spacing: 0.04em; cursor: pointer; }
+.hud button:hover { border-color: var(--line); color: var(--accent); }
+.hud button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+.hud label { display: inline-flex; align-items: center; gap: 6px; padding: 0 6px; font: 600 11.5px/1 var(--font-label); color: var(--muted); }
+.hud input[type="range"] { width: 84px; accent-color: var(--accent); }
+.probe { position: absolute; pointer-events: none; background: var(--raise); color: var(--fg); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; font: 12px/1.5 var(--font-data); box-shadow: var(--shadow); transform: translate(14px, -50%); white-space: nowrap; }
+.probe b { font-family: var(--font-label); font-weight: 700; letter-spacing: 0.04em; }
+.footline { left: 14px; bottom: 10px; font: 11px/1.4 var(--font-data); opacity: 0.75; max-width: calc(100% - 28px); }
+.modeplayer { position: absolute; right: 12px; bottom: 12px; display: flex; gap: 6px; align-items: center; background: color-mix(in srgb, var(--panel) 85%, transparent); border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; font: 600 12px/1 var(--font-label); backdrop-filter: blur(6px); }
+.loading { position: absolute; inset: 0; display: grid; place-items: center; background: color-mix(in srgb, var(--bg) 55%, transparent); backdrop-filter: blur(3px); }
+.loading .card { width: min(380px, 86%); background: var(--raise); border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; box-shadow: var(--shadow); }
+.loading h3 { margin: 0 0 4px; font: 700 18px/1.2 var(--font-label); letter-spacing: 0.03em; }
+.loading p { margin: 0; color: var(--muted); font: 12px/1.5 var(--font-data); min-height: 3em; }
+.progress { margin-top: 12px; height: 6px; border-radius: 3px; background: var(--panel-2); overflow: hidden; }
+.progress div { height: 100%; width: 0; background: var(--accent); transition: width 0.18s ease; }
+
+/* ---------- property manager ---------- */
+.pm { grid-area: pm; display: flex; flex-direction: column; overflow: hidden; }
+.pm-body { padding: 12px 14px 16px; overflow: auto; flex: 1; display: flex; flex-direction: column; gap: 14px; }
+.pm-body > * { flex: none; }
+.pm h2 { margin: 0; font: 700 17px/1.2 var(--font-label); letter-spacing: 0.02em; text-wrap: balance; }
+.pm .lede { margin: 0; color: var(--muted); font-size: 13px; }
+fieldset { border: 1px solid var(--line); border-radius: 8px; margin: 0; padding: 10px 10px 12px; display: grid; gap: 9px; }
+legend { font: 700 11px/1 var(--font-label); letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); padding: 0 4px; }
+.field { display: grid; grid-template-columns: minmax(0, 1fr) 108px; gap: 8px; align-items: center; }
+.field label { font-size: 13px; }
+.field label small { color: var(--muted); display: block; font-size: 11px; }
+.field input, .field select { width: 100%; height: 30px; padding: 0 8px; border-radius: 6px; border: 1px solid var(--line); background: var(--panel-2); font: 13px var(--font-data); }
+.field input:focus, .field select:focus { border-color: var(--accent); outline: none; }
+.seg { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; border: 1px solid var(--line); border-radius: 7px; overflow: hidden; }
+.seg button { border: 0; background: var(--panel-2); padding: 7px 6px; cursor: pointer; font: 600 12px/1.1 var(--font-label); letter-spacing: 0.03em; }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+.kv { display: grid; grid-template-columns: minmax(96px, 1fr) minmax(0, 1.3fr); gap: 4px 10px; font-size: 13px; margin: 0; }
+.kv dt { color: var(--muted); }
+.kv dd { margin: 0; font: 12.5px var(--font-data); font-variant-numeric: tabular-nums; text-align: right; overflow-wrap: anywhere; }
+.note { font-size: 12px; color: var(--muted); margin: 0; }
+.err { color: var(--bad); font-size: 13px; margin: 0; }
+
+/* ---------- dock ---------- */
+.dock { grid-area: dock; display: flex; flex-direction: column; overflow: hidden; }
+.tabs { display: flex; gap: 2px; padding: 6px 8px 0; border-bottom: 1px solid var(--line); overflow-x: auto; flex: none; }
+.tabs button { border: 0; background: transparent; padding: 8px 12px 9px; cursor: pointer; font: 700 12.5px/1 var(--font-label); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); border-bottom: 2px solid transparent; white-space: nowrap; }
+.tabs button[aria-selected="true"] { color: var(--fg); border-bottom-color: var(--accent); }
+.tabpanel { padding: 12px 14px; overflow: auto; flex: 1; min-height: 0; }
+.charts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px 14px; }
+.chart { min-width: 0; }
+.chart h4 { margin: 0 0 2px; font: 700 12px/1.2 var(--font-label); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); display: flex; justify-content: space-between; gap: 8px; }
+.chart h4 span { font: 500 11.5px var(--font-data); text-transform: none; letter-spacing: 0; color: var(--fg); }
+.chart svg { width: 100%; height: auto; display: block; overflow: visible; }
+.chart text { fill: var(--muted); font: 10px var(--font-data); }
+.checks { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 14px 20px; }
+.checklist { display: grid; gap: 6px; align-content: start; }
+.crow { display: grid; grid-template-columns: minmax(0, 1fr) 150px 62px; gap: 10px; align-items: center; padding: 6px 8px; border-radius: 7px; border: 1px solid var(--line); background: var(--panel-2); }
+.crow.gov { border-color: var(--accent); }
+.crow b { font-weight: 600; font-size: 13px; display: block; }
+.crow i { font-style: normal; color: var(--muted); font-size: 11.5px; display: block; }
+.ubar { position: relative; height: 10px; border-radius: 5px; background: var(--bg); overflow: hidden; }
+.ubar div { position: absolute; inset: 0 auto 0 0; border-radius: 5px; }
+.ubar::after { content: ""; position: absolute; left: 66.6%; top: -2px; bottom: -2px; width: 2px; background: var(--fg); opacity: 0.55; }
+.uval { font: 500 12.5px var(--font-data); text-align: right; font-variant-numeric: tabular-nums; }
+.callout { border: 1px solid var(--line); border-radius: 9px; padding: 12px 14px; background: var(--panel-2); display: grid; gap: 8px; align-content: start; }
+.callout h3 { margin: 0; font: 700 15px/1.25 var(--font-label); letter-spacing: 0.02em; text-wrap: balance; }
+.callout p { margin: 0; font-size: 13px; color: var(--muted); max-width: 65ch; }
+.secwrap { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 16px; }
+#secCanvas { width: 100%; height: 210px; display: block; border-radius: 8px; background: var(--bg); border: 1px solid var(--line); }
+table { border-collapse: collapse; width: 100%; font-size: 13px; }
+th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th { font: 700 11px var(--font-label); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+td.num { font-family: var(--font-data); font-variant-numeric: tabular-nums; text-align: right; }
+.tablewrap { overflow-x: auto; }
+.btn { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px; border-radius: 7px; border: 1px solid var(--line); background: var(--panel-2); cursor: pointer; font: 600 13px/1 var(--font-label); letter-spacing: 0.03em; }
+.btn:hover { border-color: var(--accent); color: var(--accent); }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.predict { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 20px; }
+.scoreline { font: 500 13px var(--font-data); }
+.big { font: 700 26px/1 var(--font-label); letter-spacing: 0.01em; font-variant-numeric: tabular-nums; }
+#report { width: 100%; min-height: 180px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); font: 12px/1.5 var(--font-data); padding: 10px; resize: vertical; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+
+@media (max-width: 1180px) { #app { grid-template-columns: 210px minmax(0, 1fr) 280px; } .charts { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 900px) {
+  #app { height: auto; grid-template-columns: minmax(0, 1fr); grid-template-rows: none; grid-template-areas: "bar" "view" "pm" "dock" "tree"; }
+  .view { height: 62vh; min-height: 340px; }
+  .tree ul { max-height: 360px; }
+  .checks, .secwrap, .predict { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 560px) {
+  .charts { grid-template-columns: minmax(0, 1fr); }
+  .crow { grid-template-columns: minmax(0, 1fr) 70px 52px; }
+  .infocol { max-width: calc(100% - 28px); }
+  .plotinfo, .footline { display: none; }
+  .hud { top: auto; bottom: 10px; left: 10px; right: 10px; flex-direction: row; overflow-x: auto; align-items: center; }
+  .hud-row { flex-wrap: nowrap; flex: none; }
+  .modeplayer { bottom: 62px; }
+  .group { border-right: 0; padding-right: 0; flex: 1 1 100%; min-width: 0; } .brand { border-right: 0; } .status { margin-left: 0; }
+  .tool { padding: 0 8px; }
+}
+@media (prefers-reduced-motion: reduce) { .run.stale { animation: none; } .progress div { transition: none; } }
+</style>
+
+<div id="app">
+  <header class="bar panel" aria-label="Commands">
+    <div class="brand">
+      <svg viewBox="0 0 76 44" aria-hidden="true"><path d="M3 24 C 12 8, 40 6, 73 21 L 73 23 C 40 30, 14 32, 3 24 Z" fill="none" stroke="currentColor" stroke-width="3"/><circle cx="24" cy="21" r="3.2" fill="currentColor"/><circle cx="46" cy="21" r="3.2" fill="currentColor"/></svg>
+      <div><b>Wing Lab</b><small>MIE 446 · Aerospace Structures</small></div>
+    </div>
+    <div class="group"><span>Study</span>
+      <div class="row">
+        <button class="run" id="runBtn" type="button"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M4 2 L14 8 L4 14 Z" fill="currentColor"/></svg>Run study</button>
+      </div>
+    </div>
+    <div class="group"><span>Results</span>
+      <div class="row" role="group" aria-label="Plot">
+        <button class="tool" data-plot="model" type="button">Model</button>
+        <button class="tool" data-plot="stress" type="button">Stress</button>
+        <button class="tool" data-plot="disp" type="button">Displacement</button>
+        <button class="tool" data-plot="fos" type="button">Factor of safety</button>
+        <button class="tool" data-plot="mode" type="button">Modes</button>
+      </div>
+    </div>
+    <div class="status" aria-live="polite"><span class="chip idle" id="stateChip">Starting</span><span id="stateText">Loading the solver</span></div>
+  </header>
+
+  <aside class="tree panel" aria-label="Study tree">
+    <div class="panel-head">Study tree</div>
+    <ul id="tree"></ul>
+  </aside>
+
+  <main class="view panel" aria-label="3-D viewport">
+    <canvas id="gl"></canvas>
+    <div class="overlay infocol">
+      <div class="plotinfo" id="plotinfo"></div>
+      <div class="legend-title" id="legendTitle"></div>
+      <div class="legend" id="legend"></div>
+    </div>
+    <div class="hud" role="toolbar" aria-label="View and display">
+      <div class="hud-row" role="group" aria-label="Standard views">
+        <button type="button" data-view="iso">Isometric</button>
+        <button type="button" data-view="plan">Planform</button>
+        <button type="button" data-view="section">Section</button>
+        <button type="button" data-view="front">Leading edge</button>
+      </div>
+      <div class="hud-row">
+        <button type="button" id="defBtn" aria-pressed="true">Deformed</button>
+        <label for="scaleIn">Scale <input id="scaleIn" type="range" min="0" max="2" step="0.05" value="1"></label>
+        <button type="button" id="xrayBtn" aria-pressed="false">See-through</button>
+      </div>
+      <div class="hud-row">
+        <label for="explodeIn">Explode <input id="explodeIn" type="range" min="0" max="60" step="1" value="0"></label>
+        <button type="button" id="clipBtn" aria-pressed="false">Clip</button>
+        <label for="clipIn"><span class="sr">Clip station</span><input id="clipIn" type="range" min="0" max="450" step="1" value="150"></label>
+      </div>
+    </div>
+    <div class="probe" id="probe" hidden></div>
+    <div class="overlay footline" id="footline"></div>
+    <div class="modeplayer" id="modeplayer" hidden>
+      <span>Mode</span>
+      <div class="seg" id="modeSeg"></div>
+    </div>
+    <div class="loading" id="loading">
+      <div class="card" role="status">
+        <h3 id="loadTitle">Starting the solver</h3>
+        <p id="loadStep">Building the NACA geometry</p>
+        <div class="progress"><div id="loadBar"></div></div>
+      </div>
+    </div>
+  </main>
+
+  <aside class="pm panel" aria-label="Properties">
+    <div class="panel-head"><span id="pmHead">Properties</span></div>
+    <div class="pm-body" id="pm"></div>
+  </aside>
+
+  <section class="dock panel" aria-label="Results">
+    <div class="tabs" role="tablist">
+      <button role="tab" type="button" data-tab="diagrams" aria-selected="true">Diagrams</button>
+      <button role="tab" type="button" data-tab="checks" aria-selected="false">Checks</button>
+      <button role="tab" type="button" data-tab="section" aria-selected="false">Section</button>
+      <button role="tab" type="button" data-tab="joints" aria-selected="false">Compare joints</button>
+      <button role="tab" type="button" data-tab="predict" aria-selected="false">Predict &amp; challenge</button>
+      <button role="tab" type="button" data-tab="report" aria-selected="false">Report</button>
+    </div>
+    <div class="tabpanel" id="tab-diagrams" role="tabpanel"><div class="charts" id="charts"></div></div>
+    <div class="tabpanel" id="tab-checks" role="tabpanel" hidden>
+      <div class="checks"><div class="checklist" id="checklist"></div><div class="callout" id="govCallout"></div></div>
+    </div>
+    <div class="tabpanel" id="tab-section" role="tabpanel" hidden>
+      <div class="secwrap">
+        <div>
+          <div class="row" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
+            <label class="range" for="secY">Station y <input id="secY" type="range" min="0" max="450" step="1" value="0"></label>
+            <span id="secYv" class="scoreline">0 mm</span>
+            <div class="seg" id="secField" style="width:220px"><button type="button" data-f="sigma" aria-pressed="true">Normal stress σ</button><button type="button" data-f="tau" aria-pressed="false">Shear stress τ</button></div>
+          </div>
+          <canvas id="secCanvas"></canvas>
+        </div>
+        <div><dl class="kv" id="secProps"></dl><p class="note" id="secNote" style="margin-top:8px"></p></div>
+      </div>
+    </div>
+    <div class="tabpanel" id="tab-joints" role="tabpanel" hidden>
+      <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
+        <button class="btn primary" id="cmpBtn" type="button">Run all 8 assemblies</button>
+        <span class="note">Same printed parts, same load case: rods slip-fit or epoxied, seams dry or epoxied, for the hobby and T700 rod cards.</span>
+      </div>
+      <div class="tablewrap" id="cmpTable"><p class="note">Press the button to run the comparison (about 5 s).</p></div>
+    </div>
+    <div class="tabpanel" id="tab-predict" role="tabpanel" hidden>
+      <div class="predict">
+        <div class="callout">
+          <h3>Predict, then run</h3>
+          <p>Write down your expectation before you press Run. Change one input, predict, run, compare.</p>
+          <div class="field"><label for="pDefl">Tip deflection <small>mm, limit load</small></label><input id="pDefl" type="number" step="0.1" placeholder="e.g. 12"></div>
+          <div class="field"><label for="pGov">Governing check</label><select id="pGov"></select></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" id="pLock" type="button">Lock prediction</button><span class="note" id="pState">No prediction locked.</span></div>
+          <div id="pResult"></div>
+        </div>
+        <div class="callout">
+          <h3>Design challenge: lightest wing that passes</h3>
+          <p>Keep every check at U ≤ 1 for the current load case and stay inside the course limits (chord ≤ 300 mm, module ≤ 300 mm, skin and ribs ≥ 0.8 mm, printed mass ≤ 300 g). Adjust the wing in the Part properties.</p>
+          <div style="display:flex;gap:24px;flex-wrap:wrap;align-items:end">
+            <div><span class="note">This design</span><div class="big" id="chMass">–</div></div>
+            <div><span class="note">Your best passing design</span><div class="big" id="chBest">–</div></div>
+          </div>
+          <div id="chState"></div>
+        </div>
+      </div>
+    </div>
+    <div class="tabpanel" id="tab-report" role="tabpanel" hidden>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
+        <button class="btn primary" id="copyBtn" type="button">Copy report</button>
+        <span class="note" id="copyState">Plain-text study summary for your engineering record.</span>
+      </div>
+      <textarea id="report" readonly aria-label="Study report"></textarea>
+    </div>
+  </section>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+/*__ENGINE__*/
+</script>
+<script>
+(() => {
+  "use strict";
+  const E = WingEngine;
+  const $ = (s) => document.querySelector(s);
+  const el = (tag, attrs = {}, html) => { const n = document.createElement(tag); for (const [k, v] of Object.entries(attrs)) n.setAttribute(k, v); if (html != null) n.innerHTML = html; return n; };
+  const nf = (v, d = 2) => (v == null || !isFinite(v) ? "–" : Number(v).toFixed(d));
+  const sig = (v, d = 3) => (v == null || !isFinite(v) ? "–" : Math.abs(v) >= 1000 ? v.toFixed(0) : Number(v.toPrecision(d)).toString());
+  const store = { get(k, f) { try { const v = localStorage.getItem("winglab:" + k); return v == null ? f : JSON.parse(v); } catch { return f; } }, set(k, v) { try { localStorage.setItem("winglab:" + k, JSON.stringify(v)); } catch {} } };
+  const css = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+
+  // ------------------------------------------------------------ study state
+  const S = {
+    geometry: { ...E.DEFAULT_GEOMETRY },
+    plaKey: "pla_upright", rodKey: "rod_hobby",
+    plaOver: { E: null, ft: null, fc: null, fs: null }, rodOver: { E: null },
+    assembly: { ...E.DEFAULT_ASSEMBLY, seamFreeLength: 8 },
+    load: { ...E.DEFAULT_LOAD },
+    criteria: { ...E.DEFAULT_CRITERIA },
+    selected: "part",
+    plot: "stress", deformed: true, scale: 1, xray: false, explode: 0, clip: false, clipY: 150,
+    mode: { kind: "bending", index: 0 },
+    secY: 0, secField: "sigma",
+  };
+  let R = null, lastGeoKey = "", stale = true, running = false, pending = false;
+
+  function materials() {
+    const pla = { ...E.MATERIALS[S.plaKey] };
+    for (const k of ["E", "ft", "fc", "fs"]) if (S.plaOver[k] > 0) pla[k] = S.plaOver[k];
+    const rod = { ...E.MATERIALS[S.rodKey] };
+    if (S.rodOver.E > 0) rod.E = S.rodOver.E;
+    return { pla, rod };
+  }
+  function engineInput() {
+    const { pla, rod } = materials();
+    return { geometry: { ...S.geometry }, pla, rod, assembly: { ...S.assembly }, load: { ...S.load }, criteria: { ...S.criteria } };
+  }
+
+  // ------------------------------------------------------------ study tree
+  const glyph = {
+    part: '<svg class="glyph" viewBox="0 0 16 16"><path d="M1 9 C 4 4, 10 4, 15 8 C 10 11, 4 11, 1 9Z" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>',
+    mat: '<svg class="glyph" viewBox="0 0 16 16"><rect x="2" y="2" width="12" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M2 10 L10 2 M6 14 L14 6" stroke="currentColor" stroke-width="1.2"/></svg>',
+    link: '<svg class="glyph" viewBox="0 0 16 16"><circle cx="5" cy="8" r="3" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="11" cy="8" r="3" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>',
+    fix: '<svg class="glyph" viewBox="0 0 16 16"><path d="M3 2 V14 M3 4 L7 2 M3 8 L7 6 M3 12 L7 10" stroke="var(--fixture)" stroke-width="1.6" fill="none"/></svg>',
+    load: '<svg class="glyph" viewBox="0 0 16 16"><path d="M8 15 V3 M4 7 L8 2 L12 7" stroke="var(--load)" stroke-width="1.8" fill="none"/></svg>',
+    mesh: '<svg class="glyph" viewBox="0 0 16 16"><path d="M2 2 H14 V14 H2 Z M2 8 H14 M8 2 V14 M2 2 L14 14" stroke="currentColor" stroke-width="1.1" fill="none"/></svg>',
+    res: '<svg class="glyph" viewBox="0 0 16 16"><rect x="2" y="2" width="3" height="12" fill="#2b5cff"/><rect x="5" y="2" width="3" height="12" fill="#22c39a"/><rect x="8" y="2" width="3" height="12" fill="#f1d43a"/><rect x="11" y="2" width="3" height="12" fill="#ef4a3b"/></svg>',
+  };
+  function treeModel() {
+    const g = S.geometry, { pla, rod } = materials(), L = S.load;
+    const loadLbl = L.kind === "flight" ? `Lift n = ${L.loadFactor}, m = ${L.aircraftMass} kg` : `Tip force ${L.tipForce} N`;
+    return [
+      { id: "part", g: "part", b: "Semi-wing", i: `NACA ${g.naca} · ${g.semiSpan} mm · ${g.modules} modules` },
+      { id: "materials", g: "mat", b: "Materials", kids: [{ id: "mat-pla", g: "mat", b: "Shell, ribs, sleeves", i: pla.short + ` · E ${pla.E} MPa` }, { id: "mat-rod", g: "mat", b: "Rods", i: rod.short + ` · E ${(rod.E / 1000).toFixed(0)} GPa` }] },
+      { id: "connections", g: "link", b: "Connections", kids: [{ id: "con", g: "link", b: "Rods in sleeves", i: S.assembly.rodsBonded ? "Epoxied (bonded)" : "Slip fit" }, { id: "con-seam", g: "link", b: "Module seams", i: S.assembly.seamsBonded ? "Epoxied" : "Dry (rods only)" }] },
+      { id: "fixtures", g: "fix", b: "Fixtures", kids: [{ id: "fix", g: "fix", b: "Fixed: root face", i: "Clamped cantilever" }] },
+      { id: "loads", g: "load", b: "External loads", kids: [{ id: "load", g: "load", b: L.kind === "flight" ? "Lift distribution" : "Tip force", i: loadLbl }] },
+      { id: "mesh", g: "mesh", b: "Mesh", i: "7 sections · 1-D beam" },
+      { id: "results", g: "res", b: "Results", kids: [{ id: "res-stress", g: "res", b: "Stress", i: "Spanwise σ" }, { id: "res-disp", g: "res", b: "Displacement", i: "Resultant" }, { id: "res-fos", g: "res", b: "Factor of safety", i: "Strength" }, { id: "res-mode", g: "res", b: "Frequency modes", i: R ? `f₁ = ${nf(R.fem.fBending[0], 1)} Hz` : "–" }] },
+    ];
+  }
+  function renderTree() {
+    const ul = $("#tree");
+    ul.innerHTML = "";
+    const make = (n) => {
+      const li = el("li");
+      const b = el("button", { class: "node", type: "button", "data-id": n.id, "aria-current": String(S.selected === n.id) },
+        `${glyph[n.g]}<span class="lbl"><b>${n.b}</b>${n.i ? `<i>${n.i}</i>` : ""}</span>${stale && n.id === "results" ? '<span class="warnmark" title="Results are out of date">!</span>' : ""}`);
+      b.addEventListener("click", () => { select(n.id); });
+      li.append(b);
+      if (n.kids) { const sub = el("ul"); n.kids.forEach((k) => sub.append(make(k))); li.append(sub); }
+      return li;
+    };
+    treeModel().forEach((n) => ul.append(make(n)));
+  }
+  function select(id) {
+    S.selected = id;
+    const plotFor = { "res-stress": "stress", "res-disp": "disp", "res-fos": "fos", "res-mode": "mode" };
+    if (plotFor[id]) setPlot(plotFor[id]);
+    renderTree();
+    renderPM();
+  }
+
+  // ------------------------------------------------------------ property manager
+  function numField(id, label, hint, value, step, onSet) {
+    const w = el("div", { class: "field" }, `<label for="${id}">${label}${hint ? `<small>${hint}</small>` : ""}</label><input id="${id}" type="number" step="${step}" value="${value}">`);
+    w.querySelector("input").addEventListener("change", (e) => { const v = parseFloat(e.target.value); if (isFinite(v)) { onSet(v); changed(); } });
+    return w;
+  }
+  function selField(id, label, options, value, onSet) {
+    const w = el("div", { class: "field" }, `<label for="${id}">${label}</label><select id="${id}">${options.map(([v, t]) => `<option value="${v}" ${String(v) === String(value) ? "selected" : ""}>${t}</option>`).join("")}</select>`);
+    w.querySelector("select").addEventListener("change", (e) => { onSet(e.target.value); changed(); });
+    return w;
+  }
+  function segField(options, value, onSet, label) {
+    const w = el("div", { class: "seg", role: "group", "aria-label": label || "" });
+    options.forEach(([v, t]) => {
+      const b = el("button", { type: "button", "aria-pressed": String(v === value) }, t);
+      b.addEventListener("click", () => { onSet(v); changed(); renderPM(); });
+      w.append(b);
+    });
+    return w;
+  }
+  const fs = (title, ...kids) => { const f = el("fieldset", {}, `<legend>${title}</legend>`); kids.forEach((k) => f.append(k)); return f; };
+  const kv = (pairs) => el("dl", { class: "kv" }, pairs.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join(""));
+
+  function renderPM() {
+    const pm = $("#pm");
+    pm.innerHTML = "";
+    const g = S.geometry, { pla, rod } = materials();
+    const id = S.selected;
+    const head = (t, lede) => { pm.append(el("h2", {}, t)); if (lede) pm.append(el("p", { class: "lede" }, lede)); };
+    if (id === "part") {
+      $("#pmHead").textContent = "Part properties";
+      head("Semi-wing geometry", "Copy the values from your team's Code-to-Print form (R02). The solver rebuilds the printed section with the same rules as the CAD code.");
+      pm.append(fs("Airfoil and planform",
+        (() => { const w = el("div", { class: "field" }, `<label for="naca">NACA code</label><input id="naca" type="text" value="${g.naca}" maxlength="9">`); w.querySelector("input").addEventListener("change", (e) => { try { S.geometry.naca = E.normalizeNaca(e.target.value); changed(); } catch (err) { flash(err.message); } }); return w; })(),
+        numField("span", "Semi-span", "mm", g.semiSpan, 5, (v) => (S.geometry.semiSpan = v)),
+        numField("rc", "Root chord", "mm", g.rootChord, 5, (v) => (S.geometry.rootChord = v)),
+        numField("tc", "Tip chord", "mm", g.tipChord, 5, (v) => (S.geometry.tipChord = v))));
+      pm.append(fs("Printed structure",
+        numField("skin", "Skin thickness", "mm, measured vertically", g.skin, 0.1, (v) => (S.geometry.skin = v)),
+        numField("rib", "Rib thickness", "mm", g.ribThickness, 0.1, (v) => (S.geometry.ribThickness = v)),
+        selField("mods", "Modules", [[2, "2"], [3, "3"]], g.modules, (v) => (S.geometry.modules = +v)),
+        selField("clr", "Rod clearance <small>radial, from coupon</small>", [[0.15, "0.15 mm"], [0.25, "0.25 mm"], [0.35, "0.35 mm"]], g.clearance, (v) => (S.geometry.clearance = +v))));
+      const area = 0.5 * (g.rootChord + g.tipChord) * g.semiSpan, taper = g.tipChord / g.rootChord;
+      pm.append(fs("Derived", kv([
+        ["Semi-wing area", `${nf(area / 100, 1)} cm²`], ["Taper ratio", nf(taper, 3)], ["Aspect ratio (full wing)", nf((4 * g.semiSpan ** 2) / (2 * area), 2)],
+        ["Ribs", `${E.ribStations(g).length} at ${E.ribStations(g).map((v) => nf(v, 1)).join(", ")} mm`], ["Seams", E.seams(g).map((v) => nf(v, 0)).join(", ") + " mm"],
+        ["Rods", `2 × ⌀${g.rodDiameter} mm at ${g.rodFractions.map((f) => f.toFixed(2)).join(" and ")} c`],
+        ["Printed PLA mass", R ? `${nf(R.mass.printed, 1)} g` : "–"]])));
+    } else if (id === "materials" || id === "mat-pla") {
+      $("#pmHead").textContent = "Material";
+      head("Printed PLA card", "Printed PLA is anisotropic. Upright modules put bending stress across layer interfaces, the weakest direction. Replace these placeholder values with coupon data.");
+      pm.append(fs("Card", segField([["pla_upright", "Upright (span = print Z)"], ["pla_flat", "Flat (span in plane)"]], S.plaKey, (v) => { S.plaKey = v; S.plaOver = { E: null, ft: null, fc: null, fs: null }; }, "PLA orientation"),
+        numField("pE", "Elastic modulus E", "MPa", pla.E, 50, (v) => (S.plaOver.E = v)),
+        numField("pft", "Tensile strength", "MPa", pla.ft, 1, (v) => (S.plaOver.ft = v)),
+        numField("pfc", "Compressive strength", "MPa", pla.fc, 1, (v) => (S.plaOver.fc = v)),
+        numField("pfs", "Shear strength", "MPa", pla.fs, 1, (v) => (S.plaOver.fs = v))));
+      pm.append(fs("Fixed values", kv([["Poisson's ratio", pla.nu], ["Shear modulus G", `${nf(pla.E / (2 * (1 + pla.nu)), 0)} MPa`], ["Density", `${pla.rho} g/cm³`]])));
+      pm.append(el("p", { class: "note" }, pla.source));
+    } else if (id === "mat-rod") {
+      $("#pmHead").textContent = "Material";
+      head("Carbon rod card", "Hobby-grade and aerospace-grade pultruded rods differ by about five times in stiffness. Measure your rod with a hanging weight if you can.");
+      pm.append(fs("Card", segField([["rod_hobby", "Hobby grade"], ["rod_t700", "T700 aerospace"]], S.rodKey, (v) => { S.rodKey = v; S.rodOver = { E: null }; }, "Rod card"),
+        numField("rE", "Elastic modulus E", "MPa (flexural)", rod.E, 1000, (v) => (S.rodOver.E = v))));
+      pm.append(fs("Fixed values", kv([["Tension / compression", `${rod.ft} / ${rod.fc} MPa`], ["Shear", `${rod.fs} MPa`], ["Density", `${rod.rho} g/cm³`]])));
+      const hang = el("fieldset", {}, `<legend>Measure E with a hanging weight</legend><p class="note">Clamp the rod, hang a mass at length L, measure the drop δ. E = P L³ / (3 δ I).</p>`);
+      const st = { m: 100, L: 300, d: 0 };
+      const out = el("p", { class: "scoreline" }, "Enter a measured drop.");
+      const upd = () => { if (st.d > 0) { const I = (Math.PI * g.rodDiameter ** 4) / 64; const Ev = (st.m * 9.81e-3 * st.L ** 3) / (3 * st.d * I); out.innerHTML = `E ≈ <b>${nf(Ev / 1000, 1)} GPa</b> <button class="btn" type="button" id="useE">Use it</button>`; out.querySelector("#useE").addEventListener("click", () => { S.rodOver.E = Math.round(Ev); changed(); renderPM(); }); } };
+      for (const [k, lab, step] of [["m", "Hanging mass (g)", 10], ["L", "Free length L (mm)", 10], ["d", "Measured drop δ (mm)", 0.1]]) {
+        const w = el("div", { class: "field" }, `<label for="h${k}">${lab}</label><input id="h${k}" type="number" step="${step}" value="${st[k]}">`);
+        w.querySelector("input").addEventListener("input", (e) => { st[k] = parseFloat(e.target.value) || 0; upd(); });
+        hang.append(w);
+      }
+      hang.append(out);
+      pm.append(hang);
+      pm.append(el("p", { class: "note" }, rod.source));
+    } else if (id === "connections" || id === "con" || id === "con-seam") {
+      $("#pmHead").textContent = "Connections";
+      head("How the parts are joined", "Same printed parts, very different structures. A slip-fit rod only bends with the wing. Across a dry seam the shell is cut, and only the two rods carry the bending moment.");
+      pm.append(fs("Rods in sleeves", segField([[false, "Slip fit"], [true, "Epoxied"]], S.assembly.rodsBonded, (v) => (S.assembly.rodsBonded = v), "Rods")));
+      pm.append(fs("Module seams", segField([[false, "Dry"], [true, "Epoxied"]], S.assembly.seamsBonded, (v) => (S.assembly.seamsBonded = v), "Seams"),
+        numField("lf", "Rod free length at a dry seam", "mm (between the paired interface ribs)", S.assembly.seamFreeLength, 1, (v) => (S.assembly.seamFreeLength = v)),
+        numField("adh", "Epoxy butt-joint strength", "MPa", S.assembly.adhesiveTensile, 0.5, (v) => (S.assembly.adhesiveTensile = v))));
+      if (R) pm.append(fs("Seam model", kv([["Seam spring k = n E I / L_f", `${nf(R.seam.kBend / 1000, 1)} N·m/rad`], ["Clearance dead band at tip", `${nf(R.seam.freePlay, 2)} mm`], ["Tip stiffness, this joint", `${nf(R.stiffness.tip, 3)} N/mm`], ["Tip stiffness, rigid seams", `${nf(R.stiffness.rigidSeams, 3)} N/mm`]])));
+    } else if (id === "fixtures" || id === "fix") {
+      $("#pmHead").textContent = "Fixture";
+      head("Fixed geometry: root face", "The root section is clamped: no deflection, slope or twist at y = 0. That is the cantilever the load-cell demonstration uses.");
+      pm.append(el("p", { class: "note" }, "A real clamp is never perfectly rigid. If a measured slope is softer than predicted, the fixture is one of the first suspects."));
+    } else if (id === "loads" || id === "load") {
+      $("#pmHead").textContent = "External load";
+      head("Load case", S.load.kind === "flight" ? "Each semi-wing lifts L = n m g / 2. The wing's own mass pushes down with the same load factor (inertia relief)." : "A single upward force at the tip, like the instructor's load-cell test. Self-weight is excluded because the load cell is zeroed first.");
+      pm.append(segField([["flight", "Flight-like lift"], ["tip", "Tip force"]], S.load.kind, (v) => (S.load.kind = v), "Load case"));
+      if (S.load.kind === "flight") {
+        pm.append(fs("Lift",
+          numField("am", "Aircraft mass", "kg", S.load.aircraftMass, 0.1, (v) => (S.load.aircraftMass = v)),
+          numField("nf", "Load factor n", "", S.load.loadFactor, 0.5, (v) => (S.load.loadFactor = v)),
+          selField("dist", "Spanwise shape", [["schrenk", "Schrenk"], ["elliptic", "Elliptic"], ["planform", "Planform"], ["uniform", "Uniform"], ["tip", "Point load at tip"]], S.load.distribution, (v) => (S.load.distribution = v)),
+          numField("lcf", "Lift acts at", "fraction of chord", S.load.liftFraction, 0.01, (v) => (S.load.liftFraction = v)),
+          selField("ir", "Inertia relief", [["true", "Included"], ["false", "Ignored"]], String(S.load.inertiaRelief), (v) => (S.load.inertiaRelief = v === "true"))));
+      } else {
+        pm.append(fs("Tip force",
+          numField("tf", "Force", "N, upward", S.load.tipForce, 1, (v) => (S.load.tipForce = v)),
+          numField("tfc", "Applied at", "fraction of tip chord", S.load.tipFraction, 0.01, (v) => (S.load.tipFraction = v))));
+      }
+      pm.append(fs("Checks",
+        numField("fos", "Factor of safety", "on strength and buckling", S.load.fos, 0.1, (v) => (S.load.fos = v)),
+        numField("tm", "Tip sensor mass", "g (lowers the frequency)", S.load.tipMass, 1, (v) => (S.load.tipMass = v)),
+        numField("cd", "Max tip deflection", "mm", S.criteria.maxTipDeflection, 1, (v) => (S.criteria.maxTipDeflection = v)),
+        numField("ct", "Max tip twist", "deg", S.criteria.maxTipTwist, 0.1, (v) => (S.criteria.maxTipTwist = v))));
+      if (R && S.load.kind === "flight") pm.append(kv([["Semi-wing lift", `${nf(R.liftN, 2)} N`], ["Net force after relief", `${nf(R.appliedForce, 2)} N`]]));
+    } else if (id === "mesh") {
+      $("#pmHead").textContent = "Mesh and solver";
+      head("How the answer is computed", "Seven cross-sections are meshed with triangles and solved for torsion and shear. A 1-D beam carries the loads along the span.");
+      if (R) {
+        const s0 = R.sections[0];
+        pm.append(fs("Mesh", kv([["Analysis stations", R.ySec.map((v) => nf(v, 0)).join(", ") + " mm"], ["Triangles per section", (s0.mesh.tris.length / 3).toLocaleString()], ["Beam elements", R.fem.y.length - 1], ["Span grid points", R.y.length]])));
+        const v = R.verification;
+        pm.append(fs("Built-in checks", kv([
+          ["Root shear vs applied force", v.rootShearError.toExponential(1)], ["Root moment vs applied moment", v.rootMomentError.toExponential(1)],
+          ["Deflection: integration vs FEM", `${nf(100 * v.deflectionMethodsDiff, 3)} %`], ["Twist: integration vs FEM", `${nf(100 * v.twistMethodsDiff, 3)} %`],
+          ["J Bredt–Batho / 2-D FE, root", nf(v.bredtRatioRoot, 3)], ["Principal-axis angle", `${nf(v.principalAngleMax, 2)}°`]])));
+      }
+      pm.append(el("p", { class: "note" }, "Theory: modulus-weighted sections; St-Venant warping and Prandtl-type shear functions by 2-D finite elements; Euler–Bernoulli bending and St-Venant torsion of a tapered cantilever; dry seams as rotational springs; Hermite beam elements for the modes. The engine reproduces the course Python solver (238 compared quantities, tip deflection within 0.1 %)."));
+    } else if (id.startsWith("res") || id === "results") {
+      $("#pmHead").textContent = "Result plot";
+      head({ stress: "Spanwise normal stress", disp: "Resultant displacement", fos: "Factor of safety (strength)", mode: "Natural frequency modes", model: "Model" }[S.plot] || "Results",
+        { stress: "σ = −E κ (z − z̄) on the outer skin and sleeves: beam theory on the exact section, at limit load. Rods use their own colour.", disp: "Bending deflection plus twist about the shear centre, at limit load.", fos: "Strength of printed PLA divided by the local bending stress at limit load. Values below your required factor of safety show red. Skin buckling is checked separately.", mode: "Undamped modes of the clamped wing. Pick a mode in the viewport.", model: "" }[S.plot] || "");
+      if (R) pm.append(kv([["Tip deflection", `${nf(R.deflection.at(-1), 2)} mm`], ["Tip twist", `${nf((R.twist.at(-1) * 180) / Math.PI, 3)}°`], ["Root bending moment", `${nf(R.M[0] / 1000, 3)} N·m`], ["Root torque (nose-up +)", `${nf(R.T[0] / 1000, 4)} N·m`], ["First bending mode", `${nf(R.fem.fBending[0], 2)} Hz`], ["First torsion mode", `${nf(R.fem.fTorsion[0], 1)} Hz`], ["Governing check", `${R.governing.name.replace(/ \(.*\)/, "")} · U ${nf(R.governing.U, 2)}`]]));
+    }
+  }
+  let flashTimer;
+  function flash(msg) {
+    $("#stateChip").className = "chip bad"; $("#stateChip").textContent = "Input error"; $("#stateText").textContent = msg;
+    clearTimeout(flashTimer); flashTimer = setTimeout(() => setStatus(), 5000);
+  }
+
+  // ------------------------------------------------------------ run control
+  let runTimer;
+  function changed() {
+    stale = true;
+    setStatus();
+    renderTree();
+    clearTimeout(runTimer);
+    runTimer = setTimeout(runStudy, 450);
+  }
+  function setStatus(text) {
+    const chip = $("#stateChip"), t = $("#stateText"), btn = $("#runBtn");
+    btn.classList.toggle("stale", stale && !running);
+    if (running) { chip.className = "chip idle"; chip.textContent = "Solving"; t.textContent = text || "Running the study"; return; }
+    if (stale) { chip.className = "chip warn"; chip.textContent = "Out of date"; t.textContent = "Inputs changed — run the study"; return; }
+    if (!R) return;
+    const u = R.governing.U;
+    chip.className = "chip " + (u <= 0.7 ? "ok" : u <= 1 ? "warn" : "bad");
+    chip.textContent = u <= 1 ? "All checks pass" : "Check exceeded";
+    t.textContent = text || `Governing U = ${nf(u, 2)} · ${R.governing.name.replace(/ \(.*\)/, "")}`;
+  }
+  const frame = () => new Promise((r) => requestAnimationFrame(() => setTimeout(r, 0)));
+  async function runStudy() {
+    if (running) { pending = true; return; }
+    running = true; stale = false;
+    setStatus();
+    const input = engineInput();
+    const geoKey = JSON.stringify(input.geometry);
+    const t0 = performance.now();
+    const heavy = geoKey !== lastGeoKey;
+    const ld = $("#loading");
+    try {
+      E.makeGeometry(input.geometry);
+      if (heavy) {
+        ld.hidden = false;
+        $("#loadTitle").textContent = R ? "Re-meshing the wing" : "Starting the solver";
+        const ys = E.stations(input);
+        for (let k = 0; k < ys.length; k++) {
+          $("#loadStep").textContent = `Meshing section ${k + 1} of ${ys.length} at y = ${ys[k].toFixed(1)} mm · solving warping and shear functions`;
+          $("#loadBar").style.width = `${(100 * k) / (ys.length + 2)}%`;
+          await frame();
+          E.warmStation(input, k);
+        }
+        $("#loadStep").textContent = "Assembling the 1-D beam · extracting natural frequencies";
+        $("#loadBar").style.width = `${(100 * ys.length) / (ys.length + 2)}%`;
+        await frame();
+      }
+      R = E.solve(input);
+      if (heavy) { buildModel(R); lastGeoKey = geoKey; frameView(heavy && !lastViewSet); }
+      applyResult();
+      renderAll();
+      const ms = performance.now() - t0;
+      $("#footline").textContent = `Solved in ${(ms / 1000).toFixed(2)} s · ${R.sections.length} sections × ${(R.sections[0].mesh.tris.length / 3).toLocaleString()} triangles · ${R.fem.y.length - 1} beam elements · beam theory on exact printed sections, not 3-D FE`;
+    } catch (err) {
+      console.error(err);
+      flash(err.message || String(err));
+    } finally {
+      ld.hidden = true;
+      running = false;
+      setStatus();
+      renderTree();
+      if (pending) { pending = false; runStudy(); }
+    }
+  }
+
+  // ------------------------------------------------------------ 3-D scene
+  const canvas = $("#gl");
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, preserveDrawingBuffer: false });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.localClippingEnabled = true;
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(32, 1, 1, 20000);
+  const controls = new THREE.OrbitControls(camera, canvas);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.12;
+  scene.add(new THREE.HemisphereLight(0xdfe9f5, 0x2a3440, 0.85));
+  const key = new THREE.DirectionalLight(0xffffff, 0.75); key.position.set(300, 500, 400); scene.add(key);
+  const rim = new THREE.DirectionalLight(0x9fc4ff, 0.35); rim.position.set(-400, 150, -300); scene.add(rim);
+  const clipPlane = new THREE.Plane(new THREE.Vector3(-1, 0, 0), 150);
+  const world = new THREE.Group(); scene.add(world);
+  let model = null, lastViewSet = false;
+
+  // three.js axes: X = span (y), Y = up (z), Z = chord (x, from the leading edge)
+  const COLORS = { pla: 0xc9d3dd, rib: 0xe6d9c0, sleeve: 0xe39a4b, rod: 0x2b3138, fixture: 0x33c587, load: 0xd25ad6, relief: 0x7aa7d9, seam: 0x4ea6ff };
+
+  function swept(stations, loopAt, matOpts) {
+    const nS = stations.length, loops = stations.map(loopAt), nP = loops[0].length;
+    const pos = new Float32Array(nS * nP * 3), col = new Float32Array(nS * nP * 3);
+    const by = new Float32Array(nS * nP), bx = new Float32Array(nS * nP), bz = new Float32Array(nS * nP);
+    loops.forEach((loop, s) => loop.forEach(([x, z], p) => { const i = s * nP + p; by[i] = stations[s]; bx[i] = x; bz[i] = z; }));
+    const idx = [];
+    for (let s = 0; s < nS - 1; s++) for (let p = 0; p < nP; p++) {
+      const a = s * nP + p, b = s * nP + ((p + 1) % nP), c = (s + 1) * nP + ((p + 1) % nP), d = (s + 1) * nP + p;
+      idx.push(a, b, c, a, c, d);
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+    geo.setAttribute("color", new THREE.BufferAttribute(col, 3));
+    geo.setIndex(idx);
+    const mat = new THREE.MeshPhongMaterial({ vertexColors: true, side: THREE.DoubleSide, shininess: 28, clippingPlanes: [], ...matOpts });
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.userData = { by, bx, bz, nP, nS };
+    return mesh;
+  }
+  function circleLoop(c, r, n = 28) { return Array.from({ length: n }, (_, k) => [c[0] + r * Math.cos((2 * Math.PI * k) / n), c[1] + r * Math.sin((2 * Math.PI * k) / n)]); }
+  function shapeFrom(outer, holes) {
+    const sh = new THREE.Shape(outer.map(([x, z]) => new THREE.Vector2(x, z)));
+    holes.forEach((h) => sh.holes.push(new THREE.Path(h.map(([x, z]) => new THREE.Vector2(x, z)))));
+    return sh;
+  }
+  // map shape space (X = chord, Y = up, Z = extrusion) to three space (X = span, Y = up, Z = chord)
+  const SWAP = new THREE.Matrix4().set(0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1);
+  function platePart(outer, holes, thickness, y0, color) {
+    const geo = new THREE.ExtrudeGeometry(shapeFrom(outer, holes), { depth: thickness, bevelEnabled: false, curveSegments: 18 });
+    geo.applyMatrix4(SWAP);
+    geo.translate(y0, 0, 0);
+    geo.computeVertexNormals();
+    const m = new THREE.Mesh(geo, new THREE.MeshPhongMaterial({ color, side: THREE.DoubleSide, shininess: 18, clippingPlanes: [] }));
+    m.userData.y = y0 + thickness / 2;
+    m.userData.base = y0;
+    return m;
+  }
+
+  function buildModel(res) {
+    if (model) { world.remove(model.root); model.root.traverse((o) => { if (o.geometry) o.geometry.dispose(); if (o.material) o.material.dispose(); }); }
+    const g = res.geometry, L = g.semiSpan;
+    const root = new THREE.Group();
+    const bounds = E.moduleBounds(g);
+    const modules = [], skins = [], sleeves = [], rigid = [];
+    const outerAt = (y) => E.outerContour(g, y, 49);
+    for (let k = 0; k < bounds.length - 1; k++) {
+      const grp = new THREE.Group();
+      const y0 = bounds[k], y1 = bounds[k + 1];
+      const n = Math.max(8, Math.round((y1 - y0) / 4));
+      const st = Array.from({ length: n + 1 }, (_, i) => y0 + ((y1 - y0) * i) / n);
+      const skin = swept(st, outerAt, { transparent: false, opacity: 1 });
+      skin.userData.kind = "skin"; skin.userData.module = k;
+      grp.add(skin); skins.push(skin);
+      for (const f of g.rodFractions) {
+        const fIdx = g.rodFractions.indexOf(f);
+        const sl = swept(st, (y) => circleLoop(E.rodCentres(g, y)[fIdx], E.sleeveRadius(g), 24), {});
+        sl.userData.kind = "sleeve"; sl.userData.module = k;
+        grp.add(sl); sleeves.push(sl);
+      }
+      // module end faces: printed ring + sleeves, holes for the rods
+      for (const ye of [y0, y1]) {
+        const outer = outerAt(ye);
+        const cav = E.ringLoops(g, Math.min(Math.max(ye, 0.01), L)).inner;
+        const solidEnd = (ye === 0 || ye === L);
+        const holes = solidEnd ? E.rodCentres(g, ye).map((c) => circleLoop(c, E.holeRadius(g), 24)) : [cav];
+        const t = solidEnd ? g.cap : 0.6;
+        const yy = ye === y0 ? ye : ye - t;
+        const face = platePart(outer, holes, t, yy, COLORS.pla);
+        face.userData.kind = "face"; face.userData.module = k;
+        grp.add(face); rigid.push(face);
+        if (!solidEnd) for (const c of E.rodCentres(g, ye)) {
+          const ring = platePart(circleLoop(c, E.sleeveRadius(g), 24), [circleLoop(c, E.holeRadius(g), 24)], 0.6, yy, COLORS.sleeve);
+          ring.userData.module = k; grp.add(ring); rigid.push(ring);
+        }
+      }
+      root.add(grp); modules.push(grp);
+    }
+    const ribs = [];
+    for (const yr of E.ribStations(g)) {
+      const k = bounds.findIndex((b, i) => i < bounds.length - 1 && yr >= b && yr <= bounds[i + 1]);
+      const holes = E.rodCentres(g, yr).map((c) => circleLoop(c, E.holeRadius(g), 24));
+      const rib = platePart(outerAt(yr), holes, g.ribThickness, yr - g.ribThickness / 2, COLORS.rib);
+      rib.userData.kind = "rib"; rib.userData.module = k;
+      modules[k].add(rib); ribs.push(rib); rigid.push(rib);
+    }
+    const rods = g.rodFractions.map((f, fIdx) => {
+      const st = Array.from({ length: 31 }, (_, i) => (L * i) / 30);
+      const r = swept(st, (y) => circleLoop(E.rodCentres(g, y)[fIdx], E.rodRadius(g), 18), { shininess: 60 });
+      r.userData.kind = "rod";
+      root.add(r);
+      return r;
+    });
+    // fixture symbol at the root
+    const fix = new THREE.Group();
+    const c0 = g.rootChord;
+    const plate = new THREE.Mesh(new THREE.BoxGeometry(2, 34, c0 * 1.15), new THREE.MeshPhongMaterial({ color: COLORS.fixture, transparent: true, opacity: 0.35 }));
+    plate.position.set(-2, 2, c0 / 2);
+    fix.add(plate);
+    for (let i = 0; i < 6; i++) {
+      const a = new THREE.ArrowHelper(new THREE.Vector3(1, 0, 0), new THREE.Vector3(-24, (i % 2 ? 7 : -3), c0 * (0.1 + 0.16 * i)), 20, COLORS.fixture, 7, 4);
+      fix.add(a);
+    }
+    root.add(fix);
+    const loads = new THREE.Group(); root.add(loads);
+    const marker = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ color: COLORS.seam, transparent: true, opacity: 0.18, side: THREE.DoubleSide, depthWrite: false }));
+    marker.visible = false; root.add(marker);
+    world.add(root);
+    model = { g, root, modules, skins, sleeves, rods, ribs, rigid, loads, marker, fix };
+    applyClip();
+    applyXray();
+  }
+
+  function frameView(force) {
+    if (!model) return;
+    const g = model.g;
+    if (force || !lastViewSet) { setView("iso"); lastViewSet = true; }
+    $("#clipIn").max = g.semiSpan; $("#secY").max = g.semiSpan;
+  }
+  function setView(v) {
+    if (!model) return;
+    const g = model.g, L = g.semiSpan, c = g.rootChord;
+    const target = new THREE.Vector3(L / 2, 0, c / 2);
+    const aspect = Math.max(camera.aspect || 1.6, 0.3);
+    const d = Math.max(L, c) * 1.25 * Math.max(1, 1.5 / aspect);
+    const pos = { iso: [L * 0.5 + d * 0.55, d * 0.42, c / 2 + d * 0.72], plan: [L / 2, d * 1.05, c / 2 + 0.01], section: [L + d * 0.9, 0.0001, c / 2], front: [L / 2, 0.0001, -d * 0.95] }[v];
+    camera.position.set(...pos);
+    controls.target.copy(target);
+    camera.up.set(0, 1, 0);
+    controls.update();
+  }
+
+  // ------------------------------------------------------------ results on the model
+  function rainbow(t) {
+    t = Math.min(1, Math.max(0, t));
+    const band = Math.min(11, Math.floor(t * 12)) / 11; // 12 discrete bands, like FEA legends
+    const h = (1 - band) * (240 / 360);
+    const c = new THREE.Color(); c.setHSL(h, 1, 0.5);
+    return c;
+  }
+  const at = (arr, y) => E.interp(y, R.y, arr);
+  const zscAt = (y) => E.interp(y, R.ySec, R.sections.map((s) => s.zsc));
+  function fieldValue(y, x, z, kind) {
+    const k = at(R.kappa, y), zc = at(R.props.zc, y);
+    const sigma = -R.pla.E * k * (z - zc);
+    if (kind === "sigma") return sigma;
+    if (kind === "fos") { const ult = Math.abs(sigma); if (ult < 1e-9) return 99; return (sigma >= 0 ? R.pla.ft : R.pla.fc) / ult; }
+    if (kind === "disp") {
+      const w = at(R.deflection, y), phi = at(R.twist, y), xsc = at(R.props.xsc, y);
+      const zsc = zscAt(y);
+      const dz = w + phi * (xsc - x), dx = phi * (z - zsc);
+      return Math.hypot(dz, dx);
+    }
+    return 0;
+  }
+  let range = { min: 0, max: 1 };
+  function computeRange(kind) {
+    let mn = Infinity, mx = -Infinity;
+    const meshes = model.skins.concat(model.sleeves);
+    for (const m of meshes) { const u = m.userData; for (let i = 0; i < u.by.length; i += 3) { const v = fieldValue(u.by[i], u.bx[i], u.bz[i], kind); if (v < mn) mn = v; if (v > mx) mx = v; } }
+    if (kind === "fos") { mn = 0; mx = Math.min(Math.max(mx, 1), 10); }
+    if (mx - mn < 1e-12) mx = mn + 1;
+    return { min: mn, max: mx };
+  }
+  function deformAmount() {
+    if (!R) return 0;
+    const maxU = Math.max(...R.deflection.map(Math.abs)) + Math.max(...R.twist.map(Math.abs)) * R.geometry.rootChord * 0.6;
+    const auto = maxU > 1e-9 ? (0.08 * R.geometry.semiSpan) / maxU : 1;
+    return { auto, scale: S.deformed ? auto * S.scale : 0 };
+  }
+  let modeT = 0;
+  function sectionMotion(y) {
+    // returns [w, phi] displacement of the section at y for the current display (static or mode)
+    if (S.plot === "mode" && R) {
+      const shape = S.mode.kind === "bending" ? R.fem.modesBending[S.mode.index] : R.fem.modesTorsion[S.mode.index];
+      const v = E.interp(y, R.fem.y, shape) * Math.sin(modeT);
+      return S.mode.kind === "bending" ? [0.07 * R.geometry.semiSpan * v, 0] : [0, 0.22 * v];
+    }
+    const s = deformAmount().scale;
+    return [s * at(R.deflection, y), s * at(R.twist, y)];
+  }
+  function updateModel() {
+    if (!model || !R) return;
+    const kind = { stress: "sigma", disp: "disp", fos: "fos" }[S.plot];
+    const useField = !!kind;
+    if (useField) range = computeRange(kind);
+    const reqFos = R.load.fos;
+    const colorOf = (y, x, z, base) => {
+      if (!useField) return base;
+      const v = fieldValue(y, x, z, kind);
+      if (kind === "fos") return v < reqFos ? new THREE.Color(0xff1f3d) : rainbow(1 - (Math.min(v, range.max) - range.min) / (range.max - range.min));
+      return rainbow((v - range.min) / (range.max - range.min));
+    };
+    const explode = S.explode;
+    const motionCache = new Map();
+    const motion = (y) => { const k = Math.round(y * 4); if (!motionCache.has(k)) motionCache.set(k, sectionMotion(y)); return motionCache.get(k); };
+    const xscAt = (y) => at(R.props.xsc, y);
+    const place = (y, x, z, out, mod) => {
+      const [w, a] = motion(y);
+      const xs = xscAt(y), zs = zscAt(y), dx = x - xs, dz = z - zs, ca = Math.cos(a), sa = Math.sin(a);
+      out[0] = y + (mod || 0) * explode;
+      out[1] = zs + dz * ca - dx * sa + w;
+      out[2] = xs + dz * sa + dx * ca;
+    };
+    const tmp = [0, 0, 0];
+    const base = { skin: new THREE.Color(COLORS.pla), sleeve: new THREE.Color(COLORS.sleeve), rod: new THREE.Color(COLORS.rod) };
+    for (const m of model.skins.concat(model.sleeves, model.rods)) {
+      const u = m.userData, pos = m.geometry.attributes.position.array, col = m.geometry.attributes.color.array;
+      const isRod = u.kind === "rod";
+      for (let i = 0; i < u.by.length; i++) {
+        place(u.by[i], u.bx[i], u.bz[i], tmp, isRod ? 0 : u.module);
+        pos[3 * i] = tmp[0]; pos[3 * i + 1] = tmp[1]; pos[3 * i + 2] = tmp[2];
+        const c = isRod ? base.rod : colorOf(u.by[i], u.bx[i], u.bz[i], base[u.kind]);
+        col[3 * i] = c.r; col[3 * i + 1] = c.g; col[3 * i + 2] = c.b;
+      }
+      m.geometry.attributes.position.needsUpdate = true;
+      m.geometry.attributes.color.needsUpdate = true;
+      m.geometry.computeVertexNormals();
+      m.geometry.computeBoundingSphere();
+    }
+    for (const p of model.rigid) {
+      const y = p.userData.y, [w, a] = motion(y), xs = xscAt(y), zs = zscAt(y);
+      p.position.set((p.userData.module || 0) * explode, 0, 0);
+      // rotate about the span axis through the shear centre, then translate by w
+      p.rotation.set(a, 0, 0);
+      const ca = Math.cos(a), sa = Math.sin(a);
+      p.position.y = zs - (zs * ca - xs * sa) + w;
+      p.position.z = xs - (zs * sa + xs * ca);
+      p.position.x = (p.userData.module || 0) * explode;
+    }
+    drawLoads();
+    renderLegend(kind);
+  }
+  function drawLoads() {
+    const grp = model.loads;
+    while (grp.children.length) { const c = grp.children.pop(); c.traverse((o) => { if (o.geometry) o.geometry.dispose(); if (o.material) o.material.dispose(); }); }
+    if (!R || S.plot === "mode") return;
+    const g = R.geometry, L = g.semiSpan;
+    const lift = R.load.kind === "flight";
+    const scaleLen = 60;
+    const add = (y, x, F, color) => {
+      if (Math.abs(F) < 1e-9) return;
+      const w = sectionMotion(y)[0];
+      const len = Math.max(14, Math.min(90, scaleLen * Math.abs(F)));
+      const zLow = at(R.props.zBot, y) - 4, zHigh = at(R.props.zTop, y) + 4;
+      if (F > 0) grp.add(new THREE.ArrowHelper(new THREE.Vector3(0, 1, 0), new THREE.Vector3(y, zLow - len + w, x), len, color, Math.min(10, len * 0.35), 5));
+      else grp.add(new THREE.ArrowHelper(new THREE.Vector3(0, -1, 0), new THREE.Vector3(y, zHigh + len + w, x), len, color, Math.min(10, len * 0.35), 5));
+    };
+    if (lift && R.load.distribution !== "tip") {
+      const wmax = Math.max(...R.w.map((v) => Math.abs(v))) || 1;
+      for (let i = 0; i <= 12; i++) {
+        const y = (L * i) / 12 * 0.999;
+        const wl = R.load.distribution === "uniform" ? 1 : E.interp(y, R.y, R.w) / wmax;
+        add(y, R.load.liftFraction * E.chordAt(g, y), wl * 1.2, COLORS.load);
+      }
+    } else {
+      const p = R.point[0];
+      add(p[0], p[2], 1.4, COLORS.load);
+    }
+  }
+  function renderLegend(kind) {
+    const lg = $("#legend"), lt = $("#legendTitle");
+    if (!kind) { lg.innerHTML = ""; lt.textContent = ""; return; }
+    const unit = { sigma: "MPa", disp: "mm", fos: "" }[kind];
+    lt.textContent = { sigma: "Stress σ, span (MPa)", disp: "Displacement (mm)", fos: "Factor of safety" }[kind];
+    const bands = Array.from({ length: 12 }, (_, i) => rainbow((11 - i) / 11.0001 + 1e-6));
+    const ticks = kind === "fos"
+      ? Array.from({ length: 7 }, (_, i) => range.min + ((range.max - range.min) * i) / 6)
+      : Array.from({ length: 7 }, (_, i) => range.max - ((range.max - range.min) * i) / 6);
+    lg.innerHTML = `<div class="bar-c" style="height:${Math.min(220, Math.max(96, canvas.clientHeight * (canvas.clientWidth < 560 ? 0.24 : 0.36)))}px">${bands.map((c) => `<div style="background:#${c.getHexString()}"></div>`).join("")}</div>` +
+      `<div class="ticks">${ticks.map((v) => `<span>${kind === "fos" && v >= 10 ? "≥10" : sig(v, 3)}</span>`).join("")}</div>`;
+    void unit;
+  }
+  function renderPlotInfo() {
+    if (!R) return;
+    const g = R.geometry;
+    const kind = { stress: "Spanwise normal stress σ, beam theory, limit load", disp: "Resultant displacement, limit load", fos: `Factor of safety on PLA strength (red: below ${R.load.fos})`, mode: "Natural frequency mode", model: "Model" }[S.plot];
+    const d = deformAmount();
+    const scaleTxt = S.plot === "mode" ? "animated" : S.deformed ? nf(d.scale, 1) : "off";
+    let modeTxt = "";
+    if (S.plot === "mode") { const f = (S.mode.kind === "bending" ? R.fem.fBending : R.fem.fTorsion)[S.mode.index]; modeTxt = `<br><b>Mode:</b> ${S.mode.kind} ${S.mode.index + 1}, ${nf(f, 2)} Hz`; }
+    $("#plotinfo").innerHTML = `<b>Model:</b> NACA ${g.naca} semi-wing, ${g.semiSpan} × ${g.rootChord}/${g.tipChord} mm<br><b>Study:</b> ${R.load.kind === "flight" ? `lift, n = ${R.load.loadFactor}, m = ${R.load.aircraftMass} kg (${R.load.distribution})` : `tip force ${R.load.tipForce} N`} · ${R.assembly.seamsBonded ? "epoxied" : "dry"} seams · ${R.assembly.rodsBonded ? "epoxied" : "slip-fit"} rods<br><b>Plot:</b> ${kind}<br><b>Deformation scale:</b> ${scaleTxt}${modeTxt}`;
+  }
+  function applyClip() {
+    if (!model) return;
+    clipPlane.constant = S.clipY;
+    const planes = S.clip ? [clipPlane] : [];
+    model.root.traverse((o) => { if (o.material && "clippingPlanes" in o.material) { o.material.clippingPlanes = planes; o.material.needsUpdate = true; } });
+  }
+  function applyXray() {
+    if (!model) return;
+    for (const m of model.skins) { m.material.transparent = S.xray; m.material.opacity = S.xray ? 0.22 : 1; m.material.depthWrite = !S.xray; m.material.needsUpdate = true; }
+    model.rigid.filter((p) => p.userData.kind === "face").forEach((p) => { p.material.transparent = S.xray; p.material.opacity = S.xray ? 0.25 : 1; p.material.needsUpdate = true; });
+  }
+  function applyResult() {
+    updateModel();
+    renderPlotInfo();
+    renderModePlayer();
+  }
+
+  // ------------------------------------------------------------ probe
+  const raycaster = new THREE.Raycaster();
+  const ndc = new THREE.Vector2();
+  canvas.addEventListener("pointermove", (ev) => {
+    if (!model || !R) return;
+    const r = canvas.getBoundingClientRect();
+    ndc.set(((ev.clientX - r.left) / r.width) * 2 - 1, -((ev.clientY - r.top) / r.height) * 2 + 1);
+    raycaster.setFromCamera(ndc, camera);
+    const hits = raycaster.intersectObjects(model.skins.concat(model.sleeves, model.rods), false).filter((h) => !S.clip || h.point.x <= S.clipY);
+    const pr = $("#probe");
+    if (!hits.length || ev.buttons) { pr.hidden = true; return; }
+    const h = hits[0], u = h.object.userData;
+    const tri = new THREE.Triangle(), bc = new THREE.Vector3();
+    const p = h.object.geometry.attributes.position;
+    tri.set(new THREE.Vector3().fromBufferAttribute(p, h.face.a), new THREE.Vector3().fromBufferAttribute(p, h.face.b), new THREE.Vector3().fromBufferAttribute(p, h.face.c));
+    tri.getBarycoord(h.point, bc);
+    const mix = (arr) => arr[h.face.a] * bc.x + arr[h.face.b] * bc.y + arr[h.face.c] * bc.z;
+    const y = mix(u.by), x = mix(u.bx), z = mix(u.bz);
+    const c = E.chordAt(R.geometry, y);
+    let body;
+    if (u.kind === "rod") {
+      const k = at(R.kappa, y);
+      const rc = E.rodCentres(R.geometry, y).reduce((a, b) => (Math.abs(b[0] - x) < Math.abs(a[0] - x) ? b : a));
+      const sRod = R.assembly.rodsBonded ? -R.rod.E * k * (z - at(R.props.zc, y)) : -R.rod.E * k * (z - rc[1]);
+      body = `<b>Carbon rod</b><br>y ${nf(y, 1)} mm<br>σ ${nf(sRod, 2)} MPa`;
+    } else {
+      const sg = fieldValue(y, x, z, "sigma"), ds = fieldValue(y, x, z, "disp"), fos = fieldValue(y, x, z, "fos");
+      body = `<b>${u.kind === "sleeve" ? "Printed sleeve" : "Printed skin"} · module ${u.module + 1}</b><br>y ${nf(y, 1)} mm · x/c ${nf(x / c, 3)}<br>σ ${nf(sg, 3)} MPa ${sg < 0 ? "(compression)" : "(tension)"}<br>URES ${nf(ds, 3)} mm · FoS ${fos > 50 ? ">50" : nf(fos, 1)}`;
+    }
+    pr.innerHTML = body;
+    pr.hidden = false;
+    const vr = $(".view").getBoundingClientRect();
+    let left = ev.clientX - vr.left, top = ev.clientY - vr.top;
+    if (left > vr.width - 230) left -= 250;
+    pr.style.left = `${left}px`; pr.style.top = `${top}px`;
+  });
+  canvas.addEventListener("pointerleave", () => ($("#probe").hidden = true));
+
+  // ------------------------------------------------------------ render loop
+  function resize() {
+    const w = canvas.clientWidth, h = canvas.clientHeight;
+    if (canvas.width !== Math.round(w * renderer.getPixelRatio()) || canvas.height !== Math.round(h * renderer.getPixelRatio())) {
+      renderer.setSize(w, h, false);
+      camera.aspect = w / Math.max(h, 1);
+      camera.updateProjectionMatrix();
+    }
+  }
+  let lastT = performance.now();
+  function loop(t) {
+    resize();
+    controls.update();
+    if (S.plot === "mode" && R && model) {
+      const f = (S.mode.kind === "bending" ? R.fem.fBending : R.fem.fTorsion)[S.mode.index];
+      const visualHz = Math.min(1.2, 0.35 + f / 120);
+      if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) modeT += ((t - lastT) / 1000) * 2 * Math.PI * visualHz;
+      else modeT = Math.PI / 2;
+      updateModel();
+    }
+    lastT = t;
+    renderer.render(scene, camera);
+    requestAnimationFrame(loop);
+  }
+
+  // ------------------------------------------------------------ charts
+  function niceTicks(min, max, n = 4) {
+    if (min === max) { min -= 1; max += 1; }
+    const span = max - min, step0 = span / n, mag = Math.pow(10, Math.floor(Math.log10(step0)));
+    const step = [1, 2, 2.5, 5, 10].map((m) => m * mag).find((s) => span / s <= n + 0.5) || 10 * mag;
+    const lo = Math.floor(min / step) * step, hi = Math.ceil(max / step) * step;
+    const out = []; for (let v = lo; v <= hi + step * 1e-6; v += step) out.push(+v.toFixed(10));
+    return out;
+  }
+  function chart(host, title, unit, xs, series, opts = {}) {
+    const W = 420, H = 112, m = { l: 40, r: 8, t: 6, b: 18 };
+    const ys = series.flatMap((s) => s.y);
+    let ymin = Math.min(0, ...ys), ymax = Math.max(0, ...ys);
+    const ticks = niceTicks(ymin, ymax, 3);
+    ymin = ticks[0]; ymax = ticks[ticks.length - 1];
+    const xmax = xs[xs.length - 1];
+    const X = (v) => m.l + ((W - m.l - m.r) * v) / xmax, Y = (v) => m.t + ((H - m.t - m.b) * (ymax - v)) / (ymax - ymin || 1);
+    const step = Math.max(1, Math.floor(xs.length / 300));
+    let svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${title}">`;
+    for (const tv of ticks) svg += `<line x1="${m.l}" x2="${W - m.r}" y1="${Y(tv)}" y2="${Y(tv)}" stroke="var(--line)" stroke-width="${tv === 0 ? 1.2 : 0.6}"/><text x="${m.l - 5}" y="${Y(tv) + 3}" text-anchor="end">${sig(tv, 3)}</text>`;
+    for (const s of opts.seams || []) svg += `<line x1="${X(s)}" x2="${X(s)}" y1="${m.t}" y2="${H - m.b}" stroke="var(--faint)" stroke-dasharray="3 3" stroke-width="0.8"/>`;
+    for (const xv of niceTicks(0, xmax, 4)) if (xv <= xmax + 1e-9) svg += `<text x="${X(xv)}" y="${H - 4}" text-anchor="middle">${xv}</text>`;
+    for (const s of series) {
+      let d = "";
+      for (let i = 0; i < xs.length; i += step) d += `${i ? "L" : "M"}${X(xs[i]).toFixed(1)},${Y(s.y[i]).toFixed(1)}`;
+      d += `L${X(xs[xs.length - 1]).toFixed(1)},${Y(s.y[s.y.length - 1]).toFixed(1)}`;
+      if (s.fill) svg += `<path d="${d}L${X(xs[xs.length - 1])},${Y(0)}L${X(xs[0])},${Y(0)}Z" fill="${s.color}" opacity="0.12"/>`;
+      svg += `<path d="${d}" fill="none" stroke="${s.color}" stroke-width="${s.width || 1.6}" ${s.dash ? `stroke-dasharray="${s.dash}"` : ""} vector-effect="non-scaling-stroke"/>`;
+    }
+    svg += `<line class="hover" x1="0" x2="0" y1="${m.t}" y2="${H - m.b}" stroke="var(--accent)" stroke-width="1" visibility="hidden"/></svg>`;
+    const div = el("div", { class: "chart" }, `<h4>${title}<span>${opts.badge || unit}</span></h4>${svg}`);
+    const sv = div.querySelector("svg"), hl = sv.querySelector(".hover");
+    sv.addEventListener("pointermove", (ev) => {
+      const r = sv.getBoundingClientRect();
+      const fx = ((ev.clientX - r.left) / r.width) * W;
+      const xv = Math.min(xmax, Math.max(0, ((fx - m.l) / (W - m.l - m.r)) * xmax));
+      hl.setAttribute("x1", X(xv)); hl.setAttribute("x2", X(xv)); hl.setAttribute("visibility", "visible");
+      const vals = series.map((s) => `${s.label ? s.label + " " : ""}${sig(E.interp(xv, xs, s.y), 3)}`).join(" · ");
+      div.querySelector("h4 span").textContent = `y ${xv.toFixed(0)} mm: ${vals} ${unit}`;
+      showMarker(xv);
+    });
+    sv.addEventListener("pointerleave", () => { hl.setAttribute("visibility", "hidden"); div.querySelector("h4 span").textContent = opts.badge || unit; showMarker(null); });
+    host.append(div);
+  }
+  function showMarker(y) {
+    if (!model) return;
+    const mk = model.marker;
+    if (y == null) { mk.visible = false; return; }
+    const g = model.g, c = E.chordAt(g, y);
+    mk.visible = true;
+    mk.scale.set(c * 1.25, c * 0.45, 1);
+    mk.rotation.set(0, Math.PI / 2, 0);
+    mk.position.set(y, sectionMotion(y)[0], c / 2);
+  }
+  function renderCharts() {
+    const host = $("#charts");
+    host.innerHTML = "";
+    const y = Array.from(R.y), seams = R.seams;
+    const ac = css("--accent"), lc = "#d25ad6";
+    chart(host, "Net line load", "N/mm", y, [{ y: Array.from(R.w), color: lc, fill: true }], { seams, badge: R.point.length ? `+ ${R.point.length} point force${R.point.length > 1 ? "s" : ""}` : "N/mm" });
+    chart(host, "Shear force V", "N", y, [{ y: Array.from(R.V), color: "#33c587", fill: true }], { seams });
+    chart(host, "Bending moment M", "N·m", y, [{ y: Array.from(R.M).map((v) => v / 1000), color: "#f05b6c", fill: true }], { seams });
+    chart(host, "Torque T, nose-up +", "N·m", y, [{ y: Array.from(R.T).map((v) => v / 1000), color: "#a77bf3", fill: true }], { seams });
+    const femW = y.map((v) => E.interp(v, R.fem.y, R.fem.w));
+    chart(host, "Deflection", "mm", y, [{ y: Array.from(R.deflection), color: ac, width: 2.6 }, { y: femW, color: "#efb03b", dash: "4 3", label: "FEM" }], { seams, badge: `tip ${nf(R.deflection.at(-1), 2)} mm` });
+    const femP = y.map((v) => (E.interp(v, R.fem.y, R.fem.phi) * 180) / Math.PI);
+    chart(host, "Twist", "deg", y, [{ y: Array.from(R.twist).map((v) => (v * 180) / Math.PI), color: "#5fd0e0", width: 2.6 }, { y: femP, color: "#efb03b", dash: "4 3", label: "FEM" }], { seams, badge: `tip ${nf((R.twist.at(-1) * 180) / Math.PI, 3)}°` });
+  }
+
+  // ------------------------------------------------------------ checks
+  function renderChecks() {
+    const host = $("#checklist");
+    host.innerHTML = "";
+    const order = [...R.checks];
+    for (const c of order) {
+      const pct = Math.min(1.5, c.U) / 1.5;
+      const color = c.U <= 0.7 ? "var(--good)" : c.U <= 1 ? "var(--warn)" : "var(--bad)";
+      host.append(el("div", { class: "crow" + (c === R.governing ? " gov" : "") },
+        `<div><b>${c.name}</b><i>${sig(c.demand, 3)} / ${sig(c.capacity, 3)} ${c.unit} at y = ${nf(c.at, 0)} mm · ${c.basis}</i></div><div class="ubar" title="U = 1 at the tick"><div style="width:${(100 * pct).toFixed(1)}%;background:${color}"></div></div><div class="uval" style="color:${color}">${nf(c.U, 2)}</div>`));
+    }
+    const g = R.governing;
+    const why = {
+      "Skin compression buckling (screening)": "The thin upper skin wrinkles before the PLA reaches its strength. Shorter rib bays, a thicker skin or a deeper airfoil raise the buckling stress.",
+      "Rod bending at dry seam (rods carry the whole moment)": "At a dry seam the shell is cut and only the two rods carry the bending moment. Epoxying the seams or using stiffer, stronger rods relieves them.",
+      "PLA tension (bending)": "Bending tension in the lower skin governs. In upright prints this stress crosses layer interfaces, the weakest direction.",
+      "Tip deflection at limit load": "Stiffness governs. Dry seams and a soft rod card add flexibility.",
+    }[g.name] || "Read the basis line under the check to see what drives it.";
+    $("#govCallout").innerHTML = `<span class="chip ${g.U <= 1 ? (g.U <= 0.7 ? "ok" : "warn") : "bad"}">Governing · U ${nf(g.U, 2)}</span><h3>${g.name}</h3><p>${why}</p><p>Strength and buckling use the ultimate load (factor of safety ${R.load.fos} × limit). U close to or above 1 means investigate and test; it is a screening result, not a prediction of the exact failure load.</p><p>Shear stress at the four sharp cavity corners reaches ${nf(Math.max(...R.stress.tauPeak), 2)} MPa locally versus ${nf(Math.max(...R.stress.tau), 2)} MPa nominal; the corner value depends on the printed fillet and is reported, not checked.</p>`;
+  }
+
+  // ------------------------------------------------------------ section view
+  let secTimer;
+  function renderSection() {
+    if (!R) return;
+    const cv = $("#secCanvas"), ctx = cv.getContext("2d");
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const W = cv.clientWidth, H = cv.clientHeight;
+    cv.width = W * dpr; cv.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, W, H);
+    const y = S.secY;
+    $("#secYv").textContent = `${y.toFixed(0)} mm (chord ${nf(E.chordAt(R.geometry, y), 1)} mm)`;
+    let sec;
+    try { sec = E.sectionAt(engineInput(), y); } catch (e) { return; }
+    const c = sec.chord, pad = 16;
+    const zr = [sec.zBot, sec.zTop];
+    const sc = Math.min((W - 2 * pad) / c, (H - 2 * pad - 28) / (zr[1] - zr[0]));
+    const ox = (W - c * sc) / 2, oy = (H - 22) / 2 + ((zr[1] + zr[0]) / 2) * sc;
+    const P = (x, z) => [ox + x * sc, oy - z * sc];
+    const V = E.interp(y, R.y, R.V), T = E.interp(y, R.y, R.T), k = E.interp(y, R.y, R.kappa);
+    const mesh = sec.mesh, nodes = mesh.nodes, tris = mesh.tris, nT = tris.length / 3;
+    const field = S.secField;
+    const vals = new Float64Array(nT);
+    let lo = Infinity, hi = -Infinity;
+    const shear = field === "tau" ? E.shearField(sec, V, T, R.geometry) : null;
+    for (let e = 0; e < nT; e++) {
+      let v;
+      if (field === "sigma") { const zm = (nodes[2 * tris[3 * e] + 1] + nodes[2 * tris[3 * e + 1] + 1] + nodes[2 * tris[3 * e + 2] + 1]) / 3; v = -R.pla.E * k * (zm - sec.zc); }
+      else v = shear.values[e];
+      vals[e] = v; if (v < lo) lo = v; if (v > hi) hi = v;
+    }
+    if (field === "tau") hi = Math.max(shear.nominal * 1.05, 1e-9), lo = 0;
+    for (let e = 0; e < nT; e++) {
+      const t = Math.min(1, Math.max(0, (vals[e] - lo) / (hi - lo || 1)));
+      ctx.fillStyle = "#" + rainbow(t).getHexString();
+      ctx.beginPath();
+      for (let v = 0; v < 3; v++) { const n = tris[3 * e + v]; const [px, py] = P(nodes[2 * n], nodes[2 * n + 1]); v ? ctx.lineTo(px, py) : ctx.moveTo(px, py); }
+      ctx.closePath(); ctx.fill();
+    }
+    const ink = css("--fg"), muted = css("--muted");
+    for (const cc of sec.centres) {
+      const [px, py] = P(cc[0], cc[1]);
+      ctx.fillStyle = "#e39a4b"; ctx.beginPath(); ctx.arc(px, py, sec.Rs * sc, 0, 2 * Math.PI); ctx.arc(px, py, sec.rh * sc, 0, 2 * Math.PI, true); ctx.fill();
+      ctx.fillStyle = "#2b3138"; ctx.beginPath(); ctx.arc(px, py, sec.rr * sc, 0, 2 * Math.PI); ctx.fill();
+    }
+    const [cx, cz] = P(sec.xc, sec.zc), [sx, sz] = P(sec.xsc, sec.zsc);
+    ctx.strokeStyle = "#f05b6c"; ctx.lineWidth = 1; ctx.setLineDash([5, 4]);
+    ctx.beginPath(); ctx.moveTo(P(0, 0)[0] - 6, cz); ctx.lineTo(P(c, 0)[0] + 6, cz); ctx.stroke(); ctx.setLineDash([]);
+    ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(cx - 7, cz); ctx.lineTo(cx + 7, cz); ctx.moveTo(cx, cz - 7); ctx.lineTo(cx, cz + 7); ctx.stroke();
+    ctx.strokeStyle = "#33c587"; ctx.beginPath(); ctx.moveTo(sx - 6, sz - 6); ctx.lineTo(sx + 6, sz + 6); ctx.moveTo(sx + 6, sz - 6); ctx.lineTo(sx - 6, sz + 6); ctx.stroke();
+    ctx.font = "11px JetBrains Mono, monospace"; ctx.fillStyle = muted;
+    ctx.fillText(field === "sigma" ? `σ ${sig(lo, 3)} … ${sig(hi, 3)} MPa · dashed line = neutral axis` : `|τ| 0 … ${sig(hi, 3)} MPa (scale capped; corners ${sig(shear.peak, 3)} MPa)`, 10, H - 8);
+    ctx.fillStyle = ink;
+    ctx.fillText("+ centroid   × shear centre", W - 190, H - 8);
+    $("#secProps").innerHTML = [
+      ["Chord", `${nf(c, 1)} mm`], ["PLA area", `${nf(sec.plaArea, 1)} mm²`], ["EI flap", `${nf(sec.EIf / 1e6, 3)} N·m²`],
+      ["Rods' share of EI", `${nf((100 * sec.EIrods) / sec.EIf, 1)} %`], ["GJ", `${nf(sec.GJ / 1e6, 3)} N·m²`],
+      ["J, 2-D FE", `${Math.round(sec.Jfe).toLocaleString()} mm⁴`], ["J, Bredt–Batho", `${Math.round(sec.Jbredt).toLocaleString()} mm⁴`],
+      ["Shear centre", `${nf(sec.xsc / c, 3)} c`], ["Centroid", `${nf(sec.xc / c, 3)} c`], ["Mass", `${nf(sec.mass, 3)} g/mm`],
+      ["V, M, T here", `${nf(V, 2)} N · ${nf(E.interp(y, R.y, R.M) / 1000, 3)} N·m · ${nf(T, 0)} N·mm`],
+    ].map(([a, b]) => `<dt>${a}</dt><dd>${b}</dd>`).join("");
+    $("#secNote").textContent = "Orange: printed sleeves, tied to the shell only at the ribs. They add to bending stiffness, not to the torsion cell. Black: carbon rods.";
+  }
+
+  // ------------------------------------------------------------ comparison, prediction, challenge, report
+  async function runCompare() {
+    const btn = $("#cmpBtn"), host = $("#cmpTable");
+    btn.disabled = true;
+    host.innerHTML = '<p class="note">Running 8 studies…</p>';
+    await frame();
+    const base = engineInput();
+    const rows = [];
+    const rods = [E.MATERIALS.rod_hobby, E.MATERIALS.rod_t700];
+    for (const rod of rods) for (const rb of [false, true]) for (const sb of [false, true]) {
+      host.innerHTML = `<p class="note">Running study ${rows.length + 1} of 8…</p>`;
+      await frame();
+      const r = E.solve({ ...base, rod, assembly: { ...base.assembly, rodsBonded: rb, seamsBonded: sb }, nElements: 40 });
+      rows.push({ rod: rod.short, rods: rb ? "Epoxied" : "Slip fit", seams: sb ? "Epoxied" : "Dry", r });
+    }
+    const best = Math.max(...rows.map((x) => x.r.stiffness.tip));
+    host.innerHTML = `<table><thead><tr><th>Rod card</th><th>Rods</th><th>Seams</th><th class="num">Tip stiffness N/mm</th><th class="num">Tip deflection mm</th><th class="num">Dead band mm</th><th class="num">f₁ Hz</th><th>Governing</th><th class="num">U</th></tr></thead><tbody>${rows.map(({ rod, rods: rr, seams: ss, r }) => `<tr><td>${rod}</td><td>${rr}</td><td>${ss}</td><td class="num">${nf(r.stiffness.tip, 3)} <span style="display:inline-block;width:${(60 * r.stiffness.tip) / best}px;height:8px;border-radius:4px;background:var(--accent);vertical-align:middle;margin-left:6px"></span></td><td class="num">${nf(r.deflection.at(-1), 2)}</td><td class="num">${nf(r.seam.freePlay, 2)}</td><td class="num">${nf(r.fem.fBending[0], 1)}</td><td>${r.governing.name.replace(/ \(.*\)/, "")}</td><td class="num" style="color:${r.governing.U > 1 ? "var(--bad)" : r.governing.U > 0.7 ? "var(--warn)" : "var(--good)"}">${nf(r.governing.U, 2)}</td></tr>`).join("")}</tbody></table>`;
+    btn.disabled = false;
+  }
+  let prediction = store.get("prediction", null);
+  function renderPredict() {
+    const sel = $("#pGov");
+    if (R) {
+      const names = R.checks.map((c) => c.name);
+      sel.innerHTML = names.map((n) => `<option ${prediction && prediction.gov === n ? "selected" : ""}>${n}</option>`).join("");
+    }
+    const out = $("#pResult");
+    if (!prediction) { $("#pState").textContent = "No prediction locked."; out.innerHTML = ""; }
+    else {
+      $("#pState").textContent = `Locked: ${prediction.defl} mm, ${prediction.gov.replace(/ \(.*\)/, "")}`;
+      if (R && prediction.after) {
+        const actual = R.deflection.at(-1);
+        const err = (100 * (prediction.defl - actual)) / actual;
+        const hitGov = prediction.gov === R.governing.name;
+        const verdict = Math.abs(err) <= 15 ? "Excellent" : Math.abs(err) <= 35 ? "Close" : "Far off — find the assumption you missed";
+        out.innerHTML = `<div class="scoreline">Solver: ${nf(actual, 2)} mm · your error ${err > 0 ? "+" : ""}${nf(err, 0)} % · <b>${verdict}</b><br>Governing check: ${hitGov ? "you called it" : `it was “${R.governing.name.replace(/ \(.*\)/, "")}”`}</div>`;
+      }
+    }
+    if (R) {
+      const g = R.geometry, m = R.mass.printed;
+      const ok = R.checks.every((c) => c.U <= 1) && m <= 300 && g.rootChord <= 300 && g.semiSpan / g.modules <= 300 && g.skin >= 0.8 && g.ribThickness >= 0.8;
+      $("#chMass").textContent = `${nf(m, 1)} g`;
+      let best = store.get("best", null);
+      const caseKey = JSON.stringify([S.load, S.plaKey, S.rodKey, S.assembly]);
+      if (ok && (!best || best.key !== caseKey || m < best.m)) { best = { m, key: caseKey, g: { ...g } }; store.set("best", best); }
+      $("#chBest").textContent = best && best.key === caseKey ? `${nf(best.m, 1)} g` : "–";
+      $("#chState").innerHTML = ok ? '<span class="chip ok">Passes every check</span>' : `<span class="chip bad">Not yet: ${R.checks.filter((c) => c.U > 1).map((c) => c.name.replace(/ \(.*\)/, "")).join(", ") || "course limits"}</span>`;
+    }
+  }
+  $("#pLock").addEventListener("click", () => {
+    const d = parseFloat($("#pDefl").value);
+    if (!isFinite(d)) { $("#pState").textContent = "Enter a tip deflection first."; return; }
+    prediction = { defl: d, gov: $("#pGov").value, after: false };
+    store.set("prediction", prediction);
+    $("#pState").textContent = "Locked. Now press Run study.";
+    $("#pResult").innerHTML = "";
+  });
+  function reportText() {
+    if (!R) return "";
+    const g = R.geometry, L = R.load;
+    const lines = [
+      `MIE 446 Wing Lab — study report (engine v${R.version})`,
+      ``,
+      `Wing: NACA ${g.naca}, semi-span ${g.semiSpan} mm, chords ${g.rootChord}/${g.tipChord} mm, ${g.modules} modules, skin ${g.skin} mm, ribs ${g.ribThickness} mm at ${E.ribStations(g).map((v) => nf(v, 1)).join(", ")} mm`,
+      `Materials: ${R.pla.name} (E ${R.pla.E} MPa, tension ${R.pla.ft} MPa); ${R.rod.name} (E ${R.rod.E} MPa)`,
+      `Joints: rods ${R.assembly.rodsBonded ? "epoxied" : "slip fit"}, seams ${R.assembly.seamsBonded ? "epoxied" : `dry (rod free length ${R.seam.freeLength} mm)`}`,
+      `Load: ${L.kind === "flight" ? `lift n = ${L.loadFactor}, aircraft ${L.aircraftMass} kg, ${L.distribution}, at ${L.liftFraction} c, inertia relief ${L.inertiaRelief ? "on" : "off"}` : `tip force ${L.tipForce} N at ${L.tipFraction} c`}; factor of safety ${L.fos}`,
+      ``,
+      `Mass: printed PLA ${nf(R.mass.printed, 1)} g, rods ${nf(R.mass.rods, 1)} g`,
+      `Root: V ${nf(R.V[0], 2)} N, M ${nf(R.M[0] / 1000, 3)} N·m, T ${nf(R.T[0] / 1000, 4)} N·m (nose-up +)`,
+      `Tip deflection ${nf(R.deflection.at(-1), 2)} mm; tip twist ${nf((R.twist.at(-1) * 180) / Math.PI, 3)} deg`,
+      `Tip stiffness ${nf(R.stiffness.tip, 3)} N/mm (rigid seams ${nf(R.stiffness.rigidSeams, 3)}); clearance dead band ${nf(R.seam.freePlay, 2)} mm`,
+      `Frequencies: bending ${R.fem.fBending.map((f) => nf(f, 2)).join(", ")} Hz; torsion ${nf(R.fem.fTorsion[0], 1)} Hz`,
+      ``,
+      `Checks (U = demand/capacity):`,
+      ...R.checks.map((c) => `  ${c.U <= 1 ? "PASS" : "FAIL"}  U ${nf(c.U, 2).padStart(5)}  ${c.name} (${sig(c.demand, 3)} / ${sig(c.capacity, 3)} ${c.unit} at y = ${nf(c.at, 0)} mm)`),
+      `Governing: ${R.governing.name}`,
+      ``,
+      `Built-in checks: equilibrium error ${R.verification.rootMomentError.toExponential(1)}, integration vs beam FEM ${nf(100 * R.verification.deflectionMethodsDiff, 3)} %, J Bredt/FE ${nf(R.verification.bredtRatioRoot, 3)}`,
+      `Model: beam theory on exact printed sections (Euler–Bernoulli, St-Venant torsion, 2-D FE warping), dry seams as springs. Not a 3-D FE result; screening checks only.`,
+      ``,
+      `Claim:`, `Evidence:`, `Check:`, `Confidence:`, `Limitation:`,
+    ];
+    return lines.join("\n");
+  }
+  $("#copyBtn").addEventListener("click", async () => {
+    const t = $("#report");
+    try { await navigator.clipboard.writeText(t.value); $("#copyState").textContent = "Copied. Paste it into your engineering record."; }
+    catch { t.focus(); t.select(); $("#copyState").textContent = "Text selected — press Ctrl+C (⌘C) to copy."; }
+  });
+
+  function renderModePlayer() {
+    const mp = $("#modeplayer");
+    mp.hidden = S.plot !== "mode" || !R;
+    if (mp.hidden) return;
+    const seg = $("#modeSeg");
+    seg.innerHTML = "";
+    const opts = [["bending", 0], ["bending", 1], ["torsion", 0]];
+    for (const [kind, i] of opts) {
+      const f = (kind === "bending" ? R.fem.fBending : R.fem.fTorsion)[i];
+      const b = el("button", { type: "button", "aria-pressed": String(S.mode.kind === kind && S.mode.index === i) }, `${kind === "bending" ? "Bend" : "Twist"} ${i + 1} · ${nf(f, f < 100 ? 1 : 0)} Hz`);
+      b.addEventListener("click", () => { S.mode = { kind, index: i }; renderModePlayer(); renderPlotInfo(); });
+      seg.append(b);
+    }
+  }
+
+  function renderAll() {
+    if (!R) return;
+    renderTree(); renderPM(); renderCharts(); renderChecks(); renderPredict();
+    if (!$("#tab-section").hidden) renderSection();
+    $("#report").value = reportText();
+    if (prediction && !prediction.after) { prediction.after = true; store.set("prediction", prediction); renderPredict(); }
+  }
+
+  // ------------------------------------------------------------ wiring
+  function setPlot(p) {
+    S.plot = p;
+    document.querySelectorAll("[data-plot]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.plot === p)));
+    if (R) applyResult();
+    if (S.selected.startsWith("res") || S.selected === "results") renderPM();
+  }
+  document.querySelectorAll("[data-plot]").forEach((b) => b.addEventListener("click", () => {
+    setPlot(b.dataset.plot);
+    const map = { stress: "res-stress", disp: "res-disp", fos: "res-fos", mode: "res-mode" };
+    if (map[b.dataset.plot]) { S.selected = map[b.dataset.plot]; renderTree(); renderPM(); }
+  }));
+  $("#defBtn").addEventListener("click", (e) => { S.deformed = !S.deformed; e.currentTarget.setAttribute("aria-pressed", String(S.deformed)); applyResult(); });
+  $("#scaleIn").addEventListener("input", (e) => { S.scale = parseFloat(e.target.value); if (!S.deformed) { S.deformed = true; $("#defBtn").setAttribute("aria-pressed", "true"); } applyResult(); });
+  $("#xrayBtn").addEventListener("click", (e) => { S.xray = !S.xray; e.currentTarget.setAttribute("aria-pressed", String(S.xray)); applyXray(); });
+  $("#explodeIn").addEventListener("input", (e) => { S.explode = parseFloat(e.target.value); applyResult(); });
+  $("#clipBtn").addEventListener("click", (e) => { S.clip = !S.clip; e.currentTarget.setAttribute("aria-pressed", String(S.clip)); applyClip(); });
+  $("#clipIn").addEventListener("input", (e) => { S.clipY = parseFloat(e.target.value); if (!S.clip) { S.clip = true; $("#clipBtn").setAttribute("aria-pressed", "true"); } applyClip(); S.secY = S.clipY; $("#secY").value = S.clipY; if (!$("#tab-section").hidden) { clearTimeout(secTimer); secTimer = setTimeout(renderSection, 120); } });
+  document.querySelectorAll("[data-view]").forEach((b) => b.addEventListener("click", () => setView(b.dataset.view)));
+  $("#runBtn").addEventListener("click", () => { clearTimeout(runTimer); runStudy(); });
+  document.querySelectorAll("[role=tab]").forEach((b) => b.addEventListener("click", () => {
+    document.querySelectorAll("[role=tab]").forEach((x) => x.setAttribute("aria-selected", String(x === b)));
+    document.querySelectorAll(".tabpanel").forEach((p) => (p.hidden = p.id !== "tab-" + b.dataset.tab));
+    if (b.dataset.tab === "section") renderSection();
+  }));
+  $("#secY").addEventListener("input", (e) => { S.secY = parseFloat(e.target.value); clearTimeout(secTimer); secTimer = setTimeout(renderSection, 90); });
+  $("#secField").querySelectorAll("button").forEach((b) => b.addEventListener("click", () => {
+    S.secField = b.dataset.f;
+    $("#secField").querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+    renderSection();
+  }));
+  $("#cmpBtn").addEventListener("click", runCompare);
+  window.addEventListener("resize", () => { if (!$("#tab-section").hidden) { clearTimeout(secTimer); secTimer = setTimeout(renderSection, 150); } if (R) renderLegend({ stress: "sigma", disp: "disp", fos: "fos" }[S.plot]); });
+
+  setPlot("stress");
+  renderTree();
+  renderPM();
+  requestAnimationFrame(loop);
+  runStudy();
+})();
+</script>

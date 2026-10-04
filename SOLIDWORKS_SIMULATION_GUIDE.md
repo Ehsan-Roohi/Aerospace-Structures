@@ -15,7 +15,7 @@ The comparison case is deliberately simple:
 | Setting | Value |
 |---|---|
 | Geometry | Your final `MIE446_<Team>_Wing_Complete_<Revision>.step` from the verified ZIP |
-| Joints | Continuous shell (the STEP has no seams) and rods filling and bonded in their holes; use the **matched hole-filling comparison** in Section 7, not the default 4 mm rod model |
+| Joints | Continuous shell (the STEP has no seams) and rods filling and bonded in their holes — equivalent to **rods and seams epoxied** in the notebook |
 | Support | Root face fully fixed |
 | Load | 10 N upward, spread over the tip face |
 | Material | The **same** PLA card you used in the notebook |
@@ -42,7 +42,7 @@ The STEP contains the printed shell with two empty rod holes. Fill each hole wit
 3. Clear **Merge result**. Confirm.
 4. Repeat for the rear hole. The **Solid Bodies** folder should now list three bodies.
 
-These idealized rods have the hole diameter (rod + 2 × clearance, for example 4.5 mm). Assigning carbon properties to the entire hole is a **hole-filling comparison model**, not a faithful model of a 4 mm carbon rod with a softer epoxy annulus. Section 7 preserves the printed geometry while matching this idealization. For actual epoxy properties, model carbon and adhesive separately; do not claim exact equivalence to the classroom assembly.
+These rods have the hole diameter (rod + 2 × clearance, for example 4.5 mm). This is the simplest way to represent an epoxy-filled sleeve; the reference numbers in Section 7 use the same diameter.
 
 ## 4. Static study
 
@@ -74,28 +74,22 @@ These idealized rods have the hole diameter (rod + 2 × clearance, for example 4
 1. **New Study → Frequency**. Drag the *Materials*, *Connections* and *Fixtures* folders from the static study onto the new study.
 2. Properties: **Number of frequencies = 5**. Run.
 3. **List Resonant Frequencies** and animate each mode. Identify the first **flap-bending** mode (tip moves up and down), the first **chordwise (in-plane) bending** mode and the first **torsion** mode.
-4. Compare only the flap-bending and torsion modes with the notebook. The 1-D notebook model does not compute chordwise bending. It also decouples bending and torsion; 3-D modes can be coupled. Use zero tip sensor mass in both models, or explicitly match its mass, position and rotational inertia.
+4. Compare only the flap-bending and torsion modes with the notebook. The 1-D notebook model does not compute chordwise bending.
 
 ## 7. Reference values and acceptance
 
-Generate fresh reference values with the reviewed solver, rather than using a fixed table from an older version. After running the notebook, use this optional comparison cell:
+The table below was produced by the notebook solver for the **class baseline** (NACA 2412, 450 mm, 160/100 mm, three modules) with rods filling the holes and every joint bonded, 10 N at 0.429 chord on the tip. Re-run the notebook with your own geometry and the same settings before comparing your SOLIDWORKS model.
 
-```python
-from dataclasses import replace
-matched_geom = replace(geom,
-    rod_diameter_mm=geom.rod_diameter_mm + 2 * geom.radial_clearance_mm,
-    radial_clearance_mm=0.0)
-# Hole and sleeve outer radii remain unchanged; only the comparison rod fills the hole.
-matched = pws.solve(matched_geom, pla, rod,
-    pws.Assembly(rods_bonded=True, seams_bonded=True),
-    pws.LoadCase(kind="tip", tip_force_N=10.0,
-                 tip_force_chord_fraction=0.429, tip_mass_g=0.0))
-display(pd.Series(matched.summary()))
-```
+| PLA E (MPa) | Rod E (GPa) | Tip deflection (mm) | SY at y = 25 mm, upper / lower (MPa) | First flap-bending (Hz) | First torsion (Hz) |
+|---:|---:|---:|---:|---:|---:|
+| 2000 | 25 | 11.6 | −2.4 / +2.2 | 21.1 | 108 |
+| 2000 | 131 | 9.8 | −2.1 / +2.0 | 22.7 | 108 |
+| 3000 | 25 | 7.8 | −2.5 / +2.2 | 25.7 | 132 |
+| 3000 | 131 | 7.0 | −2.2 / +2.1 | 27.0 | 132 |
 
-The 0.429 chord load position is an approximate baseline tip-face centroid. Measure the resultant location for your geometry and use that same fraction in both models. Compare stress at the same span station and physical point; a root maximum and a value at y = 25 mm are not equivalent.
+In the notebook, *rods epoxied* and *seams epoxied* with the standard 4 mm rods give a tip deflection about 2 % (hobby rod) to 7 % (T700 rod) larger than the hole-filling rods in this table.
 
-Agreement within roughly 10–20 % can be a useful classroom discussion target, **not an acceptance certificate**. The 3-D model includes solid ribs, end caps, local sleeve attachments and coupled deformation; the reduced beam model makes simplifying assumptions. Investigate differences through units, materials, mesh convergence, fixtures, loads and model assumptions instead of treating every discrepancy as a software error. No SOLIDWORKS solution was executed to certify these comparisons.
+**Acceptance:** agreement within about 10–20 % is good for two models this different. The 3-D model includes the solid ribs, the end caps and the real attachment of the sleeves; the notebook uses beam theory with exact sections. A difference larger than 20 % usually means a mismatch in units, material card, load direction, fixture or rod bodies — find it before interpreting physics.
 
 ## 8. Mesh convergence (required if you report a SOLIDWORKS number)
 

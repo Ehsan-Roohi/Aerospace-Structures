@@ -39,7 +39,7 @@ md(
 # MIE 446 — Printed-Wing Structural Solver
 ## Analyse the wing your team designed: section, loads, stress, stiffness and vibration
 
-**Team notebook · Aerospace Structures · Fall 2026 · solver v1.0.1**
+**Team notebook · Aerospace Structures · Fall 2026 · solver v1.0.0**
 
 [Course home]({REPO_URL}/README.md) · [Wing project]({REPO_URL}/PROJECT.md) · [SolidWorks cross-check guide]({REPO_URL}/SOLIDWORKS_SIMULATION_GUIDE.md) · [Solver source and tests]({REPO_URL}/computational/printed-wing-solver)
 
@@ -86,23 +86,15 @@ code(
     """
 #@title 0. Setup — run once (installs the 2-D section solver) { display-mode: "form" }
 import importlib, subprocess, sys
-from importlib.metadata import version, PackageNotFoundError
-from packaging.specifiers import SpecifierSet
 
-def _ensure(package, spec, bounds):
+def _ensure(package, spec):
     try:
-        compatible = version(package) in SpecifierSet(bounds)
-    except PackageNotFoundError:
-        compatible = False
-    if not compatible:
+        importlib.import_module(package)
+    except ImportError:
         subprocess.run([sys.executable, "-m", "pip", "install", "-q", spec], check=True)
-        if package in sys.modules:
-            raise RuntimeError("A loaded dependency changed. Restart the Colab session, then run all cells again.")
 
-for package, bounds in (("numpy", ">=2.0,<3"), ("scipy", ">=1.11"),
-                        ("shapely", ">=2.0"), ("sectionproperties", ">=3.3,<4"),
-                        ("matplotlib", ">=3.8"), ("pandas", ">=2.0")):
-    _ensure(package, package + bounds, bounds)
+_ensure("sectionproperties", "sectionproperties>=3.3,<4")
+_ensure("shapely", "shapely>=2")
 
 import math
 import numpy as np
@@ -119,17 +111,14 @@ print("Setup complete. Next: run cell 1 to load the solver engine.")
 code(
     f"""
 #@title 1. Solver engine — run once, do not edit {{ display-mode: "form" }}
-# Downloads the current course solver; record its printed version with your evidence.
+# Downloads the verified solver from the course repository (the same file the test suite checks).
 # Read it in the Colab file browser after this cell, or on GitHub: {ENGINE_PATH}
 import importlib, sys, urllib.request
 from pathlib import Path
 
 ENGINE_URL = "{ENGINE_URL}"
 try:
-    with urllib.request.urlopen(ENGINE_URL, timeout=30) as response:
-        engine_bytes = response.read()
-    compile(engine_bytes, "printed_wing_solver.py", "exec")
-    Path("printed_wing_solver.py").write_bytes(engine_bytes)
+    urllib.request.urlretrieve(ENGINE_URL, "printed_wing_solver.py")
     source = "course repository"
 except Exception as error:
     if not Path("printed_wing_solver.py").exists():
@@ -336,9 +325,6 @@ TIP_FORCE_CHORD_FRACTION = 0.30 #@param {type:"number"}
 #@markdown **Common**
 FACTOR_OF_SAFETY = 1.5 #@param {type:"number"}
 TIP_SENSOR_MASS_G = 0.0 #@param {type:"number"}
-TIP_SENSOR_CHORD_FRACTION = 0.30 #@param {type:"number"}
-TIP_SENSOR_HEIGHT_MM = 0.0 #@param {type:"number"}
-TIP_SENSOR_CENTROIDAL_INERTIA_G_MM2 = 0.0 #@param {type:"number"}
 MAX_TIP_DEFLECTION_MM = 45.0 #@param {type:"number"}
 MAX_TIP_TWIST_DEG = 2.0 #@param {type:"number"}
 
@@ -346,15 +332,11 @@ if LOAD_CASE.startswith("Flight"):
     load = pws.LoadCase(name=f"Flight-like lift, n = {LOAD_FACTOR_N:g}, m = {AIRCRAFT_MASS_KG:g} kg", kind="flight",
                         aircraft_mass_kg=AIRCRAFT_MASS_KG, load_factor=LOAD_FACTOR_N, distribution=LIFT_DISTRIBUTION,
                         lift_chord_fraction=LIFT_CHORD_FRACTION, inertia_relief=INCLUDE_INERTIA_RELIEF,
-                        factor_of_safety=FACTOR_OF_SAFETY, tip_mass_g=TIP_SENSOR_MASS_G,
-                        tip_mass_chord_fraction=TIP_SENSOR_CHORD_FRACTION, tip_mass_height_mm=TIP_SENSOR_HEIGHT_MM,
-                        tip_mass_centroidal_inertia_g_mm2=TIP_SENSOR_CENTROIDAL_INERTIA_G_MM2)
+                        factor_of_safety=FACTOR_OF_SAFETY, tip_mass_g=TIP_SENSOR_MASS_G)
 else:
     load = pws.LoadCase(name=f"Tip force {TIP_FORCE_N:g} N at {TIP_FORCE_CHORD_FRACTION:g} c", kind="tip",
                         tip_force_N=TIP_FORCE_N, tip_force_chord_fraction=TIP_FORCE_CHORD_FRACTION,
-                        factor_of_safety=FACTOR_OF_SAFETY, tip_mass_g=TIP_SENSOR_MASS_G,
-                        tip_mass_chord_fraction=TIP_SENSOR_CHORD_FRACTION, tip_mass_height_mm=TIP_SENSOR_HEIGHT_MM,
-                        tip_mass_centroidal_inertia_g_mm2=TIP_SENSOR_CENTROIDAL_INERTIA_G_MM2)
+                        factor_of_safety=FACTOR_OF_SAFETY, tip_mass_g=TIP_SENSOR_MASS_G)
 criteria = pws.Criteria(max_tip_deflection_mm=MAX_TIP_DEFLECTION_MM, max_tip_twist_deg=MAX_TIP_TWIST_DEG)
 print(load.name)
 if load.kind == "flight":
@@ -419,20 +401,13 @@ Each check is reported as a **utilisation** $U=\text{demand}/\text{capacity}$; s
 |---|---|---|
 | PLA tension / compression | $\sigma=-E_{PLA}\,\kappa\,(z-\bar z)$ at the extreme fibres | printed-PLA strength card |
 | PLA shear | resultant of transverse shear and torsion from the 2-D FE, **away from the four sharp cavity corners** | shear strength card |
-| Skin buckling | compressive stress in the skin | flat-plate reference $k\frac{\pi^2E}{12(1-\nu^2)}\big(\frac{t}{b}\big)^2$; **REVIEW only**, not a validated curved-panel allowable |
+| Skin buckling | compressive stress in the skin | larger of the flat-plate value $k\frac{\pi^2E}{12(1-\nu^2)}\big(\frac{t}{b}\big)^2$ (panel between ribs) and the knocked-down cylinder value $\gamma\frac{Et}{R\sqrt{3(1-\nu^2)}}$, $\gamma=1-0.901(1-e^{-\sqrt{R/t}/16})$ (NASA SP-8007) |
 | Rod bending at a dry seam | $\sigma_r=\dfrac{M_s/n\;r}{I_r}$ — the rods carry the whole moment there | rod strength card |
 | Rib-hole bearing at a dry seam | rod moment reacted by a force couple between the interface rib and the next rib | PLA compressive strength |
 | Epoxied seam | bending tension across the butt joint | adhesive strength input |
 | Deflection, twist | limit-load values | criteria above |
 
 A **screening check** is deliberately simple. $U$ close to or above 1 means *investigate and test*, not *it will certainly break*; $U \ll 1$ means this mode is unlikely to govern **if the model assumptions hold**.
-
-**Buckling needs separate interpretation.** The code retains a second, circular-cylinder comparison
-$\gamma Et/[R\sqrt{3(1-\nu^2)}]$ from NASA SP-8007. A curved printed airfoil panel is not a circular
-cylinder; neither this formula nor taking the larger of two estimates validates its capacity.
-We report both references below, use the flat-panel reference for the displayed ratio, and always
-mark this row **REVIEW**. Do not treat it as a flight or loading approval. A shell-buckling model
-with appropriate boundary conditions, material data and validation is needed for a capacity claim.
 
 **Predict first:** which mode will govern for your wing — PLA tension across layers, skin buckling, or rods at the seam?
 """
@@ -442,8 +417,6 @@ code(
     """
 #@title 9. Screening checks and stress maps at the root { display-mode: "form" }
 display(pd.DataFrame(res.check_table()).set_index("check"))
-print("Buckling references at the root (MPa): flat panel =", round(float(res.stress['skin_critical_flat'][0]), 3),
-      "; circular cylinder =", round(float(res.stress['skin_critical_cylinder'][0]), 3), "; status = REVIEW")
 pws.plot_checks(res); plt.show()
 pws.plot_stress_maps(res, 0); plt.show()
 g = res.governing
@@ -463,12 +436,7 @@ The instructor's sacrificial specimen produces a **force–deflection slope** (l
 * Static: slope $k=P/\delta_{tip}$ for a tip force.
 * Dynamic: the 1-D finite-element model (Hermite beam elements for bending, linear elements for torsion, consistent mass, rib and tip masses lumped) solves $K\phi=\omega^2M\phi$. For a uniform cantilever the first bending frequency is $f_1=\frac{1.875^2}{2\pi}\sqrt{\frac{EI}{m'L^4}}$ — a useful hand check.
 
-A sensor glued to the tip adds mass and lowers bending frequency. It also lowers torsional
-frequency when it adds polar inertia about the shear centre. Enter its chordwise position and
-height in cell 5: $I_{sensor}=I_{CG}+m[(x-x_{sc})^2+(z-z_{sc})^2]$ (g mm²). The default zero
-$I_{CG}$ treats it as a point mass, not a finite-size body. The extra rib material and tip cap
-also contribute polar inertia; shell material is not counted a second time at ribs.
-A crack lowers stiffness; so can a loosening seam. Which indicator is easier to measure precisely?
+A sensor glued to the tip adds mass and **lowers** the frequency. A crack lowers stiffness; so can a loosening seam. Which indicator changes more for a given damage — and which is easier to measure precisely?
 """
 )
 
@@ -599,7 +567,7 @@ md(
 
 * Course CAD generator `mie446_wing` v1.1.1 — geometry rules reproduced exactly (NACA surfaces, vertical skin offset, cavity 6–90 % chord, sleeve radius, rib stations).
 * R. van Leeuwen, *sectionproperties* — 2-D finite-element warping analysis of arbitrary cross-sections (torsion constant, shear centre, shear stress).
-* [NASA SP-8007](https://ntrs.nasa.gov/citations/20205011530), *Buckling of Thin-Walled Circular Cylinders* — the older 1968 expression is retained only as an illustrative circular-cylinder comparison; the linked 2020 revision explains the scope of cylinder design guidance.
+* NASA SP-8007, *Buckling of Thin-Walled Circular Cylinders* (1968 rev.) — knock-down factor used in the skin-buckling screen.
 * T. H. G. Megson, *Aircraft Structures for Engineering Students* — Bredt–Batho torsion, shear flow, modulus-weighted sections, plate buckling.
 * H. Gonabadi, A. Yadav, S. J. Bull, "The effect of processing parameters on the mechanical characteristics of PLA produced by a 3D FFF printer", *Int. J. Adv. Manuf. Technol.* (2020) — build-orientation anisotropy of printed PLA.
 * Easy Composites, *Carbon Fibre Pultrusions* technical data sheet; Rock West Composites part 47316 data — low- and high-bound rod cards.

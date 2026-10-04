@@ -56,11 +56,12 @@ button, input, select { font: inherit; color: inherit; }
 
 #app {
   height: 100%;
+  min-height: 1020px;
   padding: 12px 16px;
   display: grid;
   gap: 10px;
   grid-template-columns: 238px minmax(0, 1fr) 312px;
-  grid-template-rows: auto minmax(0, 1fr) minmax(240px, 37%);
+  grid-template-rows: auto minmax(440px, 1fr) minmax(390px, 40%);
   grid-template-areas: "bar bar bar" "tree view pm" "dock dock dock";
 }
 .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; min-width: 0; min-height: 0; }
@@ -201,8 +202,37 @@ td.num { font-family: var(--font-data); font-variant-numeric: tabular-nums; text
 #report { width: 100%; min-height: 180px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); font: 12px/1.5 var(--font-data); padding: 10px; resize: vertical; }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 
+/* Guided learning uses the same geometry/results, never a second solver. */
+.learn-layout { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 20px; }
+.learn-nav { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+.learn-nav button { height: auto; min-height: 34px; padding: 7px 10px; }
+.learn-nav button[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); }
+.learn-copy h2 { margin: 0 0 8px; font: 700 22px var(--font-label); }
+.learn-copy p, .learn-copy li { font-size: 15px; line-height: 1.55; }
+.learn-copy p { margin: 8px 0; }
+.learn-copy ul { padding-left: 22px; }
+.equation { padding: 10px 14px; border-left: 3px solid var(--accent); background: var(--panel-2); font: 19px/1.65 Georgia, serif; overflow-x: auto; }
+.learn-figure svg { display: block; width: 100%; height: auto; background: #f4f7fa; border-radius: 8px; }
+.learn-figure figcaption { font-size: 13px; line-height: 1.5; margin-top: 8px; }
+.learn-figure { margin: 0; }
+.lesson-actions { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0; }
+.lesson-check { margin-top: 12px; border: 1px solid var(--line); border-radius: 8px; padding: 12px; }
+.lesson-check summary { font-weight: 600; cursor: pointer; }
+.anatomy-key { position: absolute; left: 12px; bottom: 42px; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; font-size: 12px; max-width: calc(100% - 24px); }
+.anatomy-key span { display: inline-block; margin-right: 12px; }
+.anatomy-key i { display: inline-block; width: 11px; height: 11px; border-radius: 2px; margin-right: 4px; }
+.anatomy-key b { display: block; margin-bottom: 4px; }
+.view .hud { top: 10px; }
+.anatomy-labels { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.rib-label { position: absolute; transform: translate(-50%, -100%); background: #ffcc4d; color: #17202c; font: 700 12px var(--font-label); padding: 2px 5px; border: 1px solid #17202c; border-radius: 4px; }
+.guide-note { font-size: 13px; color: var(--muted); margin: 6px 0; }
+#app.learning-view { height: auto; min-height: 0; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto 520px auto; grid-template-areas: "bar" "view" "dock"; }
+#app.learning-view > .tree, #app.learning-view > .pm { display: none; }
+#app.learning-view .dock, #app.learning-view .tabpanel { overflow: visible; }
+@media (max-width: 760px) { .learn-layout { grid-template-columns: minmax(0, 1fr); } }
+
 @media (max-width: 1180px) { #app { grid-template-columns: 210px minmax(0, 1fr) 280px; } .charts { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (max-width: 900px) {
+@media (max-width: 1100px) {
   #app { height: auto; grid-template-columns: minmax(0, 1fr); grid-template-rows: none; grid-template-areas: "bar" "view" "pm" "dock" "tree"; }
   .view { height: 62vh; min-height: 340px; }
   .tree ul { max-height: 360px; }
@@ -222,7 +252,7 @@ td.num { font-family: var(--font-data); font-variant-numeric: tabular-nums; text
 @media (prefers-reduced-motion: reduce) { .run.stale { animation: none; } .progress div { transition: none; } }
 </style>
 
-<div id="app">
+<div id="app" class="learning-view">
   <header class="bar panel" aria-label="Commands">
     <div class="brand">
       <svg viewBox="0 0 76 44" aria-hidden="true"><path d="M3 24 C 12 8, 40 6, 73 21 L 73 23 C 40 30, 14 32, 3 24 Z" fill="none" stroke="currentColor" stroke-width="3"/><circle cx="24" cy="21" r="3.2" fill="currentColor"/><circle cx="46" cy="21" r="3.2" fill="currentColor"/></svg>
@@ -242,6 +272,7 @@ td.num { font-family: var(--font-data); font-variant-numeric: tabular-nums; text
         <button class="tool" data-plot="mode" type="button">Modes</button>
       </div>
     </div>
+    <div class="group"><span>Learn first</span><div class="row"><button class="tool" type="button" id="learnBtn">Guided lesson</button><button class="tool" type="button" id="inputsBtn" aria-pressed="false">Edit inputs</button></div></div>
     <div class="status" aria-live="polite"><span class="chip idle" id="stateChip">Starting</span><span id="stateText">Loading the solver</span></div>
   </header>
 
@@ -252,6 +283,7 @@ td.num { font-family: var(--font-data); font-variant-numeric: tabular-nums; text
 
   <main class="view panel" aria-label="3-D viewport">
     <canvas id="gl"></canvas>
+    <div class="anatomy-labels" id="ribLabels" aria-hidden="true"></div>
     <div class="overlay infocol">
       <div class="plotinfo" id="plotinfo"></div>
       <div class="legend-title" id="legendTitle"></div>
@@ -264,8 +296,14 @@ td.num { font-family: var(--font-data); font-variant-numeric: tabular-nums; text
         <button type="button" data-view="section">Section</button>
         <button type="button" data-view="front">Leading edge</button>
       </div>
+      <div class="hud-row" role="group" aria-label="Wing anatomy">
+        <button type="button" data-anatomy="assembled" aria-pressed="true">Complete wing</button>
+        <button type="button" data-anatomy="inside" aria-pressed="false">Inside wing</button>
+        <button type="button" data-anatomy="ribs" aria-pressed="false">Ribs only</button>
+        <button type="button" data-anatomy="rods" aria-pressed="false">Rods &amp; sleeves</button>
+      </div>
       <div class="hud-row">
-        <button type="button" id="defBtn" aria-pressed="true">Deformed</button>
+        <button type="button" id="defBtn" aria-pressed="false">Deformed</button>
         <label for="scaleIn">Scale <input id="scaleIn" type="range" min="0" max="2" step="0.05" value="1"></label>
         <button type="button" id="xrayBtn" aria-pressed="false">See-through</button>
       </div>
@@ -276,6 +314,10 @@ td.num { font-family: var(--font-data); font-variant-numeric: tabular-nums; text
       </div>
     </div>
     <div class="probe" id="probe" hidden></div>
+    <div class="anatomy-key" id="anatomyKey">
+      <b>Undeformed project geometry · select “Inside wing” to reveal the ribs</b>
+      <span><i style="background:#c9d3dd"></i>PLA skin</span><span><i style="background:#ffcc4d"></i>Ribs</span><span><i style="background:#e39a4b"></i>Printed sleeves</span><span><i style="background:#329bdd"></i>Carbon rods</span>
+    </div>
     <div class="overlay footline" id="footline"></div>
     <div class="modeplayer" id="modeplayer" hidden>
       <span>Mode</span>
@@ -297,14 +339,27 @@ td.num { font-family: var(--font-data); font-variant-numeric: tabular-nums; text
 
   <section class="dock panel" aria-label="Results">
     <div class="tabs" role="tablist">
-      <button role="tab" type="button" data-tab="diagrams" aria-selected="true">Diagrams</button>
+      <button role="tab" type="button" data-tab="learn" aria-selected="true">Start here · learn</button>
+      <button role="tab" type="button" data-tab="diagrams" aria-selected="false">Diagrams</button>
       <button role="tab" type="button" data-tab="checks" aria-selected="false">Checks</button>
       <button role="tab" type="button" data-tab="section" aria-selected="false">Section</button>
       <button role="tab" type="button" data-tab="joints" aria-selected="false">Compare joints</button>
       <button role="tab" type="button" data-tab="predict" aria-selected="false">Predict &amp; challenge</button>
       <button role="tab" type="button" data-tab="report" aria-selected="false">Report</button>
     </div>
-    <div class="tabpanel" id="tab-diagrams" role="tabpanel"><div class="charts" id="charts"></div></div>
+    <div class="tabpanel" id="tab-learn" role="tabpanel">
+      <nav class="learn-nav" aria-label="Learning steps">
+        <button class="btn" data-lesson="0" aria-pressed="true">1 · Identify the parts</button>
+        <button class="btn" data-lesson="1" aria-pressed="false">2 · Follow the load</button>
+        <button class="btn" data-lesson="2" aria-pressed="false">3 · Understand bending</button>
+        <button class="btn" data-lesson="3" aria-pressed="false">4 · Understand twist</button>
+        <button class="btn" data-lesson="4" aria-pressed="false">5 · Connections matter</button>
+        <button class="btn" data-lesson="5" aria-pressed="false">6 · Judge the result</button>
+      </nav>
+      <div class="learn-layout"><article class="learn-copy" id="lessonText"></article><div><figure class="learn-figure" id="lessonFigure"></figure><div class="callout" id="lessonReading" style="margin-top:12px"></div></div></div>
+      <p class="guide-note">Teaching model of your selected project geometry, not a scan of a manufactured wing. Baseline inputs must match your team's CAD. Numerical results are not permission to load or fly a printed wing.</p>
+    </div>
+    <div class="tabpanel" id="tab-diagrams" role="tabpanel" hidden><div class="charts" id="charts"></div></div>
     <div class="tabpanel" id="tab-checks" role="tabpanel" hidden>
       <div class="checks"><div class="checklist" id="checklist"></div><div class="callout" id="govCallout"></div></div>
     </div>
@@ -384,11 +439,14 @@ td.num { font-family: var(--font-data); font-variant-numeric: tabular-nums; text
     load: { ...E.DEFAULT_LOAD },
     criteria: { ...E.DEFAULT_CRITERIA },
     selected: "part",
-    plot: "stress", deformed: true, scale: 1, xray: false, explode: 0, clip: false, clipY: 150,
+    plot: "model", deformed: false, scale: 1, xray: false, explode: 0, clip: false, clipY: 150,
+    anatomy: "assembled", lesson: 0,
     mode: { kind: "bending", index: 0 },
     secY: 0, secField: "sigma",
   };
   let R = null, lastGeoKey = "", stale = true, running = false, pending = false;
+  const lessonAnswers = new Map();
+  let savedLessonLoad = null;
 
   function materials() {
     const pla = { ...E.MATERIALS[S.plaKey] };
@@ -600,7 +658,7 @@ td.num { font-family: var(--font-data); font-variant-numeric: tabular-nums; text
     if (!R) return;
     const u = R.governing.U;
     chip.className = "chip " + (u <= 0.7 ? "ok" : u <= 1 ? "warn" : "bad");
-    chip.textContent = u <= 1 ? "All checks pass" : "Check exceeded";
+    chip.textContent = u <= 1 ? "Model screens within limits" : "Model screen exceeded";
     t.textContent = text || `Governing U = ${nf(u, 2)} · ${R.governing.name.replace(/ \(.*\)/, "")}`;
   }
   const frame = () => new Promise((r) => requestAnimationFrame(() => setTimeout(r, 0)));
@@ -665,7 +723,7 @@ td.num { font-family: var(--font-data); font-variant-numeric: tabular-nums; text
   let model = null, lastViewSet = false;
 
   // three.js axes: X = span (y), Y = up (z), Z = chord (x, from the leading edge)
-  const COLORS = { pla: 0xc9d3dd, rib: 0xe6d9c0, sleeve: 0xe39a4b, rod: 0x2b3138, fixture: 0x33c587, load: 0xd25ad6, relief: 0x7aa7d9, seam: 0x4ea6ff };
+  const COLORS = { pla: 0xc9d3dd, rib: 0xffcc4d, sleeve: 0xe39a4b, rod: 0x329bdd, fixture: 0x33c587, load: 0xd25ad6, relief: 0x7aa7d9, seam: 0x4ea6ff };
 
   function swept(stations, loopAt, matOpts) {
     const nS = stations.length, loops = stations.map(loopAt), nP = loops[0].length;
@@ -777,6 +835,8 @@ td.num { font-family: var(--font-data); font-variant-numeric: tabular-nums; text
     model = { g, root, modules, skins, sleeves, rods, ribs, rigid, loads, marker, fix };
     applyClip();
     applyXray();
+    $("#ribLabels").innerHTML = ribs.map((_, i) => `<span class="rib-label">R${i + 1}</span>`).join("");
+    applyAnatomy();
   }
 
   function frameView(force) {
@@ -959,9 +1019,11 @@ td.num { font-family: var(--font-data); font-variant-numeric: tabular-nums; text
     if (!model) return;
     for (const m of model.skins) { m.material.transparent = S.xray; m.material.opacity = S.xray ? 0.22 : 1; m.material.depthWrite = !S.xray; m.material.needsUpdate = true; }
     model.rigid.filter((p) => p.userData.kind === "face").forEach((p) => { p.material.transparent = S.xray; p.material.opacity = S.xray ? 0.25 : 1; p.material.needsUpdate = true; });
+    applyAnatomy();
   }
   function applyResult() {
     updateModel();
+    applyAnatomy();
     renderPlotInfo();
     renderModePlayer();
   }
@@ -1017,6 +1079,7 @@ td.num { font-family: var(--font-data); font-variant-numeric: tabular-nums; text
   function loop(t) {
     resize();
     controls.update();
+    positionRibLabels();
     if (S.plot === "mode" && R && model) {
       const f = (S.mode.kind === "bending" ? R.fem.fBending : R.fem.fTorsion)[S.mode.index];
       const visualHz = Math.min(1.2, 0.35 + f / 120);
@@ -1291,14 +1354,233 @@ td.num { font-family: var(--font-data); font-variant-numeric: tabular-nums; text
   function renderAll() {
     if (!R) return;
     renderTree(); renderPM(); renderCharts(); renderChecks(); renderPredict();
+    renderLesson();
     if (!$("#tab-section").hidden) renderSection();
     $("#report").value = reportText();
     if (prediction && !prediction.after) { prediction.after = true; store.set("prediction", prediction); renderPredict(); }
   }
 
+  // ------------------------------------------------------------ guided learning
+  function openTab(name) {
+    document.querySelectorAll("[role=tab]").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.tab === name)));
+    document.querySelectorAll(".tabpanel").forEach((p) => (p.hidden = p.id !== "tab-" + name));
+    if (name === "section") renderSection();
+  }
+
+  function setAnatomy(kind) {
+    S.anatomy = kind; S.deformed = false; S.clip = false; S.explode = 0;
+    S.xray = kind === "inside";
+    $("#defBtn").setAttribute("aria-pressed", "false");
+    $("#clipBtn").setAttribute("aria-pressed", "false");
+    $("#xrayBtn").setAttribute("aria-pressed", String(S.xray));
+    $("#explodeIn").value = 0;
+    setPlot("model"); applyXray(); applyClip(); applyResult();
+    if (model) setView("iso");
+  }
+
+  function applyAnatomy() {
+    if (!model) return;
+    const k = S.anatomy, onlyRibs = k === "ribs", onlyRods = k === "rods";
+    for (const m of model.skins) m.visible = !onlyRibs && !onlyRods;
+    for (const m of model.sleeves) {
+      m.visible = !onlyRibs;
+      m.material.transparent = onlyRods || k === "inside";
+      m.material.opacity = m.material.transparent ? 0.22 : 1;
+      m.material.depthWrite = !m.material.transparent;
+    }
+    for (const m of model.rods) m.visible = !onlyRibs;
+    for (const m of model.rigid) m.visible = m.userData.kind === "rib" ? !onlyRods : !onlyRibs && !onlyRods;
+    model.loads.visible = S.plot !== "model" && !onlyRibs && !onlyRods;
+    $("#anatomyKey").hidden = S.plot !== "model";
+    $("#anatomyKey b").textContent = {
+      assembled: "Complete project semi-wing · undeformed when selected",
+      inside: "Skin made transparent for teaching · material is not removed",
+      ribs: "Physical printed ribs R1–R" + model.ribs.length + " · skin and rods hidden",
+      rods: "Continuous carbon rods (blue) inside printed sleeves (transparent orange)",
+    }[k];
+    document.querySelectorAll("[data-anatomy]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.anatomy === k)));
+    $("#ribLabels").hidden = !(S.plot === "model" && (onlyRibs || k === "inside") && !S.deformed && !S.clip);
+  }
+
+  function positionRibLabels() {
+    if (!model || $("#ribLabels").hidden) return;
+    const labels = $("#ribLabels").children;
+    model.ribs.forEach((rib, i) => {
+      if (!labels[i]) return;
+      const y = rib.userData.y, x = 0.52 * E.chordAt(model.g, y);
+      const v = new THREE.Vector3(y + rib.userData.module * S.explode, i % 2 ? -10 : 18, x).project(camera);
+      labels[i].style.left = `${(v.x + 1) * canvas.clientWidth / 2}px`;
+      labels[i].style.top = `${(1 - v.y) * canvas.clientHeight / 2}px`;
+      labels[i].hidden = v.z < -1 || v.z > 1;
+    });
+  }
+
+  function svgFrame(title, content) {
+    return `<svg viewBox="0 0 680 280" role="img" aria-label="${title}"><style>text{font-family:Arial,sans-serif;fill:#18344b;font-size:18px}.small{font-size:17px}.heading{font-size:20px;font-weight:bold}</style><text x="22" y="26" class="heading">${title}</text>${content}</svg>`;
+  }
+
+  function ribPlanFigure(g) {
+    const x = (y) => 48 + y / g.semiSpan * 580;
+    const le = 87, bottom = (y) => le + 92 * E.chordAt(g, y) / g.rootChord;
+    const ribs = E.ribStations(g), seams = E.seams(g);
+    let lines = `<path d="M48 ${le} H628 V${bottom(g.semiSpan)} L48 ${bottom(0)} Z" fill="#dfeaf2" stroke="#46667d" stroke-width="2"/>`;
+    for (const f of g.rodFractions) lines += `<line x1="48" y1="${le + 92 * f}" x2="628" y2="${le + 92 * g.tipChord / g.rootChord * f}" stroke="#329bdd" stroke-width="4"/>`;
+    seams.forEach((y, i) => { lines += `<path d="M${x(y)} 70 V211" stroke="#b6530b" stroke-width="2" stroke-dasharray="4 3"/><text x="${x(y)}" y="${i % 2 ? 255 : 236}" text-anchor="middle" class="small">Seam ${i + 1}: ${nf(y, 1)} mm</text>`; });
+    ribs.forEach((y, i) => { const ty = i % 2 ? 59 : 42; lines += `<path d="M${x(y)} ${le} V${bottom(y)}" stroke="#c88a00" stroke-width="5"/><path d="M${x(y)} ${ty + 3} V${le - 3}" stroke="#7d5b14"/><text x="${x(y)}" y="${ty}" text-anchor="middle" class="small">R${i + 1}</text>`; });
+    lines += '<text x="48" y="205">Root · y = 0</text><text x="628" y="205" text-anchor="end">Tip</text><text x="650" y="97" class="small">LE</text><text x="650" y="165" class="small">TE</text>';
+    return svgFrame("Your semi-wing: plan view, numbered physical ribs", lines);
+  }
+
+  function sectionFigure(g) {
+    const y = g.semiSpan * 0.1, c = E.chordAt(g, y), X = (x) => 45 + 590 * x / c, Z = (z) => 170 - 590 * z / c;
+    const points = (a) => a.map(([x, z]) => `${X(x)},${Z(z)}`).join(" ");
+    const loops = E.ringLoops(g, y);
+    let drawing = `<polygon points="${points(E.outerContour(g, y, 70))}" fill="#d1deea" stroke="#40637e" stroke-width="2"/><polygon points="${points(loops.inner)}" fill="#f4f7fa" stroke="#40637e"/>`;
+    E.rodCentres(g, y).forEach((p, i) => {
+      drawing += `<circle cx="${X(p[0])}" cy="${Z(p[1])}" r="${590 * E.sleeveRadius(g) / c}" fill="#e39a4b"/><circle cx="${X(p[0])}" cy="${Z(p[1])}" r="${590 * E.holeRadius(g) / c}" fill="#f4f7fa"/><circle cx="${X(p[0])}" cy="${Z(p[1])}" r="${590 * E.rodRadius(g) / c}" fill="#329bdd"/><path d="M${X(p[0])} ${Z(p[1]) + 12} V218" stroke="#18344b"/><text x="${X(p[0])}" y="239" text-anchor="middle">Rod ${i + 1} + sleeve</text>`;
+    });
+    drawing += `<path d="M${X(.48 * c)} 63 V${Z(E.verticalOrdinates(g.naca, .48, c, g.te).upper)}" stroke="#40637e"/>`;
+    // Separate fixed caption avoids implying a spar web that is not in this geometry.
+    drawing += '<text x="310" y="55">Upper skin</text><text x="50" y="197">Leading edge</text><text x="545" y="197">Trailing edge</text>';
+    return svgFrame("Between ribs: the hollow printed section", drawing);
+  }
+
+  function beamFigure(step) {
+    const bend = step === 2;
+    return svgFrame(bend ? "Why a force produces bending" : "Cut the wing and balance the outboard loads", `
+      <rect x="44" y="65" width="22" height="150" fill="#33a777"/>
+      <path d="M66 175 H610" stroke="#8ca6bd" stroke-width="12"/>
+      ${bend ? '<path d="M66 175 Q320 175 610 87" fill="none" stroke="#246fa0" stroke-width="5"/><text x="290" y="210">Dashed/grey reference: undeformed span</text>' : '<path d="M285 75 V204" stroke="#18344b" stroke-dasharray="6 4"/><text x="265" y="59">Cut at y</text>'}
+      <path d="M598 153 V76 L589 91 M598 76 L607 91" fill="none" stroke="#b13386" stroke-width="4"/>
+      <text x="575" y="57">P ↑</text><text x="28" y="243">Root: w = 0; slope = 0</text>
+      <path d="M${bend ? 68 : 288} 223 H599" stroke="#18344b"/>
+      <text x="360" y="247">${bend ? 'Moment arm: L' : 'Moment arm: L − y'}</text>
+      <text x="96" y="99">${bend ? 'Actual deflection is in mm;' : 'Tip force P gives:'}</text>
+      <text x="96" y="122">${bend ? 'the 3-D view can magnify it.' : '|V(y)| = |P|; |M(y)| = |P|(L − y)'}</text>`);
+  }
+
+  function renderLesson() {
+    const g = R ? R.geometry : E.makeGeometry(S.geometry), ribs = E.ribStations(g), seams = E.seams(g);
+    const paired = ribs.filter((y) => seams.some((s) => Math.abs(Math.abs(y - s) - g.interfaceOffset) < 1e-6)).length;
+    const stories = [
+      {
+        title: "1 · Meet the wing before reading a stress plot",
+        text: `<p>This is one <b>semi-wing</b> of your project: NACA ${g.naca}, ${nf(g.semiSpan, 0)} mm from root to tip, made in ${g.modules} printed modules. “Complete wing” shows its exterior at its undeformed shape; it is not a photograph or an imported STL.</p>
+        <p>Choose <b>Inside wing</b>, then <b>Ribs only</b>. Gold plates run across the chord; blue carbon rods run along the span. Orange sleeves are printed guides around those rods. Use the mouse to rotate and the wheel to zoom.</p>
+        <div class="equation">${ribs.length} physical ribs = ${ribs.length - paired} interior ribs + ${paired} interface ribs</div>
+        <p>For the default three-module design, there are 3 interior ribs plus 2 ribs beside each of 2 seams: <b>3 + 2 × 2 = 7</b>. Root/tip caps are separate, not two extra numbered ribs. This is a CAD layout choice, not a universal optimum or the result of a buckling calculation.</p>
+        <p><b>No separate stringers are included.</b> This is a closed printed shell with rods and sleeves, not a conventional two-web aircraft wing box. Do not label the rods as full-height spar webs.</p>`,
+        question: "What does R1–R7 identify in the default model?", options: ["Seven physical printed ribs", "Seven stringers", "Seven mathematical integration points"], answer: 0,
+        why: "The rib stations come from the CAD layout. The solver also samples seven analysis cross-sections; that matching count is coincidental and the locations differ.",
+      },
+      {
+        title: "2 · Follow the load to the root",
+        text: `<p>Air pressure acts on the skin. The skin, ribs, rods and their joints share the load and transmit it toward the root attachment. Ribs preserve the airfoil shape and support the skin; they are not spanwise beams. A seam interrupts the shell load path unless a joint transfers force across it.</p>
+        <p>Replace a short piece of distributed load by <b>w(y) Δy</b>. Here w is force per span (N/mm), not pressure (N/mm²). At a cut, the internal shear V balances outboard force; the bending moment M balances each force multiplied by its distance from the cut.</p>
+        <div class="equation">|V(y)| = |P| &nbsp; and &nbsp; |M(y)| = |P|(L − y)<br>At the root: |M(0)| = |P|L</div>
+        <p>These two simple equations apply to an isolated tip force. With distributed and multiple point loads, sum all outboard contributions with their signs. The app uses that more general balance. Flight-like lift is <b>prescribed</b>, not calculated from airflow or CFD.</p>`,
+        question: "For the same upward tip force, where is the bending moment largest?", options: ["At the free tip", "At the root", "Equal everywhere"], answer: 1,
+        why: "The root has the longest moment arm. For a tip force, M decreases from magnitude PL at the root to zero at the tip.",
+      },
+      {
+        title: "3 · Separate bending stiffness from strength",
+        text: `<p><b>E</b> measures material stiffness; <b>I</b> describes how cross-sectional area is distributed relative to the bending axis. Their combination EI controls curvature. Moving load-carrying material away from the neutral axis can increase stiffness without simply making everything solid.</p>
+        <div class="equation">|curvature| = |M| / EI<br>Uniform cantilever reference: δ<sub>tip</sub> = PL³ / (3EI)</div>
+        <p>The last formula assumes constant EI, small elastic deflection and no flexible joints. Our tapered, multi-material wing has varying EI and seam rotations, so the solver accumulates curvature along the span. It does not use a single constant-EI shortcut.</p>
+        <p><b>Numerical experiment:</b> predict first, then compare the 2 N and 4 N tip cases below, with everything else fixed. Deflection and stress should approximately double within this linear model. The display magnifies deformation; read the actual millimetres, not the picture alone.</p>`,
+        question: "If P doubles with the same geometry, materials and linear joints, what happens to deflection?", options: ["It stays the same", "It halves", "It doubles"], answer: 2,
+        why: "The linear elastic equations are proportional to load. This does not predict cracking, contact changes or post-buckling behaviour.",
+      },
+      {
+        title: "4 · Twist is not bending",
+        text: `<p>Bending moves the wing upward/downward; torsion rotates the airfoil about a spanwise axis. The <b>shear centre</b> is the ideal load position that produces bending without twist in the uncoupled beam model. It is not automatically at quarter-chord or at the centre of mass.</p>
+        <div class="equation">T = F (x<sub>sc</sub> − x<sub>load</sub>)<br>Twist per unit span = T / GJ</div>
+        <p>x is measured aft from the leading edge; the sign above follows this app's nose-up-positive convention for an upward force. <b>G</b> is shear modulus and <b>J</b> the torsion constant, not generally the polar second moment of an airfoil. The closed skin supports a circulating shear flow and resists twist.</p>
+        <p>Use the same 2 N tip force at 0.25c and 0.60c. The bending load is unchanged, but the torque arm changes. Compare the signed tip twist. A force farther from the shear centre produces a larger torque magnitude.</p>`,
+        question: "What directly creates torque from an upward force?", options: ["The force's chordwise offset from the shear centre", "The number of ribs alone", "The colour of the stress plot"], answer: 0,
+        why: "Torque is force times perpendicular offset. The shell and joints determine how much rotation that torque produces.",
+      },
+      {
+        title: "5 · The joint is part of the structure",
+        text: `<p>A stiff rod does not automatically make a stiff assembled wing. <b>Slip-fit</b> rods do not acquire the same composite action as perfectly bonded rods. At a dry seam, this model transfers bending through rods across the gap between paired interface ribs.</p>
+        <div class="equation">Seam rotational stiffness: k<sub>θ</sub> ≈ N<sub>rods</sub> EI<sub>rod</sub> / ℓ<sub>free</sub><br>Extra rotation: Δθ = M / k<sub>θ</sub></div>
+        <p>ℓ<sub>free</sub> is the effective unsupported rod length across the joint. A larger value gives a softer joint. Clearance may create play before firm contact; an ideal spring is not a full contact simulation.</p>
+        <p>Open <b>Connections</b> in the study tree or <b>Compare joints</b> below. Hold geometry and load fixed and compare dry versus bonded seams. These are numerical alternatives, not instructions to change your approved manufacturing process.</p>`,
+        question: "In this spring approximation, increasing the rod's free length makes the seam…", options: ["Stiffer", "Softer", "Unaffected"], answer: 1,
+        why: "kθ is inversely proportional to free length. More seam rotation can increase tip deflection even if the printed parts have not changed.",
+      },
+      {
+        title: "6 · Read the evidence, not just the colours",
+        text: `<p><b>Stress</b> is force per area (1 MPa = 1 N/mm²). Positive spanwise stress means tension; negative means compression in this app. <b>Displacement</b> is motion, not stress. A structure can be flexible but strong, or stiff but fail locally.</p>
+        <div class="equation">Utilization U = demand / assumed capacity<br>Strength factor of safety = assumed strength / |stress|</div>
+        <p>U ≤ 1 only satisfies that particular model screen with its chosen assumptions. The colour scale is rescaled for each run, so red does <b>not</b> always mean failure; compare values and units. The FoS plot covers PLA normal strength, not every failure mechanism.</p>
+        <p><b>Buckling</b> is loss of shape stability under compression, distinct from crushing. The supplied engine uses simplified plate/cylinder comparisons; these are not validated allowables for a printed curved panel. Layer bonding, seams, imperfections and actual material properties need separate evidence.</p>
+        <p>Write a claim, a numerical value, a hand-check and one limitation. This 1-D beam/2-D section model does not simulate crack initiation or growth, a crash, or the full 3-D printed solid.</p>`,
+        question: "Does a green model screen certify that the printed wing is safe to fly?", options: ["Yes, because every real failure is modelled", "No; it only passes the selected model checks"], answer: 1,
+        why: "Verification checks the calculations; physical validation checks whether the model describes the manufactured structure. Neither colour nor a single utilization replaces that evidence.",
+      },
+    ];
+    const story = stories[S.lesson], answered = lessonAnswers.get(S.lesson);
+    $("#lessonText").innerHTML = `<h2>${story.title}</h2>${story.text}<div class="lesson-actions" id="lessonActions"></div><fieldset class="lesson-check"><legend>Check your understanding</legend><p>${story.question}</p>${story.options.map((o, i) => `<label><input type="radio" name="lessonAnswer" value="${i}" ${answered === i ? "checked" : ""}> ${o}</label>`).join("")}<button class="btn" id="checkLesson" type="button">Check my answer</button><p id="lessonFeedback" aria-live="polite"></p></fieldset>`;
+    $("#checkLesson").addEventListener("click", () => {
+      const checked = $("input[name=lessonAnswer]:checked");
+      if (!checked) { $("#lessonFeedback").textContent = "Choose an answer first."; return; }
+      const a = +checked.value; lessonAnswers.set(S.lesson, a);
+      $("#lessonFeedback").textContent = (a === story.answer ? "Correct. " : "Not yet. ") + story.why;
+    });
+    const action = (label, callback) => { const b = el("button", { class: "btn", type: "button" }, label); b.addEventListener("click", callback); $("#lessonActions").append(b); };
+    if (S.lesson === 0) {
+      action("Show inside wing", () => setAnatomy("inside"));
+      action("Show numbered ribs", () => setAnatomy("ribs"));
+      action("Show rods and sleeves", () => setAnatomy("rods"));
+    } else if (S.lesson === 2 || S.lesson === 3) {
+      const trial = (P, fraction) => {
+        if (!savedLessonLoad) savedLessonLoad = { ...S.load };
+        S.load.kind = "tip"; S.load.tipForce = P; S.load.tipFraction = fraction;
+        S.anatomy = "assembled"; S.xray = false; S.deformed = true;
+        $("#defBtn").setAttribute("aria-pressed", "true"); $("#xrayBtn").setAttribute("aria-pressed", "false");
+        S.plot = "disp"; setPlot("disp"); applyXray(); renderPM(); clearTimeout(runTimer); runStudy();
+      };
+      if (S.lesson === 2) { action("Run 2 N at 0.30c", () => trial(2, .3)); action("Run 4 N at 0.30c", () => trial(4, .3)); }
+      else { action("Run 2 N at 0.25c", () => trial(2, .25)); action("Run 2 N at 0.60c", () => trial(2, .6)); }
+      action("Restore my load case", () => { if (savedLessonLoad) { S.load = savedLessonLoad; savedLessonLoad = null; renderPM(); runStudy(); } });
+    } else if (S.lesson === 4) {
+      action("Open connection properties", () => { showInputs(true); select("con"); $("#pm").scrollIntoView({ block: "nearest" }); }); action("Compare joints", () => openTab("joints"));
+    } else { action("Show load diagrams", () => openTab("diagrams")); action("Show numerical checks", () => openTab("checks")); }
+    document.querySelectorAll("[data-lesson]").forEach((b) => b.setAttribute("aria-pressed", String(+b.dataset.lesson === S.lesson)));
+    const anatomy = S.lesson === 0 || S.lesson === 4;
+    const section = S.lesson === 3 || S.lesson === 5;
+    const fig = anatomy ? ribPlanFigure(g) : section ? sectionFigure(g) : beamFigure(S.lesson);
+    const caption = anatomy ? `Rib stations y (mm): ${ribs.map((y, i) => `R${i + 1}: ${nf(y, 1)}`).join("; ")}. Dashed lines are module seams; blue lines are rod paths. The 3-D labels and this plan use the same geometry.` : section ? "Actual selected airfoil-section geometry between ribs: grey printed shell, orange sleeves, blue rods, white cavity/clearance. There are no added stringers or front/rear spar webs. At a rib station, a printed diaphragm fills much of the cavity." : "Teaching free-body sketch for an isolated tip force; distances are measured from the root. The app's flight-like case can have distributed loads and additional point forces.";
+    $("#lessonFigure").innerHTML = fig + `<figcaption>${caption}</figcaption>`;
+    $("#lessonReading").innerHTML = R ? `<h3>Read your current result</h3><p>${R.load.kind === "tip" ? `Tip force ${nf(R.load.tipForce, 1)} N at ${nf(R.load.tipFraction, 2)}c` : `Flight-like load: n = ${nf(R.load.loadFactor, 1)}, aircraft mass ${nf(R.load.aircraftMass, 2)} kg`} · ${R.assembly.seamsBonded ? "bonded" : "dry"} seams</p><dl class="kv"><dt>Root shear magnitude</dt><dd>${nf(Math.abs(R.V[0]), 2)} N</dd><dt>Root bending moment magnitude</dt><dd>${nf(Math.abs(R.M[0]) / 1000, 3)} N·m</dd><dt>Signed tip deflection</dt><dd>${nf(R.deflection.at(-1), 3)} mm</dd><dt>Signed tip twist</dt><dd>${nf(R.twist.at(-1) * 180 / Math.PI, 3)}°</dd></dl><p>Run study recomputes this case; with identical inputs the numbers stay the same. Property edits also trigger a solve automatically.</p>` : "<p>Preparing the first result. You can read the lesson while the solver starts.</p>";
+  }
+
+  function showInputs(show) {
+    $("#app").classList.toggle("learning-view", !show);
+    $("#inputsBtn").textContent = show ? "Hide inputs" : "Edit inputs";
+    $("#inputsBtn").setAttribute("aria-pressed", String(show));
+    resize(); if (model) setView("iso");
+  }
+  $("#inputsBtn").addEventListener("click", () => showInputs($("#app").classList.contains("learning-view")));
+  $("#learnBtn").addEventListener("click", () => { showInputs(false); openTab("learn"); $("#tab-learn").scrollIntoView({ block: "nearest" }); });
+  document.querySelectorAll("[data-anatomy]").forEach((b) => b.addEventListener("click", () => setAnatomy(b.dataset.anatomy)));
+  document.querySelectorAll("[data-lesson]").forEach((b) => b.addEventListener("click", () => {
+    S.lesson = +b.dataset.lesson;
+    if (S.lesson === 0) setAnatomy("inside");
+    else if (S.lesson === 4) { setAnatomy("inside"); S.explode = 25; $("#explodeIn").value = 25; applyResult(); }
+    else { setAnatomy("assembled"); setPlot(S.lesson === 5 ? "stress" : "disp"); }
+    renderLesson();
+  }));
+
   // ------------------------------------------------------------ wiring
   function setPlot(p) {
     S.plot = p;
+    if (p !== "model" && (S.anatomy === "ribs" || S.anatomy === "rods")) {
+      S.anatomy = "assembled"; S.xray = false;
+      $("#xrayBtn").setAttribute("aria-pressed", "false");
+      applyXray();
+    }
     document.querySelectorAll("[data-plot]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.plot === p)));
     if (R) applyResult();
     if (S.selected.startsWith("res") || S.selected === "results") renderPM();
@@ -1330,9 +1612,10 @@ td.num { font-family: var(--font-data); font-variant-numeric: tabular-nums; text
   $("#cmpBtn").addEventListener("click", runCompare);
   window.addEventListener("resize", () => { if (!$("#tab-section").hidden) { clearTimeout(secTimer); secTimer = setTimeout(renderSection, 150); } if (R) renderLegend({ stress: "sigma", disp: "disp", fos: "fos" }[S.plot]); });
 
-  setPlot("stress");
+  setPlot("model");
   renderTree();
   renderPM();
+  renderLesson();
   requestAnimationFrame(loop);
   runStudy();
 })();

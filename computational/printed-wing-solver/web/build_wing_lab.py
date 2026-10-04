@@ -16,7 +16,7 @@ assert "/*__ENGINE__*/" in template
 page = template.replace("/*__ENGINE__*/", engine)
 dist = HERE / "dist"
 dist.mkdir(exist_ok=True)
-(dist / "wing-lab.html").write_text(page, encoding="utf-8")
+(dist / "wing-lab.html").write_text(page, encoding="utf-8", newline="\n")
 title_end = page.index("</title>") + len("</title>")
 standalone = (
     "<!doctype html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n"
@@ -24,5 +24,5 @@ standalone = (
     + page[:title_end] + "\n" + page[title_end:page.index("</style>") + len("</style>")]
     + "\n</head>\n<body>\n" + page[page.index("</style>") + len("</style>"):] + "\n</body>\n</html>\n"
 )
-(REPO / "docs" / "wing-lab.html").write_text(standalone, encoding="utf-8")
+(REPO / "docs" / "wing-lab.html").write_text(standalone, encoding="utf-8", newline="\n")
 print(f"dist/wing-lab.html {len(page)/1024:.0f} KB; docs/wing-lab.html written")

@@ -340,6 +340,7 @@ td.num { font-family: var(--font-data); font-variant-numeric: tabular-nums; text
   <section class="dock panel" aria-label="Results">
     <div class="tabs" role="tablist">
       <button role="tab" type="button" data-tab="learn" aria-selected="true">Start here · learn</button>
+      <button role="tab" type="button" data-tab="design" aria-selected="false">Design lab · add ribs</button>
       <button role="tab" type="button" data-tab="diagrams" aria-selected="false">Diagrams</button>
       <button role="tab" type="button" data-tab="checks" aria-selected="false">Checks</button>
       <button role="tab" type="button" data-tab="section" aria-selected="false">Section</button>
@@ -358,6 +359,34 @@ td.num { font-family: var(--font-data); font-variant-numeric: tabular-nums; text
       </nav>
       <div class="learn-layout"><article class="learn-copy" id="lessonText"></article><div><figure class="learn-figure" id="lessonFigure"></figure><div class="callout" id="lessonReading" style="margin-top:12px"></div></div></div>
       <p class="guide-note">Teaching model of your selected project geometry, not a scan of a manufactured wing. Baseline inputs must match your team's CAD. Numerical results are not permission to load or fly a printed wing.</p>
+    </div>
+    <div class="tabpanel" id="tab-design" role="tabpanel" hidden>
+      <h2>Design lab · place ribs, predict, compare</h2>
+      <p>Change one thing at a time. First predict what will change; then edit the wing and compare it with your saved baseline. Positions are measured in millimetres from the root, not from the previous rib.</p>
+      <div class="learn-layout">
+        <article class="learn-copy">
+          <h3>What should adding a rib do?</h3>
+          <p>A rib preserves the airfoil shape and supports the skin. An extra rib adds mass and can shorten a skin bay. It does <b>not create lift</b>. For a fixed tip force P, equilibrium still gives:</p>
+          <div class="equation">|V(0)| = |P| &nbsp; · &nbsp; |M(0)| = |P|L<br>Skin bay length = distance between neighbouring supports</div>
+          <p>This beam model includes rib mass, its flight inertia relief, modal mass and rib spacing in an approximate skin-buckling screen. It does <b>not</b> add a rib's local diaphragm stiffness to distributed EI or GJ. Under a fixed tip force, rib changes alone therefore leave static bending and twist unchanged. Real ribs can prevent local distortion that this model cannot resolve.</p>
+          <p>For flight loading, the specified aircraft mass and load factor set gross lift. Added rib mass changes the downward inertia-relief loads when that option is enabled; gross lift does not automatically increase. Update aircraft mass separately if that is your intended experiment.</p>
+          <div class="field"><label for="designPrediction">Your prediction and reason</label><textarea id="designPrediction" rows="3" placeholder="If I add a rib at y = … mm, I expect … because …"></textarea></div>
+          <div class="lesson-actions">
+            <button class="btn primary" id="designTip" type="button">Start 2 N experiment &amp; save baseline</button>
+            <button class="btn" id="designSave" type="button">Save current result as baseline</button>
+            <button class="btn" id="designInside" type="button">Show inside wing</button>
+          </div>
+          <p class="note">The 2 N experiment uses your current geometry with an upward tip force at 0.30c; it replaces the current load case. Baselines and edits are kept only in this open browser session.</p>
+          <div id="designControls"></div>
+          <p id="designMessage" role="status" aria-live="polite"></p>
+        </article>
+        <div>
+          <figure class="learn-figure" id="designFigure"></figure>
+          <div class="tablewrap" id="designComparison" style="margin-top:16px"></div>
+          <div class="callout" style="margin-top:16px"><h3>Explain the evidence</h3><p>1. What changed, by how much?<br>2. Which quantities stayed the same, and why?<br>3. Did mass increase without a useful change in the longest bay?<br>4. Is the conclusion a result of physics, or a limitation of this model?</p><p>The flat-panel comparison is only an educational indicator. The engine's combined plate/cylinder buckling screen may remain unchanged even when bay spacing changes. Neither is a validated printed-wing allowable.</p></div>
+        </div>
+      </div>
+      <p class="guide-note"><b>Numerical what-if, not a print-ready CAD update.</b> Custom rib positions change this app's model and 3-D view only. They do not update the Code-to-Print notebook, STL, G-code or the Python solver automatically. Record approved positions and reproduce them in CAD before manufacturing. Interface ribs stay locked to preserve the module-joint layout.</p>
     </div>
     <div class="tabpanel" id="tab-diagrams" role="tabpanel" hidden><div class="charts" id="charts"></div></div>
     <div class="tabpanel" id="tab-checks" role="tabpanel" hidden>
@@ -447,6 +476,7 @@ td.num { font-family: var(--font-data); font-variant-numeric: tabular-nums; text
   let R = null, lastGeoKey = "", stale = true, running = false, pending = false;
   const lessonAnswers = new Map();
   let savedLessonLoad = null;
+  let designBaseline = null, saveDesignAfterRun = false;
 
   function materials() {
     const pla = { ...E.MATERIALS[S.plaKey] };
@@ -661,7 +691,8 @@ td.num { font-family: var(--font-data); font-variant-numeric: tabular-nums; text
     chip.textContent = u <= 1 ? "Model screens within limits" : "Model screen exceeded";
     t.textContent = text || `Governing U = ${nf(u, 2)} · ${R.governing.name.replace(/ \(.*\)/, "")}`;
   }
-  const frame = () => new Promise((r) => requestAnimationFrame(() => setTimeout(r, 0)));
+  // Do not stall a study when the browser suspends animation in a background tab.
+  const frame = () => new Promise((r) => setTimeout(r, 0));
   async function runStudy() {
     if (running) { pending = true; return; }
     running = true; stale = false;
@@ -688,12 +719,15 @@ td.num { font-family: var(--font-data); font-variant-numeric: tabular-nums; text
         await frame();
       }
       R = E.solve(input);
+      if (!designBaseline || saveDesignAfterRun) { designBaseline = R; saveDesignAfterRun = false; }
       if (heavy) { buildModel(R); lastGeoKey = geoKey; frameView(heavy && !lastViewSet); }
       applyResult();
       renderAll();
       const ms = performance.now() - t0;
       $("#footline").textContent = `Solved in ${(ms / 1000).toFixed(2)} s · ${R.sections.length} sections × ${(R.sections[0].mesh.tris.length / 3).toLocaleString()} triangles · ${R.fem.y.length - 1} beam elements · beam theory on exact printed sections, not 3-D FE`;
     } catch (err) {
+      stale = true;
+      saveDesignAfterRun = false;
       console.error(err);
       flash(err.message || String(err));
     } finally {
@@ -1314,6 +1348,9 @@ td.num { font-family: var(--font-data); font-variant-numeric: tabular-nums; text
       `Load: ${L.kind === "flight" ? `lift n = ${L.loadFactor}, aircraft ${L.aircraftMass} kg, ${L.distribution}, at ${L.liftFraction} c, inertia relief ${L.inertiaRelief ? "on" : "off"}` : `tip force ${L.tipForce} N at ${L.tipFraction} c`}; factor of safety ${L.fos}`,
       ``,
       `Mass: printed PLA ${nf(R.mass.printed, 1)} g, rods ${nf(R.mass.rods, 1)} g`,
+      `Physical ribs (${R.ribs.length}), y from root in mm: ${R.ribs.join(", ")}`,
+      `Interior layout: ${R.geometry.customInteriorRibs == null ? "course/even-spacing rule" : "custom browser-only layout; transfer to CAD separately"}`,
+      `Rib thickness: ${nf(R.geometry.ribThickness, 2)} mm`,
       `Root: V ${nf(R.V[0], 2)} N, M ${nf(R.M[0] / 1000, 3)} N·m, T ${nf(R.T[0] / 1000, 4)} N·m (nose-up +)`,
       `Tip deflection ${nf(R.deflection.at(-1), 2)} mm; tip twist ${nf((R.twist.at(-1) * 180) / Math.PI, 3)} deg`,
       `Tip stiffness ${nf(R.stiffness.tip, 3)} N/mm (rigid seams ${nf(R.stiffness.rigidSeams, 3)}); clearance dead band ${nf(R.seam.freePlay, 2)} mm`,
@@ -1328,6 +1365,13 @@ td.num { font-family: var(--font-data); font-variant-numeric: tabular-nums; text
       ``,
       `Claim:`, `Evidence:`, `Check:`, `Confidence:`, `Limitation:`,
     ];
+    if (designBaseline) {
+      lines.push("", "DESIGN LAB COMPARISON (baseline -> current):", `Prediction: ${$("#designPrediction").value}`);
+      const a = designMetrics(designBaseline);
+      designMetrics(R).forEach(([name, value, unit, digits], i) => lines.push(`${name}: ${nf(a[i][1], digits)} -> ${nf(value, digits)} ${unit}`));
+      lines.push(`Same load/materials/connections/criteria: ${comparisonContext(designBaseline) === comparisonContext(R)}`,
+        "Rib edits do not add local diaphragm stiffness to beam EI/GJ. Numerical what-if; no automatic CAD/STL/G-code update.");
+    }
     return lines.join("\n");
   }
   $("#copyBtn").addEventListener("click", async () => {
@@ -1354,7 +1398,7 @@ td.num { font-family: var(--font-data); font-variant-numeric: tabular-nums; text
   function renderAll() {
     if (!R) return;
     renderTree(); renderPM(); renderCharts(); renderChecks(); renderPredict();
-    renderLesson();
+    renderLesson(); renderDesignLab();
     if (!$("#tab-section").hidden) renderSection();
     $("#report").value = reportText();
     if (prediction && !prediction.after) { prediction.after = true; store.set("prediction", prediction); renderPredict(); }
@@ -1459,6 +1503,94 @@ td.num { font-family: var(--font-data); font-variant-numeric: tabular-nums; text
       <text x="96" y="122">${bend ? 'the 3-D view can magnify it.' : '|V(y)| = |P|; |M(y)| = |P|(L − y)'}</text>`);
   }
 
+  function interiorStations(g) {
+    return E.ribStations(g).filter(y => !E.seams(g).some(s => Math.abs(Math.abs(y - s) - g.interfaceOffset) < 1e-6));
+  }
+
+  function designMetrics(r) {
+    const supports = [0, ...r.ribs, r.geometry.semiSpan];
+    const maxBay = Math.max(...supports.slice(1).map((y, i) => y - supports[i]));
+    const flatU = Math.max(...r.stress.skinComp.map((s, i) => Math.max(0, s) * r.load.fos / r.stress.sigFlat[i]));
+    return [
+      ["Physical ribs", r.ribs.length, "", 0],
+      ["Printed PLA mass", r.mass.printed, "g", 2],
+      ["Longest support bay (centre-to-centre)", maxBay, "mm", 2],
+      [r.load.kind === "tip" ? "Prescribed tip force" : "Prescribed gross semi-wing lift", r.load.kind === "tip" ? r.load.tipForce : r.liftN, "N", 3],
+      ["Root net shear magnitude", Math.abs(r.V[0]), "N", 3],
+      ["Root net bending moment magnitude", Math.abs(r.M[0]) / 1000, "N·m", 4],
+      ["Signed tip deflection", r.deflection.at(-1), "mm", 4],
+      ["Signed tip twist", r.twist.at(-1) * 180 / Math.PI, "°", 4],
+      ["First bending frequency", r.fem.fBending[0], "Hz", 3],
+      ["Flat-panel comparison U (not an allowable)", flatU, "", 3],
+    ];
+  }
+
+  function comparisonContext(r) {
+    return JSON.stringify({ load: r.load, pla: r.pla, rod: r.rod, assembly: r.assembly, criteria: r.criteria });
+  }
+
+  function renderDesignLab() {
+    if (!R) return;
+    const g = R.geometry, interiors = interiorStations(g);
+    const locked = R.ribs.filter(y => !interiors.includes(y));
+    const controls = $("#designControls");
+    controls.innerHTML = `<h3>Edit the rib layout</h3>
+      <p><b>${R.ribs.length} ribs = ${interiors.length} editable interior + ${locked.length} locked interface.</b> Locked stations: ${locked.length ? locked.map(y => nf(y, 1)).join(", ") + " mm" : "none (one module)"}. Root/tip caps are separate.</p>
+      <form id="ribAddForm" class="lesson-actions"><label for="ribNew">New rib station y (mm)</label><input id="ribNew" type="number" step="0.1" min="0" max="${g.semiSpan}" value="${nf(g.semiSpan / 8, 1)}" required style="width:100px"><button class="btn primary" type="submit">Add rib</button></form>
+      <div class="tablewrap"><table><thead><tr><th>Interior rib</th><th>Station y (mm)</th><th>Actions</th></tr></thead><tbody>${interiors.map((y, i) => `<tr><td>R${R.ribs.indexOf(y) + 1}</td><td><input aria-label="Station of interior rib ${i + 1}" id="ribPosition${i}" type="number" step="0.1" value="${y}" style="width:95px"></td><td><button class="btn" type="button" data-move-rib="${i}">Move</button> <button class="btn" type="button" data-remove-rib="${i}">Remove</button></td></tr>`).join("") || '<tr><td colspan="3">No interior ribs. Add one above; interface ribs remain.</td></tr>'}</tbody></table></div>
+      <form id="ribUniformForm" class="lesson-actions" style="margin-top:10px"><label for="ribCount">Requested evenly spaced interior ribs</label><input id="ribCount" type="number" min="0" max="16" step="1" value="${interiors.length}" required style="width:70px"><button class="btn" type="submit">Replace interior layout</button></form>
+      <p class="note">Even spacing starts at iL/(N+1). Stations inside an interface zone are omitted; the actual count above can be smaller. Manual positions are rejected if they overlap a rib, cap or protected seam zone. Up to 16 interior ribs.</p>
+      <button class="btn" id="ribReset" type="button">Reset to course rib rule</button>
+      <h3>Try another design variable</h3><p>Keep the load fixed and change only one thickness. Skin thickness affects the section stiffness and mass; rib thickness affects rib mass and the available layout space.</p>
+      <form id="designThicknessForm"><div class="field"><label for="labSkin">Skin thickness (mm, vertical)</label><input id="labSkin" type="number" min="0.8" max="2.4" step="0.1" value="${g.skin}" required></div><div class="field"><label for="labRib">Rib thickness (mm)</label><input id="labRib" type="number" min="0.8" max="3" step="0.1" value="${g.ribThickness}" required></div><button class="btn" type="submit">Apply thicknesses</button></form>`;
+    const update = (patch, message) => {
+      if (running || stale) { $("#designMessage").textContent = "Wait for a successful study before editing the layout."; return; }
+      try {
+        const next = E.makeGeometry({ ...S.geometry, ...patch });
+        // Reject an unprintable cavity before replacing the last successful design.
+        for (const y of [0, next.semiSpan, ...E.ribStations(next), ...E.stations({ geometry: next })]) E.ringLoops(next, y);
+        S.geometry = { ...next };
+        $("#designMessage").textContent = message + " Recomputing…";
+        setAnatomy("inside"); changed();
+      } catch (err) { $("#designMessage").textContent = err.message; }
+    };
+    $("#ribAddForm").addEventListener("submit", e => {
+      e.preventDefault();
+      update({ customInteriorRibs: [...interiors, +$("#ribNew").value] }, "Rib added.");
+    });
+    controls.querySelectorAll("[data-remove-rib]").forEach(b => b.addEventListener("click", () => update({ customInteriorRibs: interiors.filter((_, i) => i !== +b.dataset.removeRib) }, "Interior rib removed; interface ribs retained.")));
+    controls.querySelectorAll("[data-move-rib]").forEach(b => b.addEventListener("click", () => {
+      const i = +b.dataset.moveRib, field = $("#ribPosition" + i);
+      if (!field.value || !Number.isFinite(+field.value)) { $("#designMessage").textContent = "Enter a finite station in mm."; return; }
+      update({ customInteriorRibs: interiors.map((y, j) => i === j ? +field.value : y) }, "Rib moved.");
+    }));
+    $("#ribUniformForm").addEventListener("submit", e => { e.preventDefault(); update({ customInteriorRibs: null, interiorRibs: +$("#ribCount").value }, "Interior layout replaced using the spacing rule."); });
+    $("#ribReset").addEventListener("click", () => update({ customInteriorRibs: null, interiorRibs: 3 }, "Course rib rule restored for the current module count."));
+    $("#designThicknessForm").addEventListener("submit", e => {
+      e.preventDefault();
+      update({ skin: +$("#labSkin").value, ribThickness: +$("#labRib").value }, "Thicknesses updated.");
+    });
+    $("#designFigure").innerHTML = ribPlanFigure(g) + `<figcaption>Live layout: gold = ribs; blue = carbon rods; dashed = seams. Stations: ${R.ribs.map((y, i) => `R${i + 1} = ${nf(y, 1)} mm${locked.includes(y) ? " (locked)" : ""}`).join("; ")}. The 3-D view uses these same stations.</figcaption>`;
+    const a = designMetrics(designBaseline), b = designMetrics(R);
+    const sameContext = comparisonContext(designBaseline) === comparisonContext(R);
+    $("#designComparison").innerHTML = `<h3>Saved baseline → current design</h3><p class="note">Baseline: ${designBaseline.ribs.length} ribs; skin ${nf(designBaseline.geometry.skin, 1)} mm; rib ${nf(designBaseline.geometry.ribThickness, 1)} mm. ${sameContext ? "Load, materials, connections and criteria are unchanged." : "CAUTION: load, material, connection or criterion settings also changed. This is not an isolated geometry experiment."}</p><table><thead><tr><th>Quantity</th><th>Baseline</th><th>Current</th><th>Change</th></tr></thead><tbody>${b.map(([label, value, unit, digits], i) => `<tr><td>${label}${i === 3 && a[i][0] !== label ? " (baseline used a different load type)" : ""}</td><td>${nf(a[i][1], digits)} ${unit}</td><td>${nf(value, digits)} ${unit}</td><td>${nf(value - a[i][1], digits)} ${unit}</td></tr>`).join("")}</tbody></table><p class="note">Values are rounded; 0.000 may mean a change below the displayed precision. Save a new baseline after switching experiments. Rib edits alone do not alter distributed EI/GJ in this model.</p>`;
+    $("#designMessage").textContent = "Study complete. The comparison and 3-D ribs now match the solved layout.";
+  }
+
+  $("#designSave").addEventListener("click", () => {
+    if (running || stale || !R) { $("#designMessage").textContent = "Run a successful study before saving its baseline."; return; }
+    designBaseline = R; renderDesignLab();
+    $("#report").value = reportText();
+    $("#designMessage").textContent = "Baseline saved. Predict, then change one design input.";
+  });
+  $("#designTip").addEventListener("click", () => {
+    if (running || stale || !R) { $("#designMessage").textContent = "Wait for a successful study first."; return; }
+    S.load = { ...S.load, kind: "tip", tipForce: 2, tipFraction: .3 };
+    saveDesignAfterRun = true; setAnatomy("inside"); changed();
+  });
+  $("#designInside").addEventListener("click", () => setAnatomy("inside"));
+  $("#designPrediction").addEventListener("input", () => { if (R) $("#report").value = reportText(); });
+
   function renderLesson() {
     const g = R ? R.geometry : E.makeGeometry(S.geometry), ribs = E.ribStations(g), seams = E.seams(g);
     const paired = ribs.filter((y) => seams.some((s) => Math.abs(Math.abs(y - s) - g.interfaceOffset) < 1e-6)).length;
@@ -1532,6 +1664,7 @@ td.num { font-family: var(--font-data); font-variant-numeric: tabular-nums; text
     if (S.lesson === 0) {
       action("Show inside wing", () => setAnatomy("inside"));
       action("Show numbered ribs", () => setAnatomy("ribs"));
+      action("Add / move ribs in Design lab", () => { setAnatomy("inside"); openTab("design"); });
       action("Show rods and sleeves", () => setAnatomy("rods"));
     } else if (S.lesson === 2 || S.lesson === 3) {
       const trial = (P, fraction) => {

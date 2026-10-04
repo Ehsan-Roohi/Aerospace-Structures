@@ -21,7 +21,7 @@ for (const match of published.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/gi))
 }
 assert.equal(scripts, 2);
 const context = vm.createContext({ E, nf: (v, d = 2) => Number(v).toFixed(d) });
-const figures = source.slice(source.indexOf("  function svgFrame("), source.indexOf("  function renderLesson("));
+const figures = source.slice(source.indexOf("  function svgFrame("), source.indexOf("  function renderDesignLab("));
 vm.runInContext(figures, context);
 for (const modules of [2, 3]) {
   const geometry = E.makeGeometry({ modules });
@@ -37,4 +37,8 @@ assert.deepEqual(E.ribStations(E.makeGeometry()), [112.5, 146, 154, 225, 296, 30
 assert.ok(source.includes('plot: "model", deformed: false'));
 assert.ok(source.includes('data-tab="learn" aria-selected="true"'));
 assert.equal((source.match(/data-lesson="\d"/g) || []).length, 6);
-console.log("PASS: generated page matches template + unchanged engine; both scripts parse; 2/3-module teaching figures are finite; all baseline ribs are labelled; default is undeformed Model + six-step lesson.");
+assert.ok(source.includes('data-tab="design"'));
+const custom = E.makeGeometry({ customInteriorRibs: [56.3, 112.5, 225, 337.5] });
+assert.ok(context.ribPlanFigure(custom).includes('>R8</text>'));
+assert.deepEqual(Array.from(context.interiorStations(custom)), [56.3, 112.5, 225, 337.5]);
+console.log("PASS: generated page matches template + engine; both scripts parse; 2/3-module and custom-rib figures are finite and labelled; default is undeformed Model + six-step lesson; Design lab is present.");

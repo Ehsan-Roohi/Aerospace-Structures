@@ -81,7 +81,7 @@ const WingEngine = (() => {
   // ------------------------------------------------------------------ geometry
   const DEFAULT_GEOMETRY = {
     naca: "2412", semiSpan: 450, rootChord: 160, tipChord: 100, skin: 1.2, ribThickness: 1.6,
-    modules: 3, te: 1.2, interiorRibs: 3, interfaceOffset: 4, cap: 2, cavityStart: 0.06,
+    modules: 3, te: 1.2, interiorRibs: 3, customInteriorRibs: null, interfaceOffset: 4, cap: 2, cavityStart: 0.06,
     cavityEnd: 0.9, rodFractions: [0.3, 0.6], rodDiameter: 4, clearance: 0.25, sleeveWall: 1.2,
   };
 
@@ -105,6 +105,23 @@ const WingEngine = (() => {
     if (g.interfaceOffset <= g.ribThickness) throw new Error("Interface rib offset must exceed rib thickness.");
     if (g.clearance < 0 || g.clearance > 0.8) throw new Error("Radial clearance must lie between 0 and 0.8 mm.");
     g.modules = +g.modules;
+    if (!Number.isInteger(g.interiorRibs) || g.interiorRibs < 0 || g.interiorRibs > 16)
+      throw new Error("Use 0–16 requested interior ribs.");
+    if (g.customInteriorRibs != null) {
+      if (!Array.isArray(g.customInteriorRibs) || g.customInteriorRibs.length > 16)
+        throw new Error("Use at most 16 custom interior ribs.");
+      const ribs = [...g.customInteriorRibs].sort((a, b) => a - b);
+      for (let i = 0; i < ribs.length; i++) {
+        const y = ribs[i];
+        if (!Number.isFinite(y) || y <= g.cap + g.ribThickness / 2 || y >= g.semiSpan - g.cap - g.ribThickness / 2)
+          throw new Error("Interior ribs must lie inside the span, clear of root/tip caps.");
+        if (seams(g).some(s => Math.abs(y - s) <= g.interfaceOffset + g.ribThickness))
+          throw new Error("Keep interior ribs clear of the seam and its two locked interface ribs.");
+        if (i && y - ribs[i - 1] <= g.ribThickness)
+          throw new Error("Interior ribs must not overlap: separate their centres by more than the rib thickness.");
+      }
+      g.customInteriorRibs = Object.freeze(ribs);
+    }
     return Object.freeze(g);
   }
 
@@ -117,7 +134,9 @@ const WingEngine = (() => {
   function ribStations(g) {
     const st = [];
     const b = seams(g);
-    if (g.interiorRibs) {
+    if (g.customInteriorRibs != null) {
+      st.push(...g.customInteriorRibs);
+    } else if (g.interiorRibs) {
       const step = g.semiSpan / (g.interiorRibs + 1);
       for (let i = 1; i <= g.interiorRibs; i++) {
         const s = step * i;

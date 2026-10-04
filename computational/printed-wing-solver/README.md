@@ -58,9 +58,13 @@ The 2 N / 4 N load exercise and the chordwise force-position exercise connect th
 
 UI regression checks: `node computational/printed-wing-solver/web/test_teaching_ui.mjs` (from the repository root). These check the generated page and geometry figures; they do not substitute for an interactive browser test.
 
+**Design lab · add ribs** lets students add, move or remove interior ribs by span station, replace them with a requested even-spacing layout, and vary skin/rib thickness. Interface ribs remain locked. The live 3-D view and numbered plan update with the calculation. Save a baseline, predict the outcome, change one variable, then compare mass, support-bay length, forces, bending, twist and frequency. The controlled 2 N tip-force experiment makes equilibrium easy to check by hand.
+
+Ribs change lumped mass, flight inertia relief, modal mass and the approximate skin-support calculation; their local diaphragm stiffness is **not** included in the beam's distributed EI/GJ. Therefore adding a rib does not, by itself, reduce fixed-load static deflection in this model. Custom positions are a browser-only numerical extension: they do not modify the Python solver, CAD notebook, STL or G-code. Approved layouts must be transferred to CAD before printing. Tests: `node computational/printed-wing-solver/web/test_rib_design.mjs`.
+
 [Launch Wing Lab online](https://ehsan-roohi.github.io/Aerospace-Structures/wing-lab.html) — no download or installation required. Wing Lab is a single-file browser app in the style of an FEA package: study tree, property panel, 3-D viewport with stress, displacement and factor-of-safety fringe plots, deformed shape, exploded and see-through views, section clipping, animated modes, diagrams, checks, a joint comparison, a predict-then-run exercise and a design challenge. Internet access is required to load three.js from a CDN. Alternatively, download [`docs/wing-lab.html`](../../docs/wing-lab.html) and open it in a modern browser.
 
-Its engine, [`web/engine.js`](web/engine.js), is a JavaScript port of `printed_wing_solver.py`. The shell section is meshed with a mapped ring of triangles instead of `sectionproperties`; everything else follows the Python code line by line. The port is checked against the Python solver:
+Its engine, [`web/engine.js`](web/engine.js), is a JavaScript port of `printed_wing_solver.py`. The shell section is meshed with a mapped ring of triangles instead of `sectionproperties`; the browser also supports custom interior-rib positions. The unchanged baseline cases are checked against the Python solver:
 
 ```bash
 python web/export_reference.py     # five reference cases from the Python solver

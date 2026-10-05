@@ -39,6 +39,21 @@ w.document.documentElement.dataset.wingReady='true';
 let requested='';w.addEventListener('wing-learning-stage',e=>requested=e.detail);
 click('[data-stage="shell"]');assert.equal(requested,'shell');
 assert.ok(!/NaN|undefined|Infinity/.test($('#foundations').innerHTML));
+const navigationSource=read('./wing_lab_template.html');
+w.document.body.insertAdjacentHTML('beforeend',navigationSource.slice(navigationSource.indexOf('<nav id="wingNavigation"'),navigationSource.indexOf('<div id="app"'))+'<div id="app"></div>');
+ctx.$=$;
+vm.runInContext(navigationSource.slice(navigationSource.indexOf('  function returnToBeams('),navigationSource.indexOf("  document.documentElement.dataset.wingReady='true'")),ctx);
+for(const support of ['cantilever','fixed-fixed','simply-supported']) {
+  $('#foundations').hidden=true;$('#app').hidden=false;$('#wingNavigation').hidden=false;
+  click(`[data-return-beam="${support}"]`);
+  assert.equal($('#foundations').hidden,false);assert.equal($('#app').hidden,true);assert.equal($('#wingNavigation').hidden,true);
+  assert.equal($(`[data-stage="${support}"]`).getAttribute('aria-pressed'),'true');
+  assert.equal(w.document.activeElement,$(`[data-stage="${support}"]`));
+}
+$('#foundations').hidden=true;$('#app').hidden=false;$('#wingNavigation').hidden=false;
+const previousBeam=kpi();click('#backFoundations');
+assert.equal(kpi(),previousBeam,'Back preserves the beam study');
+assert.equal($('#foundations').hidden,false);assert.equal($('#app').hidden,true);
 dom.window.close();
 
 // Render the actual member/load lesson functions with real engine results.

@@ -56,6 +56,10 @@
 [hidden] { display: none !important; }
 html, body { height: 100%; }
 body { background: var(--bg); color: var(--fg); font: 14px/1.42 var(--font-ui); -webkit-font-smoothing: antialiased; }
+body { height: auto; min-height: 100%; }
+#wingNavigation { position: sticky; top: 0; z-index: 50; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 12px 16px; background: var(--panel); border-bottom: 2px solid var(--accent); box-shadow: var(--shadow); }
+#wingNavigation .btn { min-height: 42px; }
+#wingNavigation strong { margin-right: 8px; }
 * { box-sizing: border-box; }
 button, input, select { font: inherit; color: inherit; }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
@@ -262,6 +266,13 @@ td.num { font-family: var(--font-data); font-variant-numeric: tabular-nums; text
 
 
 <div id="foundations"></div>
+<nav id="wingNavigation" aria-label="Return from wing to beam lessons" hidden>
+  <button class="btn primary" type="button" id="backFoundations">← Back to beam lessons</button>
+  <strong>Or open a beam:</strong>
+  <button class="btn" type="button" data-return-beam="cantilever">Cantilever</button>
+  <button class="btn" type="button" data-return-beam="fixed-fixed">Fixed–fixed</button>
+  <button class="btn" type="button" data-return-beam="simply-supported">Simply supported</button>
+</nav>
 <div id="app" class="learning-view" hidden>
   <header class="bar panel" aria-label="Commands">
     <div class="brand">
@@ -282,7 +293,7 @@ td.num { font-family: var(--font-data); font-variant-numeric: tabular-nums; text
         <button class="tool" data-plot="mode" type="button">Modes</button>
       </div>
     </div>
-    <div class="group"><span>Learn first</span><div class="row"><button class="tool" type="button" id="backFoundations">Beams → wing pathway</button><button class="tool" type="button" id="learnBtn">Guided lesson</button><button class="tool" type="button" id="inputsBtn" aria-pressed="false">Edit inputs</button></div></div>
+    <div class="group"><span>Learn first</span><div class="row"><button class="tool" type="button" id="learnBtn">Guided lesson</button><button class="tool" type="button" id="inputsBtn" aria-pressed="false">Edit inputs</button></div></div>
     <div class="status" aria-live="polite"><span class="chip idle" id="stateChip">Starting</span><span id="stateText">Loading the solver</span></div>
   </header>
 
@@ -3264,11 +3275,19 @@ if (typeof module !== "undefined" && module.exports) module.exports = WingEngine
       S.assembly.seamsBonded=true; S.load={...S.load,kind:'tip',tipForce:2,tipFraction:.3};
     }
     S.stressComponent='skin'; S.anatomy='inside';S.xray=true;S.deformed=false;
-    $('#foundations').hidden=true;$('#app').hidden=false;
+    $('#foundations').hidden=true;$('#app').hidden=false;$('#wingNavigation').hidden=false;
     $('#app').dataset.lessonStage=stage;
     setPlot('model'); openTab('members'); resize();lastViewSet=false;runStudy();
+    $('#wingNavigation').scrollIntoView({block:'start'});
   });
-  $('#backFoundations').addEventListener('click',()=>{$('#app').hidden=true;$('#foundations').hidden=false;});
+  function returnToBeams(support) {
+    $('#app').hidden=true;$('#wingNavigation').hidden=true;$('#foundations').hidden=false;
+    if(support) $('#foundations').querySelector(`[data-stage="${support}"]`).click();
+    $('#foundations').scrollIntoView({block:'start'});
+    $('#foundations').querySelector(support?`[data-stage="${support}"]`:'[data-stage][aria-pressed="true"]').focus({preventScroll:true});
+  }
+  $('#backFoundations').addEventListener('click',()=>returnToBeams());
+  document.querySelectorAll('[data-return-beam]').forEach(b=>b.addEventListener('click',()=>returnToBeams(b.dataset.returnBeam)));
   document.documentElement.dataset.wingReady='true';
 })();
 </script>

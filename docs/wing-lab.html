@@ -260,6 +260,30 @@ td.num { font-family: var(--font-data); font-variant-numeric: tabular-nums; text
   .tool { padding: 0 8px; }
 }
 @media (prefers-reduced-motion: reduce) { .run.stale { animation: none; } .progress div { transition: none; } }
+/* Teaching content must shrink to a phone, not to the property's 108 px column. */
+body { margin: 0; }
+.learn-layout > *, .foundation-grid > *, .tabpanel, .dock, form, figure { min-width: 0; }
+.tabpanel { overflow-wrap: anywhere; }
+.tabpanel .field { grid-template-columns: minmax(0,1fr); }
+.tabpanel input, .tabpanel select, .tabpanel textarea { width: 100%; min-width: 0; max-width: 100%; }
+.tabpanel textarea { min-height: 100px; padding: 10px; font: inherit; }
+.tabpanel table { display: block; max-width: 100%; overflow-x: auto; }
+.tabpanel svg { width: 100%; height: auto; }
+#observationForm { display: grid; gap: 12px; }
+#localForm { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 10px; }
+.hud summary { display: none; cursor: pointer; padding: 8px; font-weight: 600; }
+@media(max-width:560px) {
+  #app { padding: 8px; }
+  #app.learning-view { grid-template-rows: auto 470px auto; }
+  .learn-layout, #localForm { grid-template-columns: minmax(0,1fr); }
+  .view .hud { top: auto; bottom: 12px; left: 8px; right: 8px; display: block; max-height: 170px; overflow: auto; background: var(--panel); }
+  .hud summary { display: block; }
+  .hud-row { flex-wrap: wrap; justify-content: flex-start; }
+  .view { width: 100%; min-width: 0; }
+  #wingNavigation { padding: 8px; gap: 5px; }
+  #wingNavigation strong { display: none; }
+  #wingNavigation .btn { font-size: 12px; padding: 6px; min-height: 36px; }
+}
 </style>
 </head>
 <body>
@@ -310,7 +334,8 @@ td.num { font-family: var(--font-data); font-variant-numeric: tabular-nums; text
       <div class="legend-title" id="legendTitle"></div>
       <div class="legend" id="legend"></div>
     </div>
-    <div class="hud" role="toolbar" aria-label="View and display">
+    <details class="hud" id="hudControls" open aria-label="View and display">
+      <summary>View &amp; display controls</summary>
       <div class="hud-row" role="group" aria-label="Standard views">
         <button type="button" data-view="iso">Isometric</button>
         <button type="button" data-view="plan">Planform</button>
@@ -333,7 +358,7 @@ td.num { font-family: var(--font-data); font-variant-numeric: tabular-nums; text
         <button type="button" id="clipBtn" aria-pressed="false">Clip</button>
         <label for="clipIn"><span class="sr">Clip station</span><input id="clipIn" type="range" min="0" max="450" step="1" value="150"></label>
       </div>
-    </div>
+    </details>
     <div class="probe" id="probe" hidden></div>
     <div class="anatomy-key" id="anatomyKey">
       <b>Undeformed project geometry · select “Inside wing” to reveal the ribs</b>
@@ -443,7 +468,7 @@ td.num { font-family: var(--font-data); font-variant-numeric: tabular-nums; text
           <h3>Predict, then run</h3>
           <p>Write down your expectation before you press Run. Change one input, predict, run, compare.</p>
           <div class="field"><label for="pDefl">Tip deflection <small>mm, limit load</small></label><input id="pDefl" type="number" step="0.1" placeholder="e.g. 12"></div>
-          <div class="field"><label for="pGov">Governing check</label><select id="pGov"></select></div>
+          <div class="field"><label for="pGov">Other governing check (buckling unresolved)</label><select id="pGov"></select></div>
           <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" id="pLock" type="button">Lock prediction</button><span class="note" id="pState">No prediction locked.</span></div>
           <div id="pResult"></div>
         </div>
@@ -712,15 +737,17 @@ if(typeof window!=='undefined')window.BeamLearningEngine=BeamLearningEngine;
     #foundations h1{font-size:32px;margin:4px 0} #foundations h2{font-size:23px} #foundations h3{font-size:18px}
     .pathway{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0}.pathway button{padding:10px;background:var(--panel);border:1px solid var(--line);border-radius:8px;cursor:pointer}
     .pathway button[aria-pressed=true]{border:2px solid var(--accent)}
-    .foundation-grid{display:grid;grid-template-columns:minmax(300px,1fr) minmax(450px,1.5fr);gap:20px;align-items:start}
+    .foundation-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.5fr);gap:20px;align-items:start}.foundation-grid>*{min-width:0}
     .foundation-card{background:var(--panel);border:1px solid var(--line);padding:20px;border-radius:12px;margin-bottom:16px}
     #foundations input,#foundations select{padding:7px;background:var(--bg);border:1px solid var(--line);border-radius:5px;width:100%}
-    .beam-fields{display:grid;grid-template-columns:1fr 1fr;gap:10px}.beam-fields label{font-size:14px;display:block}
+    .beam-fields{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}.beam-fields label{font-size:14px;display:block;min-width:0}.beam-fields input,.beam-fields select{min-width:0}
     #foundations svg{width:100%;height:auto;background:#f5f8fb;border-radius:8px} #foundations summary{cursor:pointer;font-weight:600}
     .beam-equation{font-family:Georgia,serif;text-align:center;background:var(--panel-2);padding:14px;font-size:20px;border-radius:8px;margin:12px 0}
     .beam-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.beam-kpis div{padding:12px;background:var(--panel-2);border-radius:8px}.beam-kpis b{display:block;font-size:20px}
     #beamCharts{display:grid;grid-template-columns:1fr 1fr;gap:10px} #foundations table{width:100%;font-size:14px} #foundations th,#foundations td{text-align:left;padding:7px;border-bottom:1px solid var(--line)}
-    @media(max-width:900px){.foundation-grid{grid-template-columns:1fr}#beamCharts{grid-template-columns:1fr}.beam-kpis{grid-template-columns:1fr 1fr}}
+    .beam-chart{margin:0;min-width:0}.beam-chart figcaption{min-height:48px;font-size:14px}.support-notice{border:2px solid var(--warn);padding:14px;margin:10px 0;background:var(--panel-2)}
+    @media(max-width:900px){.foundation-grid{grid-template-columns:minmax(0,1fr)}#beamCharts{grid-template-columns:minmax(0,1fr)}.beam-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    @media(max-width:560px){#foundations{padding:10px}.foundation-card{padding:12px}.beam-fields{grid-template-columns:minmax(0,1fr)}#foundations h1{font-size:26px}}
   `;document.head.append(style);
   host.innerHTML=`<header><p>MIE 446 · Aerospace Structures</p><h1>From a beam to your printed wing</h1><p>Predict → apply a load → solve → explain. Start with one support condition, then add complexity.</p></header>
     <nav class="pathway" aria-label="Learning pathway"><button data-stage="cantilever" aria-pressed="true">1 · Cantilever beam</button><button data-stage="fixed-fixed" aria-pressed="false">2 · Fixed–fixed beam</button><button data-stage="simply-supported" aria-pressed="false">3 · Simply supported</button><button data-stage="shell" aria-pressed="false">4 · Wing skin only</button><button data-stage="rods" aria-pressed="false">5 · Add rods / reinforcement</button><button data-stage="ribs" aria-pressed="false">6 · Add ribs</button><button data-stage="project" aria-pressed="false">7 · Course modular wing</button></nav>
@@ -739,9 +766,12 @@ if(typeof window!=='undefined')window.BeamLearningEngine=BeamLearningEngine;
     <p>x is distance along the beam, z is measured upward from its neutral axis, v is downward displacement, E is modulus, I is second moment of area, and κ = v″ is curvature with this sign convention. Positive M is sagging: top compression, bottom tension. The beam FE uses displacement and slope at each node, cubic interpolation, consistent distributed loads and a mass matrix. K and M in the eigenvalue equation are matrices, not the bending moment.</p><p>τ<sub>max</sub> is the neutral-axis shear stress in a solid rectangle, <b>not surface shear</b>. The top/bottom surfaces have zero transverse shear in this idealization. The plots show nominal beam stress; they do not resolve clamp edges, contact, holes, plasticity or buckling. The wing workspace uses upward-positive loading and states that convention explicitly.</p>
     <p><a href="https://teachbooks.tudelft.nl/computational-modelling/structural_linear/euler_bernouilli.html" target="_blank" rel="noopener">TU Delft: Euler–Bernoulli finite elements</a> · <a href="https://help.solidworks.com/2026/english/simtutorialonline/Creating_Beam_Diagrams.htm" target="_blank" rel="noopener">SOLIDWORKS: beam diagrams</a> · <a href="https://help.solidworks.com/2025/english/SolidWorks/cworks/HIDD_Mode_Shape_Amplitude.htm" target="_blank" rel="noopener">Mode amplitude interpretation</a></p><p>This app follows an educational simulation workflow; it is not SOLIDWORKS and does not replace solid/shell contact, nonlinear or fracture analysis.</p></section>`;
   const svg=(title,body,h=240)=>`<svg viewBox="0 0 760 ${h}" role="img" aria-label="${title}"><style>text{font:16px Arial;fill:#19354b}</style><text x="24" y="27" font-weight="bold">${title}</text>${body}</svg>`;
+  let chartData=[];
   function chart(title,ys,unit,color='#246fba') {
-    const xs=result.x,L=st.length,scale=max(ys), pts=xs.map((x,i)=>`${55+650*x/L},${125-75*ys[i]/scale}`).join(' ');
-    return svg(`${title} (${unit})`,`<path d="M55 45V205H710M55 125H710" fill="none" stroke="#9aaebd"/><polyline points="${pts}" fill="none" stroke="${color}" stroke-width="3"/><text x="60" y="60">+${f(scale,2)}</text><text x="60" y="194">−${f(scale,2)}</text><text x="60" y="226">0</text><text x="645" y="226">${L} mm</text>`);
+    const index=chartData.push({ys,unit,title})-1,L=st.length,scale=max(ys),X=x=>100+610*x/L,Y=v=>125-70*v/scale;
+    const grid=[-1,-.5,0,.5,1].map(t=>`<path d="M100 ${Y(t*scale)}H710" stroke="#c5d1db"/><text x="88" y="${Y(t*scale)+5}" text-anchor="end">${f(t*scale,2)}</text>`).join('');
+    const ticks=[0,.25,.5,.75,1].map(t=>`<text x="${X(t*L)}" y="224" text-anchor="middle">${f(t*L,0)}</text>`).join('');
+    return `<figure class="beam-chart" data-beam-chart="${index}">${svg(title+' ('+unit+')',grid+`<polyline points="${result.x.map((x,i)=>X(x)+','+Y(ys[i])).join(' ')}" fill="none" stroke="${color}" stroke-width="3"/>`+ticks+'<text x="360" y="252">Span position x (mm)</text>',270)}<figcaption>Hover or touch the plot for sampled values; the position slider below also works.</figcaption></figure>`;
   }
   function theory() {
     const fixed=st.support==='fixed-fixed',simple=st.support==='simply-supported';
@@ -760,11 +790,15 @@ if(typeof window!=='undefined')window.BeamLearningEngine=BeamLearningEngine;
   function renderMode(){if(!result)return;const m=result.modes[mode];$('#beamModePicture').innerHTML=svg(`Bending mode ${mode+1} · ${f(m.frequencyHz,2)} Hz · normalized`, `<path d="M55 130H705" stroke="#aebbc8" stroke-dasharray="6 5"/><polyline points="${m.x.map((x,i)=>`${55+650*x/st.length},${130+65*m.shape[i]*(animated?Math.sin(phase):1)}`).join(' ')}" fill="none" stroke="#246fba" stroke-width="4"/><text x="55" y="225">Display amplitude is arbitrary; animation is slowed, not real time.</text>`);}
   function render(){
     theory();picture();probe();renderMode();
+    const supported=st.loads.length>0&&st.loads.every(p=>p.kind==='point'&&Math.abs(p.force)>0&&(p.position===0||(st.support!=='cantilever'&&p.position===st.length)));
+    if(supported){$('#beamTheory').insertAdjacentHTML('afterbegin','<div class="support-notice" role="status"><b>Your loads act directly on restrained ends.</b><p>Zero span deflection here is expected: the supports take the forces. No load was moved automatically.</p><button class="btn primary" id="beamMoveCentre">Move these point loads to midspan</button></div>');$('#beamMoveCentre').onclick=()=>attempt(()=>{st.loads=st.loads.map(p=>({...p,position:st.length/2}));});}
+    chartData=[];
     $('#beamKpis').innerHTML=[['Maximum |v|',f(result.maxima.deflection,4)+' mm'],['Maximum |σ|',f(result.maxima.bendingStress)+' MPa'],['Total applied force',f(result.resultant)+' N']].map(([n,v])=>`<div>${n}<b>${v}</b></div>`).join('');
     $('#beamReactions').innerHTML=`<h3>Support reactions</h3><table><tr><th>Station</th><th>Force (+down)</th><th>Moment (+clockwise)</th></tr>${result.reactions.map(r=>`<tr><td>${r.x} mm</td><td>${f(r.force)} N</td><td>${f(r.moment)} N·mm</td></tr>`).join('')}</table><p>ΣF residual = ${result.equilibrium.force.toExponential(2)} N; ΣM residual = ${result.equilibrium.moment.toExponential(2)} N·mm.</p>`;
     $('#beamCharts').innerHTML=chart('Shear V',result.shear,'N')+chart('Bending moment M',result.moment,'N·mm')+chart('Displacement v (positive down)',result.deflection,'mm')+chart('Top-fibre stress σ (tension +)',result.stressTop,'MPa')+chart('Bottom-fibre stress σ',result.stressBottom,'MPa')+chart('Maximum rectangular shear |τ|',result.shearStressMax,'MPa');
     $('#beamLoads').innerHTML=`<ol>${st.loads.map((p,i)=>`<li>${p.kind==='point'?`${p.force} N at x=${p.position} mm`:`${p.qStart} → ${p.qEnd} N/mm over ${p.start}–${p.end} mm`} <button class="btn" data-delete-load="${i}">Remove load ${i+1}</button></li>`).join('')}</ol>`;
     $('#beamLoads').querySelectorAll('[data-delete-load]').forEach(b=>b.onclick=()=>attempt(()=>{st.loads.splice(+b.dataset.deleteLoad,1);}));
+    $('#beamCharts').querySelectorAll('[data-beam-chart]').forEach(el=>{el.onpointermove=e=>{const box=el.querySelector('svg').getBoundingClientRect(),x=Math.max(0,Math.min(st.length,((e.clientX-box.left)/box.width*760-100)/610*st.length));let i=0;while(i<result.x.length-1&&result.x[i+1]<=x)i++;const d=chartData[+el.dataset.beamChart];el.querySelector('figcaption').textContent=d.title+': x='+f(result.x[i],2)+' mm; '+f(d.ys[i],5)+' '+d.unit+' (sample; at a jump use the span slider for the right-side value).';};});
     $('#beamModeButtons').innerHTML=result.modes.map((m,i)=>`<button class="btn" data-beam-mode="${i}" aria-pressed="${i===mode}">Mode ${i+1}: ${f(m.frequencyHz,2)} Hz</button>`).join('');
     $('#beamModeButtons').querySelectorAll('button').forEach(b=>b.onclick=()=>{mode=+b.dataset.beamMode;render();});
     $('#beamStatus').textContent=result.warnings.length?result.warnings.join(' '):'Solved. Predict the next change before editing.';
@@ -1914,6 +1948,59 @@ const WingEngine = (() => {
 
 if (typeof module !== "undefined" && module.exports) module.exports = WingEngine;
 
+/* Independent teaching idealizations. mm, N, MPa; pressure input in Pa.
+ * Plate: isotropic Kirchhoff-Love, all four edges simply supported, uniform p.
+ * Navier odd sine series. Outputs are centre values, not a full wing solution.
+ */
+const TeachingModels = (() => {
+  function panel({a,b,t,E,nu,pressure,terms=61}) {
+    if(![a,b,t,E].every(x=>Number.isFinite(x)&&x>0)||!Number.isFinite(nu)||nu<=-1||nu>=.5||!Number.isFinite(pressure)||pressure<0||!Number.isInteger(terms)||terms<1||terms>201) throw Error('Use positive dimensions/modulus, −1 < ν < 0.5, nonnegative pressure and 1–201 series indices.');
+    const p=pressure*1e-6,D=E*t**3/(12*(1-nu**2));
+    let w=0,ma=0,mb=0;
+    for(let m=1;m<=terms;m+=2) for(let n=1;n<=terms;n+=2) {
+      const aa=(m/a)**2,bb=(n/b)**2;
+      const v=16*p*(-1)**((m+n-2)/2)/(Math.PI**6*D*m*n*(aa+bb)**2);
+      w+=v; ma+=D*Math.PI**2*(aa+nu*bb)*v; mb+=D*Math.PI**2*(bb+nu*aa)*v;
+    }
+    const stripW=5*p*a**4/(32*E*t**3), stripSigma=3*p*a*a/(4*t*t);
+    const status=d=>d/t>.2?'Outside the conservative small-deflection teaching range':'Within the δ/t ≤ 0.2 teaching screen (not validation)';
+    return {D,plate:{w,sigmaA:6*ma/t**2,sigmaB:6*mb/t**2,ratio:w/t,status:status(w)},strip:{w:stripW,sigmaA:stripSigma,ratio:stripW/t,status:status(stripW)},thin:Math.min(a,b)/t>=20};
+  }
+  function studentResult(r) {
+    // Preserve the numerical engine/reference API, but never promote max(plate,
+    // cylinder) to a validated wing buckling capacity in the teaching interface.
+    const checks=r.checks.filter(c=>c.name!=='Skin compression buckling (screening)');
+    return {...r,checks,governing:checks.reduce((a,b)=>b.U>a.U?b:a),bucklingUnresolved:true};
+  }
+  function buckling(r) {
+    const ratio=capacity=>Math.max(...r.stress.skinComp.map((s,i)=>s*r.load.fos/capacity[i]));
+    return {flat:ratio(r.stress.sigFlat),cylinder:ratio(r.stress.sigCyl),legacy:ratio(r.stress.sigCr)};
+  }
+  function zeroTipTwist(r,engine) {
+    // Affine direct-integration model: phi_tip = P(A - x_load B).
+    // Include existing dry-joint torsional spring compliances explicitly.
+    const {y,props:g,geometry,assembly,rod}=r;let A=0,B=0;
+    for(let i=1;i<y.length;i++) {const h=y[i]-y[i-1];A+=h*(g.xsc[i-1]/g.GJ[i-1]+g.xsc[i]/g.GJ[i])/2;B+=h*(1/g.GJ[i-1]+1/g.GJ[i])/2;}
+    if(!assembly.seamsBonded) for(const s of r.seams) {
+      const nr=geometry.rodFractions.length,Lf=assembly.seamFreeLength??2*geometry.interfaceOffset,d=geometry.rodDiameter;
+      const k=nr===2?6*rod.E*(Math.PI*d**4/64)*(Math.abs(geometry.rodFractions[1]-geometry.rodFractions[0])*engine.chordAt(geometry,s))**2/Lf**3:(rod.G??rod.E/(2*(1+rod.nu)))*Math.PI*d**4/32/Lf;
+      A+=engine.interp(s,y,g.xsc)/k;B+=1/k;
+    }
+    return {x:A/B,fraction:A/B/geometry.tipChord,A,B};
+  }
+  function fitObservations(rows) {
+    if(rows.length<3||rows.length>100||rows.some(r=>r.length!==2||!r.every(Number.isFinite)))throw Error('Enter 3–100 rows: force N, displacement mm.');
+    const N=rows.length,px=rows.reduce((s,r)=>s+r[0],0)/N,py=rows.reduce((s,r)=>s+r[1],0)/N;
+    const xx=rows.reduce((s,r)=>s+(r[0]-px)**2,0);if(xx<=0)throw Error('Use at least two distinct force values.');
+    const compliance=rows.reduce((s,r)=>s+(r[0]-px)*(r[1]-py),0)/xx;
+    if(compliance<=0)throw Error('Use matching force/displacement signs; a positive compliance is required.');
+    const offset=py-compliance*px,ss=rows.reduce((s,r)=>s+(r[1]-py)**2,0),err=rows.reduce((s,r)=>s+(r[1]-offset-compliance*r[0])**2,0);
+    return {compliance,stiffness:1/compliance,offset,r2:1-err/ss};
+  }
+  return {panel,studentResult,buckling,zeroTipTwist,fitObservations};
+})();
+if(typeof module!=='undefined')module.exports=TeachingModels;
+
 </script>
 <script>
 (() => {
@@ -2129,8 +2216,8 @@ if (typeof module !== "undefined" && module.exports) module.exports = WingEngine
     } else if (id.startsWith("res") || id === "results") {
       $("#pmHead").textContent = "Result plot";
       head({ stress: "Spanwise normal stress", disp: "Resultant displacement", fos: "Factor of safety (strength)", mode: "Natural frequency modes", model: "Model" }[S.plot] || "Results",
-        { stress: "σ = −E κ (z − z̄) on the outer skin and sleeves: beam theory on the exact section, at limit load. Rods use their own colour.", disp: "Bending deflection plus twist about the shear centre, at limit load.", fos: "Strength of printed PLA divided by the local bending stress at limit load. Values below your required factor of safety show red. Skin buckling is checked separately.", mode: "Undamped modes of the clamped wing. Pick a mode in the viewport.", model: "" }[S.plot] || "");
-      if (R) pm.append(kv([["Tip deflection", `${nf(R.deflection.at(-1), 2)} mm`], ["Tip twist", `${nf((R.twist.at(-1) * 180) / Math.PI, 3)}°`], ["Root bending moment", `${nf(R.M[0] / 1000, 3)} N·m`], ["Root torque (nose-up +)", `${nf(R.T[0] / 1000, 4)} N·m`], ["First bending mode", `${nf(R.fem.fBending[0], 2)} Hz`], ["First torsion mode", `${nf(R.fem.fTorsion[0], 1)} Hz`], ["Governing check", `${R.governing.name.replace(/ \(.*\)/, "")} · U ${nf(R.governing.U, 2)}`]]));
+        { stress: "σ = −E κ (z − z̄) on the outer skin and sleeves: beam theory on the exact section, at limit load. Rods use their own colour.", disp: "Bending deflection plus twist about the shear centre, at limit load.", fos: "Strength of printed PLA divided by the local bending stress at limit load. Values below your required factor of safety show red. Skin buckling remains unresolved; see the separate idealization comparisons.", mode: "Undamped modes of the clamped wing. Pick a mode in the viewport.", model: "" }[S.plot] || "");
+      if (R) pm.append(kv([["Tip deflection", `${nf(R.deflection.at(-1), 2)} mm`], ["Tip twist", `${nf((R.twist.at(-1) * 180) / Math.PI, 3)}°`], ["Root bending moment", `${nf(R.M[0] / 1000, 3)} N·m`], ["Root torque (nose-up +)", `${nf(R.T[0] / 1000, 4)} N·m`], ["First bending mode", `${nf(R.fem.fBending[0], 2)} Hz`], ["First torsion mode", `${nf(R.fem.fTorsion[0], 1)} Hz`], ["Other governing check (buckling unresolved)", `${R.governing.name.replace(/ \(.*\)/, "")} · U ${nf(R.governing.U, 2)}`]]));
     }
   }
   let flashTimer;
@@ -2155,9 +2242,9 @@ if (typeof module !== "undefined" && module.exports) module.exports = WingEngine
     if (stale) { chip.className = "chip warn"; chip.textContent = "Out of date"; t.textContent = "Inputs changed — run the study"; return; }
     if (!R) return;
     const u = R.governing.U;
-    chip.className = "chip " + (u <= 0.7 ? "ok" : u <= 1 ? "warn" : "bad");
-    chip.textContent = u <= 1 ? "Model screens within limits" : "Model screen exceeded";
-    t.textContent = text || `Governing U = ${nf(u, 2)} · ${R.governing.name.replace(/ \(.*\)/, "")}`;
+    chip.className = "chip " + (u <= 1 ? "warn" : "bad");
+    chip.textContent = u <= 1 ? "Other checks within limits · buckling unresolved" : "Other model check exceeded";
+    t.textContent = text || `Other-check U = ${nf(u, 2)} · ${R.governing.name.replace(/ \(.*\)/, "")}`;
   }
   // Do not stall a study when the browser suspends animation in a background tab.
   const frame = () => new Promise((r) => setTimeout(r, 0));
@@ -2186,7 +2273,7 @@ if (typeof module !== "undefined" && module.exports) module.exports = WingEngine
         $("#loadBar").style.width = `${(100 * ys.length) / (ys.length + 2)}%`;
         await frame();
       }
-      R = E.solve(input);
+      R = TeachingModels.studentResult(E.solve(input));
       if (!designBaseline || saveDesignAfterRun) { designBaseline = R; saveDesignAfterRun = false; }
       if (heavy) { buildModel(R); lastGeoKey = geoKey; frameView(heavy && !lastViewSet); }
       applyResult();
@@ -2693,7 +2780,7 @@ if (typeof module !== "undefined" && module.exports) module.exports = WingEngine
       "PLA tension (bending)": "The tensile side of the printed section governs; reversing the load can swap the tensile and compressed surfaces. In upright prints spanwise stress crosses layer interfaces, so measured material properties matter.",
       "Tip deflection at limit load": "Stiffness governs. Dry seams and a soft rod card add flexibility.",
     }[g.name] || "Read the basis line under the check to see what drives it.";
-    $("#govCallout").innerHTML = `<span class="chip ${g.U <= 1 ? (g.U <= 0.7 ? "ok" : "warn") : "bad"}">Governing · U ${nf(g.U, 2)}</span><h3>${g.name}</h3><p>${why}</p><p>Strength and buckling use the ultimate load (factor of safety ${R.load.fos} × limit). U close to or above 1 means investigate and test; it is a screening result, not a prediction of the exact failure load.</p><p>Shear stress at the four sharp cavity corners reaches ${nf(Math.max(...R.stress.tauPeak), 2)} MPa locally versus ${nf(Math.max(...R.stress.tau), 2)} MPa nominal; the corner value depends on the printed fillet and is reported, not checked.</p>`;
+    $("#govCallout").innerHTML = `<span class="chip ${g.U <= 1 ? (g.U <= 0.7 ? "ok" : "warn") : "bad"}">Other checks · U ${nf(g.U, 2)}</span><h3>${g.name}</h3><p><b>Buckling is unresolved.</b> The flat-panel and cylinder estimates are separate comparisons in Skin · rods · ribs · modes, not combined into a wing allowable.</p><p>${why}</p><p>Strength and buckling use the ultimate load (factor of safety ${R.load.fos} × limit). U close to or above 1 means investigate and test; it is a screening result, not a prediction of the exact failure load.</p><p>Shear stress at the four sharp cavity corners reaches ${nf(Math.max(...R.stress.tauPeak), 2)} MPa locally versus ${nf(Math.max(...R.stress.tau), 2)} MPa nominal; the corner value depends on the printed fillet and is reported, not checked.</p>`;
   }
 
   // ------------------------------------------------------------ section view
@@ -2771,11 +2858,11 @@ if (typeof module !== "undefined" && module.exports) module.exports = WingEngine
     for (const rod of rods) for (const rb of [false, true]) for (const sb of [false, true]) {
       host.innerHTML = `<p class="note">Running study ${rows.length + 1} of 8…</p>`;
       await frame();
-      const r = E.solve({ ...base, rod, assembly: { ...base.assembly, rodsBonded: rb, seamsBonded: sb }, nElements: 40 });
+      const r = TeachingModels.studentResult(E.solve({ ...base, rod, assembly: { ...base.assembly, rodsBonded: rb, seamsBonded: sb }, nElements: 40 }));
       rows.push({ rod: rod.short, rods: rb ? "Epoxied" : "Slip fit", seams: sb ? "Epoxied" : "Dry", r });
     }
     const best = Math.max(...rows.map((x) => x.r.stiffness.tip));
-    host.innerHTML = `<table><thead><tr><th>Rod card</th><th>Rods</th><th>Seams</th><th class="num">Tip stiffness N/mm</th><th class="num">Tip deflection mm</th><th class="num">Dead band mm</th><th class="num">f₁ Hz</th><th>Governing</th><th class="num">U</th></tr></thead><tbody>${rows.map(({ rod, rods: rr, seams: ss, r }) => `<tr><td>${rod}</td><td>${rr}</td><td>${ss}</td><td class="num">${nf(r.stiffness.tip, 3)} <span style="display:inline-block;width:${(60 * r.stiffness.tip) / best}px;height:8px;border-radius:4px;background:var(--accent);vertical-align:middle;margin-left:6px"></span></td><td class="num">${nf(r.deflection.at(-1), 2)}</td><td class="num">${nf(r.seam.freePlay, 2)}</td><td class="num">${nf(r.fem.fBending[0], 1)}</td><td>${r.governing.name.replace(/ \(.*\)/, "")}</td><td class="num" style="color:${r.governing.U > 1 ? "var(--bad)" : r.governing.U > 0.7 ? "var(--warn)" : "var(--good)"}">${nf(r.governing.U, 2)}</td></tr>`).join("")}</tbody></table>`;
+    host.innerHTML = `<table><thead><tr><th>Rod card</th><th>Rods</th><th>Seams</th><th class="num">Tip stiffness N/mm</th><th class="num">Tip deflection mm</th><th class="num">Dead band mm</th><th class="num">f₁ Hz</th><th>Other governing check (buckling unresolved)</th><th class="num">U</th></tr></thead><tbody>${rows.map(({ rod, rods: rr, seams: ss, r }) => `<tr><td>${rod}</td><td>${rr}</td><td>${ss}</td><td class="num">${nf(r.stiffness.tip, 3)} <span style="display:inline-block;width:${(60 * r.stiffness.tip) / best}px;height:8px;border-radius:4px;background:var(--accent);vertical-align:middle;margin-left:6px"></span></td><td class="num">${nf(r.deflection.at(-1), 2)}</td><td class="num">${nf(r.seam.freePlay, 2)}</td><td class="num">${nf(r.fem.fBending[0], 1)}</td><td>${r.governing.name.replace(/ \(.*\)/, "")}</td><td class="num" style="color:${r.governing.U > 1 ? "var(--bad)" : r.governing.U > 0.7 ? "var(--warn)" : "var(--good)"}">${nf(r.governing.U, 2)}</td></tr>`).join("")}</tbody></table>`;
     btn.disabled = false;
   }
   let prediction = store.get("prediction", null);
@@ -2794,7 +2881,7 @@ if (typeof module !== "undefined" && module.exports) module.exports = WingEngine
         const err = (100 * (prediction.defl - actual)) / actual;
         const hitGov = prediction.gov === R.governing.name;
         const verdict = Math.abs(err) <= 15 ? "Excellent" : Math.abs(err) <= 35 ? "Close" : "Far off — find the assumption you missed";
-        out.innerHTML = `<div class="scoreline">Solver: ${nf(actual, 2)} mm · your error ${err > 0 ? "+" : ""}${nf(err, 0)} % · <b>${verdict}</b><br>Governing check: ${hitGov ? "you called it" : `it was “${R.governing.name.replace(/ \(.*\)/, "")}”`}</div>`;
+        out.innerHTML = `<div class="scoreline">Solver: ${nf(actual, 2)} mm · your error ${err > 0 ? "+" : ""}${nf(err, 0)} % · <b>${verdict}</b><br>Other governing check (buckling unresolved): ${hitGov ? "you called it" : `it was “${R.governing.name.replace(/ \(.*\)/, "")}”`}</div>`;
       }
     }
     if (R) {
@@ -2805,7 +2892,7 @@ if (typeof module !== "undefined" && module.exports) module.exports = WingEngine
       const caseKey = JSON.stringify([S.load, S.plaKey, S.rodKey, S.assembly]);
       if (ok && (!best || best.key !== caseKey || m < best.m)) { best = { m, key: caseKey, g: { ...g } }; store.set("best", best); }
       $("#chBest").textContent = best && best.key === caseKey ? `${nf(best.m, 1)} g` : "–";
-      $("#chState").innerHTML = ok ? '<span class="chip ok">Passes every check</span>' : `<span class="chip bad">Not yet: ${R.checks.filter((c) => c.U > 1).map((c) => c.name.replace(/ \(.*\)/, "")).join(", ") || "course limits"}</span>`;
+      $("#chState").innerHTML = ok ? '<span class="chip warn">Other checks within limits; buckling unresolved</span>' : `<span class="chip bad">Not yet: ${R.checks.filter((c) => c.U > 1).map((c) => c.name.replace(/ \(.*\)/, "")).join(", ") || "course limits"}</span>`;
     }
   }
   $("#pLock").addEventListener("click", () => {
@@ -2838,7 +2925,8 @@ if (typeof module !== "undefined" && module.exports) module.exports = WingEngine
       ``,
       `Checks (U = demand/capacity):`,
       ...R.checks.map((c) => `  ${c.U <= 1 ? "PASS" : "FAIL"}  U ${nf(c.U, 2).padStart(5)}  ${c.name} (${sig(c.demand, 3)} / ${sig(c.capacity, 3)} ${c.unit} at y = ${nf(c.at, 0)} mm)`),
-      `Governing: ${R.governing.name}`,
+      `Largest OTHER-check utilization: ${R.governing.name}; buckling unresolved.`,
+      `Buckling idealization comparisons (not allowables): ${JSON.stringify(TeachingModels.buckling(R))}`,
       ``,
       `Built-in checks: equilibrium error ${R.verification.rootMomentError.toExponential(1)}, integration vs beam FEM ${nf(100 * R.verification.deflectionMethodsDiff, 3)} %, J Bredt/FE ${nf(R.verification.bredtRatioRoot, 3)}`,
       `Model: beam theory on exact printed sections (Euler–Bernoulli, St-Venant torsion, 2-D FE warping), dry seams as springs. Not a 3-D FE result; screening checks only.`,
@@ -2929,13 +3017,17 @@ if (typeof module !== "undefined" && module.exports) module.exports = WingEngine
   function positionRibLabels() {
     if (!model || $("#ribLabels").hidden) return;
     const labels = $("#ribLabels").children;
+    const occupied=[];
     model.ribs.forEach((rib, i) => {
       if (!labels[i]) return;
       const y = rib.userData.y, x = 0.52 * E.chordAt(model.g, y);
       const v = new THREE.Vector3(y + rib.userData.module * S.explode, i % 2 ? -10 : 18, x).project(camera);
-      labels[i].style.left = `${(v.x + 1) * canvas.clientWidth / 2}px`;
-      labels[i].style.top = `${(1 - v.y) * canvas.clientHeight / 2}px`;
-      labels[i].hidden = v.z < -1 || v.z > 1;
+      let left=Math.max(22,Math.min(canvas.clientWidth-22,(v.x+1)*canvas.clientWidth/2)),top=(1-v.y)*canvas.clientHeight/2;
+      let placed=false;
+      for(let lane=0;lane<12;lane++){const yy=top+(lane%2?1:-1)*Math.ceil(lane/2)*24;if(yy<25||yy>canvas.clientHeight-45)continue;if(!occupied.some(p=>Math.abs(p[0]-left)<40&&Math.abs(p[1]-yy)<23)){top=yy;placed=true;break;}}
+      labels[i].style.left=left+'px';labels[i].style.top=top+'px';
+      labels[i].hidden=v.z < -1 || v.z > 1 || !placed;
+      if(!labels[i].hidden)occupied.push([left,top]);
     });
   }
 
@@ -2950,7 +3042,8 @@ if (typeof module !== "undefined" && module.exports) module.exports = WingEngine
     let lines = `<path d="M48 ${le} H628 V${bottom(g.semiSpan)} L48 ${bottom(0)} Z" fill="#dfeaf2" stroke="#46667d" stroke-width="2"/>`;
     for (const f of g.rodFractions) lines += `<line x1="48" y1="${le + 92 * f}" x2="628" y2="${le + 92 * g.tipChord / g.rootChord * f}" stroke="#329bdd" stroke-width="4"/>`;
     seams.forEach((y, i) => { lines += `<path d="M${x(y)} 70 V211" stroke="#b6530b" stroke-width="2" stroke-dasharray="4 3"/><text x="${x(y)}" y="${i % 2 ? 255 : 236}" text-anchor="middle" class="small">Seam ${i + 1}: ${nf(y, 1)} mm</text>`; });
-    ribs.forEach((y, i) => { const ty = i % 2 ? 59 : 42; lines += `<path d="M${x(y)} ${le} V${bottom(y)}" stroke="#c88a00" stroke-width="5"/><path d="M${x(y)} ${ty + 3} V${le - 3}" stroke="#7d5b14"/><text x="${x(y)}" y="${ty}" text-anchor="middle" class="small">R${i + 1}</text>`; });
+    const labelX=ribs.map(x); for(let i=1;i<labelX.length;i++)labelX[i]=Math.max(labelX[i],labelX[i-1]+28); for(let i=labelX.length-1;i>=0;i--)labelX[i]=Math.min(labelX[i],i===labelX.length-1?628:labelX[i+1]-28);
+    ribs.forEach((y, i) => { const ty=i%2?63:43; lines+=`<path d="M${x(y)} ${le} V${bottom(y)}" stroke="#c88a00" stroke-width="5"/><path d="M${labelX[i]} ${ty+3} L${x(y)} ${le-3}" stroke="#7d5b14"/><text x="${labelX[i]}" y="${ty}" text-anchor="middle" class="small">R${i+1}</text>`; });
     lines += '<text x="48" y="205">Root · y = 0</text><text x="628" y="205" text-anchor="end">Tip</text><text x="650" y="97" class="small">LE</text><text x="650" y="165" class="small">TE</text>';
     return svgFrame("Your semi-wing: plan view, numbered physical ribs", lines);
   }
@@ -3007,14 +3100,73 @@ if (typeof module !== "undefined" && module.exports) module.exports = WingEngine
     <div><div class="callout"><h3>Separate stress results</h3><div class="lesson-actions"><button class="btn" id="skinStress">Show skin stress</button><button class="btn" id="rodStress">Show rod stress</button><button class="btn" id="ribBearingView">Show ribs / bearing</button></div><dl class="kv"><dt>Maximum nominal skin bending |σ|</dt><dd>${nf(skin,3)} MPa</dd><dt>Rod bending envelope (between seams)</dt><dd>${g.rodFractions.length?nf(rod,3)+' MPa':'No rods in this model'}</dd><dt>Physical ribs</dt><dd>${R.ribs.length}</dd><dt>Current colour field</dt><dd>${S.stressComponent==='rods'?'Rod bending':'Skin/sleeve bending'}</dd></dl><p>Stress colours are rescaled per run/component. Compare numbers, not just colour. Grey parts are not the selected stress field. Rod stress uses E<sub>rod</sub> and its own neutral axis for slip-fit rods; bonded rods use the composite neutral axis. This is nominal bending stress, not a full 3-D contact stress solution.</p>
       <h3>Rib-hole bearing: what is actually solved</h3><div class="equation">σ<sub>bearing</sub> ≈ F<sub>hole</sub> / (d<sub>rod</sub> t<sub>rib</sub>)</div>${R.ribBearing.length?`<table><thead><tr><th>Interface rib y</th><th>Estimated force per hole</th><th>Nominal bearing</th></tr></thead><tbody>${R.ribBearing.map(b=>`<tr><td>${nf(b.station,1)} mm</td><td>${nf(b.forcePerRod,2)} N</td><td>${nf(b.stress,3)} MPa</td></tr>`).join('')}</tbody></table><p>Limit-load estimate from a dry-joint force couple and distance to the adjacent support rib. The Checks tab applies the factor of safety. This is not the peak stress around a hole.</p>`:'<p>No dry-interface bearing result applies to this configuration. That means <b>not calculated / not applicable</b>, not zero rib stress.</p>'}<p><b>A full stress map inside every rib is not solved.</b> Ribs remain neutral gold; a shell/solid local FE model with contact/load-transfer assumptions is needed for that map.</p></div>
       <div class="callout" style="margin-top:14px"><h3>Read the animated modes</h3><div class="lesson-actions"><button class="btn" data-teach-mode="bending,0">First bending mode</button><button class="btn" data-teach-mode="bending,1">Second bending mode</button><button class="btn" data-teach-mode="torsion,0">First torsional mode</button></div><div class="equation">K φ = ω² M φ &nbsp; · &nbsp; f = ω/(2π)</div><p>Bending moves the centreline; torsion rotates sections around the span. These are normalized, undamped free-vibration patterns. The animation is magnified and slowed; its amplitude is <b>not</b> the response to your static force. Higher bending modes have more shape reversals. This model separates bending and torsion; it does not predict flutter, damping or forced vibration amplitudes.</p><p><a href="https://help.solidworks.com/2025/english/SolidWorks/cworks/HIDD_Mode_Shape_Amplitude.htm" target="_blank" rel="noopener">SOLIDWORKS explanation of mode amplitudes</a></p></div></div></div>
-    <h2>A separate local model: skin supported by two ribs</h2><p>This flat simply-supported strip explains an effect the global beam model omits. Uniform pressure p acts on a unit-width strip between ribs, spacing a. It neglects curvature, membrane action, load sharing and buckling. Do <b>not</b> add this deflection to the global wing displacement or interpret it as a full rib stress solution.</p><div class="equation">I = bt³/12 &nbsp; · &nbsp; q = pb &nbsp; · &nbsp; M<sub>max</sub> = qa²/8<br>σ<sub>max</sub> = 3pa²/(4t²) &nbsp; · &nbsp; δ<sub>max</sub> = 5pa⁴/(32Et³)</div><div class="lesson-actions"><label>Pressure p (Pa) <input id="stripPressure" type="number" min="0" value="120"></label><label>Bay a (mm) <input id="stripBay" type="number" min="1" value="${nf(bay,2)}"></label><button class="btn" id="stripSolve">Compare this bay with half spacing</button></div><div id="stripResult"></div><p>Halving the bay at fixed p, t and E reduces this strip's bending stress by 4 and deflection by 16. This supports the purpose of ribs, but does not establish that seven is the correct number for the manufactured wing.</p><p><a href="https://help.solidworks.com/2026/English/SolidWorks/cworks/hidd_stress_hot_spot.htm" target="_blank" rel="noopener">Support/load stress hot spots</a> · <a href="https://help.solidworks.com/2024/english/solidworks/cworks/ID_HELP_CONVERGENCE_GRAPH.htm" target="_blank" rel="noopener">Mesh convergence</a></p>`;
+    <section id="localModels"></section><section id="bucklingModels"></section><section id="torsionLab"></section><section id="ribChange"></section><section id="observations"></section>`;
     $('#skinStress').onclick=()=>{S.stressComponent='skin';S.anatomy='assembled';setPlot('stress');renderMemberLesson();};
     $('#rodStress').onclick=()=>{S.stressComponent='rods';S.anatomy='inside';S.xray=true;setPlot('stress');applyXray();renderMemberLesson();};
     $('#ribBearingView').onclick=()=>setAnatomy('ribs');
     document.querySelectorAll('[data-teach-mode]').forEach(b=>b.onclick=()=>{const[k,i]=b.dataset.teachMode.split(',');S.mode={kind:k,index:+i};setPlot('mode');});
-    const strip=()=>{const p=+$('#stripPressure').value*1e-6,a=+$('#stripBay').value,t=g.skin,E0=R.pla.E;if(!Number.isFinite(p)||!Number.isFinite(a)||p<0||a<=0){$('#stripResult').textContent='Use a finite nonnegative pressure and positive bay.';return;}const sig=x=>3*p*x*x/(4*t*t),def=x=>5*p*x**4/(32*E0*t**3);$('#stripResult').innerHTML=`<div class="learn-layout"><div>${svgFrame('Local skin strip: supported at each rib',`<path d="M70 105H600M70 192H335" stroke="#376782" stroke-width="8"/><path d="M70 106l-13 23h26ZM600 106l-13 23h26ZM70 192l-13 23h26ZM335 192l-13 23h26Z" fill="#21824c"/><path d="M70 105Q335 170 600 105M70 192Q203 196 335 192" stroke="#c26b00" stroke-width="3" fill="none"/><text x="85" y="75">Pressure ↓ ↓ ↓ ↓ ↓ · full bay a</text><text x="345" y="196">Half bay a/2</text><text x="75" y="255">Orange: exaggerated local skin deflection</text>`)}</div><div><table><tr><th>Spacing</th><th>Local |σ|</th><th>Local δ</th></tr><tr><td>${nf(a,2)} mm</td><td>${nf(sig(a),4)} MPa</td><td>${nf(def(a),5)} mm</td></tr><tr><td>${nf(a/2,2)} mm</td><td>${nf(sig(a/2),4)} MPa</td><td>${nf(def(a/2),5)} mm</td></tr></table><p>p=${nf(p,6)} N/mm²; t=${t} mm; E=${E0} MPa. Local deflection excludes global wing bending.</p>${def(a)>.1*t?'<p>Local deflection is not small relative to thickness: membrane effects may matter. Treat this linear strip as a scaling demonstration.</p>':''}</div></div>`;};
-    $('#stripSolve').onclick=strip;strip();
+    renderTeachingPanels();
   }
+  // Inlined inside the Wing Lab UI closure; uses its current solved R and controls.
+const localStudy={pressure:120};
+let observationDraft={rows:'',frequency:'',source:'measured',notes:''};
+function renderTeachingPanels() {
+  const g=R.geometry, stations=[0,...R.ribs,g.semiSpan];
+  const bay=Math.max(...stations.slice(1).map((s,i)=>s-stations[i]));
+  $('#localModels').innerHTML=`<h2>Local skin bending: compare assumptions before numbers</h2>
+    <p>Both examples are <b>flat, isotropic, linear-elastic teaching models</b>, separate from global wing bending. They omit curvature, membrane action, print anisotropy, joints and buckling. Neither is the actual wing's local displacement solution. Default b is the root skin arc width, not a verified distance between simple supports.</p>
+    <div class="learn-layout"><div>${svgFrame('A · One-way strip', '<path d="M90 120H575" stroke="#376782" stroke-width="8"/><path d="M90 125l-15 25h30ZM575 125l-15 25h30Z" fill="#21824c"/><text x="90" y="80">Uniform pressure ↓ ↓ ↓ ↓</text><text x="160" y="180">Only the two ends support bending</text><text x="195" y="225">Span a between ribs</text>')}<p>Independent narrow strips span a. Their sides provide no support. δ ∝ a⁴, so halving a divides this model's δ by 16.</p></div>
+    <div>${svgFrame('B · Two-way rectangular plate', '<rect x="170" y="65" width="330" height="140" fill="#dfeaf2" stroke="#21824c" stroke-width="8"/><text x="220" y="135">Uniform pressure ↓</text><text x="280" y="240">Span a</text><text x="520" y="135">Width b</text>')}<p>All four green edges are assumed simply supported: w = 0, normal bending moment = 0; rotation is free. Those supports must exist for this model to apply. Shorter span action limits growth when a/b is large.</p></div></div>
+    <div class="equation">Strip: δ = 5pa⁴/(32Et³), σ = 3pa²/(4t²)<br>Plate: D = Et³/[12(1−ν²)], D∇⁴w = p<br>w = Σ W<sub>mn</sub> sin(mπx/a) sin(nπy/b)<br>W<sub>mn</sub> = 16p / {π⁶Dmn[(m/a)²+(n/b)²]²}, m,n odd<br>M<sub>x</sub> = −D(w<sub>,xx</sub>+νw<sub>,yy</sub>), σ<sub>x,surface</sub> = ±6M<sub>x</sub>/t²</div>
+    <form id="localForm" class="beam-fields"><label>Uniform pressure (Pa)<input id="stripPressure" type="number" min="0" step="any" value="${localStudy.pressure}" required></label><label>Rib bay a (mm)<input id="stripBay" type="number" min="1" step="any" value="${nf(bay,2)}" required></label><label>Assumed supported width b (mm)<input id="plateWidth" type="number" min="1" step="any" value="${nf(R.props.skinWidth[0],2)}" required></label><button class="btn" id="stripSolve" type="submit">Compare strip and plate</button></form><div id="stripResult"></div>
+    <p>We use δ/t ≤ 0.2 as a conservative classroom warning threshold, not a design standard. Passing it does not validate the boundary conditions. A result above it is only a linear extrapolation. Do not add these numbers to global wing displacement. The change near a/b ≈ 1 explains two-way action, <b>not a rule that rib spacing must equal chord</b>.</p>
+    <p><a href="https://www.ramsay-maunder.co.uk/downloads/The-Navier-Solution-for-the-SSSS-Plate.pdf" target="_blank" rel="noopener">Navier series and convergence</a></p>`;
+  const updateLocal=()=>{
+    try {
+      const p={a:+$('#stripBay').value,b:+$('#plateWidth').value,t:g.skin,E:R.pla.E,nu:R.pla.nu,pressure:+$('#stripPressure').value};localStudy.pressure=p.pressure;
+      const full=TeachingModels.panel(p),half=TeachingModels.panel({...p,a:p.a/2}),fine=TeachingModels.panel({...p,terms:101});
+      const rows=[['Strip',p.a,full.strip],['Strip',p.a/2,half.strip],['Plate',p.a,full.plate],['Plate',p.a/2,half.plate]];
+      const curve=Array.from({length:40},(_,i)=>{const ratio=.25+i*3.75/39;return [ratio,TeachingModels.panel({...p,a:ratio*p.b}).plate.w];});
+      const ymax=Math.max(...curve.map(a=>a[1]),1e-12);
+      const drawing=`<path d="M80 55V225H630" fill="none" stroke="#668399"/><path d="M190 55V225" stroke="#b6530b" stroke-dasharray="5 4"/><polyline points="${curve.map(([x,y])=>`${80+550*(x-.25)/3.75},${225-155*y/ymax}`).join(' ')}" fill="none" stroke="#246fa0" stroke-width="3"/><text x="90" y="65">δ up to ${nf(ymax,3)} mm</text><text x="85" y="252">a/b = 0.25</text><text x="180" y="252">1</text><text x="590" y="252">4</text>`;
+      $('#stripResult').innerHTML=`<div class="tablewrap"><table><tr><th>Model</th><th>a (mm)</th><th>Linear δ (mm)</th><th>δ/t</th><th>Centre |σa| / |σb| (MPa)</th><th>Validity warning</th></tr>${rows.map(([name,a,r])=>`<tr><td>${name}</td><td>${nf(a,2)}</td><td>${nf(r.w,4)}${r.ratio>.2?' †':''}</td><td>${nf(r.ratio,2)}</td><td>${nf(r.sigmaA,3)} / ${r.sigmaB==null?'not modelled':nf(r.sigmaB,3)}</td><td>${r.status}</td></tr>`).join('')}</table></div><p><b>† Linear extrapolation—not a valid real-wing deflection.</b> t=${g.skin} mm, E=${R.pla.E} MPa, ν=${R.pla.nu}. ${full.thin?'Thin-plate aspect screen passed.':'Thin-plate assumption questionable: short side/thickness < 20.'}</p><p>Plate centre δ, series upper indices 61 → 101: ${nf(full.plate.w,6)} → ${nf(fine.plate.w,6)} mm. Numerical convergence does not validate the physical model.</p>${svgFrame('Plate response versus aspect ratio (b fixed)',drawing)}<p>Halving a: strip δ ratio ${nf(full.strip.w?half.strip.w/full.strip.w:0,4)}; plate δ ratio ${nf(full.plate.w?half.plate.w/full.plate.w:0,4)}. Ratios are not defined at zero pressure (displayed as 0).</p>`;
+    }catch(e){$('#stripResult').textContent=e.message;}
+  };
+  $('#localForm').onsubmit=e=>{e.preventDefault();updateLocal();};updateLocal();
+  renderBucklingModels();renderTorsionLab();renderRibChange();renderObservations();
+}
+function renderBucklingModels() {
+  const b=TeachingModels.buckling(R);
+  $('#bucklingModels').innerHTML=`<h2>Buckling: two comparisons, no combined wing allowable</h2><p>U = compressive demand × safety factor / assumed critical stress. These are different idealizations, <b>not two checks with interchangeable capacities</b>.</p><div class="tablewrap"><table><tr><th>Idealization</th><th>Maximum U</th><th>What it assumes</th></tr><tr><td>Flat panel between ribs</td><td>${nf(b.flat,3)}</td><td>Simply supported rectangular plate; no curvature benefit.</td></tr><tr><td>Equivalent circular cylinder</td><td>${nf(b.cylinder,3)}</td><td>Idealized radius and cylinder knockdown; not a validated airfoil-panel boundary condition.</td></tr></table></div><p>The legacy solver selects max(plate capacity, cylinder capacity), which can mask rib-spacing changes when the cylinder estimate dominates. That result is retained only in the engine for reproducible reference comparisons; <b>it is excluded from student governing/pass summaries</b>. Neither U above certifies the printed skin. Stability remains unresolved without an applicable curved-panel/local-shell model and material/imperfection evidence.</p><p>Other-check U and these comparison U values have different scopes. Low material stress does not establish buckling safety. <a href="https://ntrs.nasa.gov/citations/20205011530" target="_blank" rel="noopener">NASA SP-8007 concerns circular cylinders</a>, not arbitrary airfoil shells.</p>`;
+}
+function renderTorsionLab() {
+  const g=R.geometry,z=TeachingModels.zeroTipTwist(R,E), X=y=>55+570*y/g.semiSpan,Z=x=>65+135*x/g.rootChord;
+  const path=Array.from(R.y,(y,i)=>`${X(y)},${Z(R.props.xsc[i])}`).join(' ');
+  $('#torsionLab').innerHTML=`<h2>Find zero tip twist—not just the local shear centre</h2><p>For a straight uniform prism, a transverse force through its shear centre produces no torsion in this uncoupled model. In the tapered model x<sub>sc</sub> varies with y. A fixed tip-force line can lie ahead of one section's shear centre and behind another's. Opposite contributions may cancel at the tip while intermediate sections still rotate.</p><div class="equation">T(y) = P[x<sub>sc</sub>(y)−x<sub>P</sub>]<br>φ<sub>tip</sub> = ∫T/GJ dy + ΣT<sub>seam</sub>/k<sub>torsion</sub><br>x<sub>P,zero</sub> = [∫x<sub>sc</sub>/GJ dy + Σx<sub>sc,seam</sub>/k] / [∫1/GJ dy + Σ1/k]</div>
+    ${svgFrame('Plan view: local shear-centre path',`<path d="M55 65H625V${Z(g.tipChord)}L55 ${Z(g.rootChord)}Z" fill="#dfeaf2" stroke="#46667d"/><polyline points="${path}" fill="none" stroke="#168957" stroke-width="4"/><path d="M55 ${Z(z.x)}H625" stroke="#b6530b" stroke-dasharray="6 4"/><text x="70" y="245">Green: xsc(y) · dashed: zero-tip-twist force line</text>`)}
+    <p>Root xsc=${nf(R.props.xsc[0],2)} mm; last sampled xsc=${nf(R.props.xsc.at(-1),2)} mm. This model predicts a zero-tip-twist tip-load fraction of <b>${nf(z.fraction,4)}c</b>, with x measured from the aligned leading edge. It is a result of this reduced tapered-beam idealization, not a certified loading point for the real wing.</p>
+    <p>Predict the sign first. Each button replaces current loads with a 2 N upward tip force; geometry and material stay unchanged.</p><div class="lesson-actions"><button class="btn" data-twist-f="0.25">Test 0.25c</button><button class="btn" data-twist-f="0.30">Test 0.30c</button><button class="btn" data-twist-f="${z.fraction}" ${z.fraction<0||z.fraction>1?'disabled':''}>Test predicted zero</button></div><p>Current study: ${wingLoadName(R)}. Tip twist ${nf(R.twist.at(-1)*180/Math.PI,6)}°; largest |twist| along span ${nf(Math.max(...R.twist.map(Math.abs))*180/Math.PI,6)}°. A near-zero tip value does not imply zero torsion everywhere.</p>`;
+  $('#torsionLab').querySelectorAll('[data-twist-f]').forEach(b=>b.onclick=()=>{if(running||stale)return;S.load={...S.load,kind:'tip',tipForce:2,tipFraction:+b.dataset.twistF};changed();});
+}
+function renderRibChange() {
+  $('#ribChange').innerHTML=`<h2>What did the ribs change?</h2><p>Compare this study to the same geometry with all editable interior ribs removed. Rods, skins, joints and the prescribed load stay the same; interface ribs remain. With flight inertia relief, changing mass also changes net structural loading. With a fixed tip force, global EI/GJ and deflection should remain unchanged in this model.</p><button class="btn" id="compareNoRibs">Compute controlled rib comparison</button><div id="ribDelta"></div>`;
+  $('#compareNoRibs').onclick=async()=>{if(running||stale)return;const baseR=R,button=$('#compareNoRibs');button.disabled=true;$('#ribDelta').textContent='Computing comparison…';await frame();try {
+    const other=TeachingModels.studentResult(E.solve({...engineInput(),geometry:{...R.geometry,customInteriorRibs:[]}}));
+    if(R!==baseR)return;
+    const metrics=r=>[r.ribs.length,r.mass.printed,Math.max(...[0,...r.ribs,r.geometry.semiSpan].slice(1).map((v,i)=>v-[0,...r.ribs,r.geometry.semiSpan][i])),r.props.EI[0],r.deflection.at(-1),r.fem.fBending[0]];
+    const a=metrics(other),b=metrics(R),names=['Rib count','Printed mass (g)','Longest support bay (mm)','Root EI (N·mm²)','Tip deflection (mm)','First bending frequency (Hz)'];
+    $('#ribDelta').innerHTML=`<div class="tablewrap"><table><tr><th>Quantity</th><th>No editable interior ribs</th><th>Current</th><th>Change</th></tr>${names.map((n,i)=>`<tr><td>${n}</td><td>${nf(a[i],3)}</td><td>${nf(b[i],3)}</td><td>${nf(b[i]-a[i],3)}</td></tr>`).join('')}</table></div><p>Rib mass and skin-bay support change. Distributed section EI/GJ do not include rib diaphragm stiffness; a similar beam deflection is not evidence ribs are unnecessary. Compare the separate local-panel models and unresolved buckling assumptions above.</p>`;
+  }catch(e){$('#ribDelta').textContent=e.message;}finally{button.disabled=false;}};
+}
+function renderObservations() {
+  $('#observations').innerHTML=`<h2>Optional: model → observation → judgement</h2><p>No laboratory is required for this lesson. If measured data become available, enter 3–100 rows as <b>force N, displacement mm</b>, using matching signs. Fit includes an intercept for displacement zero-offset. The model comparison requires the same tip-load location, assembly, material, restraint and linear range. A real load-cell/accelerometer is not connected by this page.</p><form id="observationForm"><label>Source<select id="observationSource"><option value="measured">Measured data supplied by me</option><option value="synthetic">Synthetic demonstration—not an experiment</option></select></label><label>Force, displacement pairs<textarea id="observationRows" rows="5" placeholder="0, 0.02&#10;1, 1.12&#10;2, 2.22"></textarea></label><label>First measured bending frequency (Hz, optional)<input id="observationFrequency" type="number" min="0" step="any"></label><label>Fixture, uncertainty and limitations<textarea id="observationNotes" rows="3"></textarea></label><div class="lesson-actions"><button class="btn" type="submit">Fit and compare</button><button class="btn" type="button" id="syntheticObservations">Load clearly labelled synthetic example</button></div></form><div id="observationResult"></div><p>Agreement does not establish fracture, fatigue, nonlinear contact, buckling or flight safety. Data stay in this page; they are not uploaded.</p>`;
+  for(const [key,id] of Object.entries({rows:'observationRows',frequency:'observationFrequency',source:'observationSource',notes:'observationNotes'}))$('#'+id).value=observationDraft[key];
+  const save=()=>{observationDraft={rows:$('#observationRows').value,frequency:$('#observationFrequency').value,source:$('#observationSource').value,notes:$('#observationNotes').value};};
+  $('#observationForm').oninput=save;
+  $('#syntheticObservations').onclick=()=>{$('#observationSource').value='synthetic';$('#observationRows').value='0, 0.02\n1, 1.12\n2, 2.22\n3, 3.32';$('#observationFrequency').value='20';$('#observationNotes').value='Invented linear data for demonstrating the fit; not physical measurements.';save();};
+  $('#observationForm').onsubmit=e=>{e.preventDefault();save();try{const rows=observationDraft.rows.trim().split(/\n/).map(s=>s.split(/[,;\s]+/).filter(Boolean).map(Number)),f=TeachingModels.fitObservations(rows);const freq=observationDraft.frequency.trim()===''?null:Number(observationDraft.frequency);if(freq!==null&&(!Number.isFinite(freq)||freq<=0))throw Error('Frequency must be positive or empty.');$('#observationResult').innerHTML=`<p><b>${observationDraft.source==='synthetic'?'SYNTHETIC DEMONSTRATION — not experimental validation':'User-supplied measurements — not independently verified'}</b></p><p>δ = ${nf(f.offset,4)} + ${nf(f.compliance,4)}P; R²=${nf(f.r2,5)}; stiffness=${nf(f.stiffness,4)} N/mm. Unit-tip model stiffness=${nf(R.stiffness.tip,4)} N/mm; difference=${nf(100*(f.stiffness/R.stiffness.tip-1),2)}%. This model stiffness is bending-only and excludes clearance dead band; compare only matching measurements.</p>${freq===null?'':`<p>Entered first bending frequency=${nf(freq,3)} Hz; model=${nf(R.fem.fBending[0],3)} Hz; difference=${nf(100*(freq/R.fem.fBending[0]-1),2)}%.</p>`}`;}catch(e){$('#observationResult').textContent=e.message;}};
+}
+
   function interiorStations(g) {
     return E.ribStations(g).filter(y => !E.seams(g).some(s => Math.abs(Math.abs(y - s) - g.interfaceOffset) < 1e-6));
   }
@@ -3082,7 +3234,7 @@ if (typeof module !== "undefined" && module.exports) module.exports = WingEngine
       e.preventDefault();
       update({ skin: +$("#labSkin").value, ribThickness: +$("#labRib").value }, "Thicknesses updated.");
     });
-    $("#designFigure").innerHTML = ribPlanFigure(g) + `<figcaption>Live layout: gold = ribs; blue = carbon rods; dashed = seams. Stations: ${R.ribs.map((y, i) => `R${i + 1} = ${nf(y, 1)} mm${locked.includes(y) ? " (locked)" : ""}`).join("; ")}. The 3-D view uses these same stations.</figcaption>`;
+    $("#designFigure").innerHTML = ribPlanFigure(g) + `<figcaption>Live layout: gold = ribs; blue = carbon rods; dashed = seams. Stations: ${R.ribs.length ? R.ribs.map((y, i) => `R${i + 1} = ${nf(y, 1)} mm${locked.includes(y) ? " (locked)" : ""}`).join("; ") : "none; no ribs in this preset"}. The 3-D view uses these same stations.</figcaption>`;
     const a = designMetrics(designBaseline), b = designMetrics(R);
     const sameContext = comparisonContext(designBaseline) === comparisonContext(R);
     $("#designComparison").innerHTML = `<h3>Saved baseline → current design</h3><p class="note">Baseline: ${designBaseline.ribs.length} ribs; skin ${nf(designBaseline.geometry.skin, 1)} mm; rib ${nf(designBaseline.geometry.ribThickness, 1)} mm. ${sameContext ? "Load, materials, connections and criteria are unchanged." : "CAUTION: load, material, connection or criterion settings also changed. This is not an isolated geometry experiment."}</p><table><thead><tr><th>Quantity</th><th>Baseline</th><th>Current</th><th>Change</th></tr></thead><tbody>${b.map(([label, value, unit, digits], i) => `<tr><td>${label}${i === 3 && a[i][0] !== label ? " (baseline used a different load type)" : ""}</td><td>${nf(a[i][1], digits)} ${unit}</td><td>${nf(value, digits)} ${unit}</td><td>${nf(value - a[i][1], digits)} ${unit}</td></tr>`).join("")}</tbody></table><p class="note">Values are rounded; 0.000 may mean a change below the displayed precision. Save a new baseline after switching experiments. Rib edits alone do not alter distributed EI/GJ in this model.</p>`;
@@ -3109,7 +3261,7 @@ if (typeof module !== "undefined" && module.exports) module.exports = WingEngine
     const stories = [
       {
         title: "1 · Meet the wing before reading a stress plot",
-        text: `<p>This is one <b>semi-wing</b> of your project: NACA ${g.naca}, ${nf(g.semiSpan, 0)} mm from root to tip, made in ${g.modules} printed modules. “Complete wing” shows its exterior at its undeformed shape; it is not a photograph or an imported STL.</p>
+        text: `<p>This is one <b>semi-wing</b> of your project: NACA ${g.naca}, ${nf(g.semiSpan, 0)} mm from root to tip, made in ${g.modules} printed module${g.modules===1?'':'s'}. “Complete wing” shows its exterior at its undeformed shape; it is not a photograph or an imported STL.</p>
         <p>Choose <b>Inside wing</b>, then <b>Ribs only</b>. ${ribs.length ? 'Gold plates run across the chord.' : 'This teaching preset has no ribs; the empty rib view is intentional.'} ${g.rodFractions.length ? 'Blue carbon rods run along the span; orange sleeves are printed guides around them.' : 'This skin-only preset has no rods or sleeves.'} Use the mouse to rotate and the wheel to zoom.</p>
         <div class="equation">${ribs.length} physical ribs = ${ribs.length - paired} interior ribs + ${paired} interface ribs</div>
         <p>For the default three-module design, there are 3 interior ribs plus 2 ribs beside each of 2 seams: <b>3 + 2 × 2 = 7</b>. Root/tip caps are separate, not two extra numbered ribs. This is a CAD layout choice, not a universal optimum or the result of a buckling calculation.</p>
@@ -3137,10 +3289,10 @@ if (typeof module !== "undefined" && module.exports) module.exports = WingEngine
       },
       {
         title: "4 · Twist is not bending",
-        text: `<p>Bending moves the wing upward/downward; torsion rotates the airfoil about a spanwise axis. The <b>shear centre</b> is the ideal load position that produces bending without twist in the uncoupled beam model. It is not automatically at quarter-chord or at the centre of mass.</p>
+        text: `<p>Bending moves the wing upward/downward; torsion rotates the airfoil about a spanwise axis. For a uniform straight prism, loading through the <b>shear centre</b> produces no torsion in the uncoupled beam model. In a tapered wing, the shear-centre path varies along the span; the tip section alone does not determine total tip twist. It is not automatically at quarter-chord or at the centre of mass.</p>
         <div class="equation">T = F (x<sub>sc</sub> − x<sub>load</sub>)<br>Twist per unit span = T / GJ</div>
         <p>x is measured aft from the leading edge; the sign above follows this app's nose-up-positive convention for an upward force. <b>G</b> is shear modulus and <b>J</b> the torsion constant, not generally the polar second moment of an airfoil. The closed skin supports a circulating shear flow and resists twist.</p>
-        <p>Use the same 2 N tip force at 0.25c and 0.60c. The bending load is unchanged, but the torque arm changes. Compare the signed tip twist. A force farther from the shear centre produces a larger torque magnitude.</p>`,
+        <p>Use the same 2 N tip force at 0.25c and 0.60c. The bending load is unchanged, but the torque arm changes. Compare the signed tip twist. Use the “Find zero tip twist” experiment in Skin · rods · ribs · modes to see how signed contributions accumulate; zero tip twist need not mean zero internal torque.</p>`,
         question: "What directly creates torque from an upward force?", options: ["The force's chordwise offset from the shear centre", "The number of ribs alone", "The colour of the stress plot"], answer: 0,
         why: "Torque is force times perpendicular offset. The shell and joints determine how much rotation that torque produces.",
       },
@@ -3187,7 +3339,7 @@ if (typeof module !== "undefined" && module.exports) module.exports = WingEngine
         S.plot = "disp"; setPlot("disp"); applyXray(); renderPM(); clearTimeout(runTimer); runStudy();
       };
       if (S.lesson === 2) { action("Run 2 N at 0.30c", () => trial(2, .3)); action("Run 4 N at 0.30c", () => trial(4, .3)); }
-      else { action("Run 2 N at 0.25c", () => trial(2, .25)); action("Run 2 N at 0.60c", () => trial(2, .6)); }
+      else { action("Run 2 N at 0.25c", () => trial(2, .25)); action("Run 2 N at 0.60c", () => trial(2, .6)); action("Find zero tip twist", () => {openTab("members"); $("#torsionLab").scrollIntoView({block:"center"});}); }
       action("Restore my load case", () => { if (savedLessonLoad) { S.load = savedLessonLoad; savedLessonLoad = null; renderPM(); runStudy(); } });
     } else if (S.lesson === 4) {
       action("Open connection properties", () => { showInputs(true); select("con"); $("#pm").scrollIntoView({ block: "nearest" }); }); action("Compare joints", () => openTab("joints"));
@@ -3196,7 +3348,7 @@ if (typeof module !== "undefined" && module.exports) module.exports = WingEngine
     const anatomy = S.lesson === 0 || S.lesson === 4;
     const section = S.lesson === 3 || S.lesson === 5;
     const fig = anatomy ? ribPlanFigure(g) : section ? sectionFigure(g) : beamFigure(S.lesson);
-    const caption = anatomy ? `Rib stations y (mm): ${ribs.map((y, i) => `R${i + 1}: ${nf(y, 1)}`).join("; ")}. Dashed lines are module seams; blue lines are rod paths. The 3-D labels and this plan use the same geometry.` : section ? "Actual selected airfoil-section geometry between ribs: grey printed shell, orange sleeves, blue rods, white cavity/clearance. There are no added stringers or front/rear spar webs. At a rib station, a printed diaphragm fills much of the cavity." : "Teaching free-body sketch for an isolated tip force; distances are measured from the root. The app's flight-like case can have distributed loads and additional point forces.";
+    const caption = anatomy ? `Physical rib stations: ${ribs.length ? ribs.map((y,i)=>`R${i+1}: ${nf(y,1)} mm`).join("; ") : "none in this preset"}. Dashed lines show seams when present. Rod paths are blue when rods exist.` : section ? `Selected airfoil-section geometry: grey shell; ${g.rodFractions.length ? "orange sleeves and blue rods." : "no rods or sleeves."} No separate stringers or full-height spar webs. Rib diaphragms are present only at the listed rib stations.` : "Isolated tip-force sketch; the general load case may include distributed and multiple point forces.";
     $("#lessonFigure").innerHTML = fig + `<figcaption>${caption}</figcaption>`;
     $("#lessonReading").innerHTML = R ? `<h3>Read your current result</h3><p>${wingLoadName(R)} · ${g.modules===1 ? "continuous one-piece shell" : R.assembly.seamsBonded ? "bonded seams" : "dry seams"}</p><dl class="kv"><dt>Root shear magnitude</dt><dd>${nf(Math.abs(R.V[0]), 2)} N</dd><dt>Root bending moment magnitude</dt><dd>${nf(Math.abs(R.M[0]) / 1000, 3)} N·m</dd><dt>Signed tip deflection</dt><dd>${nf(R.deflection.at(-1), 3)} mm</dd><dt>Signed tip twist</dt><dd>${nf(R.twist.at(-1) * 180 / Math.PI, 3)}°</dd></dl><p>Run study recomputes this case; with identical inputs the numbers stay the same. Property edits also trigger a solve automatically.</p>` : "<p>Preparing the first result. You can read the lesson while the solver starts.</p>";
   }
@@ -3259,6 +3411,8 @@ if (typeof module !== "undefined" && module.exports) module.exports = WingEngine
   window.addEventListener("resize", () => { if (!$("#tab-section").hidden) { clearTimeout(secTimer); secTimer = setTimeout(renderSection, 150); } if (R) renderLegend({ stress: "sigma", disp: "disp", fos: "fos" }[S.plot]); });
 
   setPlot("model");
+  if(window.matchMedia('(max-width:560px)').matches) $('#hudControls').open=false;
+  window.addEventListener('resize',()=>{if(!window.matchMedia('(max-width:560px)').matches) $('#hudControls').open=true;});
   renderTree();
   renderPM();
   renderLesson();

@@ -14,7 +14,7 @@ template = (HERE / "wing_lab_template.html").read_text(encoding="utf-8")
 engine = (HERE / "engine.js").read_text(encoding="utf-8")
 assert "/*__ENGINE__*/" in template
 page = template.replace("/*__ENGINE__*/", engine)
-for token, filename in [("/*__BEAM_ENGINE__*/", "beam_learning_engine.js"), ("/*__FOUNDATIONS__*/", "foundations_ui.js")]:
+for token, filename in [("/*__BEAM_ENGINE__*/", "beam_learning_engine.js"), ("/*__FOUNDATIONS__*/", "foundations_ui.js"), ("/*__TEACHING_MODELS__*/", "teaching_models.js"), ("/*__TEACHING_PANELS__*/", "teaching_panels.js")]:
     assert token in page
     page = page.replace(token, (HERE / filename).read_text(encoding="utf-8"))
 dist = HERE / "dist"

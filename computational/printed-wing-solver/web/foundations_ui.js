@@ -10,15 +10,17 @@
     #foundations h1{font-size:32px;margin:4px 0} #foundations h2{font-size:23px} #foundations h3{font-size:18px}
     .pathway{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0}.pathway button{padding:10px;background:var(--panel);border:1px solid var(--line);border-radius:8px;cursor:pointer}
     .pathway button[aria-pressed=true]{border:2px solid var(--accent)}
-    .foundation-grid{display:grid;grid-template-columns:minmax(300px,1fr) minmax(450px,1.5fr);gap:20px;align-items:start}
+    .foundation-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.5fr);gap:20px;align-items:start}.foundation-grid>*{min-width:0}
     .foundation-card{background:var(--panel);border:1px solid var(--line);padding:20px;border-radius:12px;margin-bottom:16px}
     #foundations input,#foundations select{padding:7px;background:var(--bg);border:1px solid var(--line);border-radius:5px;width:100%}
-    .beam-fields{display:grid;grid-template-columns:1fr 1fr;gap:10px}.beam-fields label{font-size:14px;display:block}
+    .beam-fields{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}.beam-fields label{font-size:14px;display:block;min-width:0}.beam-fields input,.beam-fields select{min-width:0}
     #foundations svg{width:100%;height:auto;background:#f5f8fb;border-radius:8px} #foundations summary{cursor:pointer;font-weight:600}
     .beam-equation{font-family:Georgia,serif;text-align:center;background:var(--panel-2);padding:14px;font-size:20px;border-radius:8px;margin:12px 0}
     .beam-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.beam-kpis div{padding:12px;background:var(--panel-2);border-radius:8px}.beam-kpis b{display:block;font-size:20px}
     #beamCharts{display:grid;grid-template-columns:1fr 1fr;gap:10px} #foundations table{width:100%;font-size:14px} #foundations th,#foundations td{text-align:left;padding:7px;border-bottom:1px solid var(--line)}
-    @media(max-width:900px){.foundation-grid{grid-template-columns:1fr}#beamCharts{grid-template-columns:1fr}.beam-kpis{grid-template-columns:1fr 1fr}}
+    .beam-chart{margin:0;min-width:0}.beam-chart figcaption{min-height:48px;font-size:14px}.support-notice{border:2px solid var(--warn);padding:14px;margin:10px 0;background:var(--panel-2)}
+    @media(max-width:900px){.foundation-grid{grid-template-columns:minmax(0,1fr)}#beamCharts{grid-template-columns:minmax(0,1fr)}.beam-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    @media(max-width:560px){#foundations{padding:10px}.foundation-card{padding:12px}.beam-fields{grid-template-columns:minmax(0,1fr)}#foundations h1{font-size:26px}}
   `;document.head.append(style);
   host.innerHTML=`<header><p>MIE 446 · Aerospace Structures</p><h1>From a beam to your printed wing</h1><p>Predict → apply a load → solve → explain. Start with one support condition, then add complexity.</p></header>
     <nav class="pathway" aria-label="Learning pathway"><button data-stage="cantilever" aria-pressed="true">1 · Cantilever beam</button><button data-stage="fixed-fixed" aria-pressed="false">2 · Fixed–fixed beam</button><button data-stage="simply-supported" aria-pressed="false">3 · Simply supported</button><button data-stage="shell" aria-pressed="false">4 · Wing skin only</button><button data-stage="rods" aria-pressed="false">5 · Add rods / reinforcement</button><button data-stage="ribs" aria-pressed="false">6 · Add ribs</button><button data-stage="project" aria-pressed="false">7 · Course modular wing</button></nav>
@@ -37,9 +39,12 @@
     <p>x is distance along the beam, z is measured upward from its neutral axis, v is downward displacement, E is modulus, I is second moment of area, and κ = v″ is curvature with this sign convention. Positive M is sagging: top compression, bottom tension. The beam FE uses displacement and slope at each node, cubic interpolation, consistent distributed loads and a mass matrix. K and M in the eigenvalue equation are matrices, not the bending moment.</p><p>τ<sub>max</sub> is the neutral-axis shear stress in a solid rectangle, <b>not surface shear</b>. The top/bottom surfaces have zero transverse shear in this idealization. The plots show nominal beam stress; they do not resolve clamp edges, contact, holes, plasticity or buckling. The wing workspace uses upward-positive loading and states that convention explicitly.</p>
     <p><a href="https://teachbooks.tudelft.nl/computational-modelling/structural_linear/euler_bernouilli.html" target="_blank" rel="noopener">TU Delft: Euler–Bernoulli finite elements</a> · <a href="https://help.solidworks.com/2026/english/simtutorialonline/Creating_Beam_Diagrams.htm" target="_blank" rel="noopener">SOLIDWORKS: beam diagrams</a> · <a href="https://help.solidworks.com/2025/english/SolidWorks/cworks/HIDD_Mode_Shape_Amplitude.htm" target="_blank" rel="noopener">Mode amplitude interpretation</a></p><p>This app follows an educational simulation workflow; it is not SOLIDWORKS and does not replace solid/shell contact, nonlinear or fracture analysis.</p></section>`;
   const svg=(title,body,h=240)=>`<svg viewBox="0 0 760 ${h}" role="img" aria-label="${title}"><style>text{font:16px Arial;fill:#19354b}</style><text x="24" y="27" font-weight="bold">${title}</text>${body}</svg>`;
+  let chartData=[];
   function chart(title,ys,unit,color='#246fba') {
-    const xs=result.x,L=st.length,scale=max(ys), pts=xs.map((x,i)=>`${55+650*x/L},${125-75*ys[i]/scale}`).join(' ');
-    return svg(`${title} (${unit})`,`<path d="M55 45V205H710M55 125H710" fill="none" stroke="#9aaebd"/><polyline points="${pts}" fill="none" stroke="${color}" stroke-width="3"/><text x="60" y="60">+${f(scale,2)}</text><text x="60" y="194">−${f(scale,2)}</text><text x="60" y="226">0</text><text x="645" y="226">${L} mm</text>`);
+    const index=chartData.push({ys,unit,title})-1,L=st.length,scale=max(ys),X=x=>100+610*x/L,Y=v=>125-70*v/scale;
+    const grid=[-1,-.5,0,.5,1].map(t=>`<path d="M100 ${Y(t*scale)}H710" stroke="#c5d1db"/><text x="88" y="${Y(t*scale)+5}" text-anchor="end">${f(t*scale,2)}</text>`).join('');
+    const ticks=[0,.25,.5,.75,1].map(t=>`<text x="${X(t*L)}" y="224" text-anchor="middle">${f(t*L,0)}</text>`).join('');
+    return `<figure class="beam-chart" data-beam-chart="${index}">${svg(title+' ('+unit+')',grid+`<polyline points="${result.x.map((x,i)=>X(x)+','+Y(ys[i])).join(' ')}" fill="none" stroke="${color}" stroke-width="3"/>`+ticks+'<text x="360" y="252">Span position x (mm)</text>',270)}<figcaption>Hover or touch the plot for sampled values; the position slider below also works.</figcaption></figure>`;
   }
   function theory() {
     const fixed=st.support==='fixed-fixed',simple=st.support==='simply-supported';
@@ -58,11 +63,15 @@
   function renderMode(){if(!result)return;const m=result.modes[mode];$('#beamModePicture').innerHTML=svg(`Bending mode ${mode+1} · ${f(m.frequencyHz,2)} Hz · normalized`, `<path d="M55 130H705" stroke="#aebbc8" stroke-dasharray="6 5"/><polyline points="${m.x.map((x,i)=>`${55+650*x/st.length},${130+65*m.shape[i]*(animated?Math.sin(phase):1)}`).join(' ')}" fill="none" stroke="#246fba" stroke-width="4"/><text x="55" y="225">Display amplitude is arbitrary; animation is slowed, not real time.</text>`);}
   function render(){
     theory();picture();probe();renderMode();
+    const supported=st.loads.length>0&&st.loads.every(p=>p.kind==='point'&&Math.abs(p.force)>0&&(p.position===0||(st.support!=='cantilever'&&p.position===st.length)));
+    if(supported){$('#beamTheory').insertAdjacentHTML('afterbegin','<div class="support-notice" role="status"><b>Your loads act directly on restrained ends.</b><p>Zero span deflection here is expected: the supports take the forces. No load was moved automatically.</p><button class="btn primary" id="beamMoveCentre">Move these point loads to midspan</button></div>');$('#beamMoveCentre').onclick=()=>attempt(()=>{st.loads=st.loads.map(p=>({...p,position:st.length/2}));});}
+    chartData=[];
     $('#beamKpis').innerHTML=[['Maximum |v|',f(result.maxima.deflection,4)+' mm'],['Maximum |σ|',f(result.maxima.bendingStress)+' MPa'],['Total applied force',f(result.resultant)+' N']].map(([n,v])=>`<div>${n}<b>${v}</b></div>`).join('');
     $('#beamReactions').innerHTML=`<h3>Support reactions</h3><table><tr><th>Station</th><th>Force (+down)</th><th>Moment (+clockwise)</th></tr>${result.reactions.map(r=>`<tr><td>${r.x} mm</td><td>${f(r.force)} N</td><td>${f(r.moment)} N·mm</td></tr>`).join('')}</table><p>ΣF residual = ${result.equilibrium.force.toExponential(2)} N; ΣM residual = ${result.equilibrium.moment.toExponential(2)} N·mm.</p>`;
     $('#beamCharts').innerHTML=chart('Shear V',result.shear,'N')+chart('Bending moment M',result.moment,'N·mm')+chart('Displacement v (positive down)',result.deflection,'mm')+chart('Top-fibre stress σ (tension +)',result.stressTop,'MPa')+chart('Bottom-fibre stress σ',result.stressBottom,'MPa')+chart('Maximum rectangular shear |τ|',result.shearStressMax,'MPa');
     $('#beamLoads').innerHTML=`<ol>${st.loads.map((p,i)=>`<li>${p.kind==='point'?`${p.force} N at x=${p.position} mm`:`${p.qStart} → ${p.qEnd} N/mm over ${p.start}–${p.end} mm`} <button class="btn" data-delete-load="${i}">Remove load ${i+1}</button></li>`).join('')}</ol>`;
     $('#beamLoads').querySelectorAll('[data-delete-load]').forEach(b=>b.onclick=()=>attempt(()=>{st.loads.splice(+b.dataset.deleteLoad,1);}));
+    $('#beamCharts').querySelectorAll('[data-beam-chart]').forEach(el=>{el.onpointermove=e=>{const box=el.querySelector('svg').getBoundingClientRect(),x=Math.max(0,Math.min(st.length,((e.clientX-box.left)/box.width*760-100)/610*st.length));let i=0;while(i<result.x.length-1&&result.x[i+1]<=x)i++;const d=chartData[+el.dataset.beamChart];el.querySelector('figcaption').textContent=d.title+': x='+f(result.x[i],2)+' mm; '+f(d.ys[i],5)+' '+d.unit+' (sample; at a jump use the span slider for the right-side value).';};});
     $('#beamModeButtons').innerHTML=result.modes.map((m,i)=>`<button class="btn" data-beam-mode="${i}" aria-pressed="${i===mode}">Mode ${i+1}: ${f(m.frequencyHz,2)} Hz</button>`).join('');
     $('#beamModeButtons').querySelectorAll('button').forEach(b=>b.onclick=()=>{mode=+b.dataset.beamMode;render();});
     $('#beamStatus').textContent=result.warnings.length?result.warnings.join(' '):'Solved. Predict the next change before editing.';

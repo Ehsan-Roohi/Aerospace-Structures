@@ -8,7 +8,7 @@ const E = require("./engine.js");
 const source = readFileSync(new URL("./wing_lab_template.html", import.meta.url), "utf8").replaceAll("\r\n", "\n");
 const engine = readFileSync(new URL("./engine.js", import.meta.url), "utf8").replaceAll("\r\n", "\n");
 const published = readFileSync(new URL("../../../docs/wing-lab.html", import.meta.url), "utf8").replaceAll("\r\n", "\n");
-const page = source.replace("/*__ENGINE__*/", engine).replace("/*__BEAM_ENGINE__*/",readFileSync(new URL("./beam_learning_engine.js",import.meta.url),"utf8").replaceAll("\r\n","\n")).replace("/*__FOUNDATIONS__*/",readFileSync(new URL("./foundations_ui.js",import.meta.url),"utf8").replaceAll("\r\n","\n"));
+const page = source.replace("/*__ENGINE__*/", engine).replace("/*__BEAM_ENGINE__*/",readFileSync(new URL("./beam_learning_engine.js",import.meta.url),"utf8").replaceAll("\r\n","\n")).replace("/*__FOUNDATIONS__*/",readFileSync(new URL("./foundations_ui.js",import.meta.url),"utf8").replaceAll("\r\n","\n")).replace("/*__TEACHING_MODELS__*/",readFileSync(new URL("./teaching_models.js",import.meta.url),"utf8").replaceAll("\r\n","\n")).replace("/*__TEACHING_PANELS__*/",readFileSync(new URL("./teaching_panels.js",import.meta.url),"utf8").replaceAll("\r\n","\n"));
 const endTitle = page.indexOf("</title>") + 8;
 const endStyle = page.indexOf("</style>") + 8;
 const expected = '<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n'

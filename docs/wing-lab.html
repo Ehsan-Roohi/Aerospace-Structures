@@ -261,7 +261,8 @@ td.num { font-family: var(--font-data); font-variant-numeric: tabular-nums; text
 <body>
 
 
-<div id="app" class="learning-view">
+<div id="foundations"></div>
+<div id="app" class="learning-view" hidden>
   <header class="bar panel" aria-label="Commands">
     <div class="brand">
       <svg viewBox="0 0 76 44" aria-hidden="true"><path d="M3 24 C 12 8, 40 6, 73 21 L 73 23 C 40 30, 14 32, 3 24 Z" fill="none" stroke="currentColor" stroke-width="3"/><circle cx="24" cy="21" r="3.2" fill="currentColor"/><circle cx="46" cy="21" r="3.2" fill="currentColor"/></svg>
@@ -281,7 +282,7 @@ td.num { font-family: var(--font-data); font-variant-numeric: tabular-nums; text
         <button class="tool" data-plot="mode" type="button">Modes</button>
       </div>
     </div>
-    <div class="group"><span>Learn first</span><div class="row"><button class="tool" type="button" id="learnBtn">Guided lesson</button><button class="tool" type="button" id="inputsBtn" aria-pressed="false">Edit inputs</button></div></div>
+    <div class="group"><span>Learn first</span><div class="row"><button class="tool" type="button" id="backFoundations">Beams → wing pathway</button><button class="tool" type="button" id="learnBtn">Guided lesson</button><button class="tool" type="button" id="inputsBtn" aria-pressed="false">Edit inputs</button></div></div>
     <div class="status" aria-live="polite"><span class="chip idle" id="stateChip">Starting</span><span id="stateText">Loading the solver</span></div>
   </header>
 
@@ -350,6 +351,8 @@ td.num { font-family: var(--font-data); font-variant-numeric: tabular-nums; text
     <div class="tabs" role="tablist">
       <button role="tab" type="button" data-tab="learn" aria-selected="true">Start here · learn</button>
       <button role="tab" type="button" data-tab="design" aria-selected="false">Design lab · add ribs</button>
+      <button role="tab" type="button" data-tab="members" aria-selected="false">Skin · rods · ribs · modes</button>
+      <button role="tab" type="button" data-tab="loads" aria-selected="false">Build a wing load</button>
       <button role="tab" type="button" data-tab="diagrams" aria-selected="false">Diagrams</button>
       <button role="tab" type="button" data-tab="checks" aria-selected="false">Checks</button>
       <button role="tab" type="button" data-tab="section" aria-selected="false">Section</button>
@@ -397,6 +400,8 @@ td.num { font-family: var(--font-data); font-variant-numeric: tabular-nums; text
       </div>
       <p class="guide-note"><b>Numerical what-if, not a print-ready CAD update.</b> Custom rib positions change this app's model and 3-D view only. They do not update the Code-to-Print notebook, STL, G-code or the Python solver automatically. Record approved positions and reproduce them in CAD before manufacturing. Interface ribs stay locked to preserve the module-joint layout.</p>
     </div>
+    <div class="tabpanel" id="tab-members" role="tabpanel" hidden><div id="memberLesson"></div></div>
+    <div class="tabpanel" id="tab-loads" role="tabpanel" hidden><div id="wingLoadLesson"></div></div>
     <div class="tabpanel" id="tab-diagrams" role="tabpanel" hidden><div class="charts" id="charts"></div></div>
     <div class="tabpanel" id="tab-checks" role="tabpanel" hidden>
       <div class="checks"><div class="checklist" id="checklist"></div><div class="callout" id="govCallout"></div></div>
@@ -452,6 +457,322 @@ td.num { font-family: var(--font-data); font-variant-numeric: tabular-nums; text
   </section>
 </div>
 
+<script>/*
+ * Beam Learning Engine — MIE 446. Dependency-free Euler–Bernoulli teaching model.
+ * Browser: BeamLearningEngine.solve(options). Node: require('./beam_learning_engine.js').
+ *
+ * solve({length:450,width:20,height:10,E:2000,density:1.24,
+ *   support:'cantilever',elements:40,
+ *   loads:[{kind:'point',position:450,force:2},
+ *          {kind:'distributed',start:0,end:450,qStart:0,qEnd:0.01}]})
+ *
+ * Units: mm, N, MPa=N/mm², N/mm, density g/cm³; massG is grams, frequencyHz is Hz.
+ * Positive transverse load/displacement is DOWNWARD. Rotation is dv/dx (clockwise).
+ * Positive support moment is clockwise. Positive internal M is SAGGING:
+ * M=-EI v'', V=dM/dx, dV/dx=-q. At z positive UP from the neutral axis,
+ * sigma_x=-M z/I. stressTop=-M h/(2I), stressBottom=+M h/(2I).
+ *
+ * Returns x,deflection,rotation,shear,moment,stressTop,stressBottom,shearStressMax,
+ * nodes,nodalDisplacement,reactions:[{x,force,moment}],jumps:[{x,left,right}],
+ * modes:[{frequencyHz,x,shape,relativeResidual}], area,I,massG,EI,equilibrium,
+ * maxima, input, equations and assumptions. All arrays are ordinary JS arrays.
+ * shearStressMax=1.5*abs(V)/A is the neutral-axis MAXIMUM in a solid rectangle;
+ * it is not the shear stress at the top/bottom surface (which is zero).
+ *
+ * Cubic Hermite beam FE, consistent load integration (3-point Gauss), exact
+ * consistent Hermite mass matrix,
+ * exact equilibrium recovery of V/M, generalized inverse-iteration modes.
+ * Mesh inserts every load boundary. Point jumps have duplicate x samples.
+ * Source for Hermite/weak-form formulation:
+ * https://teachbooks.tudelft.nl/computational-modelling/structural_linear/euler_bernouilli.html
+ * Limitations: straight slender solid beam, homogeneous linear elasticity, small
+ * displacement, ideal supports; no shear deformation, local contact, buckling,
+ * plasticity, torsion, or CAD/print verification. Modes are free undamped bending
+ * eigenmodes, not a time response; their arbitrary amplitude is normalized to 1.
+ */
+const BeamLearningEngine = (() => {
+  'use strict';
+  const VERSION = '1.0.0';
+  const DEFAULTS = {length:450,width:20,height:10,E:2000,density:1.24,
+    support:'cantilever',elements:40};
+  const zeros = n => Array(n).fill(0);
+  const matrix = n => Array.from({length:n},()=>zeros(n));
+  const dot = (a,b) => a.reduce((s,v,i)=>s+v*b[i],0);
+  const matVec = (a,x) => a.map(row=>dot(row,x));
+  const maxAbs = a => Math.max(...a.map(Math.abs));
+  const shape = (t,h) => [1-3*t*t+2*t*t*t,h*(t-2*t*t+t*t*t),3*t*t-2*t*t*t,h*(-t*t+t*t*t)];
+  const slopeShape = (t,h) => [(-6*t+6*t*t)/h,1-4*t+3*t*t,(6*t-6*t*t)/h,-2*t+3*t*t];
+
+  function finite(v,name) {
+    if(typeof v!=='number'||!Number.isFinite(v)) throw new Error(`${name} must be a finite number.`);
+    return v;
+  }
+  function normalize(options={}) {
+    const o={...DEFAULTS,...options};
+    for(const k of ['length','width','height','E','density']) {
+      finite(o[k],k); if(o[k]<=0) throw new Error(`${k} must be greater than zero.`);
+    }
+    if(!['cantilever','fixed-fixed','simply-supported'].includes(o.support)) throw new Error('Choose cantilever, fixed-fixed, or simply-supported.');
+    if(!Number.isInteger(o.elements)||o.elements<4||o.elements>100) throw new Error('Use an integer mesh size from 4 to 100 elements.');
+    const list=o.loads===undefined?[{kind:'point',position:o.length,force:2}]:o.loads;
+    if(!Array.isArray(list)||list.length>30) throw new Error('Provide an array of at most 30 loads.');
+    o.loads=list.map((v,i)=>{
+      if(!v || typeof v!=='object') throw new Error(`Load ${i+1} is invalid.`);
+      if(v.kind==='point') {
+        finite(v.position,'Point position'); finite(v.force,'Point force');
+        if(v.position<0||v.position>o.length) throw new Error('Point position must lie on the beam.');
+        return {kind:'point',position:v.position,force:v.force};
+      }
+      if(v.kind==='distributed') {
+        for(const k of ['start','end','qStart','qEnd']) finite(v[k],k);
+        if(v.start<0||v.end>o.length||v.end<=v.start) throw new Error('Distributed load needs 0 ≤ start < end ≤ beam length.');
+        return {kind:'distributed',start:v.start,end:v.end,qStart:v.qStart,qEnd:v.qEnd};
+      }
+      throw new Error('Load kind must be point or distributed.');
+    });
+    return o;
+  }
+
+  // Diagonal scaling keeps translations and rotations well conditioned.
+  function factorSPD(a) {
+    const n=a.length, scale=a.map((r,i)=>Math.sqrt(r[i])), l=matrix(n);
+    for(let i=0;i<n;i++) for(let j=0;j<=i;j++) {
+      let s=a[i][j]/(scale[i]*scale[j]);
+      for(let k=0;k<j;k++) s-=l[i][k]*l[j][k];
+      if(i===j) {
+        if(!(s>0)) throw new Error('Beam stiffness is singular or ill-conditioned; check dimensions and supports.');
+        l[i][j]=Math.sqrt(s);
+      } else l[i][j]=s/l[j][j];
+    }
+    return b=>{
+      const y=zeros(n),z=zeros(n);
+      for(let i=0;i<n;i++) {let s=b[i]/scale[i];for(let j=0;j<i;j++)s-=l[i][j]*y[j];y[i]=s/l[i][i];}
+      for(let i=n-1;i>=0;i--) {let s=y[i];for(let j=i+1;j<n;j++)s-=l[j][i]*z[j];z[i]=s/l[i][i];}
+      return z.map((v,i)=>v/scale[i]);
+    };
+  }
+
+  function solve(options={}) {
+    const o=normalize(options),L=o.length,A=o.width*o.height,I=o.width*o.height**3/12,EI=o.E*I;
+    const eps=L*1e-10;
+    // Preserve actual load coordinates; drop nearby regular mesh points to avoid
+    // microscopic elements if a user enters a point nearly on a regular node.
+    const forced=[0,L,...o.loads.flatMap(v=>v.kind==='point'?[v.position]:[v.start,v.end])].sort((a,b)=>a-b);
+    const anchors=forced.filter((v,i)=>i===0||v-forced[i-1]>eps);
+    const nodes=[...anchors];
+    for(let i=1;i<o.elements;i++) {
+      const x=L*i/o.elements;
+      if(anchors.every(v=>Math.abs(v-x)>L/o.elements*0.04)) nodes.push(x);
+    }
+    nodes.sort((a,b)=>a-b);
+    // Nearly coincident independent load boundaries are numerically problematic.
+    if(nodes.some((x,i)=>i>0&&x-nodes[i-1]<L*1e-7)) throw new Error('Two load boundaries are too close together; combine them or separate their locations.');
+    const n=nodes.length,nd=2*n,K=matrix(nd),Mass=matrix(nd),F=zeros(nd);
+    const gauss=[[-Math.sqrt(3/5),5/9],[0,8/9],[Math.sqrt(3/5),5/9]];
+    const rho=o.density/1e9; // g/cm³ -> N s²/mm⁴ (consistent mm,N,s mass).
+    for(let e=0;e<n-1;e++) {
+      const a=nodes[e],h=nodes[e+1]-a,h2=h*h,k0=EI/h**3;
+      const ke=[[12,6*h,-12,6*h],[6*h,4*h2,-6*h,2*h2],[-12,-6*h,12,-6*h],[6*h,2*h2,-6*h,4*h2]];
+      for(let i=0;i<4;i++)for(let j=0;j<4;j++) K[2*e+i][2*e+j]+=k0*ke[i][j];
+      for(const [xi,weight] of gauss) {
+        const t=(xi+1)/2,x=a+t*h,N=shape(t,h),w=weight*h/2;
+        let q=0;
+        for(const load of o.loads) if(load.kind==='distributed'&&x>=load.start&&x<=load.end) q+=load.qStart+(load.qEnd-load.qStart)*(x-load.start)/(load.end-load.start);
+        for(let i=0;i<4;i++) {
+          F[2*e+i]+=w*N[i]*q;
+        }
+      }
+    }
+    // N_i*N_j has degree six: use the exact Hermite consistent mass matrix.
+    for(let e=0;e<n-1;e++) {
+      const h=nodes[e+1]-nodes[e],h2=h*h,m0=rho*A*h/420;
+      const me=[[156,22*h,54,-13*h],[22*h,4*h2,13*h,-3*h2],[54,13*h,156,-22*h],[-13*h,-3*h2,-22*h,4*h2]];
+      for(let i=0;i<4;i++)for(let j=0;j<4;j++)Mass[2*e+i][2*e+j]+=m0*me[i][j];
+    }
+    for(const load of o.loads) if(load.kind==='point') {
+      const j=nodes.findIndex(x=>Math.abs(x-load.position)<=eps);
+      if(j<0) throw new Error('Point load could not be located on mesh.');
+      F[2*j]+=load.force;
+    }
+    const fixed=o.support==='cantilever'?[0,1]:o.support==='fixed-fixed'?[0,1,nd-2,nd-1]:[0,nd-2];
+    const free=Array.from({length:nd},(_,i)=>i).filter(i=>!fixed.includes(i));
+    const k=free.map(i=>free.map(j=>K[i][j])),m=free.map(i=>free.map(j=>Mass[i][j]));
+    const backsolve=factorSPD(k),uf=backsolve(free.map(i=>F[i])),u=zeros(nd);
+    free.forEach((j,i)=>u[j]=uf[i]);
+    const residual=matVec(K,u).map((v,i)=>v-F[i]);
+    const reactions=[{x:0,force:residual[0],moment:fixed.includes(1)?residual[1]:0}];
+    if(o.support!=='cantilever') reactions.push({x:L,force:residual[nd-2],moment:fixed.includes(nd-1)?residual[nd-1]:0});
+
+    function integrals(x) {
+      let f=0,lever=0;
+      for(const v of o.loads) if(v.kind==='distributed') {
+        const t=Math.max(0,Math.min(x,v.end)-v.start),s=(v.qEnd-v.qStart)/(v.end-v.start);
+        const resultant=v.qStart*t+s*t*t/2;
+        f+=resultant;
+        lever+=(x-v.start)*resultant-v.qStart*t*t/2-s*t*t*t/3;
+      }
+      return [f,lever];
+    }
+    function internal(x,side='right') {
+      const [f,lever]=integrals(x);
+      let V=-reactions[0].force-f,M=reactions[0].moment-reactions[0].force*x-lever;
+      for(const v of o.loads) if(v.kind==='point'&&(v.position<x-eps||(Math.abs(v.position-x)<=eps&&side==='right'))) {
+        V-=v.force;M-=v.force*(x-v.position);
+      }
+      return {V,M};
+    }
+    const x=[],deflection=[],rotation=[],shear=[],moment=[],stressTop=[],stressBottom=[],shearStressMax=[];
+    function sample(s,e,side) {
+      const h=nodes[e+1]-nodes[e],t=(s-nodes[e])/h,N=shape(t,h),Ns=slopeShape(t,h),ue=u.slice(2*e,2*e+4);
+      const {V,M}=internal(s,side);
+      x.push(s);deflection.push(dot(N,ue));rotation.push(dot(Ns,ue));shear.push(V);moment.push(M);
+      stressTop.push(-M*o.height/(2*I));stressBottom.push(M*o.height/(2*I));shearStressMax.push(1.5*Math.abs(V)/A);
+    }
+    for(let e=0;e<n-1;e++) for(let j=0;j<4;j++) {
+      const s=nodes[e]+(nodes[e+1]-nodes[e])*j/4;
+      if(j===0&&e>0&&o.loads.some(v=>v.kind==='point'&&Math.abs(v.position-s)<=eps))sample(s,e,'left');
+      sample(s,e,'right');
+    }
+    sample(L,n-2,'left');
+    const jumps=o.loads.filter(v=>v.kind==='point'&&v.position>0&&v.position<L).map(v=>({x:v.position,left:internal(v.position,'left').V,right:internal(v.position,'right').V}));
+    const resultant=integrals(L)[0]+o.loads.filter(v=>v.kind==='point').reduce((s,v)=>s+v.force,0);
+    let appliedMoment=0;
+    for(const v of o.loads) {
+      if(v.kind==='point')appliedMoment+=v.force*v.position;
+      else {const h=v.end-v.start;appliedMoment+=v.start*h*(v.qStart+v.qEnd)/2+h*h*(v.qStart+2*v.qEnd)/6;}
+    }
+
+    const eigenvectors=[],modes=[];
+    if(o.modes!==false) for(let mode=0;mode<3;mode++) {
+      let v=free.map((j,i)=>Math.sin((i+1)*(mode+1)*0.873)+0.25*Math.cos((i+1)*1.197));
+      const orthonormalize=z=>{
+        // Two passes avoid loss of orthogonality from widely separated scales.
+        for(let pass=0;pass<2;pass++)for(const prior of eigenvectors) {
+          const c=dot(prior,matVec(m,z)); z=z.map((value,i)=>value-c*prior[i]);
+        }
+        const norm=Math.sqrt(dot(z,matVec(m,z)));
+        if(!(norm>0)) throw new Error('Modal normalization failed.');
+        return z.map(value=>value/norm);
+      };
+      v=orthonormalize(v);
+      let lambda=0,rel=Infinity;
+      for(let iter=0;iter<120;iter++) {
+        v=orthonormalize(backsolve(matVec(m,v)));
+        const kv=matVec(k,v),mv=matVec(m,v);lambda=dot(v,kv)/dot(v,mv);
+        rel=Math.hypot(...kv.map((a,i)=>a-lambda*mv[i]))/Math.max(Math.hypot(...kv),1e-30);
+        if(rel<1e-8)break;
+      }
+      eigenvectors.push(v);
+      const whole=zeros(nd);free.forEach((j,i)=>whole[j]=v[i]);
+      const shapes=x.map(s=>{
+        let e=0;while(e<n-2&&nodes[e+1]<s)e++;
+        const h=nodes[e+1]-nodes[e];return dot(shape((s-nodes[e])/h,h),whole.slice(2*e,2*e+4));
+      });
+      const norm=maxAbs(shapes),peak=shapes.find(value=>Math.abs(value)>=norm*.999),sign=peak<0?-1:1;
+      modes.push({frequencyHz:Math.sqrt(lambda)/(2*Math.PI),x:[...x],shape:shapes.map(a=>sign*a/norm),relativeResidual:rel});
+    }
+    const warnings=[];
+    if(L/o.height<15)warnings.push('Length/depth < 15: Euler–Bernoulli shear-neglect may be inaccurate; compare a Timoshenko or solid model.');
+    if(maxAbs(deflection)>L*.05)warnings.push('Deflection exceeds 5% of span: this small-displacement model may be inappropriate.');
+    return {version:VERSION,input:o,x,deflection,rotation,shear,moment,stressTop,stressBottom,shearStressMax,
+      nodes,nodalDisplacement:u,reactions,jumps,modes,area:A,I,EI,massG:o.density*A*L/1000,
+      resultant,appliedMoment,equilibrium:{force:resultant+reactions.reduce((s,r)=>s+r.force,0),
+        moment:appliedMoment+reactions.reduce((s,r)=>s+r.force*r.x+r.moment,0)},
+      maxima:{deflection:maxAbs(deflection),moment:maxAbs(moment),shear:maxAbs(shear),bendingStress:maxAbs(stressTop),shearStress:maxAbs(shearStressMax)},
+      equations:['EI v⁗ = q','M = −EI v″','V = dM/dx','dV/dx = −q','σx = −Mz/I','τmax = 3|V|/(2A)','K u = f','K φ = ω² M φ'],
+      assumptions:['Straight, uniform, solid rectangular cross-section','Linear elastic, small displacement, slender beam',
+        'Perfectly rigid ideal supports; local clamp/contact stresses are not resolved','No torsion, transverse-shear deformation, buckling, plasticity or self-weight unless included as a load',
+        'Three normalized undamped bending modes; amplitude is arbitrary, not predicted vibration'],warnings};
+  }
+  return {VERSION,DEFAULTS,normalize,solve};
+})();
+if(typeof module!=='undefined'&&module.exports)module.exports=BeamLearningEngine;
+if(typeof window!=='undefined')window.BeamLearningEngine=BeamLearningEngine;
+</script>
+<script>/* Progressive, dependency-free beam UI. All figures use the solved beam arrays. */
+(() => {
+  'use strict';
+  const B=BeamLearningEngine, $=s=>document.querySelector(s), host=$('#foundations');
+  const f=(x,n=3)=>Number(x).toFixed(n), max=a=>Math.max(...a.map(Math.abs),1e-12);
+  const st={length:450,width:20,height:10,E:2000,density:1.24,support:'cantilever',elements:30,loads:[{kind:'point',position:450,force:2}]};
+  let result=null, mode=0, animated=false, phase=0;
+  const style=document.createElement('style'); style.textContent=`
+    #foundations{max-width:1450px;margin:auto;padding:22px;font-size:16px;line-height:1.55}
+    #foundations h1{font-size:32px;margin:4px 0} #foundations h2{font-size:23px} #foundations h3{font-size:18px}
+    .pathway{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0}.pathway button{padding:10px;background:var(--panel);border:1px solid var(--line);border-radius:8px;cursor:pointer}
+    .pathway button[aria-pressed=true]{border:2px solid var(--accent)}
+    .foundation-grid{display:grid;grid-template-columns:minmax(300px,1fr) minmax(450px,1.5fr);gap:20px;align-items:start}
+    .foundation-card{background:var(--panel);border:1px solid var(--line);padding:20px;border-radius:12px;margin-bottom:16px}
+    #foundations input,#foundations select{padding:7px;background:var(--bg);border:1px solid var(--line);border-radius:5px;width:100%}
+    .beam-fields{display:grid;grid-template-columns:1fr 1fr;gap:10px}.beam-fields label{font-size:14px;display:block}
+    #foundations svg{width:100%;height:auto;background:#f5f8fb;border-radius:8px} #foundations summary{cursor:pointer;font-weight:600}
+    .beam-equation{font-family:Georgia,serif;text-align:center;background:var(--panel-2);padding:14px;font-size:20px;border-radius:8px;margin:12px 0}
+    .beam-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.beam-kpis div{padding:12px;background:var(--panel-2);border-radius:8px}.beam-kpis b{display:block;font-size:20px}
+    #beamCharts{display:grid;grid-template-columns:1fr 1fr;gap:10px} #foundations table{width:100%;font-size:14px} #foundations th,#foundations td{text-align:left;padding:7px;border-bottom:1px solid var(--line)}
+    @media(max-width:900px){.foundation-grid{grid-template-columns:1fr}#beamCharts{grid-template-columns:1fr}.beam-kpis{grid-template-columns:1fr 1fr}}
+  `;document.head.append(style);
+  host.innerHTML=`<header><p>MIE 446 · Aerospace Structures</p><h1>From a beam to your printed wing</h1><p>Predict → apply a load → solve → explain. Start with one support condition, then add complexity.</p></header>
+    <nav class="pathway" aria-label="Learning pathway"><button data-stage="cantilever" aria-pressed="true">1 · Cantilever beam</button><button data-stage="fixed-fixed" aria-pressed="false">2 · Fixed–fixed beam</button><button data-stage="simply-supported" aria-pressed="false">3 · Simply supported</button><button data-stage="shell" aria-pressed="false">4 · Wing skin only</button><button data-stage="rods" aria-pressed="false">5 · Add rods / reinforcement</button><button data-stage="ribs" aria-pressed="false">6 · Add ribs</button><button data-stage="project" aria-pressed="false">7 · Course modular wing</button></nav>
+    <div class="foundation-grid"><div><article class="foundation-card" id="beamTheory"></article>
+    <section class="foundation-card"><h2>Define your beam</h2><form id="beamGeometry"><div class="beam-fields">${[['length','Length L','mm',450],['width','Width b','mm',20],['height','Depth h','mm',10],['E','Elastic modulus E','MPa',2000],['density','Density','g/cm³',1.24],['elements','Requested elements','',30]].map(([id,name,unit,val])=>`<label>${name} (${unit})<input name="${id}" type="number" step="any" value="${val}" required></label>`).join('')}</div><button class="btn primary" type="submit" style="margin-top:12px">Apply beam dimensions</button></form><p>Changing span clears incompatible loads to a 2 N tip load. No self-weight unless you add it as a line load.</p></section>
+    <section class="foundation-card"><h2>Apply loads</h2><p>Beam sign convention: <b>positive load and displacement are downward</b>. Negative values point upward. q is force per length (N/mm), not pressure.</p>
+    <form id="beamLoadForm"><div class="beam-fields"><label>Load shape<select id="beamLoadKind"><option value="point">Point force</option><option value="rectangle">Rectangular / uniform</option><option value="triangle">Triangular (zero at start)</option><option value="trapezoid">Trapezoidal</option></select></label><label>Point station or distributed start (mm)<input id="beamLoadA" type="number" step="any" value="225" required></label><label>Distributed end (mm)<input id="beamLoadB" type="number" step="any" value="450"></label><label>Point force P (N)<input id="beamP" type="number" step="any" value="2"></label><label>q at start (N/mm)<input id="beamQ0" type="number" step="any" value="0.004"></label><label>q at end (N/mm)<input id="beamQ1" type="number" step="any" value="0.008"></label></div><button class="btn" type="submit" style="margin-top:12px">Add this load</button></form>
+    <div id="beamLoads"></div><button class="btn" id="beamClear">Clear all loads</button> <button class="btn" id="beamCentre">Centre point · 2 N</button><p>Changing supports preserves your loads. A force applied directly at a restrained end can be carried by that support without bending the span. Use the centre-point preset to compare all three support conditions.</p>
+    <h3>Compare shapes at the same total force</h3><p>These presets replace all loads with a full-span load of 2 N. An equal area under q(x) does not mean an equal bending moment.</p><div class="lesson-actions"><button class="btn" data-shape="uniform">Uniform · 2 N</button><button class="btn" data-shape="root">Root-heavy triangle · 2 N</button><button class="btn" data-shape="tip">Tip-heavy triangle · 2 N</button></div>
+    <p id="beamStatus" role="status"></p></section></div>
+    <div><section class="foundation-card"><h2>Free body and calculated deformation</h2><div id="beamPicture"></div><p>Grey: undeformed beam. Blue: exaggerated deflection. Purple: applied forces. Green: ideal supports. Read numerical displacement, not the drawing's height.</p><div id="beamKpis" class="beam-kpis"></div><div id="beamReactions"></div></section>
+    <section class="foundation-card"><h2>Follow the calculation</h2><p>Loads + supports → reactions → shear V and moment M → curvature → displacement and stress.</p><div id="beamCharts"></div><label>Probe position x (mm)<input id="beamProbe" type="range" min="0" max="450" step="1" value="0"></label><div id="beamProbeRead"></div></section>
+    <section class="foundation-card"><h2>Modes: a pattern, not a forced response</h2><p>A natural mode is an undamped vibration pattern. Its amplitude is normalized, so this animation is <b>not</b> the displacement caused by your static load. Frequency is computed from stiffness and mass; playback is slowed for visibility.</p><div id="beamModeButtons" class="lesson-actions"></div><button class="btn" id="beamAnimate">Animate mode</button><div id="beamModePicture" style="margin-top:10px"></div><p>These are bending modes only. Higher modes develop additional changes in direction. Natural frequency alone does not predict resonance amplitude, damping, flutter or failure.</p></section>
+    <section class="foundation-card"><h2>Verify before trusting</h2><button class="btn" id="beamRefine">Compare 10 / 20 / 40 elements</button><div id="beamConvergence"></div><p>For a constant-EI beam, some simple cases are represented exactly by a small number of cubic elements. A tiny change with refinement is not proof that the real clamp or printed material is modelled correctly.</p><label>My explanation<textarea id="beamExplain" rows="3" style="width:100%" placeholder="The largest stress is at … because …; the largest displacement is at …"></textarea></label><button class="btn" id="beamDownload">Download study record</button></section></div></div>
+    <section class="foundation-card"><h2>What equations are actually solved?</h2><div class="beam-equation">A = bh &nbsp; · &nbsp; I = bh³/12 &nbsp; · &nbsp; EI v⁗ = q<br>M = −EI v″ &nbsp; · &nbsp; V = dM/dx &nbsp; · &nbsp; dV/dx = −q<br>σ<sub>x</sub> = −Mz/I &nbsp; · &nbsp; τ<sub>max</sub> = 3|V|/(2A)<br>K u = f &nbsp; · &nbsp; K φ = ω² M φ &nbsp; · &nbsp; f<sub>n</sub> = ω/(2π)</div>
+    <p>x is distance along the beam, z is measured upward from its neutral axis, v is downward displacement, E is modulus, I is second moment of area, and κ = v″ is curvature with this sign convention. Positive M is sagging: top compression, bottom tension. The beam FE uses displacement and slope at each node, cubic interpolation, consistent distributed loads and a mass matrix. K and M in the eigenvalue equation are matrices, not the bending moment.</p><p>τ<sub>max</sub> is the neutral-axis shear stress in a solid rectangle, <b>not surface shear</b>. The top/bottom surfaces have zero transverse shear in this idealization. The plots show nominal beam stress; they do not resolve clamp edges, contact, holes, plasticity or buckling. The wing workspace uses upward-positive loading and states that convention explicitly.</p>
+    <p><a href="https://teachbooks.tudelft.nl/computational-modelling/structural_linear/euler_bernouilli.html" target="_blank" rel="noopener">TU Delft: Euler–Bernoulli finite elements</a> · <a href="https://help.solidworks.com/2026/english/simtutorialonline/Creating_Beam_Diagrams.htm" target="_blank" rel="noopener">SOLIDWORKS: beam diagrams</a> · <a href="https://help.solidworks.com/2025/english/SolidWorks/cworks/HIDD_Mode_Shape_Amplitude.htm" target="_blank" rel="noopener">Mode amplitude interpretation</a></p><p>This app follows an educational simulation workflow; it is not SOLIDWORKS and does not replace solid/shell contact, nonlinear or fracture analysis.</p></section>`;
+  const svg=(title,body,h=240)=>`<svg viewBox="0 0 760 ${h}" role="img" aria-label="${title}"><style>text{font:16px Arial;fill:#19354b}</style><text x="24" y="27" font-weight="bold">${title}</text>${body}</svg>`;
+  function chart(title,ys,unit,color='#246fba') {
+    const xs=result.x,L=st.length,scale=max(ys), pts=xs.map((x,i)=>`${55+650*x/L},${125-75*ys[i]/scale}`).join(' ');
+    return svg(`${title} (${unit})`,`<path d="M55 45V205H710M55 125H710" fill="none" stroke="#9aaebd"/><polyline points="${pts}" fill="none" stroke="${color}" stroke-width="3"/><text x="60" y="60">+${f(scale,2)}</text><text x="60" y="194">−${f(scale,2)}</text><text x="60" y="226">0</text><text x="645" y="226">${L} mm</text>`);
+  }
+  function theory() {
+    const fixed=st.support==='fixed-fixed',simple=st.support==='simply-supported';
+    $('#beamTheory').innerHTML=`<h2>${fixed?'2 · Fixed at both ends':simple?'3 · Simply supported':'1 · One fixed end, one free end'}</h2><p>${fixed?'Both end displacement and slope are zero. End moments and forces share the load. Equilibrium alone is insufficient: the deformation must also satisfy both clamps.':simple?'Vertical motion is restrained at both ends but rotation is free. A pin and roller carry vertical reactions without applied end couples.':'The root cannot translate or rotate. The free end can move and turn. The clamp must carry both a reaction force and a reaction moment.'}</p><div class="beam-equation">${fixed?'v(0) = v(L) = 0<br>v′(0) = v′(L) = 0':simple?'v(0) = v(L) = 0<br>M(0) = M(L) = 0':'v(0) = v′(0) = 0<br>Free end: no end moment unless applied'}</div><p><b>Zero displacement is not zero stress.</b> In a uniform cantilever with a tip force, |M| and nominal bending stress are largest at the clamp; displacement is largest at the tip. In a fixed–fixed beam, end moments can be nonzero even though both ends do not move.</p><details><summary>Hand-check benchmarks</summary><p>Use P for a point force and q for a constant line load.</p><div class="beam-equation">${fixed?'Centre P: δ<sub>mid</sub> = PL³/(192EI)<br>Uniform q: δ<sub>mid</sub> = qL⁴/(384EI)':simple?'Centre P: δ<sub>mid</sub> = PL³/(48EI)<br>Uniform q: δ<sub>mid</sub> = 5qL⁴/(384EI)':'Tip P: δ<sub>tip</sub> = PL³/(3EI)<br>Uniform q: δ<sub>tip</sub> = qL⁴/(8EI)'}</div><p>These apply only to the named ideal beam/load case. Do not apply a tip-force formula to an arbitrary interior force or a trapezoidal load.</p></details>`;
+  }
+  function picture(){
+    const X=x=>55+650*x/st.length;let d='<path d="M55 151H705" stroke="#afbfca" stroke-width="12"/>';
+    const support=x=>st.support==='simply-supported'?`<path d="M${x} 158l-13 22h26Z" fill="#168957"/>`:`<path d="M${x} 125v55" stroke="#168957" stroke-width="12"/>`;
+    d+=support(55);if(st.support!=='cantilever')d+=support(705);
+    const arrow=(x,q,len)=>`<path d="M${x} ${q>=0?150-len:150+len}V150l-5 ${q>=0?-9:9}m5 ${q>=0?9:-9}l5 ${q>=0?-9:9}" fill="none" stroke="#ad368b" stroke-width="2.5"/>`;
+    st.loads.forEach(p=>{if(p.kind==='point')d+=arrow(X(p.position),p.force,65)+`<text x="${Math.min(X(p.position)-20,635)}" y="55">${p.force} N</text>`;else{const qmax=Math.max(Math.abs(p.qStart),Math.abs(p.qEnd),1e-9);for(let k=0;k<=8;k++){const q=p.qStart+(p.qEnd-p.qStart)*k/8;if(Math.abs(q)>1e-12)d+=arrow(X(p.start+(p.end-p.start)*k/8),q,48*Math.abs(q)/qmax);}d+=`<text x="${X(p.start)}" y="85">q: ${f(p.qStart,4)} → ${f(p.qEnd,4)} N/mm</text>`;}});
+    const amp=max(result.deflection);d+=`<polyline points="${result.x.map((x,i)=>`${X(x)},${151+45*result.deflection[i]/amp}`).join(' ')}" fill="none" stroke="#246fba" stroke-width="3"/><text x="55" y="233">x = 0</text><text x="625" y="233">L = ${st.length} mm</text>`;
+    $('#beamPicture').innerHTML=svg('Your loads and ideal supports',d,250);
+  }
+  function probe(){const x=+$('#beamProbe').value;let i=0;while(i<result.x.length-1&&result.x[i+1]<=x)i++;$('#beamProbeRead').innerHTML=`<p>Nearest sampled x = ${f(result.x[i],2)} mm: V = ${f(result.shear[i])} N; M = ${f(result.moment[i])} N·mm; v = ${f(result.deflection[i],4)} mm; σ<sub>top</sub> = ${f(result.stressTop[i])} MPa; σ<sub>bottom</sub> = ${f(result.stressBottom[i])} MPa.</p>`;}
+  function renderMode(){if(!result)return;const m=result.modes[mode];$('#beamModePicture').innerHTML=svg(`Bending mode ${mode+1} · ${f(m.frequencyHz,2)} Hz · normalized`, `<path d="M55 130H705" stroke="#aebbc8" stroke-dasharray="6 5"/><polyline points="${m.x.map((x,i)=>`${55+650*x/st.length},${130+65*m.shape[i]*(animated?Math.sin(phase):1)}`).join(' ')}" fill="none" stroke="#246fba" stroke-width="4"/><text x="55" y="225">Display amplitude is arbitrary; animation is slowed, not real time.</text>`);}
+  function render(){
+    theory();picture();probe();renderMode();
+    $('#beamKpis').innerHTML=[['Maximum |v|',f(result.maxima.deflection,4)+' mm'],['Maximum |σ|',f(result.maxima.bendingStress)+' MPa'],['Total applied force',f(result.resultant)+' N']].map(([n,v])=>`<div>${n}<b>${v}</b></div>`).join('');
+    $('#beamReactions').innerHTML=`<h3>Support reactions</h3><table><tr><th>Station</th><th>Force (+down)</th><th>Moment (+clockwise)</th></tr>${result.reactions.map(r=>`<tr><td>${r.x} mm</td><td>${f(r.force)} N</td><td>${f(r.moment)} N·mm</td></tr>`).join('')}</table><p>ΣF residual = ${result.equilibrium.force.toExponential(2)} N; ΣM residual = ${result.equilibrium.moment.toExponential(2)} N·mm.</p>`;
+    $('#beamCharts').innerHTML=chart('Shear V',result.shear,'N')+chart('Bending moment M',result.moment,'N·mm')+chart('Displacement v (positive down)',result.deflection,'mm')+chart('Top-fibre stress σ (tension +)',result.stressTop,'MPa')+chart('Bottom-fibre stress σ',result.stressBottom,'MPa')+chart('Maximum rectangular shear |τ|',result.shearStressMax,'MPa');
+    $('#beamLoads').innerHTML=`<ol>${st.loads.map((p,i)=>`<li>${p.kind==='point'?`${p.force} N at x=${p.position} mm`:`${p.qStart} → ${p.qEnd} N/mm over ${p.start}–${p.end} mm`} <button class="btn" data-delete-load="${i}">Remove load ${i+1}</button></li>`).join('')}</ol>`;
+    $('#beamLoads').querySelectorAll('[data-delete-load]').forEach(b=>b.onclick=()=>attempt(()=>{st.loads.splice(+b.dataset.deleteLoad,1);}));
+    $('#beamModeButtons').innerHTML=result.modes.map((m,i)=>`<button class="btn" data-beam-mode="${i}" aria-pressed="${i===mode}">Mode ${i+1}: ${f(m.frequencyHz,2)} Hz</button>`).join('');
+    $('#beamModeButtons').querySelectorAll('button').forEach(b=>b.onclick=()=>{mode=+b.dataset.beamMode;render();});
+    $('#beamStatus').textContent=result.warnings.length?result.warnings.join(' '):'Solved. Predict the next change before editing.';
+  }
+  function attempt(edit){const old=JSON.parse(JSON.stringify(st));try{edit();result=B.solve(st);$('#beamProbe').max=st.length;$('#beamProbe').value=Math.min(+$('#beamProbe').value,st.length);render();$('#beamConvergence').innerHTML='';}catch(e){Object.assign(st,old);$('#beamStatus').textContent=e.message;}}
+  $('#beamGeometry').onsubmit=e=>{e.preventDefault();const fd=new FormData(e.currentTarget);attempt(()=>{const previous=st.length;for(const k of ['length','width','height','E','density','elements'])st[k]=+fd.get(k);if(previous!==st.length){st.loads=[{kind:'point',position:st.length,force:2}];$('#beamLoadB').value=st.length;}});};
+  $('#beamLoadForm').onsubmit=e=>{e.preventDefault();attempt(()=>{const k=$('#beamLoadKind').value,a=+$('#beamLoadA').value,b=+$('#beamLoadB').value,q0=+$('#beamQ0').value,q1=+$('#beamQ1').value;if(st.loads.length>=12)throw Error('Use at most 12 loads.');st.loads.push(k==='point'?{kind:'point',position:a,force:+$('#beamP').value}:{kind:'distributed',start:a,end:b,qStart:k==='triangle'?0:q0,qEnd:k==='rectangle'?q0:q1});});};
+  $('#beamClear').onclick=()=>attempt(()=>{st.loads=[];});
+  $('#beamCentre').onclick=()=>attempt(()=>{st.loads=[{kind:'point',position:st.length/2,force:2}];});
+  host.querySelectorAll('[data-shape]').forEach(b=>b.onclick=()=>attempt(()=>{const k=b.dataset.shape,q=2/st.length;st.loads=[{kind:'distributed',start:0,end:st.length,qStart:k==='tip'?0:k==='root'?2*q:q,qEnd:k==='root'?0:k==='tip'?2*q:q}];}));
+  host.querySelectorAll('[data-stage]').forEach(b=>b.onclick=()=>{const s=b.dataset.stage;if(['cantilever','fixed-fixed','simply-supported'].includes(s)){attempt(()=>{st.support=s;});host.querySelectorAll('[data-stage]').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));}else if(document.documentElement.dataset.wingReady==='true'){window.dispatchEvent(new CustomEvent('wing-learning-stage',{detail:s}));}else{const msg=$('#beamStatus');msg.textContent='The 3-D workspace is not ready. It needs WebGL and an internet connection to load its graphics libraries. Reload when connected; the beam lessons still work.';msg.scrollIntoView({block:'center'});}});
+  $('#beamProbe').oninput=probe;
+  $('#beamAnimate').onclick=()=>{animated=!animated;$('#beamAnimate').textContent=animated?'Pause mode':'Animate mode';renderMode();};
+  setInterval(()=>{if(animated&&!host.hidden&&!window.matchMedia('(prefers-reduced-motion: reduce)').matches){phase+=.18;renderMode();}},80);
+  $('#beamRefine').onclick=()=>{try{$('#beamConvergence').innerHTML='<table><tr><th>Requested elements</th><th>Max |v| (mm)</th><th>f₁ (Hz)</th></tr>'+[10,20,40].map(elements=>{const r=B.solve({...st,elements});return `<tr><td>${elements} (+ load-boundary nodes)</td><td>${f(r.maxima.deflection,6)}</td><td>${f(r.modes[0].frequencyHz,4)}</td></tr>`;}).join('')+'</table>';}catch(e){$('#beamStatus').textContent=e.message;}};
+  $('#beamDownload').onclick=()=>{const blob=new Blob([JSON.stringify({input:st,explanation:$('#beamExplain').value,reactions:result.reactions,maxima:result.maxima,equilibrium:result.equilibrium,modes:result.modes.map(m=>({frequencyHz:m.frequencyHz})),assumptions:result.assumptions},null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='MIE446-beam-study.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);};
+  attempt(()=>{});
+})();
+</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 <script>
@@ -555,6 +876,7 @@ const WingEngine = (() => {
     const g = { ...DEFAULT_GEOMETRY, ...opts };
     g.naca = normalizeNaca(g.naca);
     g.rodFractions = [...g.rodFractions];
+    if (g.rodFractions.some(f => !Number.isFinite(f) || f <= 0 || f >= 1)) throw new Error("Rod positions must be fractions between 0 and 1.");
     const pos = ["semiSpan", "rootChord", "tipChord", "skin", "ribThickness", "te", "cap", "rodDiameter", "sleeveWall"];
     for (const k of pos) if (!(g[k] > 0)) throw new Error(`${k} must be positive.`);
     if (g.tipChord > g.rootChord) throw new Error("Tip chord cannot exceed root chord.");
@@ -1152,7 +1474,7 @@ const WingEngine = (() => {
       }
     }
     for (const [y, F] of o.pointForces || []) fb[wDof[argmin(nodes, y)]] += F;
-    for (const [y, T] of o.pointTorques || []) ft[phL[argmin(nodes, y)]] += T;
+    for (const [y, T] of o.pointTorques || []) ft[(o.pointTorquesOutboard?phR:phL)[argmin(nodes, y)]] += T;
     for (const [y, m] of o.pointMasses || []) { const k = wDof[argmin(nodes, y)]; Mb[k * nb + k] += m * 1e-6; }
     for (const [y, Ip] of o.pointInertias || []) { const k = phL[argmin(nodes, y)]; Mt[k * nt + k] += Ip * 1e-6; }
     const fixB = new Set([wDof[0], thL[0], thR[0]]), fixT = new Set([phL[0], phR[0]]);
@@ -1220,10 +1542,47 @@ const WingEngine = (() => {
     const rod = { ...MATERIALS.rod_hobby, ...(input.rod || {}) };
     const asm = { ...DEFAULT_ASSEMBLY, ...(input.assembly || {}) };
     const load = { ...DEFAULT_LOAD, ...(input.load || {}) };
+    if (!g.rodFractions.length && !asm.seamsBonded && seams(g).length)
+      throw new Error("Removing every rod from a dry multi-module joint disconnects the wing. Use the one-piece teaching wing or explicitly model bonded seams.");
+    if (!["flight", "tip", "custom"].includes(load.kind)) throw new Error("Choose flight, tip or custom loading.");
+    if (load.kind === "custom") {
+      load.items = validateLoads(load.items, g.semiSpan);
+      const essential=[...new Set([0,g.semiSpan,...seams(g),...ribStations(g),...load.items.flatMap(p=>p.kind==='point'?[p.position]:[p.start,p.end])])].sort((a,b)=>a-b);
+      for(let i=1;i<essential.length;i++) if(essential[i]-essential[i-1]<.1-1e-8) throw new Error("Keep distinct wing load boundaries at least 0.1 mm from each other, ribs, seams and ends, or use exactly the same station. This avoids degenerate beam elements.");
+    }
     const crit = { ...DEFAULT_CRITERIA, ...(input.criteria || {}) };
     const nSections = input.nSections || 7;
     const ySec = linspace(0, 0.95 * g.semiSpan, nSections);
     return { g, pla, rod, asm, load, crit, nSections, ySec };
+  }
+  function validateLoads(items, L) {
+    if (!Array.isArray(items) || items.length > 12) throw new Error("Use a list of at most 12 loads.");
+    return items.map(p => {
+      const r = { ...p, fraction: p.fraction == null ? .3 : p.fraction };
+      if (!Number.isFinite(r.fraction) || r.fraction < 0 || r.fraction > 1) throw new Error("Load chord fraction must be between 0 and 1.");
+      if (r.kind === "point") {
+        if (!Number.isFinite(r.position) || r.position <= 0 || r.position > L || !Number.isFinite(r.force)) throw new Error("Wing point loads need 0 < station ≤ span and a finite force. A force applied exactly at the fixed root acts directly on the support; use the beam lesson for that case.");
+      } else if (r.kind === "distributed") {
+        if (![r.start,r.end,r.qStart,r.qEnd].every(Number.isFinite) || r.start < 0 || r.end > L || r.end <= r.start) throw new Error("Distributed load needs 0 ≤ start < end ≤ span and finite end intensities.");
+      } else throw new Error("Choose point or distributed loading.");
+      return r;
+    });
+  }
+  function customResultants(items, g, y) {
+    let V = 0, M = 0, X = 0;
+    for (const p of items) {
+      if (p.kind === "point") {
+        if (p.position >= y) { V += p.force; M += p.force * (p.position-y); X += p.force * p.fraction * chordAt(g,p.position); }
+      } else {
+        const a = Math.max(y,p.start), b = p.end;
+        if (b <= a) continue;
+        const k = (p.qEnd-p.qStart)/(p.end-p.start), c = p.qStart-k*p.start;
+        const F = c*(b-a)+k*(b*b-a*a)/2, Y = c*(b*b-a*a)/2+k*(b**3-a**3)/3;
+        V += F; M += Y-y*F;
+        X += p.fraction*(g.rootChord*F+(g.tipChord-g.rootChord)/g.semiSpan*Y);
+      }
+    }
+    return { V, M, X };
   }
   // Progressive solving for a responsive interface: analyse station k now, solve() reuses it.
   const stations = (input) => normalize(input).ySec;
@@ -1244,7 +1603,8 @@ const WingEngine = (() => {
     const ribs = ribStations(g);
     const sections = ySec.map((y) => cachedSection(g, pla, rod, asm, y));
     const col = (k) => sections.map((s) => s[k]);
-    const yset = new Set([...linspace(0, L, nGrid), ...seams(g), ...ribs].map((v) => +v.toFixed(9)));
+    const loadNodes = load.kind === "custom" ? load.items.flatMap(p => p.kind === "point" ? [p.position] : [p.start,p.end]) : [];
+    const yset = new Set([...linspace(0, L, nGrid), ...seams(g), ...ribs, ...loadNodes].map((v) => +v.toFixed(9)));
     const y = Float64Array.from([...yset].sort((a, b) => a - b));
     const lin = (k) => (yy) => interpLin(yy, ySec, col(k));
     const P = {};
@@ -1291,6 +1651,14 @@ const WingEngine = (() => {
         point.push([L, -gn * capMass[1], lin("ribCgx")(L)]);
         if (load.tipMass) point.push([L, -gn * load.tipMass, load.tipFraction * g.tipChord]);
       }
+    } else if (load.kind === "custom") {
+      for (const p of load.items) {
+        if (p.kind === "point") point.push([p.position,p.force,p.fraction*chordAt(g,p.position)]);
+        else for (let i=0;i<y.length;i++) if (y[i]>=p.start && y[i]<=p.end) {
+          const q=p.qStart+(p.qEnd-p.qStart)*(y[i]-p.start)/(p.end-p.start);
+          w[i]+=q; wx[i]+=q*p.fraction*chordAt(g,y[i]);
+        }
+      }
     } else {
       point.push([L, load.tipForce, load.tipFraction * g.tipChord]);
     }
@@ -1299,9 +1667,10 @@ const WingEngine = (() => {
     for (const [yp, F, xp] of point)
       for (let i = 0; i < y.length; i++)
         if (y[i] <= yp + 1e-9) { V[i] += F; M[i] += F * (yp - y[i]); Xall[i] += F * xp; }
+    if (load.kind === "custom") y.forEach((v,i) => { const a=customResultants(load.items,g,v); V[i]=a.V; M[i]=a.M; Xall[i]=a.X; });
     const T = y.map((v, i) => P.xsc[i] * V[i] - Xall[i]);
-    const appliedForce = trapz(w, y) + point.reduce((s, p) => s + p[1], 0);
-    const appliedMoment = trapz(w.map((v, i) => v * y[i]), y) + point.reduce((s, p) => s + p[1] * p[0], 0);
+    const appliedForce = load.kind === "custom" ? customResultants(load.items,g,0).V : trapz(w, y) + point.reduce((s, p) => s + p[1], 0);
+    const appliedMoment = load.kind === "custom" ? customResultants(load.items,g,0).M : trapz(w.map((v, i) => v * y[i]), y) + point.reduce((s, p) => s + p[1] * p[0], 0);
 
     // dry-seam springs
     const Irod = (Math.PI * g.rodDiameter ** 4) / 64;
@@ -1317,6 +1686,13 @@ const WingEngine = (() => {
     const kappa = M.map((v, i) => v / P.EI[i]);
     const slope = cumFromRoot(kappa, y);
     const twist = cumFromRoot(T.map((v, i) => v / P.GJ[i]), y);
+    if(load.kind==='custom') {
+      // Integrate over each load boundary with interior quadrature, not an average
+      // across a point-torque jump. This also handles loads close to the root.
+      const gx=[.0694318442029737,.330009478207572,.669990521792428,.930568155797026],gw=[.173927422568727,.326072577431273,.326072577431273,.173927422568727];
+      twist[0]=0;
+      for(let i=1;i<y.length;i++) { const h=y[i]-y[i-1];let inc=0;for(let k=0;k<4;k++){const q=y[i-1]+h*gx[k],rr=customResultants(load.items,g,q);inc+=gw[k]*(lin('xsc')(q)*rr.V-rr.X)/interpLog(q,ySec,col('GJ'));}twist[i]=twist[i-1]+h*inc; }
+    }
     const seamRot = [];
     for (const s of seamsActive) {
       const Ms = interp(s, y, M), Ts = interp(s, y, T);
@@ -1334,11 +1710,14 @@ const WingEngine = (() => {
       });
 
     // 1-D FEM: static and modal
-    const nodeSet = new Set([...linspace(0, L, nElem + 1), ...seams(g), ...ribs].map((v) => +v.toFixed(9)));
+    const mandatory=[0,L,...seams(g),...ribs,...loadNodes];
+    const regular=linspace(0,L,nElem+1).filter(v=>load.kind!=='custom'||!mandatory.some(p=>Math.abs(v-p)<.1));
+    const nodeSet = new Set([...regular,...mandatory].map((v) => +v.toFixed(9)));
     const nodes = [...nodeSet].sort((a, b) => a - b);
     const EIf = (q) => interpLog(q, ySec, col("EIf"));
     const GJf = (q) => interpLog(q, ySec, col("GJ"));
-    const mf = (q) => interp(q, y, P.mass), Ipf = (q) => interp(q, y, P.polarInertia), wf = (q) => interp(q, y, w);
+    const mf = (q) => interp(q, y, P.mass), Ipf = (q) => interp(q, y, P.polarInertia);
+    const wf = load.kind === "custom" ? q => load.items.reduce((sum,p) => sum + (p.kind === "distributed" && q>=p.start && q<=p.end ? p.qStart+(p.qEnd-p.qStart)*(q-p.start)/(p.end-p.start) : 0),0) : q => interp(q,y,w);
     const pointTorques = point.map(([yp, F, xp]) => [yp, F * (interp(yp, y, P.xsc) - xp)]);
     const Tpoint = new Float64Array(y.length);
     point.forEach(([yp], k) => { for (let i = 0; i < y.length; i++) if (y[i] <= yp + 1e-9) Tpoint[i] += pointTorques[k][1]; });
@@ -1357,6 +1736,7 @@ const WingEngine = (() => {
     const fem = beamFEM(nodes, EIf, GJf, mf, Ipf, {
       seams: seamsActive, kBend: kb, kTors: kTorsAt, wLine: wf, tLine: tf,
       pointForces: point.map(([yp, F]) => [yp, F]), pointTorques, pointMasses: lumped, pointInertias: lumpedI,
+      pointTorquesOutboard: load.kind==='custom',
     });
     const unit = beamFEM(nodes, EIf, GJf, mf, Ipf, { seams: seamsActive, kBend: kb, kTors: kTorsAt, pointForces: [[L, 1]], modal: false });
     const rigid = cumFromRoot(cumFromRoot(y.map((v, i) => (L - v) / P.EI[i]), y), y);
@@ -1386,7 +1766,8 @@ const WingEngine = (() => {
     const sigCr = y.map((_, i) => Math.max(sigFlat[i], sigCyl[i]));
     const rr = rodRadius(g);
     let sigRod;
-    if (asm.rodsBonded) {
+    if (!nr) sigRod = new Float64Array(y.length);
+    else if (asm.rodsBonded) {
       const off = sections.map((s) => Math.max(...rodCentres(g, s.y).map(([, z]) => Math.abs(z - s.zc))));
       sigRod = y.map((v, i) => rod.E * Math.abs(kappa[i]) * (interpLin(v, ySec, off) + rr));
     } else sigRod = y.map((_, i) => rod.E * Math.abs(kappa[i]) * rr);
@@ -1404,6 +1785,7 @@ const WingEngine = (() => {
     // checks
     const F = load.fos;
     const checks = [];
+    const ribBearing = [];
     const add = (name, demand, capacity, unit, at, basis, group) => checks.push({ name, demand, capacity, unit, at, basis, group, U: capacity > 0 ? demand / capacity : Infinity });
     const tens = y.map((_, i) => Math.max(sigTop[i], sigBot[i]));
     const comp = y.map((_, i) => Math.max(-sigTop[i], -sigBot[i]));
@@ -1424,6 +1806,7 @@ const WingEngine = (() => {
         const leverA = inner - Math.max(...sup.filter((v) => v < inner - 1e-6));
         const leverB = Math.min(...sup.filter((v) => v > outer + 1e-6)) - outer;
         const bearing = (Ms / nr) / Math.min(leverA, leverB) / (g.rodDiameter * g.ribThickness);
+        for (const [station,lever] of [[inner,leverA],[outer,leverB]]) ribBearing.push({station,seam:s,forcePerRod:Ms/nr/lever,stress:Ms/nr/lever/(g.rodDiameter*g.ribThickness)});
         const dowel = ((4 / 3) * (Vs / nr)) / (Math.PI * rr * rr);
         if (!worst || rodSig > worst[1]) worst = [s, rodSig, bearing, dowel];
       }
@@ -1431,7 +1814,7 @@ const WingEngine = (() => {
       add("Rod bending at dry seam (rods carry the whole moment)", F * rodSig, Math.min(rod.ft, rod.fc), "MPa", s, "σ = (M/n) r / I_rod", "joint");
       add("Rib-hole bearing at dry seam (screening)", F * bearing, pla.fc, "MPa", s, "rod moment reacted by a force couple between interface rib and next rib", "joint");
       add("Rod dowel shear at dry seam", F * dowel, rod.fs, "MPa", s, "4V/(3 n π r²)", "joint");
-    } else {
+    } else if (nr) {
       const iR = argmaxArr(sigRod);
       add("Rod bending (rods follow the shell curvature)", F * sigRod[iR], Math.min(rod.ft, rod.fc), "MPa", y[iR], "E_rod × curvature × fibre distance", "joint");
     }
@@ -1460,7 +1843,7 @@ const WingEngine = (() => {
       seam: { kBend, freeLength: Lf, freePlay: asm.seamsBonded ? 0 : freePlay },
       ribs, seams: seams(g), mass, stiffness, liftN, appliedForce, appliedMoment,
       stress: { sigTop, sigBot, skinComp, sigCr, sigFlat, sigCyl, sigRod, tau, tauPeak, tauBredt },
-      checks, governing, verification,
+      checks, governing, verification, ribBearing,
     };
   }
 
@@ -1542,7 +1925,7 @@ if (typeof module !== "undefined" && module.exports) module.exports = WingEngine
     criteria: { ...E.DEFAULT_CRITERIA },
     selected: "part",
     plot: "model", deformed: false, scale: 1, xray: false, explode: 0, clip: false, clipY: 150,
-    anatomy: "assembled", lesson: 0,
+    anatomy: "assembled", lesson: 0, stressComponent: "skin",
     mode: { kind: "bending", index: 0 },
     secY: 0, secField: "sigma",
   };
@@ -1575,7 +1958,7 @@ if (typeof module !== "undefined" && module.exports) module.exports = WingEngine
   };
   function treeModel() {
     const g = S.geometry, { pla, rod } = materials(), L = S.load;
-    const loadLbl = L.kind === "flight" ? `Lift n = ${L.loadFactor}, m = ${L.aircraftMass} kg` : `Tip force ${L.tipForce} N`;
+    const loadLbl = L.kind === "flight" ? `Lift n = ${L.loadFactor}, m = ${L.aircraftMass} kg` : L.kind === "custom" ? `${L.items.length} custom loads` : `Tip force ${L.tipForce} N`;
     return [
       { id: "part", g: "part", b: "Semi-wing", i: `NACA ${g.naca} · ${g.semiSpan} mm · ${g.modules} modules` },
       { id: "materials", g: "mat", b: "Materials", kids: [{ id: "mat-pla", g: "mat", b: "Shell, ribs, sleeves", i: pla.short + ` · E ${pla.E} MPa` }, { id: "mat-rod", g: "mat", b: "Rods", i: rod.short + ` · E ${(rod.E / 1000).toFixed(0)} GPa` }] },
@@ -1648,13 +2031,13 @@ if (typeof module !== "undefined" && module.exports) module.exports = WingEngine
       pm.append(fs("Printed structure",
         numField("skin", "Skin thickness", "mm, measured vertically", g.skin, 0.1, (v) => (S.geometry.skin = v)),
         numField("rib", "Rib thickness", "mm", g.ribThickness, 0.1, (v) => (S.geometry.ribThickness = v)),
-        selField("mods", "Modules", [[2, "2"], [3, "3"]], g.modules, (v) => (S.geometry.modules = +v)),
+        selField("mods", "Modules", [[1, "1 · one-piece teaching wing"], [2, "2"], [3, "3"]], g.modules, (v) => (S.geometry.modules = +v)),
         selField("clr", "Rod clearance <small>radial, from coupon</small>", [[0.15, "0.15 mm"], [0.25, "0.25 mm"], [0.35, "0.35 mm"]], g.clearance, (v) => (S.geometry.clearance = +v))));
       const area = 0.5 * (g.rootChord + g.tipChord) * g.semiSpan, taper = g.tipChord / g.rootChord;
       pm.append(fs("Derived", kv([
         ["Semi-wing area", `${nf(area / 100, 1)} cm²`], ["Taper ratio", nf(taper, 3)], ["Aspect ratio (full wing)", nf((4 * g.semiSpan ** 2) / (2 * area), 2)],
         ["Ribs", `${E.ribStations(g).length} at ${E.ribStations(g).map((v) => nf(v, 1)).join(", ")} mm`], ["Seams", E.seams(g).map((v) => nf(v, 0)).join(", ") + " mm"],
-        ["Rods", `2 × ⌀${g.rodDiameter} mm at ${g.rodFractions.map((f) => f.toFixed(2)).join(" and ")} c`],
+        ["Rods", `${g.rodFractions.length} × ⌀${g.rodDiameter} mm at ${g.rodFractions.map((f) => f.toFixed(2)).join(" and ")} c`],
         ["Printed PLA mass", R ? `${nf(R.mass.printed, 1)} g` : "–"]])));
     } else if (id === "materials" || id === "mat-pla") {
       $("#pmHead").textContent = "Material";
@@ -1698,8 +2081,9 @@ if (typeof module !== "undefined" && module.exports) module.exports = WingEngine
       pm.append(el("p", { class: "note" }, "A real clamp is never perfectly rigid. If a measured slope is softer than predicted, the fixture is one of the first suspects."));
     } else if (id === "loads" || id === "load") {
       $("#pmHead").textContent = "External load";
-      head("Load case", S.load.kind === "flight" ? "Each semi-wing lifts L = n m g / 2. The wing's own mass pushes down with the same load factor (inertia relief)." : "A single upward force at the tip, like the instructor's load-cell test. Self-weight is excluded because the load cell is zeroed first.");
+      head("Load case", S.load.kind === "flight" ? "Each semi-wing lifts L = n m g / 2. Inertia relief subtracts wing mass loading when enabled." : S.load.kind === "custom" ? "Custom point and distributed loads are active; edit them in Build a wing load." : "A signed upward-positive force at the tip. Self-weight is excluded in this idealized case.");
       pm.append(segField([["flight", "Flight-like lift"], ["tip", "Tip force"]], S.load.kind, (v) => (S.load.kind = v), "Load case"));
+      pm.append(el("p",{class:"note"},"For arbitrary point, rectangular, triangular or trapezoidal loads, open the Build a wing load tab."));
       if (S.load.kind === "flight") {
         pm.append(fs("Lift",
           numField("am", "Aircraft mass", "kg", S.load.aircraftMass, 0.1, (v) => (S.load.aircraftMass = v)),
@@ -1707,7 +2091,7 @@ if (typeof module !== "undefined" && module.exports) module.exports = WingEngine
           selField("dist", "Spanwise shape", [["schrenk", "Schrenk"], ["elliptic", "Elliptic"], ["planform", "Planform"], ["uniform", "Uniform"], ["tip", "Point load at tip"]], S.load.distribution, (v) => (S.load.distribution = v)),
           numField("lcf", "Lift acts at", "fraction of chord", S.load.liftFraction, 0.01, (v) => (S.load.liftFraction = v)),
           selField("ir", "Inertia relief", [["true", "Included"], ["false", "Ignored"]], String(S.load.inertiaRelief), (v) => (S.load.inertiaRelief = v === "true"))));
-      } else {
+      } else if (S.load.kind === "tip") {
         pm.append(fs("Tip force",
           numField("tf", "Force", "N, upward", S.load.tipForce, 1, (v) => (S.load.tipForce = v)),
           numField("tfc", "Applied at", "fraction of tip chord", S.load.tipFraction, 0.01, (v) => (S.load.tipFraction = v))));
@@ -1977,7 +2361,10 @@ if (typeof module !== "undefined" && module.exports) module.exports = WingEngine
   const zscAt = (y) => E.interp(y, R.ySec, R.sections.map((s) => s.zsc));
   function fieldValue(y, x, z, kind) {
     const k = at(R.kappa, y), zc = at(R.props.zc, y);
-    const sigma = -R.pla.E * k * (z - zc);
+    const isRod=kind==='sigma' && S.stressComponent==='rods';
+    const centres=E.rodCentres(R.geometry,y);
+    const nearest=centres.length?centres.reduce((a,b)=>Math.abs(b[0]-x)<Math.abs(a[0]-x)?b:a):[x,zc];
+    const sigma = -(isRod?R.rod.E:R.pla.E) * k * (z - (isRod&&!R.assembly.rodsBonded?nearest[1]:zc));
     if (kind === "sigma") return sigma;
     if (kind === "fos") { const ult = Math.abs(sigma); if (ult < 1e-9) return 99; return (sigma >= 0 ? R.pla.ft : R.pla.fc) / ult; }
     if (kind === "disp") {
@@ -1991,9 +2378,10 @@ if (typeof module !== "undefined" && module.exports) module.exports = WingEngine
   let range = { min: 0, max: 1 };
   function computeRange(kind) {
     let mn = Infinity, mx = -Infinity;
-    const meshes = model.skins.concat(model.sleeves);
+    const meshes = kind==='sigma'&&S.stressComponent==='rods'?model.rods:model.skins.concat(model.sleeves);
     for (const m of meshes) { const u = m.userData; for (let i = 0; i < u.by.length; i += 3) { const v = fieldValue(u.by[i], u.bx[i], u.bz[i], kind); if (v < mn) mn = v; if (v > mx) mx = v; } }
     if (kind === "fos") { mn = 0; mx = Math.min(Math.max(mx, 1), 10); }
+    if (!isFinite(mx)||!isFinite(mn)) return {min:0,max:1};
     if (mx - mn < 1e-12) mx = mn + 1;
     return { min: mn, max: mx };
   }
@@ -2045,7 +2433,8 @@ if (typeof module !== "undefined" && module.exports) module.exports = WingEngine
       for (let i = 0; i < u.by.length; i++) {
         place(u.by[i], u.bx[i], u.bz[i], tmp, isRod ? 0 : u.module);
         pos[3 * i] = tmp[0]; pos[3 * i + 1] = tmp[1]; pos[3 * i + 2] = tmp[2];
-        const c = isRod ? base.rod : colorOf(u.by[i], u.bx[i], u.bz[i], base[u.kind]);
+        const selectedStress = S.plot==='stress' && (S.stressComponent==='rods'?isRod:!isRod);
+        const c = selectedStress ? colorOf(u.by[i],u.bx[i],u.bz[i],base[u.kind]) : S.plot==='stress'?new THREE.Color(0x7f8c98):isRod?base.rod:colorOf(u.by[i],u.bx[i],u.bz[i],base[u.kind]);
         col[3 * i] = c.r; col[3 * i + 1] = c.g; col[3 * i + 2] = c.b;
       }
       m.geometry.attributes.position.needsUpdate = true;
@@ -2081,23 +2470,29 @@ if (typeof module !== "undefined" && module.exports) module.exports = WingEngine
       if (F > 0) grp.add(new THREE.ArrowHelper(new THREE.Vector3(0, 1, 0), new THREE.Vector3(y, zLow - len + w, x), len, color, Math.min(10, len * 0.35), 5));
       else grp.add(new THREE.ArrowHelper(new THREE.Vector3(0, -1, 0), new THREE.Vector3(y, zHigh + len + w, x), len, color, Math.min(10, len * 0.35), 5));
     };
-    if (lift && R.load.distribution !== "tip") {
+    if (R.load.kind === "custom") {
+      const lines=R.load.items.filter(p=>p.kind==='distributed');
+      const qmax=Math.max(...lines.flatMap(p=>[Math.abs(p.qStart),Math.abs(p.qEnd)]),1e-12);
+      for(const p of lines) for(let i=0;i<=12;i++) {
+        const y=p.start+(p.end-p.start)*i/12,q=p.qStart+(p.qEnd-p.qStart)*i/12;
+        add(y,p.fraction*E.chordAt(g,y),1.2*q/qmax,q>=0?COLORS.load:COLORS.relief);
+      }
+    } else if (lift && R.load.distribution !== "tip") {
       const wmax = Math.max(...R.w.map((v) => Math.abs(v))) || 1;
       for (let i = 0; i <= 12; i++) {
         const y = (L * i) / 12 * 0.999;
-        const wl = R.load.distribution === "uniform" ? 1 : E.interp(y, R.y, R.w) / wmax;
+        const wl = E.interp(y, R.y, R.w) / wmax;
         add(y, R.load.liftFraction * E.chordAt(g, y), wl * 1.2, COLORS.load);
       }
-    } else {
-      const p = R.point[0];
-      add(p[0], p[2], 1.4, COLORS.load);
     }
+    for (const p of R.point) add(p[0],p[2],Math.sign(p[1])*1.4,p[1]>=0?COLORS.load:COLORS.relief);
   }
   function renderLegend(kind) {
     const lg = $("#legend"), lt = $("#legendTitle");
     if (!kind) { lg.innerHTML = ""; lt.textContent = ""; return; }
     const unit = { sigma: "MPa", disp: "mm", fos: "" }[kind];
     lt.textContent = { sigma: "Stress σ, span (MPa)", disp: "Displacement (mm)", fos: "Factor of safety" }[kind];
+    if(kind==='sigma')lt.textContent=(S.stressComponent==='rods'?'Rod bending σ':'Skin / sleeve bending σ')+' (MPa)';
     const bands = Array.from({ length: 12 }, (_, i) => rainbow((11 - i) / 11.0001 + 1e-6));
     const ticks = kind === "fos"
       ? Array.from({ length: 7 }, (_, i) => range.min + ((range.max - range.min) * i) / 6)
@@ -2114,7 +2509,7 @@ if (typeof module !== "undefined" && module.exports) module.exports = WingEngine
     const scaleTxt = S.plot === "mode" ? "animated" : S.deformed ? nf(d.scale, 1) : "off";
     let modeTxt = "";
     if (S.plot === "mode") { const f = (S.mode.kind === "bending" ? R.fem.fBending : R.fem.fTorsion)[S.mode.index]; modeTxt = `<br><b>Mode:</b> ${S.mode.kind} ${S.mode.index + 1}, ${nf(f, 2)} Hz`; }
-    $("#plotinfo").innerHTML = `<b>Model:</b> NACA ${g.naca} semi-wing, ${g.semiSpan} × ${g.rootChord}/${g.tipChord} mm<br><b>Study:</b> ${R.load.kind === "flight" ? `lift, n = ${R.load.loadFactor}, m = ${R.load.aircraftMass} kg (${R.load.distribution})` : `tip force ${R.load.tipForce} N`} · ${R.assembly.seamsBonded ? "epoxied" : "dry"} seams · ${R.assembly.rodsBonded ? "epoxied" : "slip-fit"} rods<br><b>Plot:</b> ${kind}<br><b>Deformation scale:</b> ${scaleTxt}${modeTxt}`;
+    $("#plotinfo").innerHTML = `<b>Model:</b> NACA ${g.naca} semi-wing, ${g.semiSpan} × ${g.rootChord}/${g.tipChord} mm<br><b>Study:</b> ${wingLoadName(R)} · ${g.modules===1?'continuous one-piece shell':R.assembly.seamsBonded?'bonded seams':'dry seams'} · ${g.rodFractions.length} rods<br><b>Plot:</b> ${kind}<br><b>Deformation scale:</b> ${scaleTxt}${modeTxt}`;
   }
   function applyClip() {
     if (!model) return;
@@ -2184,6 +2579,7 @@ if (typeof module !== "undefined" && module.exports) module.exports = WingEngine
   }
   let lastT = performance.now();
   function loop(t) {
+    if ($("#app").hidden) { lastT=t; requestAnimationFrame(loop); return; }
     resize();
     controls.update();
     positionRibLabels();
@@ -2281,9 +2677,9 @@ if (typeof module !== "undefined" && module.exports) module.exports = WingEngine
     }
     const g = R.governing;
     const why = {
-      "Skin compression buckling (screening)": "The thin upper skin wrinkles before the PLA reaches its strength. Shorter rib bays, a thicker skin or a deeper airfoil raise the buckling stress.",
-      "Rod bending at dry seam (rods carry the whole moment)": "At a dry seam the shell is cut and only the two rods carry the bending moment. Epoxying the seams or using stiffer, stronger rods relieves them.",
-      "PLA tension (bending)": "Bending tension in the lower skin governs. In upright prints this stress crosses layer interfaces, the weakest direction.",
+      "Skin compression buckling (screening)": "The compressed skin controls this approximate screening ratio. Which surface is compressed depends on the bending sign. Shorter support bays or thicker skin can improve local stability; this screen does not calculate the actual wrinkle shape or failure load.",
+      "Rod bending at dry seam (rods carry the whole moment)": "At a dry seam the shell is cut and the rods carry the bending moment in this model. A properly designed bonded seam can share that moment; rod stiffness, strength and joint details also matter.",
+      "PLA tension (bending)": "The tensile side of the printed section governs; reversing the load can swap the tensile and compressed surfaces. In upright prints spanwise stress crosses layer interfaces, so measured material properties matter.",
       "Tip deflection at limit load": "Stiffness governs. Dry seams and a soft rod card add flexibility.",
     }[g.name] || "Read the basis line under the check to see what drives it.";
     $("#govCallout").innerHTML = `<span class="chip ${g.U <= 1 ? (g.U <= 0.7 ? "ok" : "warn") : "bad"}">Governing · U ${nf(g.U, 2)}</span><h3>${g.name}</h3><p>${why}</p><p>Strength and buckling use the ultimate load (factor of safety ${R.load.fos} × limit). U close to or above 1 means investigate and test; it is a screening result, not a prediction of the exact failure load.</p><p>Shear stress at the four sharp cavity corners reaches ${nf(Math.max(...R.stress.tauPeak), 2)} MPa locally versus ${nf(Math.max(...R.stress.tau), 2)} MPa nominal; the corner value depends on the printed fillet and is reported, not checked.</p>`;
@@ -2418,7 +2814,7 @@ if (typeof module !== "undefined" && module.exports) module.exports = WingEngine
       `Wing: NACA ${g.naca}, semi-span ${g.semiSpan} mm, chords ${g.rootChord}/${g.tipChord} mm, ${g.modules} modules, skin ${g.skin} mm, ribs ${g.ribThickness} mm at ${E.ribStations(g).map((v) => nf(v, 1)).join(", ")} mm`,
       `Materials: ${R.pla.name} (E ${R.pla.E} MPa, tension ${R.pla.ft} MPa); ${R.rod.name} (E ${R.rod.E} MPa)`,
       `Joints: rods ${R.assembly.rodsBonded ? "epoxied" : "slip fit"}, seams ${R.assembly.seamsBonded ? "epoxied" : `dry (rod free length ${R.seam.freeLength} mm)`}`,
-      `Load: ${L.kind === "flight" ? `lift n = ${L.loadFactor}, aircraft ${L.aircraftMass} kg, ${L.distribution}, at ${L.liftFraction} c, inertia relief ${L.inertiaRelief ? "on" : "off"}` : `tip force ${L.tipForce} N at ${L.tipFraction} c`}; factor of safety ${L.fos}`,
+      `Load: ${wingLoadName(R)}; factor of safety ${L.fos}; details ${JSON.stringify(L)}`,
       ``,
       `Mass: printed PLA ${nf(R.mass.printed, 1)} g, rods ${nf(R.mass.rods, 1)} g`,
       `Physical ribs (${R.ribs.length}), y from root in mm: ${R.ribs.join(", ")}`,
@@ -2471,7 +2867,7 @@ if (typeof module !== "undefined" && module.exports) module.exports = WingEngine
   function renderAll() {
     if (!R) return;
     renderTree(); renderPM(); renderCharts(); renderChecks(); renderPredict();
-    renderLesson(); renderDesignLab();
+    renderLesson(); renderDesignLab(); renderMemberLesson(); renderWingLoads();
     if (!$("#tab-section").hidden) renderSection();
     $("#report").value = reportText();
     if (prediction && !prediction.after) { prediction.after = true; store.set("prediction", prediction); renderPredict(); }
@@ -2507,7 +2903,7 @@ if (typeof module !== "undefined" && module.exports) module.exports = WingEngine
     }
     for (const m of model.rods) m.visible = !onlyRibs;
     for (const m of model.rigid) m.visible = m.userData.kind === "rib" ? !onlyRods : !onlyRibs && !onlyRods;
-    model.loads.visible = S.plot !== "model" && !onlyRibs && !onlyRods;
+    model.loads.visible = S.plot !== "mode" && !onlyRibs && !onlyRods;
     $("#anatomyKey").hidden = S.plot !== "model";
     $("#anatomyKey b").textContent = {
       assembled: "Complete project semi-wing · undeformed when selected",
@@ -2576,6 +2972,38 @@ if (typeof module !== "undefined" && module.exports) module.exports = WingEngine
       <text x="96" y="122">${bend ? 'the 3-D view can magnify it.' : '|V(y)| = |P|; |M(y)| = |P|(L − y)'}</text>`);
   }
 
+  function wingLoadName(r) {
+    return r.load.kind==='custom'?`${r.load.items.length} custom point / line loads (upward +)`:r.load.kind==='tip'?`Tip force ${nf(r.load.tipForce,2)} N at ${nf(r.load.tipFraction,2)}c`:`Flight-like lift: n=${r.load.loadFactor}, mass=${r.load.aircraftMass} kg`;
+  }
+  function renderWingLoads() {
+    if(!R)return;
+    const g=R.geometry,items=S.load.kind==='custom'?S.load.items:[];
+    $('#wingLoadLesson').innerHTML=`<h2>Build a wing load: force, position and distribution</h2><div class="learn-layout"><article class="learn-copy"><p><b>Wing convention: positive is upward.</b> This is opposite to the downward-positive introductory beam exercise. The root is clamped; the tip is free. The beam pathway is where you compare different support conditions.</p><p>A point force P is measured in N. A line load q(y) is N/mm. Pressure p is N/mm² and must first be integrated over the local chord to obtain q. Load arrows show location/direction, not a calibrated force scale.</p><div class="equation">F = ∫ q(y) dy + ΣP<br>M<sub>root</sub> = ∫ y q(y) dy + Σy<sub>P</sub>P</div><p>Two loads with the same total force can have different bending effects. A 2 N uniform load over length L has root moment FL/2; a root-heavy triangle gives FL/3 and a tip-heavy triangle gives 2FL/3.</p><h3>What does load factor mean?</h3><div class="equation">n = aerodynamic lift / aircraft weight<br>L<sub>semi-wing</sub> = nmg/2</div><p>Here both wings are assigned all aerodynamic lift symmetrically; tail/body lift is not separately allocated. n=2 prescribes twice the 1-g lift at the same aircraft mass. <b>Load factor is not factor of safety.</b> With inertia relief, wing mass contributes downward inertial loading; gross lift and net structural load differ.</p><p>Flight-like default: n=4, m=1 kg, Schrenk distribution. Schrenk averages an elliptic distribution and a chord-proportional distribution; it is a prescribed teaching load, not a CFD result.</p><p>Custom cases below contain only the loads you enter, with no automatic weight/inertia relief. A force exactly at the support is handled in the beam exercise, not as a flexible-span wing load here. Keep distinct load boundaries at least 0.1 mm apart from ribs/seams/ends, or use exactly the same station.</p><p><a href="https://www.faa.gov/sites/faa.gov/files/regulations_policies/handbooks_manuals/aviation/airplane_handbook/20_afh_glossary.pdf" target="_blank" rel="noopener">FAA terminology</a> · <a href="https://help.solidworks.com/2025/english/SolidWorks/cworks/c_Summary_of_Force_and_Torque_Load.htm" target="_blank" rel="noopener">SOLIDWORKS force/torque loading</a></p></article>
+      <div><form id="wingLoadForm" class="callout"><h3>Add a load to the current wing</h3><div class="field"><label for="wingKind">Shape</label><select id="wingKind"><option value="point">Point force</option><option value="rectangle">Rectangular / uniform</option><option value="triangle">Triangular (zero at start)</option><option value="trapezoid">Trapezoidal</option></select></div>${[['wingA','Point station or start (mm)',g.semiSpan/2],['wingB','Distributed end (mm)',g.semiSpan],['wingP','Point force (N, upward +)',2],['wingQ0','Start intensity (N/mm)',.004],['wingQ1','End intensity (N/mm)',.008],['wingFraction','Chord fraction (0–1)',.3]].map(([id,label,val])=>`<div class="field"><label for="${id}">${label}</label><input id="${id}" type="number" step="any" value="${val}" required></div>`).join('')}<button class="btn primary" type="submit">Add / solve wing load</button><p>The first custom load replaces the flight/tip case. Further loads are superposed.</p></form><div id="wingCustomList">${items.map((p,i)=>`<p>${i+1}. ${p.kind==='point'?`${p.force} N at ${p.position} mm`:`${p.qStart} → ${p.qEnd} N/mm from ${p.start} to ${p.end} mm`}; chord ${p.fraction}c <button class="btn" data-delete-wing-load="${i}">Remove</button></p>`).join('')}</div><div class="lesson-actions"><button class="btn" id="wingClearLoad">Clear custom loads</button><button class="btn" id="wingFlightLoad">Restore default flight loading</button></div><p id="wingLoadStatus" role="status">${wingLoadName(R)} · root V=${nf(R.V[0],3)} N; root M=${nf(R.M[0]/1000,4)} N·m.</p></div></div>`;
+    const apply=load=>{if(running||stale){$('#wingLoadStatus').textContent='Wait for a successful solve first.';return;}try{E.normalize({...engineInput(),load});S.load=load;changed();$('#wingLoadStatus').textContent='Solving custom loads…';}catch(e){$('#wingLoadStatus').textContent=e.message;}};
+    $('#wingLoadForm').onsubmit=e=>{e.preventDefault();const kind=$('#wingKind').value,q0=+$('#wingQ0').value,q1=+$('#wingQ1').value;const p=kind==='point'?{kind:'point',position:+$('#wingA').value,force:+$('#wingP').value}:{kind:'distributed',start:+$('#wingA').value,end:+$('#wingB').value,qStart:kind==='triangle'?0:q0,qEnd:kind==='rectangle'?q0:q1};p.fraction=+$('#wingFraction').value;apply({...S.load,kind:'custom',items:[...items,p]});};
+    $('#wingCustomList').querySelectorAll('[data-delete-wing-load]').forEach(b=>b.onclick=()=>apply({...S.load,kind:'custom',items:items.filter((_,i)=>i!==+b.dataset.deleteWingLoad)}));
+    $('#wingClearLoad').onclick=()=>apply({...S.load,kind:'custom',items:[]});
+    $('#wingFlightLoad').onclick=()=>apply({...E.DEFAULT_LOAD});
+  }
+  function renderMemberLesson() {
+    if(!R)return;
+    const g=R.geometry,skin=Math.max(...R.stress.sigTop.map(Math.abs),...R.stress.sigBot.map(Math.abs)),rod=Math.max(...R.stress.sigRod.map(Math.abs));
+    const supports=[0,...R.ribs,g.semiSpan],bay=Math.max(...supports.slice(1).map((x,i)=>x-supports[i]));
+    const stage=$('#app').dataset.lessonStage||'project';
+    $('#memberLesson').innerHTML=`<h2>Starting preset: ${stage==='shell'?'4 · Wing skin only':stage==='rods'?'5 · Add spanwise rods and printed sleeves':stage==='ribs'?'6 · Add ribs':'7 · Course modular wing'}</h2><p><b>Current solved model:</b> ${g.modules} module(s), ${g.rodFractions.length} rods, ${R.ribs.length} ribs; ${g.modules===1?'continuous one-piece shell':R.assembly.seamsBonded?'bonded seams':'dry seams'}. ${wingLoadName(R)}.</p><p>The three introductory wing presets start as continuous one-piece teaching wings with the same 2 N tip load and material cards. The ribbed preset places seven ribs at the course coordinates without physical module seams. The course preset starts with three modules and flight-like loading. These are starting conditions: subsequent input edits change your study. Compare one change at a time under the same load and assembly assumptions.</p>
+    <div class="learn-layout"><article class="learn-copy"><h3>What carries the load?</h3><p><b>Skin:</b> receives pressure, carries spanwise tension/compression under bending, and shear from transverse force and torsion. A closed skin already has EI and GJ; it is not just a cover.</p><p><b>Rods:</b> spanwise reinforcement; they also bridge dry modular joints. Our round carbon rods are <b>not a conventional deep spar</b> with caps and a web. Adding these rods also adds their printed sleeves. The comparison therefore changes both components and mass, not carbon alone.</p><p><b>Ribs:</b> preserve section shape, support skin bays and transfer local forces, including forces around rod holes. In this reduced beam model they change mass, bay spacing and joint-bearing estimates, but do not directly add diaphragm stiffness to EI/GJ.</p><h3>Why seven ribs?</h3><div class="equation">3 interior + (2 interfaces × 2 ribs/interface) = 7</div><p>Seven is the initial <b>manufacturing layout</b>, not a proved optimum or minimum. Removing ribs does not remove the applied load. It can permit skin distortion, local bending/buckling or poor joint support. Those effects need local analysis and manufacturing evidence; a similar global deflection is not proof ribs are unnecessary.</p><h3>Why is the root not moving?</h3><p>The clamp imposes zero displacement and rotation. It can still carry a large moment and high stress. For a uniform cantilever with a tip force, nominal bending stress is highest at the root. In a tapered/reinforced wing the peak also depends on EI, material and geometry. Local holes/contact can raise stress beyond this beam estimate.</p><h3>The calculation, in order</h3><div class="equation">Loads → V, M, T → section stiffness → displacement / stress<br>dV/dy = −q &nbsp; · &nbsp; dM/dy = −V<br>κ = M/EI &nbsp; · &nbsp; dθ/dy = κ &nbsp; · &nbsp; du/dy = θ<br>dφ/dy = T/GJ &nbsp; · &nbsp; σ = −Eκ(z−z<sub>NA</sub>)</div><p>The engine computes section properties, sums outboard loads, integrates bending/twist and independently checks displacement with beam finite elements. Dry joints add spring rotations. Sign conventions are upward load and positive nose-up torque; do not mix them with the downward-positive introductory beam plots.</p></article>
+    <div><div class="callout"><h3>Separate stress results</h3><div class="lesson-actions"><button class="btn" id="skinStress">Show skin stress</button><button class="btn" id="rodStress">Show rod stress</button><button class="btn" id="ribBearingView">Show ribs / bearing</button></div><dl class="kv"><dt>Maximum nominal skin bending |σ|</dt><dd>${nf(skin,3)} MPa</dd><dt>Rod bending envelope (between seams)</dt><dd>${g.rodFractions.length?nf(rod,3)+' MPa':'No rods in this model'}</dd><dt>Physical ribs</dt><dd>${R.ribs.length}</dd><dt>Current colour field</dt><dd>${S.stressComponent==='rods'?'Rod bending':'Skin/sleeve bending'}</dd></dl><p>Stress colours are rescaled per run/component. Compare numbers, not just colour. Grey parts are not the selected stress field. Rod stress uses E<sub>rod</sub> and its own neutral axis for slip-fit rods; bonded rods use the composite neutral axis. This is nominal bending stress, not a full 3-D contact stress solution.</p>
+      <h3>Rib-hole bearing: what is actually solved</h3><div class="equation">σ<sub>bearing</sub> ≈ F<sub>hole</sub> / (d<sub>rod</sub> t<sub>rib</sub>)</div>${R.ribBearing.length?`<table><thead><tr><th>Interface rib y</th><th>Estimated force per hole</th><th>Nominal bearing</th></tr></thead><tbody>${R.ribBearing.map(b=>`<tr><td>${nf(b.station,1)} mm</td><td>${nf(b.forcePerRod,2)} N</td><td>${nf(b.stress,3)} MPa</td></tr>`).join('')}</tbody></table><p>Limit-load estimate from a dry-joint force couple and distance to the adjacent support rib. The Checks tab applies the factor of safety. This is not the peak stress around a hole.</p>`:'<p>No dry-interface bearing result applies to this configuration. That means <b>not calculated / not applicable</b>, not zero rib stress.</p>'}<p><b>A full stress map inside every rib is not solved.</b> Ribs remain neutral gold; a shell/solid local FE model with contact/load-transfer assumptions is needed for that map.</p></div>
+      <div class="callout" style="margin-top:14px"><h3>Read the animated modes</h3><div class="lesson-actions"><button class="btn" data-teach-mode="bending,0">First bending mode</button><button class="btn" data-teach-mode="bending,1">Second bending mode</button><button class="btn" data-teach-mode="torsion,0">First torsional mode</button></div><div class="equation">K φ = ω² M φ &nbsp; · &nbsp; f = ω/(2π)</div><p>Bending moves the centreline; torsion rotates sections around the span. These are normalized, undamped free-vibration patterns. The animation is magnified and slowed; its amplitude is <b>not</b> the response to your static force. Higher bending modes have more shape reversals. This model separates bending and torsion; it does not predict flutter, damping or forced vibration amplitudes.</p><p><a href="https://help.solidworks.com/2025/english/SolidWorks/cworks/HIDD_Mode_Shape_Amplitude.htm" target="_blank" rel="noopener">SOLIDWORKS explanation of mode amplitudes</a></p></div></div></div>
+    <h2>A separate local model: skin supported by two ribs</h2><p>This flat simply-supported strip explains an effect the global beam model omits. Uniform pressure p acts on a unit-width strip between ribs, spacing a. It neglects curvature, membrane action, load sharing and buckling. Do <b>not</b> add this deflection to the global wing displacement or interpret it as a full rib stress solution.</p><div class="equation">I = bt³/12 &nbsp; · &nbsp; q = pb &nbsp; · &nbsp; M<sub>max</sub> = qa²/8<br>σ<sub>max</sub> = 3pa²/(4t²) &nbsp; · &nbsp; δ<sub>max</sub> = 5pa⁴/(32Et³)</div><div class="lesson-actions"><label>Pressure p (Pa) <input id="stripPressure" type="number" min="0" value="120"></label><label>Bay a (mm) <input id="stripBay" type="number" min="1" value="${nf(bay,2)}"></label><button class="btn" id="stripSolve">Compare this bay with half spacing</button></div><div id="stripResult"></div><p>Halving the bay at fixed p, t and E reduces this strip's bending stress by 4 and deflection by 16. This supports the purpose of ribs, but does not establish that seven is the correct number for the manufactured wing.</p><p><a href="https://help.solidworks.com/2026/English/SolidWorks/cworks/hidd_stress_hot_spot.htm" target="_blank" rel="noopener">Support/load stress hot spots</a> · <a href="https://help.solidworks.com/2024/english/solidworks/cworks/ID_HELP_CONVERGENCE_GRAPH.htm" target="_blank" rel="noopener">Mesh convergence</a></p>`;
+    $('#skinStress').onclick=()=>{S.stressComponent='skin';S.anatomy='assembled';setPlot('stress');renderMemberLesson();};
+    $('#rodStress').onclick=()=>{S.stressComponent='rods';S.anatomy='inside';S.xray=true;setPlot('stress');applyXray();renderMemberLesson();};
+    $('#ribBearingView').onclick=()=>setAnatomy('ribs');
+    document.querySelectorAll('[data-teach-mode]').forEach(b=>b.onclick=()=>{const[k,i]=b.dataset.teachMode.split(',');S.mode={kind:k,index:+i};setPlot('mode');});
+    const strip=()=>{const p=+$('#stripPressure').value*1e-6,a=+$('#stripBay').value,t=g.skin,E0=R.pla.E;if(!Number.isFinite(p)||!Number.isFinite(a)||p<0||a<=0){$('#stripResult').textContent='Use a finite nonnegative pressure and positive bay.';return;}const sig=x=>3*p*x*x/(4*t*t),def=x=>5*p*x**4/(32*E0*t**3);$('#stripResult').innerHTML=`<div class="learn-layout"><div>${svgFrame('Local skin strip: supported at each rib',`<path d="M70 105H600M70 192H335" stroke="#376782" stroke-width="8"/><path d="M70 106l-13 23h26ZM600 106l-13 23h26ZM70 192l-13 23h26ZM335 192l-13 23h26Z" fill="#21824c"/><path d="M70 105Q335 170 600 105M70 192Q203 196 335 192" stroke="#c26b00" stroke-width="3" fill="none"/><text x="85" y="75">Pressure ↓ ↓ ↓ ↓ ↓ · full bay a</text><text x="345" y="196">Half bay a/2</text><text x="75" y="255">Orange: exaggerated local skin deflection</text>`)}</div><div><table><tr><th>Spacing</th><th>Local |σ|</th><th>Local δ</th></tr><tr><td>${nf(a,2)} mm</td><td>${nf(sig(a),4)} MPa</td><td>${nf(def(a),5)} mm</td></tr><tr><td>${nf(a/2,2)} mm</td><td>${nf(sig(a/2),4)} MPa</td><td>${nf(def(a/2),5)} mm</td></tr></table><p>p=${nf(p,6)} N/mm²; t=${t} mm; E=${E0} MPa. Local deflection excludes global wing bending.</p>${def(a)>.1*t?'<p>Local deflection is not small relative to thickness: membrane effects may matter. Treat this linear strip as a scaling demonstration.</p>':''}</div></div>`;};
+    $('#stripSolve').onclick=strip;strip();
+  }
   function interiorStations(g) {
     return E.ribStations(g).filter(y => !E.seams(g).some(s => Math.abs(Math.abs(y - s) - g.interfaceOffset) < 1e-6));
   }
@@ -2588,7 +3016,7 @@ if (typeof module !== "undefined" && module.exports) module.exports = WingEngine
       ["Physical ribs", r.ribs.length, "", 0],
       ["Printed PLA mass", r.mass.printed, "g", 2],
       ["Longest support bay (centre-to-centre)", maxBay, "mm", 2],
-      [r.load.kind === "tip" ? "Prescribed tip force" : "Prescribed gross semi-wing lift", r.load.kind === "tip" ? r.load.tipForce : r.liftN, "N", 3],
+      [r.load.kind === "custom" ? "Net custom applied force" : r.load.kind === "tip" ? "Prescribed tip force" : "Prescribed gross semi-wing lift", r.load.kind === "custom" ? r.appliedForce : r.load.kind === "tip" ? r.load.tipForce : r.liftN, "N", 3],
       ["Root net shear magnitude", Math.abs(r.V[0]), "N", 3],
       ["Root net bending moment magnitude", Math.abs(r.M[0]) / 1000, "N·m", 4],
       ["Signed tip deflection", r.deflection.at(-1), "mm", 4],
@@ -2671,10 +3099,10 @@ if (typeof module !== "undefined" && module.exports) module.exports = WingEngine
       {
         title: "1 · Meet the wing before reading a stress plot",
         text: `<p>This is one <b>semi-wing</b> of your project: NACA ${g.naca}, ${nf(g.semiSpan, 0)} mm from root to tip, made in ${g.modules} printed modules. “Complete wing” shows its exterior at its undeformed shape; it is not a photograph or an imported STL.</p>
-        <p>Choose <b>Inside wing</b>, then <b>Ribs only</b>. Gold plates run across the chord; blue carbon rods run along the span. Orange sleeves are printed guides around those rods. Use the mouse to rotate and the wheel to zoom.</p>
+        <p>Choose <b>Inside wing</b>, then <b>Ribs only</b>. ${ribs.length ? 'Gold plates run across the chord.' : 'This teaching preset has no ribs; the empty rib view is intentional.'} ${g.rodFractions.length ? 'Blue carbon rods run along the span; orange sleeves are printed guides around them.' : 'This skin-only preset has no rods or sleeves.'} Use the mouse to rotate and the wheel to zoom.</p>
         <div class="equation">${ribs.length} physical ribs = ${ribs.length - paired} interior ribs + ${paired} interface ribs</div>
         <p>For the default three-module design, there are 3 interior ribs plus 2 ribs beside each of 2 seams: <b>3 + 2 × 2 = 7</b>. Root/tip caps are separate, not two extra numbered ribs. This is a CAD layout choice, not a universal optimum or the result of a buckling calculation.</p>
-        <p><b>No separate stringers are included.</b> This is a closed printed shell with rods and sleeves, not a conventional two-web aircraft wing box. Do not label the rods as full-height spar webs.</p>`,
+        <p><b>No separate stringers are included.</b> This is a closed printed shell${g.rodFractions.length ? ' with rods and sleeves' : ''}, not a conventional two-web aircraft wing box. Do not label round rods as full-height spar webs.</p>`,
         question: "What does R1–R7 identify in the default model?", options: ["Seven physical printed ribs", "Seven stringers", "Seven mathematical integration points"], answer: 0,
         why: "The rib stations come from the CAD layout. The solver also samples seven analysis cross-sections; that matching count is coincidental and the locations differ.",
       },
@@ -2759,7 +3187,7 @@ if (typeof module !== "undefined" && module.exports) module.exports = WingEngine
     const fig = anatomy ? ribPlanFigure(g) : section ? sectionFigure(g) : beamFigure(S.lesson);
     const caption = anatomy ? `Rib stations y (mm): ${ribs.map((y, i) => `R${i + 1}: ${nf(y, 1)}`).join("; ")}. Dashed lines are module seams; blue lines are rod paths. The 3-D labels and this plan use the same geometry.` : section ? "Actual selected airfoil-section geometry between ribs: grey printed shell, orange sleeves, blue rods, white cavity/clearance. There are no added stringers or front/rear spar webs. At a rib station, a printed diaphragm fills much of the cavity." : "Teaching free-body sketch for an isolated tip force; distances are measured from the root. The app's flight-like case can have distributed loads and additional point forces.";
     $("#lessonFigure").innerHTML = fig + `<figcaption>${caption}</figcaption>`;
-    $("#lessonReading").innerHTML = R ? `<h3>Read your current result</h3><p>${R.load.kind === "tip" ? `Tip force ${nf(R.load.tipForce, 1)} N at ${nf(R.load.tipFraction, 2)}c` : `Flight-like load: n = ${nf(R.load.loadFactor, 1)}, aircraft mass ${nf(R.load.aircraftMass, 2)} kg`} · ${R.assembly.seamsBonded ? "bonded" : "dry"} seams</p><dl class="kv"><dt>Root shear magnitude</dt><dd>${nf(Math.abs(R.V[0]), 2)} N</dd><dt>Root bending moment magnitude</dt><dd>${nf(Math.abs(R.M[0]) / 1000, 3)} N·m</dd><dt>Signed tip deflection</dt><dd>${nf(R.deflection.at(-1), 3)} mm</dd><dt>Signed tip twist</dt><dd>${nf(R.twist.at(-1) * 180 / Math.PI, 3)}°</dd></dl><p>Run study recomputes this case; with identical inputs the numbers stay the same. Property edits also trigger a solve automatically.</p>` : "<p>Preparing the first result. You can read the lesson while the solver starts.</p>";
+    $("#lessonReading").innerHTML = R ? `<h3>Read your current result</h3><p>${wingLoadName(R)} · ${g.modules===1 ? "continuous one-piece shell" : R.assembly.seamsBonded ? "bonded seams" : "dry seams"}</p><dl class="kv"><dt>Root shear magnitude</dt><dd>${nf(Math.abs(R.V[0]), 2)} N</dd><dt>Root bending moment magnitude</dt><dd>${nf(Math.abs(R.M[0]) / 1000, 3)} N·m</dd><dt>Signed tip deflection</dt><dd>${nf(R.deflection.at(-1), 3)} mm</dd><dt>Signed tip twist</dt><dd>${nf(R.twist.at(-1) * 180 / Math.PI, 3)}°</dd></dl><p>Run study recomputes this case; with identical inputs the numbers stay the same. Property edits also trigger a solve automatically.</p>` : "<p>Preparing the first result. You can read the lesson while the solver starts.</p>";
   }
 
   function showInputs(show) {
@@ -2781,6 +3209,7 @@ if (typeof module !== "undefined" && module.exports) module.exports = WingEngine
 
   // ------------------------------------------------------------ wiring
   function setPlot(p) {
+    if(p==='fos')S.stressComponent='skin';
     S.plot = p;
     if (p !== "model" && (S.anatomy === "ribs" || S.anatomy === "rods")) {
       S.anatomy = "assembled"; S.xray = false;
@@ -2823,7 +3252,24 @@ if (typeof module !== "undefined" && module.exports) module.exports = WingEngine
   renderPM();
   renderLesson();
   requestAnimationFrame(loop);
-  runStudy();
+  window.addEventListener('wing-learning-stage', event => {
+    if (running) return;
+    const stage=event.detail, project=stage==='project';
+    S.geometry={...E.DEFAULT_GEOMETRY, rodFractions:[...E.DEFAULT_GEOMETRY.rodFractions]};
+    S.assembly={...E.DEFAULT_ASSEMBLY,seamFreeLength:8};
+    S.load={...E.DEFAULT_LOAD}; S.plaKey='pla_upright';S.rodKey='rod_hobby';S.plaOver={};S.rodOver={};
+    if (!project) {
+      S.geometry.modules=1; S.geometry.customInteriorRibs=stage==='ribs'?[112.5,146,154,225,296,304,337.5]:[];
+      if(stage==='shell')S.geometry.rodFractions=[];
+      S.assembly.seamsBonded=true; S.load={...S.load,kind:'tip',tipForce:2,tipFraction:.3};
+    }
+    S.stressComponent='skin'; S.anatomy='inside';S.xray=true;S.deformed=false;
+    $('#foundations').hidden=true;$('#app').hidden=false;
+    $('#app').dataset.lessonStage=stage;
+    setPlot('model'); openTab('members'); resize();lastViewSet=false;runStudy();
+  });
+  $('#backFoundations').addEventListener('click',()=>{$('#app').hidden=true;$('#foundations').hidden=false;});
+  document.documentElement.dataset.wingReady='true';
 })();
 </script>
 

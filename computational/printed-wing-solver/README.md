@@ -52,6 +52,25 @@ The student notebook downloads `printed_wing_solver.py` from the `main` branch w
 
 ## Wing Lab: the same solver as a 3-D browser app
 
+### Progressive learning pathway
+
+The landing screen now starts with **cantilever → fixed–fixed → simply supported beams**, then **continuous wing skin only → rods and sleeves → ribs → the actual modular course wing**. The introductory wing comparisons share a 2 N tip force; the course preset restores the flight-like baseline. The skin-only example is one continuous shell, not disconnected printed modules with their rods removed.
+
+The independent Euler–Bernoulli beam engine exposes support reactions, shear, bending moment, deflection, top/bottom normal stress, rectangular-section maximum shear stress, three bending modes, a position probe and a mesh-refinement comparison. Point forces and piecewise linear distributed loads can be superposed. Uniform and triangular presets hold total force constant to teach why its location still changes bending. Support changes preserve loads; use **Centre point · 2 N** for a clear comparison between support conditions. A study record includes inputs, results and the student's explanation.
+
+In the wing workspace, **Build a wing load** supports point, rectangular, triangular and trapezoidal loads with span and chord location. Custom loads use upward-positive forces and do not silently add flight inertia relief. **Skin · rods · ribs · modes** explains load factor, governing equations and each component's role. Skin and rod stress displays are distinct; rib results are limited to the existing joint-bearing screen, not a fabricated full rib stress contour. A separate ideal simply-supported skin-strip example illustrates local bay stress and deflection; its result is not added to global wing displacement.
+
+Seven ribs are the course's starting layout: three interior ribs and two interface ribs at each of two seams. This is a manufacturing/layout choice, not proof of the minimum or optimum rib count. The model does not resolve local shell deformation, full rib stress, contact, fracture or nonlinear buckling. A clamp's zero displacement must not be mistaken for zero stress.
+
+Additional checks (run from the repository root):
+
+```bash
+node computational/printed-wing-solver/web/test_beam_learning.mjs
+node computational/printed-wing-solver/web/test_wing_loading.mjs
+```
+
+`web/test_learning_components.mjs` additionally tests the actual lesson forms and controls in a DOM harness, including separated force-couple arrows. It requires `jsdom` (tested with 26.1.0); if installed outside the repository, set `MIE446_JSDOM_MODULE` to its module path. These component tests do not verify WebGL rendering or visual layout in a real browser.
+
 Start with **Start here · learn**: six guided steps explain the physical parts, load path, bending, torsion, connections and interpretation. **Complete wing**, **Inside wing**, **Ribs only**, and **Rods & sleeves** show the selected project geometry without changing the structural calculation. Ribs R1–R7 in the baseline are physical CAD ribs, not the seven numerical analysis sections. Separate stringers and full-height spar webs are not part of this printed design.
 
 The 2 N / 4 N load exercise and the chordwise force-position exercise connect theory to calculated numbers. Each step teaches the idea before asking a question; **Check my answer** provides feedback. **Edit inputs** opens the original study tree and property controls. All model checks remain educational screens, not physical validation or flight approval.

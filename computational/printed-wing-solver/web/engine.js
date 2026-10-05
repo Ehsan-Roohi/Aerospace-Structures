@@ -98,6 +98,7 @@ const WingEngine = (() => {
     const g = { ...DEFAULT_GEOMETRY, ...opts };
     g.naca = normalizeNaca(g.naca);
     g.rodFractions = [...g.rodFractions];
+    if (g.rodFractions.some(f => !Number.isFinite(f) || f <= 0 || f >= 1)) throw new Error("Rod positions must be fractions between 0 and 1.");
     const pos = ["semiSpan", "rootChord", "tipChord", "skin", "ribThickness", "te", "cap", "rodDiameter", "sleeveWall"];
     for (const k of pos) if (!(g[k] > 0)) throw new Error(`${k} must be positive.`);
     if (g.tipChord > g.rootChord) throw new Error("Tip chord cannot exceed root chord.");
@@ -695,7 +696,7 @@ const WingEngine = (() => {
       }
     }
     for (const [y, F] of o.pointForces || []) fb[wDof[argmin(nodes, y)]] += F;
-    for (const [y, T] of o.pointTorques || []) ft[phL[argmin(nodes, y)]] += T;
+    for (const [y, T] of o.pointTorques || []) ft[(o.pointTorquesOutboard?phR:phL)[argmin(nodes, y)]] += T;
     for (const [y, m] of o.pointMasses || []) { const k = wDof[argmin(nodes, y)]; Mb[k * nb + k] += m * 1e-6; }
     for (const [y, Ip] of o.pointInertias || []) { const k = phL[argmin(nodes, y)]; Mt[k * nt + k] += Ip * 1e-6; }
     const fixB = new Set([wDof[0], thL[0], thR[0]]), fixT = new Set([phL[0], phR[0]]);
@@ -763,10 +764,47 @@ const WingEngine = (() => {
     const rod = { ...MATERIALS.rod_hobby, ...(input.rod || {}) };
     const asm = { ...DEFAULT_ASSEMBLY, ...(input.assembly || {}) };
     const load = { ...DEFAULT_LOAD, ...(input.load || {}) };
+    if (!g.rodFractions.length && !asm.seamsBonded && seams(g).length)
+      throw new Error("Removing every rod from a dry multi-module joint disconnects the wing. Use the one-piece teaching wing or explicitly model bonded seams.");
+    if (!["flight", "tip", "custom"].includes(load.kind)) throw new Error("Choose flight, tip or custom loading.");
+    if (load.kind === "custom") {
+      load.items = validateLoads(load.items, g.semiSpan);
+      const essential=[...new Set([0,g.semiSpan,...seams(g),...ribStations(g),...load.items.flatMap(p=>p.kind==='point'?[p.position]:[p.start,p.end])])].sort((a,b)=>a-b);
+      for(let i=1;i<essential.length;i++) if(essential[i]-essential[i-1]<.1-1e-8) throw new Error("Keep distinct wing load boundaries at least 0.1 mm from each other, ribs, seams and ends, or use exactly the same station. This avoids degenerate beam elements.");
+    }
     const crit = { ...DEFAULT_CRITERIA, ...(input.criteria || {}) };
     const nSections = input.nSections || 7;
     const ySec = linspace(0, 0.95 * g.semiSpan, nSections);
     return { g, pla, rod, asm, load, crit, nSections, ySec };
+  }
+  function validateLoads(items, L) {
+    if (!Array.isArray(items) || items.length > 12) throw new Error("Use a list of at most 12 loads.");
+    return items.map(p => {
+      const r = { ...p, fraction: p.fraction == null ? .3 : p.fraction };
+      if (!Number.isFinite(r.fraction) || r.fraction < 0 || r.fraction > 1) throw new Error("Load chord fraction must be between 0 and 1.");
+      if (r.kind === "point") {
+        if (!Number.isFinite(r.position) || r.position <= 0 || r.position > L || !Number.isFinite(r.force)) throw new Error("Wing point loads need 0 < station ≤ span and a finite force. A force applied exactly at the fixed root acts directly on the support; use the beam lesson for that case.");
+      } else if (r.kind === "distributed") {
+        if (![r.start,r.end,r.qStart,r.qEnd].every(Number.isFinite) || r.start < 0 || r.end > L || r.end <= r.start) throw new Error("Distributed load needs 0 ≤ start < end ≤ span and finite end intensities.");
+      } else throw new Error("Choose point or distributed loading.");
+      return r;
+    });
+  }
+  function customResultants(items, g, y) {
+    let V = 0, M = 0, X = 0;
+    for (const p of items) {
+      if (p.kind === "point") {
+        if (p.position >= y) { V += p.force; M += p.force * (p.position-y); X += p.force * p.fraction * chordAt(g,p.position); }
+      } else {
+        const a = Math.max(y,p.start), b = p.end;
+        if (b <= a) continue;
+        const k = (p.qEnd-p.qStart)/(p.end-p.start), c = p.qStart-k*p.start;
+        const F = c*(b-a)+k*(b*b-a*a)/2, Y = c*(b*b-a*a)/2+k*(b**3-a**3)/3;
+        V += F; M += Y-y*F;
+        X += p.fraction*(g.rootChord*F+(g.tipChord-g.rootChord)/g.semiSpan*Y);
+      }
+    }
+    return { V, M, X };
   }
   // Progressive solving for a responsive interface: analyse station k now, solve() reuses it.
   const stations = (input) => normalize(input).ySec;
@@ -787,7 +825,8 @@ const WingEngine = (() => {
     const ribs = ribStations(g);
     const sections = ySec.map((y) => cachedSection(g, pla, rod, asm, y));
     const col = (k) => sections.map((s) => s[k]);
-    const yset = new Set([...linspace(0, L, nGrid), ...seams(g), ...ribs].map((v) => +v.toFixed(9)));
+    const loadNodes = load.kind === "custom" ? load.items.flatMap(p => p.kind === "point" ? [p.position] : [p.start,p.end]) : [];
+    const yset = new Set([...linspace(0, L, nGrid), ...seams(g), ...ribs, ...loadNodes].map((v) => +v.toFixed(9)));
     const y = Float64Array.from([...yset].sort((a, b) => a - b));
     const lin = (k) => (yy) => interpLin(yy, ySec, col(k));
     const P = {};
@@ -834,6 +873,14 @@ const WingEngine = (() => {
         point.push([L, -gn * capMass[1], lin("ribCgx")(L)]);
         if (load.tipMass) point.push([L, -gn * load.tipMass, load.tipFraction * g.tipChord]);
       }
+    } else if (load.kind === "custom") {
+      for (const p of load.items) {
+        if (p.kind === "point") point.push([p.position,p.force,p.fraction*chordAt(g,p.position)]);
+        else for (let i=0;i<y.length;i++) if (y[i]>=p.start && y[i]<=p.end) {
+          const q=p.qStart+(p.qEnd-p.qStart)*(y[i]-p.start)/(p.end-p.start);
+          w[i]+=q; wx[i]+=q*p.fraction*chordAt(g,y[i]);
+        }
+      }
     } else {
       point.push([L, load.tipForce, load.tipFraction * g.tipChord]);
     }
@@ -842,9 +889,10 @@ const WingEngine = (() => {
     for (const [yp, F, xp] of point)
       for (let i = 0; i < y.length; i++)
         if (y[i] <= yp + 1e-9) { V[i] += F; M[i] += F * (yp - y[i]); Xall[i] += F * xp; }
+    if (load.kind === "custom") y.forEach((v,i) => { const a=customResultants(load.items,g,v); V[i]=a.V; M[i]=a.M; Xall[i]=a.X; });
     const T = y.map((v, i) => P.xsc[i] * V[i] - Xall[i]);
-    const appliedForce = trapz(w, y) + point.reduce((s, p) => s + p[1], 0);
-    const appliedMoment = trapz(w.map((v, i) => v * y[i]), y) + point.reduce((s, p) => s + p[1] * p[0], 0);
+    const appliedForce = load.kind === "custom" ? customResultants(load.items,g,0).V : trapz(w, y) + point.reduce((s, p) => s + p[1], 0);
+    const appliedMoment = load.kind === "custom" ? customResultants(load.items,g,0).M : trapz(w.map((v, i) => v * y[i]), y) + point.reduce((s, p) => s + p[1] * p[0], 0);
 
     // dry-seam springs
     const Irod = (Math.PI * g.rodDiameter ** 4) / 64;
@@ -860,6 +908,13 @@ const WingEngine = (() => {
     const kappa = M.map((v, i) => v / P.EI[i]);
     const slope = cumFromRoot(kappa, y);
     const twist = cumFromRoot(T.map((v, i) => v / P.GJ[i]), y);
+    if(load.kind==='custom') {
+      // Integrate over each load boundary with interior quadrature, not an average
+      // across a point-torque jump. This also handles loads close to the root.
+      const gx=[.0694318442029737,.330009478207572,.669990521792428,.930568155797026],gw=[.173927422568727,.326072577431273,.326072577431273,.173927422568727];
+      twist[0]=0;
+      for(let i=1;i<y.length;i++) { const h=y[i]-y[i-1];let inc=0;for(let k=0;k<4;k++){const q=y[i-1]+h*gx[k],rr=customResultants(load.items,g,q);inc+=gw[k]*(lin('xsc')(q)*rr.V-rr.X)/interpLog(q,ySec,col('GJ'));}twist[i]=twist[i-1]+h*inc; }
+    }
     const seamRot = [];
     for (const s of seamsActive) {
       const Ms = interp(s, y, M), Ts = interp(s, y, T);
@@ -877,11 +932,14 @@ const WingEngine = (() => {
       });
 
     // 1-D FEM: static and modal
-    const nodeSet = new Set([...linspace(0, L, nElem + 1), ...seams(g), ...ribs].map((v) => +v.toFixed(9)));
+    const mandatory=[0,L,...seams(g),...ribs,...loadNodes];
+    const regular=linspace(0,L,nElem+1).filter(v=>load.kind!=='custom'||!mandatory.some(p=>Math.abs(v-p)<.1));
+    const nodeSet = new Set([...regular,...mandatory].map((v) => +v.toFixed(9)));
     const nodes = [...nodeSet].sort((a, b) => a - b);
     const EIf = (q) => interpLog(q, ySec, col("EIf"));
     const GJf = (q) => interpLog(q, ySec, col("GJ"));
-    const mf = (q) => interp(q, y, P.mass), Ipf = (q) => interp(q, y, P.polarInertia), wf = (q) => interp(q, y, w);
+    const mf = (q) => interp(q, y, P.mass), Ipf = (q) => interp(q, y, P.polarInertia);
+    const wf = load.kind === "custom" ? q => load.items.reduce((sum,p) => sum + (p.kind === "distributed" && q>=p.start && q<=p.end ? p.qStart+(p.qEnd-p.qStart)*(q-p.start)/(p.end-p.start) : 0),0) : q => interp(q,y,w);
     const pointTorques = point.map(([yp, F, xp]) => [yp, F * (interp(yp, y, P.xsc) - xp)]);
     const Tpoint = new Float64Array(y.length);
     point.forEach(([yp], k) => { for (let i = 0; i < y.length; i++) if (y[i] <= yp + 1e-9) Tpoint[i] += pointTorques[k][1]; });
@@ -900,6 +958,7 @@ const WingEngine = (() => {
     const fem = beamFEM(nodes, EIf, GJf, mf, Ipf, {
       seams: seamsActive, kBend: kb, kTors: kTorsAt, wLine: wf, tLine: tf,
       pointForces: point.map(([yp, F]) => [yp, F]), pointTorques, pointMasses: lumped, pointInertias: lumpedI,
+      pointTorquesOutboard: load.kind==='custom',
     });
     const unit = beamFEM(nodes, EIf, GJf, mf, Ipf, { seams: seamsActive, kBend: kb, kTors: kTorsAt, pointForces: [[L, 1]], modal: false });
     const rigid = cumFromRoot(cumFromRoot(y.map((v, i) => (L - v) / P.EI[i]), y), y);
@@ -929,7 +988,8 @@ const WingEngine = (() => {
     const sigCr = y.map((_, i) => Math.max(sigFlat[i], sigCyl[i]));
     const rr = rodRadius(g);
     let sigRod;
-    if (asm.rodsBonded) {
+    if (!nr) sigRod = new Float64Array(y.length);
+    else if (asm.rodsBonded) {
       const off = sections.map((s) => Math.max(...rodCentres(g, s.y).map(([, z]) => Math.abs(z - s.zc))));
       sigRod = y.map((v, i) => rod.E * Math.abs(kappa[i]) * (interpLin(v, ySec, off) + rr));
     } else sigRod = y.map((_, i) => rod.E * Math.abs(kappa[i]) * rr);
@@ -947,6 +1007,7 @@ const WingEngine = (() => {
     // checks
     const F = load.fos;
     const checks = [];
+    const ribBearing = [];
     const add = (name, demand, capacity, unit, at, basis, group) => checks.push({ name, demand, capacity, unit, at, basis, group, U: capacity > 0 ? demand / capacity : Infinity });
     const tens = y.map((_, i) => Math.max(sigTop[i], sigBot[i]));
     const comp = y.map((_, i) => Math.max(-sigTop[i], -sigBot[i]));
@@ -967,6 +1028,7 @@ const WingEngine = (() => {
         const leverA = inner - Math.max(...sup.filter((v) => v < inner - 1e-6));
         const leverB = Math.min(...sup.filter((v) => v > outer + 1e-6)) - outer;
         const bearing = (Ms / nr) / Math.min(leverA, leverB) / (g.rodDiameter * g.ribThickness);
+        for (const [station,lever] of [[inner,leverA],[outer,leverB]]) ribBearing.push({station,seam:s,forcePerRod:Ms/nr/lever,stress:Ms/nr/lever/(g.rodDiameter*g.ribThickness)});
         const dowel = ((4 / 3) * (Vs / nr)) / (Math.PI * rr * rr);
         if (!worst || rodSig > worst[1]) worst = [s, rodSig, bearing, dowel];
       }
@@ -974,7 +1036,7 @@ const WingEngine = (() => {
       add("Rod bending at dry seam (rods carry the whole moment)", F * rodSig, Math.min(rod.ft, rod.fc), "MPa", s, "σ = (M/n) r / I_rod", "joint");
       add("Rib-hole bearing at dry seam (screening)", F * bearing, pla.fc, "MPa", s, "rod moment reacted by a force couple between interface rib and next rib", "joint");
       add("Rod dowel shear at dry seam", F * dowel, rod.fs, "MPa", s, "4V/(3 n π r²)", "joint");
-    } else {
+    } else if (nr) {
       const iR = argmaxArr(sigRod);
       add("Rod bending (rods follow the shell curvature)", F * sigRod[iR], Math.min(rod.ft, rod.fc), "MPa", y[iR], "E_rod × curvature × fibre distance", "joint");
     }
@@ -1003,7 +1065,7 @@ const WingEngine = (() => {
       seam: { kBend, freeLength: Lf, freePlay: asm.seamsBonded ? 0 : freePlay },
       ribs, seams: seams(g), mass, stiffness, liftN, appliedForce, appliedMoment,
       stress: { sigTop, sigBot, skinComp, sigCr, sigFlat, sigCyl, sigRod, tau, tauPeak, tauBredt },
-      checks, governing, verification,
+      checks, governing, verification, ribBearing,
     };
   }
 

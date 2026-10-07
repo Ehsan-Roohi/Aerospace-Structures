@@ -8,7 +8,7 @@ Dr. Ehsan Roohi Golkhatmi · Gunness Laboratory, Room 1 · [roohie@umass.edu](ma
 
 **[Launch Wing Lab: beams → printed wing](https://ehsan-roohi.github.io/Aerospace-Structures/wing-lab.html)** — start with cantilever, fixed–fixed and simply supported beams; then compare skin-only, reinforced, ribbed and modular wings. Apply point or distributed loads and explore reactions, stress, deflection and modes. No installation; internet access is required for the wing's 3-D graphics library. [Learning pathway and model limits](computational/printed-wing-solver/README.md#progressive-learning-pathway).
 
-**[Syllabus](SYLLABUS.md)** · **[Download Word syllabus](docs/MIE_446_Aerospace_Structures_Fall_2026_Syllabus_Updated.docx)** · **[Weekly schedule](SYLLABUS.md#7-weekly-schedule--fall-2026)** · **[Lecture notebooks](#lecture-notebooks)** · **[Stipa-Caproni: the Venturi-fuselage aircraft](STIPA_CAPRONI.md)** · **[Gimli Glider case study](GIMLI_GLIDER.md)** · **[Navier–Stokes and AI reading](NAVIER_STOKES_AI.md)** · **[Wing project](PROJECT.md)** · **[Homework 1 PDF](assignments/homework-01/MIE446_HW1_Surface_Pressure.pdf)** · **[Homework 1 Excel data](assignments/homework-01/MIE446_HW1_NACA2412_Data.xlsx)** · **[All homework](ASSIGNMENTS.md)** · **[General OrcaSlicer + USB guide](PRINTING.md)**
+**[Syllabus](SYLLABUS.md)** · **[Download Word syllabus](docs/MIE_446_Aerospace_Structures_Fall_2026_Syllabus_Updated.docx)** · **[Weekly schedule](SYLLABUS.md#7-weekly-schedule--fall-2026)** · **[Lecture notebooks](#lecture-notebooks)** · **[Stipa-Caproni: the Venturi-fuselage aircraft](STIPA_CAPRONI.md)** · **[Boeing 747: uranium, mass balance and flutter](BOEING_747_MASS_BALANCE.md)** · **[Gimli Glider case study](GIMLI_GLIDER.md)** · **[Navier–Stokes and AI reading](NAVIER_STOKES_AI.md)** · **[Wing project](PROJECT.md)** · **[Homework 1 PDF](assignments/homework-01/MIE446_HW1_Surface_Pressure.pdf)** · **[Homework 1 Excel data](assignments/homework-01/MIE446_HW1_NACA2412_Data.xlsx)** · **[All homework](ASSIGNMENTS.md)** · **[General OrcaSlicer + USB guide](PRINTING.md)**
 
 This is the classroom home for released MIE 446 learning materials. Open a lecture below, save your own copy in Google Drive, and work through the predictions, theory and experiments. No prior aerospace course is assumed.
 
@@ -32,6 +32,8 @@ force/moment and modern-control sections.
 Lectures 01 and 02 are released. Later lecture notebooks will appear here when ready; the [syllabus schedule](SYLLABUS.md#7-weekly-schedule--fall-2026) describes the full semester, not a list of already-published notebooks.
 
 ### Engineering case studies
+
+**[Why did early Boeing 747s carry uranium counterweights?](BOEING_747_MASS_BALANCE.md)** distinguishes whole-aircraft CG from local control-surface mass balance, explains compact dense weights and flutter, follows attachment load paths, and compares tungsten substitution with modern aeroelastic validation. Includes three real photographs, three original teaching diagrams, transparent numerical examples, discussion questions and official FAA/NRC/Airbus sources.
 
 **[Stipa-Caproni: when the fuselage becomes a duct](STIPA_CAPRONI.md)** connects the unusual ducted-propeller aircraft to pressure forces, lift, thrust, wooden shell construction, wire-braced wing load paths and structural tradeoffs. Includes original schematics, a historical construction-photo link, archival video and NACA sources, a worked numerical example and an AI-audit discussion.
 

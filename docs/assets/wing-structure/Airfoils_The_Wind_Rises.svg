@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="1040" viewBox="0 0 1400 1040">
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#687887"/></marker></defs>
+<rect width="1400" height="1040" fill="white"/><g font-family="Arial, sans-serif">
+<text x="45" y="55" font-size="34" fill="#19334c" font-weight="bold">THE WIND RISES: identify the label, then verify the geometry</text>
+<text x="45" y="94" font-size="24" fill="#19334c" font-weight="normal">The drawing on Jiro's desk is not an engineering specification for the aircraft.</text>
+<rect x="35" y="122" width="1330" height="330" rx="14" fill="#f5f8fb" stroke="#bfd0dd"/>
+<text x="60" y="163" font-size="27" fill="#19334c" font-weight="bold">A. Film frame 00:34:38 — a qualitative redraw of the visible outline</text>
+<text x="60" y="198" font-size="23" fill="#19334c" font-weight="normal">The handwritten names NACA M-9 and NACA M12 are visible in this frame.</text>
+<path d="M220 343 C239 302 405 262 610 270 C829 277 1069 307 1210 327 C950 333 671 359 435 359 C325 359 249 355 220 343Z" fill="#e0ebf1" stroke="#19334c" stroke-width="3"/>
+<text x="220" y="242" font-size="27" fill="#19334c" font-weight="bold">NACA M-9</text><text x="1020" y="261" font-size="27" fill="#19334c" font-weight="bold">NACA M12</text>
+<text x="60" y="408" font-size="23" fill="#b45c15" font-weight="normal">Illustrative only: perspective, dimensions and exact section geometry are not recovered.</text>
+<text x="60" y="440" font-size="21" fill="#687887" font-weight="normal">Names reproduced as seen in the film; a hybrid section is NOT inferred.</text>
+<rect x="35" y="475" width="1330" height="358" rx="14" fill="white" stroke="#bfd0dd"/>
+<text x="60" y="516" font-size="27" fill="#19334c" font-weight="bold">B. NACA M12 — reconstructed from the UIUC m12.dat coordinate table</text>
+<text x="60" y="551" font-size="23" fill="#19334c" font-weight="normal">Equal horizontal and vertical scales. The shape is not vertically exaggerated.</text>
+<polygon points="210,653 222.5,632.67 235,624.35 260,612.7 285,603.95 310,596.9 360,586.4 410,579.6 510,572.9 610,573.6 710,579.5 810,589.1 910,601.8 1010,616.4 1110,632.3 1160,640.4 1210,649 1210,653 1160,659.2 1110,664.9 1010,674.5 910,681.6 810,686.8 710,690.2 610,691.8 510,692.2 410,690.6 360,688.7 310,685.9 285,683.55 260,680.1 235,674.35 222.5,669.48 210,653" fill="#e0ebf1" stroke="#19334c" stroke-width="3" stroke-linejoin="round"/>
+<path d="M210 653L1210 651" stroke="#687887" stroke-width="1.7" stroke-dasharray="10 7"/>
+<polyline points="210,653 222.5,651.075 235,649.35 260,646.4 285,643.75 310,641.4 360,637.55 410,635.1 510,632.55 610,632.7 710,634.85 810,637.95 910,641.7 1010,645.45 1110,648.6 1160,649.8 1210,651" fill="none" stroke="#b45c15" stroke-width="2.5" stroke-dasharray="6 5"/>
+<path d="M173 632L210 653" fill="none" stroke="#687887" stroke-width="1.7" marker-end="url(#arrow)"/>
+<text x="65" y="617" font-size="22" fill="#19334c" font-weight="normal">Leading edge</text>
+<path d="M1250 618L1210 651" fill="none" stroke="#687887" stroke-width="1.7" marker-end="url(#arrow)"/>
+<text x="1160" y="602" font-size="22" fill="#19334c" font-weight="normal">Trailing edge</text>
+<path d="M210 728H1210" stroke="#687887" stroke-width="1.7" marker-start="url(#arrow)" marker-end="url(#arrow)"/>
+<text x="591" y="760" font-size="24" fill="#19334c" font-weight="normal">Chord length c</text>
+<path d="M230 800H310" stroke="#687887" stroke-width="2" stroke-dasharray="10 7"/><text x="320" y="808" font-size="22" fill="#19334c" font-weight="normal">Chord line</text>
+<path d="M520 800H600" stroke="#b45c15" stroke-width="2.5" stroke-dasharray="6 5"/><text x="610" y="808" font-size="22" fill="#b45c15" font-weight="normal">Mean camber line</text>
+<rect x="35" y="855" width="1330" height="158" rx="14" fill="#fff7ec" stroke="#dab98c"/>
+<text x="60" y="895" font-size="26" fill="#b45c15" font-weight="bold">Why no exact M-9 plot here?</text>
+<text x="60" y="930" font-size="22" fill="#19334c" font-weight="normal">UIUC removed M8 and M9 from its listing on 30 Dec 2016 because their coordinates were wrong.</text>
+<text x="60" y="962" font-size="22" fill="#19334c" font-weight="normal">An exact M-9 reconstruction needs a checked historical source; old DAT copies are not sufficient.</text>
+<text x="60" y="994" font-size="20" fill="#687887" font-weight="normal">Sources: film still via New Savanna; UIUC Airfoil Data Site (m12.dat and ads_history.html).</text>
+</g></svg>

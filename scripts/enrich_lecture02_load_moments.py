@@ -355,7 +355,8 @@ def build_figures():
     from matplotlib.patches import Rectangle
     ASSETS.mkdir(parents=True, exist_ok=True)
     plt.rcParams.update({'font.family': 'DejaVu Sans', 'font.size': 12,
-                         'mathtext.fontset': 'dejavusans', 'svg.fonttype': 'none'})
+                         'mathtext.fontset': 'dejavusans', 'svg.fonttype': 'none',
+                         'svg.hashsalt': 'mie446-load-moments'})
     blue, red = '#245B8A', '#A92333'
     y = np.linspace(0, 4, 1201)
     def beam(ax, centroid=None, strip=False):
@@ -374,7 +375,13 @@ def build_figures():
         ax.text(2,2.08,'One equivalent force',ha='center',weight='bold')
     def save(fig, name):
         for ext in ('png','svg'):
-            fig.savefig(ASSETS/f'{name}.{ext}',dpi=170,facecolor='white')
+            target = ASSETS/f'{name}.{ext}'
+            options = {'metadata': {'Date': None}} if ext == 'svg' else {}
+            fig.savefig(target,dpi=170,facecolor='white',**options)
+            if ext == 'svg':
+                # Mechanical XML whitespace cleanup; no geometry/content change.
+                text = target.read_text(encoding='utf-8')
+                target.write_text('\n'.join(line.rstrip() for line in text.splitlines())+'\n',encoding='utf-8')
         plt.close(fig)
     cases = [
         ('Uniform / rectangular', 'Load_Uniform', np.full_like(y,300), 2., 2400.),

@@ -36,6 +36,8 @@ Lectures 01 and 02 and the independent wing-structure lecture are released. Late
 
 ### Engineering case studies
 
+**[Aircraft windows and the Comet fatigue failures](COMET_WINDOWS_AND_FATIGUE.md)** explains cabin-pressure load paths, rounded corners, fastener-hole crack origins and the two 1954 accidents. Includes two licensed historical images, seven original teaching diagrams, documented 296.5–315.1 MPa local stress estimates, a reproducible analytical stress-map example and modern damage-tolerance lessons.
+
 **[Why did early Boeing 747s carry uranium counterweights?](BOEING_747_MASS_BALANCE.md)** distinguishes whole-aircraft CG from local control-surface mass balance, explains compact dense weights and flutter, follows attachment load paths, and compares tungsten substitution with modern aeroelastic validation. Includes three real photographs, three original teaching diagrams, transparent numerical examples, discussion questions and official FAA/NRC/Airbus sources.
 
 **[Stipa-Caproni: when the fuselage becomes a duct](STIPA_CAPRONI.md)** connects the unusual ducted-propeller aircraft to pressure forces, lift, thrust, wooden shell construction, wire-braced wing load paths and structural tradeoffs. Includes original schematics, a historical construction-photo link, archival video and NACA sources, a worked numerical example and an AI-audit discussion.

@@ -617,6 +617,8 @@ for i,cell in enumerate(cells):
     else:
         assert cell.source.count("$$")%2==0
         assert cell.source.replace("$$","").count("$")%2==0
+from enrich_lecture02_load_moments import enrich_load_moments
+nb = nbf.from_dict(enrich_load_moments(nb))
 nbf.validate(nb)
 out=ROOT/"notebooks"/NAME
 nbf.write(nb,out)

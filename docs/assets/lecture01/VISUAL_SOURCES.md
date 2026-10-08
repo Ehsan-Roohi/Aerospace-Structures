@@ -212,3 +212,37 @@ Run `scripts/fetch_lecture01_b2_photo.py` to rebuild the unchanged photo and
 the existing `l01-controls-x47` cell, and regenerate the local HTML companion.
 The main control-atlas builder also invokes this enrichment. All existing
 code cells, outputs and section numbers outside 7A-12 are preserved.
+
+### Aircraft-specific location references — October 7, 2026
+
+- `Controls_B2_Figure7_Source.png`: cropped Figure 7 with caption from the
+  user-supplied NASA proceedings, PDF p. 83 / printed p. 515. The adjacent
+  paragraph identifies three elevon pairs, a centerline GLAS and upper/lower
+  split drag rudders. The [individual paper record](https://ntrs.nasa.gov/citations/19990052682)
+  states public use permitted. Full PDF remains linked, not uploaded.
+- `Controls_B2_Split_Open.jpg`: unchanged official USAF photograph,
+  SRA Diane S. Robinson, June 11, 1995, DF-ST-96-00221.
+  [Original photograph and public-domain record](https://commons.wikimedia.org/wiki/File:B-2_Spirit_at_Le_Bourget_Airport.JPEG).
+  `Controls_B2_Open_Annotated.png` is a scientific figure composition of a
+  cropped photograph with two leader arrows to the visible upper/lower halves.
+  No panel motion, geometry or force magnitude has been digitally invented.
+  The landing image does not establish the instantaneous yaw command.
+- `Controls_X47B_Moog_Locations.png`: the aircraft/actuator figure excerpt from
+  [Moog, Flight Control Technology, ABIMAQ workshop, May 2012, slide 70](https://cisb.org.br/images/pdf/MarioValdo.pdf#page=71).
+  Original labels and leader lines locate inner/outer elevons and the spoiler.
+  Source copyright retained; limited attributed educational figure excerpt,
+  not the whole slide deck. The location image is a supplier illustration;
+  the separate USAF first-flight image is the real aircraft photograph.
+  Moog's [first-flight release](https://www.moog.com/news/corporate-press-releases/2011/index-1/moog-system-maneuvers-aircraft-primary-flight-surfaces-during-first-flight-of-x-47b-navy-unmanned-combat-air-system.html)
+  independently names aileron, elevon and spoiler surfaces. These sources do
+  not establish a full control-mixing schedule. The course therefore does
+  not equate X-47B hardware with the B-2 split-rudder mechanism.
+
+Hashes, credits and exact URLs: `FINLESS_LOCATION_SOURCES.json`.
+Rebuild the figure excerpts/composition with
+`scripts/build_finless_control_location_figures.py --b2-pdf <local-proceedings.pdf> --moog-pdf <MarioValdo.pdf>`.
+Rebuild only lesson text and its HTML companion with
+`scripts/enrich_lecture01_finless_yaw.py --lesson-only`.
+Moment examples are original elementary force-arm reasoning, not measured
+aircraft loads or operational commands. Surface pressure/shear resultants,
+their reaction paths and lift/drag coupling are distinguished explicitly.

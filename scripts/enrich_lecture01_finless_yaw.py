@@ -11,6 +11,8 @@ NB = ROOT/'notebooks/MIE446_Lecture_01_Trust_Forces_Airfoils.ipynb'
 RAW = 'https://raw.githubusercontent.com/Ehsan-Roohi/Aerospace-Structures/main/docs/assets/lecture01/'
 XREF = 'https://www.scielo.br/j/jatm/a/LRXDrQqY4wyQh4SSGnssPPp/?lang=en'
 BREF = 'https://ntrs.nasa.gov/api/citations/19990052675/downloads/19990052675.pdf#page=83'
+MOOG = 'https://cisb.org.br/images/pdf/MarioValdo.pdf#page=71'
+MOOG_NEWS = 'https://www.moog.com/news/corporate-press-releases/2011/index-1/moog-system-maneuvers-aircraft-primary-flight-surfaces-during-first-flight-of-x-47b-navy-unmanned-combat-air-system.html'
 
 def build_diagram():
     plt.rcParams.update({'font.family':'Times New Roman','font.size':12,'mathtext.fontset':'stix',
@@ -71,6 +73,9 @@ def lesson_html():
 <h4>7A-12a. X-47B: coordinate spoilers and trailing-edge controls</h4>
 {photo('Controls_X47B_Finless.jpg','X-47B taking off; no upright vertical tail is visible','X-47B unmanned demonstrator. U.S. Air Force / Rob Densmore, 4 February 2011. <a style="color:#000" href="https://commons.wikimedia.org/wiki/File:X-47B_110204-F-1162D-119.jpg">Photo and public-domain record</a>.')}
 <p><b>Look first:</b> trace the swept wings and their rear edges. There is no upright fin. This front/underside photograph is useful for the overall layout; upper-wing spoiler deployment and the individual commands are not resolved.</p>
+{photo('Controls_X47B_Moog_Locations.png','Moog aircraft and actuator illustration with original leader lines locating the X-47B inboard elevon, outboard elevon and spoiler','<b>Where are the X-47B surfaces?</b> The actuator supplier\'s aircraft illustration labels the <b>inboard elevon, outboard elevon and spoiler</b>. Original labels/leader lines retained; click to enlarge. Moog, Flight Control Technology, ABIMAQ workshop, May 2012, slide 70 / PDF p. 71. <a style="color:#000" href="'+MOOG+'">Open supplier slide</a>. Source copyright retained; figure excerpt, not a new reconstruction.')}
+<p><b>Read the leader lines, not the actuator pictures:</b> the photographs in the boxes show the mechanisms <i>inside</i> the aircraft; each line points toward its surface on the airframe. This is a <b>wing-control detail</b>: the nose lies outside the crop toward the upper right; the full slide is linked above. The inner and outer elevons lie along the trailing edge. The supplier locates its spoiler in the outer-wing region. This is an aircraft-specific location reference, whereas the section-view sketches below explain how the mechanisms move.</p>
+<p><b>Terminology:</b> <i>elevon</i> combines elevator-like pitch control with aileron-like roll control. Moog's <a style="color:#000" href="{MOOG_NEWS}">first-flight announcement</a> identifies aileron, elevon and spoiler flight surfaces. Its slide uses “outboard elevon.” Do not infer an additional surface from the two naming conventions, or relabel the X-47B spoiler as a B-2 clamshell.</p>
 <p><b>Aircraft-specific evidence:</b> published technical literature describes the X-47 approach as <b>spoilers combined with trailing-edge control surfaces</b>, citing Whittenbury's X-47B design-development paper. This is not simply the B-2's split-rudder arrangement. <a style="color:#000" href="{XREF}">Open research paper, Introduction</a>; design reference: <a style="color:#000" href="https://doi.org/10.2514/6.2011-7041">Whittenbury, AIAA 2011-7041</a>. The public research description establishes the mechanism family, not a complete X-47B command schedule.</p>
 <p><b>Explain the physics step by step:</b></p>
 <ol>
@@ -82,8 +87,12 @@ def lesson_html():
 
 <h4>7A-12b. B-2 Spirit: split drag rudders on a crewed flying wing</h4>
 {photo('Controls_B2_Flying_Wing.jpg','B-2 from above and in front, showing its flying-wing planform and trailing-edge regions','B-2 Spirit: a <b>crewed aircraft, not a UAV</b>. U.S. Air Force / Staff Sgt. Bennie J. Davis III, 30 May 2006. <a style="color:#000" href="https://commons.wikimedia.org/wiki/File:B-2_Spirit_original.jpg">Original photo / public-domain record</a>; image content unchanged.')}
-<p><b>Locate:</b> start at each wingtip and follow the outer trailing edge inward. This is the region of the split drag-rudder assemblies; the elevons occupy more inboard trailing-edge regions. The photograph locates the airframe geometry, but does not show a clearly opened clamshell or establish a yaw command. Use sketch B below to understand the opening motion.</p>
+<p><b>Locate:</b> start at each wingtip and follow the outer trailing edge inward. The split drag rudders occupy the outboard trailing-edge regions. Elevons lie farther inboard, and GLAS is on the centerline aft edge. The overall photograph is not enough to distinguish every panel: use the manufacturer's labeled map next, then the real opened-surface photograph.</p>
 <p><b>Documented hardware:</b> Northrop Grumman engineers identify upper/lower split drag rudders for yaw, elevons for pitch/roll, and a centerline gust-load-alleviation surface. Their flight-control architecture drawing labels the outboard split rudders. <a style="color:#000" href="{BREF}">Dreim, Jacobson and Britt, “Simulation of Non-Linear Transonic Aeroelastic Behavior on the B-2,” 1999, printed p. 515, Fig. 7 (PDF p. 83)</a>.</p>
+{photo('Controls_B2_Figure7_Source.png','Original Northrop Grumman B-2 Figure 7: split drag rudders at the outer trailing edges, inboard middle and outboard elevons, centerline GLAS, flight-control computers and sensors','<b>Source map: B-2 flight-control architecture.</b> Figure 7 from the supplied NASA proceedings, printed p. 515 / PDF p. 83. Original labels retained. <a style="color:#000" href="'+BREF+'">Full source page</a>; <a style="color:#000" href="https://ntrs.nasa.gov/citations/19990052682">paper / authors / public-use record</a>. The scan has limited resolution; the reading guide below spells out the labels.')}
+<p><b>Read the B-2 map from the centerline toward either wingtip:</b> <b>GLAS → inboard elevon → middle elevon → outboard elevon → split drag rudder</b>. There are <b>three elevon pairs</b>, not three surfaces total. Each outboard drag-rudder assembly has upper and lower portions. “Outboard elevon” is therefore <i>not</i> another name for “split drag rudder.”</p>
+<p><b>Separate moving hardware from electronics:</b> ADS = air-data system, AMSS = attitude/motion sensors, FCC = flight-control computer. These sense or command; they are not surfaces exposed to the flow. GLAS = gust-load-alleviation surface: the central moving panel participates in pitch control and load response.</p>
+{photo('Controls_B2_Open_Annotated.png','Real B-2 landing photograph enlarged with arrows pointing to the raised upper and lowered lower halves of an outboard split drag rudder','<b>Real hardware, not a sketch:</b> the two black panels at the outboard trailing edge separate above and below the wing. USAF / SRA Diane S. Robinson, Le Bourget, 11 June 1995, DF-ST-96-00221. <a style="color:#000" href="https://commons.wikimedia.org/wiki/File:B-2_Spirit_at_Le_Bourget_Airport.JPEG">Original photograph / public-domain record</a>. Cropped for clarity; teaching arrows added without altering aircraft geometry. The still image shows opening, not the instantaneous left/right yaw command.')}
 <ol>
 <li><b>Open the two halves:</b> upper and lower portions separate like a clamshell, increasing local drag.</li>
 <li><b>Make drag unequal:</b> more right-side drag produces a nose-right yaw contribution; more left-side drag produces nose-left yaw. “More” can mean unequal openings, not necessarily one fully closed side.</li>
@@ -91,10 +100,23 @@ def lesson_html():
 </ol>
 <p><b>Structural bridge:</b> both halves have pressure loads, hinge reactions and actuator reactions. Follow both load branches into the outer wing and wing box. The flight-control computer coordinates the hardware; it does not itself supply the aerodynamic force.</p>
 
+<h4>Which force changes, and what does the aircraft do?</h4>
+<div style="overflow-x:auto"><table style="border-collapse:collapse;width:100%;min-width:650px;color:#000;font-family:Times New Roman,Times,serif">
+<thead><tr><th style="border:1px solid #000;padding:9px;text-align:left">Physical control / location</th><th style="border:1px solid #000;padding:9px;text-align:left">Motion and aerodynamic change</th><th style="border:1px solid #000;padding:9px;text-align:left">Moment and structural consequence</th></tr></thead>
+<tbody>
+<tr><td style="border:1px solid #000;padding:9px">B-2 split drag rudder<br>Outboard trailing edge</td><td style="border:1px solid #000;padding:9px">Upper/lower halves separate. Local rearward drag increases; lift may also change.</td><td style="border:1px solid #000;padding:9px">Unequal left/right drag gives yaw; equal increments add braking drag. Each half loads its hinges and actuator anchors.</td></tr>
+<tr><td style="border:1px solid #000;padding:9px">Elevons<br>B-2: inner, middle and outer pairs<br>X-47B: supplier-labeled inner/outer panels</td><td style="border:1px solid #000;padding:9px">Panels change the section loading. In the simple attached-flow picture, trailing edge down tends to increase local upward force; up tends to decrease it.</td><td style="border:1px solid #000;padding:9px">Symmetric changes can command pitch; differential changes can command roll. Exact mixing varies. Hinge reactions enter the rear-wing structure and alter wing bending/torsion.</td></tr>
+<tr><td style="border:1px solid #000;padding:9px">X-47B spoiler<br>Outer-wing region in supplier illustration</td><td style="border:1px solid #000;padding:9px">Deploying a spoiler disrupts local flow: drag can increase and lift decrease.</td><td style="border:1px solid #000;padding:9px">Drag asymmetry contributes yaw; vertical-force asymmetry also contributes roll. Coordinated trailing-edge controls manage coupling.</td></tr>
+<tr><td style="border:1px solid #000;padding:9px">B-2 GLAS<br>Centerline trailing edge</td><td style="border:1px solid #000;padding:9px">Central-panel motion changes aft aerodynamic loading.</td><td style="border:1px solid #000;padding:9px">Pitch/load response rather than a wingtip drag-rudder role. In an ideal symmetric centerline model it has no lateral lever arm for direct roll.</td></tr>
+</tbody></table></div>
+<p><b>Two elevon examples — qualitative, not an aircraft command schedule:</b> if aft upward force increases equally on both sides, its aft lever arm gives a nose-down pitch contribution. If the right wing gains upward force while the left loses it, the right wing rises and the left drops: left bank (negative roll about the forward body axis). Changing only one panel usually changes more than one moment.</p>
+<p><b>Connect pressure to structure:</b> the surface force is the resultant of distributed pressure and shear, not a force produced by the actuator alone. Pressure → movable panel → hinge fittings and actuator anchors → supporting ribs/rear spar/skins → wing box → root. Offsets from the wing's structural reference line also introduce torsion. Larger deflection does not mean a known force unless speed, angle of attack and aerodynamic response are specified.</p>
+
 <h4>7A-12c. One moment balance explains both approaches</h4>
 {photo('Controls_Finless_Yaw.png','Three teaching schematics: spoiler and trailing-edge panel, split drag-rudder halves, and top-view right drag with nose-right yaw','Read A and B as local mechanism sketches, then C as the whole-aircraft moment balance. These are teaching schematics, not measured reconstructions of either aircraft.')}
 <p>Reuse the body axes from <b>7A-3b</b>: <i>x</i> forward, <i>y</i> right, <i>z</i> down, moments about the CG. For an isolated rearward force increment, Δ<i>F</i><sub>x</sub> = −Δ<i>D</i>, Δ<i>F</i><sub>y</sub> = 0. Thus:</p>
 <p style="text-align:center;font-size:1.2em">Δ<i>M</i><sub>z</sub> = <i>x</i>Δ<i>F</i><sub>y</sub> − <i>y</i>Δ<i>F</i><sub>x</sub> = <i>y</i>Δ<i>D</i>.</p>
+<p><b>Check pitch and roll with the same force:</b> for an isolated upward increment Δ<i>L</i>, Δ<i>F</i><sub>z</sub> = −Δ<i>L</i>. Its vertical-force contributions are Δ<i>M</i><sub>x</sub> = −<i>y</i>Δ<i>L</i> and Δ<i>M</i><sub>y</sub> = <i>x</i>Δ<i>L</i>. An aft surface has <i>x</i> &lt; 0, so added upward force gives a nose-down contribution. These are force-arm contributions; the complete surface loading can also include aerodynamic couples and other force components.</p>
 <p><b>Two-minute calculation — invented classroom loads, not aircraft measurements:</b> place the right/left drag increments at <i>y</i> = ±4 m. Let Δ<i>D</i><sub>R</sub> = 30 N and Δ<i>D</i><sub>L</sub> = 10 N. Then Δ<i>M</i><sub>z</sub> = 4(30 − 10) = <b>+80 N·m</b>: nose-right tendency. Total added drag is 40 N. With 20 N on each side, the same 40 N braking increment gives <b>zero net yaw increment</b> in this simplified model.</p>
 <p><b>Link back to Lilienthal (7A-3b):</b> an aft vertical rudder can generate yaw through <i>xF</i><sub>y</sub>; an outboard drag device can generate yaw through −<i>yF</i><sub>x</sub>. A tip vane can alter several force components. Name the force and lever arm before naming the control role.</p>
 <p><b>Instructor check:</b> ask students to sketch the two drag arrows, mark the CG, predict the yaw sign, and draw both hinge and actuator load paths. Then ask: “What extra aerodynamic information would you need to predict roll?” Answer: the accompanying vertical-force changes and their lever arms, not only the drag difference. Yaw moment alone also does not specify the aircraft's complete turn trajectory.</p>
@@ -103,11 +125,16 @@ def lesson_html():
 def enrich_finless_yaw(notebook):
     target=next(c for c in notebook['cells'] if c.get('id')=='l01-controls-x47')
     target['source']=(lesson_html()+'\n').splitlines(keepends=True)
-    notebook.setdefault('metadata',{}).setdefault('mie446',{})['finless_yaw_revision']='2026-10-01'
+    notebook.setdefault('metadata',{}).setdefault('mie446',{})['finless_yaw_revision']='2026-10-07'
     return notebook
 
 def main():
-    build_diagram()
+    import argparse
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--lesson-only', action='store_true', help='Preserve existing mechanism schematic assets')
+    args = parser.parse_args()
+    if not args.lesson_only:
+        build_diagram()
     nb=json.loads(NB.read_text(encoding='utf-8'))
     enrich_finless_yaw(nb)
     NB.write_text(json.dumps(nb,ensure_ascii=False,indent=1)+'\n',encoding='utf-8')

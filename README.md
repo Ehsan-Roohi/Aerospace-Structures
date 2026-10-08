@@ -10,6 +10,8 @@ Dr. Ehsan Roohi Golkhatmi · Gunness Laboratory, Room 1 · [roohie@umass.edu](ma
 
 **[Syllabus](SYLLABUS.md)** · **[Download Word syllabus](docs/MIE_446_Aerospace_Structures_Fall_2026_Syllabus_Updated.docx)** · **[Weekly schedule](SYLLABUS.md#7-weekly-schedule--fall-2026)** · **[Lecture notebooks](#lecture-notebooks)** · **[Stipa-Caproni: the Venturi-fuselage aircraft](STIPA_CAPRONI.md)** · **[Boeing 747: uranium, mass balance and flutter](BOEING_747_MASS_BALANCE.md)** · **[Gimli Glider case study](GIMLI_GLIDER.md)** · **[Navier–Stokes and AI reading](NAVIER_STOKES_AI.md)** · **[Wing project](PROJECT.md)** · **[Homework 1 PDF](assignments/homework-01/MIE446_HW1_Surface_Pressure.pdf)** · **[Homework 1 Excel data](assignments/homework-01/MIE446_HW1_NACA2412_Data.xlsx)** · **[All homework](ASSIGNMENTS.md)** · **[General OrcaSlicer + USB guide](PRINTING.md)**
 
+**Homework 1 solutions are available:** [download the solution (Word)](https://raw.githubusercontent.com/Ehsan-Roohi/Aerospace-Structures/main/assignments/homework-01/solutions/MIE446_HW1_solution.docx) · [download the solution workbook (Excel)](https://raw.githubusercontent.com/Ehsan-Roohi/Aerospace-Structures/main/assignments/homework-01/solutions/MIE446_HW1_NACA2412_Data.xlsx) · [solution overview](assignments/homework-01/README.md#released-solutions).
+
 This is the classroom home for released MIE 446 learning materials. Open a lecture below, save your own copy in Google Drive, and work through the predictions, theory and experiments. No prior aerospace course is assumed.
 
 **Homework 2 is available:** [step-by-step guide (PDF)](assignments/homework-02/MIE446_HW2_Control_Forces_Moments.pdf)
@@ -105,7 +107,7 @@ AI use is **permitted with disclosure and verification**, except during the midt
 
 ## What stays in Canvas
 
-Use GitHub for classroom navigation, the web syllabus, released notebooks, project code and public checklists. Use Canvas for announcements, authoritative deadline changes, assignment question sheets until released here, submissions, grades, office-hour updates, oral-check rotations, printer reservations and private access information. No student submissions, answer keys or room access codes are published here.
+Use GitHub for classroom navigation, the web syllabus, released notebooks, project code, public checklists and instructor-released solutions. Use Canvas for announcements, authoritative deadline changes, assignment question sheets and answer keys until released here by the instructor, submissions, grades, office-hour updates, oral-check rotations, printer reservations and private access information. No student submissions or room access codes are published here.
 
 ## Code and maintenance
 

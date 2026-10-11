@@ -1,4 +1,7 @@
-"""Assemble the Wing Lab page: inline the verified engine into the HTML template.
+"""Assemble the Wing Lab page: inline the verified engines into the HTML template.
+
+The printed-wing engine (engine.js) and the full-scale metal-wing engine (metal_wing_engine.js, with the
+D.520 shell-model reference numbers and its workspace metal_wing_ui.js) are inlined so the page is one file.
 
     python computational/printed-wing-solver/web/build_wing_lab.py
 
@@ -6,6 +9,7 @@ Writes dist/wing-lab.html (page body for publishing as an artifact) and
 docs/wing-lab.html in the repository (a complete standalone HTML document).
 """
 
+import json
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -14,9 +18,14 @@ template = (HERE / "wing_lab_template.html").read_text(encoding="utf-8")
 engine = (HERE / "engine.js").read_text(encoding="utf-8")
 assert "/*__ENGINE__*/" in template
 page = template.replace("/*__ENGINE__*/", engine)
-for token, filename in [("/*__BEAM_ENGINE__*/", "beam_learning_engine.js"), ("/*__FOUNDATIONS__*/", "foundations_ui.js"), ("/*__TEACHING_MODELS__*/", "teaching_models.js"), ("/*__TEACHING_PANELS__*/", "teaching_panels.js")]:
+for token, filename in [("/*__BEAM_ENGINE__*/", "beam_learning_engine.js"), ("/*__FOUNDATIONS__*/", "foundations_ui.js"), ("/*__TEACHING_MODELS__*/", "teaching_models.js"), ("/*__TEACHING_PANELS__*/", "teaching_panels.js"),
+                        ("/*__METAL_ENGINE__*/", "metal_wing_engine.js"), ("/*__METAL_REFERENCE__*/", "metal_wing_reference.json"), ("/*__METAL_UI__*/", "metal_wing_ui.js")]:
     assert token in page
-    page = page.replace(token, (HERE / filename).read_text(encoding="utf-8"))
+    text = (HERE / filename).read_text(encoding="utf-8")
+    if filename.endswith(".json"):
+        json.loads(text)                     # inlined verbatim, but it must be valid JSON
+        text = text.strip()
+    page = page.replace(token, text)
 dist = HERE / "dist"
 dist.mkdir(exist_ok=True)
 (dist / "wing-lab.html").write_text(page, encoding="utf-8", newline="\n")

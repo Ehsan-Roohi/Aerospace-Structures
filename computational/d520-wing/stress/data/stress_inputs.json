@@ -1,0 +1,342 @@
+{
+ "mass_gross": {
+  "value": 2677.0,
+  "unit": "kg",
+  "status": "EXTERNAL",
+  "source": "Wikipedia 'Dewoitine D.520' specifications (gross weight)",
+  "note": "Manual p13 leaves 'L'avion etant au poids de' blank. Alternatives: 2785 kg max take-off (Wikipedia), 2800 kg (warbirdsresourcegroup)."
+ },
+ "g": {
+  "value": 9.80665,
+  "unit": "m/s2",
+  "status": "PRINTED",
+  "source": "standard gravity",
+  "note": ""
+ },
+ "n_limit_pos": {
+  "value": 6.0,
+  "unit": "-",
+  "status": "GUESS",
+  "source": "CS-23 aerobatic category limit load factor (+6.0 g)",
+  "note": "The manual gives no load factor and none was found for the D.520. Results are also given per g and as the load factor at which each failure mode is reached, so any other requirement can be applied."
+ },
+ "n_limit_neg": {
+  "value": -3.0,
+  "unit": "-",
+  "status": "GUESS",
+  "source": "CS-23 aerobatic category negative limit load factor (-0.5 x positive)",
+  "note": ""
+ },
+ "safety_factor": {
+  "value": 1.5,
+  "unit": "-",
+  "status": "EXTERNAL",
+  "source": "ultimate = 1.5 x limit (CS-23.303 / period practice)",
+  "note": ""
+ },
+ "CL_design": {
+  "value": 1.4,
+  "unit": "-",
+  "status": "GUESS",
+  "source": "clean CL at the manoeuvre point (only shapes the small 'basic' part of the span loading)",
+  "note": ""
+ },
+ "a0_section": {
+  "value": 5.654866776461628,
+  "unit": "1/rad",
+  "status": "GUESS",
+  "source": "section lift slope 0.9 x 2 pi (thick sections)",
+  "note": ""
+ },
+ "alpha0_tip": {
+  "value": -1.2,
+  "unit": "deg",
+  "status": "EXTERNAL",
+  "source": "NACA 230-series zero-lift angle (Abbott & von Doenhoff, 23012: -1.2 deg)",
+  "note": "Root section is symmetric (Pl.1 rib table); camber blended from rib 21 to the tip as in the 3-D model (GUESS blend)."
+ },
+ "rib_stations_y": {
+  "value": [
+   0.51,
+   0.7,
+   0.86,
+   1.01,
+   1.17,
+   1.33,
+   1.5,
+   1.66,
+   1.88,
+   2.07,
+   2.31,
+   2.54,
+   2.78,
+   3.01,
+   3.25,
+   3.49,
+   3.72,
+   3.96,
+   4.2,
+   4.44,
+   4.68,
+   4.93
+  ],
+  "unit": "m",
+  "status": "SCALED",
+  "source": "Pl.1 front elevation (PDF p68): ribs numbered 22 (root) to 1 (tip), 396 px/m",
+  "note": "Rib 22 = 0.51 m, rib 16 = 1.50 m (dihedral break), rib 13 = 2.07 m, rib 1 = 4.93 m."
+ },
+ "spar_x_c": {
+  "value": 0.37,
+  "unit": "chord",
+  "status": "SCALED",
+  "source": "Pl.1 root section (0.371c), Pl.6 rib 13 (0.35-0.40c), Pl.1 plan (0.35-0.385c)",
+  "note": "Single I-section main spar (PRINTED p13: 'a) un longeron unique')."
+ },
+ "false_spar_x_c": {
+  "value": 0.73,
+  "unit": "chord",
+  "status": "SCALED",
+  "source": "Pl.6 rib 13 (0.73c); Pl.1 root section (0.705c); 1 - flap chord fraction 0.25 (p14)",
+  "note": ""
+ },
+ "flange_root_width": {
+  "value": 0.11,
+  "unit": "m",
+  "status": "SCALED",
+  "source": "Pl.1 root section, hatched spar boom: ~40 px along the chord at 352 px/m (low confidence)",
+  "note": ""
+ },
+ "flange_root_thickness": {
+  "value": 0.03,
+  "unit": "m",
+  "status": "SCALED",
+  "source": "Pl.1 root section, hatched spar boom: ~11 px normal to the skin (low confidence, +/-30%)",
+  "note": ""
+ },
+ "flange_taper": {
+  "value": "A(y) proportional to M(y)/h(y)",
+  "unit": "-",
+  "status": "GUESS",
+  "source": "Manual p13: 'Les semelles vont en diminuant d'epaisseur et de largeur le long de l'envergure' (PRINTED, qualitative). Width taken proportional to chord, thickness = area / width.",
+  "note": ""
+ },
+ "tank_y": {
+  "value": [
+   2.07,
+   3.49
+  ],
+  "unit": "m",
+  "status": "DERIVED",
+  "source": "Pl.5 'Jonction 13' (tank ends at rib 13) + capacity 122 l fits the D-nose from rib 13 to rib 7",
+  "note": "Outboard end is an inference from volume."
+ },
+ "tank_volume": {
+  "value": 122.0,
+  "unit": "l",
+  "status": "PRINTED",
+  "source": "p.11 bis (handwritten): 'Capacite du reservoir gauche 122, droit 122'",
+  "note": ""
+ },
+ "fuel_density": {
+  "value": 0.72,
+  "unit": "kg/l",
+  "status": "EXTERNAL",
+  "source": "aviation gasoline, typical 0.72 kg/l",
+  "note": ""
+ },
+ "guns_y": {
+  "value": [
+   1.79,
+   1.955
+  ],
+  "unit": "m",
+  "status": "DERIVED",
+  "source": "Pl.50 bis (PDF p145/148) gun positions, as in the 3-D model",
+  "note": ""
+ },
+ "gun_mass": {
+  "value": 10.7,
+  "unit": "kg",
+  "status": "EXTERNAL",
+  "source": "Wikipedia 'MAC 1934' (10.7 kg)",
+  "note": ""
+ },
+ "rounds_per_gun": {
+  "value": 650,
+  "unit": "-",
+  "status": "PRINTED",
+  "source": "p38: '650 cartouches par arme'; p41: 'chargeurs ... 650 cartouches'",
+  "note": ""
+ },
+ "round_mass": {
+  "value": 0.025,
+  "unit": "kg",
+  "status": "GUESS",
+  "source": "7.5x54 MAS round ~23 g (9.0 g bullet, Wikipedia) plus belt link",
+  "note": ""
+ },
+ "wheel_well": {
+  "value": {
+   "y_c": 0.3,
+   "x_c": 0.17,
+   "r": 0.37
+  },
+  "unit": "m / chord",
+  "status": "SCALED",
+  "source": "Pl.1 plan 'Passage de la roue' circle: centre y 0.30 m (= retracted wheel of the 3-D model), 0.17c behind LE, radius 0.37 m",
+  "note": ""
+ },
+ "fitting_y": {
+  "value": 0.46,
+  "unit": "m",
+  "status": "DERIVED",
+  "source": "fuselage side at the wing upper surface (Pl.0 fuselage width law), where the D fittings of Pl.14 join spar and frame",
+  "note": "Manual p14: 3 attachments of the spar upper part to frame I, 2 of the false spar to frame III; all fittings high-tensile steel."
+ },
+ "E": {
+  "value": 72000000000.0,
+  "unit": "Pa",
+  "status": "EXTERNAL",
+  "source": "2017-T4 (AU4G duralumin), matmatch AA data: 72-73 GPa",
+  "note": "Manual p13: all wing parts duralumin except the fishplates (PRINTED)."
+ },
+ "nu": {
+  "value": 0.33,
+  "unit": "-",
+  "status": "EXTERNAL",
+  "source": "2017-T4, typical wrought 2000-series",
+  "note": ""
+ },
+ "rho": {
+  "value": 2790.0,
+  "unit": "kg/m3",
+  "status": "EXTERNAL",
+  "source": "2017-T4, 2.79 g/cm3",
+  "note": ""
+ },
+ "Fty": {
+  "value": 220000000.0,
+  "unit": "Pa",
+  "status": "EXTERNAL",
+  "source": "2017-T4 0.2% proof, minimum of quoted 220-275 MPa",
+  "note": ""
+ },
+ "Ftu": {
+  "value": 380000000.0,
+  "unit": "Pa",
+  "status": "EXTERNAL",
+  "source": "2017-T4 tensile strength, minimum of quoted 380-425 MPa",
+  "note": ""
+ },
+ "Fsu": {
+  "value": 262000000.0,
+  "unit": "Pa",
+  "status": "EXTERNAL",
+  "source": "2017-T4 shear strength 262 MPa",
+  "note": ""
+ },
+ "zones": {
+  "value": [
+   [
+    0.0,
+    0.7
+   ],
+   [
+    0.7,
+    1.5
+   ],
+   [
+    1.5,
+    2.31
+   ],
+   [
+    2.31,
+    3.25
+   ],
+   [
+    3.25,
+    4.2
+   ],
+   [
+    4.2,
+    4.93
+   ]
+  ],
+  "unit": "m",
+  "status": "DERIVED",
+  "source": "6 spanwise gauge zones bounded by ribs 21, 16, 12, 8, 4 (sheet gauges step at ribs)",
+  "note": ""
+ },
+ "t_skin": {
+  "value": [
+   0.0016,
+   0.0016,
+   0.0012,
+   0.001,
+   0.0008,
+   0.0008
+  ],
+  "unit": "m",
+  "status": "GUESS",
+  "source": "smooth stressed skin ('revetement en tole lisse', p13); gauges typical of 1938-40 fighters",
+  "note": ""
+ },
+ "t_spar_web": {
+  "value": [
+   0.003,
+   0.0025,
+   0.002,
+   0.0016,
+   0.0012,
+   0.001
+  ],
+  "unit": "m",
+  "status": "GUESS",
+  "source": "'ame en tole forte' (thick sheet web, p13)",
+  "note": ""
+ },
+ "t_false_spar": {
+  "value": [
+   0.0012,
+   0.0012,
+   0.001,
+   0.001,
+   0.0008,
+   0.0008
+  ],
+  "unit": "m",
+  "status": "GUESS",
+  "source": "channel false spar (p13)",
+  "note": ""
+ },
+ "t_rib": {
+  "value": 0.001,
+  "unit": "m",
+  "status": "GUESS",
+  "source": "pressed-sheet ribs with lightening holes (Pl.6)",
+  "note": ""
+ },
+ "stringer": {
+  "value": {
+   "x_c": [
+    0.46,
+    0.53,
+    0.6,
+    0.67
+   ],
+   "h": 0.02,
+   "t": [
+    0.0012,
+    0.0012,
+    0.0012,
+    0.001,
+    0.001,
+    0.001
+   ]
+  },
+  "unit": "chord / m",
+  "status": "GUESS",
+  "source": "spanwise rivet rows on the skin of Pl.2 indicate stringers; 4 blade stringers per surface between the spars",
+  "note": ""
+ }
+}

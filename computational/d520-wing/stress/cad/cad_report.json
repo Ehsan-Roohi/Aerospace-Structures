@@ -1,0 +1,637 @@
+{
+ "Fuselage": {
+  "valid": true,
+  "faults": [],
+  "volume_m3": 5.812658103825234,
+  "area_m2": 24.559542135320697,
+  "n_solids": 1,
+  "bbox_m": [
+   0.55,
+   8.1,
+   -0.4711,
+   0.4711,
+   -0.8445,
+   0.7999
+  ]
+ },
+ "Flap_R": {
+  "valid": true,
+  "faults": [],
+  "volume_m3": 0.08549480848695847,
+  "area_m2": 2.6041600047327145,
+  "n_solids": 1,
+  "bbox_m": [
+   3.4783,
+   4.1865,
+   0.595,
+   2.945,
+   -0.7602,
+   -0.4033
+  ]
+ },
+ "Aileron_R": {
+  "valid": true,
+  "faults": [],
+  "volume_m3": 0.0212406013965922,
+  "area_m2": 1.1709283894683022,
+  "n_solids": 1,
+  "bbox_m": [
+   3.3509,
+   3.8313,
+   3.0175,
+   4.6625,
+   -0.4995,
+   -0.2565
+  ]
+ },
+ "Flap_L": {
+  "valid": true,
+  "faults": [],
+  "volume_m3": 0.08529109185797445,
+  "area_m2": 2.6024966736824697,
+  "n_solids": 1,
+  "bbox_m": [
+   3.4783,
+   4.1865,
+   -2.945,
+   -0.595,
+   -0.7602,
+   -0.4033
+  ]
+ },
+ "Aileron_L": {
+  "valid": true,
+  "faults": [],
+  "volume_m3": 0.021231254616586842,
+  "area_m2": 1.1712678427909395,
+  "n_solids": 1,
+  "bbox_m": [
+   3.3509,
+   3.8313,
+   -4.6625,
+   -3.0175,
+   -0.4995,
+   -0.2565
+  ]
+ },
+ "Wing": {
+  "valid": true,
+  "faults": [],
+  "volume_m3": 2.7066517181127057,
+  "area_m2": 27.85595649599979,
+  "n_solids": 1,
+  "bbox_m": [
+   1.9141,
+   4.2738,
+   -5.097,
+   5.097,
+   -0.8418,
+   -0.1884
+  ]
+ },
+ "Elevator_R": {
+  "valid": true,
+  "faults": [],
+  "volume_m3": 0.020777771476471498,
+  "area_m2": 1.0920710358699846,
+  "n_solids": 1,
+  "bbox_m": [
+   7.9,
+   8.3075,
+   0.3,
+   1.7612,
+   0.3285,
+   0.4235
+  ]
+ },
+ "Elevator_L": {
+  "valid": true,
+  "faults": [],
+  "volume_m3": 0.020797199440185616,
+  "area_m2": 1.0941631291889595,
+  "n_solids": 1,
+  "bbox_m": [
+   7.9,
+   8.3075,
+   -1.7612,
+   -0.3,
+   0.3285,
+   0.4235
+  ]
+ },
+ "Tailplane": {
+  "valid": true,
+  "faults": [],
+  "volume_m3": 0.1762169364495843,
+  "area_m2": 4.480058858364984,
+  "n_solids": 1,
+  "bbox_m": [
+   7.1535,
+   8.3075,
+   -1.7612,
+   1.7612,
+   0.3099,
+   0.4421
+  ]
+ },
+ "Rudder": {
+  "valid": true,
+  "faults": [],
+  "volume_m3": 0.06556689061381828,
+  "area_m2": 2.116397227202038,
+  "n_solids": 1,
+  "bbox_m": [
+   7.9997,
+   8.7829,
+   -0.087,
+   0.087,
+   -0.2182,
+   1.5877
+  ]
+ },
+ "Fin": {
+  "valid": true,
+  "faults": [],
+  "volume_m3": 0.7112570871450383,
+  "area_m2": 7.431932388234935,
+  "n_solids": 1,
+  "bbox_m": [
+   4.4433,
+   8.1,
+   -0.2219,
+   0.2219,
+   -0.2442,
+   1.5877
+  ]
+ },
+ "Spinner": {
+  "valid": true,
+  "faults": [],
+  "volume_m3": 0.06947658334243524,
+  "area_m2": 0.9293223813724795,
+  "n_solids": 1,
+  "bbox_m": [
+   -0.0,
+   0.55,
+   -0.275,
+   0.275,
+   -0.275,
+   0.275
+  ]
+ },
+ "Radiator": {
+  "valid": true,
+  "faults": [],
+  "volume_m3": 0.23797242095299573,
+  "area_m2": 2.733745690564768,
+  "n_solids": 1,
+  "bbox_m": [
+   2.78,
+   4.08,
+   -0.4294,
+   0.4305,
+   -1.1066,
+   -0.78
+  ]
+ },
+ "_checks": {
+  "wing_surface_deviation": {
+   "max_mm": 3.3313813362358777,
+   "rms_mm": 0.30609037542747325,
+   "n": 570
+  },
+  "wing_volume_integrated_m3": 2.8865786137162495,
+  "wing_volume_cad_m3": 2.91764839769046,
+  "fuselage_surface_deviation": {
+   "max_mm": 2.043058022512622,
+   "rms_mm": 0.3235519486291429,
+   "n": 779
+  },
+  "fuselage_volume_integrated_m3": 5.80955304883863,
+  "fuselage_volume_cad_m3": 5.812658103825234,
+  "tailplane_surface_deviation": {
+   "max_mm": 7.806233072360399,
+   "rms_mm": 1.2714966838519755,
+   "n": 174
+  },
+  "wing_span_m": 10.194000000200004,
+  "tailplane_span_m": 3.5223000002000036,
+  "overall_length_m": 8.887674310798205,
+  "overall_span_m": 10.26114474050393,
+  "printed": {
+   "span": 10.2,
+   "length": 8.76,
+   "tailplane_span": 3.54
+  }
+ },
+ "structure:Skin_upper_LE_Z0_t1.6mm": {
+  "area_m2": 0.6327444500912522,
+  "valid": true,
+  "n_faces": 2
+ },
+ "structure:Skin_upper_box_Z0_t1.6mm": {
+  "area_m2": 0.5722774646017353,
+  "valid": true,
+  "n_faces": 2
+ },
+ "structure:Skin_lower_LE_Z0_t1.6mm": {
+  "area_m2": 0.21145767973827626,
+  "valid": true,
+  "n_faces": 2
+ },
+ "structure:Skin_lower_box_Z0_t1.6mm": {
+  "area_m2": 0.5701542578041131,
+  "valid": true,
+  "n_faces": 2
+ },
+ "structure:SparWeb_Z0_t3.0mm": {
+  "area_m2": 0.2817483889096572,
+  "valid": true,
+  "n_faces": 2
+ },
+ "structure:FalseSpar_Z0_t1.2mm": {
+  "area_m2": 0.15922081995271115,
+  "valid": true,
+  "n_faces": 2
+ },
+ "structure:Boom_upper_Z0_t30.0mm": {
+  "area_m2": 0.07349175627796371,
+  "valid": true,
+  "n_faces": 2
+ },
+ "structure:Boom_lower_Z0_t30.0mm": {
+  "area_m2": 0.073491772922186,
+  "valid": true,
+  "n_faces": 2
+ },
+ "structure:Stringer_upper_Z0_t1.2mm": {
+  "area_m2": 0.05602091843969155,
+  "valid": true,
+  "n_faces": 8
+ },
+ "structure:Stringer_lower_Z0_t1.2mm": {
+  "area_m2": 0.05602091843969156,
+  "valid": true,
+  "n_faces": 8
+ },
+ "structure:Skin_upper_LE_Z1_t1.6mm": {
+  "area_m2": 0.6453638739356794,
+  "valid": true,
+  "n_faces": 1
+ },
+ "structure:Skin_upper_box_Z1_t1.6mm": {
+  "area_m2": 0.5867751330728491,
+  "valid": true,
+  "n_faces": 1
+ },
+ "structure:Skin_lower_LE_Z1_t1.6mm": {
+  "area_m2": 0.6536171341479391,
+  "valid": true,
+  "n_faces": 1
+ },
+ "structure:Skin_lower_box_Z1_t1.6mm": {
+  "area_m2": 0.5898513054637957,
+  "valid": true,
+  "n_faces": 1
+ },
+ "structure:SparWeb_Z1_t2.5mm": {
+  "area_m2": 0.2706082188256624,
+  "valid": true,
+  "n_faces": 1
+ },
+ "structure:FalseSpar_Z1_t1.2mm": {
+  "area_m2": 0.15292526192304728,
+  "valid": true,
+  "n_faces": 1
+ },
+ "structure:Boom_upper_Z1_t29.1mm": {
+  "area_m2": 0.07539801604734393,
+  "valid": true,
+  "n_faces": 1
+ },
+ "structure:Boom_lower_Z1_t29.1mm": {
+  "area_m2": 0.07622516612751741,
+  "valid": true,
+  "n_faces": 1
+ },
+ "structure:Stringer_upper_Z1_t1.2mm": {
+  "area_m2": 0.06402390705192353,
+  "valid": true,
+  "n_faces": 4
+ },
+ "structure:Stringer_lower_Z1_t1.2mm": {
+  "area_m2": 0.06402391911936695,
+  "valid": true,
+  "n_faces": 4
+ },
+ "structure:Skin_upper_LE_Z2_t1.2mm": {
+  "area_m2": 0.567782396340345,
+  "valid": true,
+  "n_faces": 1
+ },
+ "structure:Skin_upper_box_Z2_t1.2mm": {
+  "area_m2": 0.5220978194432201,
+  "valid": true,
+  "n_faces": 1
+ },
+ "structure:Skin_lower_LE_Z2_t1.2mm": {
+  "area_m2": 0.5684137157925859,
+  "valid": true,
+  "n_faces": 1
+ },
+ "structure:Skin_lower_box_Z2_t1.2mm": {
+  "area_m2": 0.5228440077745512,
+  "valid": true,
+  "n_faces": 1
+ },
+ "structure:SparWeb_Z2_t2.0mm": {
+  "area_m2": 0.20578621588783955,
+  "valid": true,
+  "n_faces": 1
+ },
+ "structure:FalseSpar_Z2_t1.0mm": {
+  "area_m2": 0.11629329899332665,
+  "valid": true,
+  "n_faces": 1
+ },
+ "structure:Boom_upper_Z2_t29.0mm": {
+  "area_m2": 0.06717417559985868,
+  "valid": true,
+  "n_faces": 1
+ },
+ "structure:Boom_lower_Z2_t29.0mm": {
+  "area_m2": 0.06759195767324301,
+  "valid": true,
+  "n_faces": 1
+ },
+ "structure:Stringer_upper_Z2_t1.2mm": {
+  "area_m2": 0.06482420586850937,
+  "valid": true,
+  "n_faces": 4
+ },
+ "structure:Stringer_lower_Z2_t1.2mm": {
+  "area_m2": 0.06482421014443797,
+  "valid": true,
+  "n_faces": 4
+ },
+ "structure:Skin_upper_LE_Z3_t1.0mm": {
+  "area_m2": 0.5593252239771376,
+  "valid": true,
+  "n_faces": 1
+ },
+ "structure:Skin_upper_box_Z3_t1.0mm": {
+  "area_m2": 0.5141478430312738,
+  "valid": true,
+  "n_faces": 1
+ },
+ "structure:Skin_lower_LE_Z3_t1.0mm": {
+  "area_m2": 0.5547346333642146,
+  "valid": true,
+  "n_faces": 1
+ },
+ "structure:Skin_lower_box_Z3_t1.0mm": {
+  "area_m2": 0.5143999820034604,
+  "valid": true,
+  "n_faces": 1
+ },
+ "structure:SparWeb_Z3_t1.6mm": {
+  "area_m2": 0.1927570936139187,
+  "valid": true,
+  "n_faces": 1
+ },
+ "structure:FalseSpar_Z3_t1.0mm": {
+  "area_m2": 0.10893032117483625,
+  "valid": true,
+  "n_faces": 1
+ },
+ "structure:Boom_upper_Z3_t22.1mm": {
+  "area_m2": 0.0661480250270258,
+  "valid": true,
+  "n_faces": 1
+ },
+ "structure:Boom_lower_Z3_t22.1mm": {
+  "area_m2": 0.06653117524438937,
+  "valid": true,
+  "n_faces": 1
+ },
+ "structure:Stringer_upper_Z3_t1.0mm": {
+  "area_m2": 0.07522809045903343,
+  "valid": true,
+  "n_faces": 4
+ },
+ "structure:Stringer_lower_Z3_t1.0mm": {
+  "area_m2": 0.07522808965372003,
+  "valid": true,
+  "n_faces": 4
+ },
+ "structure:Skin_upper_LE_Z4_t0.8mm": {
+  "area_m2": 0.45471885884007057,
+  "valid": true,
+  "n_faces": 1
+ },
+ "structure:Skin_upper_box_Z4_t0.8mm": {
+  "area_m2": 0.4192934656665049,
+  "valid": true,
+  "n_faces": 1
+ },
+ "structure:Skin_lower_LE_Z4_t0.8mm": {
+  "area_m2": 0.44713424020681614,
+  "valid": true,
+  "n_faces": 1
+ },
+ "structure:Skin_lower_box_Z4_t0.8mm": {
+  "area_m2": 0.4193022670922443,
+  "valid": true,
+  "n_faces": 1
+ },
+ "structure:SparWeb_Z4_t1.2mm": {
+  "area_m2": 0.14143738795921343,
+  "valid": true,
+  "n_faces": 1
+ },
+ "structure:FalseSpar_Z4_t0.8mm": {
+  "area_m2": 0.0799286805056187,
+  "valid": true,
+  "n_faces": 1
+ },
+ "structure:Boom_upper_Z4_t13.4mm": {
+  "area_m2": 0.05396346743950844,
+  "valid": true,
+  "n_faces": 1
+ },
+ "structure:Boom_lower_Z4_t13.4mm": {
+  "area_m2": 0.054266403544106445,
+  "valid": true,
+  "n_faces": 1
+ },
+ "structure:Stringer_upper_Z4_t1.0mm": {
+  "area_m2": 0.07602838916074395,
+  "valid": true,
+  "n_faces": 4
+ },
+ "structure:Stringer_lower_Z4_t1.0mm": {
+  "area_m2": 0.07602838708143474,
+  "valid": true,
+  "n_faces": 4
+ },
+ "structure:Skin_upper_LE_Z5_t0.8mm": {
+  "area_m2": 0.2719566467209836,
+  "valid": true,
+  "n_faces": 1
+ },
+ "structure:Skin_upper_box_Z5_t0.8mm": {
+  "area_m2": 0.2527244061502898,
+  "valid": true,
+  "n_faces": 1
+ },
+ "structure:Skin_lower_LE_Z5_t0.8mm": {
+  "area_m2": 0.2670542837936904,
+  "valid": true,
+  "n_faces": 1
+ },
+ "structure:Skin_lower_box_Z5_t0.8mm": {
+  "area_m2": 0.25367146946935215,
+  "valid": true,
+  "n_faces": 1
+ },
+ "structure:SparWeb_Z5_t1.0mm": {
+  "area_m2": 0.07049079886173433,
+  "valid": true,
+  "n_faces": 1
+ },
+ "structure:FalseSpar_Z5_t0.8mm": {
+  "area_m2": 0.04024274298670202,
+  "valid": true,
+  "n_faces": 1
+ },
+ "structure:Boom_upper_Z5_t4.5mm": {
+  "area_m2": 0.03255273337222691,
+  "valid": true,
+  "n_faces": 1
+ },
+ "structure:Boom_lower_Z5_t4.5mm": {
+  "area_m2": 0.032851793986908594,
+  "valid": true,
+  "n_faces": 1
+ },
+ "structure:Stringer_upper_Z5_t1.0mm": {
+  "area_m2": 0.05664698640025699,
+  "valid": true,
+  "n_faces": 4
+ },
+ "structure:Stringer_lower_Z5_t1.0mm": {
+  "area_m2": 0.05664685083056362,
+  "valid": true,
+  "n_faces": 4
+ },
+ "structure:Rib22_t1.0mm": {
+  "area_m2": 0.2613138387305637,
+  "valid": true,
+  "n_faces": 1
+ },
+ "structure:Rib21_t2.0mm": {
+  "area_m2": 0.5278365576041025,
+  "valid": true,
+  "n_faces": 1
+ },
+ "structure:Rib20_t1.0mm": {
+  "area_m2": 0.4716055699755932,
+  "valid": true,
+  "n_faces": 1
+ },
+ "structure:Rib19_t1.0mm": {
+  "area_m2": 0.43657003369866426,
+  "valid": true,
+  "n_faces": 1
+ },
+ "structure:Rib18_t1.0mm": {
+  "area_m2": 0.40082249014983073,
+  "valid": true,
+  "n_faces": 1
+ },
+ "structure:Rib17_t1.0mm": {
+  "area_m2": 0.36749132248180455,
+  "valid": true,
+  "n_faces": 1
+ },
+ "structure:Rib16_t2.0mm": {
+  "area_m2": 0.32908854010674304,
+  "valid": true,
+  "n_faces": 1
+ },
+ "structure:Rib15_t1.0mm": {
+  "area_m2": 0.3061001998266636,
+  "valid": true,
+  "n_faces": 1
+ },
+ "structure:Rib14_t1.0mm": {
+  "area_m2": 0.27346778446664327,
+  "valid": true,
+  "n_faces": 1
+ },
+ "structure:Rib13_t1.0mm": {
+  "area_m2": 0.25621304650234333,
+  "valid": true,
+  "n_faces": 1
+ },
+ "structure:Rib12_t1.0mm": {
+  "area_m2": 0.23532534039339809,
+  "valid": true,
+  "n_faces": 1
+ },
+ "structure:Rib11_t1.0mm": {
+  "area_m2": 0.21099242502068827,
+  "valid": true,
+  "n_faces": 1
+ },
+ "structure:Rib10_t1.0mm": {
+  "area_m2": 0.19027055772207138,
+  "valid": true,
+  "n_faces": 1
+ },
+ "structure:Rib09_t1.0mm": {
+  "area_m2": 0.16752532665134962,
+  "valid": true,
+  "n_faces": 1
+ },
+ "structure:Rib08_t1.0mm": {
+  "area_m2": 0.14663082646366488,
+  "valid": true,
+  "n_faces": 1
+ },
+ "structure:Rib07_t1.0mm": {
+  "area_m2": 0.1293916985619518,
+  "valid": true,
+  "n_faces": 1
+ },
+ "structure:Rib06_t1.0mm": {
+  "area_m2": 0.11130699926464944,
+  "valid": true,
+  "n_faces": 1
+ },
+ "structure:Rib05_t1.0mm": {
+  "area_m2": 0.09355652864104369,
+  "valid": true,
+  "n_faces": 1
+ },
+ "structure:Rib04_t1.0mm": {
+  "area_m2": 0.07851286681290218,
+  "valid": true,
+  "n_faces": 1
+ },
+ "structure:Rib03_t1.0mm": {
+  "area_m2": 0.06471153768244345,
+  "valid": true,
+  "n_faces": 1
+ },
+ "structure:Rib02_t1.0mm": {
+  "area_m2": 0.05159762863231692,
+  "valid": true,
+  "n_faces": 1
+ },
+ "structure:Rib01_t1.0mm": {
+  "area_m2": 0.028144992339140334,
+  "valid": true,
+  "n_faces": 1
+ }
+}

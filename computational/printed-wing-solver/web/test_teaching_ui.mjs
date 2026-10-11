@@ -8,7 +8,10 @@ const E = require("./engine.js");
 const source = readFileSync(new URL("./wing_lab_template.html", import.meta.url), "utf8").replaceAll("\r\n", "\n");
 const engine = readFileSync(new URL("./engine.js", import.meta.url), "utf8").replaceAll("\r\n", "\n");
 const published = readFileSync(new URL("../../../docs/wing-lab.html", import.meta.url), "utf8").replaceAll("\r\n", "\n");
-const page = source.replace("/*__ENGINE__*/", engine).replace("/*__BEAM_ENGINE__*/",readFileSync(new URL("./beam_learning_engine.js",import.meta.url),"utf8").replaceAll("\r\n","\n")).replace("/*__FOUNDATIONS__*/",readFileSync(new URL("./foundations_ui.js",import.meta.url),"utf8").replaceAll("\r\n","\n")).replace("/*__TEACHING_MODELS__*/",readFileSync(new URL("./teaching_models.js",import.meta.url),"utf8").replaceAll("\r\n","\n")).replace("/*__TEACHING_PANELS__*/",readFileSync(new URL("./teaching_panels.js",import.meta.url),"utf8").replaceAll("\r\n","\n"));
+const page = source.replace("/*__ENGINE__*/", engine).replace("/*__BEAM_ENGINE__*/",readFileSync(new URL("./beam_learning_engine.js",import.meta.url),"utf8").replaceAll("\r\n","\n")).replace("/*__FOUNDATIONS__*/",readFileSync(new URL("./foundations_ui.js",import.meta.url),"utf8").replaceAll("\r\n","\n")).replace("/*__TEACHING_MODELS__*/",readFileSync(new URL("./teaching_models.js",import.meta.url),"utf8").replaceAll("\r\n","\n")).replace("/*__TEACHING_PANELS__*/",readFileSync(new URL("./teaching_panels.js",import.meta.url),"utf8").replaceAll("\r\n","\n"))
+  .replace("/*__METAL_ENGINE__*/",()=>readFileSync(new URL("./metal_wing_engine.js",import.meta.url),"utf8").replaceAll("\r\n","\n"))
+  .replace("/*__METAL_REFERENCE__*/",()=>readFileSync(new URL("./metal_wing_reference.json",import.meta.url),"utf8").replaceAll("\r\n","\n").trim())
+  .replace("/*__METAL_UI__*/",()=>readFileSync(new URL("./metal_wing_ui.js",import.meta.url),"utf8").replaceAll("\r\n","\n"));
 const endTitle = page.indexOf("</title>") + 8;
 const endStyle = page.indexOf("</style>") + 8;
 const expected = '<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n'
@@ -19,7 +22,8 @@ let scripts = 0;
 for (const match of published.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/gi)) {
   if (match[1].trim()) { new vm.Script(match[1]); scripts++; }
 }
-assert.equal(scripts, 4);
+assert.equal(scripts, 5);
+assert.ok(published.includes('data-stage="metal"') && published.includes('const MetalWingEngine') && published.includes('id="toMetalWing"'), 'full-scale metal wing workspace is built in');
 assert.ok(source.includes('<div id="foundations"></div>'));
 assert.ok(source.includes('<div id="app" class="learning-view" hidden>'));
 const context = vm.createContext({ E, nf: (v, d = 2) => Number(v).toFixed(d) });
@@ -43,4 +47,4 @@ assert.ok(source.includes('data-tab="design"'));
 const custom = E.makeGeometry({ customInteriorRibs: [56.3, 112.5, 225, 337.5] });
 assert.ok(context.ribPlanFigure(custom).includes('>R8</text>'));
 assert.deepEqual(Array.from(context.interiorStations(custom)), [56.3, 112.5, 225, 337.5]);
-console.log("PASS: generated page matches template and engines; four inline scripts parse; 2/3-module and custom-rib figures are finite and labelled; beam landing screen and initially hidden wing workspace are present; wing lesson and Design lab remain available.");
+console.log("PASS: generated page matches template and engines; five inline scripts parse (including the full-scale metal wing); 2/3-module and custom-rib figures are finite and labelled; beam landing screen and initially hidden wing workspace are present; wing lesson and Design lab remain available.");

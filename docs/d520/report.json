@@ -1,0 +1,1650 @@
+{
+ "blend": "d520.blend",
+ "checks": [
+  {
+   "check": "Wing span",
+   "measured": 10.192,
+   "target": 10.2,
+   "unit": "m",
+   "tolerance": 0.005,
+   "mode": "rel",
+   "error": -0.0008,
+   "verdict": "PASS",
+   "source": "PRINTED: p13 [9] 'Envergure maximum 10.20'; p62 Pl.0 '10m200'",
+   "note": ""
+  },
+  {
+   "check": "Overall length (spinner tip to rudder TE)",
+   "measured": 8.7689,
+   "target": 8.76,
+   "unit": "m",
+   "tolerance": 0.005,
+   "mode": "rel",
+   "error": 0.001,
+   "verdict": "PASS",
+   "source": "PRINTED: p63/p66 fiche des cotes 'Longueur hors tout 8.76'; p67 croquis coté '8.76'",
+   "note": ""
+  },
+  {
+   "check": "Rudder TE to propeller plane",
+   "measured": 8.2885,
+   "target": 8.28,
+   "unit": "m",
+   "tolerance": 0.01,
+   "mode": "rel",
+   "error": 0.001,
+   "verdict": "PASS",
+   "source": "PRINTED: p67 croquis coté '8.28'",
+   "note": ""
+  },
+  {
+   "check": "Wing area, gross projected (incl. fuselage strip)",
+   "measured": 15.9987,
+   "target": 15.97,
+   "unit": "m2",
+   "tolerance": 0.015,
+   "mode": "rel",
+   "error": 0.0018,
+   "verdict": "PASS",
+   "source": "PRINTED: p63/p66 'Surface des voilures 15m2 97'",
+   "note": ""
+  },
+  {
+   "check": "Chord on the aircraft axis (y=0)",
+   "measured": 2.364,
+   "target": 2.36,
+   "unit": "m",
+   "tolerance": 0.02,
+   "mode": "rel",
+   "error": 0.0017,
+   "verdict": "PASS",
+   "source": "PRINTED: p62 Pl.0 '2m360' (dimension of chord on aircraft axis)",
+   "note": ""
+  },
+  {
+   "check": "Chord at wing/fuselage junction (y=0.66)",
+   "measured": 2.156,
+   "target": 2.15,
+   "unit": "m",
+   "tolerance": 0.02,
+   "mode": "rel",
+   "error": 0.0028,
+   "verdict": "PASS",
+   "source": "PRINTED: p13 [9] 'Corde dans l'axe ou à l'emplanture 2.15'",
+   "note": ""
+  },
+  {
+   "check": "Chord at tip-cap start (y=4.687)",
+   "measured": 0.924,
+   "target": 0.92,
+   "unit": "m",
+   "tolerance": 0.03,
+   "mode": "rel",
+   "error": 0.0043,
+   "verdict": "PASS",
+   "source": "PRINTED: p13 [9] 'Corde au saumon 0.92' (could read 0.82)",
+   "note": "cap start solved from area"
+  },
+  {
+   "check": "Wing LE at junction, S from spinner tip",
+   "measured": 2.0218,
+   "target": 2.02,
+   "unit": "m",
+   "tolerance": 0.01,
+   "mode": "abs",
+   "error": 0.0018,
+   "verdict": "PASS",
+   "source": "DERIVED: rudder hinge S (8.10, SCALED Pl.0 side) - 6.08 (PRINTED p14/p63 hinge-to-LE); Pl.0 side view LE at root: 2.03 (SCALED)",
+   "note": ""
+  },
+  {
+   "check": "Aileron R area, visible (aft of the cove)",
+   "measured": 0.5004,
+   "target": 0.5,
+   "unit": "m2",
+   "tolerance": 0.06,
+   "mode": "rel",
+   "error": 0.0008,
+   "verdict": "PASS",
+   "source": "PRINTED: p13 [9]",
+   "note": "incl. nose hidden under the wing: 0.549 m2"
+  },
+  {
+   "check": "Aileron R span",
+   "measured": 1.637,
+   "target": 1.645,
+   "unit": "m",
+   "tolerance": 0.01,
+   "mode": "rel",
+   "error": -0.0049,
+   "verdict": "PASS",
+   "source": "PRINTED: p62 Pl.0 '1m645'",
+   "note": ""
+  },
+  {
+   "check": "Aileron R centre distance to axis",
+   "measured": 3.84,
+   "target": 3.84,
+   "unit": "m",
+   "tolerance": 0.01,
+   "mode": "rel",
+   "error": 0.0,
+   "verdict": "PASS",
+   "source": "PRINTED: p13 [9] 'Distance de l'axe de l'aileron à l'axe de l'avion 3.84'",
+   "note": ""
+  },
+  {
+   "check": "Aileron L area, visible (aft of the cove)",
+   "measured": 0.5,
+   "target": 0.5,
+   "unit": "m2",
+   "tolerance": 0.06,
+   "mode": "rel",
+   "error": 0.0,
+   "verdict": "PASS",
+   "source": "PRINTED: p13 [9]",
+   "note": "incl. nose hidden under the wing: 0.549 m2"
+  },
+  {
+   "check": "Aileron L span",
+   "measured": 1.637,
+   "target": 1.645,
+   "unit": "m",
+   "tolerance": 0.01,
+   "mode": "rel",
+   "error": -0.0049,
+   "verdict": "PASS",
+   "source": "PRINTED: p62 Pl.0 '1m645'",
+   "note": ""
+  },
+  {
+   "check": "Aileron L centre distance to axis",
+   "measured": 3.84,
+   "target": 3.84,
+   "unit": "m",
+   "tolerance": 0.01,
+   "mode": "rel",
+   "error": 0.0,
+   "verdict": "PASS",
+   "source": "PRINTED: p13 [9] 'Distance de l'axe de l'aileron à l'axe de l'avion 3.84'",
+   "note": ""
+  },
+  {
+   "check": "Flap R area, visible (aft of the cove)",
+   "measured": 1.0665,
+   "target": 1.05,
+   "unit": "m2",
+   "tolerance": 0.06,
+   "mode": "rel",
+   "error": 0.0158,
+   "verdict": "PASS",
+   "source": "PRINTED: p14 [10]",
+   "note": "incl. nose hidden under the wing: 1.199 m2"
+  },
+  {
+   "check": "Flap R span",
+   "measured": 2.342,
+   "target": 2.35,
+   "unit": "m",
+   "tolerance": 0.01,
+   "mode": "rel",
+   "error": -0.0034,
+   "verdict": "PASS",
+   "source": "PRINTED: p14 [10]; p62 Pl.0 '2m350'",
+   "note": ""
+  },
+  {
+   "check": "Flap R centre distance to axis",
+   "measured": 1.77,
+   "target": 1.77,
+   "unit": "m",
+   "tolerance": 0.01,
+   "mode": "rel",
+   "error": 0.0,
+   "verdict": "PASS",
+   "source": "PRINTED: p14 [10] 'Distance de l'axe du volet à l'axe de l'avion 1.77'",
+   "note": ""
+  },
+  {
+   "check": "Flap L area, visible (aft of the cove)",
+   "measured": 1.0648,
+   "target": 1.05,
+   "unit": "m2",
+   "tolerance": 0.06,
+   "mode": "rel",
+   "error": 0.0141,
+   "verdict": "PASS",
+   "source": "PRINTED: p14 [10]",
+   "note": "incl. nose hidden under the wing: 1.197 m2"
+  },
+  {
+   "check": "Flap L span",
+   "measured": 2.342,
+   "target": 2.35,
+   "unit": "m",
+   "tolerance": 0.01,
+   "mode": "rel",
+   "error": -0.0034,
+   "verdict": "PASS",
+   "source": "PRINTED: p14 [10]; p62 Pl.0 '2m350'",
+   "note": ""
+  },
+  {
+   "check": "Flap L centre distance to axis",
+   "measured": 1.77,
+   "target": 1.77,
+   "unit": "m",
+   "tolerance": 0.01,
+   "mode": "rel",
+   "error": 0.0,
+   "verdict": "PASS",
+   "source": "PRINTED: p14 [10] 'Distance de l'axe du volet à l'axe de l'avion 1.77'",
+   "note": ""
+  },
+  {
+   "check": "Aileron max chord (visible, at inner end)",
+   "measured": 0.3697,
+   "target": 0.38,
+   "unit": "m",
+   "tolerance": 0.04,
+   "mode": "rel",
+   "error": -0.0271,
+   "verdict": "PASS",
+   "source": "PRINTED: p13 [9]",
+   "note": ""
+  },
+  {
+   "check": "Flap max chord (visible part)",
+   "measured": 0.628,
+   "target": 0.65,
+   "unit": "m",
+   "tolerance": 0.05,
+   "mode": "rel",
+   "error": -0.0338,
+   "verdict": "PASS",
+   "source": "PRINTED: p14 [10]",
+   "note": "printed 0.65 read as including the nose stowed under the shroud"
+  },
+  {
+   "check": "Upper-surface dihedral outboard of rib 16",
+   "measured": 3.9979,
+   "target": 3.925,
+   "unit": "deg",
+   "tolerance": 0.04,
+   "mode": "rel",
+   "error": 0.0186,
+   "verdict": "PASS",
+   "source": "PRINTED: p13 [9] / p63 'Dièdre transversal 3°55'30\"' (extrados)",
+   "note": ""
+  },
+  {
+   "check": "Lower-surface slope rib 21 -> tip (Pl.1 'tangente 0.1246')",
+   "measured": 0.1294,
+   "target": 0.1246,
+   "unit": "tan",
+   "tolerance": 0.06,
+   "mode": "rel",
+   "error": 0.0384,
+   "verdict": "PASS",
+   "source": "PRINTED: p68 Pl.1 front elevation 'tangente 0.1246'",
+   "note": ""
+  },
+  {
+   "check": "Wing incidence at root (chord line vs thrust axis)",
+   "measured": 1.0,
+   "target": 1.0,
+   "unit": "deg",
+   "tolerance": 0.25,
+   "mode": "abs",
+   "error": 0.0,
+   "verdict": "PASS",
+   "source": "PRINTED: p13 [9] 'Calage +1°'; p63 'Incidence de l'aile par rapport à l'axe des propulseurs 1°'",
+   "note": ""
+  },
+  {
+   "check": "Fuselage max width (main frame)",
+   "measured": 0.94,
+   "target": 0.94,
+   "unit": "m",
+   "tolerance": 0.02,
+   "mode": "rel",
+   "error": 0.0,
+   "verdict": "PASS",
+   "source": "PRINTED: p14 [10] 'Dimensions 0.94 - 1.50'",
+   "note": ""
+  },
+  {
+   "check": "Fuselage height incl. canopy at the cockpit (main frame)",
+   "measured": 1.5557,
+   "target": 1.5,
+   "unit": "m",
+   "tolerance": 0.03,
+   "mode": "rel",
+   "error": 0.0371,
+   "verdict": "WARN",
+   "source": "PRINTED: p14 [10]",
+   "note": "includes the sliding hood, which rides 14 mm outside the fixed arches (GUESS); Pl.0 drawn at 1/50 measures 1.53 m"
+  },
+  {
+   "check": "Tailplane span",
+   "measured": 3.5329,
+   "target": 3.54,
+   "unit": "m",
+   "tolerance": 0.01,
+   "mode": "rel",
+   "error": -0.002,
+   "verdict": "PASS",
+   "source": "PRINTED: p13 [9] 'Envergure aile démontée 3.54'; p14 [10] 'Envergure maximum 3.54'",
+   "note": ""
+  },
+  {
+   "check": "Tailplane (fixed) area outside the fuselage",
+   "measured": 1.7802,
+   "target": 1.83,
+   "unit": "m2",
+   "tolerance": 0.06,
+   "mode": "rel",
+   "error": -0.0272,
+   "verdict": "PASS",
+   "source": "PRINTED: p14 [10]; p63",
+   "note": "including the strip through the fuselage: 1.944 m2"
+  },
+  {
+   "check": "Elevator area (both)",
+   "measured": 1.055,
+   "target": 1.04,
+   "unit": "m2",
+   "tolerance": 0.08,
+   "mode": "rel",
+   "error": 0.0144,
+   "verdict": "PASS",
+   "source": "PRINTED: p14 [10]; p63",
+   "note": ""
+  },
+  {
+   "check": "Elevator hinge aft of wing LE",
+   "measured": 5.8782,
+   "target": 5.88,
+   "unit": "m",
+   "tolerance": 0.01,
+   "mode": "rel",
+   "error": -0.0003,
+   "verdict": "PASS",
+   "source": "PRINTED: p14 [10]; p63",
+   "note": ""
+  },
+  {
+   "check": "Rudder hinge aft of wing LE",
+   "measured": 6.0782,
+   "target": 6.08,
+   "unit": "m",
+   "tolerance": 0.01,
+   "mode": "rel",
+   "error": -0.0003,
+   "verdict": "PASS",
+   "source": "PRINTED: p14 [10]; p63",
+   "note": ""
+  },
+  {
+   "check": "Fin area exposed above the fuselage (side projection)",
+   "measured": 0.7887,
+   "target": 0.59,
+   "unit": "m2",
+   "tolerance": 0.1,
+   "mode": "rel",
+   "error": 0.3368,
+   "verdict": "FAIL",
+   "source": "PRINTED: p14 [10]; p63",
+   "note": "total incl. buried root 2.779 m2; the printed 0.59 m2 equals the fin above Z=+0.67 m (thrust-axis frame), i.e. without the curved dorsal fillet"
+  },
+  {
+   "check": "Rudder area (side projection)",
+   "measured": 1.0172,
+   "target": 1.04,
+   "unit": "m2",
+   "tolerance": 0.08,
+   "mode": "rel",
+   "error": -0.0219,
+   "verdict": "PASS",
+   "source": "PRINTED: p14 [10]; p63",
+   "note": ""
+  },
+  {
+   "check": "Fin height, fuselage bottom at sternpost to fin tip",
+   "measured": 1.8849,
+   "target": 1.87,
+   "unit": "m",
+   "tolerance": 0.02,
+   "mode": "rel",
+   "error": 0.008,
+   "verdict": "PASS",
+   "source": "PRINTED: p14 [10] 'Hauteur maximum 1.87'; p67",
+   "note": ""
+  },
+  {
+   "check": "Overall height, flight line (fin tip above ground)",
+   "measured": 3.4327,
+   "target": 3.435,
+   "unit": "m",
+   "tolerance": 0.03,
+   "mode": "rel",
+   "error": -0.0007,
+   "verdict": "PASS",
+   "source": "PRINTED: p62 Pl.0 '3m435' (blurred, low confidence)",
+   "note": "Pl.0 label is blurred; Pl.0 draws the oleos fully extended"
+  },
+  {
+   "check": "Propeller diameter",
+   "measured": 3.0501,
+   "target": 3.05,
+   "unit": "m",
+   "tolerance": 0.005,
+   "mode": "rel",
+   "error": 0.0,
+   "verdict": "PASS",
+   "source": "PRINTED: p15 [11] 'Diamètre 3.05'; p63 '3.05'",
+   "note": ""
+  },
+  {
+   "check": "Propeller axis height, flight line",
+   "measured": 1.845,
+   "target": 1.845,
+   "unit": "m",
+   "tolerance": 0.01,
+   "mode": "rel",
+   "error": 0.0,
+   "verdict": "PASS",
+   "source": "PRINTED: p13 [9] '1.845'; p63 '1.84'",
+   "note": ""
+  },
+  {
+   "check": "Propeller ground clearance, flight line",
+   "measured": 0.32,
+   "target": 0.32,
+   "unit": "m",
+   "tolerance": 0.03,
+   "mode": "abs",
+   "error": -0.0,
+   "verdict": "PASS",
+   "source": "PRINTED: p13 [9]",
+   "note": ""
+  },
+  {
+   "check": "Track (tyre contact points)",
+   "measured": 2.88,
+   "target": 2.88,
+   "unit": "m",
+   "tolerance": 0.01,
+   "mode": "rel",
+   "error": 0.0,
+   "verdict": "PASS",
+   "source": "PRINTED: p14 [10] 'Voie 2.88'; p62 Pl.0 front view scaled 2.85-2.89",
+   "note": ""
+  },
+  {
+   "check": "Main wheels on the ground in flight line (lowest point Z)",
+   "measured": -0.0198,
+   "target": 0.0,
+   "unit": "m",
+   "tolerance": 0.025,
+   "mode": "abs",
+   "error": -0.0198,
+   "verdict": "PASS",
+   "source": "DERIVED: tyre 6% static deflection",
+   "note": ""
+  },
+  {
+   "check": "Propeller axis height at rest",
+   "measured": 2.2649,
+   "target": 2.265,
+   "unit": "m",
+   "tolerance": 0.01,
+   "mode": "rel",
+   "error": -0.0,
+   "verdict": "PASS",
+   "source": "PRINTED: p13 [9] '2.265'",
+   "note": ""
+  },
+  {
+   "check": "Propeller ground clearance at rest",
+   "measured": 0.7399,
+   "target": 0.74,
+   "unit": "m",
+   "tolerance": 0.03,
+   "mode": "abs",
+   "error": -0.0001,
+   "verdict": "PASS",
+   "source": "PRINTED: p13 [9]",
+   "note": ""
+  },
+  {
+   "check": "Tail wheel on the ground at rest",
+   "measured": -0.0151,
+   "target": 0.0,
+   "unit": "m",
+   "tolerance": 0.03,
+   "mode": "abs",
+   "error": -0.0151,
+   "verdict": "PASS",
+   "source": "DERIVED: p25 tail wheel at frame 12; photo p3",
+   "note": ""
+  },
+  {
+   "check": "Main wheels on the ground at rest",
+   "measured": -0.0298,
+   "target": 0.0,
+   "unit": "m",
+   "tolerance": 0.03,
+   "mode": "abs",
+   "error": -0.0298,
+   "verdict": "PASS",
+   "source": "DERIVED: prop axis 1.845 -> 2.265 m pivoting on the main wheels",
+   "note": ""
+  },
+  {
+   "check": "Ground angle at rest (derived)",
+   "measured": 14.6269,
+   "target": null,
+   "unit": "deg",
+   "tolerance": 0,
+   "mode": "rel",
+   "error": null,
+   "verdict": "INFO",
+   "source": "DERIVED: prop axis 1.845 -> 2.265 m pivoting on the main wheels",
+   "note": ""
+  },
+  {
+   "check": "Right aileron up (stick right)",
+   "measured": 30.0,
+   "target": 30,
+   "unit": "deg",
+   "tolerance": 0.01,
+   "mode": "rel",
+   "error": -0.0,
+   "verdict": "PASS",
+   "source": "PRINTED: p13 [9] handwritten '30°'",
+   "note": ""
+  },
+  {
+   "check": "Left aileron down (stick right)",
+   "measured": 15.0,
+   "target": 15,
+   "unit": "deg",
+   "tolerance": 0.01,
+   "mode": "rel",
+   "error": -0.0,
+   "verdict": "PASS",
+   "source": "PRINTED: p13 [9] handwritten '15°'",
+   "note": ""
+  },
+  {
+   "check": "Right aileron down (stick left)",
+   "measured": 15.0,
+   "target": 15,
+   "unit": "deg",
+   "tolerance": 0.01,
+   "mode": "rel",
+   "error": -0.0,
+   "verdict": "PASS",
+   "source": "PRINTED: p13 [9] handwritten '15°'",
+   "note": ""
+  },
+  {
+   "check": "Left aileron up (stick left)",
+   "measured": 30.0,
+   "target": 30,
+   "unit": "deg",
+   "tolerance": 0.01,
+   "mode": "rel",
+   "error": 0.0,
+   "verdict": "PASS",
+   "source": "PRINTED: p13 [9] handwritten '30°'",
+   "note": ""
+  },
+  {
+   "check": "Elevator travel up",
+   "measured": 20.0,
+   "target": 20,
+   "unit": "deg",
+   "tolerance": 0.01,
+   "mode": "rel",
+   "error": -0.0,
+   "verdict": "PASS",
+   "source": "PRINTED: p14 [10] '± 20'",
+   "note": ""
+  },
+  {
+   "check": "Elevator travel down",
+   "measured": 20.0,
+   "target": 20,
+   "unit": "deg",
+   "tolerance": 0.01,
+   "mode": "rel",
+   "error": -0.0,
+   "verdict": "PASS",
+   "source": "PRINTED: p14 [10] '± 20'",
+   "note": ""
+  },
+  {
+   "check": "Rudder travel right",
+   "measured": 30.0,
+   "target": 30,
+   "unit": "deg",
+   "tolerance": 0.01,
+   "mode": "rel",
+   "error": -0.0,
+   "verdict": "PASS",
+   "source": "PRINTED: p14 [10] handwritten '30°'",
+   "note": ""
+  },
+  {
+   "check": "Rudder travel left",
+   "measured": 30.0,
+   "target": 30,
+   "unit": "deg",
+   "tolerance": 0.01,
+   "mode": "rel",
+   "error": -0.0,
+   "verdict": "PASS",
+   "source": "PRINTED: p14 [10] handwritten '30°'",
+   "note": ""
+  },
+  {
+   "check": "Flap travel (down)",
+   "measured": 35.0,
+   "target": 35,
+   "unit": "deg",
+   "tolerance": 0.01,
+   "mode": "rel",
+   "error": -0.0,
+   "verdict": "PASS",
+   "source": "PRINTED: p14 [10] handwritten '35°'",
+   "note": ""
+  },
+  {
+   "check": "Tailplane incidence +3°",
+   "measured": 3.0,
+   "target": 3,
+   "unit": "deg",
+   "tolerance": 0.01,
+   "mode": "rel",
+   "error": -0.0,
+   "verdict": "PASS",
+   "source": "PRINTED: p63 'réglable en vol ±3°'; p39 handwheel left of seat",
+   "note": ""
+  },
+  {
+   "check": "Retracted wheel R centre |y| (Pl.0 plan wells)",
+   "measured": 0.3047,
+   "target": 0.3,
+   "unit": "m",
+   "tolerance": 0.03,
+   "mode": "abs",
+   "error": 0.0047,
+   "verdict": "PASS",
+   "source": "SCALED: p62 Pl.0 plan view: retracted wheel centres (fore-aft pivot keeps S)",
+   "note": ""
+  },
+  {
+   "check": "Retracted wheel R protrusion below wing lower surface",
+   "measured": -0.0059,
+   "target": 0.0,
+   "unit": "m",
+   "tolerance": 0.03,
+   "mode": "abs",
+   "error": -0.0059,
+   "verdict": "PASS",
+   "source": "Pl.30: outer face flush with the lower surface",
+   "note": ""
+  },
+  {
+   "check": "Retracted wheel L centre |y| (Pl.0 plan wells)",
+   "measured": 0.3047,
+   "target": 0.3,
+   "unit": "m",
+   "tolerance": 0.03,
+   "mode": "abs",
+   "error": 0.0047,
+   "verdict": "PASS",
+   "source": "SCALED: p62 Pl.0 plan view: retracted wheel centres (fore-aft pivot keeps S)",
+   "note": ""
+  },
+  {
+   "check": "Retracted wheel L protrusion below wing lower surface",
+   "measured": -0.0059,
+   "target": 0.0,
+   "unit": "m",
+   "tolerance": 0.03,
+   "mode": "abs",
+   "error": -0.0059,
+   "verdict": "PASS",
+   "source": "Pl.30: outer face flush with the lower surface",
+   "note": ""
+  },
+  {
+   "check": "Ventral antenna hangs vertical with gear up (z extent)",
+   "measured": 0.5507,
+   "target": null,
+   "unit": "m",
+   "tolerance": 0,
+   "mode": "rel",
+   "error": null,
+   "verdict": "INFO",
+   "source": "PRINTED: p29; Pl.45 (p141)",
+   "note": "gear down z extent 0.040 m"
+  },
+  {
+   "check": "Gun port R spanwise station",
+   "measured": 1.79,
+   "target": 1.79,
+   "unit": "m",
+   "tolerance": 0.005,
+   "mode": "abs",
+   "error": -0.0,
+   "verdict": "PASS",
+   "source": "DERIVED: p145/p148 Pl.50 bis: 1743 and 1840 mm from cannon axis (41 mm off-centre), averaged",
+   "note": ""
+  },
+  {
+   "check": "Gun port R spanwise station",
+   "measured": 1.955,
+   "target": 1.955,
+   "unit": "m",
+   "tolerance": 0.005,
+   "mode": "abs",
+   "error": 0.0,
+   "verdict": "PASS",
+   "source": "DERIVED: p145/p148 Pl.50 bis: 1743 and 1840 mm from cannon axis (41 mm off-centre), averaged",
+   "note": ""
+  },
+  {
+   "check": "Gun port L spanwise station",
+   "measured": 1.79,
+   "target": 1.79,
+   "unit": "m",
+   "tolerance": 0.005,
+   "mode": "abs",
+   "error": -0.0,
+   "verdict": "PASS",
+   "source": "DERIVED: p145/p148 Pl.50 bis: 1743 and 1840 mm from cannon axis (41 mm off-centre), averaged",
+   "note": ""
+  },
+  {
+   "check": "Gun port L spanwise station",
+   "measured": 1.955,
+   "target": 1.955,
+   "unit": "m",
+   "tolerance": 0.005,
+   "mode": "abs",
+   "error": 0.0,
+   "verdict": "PASS",
+   "source": "DERIVED: p145/p148 Pl.50 bis: 1743 and 1840 mm from cannon axis (41 mm off-centre), averaged",
+   "note": ""
+  },
+  {
+   "check": "Pitot on the LEFT wing tip (x < -4.5)",
+   "measured": -4.8,
+   "target": null,
+   "unit": "m",
+   "tolerance": 0,
+   "mode": "rel",
+   "error": null,
+   "verdict": "INFO",
+   "source": "PRINTED: p27 'au bout de l'aile gauche'",
+   "note": "negative x = left (port)"
+  },
+  {
+   "check": "Meshes with zero faces or NaN coordinates",
+   "measured": 0.0,
+   "target": 0,
+   "unit": "count",
+   "tolerance": 0,
+   "mode": "abs",
+   "error": 0.0,
+   "verdict": "PASS",
+   "source": "sanity (boolean-failure guard)",
+   "note": ""
+  }
+ ],
+ "sanity": [
+  {
+   "object": "Aileron_L",
+   "faces": 1442,
+   "nan": false,
+   "non_manifold_edges": 0,
+   "boundary_edges": 0,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "Aileron_R",
+   "faces": 1442,
+   "nan": false,
+   "non_manifold_edges": 0,
+   "boundary_edges": 0,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "Antenna_Mast",
+   "faces": 22,
+   "nan": false,
+   "non_manifold_edges": 0,
+   "boundary_edges": 0,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "Antenna_Ventral",
+   "faces": 22,
+   "nan": false,
+   "non_manifold_edges": 0,
+   "boundary_edges": 0,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "Antenna_Wire",
+   "faces": 22,
+   "nan": false,
+   "non_manifold_edges": 0,
+   "boundary_edges": 0,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "Armour_Plate",
+   "faces": 22,
+   "nan": false,
+   "non_manifold_edges": 0,
+   "boundary_edges": 0,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "Backup_Sight_Post",
+   "faces": 22,
+   "nan": false,
+   "non_manifold_edges": 0,
+   "boundary_edges": 0,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "Blade_1",
+   "faces": 800,
+   "nan": false,
+   "non_manifold_edges": 0,
+   "boundary_edges": 0,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "Blade_2",
+   "faces": 800,
+   "nan": false,
+   "non_manifold_edges": 0,
+   "boundary_edges": 0,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "Blade_3",
+   "faces": 800,
+   "nan": false,
+   "non_manifold_edges": 0,
+   "boundary_edges": 0,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "Canopy_Hood",
+   "faces": 1020,
+   "nan": false,
+   "non_manifold_edges": 154,
+   "boundary_edges": 154,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "Canopy_RearFairing",
+   "faces": 2752,
+   "nan": false,
+   "non_manifold_edges": 336,
+   "boundary_edges": 336,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "Canopy_RearWindow_L",
+   "faces": 225,
+   "nan": false,
+   "non_manifold_edges": 68,
+   "boundary_edges": 68,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "Canopy_RearWindow_R",
+   "faces": 225,
+   "nan": false,
+   "non_manifold_edges": 68,
+   "boundary_edges": 68,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "Canopy_Windscreen",
+   "faces": 840,
+   "nan": false,
+   "non_manifold_edges": 148,
+   "boundary_edges": 148,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "Cockpit_Tub",
+   "faces": 1858,
+   "nan": false,
+   "non_manifold_edges": 0,
+   "boundary_edges": 0,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "Control_Stick",
+   "faces": 22,
+   "nan": false,
+   "non_manifold_edges": 0,
+   "boundary_edges": 0,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "Dial_00_Coolant_(water)_thermometer",
+   "faces": 26,
+   "nan": false,
+   "non_manifold_edges": 0,
+   "boundary_edges": 0,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "Dial_01_Oil_thermometer",
+   "faces": 26,
+   "nan": false,
+   "non_manifold_edges": 0,
+   "boundary_edges": 0,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "Dial_02_Manifold_(boost)_pressure_ga",
+   "faces": 26,
+   "nan": false,
+   "non_manifold_edges": 0,
+   "boundary_edges": 0,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "Dial_03_Carburettor_(fuel)_pressure_",
+   "faces": 26,
+   "nan": false,
+   "non_manifold_edges": 0,
+   "boundary_edges": 0,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "Dial_04_Oil_pressure_gauge",
+   "faces": 26,
+   "nan": false,
+   "non_manifold_edges": 0,
+   "boundary_edges": 0,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "Dial_05_Tachometer_(rev_counter)",
+   "faces": 26,
+   "nan": false,
+   "non_manifold_edges": 0,
+   "boundary_edges": 0,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "Dial_06_Landing_airspeed_indicator",
+   "faces": 26,
+   "nan": false,
+   "non_manifold_edges": 0,
+   "boundary_edges": 0,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "Dial_07_Vion_compass",
+   "faces": 26,
+   "nan": false,
+   "non_manifold_edges": 0,
+   "boundary_edges": 0,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "Dial_08_Airspeed_indicator_of_the_fl",
+   "faces": 26,
+   "nan": false,
+   "non_manifold_edges": 0,
+   "boundary_edges": 0,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "Dial_09_Turn_indicator_(horizontal_w",
+   "faces": 26,
+   "nan": false,
+   "non_manifold_edges": 0,
+   "boundary_edges": 0,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "Dial_10_Variometer_(vertical-speed_i",
+   "faces": 26,
+   "nan": false,
+   "non_manifold_edges": 0,
+   "boundary_edges": 0,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "Dial_11_Altimeter_(no_callout;_word_",
+   "faces": 26,
+   "nan": false,
+   "non_manifold_edges": 0,
+   "boundary_edges": 0,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "Dial_12_Clock_(no_callout;_identifie",
+   "faces": 26,
+   "nan": false,
+   "non_manifold_edges": 0,
+   "boundary_edges": 0,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "Dial_13_Oxygen_inhaler_pressure_gaug",
+   "faces": 26,
+   "nan": false,
+   "non_manifold_edges": 0,
+   "boundary_edges": 0,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "Dial_14_Fuel_gauge",
+   "faces": 26,
+   "nan": false,
+   "non_manifold_edges": 0,
+   "boundary_edges": 0,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "Dial_15_Pressure_gauge_(emergency_fl",
+   "faces": 26,
+   "nan": false,
+   "non_manifold_edges": 0,
+   "boundary_edges": 0,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "Dial_16_Brake_supply_(Olaer)_pressur",
+   "faces": 26,
+   "nan": false,
+   "non_manifold_edges": 0,
+   "boundary_edges": 0,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "Elevator_L",
+   "faces": 1502,
+   "nan": false,
+   "non_manifold_edges": 0,
+   "boundary_edges": 0,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "Elevator_R",
+   "faces": 1502,
+   "nan": false,
+   "non_manifold_edges": 0,
+   "boundary_edges": 0,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "Exhaust_L_1.05",
+   "faces": 6,
+   "nan": false,
+   "non_manifold_edges": 0,
+   "boundary_edges": 0,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "Exhaust_L_1.42",
+   "faces": 6,
+   "nan": false,
+   "non_manifold_edges": 0,
+   "boundary_edges": 0,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "Exhaust_L_1.79",
+   "faces": 6,
+   "nan": false,
+   "non_manifold_edges": 0,
+   "boundary_edges": 0,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "Exhaust_R_1.05",
+   "faces": 6,
+   "nan": false,
+   "non_manifold_edges": 0,
+   "boundary_edges": 0,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "Exhaust_R_1.42",
+   "faces": 6,
+   "nan": false,
+   "non_manifold_edges": 0,
+   "boundary_edges": 0,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "Exhaust_R_1.79",
+   "faces": 6,
+   "nan": false,
+   "non_manifold_edges": 0,
+   "boundary_edges": 0,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "Fin",
+   "faces": 2580,
+   "nan": false,
+   "non_manifold_edges": 0,
+   "boundary_edges": 0,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "FinLight_L",
+   "faces": 512,
+   "nan": false,
+   "non_manifold_edges": 0,
+   "boundary_edges": 0,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "FinLight_R",
+   "faces": 512,
+   "nan": false,
+   "non_manifold_edges": 0,
+   "boundary_edges": 0,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "Flap_L",
+   "faces": 2222,
+   "nan": false,
+   "non_manifold_edges": 0,
+   "boundary_edges": 0,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "Flap_R",
+   "faces": 2222,
+   "nan": false,
+   "non_manifold_edges": 0,
+   "boundary_edges": 0,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "Frame_Hood_FrontBow",
+   "faces": 492,
+   "nan": false,
+   "non_manifold_edges": 32,
+   "boundary_edges": 32,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "Frame_Hood_Rail_-1",
+   "faces": 148,
+   "nan": false,
+   "non_manifold_edges": 32,
+   "boundary_edges": 32,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "Frame_Hood_Rail_1",
+   "faces": 148,
+   "nan": false,
+   "non_manifold_edges": 32,
+   "boundary_edges": 32,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "Frame_Hood_RearBow",
+   "faces": 492,
+   "nan": false,
+   "non_manifold_edges": 32,
+   "boundary_edges": 32,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "Frame_RearWindow_L",
+   "faces": 416,
+   "nan": false,
+   "non_manifold_edges": 0,
+   "boundary_edges": 0,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "Frame_RearWindow_R",
+   "faces": 416,
+   "nan": false,
+   "non_manifold_edges": 0,
+   "boundary_edges": 0,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "Frame_Windscreen_Base_-1",
+   "faces": 124,
+   "nan": false,
+   "non_manifold_edges": 32,
+   "boundary_edges": 32,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "Frame_Windscreen_Base_1",
+   "faces": 124,
+   "nan": false,
+   "non_manifold_edges": 32,
+   "boundary_edges": 32,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "Frame_Windscreen_Bow",
+   "faces": 492,
+   "nan": false,
+   "non_manifold_edges": 32,
+   "boundary_edges": 32,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "Frame_Windscreen_Pillar_-1",
+   "faces": 124,
+   "nan": false,
+   "non_manifold_edges": 32,
+   "boundary_edges": 32,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "Frame_Windscreen_Pillar_1",
+   "faces": 124,
+   "nan": false,
+   "non_manifold_edges": 32,
+   "boundary_edges": 32,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "Fuselage",
+   "faces": 17598,
+   "nan": false,
+   "non_manifold_edges": 98,
+   "boundary_edges": 98,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "Gear_Fairing_L_Lower",
+   "faces": 72,
+   "nan": false,
+   "non_manifold_edges": 34,
+   "boundary_edges": 34,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "Gear_Fairing_L_Upper",
+   "faces": 16,
+   "nan": false,
+   "non_manifold_edges": 20,
+   "boundary_edges": 20,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "Gear_Fairing_R_Lower",
+   "faces": 72,
+   "nan": false,
+   "non_manifold_edges": 34,
+   "boundary_edges": 34,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "Gear_Fairing_R_Upper",
+   "faces": 16,
+   "nan": false,
+   "non_manifold_edges": 20,
+   "boundary_edges": 20,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "Gear_Leg_L",
+   "faces": 22,
+   "nan": false,
+   "non_manifold_edges": 0,
+   "boundary_edges": 0,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "Gear_Leg_R",
+   "faces": 22,
+   "nan": false,
+   "non_manifold_edges": 0,
+   "boundary_edges": 0,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "Gear_Slider_L",
+   "faces": 22,
+   "nan": false,
+   "non_manifold_edges": 0,
+   "boundary_edges": 0,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "Gear_Slider_R",
+   "faces": 22,
+   "nan": false,
+   "non_manifold_edges": 0,
+   "boundary_edges": 0,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "Gear_Stub_L",
+   "faces": 22,
+   "nan": false,
+   "non_manifold_edges": 0,
+   "boundary_edges": 0,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "Gear_Stub_R",
+   "faces": 22,
+   "nan": false,
+   "non_manifold_edges": 0,
+   "boundary_edges": 0,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "GunCamera",
+   "faces": 22,
+   "nan": false,
+   "non_manifold_edges": 0,
+   "boundary_edges": 0,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "GunPort_L_1.79",
+   "faces": 22,
+   "nan": false,
+   "non_manifold_edges": 0,
+   "boundary_edges": 0,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "GunPort_L_1.96",
+   "faces": 22,
+   "nan": false,
+   "non_manifold_edges": 0,
+   "boundary_edges": 0,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "GunPort_R_1.79",
+   "faces": 22,
+   "nan": false,
+   "non_manifold_edges": 0,
+   "boundary_edges": 0,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "GunPort_R_1.96",
+   "faces": 22,
+   "nan": false,
+   "non_manifold_edges": 0,
+   "boundary_edges": 0,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "Gunsight_OPL",
+   "faces": 22,
+   "nan": false,
+   "non_manifold_edges": 0,
+   "boundary_edges": 0,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "Instrument_Panel",
+   "faces": 6,
+   "nan": false,
+   "non_manifold_edges": 0,
+   "boundary_edges": 0,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "Karman_L",
+   "faces": 559,
+   "nan": false,
+   "non_manifold_edges": 112,
+   "boundary_edges": 112,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "Karman_R",
+   "faces": 559,
+   "nan": false,
+   "non_manifold_edges": 112,
+   "boundary_edges": 112,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "NavLight_L",
+   "faces": 512,
+   "nan": false,
+   "non_manifold_edges": 0,
+   "boundary_edges": 0,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "NavLight_R",
+   "faces": 512,
+   "nan": false,
+   "non_manifold_edges": 0,
+   "boundary_edges": 0,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "Pitot",
+   "faces": 22,
+   "nan": false,
+   "non_manifold_edges": 0,
+   "boundary_edges": 0,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "Pitot_Mast",
+   "faces": 22,
+   "nan": false,
+   "non_manifold_edges": 0,
+   "boundary_edges": 0,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "Radiator",
+   "faces": 928,
+   "nan": false,
+   "non_manifold_edges": 64,
+   "boundary_edges": 64,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "Radiator_Core_Front",
+   "faces": 1,
+   "nan": false,
+   "non_manifold_edges": 4,
+   "boundary_edges": 4,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "Radiator_Core_Rear",
+   "faces": 1,
+   "nan": false,
+   "non_manifold_edges": 4,
+   "boundary_edges": 4,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "Radiator_Flap",
+   "faces": 6,
+   "nan": false,
+   "non_manifold_edges": 0,
+   "boundary_edges": 0,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "Rudder",
+   "faces": 2704,
+   "nan": false,
+   "non_manifold_edges": 0,
+   "boundary_edges": 0,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "Rudder_Bar",
+   "faces": 22,
+   "nan": false,
+   "non_manifold_edges": 0,
+   "boundary_edges": 0,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "Rudder_Tab",
+   "faces": 252,
+   "nan": false,
+   "non_manifold_edges": 0,
+   "boundary_edges": 0,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "Seat",
+   "faces": 22,
+   "nan": false,
+   "non_manifold_edges": 0,
+   "boundary_edges": 0,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "Seat_Back",
+   "faces": 22,
+   "nan": false,
+   "non_manifold_edges": 0,
+   "boundary_edges": 0,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "Spinner",
+   "faces": 1297,
+   "nan": false,
+   "non_manifold_edges": 48,
+   "boundary_edges": 48,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "Tailplane",
+   "faces": 3364,
+   "nan": false,
+   "non_manifold_edges": 0,
+   "boundary_edges": 0,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "Tailwheel",
+   "faces": 960,
+   "nan": false,
+   "non_manifold_edges": 0,
+   "boundary_edges": 0,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "Tailwheel_Fork",
+   "faces": 22,
+   "nan": false,
+   "non_manifold_edges": 0,
+   "boundary_edges": 0,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "Tailwheel_Hub",
+   "faces": 34,
+   "nan": false,
+   "non_manifold_edges": 0,
+   "boundary_edges": 0,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "Tailwheel_Strut",
+   "faces": 22,
+   "nan": false,
+   "non_manifold_edges": 0,
+   "boundary_edges": 0,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "Wheel_L",
+   "faces": 960,
+   "nan": false,
+   "non_manifold_edges": 0,
+   "boundary_edges": 0,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "Wheel_L_Hub",
+   "faces": 34,
+   "nan": false,
+   "non_manifold_edges": 0,
+   "boundary_edges": 0,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "Wheel_R",
+   "faces": 960,
+   "nan": false,
+   "non_manifold_edges": 0,
+   "boundary_edges": 0,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "Wheel_R_Hub",
+   "faces": 34,
+   "nan": false,
+   "non_manifold_edges": 0,
+   "boundary_edges": 0,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "Wing_L",
+   "faces": 5076,
+   "nan": false,
+   "non_manifold_edges": 0,
+   "boundary_edges": 0,
+   "zero_area_faces": 0
+  },
+  {
+   "object": "Wing_R",
+   "faces": 5076,
+   "nan": false,
+   "non_manifold_edges": 0,
+   "boundary_edges": 0,
+   "zero_area_faces": 0
+  }
+ ],
+ "parameter_status": {
+  "PRINTED": 62,
+  "DERIVED": 12,
+  "SCALED": 12,
+  "GUESS": 7
+ },
+ "guesses": [
+  "airfoil_family",
+  "canopy_travel",
+  "exhausts",
+  "tail_airfoil",
+  "prop_blade_shape",
+  "prop_pitch_range",
+  "tyre_width"
+ ]
+}

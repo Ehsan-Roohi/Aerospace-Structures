@@ -8,6 +8,8 @@ Dr. Ehsan Roohi Golkhatmi · Gunness Laboratory, Room 1 · [roohie@umass.edu](ma
 
 **[Launch Wing Lab: beams → printed wing](https://ehsan-roohi.github.io/Aerospace-Structures/wing-lab.html)** — start with cantilever, fixed–fixed and simply supported beams; then compare skin-only, reinforced, ribbed and modular wings. Apply point or distributed loads and explore reactions, stress, deflection and modes. No installation; internet access is required for the wing's 3-D graphics library. [Learning pathway and model limits](computational/printed-wing-solver/README.md#progressive-learning-pathway).
 
+**[New: a real aircraft wing — Dewoitine D.520 (1940)](computational/d520-wing/README.md)** — the scanned 1940 manual of the French fighter, translated and rebuilt as a [3-D model you can explore](https://ehsan-roohi.github.io/Aerospace-Structures/d520/), with SolidWorks/ANSYS CAD, a shell finite-element stress analysis and a **[full-scale metal-wing mode in Wing Lab](https://ehsan-roohi.github.io/Aerospace-Structures/wing-lab.html#d520)**: lifting-line loads, two-cell thin-walled sections, shear centre, tapered spar, skin buckling and post-buckling collapse, checked against the shell model.
+
 **[Syllabus](SYLLABUS.md)** · **[Download Word syllabus](docs/MIE_446_Aerospace_Structures_Fall_2026_Syllabus_Updated.docx)** · **[Weekly schedule](SYLLABUS.md#7-weekly-schedule--fall-2026)** · **[Lecture notebooks](#lecture-notebooks)** · **[Stipa-Caproni: the Venturi-fuselage aircraft](STIPA_CAPRONI.md)** · **[Boeing 747: uranium, mass balance and flutter](BOEING_747_MASS_BALANCE.md)** · **[Gimli Glider case study](GIMLI_GLIDER.md)** · **[Navier–Stokes and AI reading](NAVIER_STOKES_AI.md)** · **[Wing project](PROJECT.md)** · **[Homework 1 PDF](assignments/homework-01/MIE446_HW1_Surface_Pressure.pdf)** · **[Homework 1 Excel data](assignments/homework-01/MIE446_HW1_NACA2412_Data.xlsx)** · **[All homework](ASSIGNMENTS.md)** · **[General OrcaSlicer + USB guide](PRINTING.md)**
 
 **Homework 1 solutions are available:** [download the solution (Word)](https://raw.githubusercontent.com/Ehsan-Roohi/Aerospace-Structures/main/assignments/homework-01/solutions/MIE446_HW1_solution.docx) · [download the solution workbook (Excel)](https://raw.githubusercontent.com/Ehsan-Roohi/Aerospace-Structures/main/assignments/homework-01/solutions/MIE446_HW1_NACA2412_Data.xlsx) · [solution overview](assignments/homework-01/README.md#released-solutions).
@@ -35,6 +37,9 @@ force/moment and modern-control sections.
 Lectures 01 and 02 and the independent wing-structure lecture are released. Later lecture notebooks will appear here when ready; the [syllabus schedule](SYLLABUS.md#7-weekly-schedule--fall-2026) describes the full semester, not a list of already-published notebooks.
 
 ### Engineering case studies
+
+**[Dewoitine D.520: from a 1940 manual to a stressed wing](computational/d520-wing/README.md)** reconstructs a complete fighter from its scanned maintenance manual (168 pages, every number traced to a page), exports CAD for SolidWorks and ANSYS, analyses the stressed-skin wing with a 41 066-element shell model ([report](computational/d520-wing/stress/REPORT.md)) and repeats the analysis in the browser with Wing Lab's full-scale metal-wing mode.
+
 
 **[Aircraft windows and the Comet fatigue failures](COMET_WINDOWS_AND_FATIGUE.md)** explains cabin-pressure load paths, rounded corners, fastener-hole crack origins and the two 1954 accidents. Includes two licensed historical images, seven original teaching diagrams, documented 296.5–315.1 MPa local stress estimates, a reproducible analytical stress-map example and modern damage-tolerance lessons.
 

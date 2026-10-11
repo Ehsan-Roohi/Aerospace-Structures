@@ -1,0 +1,967 @@
+{
+ "span": {
+  "value": 10.2,
+  "unit": "m",
+  "status": "PRINTED",
+  "sources": [
+   "p13 [9] 'Envergure maximum 10.20'",
+   "p62 Pl.0 '10m200'",
+   "p63/p66 fiche des cotes '10.20'",
+   "p165 Pl.60 '10 m 20'"
+  ],
+  "note": ""
+ },
+ "length": {
+  "value": 8.76,
+  "unit": "m",
+  "status": "PRINTED",
+  "sources": [
+   "p63/p66 fiche des cotes 'Longueur hors tout 8.76'",
+   "p67 croquis coté '8.76'",
+   "p165 Pl.60 '8 m 76'"
+  ],
+  "note": "Spinner tip to rudder trailing edge.",
+  "alternatives": [
+   {
+    "value": 8.78,
+    "source": "p13 [9] table (last digit faint, could be 6)",
+    "decision": "rejected 3 to 1"
+   }
+  ]
+ },
+ "rudder_te_to_prop_plane": {
+  "value": 8.28,
+  "unit": "m",
+  "status": "PRINTED",
+  "sources": [
+   "p67 croquis coté '8.28'"
+  ],
+  "note": ""
+ },
+ "prop_plane_S": {
+  "value": 0.4800000000000004,
+  "unit": "m",
+  "status": "DERIVED",
+  "sources": [
+   "length - rudder_te_to_prop_plane"
+  ],
+  "note": ""
+ },
+ "height_flight_line": {
+  "value": 3.435,
+  "unit": "m",
+  "status": "PRINTED",
+  "sources": [
+   "p62 Pl.0 '3m435' (blurred, low confidence)"
+  ],
+  "note": "Not used to build: the model's height results from fin geometry + gear; checked by validation."
+ },
+ "wing_area": {
+  "value": 15.97,
+  "unit": "m2",
+  "status": "PRINTED",
+  "sources": [
+   "p63/p66 'Surface des voilures 15m2 97'"
+  ],
+  "note": "",
+  "alternatives": [
+   {
+    "value": 15.95,
+    "source": "p13 [9] 'Surface nette 15.95'",
+    "decision": "0.1% apart; 15.97 used"
+   },
+   {
+    "value": 15.87,
+    "source": "EXTERNAL Wikipedia (Danel & Cuny)",
+    "decision": "not used"
+   }
+  ]
+ },
+ "chord_centreline": {
+  "value": 2.36,
+  "unit": "m",
+  "status": "PRINTED",
+  "sources": [
+   "p62 Pl.0 '2m360' (dimension of chord on aircraft axis)"
+  ],
+  "note": "Pl.0's 2.360 dimension matches the LE/TE lines extrapolated to the centreline (276 px = 2.34 m at 1/50)."
+ },
+ "chord_root_junction": {
+  "value": 2.15,
+  "unit": "m",
+  "status": "PRINTED",
+  "sources": [
+   "p13 [9] 'Corde dans l'axe ou à l'emplanture 2.15'"
+  ],
+  "note": "Interpreted as the chord at the wing/fuselage junction (Pl.0 scaled: 2.16 m at y=0.66 m)."
+ },
+ "chord_tip": {
+  "value": 0.92,
+  "unit": "m",
+  "status": "PRINTED",
+  "sources": [
+   "p13 [9] 'Corde au saumon 0.92' (could read 0.82)"
+  ],
+  "note": "Pl.0 extrapolated tip chord 0.905 m supports 0.92 over 0.82."
+ },
+ "tip_cap_start_y": {
+  "value": 4.6869,
+  "unit": "m",
+  "status": "DERIVED",
+  "sources": [
+   "solve: area(c0=2.36, ct=0.92 at y_t, half-elliptic cap to 5.10) = 15.97"
+  ],
+  "note": "Lands at rib 2 / aileron outer end; Pl.0 drawn cap length 0.41 m agrees. Result y_t = 4.687 m; chord taper 0.3072 m/m; chord at y=0.66: 2.157 m (printed 2.15)."
+ },
+ "taper_split_LE_fraction": {
+  "value": 0.5226,
+  "unit": "-",
+  "status": "SCALED",
+  "sources": [
+   "p62 Pl.0 plan view: LE slope 0.1428, TE slope 0.1305 (px/px)"
+  ],
+  "note": "Fraction of the chord reduction taken by the leading edge. Gives a main-spar line (36% chord) swept ~1 deg, matching the printed 'flèche longitudinale 1°' (p63)."
+ },
+ "sweep_reference": {
+  "value": 1.0,
+  "unit": "deg",
+  "status": "PRINTED",
+  "sources": [
+   "p63/p66 'Flèche longitudinale 1°'",
+   "p13 'V de l'avion en plan 1°'"
+  ],
+  "note": "Used as a check only (spar line sweep)."
+ },
+ "wing_incidence": {
+  "value": 1.0,
+  "unit": "deg",
+  "status": "PRINTED",
+  "sources": [
+   "p13 [9] 'Calage +1°'",
+   "p63 'Incidence de l'aile par rapport à l'axe des propulseurs 1°'"
+  ],
+  "note": ""
+ },
+ "dihedral_upper_outer": {
+  "value": 3.925,
+  "unit": "deg",
+  "status": "PRINTED",
+  "sources": [
+   "p13 [9] / p63 'Dièdre transversal 3°55'30\"' (extrados)"
+  ],
+  "note": "Applied to the upper-surface line outboard of rib 16 (dihedral break, Pl.1)."
+ },
+ "upper_slope_inner": {
+  "value": 0.0046,
+  "unit": "tan",
+  "status": "PRINTED",
+  "sources": [
+   "p68 Pl.1 front elevation 'tangente 0.0046'"
+  ],
+  "note": "Upper surface, root to rib 16."
+ },
+ "lower_slope_outer": {
+  "value": 0.1246,
+  "unit": "tan",
+  "status": "PRINTED",
+  "sources": [
+   "p68 Pl.1 front elevation 'tangente 0.1246'"
+  ],
+  "note": "Lower surface, rib 21 to tip."
+ },
+ "rib_y": {
+  "value": {
+   "1": 4.92,
+   "2": 4.68,
+   "5": 3.94,
+   "6": 3.72,
+   "9": 3.01,
+   "11": 2.53,
+   "13": 2.07,
+   "15": 1.66,
+   "16": 1.5,
+   "21": 0.7,
+   "22": 0.51
+  },
+  "unit": "m",
+  "status": "SCALED",
+  "sources": [
+   "p68 Pl.1 rib stations, scaled with aileron (ribs 2-9 = 1.645 m) and flap (ribs 9-21 = 2.35 m)"
+  ],
+  "note": "Rib numbering runs 1 (tip) to 22 (root)."
+ },
+ "root_thickness": {
+  "value": 0.409,
+  "unit": "m",
+  "status": "SCALED",
+  "sources": [
+   "p68 Pl.1 front elevation at rib 22 (162 px at 396 px/m)"
+  ],
+  "note": "t/c = 18.6 % at rib 22."
+ },
+ "tc_tip": {
+  "value": null,
+  "unit": "-",
+  "status": "DERIVED",
+  "sources": [
+   "root_thickness and the two printed surface slopes"
+  ],
+  "note": "About 10 % at the tip-cap start."
+ },
+ "airfoil_family": {
+  "value": "symmetric NACA 4-digit thickness at root, blending to NACA 230 camber line at tip",
+  "unit": "-",
+  "status": "GUESS",
+  "sources": [
+   "p13 [9] zero-lift line '0°4' relative to root chord (near-symmetric root)"
+  ],
+  "note": "Thickness distribution from the manual; camber family is an assumption. No washout data in the manual: zero twist."
+ },
+ "wing_LE_junction_S": {
+  "value": 2.02,
+  "unit": "m",
+  "status": "DERIVED",
+  "sources": [
+   "rudder hinge S (8.10, SCALED Pl.0 side) - 6.08 (PRINTED p14/p63 hinge-to-LE)",
+   "Pl.0 side view LE at root: 2.03 (SCALED)"
+  ],
+  "note": ""
+ },
+ "wing_root_lower_Z": {
+  "value": -0.84,
+  "unit": "m",
+  "status": "SCALED",
+  "sources": [
+   "p62 Pl.0 side view: wing/fuselage bottom line under the wing (px 368-372)"
+  ],
+  "note": ""
+ },
+ "aileron_span": {
+  "value": 1.645,
+  "unit": "m",
+  "status": "PRINTED",
+  "sources": [
+   "p62 Pl.0 '1m645'"
+  ],
+  "note": "",
+  "alternatives": [
+   {
+    "value": 1.55,
+    "source": "p13 [9] table (independent audit confirms the 5s)",
+    "decision": "1.645 used: third sources Pl.0 scaled at 1/50 (1.69 m) and Pl.59 aileron/flap split (~1.7 m) side with Pl.0"
+   }
+  ]
+ },
+ "aileron_centre_y": {
+  "value": 3.84,
+  "unit": "m",
+  "status": "PRINTED",
+  "sources": [
+   "p13 [9] 'Distance de l'axe de l'aileron à l'axe de l'avion 3.84'"
+  ],
+  "note": "Audit: first decimal could read 0 (3.04), which would overlap the flaps; 3.84 is the only consistent reading (aileron then ends at the tip-cap start)."
+ },
+ "aileron_area_each": {
+  "value": 0.5,
+  "unit": "m2",
+  "status": "PRINTED",
+  "sources": [
+   "p13 [9]"
+  ],
+  "note": ""
+ },
+ "aileron_chord_max": {
+  "value": 0.38,
+  "unit": "m",
+  "status": "PRINTED",
+  "sources": [
+   "p13 [9]"
+  ],
+  "note": ""
+ },
+ "aileron_chord_fraction": {
+  "value": 0.258,
+  "unit": "-",
+  "status": "DERIVED",
+  "sources": [
+   "aileron_area_each / integral of wing chord over aileron span"
+  ],
+  "note": "Pl.0 scaled 0.26. Gives max chord 0.369 m (printed 0.38, -3%)."
+ },
+ "aileron_up": {
+  "value": 30,
+  "unit": "deg",
+  "status": "PRINTED",
+  "sources": [
+   "p13 [9] handwritten '30°'"
+  ],
+  "note": ""
+ },
+ "aileron_down": {
+  "value": 15,
+  "unit": "deg",
+  "status": "PRINTED",
+  "sources": [
+   "p13 [9] handwritten '15°'"
+  ],
+  "note": ""
+ },
+ "flap_span": {
+  "value": 2.35,
+  "unit": "m",
+  "status": "PRINTED",
+  "sources": [
+   "p14 [10]",
+   "p62 Pl.0 '2m350'"
+  ],
+  "note": ""
+ },
+ "flap_centre_y": {
+  "value": 1.77,
+  "unit": "m",
+  "status": "PRINTED",
+  "sources": [
+   "p14 [10] 'Distance de l'axe du volet à l'axe de l'avion 1.77'"
+  ],
+  "note": ""
+ },
+ "flap_area_each": {
+  "value": 1.05,
+  "unit": "m2",
+  "status": "PRINTED",
+  "sources": [
+   "p14 [10]"
+  ],
+  "note": ""
+ },
+ "flap_chord_max": {
+  "value": 0.65,
+  "unit": "m",
+  "status": "PRINTED",
+  "sources": [
+   "p14 [10]"
+  ],
+  "note": ""
+ },
+ "flap_chord_fraction": {
+  "value": 0.25,
+  "unit": "-",
+  "status": "DERIVED",
+  "sources": [
+   "flap_area_each / integral of wing chord over flap span = 0.246",
+   "Pl.0 scaled 0.26"
+  ],
+  "note": "Visible flap. The printed 0.65 max chord is read as including the flap nose stowed under the shroud (slotted flap, Pl.6)."
+ },
+ "flap_down": {
+  "value": 35,
+  "unit": "deg",
+  "status": "PRINTED",
+  "sources": [
+   "p14 [10] handwritten '35°'"
+  ],
+  "note": ""
+ },
+ "gun_inner_y": {
+  "value": 1.79,
+  "unit": "m",
+  "status": "DERIVED",
+  "sources": [
+   "p145/p148 Pl.50 bis: 1743 and 1840 mm from cannon axis (41 mm off-centre), averaged"
+  ],
+  "note": ""
+ },
+ "gun_outer_y": {
+  "value": 1.955,
+  "unit": "m",
+  "status": "DERIVED",
+  "sources": [
+   "p145/p148 Pl.50 bis: +168 / +160 mm"
+  ],
+  "note": ""
+ },
+ "main_frame_width": {
+  "value": 0.94,
+  "unit": "m",
+  "status": "PRINTED",
+  "sources": [
+   "p14 [10] 'Dimensions 0.94 - 1.50'"
+  ],
+  "note": "Pl.0 plan scaled 0.93-0.95."
+ },
+ "main_frame_height": {
+  "value": 1.5,
+  "unit": "m",
+  "status": "PRINTED",
+  "sources": [
+   "p14 [10]"
+  ],
+  "note": "Matches Pl.0 side depth incl. canopy (1.53)."
+ },
+ "section_shape": {
+  "value": "ovoid",
+  "unit": "-",
+  "status": "PRINTED",
+  "sources": [
+   "p14 [10] 'Forme: ovoïde'"
+  ],
+  "note": "Widest at 41% of height from the bottom (SCALED, Pl.0 front view); superellipse exponents are a GUESS."
+ },
+ "fuselage_profile": {
+  "value": "pl0_side_px.json / pl0_plan_px.json",
+  "unit": "-",
+  "status": "SCALED",
+  "sources": [
+   "p62 Pl.0 side and plan views, 1/50"
+  ],
+  "note": "Side: S=(3035-px)/118.4, Z=(273-py)/118.4. Plan: S=(1745-py)/120.4, Y=(px-976.5)/119.9."
+ },
+ "frames_S": {
+  "value": {
+   "1": 2.8,
+   "3": 3.65,
+   "5": 4.9,
+   "12": 7.84
+  },
+  "unit": "m",
+  "status": "DERIVED",
+  "sources": [
+   "p19: main spar at frame 1, false spar at frame 3",
+   "p60: cockpit between frames 3 and 5",
+   "p25: tail wheel at frame 12; photo p3 tail wheel position"
+  ],
+  "note": "Intermediate frames evenly spaced (GUESS)."
+ },
+ "canopy_stations": {
+  "value": {
+   "windscreen_front": 3.83,
+   "windscreen_rear": 4.27,
+   "hood_front": 4.29,
+   "hood_rear": 4.86,
+   "rear_fairing_end": 5.51,
+   "top_Z": 0.8,
+   "sill_Z": 0.3
+  },
+  "unit": "m",
+  "status": "SCALED",
+  "sources": [
+   "p62 Pl.0 side view canopy outline"
+  ],
+  "note": ""
+ },
+ "canopy_width": {
+  "value": 0.6,
+  "unit": "m",
+  "status": "SCALED",
+  "sources": [
+   "p62 Pl.0 plan (0.57) and front (0.63) views"
+  ],
+  "note": ""
+ },
+ "canopy_travel": {
+  "value": 0.55,
+  "unit": "m",
+  "status": "GUESS",
+  "sources": [
+   "photos p3/p4 show the hood slid back about its own length"
+  ],
+  "note": ""
+ },
+ "radiator": {
+  "value": {
+   "S_front": 2.77,
+   "S_rear": 4.09,
+   "bottom_Z": -1.106,
+   "width": 0.86
+  },
+  "unit": "m",
+  "status": "SCALED",
+  "sources": [
+   "p62 Pl.0 side view (bath under centre section)",
+   "p26 'radiateur sous le fuselage, caréné, volet arrière commandé'"
+  ],
+  "note": "Width is a GUESS bounded by the Pl.0 front view (0.98) and fuselage width."
+ },
+ "exhausts": {
+  "value": {
+   "S": [
+    1.05,
+    1.42,
+    1.79
+   ],
+   "Z": 0.2
+  },
+  "unit": "m",
+  "status": "GUESS",
+  "sources": [
+   "photos p3/p4: three exhaust groups per side",
+   "p16 flame dampers 'G.A.L.L.'"
+  ],
+  "note": ""
+ },
+ "tailplane_span": {
+  "value": 3.54,
+  "unit": "m",
+  "status": "PRINTED",
+  "sources": [
+   "p13 [9] 'Envergure aile démontée 3.54'",
+   "p14 [10] 'Envergure maximum 3.54'",
+   "p67 croquis coté half span '1.77'"
+  ],
+  "note": "",
+  "alternatives": [
+   {
+    "value": 3.63,
+    "source": "p62 Pl.0 '3m630' (drawing scales 3.66)",
+    "decision": "rejected 3 to 1; Pl.0 outline used for shape only"
+   }
+  ]
+ },
+ "tailplane_area_fixed": {
+  "value": 1.83,
+  "unit": "m2",
+  "status": "PRINTED",
+  "sources": [
+   "p14 [10]",
+   "p63"
+  ],
+  "note": ""
+ },
+ "elevator_area": {
+  "value": 1.04,
+  "unit": "m2",
+  "status": "PRINTED",
+  "sources": [
+   "p14 [10]",
+   "p63"
+  ],
+  "note": ""
+ },
+ "elevator_hinge_from_LE": {
+  "value": 5.88,
+  "unit": "m",
+  "status": "PRINTED",
+  "sources": [
+   "p14 [10]",
+   "p63",
+   "p67"
+  ],
+  "note": ""
+ },
+ "elevator_travel": {
+  "value": 20,
+  "unit": "deg",
+  "status": "PRINTED",
+  "sources": [
+   "p14 [10] '± 20'"
+  ],
+  "note": ""
+ },
+ "tailplane_Z": {
+  "value": 0.376,
+  "unit": "m",
+  "status": "SCALED",
+  "sources": [
+   "p62 Pl.0 side view (py 228.5)"
+  ],
+  "note": ""
+ },
+ "tailplane_incidence_range": {
+  "value": 3,
+  "unit": "deg",
+  "status": "PRINTED",
+  "sources": [
+   "p63 'réglable en vol ±3°'",
+   "p39 handwheel left of seat"
+  ],
+  "note": ""
+ },
+ "fin_height": {
+  "value": 1.87,
+  "unit": "m",
+  "status": "PRINTED",
+  "sources": [
+   "p14 [10] 'Hauteur maximum 1.87'",
+   "p67"
+  ],
+  "note": "Pl.0 side scaled 1.87 (fuselage bottom at sternpost to fin tip)."
+ },
+ "fin_area": {
+  "value": 0.59,
+  "unit": "m2",
+  "status": "PRINTED",
+  "sources": [
+   "p14 [10]",
+   "p63"
+  ],
+  "note": ""
+ },
+ "rudder_area": {
+  "value": 1.04,
+  "unit": "m2",
+  "status": "PRINTED",
+  "sources": [
+   "p14 [10]",
+   "p63"
+  ],
+  "note": ""
+ },
+ "rudder_hinge_from_LE": {
+  "value": 6.08,
+  "unit": "m",
+  "status": "PRINTED",
+  "sources": [
+   "p14 [10]",
+   "p63",
+   "p67"
+  ],
+  "note": ""
+ },
+ "rudder_travel": {
+  "value": 30,
+  "unit": "deg",
+  "status": "PRINTED",
+  "sources": [
+   "p14 [10] handwritten '30°'"
+  ],
+  "note": ""
+ },
+ "tail_airfoil": {
+  "value": "NACA 0012",
+  "unit": "-",
+  "status": "GUESS",
+  "sources": [],
+  "note": "No tail section in the manual."
+ },
+ "prop_diameter": {
+  "value": 3.05,
+  "unit": "m",
+  "status": "PRINTED",
+  "sources": [
+   "p15 [11] 'Diamètre 3.05'",
+   "p63 '3.05'",
+   "p67 radius '1.525'"
+  ],
+  "note": ""
+ },
+ "prop_blades": {
+  "value": 3,
+  "unit": "-",
+  "status": "PRINTED",
+  "sources": [
+   "p26/p27",
+   "photos p2-p4"
+  ],
+  "note": ""
+ },
+ "prop_make": {
+  "value": "Ratier (electric) or Chauvière (pneumatic 2-pitch / electro-magnetic)",
+  "unit": "-",
+  "status": "PRINTED",
+  "sources": [
+   "p15",
+   "p27"
+  ],
+  "note": ""
+ },
+ "prop_blade_shape": {
+  "value": "paddle blade, max chord 0.24 m at 45% R, Clark-Y-like section",
+  "unit": "-",
+  "status": "GUESS",
+  "sources": [],
+  "note": ""
+ },
+ "prop_pitch_range": {
+  "value": [
+   20,
+   45
+  ],
+  "unit": "deg at 0.75R",
+  "status": "GUESS",
+  "sources": [
+   "p15 'Pas limite' left blank"
+  ],
+  "note": ""
+ },
+ "spinner": {
+  "value": {
+   "length": 0.55,
+   "base_diameter": 0.55
+  },
+  "unit": "m",
+  "status": "SCALED",
+  "sources": [
+   "p62 Pl.0 plan cowl ring 0.53, side 0.53-0.62, front 0.57"
+  ],
+  "note": "Length GUESS bounded by the prop plane at 0.48 m (PRINTED 8.76-8.28)."
+ },
+ "engine_offset_left": {
+  "value": 1.0,
+  "unit": "deg",
+  "status": "PRINTED",
+  "sources": [
+   "p15 [11] 'Calage latéral 1° à gauche'",
+   "p145 Pl.50 bis '41 mm at the nose'"
+  ],
+  "note": ""
+ },
+ "track": {
+  "value": 2.88,
+  "unit": "m",
+  "status": "PRINTED",
+  "sources": [
+   "p14 [10] 'Voie 2.88'",
+   "p62 Pl.0 front view scaled 2.85-2.89"
+  ],
+  "note": "",
+  "alternatives": [
+   {
+    "value": 2.83,
+    "source": "p62 Pl.0 label '2m830' (independent audit confirms 830)",
+    "decision": "2.88 used: typed characteristics table (audit: both 8s closed); third source Pl.0 front view scaled 2.86-2.92 m does not separate them clearly, so the official table wins"
+   }
+  ]
+ },
+ "prop_axis_height_flight_line": {
+  "value": 1.845,
+  "unit": "m",
+  "status": "PRINTED",
+  "sources": [
+   "p13 [9] '1.845'",
+   "p63 '1.84'"
+  ],
+  "note": "",
+  "alternatives": [
+   {
+    "value": 1.95,
+    "source": "p62 Pl.0 '1m950'",
+    "decision": "rejected 2 to 1"
+   }
+  ]
+ },
+ "prop_axis_height_rest": {
+  "value": 2.265,
+  "unit": "m",
+  "status": "PRINTED",
+  "sources": [
+   "p13 [9] '2.265'"
+  ],
+  "note": ""
+ },
+ "prop_clearance_flight_line": {
+  "value": 0.32,
+  "unit": "m",
+  "status": "PRINTED",
+  "sources": [
+   "p13 [9]"
+  ],
+  "note": ""
+ },
+ "prop_clearance_rest": {
+  "value": 0.74,
+  "unit": "m",
+  "status": "PRINTED",
+  "sources": [
+   "p13 [9]"
+  ],
+  "note": ""
+ },
+ "wheel_diameter": {
+  "value": 0.66,
+  "unit": "m",
+  "status": "SCALED",
+  "sources": [
+   "p62 Pl.0 side view dashed wheel (0.65-0.73)",
+   "Pl.0 plan retracted wheel circles (0.63)"
+  ],
+  "note": "Tyre size '10 bis' (p14) not converted: no table in the manual."
+ },
+ "tyre_width": {
+  "value": 0.2,
+  "unit": "m",
+  "status": "GUESS",
+  "sources": [
+   "Pl.30 drawing proportion ~0.3 x diameter"
+  ],
+  "note": ""
+ },
+ "main_axle_S": {
+  "value": 2.38,
+  "unit": "m",
+  "status": "SCALED",
+  "sources": [
+   "p62 Pl.0 plan view: retracted wheel centres (fore-aft pivot keeps S)"
+  ],
+  "note": "Pl.0 side view puts it at 2.28."
+ },
+ "gear_retract": {
+  "value": "inward, 90 deg about a fore-aft axis",
+  "unit": "-",
+  "status": "PRINTED",
+  "sources": [
+   "p21/p22",
+   "Pl.30"
+  ],
+  "note": ""
+ },
+ "gear_leg": {
+  "value": null,
+  "unit": "m",
+  "status": "DERIVED",
+  "sources": [
+   "track/2, retracted wheel y (0.30, SCALED Pl.0 plan), axle height from 1.845 - wheel radius, retracted wheel at wing mid-thickness"
+  ],
+  "note": "Solved in the build script: leg length ~1.03 m, splay ~6 deg."
+ },
+ "oleo_stroke": {
+  "value": 0.3,
+  "unit": "m",
+  "status": "PRINTED",
+  "sources": [
+   "p14 [10] 'course 300'"
+  ],
+  "note": ""
+ },
+ "tail_wheel_S": {
+  "value": 7.84,
+  "unit": "m",
+  "status": "DERIVED",
+  "sources": [
+   "p25 tail wheel at frame 12",
+   "photo p3"
+  ],
+  "note": ""
+ },
+ "rest_attitude": {
+  "value": null,
+  "unit": "deg",
+  "status": "DERIVED",
+  "sources": [
+   "prop axis 1.845 -> 2.265 m pivoting on the main wheels"
+  ],
+  "note": "~14.6 deg nose up."
+ },
+ "pitot": {
+  "value": "left wing tip",
+  "unit": "-",
+  "status": "PRINTED",
+  "sources": [
+   "p27 'au bout de l'aile gauche'"
+  ],
+  "note": ""
+ },
+ "nav_lights": {
+  "value": "red left tip, green right tip, 2 white at top of fin",
+  "unit": "-",
+  "status": "PRINTED",
+  "sources": [
+   "p48"
+  ],
+  "note": ""
+ },
+ "gun_camera": {
+  "value": "under left wing",
+  "unit": "-",
+  "status": "PRINTED",
+  "sources": [
+   "p31"
+  ],
+  "note": "Spanwise station is a GUESS (y=2.4 m)."
+ },
+ "antenna_fixed": {
+  "value": "mast on top behind cockpit, wire to fin",
+  "unit": "-",
+  "status": "PRINTED",
+  "sources": [
+   "p29, p46 (upper antenna fixed)",
+   "Pl.44, photos"
+  ],
+  "note": "Mast height is a GUESS (0.45 m)."
+ },
+ "antenna_ventral": {
+  "value": "retractable, hinged ahead of frame 7, vertical when gear up",
+  "unit": "-",
+  "status": "PRINTED",
+  "sources": [
+   "p29",
+   "Pl.45 (p141)"
+  ],
+  "note": ""
+ },
+ "tail_lift_bar_hole": {
+  "value": "through rear fuselage",
+  "unit": "-",
+  "status": "PRINTED",
+  "sources": [
+   "p48"
+  ],
+  "note": ""
+ },
+ "paint_upper": {
+  "value": [
+   "kaki mat",
+   "terre foncée mat",
+   "gris bleu foncé mat"
+  ],
+  "unit": "-",
+  "status": "PRINTED",
+  "sources": [
+   "p59 [50 bis] 'camouflage kaki, terre foncée, gris bleu foncé'"
+  ],
+  "note": "Pattern shape and RGB values are a GUESS (manual names colours only; camouflage drawing number left blank)."
+ },
+ "paint_lower_metal": {
+  "value": "gris bleu (matt blue-grey)",
+  "unit": "-",
+  "status": "PRINTED",
+  "sources": [
+   "p59"
+  ],
+  "note": ""
+ },
+ "paint_lower_fabric": {
+  "value": "gris bleu clair",
+  "unit": "-",
+  "status": "PRINTED",
+  "sources": [
+   "p59"
+  ],
+  "note": ""
+ },
+ "roundels": {
+  "value": "white/red/blue, ST letter 10990/A",
+  "unit": "-",
+  "status": "PRINTED",
+  "sources": [
+   "p59"
+  ],
+  "note": "French order (blue centre, white, red outer); sizes GUESS."
+ },
+ "rudder_stripes": {
+  "value": "blue/white/red over white, black lettering",
+  "unit": "-",
+  "status": "PRINTED",
+  "sources": [
+   "p60"
+  ],
+  "note": "Lettering 'D / 520' from photo p3."
+ },
+ "flettner_tab": {
+  "value": "red",
+  "unit": "-",
+  "status": "PRINTED",
+  "sources": [
+   "p61"
+  ],
+  "note": ""
+ },
+ "cockpit_paint": {
+  "value": "matt night blue",
+  "unit": "-",
+  "status": "PRINTED",
+  "sources": [
+   "p60"
+  ],
+  "note": ""
+ }
+}

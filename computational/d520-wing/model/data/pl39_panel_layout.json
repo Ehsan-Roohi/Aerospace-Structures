@@ -1,0 +1,519 @@
+{
+ "source": "PDF p134, Pl.39 'Planche de bord' — positions measured on the scan as fractions of the panel box (SCALED)",
+ "panel_layout": [
+  {
+   "label_fr": "FEUX DE ROUTE",
+   "label_en": "Navigation lights (switch)",
+   "kind": "switch",
+   "x": 0.204,
+   "y": 0.208,
+   "approx_diameter": 0.017
+  },
+  {
+   "label_fr": "FEUX DE BORD",
+   "label_en": "Cockpit (instrument) lights (rheostat knob)",
+   "kind": "switch",
+   "x": 0.204,
+   "y": 0.16,
+   "approx_diameter": 0.059
+  },
+  {
+   "label_fr": "ANEMO",
+   "label_en": "Airspeed indicator (pitot heating) switch",
+   "kind": "switch",
+   "x": 0.236,
+   "y": 0.206,
+   "approx_diameter": 0.017
+  },
+  {
+   "label_fr": "PHARE",
+   "label_en": "Landing light (knob)",
+   "kind": "switch",
+   "x": 0.259,
+   "y": 0.157,
+   "approx_diameter": 0.031
+  },
+  {
+   "label_fr": "COMPAS",
+   "label_en": "Compass (lighting) knob",
+   "kind": "switch",
+   "x": 0.311,
+   "y": 0.157,
+   "approx_diameter": 0.059
+  },
+  {
+   "label_fr": "FUSÉE",
+   "label_en": "Flare (lever switch)",
+   "kind": "switch",
+   "x": 0.338,
+   "y": 0.219,
+   "approx_diameter": 0.02
+  },
+  {
+   "label_fr": "SIGNALISATION",
+   "label_en": "Signalling (lamp / push-button)",
+   "kind": "light",
+   "x": 0.367,
+   "y": 0.157,
+   "approx_diameter": 0.028
+  },
+  {
+   "label_fr": "THERMOMÈTRE EAU",
+   "label_en": "Coolant (water) thermometer",
+   "kind": "dial",
+   "x": 0.149,
+   "y": 0.321,
+   "approx_diameter": 0.086
+  },
+  {
+   "label_fr": "THERMOMÈTRE HUILE",
+   "label_en": "Oil thermometer",
+   "kind": "dial",
+   "x": 0.241,
+   "y": 0.321,
+   "approx_diameter": 0.086
+  },
+  {
+   "label_fr": "MANO ADMISSION",
+   "label_en": "Manifold (boost) pressure gauge",
+   "kind": "dial",
+   "x": 0.078,
+   "y": 0.427,
+   "approx_diameter": 0.079
+  },
+  {
+   "label_fr": "MANO DE CARBURATEUR",
+   "label_en": "Carburettor (fuel) pressure gauge",
+   "kind": "dial",
+   "x": 0.171,
+   "y": 0.425,
+   "approx_diameter": 0.083
+  },
+  {
+   "label_fr": "MANO HUILE",
+   "label_en": "Oil pressure gauge",
+   "kind": "dial",
+   "x": 0.263,
+   "y": 0.425,
+   "approx_diameter": 0.083
+  },
+  {
+   "label_fr": "TACHYMÈTRE",
+   "label_en": "Tachometer (rev counter)",
+   "kind": "dial",
+   "x": 0.153,
+   "y": 0.526,
+   "approx_diameter": 0.083
+  },
+  {
+   "label_fr": "HÉLICE",
+   "label_en": "Propeller (pitch control box, PETIT PAS / GRAND PAS lever)",
+   "kind": "lever",
+   "x": 0.252,
+   "y": 0.523,
+   "approx_diameter": 0.098
+  },
+  {
+   "label_fr": "ANÉMOMÈTRE D'ATTERRISSAGE",
+   "label_en": "Landing airspeed indicator",
+   "kind": "dial",
+   "x": 0.367,
+   "y": 0.336,
+   "approx_diameter": 0.118
+  },
+  {
+   "label_fr": "SIGNALISATION DU TRAIN",
+   "label_en": "Landing-gear position signalling (4-lamp box marked LEVÉ ...; arrow tip touches small knob at its lower left)",
+   "kind": "light",
+   "x": 0.403,
+   "y": 0.464,
+   "approx_diameter": 0.055
+  },
+  {
+   "label_fr": "COMPAS VION",
+   "label_en": "Vion compass",
+   "kind": "dial",
+   "x": 0.513,
+   "y": 0.229,
+   "approx_diameter": 0.118
+  },
+  {
+   "label_fr": "ANÉMO CONTRÔLEUR DE VOL",
+   "label_en": "Airspeed indicator of the flight-control (Badin-type) unit",
+   "kind": "dial",
+   "x": 0.515,
+   "y": 0.384,
+   "approx_diameter": 0.11
+  },
+  {
+   "label_fr": "INDICATEUR DE VIRAGE",
+   "label_en": "Turn indicator (horizontal window under the airspeed dial)",
+   "kind": "dial",
+   "x": 0.517,
+   "y": 0.477,
+   "approx_diameter": 0.118
+  },
+  {
+   "label_fr": "POSTE DE COMMANDE 2 B.E.C.",
+   "label_en": "Control box for 2 flares (bombes éclairantes): GAUCHE / DROITE buttons",
+   "kind": "switch",
+   "x": 0.68,
+   "y": 0.171,
+   "approx_diameter": 0.11
+  },
+  {
+   "label_fr": "VARIOMÈTRE VITESSES VERTICALES",
+   "label_en": "Variometer (vertical-speed indicator)",
+   "kind": "dial",
+   "x": 0.653,
+   "y": 0.306,
+   "approx_diameter": 0.106
+  },
+  {
+   "label_fr": "(sans légende) — ALTIMÈTRE (inscrit sur le cadran)",
+   "label_en": "Altimeter (no callout; word ALTIMÈTRE on dial face)",
+   "kind": "dial",
+   "x": 0.65,
+   "y": 0.44,
+   "approx_diameter": 0.102
+  },
+  {
+   "label_fr": "(sans légende) — montre",
+   "label_en": "Clock (no callout; identified from its 12-hour face)",
+   "kind": "dial",
+   "x": 0.767,
+   "y": 0.292,
+   "approx_diameter": 0.083
+  },
+  {
+   "label_fr": "GRAISSAGE",
+   "label_en": "Lubrication (oil-pump / greasing) knob",
+   "kind": "handle",
+   "x": 0.796,
+   "y": 0.194,
+   "approx_diameter": 0.031
+  },
+  {
+   "label_fr": "PRISE DE COURANT",
+   "label_en": "Electrical socket box",
+   "kind": "other",
+   "x": 0.869,
+   "y": 0.282,
+   "approx_diameter": 0.098
+  },
+  {
+   "label_fr": "INHALATEUR (Gourdou)",
+   "label_en": "Oxygen inhaler (Gourdou) control box, with pressure gauge and flow indicator",
+   "kind": "other",
+   "x": 0.782,
+   "y": 0.466,
+   "approx_diameter": 0.165
+  },
+  {
+   "label_fr": "INHALATEUR — manomètre",
+   "label_en": "Oxygen inhaler pressure gauge (part of inhaler box)",
+   "kind": "dial",
+   "x": 0.79,
+   "y": 0.528,
+   "approx_diameter": 0.049
+  },
+  {
+   "label_fr": "RELAIS DE CARLINGUE",
+   "label_en": "Cockpit relay box (Ericsson)",
+   "kind": "other",
+   "x": 0.924,
+   "y": 0.429,
+   "approx_diameter": 0.11
+  },
+  {
+   "label_fr": "SÉCURITÉ TOTALE — CINÉ-MITRAILLEUR",
+   "label_en": "Master (total) safety — gun-camera switch",
+   "kind": "switch",
+   "x": 0.443,
+   "y": 0.537,
+   "approx_diameter": 0.014
+  },
+  {
+   "label_fr": "LAMPE TÉMOIN",
+   "label_en": "Telltale (warning) lamp",
+   "kind": "light",
+   "x": 0.464,
+   "y": 0.546,
+   "approx_diameter": 0.014
+  },
+  {
+   "label_fr": "ARMEMENT MITR. GAUCHE",
+   "label_en": "Left machine-gun cocking (arming) button",
+   "kind": "switch",
+   "x": 0.495,
+   "y": 0.546,
+   "approx_diameter": 0.014
+  },
+  {
+   "label_fr": "ARMEMENT CANON",
+   "label_en": "Cannon cocking (arming) button",
+   "kind": "switch",
+   "x": 0.517,
+   "y": 0.546,
+   "approx_diameter": 0.014
+  },
+  {
+   "label_fr": "ARMEMENT MITR. DROITE",
+   "label_en": "Right machine-gun cocking (arming) button",
+   "kind": "switch",
+   "x": 0.542,
+   "y": 0.546,
+   "approx_diameter": 0.014
+  },
+  {
+   "label_fr": "DÉTENTE MITR. GAUCHE",
+   "label_en": "Left machine-gun trigger (firing) switch",
+   "kind": "switch",
+   "x": 0.568,
+   "y": 0.537,
+   "approx_diameter": 0.014
+  },
+  {
+   "label_fr": "DÉTENTE CANON",
+   "label_en": "Cannon trigger (firing) switch",
+   "kind": "switch",
+   "x": 0.588,
+   "y": 0.537,
+   "approx_diameter": 0.014
+  },
+  {
+   "label_fr": "DÉTENTE MITR. DROITE",
+   "label_en": "Right machine-gun trigger (firing) switch",
+   "kind": "switch",
+   "x": 0.612,
+   "y": 0.537,
+   "approx_diameter": 0.014
+  },
+  {
+   "label_fr": "FUSIBLES",
+   "label_en": "Fuses (fuse box under the switch strip)",
+   "kind": "other",
+   "x": 0.524,
+   "y": 0.625,
+   "approx_diameter": 0.189
+  },
+  {
+   "label_fr": "JAUGEUR ESSENCE",
+   "label_en": "Fuel gauge",
+   "kind": "dial",
+   "x": 0.524,
+   "y": 0.718,
+   "approx_diameter": 0.067
+  },
+  {
+   "label_fr": "MANO (SECOURS VOLET, TRAIN, POMPE)",
+   "label_en": "Pressure gauge (emergency flap, undercarriage, pump) — triple gauge",
+   "kind": "dial",
+   "x": 0.524,
+   "y": 0.818,
+   "approx_diameter": 0.079
+  },
+  {
+   "label_fr": "ALIMENTATION FREINS OLAER",
+   "label_en": "Brake supply (Olaer) pressure gauge",
+   "kind": "dial",
+   "x": 0.531,
+   "y": 0.907,
+   "approx_diameter": 0.071
+  }
+ ],
+ "labels": [
+  {
+   "fr": "PLANCHE DE BORD",
+   "en": "INSTRUMENT PANEL"
+  },
+  {
+   "fr": "PL. N° 39",
+   "en": "Pl. 39"
+  },
+  {
+   "fr": "D. 520. S",
+   "en": "D. 520. S"
+  },
+  {
+   "fr": "FEUX DE ROUTE",
+   "en": "Navigation lights (switch)"
+  },
+  {
+   "fr": "FEUX DE BORD",
+   "en": "Cockpit (instrument) lights (rheostat knob)"
+  },
+  {
+   "fr": "ANEMO",
+   "en": "Airspeed indicator (pitot heating) switch"
+  },
+  {
+   "fr": "PHARE",
+   "en": "Landing light (knob)"
+  },
+  {
+   "fr": "COMPAS",
+   "en": "Compass (lighting) knob"
+  },
+  {
+   "fr": "FUSÉE",
+   "en": "Flare (lever switch)"
+  },
+  {
+   "fr": "SIGNALISATION",
+   "en": "Signalling (lamp / push-button)"
+  },
+  {
+   "fr": "THERMOMÈTRE EAU",
+   "en": "Coolant (water) thermometer"
+  },
+  {
+   "fr": "THERMOMÈTRE HUILE",
+   "en": "Oil thermometer"
+  },
+  {
+   "fr": "MANO ADMISSION",
+   "en": "Manifold (boost) pressure gauge"
+  },
+  {
+   "fr": "MANO DE CARBURATEUR",
+   "en": "Carburettor (fuel) pressure gauge"
+  },
+  {
+   "fr": "MANO HUILE",
+   "en": "Oil pressure gauge"
+  },
+  {
+   "fr": "TACHYMÈTRE",
+   "en": "Tachometer (rev counter)"
+  },
+  {
+   "fr": "HÉLICE",
+   "en": "Propeller (pitch control box, PETIT PAS / GRAND PAS lever)"
+  },
+  {
+   "fr": "ANÉMOMÈTRE D'ATTERRISSAGE",
+   "en": "Landing airspeed indicator"
+  },
+  {
+   "fr": "SIGNALISATION DU TRAIN",
+   "en": "Landing-gear position signalling (4-lamp box marked LEVÉ ...; arrow tip touches small knob at its lower left)"
+  },
+  {
+   "fr": "COMPAS VION",
+   "en": "Vion compass"
+  },
+  {
+   "fr": "ANÉMO CONTRÔLEUR DE VOL",
+   "en": "Airspeed indicator of the flight-control (Badin-type) unit"
+  },
+  {
+   "fr": "INDICATEUR DE VIRAGE",
+   "en": "Turn indicator (horizontal window under the airspeed dial)"
+  },
+  {
+   "fr": "POSTE DE COMMANDE 2 B.E.C.",
+   "en": "Control box for 2 flares (bombes éclairantes): GAUCHE / DROITE buttons"
+  },
+  {
+   "fr": "VARIOMÈTRE VITESSES VERTICALES",
+   "en": "Variometer (vertical-speed indicator)"
+  },
+  {
+   "fr": "(sans légende) — ALTIMÈTRE (inscrit sur le cadran)",
+   "en": "Altimeter (no callout; word ALTIMÈTRE on dial face)"
+  },
+  {
+   "fr": "(sans légende) — montre",
+   "en": "Clock (no callout; identified from its 12-hour face)"
+  },
+  {
+   "fr": "GRAISSAGE",
+   "en": "Lubrication (oil-pump / greasing) knob"
+  },
+  {
+   "fr": "PRISE DE COURANT",
+   "en": "Electrical socket box"
+  },
+  {
+   "fr": "INHALATEUR (Gourdou)",
+   "en": "Oxygen inhaler (Gourdou) control box, with pressure gauge and flow indicator"
+  },
+  {
+   "fr": "INHALATEUR — manomètre",
+   "en": "Oxygen inhaler pressure gauge (part of inhaler box)"
+  },
+  {
+   "fr": "RELAIS DE CARLINGUE",
+   "en": "Cockpit relay box (Ericsson)"
+  },
+  {
+   "fr": "SÉCURITÉ TOTALE — CINÉ-MITRAILLEUR",
+   "en": "Master (total) safety — gun-camera switch"
+  },
+  {
+   "fr": "LAMPE TÉMOIN",
+   "en": "Telltale (warning) lamp"
+  },
+  {
+   "fr": "ARMEMENT MITR. GAUCHE",
+   "en": "Left machine-gun cocking (arming) button"
+  },
+  {
+   "fr": "ARMEMENT CANON",
+   "en": "Cannon cocking (arming) button"
+  },
+  {
+   "fr": "ARMEMENT MITR. DROITE",
+   "en": "Right machine-gun cocking (arming) button"
+  },
+  {
+   "fr": "DÉTENTE MITR. GAUCHE",
+   "en": "Left machine-gun trigger (firing) switch"
+  },
+  {
+   "fr": "DÉTENTE CANON",
+   "en": "Cannon trigger (firing) switch"
+  },
+  {
+   "fr": "DÉTENTE MITR. DROITE",
+   "en": "Right machine-gun trigger (firing) switch"
+  },
+  {
+   "fr": "FUSIBLES",
+   "en": "Fuses (fuse box under the switch strip)"
+  },
+  {
+   "fr": "JAUGEUR ESSENCE",
+   "en": "Fuel gauge"
+  },
+  {
+   "fr": "MANO (SECOURS VOLET, TRAIN, POMPE)",
+   "en": "Pressure gauge (emergency flap, undercarriage, pump) — triple gauge"
+  },
+  {
+   "fr": "ALIMENTATION FREINS OLAER",
+   "en": "Brake supply (Olaer) pressure gauge"
+  },
+  {
+   "fr": "PETIT PAS / GRAND PAS (plaque de la boîte HÉLICE, lecture probable)",
+   "en": "FINE PITCH / COARSE PITCH (plate on propeller box, probable reading)"
+  },
+  {
+   "fr": "LEVÉ (boîte de signalisation du train; le mot du bas est illisible)",
+   "en": "UP (on gear-signal box; lower word illegible)"
+  },
+  {
+   "fr": "GAUCHE / DROITE (boutons du poste de commande 2 B.E.C.); « ... ET LÂCHER » partiellement lisible",
+   "en": "LEFT / RIGHT (buttons of the 2-flare control box); '... AND RELEASE' partly legible"
+  },
+  {
+   "fr": "VARIOMÈTRE (sur le cadran)",
+   "en": "VARIOMETER (on dial face)"
+  },
+  {
+   "fr": "INHALATEUR GOURDOU (plaque)",
+   "en": "GOURDOU INHALER (plate)"
+  }
+ ]
+}

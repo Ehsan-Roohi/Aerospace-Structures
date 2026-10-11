@@ -1,0 +1,21 @@
+{
+ "reference": {
+  "reaction_fz": -10591.62,
+  "tip_uz": 0.0123121
+ },
+ "nastran": {
+  "n_nodes": 39440,
+  "n_elems": 41066,
+  "mass": 115.9854835343293,
+  "sum_fz": 11734.0475775978,
+  "reaction_fz": -10591.62,
+  "tip_uz_max": 0.0123145
+ },
+ "apdl": {
+  "n_nodes": 39440,
+  "n_elems": 41066,
+  "sum_fz": 11734.0475775978,
+  "reaction_fz": -10591.62,
+  "tip_uz_max": 0.0123145
+ }
+}

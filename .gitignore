@@ -13,3 +13,7 @@ tmp/lecture01-figures/
 *.step
 *.3mf
 *.zip
+
+# D.520 case study: CAD deliverables for SolidWorks / ANSYS are part of the course material
+!computational/d520-wing/stress/cad/*.step
+!computational/d520-wing/stress/cad/*.stl

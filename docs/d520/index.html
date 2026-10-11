@@ -1,0 +1,441 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dewoitine D.520 S Notice</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=B612:ital,wght@0,400;0,700;1,400&family=B612+Mono:wght@400;700&family=Courier+Prime:wght@400;700&family=Saira+Condensed:wght@500;600;700&display=swap">
+<style>
+/* Layout: a technical binder. Chapter tabs on top, the plate (3-D view) as the working surface,
+   controls set like a placard beside it; red plate-ink is the only accent. */
+:root{
+  --paper:#dddfdb; --sheet:#ecedea; --sheet-2:#e4e6e2; --ink:#1b1f23; --ink-2:#4b525a; --rule:#b8bcb7;
+  --plate:#a3302b; --plate-soft:#a3302b1f;
+  --printed:#1b1f23; --scaled:#35566f; --derived:#6a6634; --guess:#a1620a; --external:#6b4b86;
+  --pass:#2d7a4c; --warn:#a86c12; --fail:#b0281f; --info:#5c636b;
+  --view-bg:#cfd2ce;
+  --f-display:"Saira Condensed","Arial Narrow",Arial,sans-serif;
+  --f-body:"B612","Segoe UI",Helvetica,Arial,sans-serif;
+  --f-mono:"B612 Mono",ui-monospace,Menlo,Consolas,monospace;
+  --f-type:"Courier Prime","Courier New",Courier,monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --paper:#14181d; --sheet:#1c2228; --sheet-2:#232a31; --ink:#e4e5e0; --ink-2:#a3a9ae; --rule:#333b44;
+  --plate:#e2675d; --plate-soft:#e2675d26;
+  --printed:#e4e5e0; --scaled:#8fb3cf; --derived:#c3bd78; --guess:#e8a33d; --external:#b99bd6;
+  --pass:#5cc488; --warn:#e3a645; --fail:#f07067; --info:#9aa1a8; --view-bg:#20262d; color-scheme:dark }}
+:root[data-theme="dark"]{
+  --paper:#14181d; --sheet:#1c2228; --sheet-2:#232a31; --ink:#e4e5e0; --ink-2:#a3a9ae; --rule:#333b44;
+  --plate:#e2675d; --plate-soft:#e2675d26;
+  --printed:#e4e5e0; --scaled:#8fb3cf; --derived:#c3bd78; --guess:#e8a33d; --external:#b99bd6;
+  --pass:#5cc488; --warn:#e3a645; --fail:#f07067; --info:#9aa1a8; --view-bg:#20262d; color-scheme:dark }
+*{box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--paper);color:var(--ink);font:14px/1.5 var(--f-body);margin:0}
+.wrap{padding-inline:clamp(16px,3vw,32px);padding-block:0 40px;max-width:1500px;margin:0 auto}
+header.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--paper);border-bottom:1px solid var(--rule)}
+.bar-in{display:flex;flex-wrap:wrap;align-items:flex-end;gap:10px 28px;padding-block:14px 0}
+.brand{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;min-width:0}
+.brand h1{font:700 clamp(28px,4vw,40px)/0.9 var(--f-display);letter-spacing:.06em;margin:0;text-transform:uppercase}
+.brand h1 b{color:var(--plate);font-weight:700}
+.brand p{margin:0;color:var(--ink-2);font-size:12.5px;letter-spacing:.02em;max-width:52ch}
+nav.tabs{display:flex;gap:2px;margin-left:auto;flex-wrap:wrap}
+nav.tabs button{font:600 15px/1 var(--f-display);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2);
+  background:transparent;border:1px solid transparent;border-bottom:none;padding:10px 14px 9px;cursor:pointer;border-radius:6px 6px 0 0}
+nav.tabs button[aria-selected="true"]{color:var(--ink);background:var(--sheet);border-color:var(--rule);position:relative;top:1px}
+nav.tabs button:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--plate);outline-offset:2px}
+section.tab{padding-top:22px}
+.eyebrow{font:600 12px/1 var(--f-display);letter-spacing:.16em;text-transform:uppercase;color:var(--plate)}
+h2{font:700 26px/1.1 var(--f-display);letter-spacing:.05em;text-transform:uppercase;margin:6px 0 10px;text-wrap:balance}
+h3{font:700 17px/1.2 var(--f-display);letter-spacing:.08em;text-transform:uppercase;margin:0 0 8px}
+.lede{color:var(--ink-2);max-width:72ch;margin:0 0 18px}
+/* model */
+.model-grid{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:18px;align-items:start}
+@media (max-width:980px){.model-grid{grid-template-columns:minmax(0,1fr)}}
+.viewer{position:relative;background:var(--view-bg);border:1px solid var(--rule);border-radius:4px;aspect-ratio:16/10;max-width:100%;overflow:hidden}
+.viewer canvas{width:100%;height:100%;display:block;touch-action:none}
+.viewer .load{position:absolute;inset:0;display:grid;place-items:center;font:600 14px var(--f-mono);color:var(--ink-2)}
+.viewer .load[hidden]{display:none}
+.viewer .hint{position:absolute;left:12px;bottom:10px;font:12px var(--f-mono);color:var(--ink-2);background:color-mix(in srgb,var(--sheet) 80%,transparent);padding:4px 8px;border-radius:3px}
+.viewer .stamp{position:absolute;right:12px;top:10px;font:600 11px/1.2 var(--f-display);letter-spacing:.12em;text-transform:uppercase;color:var(--plate);border:1.5px solid var(--plate);border-radius:50%;width:84px;height:84px;display:grid;place-items:center;text-align:center;transform:rotate(-12deg);opacity:.75;pointer-events:none}
+.panel{background:var(--sheet);border:1px solid var(--rule);border-radius:4px;padding:16px 16px 6px}
+.ctl{display:grid;grid-template-columns:1fr auto;gap:2px 10px;padding:10px 0;border-top:1px solid var(--rule)}
+.ctl:first-of-type{border-top:none;padding-top:2px}
+.ctl label{font-weight:700;font-size:13px}
+.ctl output{font:700 13px var(--f-mono);font-variant-numeric:tabular-nums;color:var(--plate);text-align:right}
+.ctl input[type=range]{grid-column:1/-1;width:100%;accent-color:var(--plate)}
+.ctl .src{grid-column:1/-1;font-size:11.5px;color:var(--ink-2)}
+.btns{display:flex;flex-wrap:wrap;gap:8px;padding:12px 0}
+.btn{font:700 13px var(--f-body);background:var(--ink);color:var(--paper);border:0;border-radius:3px;padding:8px 12px;cursor:pointer}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--rule)}
+.keyfigs{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:1px;background:var(--rule);border:1px solid var(--rule);border-radius:4px;overflow:hidden;margin-top:18px}
+.kf{background:var(--sheet);padding:10px 12px;min-width:0}
+@media (max-width:1100px){.keyfigs{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:480px){.keyfigs{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.kf .k{font:600 11px/1.2 var(--f-display);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2)}
+.kf .v{font:700 20px/1.25 var(--f-mono);font-variant-numeric:tabular-nums}
+.kf .s{font-size:11px;color:var(--ink-2)}
+/* pills */
+.pill{display:inline-block;font:700 10.5px/1 var(--f-mono);letter-spacing:.06em;padding:4px 6px 3px;border-radius:3px;border:1.5px solid currentColor;white-space:nowrap}
+.st-PRINTED{color:var(--printed)} .st-SCALED{color:var(--scaled)} .st-DERIVED{color:var(--derived)} .st-GUESS{color:var(--guess);border-style:dashed} .st-EXTERNAL{color:var(--external)}
+.v-PASS{color:var(--pass)} .v-WARN{color:var(--warn)} .v-FAIL{color:var(--fail)} .v-INFO{color:var(--info)}
+/* tables */
+.tbl-wrap{overflow-x:auto;border:1px solid var(--rule);border-radius:4px;background:var(--sheet)}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{text-align:left;vertical-align:top;padding:8px 10px;border-bottom:1px solid var(--rule)}
+th{font:600 12px var(--f-display);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2);background:var(--sheet-2);position:sticky;top:0}
+td.num{font-family:var(--f-mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+td small{color:var(--ink-2)}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 12px}
+.chip{font:700 12px var(--f-body);border:1px solid var(--rule);background:var(--sheet);color:var(--ink);border-radius:20px;padding:5px 11px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.summary{display:flex;flex-wrap:wrap;gap:18px;align-items:baseline;margin:0 0 14px}
+.summary .n{font:700 30px var(--f-mono)}
+.figs{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:16px;margin-top:18px}
+figure{margin:0;background:var(--sheet);border:1px solid var(--rule);border-radius:4px;overflow:hidden}
+figure img{display:block;width:100%;height:auto;background:#fff}
+figcaption{padding:8px 12px 10px;font-size:12.5px;color:var(--ink-2)}
+figcaption b{color:var(--ink)}
+/* manual */
+.man{display:grid;grid-template-columns:300px minmax(0,1fr);gap:18px;align-items:start}
+@media (max-width:860px){.man{grid-template-columns:minmax(0,1fr)}}
+.man-list{background:var(--sheet);border:1px solid var(--rule);border-radius:4px;max-height:78vh;overflow:auto}
+.man-list input{width:calc(100% - 16px);margin:8px;padding:8px 10px;font:13px var(--f-body);border:1px solid var(--rule);border-radius:3px;background:var(--paper);color:var(--ink)}
+.man-list ol{list-style:none;margin:0;padding:0}
+.man-list li button{display:grid;grid-template-columns:42px 1fr;gap:6px;width:100%;text-align:left;background:transparent;border:0;border-top:1px solid var(--rule);padding:7px 10px;cursor:pointer;color:var(--ink);font:12.5px/1.3 var(--f-body)}
+.man-list li button[aria-current="true"]{background:var(--plate-soft)}
+.man-list .pn{font:700 12px var(--f-mono);color:var(--ink-2)}
+.man-list .kd{display:block;font:600 10.5px var(--f-display);letter-spacing:.1em;text-transform:uppercase;color:var(--plate)}
+.man-page{min-width:0}
+.man-head{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:baseline;margin-bottom:10px}
+.man-head .meta{font:12px var(--f-mono);color:var(--ink-2)}
+.seg{display:inline-flex;border:1px solid var(--rule);border-radius:3px;overflow:hidden;margin-left:auto}
+.seg button{font:700 12px var(--f-body);background:var(--sheet);color:var(--ink);border:0;padding:6px 10px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.man-body{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
+@media (max-width:1100px){.man-body{grid-template-columns:minmax(0,1fr)}}
+.scan{background:var(--sheet);border:1px solid var(--rule);border-radius:4px;padding:8px}
+.scan img{display:block;width:100%;height:auto;cursor:zoom-in}
+.scan.big{grid-column:1/-1}
+.scan.big img{cursor:zoom-out}
+.text{background:var(--sheet);border:1px solid var(--rule);border-radius:4px;padding:14px 18px;min-width:0;overflow-wrap:break-word}
+.text td,.text th{overflow-wrap:normal}
+.text .lang{font:600 11px var(--f-display);letter-spacing:.16em;text-transform:uppercase;color:var(--plate);margin:0 0 6px}
+.text.fr{font-family:var(--f-type);font-size:14px}
+.text table{font-size:12.5px;margin:8px 0;display:block;overflow-x:auto}
+.text h2,.text h3,.text h4{font-family:var(--f-display);letter-spacing:.06em;text-transform:uppercase;margin:14px 0 6px;font-size:17px}
+.text blockquote{margin:8px 0;padding:8px 12px;border-left:3px solid var(--plate);background:var(--sheet-2)}
+.note{font-size:12px;color:var(--ink-2);margin-top:12px;border-top:1px dashed var(--rule);padding-top:8px}
+.gal{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr));gap:16px}
+.foot{margin-top:28px;color:var(--ink-2);font-size:12px;border-top:1px solid var(--rule);padding-top:12px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+
+<header class="bar"><div class="wrap bar-in">
+  <div class="brand">
+    <h1>D.520<b> S</b></h1>
+    <p>Notice descriptive et d'utilisation, 1940, rebuilt as a parametric model. Every dimension traced to a page of the manual.</p>
+    <p class="xlinks" style="margin:.35em 0 0;font-size:12.5px"><a href="../wing-lab.html#d520">Analyse its wing in Wing Lab →</a> · <a href="https://github.com/Ehsan-Roohi/Aerospace-Structures/tree/main/computational/d520-wing">Files: Blender, CAD, ANSYS, Python</a> · <a href="../index.html">MIE 446</a></p>
+  </div>
+  <nav class="tabs" role="tablist" aria-label="Sections">
+    <button role="tab" id="t-model" aria-controls="sec-model" aria-selected="true">Model</button>
+    <button role="tab" id="t-sources" aria-controls="sec-sources" aria-selected="false">Sources</button>
+    <button role="tab" id="t-checks" aria-controls="sec-checks" aria-selected="false">Checks</button>
+    <button role="tab" id="t-manual" aria-controls="sec-manual" aria-selected="false">Manual</button>
+    <button role="tab" id="t-renders" aria-controls="sec-renders" aria-selected="false">Renders</button>
+  </nav>
+</div></header>
+
+<main class="wrap">
+<section class="tab" id="sec-model" role="tabpanel" aria-labelledby="t-model">
+  <div class="model-grid">
+    <div style="min-width:0">
+      <div class="viewer" id="viewer">
+        <canvas id="cv" aria-label="3-D model of the Dewoitine D.520 S"></canvas>
+        <div class="load" id="load">Loading model…</div>
+        <div class="stamp" aria-hidden="true">Notice<br>D.520 S<br>1940</div>
+        <div class="hint">Drag to orbit · scroll to zoom · right-drag to pan</div>
+      </div>
+      <div class="keyfigs" id="keyfigs"></div>
+    </div>
+    <aside class="panel" aria-label="Controls">
+      <div class="eyebrow">Rigged to the printed travel</div>
+      <h3 style="margin-top:6px">Controls</h3>
+      <div class="ctl"><label for="c-ail">Stick, roll</label><output id="o-ail">0</output><input id="c-ail" type="range" min="-1" max="1" step="0.01" value="0"><div class="src">Ailerons 30° up / 15° down (differential). p13, handwritten.</div></div>
+      <div class="ctl"><label for="c-ele">Stick, pitch</label><output id="o-ele">0°</output><input id="c-ele" type="range" min="-1" max="1" step="0.01" value="0"><div class="src">Elevators ±20°. p14.</div></div>
+      <div class="ctl"><label for="c-rud">Rudder bar</label><output id="o-rud">0°</output><input id="c-rud" type="range" min="-1" max="1" step="0.01" value="0"><div class="src">Rudder ±30°. p14.</div></div>
+      <div class="ctl"><label for="c-flp">Flaps</label><output id="o-flp">0°</output><input id="c-flp" type="range" min="0" max="1" step="0.01" value="0"><div class="src">0 to 35°. p14. Use below 270 km/h (p42).</div></div>
+      <div class="ctl"><label for="c-tpi">Tailplane incidence</label><output id="o-tpi">0°</output><input id="c-tpi" type="range" min="-3" max="3" step="0.1" value="0"><div class="src">Adjustable in flight ±3°, handwheel left of the seat. p63, p39.</div></div>
+      <div class="ctl"><label for="c-gear">Landing gear</label><output id="o-gear">down</output><input id="c-gear" type="range" min="0" max="1" step="0.01" value="0"><div class="src">Retracts inward 90° about a fore-aft pivot; oleo extends 0.15 m first. p21–22, Pl.30. Ventral antenna follows (Pl.45).</div></div>
+      <div class="ctl"><label for="c-can">Sliding hood</label><output id="o-can">closed</output><input id="c-can" type="range" min="0" max="1" step="0.01" value="0"><div class="src">Slides aft. Travel 0.55 m is a guess from the photographs.</div></div>
+      <div class="ctl"><label for="c-rad">Radiator flap</label><output id="o-rad">0°</output><input id="c-rad" type="range" min="0" max="1" step="0.01" value="0"><div class="src">Pilot-controlled rear flap, p26. Travel is a guess.</div></div>
+      <div class="ctl"><label for="c-pit">Propeller pitch</label><output id="o-pit">fine</output><input id="c-pit" type="range" min="0" max="1" step="0.01" value="0"><div class="src">Variable pitch, Ratier or Chauvière. Pitch limits left blank on p15; +20° range is a guess.</div></div>
+      <div class="ctl"><label for="c-att">Attitude</label><output id="o-att">flight line</output><input id="c-att" type="range" min="0" max="1" step="0.01" value="0"><div class="src">Prop axis 1.845 m in flight line, 2.265 m at rest (p13): 14.6° nose-up on the tail wheel.</div></div>
+      <div class="btns">
+        <button class="btn" id="b-check" type="button">Run control check</button>
+        <button class="btn ghost" id="b-spin" type="button" aria-pressed="false">Spin propeller</button>
+        <button class="btn ghost" id="b-reset" type="button">Reset</button>
+      </div>
+    </aside>
+  </div>
+</section>
+
+<section class="tab" id="sec-sources" role="tabpanel" aria-labelledby="t-sources" hidden>
+  <div class="eyebrow">One rule: every dimension has a source</div>
+  <h2>Where each number comes from</h2>
+  <p class="lede">Printed values come straight from the manual's tables or plates. Scaled values were measured on Pl. 0, which is drawn at 1/50 and scanned at 150 dpi, so 1 m is 118 pixels. Derived values are computed from those, and guesses are labelled as guesses. When two sources disagreed, a third one decided.</p>
+  <div class="chips" id="st-chips"></div>
+  <div class="tbl-wrap"><table id="t-params"><thead><tr><th>Parameter</th><th>Value</th><th>Status</th><th>Source</th><th>Notes and conflicts</th></tr></thead><tbody></tbody></table></div>
+</section>
+
+<section class="tab" id="sec-checks" role="tabpanel" aria-labelledby="t-checks" hidden>
+  <div class="eyebrow">Measured on the finished model</div>
+  <h2>Model against manual</h2>
+  <p class="lede">A second script measures the built Blender model and compares each figure with the manual. Two checks stay open on purpose: the fin area and the cockpit height.</p>
+  <div class="summary" id="v-sum"></div>
+  <div class="tbl-wrap"><table id="t-checks"><thead><tr><th>Check</th><th>Measured</th><th>Manual</th><th>Error</th><th>Verdict</th><th>Source</th></tr></thead><tbody></tbody></table></div>
+  <div class="figs">
+    <figure><img src="img/overlay_pl0_sheet.jpg" alt="Model silhouettes in blue over the three views of plate 0" loading="lazy"><figcaption><b>Over Pl. 0, the 1/50 general views.</b> Blue is the model, red the manual's ink. The gear in the drawing is longer because the oleos are drawn fully extended.</figcaption></figure>
+    <figure><img src="img/front_overlay.jpg" alt="Model overlaid on the manual's front photograph" loading="lazy"><figcaption><b>Front photograph, page 2.</b> Camera solved from six landmarks, 3.7 px mean error.</figcaption></figure>
+    <figure><img src="img/profile_overlay.jpg" alt="Model overlaid on the manual's profile photograph" loading="lazy"><figcaption><b>Profile photograph, page 3.</b> Same procedure; the aircraft stands on its tail wheel with the hood open.</figcaption></figure>
+    <figure><img src="img/three_quarter_overlay.jpg" alt="Model overlaid on the three-quarter photograph" loading="lazy"><figcaption><b>Three-quarter photograph, page 4.</b></figcaption></figure>
+  </div>
+</section>
+
+<section class="tab" id="sec-manual" role="tabpanel" aria-labelledby="t-manual" hidden>
+  <div class="eyebrow">168 pages · French transcription and English translation</div>
+  <h2>The notice, page by page</h2>
+  <div class="man">
+    <div class="man-list"><input id="q" type="search" placeholder="Search the manual (e.g. radiateur, flap, Pl. 39)" aria-label="Search the manual"><ol id="plist"></ol></div>
+    <div class="man-page" id="ppage"></div>
+  </div>
+</section>
+
+<section class="tab" id="sec-renders" role="tabpanel" aria-labelledby="t-renders" hidden>
+  <div class="eyebrow">Cycles renders of the baked model</div>
+  <h2>Renders</h2>
+  <div class="gal" id="gal"></div>
+</section>
+<p class="foot">Source: <i>Notice descriptive et d'utilisation de l'avion de chasse D.520 S, moteur 12 Y 45</i>, scan held by the Archives départementales de la Haute-Garonne. Model, scripts and translation produced from that scan.</p>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/loaders/GLTFLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/environments/RoomEnvironment.js"></script>
+<script>
+const $ = (s, r=document) => r.querySelector(s);
+const store = { get(k){ try { return localStorage.getItem(k) } catch(e){ return null } }, set(k,v){ try { localStorage.setItem(k,v) } catch(e){} } };
+const md = t => { try { return DOMPurify.sanitize(marked.parse(t || "")) } catch(e){ const d=document.createElement('pre'); d.textContent=t||''; return d.outerHTML } };
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+/* ---------------- tabs ---------------- */
+const TABS = ["model","sources","checks","manual","renders"];
+const loaded = {};
+function show(id){
+  if(!TABS.includes(id)) id = "model";
+  for(const t of TABS){ $("#sec-"+t).hidden = t!==id; $("#t-"+t).setAttribute("aria-selected", t===id) }
+  if(location.hash.slice(1)!==id) history.replaceState(null,"","#"+id);
+  if(!loaded[id]){ loaded[id]=true; ({model:initModel,sources:initSources,checks:initChecks,manual:initManual,renders:initRenders})[id]() }
+  if(id==="model") onResize();
+}
+for(const t of TABS) $("#t-"+t).addEventListener("click", ()=>show(t));
+window.addEventListener("hashchange", ()=>show(location.hash.slice(1)));
+
+/* ---------------- 3-D model ---------------- */
+let renderer, scene, camera, controls, nodes = {}, base = {}, spin = false, spinAngle = 0, anim = null;
+const D2R = Math.PI/180;
+const state = { ail:0, ele:0, rud:0, flp:0, tpi:0, gear:0, can:0, rad:0, pit:0, att:0 };
+function onResize(){
+  if(!renderer) return;
+  const el = $("#viewer"), w = el.clientWidth, h = el.clientHeight;
+  renderer.setSize(w, h, false); camera.aspect = w/h; camera.updateProjectionMatrix();
+}
+function initModel(){
+  const cv = $("#cv");
+  renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: true });
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  renderer.outputEncoding = THREE.sRGBEncoding; renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.05;
+  renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  scene = new THREE.Scene();
+  const bgCol = () => renderer.setClearColor(new THREE.Color(getComputedStyle(document.documentElement).getPropertyValue("--view-bg").trim() || "#cfd2ce"), 1);
+  bgCol(); try { matchMedia("(prefers-color-scheme: dark)").addEventListener("change", bgCol) } catch(e){}
+  new MutationObserver(bgCol).observe(document.documentElement, { attributes:true, attributeFilter:["data-theme"] });
+  const pm = new THREE.PMREMGenerator(renderer);
+  scene.environment = pm.fromScene(new THREE.RoomEnvironment(), 0.04).texture;
+  camera = new THREE.PerspectiveCamera(32, 16/10, 0.1, 300);
+  camera.position.set(-10.5, 3.4, -4.5);
+  controls = new THREE.OrbitControls(camera, cv);
+  controls.target.set(0, 1.25, 3.9); controls.enableDamping = true; controls.maxPolarAngle = Math.PI*0.495; controls.minDistance = 2; controls.maxDistance = 40;
+  const sun = new THREE.DirectionalLight(0xffffff, 1.6); sun.position.set(-6, 14, -5); sun.castShadow = true;
+  sun.shadow.mapSize.set(2048, 2048); Object.assign(sun.shadow.camera, { left:-9, right:9, top:9, bottom:-9, near:1, far:40 });
+  sun.target.position.set(0,0,4); scene.add(sun, sun.target, new THREE.HemisphereLight(0xdfe6ee, 0x5d5a50, 0.35));
+  const g = new THREE.Mesh(new THREE.CircleGeometry(30, 64), new THREE.ShadowMaterial({ opacity: 0.28 }));
+  g.rotation.x = -Math.PI/2; g.receiveShadow = true; scene.add(g);
+  const onModel = gltf => {
+    const root = gltf.scene;
+    root.traverse(o => { if(o.name) nodes[o.name] = o; if(o.isMesh){ o.castShadow = true; o.receiveShadow = true;
+      const m = o.material; if(m && m.name && /Glass/i.test(m.name)){ m.transparent = true; m.opacity = 0.22; m.roughness = 0.05; m.metalness = 0; m.depthWrite = false } } });
+    for(const [k,o] of Object.entries(nodes)) base[k] = { p:o.position.clone(), r:o.rotation.clone() };
+    scene.add(root); $("#load").hidden = true; applyState();
+  };
+  const fail = err => { $("#load").textContent = "The 3-D model could not load. Reload the page to try again."; console.error(err) };
+  fetch("d520_glb.json").then(r => { if(!r.ok) throw new Error(r.status); return r.json() }).then(j => {
+    const bin = atob(j.data), u8 = new Uint8Array(bin.length);
+    for(let i=0;i<bin.length;i++) u8[i] = bin.charCodeAt(i);
+    new THREE.GLTFLoader().parse(u8.buffer, "", onModel, fail);
+  }).catch(fail);
+  new ResizeObserver(onResize).observe($("#viewer")); onResize();
+  let last = performance.now();
+  renderer.setAnimationLoop(t => {
+    const dt = (t-last)/1000; last = t;
+    if(spin && nodes.Prop_Spin){ spinAngle += dt*2*Math.PI*0.9; nodes.Prop_Spin.rotation.y = spinAngle }
+    if(anim) anim(t);
+    controls.update(); renderer.render(scene, camera);
+  });
+  bindControls(); keyFigures();
+}
+function rx(name, a){ const n=nodes[name]; if(n){ n.rotation.x = base[name].r.x + a } }
+function applyState(){
+  const s = state, pos = v=>Math.max(v,0), neg = v=>Math.min(v,0);
+  rx("Hinge_Aileron_R", D2R*(-30*pos(s.ail) - 15*neg(s.ail)));
+  rx("Hinge_Aileron_L", D2R*(-15*pos(s.ail) - 30*neg(s.ail)));
+  rx("Hinge_Flap_R", D2R*35*s.flp); rx("Hinge_Flap_L", D2R*35*s.flp);
+  rx("Hinge_Elevator", D2R*-20*s.ele); rx("Pivot_Tailplane", D2R*-s.tpi);
+  rx("Hinge_Rudder", D2R*30*s.rud); rx("Hinge_RadiatorFlap", D2R*25*s.rad);
+  rx("Hinge_VentralAntenna", D2R*-90*s.gear);
+  for(const [tag,sg] of [["R",1],["L",-1]]){
+    const p = nodes["Gear_Pivot_"+tag]; if(p) p.rotation.z = base["Gear_Pivot_"+tag].r.z - sg*D2R*90*s.gear;
+    const o = nodes["Gear_Oleo_"+tag]; if(o) o.position.y = base["Gear_Oleo_"+tag].p.y + 0.15*Math.min(1, 6*s.gear);
+  }
+  const h = nodes.Canopy_Hood; if(h) h.position.z = base.Canopy_Hood.p.z + 0.55*s.can;
+  for(const k of [1,2,3]){ const b = nodes[`Blade_${k}_Pitch`]; if(b) b.rotation.y = base[`Blade_${k}_Pitch`].r.y + D2R*20*s.pit }
+  rx("D520_ATTITUDE", D2R*14.627*s.att);
+  const st = nodes.Pivot_Stick; if(st){ st.rotation.x = D2R*-15*s.ele; st.rotation.z = -D2R*15*s.ail }
+  const rb = nodes.Pivot_RudderBar; if(rb) rb.rotation.y = D2R*-12*s.rud;
+  // outputs
+  $("#o-ail").textContent = s.ail===0 ? "neutral" : `R ${s.ail>0?"up":"down"} ${Math.abs(s.ail>0?30*s.ail:15*s.ail).toFixed(0)}° · L ${s.ail>0?"down":"up"} ${Math.abs(s.ail>0?15*s.ail:30*s.ail).toFixed(0)}°`;
+  $("#o-ele").textContent = `${(20*s.ele).toFixed(0)}° ${s.ele>0?"up":s.ele<0?"down":""}`;
+  $("#o-rud").textContent = `${Math.abs(30*s.rud).toFixed(0)}° ${s.rud>0?"right":s.rud<0?"left":""}`;
+  $("#o-flp").textContent = `${(35*s.flp).toFixed(0)}°`; $("#o-tpi").textContent = `${(+s.tpi).toFixed(1)}°`;
+  $("#o-gear").textContent = s.gear<=0 ? "down" : s.gear>=1 ? "up" : `${Math.round(90*s.gear)}°`;
+  $("#o-can").textContent = s.can<=0 ? "closed" : `${(0.55*s.can).toFixed(2)} m aft`;
+  $("#o-rad").textContent = `${(25*s.rad).toFixed(0)}°`; $("#o-pit").textContent = s.pit<=0 ? "fine" : `+${(20*s.pit).toFixed(0)}°`;
+  $("#o-att").textContent = s.att<=0 ? "flight line" : s.att>=1 ? "at rest, 14.6°" : `${(14.627*s.att).toFixed(1)}°`;
+}
+const CTL = { ail:"c-ail", ele:"c-ele", rud:"c-rud", flp:"c-flp", tpi:"c-tpi", gear:"c-gear", can:"c-can", rad:"c-rad", pit:"c-pit", att:"c-att" };
+function bindControls(){
+  for(const [k,id] of Object.entries(CTL)) $("#"+id).addEventListener("input", e => { anim=null; state[k] = +e.target.value; applyState() });
+  $("#b-reset").addEventListener("click", () => { anim=null; for(const [k,id] of Object.entries(CTL)){ state[k]=0; $("#"+id).value=0 } applyState() });
+  $("#b-spin").addEventListener("click", e => { spin=!spin; e.currentTarget.setAttribute("aria-pressed", spin); e.currentTarget.textContent = spin ? "Stop propeller" : "Spin propeller" });
+  $("#b-check").addEventListener("click", () => {
+    const seq = [[0,{}],[1,{ail:1}],[2,{ail:-1}],[3,{ail:0,ele:1}],[4,{ele:-1}],[5,{ele:0,rud:1}],[6,{rud:-1}],[7,{rud:0,flp:1}],[8,{flp:0,can:1}],[9,{can:0,gear:1}],[10.5,{gear:0}]];
+    const keys = ["ail","ele","rud","flp","can","gear"]; const frames = []; let cur = {ail:0,ele:0,rud:0,flp:0,can:0,gear:0};
+    for(const [t,ch] of seq){ cur = {...cur, ...ch}; frames.push([t,{...cur}]) }
+    const t0 = performance.now();
+    anim = t => { const s=(t-t0)/1000; let i=0; while(i<frames.length-1 && frames[i+1][0]<s) i++;
+      if(i>=frames.length-1){ anim=null; return }
+      const [ta,a]=frames[i],[tb,b]=frames[i+1]; let u=Math.min(1,(s-ta)/(tb-ta)); u=u*u*(3-2*u);
+      for(const k of keys){ state[k]=a[k]+(b[k]-a[k])*u; $("#"+CTL[k]).value=state[k] } applyState() };
+  });
+}
+async function keyFigures(){
+  try{
+    const r = await (await fetch("report.json")).json();
+    const pick = [["Wing span","Span"],["Overall length","Length"],["Wing area, gross","Wing area"],["Propeller diameter","Propeller"],["Track","Track"],["Overall height, flight line","Height, flight line"]];
+    $("#keyfigs").innerHTML = pick.map(([key,lab]) => { const c = r.checks.find(x=>x.check.startsWith(key)); if(!c) return "";
+      return `<div class="kf"><div class="k">${esc(lab)}</div><div class="v">${(+c.measured).toFixed(2)} <small style="font-size:12px">${esc(c.unit.replace("m2","m²"))}</small></div><div class="s">manual ${esc(c.target)} · <span class="v-${c.verdict}">${c.verdict.toLowerCase()}</span></div></div>` }).join("");
+  }catch(e){ $("#keyfigs").hidden = true }
+}
+
+/* ---------------- sources ---------------- */
+async function initSources(){
+  const P = await (await fetch("params.json")).json();
+  const rows = Object.entries(P).map(([k,p]) => ({k, ...p}));
+  const counts = {}; rows.forEach(r => counts[r.status] = (counts[r.status]||0)+1);
+  let filter = store.get("d520-filter") || "ALL";
+  const chips = ["ALL", ...Object.keys(counts).sort()];
+  const fmt = v => { if(v===null||v===undefined) return "—"; if(typeof v==="number") return (Math.round(v*10000)/10000).toString();
+    if(Array.isArray(v)) return v.join(", "); if(typeof v==="object") return Object.entries(v).map(([a,b])=>`${a}: ${Array.isArray(b)?b.join(", "):b}`).join("<br>"); return esc(v) };
+  function draw(){
+    $("#st-chips").innerHTML = chips.map(c => `<button class="chip" aria-pressed="${c===filter}" data-f="${c}">${c==="ALL"?"All":c.toLowerCase()} <span style="opacity:.7">${c==="ALL"?rows.length:counts[c]}</span></button>`).join("");
+    $("#t-params tbody").innerHTML = rows.filter(r => filter==="ALL" || r.status===filter).map(r => `<tr>
+      <td><b>${esc(r.k.replace(/_/g," "))}</b></td>
+      <td class="num">${fmt(r.value)} <small>${esc(r.unit==="-"?"":r.unit)}</small></td>
+      <td><span class="pill st-${r.status}">${r.status}</span></td>
+      <td style="min-width:220px">${(r.sources||[]).map(esc).join("<br>")}</td>
+      <td style="min-width:240px">${esc(r.note||"")}${(r.alternatives||[]).map(a=>`<div style="margin-top:6px"><small>Conflict: ${esc(a.value)} from ${esc(a.source)}. ${esc(a.decision)}</small></div>`).join("")}</td></tr>`).join("");
+    for(const b of document.querySelectorAll("#st-chips .chip")) b.addEventListener("click", () => { filter=b.dataset.f; store.set("d520-filter",filter); draw() });
+  }
+  draw();
+}
+
+/* ---------------- checks ---------------- */
+async function initChecks(){
+  const r = await (await fetch("report.json")).json();
+  const n = {}; r.checks.forEach(c => n[c.verdict]=(n[c.verdict]||0)+1);
+  $("#v-sum").innerHTML = ["PASS","WARN","FAIL","INFO"].map(v => `<div><span class="n v-${v}">${n[v]||0}</span> <span class="pill v-${v}">${v}</span></div>`).join("") + `<div style="color:var(--ink-2)">${r.checks.length} checks on <code>${esc(r.blend)}</code></div>`;
+  $("#t-checks tbody").innerHTML = r.checks.map(c => {
+    const err = c.error===null ? "" : (c.mode==="rel" ? `${(c.error*100).toFixed(1)} %` : `${c.error>0?"+":""}${c.error} abs`);
+    return `<tr><td>${esc(c.check)}${c.note?`<br><small>${esc(c.note)}</small>`:""}</td><td class="num">${c.measured} ${esc(c.unit.replace("m2","m²"))}</td><td class="num">${c.target===null?"—":c.target+" "+esc(c.unit.replace("m2","m²"))}</td><td class="num">${err}</td><td><span class="pill v-${c.verdict}">${c.verdict}</span></td><td><small>${esc(c.source)}</small></td></tr>` }).join("");
+}
+
+/* ---------------- manual ---------------- */
+let PAGES = [], curPage = 1, langMode = store.get("d520-lang") || "both";
+async function initManual(){
+  PAGES = await (await fetch("manual.json")).json();
+  const kindLabel = k => ({cover:"Cover",photo:"Photograph",toc:"Contents",text:"Text","plate":"Plate","plate-card":"Fold-out card","plate-view":"Plate view",blank:"Blank"})[k] || k;
+  function list(q){
+    const qq = (q||"").trim().toLowerCase();
+    const items = PAGES.filter(p => !qq || [p.title_en,p.title_fr,p.en,p.fr,p.plate].join(" ").toLowerCase().includes(qq));
+    $("#plist").innerHTML = items.map(p => `<li><button data-p="${p.pdf_page}" aria-current="${p.pdf_page===curPage}"><span class="pn">${p.pdf_page}</span><span><span class="kd">${esc(kindLabel(p.kind))}${p.plate?" · "+esc(p.plate):""}</span>${esc(p.title_en||"(untitled)")}</span></button></li>`).join("") || `<li style="padding:12px">No page matches “${esc(q)}”.</li>`;
+    for(const b of document.querySelectorAll("#plist button")) b.addEventListener("click", () => open(+b.dataset.p));
+  }
+  function open(n){
+    curPage = n; store.set("d520-page", n);
+    for(const b of document.querySelectorAll("#plist button")) b.setAttribute("aria-current", +b.dataset.p===n);
+    const p = PAGES.find(x=>x.pdf_page===n); if(!p) return;
+    const labels = (p.labels||[]).length ? `<table><thead><tr><th>Label</th><th>English</th></tr></thead><tbody>${p.labels.map(l=>`<tr><td>${esc(l.fr)}</td><td>${esc(l.en)}</td></tr>`).join("")}</tbody></table>` : "";
+    const en = `<div class="text"><p class="lang">English</p>${p.description_en?`<blockquote>${esc(p.description_en)}</blockquote>`:""}${md(p.en)}${labels}${p.notes?`<p class="note">${esc(p.notes)}</p>`:""}</div>`;
+    const fr = `<div class="text fr"><p class="lang">Français</p>${md(p.fr)}</div>`;
+    $("#ppage").innerHTML = `<div class="man-head"><h3 style="margin:0">${esc(p.title_en||"(untitled)")}</h3><span class="meta">PDF p.${p.pdf_page}${p.printed_page?" · printed "+esc(p.printed_page):""}${p.plate?" · "+esc(p.plate):""}</span>
+      <div class="seg" role="group" aria-label="Language">${["both","en","fr"].map(m=>`<button data-l="${m}" aria-pressed="${m===langMode}">${m==="both"?"Both":m.toUpperCase()}</button>`).join("")}</div></div>
+      <div class="man-body"><div class="scan"><img src="scans/p${String(p.pdf_page).padStart(3,"0")}.jpg" alt="Scan of PDF page ${p.pdf_page}" loading="lazy"></div>
+      <div style="display:grid;gap:16px;min-width:0">${langMode!=="fr"?en:""}${langMode!=="en"?fr:""}</div></div>`;
+    $("#ppage .scan img").addEventListener("click", e => e.currentTarget.parentElement.classList.toggle("big"));
+    for(const b of document.querySelectorAll("#ppage .seg button")) b.addEventListener("click", () => { langMode=b.dataset.l; store.set("d520-lang",langMode); open(curPage) });
+  }
+  $("#q").addEventListener("input", e => list(e.target.value));
+  curPage = +(store.get("d520-page") || 13); list(""); open(curPage);
+}
+
+/* ---------------- renders ---------------- */
+function initRenders(){
+  const R = [
+    ["slide.jpg","The 1940 notice, then the Blender model."],
+    ["hero.jpg","Port three-quarter, flight line, studio grey."],
+    ["hero_right.jpg","Starboard side: roundel, rudder lettering, exhaust soot."],
+    ["rear34.jpg","Rear three-quarter. Tricolour rudder with the red Flettner tab."],
+    ["top34.jpg","From above: camouflage across wing, fillet and fuselage, wing roundels."],
+    ["controls.jpg","Rudder 30° right, elevators 20° up, right aileron 30° up, flaps 35°."],
+    ["gear_up.jpg","Gear retracted inward, flaps up, ventral antenna lowered."],
+    ["cockpit.jpg","Hood slid aft; night-blue cockpit (p60), seat and armour plate (7 mm, frame 6)."],
+    ["at_rest.jpg","At rest on the tail wheel, 14.6° nose-up from the printed propeller heights."],
+    ["front_side_by_side.jpg","Manual photograph (left) and the model from the solved camera (right): front."],
+    ["profile_side_by_side.jpg","Profile, page 3."],
+    ["three_quarter_side_by_side.jpg","Three-quarter, page 4."],
+  ];
+  $("#gal").innerHTML = R.map(([f,c]) => `<figure><img src="img/${f}" alt="${esc(c)}" loading="lazy"><figcaption>${esc(c)}</figcaption></figure>`).join("");
+}
+show(location.hash.slice(1) || "model");
+</script>
+
+</body>
+</html>

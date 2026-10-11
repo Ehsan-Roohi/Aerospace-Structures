@@ -52,6 +52,21 @@ The student notebook downloads `printed_wing_solver.py` from the `main` branch w
 
 ## Wing Lab: the same solver as a 3-D browser app
 
+### Full-scale metal wing: Dewoitine D.520
+
+Pathway step **8 · Full-scale metal wing** (or [`wing-lab.html#d520`](https://ehsan-roohi.github.io/Aerospace-Structures/wing-lab.html#d520)) opens a second workspace for a real stressed-skin wing, preset to the 1940 Dewoitine D.520 ([project folder](../d520-wing/README.md)). The engine is `web/metal_wing_engine.js` (SI units); the workspace is `web/metal_wing_ui.js`.
+
+| Step | Method |
+|---|---|
+| Geometry | The manual's planform (taper + elliptic tip cap), thickness at all 22 ribs, dihedral break, NACA 230 camber blend; spar at 0.37c, false spar 0.73c, 4 blade stringers per surface, booms ∝ M/h, wheel-well cut-out |
+| Loads | Glauert lifting line on the real planform (or Schrenk / elliptic) × n; inertia relief from the computed structure, ribs, fuel, guns and ammunition; fuselage fittings with the centre section carried through by symmetry |
+| Sections | Thin-walled idealisation with ~110 walls per station: unsymmetric bending, open-section shear flows closed by two-cell (nose + box) twist compatibility, shear centre, GJ, shear flexibility; tapered-spar correction (inclined booms carry part of V and T) |
+| Response | Deflection (bending + web shear) and twist by integration, a Hermite beam FE for the same static answer and the bending/torsion frequencies |
+| Stability and strength | Skin compression buckling (flat + curved panel), combined compression–shear, spar-web shear buckling, blade-stringer crippling, boom yield, effective-width post-buckling collapse (moment–curvature of each section) |
+
+`web/test_metal_wing.mjs` runs 218 checks: textbook sections (thin tube J = 2πR³t, two-cell Bredt–Batho box), the Python geometry and loads exactly, section properties, collapse moments of 15 sections against the Python section analysis (0.0 %), and the CalculiX shell model of the same wing (structural mass −0.3 %, fitting reaction −0.1 %, tip deflection +2.4 %, tip twist −3 %, boom stresses within 9 % from root to 3.6 m, the three sensitivity meshes within 2.5 %). Reference numbers: `web/metal_wing_reference.json`, written by `computational/d520-wing/stress/scripts/export_wing_lab_reference.py`.
+
+
 ### Progressive learning pathway
 
 The landing screen now starts with **cantilever → fixed–fixed → simply supported beams**, then **continuous wing skin only → rods and sleeves → ribs → the actual modular course wing**. The introductory wing comparisons share a 2 N tip force; the course preset restores the flight-like baseline. The skin-only example is one continuous shell, not disconnected printed modules with their rods removed.
@@ -78,6 +93,7 @@ Additional checks (run from the repository root):
 ```bash
 node computational/printed-wing-solver/web/test_beam_learning.mjs
 node computational/printed-wing-solver/web/test_wing_loading.mjs
+node computational/printed-wing-solver/web/test_metal_wing.mjs
 ```
 
 `web/test_learning_components.mjs` additionally tests the actual lesson forms and controls in a DOM harness, including separated force-couple arrows. It requires `jsdom` (tested with 26.1.0); if installed outside the repository, set `MIE446_JSDOM_MODULE` to its module path. These component tests do not verify WebGL rendering or visual layout in a real browser.

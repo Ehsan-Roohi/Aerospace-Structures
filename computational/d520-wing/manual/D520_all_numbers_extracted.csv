@@ -1,0 +1,433 @@
+pdf_page,plate,quantity,value,unit,quote_fr,where,confidence
+2,,number of propeller blades (observed in photograph),3,blades,(no text – counted on the photograph),photograph,high
+3,,number of propeller blades (observed in photograph),3,blades,(no text – counted on the photograph),photograph,high
+4,,number of propeller blades (observed in photograph),3,blades,(no text – counted on the photograph),photograph,high
+10,,wing rib number singled out by a dedicated plate (rib station reference),13,rib No.,6   Nervure N° 13,"plate list, Pl. 6 title",high
+13,,maximum span (overall),10.20,m (implied),"Envergure maximum .......... 10,20","Encombrement table, row 1; unit not printed",high
+13,,span with wing removed (widest remaining part = tailplane span),3.54,m (implied),"Envergure aile démontée ...... 3,54","Encombrement table, row 2; equals 'Envergure maximum' of the horizontal tail on printed p.10",medium
+13,,overall length,8.78,m (implied),"Longueur totale ...... 8,78","Encombrement table, row 3; last digit faint: 8 or 6 (8,78 or 8,76)",low
+13,,"height of propeller axis above ground, at rest (tail down)",2.265,m (implied),"Hauteur de l'axe d'hélice au-dessus du sol : au repos ...... 2,265",Encombrement table,high
+13,,"height of propeller axis above ground, in flight line (level attitude)",1.845,m (implied),"Hauteur de l'axe d'hélice au-dessus du sol : en ligne de vol ...... 1,845",Encombrement table,high
+13,,"propeller ground clearance, at rest",0.74,m (implied),"Garde de l'hélice : au repos ...... 0,74",Encombrement table,high
+13,,"propeller ground clearance, in flight line",0.32,m (implied),"Garde de l'hélice : en ligne de vol ...... 0,32",Encombrement table,high
+13,,remaining shock-absorber travel (at the static weight),0.15,m (implied),Course restante des amortisseurs 0.15,"Encombrement table, handwritten value",high
+13,,additional tyre flattening,0.10,m (implied),Aplatissement complémentaire des pneus 0.10,"Encombrement table, handwritten value",high
+13,,direction of zero-lift axis relative to root chord,0°4,deg (as written),Direction de l'axe de portance nulle par rapport à la corde d'encastrement ...... 0°4,"Voilure table, row 1; notation ambiguous (0.4° or 0°4'); sign not given",medium
+13,,"plan-view V angle of the aircraft (wing plan angle, presumably sweep of reference line)",1,deg,Vé de l'aérodyne en plan ...... 1°,Voilure table,high
+13,,"wing dihedral, measured on upper surface","3°55'30""",deg-min-sec,"Dièdre de l'aérodyne Extrados ...... 3°55'30""",Voilure table,medium
+13,,wing span including ailerons,10.20,m (implied),"Aile y compris les ailerons : Envergure maximum ...... 10,20",Voilure table,high
+13,,wing chord on aircraft centreline / at root,2.15,m (implied),"Profondeur sur l'axe de l'aérodyne ou à l'encastrement ...... 2,15","Voilure table; faint, 2,15 (2,13 not excluded)",medium
+13,,wing maximum chord,2.15,m (implied),"Profondeur maximum ...... 2,15",Voilure table,medium
+13,,wing tip chord,0.92,m (implied),"Profondeur en bout d'aile ...... 0,92","Voilure table; second digit faint, 9 (8 not excluded)",medium
+13,,wing net area,15.95,m²,"Surface nette ...... 15,95 m2",Voilure table,medium
+13,,wing setting (rigging incidence) angle,+1,deg,Angle de calage ...... +1°,Voilure table,high
+13,,aileron maximum length (span of one aileron),1.55,m (implied),"Ailerons : Longueur maximum ...... 1,55","Ailerons table; second digit faint, 5 (6 not excluded)",medium
+13,,aileron maximum chord,0.38,m (implied),"Profondeur maximum ...... 0,38",Ailerons table,medium
+13,,area of one aileron,0.50,m²,"Surface d'un aileron ...... 0,50 m2","Ailerons table; faint, 0,50 (0,30 not excluded but less consistent with 1.55 x 0.38)",medium
+13,,distance from aileron axis to aircraft centreline,3.84,m (implied),"Distance de l'axe des ailerons à l'axe de l'aérodyne ...... 3,84","Ailerons table; first digit faint, 3 (reading 3,54 would overlap the flaps, see modeling_notes)",medium
+13,,aileron maximum deflection up,30,deg,Braquage maximum vers le haut ...... 30°,"Ailerons table, handwritten",high
+13,,aileron maximum deflection down,15,deg,Braquage maximum vers le bas ...... 15°,"Ailerons table, handwritten",high
+14,,flap location,trailing edge,,Disposition ...... Bord de fuite,flap table (handwritten),high
+14,,flap maximum length (span of one flap),2.35,m (implied),Longueur maximum ...... 2.35,"flap table, handwritten",high
+14,,area of one flap,1.05,m² (implied),Surface d'un volet ...... 1.05,"flap table, handwritten; unit not written",high
+14,,flap maximum chord,0.65,m (implied),Profondeur maximum ...... 0.65,"flap table, handwritten",high
+14,,distance from flap axis to aircraft centreline,1.77,m (implied),Distance de l'axe du volet à l'axe de l'aérodyne ...... 1.77,"flap table, handwritten (continental 1 and crossed 7s)",high
+14,,flap maximum deflection up,0,deg,Braquage maximum vers le haut ...... 0°,"flap table, handwritten",high
+14,,flap maximum deflection down,35,deg,Braquage maximum vers le bas ...... 35°,"flap table, handwritten",high
+14,,fuselage main-frame cross-section dimensions (presumably width - height),0.94 - 1.50,m (implied),Section au maître-couple : Dimensions ...... 0.94 - 1.50,"Fuselage table, handwritten; which figure is width/height not stated",high
+14,,fuselage main-frame cross-section 'surface',2.290,unstated,Surface ...... 2.290,"Fuselage table, handwritten; exceeds 0.94 x 1.50 = 1.41, so not a cross-section area in m² as written (see notes)",high
+14,,horizontal tail maximum span,3.54,m (implied),"Empennage horizontal : Envergure maximum ...... 3,54",Empennages table,high
+14,,tailplane (fixed part) area,1.83,m²,"Surface de la partie fixe ...... 1,83 m2","Empennages table; last digit faint, read 3; confirmed by the Fiche des cotes générales (PDF p.63) ""PLAN FIXE 1m²83""",high
+14,,elevator (movable part) area,1.04,m²,"Surface de la partie mobile ...... 1,04 m2",Empennages table,medium
+14,,distance from elevator hinge axis to wing leading edge,5.88,m (implied),"Distance de l'axe d'articulation au bord d'attaque de l'aile ...... 5,88","Empennages table (value typed in heavier type, possibly over-struck)",high
+14,,elevator deflection,±20,deg (implied),Braquage des volets ...... ± 20,Empennages table; '±' added by hand; unit not written,medium
+14,,vertical tail maximum height,1.87,m (implied),"Empennage vertical : Hauteur maximum ...... 1,87",Empennages table; reference line for height not stated,medium
+14,,fin (fixed part) area,0.59,m²,"Surface de la partie fixe ...... 0,59 m2",Empennages table,medium
+14,,rudder (movable part) area,1.04,m²,"Surface de la partie mobile ...... 1,04 m2","Empennages table; second digit checked against 0 and 6 glyphs, 0 best match",medium
+14,,distance from rudder hinge axis to wing leading edge,6.08,m (implied),"Distance de l'axe d'articulation au bord d'attaque de l'aile ...... 6,08",Empennages table,medium
+14,,rudder deflection,30,deg,Braquage du gouvernail ...... 30°,"Empennages table, handwritten (each side presumably)",high
+14,,number of main wheels,2,,Nombre de roues ...... 2,Atterrisseur table,high
+14,,main wheel type,"type 10, flat base",,Type de roues ...... type 10 à base plate,Atterrisseur table,high
+14,,main tyre specification,10 bis,,Spécification des pneus ...... pneus 10 bis,Atterrisseur table,high
+14,,normal tyre inflation pressure,3.6,kg/cm² (implied),"Pression normale de gonflement des pneus .... 3,6",Atterrisseur table; unit not printed,medium
+14,,main undercarriage track,2.88,m (implied),"Voie ...... 2,88","Atterrisseur table; both decimals have a closed upper loop (8), unlike the open-topped 6s typed on this page (6,08 and 3,6), so 2,88 not 2,86. NB Pl. 0 (PDF p.62) dimensions the track as 2m830",high
+14,,main shock-absorber stroke,300,mm (implied),"Amortisseur , course 300 ...... OLAER",Atterrisseur table; unit not printed,high
+14,,tail wheel,No. 592,,Roue de queue ...... roue N° 592,Atterrisseur table,high
+14,,tail-wheel tyre,GOODRICH 10.6 plis,,Pneus de roue de queue ...... GOODRICH 10.6 plis,Atterrisseur table; '10.6' meaning unclear (size and/or ply count),medium
+15,,engine mount (thrust line) down setting,1,deg,Bati-moteur : Calage en piqué ...... 1°,"Bâti-moteur table, handwritten",high
+15,,engine mount (thrust line) lateral setting,1 left,deg,Calage latéral ...... 1° gauche,"Bâti-moteur table, handwritten",high
+15,,engine,"Hispano-Suiza 12 Y 45, 1 off",,Marque ...... HISPANO-SUIZA / Type ...... 12 Y 45 / Nombre ...... 1,Groupes motopropulseurs table,high
+15,,propeller reduction ratio,2/3,,Rapport de réduction ...... 2/3,Groupes motopropulseurs table,high
+15,,number of magnetos,2,,Magnétos : Nombre ...... 2,table,high
+15,,number of carburettors,6,,Carburateurs : Nombre ...... 6.,table; faint typed digit,medium
+15,,carburettor setting (jets?),idle 75 / normal 2.65,,Réglage ...... { Ralenti 75 / Normal 2.65,"table, handwritten; meaning (jet sizes) not stated",medium
+15,,number of fuel feed pumps,2,,Pompes d'alimentation en combustible : Nombre ...... 2,table,high
+15,,propeller make,"Ratier or Chauvière, variable pitch",,Marque et type ...... RATIER ou CHAUVIERE / Dispositifs spéciaux ...... pas variable,Hélices table,high
+15,,propeller diameter,3.05,m (implied),"Diamètre ...... 3,05",Hélices table; consistent with p.9 axis heights minus clearances (radius 1.525),high
+15,,starter,VIET 250 (carburetted-air),,Marque et type ...... VIET 250 air carburé,Démarreurs table,high
+15,,number of fuel tanks,3,,Essence : nombre ...... 3,Réservoirs table,high
+16,,"fuel capacity, protected (self-sealing) central tank",410,l,Capacité réservoir central protégé ...... 410 l.,"table, handwritten",high
+16,,"fuel capacity, left tank",122,l (implied),Capacité réservoir gauche ...... 122,"table, handwritten",high
+16,,"fuel capacity, right tank",122,l (implied),Capacité réservoir droit ...... 122,"table, handwritten",high
+16,,number of oil tanks,1,,Huile : Nombre ...... 1,table,high
+16,,oil tank capacity,58,l,Capacité ...... 58 l.,"table, handwritten",high
+16,,number of oleo-pneumatic (hydraulic) oil tanks,1,,Huile sous pression circuit oléo-pneumatique : Nombre ...... 1,table,high
+16,,oleo-pneumatic (hydraulic) oil capacity,6,l,Capacité ...... 6 l.,"table, handwritten",high
+18,,wing span,10.20,m (implied),"La voilure monoplane cantilever, d'une envergure de 10,20 a, en plan, une forme trapézoïdale terminée par une partie elliptique",paragraph 1 (unit omitted in text),high
+18,,number of wing main spars,1,,a) un longeron unique,list (Pl.2),high
+18,,number of sections per aileron,2,,L'aileron (Pl.7) composé de 2 tronçons,aileron paragraph,high
+18,,hinge supports per aileron section,3,,Chaque tronçon d'aileron s'articule sur 3 supports reliés au faux longeron,aileron paragraph,high
+18,,number of flap sections,2 (one each side of fuselage),,des volets à fente en 2 tronçons situés de part et d'autre du fuselage,flap paragraph (Pl.8),high
+19,,wing-to-fuselage attachments: wing spar upper part to fuselage frame 1,3,fittings,3 attaches liant la partie supérieure du longeron d'aile au premier couple du fuselage,wing-fuselage connection list,high
+19,,wing-to-fuselage attachments: wing leading edge to engine mount,2,fittings,2 attaches liant le bord d'attaque de l'aile au bâti-moteur,wing-fuselage connection list,high
+19,,wing-to-fuselage attachments: false (rear) spar to fuselage frame 3,2,fittings,2 attaches liant le faux-longeron au couple 3 du fuselage,wing-fuselage connection list,high
+19,,wing main spar station,fuselage frame 1 (first frame),,longeron d'aile au premier couple du fuselage,wing-fuselage connection list,high
+19,,wing false (rear) spar station,fuselage frame 3,,faux-longeron au couple 3 du fuselage,wing-fuselage connection list,high
+20,,flap drive: horns/links on torsion tube,3,horns + 3 links,Sur le tube sont disposés trois guignols actionnant trois biellettes,flap control paragraph,high
+20,,engine mount attachment points to fuselage,4,points,Il est fixé au fuselage en quatre points (Pl.23 bis),C - Bâti-moteur,high
+20,,engine mount attachment points to wing,2,points,et à l'aile en deux points,C - Bâti-moteur,high
+21,,tailplane-to-fuselage attachments,"3 (2 on spar, 1 at leading edge)",fittings,L'empennage horizontal est relié au fuselage par trois attaches deux sur le longeron (Pl.28) une à l'avant sur le bord d'attaque,elevator section,high
+21,,main gear leg pivot axis orientation,"horizontal, parallel to aircraft plane of symmetry (fore-aft)",,Cette jambe tourillonne autour d'un axe horizontal parallèle au plan de symétrie de l'avion,E - Atterrisseurs,high
+21,,main wheel type,"type 10, flat base",,Les roues sont du type 10 à base plate,Roues,high
+21,,main gear fairing panels per leg,2,panels,Le carénage est constitué par deux panneaux de tôlage,Carénage (Pl.31),high
+22,,main gear retraction direction,laterally inwards into the wing,,"escamotable dans l'aile, par rabattement latéral vers l'intérieur de chaque demi-train",A- Train principal,high
+22,,main gear components per side,"leg (C), folding strut (E) with return bungee (G), retraction jack (D)",,"une jambe (C), une contre-fiche brisée (E) avec sandow de rappel, un vérin de relevage (D)",A- Train principal,high
+23,,hydraulic (oleo-pneumatic) working pressure,200/225,kg/cm²,L'huile sous pression (200/225 kg/cm2),D- Circuit oléo-pneumatique,high
+23,,hydraulic oil reservoir capacity,5,l,alimentée en charge par un réservoir d'huile de 5 litres,D- Circuit oléo-pneumatique,high
+23,,angle drive speed ratio (relative to camshaft),1.8,x,"tourne à une vitesse égale à 1,8 fois celle de l'arbre à cames",transmission item b),high
+23,,hydraulic accumulator capacity,3,l,dans un accumulateur de 3 litres,D- Circuit oléo-pneumatique,medium
+23,,pump cut-off pressure,225,kg/cm²,atteint une valeur donnée (225 kg/cm2),last paragraph,high
+24,,accumulator bladder initial air charge,110,kg/cm²,"une vessie en caoutchouc, gonflée initialement d'air à 110 kg/cm2",paragraph 2,high
+24,,accumulator equilibrium / pump cut-out pressure,225,kg/cm²,l'équilibre des pressions d'air et d'huile à 225 kg/cm2 pression de déclenchement de la pompe,paragraph 2,high
+25,,tail wheel attachment frame (frame number),12,frame no.,Elle est reliée au couple 12 par l'intermédiaire d'un châssis articulé et d'un amortisseur.,"Roue de queue, para. 1",high
+25,,tail wheel centring bungee cords (count),2,count,rappelée dans l'axe de l'avion par deux sandows ou par un jeu de cames suivant les appareils,"Roue de queue, para. 2",high
+25,,main gear tyre size designation,10 bis,tyre size,Les pneumatiques du train sont des pneus 10 bis.,Pneumatiques,high
+25,,main wheel tyre inflation pressure,3.600,kg (as written; presumably kg/cm²),"La pression de gonflement des roues est de 3,600 Kg.",Pneumatiques,high
+25,,tail tyre designation,GOODRICH 10,tyre size,Le pneu de béquille est un GOODRICH 10. 6 plis.,Pneumatiques,high
+25,,tail tyre ply rating,6,plies,Le pneu de béquille est un GOODRICH 10. 6 plis.,Pneumatiques,high
+25,,landing-run reduction from braking,30–40,%,réduire de 30 à 40% la longueur de l'atterrissage,Dispositif de freinage,high
+25,,brake shoes per brake,2,count,de 2 mâchoires articulées sur la partie fixe,Dispositif de freinage,high
+26,,engine designation,HISPANO-SUIZA 12 Y 45,model,L'appareil est équipé d'un moteur canon HISPANO-SUIZA 12 Y 45.,"section F, para. 1",high
+26,,propeller blade count,3,blades,Il est muni d'une hélice RATIER tripale à pas variable en vol et commande électrique.,"section F, para. 1",high
+26,,engine controls location (side),left,side,Les commandes du type TELEFLEX sont placées dans le poste de pilotage sur le côté gauche.,Commandes (Pl.33),high
+26,,starter model,VIET 250,model,Le démarreur VIET 250 à air carburé.,Démarreur (Pl.34),high
+26,,coolant de-aerators (count),2,count,deux dégazeurs en dérivation collectent la vapeur d'eau,Circulation d'eau (Pl.35),high
+26,,coolant header tank shape/location,"horseshoe, on reduction gear",description,une nourrice en fer à cheval sur le réducteur,Circulation d'eau (Pl.35),high
+26,,coolant radiator location,"under the fuselage, faired, pilot-controlled flap at rear",description,Le radiateur fixé sous le fuselage est caréné de façon à augmenter son rendement. A l'arrière un volet commandé par le pilote règle l'écoulement d'air.,Circulation d'eau (Pl.35),high
+26,,oil radiator location,"in a fairing under the engine, fed by an air scoop",description,Le radiateur est fixé dans un carénage sous le moteur. L'air est capté et canalisé dans une manche.,Circulation d'huile (Pl.36),high
+27,,central fuel tank location,in fuselage between engine and pilot,description,Le réservoir central est situé dans le fuselage entre le moteur et le pilote.,Circulation d'essence (Pl.37),high
+27,,propeller blade count,3,blades,L'hélice est une hélice tripale métallique RATIER,Hélice,high
+27,,last aircraft No. with RATIER electric propeller,"[?]50 (first digit faint; probably 350, possibly 250)",aircraft serial No.,à commande électrique jusqu'au N° [?]50,Hélice,low
+27,,aircraft No. range with CHAUVIERE pneumatic two-pitch propeller,[?]51 to 780,aircraft serial No.,CHAUVIERE pneumatique à deux pas du N° [?]51 au N° 780,Hélice,medium
+27,,first aircraft No. with CHAUVIERE electro-magnetic propeller,781,aircraft serial No.,hélice électro-magnétique CHAUVIERE à partir du N° 781.,Hélice,medium
+27,,CHAUVIERE pneumatic propeller pitch settings (count),2,pitch positions,CHAUVIERE pneumatique à deux pas,Hélice,medium
+27,,fire extinguisher type,LEVY type G.H.,model,Extincteur LEVY type G.H.,Extincteur (Pl.38),high
+27,,flight controller attachment: clamping pads / bolts,2 / 2,count,fixé sur la planche de bord par deux patins de serrage et deux boulons,item a),high
+27,,Pitot tube location,tip of the LEFT wing,position,Les tubes PITOT sont fixés à l'extrémité de l'aile gauche.,item a),high
+27,,altimeter range,"0–10,000",(unit not stated; presumably m),1 altimètre de 0 à 10.000,item b),high
+28,,compass model,AERA type E.10,model,1 compas AERA type E.10,item d),high
+28,,compass mounting studs (count),4,count,fixé sur la planche de bord par 4 tétons avec interposition de rondelles de caoutchouc,item d),high
+28,,variometer range,-12 to +20,(unit not stated; presumably m/s),1 variomètre - 12 + 20,item g),high
+28,,electrical system voltage,24,V,Le circuit électrique du bord est alimenté sous 24 volts,Appareils d'alimentation,high
+28,,dynamo (generator) power,1200,W,par une dynamo de1200 watts entraînée par le moteur de l'avion,Appareils d'alimentation,high
+28,,main circuit fuse rating,50,A,1 FUSIBLE DE 50 AMPERES EST PREVU SUR LE CIRCUIT,"handwritten line, Appareils d'alimentation",high
+28,,battery rating,"20 A, 24 V",A (as written; presumably Ah) / V,"La batterie d'accumulateurs de 20 ampères, 24 volts",Appareils d'alimentation,high
+28,,battery location,"in front of the firewall, in the engine compartment",position,est situé devant la cloison pare-feu dans le compartiment moteur,Appareils d'alimentation,high
+29,,landing-gear actuators,plural (count not stated),count,les vérins du train,circuit oléo-pneumatique,medium
+29,,flap actuators (count),1,count,le vérin des volets,circuit oléo-pneumatique,high
+29,,antenna actuators (count),1,count,le vérin de l'antenne,circuit oléo-pneumatique,high
+29,,seat armour plate thickness,7,mm,"Une tôle de 7 mm d'épaisseur en acier spécial, légèrement galbée",Blindage du siège,high
+29,,seat armour plate attachment frame,6,frame no.,fixée sur le couple 6 derrière le siège,Blindage du siège,high
+29,,radio set,O.T.C.-537 (RADIO-INDUSTRIE),model,Poste O.T.C.-537 de RADIO-INDUSTRIE (Pl.44),Matériel de radio-électrique,medium
+29,,upper antenna,fixed,type,L'antenne supérieure est fixe,Matériel de radio-électrique,high
+29,,lower antenna,retractable,type,l'antenne inférieure est escamotable (Pl.45),Matériel de radio-électrique,high
+29,,cannon (count),1,count,1 canon HISPANO SUIZA type 404 de 20 mm avec 60 cartouches.,H) Armement,high
+29,,cannon calibre,20,mm,1 canon HISPANO SUIZA type 404 de 20 mm,H) Armement,high
+29,,cannon ammunition,60,rounds,avec 60 cartouches,H) Armement,high
+29,,wing machine guns (count),4,count,4 mitrailleuses CHATELLERAULT dans les ailes,H) Armement,high
+29,,ammunition per machine gun,650,rounds per gun,avec 650 cartouches par arme,H) Armement,high
+30,,gunsight model,O.P.L. R x 39 (alternative BL.50),model,Un collimateur O.P.L. R x 39 / L'installation permet également le montage du BL.50,Appareils de visée,high
+30,,flare launcher mountings,"ALKAN B.E.33, removable",model,Supports démontables pour lance-bombes éclairantes : ALKAN B.E.33.,Matériel livré monté,high
+30,,cannon front mounting position,on the reduction-gear axis,position,Le support AV dans l'axe du réducteur,Canon (Pl.47),high
+30,,cannon rear mounting position,on the SZYDLOWSKI supercharger,position,le support AR fixé sur le compresseur SZYDLOWSKI,Canon (Pl.47),high
+30,,cannon cocking/firing pressure valves (count),2,count,grâce à deux valves en pression à proximité de l'arme,Canon (Pl.47),high
+30,,cannon air bottle volume,1,l,une bouteille d'air de un litre à 30 kg de pression près des armes,Canon (Pl.47),high
+30,,cannon air bottle pressure,30,kg (as written; presumably kg/cm²),une bouteille d'air de un litre à 30 kg de pression,Canon (Pl.47),high
+31,,machine-gun front mountings per gun (count),2,count,"au moyen de deux supports AV, solidaires du longeron",Mitrailleuses,high
+31,,machine-gun rear mountings per gun (count),1,count,et d'un support AR réglable en hauteur et en direction,Mitrailleuses,high
+31,,rear-mount knurled adjusting nuts (count),2,count,grâce à deux écrous moletés,Mitrailleuses,high
+31,,rear-mount guide tubes fixed to ribs (count),2,count,glissant sur deux tubes fixés sur les nervures,Mitrailleuses,high
+31,,machine guns per wing (group),2,count,Ces deux électro-valves de chaque groupe de deux mitrailleuses sont alimentées par une bouteille de 1 litre à 30 kg dans chaque aile.,Mitrailleuses,medium
+31,,MG air bottle volume (one per wing),1,l,une bouteille de 1 litre à 30 kg dans chaque aile,Mitrailleuses,high
+31,,MG air bottle pressure,30,kg (as written; presumably kg/cm²),une bouteille de 1 litre à 30 kg dans chaque aile,Mitrailleuses,high
+31,,gunsight position,"on aircraft centreline, axis parallel to cannon axis",position,Le collimateur clair O.P.L. est placé dans l'axe de l'avion ... L'axe du collimateur est parallèle à celui du canon.,Collimateur O.P.L. (Pl.46),high
+31,,camera gun location,under the LEFT wing,position,La cinémitrailleuse est placée sous l'aile gauche.,Cinémitrailleuse,high
+31,,camera gun types accepted,FACINE 60 or type 20,model,la mitrailleuse photo type FACINE 60 ou type 20,Cinémitrailleuse,medium
+32,,canopy jettison handle position,above the pilot's head and forward,position,tirer sur l'anneau ou la poignée placés au-dessus de la tête du pilote et en avant,para. 1,high
+32,,parachute static-line anchor position,bar on the upper LEFT fuselage longeron,position,la barrette placée sur le longeron supérieur gauche du fuselage,para. 5,high
+34,,fuel filler access location,inspection door on top of the fuselage,position,Le plein s'effectue par une porte de visite située au-dessus du fuselage.,Plein d'essence,high
+34,,engine compression variant A,5,"compression (ratio, as written)","dans le cas du moteur à compression 5, de l'essence à 91 octanes",Plein d'essence (the '5' is handwritten),medium
+34,,fuel octane for compression-5 engine,91,octane,de l'essence à 91 octanes,Plein d'essence,high
+34,,engine compression variant B,6 (faint; could be 8),"compression (ratio, as written)","dans le cas du moteur à compression [6 ?], de l'essence à 87 octanes",Plein d'essence,low
+34,,fuel octane for compression-variant-B engine,87,octane,de l'essence à 87 octanes,Plein d'essence,high
+34,,oil tank location,"under the (engine) cowling, accessed by an inspection door",position,"Le réservoir d'huile étant placé sous le capot, ouvrir la porte de visite y donnant accès",Plein d'huile,high
+34,,oil tank maximum fill (marked line),56,l,Ne jamais remplir le réservoir au-dessus du repère marqué : maximum 56 litres.,Plein d'huile,high
+34,,oil tank total capacity,56,l,La capacité totale du réservoir est de 56 litres.,"Plein d'huile, last para.",medium
+35,,coolant mixture,50 % water (aérodiol or Rhogol),%,Le liquide employé est l'aérodiol ou Rhogol à 50 % d'eau.,Plein de réfrigérant,high
+35,,"header-tank safety valve setting, minimum",300,g (as written; presumably g/cm²),La tare de la soupape de la nourrice d'eau est de 300 gr. au minimum,Plein de réfrigérant,high
+35,,"header-tank safety valve setting, maximum",400,g (as written; presumably g/cm²),et 400 gr au maximum,Plein de réfrigérant,high
+35,,radiator fill/drain valve location,bottom of the radiator,position,au clapet de la partie inférieure du radiateur,Plein de réfrigérant,high
+35,,combined fuel/oil cock control location,right-hand side of the aircraft,position,en tirant la commande placée sur le côté droit de l'avion,Mise en marche,high
+35,,bearing-lubrication pull handle location,"above the instrument panel, near the gunsight",position,la tirette fixée au-dessus de la planche de bord près du collimateur,Mise en marche,high
+35,,oil temperature for releasing lubrication handle,40,°(C),tant que l'huile n'atteint pas 40°,Mise en marche,high
+35,,VIET starter (pump) location,to the pilot's right,position,Le démarreur VIET est placé à droite du pilote,Mise en marche,high
+35,,starter air bottle location,"in the fuselage behind the seat, low on the right",position,"la bouteille d'air dans le fuselage, derrière le siège, en bas à droite",Mise en marche,high
+36,,"vernier position, density 660–710, temp −10° to +10°",2 to 4,vernier graduation,660 à 710 | 2 à 4,"table row 1, col 1",medium
+36,,"vernier position, density 660–710, temp +10° to +40°",4 to 5,vernier graduation,660 à 710 | 4 à 5,"table row 1, col 2",medium
+36,,"vernier position, density 660–710, temp +40° to +80°",5,vernier graduation,660 à 710 | 5,"table row 1, col 3",medium
+36,,"vernier position, density 710–727, temp −10° to +10°",1 to 3,vernier graduation,710 à 727 | 1 à 3,"table row 2, col 1",high
+36,,"vernier position, density 710–727, temp +10° to +40°",3 to 4,vernier graduation,710 à 727 | 3 à 4,"table row 2, col 2",high
+36,,"vernier position, density 710–727, temp +40° to +80°",5,vernier graduation,710 à 727 | 5,"table row 2, col 3",high
+36,,table temperature band upper limit,+80 (possibly +60),°(C),+ 40° à + 80°,"table header, col 4",low
+36,,fuel density bands,660–710 and 710–727,"g/l (as written, no unit)",Densité de l'essence 660 à 710 / 710 à 727,table first column,medium
+37,,"maximum travel of fuel-injection (priming) pump piston when pressed, if properly filled",1,cm,le piston de la pompe ne doit pas descendre de plus d'un centimètre en y appuyant,"para. a), 3rd paragraph",high
+37,,maximum duration of full-throttle ground run-up test,1,minute,L'essai à pleins gaz ne pourra avoir lieu qu'une minute au maximum.,"3°/ Essais au point fixe, last sentence",high
+38,,engine speed for magneto check at reduced throttle,1000,rpm,Vérifier à gaz réduits (1000 tours) le fonctionnement des magnétos,1st paragraph,high
+38,,fuel pressure at run-up,150,"g (grammes, i.e. g/cm2)",la pression d'essence (150 grammes),2nd paragraph,high
+38,,oil pressure at run-up,2.500,kg (kg/cm2),"la pression d'huile (2,500 kg)",2nd paragraph,high
+38,,throttle lever position at end of test (closed),0,deg,ramener progressivement la manette des gaz à 0°,3rd paragraph,high
+38,,maximum time boost needle may stay in hatched zone at start of red zone,5,minutes,"pour 5 minutes au maximum, l'aiguille peut quitter la zone bleue pourvu qu'elle reste sur la zone hachurée",4°/ Conduite,high
+38,,altitude for setting best altitude-mixture-control position,4000,m,Essayer la meilleure position du correcteur altimétrique aux environs de 4000 mètres,4°/ Conduite,high
+38,,altitude in descent at which altitude mixture control is returned to ground position,2000,m,le ramener à la position du sol lorsqu'on arrivera vers 2000 mètres,4°/ Conduite,high
+38,,minimum permissible oil pressure in operation,2.500,kg (kg/cm2),"ne jamais marcher avec moins de 2,500 Kg. de pression d'huile",4°/ Conduite,high
+42,,number of positions of flap selector valve,3,positions (descente - arrêt - relevage),Le vérin est commandé par un distributeur à 3 positions (descente - arrêt - relevage),2nd paragraph,high
+42,,maximum working pressure of flap hydraulic system,100,kg/cm2,Pression d'utilisation maximum : 100 kg/cm2.,3rd paragraph,high
+42,,maximum speed for flap use (flap limiting speed),270,km/h,Les volets ne devront être utilisés que pour une vitesse inférieure à 270 Km/h.,4th paragraph,high
+43,,capacity of compressed-air reservoir pressurised by engine compressor,12,l,la mise en pression totale et au sol d'un réservoir de 12 litres à 25 kg/cm2 en 7 minutes environ,"A - Démarreur VIET, last paragraph",high
+43,,full pressure of 12-litre air reservoir,25,kg/cm2,d'un réservoir de 12 litres à 25 kg/cm2,A - Démarreur VIET,high
+43,,time to pressurise 12-litre reservoir on the ground,7 (approx.),minutes,en 7 minutes environ,A - Démarreur VIET,high
+43,,engine speed for compressor charging,1200,rpm,au régime de 1200 tours moteurs,A - Démarreur VIET,high
+43,,starter reservoir pressure by hand pump,25,kg (kg/cm2),b) pomper jusqu'à la pression convenable 25 Kg.,"Fonctionnement à la main, step b)",high
+43,,tyre inflation pressure (main wheels),3.750,kg/cm2,"pomper jusqu'à la pression convenable (3,750 kg/cm2)","Gonflage des pneus, step c)",high
+44,,regulated pressure range of compressed-air system (regulator setting),25 to 30,kg (kg/cm2),Le régulateur limite la pression entre 25 et 30 Kg. suivant son réglage,Fonctionnement avec compresseur,high
+44,,setting of safety device between external HP air bottle and aircraft reservoirs,25 or 30,kg (kg/cm2),un appareil de sécurité taré à 25 ou 30 Kg.,Avis important,high
+44,,number of compressed-air reservoirs in starter/services system,2,reservoirs ('Démarreur' and 'Servitudes'),"Pour faire communiquer les 2 réservoirs ""Démarreur"" et ""Servitudes""",after NOTA b),high
+45,,brake air bottle pressure,30,kg (kg/cm2),"Un détendeur ramène la pression d'air de la bouteille, 30 Kg à la pression d'utilisation 5 à 6 Kg.",Fonctionnement,high
+45,,brake working pressure,5 to 6,kg (kg/cm2),la pression d'utilisation des freins est comprise entre 5 et 6 Kg.,"Fonctionnement, last paragraph",high
+45,,altitude at which oxygen is to be used,4000,m,lorsqu'on atteint l'altitude de 4.000 mètres,Inhalateur MUNERELLE,high
+45,,oxygen flow in forced-flow (emergency) mode,500 (order of),l/h,"le débit de l'appareil en débit forcé est, en effet, de l'ordre de 500 litres/heure",Inhalateur MUNERELLE,high
+46,,number of radio receivers,2,receivers,Il se compose d'un émetteur et de deux récepteurs,top of page (continued from p.37),high
+46,,number of engine-mounted cannon,1,cannon,Un canon HISPANO-SUIZA de 20 mm tirant dans l'axe du réducteur,Armement list,high
+46,,cannon calibre,20,mm,Un canon HISPANO-SUIZA de 20 mm tirant dans l'axe du réducteur,Armement list,high
+46,,cannon type,404,(type number),"Canon HISPANO-SUIZA de 20 , type 404",cannon sub-heading,high
+46,,number of wing machine guns,4,machine guns,"4 mitrailleuses CHATELLERAULT de 7,5 mm dans les ailes",Armement list,high
+46,,machine-gun calibre,7.5,mm,"4 mitrailleuses CHATELLERAULT de 7,5 mm dans les ailes",Armement list,high
+46,,armament air piping (dural tube) size,5 x 7,"(mm, presumably inner x outer diameter)",Les tuyauteries d'air sont en dural de 5 x 7 peint,armament controls paragraph,medium
+46,,electro-valves per gun group (and for cannon),2,electro-valves (armement et détente),Pour chaque groupe de mitrailleuses et pour le canon deux électro-valves ( armement et détente) et une bouteille d'air,armament controls paragraph,high
+46,,air bottles per gun group (and for cannon),1,bottle,et une bouteille d'air sont à proximité des armes,armament controls paragraph,high
+47,,gunsight lighting rheostat position when not in use,0,(rheostat setting),Ramener le rhéostat à 0 lorsque le collimateur n'est pas utilisé.,"Collimateur O.P.L., last paragraph",high
+48,,number of white navigation lights on fin,2,"lights (one each side of fin, at top)",2 feux blancs à la partie supérieure de la dérive (un de chaque côté de celle-ci),Feux de route,high
+48,,crew,1,pilot,L'équipage est constitué par un pilote qui remplit les fonctions de mitrailleur-canonnier et de radiotélégraphiste.,Equipage,high
+48,,ground crew for short moves on concrete,3,men,Pour les courts déplacements (sur aire cimentée) trois hommes suffisent.,"Manutention, 1°)",high
+48,,ground crew in other cases / without tail trolley,5 / 6,men,"Dans les autres cas, il faut cinq hommes sans chariot porte-queue l'équipe se compose de six hommes.","Manutention, 1°)",medium
+48,,ground crew for long move on tail trolley,5 (one steering trolley),men,"L'avion reposant sur le chariot de queue, cinq hommes sont nécessaires, dont un dirigeant le chariot, pour un long déplacement.",Déplacement,high
+49,,number of men lifting the aircraft by the lifting bar during handling with trolley,4,men,chariot quatre hommes soulèvent l'avion par la barre de levage,"top of page, continuation of handling paragraph",high
+49,,number of flexible steel-cable arms on control-lock device,4,arms,un capuchon et 4 bras souples en câble d'acier,"Campement sans abri, last paragraph",high
+49,,"number of towing cables (front towing, around lower oleo legs)",2,cables,On fixe deux gros câbles autour de la partie inférieure des amortisseurs,Remorquage par l'avant,high
+49,,number of oblique towing chains to tractor,2,chains,deux chaînes obliques qui viennent s'accrocher au tracteur (Pl.53),Remorquage par l'avant,high
+50,,minimum shelter length for one assembled aircraft,7.50,m,"longueur : 7,50 m.",Campement sous les abris réglementaires,high
+50,,minimum shelter width for one assembled aircraft,12.50,m (unit not typed; implied),"largeur : 12,50",Campement sous les abris réglementaires,high
+50,,minimum shelter height for one assembled aircraft,3.80,m,"hauteur : 3,80 m.",Campement sous les abris réglementaires,high
+50,,dismountable metal hangar size / capacity,9 x 10 m / 1 aircraft,m,hangars métalliques démontables 9 x 10 m : 1 seul avion.,hangar table row 1,high
+50,,tent-shelter A-16 size / capacity,16 x 12 / 2 aircraft,m (implied),tentes - abris A-16 - 16 x 12 : 2 avions.,hangar table row 2,high
+50,,Bessonneau hangar size / capacity,20 x 28 / 5 aircraft,m (implied),hangars bessonneau 20 x 28 : 5 avions.,hangar table row 3,high
+50,,dismountable metal hangar size / capacity,20x30 / 8 aircraft,m (implied),hangars métalliques démontables 20x30 : 8 avions.,hangar table row 4,medium
+50,,Bessonneau hangar size / capacity,26 x 28 / 12 aircraft,m (implied),hangars bessonneau 26 x 28 :12 avions.,hangar table row 5,medium
+53,,altitude threshold referenced for oxygen consumption planning (duration of climb below this altitude),4000,m,la durée de l'ascension au-dessous de 4000 m. et des altitudes à atteindre,Inhalateur paragraph,high
+54,,cannon magazine capacity,60,shells,Vérification du chargeur (celui-ci peut contenir 60 obus),"4°/ Armement, a) Canon",medium
+54,,armament compressed-air bottle pressure (cannon),25 to 30,kg (as typed; i.e. kg/cm²),Pression de la bouteille d'air : 25 à 30 Kg.,"4°/ Armement, a) Canon",high
+54,,armament compressed-air bottle pressure (machine guns),25 to 30,kg (as typed; i.e. kg/cm²),(Pression de la bouteille 25 à 30 Kg).,"4°/ Armement, b) Mitrailleuses",high
+54,,"machine-gun magazine capacity, each",650,rounds,Les chargeurs peuvent contenir 650 cartouches chacun.,"4°/ Armement, b) Mitrailleuses (650 is a later insertion in darker type)",high
+58,,number of faces of duralumin sheet coated with colourless varnish,2,faces (both sides),Les tôles en duralumin sont recouvertes sur les deux faces d'un vernis incolore.,"Pour éviter la corrosion, last paragraph of page",high
+59,,hidden (interior) surfaces: coats if product approved i.p.f.,"1 coat lacquer, chamois",coats,Teinte chamois / 1 couche laque si le produit est homologué i.p.f.,I - Protection des surfaces cachées (catégorie 2 bis),high
+59,,hidden (interior) surfaces: coats if 2-coat approved system,1 primer + 1 lacquer,coats,1 couche d'impression et 1 couche de laque si la protection est homologuée en 2 couches.,I - Protection des surfaces cachées,high
+59,,exterior metal surfaces: primer coats,1,coat,1 couche d'impression,II-A Surfaces métalliques,high
+59,,exterior metal surfaces: lacquer coats,2,coats,2 couches de laque,II-A Surfaces métalliques,high
+59,,wing roundels applied over first N coats,3,coats,"Sur les 3 premières couches ci-dessus, appliquer :",Cocardes (voilure),high
+59,,"wing roundel lacquer coats (white, red, blue)",1 each,coat,1 couche laque blanc cocarde / 1 couche laque rouge cocarde / 1 couche laque bleu cocarde,Cocardes (voilure),high
+59,,Service Technique letter reference fixing roundel dimensions,10990/A,reference no.,"Les dimensions des cocardes sont déterminées par une lettre du Service Technique, Référence 10990/A",Cocardes (voilure),medium
+59,,fuselage/fin inscriptions: coats of roundel red,1,coat,Teinte rouge laque / 1 couche rouge cocarde,Inscriptions sur fuselage et dérives,high
+59,,fabric surfaces: tautening primer (dope) coats,3,coats,3 couches d'impression de tension,II-B Surfaces entoilées,high
+59,,fabric surfaces: lacquer coats,1,coat,1 couche de laque,II-B Surfaces entoilées,high
+60,,fabric (rudder) roundel/flash: coats over 3 tautening-dope coats,1 white (overall) + 1 blue + 1 red,coats,Sur les 3 couches d'impression de tension : 1 couche générale laque blanc cocarde / 1 couche laque bleu cocarde / 1 couche laque rouge cocarde,"top of page (continuation of II-B Surfaces entoilées, Cocardes gouvernail)",high
+60,,rudder inscription: coats of black lacquer,1,coat,Inscription sur gouvernail : Teinte noire / 1 couche laque noir inscription,Inscription sur gouvernail,high
+60,,extent of cockpit painted night blue (fuselage frames),frame 3 to frame 5,frame numbers,III - PEINTURE DE L'HABITACLE DU PILOTE (Couple 3 au couple 5),section III heading,medium
+60,,cockpit: night-blue lacquer coats over chamois protection,1,coat,Sur la protection chamois : 1 couche laque bleu de nuit mat,section III,high
+60,,instrument panel coats,1 primer + 1 matt night-blue lacquer,coats,1 couche d'impression / 1 couche laque bleu de nuit mat,section IV Planche de bord,high
+60,,engine mount coats,1 primer + 1 matt black lacquer,coats,1 couche d'impression / 1 couche laque noir mat,section V Bâti-moteur,high
+60,,magnesium internal parts: stoving-enamel baking temperature,110,° (degrees; °C implied),1 couche d'émail au four (cuisson à 110° pendant 1 h.30),section VII a) Pièces internes,high
+60,,magnesium internal parts: stoving-enamel baking time,1 h 30,h,cuisson à 110° pendant 1 h.30,section VII a) Pièces internes,high
+61,,external magnesium parts (Flettner tab): coats,1 stoving enamel + 2 lacquer + 1 roundel-red lacquer,coats,Teinte rouge cocarde / 1 couche d'émail au four / 2 couches laque / 1 couche laque rouge cocarde,VII b) Pièces externes (flettner),high
+61,,pipework identification lacquer coats,1,coat,1 couche laque ( vert pour eau ...,VIII Peinture des tuyauteries,high
+61,,paint-shop temperature for hourly recoat with cellulose products,20,° (°C implied),dans une chambre chaude à 20°,final paragraph,high
+61,,relative humidity range for hourly recoat,35 to 75,° (as typed; = % RH),le degré hygrométrique est compris entre 35° et 75°,final paragraph,high
+61,,recoat interval with cellulose products,1,coat per hour,permet l'application d'une couche toutes les heures,final paragraph,high
+62,Pl. 0,"wing span, overall (front view, tip to tip)",10.200,m,10m200,"front view (top left), long horizontal dimension line under the wing from tip to tip",high
+62,Pl. 0,main undercarriage track (between wheel ground-contact points / wheel centrelines),2.830,m,2m830,"front view, dimension line between the bottoms of the two extended main wheels",high
+62,Pl. 0,"tailplane span (horizontal tail, tip to tip)",3.630,m,3m630,"plan view, dimension line above the tailplane",high
+62,Pl. 0,"aileron span (along trailing edge, from outer end of flap to outer end of aileron)",1.645,m,1m645,"plan view, left wing, outer of two chained dimension lines above the trailing edge",high
+62,Pl. 0,"flap span (along trailing edge, from fuselage side / wing root to the aileron/flap junction)",2.350,m,2m350,"plan view, left wing, inner of two chained dimension lines above the trailing edge, ending at the fuselage side",high
+62,Pl. 0,"wing chord at the root (trailing edge to leading edge at fuselage junction, measured parallel to aircraft axis)",2.360,m,2m360,"plan view, right wing, vertical dimension line at right from the trailing-edge line down to the leading edge at the root",high
+62,Pl. 0,"overall height, ground line to fin tip (aircraft in flying attitude on extended main wheels)",3.435,m,3m435,"side view, vertical dimension line at far left from ground line to top of fin",medium
+62,Pl. 0,"height of propeller axis above ground (side view, flying attitude)",1.950,m,1m950,"side view, rightmost vertical dimension line from ground line up to propeller/spinner axis",medium
+62,Pl. 0,propeller tip ground clearance (ground to lower blade tip),0.420,m,0m420,"side view, short vertical dimension line under the lower propeller blade",medium
+62,Pl. 0,overall length (dimension line drawn from rudder trailing edge to spinner tip),[no figure written],m,(ligne de cote sans chiffre),"side view, long horizontal line under the aircraft",high
+63,,overall wing span,10.20,m,ENVERGURE HORS TOUT … 10.20,"Caractéristiques du planeur table, row 1",high
+63,,overall length,8.76,m,LONGUEUR HORS TOUT … 8.76,table row 2; also side-view sketch bottom line 8.76 from rudder trailing edge to spinner tip,high
+63,,wing area (gross),15.97,m²,SURFACE DES VOILURES … 15m²97,table row 3,high
+63,,dihedral,"3°55'30""",deg-min-sec,"DIEDRE TRANSVERSAL … 3°55'30""",table row 5,high
+63,,wing sweep (flèche longitudinale),1,°,FLECHE LONGITUDINALE … 1°,table row 6,high
+63,,wing incidence relative to propeller (thrust) axis,1,°,INCIDENCE DE L'AILE PAR RAPPORT A L'AXE DE ROTATION DES PROPULSEURS … 1°,table row 7,high
+63,,tailplane (fixed horizontal stabiliser) area,1.83,m²,PLAN FIXE … 1m²83,"table, horizontal tail area",high
+63,,elevator area,1.04,m²,GOUVERNAIL DE PROFONDEUR … 1m²04,"table, horizontal tail area",high
+63,,fin area,0.59,m²,DERIVES … 0m²59,"table, vertical tail area",high
+63,,rudder area,1.04,m²,GOUVERNAIL DE DIRECTION … 1m²04,"table, vertical tail area",medium
+63,,"tailplane incidence adjustment range (relative to thrust axis), adjustable in flight",±3,°,CALAGE DU PLAN FIXE HORIZONTAL … Réglable en vol ±3°,table last row,high
+63,,distance elevator hinge axis to wing leading edge (longitudinal),5.88,m,DISTANCE DE L'AXE D'ARTICULATION DU GOUVERNAIL DE PROFONDEUR AU BORD D'ATTAQUE DE LA VOILURE … 5.88,right table column; also 1/2 plan sketch vertical line 5.88 from elevator hinge to wing LE at root,high
+63,,distance rudder hinge axis to wing leading edge (longitudinal),6.08,m,DISTANCE DE L'AXE D'ARTICULATION DU GOUVERNAIL DE DIRECTION AU BORD D'ATTAQUE DE LA VOILURE … 6.08,right table column; also side-view sketch upper line 6.08 from rudder hinge to wing LE,high
+63,,"propeller axis height above ground, flying line, normal oleo setting and tyre pressure",1.84,m,HAUTEUR AU DESSUS DU SOL DE L'AXE DES PROPULSEURS … AVION EN LIGNE DE VOL 1° … NORMAUX … 1.84,right table column,high
+63,,"propeller axis height above ground, flying line, oleos bottomed and tyres fully flat",1.63,m,2° LES AMORTISSEURS ETANT A FOND DE COURSES HAUTEUR D'APPLATISSEMENT COMPLET DES PNEUS … 1.63,right table column,medium
+63,,propeller diameter (Ratier variable pitch),3.05,m,DIAMETRES 3.05,Propulseurs table,high
+63,,propeller radius,1.525,m,"1,525","1/2 front-view sketch, from hub axis to blade tip",high
+63,,length from rudder trailing edge (rear extremity) to propeller plane,8.28,m,8.28,"side-view sketch, top horizontal line from rear of rudder to the propeller disc/spinner base",medium
+63,,"fin + rudder height, from fuselage bottom line at sternpost to fin tip",1.87,m,1.87,"side-view sketch, vertical line at left of tail",medium
+63,,half span (aircraft centreline to wingtip),5.10,m,"5,10",1/2 plan-view sketch,high
+63,,half tailplane span (centreline to tailplane tip),1.77,m,"1,77","1/2 plan-view sketch, line from fuselage centreline to tailplane tip",medium
+63,,"dimension along wing trailing edge, root to outer end of aileron (exact meaning unclear)",2.41,m,"2,41","1/2 plan-view sketch, dimension line drawn along the trailing edge from wing root toward aileron tip",low
+63,,main wheels designation,10,-,ROUES 10 / PNEUMATIQUES 10 bis,Atterrisseurs principaux,medium
+66,,overall wing span,10.20,m,ENVERGURE HORS TOUT … 10.20,"detail of table (PDF p.66): Caractéristiques du planeur table, row 1",high
+66,,overall length,8.76,m,LONGUEUR HORS TOUT … 8.76,detail of table (PDF p.66): table row 2,high
+66,,wing area (gross),15.97,m²,SURFACE DES VOILURES … 15m²97,detail of table (PDF p.66): table row 3,high
+66,,dihedral,"3°55'30""",deg-min-sec,"DIEDRE TRANSVERSAL … 3°55'30""",detail of table (PDF p.66): table row 5,high
+66,,wing sweep (flèche longitudinale),1,°,FLECHE LONGITUDINALE … 1°,detail of table (PDF p.66): table row 6,high
+66,,wing incidence relative to propeller (thrust) axis,1,°,INCIDENCE DE L'AILE PAR RAPPORT A L'AXE DE ROTATION DES PROPULSEURS … 1°,detail of table (PDF p.66): table row 7,high
+66,,tailplane (fixed horizontal stabiliser) area,1.83,m²,PLAN FIXE … 1m²83,"detail of table (PDF p.66): table, horizontal tail area",high
+66,,elevator area,1.04,m²,GOUVERNAIL DE PROFONDEUR … 1m²04,"detail of table (PDF p.66): table, horizontal tail area",high
+66,,fin area,0.59,m²,DERIVES … 0m²59,"detail of table (PDF p.66): table, vertical tail area",high
+66,,rudder area,1.04,m²,GOUVERNAIL DE DIRECTION … 1m²04,"detail of table (PDF p.66): table, vertical tail area",medium
+66,,"tailplane incidence adjustment range (relative to thrust axis), adjustable in flight",±3,°,CALAGE DU PLAN FIXE HORIZONTAL … Réglable en vol ±3°,detail of table (PDF p.66): table last row,high
+66,,distance elevator hinge axis to wing leading edge (longitudinal),5.88,m,DISTANCE DE L'AXE D'ARTICULATION DU GOUVERNAIL DE PROFONDEUR AU BORD D'ATTAQUE DE LA VOILURE … 5.88,detail of table (PDF p.66): right table column,high
+66,,distance rudder hinge axis to wing leading edge (longitudinal),6.08,m,DISTANCE DE L'AXE D'ARTICULATION DU GOUVERNAIL DE DIRECTION AU BORD D'ATTAQUE DE LA VOILURE … 6.08,detail of table (PDF p.66): right table column,high
+66,,"propeller axis height above ground, flying line, normal oleo setting and tyre pressure",1.84,m,HAUTEUR AU DESSUS DU SOL DE L'AXE DES PROPULSEURS … AVION EN LIGNE DE VOL 1° … NORMAUX … 1.84,detail of table (PDF p.66): right table column,high
+66,,"propeller axis height above ground, flying line, oleos bottomed and tyres fully flat",1.63,m,2° LES AMORTISSEURS ETANT A FOND DE COURSES HAUTEUR D'APPLATISSEMENT COMPLET DES PNEUS … 1.63,detail of table (PDF p.66): right table column,medium
+66,,propeller diameter (Ratier variable pitch),3.05,m,DIAMETRES 3.05,detail of table (PDF p.66): Propulseurs table,high
+66,,main wheels designation,10,-,ROUES 10 / PNEUMATIQUES 10 bis,detail of table (PDF p.66): Atterrisseurs principaux,medium
+67,,overall length,8.76,m,LONGUEUR HORS TOUT … 8.76,detail of sketches (PDF p.67): table row 2; also side-view sketch bottom line 8.76 from rudder trailing edge to spinner tip,high
+67,,distance elevator hinge axis to wing leading edge (longitudinal),5.88,m,DISTANCE DE L'AXE D'ARTICULATION DU GOUVERNAIL DE PROFONDEUR AU BORD D'ATTAQUE DE LA VOILURE … 5.88,detail of sketches (PDF p.67): right table column; also 1/2 plan sketch vertical line 5.88 from elevator hinge to wing LE at root,high
+67,,distance rudder hinge axis to wing leading edge (longitudinal),6.08,m,DISTANCE DE L'AXE D'ARTICULATION DU GOUVERNAIL DE DIRECTION AU BORD D'ATTAQUE DE LA VOILURE … 6.08,detail of sketches (PDF p.67): right table column; also side-view sketch upper line 6.08 from rudder hinge to wing LE,high
+67,,propeller radius,1.525,m,"1,525","detail of sketches (PDF p.67): 1/2 front-view sketch, from hub axis to blade tip",high
+67,,length from rudder trailing edge (rear extremity) to propeller plane,8.28,m,8.28,"detail of sketches (PDF p.67): side-view sketch, top horizontal line from rear of rudder to the propeller disc/spinner base",medium
+67,,"fin + rudder height, from fuselage bottom line at sternpost to fin tip",1.87,m,1.87,"detail of sketches (PDF p.67): side-view sketch, vertical line at left of tail",medium
+67,,half span (aircraft centreline to wingtip),5.10,m,"5,10",detail of sketches (PDF p.67): 1/2 plan-view sketch,high
+67,,half tailplane span (centreline to tailplane tip),1.77,m,"1,77","detail of sketches (PDF p.67): 1/2 plan-view sketch, line from fuselage centreline to tailplane tip",medium
+67,,"dimension along wing trailing edge, root to outer end of aileron (exact meaning unclear)",2.41,m,"2,41","detail of sketches (PDF p.67): 1/2 plan-view sketch, dimension line drawn along the trailing edge from wing root toward aileron tip",low
+68,Pl. 1,number of rib stations per half-wing (numbered from tip to root),22,count,① … ㉒,"front elevation at top, circled numbers above each rib line",high
+68,Pl. 1,"slope (tangent) of the upper-surface line, inboard portion (approx. ribs 15-22) in front elevation",0.0046,tan (≈0.26°),"Tangente 0,0046","front elevation, right end, between ribs 21 and 22, with small vertical dimension arrow",high
+68,Pl. 1,"slope (tangent) of the lower-surface line in front elevation (outboard portion, tip to rib 21)",0.1246,tan (≈7.1°),"Tangente 0,1246","front elevation, below the lower line around ribs 12-13, with vertical dimension arrow down to a dotted reference line",high
+76,Pl. 9,"fold-out sheet size of Pl. 9 (paper, not aircraft)",103 x 29.5,cm,"Longueur : 103 cm / Largeur : 29,5 cm",archive card,high
+80,Pl. 10,number of numbered fuselage frames in the rear fuselage framework,12,count (I-XII),Couple I … Couple XII,"call-outs along the framework, right-hand side of drawing",high
+85,Pl. 14,"fold-out sheet size of Pl. 14 (paper, not aircraft)",85 x 29.5,cm,"Longueur : 85 cm / Largeur : 29,5",archive card,high
+88,Pl. 15,wing rib at which the aileron control bellcrank (root relay) is mounted,22,rib No.,Renvoi de commande de gauchissement sur nervure 22,"label at left, pointing to the wing-root bellcrank",high
+88,Pl. 15,aileron control relays along the wing,between ribs 15 and 16; between ribs 10 and 10 bis,rib Nos.,entre nervure 15 et 16 / entre nervure 10-10 bis,labels on the right and left wings,high
+88,Pl. 15,wing rib at which the aileron is driven (aileron hinge/horn),6,rib No.,Articulation d'aileron nervure 6,"label lower right, pointing to the right-aileron drive",high
+88,Pl. 15,fuselage frames carrying control-rod pulleys,6 and 12,frame Nos.,Poulies sur couple 6 / Poulies sur couple 12,labels along the fuselage control run,high
+89,Pl. 16,"fold-out sheet length (Pl. 16, paper size, not an aircraft dimension)",88.5,cm,"Longueur : 88,5 cm","card, handwritten field",high
+89,Pl. 16,"fold-out sheet width (Pl. 16, paper size, not an aircraft dimension)",29.5,cm,"Largeur : 29,5 cm","card, handwritten field",high
+98,Pl. 21,longitudinal position of flap actuator installation (between fuselage frames),frame 3 to frame 4,frame numbers,COUPLE 3 … COUPLE 4,labels with leaders to the two frames bounding the actuator mounting structure,high
+100,Pl. 23,number of numbered engine-mount items in parts table,6,items,REPÈRES 1 … 6,parts table at right,high
+101,Pl. 23 bis,engine mount rear attachments — fuselage frame,frame 1,frame number,Attache sup^r Bâti moteur sur couple 1 / Attache inf^r Bâti moteur sur couple 1,parts table items 4 and 5,high
+101,Pl. 23 bis,number of engine mount attachments per side on frame 1,2 (upper and lower),count,Attache sup^r … Attache inf^r … sur couple 1,"parts table items 4, 5; fork ends in plan view",high
+103,Pl. 25,"fold-out sheet length (Pl. 25, paper size, not an aircraft dimension)",89,cm,Longueur : 89 cm,"card, handwritten field",high
+103,Pl. 25,"fold-out sheet width (Pl. 25, paper size, not an aircraft dimension)",56.8,cm,"Largeur : 56,8 cm","card, handwritten field",high
+105,Pl. 25,number of fin ribs visible between tailplane carry-through and fin tip (excluding tip),3,ribs,"(drawing, no text)","cut-away fin, count from drawing",medium
+108,Pl. 26,"rudder ribs below the horn (including top and bottom ribs), counted on drawing",6,ribs,"(drawing, no text)",main perspective view,medium
+109,Pl. 27,"fold-out sheet length (Pl. 27, paper size, not an aircraft dimension)",100,cm,Longueur : 100 cm,"card, handwritten field",high
+109,Pl. 27,"fold-out sheet width (Pl. 27, paper size, not an aircraft dimension)",29.5,cm,"Largeur : 29,5 cm","card, handwritten field",high
+110,Pl. 27,number of spar-to-fuselage fittings on tailplane spar (detail E),2 (each a double lug),fittings,ATTACHE DU LONGERON SUR FUSELAGE (E),"detail E, two arrows from E",high
+110,Pl. 27,number of nose (bec) attachment lugs to fuselage (detail D),2,lugs,ATTACHE DU BEC SUR FUSELAGE (D),detail D,medium
+111,Pl. 27,"elevator hinge points per tailplane half (A outer, B middle) plus central hinge C",2 per half + 1 central,hinges,"ARTICULATION EXTRÊME (A), ARTICULATION MOYENNE (B), ARTICULATION CENTRALE DE VOLET (C)",callouts on general view and details,high
+111,Pl. 27,"nose ribs ahead of main spar on one tailplane half (counted, excluding centre box)",5,ribs,"(drawing, no text)","near half, general view",low
+111,Pl. 27,"rear ribs behind main spar on one tailplane half (counted, excluding tip end rib)",5,ribs,"(drawing, no text)","near half, general view",low
+112,Pl. 28,number of spar-to-fuselage lug fittings on tailplane spar,"2 (double lugs, near centre)",fittings,(drawing; cf. Pl. 27 'Attache du longeron sur fuselage'),"centre of spar, two enlargements",high
+113,Pl. 29,"ribs per elevator half (counted on the bare-framework half, excluding horn nose block)",6,ribs,"(drawing, no text)",upper (far) elevator half,low
+113,Pl. 29,hinge cut-outs in each elevator half leading edge,2,cut-outs,"(drawing, no text)",planform outline at upper right,medium
+114,Pl. 30,"fold-out sheet length (Pl. 30, paper size, not an aircraft dimension)",82.5,cm,"Longueur : 82,5 cm","card, handwritten field",high
+114,Pl. 30,"fold-out sheet width (Pl. 30, paper size, not an aircraft dimension)",29.5,cm,"Largeur : 29,5 cm","card, handwritten field",high
+115,Pl. 30,main undercarriage legs shown in vignette,2 (plus tail support),count,"(vignette, no text)",half-round vignette lower left,high
+120,Pl. 33,"fold-out sheet length (archive card, not aircraft)",78,cm,Longueur : 78 cm,card,high
+120,Pl. 33,"fold-out sheet width (archive card, not aircraft)",29.5,cm,"Largeur : 29,5 cm",card,high
+123,Pl. 34,"fold-out sheet length (archive card, not aircraft)",86,cm,Longueur : 86 cm,card,high
+123,Pl. 34,"fold-out sheet width (archive card, not aircraft)",29.5,cm,"Largeur : 29,5 cm",card,high
+128,Pl. 37,"fold-out sheet length (archive card, not aircraft)",88.3,cm,"Longueur : 88,3 cm",card,high
+128,Pl. 37,"fold-out sheet width (archive card, not aircraft)",29.5,cm,"Largeur : 29,5 cm",card,high
+131,Pl. 38,"fold-out sheet length (archive card, not aircraft)",81,cm,Longueur : 81 cm,card,medium
+131,Pl. 38,"fold-out sheet width (archive card, not aircraft)",29.5,cm,"Largeur : 29,5 cm",card,high
+136,Pl. 41,generator power,600,W,génératrice 600 W 1694,top centre,high
+144,Pl. 50,number of wing machine guns,"4 (2 left wing, 2 right wing)",count,MI G ... MI D (two gun symbols drawn on each side),"top row of the diagram, left and right groups",medium
+144,Pl. 50,number of engine-mounted cannons,1,count,"C (canon), centre of diagram",top centre of diagram,medium
+144,Pl. 50,number of fuses in armament circuit,6,count,fusibles,centre of diagram,high
+145,Pl. 50 bis,number of wing machine guns,"4 (2 per wing, side by side)",count,MITRAILLEUSE / MITRAILLEUSE (each wing),"plan view, both wings; front view shows two muzzles per wing",high
+145,Pl. 50 bis,engine-mounted cannon,"1, on the engine/propeller axis",count,AXE DU CANON / AXE CANON,side and plan views,high
+145,Pl. 50 bis,image-left wing (starboard wing if the plan is a view from above): spanwise distance from cannon-axis reference to the inner (inboard) machine gun,1743,mm,1743,"plan view, dimension line from the tick on the cannon axis near the nose to the inboard machine-gun line of the image-left wing",medium
+145,Pl. 50 bis,image-left wing (starboard wing if the plan is a view from above): spanwise spacing between the two machine guns (inner to outer),168,mm,168,"plan view, chained dimension written outboard of the outer machine-gun line of the image-left wing (last digit may be 2/8; read as 8)",medium
+145,Pl. 50 bis,image-left wing (starboard wing if the plan is a view from above): derived spanwise position of outer machine gun from cannon-axis reference,"1911 (= 1743 + 168, derived, not printed)",mm,1743 + 168,derived,low
+145,Pl. 50 bis,image-right wing (port wing if the plan is a view from above): spanwise distance from cannon-axis reference to the inner (inboard) machine gun,1840,mm,1840,"plan view, dimension line from the tick on the cannon axis near the nose to the inboard machine-gun line of the image-right wing; second digit read as 8 (alternative 6) from the enlarged detail scan p-147; scaling the drawing (~8.4 mm per scan pixel on p-147) gives ~1830, supporting 1840",medium
+145,Pl. 50 bis,image-right wing (port wing if the plan is a view from above): spanwise spacing between the two machine guns (inner to outer),160,mm,160,"plan view, written just outboard of the image-right-wing gun pair, next to the arrowhead of the 1840 dimension",medium
+145,Pl. 50 bis,image-right wing (port wing if the plan is a view from above): derived spanwise position of outer machine gun from cannon-axis reference,"2000 (= 1840 + 160, derived, not printed)",mm,1840 + 160,derived,low
+145,Pl. 50 bis,"engine-mount setting (offset angle of engine/cannon axis relative to aircraft axis, in plan)",1,deg,DÉPART CALAGE BÂTI MOTEUR 1°,"plan view, leader to a point on the cannon axis near the nose",high
+145,Pl. 50 bis,lateral offset between aircraft axis and cannon axis at the nose (propeller hub),41,mm,41,"plan view, small dimension at the very nose between two longitudinal lines",medium
+145,Pl. 50 bis,vertical distance line of sight above cannon axis,505,mm,505,"side view, vertical dimension (written sideways) at the nose between LIGNE DE VISÉE and AXE DU CANON; enlarged detail scan p-146 reads 505 (alternatives 565 / 306); scaling the side view gives a ratio to the lower dimension matching 505/626",low
+145,Pl. 50 bis,vertical distance cannon axis above mean axis of the wing machine guns,626,mm,626,"side view, vertical dimension (written sideways) between AXE DU CANON and AXE MOYEN DES MITRAILLEUSES; alternative reading 686",medium
+145,Pl. 50 bis,"angle annotation near aircraft axis (rear fuselage, plan view), probably the 1° angle between aircraft axis and cannon/engine axis",1° (probable; figure partly illegible),deg,1[0],"plan view, left of the AXE APPAREIL leader, between two longitudinal lines",low
+147,Pl. 50 bis,engine-mounted cannon,"1, on the engine/propeller axis",count,AXE DU CANON / AXE CANON,side and plan views,high
+147,Pl. 50 bis,vertical distance line of sight above cannon axis,505,mm,505,"side view, vertical dimension (written sideways) at the nose between LIGNE DE VISÉE and AXE DU CANON; enlarged detail scan p-146 reads 505 (alternatives 565 / 306); scaling the side view gives a ratio to the lower dimension matching 505/626",low
+147,Pl. 50 bis,vertical distance cannon axis above mean axis of the wing machine guns,626,mm,626,"side view, vertical dimension (written sideways) between AXE DU CANON and AXE MOYEN DES MITRAILLEUSES; alternative reading 686",medium
+148,Pl. 50 bis,number of wing machine guns,"4 (2 per wing, side by side)",count,MITRAILLEUSE / MITRAILLEUSE (each wing),"plan view, both wings; front view shows two muzzles per wing",high
+148,Pl. 50 bis,image-left wing (starboard wing if the plan is a view from above): spanwise distance from cannon-axis reference to the inner (inboard) machine gun,1743,mm,1743,"plan view, dimension line from the tick on the cannon axis near the nose to the inboard machine-gun line of the image-left wing",medium
+148,Pl. 50 bis,image-left wing (starboard wing if the plan is a view from above): spanwise spacing between the two machine guns (inner to outer),168,mm,168,"plan view, chained dimension written outboard of the outer machine-gun line of the image-left wing (last digit may be 2/8; read as 8)",medium
+148,Pl. 50 bis,image-left wing (starboard wing if the plan is a view from above): derived spanwise position of outer machine gun from cannon-axis reference,"1911 (= 1743 + 168, derived, not printed)",mm,1743 + 168,derived,low
+148,Pl. 50 bis,image-right wing (port wing if the plan is a view from above): spanwise distance from cannon-axis reference to the inner (inboard) machine gun,1840,mm,1840,"plan view, dimension line from the tick on the cannon axis near the nose to the inboard machine-gun line of the image-right wing; second digit read as 8 (alternative 6) from the enlarged detail scan p-147; scaling the drawing (~8.4 mm per scan pixel on p-147) gives ~1830, supporting 1840",medium
+148,Pl. 50 bis,image-right wing (port wing if the plan is a view from above): spanwise spacing between the two machine guns (inner to outer),160,mm,160,"plan view, written just outboard of the image-right-wing gun pair, next to the arrowhead of the 1840 dimension",medium
+148,Pl. 50 bis,image-right wing (port wing if the plan is a view from above): derived spanwise position of outer machine gun from cannon-axis reference,"2000 (= 1840 + 160, derived, not printed)",mm,1840 + 160,derived,low
+148,Pl. 50 bis,"engine-mount setting (offset angle of engine/cannon axis relative to aircraft axis, in plan)",1,deg,DÉPART CALAGE BÂTI MOTEUR 1°,"plan view, leader to a point on the cannon axis near the nose",high
+148,Pl. 50 bis,lateral offset between aircraft axis and cannon axis at the nose (propeller hub),41,mm,41,"plan view, small dimension at the very nose between two longitudinal lines",medium
+148,Pl. 50 bis,"angle annotation near aircraft axis (rear fuselage, plan view), probably the 1° angle between aircraft axis and cannon/engine axis",1° (probable; figure partly illegible),deg,1[0],"plan view, left of the AXE APPAREIL leader, between two longitudinal lines",low
+150,Pl. 50 quater,spacing of the 2 quick-release connector pins,60,mm,60,"top left of cable run, between the two connector plugs",medium
+150,Pl. 50 quater,cable-clamp spacings along the upper run (from connector end),"165, 160, 225, 29[5], [9]0",mm,165 / 160 / 225 / 29[5] / [9]0,dimension chain along the upper cable run ('Sur nerv. AR 22 droite'),low
+150,Pl. 50 quater,clamp offsets near the air-supply branch,"95, 95",mm,95 ... 95,"right-centre, near 'Alimentation venant de la bouteille 8 L.'",medium
+150,Pl. 50 quater,cable-clamp spacings along the lower run (spar flange),"250, 555, 180",mm,250 / 555 / 180,"dimension chain along the spar-flange cable run, centre",medium
+150,Pl. 50 quater,compressed-air bottle capacity (armament),8,l,Alimentation venant de la bouteille 8 L.,right-centre note,high
+150,Pl. 50 quater,chamfer size,4.5 × 4.5,mm,"chanfrein de 4,5 × 4,5",bottom note,medium
+151,Pl. 51,inclination of flare (bomb) axis relative to horizontal,2,deg,2° ... Horizontale,"small marking with two facing arrows at the end of the 'Horizontale' line, just above the rear of the flare",low
+151,Pl. 51,"main-spar position on rib 11, fraction of chord from leading edge (scaled from drawing, not printed)",≈0.36,chord fraction,Axe longeron,"scaled: LE at scan x≈21 px, spar axis x≈903 px, TE x≈2460 px",low
+151,Pl. 51,"false-spar position on rib 11, fraction of chord from leading edge (scaled from drawing, not printed)",≈0.71,chord fraction,Axe faux longeron,scaled: false-spar axis x≈1757 px on the same chord,low
+151,Pl. 51,"rib 11 profile maximum thickness/chord (scaled from drawing, not printed)",≈0.14,ratio,Référence – nervure 11,scaled from the drawn profile (max depth ≈245 px over ≈1740 px chord at display scale); sketch accuracy unknown,low
+154,Pl. 52 ter,number of hoisting points,"4 (2 forward, 2 rear), via 2 spreader bars",count,"(pictorial, no text)",whole illustration,medium
+156,Pl. 54,fold-out sheet length (archive card),91.5,cm,"Longueur : 91,5 cm",card,high
+156,Pl. 54,fold-out sheet width (archive card),29.5,cm,"Largeur : 29,5 cm",card,high
+160,Pl. 55,"hangar size, layout 1",20 × 30,m,HANGAR 20m x 30m,left plan,high
+160,Pl. 55,"aircraft accommodated, hangar 20 × 30 m",8,count,(silhouettes counted),left plan,high
+160,Pl. 55,"hangar size, layout 2",26 × 28,m,HANGAR 26m x 28m,centre plan,high
+160,Pl. 55,"aircraft accommodated, hangar 26 × 28 m",11,count,(silhouettes counted),centre plan,high
+160,Pl. 55,"hangar size, layout 3",20 × 28,m,HANGAR 20m x 28m,right plan,high
+160,Pl. 55,"aircraft accommodated, hangar 20 × 28 m",8,count,(silhouettes counted),right plan,high
+160,Pl. 55,"wing span scaled from hangar silhouette (check only, not printed)",≈10.2,m,HANGAR 20m x 30m (scale),left plan: hangar width 20 m ≈ 460 display px; horizontal silhouette span ≈ 235 px,low
+162,Pl. 57,baggage compartment (suitcase rack) longitudinal position,between frame 7 and frame 8,frame numbers,PORTE-VALISE ... COUPLE 7 ... COUPLE 8,top-right detail,high
+164,Pl. 59,number of distinct wing inspection-door references,12 (items 1-12; most repeated on both wings; item 10 left wing only; item 9 = two doors per wing),count,REP. ○ VOILURE 1 … 12,legend table,high
+164,Pl. 59,number of fuselage inspection-door references,10 (items 1-10; item 4 = two doors; item 9 on both sides),count,REP. ◎ FUSELAGE 1 … 10,legend table,high
+164,Pl. 59,"gun-access door (wing 7) spanwise extent, scaled from plan view (not printed)",≈0.31-0.38 semi-span (≈1.6-1.95 m from centreline if span = 10.18 m),fraction / m,ACCÈS AUX MITRAILLEUSES,"plan view, both wings",low
+164,Pl. 59,"ammunition-box door (wing 8) spanwise extent, scaled from plan view (not printed)",≈0.17-0.30 semi-span (≈0.85-1.55 m from centreline),fraction / m,ACCÈS BOÎTE D'ALIMENTATION,plan view,low
+164,Pl. 59,"aileron inboard end, scaled from plan view (not printed)",≈0.58 semi-span (aileron from ≈0.58 to the tip; flap from the root to ≈0.58),fraction of semi-span,(outline only),"plan view, trailing-edge strip divided at about 0.58 semi-span",low
+165,Pl. 60,wing span (overall),10.20,m,"10m,20","front view, dimension line from wingtip to wingtip",high
+165,Pl. 60,overall length,8.76,m,8m76,"profile, dimension line from the rudder trailing edge to the spinner tip",high
+165,Pl. 60,"aileron inboard end / flap outboard end (plates 4/12 and 5/13), scaled",≈0.57-0.58,fraction of semi-span,AILERON / VOLET DE COURBURE,"plan view, scaled (not printed)",low

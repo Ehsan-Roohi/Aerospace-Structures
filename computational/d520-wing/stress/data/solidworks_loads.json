@@ -1,0 +1,82 @@
+{
+ "zones": [
+  {
+   "zone": 0,
+   "y0": 0.0,
+   "y1": 0.7,
+   "lift_N_per_g": 2370.956460111399,
+   "upper_skin_plan_area_m2": 1.151010246431543,
+   "equivalent_pressure_Pa_per_g": 2059.891705970502
+  },
+  {
+   "zone": 1,
+   "y0": 0.7,
+   "y1": 1.5,
+   "lift_N_per_g": 2585.6933908954106,
+   "upper_skin_plan_area_m2": 1.180869456570441,
+   "equivalent_pressure_Pa_per_g": 2189.6521893325553
+  },
+  {
+   "zone": 2,
+   "y0": 1.5,
+   "y1": 2.31,
+   "lift_N_per_g": 2417.3651900607156,
+   "upper_skin_plan_area_m2": 1.0493854806375216,
+   "equivalent_pressure_Pa_per_g": 2303.6007593626323
+  },
+  {
+   "zone": 3,
+   "y0": 2.31,
+   "y1": 3.25,
+   "lift_N_per_g": 2478.7355587604984,
+   "upper_skin_plan_area_m2": 1.0333311998975865,
+   "equivalent_pressure_Pa_per_g": 2398.7812997480055
+  },
+  {
+   "zone": 4,
+   "y0": 3.25,
+   "y1": 4.2,
+   "lift_N_per_g": 2049.601711273699,
+   "upper_skin_plan_area_m2": 0.8429724879984637,
+   "equivalent_pressure_Pa_per_g": 2431.3981066454858
+  },
+  {
+   "zone": 5,
+   "y0": 4.2,
+   "y1": 4.93,
+   "lift_N_per_g": 1218.3547167897216,
+   "upper_skin_plan_area_m2": 0.5084926065125039,
+   "equivalent_pressure_Pa_per_g": 2396.012648336829
+  }
+ ],
+ "nonstructural": [
+  {
+   "item": "fuel",
+   "force_N_per_g": -861.4161359999999,
+   "y_range": [
+    2.07,
+    3.49
+   ]
+  },
+  {
+   "item": "gun",
+   "force_N_per_g": -209.86230999999998,
+   "y_range": [
+    1.79,
+    1.955
+   ]
+  },
+  {
+   "item": "ammo",
+   "force_N_per_g": -318.716125,
+   "y_range": [
+    1.79,
+    1.955
+   ]
+  }
+ ],
+ "root_moment_lift_exact_Nm": 22607.958574270684,
+ "root_moment_lift_zoned_Nm": 22591.898665865585,
+ "zoned_error": -0.0007103652615223886,
+ "total_lift_half_N_per_g": 13124.168157124652
+}

@@ -51,7 +51,7 @@
       r.ghost=new THREE.Mesh(r.mesh.geometry.clone(),grey);r.ghost.name=`Original_${r.mesh.name}`;
       r.ghost.matrixAutoUpdate=false;r.ghost.renderOrder=2;r.ghost.visible=false;scene.add(r.ghost);
     }
-    let mode='original',pending=null;
+    let mode='original',pending=null,structure=null;
     const view=doc.defaultView || root;
     const q=s=>doc.querySelector(s), opts=()=>({mode,n:+q('#wing-flex-n').value,bendScale:+q('#wing-flex-bend').value,twistScale:+q('#wing-flex-twist').value});
     function update(){
@@ -78,9 +78,11 @@
         pos.needsUpdate=true;if(geo.getAttribute('normal'))geo.getAttribute('normal').needsUpdate=true;
         geo.computeBoundingSphere();geo.computeBoundingBox();
       }
+      if(structure)structure.update(settings);
       const end=profile.stations[profile.stations.length-1], physicalW=end.w*settings.n*1000, physicalT=end.twist*settings.n*180/Math.PI;
       q('#wing-flex-bend-value').textContent=`×${settings.bendScale}`;q('#wing-flex-twist-value').textContent=`×${settings.twistScale}`;
-      q('#wing-flex-status').textContent=mode==='original'?'Original geometry. Select 3-D bending, torsion or both to compare.':`${mode==='both'?'Bending + torsion':mode==='bending'?'Bending':'Torsion'} on the actual wing mesh. Blue = deformed; transparent grey = original. Engine ${profile.engine}, baseline scaled to ${settings.n} g.`;
+      const colourNote=q('#wing-stress-field')?.value!=='off'?'Stress-coloured = deformed; transparent grey = original.':'Blue = deformed; transparent grey = original.';
+      q('#wing-flex-status').textContent=mode==='original'?'Original geometry. Select 3-D bending, torsion or both to compare.':`${mode==='both'?'Bending + torsion':mode==='bending'?'Bending':'Torsion'} on the actual wing mesh. ${colourNote} Engine ${profile.engine}, baseline scaled to ${settings.n} g.`;
       q('#wing-flex-values').textContent=`At rib 1 (y = ${end.y.toFixed(2)} m), before magnification: shear-centre displacement ${physicalW.toFixed(2)} mm; nose-up twist ${physicalT.toFixed(3)}°. ${mode==='original'?'No deformation displayed.':`Displayed bending offset ${(mode==='torsion'?0:physicalW*settings.bendScale/1000).toFixed(3)} m; displayed twist ${(mode==='bending'?0:physicalT*settings.twistScale).toFixed(1)}°. These are exaggerated separately for teaching.`}`;
     }
     function schedule(){if(pending!=null)view.cancelAnimationFrame(pending);pending=view.requestAnimationFrame(()=>{pending=null;update();});}
@@ -93,7 +95,8 @@
     for(const [id,position] of [['wing-flex-front',[0,3,-17]],['wing-flex-oblique',[-10.5,5,-4.5]]]){
       const el=q('#'+id);el.disabled=false;el.addEventListener('click',()=>{camera.position.set(...position);controls.target.set(0,1.7,3.1);controls.update();});
     }
-    update();return {update,records,profile};
+    if(root.D520WingStructure)structure=root.D520WingStructure.mount({THREE,frame,camera,controls,profile,records,document:doc,refresh:update,deformPoint});
+    update();return {update,records,profile,structure};
   }
   const api={validate,sample,deformPoint,wingMember,mount};
   if(typeof module==='object' && module.exports)module.exports=api;

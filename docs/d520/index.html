@@ -159,11 +159,12 @@ figcaption b{color:var(--ink)}
         <canvas id="cv" aria-label="3-D model of the Dewoitine D.520 S"></canvas>
         <div class="load" id="load">Loading model…</div>
         <div class="stamp" aria-hidden="true">Notice<br>D.520 S<br>1940</div>
+        <div id="wing-stress-overlay" style="display:none;position:absolute;top:10px;left:10px;max-width:230px;padding:8px;background:rgba(255,255,255,.92);color:#18242c;font:12px/1.4 sans-serif;border:1px solid #aeb7bb;pointer-events:none"></div>
         <div class="hint">Drag to orbit · scroll to zoom · right-drag to pan</div>
       </div>
       <section class="panel" style="margin-top:12px" aria-labelledby="wing-flex-title">
         <h3 id="wing-flex-title">Deform the actual 3-D wings</h3>
-        <p>Compare the original grey-transparent wings with the blue deformed wings. Flaps and ailerons follow the same deformation field; the fuselage and tail are unchanged.</p>
+        <p>Compare the original grey-transparent wings with the deformed wings (blue when stress colouring is off). Flaps and ailerons follow the same deformation field; the fuselage and tail are unchanged.</p>
         <div class="btns" role="group" aria-label="Actual wing deformation">
           <button class="btn" type="button" data-wing-flex="original" aria-pressed="true" disabled>Original only</button>
           <button class="btn ghost" type="button" data-wing-flex="bending" aria-pressed="false" disabled>3-D bending</button>
@@ -177,8 +178,25 @@ figcaption b{color:var(--ink)}
         <div class="btns" role="group" aria-label="Wing inspection camera"><button class="btn ghost" id="wing-flex-front" type="button" disabled>Front view · bending</button><button class="btn ghost" id="wing-flex-oblique" type="button" disabled>Oblique view · twist</button></div>
         <p id="wing-flex-status" role="status">Preparing verified deformation profile…</p>
         <p id="wing-flex-values"></p>
-        <p><b>What is computed:</b> spanwise vertical displacement (bending + web shear) and twist from the same 1-g beam/section engine as Wing Lab. <b>What is visual:</b> exaggerated vertex movement, rigid-section rotation and interpolation onto the exterior aircraft mesh. This is not a new shell FE solution, deformed aerodynamic calculation or stress colour plot. No local skin wrinkles or rib stresses are recovered.</p>
+        <p><b>What is computed:</b> spanwise displacement and twist from the same 1-g beam/section engine as Wing Lab. <b>What is visual:</b> exaggerated vertex movement and rigid-section rotation. Stress colours below use the undeformed linear solution: changing magnification does not change stress. This is not a new shell FE solution or deformed aerodynamic calculation. No local skin wrinkles or rib stresses are recovered.</p>
         <p><b>Read the shape:</b> in front view, bending displacement grows toward the tip. In oblique view, torsion rotates each airfoil about its local computed shear-centre axis, raising the leading edge relative to the trailing edge for nose-up twist. The two effects may occur together. Large display magnifications deliberately exaggerate the shape; they are not larger physical loads.</p>
+      </section>
+      <section class="panel" style="margin-top:12px" aria-labelledby="wing-stress-title">
+        <h3 id="wing-stress-title">Stress and the internal load path</h3>
+        <div class="ctl"><label for="wing-stress-field">Stress colour field (MPa)</label><select id="wing-stress-field" disabled><option value="off">Aircraft colours / member identification</option><option value="sigma">Spanwise normal stress σ · signed</option><option value="tau">Shear stress |τ| · magnitude</option><option value="vm">Equivalent stress √(σ² + 3τ²)</option></select></div>
+        <div id="wing-stress-legend" role="status"></div>
+        <div class="ctl"><label for="wing-skin-view">Exterior wing skin</label><select id="wing-skin-view" disabled><option value="solid">Solid</option><option value="transparent">Transparent</option><option value="hidden">Hidden · internal cutaway</option></select></div>
+        <p><label><input id="wing-show-structure" type="checkbox" disabled> Show idealised internal structure</label></p>
+        <p><label><input id="wing-show-spars" type="checkbox" checked disabled> Main spar + false spar</label> · <label><input id="wing-show-ribs" type="checkbox" checked disabled> 22 ribs per half-wing</label> · <label><input id="wing-show-stringers" type="checkbox" checked disabled> Upper/lower stringers</label></p>
+        <div class="btns"><button class="btn ghost" id="wing-cutaway" type="button" disabled>Open structural cutaway</button><button class="btn ghost" id="wing-structure-camera" type="button" disabled>Close wing view</button></div>
+        <div class="ctl"><label for="wing-load-path">Trace the load path</label><select id="wing-load-path" disabled><option value="all">All members</option><option value="skin">1 · Pressure and stressed skin</option><option value="ribs">2 · Ribs: local shape and load distribution</option><option value="spars">3 · Spar caps, webs and closed cells</option><option value="fittings">4 · Fittings into the fuselage</option></select></div>
+        <p id="wing-load-path-text"></p><p id="wing-stress-max"></p>
+        <p><b>Read the colours:</b> σ is tension-positive and compression-negative; positive-g bending usually compresses upper members and stretches lower ones. Shear and equivalent-stress colours show magnitude, not sign. The fixed scale is shared by skin, spar webs, caps and stringers and is sized to this baseline at |n| = 6, so changing n visibly changes demand. Grey means <b>not analysed here</b>, not zero stress: the trailing region aft of the false spar, flaps, ailerons, tip cap and absent skin around the wheel-well cut-out have no mapped stress. Ribs are green because rib stress is not independently solved.</p>
+        <h4>Where is stress high, and why?</h4>
+        <p>The inboard wing must pass the accumulated outboard force and bending moment into the fuselage fittings. For a simple symmetric beam, σ = −M(z − z̄)/I: material far from the neutral axis carries more bending stress. But this wing tapers and its gauges change: M decreases outward while I and spar-cap area also decrease. Therefore the <b>largest stress need not be exactly at the root</b>. Use the calculated peak locations below, not a rule that “red must be at the root”. Thin webs carry shear flow q with τ = q/t; a thinner wall can have greater stress even when the force is smaller.</p>
+        <p><b>What the cutaway represents:</b> members are rebuilt from the same section geometry, 0.37c main spar, 0.73c false spar and documented/scaled rib stations used by Wing Lab. Caps and blade stringers are simplified surfaces, not solid manufacturing CAD; ribs are idealised translucent filled frames with green outlines, not a detailed historical reconstruction with lightening holes, rivets or fittings. The model includes the lower-skin wheel-well opening in its stress mapping. Internal members follow the same displayed bending/twist as the exterior.</p>
+        <p><b>Limits:</b> this is a beam/thin-wall stress projection, not a surface-by-surface shell FE contour or a prediction of local joint stresses. The colours omit rivet-hole concentrations, shear lag, rib stress, local wrinkling and redistribution after buckling. Linear scaling at +6 g may exceed a panel's predicted buckling onset; a red contour alone does not establish failure or safety. <a href="../wing-lab.html#d520">Open the full D.520 study for buckling, assumptions and shell-model comparison.</a></p>
+        <p><b>Try it:</b> at +1 g choose signed σ, open the cutaway, then hide ribs and stringers in turn. Compare the upper and lower caps. Change to shear and find the web carrying it. Change n to −3: which normal-stress signs reverse? Finally compare an undeformed and magnified deformed view: geometry changes, but the computed stress at the same material point does not.</p>
       </section>
       <div class="keyfigs" id="keyfigs"></div>
       <section class="panel" style="margin-top:18px" aria-labelledby="deform-title">
@@ -485,6 +503,7 @@ function initRenders(){
 }
 </script>
 <script src="deformation_lesson.js"></script>
+<script src="wing_structure.js"></script>
 <script src="wing_deformation.js"></script>
 <script>show(location.hash.slice(1) || "model");</script>
 

@@ -31,6 +31,13 @@ try {
   await wait(()=>q('#mChip').textContent.includes('meet assumed'));
   // Negative-side governing capacity 5 g meets 4.5 g, even though it is below +9 g.
   assert.ok(q('#mChip').classList.contains('ok'));
+  q('[data-mtab="theory"]').click();
+  assert.equal(q('#mtab-theory').hidden,false);
+  assert.match(q('#mtab-theory').textContent,/200 N·m/);
+  assert.match(q('#mtab-theory').textContent,/mass matrix/);
+  assert.match(q('#mtab-theory').textContent,/not automatically safe/);
+  assert.ok(q('#mtab-theory svg[role="img"]'));
+  q('[data-mtab="start"]').click();
   q('#mBackBeams').click(); assert.equal(q('#foundations').hidden,false);
   assert.equal(q('#metalLab').hidden,true);
   w.MetalWingUI.open();

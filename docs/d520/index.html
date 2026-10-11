@@ -162,6 +162,17 @@ figcaption b{color:var(--ink)}
         <div class="hint">Drag to orbit · scroll to zoom · right-drag to pan</div>
       </div>
       <div class="keyfigs" id="keyfigs"></div>
+      <article class="panel" style="margin-top:18px" aria-label="Student guide to the aircraft model">
+        <h2>From the aircraft model to structural mechanics</h2>
+        <p>This is a geometric reconstruction with movable controls, not a flight or stress simulation. Moving a slider rotates a part to illustrate its location and travel; it does not compute pressure, lift, stability or structural stress.</p>
+        <h3>First identify the parts</h3>
+        <p><b>Ailerons</b> are near the outboard trailing edges: differential deflection changes the left/right aerodynamic loading and commands roll. <b>Elevators</b> on the horizontal tail change tail loading and command pitch. The <b>rudder</b> on the vertical tail changes side force and commands yaw. Flaps are inboard trailing-edge devices that change lift and drag. Control force enters the airframe through hinges and supporting members; these local loads are not solved by the animation.</p>
+        <h3>Why the wing needs an internal structure</h3>
+        <p>Pressure acts over the skin. Ribs preserve the airfoil shape and transfer local loading; spar caps and stressed skin form tension–compression load paths for bending; webs and connected skins carry shear and torque; stringers stiffen the skin against local buckling. A smooth external surface hides these members, so the whole-aircraft view alone cannot show their stresses.</p>
+        <h3>Continue with the numerical wing lesson</h3>
+        <p><a href="../wing-lab.html#d520">Open the D.520 structural workspace</a>, then choose <b>Theory · guided lesson</b>. Follow the sequence pressure → net span load → shear/moment/torque → section stresses → deformation → stability. Use <b>Section</b> for the internal cross-section and <b>Loads</b> for the actual prescribed load distribution.</p>
+        <p><b>Before running:</b> predict what increasing the load factor from 1 to 6 will do to stress and deflection. Then predict whether thicker skin or larger spar caps will be more effective for bending and twisting. Check both the result and the added mass. All strength conclusions depend on the assumed gauges, material properties and boundary conditions; this is not an airworthiness assessment.</p>
+      </article>
     </div>
     <aside class="panel" aria-label="Controls">
       <div class="eyebrow">Rigged to the printed travel</div>

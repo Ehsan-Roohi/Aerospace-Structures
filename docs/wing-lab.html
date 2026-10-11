@@ -6575,6 +6575,7 @@ const METAL_REFERENCE = {
     <section class="dock panel" aria-label="Results">
       <div class="tabs" role="tablist" id="mTabs">
         <button role="tab" type="button" data-mtab="start" aria-selected="true">Start here · D.520</button>
+        <button role="tab" type="button" data-mtab="theory" aria-selected="false">Theory · guided lesson</button>
         <button role="tab" type="button" data-mtab="loads" aria-selected="false">Loads</button>
         <button role="tab" type="button" data-mtab="diagrams" aria-selected="false">Diagrams</button>
         <button role="tab" type="button" data-mtab="section" aria-selected="false">Section</button>
@@ -6585,6 +6586,7 @@ const METAL_REFERENCE = {
         <button role="tab" type="button" data-mtab="report" aria-selected="false">Report</button>
       </div>
       <div class="tabpanel" id="mtab-start" role="tabpanel"></div>
+      <div class="tabpanel" id="mtab-theory" role="tabpanel" hidden></div>
       <div class="tabpanel" id="mtab-loads" role="tabpanel" hidden></div>
       <div class="tabpanel" id="mtab-diagrams" role="tabpanel" hidden><div class="charts" id="mCharts"></div></div>
       <div class="tabpanel" id="mtab-section" role="tabpanel" hidden></div>
@@ -7095,12 +7097,12 @@ const METAL_REFERENCE = {
   }
 
   // ------------------------------------------------------------------ tabs
-  const TABS = ["start", "loads", "diagrams", "section", "strength", "compare", "modes", "method", "report"];
+  const TABS = ["start", "theory", "loads", "diagrams", "section", "strength", "compare", "modes", "method", "report"];
   let dirtyTabs = new Set();
   function renderAll() { renderTree(); renderPM(); dirtyTabs = new Set(TABS); renderTab(MS.tab); dirtyTabs.delete(MS.tab); if (MS.plot === "mode") renderModeSeg(); }
   function renderTab(t) {
     if (!R) return;
-    ({ start: renderStart, loads: renderLoads, diagrams: renderDiagrams, section: renderSection, strength: renderStrength, compare: renderCompare, modes: renderModes, method: renderMethod, report: renderReport })[t]();
+    ({ start: renderStart, theory: renderTheory, loads: renderLoads, diagrams: renderDiagrams, section: renderSection, strength: renderStrength, compare: renderCompare, modes: renderModes, method: renderMethod, report: renderReport })[t]();
   }
   function openTab(t) {
     MS.tab = t;
@@ -7119,7 +7121,7 @@ const METAL_REFERENCE = {
       <h3>Try this</h3>
       <ol><li>Press <b>+6 g limit</b> and switch the plot to <b>Spanwise σ</b>. Where is the boom stress highest, and why is it nearly constant from root to mid-span?</li>
       <li>Open <b>Section</b> and move the station. Find the shear centre and compare it with the 25 % chord where the lift acts. Which way does the wing twist?</li>
-      <li>Switch the plot to <b>Buckling n</b>. Which skin panels buckle below 1 g? Then read <b>Strength &amp; stability</b>: why is that not a failure?</li>
+      <li>Switch the plot to <b>Buckling n</b>. Which skin panels buckle below 1 g? Then read <b>Strength &amp; stability</b>: why are buckling onset and final collapse different events, and what extra evidence would establish safety?</li>
       <li>In <b>Model &amp; solver</b>, untick the tapered-beam effect. What happens to the spar-web shear between ribs 21 and 16 (y = 0.70–1.50 m)?</li>
       <li>Open <b>Compare with shell FE</b>. Where does beam theory agree with the 41 066-element shell model, and where does it not?</li></ol>
       <p class="note">The complete aircraft (transcribed manual, parametric Blender model, CAD, ANSYS/NASTRAN/CalculiX decks) is in the course repository: <a href="${MODEL3D}" target="_blank" rel="noopener">3-D model viewer</a> · <a href="${REPO}" target="_blank" rel="noopener">files on GitHub</a>.</p>
@@ -7136,6 +7138,64 @@ const METAL_REFERENCE = {
         <p>First bending frequency ${r.fem ? nf(r.fem.fBending[0], 1) : "–"} Hz, first torsion ${r.fem ? nf(r.fem.fTorsion[0], 0) : "–"} Hz (fuselage held fixed).</p>
         <p class="note">The load factors and gross mass are assumptions (the manual gives neither). All results scale linearly with n except the strength modes, which are reported as the load factor at which each happens.</p></div>
     </div></div>`;
+  }
+  function renderTheory() {
+    const r = R, W = r.W, half = r.n * W / 2;
+    $("#mtab-theory").innerHTML = `<article class="mw-story">
+      <h2>Understand the wing before reading its colours</h2>
+      <p>Learning goals: trace the load into the fuselage; distinguish force, moment, stress and displacement; explain why a light wing needs several kinds of member; and judge what this simplified solver can and cannot establish. Start at 1 g, make a prediction, change only one input, press <b>Run study</b>, and compare with your prediction.</p>
+      <h3>1. Pressure becomes a structural load</h3>
+      <p>Air pressure acts over the skin, not directly on an isolated spar. Integrating pressure around each airfoil section gives lift per unit span ℓ(y), in N/m. The structural problem replaces those many small pressures by an equivalent spanwise load and a torque. Here y is distance from the aircraft centreline toward the tip, x is chordwise, and z is upward.</p>
+      <div class="mw-sec"><svg viewBox="0 0 900 225" role="img" aria-label="Load path: pressure on skin to ribs, skin stiffeners, spar and fuselage fittings">
+        <defs><marker id="mTheoryArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10Z" fill="currentColor"/></marker></defs>
+        <g fill="var(--panel-2)" stroke="var(--line)"><rect x="15" y="55" width="150" height="80" rx="8"/><rect x="240" y="55" width="195" height="80" rx="8"/><rect x="510" y="55" width="165" height="80" rx="8"/><rect x="750" y="55" width="135" height="80" rx="8"/></g>
+        <g fill="var(--fg)" text-anchor="middle" style="font-size:17px"><text x="90" y="85">Pressure on skin</text><text x="90" y="113">distributed load</text><text x="337" y="85">Ribs + stiffened skin</text><text x="337" y="113">local load transfer</text><text x="592" y="85">Spar + wing box</text><text x="592" y="113">V, M and T</text><text x="818" y="85">Fittings</text><text x="818" y="113">fuselage</text></g>
+        <g stroke="var(--accent)" stroke-width="3" style="color:var(--accent)" marker-end="url(#mTheoryArrow)"><path d="M173 95H229"/><path d="M443 95H499"/><path d="M683 95H739"/></g>
+        <text x="450" y="180" text-anchor="middle" style="font-size:16px">Conceptual path: members share loads; this is not an exclusive serial chain.</text>
+        <text x="450" y="207" text-anchor="middle" style="font-size:16px">Skin also carries spanwise bending stress and closed-cell shear flow.</text>
+      </svg></div>
+      <h3>2. What does “6 g” mean?</h3>
+      <p>The load factor n is total aerodynamic lift divided by aircraft weight W in this symmetric prescribed-load case: n = L/W. At 1 g, L = W; at 6 g, L = 6W. It is not a change in the value of gravity. A real manoeuvre also involves acceleration, trim and changing aerodynamic conditions; this app prescribes their equivalent load, not a flight trajectory.</p>
+      <div class="mw-eq">W = mg &nbsp; · &nbsp; L = nW &nbsp; · &nbsp; L<sub>half</sub> = nW/2<br>Current study: W = ${nf(W/1000,2)} kN, n = ${sgn(r.n,1)}, L<sub>half</sub> = ${nf(half/1000,2)} kN.</div>
+      <p><b>Inertia relief:</b> the wing itself, fuel and equipment have mass. Their inertial loads oppose lift in a positive-g manoeuvre, reducing net bending relative to “lift only”. With upward positive, the distributed net load is p(y) = ℓ(y) − n g m′(y), with additional concentrated loads −n g mᵢ at their stations. m′ means kg per metre. The solver includes these masses when inertia relief is enabled. Fuel can reduce static net bending while increasing mass and altering vibration; “more fuel is always safer” does not follow.</p>
+      <h3>3. Make a cut: why the root carries a large moment</h3>
+      <p>Imagine keeping only the wing outboard of a cut at y. At that cut, the remaining wing must supply shear V to balance the outboard force, bending moment M to balance its turning effect, and torque T to balance twisting. For a positive upward outboard load we use the following positive resultant magnitudes; the matching cut-face reactions act oppositely.</p>
+      <div class="mw-eq">V(y) = ∫<sub>y</sub><sup>s</sup> p(η) dη + Σ<sub>yᵢ&gt;y</sub> Fᵢ<br>M(y) = ∫<sub>y</sub><sup>s</sup> p(η)(η − y) dη + Σ<sub>yᵢ&gt;y</sub> Fᵢ(yᵢ − y)<br>dV/dy = −p &nbsp; · &nbsp; dM/dy = −V &nbsp; · &nbsp; V(s) = M(s) = 0 for an unloaded free tip.</div>
+      <p>η is just the integration position; s is the modelled tip. Multiply each small force p(η)dη by its distance η − y to obtain its small moment. Point loads produce jumps in V; M remains continuous unless an applied couple is present. The formulas above describe the outboard free body; inboard of the fuselage fittings, their reactions must also be included.</p>
+      <p><b>Hand calculation:</b> for a uniform net load p₀ over a 2 m cantilever, V(0) = p₀s and M(0) = p₀s²/2. If p₀ = 100 N/m, V(0) = 200 N and M(0) = 200 N·m. The same total 200 N as a point load at the tip gives 400 N·m. Thus equal total lift does not imply equal root bending: where the force acts matters. A root-heavy triangular load with the same total force has its centroid at s/3 and gives 133.3 N·m.</p>
+      <h3>4. Why skin, caps, webs, ribs and stringers are different</h3>
+      <ul><li><b>Spar caps / booms:</b> large spanwise areas near the upper and lower surfaces form a tension–compression pair that resists bending. A simple estimate is cap force ≈ M/h, where h is their separation.</li>
+      <li><b>Spar webs:</b> connect upper and lower regions and carry shear. An I-section needs both caps and web; a thin vertical plate alone is not the entire spar.</li>
+      <li><b>Skin:</b> carries local pressure, shares spanwise normal stress and carries shear around closed cells. It is structural, not just a cover.</li>
+      <li><b>Stringers:</b> spanwise stiffeners attached to the skin. They share axial load and divide a wide skin into narrower supported panels, delaying local buckling.</li>
+      <li><b>Ribs:</b> chordwise frames at discrete span stations. They preserve section shape, support skin and stiffeners, and distribute concentrated loads. This beam model includes rib mass and panel spacing but does <b>not</b> independently solve rib stress or the benefit of arbitrary new rib layouts.</li></ul>
+      <p>A closed wing box is formed by connected upper/lower skins and bounding webs; ribs frame it along the span. The D.520 idealisation has a nose cell and a spar-box cell where the geometry closes them. The wheel-well cut-out changes that topology. Do not assume that every wing has two identical full-height spars or that a visually hidden member is absent.</p>
+      <h3>5. From moment to stress, and from stress to displacement</h3>
+      <div class="mw-eq">Symmetric-section teaching case: σ = −M(z − z̄)/I &nbsp; · &nbsp; EI = bending stiffness<br>Curvature magnitude |κ| = |M|/(EI) &nbsp; · &nbsp; shear stress τ = q/t.</div>
+      <p>σ is spanwise normal stress (Pa), z̄ is the neutral-axis height, I is second moment of area (m⁴), E is Young's modulus (Pa), q is shear flow (N/m), and t is wall thickness (m). Positive bending here usually compresses upper members and stretches lower members. The actual solver uses the unsymmetric section formula in <b>Method &amp; sources</b>, including I<sub>xz</sub>; the simple equation above is a teaching limit, not a replacement solver.</p>
+      <p>Moment alone cannot tell you the maximum stress. The wing becomes thinner and its caps taper toward the tip: M decreases, but I and cap area also decrease. This is why stress need not peak exactly at the root. Moving material away from the neutral axis increases I; adding mass close to that axis is less efficient for bending. Integrating curvature gives slope and bending deflection. Web shear adds further deflection; the support and centre-section compliance determine the integration constants.</p>
+      <h3>6. Why the wing twists</h3>
+      <p>The <b>shear centre</b> is the load position that produces no twist for the local idealised section under transverse shear. It is not necessarily the area centroid or the mass centre. A force offset from it produces torque; aerodynamic section couples can contribute too. Torque accumulates from the outboard loads just as bending moment does.</p>
+      <div class="mw-eq">Single closed cell, pure torque teaching case: q = T/(2A), τ = q/t<br>dθ/dy = T/(GJ), &nbsp; J = 4A² / ∮(ds/t).</div>
+      <p>A is area enclosed by the wall midline, G is shear modulus, J is torsion constant (not generally the polar second moment), and θ is twist in radians. Two connected cells require torque equilibrium <b>and equal twist rate</b>; the app solves for their separate circulation flows. Tapered spar caps also carry vertical components of axial force, so the actual wall torque/shear can differ from the total section resultants. Use <b>Section</b> to compare them. A disconnected skin joint cannot be treated as an intact closed box.</p>
+      <h3>7. Buckling, yielding, crippling and collapse are not synonyms</h3>
+      <p><b>Yielding</b> is the onset of permanent material deformation. <b>Buckling</b> is loss of stability under compression or shear: a thin panel develops an out-of-plane wave, possibly below yield stress. <b>Crippling</b> is local failure of a compressed stiffener's walls. <b>Section collapse</b> here is a peak in the approximate moment–curvature response as load-carrying areas lose effectiveness.</p>
+      <div class="mw-eq">Flat-panel teaching estimate: σ<sub>cr</sub> = [kπ²E / (12(1 − ν²))](t/b)²<br>Margin of safety = capacity/demand − 1.</div>
+      <p>b is panel width between supports, ν is Poisson's ratio, and k depends on boundary conditions and aspect ratio. Doubling thickness gives four times the flat-panel estimate if everything else is unchanged; halving unsupported width does likewise. The app adds approximate curvature and combined compression–shear effects, so its final thresholds need not follow that simple scaling. After buckling, some supported skin remains effective, but this requires adequate stiffeners and connections; buckling is <b>not automatically safe</b>.</p>
+      <p>Limit load is the assumed operating requirement; ultimate load applies the specified safety factor. Here those requirements are model inputs, not recovered historical certification limits. A higher section-collapse number does not excuse an earlier failing stringer, fitting or other check.</p>
+      <h3>8. Modes are not a flutter simulation</h3>
+      <div class="mw-eq">Free-vibration model: Kφ = ω²Mφ &nbsp; · &nbsp; f = ω/(2π).</div>
+      <p>K is stiffness matrix, M here is <b>mass matrix</b> (not bending moment), φ is a mode shape, ω is angular frequency in rad/s, and f is frequency in Hz. A mode is a characteristic deformation pattern; its displayed amplitude and sign are arbitrary. Higher bending modes have additional nodes where modal displacement is zero. Torsional modes rotate sections rather than simply moving them upward.</p>
+      <p>The current modes are uncoupled structural bending and torsion with the fuselage held fixed. They do not predict a forced vibration amplitude or a flutter speed. Flutter requires motion-dependent aerodynamic forces, inertia, stiffness and damping coupled together. Merely seeing a wing animation, or two similar frequencies, is not proof of flutter. <a href="https://www.nasa.gov/aeronautics/nasa-boeing-test-aircraft-wings/" target="_blank" rel="noopener">NASA's explanation of flexible-wing flutter tests</a> provides the physical context.</p>
+      <h3>Guided numerical investigation</h3>
+      <ol><li><b>Baseline:</b> record inputs, mass, root/fitting moment, tip deflection, twist and first bending frequency at 1 g. Check Section units and upper/lower stress signs.</li>
+      <li><b>Load factor:</b> predict the result at +6 g before running. Linear stresses and displacements should scale by six for unchanged inputs. Event load factors are capacities, so they do not scale with the selected display n.</li>
+      <li><b>Load shape:</b> compare elliptic, Schrenk and lifting-line distributions at the same n. Verify equal total lift; compare moment, not just peak load.</li>
+      <li><b>Mass:</b> compare inertia relief on/off. Explain the changed fitting reaction. This is an equivalent inertial-load experiment, not removal of the wing's physical mass.</li>
+      <li><b>Stiffness versus strength:</b> change skin scale to 1.25, then restore baseline and change boom scale to 1.25. Predict which change affects twisting, bending and local stability more; read mass as well as stress.</li>
+      <li><b>Evidence:</b> compare with archived shell FE only under matched baseline inputs. List three effects absent from the beam model before making a design recommendation.</li></ol>
+      <p class="callout"><b>Short student submission:</b> one labelled load-path sketch, the 200 N uniform-load moment calculation, a baseline/change comparison table, and a paragraph explaining one disagreement with your prediction. A screenshot of coloured stress alone is not an engineering explanation.</p>
+    </article>`;
   }
   function renderLoads() {
     const r = R, g = r.grid;

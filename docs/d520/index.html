@@ -161,10 +161,29 @@ figcaption b{color:var(--ink)}
         <div class="stamp" aria-hidden="true">Notice<br>D.520 S<br>1940</div>
         <div class="hint">Drag to orbit · scroll to zoom · right-drag to pan</div>
       </div>
+      <section class="panel" style="margin-top:12px" aria-labelledby="wing-flex-title">
+        <h3 id="wing-flex-title">Deform the actual 3-D wings</h3>
+        <p>Compare the original grey-transparent wings with the blue deformed wings. Flaps and ailerons follow the same deformation field; the fuselage and tail are unchanged.</p>
+        <div class="btns" role="group" aria-label="Actual wing deformation">
+          <button class="btn" type="button" data-wing-flex="original" aria-pressed="true" disabled>Original only</button>
+          <button class="btn ghost" type="button" data-wing-flex="bending" aria-pressed="false" disabled>3-D bending</button>
+          <button class="btn ghost" type="button" data-wing-flex="torsion" aria-pressed="false" disabled>3-D torsion</button>
+          <button class="btn ghost" type="button" data-wing-flex="both" aria-pressed="false" disabled>3-D bending + torsion</button>
+        </div>
+        <div class="ctl"><label for="wing-flex-n">Load factor n (prescribed baseline scaled)</label><select id="wing-flex-n" disabled><option value="1">+1 g</option><option value="6">+6 g (assumed limit)</option><option value="-3">−3 g</option></select></div>
+        <div class="ctl"><label for="wing-flex-bend">Bending magnification</label><output id="wing-flex-bend-value">×60</output><input id="wing-flex-bend" type="range" min="1" max="150" value="60" disabled></div>
+        <div class="ctl"><label for="wing-flex-twist">Twist magnification</label><output id="wing-flex-twist-value">×120</output><input id="wing-flex-twist" type="range" min="1" max="150" value="120" disabled></div>
+        <p><label><input id="wing-flex-reference" type="checkbox" checked disabled> Show original wing as a transparent reference</label></p>
+        <div class="btns" role="group" aria-label="Wing inspection camera"><button class="btn ghost" id="wing-flex-front" type="button" disabled>Front view · bending</button><button class="btn ghost" id="wing-flex-oblique" type="button" disabled>Oblique view · twist</button></div>
+        <p id="wing-flex-status" role="status">Preparing verified deformation profile…</p>
+        <p id="wing-flex-values"></p>
+        <p><b>What is computed:</b> spanwise vertical displacement (bending + web shear) and twist from the same 1-g beam/section engine as Wing Lab. <b>What is visual:</b> exaggerated vertex movement, rigid-section rotation and interpolation onto the exterior aircraft mesh. This is not a new shell FE solution, deformed aerodynamic calculation or stress colour plot. No local skin wrinkles or rib stresses are recovered.</p>
+        <p><b>Read the shape:</b> in front view, bending displacement grows toward the tip. In oblique view, torsion rotates each airfoil about its local computed shear-centre axis, raising the leading edge relative to the trailing edge for nose-up twist. The two effects may occur together. Large display magnifications deliberately exaggerate the shape; they are not larger physical loads.</p>
+      </section>
       <div class="keyfigs" id="keyfigs"></div>
       <section class="panel" style="margin-top:18px" aria-labelledby="deform-title">
         <h2 id="deform-title">See bending and torsion</h2>
-        <p>These enlarged <b>schematics</b> sit beside the aircraft model to separate two deformation mechanisms. Dashed grey is the original shape; blue is bending; red is twisting. The aircraft mesh above is not deformed by this demonstration.</p>
+        <p>These enlarged <b>schematics</b> supplement the actual 3-D wing controls above and isolate two deformation mechanisms. Dashed grey is the original shape; blue is bending; red is twisting. These schematic controls are independent of the 3-D mesh controls.</p>
         <div class="btns" role="group" aria-label="Deformation mechanism">
           <button class="btn ghost" type="button" data-deform="bending" aria-pressed="false">Bending only</button>
           <button class="btn ghost" type="button" data-deform="torsion" aria-pressed="false">Torsion only</button>
@@ -278,7 +297,7 @@ for(const t of TABS) $("#t-"+t).addEventListener("click", ()=>show(t));
 window.addEventListener("hashchange", ()=>show(location.hash.slice(1)));
 
 /* ---------------- 3-D model ---------------- */
-let renderer, scene, camera, controls, nodes = {}, base = {}, spin = false, spinAngle = 0, anim = null;
+let renderer, scene, camera, controls, nodes = {}, base = {}, spin = false, spinAngle = 0, anim = null, wingFlex = null;
 const D2R = Math.PI/180;
 const state = { ail:0, ele:0, rud:0, flp:0, tpi:0, gear:0, can:0, rad:0, pit:0, att:0 };
 function onResize(){
@@ -313,6 +332,7 @@ function initModel(){
       const m = o.material; if(m && m.name && /Glass/i.test(m.name)){ m.transparent = true; m.opacity = 0.22; m.roughness = 0.05; m.metalness = 0; m.depthWrite = false } } });
     for(const [k,o] of Object.entries(nodes)) base[k] = { p:o.position.clone(), r:o.rotation.clone() };
     scene.add(root); $("#load").hidden = true; applyState();
+    D520WingDeformation.mount({THREE,root,frame:nodes.D520_ATTITUDE,scene,camera,controls}).then(c => {wingFlex=c;}).catch(err => {$("#wing-flex-status").textContent="Wing deformation could not load. The original aircraft and its controls remain available."; console.error(err);});
   };
   const fail = err => { $("#load").textContent = "The 3-D model could not load. Reload the page to try again."; console.error(err) };
   fetch("d520_glb.json").then(r => { if(!r.ok) throw new Error(r.status); return r.json() }).then(j => {
@@ -357,6 +377,7 @@ function applyState(){
   $("#o-can").textContent = s.can<=0 ? "closed" : `${(0.55*s.can).toFixed(2)} m aft`;
   $("#o-rad").textContent = `${(25*s.rad).toFixed(0)}°`; $("#o-pit").textContent = s.pit<=0 ? "fine" : `+${(20*s.pit).toFixed(0)}°`;
   $("#o-att").textContent = s.att<=0 ? "flight line" : s.att>=1 ? "at rest, 14.6°" : `${(14.627*s.att).toFixed(1)}°`;
+  if (wingFlex) wingFlex.update();
 }
 const CTL = { ail:"c-ail", ele:"c-ele", rud:"c-rud", flp:"c-flp", tpi:"c-tpi", gear:"c-gear", can:"c-can", rad:"c-rad", pit:"c-pit", att:"c-att" };
 function bindControls(){
@@ -464,6 +485,7 @@ function initRenders(){
 }
 </script>
 <script src="deformation_lesson.js"></script>
+<script src="wing_deformation.js"></script>
 <script>show(location.hash.slice(1) || "model");</script>
 
 </body>

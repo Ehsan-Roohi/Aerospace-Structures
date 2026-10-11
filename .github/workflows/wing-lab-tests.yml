@@ -16,10 +16,11 @@ jobs:
         with:
           python-version: '3.12'
       - name: Install DOM test dependency
-        run: npm install --prefix /tmp/wing-lab-tests jsdom@26
+        run: npm install --prefix /tmp/wing-lab-tests jsdom@26 three@0.147.0
       - name: Check generated page is current and run all regression suites
         env:
           MIE446_JSDOM_MODULE: /tmp/wing-lab-tests/node_modules/jsdom
+          MIE446_THREE_MODULE: /tmp/wing-lab-tests/node_modules/three
         run: |
           python computational/printed-wing-solver/web/build_wing_lab.py
           git diff --exit-code -- docs/wing-lab.html

@@ -1,0 +1,42 @@
+// Teaching deformation is independent of the D.520 structural engine and aircraft WebGL mesh.
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {createRequire} from 'node:module';
+import vm from 'node:vm';
+import {fileURLToPath} from 'node:url';
+const require=createRequire(import.meta.url);
+const {JSDOM}=require(process.env.MIE446_JSDOM_MODULE || 'jsdom');
+const script=new URL('../../../docs/d520/deformation_lesson.js',import.meta.url);
+const {bendShape,twistShape,point}=require(fileURLToPath(script));
+assert.equal(bendShape(0),0);assert.equal(bendShape(1),1);
+assert.ok(bendShape(0.0001)/0.0001<0.001,'root slope is zero');
+assert.ok(Math.abs((bendShape(1)-2*bendShape(0.9999)+bendShape(0.9998))/1e-8)<0.001,'tip curvature is zero for the uniform-load case');
+assert.equal(twistShape(0),0);assert.equal(twistShape(1),1);
+assert.deepEqual(point(1,0,0,0,Math.PI/2).map(x=>Math.round(x)),[0,1]);
+const html=readFileSync(new URL('../../../docs/d520/index.html',import.meta.url),'utf8');
+const dom=new JSDOM(html,{url:'http://localhost/d520/#model',runScripts:'outside-only',pretendToBeVisual:true});
+const w=dom.window, q=s=>w.document.querySelector(s);
+let callback;
+w.requestAnimationFrame=fn=>{callback=fn;return 1;};w.cancelAnimationFrame=()=>{callback=null;};
+try {
+  vm.runInContext(readFileSync(script,'utf8'),dom.getInternalVMContext());
+  assert.equal(q('#deform-figures').querySelectorAll('svg').length,2);
+  assert.match(q('#deform-figures').textContent,/12.6°/);
+  q('[data-deform="bending"]').click();assert.match(q('#deform-figures').textContent,/θ = 0.0°/);
+  assert.equal(q('[data-deform="bending"]').getAttribute('aria-pressed'),'true');
+  assert.equal(q('[data-deform="bending"]').classList.contains('ghost'),false);
+  assert.equal(q('[data-deform="both"]').classList.contains('ghost'),true);
+  q('[data-deform="torsion"]').click();assert.match(q('#deform-caption').textContent,/span stays straight/);
+  q('#deform-scale').value='100';q('#deform-scale').dispatchEvent(new w.Event('input'));
+  assert.match(q('#deform-figures').textContent,/18.0°/);
+  q('[data-deform="both"]').click();assert.match(q('#deform-caption').textContent,/Both can occur/);
+  q('#deform-scale').value='0';q('#deform-scale').dispatchEvent(new w.Event('input'));
+  assert.match(q('#deform-figures').textContent,/0.0°/);
+  assert.ok(!/NaN|Infinity/.test(q('#deform-figures').innerHTML));
+  q('#deform-play').click();assert.equal(q('#deform-play').getAttribute('aria-pressed'),'true');
+  callback(w.performance.now()+2500);assert.ok(+q('#deform-scale').value>99);
+  q('#deform-play').click();assert.equal(q('#deform-play').getAttribute('aria-pressed'),'false');
+  assert.equal(callback,null);
+  assert.ok(html.indexOf('src="deformation_lesson.js"')<html.indexOf('<script>show('));
+  console.log('PASS: D.520 bending/torsion teaching shapes, boundary conditions, rotation, mode buttons, zero amplitude, load-cycle animation and isolation from WebGL.');
+} finally {dom.window.close();}

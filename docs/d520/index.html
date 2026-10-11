@@ -162,6 +162,23 @@ figcaption b{color:var(--ink)}
         <div class="hint">Drag to orbit · scroll to zoom · right-drag to pan</div>
       </div>
       <div class="keyfigs" id="keyfigs"></div>
+      <section class="panel" style="margin-top:18px" aria-labelledby="deform-title">
+        <h2 id="deform-title">See bending and torsion</h2>
+        <p>These enlarged <b>schematics</b> sit beside the aircraft model to separate two deformation mechanisms. Dashed grey is the original shape; blue is bending; red is twisting. The aircraft mesh above is not deformed by this demonstration.</p>
+        <div class="btns" role="group" aria-label="Deformation mechanism">
+          <button class="btn ghost" type="button" data-deform="bending" aria-pressed="false">Bending only</button>
+          <button class="btn ghost" type="button" data-deform="torsion" aria-pressed="false">Torsion only</button>
+          <button class="btn" type="button" data-deform="both" aria-pressed="true">Both mechanisms</button>
+          <button class="btn ghost" type="button" id="deform-play" aria-pressed="false">Animate load cycle</button>
+        </div>
+        <label for="deform-scale">Illustration amplitude (not a physical load): <output id="deform-value">70%</output></label>
+        <input id="deform-scale" type="range" min="0" max="100" value="70" style="width:100%">
+        <div id="deform-figures" style="display:grid;gap:16px"></div>
+        <p id="deform-caption"></p>
+        <p><b>Bending:</b> the spanwise centreline curves and the tip moves upward; under the illustrated positive bending, upper members are compressed and lower members are stretched. <b>Torsion:</b> an airfoil section rotates about a spanwise axis, changing its local incidence. Bending slope is not the same as twist.</p>
+        <p>Teaching cases: a uniform-load, constant-EI cantilever for bending, and a constant-GJ cantilever with a tip torque for torsion. The real D.520 is tapered and has distributed loads and variable stiffness, so its numerical shapes differ. The animation prescribes a slow load cycle: it is <b>not a natural mode, flutter, or a computed D.520 response</b>.</p>
+        <p>For computed deformation, <a href="../wing-lab.html#d520">open D.520 Wing Lab</a>, choose <b>Diagrams</b> for numerical deflection and twist, or <b>Modes</b> for the structural mode shapes. Use the viewport's <b>Deformed</b> switch to compare with the original geometry.</p>
+      </section>
       <article class="panel" style="margin-top:18px" aria-label="Student guide to the aircraft model">
         <h2>From the aircraft model to structural mechanics</h2>
         <p>This is a geometric reconstruction with movable controls, not a flight or stress simulation. Moving a slider rotates a part to illustrate its location and travel; it does not compute pressure, lift, stability or structural stress.</p>
@@ -445,8 +462,9 @@ function initRenders(){
   ];
   $("#gal").innerHTML = R.map(([f,c]) => `<figure><img src="img/${f}" alt="${esc(c)}" loading="lazy"><figcaption>${esc(c)}</figcaption></figure>`).join("");
 }
-show(location.hash.slice(1) || "model");
 </script>
+<script src="deformation_lesson.js"></script>
+<script>show(location.hash.slice(1) || "model");</script>
 
 </body>
 </html>

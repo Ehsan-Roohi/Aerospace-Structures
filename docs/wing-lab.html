@@ -3474,7 +3474,7 @@ function renderObservations() {
  */
 const MetalWingEngine = (() => {
   "use strict";
-  const VERSION = "1.0.0";
+  const VERSION = "1.0.1";
   const G0 = 9.80665;
 
   // ------------------------------------------------------------------ small numerics
@@ -3952,7 +3952,8 @@ const MetalWingEngine = (() => {
         const p0 = Pp[0], p1 = Pp[Pp.length >> 1], p2 = Pp[Pp.length - 1];
         const area2 = Math.abs((p1[0] - p0[0]) * (p2[1] - p0[1]) - (p2[0] - p0[0]) * (p1[1] - p0[1]));
         const d = (u, v) => Math.hypot(u[0] - v[0], u[1] - v[1]);
-        const R = area2 > 1e-12 ? (d(p1, p0) * d(p2, p1) * d(p2, p0)) / area2 : 1e9;
+        // Circumradius abc/(4A); area2 is twice the triangle area.
+        const R = area2 > 1e-12 ? (d(p1, p0) * d(p2, p1) * d(p2, p0)) / (2 * area2) : 1e9;
         const zm = Pp.reduce((q, p) => q + p[1], 0) / Pp.length;
         parts.push({ kind: k === "panel" ? 4 : 3, A: L * tsk, z: zm, b: L, t: tsk, scr: flat + (0.3 * E * tsk) / R, R, pitch, side, x0: a, x1: b, name: "skin_" + k });
       }
@@ -4117,29 +4118,54 @@ const MetalWingEngine = (() => {
   const PRESETS = { d520: D520 };
 
   function normalise(input = {}) {
+    const finiteNumbers = (value) => {
+      if (typeof value === "number" && !Number.isFinite(value)) throw new Error("Inputs must be finite numbers");
+      if (value && typeof value === "object") Object.values(value).forEach(finiteNumbers);
+    };
+    finiteNumbers(input); // Before JSON cloning can turn NaN/Infinity into null.
     const inp = { ...deepCopy(DEFAULT_INPUT), ...deepCopy(input) };
     inp.include = { ...DEFAULT_INPUT.include, ...(input.include || {}) };
     inp.scales = { ...DEFAULT_INPUT.scales, ...(input.scales || {}) };
-    const P = typeof inp.preset === "object" ? deepCopy(inp.preset) : deepCopy(PRESETS[inp.preset] || D520);
-    if (inp.mass > 0) P.aircraft.mass = inp.mass;
-    if (inp.CL > 0) P.aircraft.CL = inp.CL;
+    if (!inp.preset || (typeof inp.preset !== "object" && !PRESETS[inp.preset])) throw new Error("Unknown wing preset");
+    if (!["liftingLine", "schrenk", "elliptic"].includes(inp.distribution)) throw new Error("Unknown span-loading distribution");
+    if (!["fittings", "clamped"].includes(inp.support)) throw new Error("Unknown support condition");
+    if (!Number.isInteger(inp.stations) || inp.stations < 20 || inp.stations > 300) throw new Error("Use 20–300 integer analysis stations");
+    const P = typeof inp.preset === "object" ? deepCopy(inp.preset) : deepCopy(PRESETS[inp.preset]);
+    const designCL = P.aircraft.CL;
+    if (inp.mass != null) {
+      if (!(Number.isFinite(inp.mass) && inp.mass > 0)) throw new Error("Aircraft mass must be positive");
+      P.aircraft.mass = inp.mass;
+    }
+    if (inp.CL != null) {
+      if (!(Number.isFinite(inp.CL) && inp.CL > 0)) throw new Error("Reference CL must be positive");
+      P.aircraft.CL = inp.CL;
+    }
     if (input.material) P.material = { ...P.material, ...input.material };
     if (input.gauges) for (const k of ["skin", "web", "falseSpar"]) if (input.gauges[k]) P[k] = input.gauges[k].slice();
     if (input.boom) P.boom = { ...P.boom, ...input.boom };
-    if (input.fittingY > 0) P.fittingY = input.fittingY;
-    for (const [k, v] of Object.entries(inp.scales)) if (!(v > 0)) throw new Error(`Scale factor for ${k} must be positive`);
+    if (input.fittingY != null) {
+      if (!(input.fittingY > 0 && input.fittingY < P.ribs[0])) throw new Error("Fitting must be between the centreline and first rib");
+      P.fittingY = input.fittingY;
+    }
+    for (const [k, v] of Object.entries(inp.scales)) if (!(Number.isFinite(v) && v > 0)) throw new Error(`Scale factor for ${k} must be positive`);
     if (!(P.aircraft.mass > 0)) throw new Error("Aircraft mass must be positive");
-    if (!isFinite(inp.n) || inp.n === 0) throw new Error("Load factor must be a non-zero number");
+    if (!Number.isFinite(inp.n) || inp.n === 0) throw new Error("Load factor must be a non-zero number");
     if (!(P.material.E > 0 && P.material.nu > 0 && P.material.nu < 0.5)) throw new Error("Check the material card (E > 0, 0 < ν < 0.5)");
-    return { inp, P };
+    for (const k of ["E", "rho", "Fty", "Fcy", "Ftu", "Fsu", "epsU"]) if (!(Number.isFinite(P.material[k]) && P.material[k] > 0)) throw new Error(`Material ${k} must be positive`);
+    if (!Number.isFinite(P.material.nu)) throw new Error("Poisson's ratio must be a finite number");
+    if (!(P.material.Ftu > P.material.Fty && P.material.epsU > P.material.Fty / P.material.E)) throw new Error("Check tensile ultimate stress and rupture strain");
+    for (const k of ["skin", "web", "falseSpar"]) if (P[k].length !== P.zones.length || P[k].some((v) => !(Number.isFinite(v) && v > 0))) throw new Error(`Invalid ${k} gauge array`);
+    if (!(P.boom.rootWidth > 0 && P.boom.rootThickness > 0)) throw new Error("Boom dimensions must be positive");
+    return { inp, P, designCL };
   }
 
   // ------------------------------------------------------------------ main solve
   function solve(input = {}) {
     const t0 = Date.now();
-    const { inp, P } = normalise(input);
+    const { inp, P, designCL } = normalise(input);
     const W = makeWing(P), mat = P.material, n = inp.n;
-    const Z = boomZones(P, W);
+    // A load-case change must not silently redesign the physical spar.
+    const Z = boomZones({ ...P, aircraft: { ...P.aircraft, CL: designCL } }, W);
     const yTipStruct = P.ribs[P.ribs.length - 1];
     // analysis stations: uniform plus both sides of every gauge step, the fitting and every rib
     let st = linspace(0, yTipStruct, inp.stations);
@@ -4219,7 +4245,9 @@ const MetalWingEngine = (() => {
     stations.forEach((s, i) => { s.w = w[i]; s.wBend = wBend[i]; s.wShear = wShear[i]; s.twist = twist[i]; s.slope = slopeUse[i]; });
     const last = stations[stations.length - 1];
     const tipCap = W.b2 - last.y;
+    // tipTE is the legacy rear-box-node result, not a deformable trailing-edge flap.
     const tipSC = last.w, tipLE = last.w + last.twist * last.xsc * last.chord, tipTE = last.w - last.twist * (P.falseSparX - last.xsc) * last.chord;
+    const tipMax = [tipLE, tipTE, tipSC].reduce((a, b) => Math.abs(b) > Math.abs(a) ? b : a);
 
     // beam finite elements: same static answer (bending, no shear deformation) and the natural frequencies
     let fem = null;
@@ -4287,7 +4315,7 @@ const MetalWingEngine = (() => {
       row.skinCombined = combined;
       if (inp.collapse) {
         for (const [side, sgn] of [["pos", 1], ["neg", -1]]) {
-          const key = JSON.stringify([P.id, y, sgn, inp.scales, mat, P.skin, P.web, P.falseSpar, P.boom, P.stringer]);
+          const key = JSON.stringify([y, sgn, mat, parts]);
           if (!CAP_CACHE.has(key)) { if (CAP_CACHE.size > 400) CAP_CACHE.clear(); CAP_CACHE.set(key, capacity(parts, mat, sgn)); }
           const c = CAP_CACHE.get(key), f = (m) => (m == null ? null : m / Math.abs(M1g));
           row[side] = { n_skin_buckle: f(c.firstSkinBuckle), n_stringer_cripple: f(c.firstStringerCripple), n_boom_yield: f(c.firstBoomYield), n_collapse: f(c.Mmax), M_max: c.Mmax, curve: c.curve };
@@ -4298,9 +4326,9 @@ const MetalWingEngine = (() => {
     const crit = (fn) => { let best = null; for (const r of checks) { const v = fn(r); if (v != null && isFinite(v) && (!best || v < best.n)) best = { n: v, y: r.y }; } return best; };
     const nUlt = P.aircraft.nLimitPos * P.aircraft.safetyFactor, nUltNeg = Math.abs(P.aircraft.nLimitNeg) * P.aircraft.safetyFactor;
     const modesSummary = [
-      { key: "skinBuckle", name: "Skin panel buckles in compression (elastic, not failure)", pos: crit((r) => r.pos && r.pos.n_skin_buckle), neg: crit((r) => r.neg && r.neg.n_skin_buckle), kind: "stability", governs: false },
+      { key: "skinBuckle", name: "Predicted skin compression buckling onset", pos: crit((r) => r.pos && r.pos.n_skin_buckle), neg: crit((r) => r.neg && r.neg.n_skin_buckle), kind: "stability", governs: false },
       { key: "skinCombined", name: "Skin panel buckles under compression + shear", pos: crit((r) => r.skinCombined.pos), neg: crit((r) => r.skinCombined.neg), kind: "stability", governs: false },
-      { key: "webBuckle", name: "Spar web shear buckling (tension field follows)", pos: crit((r) => r.web.n_buckle), neg: crit((r) => r.web.n_buckle), kind: "stability", governs: false },
+      { key: "webBuckle", name: "Spar web shear buckling (post-buckling not solved)", pos: crit((r) => r.web.n_buckle), neg: crit((r) => r.web.n_buckle), kind: "stability", governs: false },
       { key: "stringer", name: "Blade stringer cripples", pos: crit((r) => r.pos && r.pos.n_stringer_cripple), neg: crit((r) => r.neg && r.neg.n_stringer_cripple), kind: "strength", governs: true },
       { key: "boomYield", name: "Spar boom first yield", pos: crit((r) => r.pos && r.pos.n_boom_yield), neg: crit((r) => r.neg && r.neg.n_boom_yield), kind: "strength", governs: true },
       { key: "webShear", name: "Spar web shear rupture (Fsu)", pos: crit((r) => r.web.n_ultimate), neg: crit((r) => r.web.n_ultimate), kind: "strength", governs: true },
@@ -4328,7 +4356,7 @@ const MetalWingEngine = (() => {
       perG: { V: (y) => at(Vd, y), M: (y) => at(Md, y), T: (y) => at(Td, y), lift: (y) => at(lift, y) },
       stations, sections: secs, sectionProps: props, ribs, masses, points,
       mass: { structuralHalf: structMass, shellsBoomsStringers: structLineMass, ribs: ribMass, nonStructuralHalf: nonStructural },
-      fitting, tip: { y: last.y, wSC: tipSC, wLE: tipLE, wTE: tipTE, wMax: Math.max(tipLE, tipTE, tipSC), w5: tipSC + last.slope * tipCap, twistDeg: (last.twist * 180) / Math.PI, twistDegNoTaper: (twistPlain[stations.length - 1] * 180) / Math.PI, wBendClamped: wBendClamped[stations.length - 1], wBendClamped5: wBendClamped[stations.length - 1] + slopeClamped[stations.length - 1] * tipCap, wBend: wBend[stations.length - 1], wShear: wShear[stations.length - 1] },
+      fitting, tip: { y: last.y, wSC: tipSC, wLE: tipLE, wTE: tipTE, wRearBox: tipTE, wMax: tipMax, w5: tipSC + last.slope * tipCap, twistDeg: (last.twist * 180) / Math.PI, twistDegNoTaper: (twistPlain[stations.length - 1] * 180) / Math.PI, wBendClamped: wBendClamped[stations.length - 1], wBendClamped5: wBendClamped[stations.length - 1] + slopeClamped[stations.length - 1] * tipCap, wBend: wBend[stations.length - 1], wShear: wShear[stations.length - 1] },
       fem, checks, failure: modesSummary, nUlt, nUltNeg, verification, ms: Date.now() - t0,
     };
   }
@@ -4546,7 +4574,7 @@ const METAL_REFERENCE = {
     ],
     [
      3.274069637260578,
-     -0.5963125675135156
+     -0.5963125675135155
     ],
     [
      3.4869755914264147,
@@ -4575,7 +4603,7 @@ const METAL_REFERENCE = {
     ],
     [
      3.2229721230696935,
-     -0.2536315255046469
+     -0.25363152550464696
     ],
     [
      3.350017764374888,
@@ -6124,325 +6152,325 @@ const METAL_REFERENCE = {
     "y": 0.47,
     "M_per_g": 18330.631156092364,
     "pos": {
-     "n_skin_buckle": 1.1107996134268792,
-     "n_stringer_cripple": 13.050306212497635,
-     "n_boom_yield": 19.46129351313481,
-     "n_collapse": 21.63629319248078,
-     "M_max": 396606.9100964373
+     "n_skin_buckle": 2.0007564492783856,
+     "n_stringer_cripple": 13.193729167769572,
+     "n_boom_yield": 19.61156927695343,
+     "n_collapse": 21.77547594750185,
+     "M_max": 399158.2178420173
     },
     "neg": {
-     "n_skin_buckle": 2.8949995315448196,
-     "n_stringer_cripple": 11.749180216021053,
-     "n_boom_yield": 18.21204561775471,
-     "n_collapse": 20.542347966046368,
-     "M_max": 376554.2036457002
+     "n_skin_buckle": 3.1693268359400646,
+     "n_stringer_cripple": 11.766013447837054,
+     "n_boom_yield": 18.242086836662587,
+     "n_collapse": 20.57279283613683,
+     "M_max": 377112.2773299236
     }
    },
    {
     "y": 0.6,
     "M_per_g": 17164.82685274908,
     "pos": {
-     "n_skin_buckle": 1.5987136301599993,
-     "n_stringer_cripple": 13.819589358819423,
-     "n_boom_yield": 20.54920632478094,
-     "n_collapse": 22.84383219137513,
-     "M_max": 392110.4242182097
+     "n_skin_buckle": 2.535061496048303,
+     "n_stringer_cripple": 13.972841156803517,
+     "n_boom_yield": 20.71078323158825,
+     "n_collapse": 22.98794236908605,
+     "M_max": 394584.05046633654
     },
     "neg": {
-     "n_skin_buckle": 3.1832978061181625,
-     "n_stringer_cripple": 12.356496825395816,
-     "n_boom_yield": 19.165586599565415,
-     "n_collapse": 21.637254377221264,
-     "M_max": 371399.72495389014
+     "n_skin_buckle": 3.4712913669120535,
+     "n_stringer_cripple": 12.374448866173529,
+     "n_boom_yield": 19.19779633613187,
+     "n_collapse": 21.66997883383092,
+     "M_max": 371961.4345854452
     }
    },
    {
     "y": 0.72,
     "M_per_g": 16132.097185864826,
     "pos": {
-     "n_skin_buckle": 1.937162461502999,
-     "n_stringer_cripple": 14.023239055086597,
-     "n_boom_yield": 20.857811389967683,
-     "n_collapse": 23.805276829675563,
-     "M_max": 384029.0393527423
+     "n_skin_buckle": 2.900614223749174,
+     "n_stringer_cripple": 14.195906577157483,
+     "n_boom_yield": 21.036748086796102,
+     "n_collapse": 23.959488098488993,
+     "M_max": 386516.7905283961
     },
     "neg": {
-     "n_skin_buckle": 2.019040692013313,
-     "n_stringer_cripple": 13.5830500966605,
-     "n_boom_yield": 20.855322537357424,
-     "n_collapse": 23.646890223299987,
-     "M_max": 381473.9312257522
+     "n_skin_buckle": 3.0609398640253667,
+     "n_stringer_cripple": 13.751635039294547,
+     "n_boom_yield": 21.031028775861596,
+     "n_collapse": 23.80613632950901,
+     "M_max": 384042.9048875867
     }
    },
    {
     "y": 0.9,
     "M_per_g": 14660.384828860691,
     "pos": {
-     "n_skin_buckle": 1.9150794097069603,
-     "n_stringer_cripple": 13.589842041056166,
-     "n_boom_yield": 20.268051368462476,
-     "n_collapse": 22.999817709232868,
-     "M_max": 337186.178610999
+     "n_skin_buckle": 2.8311432088171857,
+     "n_stringer_cripple": 13.747931982921989,
+     "n_boom_yield": 20.435115170916205,
+     "n_collapse": 23.14470818470992,
+     "M_max": 339310.3287395292
     },
     "neg": {
-     "n_skin_buckle": 2.0544448951664314,
-     "n_stringer_cripple": 13.213678793195143,
-     "n_boom_yield": 20.27575821137745,
-     "n_collapse": 22.845476597467076,
-     "M_max": 334923.4785175983
+     "n_skin_buckle": 2.9726954062639503,
+     "n_stringer_cripple": 13.366358042533305,
+     "n_boom_yield": 20.437726683473795,
+     "n_collapse": 22.994023455036587,
+     "M_max": 337101.23261468526
     }
    },
    {
     "y": 1.2,
     "M_per_g": 12413.11754353565,
     "pos": {
-     "n_skin_buckle": 1.8215764615306151,
-     "n_stringer_cripple": 13.668955996279571,
-     "n_boom_yield": 20.316329632635878,
-     "n_collapse": 22.92680897083387,
-     "M_max": 284593.17465314845
+     "n_skin_buckle": 2.697669375540631,
+     "n_stringer_cripple": 13.819180195894356,
+     "n_boom_yield": 20.479743121758137,
+     "n_collapse": 23.07061771636084,
+     "M_max": 286378.2895151631
     },
     "neg": {
-     "n_skin_buckle": 1.8861592920135892,
-     "n_stringer_cripple": 13.197707866402302,
-     "n_boom_yield": 20.364128380203933,
-     "n_collapse": 22.787366248347805,
-     "M_max": 282862.2557483383
+     "n_skin_buckle": 2.822548431755843,
+     "n_stringer_cripple": 13.339635663454692,
+     "n_boom_yield": 20.51889786685384,
+     "n_collapse": 22.929996503532532,
+     "M_max": 284632.7418712108
     }
    },
    {
     "y": 1.52,
     "M_per_g": 10295.885340233974,
     "pos": {
-     "n_skin_buckle": 1.0442053042350732,
-     "n_stringer_cripple": 11.967124558743423,
-     "n_boom_yield": 18.08757335689846,
-     "n_collapse": 19.898955304152036,
-     "M_max": 204877.36220199
+     "n_skin_buckle": 1.6098622928656048,
+     "n_stringer_cripple": 12.064116628326554,
+     "n_boom_yield": 18.176589967932504,
+     "n_collapse": 19.991046874403768,
+     "M_max": 205825.52645010396
     },
     "neg": {
-     "n_skin_buckle": 1.0917240994652404,
-     "n_stringer_cripple": 11.427897920608686,
-     "n_boom_yield": 18.0845159741475,
-     "n_collapse": 19.78697763476002,
-     "M_max": 203724.4529572632
+     "n_skin_buckle": 1.657547221752289,
+     "n_stringer_cripple": 11.51839563400274,
+     "n_boom_yield": 18.166216958885233,
+     "n_collapse": 19.867208198509253,
+     "M_max": 204550.49764240763
     }
    },
    {
     "y": 1.8,
     "M_per_g": 8672.349276020608,
     "pos": {
-     "n_skin_buckle": 0.8915572063083879,
-     "n_stringer_cripple": 12.345990615873248,
-     "n_boom_yield": 18.58634499896638,
-     "n_collapse": 20.46981820084864,
-     "M_max": 177521.41305440315
+     "n_skin_buckle": 1.5082456431751887,
+     "n_stringer_cripple": 12.443209699435462,
+     "n_boom_yield": 18.679106757909484,
+     "n_collapse": 20.56679719401367,
+     "M_max": 178362.44875556714
     },
     "neg": {
-     "n_skin_buckle": 0.9350109348833613,
-     "n_stringer_cripple": 11.741727159445011,
-     "n_boom_yield": 18.60986225277984,
-     "n_collapse": 20.369044312708912,
-     "M_max": 176647.4666985528
+     "n_skin_buckle": 1.5093455050677698,
+     "n_stringer_cripple": 11.830355875800825,
+     "n_boom_yield": 18.692554617435768,
+     "n_collapse": 20.450553851046898,
+     "M_max": 177354.345884347
     }
    },
    {
     "y": 2.1,
     "M_per_g": 7055.2342958278505,
     "pos": {
-     "n_skin_buckle": 0.9924612385812301,
-     "n_stringer_cripple": 13.528788902990808,
-     "n_boom_yield": 20.293015622999587,
-     "n_collapse": 22.31786730210846,
-     "M_max": 157457.7827995706
+     "n_skin_buckle": 1.6637859899804064,
+     "n_stringer_cripple": 13.634909598712815,
+     "n_boom_yield": 20.398350394855463,
+     "n_collapse": 22.422906602689757,
+     "M_max": 158198.85967544152
     },
     "neg": {
-     "n_skin_buckle": 0.9931033006153911,
-     "n_stringer_cripple": 12.817196455605309,
-     "n_boom_yield": 20.346697648107984,
-     "n_collapse": 22.221368648450742,
-     "M_max": 156776.96218878345
+     "n_skin_buckle": 1.6633417155021564,
+     "n_stringer_cripple": 12.9115363494562,
+     "n_boom_yield": 20.438121816353664,
+     "n_collapse": 22.311247243641965,
+     "M_max": 157411.0767360374
     }
    },
    {
     "y": 2.35,
     "M_per_g": 5830.103071644302,
     "pos": {
-     "n_skin_buckle": 0.7399147874576747,
-     "n_stringer_cripple": 8.536001147551483,
-     "n_boom_yield": 17.355045993509947,
-     "n_collapse": 19.36324632326005,
-     "M_max": 112889.72186624365
+     "n_skin_buckle": 1.2792634611749347,
+     "n_stringer_cripple": 8.623542122805137,
+     "n_boom_yield": 17.44248274683153,
+     "n_collapse": 19.455471300962433,
+     "M_max": 113427.40299202864
     },
     "neg": {
-     "n_skin_buckle": 0.7398178798100769,
-     "n_stringer_cripple": 8.085692110280185,
-     "n_boom_yield": 17.5381336353912,
-     "n_collapse": 19.299399031250413,
-     "M_max": 112517.4855729821
+     "n_skin_buckle": 1.2410588617024039,
+     "n_stringer_cripple": 8.162457258664798,
+     "n_boom_yield": 17.612934701970467,
+     "n_collapse": 19.372689987715553,
+     "M_max": 112944.77940339326
     }
    },
    {
     "y": 2.7,
     "M_per_g": 4326.18818921514,
     "pos": {
-     "n_skin_buckle": 0.8867488162682446,
-     "n_stringer_cripple": 9.873430939096842,
-     "n_boom_yield": 19.92631527758852,
-     "n_collapse": 22.18310601563244,
-     "M_max": 95968.29124493638
+     "n_skin_buckle": 1.5263609805677298,
+     "n_stringer_cripple": 9.973407996529467,
+     "n_boom_yield": 20.173026591880824,
+     "n_collapse": 22.288116333355966,
+     "M_max": 96422.58564121762
     },
     "neg": {
-     "n_skin_buckle": 0.8861385861123302,
-     "n_stringer_cripple": 9.323808607061965,
-     "n_boom_yield": 20.16143781505495,
-     "n_collapse": 22.129810057230852,
-     "M_max": 95737.72289916652
+     "n_skin_buckle": 1.4467674237858397,
+     "n_stringer_cripple": 9.408408022672036,
+     "n_boom_yield": 20.24788652181288,
+     "n_collapse": 22.214381642142104,
+     "M_max": 96103.5954909528
     }
    },
    {
     "y": 3.0,
     "M_per_g": 3223.51002206027,
     "pos": {
-     "n_skin_buckle": 1.0760678162867405,
-     "n_stringer_cripple": 11.359553118578566,
-     "n_boom_yield": 22.87897121032903,
-     "n_collapse": 25.294469276656642,
-     "M_max": 81536.97521599827
+     "n_skin_buckle": 1.817152021799439,
+     "n_stringer_cripple": 11.472703222141668,
+     "n_boom_yield": 23.00409722205802,
+     "n_collapse": 25.419597780742762,
+     "M_max": 81940.32820296529
     },
     "neg": {
-     "n_skin_buckle": 1.0355339351246455,
-     "n_stringer_cripple": 10.715332239635309,
-     "n_boom_yield": 23.03633747766447,
-     "n_collapse": 25.27970115126094,
-     "M_max": 81489.37001577819
+     "n_skin_buckle": 1.694091270813593,
+     "n_stringer_cripple": 10.807553428044464,
+     "n_boom_yield": 23.26627274533241,
+     "n_collapse": 25.376084262732938,
+     "M_max": 81800.06194156552
     }
    },
    {
     "y": 3.3,
     "M_per_g": 2281.101826209247,
     "pos": {
-     "n_skin_buckle": 0.7498565204345647,
-     "n_stringer_cripple": 9.442154831358962,
-     "n_boom_yield": 18.012162244413172,
-     "n_collapse": 20.421936806918893,
-     "M_max": 46584.51734499253
+     "n_skin_buckle": 1.3003551538591969,
+     "n_stringer_cripple": 9.563224501023942,
+     "n_boom_yield": 18.116078610275395,
+     "n_collapse": 20.533792207727785,
+     "M_max": 46839.67090404906
     },
     "neg": {
-     "n_skin_buckle": 0.6865924236121466,
-     "n_stringer_cripple": 8.91199991777179,
-     "n_boom_yield": 18.274020390768136,
-     "n_collapse": 20.420970332272592,
-     "M_max": 46582.31271791187
+     "n_skin_buckle": 1.172189028496999,
+     "n_stringer_cripple": 8.986708283822859,
+     "n_boom_yield": 18.35307918471412,
+     "n_collapse": 20.499350569727323,
+     "M_max": 46761.10602070857
     }
    },
    {
     "y": 3.6,
     "M_per_g": 1491.7417289588052,
     "pos": {
-     "n_skin_buckle": 1.0180988728638751,
-     "n_stringer_cripple": 12.369082539624557,
-     "n_boom_yield": 23.39777582910457,
-     "n_collapse": 26.28690989828134,
-     "M_max": 39213.28042064654
+     "n_skin_buckle": 1.7672930678717487,
+     "n_stringer_cripple": 12.491623431049135,
+     "n_boom_yield": 23.538446029346215,
+     "n_collapse": 26.43404905171132,
+     "M_max": 39432.77403578171
     },
     "neg": {
-     "n_skin_buckle": 0.9440182321935543,
-     "n_stringer_cripple": 11.640320802563268,
-     "n_boom_yield": 23.642422443167238,
-     "n_collapse": 26.359566805420386,
-     "M_max": 39321.66576092294
+     "n_skin_buckle": 1.5807768996643967,
+     "n_stringer_cripple": 11.763858735221698,
+     "n_boom_yield": 23.74434553666233,
+     "n_collapse": 26.460912909910903,
+     "M_max": 39472.84797405886
     }
    },
    {
     "y": 3.9,
     "M_per_g": 879.4162503068155,
     "pos": {
-     "n_skin_buckle": 1.432740399007809,
-     "n_stringer_cripple": 17.62603416404805,
-     "n_boom_yield": 32.093392006691325,
-     "n_collapse": 35.87967450417847,
-     "M_max": 31553.16881469368
+     "n_skin_buckle": 2.4584772248012596,
+     "n_stringer_cripple": 17.756496427354787,
+     "n_boom_yield": 32.292436813860526,
+     "n_collapse": 36.09631119368386,
+     "M_max": 31743.68263985739
     },
     "neg": {
-     "n_skin_buckle": 1.3003189788450347,
-     "n_stringer_cripple": 16.54863276030143,
-     "n_boom_yield": 32.71269407454789,
-     "n_collapse": 36.1609799178367,
-     "M_max": 31800.553366764005
+     "n_skin_buckle": 2.1466413840606164,
+     "n_stringer_cripple": 16.630553428150183,
+     "n_boom_yield": 32.849620770776866,
+     "n_collapse": 36.2962973244943,
+     "M_max": 31919.553693128073
     }
    },
    {
     "y": 4.25,
     "M_per_g": 386.62293396025814,
     "pos": {
-     "n_skin_buckle": 1.8315337626247026,
-     "n_stringer_cripple": 19.422479801645196,
-     "n_boom_yield": 31.2355270216067,
-     "n_collapse": 37.49000435929657,
-     "M_max": 14494.495479574109
+     "n_skin_buckle": 3.152479994061212,
+     "n_stringer_cripple": 19.67836633487477,
+     "n_boom_yield": 31.82789933578727,
+     "n_collapse": 37.88718365756568,
+     "M_max": 14648.054105179186
     },
     "neg": {
-     "n_skin_buckle": 1.6950809647081035,
-     "n_stringer_cripple": 18.974544583819505,
-     "n_boom_yield": 32.81505347402812,
-     "n_collapse": 38.47860710449765,
-     "M_max": 14876.711973444913
+     "n_skin_buckle": 2.742401930205019,
+     "n_stringer_cripple": 19.119944816264177,
+     "n_boom_yield": 33.03556943642841,
+     "n_collapse": 38.70485124118092,
+     "M_max": 14964.183145360706
     }
    },
    {
     "y": 4.5,
     "M_per_g": 167.36530377182362,
     "pos": {
-     "n_skin_buckle": 3.6630604446234174,
-     "n_stringer_cripple": 37.44624014310916,
-     "n_boom_yield": 59.472248834617325,
-     "n_collapse": 70.54211975514006,
-     "M_max": 11806.303301527378
+     "n_skin_buckle": 6.19643502073046,
+     "n_stringer_cripple": 37.93779078459252,
+     "n_boom_yield": 60.13191580600046,
+     "n_collapse": 71.30476268155124,
+     "M_max": 11933.943266575616
     },
     "neg": {
-     "n_skin_buckle": 3.3678143459742023,
-     "n_stringer_cripple": 37.22143062513062,
-     "n_boom_yield": 63.27242921378825,
-     "n_collapse": 73.02409569496227,
-     "M_max": 12221.699958650079
+     "n_skin_buckle": 5.304031944177969,
+     "n_stringer_cripple": 37.47902345260151,
+     "n_boom_yield": 63.67050441911548,
+     "n_collapse": 73.42746966944858,
+     "M_max": 12289.210766423628
     }
    }
   ],
   "summary": {
    "pos": {
     "n_skin_buckle": [
-     0.7399147874576747,
+     1.2792634611749347,
      2.35
     ],
     "n_stringer_cripple": [
-     8.536001147551483,
+     8.623542122805137,
      2.35
     ],
     "n_boom_yield": [
-     17.355045993509947,
+     17.44248274683153,
      2.35
     ],
     "n_collapse": [
-     19.36324632326005,
+     19.455471300962433,
      2.35
     ]
    },
    "neg": {
     "n_skin_buckle": [
-     0.6865924236121466,
+     1.172189028496999,
      3.3
     ],
     "n_stringer_cripple": [
-     8.085692110280185,
+     8.162457258664798,
      2.35
     ],
     "n_boom_yield": [
-     17.5381336353912,
+     17.612934701970467,
      2.35
     ],
     "n_collapse": [
-     19.299399031250413,
+     19.372689987715553,
      2.35
     ]
    }
@@ -6465,7 +6493,7 @@ const METAL_REFERENCE = {
   const MPa = (v, d = 1) => nf(v / 1e6, d);
   const frame = () => new Promise((r) => setTimeout(r, 30));
   const REPO = "https://github.com/Ehsan-Roohi/Aerospace-Structures/tree/main/computational/d520-wing";
-  const MODEL3D = /github\.io$/.test(location.hostname) ? "./d520/index.html" : "https://ehsan-roohi.github.io/Aerospace-Structures/d520/";
+  const MODEL3D = location.protocol === "file:" ? "https://ehsan-roohi.github.io/Aerospace-Structures/d520/" : "./d520/index.html";
 
   // ------------------------------------------------------------------ styles
   const style = document.createElement("style");
@@ -6576,25 +6604,26 @@ const METAL_REFERENCE = {
     selected: "aircraft", plot: "sigma", show: "all", deformed: true, scale: 1, mirror: false, arrows: true, clip: false, clipY: 2.35,
     secY: 2.35, secField: "sigma", tab: "start", mode: { kind: "bending", index: 0 },
   };
-  let R = null, R1 = null, running = false, pending = false, stale = true, opened = false, timer = null;
+  let R = null, R1 = null, running = false, pending = false, stale = true, opened = false, timer = null, lastError = null;
 
   // ------------------------------------------------------------------ run control
   function setStatus(text, kind) {
     const chip = $("#mChip"), t = $("#mStateText");
     $("#mRun").classList.toggle("stale", stale && !running);
     if (running) { chip.className = "chip idle"; chip.textContent = "Solving"; t.textContent = text || "Running"; return; }
+    if (lastError) { chip.className = "chip bad"; chip.textContent = "Input error"; t.textContent = lastError; return; }
     if (stale) { chip.className = "chip warn"; chip.textContent = "Out of date"; t.textContent = "Inputs changed — run the study"; return; }
     if (!R) return;
     const g = governing(R);
-    const ok = g && g.n >= R.nUlt;
+    const ok = g && g.ratio >= 1;
     chip.className = "chip " + (kind || (ok ? "ok" : "bad"));
-    chip.textContent = ok ? `Strength ≥ ${nf(R.nUlt, 1)} g ultimate` : "Below ultimate";
+    chip.textContent = ok ? "Model checks meet assumed ultimate" : "Below assumed ultimate";
     t.textContent = text || (g ? `Weakest: ${g.name.toLowerCase()} at ${nf(g.n, 1)} g (y = ${nf(g.y, 2)} m)` : "");
   }
   function changed() { stale = true; setStatus(); renderTree(); clearTimeout(timer); timer = setTimeout(runStudy, 500); }
   async function runStudy() {
     if (running) { pending = true; return; }
-    running = true; stale = false; setStatus();
+    running = true; stale = false; lastError = null; setStatus();
     const ld = $("#mLoading"), t0 = performance.now();
     try {
       const first = !R;
@@ -6604,7 +6633,8 @@ const METAL_REFERENCE = {
       await frame();
       const quick = E.solve({ ...MS.input, collapse: false });
       R = quick;
-      if (first || !modelBuilt) buildModel(R); else updateModel();
+      // Gauges and boom dimensions change geometry as well as stresses.
+      buildModel(R);
       $("#mLoadStep").textContent = "Post-buckling strength of 37 sections (effective width) · beam modes"; $("#mLoadBar").style.width = "55%";
       await frame();
       R = E.solve({ ...MS.input, collapse: true });
@@ -6612,7 +6642,7 @@ const METAL_REFERENCE = {
       $("#mLoadBar").style.width = "100%";
       updateModel(); renderAll();
       $("#mFoot").textContent = `Solved in ${((performance.now() - t0) / 1000).toFixed(2)} s · ${R.stations.length} thin-walled sections × ${R.sections[0].walls.length} walls · lifting line N = 60 · beam FE ${R.fem ? R.fem.y.length - 1 : 0} elements · ${R.checks.length} strength sections`;
-    } catch (err) { stale = true; console.error(err); $("#mChip").className = "chip bad"; $("#mChip").textContent = "Input error"; $("#mStateText").textContent = err.message || String(err); }
+    } catch (err) { stale = true; lastError = err.message || String(err); console.error(err); }
     finally { ld.hidden = true; running = false; setStatus(); renderTree(); if (pending) { pending = false; runStudy(); } }
   }
   function governing(r) {
@@ -6644,7 +6674,11 @@ const METAL_REFERENCE = {
   }
   function numField(id, label, hint, value, step, onSet) {
     const w = el("div", { class: "field" }, `<label for="${id}">${label}${hint ? `<small>${hint}</small>` : ""}</label><input id="${id}" type="number" step="${step}" value="${value}">`);
-    w.querySelector("input").addEventListener("change", (e) => { const v = parseFloat(e.target.value); if (isFinite(v)) { onSet(v); changed(); renderTree(); } });
+    w.querySelector("input").addEventListener("change", (e) => {
+      const v = Number(e.target.value);
+      if (!e.target.value.trim() || !Number.isFinite(v)) { stale = true; lastError = `${label}: enter a finite number`; setStatus(); return; }
+      onSet(v); changed(); renderTree();
+    });
     return w;
   }
   function selField(id, label, options, value, onSet) {
@@ -6663,7 +6697,7 @@ const METAL_REFERENCE = {
       head("Aircraft and load case", "Lift = n W, shaped along the span by the chosen method. Inertia relief subtracts n × (structure + fuel + guns + ammunition) weight at the right span and chord positions.");
       pm.append(fs("Flight condition",
         numField("mMass", "Gross mass", "kg (Wikipedia 2 677; manual leaves it blank)", i.mass, 10, (v) => (i.mass = v)),
-        numField("mN", "Load factor n", "g; limit +6 / −3 (CS-23 aerobatic, assumed)", i.n, 0.5, (v) => { if (v === 0) return; i.n = v; syncN(); }),
+        numField("mN", "Load factor n", "g; teaching limits +6 / −3, not a D.520 certification", i.n, 0.5, (v) => { i.n = v; syncN(); }),
         numField("mCL", "Wing CL for the lifting line", "only shapes the small camber part", i.CL, 0.1, (v) => (i.CL = v)),
         selField("mDist", "Spanwise lift shape", [["liftingLine", "Lifting line (Glauert, real planform)"], ["schrenk", "Schrenk"], ["elliptic", "Elliptic"]], i.distribution, (v) => (i.distribution = v))));
       const inc = el("fieldset", {}, "<legend>Inertia relief</legend>");
@@ -6677,7 +6711,7 @@ const METAL_REFERENCE = {
       if (R) pm.append(kv([["Weight W", `${nf(R.W / 1e3, 2)} kN`], ["Half-wing lift at n", `${nf((R.W / 2) * R.n / 1e3, 2)} kN`], ["Angle of attack (lifting line)", R.alphaDeg != null ? `${nf(R.alphaDeg, 1)}° at CL ${nf(i.CL, 2)}` : "–"], ["Wing area", `${nf(R.wingArea, 2)} m²`], ["Half-wing structure", `${nf(R.mass.structuralHalf, 1)} kg`], ["Non-structural, half wing", `${nf(R.mass.nonStructuralHalf, 1)} kg`]]));
     } else if (id === "material") {
       $("#mPmHead").textContent = "Material";
-      head("2017-T4 duralumin (AU4G)", "The manual says every wing part is duralumin except the steel fittings. Minimum handbook values; replace them to study another alloy.");
+      head("Assumed 2017-T4 duralumin analogue", "The manual says duralumin, not a certified alloy/temper or allowable. These representative properties are teaching assumptions; replace them to study another alloy.");
       const m = i.material;
       pm.append(fs("Card", numField("mE", "Young's modulus E", "GPa", m.E / 1e9, 1, (v) => (m.E = v * 1e9)), numField("mNu", "Poisson's ratio ν", "", m.nu, 0.01, (v) => (m.nu = v)), numField("mRho", "Density", "kg/m³", m.rho, 10, (v) => (m.rho = v)),
         numField("mFty", "Tensile yield Fty", "MPa", m.Fty / 1e6, 5, (v) => (m.Fty = v * 1e6)), numField("mFcy", "Compressive yield Fcy", "MPa", m.Fcy / 1e6, 5, (v) => (m.Fcy = v * 1e6)), numField("mFtu", "Tensile strength Ftu", "MPa", m.Ftu / 1e6, 5, (v) => (m.Ftu = v * 1e6)), numField("mFsu", "Shear strength Fsu", "MPa", m.Fsu / 1e6, 5, (v) => (m.Fsu = v * 1e6))));
@@ -7079,6 +7113,7 @@ const METAL_REFERENCE = {
     const sk = r.failure.find((f) => f.key === "skinBuckle");
     $("#mtab-start").innerHTML = `<div class="mw-grid2"><article class="mw-story">
       <h2>From a printed wing to a real one: the Dewoitine D.520 (1940)</h2>
+      <p class="callout"><b>Educational reconstruction, not an airworthiness assessment.</b> Geometry is manual-derived; gauges, boom taper, material allowables, gross mass and load requirements are assumed. Agreement with a supplied shell-model dataset checks consistency, not the strength of a surviving or historical aircraft.</p>
       <p>The D.520 was the best French fighter of 1940. Its wing is a classic <b>stressed-skin</b> metal structure: one I-section main spar at 37 % chord with heavy duralumin booms, a light false spar at 73 % carrying the flaps and ailerons, 22 pressed ribs, a smooth duralumin skin and blade stringers. Every dimension here comes from the scanned 1940 manual (<i>Notice descriptive</i>) or is labelled as an assumption in <b>Method &amp; sources</b>.</p>
       <p>This workspace uses the same chain of reasoning as the printed-wing lab, at full scale: <b>loads → shear, bending moment and torque → section properties → stresses → deflection and twist → stability and strength</b>. What is new is the thin-walled analysis of a real two-cell box (leading-edge nose cell + spar box), a tapered spar whose inclined booms carry part of the shear, skin buckling and the post-buckling strength that let 1940s designers use skins that wrinkle in flight.</p>
       <h3>Try this</h3>
@@ -7097,7 +7132,7 @@ const METAL_REFERENCE = {
       </div>
       <div class="callout"><h3>Verdict at the assumed requirement</h3>
         <p>${g ? `The weakest strength mode is <b>${g.name.toLowerCase()}</b> at <b>${nf(g.n, 1)} g</b> (${g.side === "pos" ? "positive" : "negative"} g, y = ${nf(g.y, 2)} m) against an ultimate requirement of ${nf(g.need, 1)} g: margin of safety ${sgn(g.n / g.need - 1, 2)}.` : ""}</p>
-        <p>The leading-edge skin between ribs has no stringers and buckles elastically early: at <b>${nf(sk.pos.n, 2)} g</b> by the simple panel formulas (y = ${nf(sk.pos.y, 2)} m), at about 2–3 g in the shell model, whose estimate was still falling with mesh refinement. Stressed-skin wings of the period were designed for this; the effective-width analysis carries the load past it.</p>
+        <p>The leading-edge skin between ribs has no stringers. The simplified panel model predicts buckling at <b>${nf(sk.pos.n, 2)} g</b> (y = ${nf(sk.pos.y, 2)} m). The supplied shell eigenvalue estimate falls toward 2–3 g with refinement and is not converged. Some structures retain post-buckling capacity, but this does not prove elastic recovery or acceptable operation of this aircraft. Our effective-width calculation is an approximate section model.</p>
         <p>First bending frequency ${r.fem ? nf(r.fem.fBending[0], 1) : "–"} Hz, first torsion ${r.fem ? nf(r.fem.fTorsion[0], 0) : "–"} Hz (fuselage held fixed).</p>
         <p class="note">The load factors and gross mass are assumptions (the manual gives neither). All results scale linearly with n except the strength modes, which are reported as the load factor at which each happens.</p></div>
     </div></div>`;
@@ -7179,11 +7214,11 @@ const METAL_REFERENCE = {
     const fe = REF ? REF.fe : null;
     $("#mtab-strength").innerHTML = `<div class="mw-grid2"><div>
       <div class="mw-check head"><div>Failure or stability mode</div><div class="num">+g at n</div><div class="num">−g at n</div><div class="num hide-s">where (+g)</div><div class="num hide-s">MS vs ${nf(r.nUlt, 0)} g</div></div>${rows}
-      <p class="note">Load factor at which each event first happens anywhere on the span (positive and negative g). Margin of safety MS = n/n<sub>ult</sub> − 1 against the assumed ultimate ${nf(r.nUlt, 1)} g / −${nf(r.nUltNeg, 1)} g. ${fe ? `The shell model's first linear buckling eigenvalue is ${nf(fe.buckle_pos[0], 2)} g (positive) and −${nf(Math.abs(fe.buckle_neg[0]), 2)} g (negative), and it was still falling with mesh refinement (${fe.convergence.map((q) => q.buckle_pos ? nf(q.buckle_pos, 1) : null).filter(Boolean).join(" → ")}), so it is an upper estimate. The simply supported panel formulas here ignore the fuel tank and the rib beads that stiffened the real leading edge, so they are a lower estimate: the first skin buckle lies between the two.` : ""}</p></div>
-      <div class="callout"><h3>Why a wing whose skin buckles at 1 g is still safe</h3>
+      <p class="note">Predicted event load factors in this assumed model (+g / −g). Margin of safety MS = n/n<sub>ult</sub> − 1 against assumed demands ${nf(r.nUlt, 1)} g / −${nf(r.nUltNeg, 1)} g. ${fe ? `The archived shell eigenvalues are ${nf(fe.buckle_pos[0], 2)} g and −${nf(Math.abs(fe.buckle_neg[0]), 2)} g; they decrease with refinement (${fe.convergence.map((q) => q.buckle_pos ? nf(q.buckle_pos, 1) : null).filter(Boolean).join(" → ")}) and are not converged. Simplified panel predictions and shell predictions are not rigorous bounds on the real wing.` : ""}</p></div>
+      <div class="callout"><h3>Buckling onset is not the same as collapse</h3>
       <p>Thin skins between ribs and stringers buckle elastically at low stress. After buckling a panel keeps carrying load next to its stiffeners (von Kármán effective width w<sub>e</sub> = 1.9 t √(E/σ)), so the booms, stringers and the strips of skin beside them take over. The section fails when stringers cripple and the booms yield: that is the collapse moment found by stepping the curvature of each section until the moment peaks.</p>
       <div class="mw-eq">σ<sub>cr</sub> = k π²E/12(1−ν²) (t/b)² + 0.3 E t/R &nbsp;·&nbsp; τ<sub>cr</sub> = (5.35 + 4 (b/a)²) π²E/12(1−ν²) (t/b)²<br>n σ₁/σ<sub>cr</sub> + (n τ₁/τ<sub>cr</sub>)² = 1 &nbsp;·&nbsp; σ<sub>cc, blade</sub> = 1.3 × 0.43 π²E/12(1−ν²) (t/h)²</div>
-      <p class="note">Spar-web shear buckling is not failure either: a buckled web carries shear as a diagonal tension field (Wagner beam) until the web or its rivets fail. Fittings, rivets and the steel fishplates are not modelled.</p></div></div>
+      <p class="note">Post-buckling strength requires a validated load path, adequate stiffeners and connections. Tension-field action is not solved here; do not assume a buckled web is safe. The curvature correction and stringer multiplier are approximate. Fittings, rivets and the steel fishplates are not modelled; first crippling below the assumed ultimate requirement remains a failing check even if the section moment peak is higher.</p></div></div>
       <div class="charts" style="margin-top:12px">${chart("Load factor at each event (positive g)", "g", [{ name: "collapse", x: y, y: c.map((q) => q.pos && q.pos.n_collapse) }, { name: "boom yield", x: y, y: c.map((q) => q.pos && q.pos.n_boom_yield), dash: "5 4" }, { name: "stringer crippling", x: y, y: c.map((q) => q.pos && q.pos.n_stringer_cripple) }, { name: "web shear buckling", x: y, y: c.map((q) => q.web.n_buckle), dash: "2 3" }, { name: "skin buckling", x: y, y: c.map((q) => q.skinCombined.pos) }], { ymax: 40, hlines: [{ y: r.nUlt, label: "ultimate" }, { y: P.aircraft.nLimitPos, label: "limit" }] })}
       ${crit ? chart(`Moment–curvature at y = ${nf(crit.y, 2)} m`, "load factor", [{ name: "section response", x: curve.map((p) => p[0] * 1e3), y: curve.map((p) => p[1] / Math.abs(crit.M_per_g)) }], { xlabel: "curvature (1/km)", hlines: [{ y: crit.pos.n_stringer_cripple, label: "stringers cripple" }, { y: crit.pos.n_boom_yield, label: "boom yields" }] }) : ""}
       ${chart("Skin panel buckling (compression + shear)", "g", [{ name: "+g", x: y, y: c.map((q) => q.skinCombined.pos) }, { name: "−g", x: y, y: c.map((q) => q.skinCombined.neg), dash: "5 4" }], { ymax: 4, hlines: [{ y: 1, label: "1 g" }] })}</div>`;
@@ -7243,6 +7278,7 @@ const METAL_REFERENCE = {
     $("#mtab-method").innerHTML = `<div class="mw-grid2"><article class="mw-story">
       <h2>Method</h2>
       <h3>1. Span loading</h3><p>Glauert's lifting line, symmetric terms, N = 60, on the real planform (linear taper to y = 4.687 m, then the elliptic tip cap) with the section lift slope 0.9 × 2π and the zero-lift angle blended from 0 at rib 21 to −1.2° (NACA 230) at the tip. The lift is scaled to n W.</p>
+      <p class="note">CL and the displayed angle of attack define a reference load shape in linear attached-flow theory, not a stall prediction or a trimmed flight condition. Negative n reverses that prescribed shape; it does not solve a new negative-angle aerodynamic polar. The spar-cap taper is held fixed when CL changes.</p>
       <div class="mw-eq">Σ A<sub>n</sub> sin nθ (μ n + sin θ) = μ (α − α₀) sin θ, &nbsp; μ = a₀c/4b</div>
       <h3>2. Shear, moment, torque</h3><p>Integrated from the tip, with inertia relief from the structural line mass (computed from the sections), the ribs, fuel, guns and ammunition at their span and chord positions. The fittings at y = ${P.fittingY} m react the half-wing load.</p>
       <h3>3. Thin-walled section (every station)</h3><p>Upper and lower skins from the leading edge to the false spar, the spar web and the false-spar web are ${R.sections[20].walls.length} straight walls. Spar caps, blade stringers, and the skin and webs (by the linear-stress rule) are lumped as booms at the wall junctions. Bending stresses use the unsymmetric formula; shear flows come from boom equilibrium and are closed by the compatibility of the two cells:</p>
@@ -7271,7 +7307,7 @@ const METAL_REFERENCE = {
     for (const q of f) L.push(`  ${q.name.padEnd(56)} ${q.pos ? nf(q.pos.n, 2).padStart(6) : "     –"} / ${q.neg ? ("−" + nf(q.neg.n, 2)).padStart(7) : "      –"}   y = ${q.pos ? nf(q.pos.y, 2) : "–"} m`);
     if (g) L.push("", `GOVERNING: ${g.name} at ${nf(g.n, 2)} g (${g.side === "pos" ? "+g" : "−g"}), required ${nf(g.need, 1)} g, MS ${sgn(g.n / g.need - 1, 2)}`);
     if (REF) L.push("", `CHECK (1 g): tip deflection Wing Lab ${nf((R1 || r).tip.wMax * 1e3, 2)} mm vs CalculiX shell ${nf(REF.fe.tip_mm_1g, 2)} mm; collapse ${nf((R1 || r).failure.find((q) => q.key === "collapse").pos.n, 2)} g vs Python ${nf(REF.collapse.summary.pos.n_collapse[0], 2)} g`);
-    L.push("", "Beam theory on thin-walled sections; not a 3-D finite-element result. Gauges, load factors and gross mass are assumptions (see Method & sources).");
+    L.push("", "Educational reconstruction; not an airworthiness assessment. Beam theory on thin-walled sections, not a 3-D finite-element result. Gauges, boom taper, material allowables, load factors and gross mass are assumptions. Approximate section collapse does not validate whole-wing collapse, joints, post-buckling safety or flutter (see Method & sources).");
     return L.join("\n");
   }
   function renderReport() {
@@ -7279,7 +7315,8 @@ const METAL_REFERENCE = {
     $("#mReport").value = reportText();
     $("#mCopy").addEventListener("click", async () => { try { await navigator.clipboard.writeText($("#mReport").value); $("#mCopyState").textContent = "Copied."; } catch { $("#mReport").select(); $("#mCopyState").textContent = "Select-all done; press Ctrl/Cmd+C."; } });
     $("#mJson").addEventListener("click", () => {
-      const r = R, out = { input: MS.input, engine: E.VERSION, n: r.n, mass: r.mass, fitting: r.fitting, tip: r.tip, failure: r.failure, frequencies: r.fem && { bending: r.fem.fBending, torsion: r.fem.fTorsion }, stations: r.stations.map((s) => ({ y: s.y, V: s.V, M: s.M, T: s.T, Vw: s.Vw, EI: s.EI, GJ: s.GJ, xsc: s.xsc, boomU: s.boomU, boomL: s.boomL, tauWeb: s.tauWeb, w: s.w, twist: s.twist })) };
+      if (stale || running) { $("#mCopyState").textContent = "Correct the inputs and run the study before exporting."; return; }
+      const r = R, out = { input: r.input, engine: E.VERSION, n: r.n, mass: r.mass, fitting: r.fitting, tip: r.tip, failure: r.failure, frequencies: r.fem && { bending: r.fem.fBending, torsion: r.fem.fTorsion }, stations: r.stations.map((s) => ({ y: s.y, V: s.V, M: s.M, T: s.T, Vw: s.Vw, EI: s.EI, GJ: s.GJ, xsc: s.xsc, boomU: s.boomU, boomL: s.boomL, tauWeb: s.tauWeb, w: s.w, twist: s.twist })) };
       const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([JSON.stringify(out, null, 1)], { type: "application/json" })); a.download = "D520-wing-lab-results.json"; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
     });
   }

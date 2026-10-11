@@ -27,6 +27,8 @@ The rule throughout: every number comes from a source, and anything that does no
 
 ## The wing in numbers (half wing, per g unless stated)
 
+These are model predictions, not measured historical capacities or an airworthiness assessment. The shell values are archived supplied results. Live Wing Lab uses a corrected panel circumradius; its baseline stringer-crippling estimate is about 8.6 g, **below** the assumed 9 g ultimate demand. A higher approximate section-collapse peak does not make that failing check acceptable. See the report's correction note before using the archived values below.
+
 | Quantity | Wing Lab (beam + thin-walled sections) | Shell FE, 41 066 elements | Note |
 |---|---|---|---|
 | Structural mass | 115.6 kg | 116.0 kg | plus 141.7 kg of fuel, guns and ammunition |

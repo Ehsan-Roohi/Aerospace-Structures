@@ -61,7 +61,8 @@ def section(y, scales=None):
             flat = 4.0 * D_PLATE * (tsk / L) ** 2 if a >= L else D_PLATE * (tsk / a) ** 2 * (1 + (a / L) ** 2) ** 2
             p0, p1, p2 = P[0], P[len(P) // 2], P[-1]
             area2 = abs((p1[0] - p0[0]) * (p2[1] - p0[1]) - (p2[0] - p0[0]) * (p1[1] - p0[1]))
-            R = (np.linalg.norm(p1 - p0) * np.linalg.norm(p2 - p1) * np.linalg.norm(p2 - p0) / area2) if area2 > 1e-12 else 1e9
+            # Circumradius abc/(4A); area2 is twice the triangle area.
+            R = (np.linalg.norm(p1 - p0) * np.linalg.norm(p2 - p1) * np.linalg.norm(p2 - p0) / (2 * area2)) if area2 > 1e-12 else 1e9
             parts.append(dict(kind="skin_" + k, A=L * tsk, z=float(P[:, 1].mean()), side=side, b=L, t=tsk,
                               scr=flat + 0.3 * E * tsk / R, R=R, a=a))
     # webs

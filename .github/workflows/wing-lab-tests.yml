@@ -1,0 +1,28 @@
+name: Wing Lab regression tests
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+jobs:
+  browser-engines:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install DOM test dependency
+        run: npm install --prefix /tmp/wing-lab-tests jsdom@26
+      - name: Check generated page is current and run all regression suites
+        env:
+          MIE446_JSDOM_MODULE: /tmp/wing-lab-tests/node_modules/jsdom
+        run: |
+          python computational/printed-wing-solver/web/build_wing_lab.py
+          git diff --exit-code -- docs/wing-lab.html
+          for suite in computational/printed-wing-solver/web/test_*.mjs computational/printed-wing-solver/web/verify_engine.mjs; do
+            node "$suite"
+          done

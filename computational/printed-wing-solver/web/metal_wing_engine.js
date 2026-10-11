@@ -25,7 +25,7 @@
  */
 const MetalWingEngine = (() => {
   "use strict";
-  const VERSION = "1.0.0";
+  const VERSION = "1.0.1";
   const G0 = 9.80665;
 
   // ------------------------------------------------------------------ small numerics
@@ -503,7 +503,8 @@ const MetalWingEngine = (() => {
         const p0 = Pp[0], p1 = Pp[Pp.length >> 1], p2 = Pp[Pp.length - 1];
         const area2 = Math.abs((p1[0] - p0[0]) * (p2[1] - p0[1]) - (p2[0] - p0[0]) * (p1[1] - p0[1]));
         const d = (u, v) => Math.hypot(u[0] - v[0], u[1] - v[1]);
-        const R = area2 > 1e-12 ? (d(p1, p0) * d(p2, p1) * d(p2, p0)) / area2 : 1e9;
+        // Circumradius abc/(4A); area2 is twice the triangle area.
+        const R = area2 > 1e-12 ? (d(p1, p0) * d(p2, p1) * d(p2, p0)) / (2 * area2) : 1e9;
         const zm = Pp.reduce((q, p) => q + p[1], 0) / Pp.length;
         parts.push({ kind: k === "panel" ? 4 : 3, A: L * tsk, z: zm, b: L, t: tsk, scr: flat + (0.3 * E * tsk) / R, R, pitch, side, x0: a, x1: b, name: "skin_" + k });
       }
@@ -668,29 +669,54 @@ const MetalWingEngine = (() => {
   const PRESETS = { d520: D520 };
 
   function normalise(input = {}) {
+    const finiteNumbers = (value) => {
+      if (typeof value === "number" && !Number.isFinite(value)) throw new Error("Inputs must be finite numbers");
+      if (value && typeof value === "object") Object.values(value).forEach(finiteNumbers);
+    };
+    finiteNumbers(input); // Before JSON cloning can turn NaN/Infinity into null.
     const inp = { ...deepCopy(DEFAULT_INPUT), ...deepCopy(input) };
     inp.include = { ...DEFAULT_INPUT.include, ...(input.include || {}) };
     inp.scales = { ...DEFAULT_INPUT.scales, ...(input.scales || {}) };
-    const P = typeof inp.preset === "object" ? deepCopy(inp.preset) : deepCopy(PRESETS[inp.preset] || D520);
-    if (inp.mass > 0) P.aircraft.mass = inp.mass;
-    if (inp.CL > 0) P.aircraft.CL = inp.CL;
+    if (!inp.preset || (typeof inp.preset !== "object" && !PRESETS[inp.preset])) throw new Error("Unknown wing preset");
+    if (!["liftingLine", "schrenk", "elliptic"].includes(inp.distribution)) throw new Error("Unknown span-loading distribution");
+    if (!["fittings", "clamped"].includes(inp.support)) throw new Error("Unknown support condition");
+    if (!Number.isInteger(inp.stations) || inp.stations < 20 || inp.stations > 300) throw new Error("Use 20–300 integer analysis stations");
+    const P = typeof inp.preset === "object" ? deepCopy(inp.preset) : deepCopy(PRESETS[inp.preset]);
+    const designCL = P.aircraft.CL;
+    if (inp.mass != null) {
+      if (!(Number.isFinite(inp.mass) && inp.mass > 0)) throw new Error("Aircraft mass must be positive");
+      P.aircraft.mass = inp.mass;
+    }
+    if (inp.CL != null) {
+      if (!(Number.isFinite(inp.CL) && inp.CL > 0)) throw new Error("Reference CL must be positive");
+      P.aircraft.CL = inp.CL;
+    }
     if (input.material) P.material = { ...P.material, ...input.material };
     if (input.gauges) for (const k of ["skin", "web", "falseSpar"]) if (input.gauges[k]) P[k] = input.gauges[k].slice();
     if (input.boom) P.boom = { ...P.boom, ...input.boom };
-    if (input.fittingY > 0) P.fittingY = input.fittingY;
-    for (const [k, v] of Object.entries(inp.scales)) if (!(v > 0)) throw new Error(`Scale factor for ${k} must be positive`);
+    if (input.fittingY != null) {
+      if (!(input.fittingY > 0 && input.fittingY < P.ribs[0])) throw new Error("Fitting must be between the centreline and first rib");
+      P.fittingY = input.fittingY;
+    }
+    for (const [k, v] of Object.entries(inp.scales)) if (!(Number.isFinite(v) && v > 0)) throw new Error(`Scale factor for ${k} must be positive`);
     if (!(P.aircraft.mass > 0)) throw new Error("Aircraft mass must be positive");
-    if (!isFinite(inp.n) || inp.n === 0) throw new Error("Load factor must be a non-zero number");
+    if (!Number.isFinite(inp.n) || inp.n === 0) throw new Error("Load factor must be a non-zero number");
     if (!(P.material.E > 0 && P.material.nu > 0 && P.material.nu < 0.5)) throw new Error("Check the material card (E > 0, 0 < ν < 0.5)");
-    return { inp, P };
+    for (const k of ["E", "rho", "Fty", "Fcy", "Ftu", "Fsu", "epsU"]) if (!(Number.isFinite(P.material[k]) && P.material[k] > 0)) throw new Error(`Material ${k} must be positive`);
+    if (!Number.isFinite(P.material.nu)) throw new Error("Poisson's ratio must be a finite number");
+    if (!(P.material.Ftu > P.material.Fty && P.material.epsU > P.material.Fty / P.material.E)) throw new Error("Check tensile ultimate stress and rupture strain");
+    for (const k of ["skin", "web", "falseSpar"]) if (P[k].length !== P.zones.length || P[k].some((v) => !(Number.isFinite(v) && v > 0))) throw new Error(`Invalid ${k} gauge array`);
+    if (!(P.boom.rootWidth > 0 && P.boom.rootThickness > 0)) throw new Error("Boom dimensions must be positive");
+    return { inp, P, designCL };
   }
 
   // ------------------------------------------------------------------ main solve
   function solve(input = {}) {
     const t0 = Date.now();
-    const { inp, P } = normalise(input);
+    const { inp, P, designCL } = normalise(input);
     const W = makeWing(P), mat = P.material, n = inp.n;
-    const Z = boomZones(P, W);
+    // A load-case change must not silently redesign the physical spar.
+    const Z = boomZones({ ...P, aircraft: { ...P.aircraft, CL: designCL } }, W);
     const yTipStruct = P.ribs[P.ribs.length - 1];
     // analysis stations: uniform plus both sides of every gauge step, the fitting and every rib
     let st = linspace(0, yTipStruct, inp.stations);
@@ -770,7 +796,9 @@ const MetalWingEngine = (() => {
     stations.forEach((s, i) => { s.w = w[i]; s.wBend = wBend[i]; s.wShear = wShear[i]; s.twist = twist[i]; s.slope = slopeUse[i]; });
     const last = stations[stations.length - 1];
     const tipCap = W.b2 - last.y;
+    // tipTE is the legacy rear-box-node result, not a deformable trailing-edge flap.
     const tipSC = last.w, tipLE = last.w + last.twist * last.xsc * last.chord, tipTE = last.w - last.twist * (P.falseSparX - last.xsc) * last.chord;
+    const tipMax = [tipLE, tipTE, tipSC].reduce((a, b) => Math.abs(b) > Math.abs(a) ? b : a);
 
     // beam finite elements: same static answer (bending, no shear deformation) and the natural frequencies
     let fem = null;
@@ -838,7 +866,7 @@ const MetalWingEngine = (() => {
       row.skinCombined = combined;
       if (inp.collapse) {
         for (const [side, sgn] of [["pos", 1], ["neg", -1]]) {
-          const key = JSON.stringify([P.id, y, sgn, inp.scales, mat, P.skin, P.web, P.falseSpar, P.boom, P.stringer]);
+          const key = JSON.stringify([y, sgn, mat, parts]);
           if (!CAP_CACHE.has(key)) { if (CAP_CACHE.size > 400) CAP_CACHE.clear(); CAP_CACHE.set(key, capacity(parts, mat, sgn)); }
           const c = CAP_CACHE.get(key), f = (m) => (m == null ? null : m / Math.abs(M1g));
           row[side] = { n_skin_buckle: f(c.firstSkinBuckle), n_stringer_cripple: f(c.firstStringerCripple), n_boom_yield: f(c.firstBoomYield), n_collapse: f(c.Mmax), M_max: c.Mmax, curve: c.curve };
@@ -849,9 +877,9 @@ const MetalWingEngine = (() => {
     const crit = (fn) => { let best = null; for (const r of checks) { const v = fn(r); if (v != null && isFinite(v) && (!best || v < best.n)) best = { n: v, y: r.y }; } return best; };
     const nUlt = P.aircraft.nLimitPos * P.aircraft.safetyFactor, nUltNeg = Math.abs(P.aircraft.nLimitNeg) * P.aircraft.safetyFactor;
     const modesSummary = [
-      { key: "skinBuckle", name: "Skin panel buckles in compression (elastic, not failure)", pos: crit((r) => r.pos && r.pos.n_skin_buckle), neg: crit((r) => r.neg && r.neg.n_skin_buckle), kind: "stability", governs: false },
+      { key: "skinBuckle", name: "Predicted skin compression buckling onset", pos: crit((r) => r.pos && r.pos.n_skin_buckle), neg: crit((r) => r.neg && r.neg.n_skin_buckle), kind: "stability", governs: false },
       { key: "skinCombined", name: "Skin panel buckles under compression + shear", pos: crit((r) => r.skinCombined.pos), neg: crit((r) => r.skinCombined.neg), kind: "stability", governs: false },
-      { key: "webBuckle", name: "Spar web shear buckling (tension field follows)", pos: crit((r) => r.web.n_buckle), neg: crit((r) => r.web.n_buckle), kind: "stability", governs: false },
+      { key: "webBuckle", name: "Spar web shear buckling (post-buckling not solved)", pos: crit((r) => r.web.n_buckle), neg: crit((r) => r.web.n_buckle), kind: "stability", governs: false },
       { key: "stringer", name: "Blade stringer cripples", pos: crit((r) => r.pos && r.pos.n_stringer_cripple), neg: crit((r) => r.neg && r.neg.n_stringer_cripple), kind: "strength", governs: true },
       { key: "boomYield", name: "Spar boom first yield", pos: crit((r) => r.pos && r.pos.n_boom_yield), neg: crit((r) => r.neg && r.neg.n_boom_yield), kind: "strength", governs: true },
       { key: "webShear", name: "Spar web shear rupture (Fsu)", pos: crit((r) => r.web.n_ultimate), neg: crit((r) => r.web.n_ultimate), kind: "strength", governs: true },
@@ -879,7 +907,7 @@ const MetalWingEngine = (() => {
       perG: { V: (y) => at(Vd, y), M: (y) => at(Md, y), T: (y) => at(Td, y), lift: (y) => at(lift, y) },
       stations, sections: secs, sectionProps: props, ribs, masses, points,
       mass: { structuralHalf: structMass, shellsBoomsStringers: structLineMass, ribs: ribMass, nonStructuralHalf: nonStructural },
-      fitting, tip: { y: last.y, wSC: tipSC, wLE: tipLE, wTE: tipTE, wMax: Math.max(tipLE, tipTE, tipSC), w5: tipSC + last.slope * tipCap, twistDeg: (last.twist * 180) / Math.PI, twistDegNoTaper: (twistPlain[stations.length - 1] * 180) / Math.PI, wBendClamped: wBendClamped[stations.length - 1], wBendClamped5: wBendClamped[stations.length - 1] + slopeClamped[stations.length - 1] * tipCap, wBend: wBend[stations.length - 1], wShear: wShear[stations.length - 1] },
+      fitting, tip: { y: last.y, wSC: tipSC, wLE: tipLE, wTE: tipTE, wRearBox: tipTE, wMax: tipMax, w5: tipSC + last.slope * tipCap, twistDeg: (last.twist * 180) / Math.PI, twistDegNoTaper: (twistPlain[stations.length - 1] * 180) / Math.PI, wBendClamped: wBendClamped[stations.length - 1], wBendClamped5: wBendClamped[stations.length - 1] + slopeClamped[stations.length - 1] * tipCap, wBend: wBend[stations.length - 1], wShear: wShear[stations.length - 1] },
       fem, checks, failure: modesSummary, nUlt, nUltNeg, verification, ms: Date.now() - t0,
     };
   }

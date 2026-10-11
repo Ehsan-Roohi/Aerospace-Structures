@@ -2,7 +2,9 @@
 
 October 2026 · MIE 446 Aerospace Structures, UMass Amherst · [D.520 project home](../README.md) · [Wing Lab version](https://ehsan-roohi.github.io/Aerospace-Structures/wing-lab.html#d520)
 
-Rebuilt from the 1940 manual, the D.520 wing carries the 6 g limit load without yielding and collapses at about 19 g. Its thin leading-edge skin buckles elastically from about 2 g, the stringers start to cripple near 8.5 g (just under a 9 g ultimate load) and the spar booms yield near 17 g. The collapse figure rests mostly on the spar-boom size, scaled from a small drawing; with booms 40 % smaller it falls to about 14 g, still well above a 9 g ultimate load. The manual gives the wing's layout and material but no sheet gauges, weights or load factors, so those are labelled assumptions below.
+This is an **educational reconstruction**, not a verified strength assessment of the historical D.520. The 1940 manual supplies layout and material descriptions, but not the sheet gauges, exact alloy/temper, certified allowables, gross mass or load requirements used here. Linear stresses, local buckling and approximate post-buckling section capacities are separate predictions, not proof of airworthiness. The supplied shell results have not been re-solved for this publication; comparisons check consistency against those archived results.
+
+The assumed baseline gives stringer crippling near 8.5 g, below the assumed 9 g ultimate requirement. A much higher section moment peak (roughly 19 g) **does not erase that failing check**, and it does not establish the collapse load of the whole aircraft. Boom dimensions scaled from a small drawing dominate that estimate. Live Wing Lab values incorporate the corrected circumradius formula described below.
 
 This folder holds the CAD for SolidWorks and the ready-to-run ANSYS, NASTRAN and CalculiX models used here.
 
@@ -68,7 +70,7 @@ The starboard half-wing is modelled in shells: 41,066 elements in the reference 
 
 ## Stresses at the 6 g limit load
 
-If nothing buckled, the highest stress at 6 g would be 133 MPa, in the spar web at the centre joint (where the real wing has doubled webs and steel splice plates, Pl.4), against a 220 MPa yield: a reserve factor of 1.66. The same linear model at the 9 g ultimate load stays below the 380 MPa tensile strength everywhere, with a reserve of 1.9. The skin does buckle well before 6 g (next section), so these numbers hold for the spars, booms and ribs but overstate what the skins carry above about 2 g.
+In the archived linear shell calculation, the highest reported stress at the assumed 6 g case is 133 MPa, against the assumed 220 MPa yield. The 9 g comparison with 380 MPa tensile strength is only a screening ratio: a tensile ultimate value applied to equivalent stress cannot establish combined-stress rupture, compression strength or post-buckling safety. Once skin buckles, load redistribution also changes stresses in spars, booms and ribs. These linear results should therefore be read alongside, not substituted for, the stability and strength checks.
 
 ![Upper surface at 6 g, seen from above: leading edge up, root at left](figures/fig_vm_upper.png)
 
@@ -94,7 +96,7 @@ Reserve factors use the higher stress (with bending) against 220 MPa yield and 3
 
 ## Buckling
 
-The leading-edge skin is the first part to buckle, at about 2 g in either direction, between the ribs and ahead of the spar. Under positive g it buckles in the upper surface just outboard of rib 16, where the dihedral breaks. Under negative g it buckles in the lower surface beside the wheel well. These buckles are elastic: the skin springs back when the load comes off and the spars and stringers keep carrying it, as in other stressed-skin fighters of 1940. The manual's after-flight check says the same thing from the other side: "a wrinkle in the sheet metal indicates a permanent deformation and calls for a thorough check" (printed p47).
+The archived linear eigenbuckling modes localize in the leading-edge skin, ahead of the spar. Under positive g the illustrated mode is in the upper surface outboard of rib 16; under negative g it is in the lower surface near the wheel well. Eigenbuckling predicts instability of an ideal elastic model, **not** elastic recovery, allowable wrinkling in service or the subsequent collapse load. The manual calls for inspection of permanent sheet-metal wrinkles (printed p47); this is not permission to operate above a computed buckling threshold.
 
 ![First buckling mode under positive g: upper leading-edge skin outboard of rib 16 (deflection exaggerated)](figures/fig_mode_pos.png)
 
@@ -130,7 +132,11 @@ The boom size decides the answer. It is scaled from a section drawn a few centim
 | Skin 25 % thicker | 9.4 | 18.8 | 21.0 | 20.9 |
 | Stringers 50 % thicker | 17.9 | 17.9 | 19.9 | 19.8 |
 
-Even with booms 40 % smaller than drawn, the wing clears the assumed 9 g ultimate load by a wide margin. The guessed 1.0 mm stringers cripple first in every case; at 1.5 mm they hold until the booms yield.
+The section moment peak exceeds the assumed 9 g demand in these archived cases, but the baseline and smaller-boom cases do **not** pass every strength check: the guessed thin stringers cripple below that demand. Neither the effective-width approximation nor the stalled nonlinear shell run validates whole-wing collapse or joint strength.
+
+### Correction and reproducibility
+
+The original bundle used twice the geometric circumradius in its curved-skin approximation. Both `collapse.py` and the browser engine now use R = abc/(4A), where A is the area of the triangle formed by three panel points. The baseline Python collapse data and browser reference JSON have been regenerated. Figures and sensitivity tables above are retained as **archived pre-correction results**, not updated live predictions. Use Wing Lab for the corrected baseline, or rerun the supplied pipeline for revised sensitivity curves. Curvature additions, the blade-stringer crippling multiplier and effective-width laws remain approximate and require experimental or independently validated nonlinear checks.
 
 ## Limits of this analysis
 

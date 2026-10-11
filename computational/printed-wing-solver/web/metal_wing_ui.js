@@ -14,7 +14,7 @@
   const MPa = (v, d = 1) => nf(v / 1e6, d);
   const frame = () => new Promise((r) => setTimeout(r, 30));
   const REPO = "https://github.com/Ehsan-Roohi/Aerospace-Structures/tree/main/computational/d520-wing";
-  const MODEL3D = /github\.io$/.test(location.hostname) ? "./d520/index.html" : "https://ehsan-roohi.github.io/Aerospace-Structures/d520/";
+  const MODEL3D = location.protocol === "file:" ? "https://ehsan-roohi.github.io/Aerospace-Structures/d520/" : "./d520/index.html";
 
   // ------------------------------------------------------------------ styles
   const style = document.createElement("style");
@@ -125,25 +125,26 @@
     selected: "aircraft", plot: "sigma", show: "all", deformed: true, scale: 1, mirror: false, arrows: true, clip: false, clipY: 2.35,
     secY: 2.35, secField: "sigma", tab: "start", mode: { kind: "bending", index: 0 },
   };
-  let R = null, R1 = null, running = false, pending = false, stale = true, opened = false, timer = null;
+  let R = null, R1 = null, running = false, pending = false, stale = true, opened = false, timer = null, lastError = null;
 
   // ------------------------------------------------------------------ run control
   function setStatus(text, kind) {
     const chip = $("#mChip"), t = $("#mStateText");
     $("#mRun").classList.toggle("stale", stale && !running);
     if (running) { chip.className = "chip idle"; chip.textContent = "Solving"; t.textContent = text || "Running"; return; }
+    if (lastError) { chip.className = "chip bad"; chip.textContent = "Input error"; t.textContent = lastError; return; }
     if (stale) { chip.className = "chip warn"; chip.textContent = "Out of date"; t.textContent = "Inputs changed — run the study"; return; }
     if (!R) return;
     const g = governing(R);
-    const ok = g && g.n >= R.nUlt;
+    const ok = g && g.ratio >= 1;
     chip.className = "chip " + (kind || (ok ? "ok" : "bad"));
-    chip.textContent = ok ? `Strength ≥ ${nf(R.nUlt, 1)} g ultimate` : "Below ultimate";
+    chip.textContent = ok ? "Model checks meet assumed ultimate" : "Below assumed ultimate";
     t.textContent = text || (g ? `Weakest: ${g.name.toLowerCase()} at ${nf(g.n, 1)} g (y = ${nf(g.y, 2)} m)` : "");
   }
   function changed() { stale = true; setStatus(); renderTree(); clearTimeout(timer); timer = setTimeout(runStudy, 500); }
   async function runStudy() {
     if (running) { pending = true; return; }
-    running = true; stale = false; setStatus();
+    running = true; stale = false; lastError = null; setStatus();
     const ld = $("#mLoading"), t0 = performance.now();
     try {
       const first = !R;
@@ -153,7 +154,8 @@
       await frame();
       const quick = E.solve({ ...MS.input, collapse: false });
       R = quick;
-      if (first || !modelBuilt) buildModel(R); else updateModel();
+      // Gauges and boom dimensions change geometry as well as stresses.
+      buildModel(R);
       $("#mLoadStep").textContent = "Post-buckling strength of 37 sections (effective width) · beam modes"; $("#mLoadBar").style.width = "55%";
       await frame();
       R = E.solve({ ...MS.input, collapse: true });
@@ -161,7 +163,7 @@
       $("#mLoadBar").style.width = "100%";
       updateModel(); renderAll();
       $("#mFoot").textContent = `Solved in ${((performance.now() - t0) / 1000).toFixed(2)} s · ${R.stations.length} thin-walled sections × ${R.sections[0].walls.length} walls · lifting line N = 60 · beam FE ${R.fem ? R.fem.y.length - 1 : 0} elements · ${R.checks.length} strength sections`;
-    } catch (err) { stale = true; console.error(err); $("#mChip").className = "chip bad"; $("#mChip").textContent = "Input error"; $("#mStateText").textContent = err.message || String(err); }
+    } catch (err) { stale = true; lastError = err.message || String(err); console.error(err); }
     finally { ld.hidden = true; running = false; setStatus(); renderTree(); if (pending) { pending = false; runStudy(); } }
   }
   function governing(r) {
@@ -193,7 +195,11 @@
   }
   function numField(id, label, hint, value, step, onSet) {
     const w = el("div", { class: "field" }, `<label for="${id}">${label}${hint ? `<small>${hint}</small>` : ""}</label><input id="${id}" type="number" step="${step}" value="${value}">`);
-    w.querySelector("input").addEventListener("change", (e) => { const v = parseFloat(e.target.value); if (isFinite(v)) { onSet(v); changed(); renderTree(); } });
+    w.querySelector("input").addEventListener("change", (e) => {
+      const v = Number(e.target.value);
+      if (!e.target.value.trim() || !Number.isFinite(v)) { stale = true; lastError = `${label}: enter a finite number`; setStatus(); return; }
+      onSet(v); changed(); renderTree();
+    });
     return w;
   }
   function selField(id, label, options, value, onSet) {
@@ -212,7 +218,7 @@
       head("Aircraft and load case", "Lift = n W, shaped along the span by the chosen method. Inertia relief subtracts n × (structure + fuel + guns + ammunition) weight at the right span and chord positions.");
       pm.append(fs("Flight condition",
         numField("mMass", "Gross mass", "kg (Wikipedia 2 677; manual leaves it blank)", i.mass, 10, (v) => (i.mass = v)),
-        numField("mN", "Load factor n", "g; limit +6 / −3 (CS-23 aerobatic, assumed)", i.n, 0.5, (v) => { if (v === 0) return; i.n = v; syncN(); }),
+        numField("mN", "Load factor n", "g; teaching limits +6 / −3, not a D.520 certification", i.n, 0.5, (v) => { i.n = v; syncN(); }),
         numField("mCL", "Wing CL for the lifting line", "only shapes the small camber part", i.CL, 0.1, (v) => (i.CL = v)),
         selField("mDist", "Spanwise lift shape", [["liftingLine", "Lifting line (Glauert, real planform)"], ["schrenk", "Schrenk"], ["elliptic", "Elliptic"]], i.distribution, (v) => (i.distribution = v))));
       const inc = el("fieldset", {}, "<legend>Inertia relief</legend>");
@@ -226,7 +232,7 @@
       if (R) pm.append(kv([["Weight W", `${nf(R.W / 1e3, 2)} kN`], ["Half-wing lift at n", `${nf((R.W / 2) * R.n / 1e3, 2)} kN`], ["Angle of attack (lifting line)", R.alphaDeg != null ? `${nf(R.alphaDeg, 1)}° at CL ${nf(i.CL, 2)}` : "–"], ["Wing area", `${nf(R.wingArea, 2)} m²`], ["Half-wing structure", `${nf(R.mass.structuralHalf, 1)} kg`], ["Non-structural, half wing", `${nf(R.mass.nonStructuralHalf, 1)} kg`]]));
     } else if (id === "material") {
       $("#mPmHead").textContent = "Material";
-      head("2017-T4 duralumin (AU4G)", "The manual says every wing part is duralumin except the steel fittings. Minimum handbook values; replace them to study another alloy.");
+      head("Assumed 2017-T4 duralumin analogue", "The manual says duralumin, not a certified alloy/temper or allowable. These representative properties are teaching assumptions; replace them to study another alloy.");
       const m = i.material;
       pm.append(fs("Card", numField("mE", "Young's modulus E", "GPa", m.E / 1e9, 1, (v) => (m.E = v * 1e9)), numField("mNu", "Poisson's ratio ν", "", m.nu, 0.01, (v) => (m.nu = v)), numField("mRho", "Density", "kg/m³", m.rho, 10, (v) => (m.rho = v)),
         numField("mFty", "Tensile yield Fty", "MPa", m.Fty / 1e6, 5, (v) => (m.Fty = v * 1e6)), numField("mFcy", "Compressive yield Fcy", "MPa", m.Fcy / 1e6, 5, (v) => (m.Fcy = v * 1e6)), numField("mFtu", "Tensile strength Ftu", "MPa", m.Ftu / 1e6, 5, (v) => (m.Ftu = v * 1e6)), numField("mFsu", "Shear strength Fsu", "MPa", m.Fsu / 1e6, 5, (v) => (m.Fsu = v * 1e6))));
@@ -628,6 +634,7 @@
     const sk = r.failure.find((f) => f.key === "skinBuckle");
     $("#mtab-start").innerHTML = `<div class="mw-grid2"><article class="mw-story">
       <h2>From a printed wing to a real one: the Dewoitine D.520 (1940)</h2>
+      <p class="callout"><b>Educational reconstruction, not an airworthiness assessment.</b> Geometry is manual-derived; gauges, boom taper, material allowables, gross mass and load requirements are assumed. Agreement with a supplied shell-model dataset checks consistency, not the strength of a surviving or historical aircraft.</p>
       <p>The D.520 was the best French fighter of 1940. Its wing is a classic <b>stressed-skin</b> metal structure: one I-section main spar at 37 % chord with heavy duralumin booms, a light false spar at 73 % carrying the flaps and ailerons, 22 pressed ribs, a smooth duralumin skin and blade stringers. Every dimension here comes from the scanned 1940 manual (<i>Notice descriptive</i>) or is labelled as an assumption in <b>Method &amp; sources</b>.</p>
       <p>This workspace uses the same chain of reasoning as the printed-wing lab, at full scale: <b>loads → shear, bending moment and torque → section properties → stresses → deflection and twist → stability and strength</b>. What is new is the thin-walled analysis of a real two-cell box (leading-edge nose cell + spar box), a tapered spar whose inclined booms carry part of the shear, skin buckling and the post-buckling strength that let 1940s designers use skins that wrinkle in flight.</p>
       <h3>Try this</h3>
@@ -646,7 +653,7 @@
       </div>
       <div class="callout"><h3>Verdict at the assumed requirement</h3>
         <p>${g ? `The weakest strength mode is <b>${g.name.toLowerCase()}</b> at <b>${nf(g.n, 1)} g</b> (${g.side === "pos" ? "positive" : "negative"} g, y = ${nf(g.y, 2)} m) against an ultimate requirement of ${nf(g.need, 1)} g: margin of safety ${sgn(g.n / g.need - 1, 2)}.` : ""}</p>
-        <p>The leading-edge skin between ribs has no stringers and buckles elastically early: at <b>${nf(sk.pos.n, 2)} g</b> by the simple panel formulas (y = ${nf(sk.pos.y, 2)} m), at about 2–3 g in the shell model, whose estimate was still falling with mesh refinement. Stressed-skin wings of the period were designed for this; the effective-width analysis carries the load past it.</p>
+        <p>The leading-edge skin between ribs has no stringers. The simplified panel model predicts buckling at <b>${nf(sk.pos.n, 2)} g</b> (y = ${nf(sk.pos.y, 2)} m). The supplied shell eigenvalue estimate falls toward 2–3 g with refinement and is not converged. Some structures retain post-buckling capacity, but this does not prove elastic recovery or acceptable operation of this aircraft. Our effective-width calculation is an approximate section model.</p>
         <p>First bending frequency ${r.fem ? nf(r.fem.fBending[0], 1) : "–"} Hz, first torsion ${r.fem ? nf(r.fem.fTorsion[0], 0) : "–"} Hz (fuselage held fixed).</p>
         <p class="note">The load factors and gross mass are assumptions (the manual gives neither). All results scale linearly with n except the strength modes, which are reported as the load factor at which each happens.</p></div>
     </div></div>`;
@@ -728,11 +735,11 @@
     const fe = REF ? REF.fe : null;
     $("#mtab-strength").innerHTML = `<div class="mw-grid2"><div>
       <div class="mw-check head"><div>Failure or stability mode</div><div class="num">+g at n</div><div class="num">−g at n</div><div class="num hide-s">where (+g)</div><div class="num hide-s">MS vs ${nf(r.nUlt, 0)} g</div></div>${rows}
-      <p class="note">Load factor at which each event first happens anywhere on the span (positive and negative g). Margin of safety MS = n/n<sub>ult</sub> − 1 against the assumed ultimate ${nf(r.nUlt, 1)} g / −${nf(r.nUltNeg, 1)} g. ${fe ? `The shell model's first linear buckling eigenvalue is ${nf(fe.buckle_pos[0], 2)} g (positive) and −${nf(Math.abs(fe.buckle_neg[0]), 2)} g (negative), and it was still falling with mesh refinement (${fe.convergence.map((q) => q.buckle_pos ? nf(q.buckle_pos, 1) : null).filter(Boolean).join(" → ")}), so it is an upper estimate. The simply supported panel formulas here ignore the fuel tank and the rib beads that stiffened the real leading edge, so they are a lower estimate: the first skin buckle lies between the two.` : ""}</p></div>
-      <div class="callout"><h3>Why a wing whose skin buckles at 1 g is still safe</h3>
+      <p class="note">Predicted event load factors in this assumed model (+g / −g). Margin of safety MS = n/n<sub>ult</sub> − 1 against assumed demands ${nf(r.nUlt, 1)} g / −${nf(r.nUltNeg, 1)} g. ${fe ? `The archived shell eigenvalues are ${nf(fe.buckle_pos[0], 2)} g and −${nf(Math.abs(fe.buckle_neg[0]), 2)} g; they decrease with refinement (${fe.convergence.map((q) => q.buckle_pos ? nf(q.buckle_pos, 1) : null).filter(Boolean).join(" → ")}) and are not converged. Simplified panel predictions and shell predictions are not rigorous bounds on the real wing.` : ""}</p></div>
+      <div class="callout"><h3>Buckling onset is not the same as collapse</h3>
       <p>Thin skins between ribs and stringers buckle elastically at low stress. After buckling a panel keeps carrying load next to its stiffeners (von Kármán effective width w<sub>e</sub> = 1.9 t √(E/σ)), so the booms, stringers and the strips of skin beside them take over. The section fails when stringers cripple and the booms yield: that is the collapse moment found by stepping the curvature of each section until the moment peaks.</p>
       <div class="mw-eq">σ<sub>cr</sub> = k π²E/12(1−ν²) (t/b)² + 0.3 E t/R &nbsp;·&nbsp; τ<sub>cr</sub> = (5.35 + 4 (b/a)²) π²E/12(1−ν²) (t/b)²<br>n σ₁/σ<sub>cr</sub> + (n τ₁/τ<sub>cr</sub>)² = 1 &nbsp;·&nbsp; σ<sub>cc, blade</sub> = 1.3 × 0.43 π²E/12(1−ν²) (t/h)²</div>
-      <p class="note">Spar-web shear buckling is not failure either: a buckled web carries shear as a diagonal tension field (Wagner beam) until the web or its rivets fail. Fittings, rivets and the steel fishplates are not modelled.</p></div></div>
+      <p class="note">Post-buckling strength requires a validated load path, adequate stiffeners and connections. Tension-field action is not solved here; do not assume a buckled web is safe. The curvature correction and stringer multiplier are approximate. Fittings, rivets and the steel fishplates are not modelled; first crippling below the assumed ultimate requirement remains a failing check even if the section moment peak is higher.</p></div></div>
       <div class="charts" style="margin-top:12px">${chart("Load factor at each event (positive g)", "g", [{ name: "collapse", x: y, y: c.map((q) => q.pos && q.pos.n_collapse) }, { name: "boom yield", x: y, y: c.map((q) => q.pos && q.pos.n_boom_yield), dash: "5 4" }, { name: "stringer crippling", x: y, y: c.map((q) => q.pos && q.pos.n_stringer_cripple) }, { name: "web shear buckling", x: y, y: c.map((q) => q.web.n_buckle), dash: "2 3" }, { name: "skin buckling", x: y, y: c.map((q) => q.skinCombined.pos) }], { ymax: 40, hlines: [{ y: r.nUlt, label: "ultimate" }, { y: P.aircraft.nLimitPos, label: "limit" }] })}
       ${crit ? chart(`Moment–curvature at y = ${nf(crit.y, 2)} m`, "load factor", [{ name: "section response", x: curve.map((p) => p[0] * 1e3), y: curve.map((p) => p[1] / Math.abs(crit.M_per_g)) }], { xlabel: "curvature (1/km)", hlines: [{ y: crit.pos.n_stringer_cripple, label: "stringers cripple" }, { y: crit.pos.n_boom_yield, label: "boom yields" }] }) : ""}
       ${chart("Skin panel buckling (compression + shear)", "g", [{ name: "+g", x: y, y: c.map((q) => q.skinCombined.pos) }, { name: "−g", x: y, y: c.map((q) => q.skinCombined.neg), dash: "5 4" }], { ymax: 4, hlines: [{ y: 1, label: "1 g" }] })}</div>`;
@@ -792,6 +799,7 @@
     $("#mtab-method").innerHTML = `<div class="mw-grid2"><article class="mw-story">
       <h2>Method</h2>
       <h3>1. Span loading</h3><p>Glauert's lifting line, symmetric terms, N = 60, on the real planform (linear taper to y = 4.687 m, then the elliptic tip cap) with the section lift slope 0.9 × 2π and the zero-lift angle blended from 0 at rib 21 to −1.2° (NACA 230) at the tip. The lift is scaled to n W.</p>
+      <p class="note">CL and the displayed angle of attack define a reference load shape in linear attached-flow theory, not a stall prediction or a trimmed flight condition. Negative n reverses that prescribed shape; it does not solve a new negative-angle aerodynamic polar. The spar-cap taper is held fixed when CL changes.</p>
       <div class="mw-eq">Σ A<sub>n</sub> sin nθ (μ n + sin θ) = μ (α − α₀) sin θ, &nbsp; μ = a₀c/4b</div>
       <h3>2. Shear, moment, torque</h3><p>Integrated from the tip, with inertia relief from the structural line mass (computed from the sections), the ribs, fuel, guns and ammunition at their span and chord positions. The fittings at y = ${P.fittingY} m react the half-wing load.</p>
       <h3>3. Thin-walled section (every station)</h3><p>Upper and lower skins from the leading edge to the false spar, the spar web and the false-spar web are ${R.sections[20].walls.length} straight walls. Spar caps, blade stringers, and the skin and webs (by the linear-stress rule) are lumped as booms at the wall junctions. Bending stresses use the unsymmetric formula; shear flows come from boom equilibrium and are closed by the compatibility of the two cells:</p>
@@ -820,7 +828,7 @@
     for (const q of f) L.push(`  ${q.name.padEnd(56)} ${q.pos ? nf(q.pos.n, 2).padStart(6) : "     –"} / ${q.neg ? ("−" + nf(q.neg.n, 2)).padStart(7) : "      –"}   y = ${q.pos ? nf(q.pos.y, 2) : "–"} m`);
     if (g) L.push("", `GOVERNING: ${g.name} at ${nf(g.n, 2)} g (${g.side === "pos" ? "+g" : "−g"}), required ${nf(g.need, 1)} g, MS ${sgn(g.n / g.need - 1, 2)}`);
     if (REF) L.push("", `CHECK (1 g): tip deflection Wing Lab ${nf((R1 || r).tip.wMax * 1e3, 2)} mm vs CalculiX shell ${nf(REF.fe.tip_mm_1g, 2)} mm; collapse ${nf((R1 || r).failure.find((q) => q.key === "collapse").pos.n, 2)} g vs Python ${nf(REF.collapse.summary.pos.n_collapse[0], 2)} g`);
-    L.push("", "Beam theory on thin-walled sections; not a 3-D finite-element result. Gauges, load factors and gross mass are assumptions (see Method & sources).");
+    L.push("", "Educational reconstruction; not an airworthiness assessment. Beam theory on thin-walled sections, not a 3-D finite-element result. Gauges, boom taper, material allowables, load factors and gross mass are assumptions. Approximate section collapse does not validate whole-wing collapse, joints, post-buckling safety or flutter (see Method & sources).");
     return L.join("\n");
   }
   function renderReport() {
@@ -828,7 +836,8 @@
     $("#mReport").value = reportText();
     $("#mCopy").addEventListener("click", async () => { try { await navigator.clipboard.writeText($("#mReport").value); $("#mCopyState").textContent = "Copied."; } catch { $("#mReport").select(); $("#mCopyState").textContent = "Select-all done; press Ctrl/Cmd+C."; } });
     $("#mJson").addEventListener("click", () => {
-      const r = R, out = { input: MS.input, engine: E.VERSION, n: r.n, mass: r.mass, fitting: r.fitting, tip: r.tip, failure: r.failure, frequencies: r.fem && { bending: r.fem.fBending, torsion: r.fem.fTorsion }, stations: r.stations.map((s) => ({ y: s.y, V: s.V, M: s.M, T: s.T, Vw: s.Vw, EI: s.EI, GJ: s.GJ, xsc: s.xsc, boomU: s.boomU, boomL: s.boomL, tauWeb: s.tauWeb, w: s.w, twist: s.twist })) };
+      if (stale || running) { $("#mCopyState").textContent = "Correct the inputs and run the study before exporting."; return; }
+      const r = R, out = { input: r.input, engine: E.VERSION, n: r.n, mass: r.mass, fitting: r.fitting, tip: r.tip, failure: r.failure, frequencies: r.fem && { bending: r.fem.fBending, torsion: r.fem.fTorsion }, stations: r.stations.map((s) => ({ y: s.y, V: s.V, M: s.M, T: s.T, Vw: s.Vw, EI: s.EI, GJ: s.GJ, xsc: s.xsc, boomU: s.boomU, boomL: s.boomL, tauWeb: s.tauWeb, w: s.w, twist: s.twist })) };
       const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([JSON.stringify(out, null, 1)], { type: "application/json" })); a.download = "D520-wing-lab-results.json"; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
     });
   }

@@ -179,12 +179,12 @@
   function treeModel() {
     const i = MS.input;
     return [
-      { id: "aircraft", c: "var(--load)", b: "Aircraft & load case", i: `${nf(i.mass, 0)} kg · n = ${sgn(i.n, 1)} g` },
+      { id: "aircraft", c: "var(--load)", b: "Aircraft & load case", i: i.customLoads!=null?`${i.customLoads.length} custom loads · multiplier ×${sgn(i.n,1)}`:`${nf(i.mass, 0)} kg · n = ${sgn(i.n, 1)} g` },
       { id: "material", c: "var(--muted)", b: "Material", i: `${i.material.name || "duralumin"} · E ${nf(i.material.E / 1e9, 0)} GPa` },
       { id: "structure", c: "var(--accent)", b: "Structure & gauges", i: `skin ×${i.scales.skin} · webs ×${i.scales.web} · booms ×${i.scales.boom}` },
       { id: "supports", c: "var(--fixture)", b: "Supports", i: i.support === "clamped" ? "Clamped at fittings" : "Fittings + centre section" },
       { id: "solver", c: "var(--muted)", b: "Model & solver", i: R ? `${R.stations.length} sections · ${R.checks.length} strength stations` : "–" },
-      { id: "results", c: "var(--warn)", b: "Results", i: R ? `tip ${nf(R.tip.wMax * 1e3, 1)} mm at ${sgn(R.n, 1)} g` : "–" },
+      { id: "results", c: "var(--warn)", b: "Results", i: R ? `tip ${nf(R.tip.wMax * 1e3, 1)} mm at ${sgn(R.n, 1)} ${R.input.customLoads!=null?'× reference':'g'}` : "–" },
     ];
   }
   function renderTree() {

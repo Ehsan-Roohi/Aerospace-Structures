@@ -94,9 +94,31 @@ c.$('#stripPressure').value='120';c.$('#localForm').dispatchEvent(new wingDOM.wi
 await c.$('#compareNoRibs').onclick();
 assert.match(c.$('#ribDelta').textContent,/Root EI/);
 c.renderWingLoads();
+assert.equal(c.$('#wingB').disabled,true,'Point force hides distributed end');
+assert.equal(c.$('#wingQ0').closest('.field').hidden,true);
 c.$('#wingKind').value='trapezoid';c.$('#wingA').value='40';c.$('#wingB').value='400';
 c.$('#wingLoadForm').dispatchEvent(new wingDOM.window.Event('submit',{bubbles:true,cancelable:true}));
 assert.equal(c.S.load.kind,'custom');assert.equal(c.S.load.items.length,1);assert.equal(c.changeCount,1);
+// All printed presets use the same load editor, independent of reinforcement.
+for(const stage of ['shell','rods','ribs','project']) {
+  const project=stage==='project';
+  c.R=E.solve({geometry:{modules:project?3:1,rodFractions:stage==='shell'?[]:[.3,.6],customInteriorRibs:stage==='ribs'?[112.5,146,154,225,296,304,337.5]:[]},assembly:{seamsBonded:true},load:{kind:'tip',tipForce:2}});
+  c.S.geometry=c.R.geometry;c.S.load=c.R.load;
+  for(const shape of ['point','rectangle','triangle','triangleDown','trapezoid']) {
+    c.renderWingLoads();c.$('#wingKind').value=shape;
+    c.$('#wingKind').dispatchEvent(new wingDOM.window.Event('change'));
+    assert.equal(c.$('#wingP').disabled,shape!=='point');
+    assert.equal(c.$('#wingB').disabled,shape==='point');
+    c.$('#wingA').value='40';c.$('#wingB').value='400';c.$('#wingP').value='-2';
+    c.$('#wingQ0').value='.004';c.$('#wingQ1').value='.008';
+    c.$('#wingLoadForm').dispatchEvent(new wingDOM.window.Event('submit',{bubbles:true,cancelable:true}));
+    const load=c.S.load.items.at(-1);
+    if(shape==='point')assert.equal(load.force,-2);
+    else {assert.equal(load.qStart,shape==='triangle'?0:.004);assert.equal(load.qEnd,shape==='triangleDown'?0:shape==='rectangle'?.004:.008);}
+    const solved=E.solve(c.engineInput());assert.ok(Number.isFinite(solved.M[0]));
+  }
+  assert.equal(c.S.load.items.length,5,'Loads are superposed, not overwritten');
+}
 c.R=E.solve({geometry:{modules:1,customInteriorRibs:[],rodFractions:[]},assembly:{seamsBonded:true},load:{kind:'tip',tipForce:2}});
 c.S.geometry=c.R.geometry;c.$('#app').dataset.lessonStage='shell';c.renderMemberLesson();
 assert.match(c.$('#memberLesson').textContent,/No rods in this model/);

@@ -71,8 +71,8 @@ button, input, select { font: inherit; color: inherit; }
   display: grid;
   gap: 10px;
   grid-template-columns: 238px minmax(0, 1fr) 312px;
-  grid-template-rows: auto minmax(440px, 1fr) minmax(390px, 40%);
-  grid-template-areas: "bar bar bar" "tree view pm" "dock dock dock";
+  grid-template-rows: auto auto minmax(440px, 1fr) minmax(390px, 40%);
+  grid-template-areas: "bar bar bar" "loads loads loads" "tree view pm" "dock dock dock";
 }
 .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; min-width: 0; min-height: 0; }
 
@@ -236,14 +236,14 @@ td.num { font-family: var(--font-data); font-variant-numeric: tabular-nums; text
 .anatomy-labels { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
 .rib-label { position: absolute; transform: translate(-50%, -100%); background: #ffcc4d; color: #17202c; font: 700 12px var(--font-label); padding: 2px 5px; border: 1px solid #17202c; border-radius: 4px; }
 .guide-note { font-size: 13px; color: var(--muted); margin: 6px 0; }
-#app.learning-view { height: auto; min-height: 0; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto 520px auto; grid-template-areas: "bar" "view" "dock"; }
+#app.learning-view { height: auto; min-height: 0; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto 520px auto; grid-template-areas: "bar" "loads" "view" "dock"; }
 #app.learning-view > .tree, #app.learning-view > .pm { display: none; }
 #app.learning-view .dock, #app.learning-view .tabpanel { overflow: visible; }
 @media (max-width: 760px) { .learn-layout { grid-template-columns: minmax(0, 1fr); } }
 
 @media (max-width: 1180px) { #app { grid-template-columns: 210px minmax(0, 1fr) 280px; } .charts { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 1100px) {
-  #app { height: auto; grid-template-columns: minmax(0, 1fr); grid-template-rows: none; grid-template-areas: "bar" "view" "pm" "dock" "tree"; }
+  #app { height: auto; grid-template-columns: minmax(0, 1fr); grid-template-rows: none; grid-template-areas: "bar" "loads" "view" "pm" "dock" "tree"; }
   .view { height: 62vh; min-height: 340px; }
   .tree ul { max-height: 360px; }
   .checks, .secwrap, .predict { grid-template-columns: minmax(0, 1fr); }
@@ -274,7 +274,7 @@ body { margin: 0; }
 .hud summary { display: none; cursor: pointer; padding: 8px; font-weight: 600; }
 @media(max-width:560px) {
   #app { padding: 8px; }
-  #app.learning-view { grid-template-rows: auto 470px auto; }
+  #app.learning-view { grid-template-rows: auto auto 470px auto; }
   .learn-layout, #localForm { grid-template-columns: minmax(0,1fr); }
   .view .hud { top: auto; bottom: 12px; left: 8px; right: 8px; display: block; max-height: 170px; overflow: auto; background: var(--panel); }
   .hud summary { display: block; }
@@ -307,6 +307,7 @@ body { margin: 0; }
     <div class="group"><span>Study</span>
       <div class="row">
         <button class="run" id="runBtn" type="button"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M4 2 L14 8 L4 14 Z" fill="currentColor"/></svg>Run study</button>
+        <button class="btn" id="wingLoadBtn" type="button">Apply wing loads</button>
       </div>
     </div>
     <div class="group"><span>Results</span>
@@ -327,6 +328,16 @@ body { margin: 0; }
     <ul id="tree"></ul>
   </aside>
 
+  <section class="panel" style="grid-area:loads;padding:12px 18px" aria-label="Wing load shortcuts">
+    <div class="lesson-actions"><b>Apply loads to this wing:</b>
+      <button class="btn" type="button" data-wing-load-shape="point">Point force</button>
+      <button class="btn" type="button" data-wing-load-shape="rectangle">Uniform</button>
+      <button class="btn" type="button" data-wing-load-shape="triangle">Triangle ↑</button>
+      <button class="btn" type="button" data-wing-load-shape="triangleDown">Triangle ↓</button>
+      <button class="btn" type="button" data-wing-load-shape="trapezoid">Trapezoid / combined loads</button>
+    </div>
+    <p class="note" style="margin:6px 0 0">Available for skin-only, reinforced, ribbed and course printed wings. Choose a shape, enter its position and magnitude, then add it. ↑ / ↓ means increasing / decreasing intensity along the span, not force direction; use signed values for upward / downward forces.</p>
+  </section>
   <main class="view panel" aria-label="3-D viewport">
     <canvas id="gl"></canvas>
     <div class="anatomy-labels" id="ribLabels" aria-hidden="true"></div>
@@ -3086,7 +3097,19 @@ if(typeof module!=='undefined')module.exports=TeachingModels;
     $('#wingLoadLesson').innerHTML=`<h2>Build a wing load: force, position and distribution</h2><div class="learn-layout"><article class="learn-copy"><p><b>Wing convention: positive is upward.</b> This is opposite to the downward-positive introductory beam exercise. The root is clamped; the tip is free. The beam pathway is where you compare different support conditions.</p><p>A point force P is measured in N. A line load q(y) is N/mm. Pressure p is N/mm² and must first be integrated over the local chord to obtain q. Load arrows show location/direction, not a calibrated force scale.</p><div class="equation">F = ∫ q(y) dy + ΣP<br>M<sub>root</sub> = ∫ y q(y) dy + Σy<sub>P</sub>P</div><p>Two loads with the same total force can have different bending effects. A 2 N uniform load over length L has root moment FL/2; a root-heavy triangle gives FL/3 and a tip-heavy triangle gives 2FL/3.</p><h3>What does load factor mean?</h3><div class="equation">n = aerodynamic lift / aircraft weight<br>L<sub>semi-wing</sub> = nmg/2</div><p>Here both wings are assigned all aerodynamic lift symmetrically; tail/body lift is not separately allocated. n=2 prescribes twice the 1-g lift at the same aircraft mass. <b>Load factor is not factor of safety.</b> With inertia relief, wing mass contributes downward inertial loading; gross lift and net structural load differ.</p><p>Flight-like default: n=4, m=1 kg, Schrenk distribution. Schrenk averages an elliptic distribution and a chord-proportional distribution; it is a prescribed teaching load, not a CFD result.</p><p>Custom cases below contain only the loads you enter, with no automatic weight/inertia relief. A force exactly at the support is handled in the beam exercise, not as a flexible-span wing load here. Keep distinct load boundaries at least 0.1 mm apart from ribs/seams/ends, or use exactly the same station.</p><p><a href="https://www.faa.gov/sites/faa.gov/files/regulations_policies/handbooks_manuals/aviation/airplane_handbook/20_afh_glossary.pdf" target="_blank" rel="noopener">FAA terminology</a> · <a href="https://help.solidworks.com/2025/english/SolidWorks/cworks/c_Summary_of_Force_and_Torque_Load.htm" target="_blank" rel="noopener">SOLIDWORKS force/torque loading</a></p></article>
       <div><form id="wingLoadForm" class="callout"><h3>Add a load to the current wing</h3><div class="field"><label for="wingKind">Shape</label><select id="wingKind"><option value="point">Point force</option><option value="rectangle">Rectangular / uniform</option><option value="triangle">Triangular (zero at start)</option><option value="trapezoid">Trapezoidal</option></select></div>${[['wingA','Point station or start (mm)',g.semiSpan/2],['wingB','Distributed end (mm)',g.semiSpan],['wingP','Point force (N, upward +)',2],['wingQ0','Start intensity (N/mm)',.004],['wingQ1','End intensity (N/mm)',.008],['wingFraction','Chord fraction (0–1)',.3]].map(([id,label,val])=>`<div class="field"><label for="${id}">${label}</label><input id="${id}" type="number" step="any" value="${val}" required></div>`).join('')}<button class="btn primary" type="submit">Add / solve wing load</button><p>The first custom load replaces the flight/tip case. Further loads are superposed.</p></form><div id="wingCustomList">${items.map((p,i)=>`<p>${i+1}. ${p.kind==='point'?`${p.force} N at ${p.position} mm`:`${p.qStart} → ${p.qEnd} N/mm from ${p.start} to ${p.end} mm`}; chord ${p.fraction}c <button class="btn" data-delete-wing-load="${i}">Remove</button></p>`).join('')}</div><div class="lesson-actions"><button class="btn" id="wingClearLoad">Clear custom loads</button><button class="btn" id="wingFlightLoad">Restore default flight loading</button></div><p id="wingLoadStatus" role="status">${wingLoadName(R)} · root V=${nf(R.V[0],3)} N; root M=${nf(R.M[0]/1000,4)} N·m.</p></div></div>`;
     const apply=load=>{if(running||stale){$('#wingLoadStatus').textContent='Wait for a successful solve first.';return;}try{E.normalize({...engineInput(),load});S.load=load;changed();$('#wingLoadStatus').textContent='Solving custom loads…';}catch(e){$('#wingLoadStatus').textContent=e.message;}};
-    $('#wingLoadForm').onsubmit=e=>{e.preventDefault();const kind=$('#wingKind').value,q0=+$('#wingQ0').value,q1=+$('#wingQ1').value;const p=kind==='point'?{kind:'point',position:+$('#wingA').value,force:+$('#wingP').value}:{kind:'distributed',start:+$('#wingA').value,end:+$('#wingB').value,qStart:kind==='triangle'?0:q0,qEnd:kind==='rectangle'?q0:q1};p.fraction=+$('#wingFraction').value;apply({...S.load,kind:'custom',items:[...items,p]});};
+    const reverse=document.createElement('option');reverse.value='triangleDown';reverse.textContent='Triangular (zero at end / root-heavy)';$('#wingKind').append(reverse);
+    $('#wingKind').querySelector('[value="triangle"]').textContent='Triangular (zero at start / tip-heavy)';
+    const updateFields=()=>{
+      const kind=$('#wingKind').value,point=kind==='point';
+      const visible={wingA:true,wingB:!point,wingP:point,wingQ0:!point&&kind!=='triangle',wingQ1:kind==='triangle'||kind==='trapezoid',wingFraction:true};
+      Object.entries(visible).forEach(([id,show])=>{const input=$('#'+id);input.closest('.field').hidden=!show;input.disabled=!show;input.required=show;});
+      document.querySelector('label[for="wingA"]').textContent=point?'Point station y (mm from root)':'Start station a (mm from root)';
+      document.querySelector('label[for="wingQ0"]').textContent=kind==='rectangle'?'Uniform intensity q (N/mm, upward +)':'Start intensity q(a) (N/mm, upward +)';
+      document.querySelector('label[for="wingQ1"]').textContent='End intensity q(b) (N/mm, upward +)';
+    };
+    $('#wingKind').onchange=updateFields;updateFields();
+    $('#wingLoadForm').insertAdjacentHTML('beforeend','<p class="note">This editor does not change the skin, rods, ribs or joints. Change chord fraction to explore torsion. After adding a load, inspect Model, Stress, Displacement and Diagrams. Add several loads to the same case; their signed effects are superposed.</p>');
+    $('#wingLoadForm').onsubmit=e=>{e.preventDefault();const kind=$('#wingKind').value,q0=+$('#wingQ0').value,q1=+$('#wingQ1').value;const p=kind==='point'?{kind:'point',position:+$('#wingA').value,force:+$('#wingP').value}:{kind:'distributed',start:+$('#wingA').value,end:+$('#wingB').value,qStart:kind==='triangle'?0:q0,qEnd:kind==='triangleDown'?0:kind==='rectangle'?q0:q1};p.fraction=+$('#wingFraction').value;apply({...S.load,kind:'custom',items:[...items,p]});};
     $('#wingCustomList').querySelectorAll('[data-delete-wing-load]').forEach(b=>b.onclick=()=>apply({...S.load,kind:'custom',items:items.filter((_,i)=>i!==+b.dataset.deleteWingLoad)}));
     $('#wingClearLoad').onclick=()=>apply({...S.load,kind:'custom',items:[]});
     $('#wingFlightLoad').onclick=()=>apply({...E.DEFAULT_LOAD});
@@ -3397,6 +3420,12 @@ function renderObservations() {
   $("#clipIn").addEventListener("input", (e) => { S.clipY = parseFloat(e.target.value); if (!S.clip) { S.clip = true; $("#clipBtn").setAttribute("aria-pressed", "true"); } applyClip(); S.secY = S.clipY; $("#secY").value = S.clipY; if (!$("#tab-section").hidden) { clearTimeout(secTimer); secTimer = setTimeout(renderSection, 120); } });
   document.querySelectorAll("[data-view]").forEach((b) => b.addEventListener("click", () => setView(b.dataset.view)));
   $("#runBtn").addEventListener("click", () => { clearTimeout(runTimer); runStudy(); });
+  $('#wingLoadBtn').addEventListener('click',()=>{openTab('loads');$('#tab-loads').scrollIntoView({behavior:'smooth',block:'start'});});
+  document.querySelectorAll('[data-wing-load-shape]').forEach(b=>b.addEventListener('click',()=>{
+    openTab('loads');const select=$('#wingKind');
+    if(select){select.value=b.dataset.wingLoadShape;select.dispatchEvent(new Event('change'));}
+    $('#tab-loads').scrollIntoView({behavior:'smooth',block:'start'});
+  }));
   document.querySelectorAll("[role=tab]").forEach((b) => b.addEventListener("click", () => {
     document.querySelectorAll("[role=tab]").forEach((x) => x.setAttribute("aria-selected", String(x === b)));
     document.querySelectorAll(".tabpanel").forEach((p) => (p.hidden = p.id !== "tab-" + b.dataset.tab));

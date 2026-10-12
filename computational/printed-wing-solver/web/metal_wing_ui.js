@@ -141,7 +141,7 @@
     const ok = g && g.ratio >= 1;
     chip.className = "chip " + (kind || (ok ? "ok" : "bad"));
     chip.textContent = ok ? "Model checks meet assumed ultimate" : "Below assumed ultimate";
-    t.textContent = text || (g ? `Weakest: ${g.name.toLowerCase()} at ${nf(g.n, 1)} g (y = ${nf(g.y, 2)} m)` : "");
+    t.textContent = text || (g ? `Weakest: ${g.name.toLowerCase()} at ${nf(g.n, 1)} ${R.input.customLoads!=null?'× reference load':'g'} (y = ${nf(g.y, 2)} m)` : "");
   }
   function changed() { stale = true; setStatus(); renderTree(); clearTimeout(timer); timer = setTimeout(runStudy, 500); }
   async function runStudy() {
@@ -215,6 +215,7 @@
     const pm = $("#mPm"); pm.innerHTML = "";
     const i = MS.input, P = E.D520, id = MS.selected;
     const head = (t, lede) => { pm.append(el("h2", {}, t)); if (lede) pm.append(el("p", { class: "lede" }, lede)); };
+    if(id==='aircraft'&&i.customLoads!=null){head('Custom bench load case','Entered point and line loads only. No automatic flight lift or gravity/inertia relief. Mass is still present in the modal model.');pm.append(numField('mN','Load multiplier','dimensionless, not flight g',i.n,.5,v=>{i.n=v;syncN();}));if(R)pm.append(kv([['Custom loads',i.customLoads.length],['Applied net force',nf(E.customDemand(i.customLoads,0).V*i.n,2)+' N'],['Tip displacement',nf(R.tip.wMax*1000,3)+' mm'],['Tip twist',nf(R.tip.twistDeg,4)+'°']]));return;}
     if (id === "aircraft") {
       $("#mPmHead").textContent = "Load case";
       head("Aircraft and load case", "Lift = n W, shaped along the span by the chosen method. Inertia relief subtracts n × (structure + fuel + guns + ammunition) weight at the right span and chord positions.");
@@ -263,7 +264,7 @@
       if (R) pm.append(kv([["Load factor", `${sgn(R.n, 1)} g`], ["Tip deflection (rib 1)", `${nf(R.tip.wMax * 1e3, 1)} mm`], ["Tip twist", `${sgn(R.tip.twistDeg, 3)}° nose-up`], ["Root boom stress (upper)", `${MPa(R.stations[0].boomU)} MPa`], ["Max boom stress", `${MPa(Math.max(...R.stations.map((s) => Math.max(Math.abs(s.boomU), Math.abs(s.boomL)))))} MPa`], ["Max spar-web τ", `${MPa(Math.max(...R.stations.map((s) => Math.abs(s.tauWeb))))} MPa`], ["First bending mode", R.fem ? `${nf(R.fem.fBending[0], 1)} Hz` : "–"]]));
     }
   }
-  function syncN() { $$("#mNbtns [data-n]").forEach((b) => b.setAttribute("aria-pressed", String(+b.dataset.n === MS.input.n))); }
+  function syncN() { $$("#mNbtns [data-n]").forEach((b) => {b.dataset.flightLabel ||= b.textContent;b.textContent=MS.input.customLoads!=null?`×${b.dataset.n}`:b.dataset.flightLabel;b.setAttribute("aria-pressed", String(+b.dataset.n === MS.input.n));});$('#mNbtns').previousElementSibling.textContent=MS.input.customLoads!=null?'Custom load multiplier':'Load factor'; }
 
   // ------------------------------------------------------------------ 3-D scene
   let renderer = null, scene, camera, controls, world, model = null, modelBuilt = false, clipPlane, raf = 0, viewSet = false;
@@ -408,6 +409,10 @@
     const g = model && model.getObjectByName("arrows"); if (!g) return;
     while (g.children.length) g.remove(g.children[0]);
     if (!R || !MS.arrows) return;
+    if(R.input.customLoads!=null){
+      for(const p of R.input.customLoads){const ys=p.kind==='point'?[p.position]:E.linspace(p.start,p.end,12);for(const y of ys){const force=R.n*(p.kind==='point'?p.force:p.qStart+(p.qEnd-p.qStart)*(y-p.start)/(p.end-p.start));if(!force)continue;const sc=R.wing.section(y,[p.fraction]),base=V3(y,sc.up[0][0],force>0?sc.up[0][1]:sc.lo[0][1]);const arrow=new THREE.ArrowHelper(new THREE.Vector3(0,Math.sign(force),0),new THREE.Vector3(...base),.35,0xd25ad6,.06,.035);arrow.userData={kind:'arrow',y,base};g.add(arrow);}}
+      return;
+    }
     const W = R.wing, ys = E.linspace(0.1, W.b2 - 0.15, 16), lmax = Math.max(...R.grid.lift.map(Math.abs)) || 1;
     for (const y of ys) {
       const l = R.perG.lift(y) * R.n, len = (0.55 * Math.abs(l)) / lmax;
@@ -544,7 +549,7 @@
       const ticks = p === "buckle" ? [3, 2, 1, 0].map((v) => (v === 3 ? "≥ 3" : String(v))) : Array.from({ length: N }, (_, i) => fmt(hi - ((hi - lo) * i) / (N - 1)));
       L.innerHTML = `<div class="bar-c" style="background:linear-gradient(${cols.join(",")})"></div><div class="ticks">${ticks.map((t) => `<span>${t}</span>`).join("")}</div>`;
     }
-    if (R) info.innerHTML = `<b>Load factor</b> ${sgn(R.n, 1)} g &nbsp; <b>tip</b> ${nf(R.tip.wMax * 1e3, 1)} mm &nbsp; <b>twist</b> ${sgn(R.tip.twistDeg, 2)}°<br><b>deformation shown</b> ×${nf(deformScale(), 0)}`;
+    if (R) info.innerHTML = `<b>${R.input.customLoads!=null?'Custom load multiplier':'Load factor'}</b> ${sgn(R.n, 1)} ${R.input.customLoads!=null?'×':'g'} &nbsp; <b>tip</b> ${nf(R.tip.wMax * 1e3, 1)} mm &nbsp; <b>twist</b> ${sgn(R.tip.twistDeg, 2)}°<br><b>deformation shown</b> ×${nf(deformScale(), 0)}`;
   }
   function updateModel() {
     if (!model || !R) return;
@@ -624,6 +629,10 @@
   function renderTab(t) {
     if (!R) return;
     ({ start: renderStart, theory: renderTheory, loads: renderLoads, diagrams: renderDiagrams, section: renderSection, strength: renderStrength, compare: renderCompare, modes: renderModes, method: renderMethod, report: renderReport })[t]();
+    if(R.input.customLoads!=null&&['strength','diagrams','method','report'].includes(t)){
+      const panel=$('#mtab-'+t);panel.insertAdjacentHTML('afterbegin','<p class="callout"><b>Custom load case:</b> capacity numbers are multipliers of the entered reference pattern, not flight g. Original flight-limit/FE references do not certify this case. Linear nominal beam stresses exclude local point-load contact stresses.</p>');
+      if(t==='strength'){const walk=document.createTreeWalker(panel,4);while(walk.nextNode())walk.currentNode.textContent=walk.currentNode.textContent.replace(/\bg\b/g,'× reference');}
+    }
   }
   function openTab(t) {
     MS.tab = t;
@@ -633,6 +642,7 @@
   }
   function renderStart() {
     const g = governing(R), r = R, P = r.P;
+    if(r.input.customLoads!=null){$('#mtab-start').innerHTML=`<h2>D.520 custom-load experiment</h2><p class="callout">Same wing structure; ${r.input.customLoads.length} entered loads, multiplied by ${r.n}. This is not a flight load-factor case. Open Loads to edit positions and intensities, then compare stress, bending and torsion. Strength-table values labelled g in the historical flight pathway represent <b>multipliers of this custom reference load pattern</b> here, not flight g limits. A static load change does not alter linear natural frequencies.</p><p>Tip displacement: ${nf(r.tip.wMax*1000,3)} mm; twist: ${nf(r.tip.twistDeg,4)}°. Point/line loads are section resultants; local load-introduction stresses need shell/solid FE.</p>`;return;}
     const sk = r.failure.find((f) => f.key === "skinBuckle");
     $("#mtab-start").innerHTML = `<div class="mw-grid2"><article class="mw-story">
       <h2>From a printed wing to a real one: the Dewoitine D.520 (1940)</h2>
@@ -720,6 +730,10 @@
   }
   function renderLoads() {
     const r = R, g = r.grid;
+    if(r.input.customLoads!=null){
+      $('#mtab-loads').innerHTML=`<h2>Custom half-wing bench loads</h2><p class="callout">Custom forces replace flight lift and inertia relief. Values entered are multiplied by n = ${r.n}; here n is a <b>load multiplier, not a flight g factor</b>. Both half wings are assumed symmetrically loaded. Load locations are restricted to the fittings-to-last-rib span; local contact stresses are not solved.</p><div class="charts">${chart('Applied line load','N/m',[{name:'q',x:g.y,y:g.lift}])}${chart('Shear force','N',[{name:'V',x:g.y,y:g.V}])}${chart('Bending moment','N·m',[{name:'M',x:g.y,y:g.M}])}${chart('Torque about shear centre','N·m',[{name:'T',x:g.y,y:g.T}])}</div><p>For each cut: V = sum of outboard forces; M = sum of force × spanwise lever arm; T = sum of force × chordwise offset from the local shear centre. The signed stresses and deformation use the same section solver as the flight cases.</p>`;
+      renderLoadEditor();return;
+    }
     const rows = [["Wing structure (skins, webs, booms, stringers)", r.mass.shellsBoomsStringers, "line mass along the span"], ["22 ribs", r.mass.ribs, "at the rib stations"], ...Object.entries(r.masses.reduce((a, p) => { a[p.name] = (a[p.name] || 0) + p.mass; return a; }, {})).map(([k, v]) => [{ fuel: "Fuel (122 l × 0.72 kg/l)", gun: "Machine guns MAC 1934 (2)", ammo: "Ammunition (2 × 650 rounds)" }[k] || k, v, k === "fuel" ? "y 2.07–3.49 m at 0.17c" : "y 1.79 and 1.955 m"])];
     $("#mtab-loads").innerHTML = `<div class="mw-grid2"><div><div class="charts single" style="grid-template-columns:minmax(0,1fr)">${chart("Lift per unit span", "kN/m at n", [{ name: "lifting line", x: g.y, y: g.liftingLine.map((v) => v / 1e3) }, { name: "Schrenk", x: g.y, y: g.schrenk.map((v) => v / 1e3), dash: "5 4" }, { name: "elliptic", x: g.y, y: g.elliptic.map((v) => v / 1e3), dash: "2 3" }])}</div>
       <p class="note">Glauert's lifting line on the real planform (taper with an elliptic tip cap, camber blended outboard). Schrenk averages the planform and the ellipse. Total half-wing lift is n W / 2 = ${nf((r.W * r.n) / 2 / 1e3, 2)} kN in every case.</p></div>
@@ -727,10 +741,20 @@
       <p class="note">At load factor n every mass pulls down with n × its weight, so it relieves the wing bending moment. The fittings then react ${nf((-r.fitting.Fz_per_g * r.n) / 1e3, 2)} kN instead of the full half-wing lift.</p></div></div>
       <div class="charts" style="margin-top:12px">${chart("Shear force V", "kN", [{ name: "with inertia relief", x: g.y, y: g.V.map((v) => v / 1e3) }, { name: "lift only", x: g.y, y: g.VliftOnly.map((v) => v / 1e3), dash: "5 4" }])}${chart("Bending moment M", "kN·m", [{ name: "with inertia relief", x: g.y, y: g.M.map((v) => v / 1e3) }, { name: "lift only", x: g.y, y: g.MliftOnly.map((v) => v / 1e3), dash: "5 4" }])}${chart("Torque about the shear centre", "N·m, nose-up +", [{ name: "T", x: g.y, y: g.T }])}</div>
       <p class="note">Inboard of the fittings (y &lt; ${r.P.fittingY} m) the fittings have taken out the shear; the centre section between the fuselage sides carries an almost constant moment by symmetry.</p>`;
+    renderLoadEditor();
+  }
+  function renderLoadEditor(){
+    const list=MS.input.customLoads||[],a=R.P.fittingY,b=R.P.ribs.at(-1);
+    $('#mtab-loads').insertAdjacentHTML('afterbegin',`<section class="callout"><h2>Apply D.520 wing loads</h2><p><b>SI units:</b> position in m, point force in N, line intensity in N/m. Upward positive. Chord fraction: 0 = leading edge, 1 = trailing edge. First custom load replaces flight loading; additional loads are superposed without changing the wing structure.</p><form id="mLoadForm"><div class="field"><label for="mLoadShape">Load shape</label><select id="mLoadShape"><option value="point">Point force</option><option value="uniform">Uniform</option><option value="up">Triangle: zero at start</option><option value="down">Triangle: zero at end</option><option value="trapezoid">Trapezoid</option></select></div>${[['mLa','Point station / start (m)',2],['mLb','End station (m)',b],['mLP','Point force (N)',1000],['mLq0','Start intensity (N/m)',500],['mLq1','End intensity (N/m)',1000],['mLxc','Chord fraction (0–1)',.25]].map(([id,label,v])=>`<div class="field"><label for="${id}">${label}</label><input id="${id}" type="number" step="any" value="${v}" required></div>`).join('')}<button class="btn primary" type="submit">Add / solve D.520 load</button></form><p id="mLoadError" role="status"></p><p>Allowed span: ${a}–${b} m. The first custom case starts at multiplier 1; toolbar buttons then scale all entered loads.</p>${list.map((p,i)=>`<p>${i+1}. ${p.kind==='point'?`${p.force} N at ${p.position} m`:`${p.qStart} → ${p.qEnd} N/m over ${p.start}–${p.end} m`}; ${p.fraction}c <button class="btn" data-mdelete="${i}">Remove load ${i+1}</button></p>`).join('')}<button class="btn" id="mClearLoads">Clear all custom loads</button> <button class="btn" id="mRestoreFlight">Restore flight loading</button></section>`);
+    const fields=()=>{const s=$('#mLoadShape').value,visible={mLa:true,mLb:s!=='point',mLP:s==='point',mLq0:['uniform','down','trapezoid'].includes(s),mLq1:['up','trapezoid'].includes(s),mLxc:true};Object.entries(visible).forEach(([id,v])=>{const e=$('#'+id);e.disabled=!v;e.closest('.field').hidden=!v;});};$('#mLoadShape').onchange=fields;fields();
+    const apply=loads=>{if(running||stale){$('#mLoadError').textContent='Wait for a successful solve first.';return;}try{const next={...MS.input,customLoads:loads,n:MS.input.customLoads==null?1:MS.input.n};E.normalise(next);MS.input=next;syncN();changed();}catch(e){$('#mLoadError').textContent=e.message;}};
+    $('#mLoadForm').onsubmit=e=>{e.preventDefault();const s=$('#mLoadShape').value,q0=+$('#mLq0').value,q1=+$('#mLq1').value,p=s==='point'?{kind:'point',position:+$('#mLa').value,force:+$('#mLP').value}:{kind:'distributed',start:+$('#mLa').value,end:+$('#mLb').value,qStart:s==='up'?0:q0,qEnd:s==='down'?0:s==='uniform'?q0:q1};p.fraction=+$('#mLxc').value;apply([...list,p]);};
+    $$('[data-mdelete]').forEach(e=>e.onclick=()=>apply(list.filter((_,i)=>i!==+e.dataset.mdelete)));
+    $('#mClearLoads').onclick=()=>apply([]);$('#mRestoreFlight').onclick=()=>{MS.input.customLoads=null;MS.input.inertiaRelief=true;MS.input.n=6;syncN();changed();};
   }
   function renderDiagrams() {
     const st = R.stations, y = st.map((s) => s.y), n = R.n;
-    const ref = REF ? REF.beam.stations : [];
+    const ref = REF && R.input.customLoads==null ? REF.beam.stations : [];
     $("#mCharts").innerHTML = [
       chart("Vertical deflection", "mm", [{ name: "total", x: y, y: st.map((s) => s.w * 1e3) }, { name: "bending", x: y, y: st.map((s) => s.wBend * 1e3), dash: "5 4" }, { name: "web shear", x: y, y: st.map((s) => s.wShear * 1e3), dash: "2 3" }]),
       chart("Twist (nose-up +)", "deg", [{ name: "twist", x: y, y: st.map((s) => (s.twist * 180) / Math.PI) }]),
@@ -806,6 +830,7 @@
   }
   function renderCompare() {
     const box = $("#mtab-compare");
+    if(R.input.customLoads!=null){box.innerHTML='<p>Shell FE reference data apply only to the original flight load case, not your custom loads. Restore flight loading before comparing.</p>';return;}
     if (!REF) { box.innerHTML = "<p>Reference data not loaded.</p>"; return; }
     const r = R1 || R, fe = REF.fe, py = REF.beam;
     const row = (q, js, pyv, fev, unit, d = 2) => { const diff = fev != null && isFinite(fev) ? (100 * (js - fev)) / Math.abs(fev) : pyv != null ? (100 * (js - pyv)) / Math.abs(pyv) : null; const c = diff == null ? "" : Math.abs(diff) < 5 ? "ok" : Math.abs(diff) < 10 ? "warn" : "bad"; return `<tr><td>${q}</td><td class="num">${nf(js, d)}</td><td class="num">${pyv == null ? "–" : nf(pyv, d)}</td><td class="num">${fev == null ? "–" : nf(fev, d)}</td><td class="num ${c}">${diff == null ? "–" : sgn(diff, 1) + " %"}</td><td>${unit}</td></tr>`; };
@@ -847,6 +872,10 @@
       <div class="charts" style="grid-template-columns:minmax(0,1fr) minmax(0,1fr);margin-top:10px">${chart("Bending mode shapes", "normalised", f.bendingModes.slice(0, 3).map((s, i) => ({ name: `${nf(f.fBending[i], 1)} Hz`, x: f.y, y: s })))}${chart("Torsion mode shapes", "normalised", f.torsionModes.slice(0, 2).map((s, i) => ({ name: `${nf(f.fTorsion[i], 1)} Hz`, x: f.y, y: s })))}</div></div>
       <div class="callout"><h3>What these are</h3><p>Free vibration of the half wing with the fuselage held fixed: Hermite beam elements from the fittings to rib 1, EI and GJ from the section analysis, the structural line mass, ribs, fuel, guns and ammunition as masses, and the centre section as a rotational spring. Bending and torsion are uncoupled here. Outboard the mass centroid sits at about ${nf(avgOut("xm"), 2)}c and the shear centre at about ${nf(avgOut("xsc"), 2)}c; any offset between them couples the two in reality, and with the aerodynamic forces that coupling is what flutter is made of.</p><p>Press a mode, then pick <b>Modes</b> in the toolbar to animate it in the viewport. The amplitude is arbitrary.</p></div></div>`;
     $$("[data-mmode]").forEach((b) => b.addEventListener("click", () => { const [k, i] = b.dataset.mmode.split(","); MS.mode = { kind: k, index: +i }; setPlot("mode"); renderModes(); renderModeSeg(); }));
+    $('#mtab-modes').insertAdjacentHTML('beforeend',`<article class="callout"><h2>Mode shape is not a measured vibration</h2><p>A mode is a natural deformation pattern. Bending modes move the wing centreline; torsional modes rotate its sections. Mode 1 usually has no internal reversal; higher modes have nodes where displacement is small and adjacent parts can move in opposite directions. A point on a node may miss that mode in a sensor recording.</p><div class="mw-eq">K φ = ω² M φ &nbsp; · &nbsp; f = ω/(2π)<br>u(y,t) = Σ φⱼ(y) aⱼ(t)</div><p>K is stiffness, M is mass, φ is the spatial mode shape, and f is its natural frequency. The amplitudes aⱼ depend on excitation, initial conditions and damping; this static solver does not calculate them. The animation is normalized and slowed for viewing. Changing static load alone does not change the linear modes; changing stiffness, mass or supports can. Stress-stiffening, coupled aeroelastic modes and flutter are not included.</p><h3>Can we take an FFT?</h3><p>Yes—from a <b>time recording</b>, such as acceleration or displacement at one sensor. An FFT of a spatial mode shape along y is a spatial spectrum, not a vibration-frequency spectrum. Here we generate a labelled synthetic recording to explain FFT peaks.</p><form id="mFFTform"><div class="field"><label for="mFFTkind">Synthetic signal</label><select id="mFFTkind"><option value="bending">First two bending modes</option><option value="torsion">First two torsion modes</option></select></div><button type="submit" class="btn">Generate signal and FFT</button></form><div id="mFFTresult"></div><p>Real experiments need uniformly sampled time data, adequate sensor placement, anti-alias filtering and a sampling rate above twice the highest frequency of interest (preferably with margin). Record length sets frequency resolution Δf = fₛ/N. Hann windowing reduces leakage but broadens peaks. Peak height is not strength or factor of safety; resonance also depends on forcing and damping.</p></article>`);
+    $('#mFFTform').onsubmit=e=>{e.preventDefault();const kind=$('#mFFTkind').value,hz=kind==='bending'?f.fBending:f.fTorsion,freq=hz.slice(0,2),fs=Math.max(500,Math.ceil(Math.max(...freq)*10)),N=4096,t=Array.from({length:N},(_,i)=>i/fs),u=t.map(x=>Math.cos(2*Math.PI*freq[0]*x)+.4*Math.cos(2*Math.PI*freq[1]*x)),sp=E.vibrationSpectrum(u,fs);
+      $('#mFFTresult').innerHTML=`<p><b>SYNTHETIC, arbitrary amplitude—not a transient simulation or measurement.</b> u(t) = cos(2π × ${nf(freq[0],2)}t) + 0.4 cos(2π × ${nf(freq[1],2)}t). Sampling ${fs} Hz; duration ${nf(N/fs,2)} s; resolution ${nf(sp.resolution,3)} Hz; Nyquist ${nf(sp.nyquist,0)} Hz. FFT peaks should lie near the two input frequencies; finite-bin leakage is expected.</p><div class="charts">${chart('Synthetic displacement vs time','arbitrary units',[{name:'u(t)',x:t.slice(0,400),y:u.slice(0,400)}],{xlabel:'time (s)'})}${chart('One-sided FFT amplitude (Hann)','arbitrary units',[{name:'FFT',x:sp.frequency.slice(0,Math.ceil(Math.max(...freq)*1.4/sp.resolution)),y:sp.amplitude.slice(0,Math.ceil(Math.max(...freq)*1.4/sp.resolution))}],{xlabel:'frequency (Hz)'})}</div>`;
+    };
   }
   function renderModeSeg() {
     const f = R && R.fem; if (!f) return;
@@ -887,7 +916,7 @@
     L.push("", "LOAD FACTOR AT EACH EVENT (+g / −g, station of +g)");
     for (const q of f) L.push(`  ${q.name.padEnd(56)} ${q.pos ? nf(q.pos.n, 2).padStart(6) : "     –"} / ${q.neg ? ("−" + nf(q.neg.n, 2)).padStart(7) : "      –"}   y = ${q.pos ? nf(q.pos.y, 2) : "–"} m`);
     if (g) L.push("", `GOVERNING: ${g.name} at ${nf(g.n, 2)} g (${g.side === "pos" ? "+g" : "−g"}), required ${nf(g.need, 1)} g, MS ${sgn(g.n / g.need - 1, 2)}`);
-    if (REF) L.push("", `CHECK (1 g): tip deflection Wing Lab ${nf((R1 || r).tip.wMax * 1e3, 2)} mm vs CalculiX shell ${nf(REF.fe.tip_mm_1g, 2)} mm; collapse ${nf((R1 || r).failure.find((q) => q.key === "collapse").pos.n, 2)} g vs Python ${nf(REF.collapse.summary.pos.n_collapse[0], 2)} g`);
+    if (REF && r.input.customLoads==null) L.push("", `CHECK (1 g): tip deflection Wing Lab ${nf((R1 || r).tip.wMax * 1e3, 2)} mm vs CalculiX shell ${nf(REF.fe.tip_mm_1g, 2)} mm; collapse ${nf((R1 || r).failure.find((q) => q.key === "collapse").pos.n, 2)} g vs Python ${nf(REF.collapse.summary.pos.n_collapse[0], 2)} g`);
     L.push("", "Educational reconstruction; not an airworthiness assessment. Beam theory on thin-walled sections, not a 3-D finite-element result. Gauges, boom taper, material allowables, load factors and gross mass are assumptions. Approximate section collapse does not validate whole-wing collapse, joints, post-buckling safety or flutter (see Method & sources).");
     return L.join("\n");
   }
@@ -922,6 +951,7 @@
   $("#mClip").addEventListener("click", (e) => { MS.clip = !MS.clip; e.currentTarget.setAttribute("aria-pressed", String(MS.clip)); applyClip(); });
   $("#mClipY").addEventListener("input", (e) => { MS.clipY = +e.target.value / 1000; MS.secY = MS.clipY; if (!MS.clip) { MS.clip = true; $("#mClip").setAttribute("aria-pressed", "true"); } applyClip(); if (!$("#mtab-section").hidden) { clearTimeout(secT); secT = setTimeout(renderSection, 90); } else dirtyTabs.add("section"); });
   $("#mRun").addEventListener("click", () => { clearTimeout(timer); runStudy(); });
+  const loadButton=document.createElement('button');loadButton.className='btn';loadButton.textContent='Apply D.520 loads';loadButton.id='mLoadBtn';$('#mRun').parentElement.append(loadButton);loadButton.onclick=()=>{openTab('loads');$('#mtab-loads').scrollIntoView({behavior:'smooth',block:'start'});};
   $$("#mTabs [role=tab]").forEach((b) => b.addEventListener("click", () => openTab(b.dataset.mtab)));
   if (window.matchMedia("(max-width:560px)").matches) $("#mHud").open = false;
 

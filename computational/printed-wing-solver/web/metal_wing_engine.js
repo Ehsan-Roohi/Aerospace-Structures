@@ -707,7 +707,30 @@ const MetalWingEngine = (() => {
     if (!(P.material.Ftu > P.material.Fty && P.material.epsU > P.material.Fty / P.material.E)) throw new Error("Check tensile ultimate stress and rupture strain");
     for (const k of ["skin", "web", "falseSpar"]) if (P[k].length !== P.zones.length || P[k].some((v) => !(Number.isFinite(v) && v > 0))) throw new Error(`Invalid ${k} gauge array`);
     if (!(P.boom.rootWidth > 0 && P.boom.rootThickness > 0)) throw new Error("Boom dimensions must be positive");
+    if (inp.customLoads != null) {
+      if (!Array.isArray(inp.customLoads) || inp.customLoads.length > 30) throw new Error('Use at most 30 custom loads');
+      const limit=P.ribs[P.ribs.length-1];
+      for(const p of inp.customLoads) {
+        if(!['point','distributed'].includes(p.kind) || !Number.isFinite(p.fraction) || p.fraction<0 || p.fraction>1) throw new Error('Choose a valid load type and chord fraction 0–1');
+        if(p.kind==='point') {if(!Number.isFinite(p.position)||p.position<P.fittingY||p.position>limit||!Number.isFinite(p.force))throw new Error(`Point station must be between fitting ${P.fittingY} and structural tip ${limit} m; force is in N`);}
+        else if(![p.start,p.end,p.qStart,p.qEnd].every(Number.isFinite)||p.start<P.fittingY||p.end>limit||p.end<=p.start)throw new Error(`Distributed bounds must increase from fitting ${P.fittingY} to structural tip ${limit} m; intensity is N/m`);
+      }
+      // Custom bench loads replace flight lift AND gravity/inertia relief.
+      inp.inertiaRelief=false;
+    }
     return { inp, P, designCL };
+  }
+
+  // Exact outboard force and first moment of a signed linear line load.
+  function customDemand(loads,y) {
+    let V=0,M=0;
+    for(const p of loads) {
+      if(p.kind==='point') {if(y<p.position){V+=p.force;M+=p.force*(p.position-y);}continue;}
+      const a=Math.max(y,p.start),b=p.end;if(a>=b)continue;
+      const h=b-a,k=(p.qEnd-p.qStart)/(p.end-p.start),qa=p.qStart+k*(a-p.start);
+      const F=qa*h+k*h*h/2;V+=F;M+=(a-y)*F+qa*h*h/2+k*h*h*h/3;
+    }
+    return {V,M};
   }
 
   // ------------------------------------------------------------------ main solve
@@ -745,12 +768,16 @@ const MetalWingEngine = (() => {
     // aerodynamic loading per g
     const Wt = P.aircraft.mass * G0;
     const shape = spanShape(P, W, inp.distribution, ys, P.aircraft.CL);
-    const lift = shape.l.map((v) => v * Wt);
+    const custom=inp.customLoads!=null;
+    const lineAt=y=>inp.customLoads.filter(p=>p.kind==='distributed'&&y>=p.start&&y<=p.end).reduce((q,p)=>q+p.qStart+(p.qEnd-p.qStart)*(y-p.start)/(p.end-p.start),0);
+    const lift = custom?ys.map(lineAt):shape.l.map((v) => v * Wt);
     const xscAt = (y) => interp(Math.min(y, yTipStruct), st, props.map((p) => p.xscFrac));
     const relief = inp.inertiaRelief ? 1 : 0;
     const wLine = ys.map((y, i) => lift[i] - relief * mLine[i] * G0);
-    const tLine = ys.map((y, i) => { const c = W.chord(y), xs = xscAt(y); return lift[i] * (xs - P.aircraft.xcp) * c - relief * mLine[i] * G0 * (xs - xmAt(Math.min(y, yTipStruct))) * c; });
+    const torqueAt=y=>inp.customLoads.filter(p=>p.kind==='distributed'&&y>=p.start&&y<=p.end).reduce((t,p)=>t+(p.qStart+(p.qEnd-p.qStart)*(y-p.start)/(p.end-p.start))*(xscAt(y)-p.fraction)*W.chord(y),0);
+    const tLine = ys.map((y, i) => { const c = W.chord(y), xs = xscAt(y); return custom?torqueAt(y):lift[i] * (xs - P.aircraft.xcp) * c - relief * mLine[i] * G0 * (xs - xmAt(Math.min(y, yTipStruct))) * c; });
     const points = [];
+    if(custom) for(const p of inp.customLoads.filter(p=>p.kind==='point'))points.push({y:p.position,F:p.force,T:p.force*(xscAt(p.position)-p.fraction)*W.chord(p.position),name:'custom point'});
     if (inp.inertiaRelief) {
       for (const p of masses) points.push({ y: p.y, F: -p.mass * G0, T: -p.mass * G0 * (xscAt(p.y) - p.xc) * W.chord(p.y), name: p.name });
       for (const r of ribs) points.push({ y: r.y, F: -r.mass * G0, T: -r.mass * G0 * (xscAt(r.y) - r.xc) * W.chord(r.y), name: "rib" });
@@ -764,6 +791,18 @@ const MetalWingEngine = (() => {
       T1[i] = T1[i + 1] + 0.5 * (tLine[i] + tLine[i + 1]) * dy;
     }
     for (const p of points) for (let i = 0; i < N; i++) if (ys[i] < p.y) { V1[i] += p.F; M1[i] += p.F * (p.y - ys[i]); T1[i] += p.T; }
+    let customLineT=null;
+    if(custom) {
+      // Integrate torque over clipped load intervals (no smeared load edges).
+      const lineT=new Array(N).fill(0);
+      for(let i=N-2;i>=0;i--){let dT=0;for(const p of inp.customLoads.filter(p=>p.kind==='distributed')){
+        const a=Math.max(ys[i],p.start),b=Math.min(ys[i+1],p.end);if(b<=a)continue;
+        const mid=(a+b)/2,h=(b-a)/2,dt=h/Math.sqrt(3);
+        for(const y of [mid-dt,mid+dt])dT+=h*(p.qStart+(p.qEnd-p.qStart)*(y-p.start)/(p.end-p.start))*(xscAt(y)-p.fraction)*W.chord(y);
+      }lineT[i]=lineT[i+1]+dT;}
+      customLineT=lineT;
+      for(let i=0;i<N;i++){const d=customDemand(inp.customLoads,ys[i]);V1[i]=d.V;M1[i]=d.M;T1[i]=lineT[i]+points.filter(p=>ys[i]<p.y).reduce((t,p)=>t+p.T,0);}
+    }
     const VL = new Array(N).fill(0), ML = new Array(N).fill(0);
     for (let i = N - 2; i >= 0; i--) { const dy = ys[i + 1] - ys[i]; VL[i] = VL[i + 1] + 0.5 * (lift[i] + lift[i + 1]) * dy; ML[i] = ML[i + 1] + 0.5 * (VL[i] + VL[i + 1]) * dy; }
     const yf = P.fittingY;
@@ -774,7 +813,11 @@ const MetalWingEngine = (() => {
     for (let i = 0; i < N; i++) if (ys[i] < yf) { Vd[i] -= totalUp; Md[i] -= totalUp * (yf - ys[i]); Td[i] = 0; }
 
     // per-station loads, stresses and shear flows at load factor n
-    const at = (arr, y) => interp(y, ys, arr);
+    const at = (arr, y) => {
+      if(custom&&(arr===Vd||arr===Md)){const d=customDemand(inp.customLoads,y);return arr===Vd?d.V-(y<yf?totalUp:0):d.M-(y<yf?totalUp*(yf-y):0);}
+      if(custom&&arr===Td)return y<yf?0:interp(y,ys,customLineT)+points.filter(p=>y<p.y).reduce((t,p)=>t+p.T,0);
+      return interp(y, ys, arr);
+    };
     const stations = secs.map((s, k) => loadSection(s, props[k], n * at(Vd, s.y), n * at(Md, s.y), n * at(Td, s.y), inp.taper !== false));
 
     // deflection and twist by integration on the station grid
@@ -899,7 +942,7 @@ const MetalWingEngine = (() => {
     const structMass = structLineMass + ribMass;
     return {
       version: VERSION, preset: { id: P.id, name: P.name, short: P.short }, P, input: inp, n, wing: W, zones: Z,
-      W: Wt, wingArea: W.area(), alphaDeg: shape.alphaDeg, CLa: shape.CLa, CLb: shape.CLb,
+      W: Wt, wingArea: W.area(), alphaDeg: custom?null:shape.alphaDeg, CLa: shape.CLa, CLb: shape.CLb,
       grid: { y: ys.filter((_, i) => i % 20 === 0), lift: lift.filter((_, i) => i % 20 === 0).map((v) => v * n), V: Vd.filter((_, i) => i % 20 === 0).map((v) => v * n), M: Md.filter((_, i) => i % 20 === 0).map((v) => v * n), T: Td.filter((_, i) => i % 20 === 0).map((v) => v * n), m: mLine.filter((_, i) => i % 20 === 0),
         VliftOnly: VL.filter((_, i) => i % 20 === 0).map((v) => v * n), MliftOnly: ML.filter((_, i) => i % 20 === 0).map((v) => v * n),
         schrenk: spanShape(P, W, "schrenk", ys.filter((_, i) => i % 20 === 0)).l.map((v) => v * Wt * n), elliptic: spanShape(P, W, "elliptic", ys.filter((_, i) => i % 20 === 0)).l.map((v) => v * Wt * n),
@@ -913,6 +956,19 @@ const MetalWingEngine = (() => {
   }
 
   // ------------------------------------------------------------------ textbook checks used by the tests
+  // Radix-2 FFT, one-sided Hann-window amplitude spectrum, mean removed.
+  function vibrationSpectrum(samples,fs){
+    const n=samples.length;
+    if(n<8||n>16384||(n&(n-1))||!Number.isFinite(fs)||fs<=0||!samples.every(Number.isFinite))throw new Error('FFT needs 8–16384 power-of-two finite samples and positive sampling rate');
+    const mean=samples.reduce((a,b)=>a+b,0)/n,re=new Array(n),im=new Array(n).fill(0);let sumW=0;
+    for(let i=0;i<n;i++){const w=.5-.5*Math.cos(2*Math.PI*i/n);sumW+=w;re[i]=(samples[i]-mean)*w;}
+    for(let i=1,j=0;i<n;i++){let bit=n>>1;for(;j&bit;bit>>=1)j^=bit;j^=bit;if(i<j)[re[i],re[j]]=[re[j],re[i]];}
+    for(let size=2;size<=n;size*=2)for(let start=0;start<n;start+=size)for(let j=0;j<size/2;j++){
+      const a=start+j,b=a+size/2,angle=-2*Math.PI*j/size,c=Math.cos(angle),s=Math.sin(angle),tr=re[b]*c-im[b]*s,ti=re[b]*s+im[b]*c;
+      re[b]=re[a]-tr;im[b]=im[a]-ti;re[a]+=tr;im[a]+=ti;
+    }
+    return {frequency:Array.from({length:n/2+1},(_,k)=>k*fs/n),amplitude:Array.from({length:n/2+1},(_,k)=>Math.hypot(re[k],im[k])*(k===0||k===n/2?1:2)/sumW),resolution:fs/n,nyquist:fs/2};
+  }
   /** Thin circular tube of radius R and wall t discretised into n walls (J = 2πR³t, shear centre at the centre). */
   function tubeSection(R, t, n = 72) {
     const nodes = [], walls = [];
@@ -926,7 +982,7 @@ const MetalWingEngine = (() => {
   }
 
   return {
-    VERSION, G0, D520, PRESETS, DEFAULT_INPUT, makeWing, liftingLine, spanShape, pointMasses, boomZones, chordFractions,
+    VERSION, G0, D520, PRESETS, DEFAULT_INPUT, normalise, customDemand, vibrationSpectrum, makeWing, liftingLine, spanShape, pointMasses, boomZones, chordFractions,
     buildSection, analyseSection, loadSection, sectionAt, shearFlowSolve, sigmaAt, collapseParts, capacity, beamFE, solve, zoneOf, interp, linspace, trapz, tubeSection,
   };
 })();

@@ -1,4 +1,4 @@
-# Wright flight controls and the structure that made them possible
+# The Wright brothers and Langley from workshop experiments to aircraft production
 
 MIE 446 · Aerospace Structures · University of Massachusetts Amherst
 
@@ -9,10 +9,11 @@ MIE 446 · Aerospace Structures · University of Massachusetts Amherst
 
 The Wright brothers treated an aircraft as a machine that a pilot must **control**, not simply a wing that must produce lift. Two choices make this especially clear: a movable horizontal surface ahead of the wings for pitch, and deliberate wing twisting for roll. The second choice made structural flexibility part of the control system.
 
-This reading develops the classroom discussions of the forward elevator, cardboard-box analogy, uprights, cables and rudder coordination, then connects them to pressure measurements, the wind tunnel, rear-tail evolution and Langley's failed launches. It distinguishes the 1899 kite, early gliders, 1903 Flyer and later Model B rather than combining their mechanisms into one imaginary aircraft.
+The story connects homes, workshops, published knowledge, measurements, flight practice and production. It distinguishes Langley's successful unpiloted models from his unsuccessful piloted Aerodrome A, and the Wrights' 1899 kite, gliders, successive Flyers and production aircraft. Money is discussed separately as experimental expenditure, allocated funding, prizes, sales and company ownership.
 
 ### Reading map
 
+- [The home, bicycle shops and family](#the-home-bicycle-shops-and-family)
 - [Pressure distributions and CP motion](#how-a-pressure-distribution-produces-a-force-and-a-moment)
 - [Wind tunnel, balances and model geometry](#the-wind-tunnel-turning-disagreement-into-measurements)
 - [The rear horizontal tail and stability](#why-put-the-horizontal-tail-behind-the-wing)
@@ -20,6 +21,50 @@ This reading develops the classroom discussions of the forward elevator, cardboa
 - [Aerodrome failures, launch loads and scaling](#langleys-aerodrome-why-a-successful-model-did-not-guarantee-a-successful-airplane)
 - [How the Wrights addressed structure and control](#how-the-wright-approach-addressed-structure-and-control)
 - [Later Flyers and the factory](#after-1903-the-wright-aircraft-kept-changing)
+- [Money and the transition to a company](#money-experiments-sales-prizes-and-company-ownership)
+- [Inside the factory and its free historical report](#inside-the-factory-and-the-free-historical-report)
+
+## The home bicycle shops and family
+
+### 7 Hawthorn Street was a place of learning and design
+
+![Wright family home at 7 Hawthorn Street around 1900](https://www.nps.gov/subjects/culturallandscapes/images/DAAV-Wright-House-1900-LOC00524v.jpg)
+
+*The Wright family home, **7 Hawthorn Street, Dayton, about 1900**—not the later Hawthorn Hill mansion. Photograph attributed to Wilbur and/or Orville Wright, Library of Congress, reproduced by [NPS](https://home.nps.gov/articles/dayton-landscapes-in-aviation-history.htm). The bicycle beside the fence connects the family setting with their mechanical work.*
+
+The home mattered as well as the shop. Reading, argument, sketches and design decisions could happen at home; component manufacture needed tools and working space. The family encouraged learning and practical work. Katharine, their college-educated sister, and their father Milton belonged to this setting, not merely the background of a story about two isolated inventors. [The Henry Ford: home and shop foundational materials, pp. 4–8](https://www.thehenryford.org/documents/default-source/default-document-library/wright-brothers-foundational-materials.pdf?sfvrsn=2).
+
+### Bicycle work supplied income skills and tools
+
+![Wilbur Wright working at a bench in the bicycle shop](https://www.nps.gov/subjects/culturallandscapes/images/500-DAAV-Wright-Bicycle-Shop-LOC_1.jpg)
+
+*Wilbur working in the bicycle shop, **1897**. Library of Congress photograph, via [NPS](https://home.nps.gov/articles/dayton-landscapes-in-aviation-history.htm). This is historical working space, not the later aircraft factory.*
+
+Repairing and making bicycles supplied income for experiments and experience with mechanisms, alignment and fabrication. Their shop included a lathe, drill press and band saw. Airplane components were made there and transported for assembly; a complete Flyer required more space than the small shop allowed. [The Henry Ford, p. 8](https://www.thehenryford.org/documents/default-source/default-document-library/wright-brothers-foundational-materials.pdf?sfvrsn=2).
+
+For an aerospace structures student, the connection is practical: a correct drawing is not enough. Wood must be shaped, joints made, wires attached and moving parts aligned. A small fit or clearance error can undermine an otherwise sound load-path idea. Charlie Taylor's machining and engine-building contribution belongs in this story alongside the brothers' aerodynamic and control work. [Smithsonian: designing the propulsion system](https://airandspace.si.edu/explore/stories/researching-wright-way).
+
+### Which Wright shop is in the photograph
+
+| Place | Role and identity |
+| --- | --- |
+| 7 Hawthorn Street, Dayton | Family home during the experimental years; later relocated to Greenfield Village. |
+| 22 South Williams Street, Dayton | An earlier bicycle-shop location, preserved within Dayton Aviation Heritage National Historical Park. |
+| 1127 West Third Street, Dayton | Last bicycle shop and the important early-aircraft workshop; relocated to Greenfield Village, Dearborn. |
+| Wright Company factory, Dayton | Purpose-built manufacturing buildings from 1910–11; not the bicycle shop. |
+| Hawthorn Hill, Oakwood | Later residence associated with Orville; not the small family home where the experiments began. |
+
+![The last Wright bicycle shop relocated to Greenfield Village](https://upload.wikimedia.org/wikipedia/commons/a/af/Wright_cycle_shop.jpg)
+
+*Modern photograph of the **relocated last bicycle shop at Greenfield Village**. Rmhermen, [image record](https://commons.wikimedia.org/wiki/File:Wright_cycle_shop.jpg), [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/), unmodified. Its present location is not its original Dayton street.*
+
+![Interior of the earlier Wright Cycle Shop museum in Dayton](https://upload.wikimedia.org/wikipedia/commons/b/bd/Wright_Cycle_Shop_P2110012.JPG)
+
+*Modern museum interior at **Dayton Aviation Heritage National Historical Park**, not the Greenfield Village interior. Chris Light, [image record](https://commons.wikimedia.org/wiki/File:Wright_Cycle_Shop_P2110012.JPG), [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/), unmodified. A museum display does not establish that every displayed object is an original experimental tool.*
+
+Henry Ford acquired the last shop and family home in 1936; they were dismantled, moved and reconstructed in Dearborn. Orville and Charlie Taylor helped with the restoration record. The relocated buildings were dedicated on **16 April 1938**. The move concerns these buildings, **not the Wright aircraft factory**. [NPS history, Chapter 12](https://npshistory.com/publications/daav/honious/chap12.htm), [The Henry Ford: photographic documentation and reconstruction](https://www.thehenryford.org/collections/explore/artifact/393713).
+
+This also explains why a historic-place photograph needs three labels: **what the building was, where it is now, and whether the picture shows its working period or a museum restoration**.
 
 ## Identify the real components first
 
@@ -340,6 +385,22 @@ The Wright transition was gradual. NASA's retrospective analysis discusses chang
 
 ## Chanute, Langley and the Wrights: an exchange of evidence
 
+### Who was Octave Chanute
+
+<img src="https://upload.wikimedia.org/wikipedia/commons/d/d5/Octave_Chanute%2C_%22the_Father_of_Aviation%22.jpg" width="360" alt="Historical portrait of Octave Chanute">
+
+*Octave Chanute, historical portrait, photographer unknown; [public-domain image record](https://commons.wikimedia.org/wiki/File:Octave_Chanute,_%22the_Father_of_Aviation%22.jpg). The commemorative nickname in the file title should not be read as a claim that he alone invented aviation.*
+
+**Octave Chanute (1832–1910)** was a French-born American civil engineer with a major bridge and railway career. He became a collector and communicator of flight knowledge, publishing *Progress in Flying Machines* in **1894**. His group tested gliders on the Indiana dunes in **1896**, with younger experimenters including Augustus Herring and William Avery doing the flying. [NPS biography](https://www.nps.gov/people/chanute.htm).
+
+![Chanute-Herring biplane glider from the 1896 programme](https://upload.wikimedia.org/wikipedia/commons/7/76/Chanute-Herring_1896_hang_glider.jpg)
+
+*Chanute–Herring biplane glider, 1896 programme; pilot identified as **probably Herring** in the [image record](https://commons.wikimedia.org/wiki/File:Chanute-Herring_1896_hang_glider.jpg), public domain. Notice the vertically separated wings, posts and diagonal bracing; do not caption this as a Wright Flyer.*
+
+The bridge-engineering connection is visible in the braced framework. A truss carries loads through connected members rather than relying on a single massive beam. Chanute's bracing arrangement influenced the Wright kite, while the Wrights developed a controllable warping system. He also advised on instruments: his correspondence offered the brothers an anemometer to measure wind. [Smithsonian: Chanute and the Richard anemometer](https://airandspace.si.edu/stories/editorial/octave-chanute-and-richard-anemometer).
+
+Their relationship involved encouragement, criticism and later disagreement about publicity and protecting inventions. It was not a simple story of either complete independence or a teacher supplying a finished design. [NPS biography and correspondence history](https://www.nps.gov/people/chanute.htm).
+
 Octave Chanute was an engineer and an important correspondent, not a substitute designer for the Wrights. Wilbur's **13 May 1900 letter** set out his interest in flight practice; Chanute replied with encouragement. Their sustained correspondence connected the brothers with earlier work and other experimenters. [Library of Congress: first letter](https://www.loc.gov/item/mcc.006/), [LOC: Wright correspondence context](https://www.loc.gov/collections/wilbur-and-orville-wright-papers/articles-and-essays/the-belief-that-flight-is-possible-to-man/).
 
 Three primary documents make the chronology concrete:
@@ -354,7 +415,29 @@ The correspondence corrects two opposite stories: they were neither inventing wi
 
 ## Langley's Aerodrome: why a successful model did not guarantee a successful airplane
 
-Langley's unpiloted Aerodromes achieved flights in 1896. His later human-carrying **Aerodrome A** used tandem wings and an unusually capable Manly gasoline engine, about 52 hp. Do not confuse that engine with the steam-powered earlier models. The Smithsonian identifies deficiencies in scaling, structure, aerodynamics and control—not merely inadequate engine power. [Smithsonian: Aerodrome A collection record](https://www.si.edu/object/langley-aerodrome%3Anasm_A19180001000).
+### First came genuinely successful unpiloted flights in 1896
+
+Langley was not simply a man whose aircraft always failed. On **6 May 1896**, his **Aerodrome No. 5**, a small **unpiloted steam-powered** machine, made two successful flights after catapult launch from a houseboat on the Potomac. The Smithsonian gives distances of about **1,005 m** and **700 m**. The machine weighed about **11 kg** ready for flight. **Aerodrome No. 6** flew successfully on **28 November 1896**, about **1,460 m**. [Smithsonian: Aerodrome Number 5](https://www.si.edu/object/langley-aerodrome-number-5%3Anasm_A19050001000).
+
+![Langley Aerodrome No. 5 on its launch apparatus](https://upload.wikimedia.org/wikipedia/commons/0/0c/PSM_V79_D415_Aerodrome_5_on_the_launching_ways.png)
+
+*Langley's **unpiloted No. 5** on its launching apparatus, historical published image, [public-domain record](https://commons.wikimedia.org/wiki/File:PSM_V79_D415_Aerodrome_5_on_the_launching_ways.png). This is not the full-sized piloted Aerodrome A of 1903.*
+
+<img src="https://upload.wikimedia.org/wikipedia/commons/1/19/Samuel_Pierpont_Langley%27s_steam_A%C3%ABrodrome_No._5_in_flight.png" width="450" alt="Alexander Graham Bell's photograph of Langley Aerodrome No. 5 in flight on 6 May 1896">
+
+*Aerodrome No. 5 in flight, **6 May 1896**, photograph by **Alexander Graham Bell**, reproduced in the historical publication scan. [Image record and original publication](https://commons.wikimedia.org/wiki/File:Samuel_Pierpont_Langley%27s_steam_A%C3%ABrodrome_No._5_in_flight.png), public domain. The small airborne object is the unpiloted machine; it is not a photograph of Manly flying in 1903.*
+
+The achievement showed that a powered heavier-than-air model could sustain flight. It did **not** yet demonstrate a human pilot controlling launch, turns, disturbances and landing. Small-model success was valuable evidence, but it left full-scale structure and operational control to be solved.
+
+### The later piloted Aerodrome A was a different engineering task
+
+His human-carrying **Aerodrome A** used tandem wings and an unusually capable Manly **gasoline** engine, about 52 hp. Do not confuse that engine with the steam-powered earlier models. The Smithsonian identifies deficiencies in scaling, structure, aerodynamics and control—not merely inadequate engine power. [Smithsonian: Aerodrome A collection record](https://www.si.edu/object/langley-aerodrome%3Anasm_A19180001000).
+
+| Machine | Power and occupants | Demonstration |
+| --- | --- | --- |
+| No. 5 and No. 6, 1896 | Steam-powered, unpiloted models | Successful powered-model flights. |
+| Aerodrome A, 1903 | Gasoline engine; Charles Manly aboard | Two unsuccessful full-scale launches, discussed below. |
+| Wright Flyer, 1903 | Gasoline engine; Orville or Wilbur piloting | Controlled powered flights, not just an unpiloted trajectory. |
 
 ![Langley Aerodrome and houseboat launching equipment on 8 December 1903](https://upload.wikimedia.org/wikipedia/commons/9/92/The_Langley_Aerodrome_%284616323625%29.jpg)
 
@@ -488,7 +571,7 @@ Around 1910, Model B brought the rear horizontal elevator and wheels into the Wr
 
 *Wright Company factory, Dayton, **1911**, not the bicycle workshop. Photograph attributed to Wilbur and/or Orville Wright; [image record and original-image link](https://commons.wikimedia.org/wiki/File:Wright_Company_factory-Dayton_Ohio-1911.jpg), public domain. The file's modern upload/edit date is not the date the factory was photographed.*
 
-The first purpose-built factory building dates to **1910**. Production introduced another engineering problem: repeatable manufacture of members, joints, engines and assemblies by skilled workers. A successful prototype must become a reproducible product; training and maintenance matter too. [NPS: Wright Company Factory historic structure report](https://irmadev.nps.gov/DataStore/Reference/Profile/2302780).
+The first purpose-built factory building dates to **1910**. Production introduced another engineering problem: repeatable manufacture of members, joints, engines and assemblies by skilled workers. A successful prototype must become a reproducible product; training and maintenance matter too. [NPS-authored Wright Company Factory historic structure report, archived full PDF](https://npshistory.com/publications/daav/hsr-wright-co-factory.pdf).
 
 | Stage | What students should compare |
 | --- | --- |
@@ -500,6 +583,109 @@ The first purpose-built factory building dates to **1910**. Production introduce
 | Model B and the 1910–11 factory | Changed tail/landing layout and the challenge of repeatable production. |
 
 Use these as separate development stages, not a claim that every later aircraft was superior in every structural or stability measure.
+
+## Money experiments sales prizes and company ownership
+
+### What the 1000 versus 70000 comparison means
+
+Fred C. Kelly's retrospective account reports Orville's recollection that the early experiments involved **less than $1,000 in cash outlay**, including travel, while much of their own mechanical labour was not charged as a purchased service. It is a remembered estimate, **not an audited project total**. [Kelly, *They Wouldn't Believe the Wrights Had Flown*, published in *Harper's*, August 1955, reproduced here](https://www.wright-brothers.org/History_Wing/Aviations_Attic/They_Wouldnt_Believe/They_Wouldnt_Believe_the_Wrights_Had_Flown.htm).
+
+Langley's full-scale programme received **$50,000 from the War Department's Board of Ordnance and Fortification**, supplemented by **$20,000 from the Smithsonian**. These add to **$70,000 allocated funding**. [Smithsonian 1928 historical account, Appendix II, printed pp. 14–15](https://repository.si.edu/server/api/core/bitstreams/b978cc0e-1c63-40d5-9b9c-5592ade4c3f5/content).
+
+![Different accounting scopes for Wright cash expenditure and Langley allocated funds](docs/assets/wright-controls/funding_scopes.png)
+
+*Money comparison in nominal historical US dollars. Left: an upper-bound recollection of cash spending; right: allocated institutional funds. **Do not interpret the bar heights as an audited 70-to-1 efficiency ratio.** They differ in accounting scope and treatment of labour and facilities.*
+
+A numerical comparison needs more than two labels saying “cost.” Ask whether a figure includes salaries, owner labour, travel, equipment, facilities and the duration of the programme. The experiments also pursued different milestones. Their budgets are useful historical context, not proof that less spending automatically produces better engineering.
+
+The bicycle business helped fund the Wright experiments. Later income from contracts and investors belongs to a later phase; it should not be retroactively described as a grant financing their first 1903 flight. [The Henry Ford: cycle-shop income and experiments](https://www.thehenryford.org/documents/default-source/default-document-library/wright-brothers-foundational-materials.pdf?sfvrsn=2).
+
+### Money the Wrights received later
+
+| Transaction | Documented amount | What kind of money it was |
+| --- | --- | --- |
+| 1909 US Army airplane purchase | **$25,000 base + $5,000 speed bonus = $30,000** | Sale payment under performance requirements, not an early research grant. |
+| 1909 American patent-rights transfer to Wright Company | **$100,000 cash, 40% of company stock, and a 10% royalty on machines built**, as recorded in the NASA chronology | Cash plus ownership and a contractual royalty; not three cash payments to add together. |
+| Wilbur's 1908 Michelin award | **20,000 francs**; won 31 December 1908, presented January 1909 | A performance prize in another currency, not dollars or the Army sale. |
+
+The Army's speed criterion was **40 mph**, with a bonus for exceeding it. The roughly **42.5 mph** demonstration earned the documented $5,000 increment. [Smithsonian: 1909 Military Flyer and contract terms](https://www.si.edu/object/1909-wright-military-flyer%3Anasm_A19120001000).
+
+![Base price and speed bonus in the 1909 Army transaction](docs/assets/wright-controls/army_purchase_price.png)
+
+*The $30,000 sale is a later commercial milestone. It does not replace the early-expenditure figure and is not a measure of profit after costs.*
+
+The patent-rights transaction and Michelin award are recorded in Arthur G. Renstrom's [*Wilbur & Orville Wright A Chronology*, NASA SP-2003-4532](https://ntrs.nasa.gov/api/citations/20040000754/downloads/20040000754.pdf): entries for **27 November 1909**, **31 December 1908** and **12 January 1909**. Stock value, royalty terms and cash receipts are different quantities; these transactions do not by themselves establish the brothers' final personal wealth.
+
+The engineering connection is worth discussing. A performance-based purchase needs a demonstration method: payload, speed, endurance and handling must be specified and measured. A buyer is purchasing a useful system and training, not only an airfoil with a high lift coefficient.
+
+## Inside the factory and the free historical report
+
+The freely readable **2023 NPS Historic Structure Report**, prepared by **Raths, Raths & Johnson**, has **286 PDF pages**. Its two parts cover developmental history and preservation/condition assessment. [Read the full report](https://npshistory.com/publications/daav/hsr-wright-co-factory.pdf). Use the printed chapter-page numbers as well as the PDF viewer's page counter; they are not the same.
+
+Building 1 was constructed in **1910**, Building 2 in **1911**. Before the purpose-built factory, assembly used rented **Speedwell Motor Car Company** space while engines were made at the former cycle shop. The report describes a **daylight factory** with large windows, open floor space and steel roof trusses; it also cautions that the 1911 publicity photographs may include staged scenes. [Report, printed pp. 1-11–1-19](https://npshistory.com/publications/daav/hsr-wright-co-factory.pdf#page=22).
+
+### Real photographs of component manufacture
+
+![Propeller and rib department in Wright factory Building 1 in 1911](docs/assets/wright-controls/factory_rib_propeller_department_1911.jpg)
+
+*Propeller and Rib Department, **1911**, Building 1. Wright State University Special Collections and Archives; reproduced in the NPS report, **Figure 1-12**, printed p. **1-16**, PDF p. **27**. Historical photograph extracted without AI modification.*
+
+Read the photograph as a structural engineer. Repeated small wooden parts suggest a need for consistent shape and fit. A rib maintains section geometry, while a propeller must carry rotating loads and maintain its aerodynamic shape. The similar material does not make their loading identical. Look for benches, stacked components and the overhead drive system, rather than treating the picture as decoration.
+
+![General machine shop at the Wright factory in 1911](docs/assets/wright-controls/factory_machine_shop_1911.jpg)
+
+*General Machine Shop, **1911**, Building 1. Wright State University Special Collections and Archives; NPS report **Figure 1-14**, printed p. **1-18**, PDF p. **29**. Unaltered historical photograph.*
+
+Machining connects the design to the actual hardware. Consider a shaft and bearing: too much clearance permits movement; too little can raise friction or prevent assembly. Consider a cable attachment: its location, edge distance and alignment influence both local stress and control travel. These are engineering questions prompted by the photograph, not historical measurements inferred from it.
+
+### Assembly of different aircraft
+
+![Model B assembled inside the Wright factory in 1911](docs/assets/wright-controls/factory_model_b_assembly_1911.jpg)
+
+*Wright **Model B**, assembly in **1911**. Wright State University Special Collections and Archives; NPS report **Figure 1-15**, printed p. **1-19**, PDF p. **30**. Identify separate wing components and partially assembled structure.*
+
+![Model F assembled inside Wright factory Building 1 in 1913](docs/assets/wright-controls/factory_model_f_assembly_1913.jpg)
+
+*Wright **Model F**, assembly in **1913**. Wright State University Special Collections and Archives; NPS report **Figure 1-16**, printed p. **1-20**, PDF p. **31**. This later machine has a visibly different body arrangement; it is not the 1903 Flyer.*
+
+Compare the photographs without assuming every visible change improved safety. Ask what new structure must carry an occupant, engine or aerodynamic force; where it attaches to the wings; whether it changes the CG; and whether the pilot can still command the required moments. A different silhouette is evidence of a different configuration, not a numerical stress result.
+
+![Interpretive sequence from design through components assembly and testing](docs/assets/wright-controls/manufacturing_sequence.png)
+
+*Original engineering teaching sequence. It is not a historical floor plan or a recovered factory process chart.*
+
+For the class wing project, this sequence becomes concrete: define the geometry and loads; manufacture reproducible parts; check fit and alignment; verify control/assembly clearances; and compare the tested response with the prediction. Repeated parts need a consistent inspection method, not just a successful first print.
+
+### A reading route through the free report
+
+| Question | Printed pages / figures to consult |
+| --- | --- |
+| How did the company begin and find manufacturing space? | **1-11–1-15**. |
+| How were departments and the open factory arranged? | **1-16–1-20**, Figures **1-12–1-17**. |
+| How did the site change under later industrial owners? | **1-27–1-34**. |
+| Where are the consolidated historical dates? | Chronologies beginning at **1-43**. |
+| How is the building's own load-bearing condition examined? | Part 2, structural assessment beginning at **2-54**. |
+
+The building's steel trusses and the aircraft's braced wings make a useful classroom comparison: both use member arrangements and connections to carry loads, but they face different weight, deformation and operating requirements. Do not use a factory-roof member size as an aircraft-design rule.
+
+This is also a preservation report, not an aircraft stress-analysis manual. Its drawings and condition assessment document a historic building. The **2023 fire** changed the preservation context described in the report; older photographs should not be presented as evidence of the site's present condition. [NPS report, administrative summary](https://npshistory.com/publications/daav/hsr-wright-co-factory.pdf#page=9).
+
+### The story after the first factory
+
+Wilbur died in **1912**. Orville sold the Wright Company in **1915** and continued experimental work afterward. Those later activities belong to a different stage from the shared bicycle-shop programme. The factory, flying school, service machines and preserved museum artifacts together explain why aviation history extends beyond one first-flight photograph. [NASA chronology](https://ntrs.nasa.gov/api/citations/20040000754/downloads/20040000754.pdf).
+
+### Free references for continuing the story
+
+- [NPS factory report, complete PDF](https://npshistory.com/publications/daav/hsr-wright-co-factory.pdf): building history, archival photographs, construction and condition assessment.
+- [NPS *What Dreams We Have*, Chapter 9](https://npshistory.com/publications/daav/honious/chap9.htm): company formation, demonstrations, factory and pilot training.
+- [NPS *What Dreams We Have*, Chapter 12](https://npshistory.com/publications/daav/honious/chap12.htm): preservation, relocation and museum history.
+- [NASA *Wilbur & Orville Wright A Chronology*](https://ntrs.nasa.gov/api/citations/20040000754/downloads/20040000754.pdf): dated events, financial transactions and flight records.
+- [The Henry Ford foundational materials](https://www.thehenryford.org/documents/default-source/default-document-library/wright-brothers-foundational-materials.pdf?sfvrsn=2): home, bicycle shop and a photographic introduction to the experimental sequence.
+- [Library of Congress Wright papers](https://www.loc.gov/collections/wilbur-and-orville-wright-papers/): original letters, diaries, photographs and notebooks.
+- [Chanute's *Progress in Flying Machines*, Library of Congress](https://www.loc.gov/item/31015366/): the freely accessible historical book behind the correspondence network.
+- [Smithsonian Langley collection finding aid](https://sirismm.si.edu/EADpdfs/NASM.XXXX.0494.pdf): correspondence, drawings and experimental records, including the 1896 photographs.
+
+The [historical-image provenance list](docs/assets/wright-controls/HISTORY_IMAGE_SOURCES.md) records the four factory photo excerpts and the original chart assumptions.
 
 ## What students should take away
 
@@ -523,7 +709,7 @@ For a second lesson, integrate Figure 6's two pressure distributions, reduce the
 
 ## Sources and scope
 
-The original diagrams have PNG and SVG versions. To regenerate the current set, run [build_wright_controls_figures.py](scripts/build_wright_controls_figures.py), then [build_wright_research_figures.py](scripts/build_wright_research_figures.py), and finally [build_wright_revision_figures.py](scripts/build_wright_revision_figures.py), which supplies the redesigned teaching views. Geometry and calculation inputs are illustrative, not historical dimensioned reconstructions. Photographs are separately credited, reproductions are identified, and the generated cardboard illustration is labeled. No restricted museum drawings are republished.
+The original diagrams have PNG and SVG versions. To regenerate the current set, run [build_wright_controls_figures.py](scripts/build_wright_controls_figures.py), then [build_wright_research_figures.py](scripts/build_wright_research_figures.py), and [build_wright_revision_figures.py](scripts/build_wright_revision_figures.py), which supplies the redesigned teaching views. The new finance/manufacturing charts and unchanged historical JPEG excerpts are generated or extracted by [build_wright_history_assets.py](scripts/build_wright_history_assets.py); supply the linked 2023 factory PDF to extract the four photographs. Geometry and calculation inputs are illustrative, not historical dimensioned reconstructions. Photographs are separately credited, reproductions are identified, and the generated cardboard illustration is labeled. No restricted museum drawings are republished.
 
 The readable discussions **“توضیح سطح جلویی برادران رایت”**, the wing-warping response in **“توضیح اعضای عمودی Wright”**, and accessible questions/search excerpts from **“توضیح مکانیزم کایت رایت”** and **“چرا دم افقی عقب رفت”** informed this expanded reading. Historical claims are checked against the linked institutional sources; ChatGPT replies are not historical evidence. Several saved assistant responses did not load, so this is **not a complete transcript or full synthesis of every discussion**. Unsupported precise CP-reversal angles and single-cause crash diagnoses are deliberately not carried over.
 

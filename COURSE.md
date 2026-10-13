@@ -67,10 +67,10 @@ Each homework submission combines an analytical solution, an Engineering Judgmen
 | 3 | External and internal loads; equilibrium; normal and shear stress and strain; wing FBDs | Optional Dr. Avshalom Manela seminar |
 | 4 | Finish Lecture 1 wing anatomy, devices and load paths; hand-calculate semi-wing geometry, taper, area and aspect ratio | HW 1 due Oct. 1; project calculation sheet |
 | 5 | NACA section, rods, modules, fit coupon and print constraints; cantilever FBD, virtual-load shear/root moment and print-release review | Coupon R01 and pre-print gate Oct. 8–9 |
-| 6 | Supervised wing-module fabrication starts Oct. 13; beam shear/moment, bending stress, slope and deflection | First-print evidence |
+| 6 | Supervised wing-module fabrication starts Oct. 13; beam shear/moment, bending stress, slope and deflection | First-print evidence; HW 2 due Sunday, Oct. 18, 2026 |
 | 7 | 2D/3D stress transformation, Mohr's circle, principal stresses and constitutive assumptions | As-built checkpoint Oct. 22 |
 | 8 | Individual midterm; electric-propulsion guest class with Dr. Michael Tsay of Busek | Midterm Oct. 27 and guest class |
-| 9 | Nov. 3 no class; strain energy and virtual work on Nov. 5 | HW 2 due Nov. 5 |
+| 9 | Nov. 3 no class; strain energy and virtual work on Nov. 5 | No HW 2 deadline this week; due Oct. 18 |
 | 10 | Castigliano, maneuver/landing loads and V–n diagrams; wing idealization and assembly review | HW 3 due Nov. 12 |
 | 11 | Thin-walled wing-box shear flow, torsion and shear center; compare model with printed geometry | HW 4 due Nov. 19; Nov. 16 lab slot |
 | 12 | University schedule and Thanksgiving recess | Approved inspection/correction slots only |

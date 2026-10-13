@@ -1,6 +1,6 @@
 # Homework 2: Flight-Control Forces, Moments, and Structural Load Paths
 
-MIE 446 Aerospace Structures, Fall 2026. Released October 1, 2026. Due: see Canvas.
+MIE 446 Aerospace Structures, Fall 2026. Released October 1, 2026. **Due: Sunday, October 18, 2026.** Submit through Canvas at the time specified there.
 
 Start with the illustrated [student guide (PDF)](MIE446_HW2_Control_Forces_Moments.pdf).
 It gives the required reading, numbered steps, MATLAB commands, exact Excel cell

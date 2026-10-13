@@ -193,6 +193,48 @@ A glider pilot manages a finite energy budget. There is no conventional engine-p
 
 The engineering objective is not merely “arrive at the runway.” The aircraft needs an appropriate combination of speed, height, alignment and configuration for the approach, flare and touchdown. Too little energy restricts reach; excess energy must be dissipated without creating unacceptable speed or loads.
 
+### Real airbrakes on a real wing
+
+![Extended Schempp-Hirth airbrakes on a Slingsby Capstan glider](https://upload.wikimedia.org/wikipedia/commons/1/11/Airbrakes_on_Capstan.jpg)
+
+*Photo A. The raised plates are Schempp-Hirth airbrakes on a Slingsby Capstan—not trailing-edge flaps or ailerons. Photo: TSRL, June 25, 2012; [source](https://commons.wikimedia.org/wiki/File:Airbrakes_on_Capstan.jpg), [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/). Image unchanged.*
+
+The raised device exposes area to the flow and changes the wing's aerodynamic loading. The resulting drag makes the descent path steeper at a maintained reference speed. “Airbrake,” “dive brake” and “spoiler” names cover different designs: some act mainly through drag; others also substantially reduce lift. Identify the actual mechanism rather than treating the words as identical.
+
+The structure carries the device's loads through its supports and control mechanism into the wing. Its opening interrupts the surrounding skin layout, so local reinforcement and load transfer matter. This is a structural interpretation of the visible mechanism, not a drawing of this particular wing's internal attachments.
+
+For a modern training example, the manufacturer describes large upper-surface dive brakes on the **Schleicher ASK 21**. That real aircraft shows why a pilot needs a controllable drag device on an otherwise efficient wing. It does not mean every glider uses the same device, deployment limit or control linkage. [Schleicher ASK 21 manufacturer page](https://www.alexander-schleicher.de/en/flugzeuge/ask-21/).
+
+### What the pilot actually sees and operates
+
+![DG-101G ELAN sailplane cockpit with control stick, blue airbrake handle and instruments](https://upload.wikimedia.org/wikipedia/commons/e/ef/Glidercockpit.JPG)
+
+*Photo B. DG-101G ELAN cockpit. The blue handle on the left operates the airbrakes. Source: [Glidercockpit.JPG](https://commons.wikimedia.org/wiki/File:Glidercockpit.JPG), uploaded by Jmcc150 with the photographer's permission; the page does not name the photographer. [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/). Image unchanged.*
+
+Read this photograph as a set of separate functions. The black stick commands pitch and roll; pedals command rudder. The blue handle commands airbrakes. The green trim control eases sustained pitch-control force; it is not a source of energy. The yellow tow-release control is for releasing the tow connection, not for stopping the glider. Handle arrangements must be identified from the actual aircraft, not transferred from a photograph to another cockpit. [Photo identification and description](https://commons.wikimedia.org/wiki/File:Glidercockpit.JPG).
+
+| Information source | What it tells the pilot | What it does not establish |
+|---|---|---|
+| Airspeed indicator | Indicated speed associated with pitot/static pressure | Groundspeed or guaranteed distance to a runway |
+| Altimeter | Altitude relative to its pressure reference | Automatic terrain clearance |
+| Variometer | Climb/sink information; some systems compensate for energy changes | A substitute for airspeed, alignment or outside visual assessment |
+| Yaw string on the canopy | Local indication of lateral airflow and coordination | A direct angle-of-attack or stall warning |
+| Map or flight computer | Position and, with model inputs, estimated arrival conditions | A guaranteed reachable landing site |
+
+These instruments inform decisions; they do not add lift or energy. Speed, altitude, sink and ground position answer different questions. [FAA Glider Flying Handbook, Chapter 4](https://www.faa.gov/regulations_policies/handbooks_manuals/aviation/glider_handbook/gfh_chapter_4.pdf).
+
+### Airbrakes are not wheel brakes
+
+![Schleicher K 8b D-5852 during landing](https://upload.wikimedia.org/wikipedia/commons/1/1e/Schleicher_K_8b_D-5852_Landung.jpg)
+
+*Photo C. A real Schleicher K 8b D-5852 landing view. Compare the long wing, fuselage and landing wheel with the simplified load-path drawing below. Photo: Stahlkocher; [source](https://commons.wikimedia.org/wiki/File:Schleicher_K_8b_D-5852_Landung.jpg), [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/). Image unchanged.*
+
+An **airbrake** acts on airflow before and after contact. A **wheel brake** acts through wheel/ground contact during rollout. Some gliders link both functions to parts of one handle's travel; other arrangements differ. A main wheel can be fixed or retractable, with additional skids or wheels depending on design. A gear-position check is therefore distinct from choosing aerodynamic drag. [FAA Chapter 2, landing gear and wheel brakes](https://www.faa.gov/regulations_policies/handbooks_manuals/aviation/glider_handbook/gfh_chapter_2.pdf).
+
+Once on the ground, tire normal force and available friction limit braking. Lift still carried by the wing reduces the tire normal reaction; surface conditions also matter. The brake system's force enters the fuselage through the gear attachment, while tire and suspension deformation accommodate vertical motion. Thus “landing safely” requires both a controlled approach and a structure capable of handling contact and rollout loads.
+
+**For class:** identify each visible control, predict whether it changes aerodynamic force, pilot workload, information or ground reaction, then trace its effect through the energy and load-path diagrams. This is an equipment-identification exercise, not a flight checklist; actual approach settings and limitations require the applicable flight manual and instruction.
+
 ### Backup power and restarting are a separate problem
 
 A RAT extracts energy from the airflow for selected systems and therefore adds drag; it does not provide propulsive thrust. An APU, batteries and remaining hydraulic sources can support different functions on different aircraft. Their availability and limits cannot be inferred from the presence of lift. See the electrical/hydraulic discussion in the [Flight 1549 investigation, section 1.6.5](https://www.ntsb.gov/investigations/accidentreports/reports/aar1003.pdf).
@@ -214,6 +256,35 @@ One qualification to the translated article is essential: **a restart needs a us
 **Flight 1549 qualification.** All 155 occupants survived, but five sustained serious injuries and the aircraft suffered substantial damage. Simulator returns initiated immediately did not reproduce real recognition time; a return trial incorporating a 35-second delay failed. A successful immediate simulation does not prove an airport return was feasible for the actual crew. [NTSB, printed pp. 50 and 89](https://www.ntsb.gov/investigations/accidentreports/reports/aar1003.pdf).
 
 **Shuttle comparison.** NASA describes a steep initial approach followed by a shallower final approach and flare. A single quoted glide ratio cannot represent every phase. Compare its trajectory and energy management with a sailplane, rather than assuming all unpowered aircraft have the same performance. [NASA](https://www.nasa.gov/centers-and-facilities/langley/the-aeronautics-of-the-space-shuttle/).
+
+### Air Transat 236 and the A330 that reached the Azores
+
+![Air Transat Airbus A330-243 C-GITS, the aircraft involved in Flight 236, photographed in 2012](https://upload.wikimedia.org/wikipedia/commons/9/9c/Air_Transat_Airbus_A330-243_C-GITS_102_%287731004188%29.jpg)
+
+*Photo D. **C-GITS is the actual A330 involved in Flight 236**, but this photograph was taken on August 6, 2012—not during the 2001 emergency landing. Photo: Lord of the Wings©; [source](https://commons.wikimedia.org/wiki/File:Air_Transat_Airbus_A330-243_C-GITS_102_%287731004188%29.jpg), [CC BY-SA 2.0](https://creativecommons.org/licenses/by-sa/2.0/). Image unchanged.*
+
+Look at the physical scale: this was a transport aircraft with substantial fuselage, fuel-system and landing-gear mass, not a lightweight sailplane. Its wings still produced lift after the loss of thrust. Height made an unpowered runway arrival possible; runway contact then created a separate gear, tire and braking load case. The 19-minute interval is evidence of this event's outcome, not a universal engine-out endurance.
+
+**Connect the photograph to the models:** Figure 1 explains support during the glide; Figures 6–7 explain why arrival speed, vertical speed and stopping distance matter after contact. A photograph cannot reveal internal stress, and the classroom numbers are not a reconstruction of this A330 landing. The event timing and distances are documented in the [investigation synopsis](https://www.fss.aero/accident-reports/dvdfiles/PT/2001-08-24-PT.pdf).
+
+### US Airways 1549 and the A320 in the Hudson
+
+![US Airways Flight 1549 Airbus A320 N106US in the Hudson River after ditching on January 15, 2009](https://upload.wikimedia.org/wikipedia/commons/0/0f/US_Airways_Flight_1549_%28N106US%29_after_crashing_into_the_Hudson_River_%28crop_4%29.jpg)
+
+*Photo E. **The actual accident aircraft, N106US, after the Hudson ditching on January 15, 2009.** Unlike Photo D, this is a photograph of the emergency's aftermath. Photo: Greg L; [source and existing crop](https://commons.wikimedia.org/wiki/File:US_Airways_Flight_1549_(N106US)_after_crashing_into_the_Hudson_River_(crop_4).jpg), [CC BY 2.0](https://creativecommons.org/licenses/by/2.0/). The published crop is reproduced unchanged.*
+
+Read the picture together with Figure 8: water contact loads the lower fuselage rather than entering only through landing-gear fittings. The visible aircraft and evacuation scene do not establish an undamaged underside. Occupant survival, structural damage and post-impact evacuation are separate engineering outcomes; see the documented damage discussion below.
+
+### Compare the two landing environments
+
+| Question | A330 runway arrival | A320 water arrival |
+|---|---|---|
+| Where does the initial contact force enter? | Tire and landing-gear assemblies | Wetted external surfaces, with evolving contact |
+| How is the vertical motion arrested? | Tire/gear deformation and aircraft response | Fluid pressure and coupled airframe/fluid response |
+| What becomes a structural concern? | Concentrated attachment loads, gear and tire capacity, braking forces | Distributed transient pressure, skin/frame deformation, openings and flooding |
+| What must not be inferred? | A reached runway guarantees an undamaged landing | All occupants surviving means the structure stayed intact |
+
+This table compares physical load paths; it does not assign measured loads to either accident or rank the sites' safety independently of the actual circumstances.
 
 ## Wing loads before touchdown
 
@@ -380,7 +451,7 @@ Crashworthiness asks whether the structure, restraint systems and exits help pre
 
 ### Reproducible figures and limits
 
-All eight engineering figures are original course diagrams generated by [build_gliding_figures.py](scripts/build_gliding_figures.py). The script creates PNG and SVG versions and checks the polar speeds and worked impact numbers. Run with Python, NumPy and Matplotlib:
+All eight engineering figures are original course diagrams generated by [build_gliding_figures.py](scripts/build_gliding_figures.py). Photos A–E are separate real photographs with source and license credits beside each image. They are remotely embedded from Wikimedia Commons, so viewing them requires access to that host; each source link also opens the photograph's description page. The script creates PNG and SVG versions of the original diagrams and checks the polar speeds and worked impact numbers. Run with Python, NumPy and Matplotlib:
 
 ```text
 python scripts/build_gliding_figures.py

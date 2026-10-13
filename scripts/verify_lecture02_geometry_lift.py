@@ -10,6 +10,12 @@ ids=[c['id'] for c in nb['cells']]
 assert len(ids)==len(set(ids))
 assert '079e72ea' in ids and 'd9e8de83' in ids
 assert all(x in ids for x in ['l2-oct13-cl-experiment','l2-oct13-real-aircraft','l2-oct13-geometry-reasons'])
+lift=''.join(next(c for c in nb['cells'] if c['id']=='079e72ea')['source'])
+assert r'\frac{L}{qS}' in lift
+assert r'\frac{a_0}{1+\displaystyle\frac{a_0}{\pi e_a AR}}' in lift
+assert '<div style="font-size:21px' not in lift
+assert lift.count('$$')%2==0 and r'\Large' in lift
+assert all(x in ids for x in ['l2-oct13-sideslip-picture','l2-oct13-projection-picture','l2-oct13-crossflow-picture','l2-oct13-causal-picture','l2-oct13-history'])
 scope={'__name__':'__main__'}
 plt.show=lambda *a,**k:plt.close('all')
 for c in nb['cells']:

@@ -16,7 +16,7 @@ def md(ident,text):return {'cell_type':'markdown','id':ident,'metadata':{},'sour
 def code(ident,text):return {'cell_type':'code','id':ident,'metadata':{},'execution_count':None,'outputs':[],'source':text.strip().splitlines(keepends=True)}
 def image(name,alt):return f'![{alt}]({RAW}{name}.png)\n\n*Original instructional model, not aircraft test data.*'
 
-GEOMETRY='''### 2B. Why choose dihedral or sweep? Three disciplines, one wing
+GEOMETRY=r'''### 2B. Why choose dihedral or sweep? Three disciplines, one wing
 
 **Dihedral Γ:** upward inclination in a FRONT view. **Sweep Λ:** aft or forward inclination in a TOP view. Neither is angle of attack, wing twist, or the upward bending caused by lift. Specify the sweep reference line (LE or quarter chord).
 
@@ -36,7 +36,7 @@ More dihedral is not always better. Sweep and a high-wing configuration can alre
 
 At high speed, consider the component of freestream normal to a swept reference line:
 
-<div style="font-size:20px;padding:12px">V<sub>normal</sub> ≈ V cos Λ &nbsp; · &nbsp; M<sub>normal</sub> ≈ M cos Λ</div>
+$$\Large V_{\mathrm{normal}}\approx V\cos\Lambda\qquad M_{\mathrm{normal}}\approx M\cos\Lambda$$
 
 This is an intuition for compressibility benefits, **not a complete swept-wing design formula**. Thickness, Mach number, Reynolds number and the three-dimensional pressure field matter. At low speed there is no free benefit: sweep can reduce lift slope, change spanwise flow and encourage tip-stall/pitch-up tendencies. Washout, airfoil selection and high-lift devices help manage those tendencies. Do not put a cosine into every aerodynamic equation indiscriminately.
 
@@ -76,13 +76,19 @@ PHOTOS='''### 2C. Real aircraft: read the view before naming the angle
 **Photo exercise:** identify nose/tail, main wing root/tip and viewing direction in each photo. Say which angle you can identify qualitatively, and which angle you cannot measure reliably from that view.
 '''
 
-LIFT='''## 3. From airfoil cₗ to finite-wing Cₗ — then induced drag
+LIFT=r'''## 3. From airfoil cₗ to finite-wing Cₗ — then induced drag
 
 ### 3.1 Begin with the two different reference areas
 
 Lecture 1 gave the **section** lift coefficient c<sub>l</sub>. A two-dimensional section uses lift per unit span L′ and its local chord c. A finite wing uses total lift L and **full-wing projected area S**:
 
-<div style="font-size:21px;padding:12px;line-height:1.8">q = ½ρV²<br>c<sub>l</sub>(y) = L′(y) / [q c(y)]<br>C<sub>L</sub> = L / (q S)<br>L = ∫<sub>−b/2</sub><sup>b/2</sup> q c(y)c<sub>l</sub>(y) dy<br>C<sub>L</sub> = (1/S) ∫<sub>−b/2</sub><sup>b/2</sup> c(y)c<sub>l</sub>(y) dy</div>
+$$\Large q=\frac{1}{2}\rho V^2$$
+
+$$\Large c_l(y)=\frac{L'(y)}{q\,c(y)}\qquad C_L=\frac{L}{qS}$$
+
+$$\Large L=\int_{-b/2}^{b/2}q\,c(y)c_l(y)\,dy$$
+
+$$\Large C_L=\frac{1}{S}\int_{-b/2}^{b/2}c(y)c_l(y)\,dy$$
 
 The wing coefficient is a **chord-weighted spanwise average**, not the section coefficient at one chosen station. In a symmetric case you may double the half-wing integral. Never use half-wing lift with full-wing area without that factor of two.
 
@@ -90,7 +96,13 @@ The wing coefficient is a **chord-weighted spanwise average**, not the section c
 
 Finite span creates a trailing vortex system and **downwash**. The local flow tilts downward, so the section sees an effective angle smaller than the geometric angle. In a simple untwisted, weakly swept, attached-flow comparison:
 
-<div style="font-size:21px;padding:12px;line-height:1.8">α<sub>effective</sub> ≈ α − α<sub>i</sub><br>c<sub>l</sub> ≈ a₀(α<sub>effective</sub> − α₀)<br>α<sub>i</sub> ≈ C<sub>L</sub> / (πe<sub>a</sub>AR)<br>C<sub>L</sub> ≈ a(α − α<sub>L=0</sub>)<br>a ≈ a₀ / [1 + a₀/(πe<sub>a</sub>AR)]</div>
+$$\Large \alpha_{\mathrm{effective}}\approx\alpha-\alpha_i$$
+
+$$\Large c_l\approx a_0(\alpha_{\mathrm{effective}}-\alpha_0)\qquad \alpha_i\approx\frac{C_L}{\pi e_a AR}$$
+
+$$\Large C_L\approx a(\alpha-\alpha_{L=0})$$
+
+$$\Large a\approx\frac{a_0}{1+\displaystyle\frac{a_0}{\pi e_a AR}}$$
 
 **Read it step by step:** increasing α creates lift; lift creates downwash; downwash removes some effective incidence; consequently the finite-wing lift slope a is below the isolated-section slope a₀. Substitute α<sub>i</sub> into C<sub>L</sub> ≈ a₀(α − α₀ − α<sub>i</sub>), collect the terms in C<sub>L</sub>, and divide: that gives the denominator above. As AR → ∞, a → a₀.
 
@@ -100,7 +112,9 @@ Thus C<sub>L</sub> depends on angle of attack, airfoil/camber and zero-lift angl
 
 ### 3.3 Now use wing Cₗ to calculate induced drag
 
-<div style="font-size:21px;padding:12px;line-height:1.8">C<sub>D,i</sub> = C<sub>L</sub>² / (πe<sub>i</sub>AR)<br>D<sub>i</sub> = q S C<sub>D,i</sub></div>
+$$\Large C_{D,i}=\frac{C_L^2}{\pi e_i AR}$$
+
+$$\Large D_i=qS C_{D,i}$$
 
 e<sub>i</sub> is **induced-drag span efficiency**; ideal planar elliptical loading gives e<sub>i</sub> = 1. e<sub>a</sub> above is an approximate lift-slope correction. They are separately assumed here; they are not automatically equal, and neither is automatically a fitted whole-aircraft Oswald factor. NACA digits do not determine them.
 
@@ -141,7 +155,104 @@ print('Left: compare at the same angle. Right: compare at the same wing CL.')
 print('Virtual teaching predictions, not NACA wind-tunnel data; do not extrapolate past stall.')
 '''
 
+SIDESLIP=r'''### 2B.1. What is sideslip? Start with the air, not the runway
+
+**Sideslip β is the sideways component of motion relative to the surrounding air.** In a top view, the aircraft nose and its air-relative velocity no longer point along the same line. The relative wind points opposite to that velocity. It is not simply a bank angle, a change in compass heading, or a difference between heading and ground track.
+
+We use body axes x forward, y toward the aircraft's right, and z downward. If v is the rightward air-relative velocity component:
+
+$$\Large \beta=\sin^{-1}\!\left(\frac{v}{V}\right)$$
+
+Positive β means the aircraft moves partly toward its own right through the air; the relative wind arrives from its right. A rudder input or an asymmetric disturbance can produce sideslip. A bank disturbance can also develop sideslip through the subsequent motion, but a coordinated banked turn can have approximately zero sideslip.
+
+**Crosswind is not automatically sideslip.** In a crabbed crosswind flight the nose can point into the wind while the air-relative velocity stays aligned with the nose: β ≈ 0 even though ground track differs from heading. This follows V_ground = V_air + V_wind. In an intentional sideslip, the pilot instead maintains a nonzero β. The next figure separates those cases.
+'''
+
+DIHEDRAL_STEPS=r'''### 2B.2. How does dihedral turn sideslip into a rolling moment?
+
+The next drawing is a **REAR view, looking toward the nose**. The aircraft's right wing is on the page's right. It is not a front-facing camera view. The green arrows illustrate the **vertical lift components**; horizontal components are omitted. All lift differences and arrows are schematic, not computed flight loads.
+
+1. Positive β brings a cross-flow component from the aircraft's right.
+2. With positive dihedral, the right and left wing panels are tilted in opposite directions. The same cross-flow therefore contributes differently to each panel's effective incidence.
+3. The right (windward) wing sees higher effective angle of attack and the left sees lower effective angle of attack, for this small-disturbance attached-flow illustration.
+4. Right-wing lift increases and left-wing lift decreases. The difference raises the right wing: a negative rolling moment in our body-axis convention.
+5. This is the **dihedral effect: rolling response to sideslip**, not a direct “bank-angle sensor.” Reversing β reverses the lift difference and rolling moment.
+
+For small angles, a geometry-only illustration is Δα_right ≈ +β sin Γ and Δα_left ≈ −β sin Γ (radians). It omits sweep, fuselage interference, twist and other surfaces; it is not the aircraft's stability derivative. An isolated, unswept zero-dihedral wing has no such geometric contribution in this idealization. A real zero-dihedral airplane can still have a substantial total dihedral effect.
+
+$$\Large C_{\ell\beta}=\frac{\partial C_{\ell}}{\partial\beta}$$
+
+Here C_ℓ is the **rolling-moment coefficient**, NOT section lift c_l or wing lift C_L. Positive roll lowers the aircraft's right wing; a usual stabilizing dihedral contribution has C_ℓβ &lt; 0. Overall lateral–directional stability also needs yaw stability/damping, roll damping and the coupled Dutch-roll/spiral behavior. Dihedral alone does not guarantee a stable aircraft.
+
+Source for the windward-wing incidence/lift explanation: [FAA Airframe Handbook, lateral stability](https://www.faa.gov/documentLibrary/media/Advisory_Circular/AC_65-15A.pdf), chapter 2, Figure 2-14.
+
+**Check your understanding:** (a) banked but coordinated, β ≈ 0: is the pictured sideslip-driven restoring moment present? (b) reverse the sideslip: which wing gets more lift? (c) keep projected span and vertical load fixed: does Γ alone necessarily increase root roll-bending? Answers: no for this pictured mechanism; the left wing; no—resolve the actual force components and lever arms.
+'''
+
+HISTORY='''### 2B.3. Was dihedral discovered after an aircraft accident?
+
+**There is no defensible universal story that “the first airplane without dihedral crashed, so designers invented dihedral.”** Zero geometric dihedral is not the same as zero aerodynamic dihedral effect. We do not attribute an accident to one geometric parameter without an investigation.
+
+**An early documented explanation: Sir George Cayley, 1810.** In Part II of *On Aerial Navigation* (February 1810), Cayley discussed an apex-down V cross-section to resist lateral rolling. This is useful historical evidence of the idea, not proof that he was the first person ever to build it. His historical reasoning should not replace today's sideslip explanation. [Original article, university-hosted transcription](https://invention.psychology.msstate.edu/i/Cayley/CayleyP2.html) (the host notes incomplete final proofreading). The [Smithsonian history](https://airandspace.si.edu/explore/stories/flight-airplane) describes his 1804 hand-launched glider, but does not establish that as the first implementation of dihedral.
+
+**A documented handling problem: Ryan FR-1 Fireball.** Ames engineer Seth B. Anderson described a 1945 investigation of inadequate lateral stability during carrier approaches. Wind-tunnel tests indicated that more dihedral was needed; three aircraft with 7.5°, 9.5° and 11.5° were compared in flight. Excessive dihedral could also make roll too sensitive to yaw. This is a concrete design/test trade-off, **not evidence of a crash caused by zero dihedral**. The cited account does not identify a final optimum or quantify the improvement. [Firsthand NASA memoir, printed p. 20](https://www.nasa.gov/wp-content/uploads/2023/04/sp-4526.pdf).
+
+**Real counterexample: F-15.** NASA TM 72861, Table 1, lists wing dihedral as **−1°**, i.e. slight anhedral—not positive dihedral. Yet a separate NASA flight-research report describes how sideslip produces roll through the F-15's dihedral effect in differential-thrust control. This illustrates the distinction between wing geometry and the total airplane's response; it does not prove unconditional passive stability. [Geometry report, Table 1](https://ntrs.nasa.gov/api/citations/19790015808/downloads/19790015808.pdf); [flight-research report, printed p. 163](https://ntrs.nasa.gov/api/citations/19950026588/downloads/19950026588.pdf).
+
+**Why might anhedral be intentional?** Other contributors—such as sweep and wing–fuselage interaction—may already produce a strong total dihedral effect. The designer balances those contributors with control authority and lateral–directional dynamics rather than maximizing Γ. A positive-dihedral wing, zero-dihedral wing and anhedral wing can all belong to flyable designs; the rest of the aircraft matters.
+'''
+
+def sideslip_figures():
+    from matplotlib.patches import Polygon, FancyBboxPatch, Arc
+    fig,axs=plt.subplots(1,3,figsize=(15,5),layout='constrained')
+    for ax,beta,title in zip(axs,[0,22,0],['A. Aligned flight: β = 0','B. Sideslip: β > 0','C. Crosswind/crab: β = 0']):
+        ax.add_patch(Polygon([(-.09,-.65),(.09,-.65),(.09,.6),(0,.92),(-.09,.6)],color='#dce8ef',ec='#19364b'))
+        ax.add_patch(Polygon([(-1.05,-.13),(-.1,.14),(.1,.14),(1.05,-.13),(1.05,-.28),(-1.05,-.28)],color='#dce8ef',ec='#19364b'))
+        ax.plot([0,0],[-.8,1.55],'k--',lw=1)
+        vx=1.25*np.sin(np.deg2rad(beta));vy=1.25*np.cos(np.deg2rad(beta))
+        ax.annotate('',(vx,vy),(0,0),arrowprops={'arrowstyle':'-|>','color':'#198652','lw':3})
+        ax.text(vx+.1,vy,'V air',color='#198652',fontsize=12)
+        ax.annotate('',(.5*vx,.5*vy),(vx,vy),arrowprops={'arrowstyle':'-|>','color':'#b42b37','lw':2})
+        ax.text(-1.35,1.4,'Nose / x forward ↑',fontsize=10)
+        if beta:
+            ax.add_patch(Arc((0,0),1.3,1.3,theta1=90-beta,theta2=90,color='#b97513',lw=2));ax.text(.1,.76,'β',fontsize=22,color='#b97513');ax.text(-1.3,-1.0,'Red: relative wind arrives\nfrom aircraft right',color='#b42b37',fontsize=11)
+        elif title.startswith('C'):
+            ax.annotate('',(.9,1.15),(0,0),arrowprops={'arrowstyle':'-|>','color':'#1766c2','lw':2});ax.text(.9,.82,'V ground',color='#1766c2',fontsize=11)
+            ax.text(-1.3,-1.0,'Wind changes ground track,\nnot necessarily sideslip.',fontsize=11)
+        else:ax.text(-1.3,-1.0,'Air-relative velocity follows nose.\nRelative wind is opposite to V air.',fontsize=11)
+        ax.set(xlim=(-1.5,1.55),ylim=(-1.2,1.65),title=title);ax.set_aspect('equal');ax.axis('off')
+    fig.savefig(OUT/'sideslip_air_and_ground.png',dpi=170,bbox_inches='tight');plt.close(fig)
+    fig,axs=plt.subplots(1,2,figsize=(13,5.5),layout='constrained')
+    for ax,gamma,title in zip(axs,[0,12],['A. Zero dihedral: geometry-only contribution','B. Positive dihedral: windward wing gains lift']):
+        xx=np.array([-1.2,0,1.2]);zz=np.abs(xx)*np.tan(np.deg2rad(gamma));ax.plot(xx,zz,lw=5,color='#197da6');ax.axhline(0,color='.6',ls='--',lw=1)
+        ax.scatter([0],[0],color='#19364b',s=70);ax.text(0,-.12,'CG',ha='center')
+        for x,label,height in [(-.8,'Aircraft LEFT',.55 if gamma==0 else .32),(.8,'Aircraft RIGHT',.55 if gamma==0 else .9)]:
+            z=abs(x)*np.tan(np.deg2rad(gamma));ax.annotate('',(x,z+height),(x,z),arrowprops={'arrowstyle':'-|>','color':'#198652','lw':3});ax.text(x,-.3,label,ha='center',fontsize=11)
+            ax.text(x,z+height+.06,'Equal lift' if gamma==0 else 'Lower lift' if x<0 else 'Higher lift',ha='center',color='#198652')
+        ax.annotate('',(-.4,1.48),(1.15,1.48),arrowprops={'arrowstyle':'-|>','color':'#b42b37','lw':2});ax.text(.35,1.58,'Cross-flow from RIGHT',ha='center',color='#b42b37',fontsize=11)
+        ax.text(0,-.62,'Same sideslip; schematic arrows, not calculated loads',ha='center',fontsize=11)
+        if gamma:ax.text(-.95,1.3,'α left ↓     α right ↑\nRight wing tends to RISE',fontsize=12,color='#19364b')
+        ax.set(xlim=(-1.5,1.5),ylim=(-.72,1.75),title=title+'\nREAR view: looking toward the nose');ax.axis('off')
+    fig.savefig(OUT/'dihedral_crossflow_lift_difference.png',dpi=170,bbox_inches='tight');plt.close(fig)
+    fig,ax=plt.subplots(figsize=(14,3.2),layout='constrained');ax.set(xlim=(0,14),ylim=(0,3));ax.axis('off')
+    labels=['Sideslip β > 0\nWind arrives\nfrom the RIGHT','Tilted panels\nRight α increases\nLeft α decreases','Lift difference\nRight lift increases\nLeft lift decreases','Rolling moment\nRight wing rises\nCℓβ usually < 0']
+    for i,label in enumerate(labels):
+        x=.15+i*3.5;ax.add_patch(FancyBboxPatch((x,.8),2.9,1.45,boxstyle='round,pad=.1',fc='#edf4f7',ec='#197da6',lw=2));ax.text(x+1.45,1.52,label,ha='center',va='center',fontsize=12)
+        if i<3:ax.annotate('',(x+3.4,1.52),(x+3.0,1.52),arrowprops={'arrowstyle':'-|>','lw':2})
+    ax.text(7,.3,'Input is SIDESLIP, not bank angle alone. Reversing β reverses the pictured response.',ha='center',fontsize=12)
+    fig.savefig(OUT/'dihedral_causal_chain.png',dpi=170,bbox_inches='tight');plt.close(fig)
+    fig,axs=plt.subplots(1,2,figsize=(12,5),layout='constrained')
+    for ax,side,sign in [(axs[0],'LEFT',1),(axs[1],'RIGHT',-1)]:
+        gamma=np.deg2rad(25);normal=np.array([sign*np.sin(gamma),np.cos(gamma)]);flow=np.array([-1.,0.]);projection=np.dot(flow,normal)*normal
+        xx=np.array([-.8,.8]);ax.plot(xx,-sign*xx*np.tan(gamma),lw=4,color='#197da6')
+        for vec,color,label,pos in [(normal,'#198652','Panel normal n',(normal[0]+.08,normal[1]+.08)),(flow,'#b42b37','Side-flow u',(-1.12,-.13)),(projection,'#b97513','Normal component',(.15,-.65))]:
+            ax.annotate('',tuple(vec),(0,0),arrowprops={'arrowstyle':'-|>','color':color,'lw':3});ax.text(*pos,label,color=color,fontsize=11)
+        ax.text(-1.05,1.3,'u · n '+('< 0: incidence decreases' if side=='LEFT' else '> 0: incidence increases'),fontsize=12)
+        ax.set(title=f'{side} panel: same flow, different projection\nRear-view geometry; Γ exaggerated for visibility',xlim=(-1.3,1.3),ylim=(-.85,1.55));ax.set_aspect('equal');ax.axis('off')
+    fig.savefig(OUT/'dihedral_normal_projection.png',dpi=170,bbox_inches='tight');plt.close(fig)
+
 def figures():
+    sideslip_figures()
     fig,axs=plt.subplots(1,3,figsize=(14,4.2),layout='constrained')
     yy=np.array([-1,0,1]);axs[0].plot(yy,np.abs(yy)*.22,lw=5,color='#1674a5');axs[0].axhline(0,ls='--',color='.6');axs[0].text(.45,.08,'Γ',fontsize=23)
     axs[0].set(title='FRONT: positive dihedral',xlabel='Span',ylabel='Height',ylim=(-.18,.45));axs[0].text(0,.35,'Tips rise; not angle of attack',ha='center',fontsize=10)
@@ -168,9 +279,10 @@ def main():
     for c in cells:
         if c.get('id')=='079e72ea':c['source']=LIFT.strip().splitlines(keepends=True)
     additions={
-      'd9e8de83':[md('l2-oct13-geometry-reasons',GEOMETRY),md('l2-oct13-real-aircraft',PHOTOS),md('l2-oct13-clean-views',image('geometry_views_and_reasons','Front-view dihedral and top-view aft and forward sweep'))],
+      'd9e8de83':[md('l2-oct13-geometry-reasons',GEOMETRY),md('l2-oct13-sideslip-definition',SIDESLIP),md('l2-oct13-sideslip-picture',image('sideslip_air_and_ground','Aligned air-relative flight, sideslip and crosswind ground-track differences')),md('l2-oct13-dihedral-steps',DIHEDRAL_STEPS),md('l2-oct13-crossflow-picture',image('dihedral_crossflow_lift_difference','Rear-view comparison showing sideslip, windward incidence and lift difference')),md('l2-oct13-causal-picture',image('dihedral_causal_chain','Causal chain from sideslip through incidence and lift to rolling moment')),md('l2-oct13-history',HISTORY),md('l2-oct13-real-aircraft',PHOTOS),md('l2-oct13-clean-views',image('geometry_views_and_reasons','Front-view dihedral and top-view aft and forward sweep'))],
       '079e72ea':[md('l2-oct13-cl-graphs',image('airfoil_wing_lift_drag_comparison','Section and finite-wing lift curves, induced drag and lift slope versus aspect ratio')),code('l2-oct13-cl-experiment',EXPERIMENT)],
     }
+    additions['d9e8de83'].insert(4,md('l2-oct13-projection-picture',image('dihedral_normal_projection','The same lateral relative wind has opposite signed normal components on left and right tilted panels')+'\n\nThe red vector is the same lateral part of relative wind on both panels. Project it onto the green panel normal: the orange normal component has opposite signs. Combined with the forward airflow, that gives the opposite incidence changes described above. This is a vector-geometry explanation, not a complete aerodynamic force calculation.'))
     result=[]
     for c in cells:result.append(c);result.extend(additions.get(c.get('id'),[]))
     nb['cells']=result;NB.write_text(json.dumps(nb,ensure_ascii=False,indent=1)+'\n',encoding='utf-8')

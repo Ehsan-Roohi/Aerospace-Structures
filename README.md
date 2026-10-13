@@ -10,7 +10,33 @@ Dr. Ehsan Roohi Golkhatmi · Gunness Laboratory, Room 1 · [roohie@umass.edu](ma
 
 **[New: a real aircraft wing — Dewoitine D.520 (1940)](computational/d520-wing/README.md)** — the scanned 1940 manual of the French fighter, translated and rebuilt as a [3-D model you can explore](https://ehsan-roohi.github.io/Aerospace-Structures/d520/), with SolidWorks/ANSYS CAD, a shell finite-element stress analysis and a **[full-scale metal-wing mode in Wing Lab](https://ehsan-roohi.github.io/Aerospace-Structures/wing-lab.html#d520)**: lifting-line loads, two-cell thin-walled sections, shear centre, tapered spar, skin buckling and post-buckling collapse, checked against the shell model.
 
-**[Syllabus](SYLLABUS.md)** · **[Download Word syllabus](docs/MIE_446_Aerospace_Structures_Fall_2026_Syllabus_Updated.docx)** · **[Weekly schedule](SYLLABUS.md#7-weekly-schedule--fall-2026)** · **[Lecture notebooks](#lecture-notebooks)** · **[Stipa-Caproni: the Venturi-fuselage aircraft](STIPA_CAPRONI.md)** · **[Boeing 747: uranium, mass balance and flutter](BOEING_747_MASS_BALANCE.md)** · **[Gimli Glider case study](GIMLI_GLIDER.md)** · **[Navier–Stokes and AI reading](NAVIER_STOKES_AI.md)** · **[Wing project](PROJECT.md)** · **[Homework 1 PDF](assignments/homework-01/MIE446_HW1_Surface_Pressure.pdf)** · **[Homework 1 Excel data](assignments/homework-01/MIE446_HW1_NACA2412_Data.xlsx)** · **[All homework](ASSIGNMENTS.md)** · **[General OrcaSlicer + USB guide](PRINTING.md)**
+### Course information
+
+- **[Syllabus](SYLLABUS.md)** — course requirements and assessment.
+- **[Download the Word syllabus](docs/MIE_446_Aerospace_Structures_Fall_2026_Syllabus_Updated.docx)**
+- **[Weekly schedule](SYLLABUS.md#7-weekly-schedule--fall-2026)**
+
+### Lessons and engineering readings
+
+- **[Lecture notebooks](#lecture-notebooks)** — open the class lessons in Colab.
+- **[Engineering case studies](#engineering-case-studies)** — historical aircraft, failure analysis and real load paths.
+- **[Gliding and unpowered landing](GLIDING_AND_UNPOWERED_LANDING.md)** — real aircraft photos, glider controls and landing loads.
+- **[Stipa-Caproni](STIPA_CAPRONI.md)** — the Venturi-fuselage aircraft.
+- **[Boeing 747 mass balance](BOEING_747_MASS_BALANCE.md)** — uranium counterweights and flutter.
+- **[Gimli Glider](GIMLI_GLIDER.md)** — emergency landing and changing structural load paths.
+- **[Navier–Stokes and AI](NAVIER_STOKES_AI.md)** — translation and technical reading.
+
+### Wing project and fabrication
+
+- **[Wing project guide](PROJECT.md)**
+- **[Design and build workflow](#design-and-build-a-wing)**
+- **[OrcaSlicer and USB printing guide](PRINTING.md)**
+
+### Homework
+
+- **[All homework and submission information](ASSIGNMENTS.md)**
+- **[Homework 1 — questions (PDF)](assignments/homework-01/MIE446_HW1_Surface_Pressure.pdf)**
+- **[Homework 1 — data (Excel)](assignments/homework-01/MIE446_HW1_NACA2412_Data.xlsx)**
 
 **Homework 1 solutions are available:** [download the solution (Word)](https://raw.githubusercontent.com/Ehsan-Roohi/Aerospace-Structures/main/assignments/homework-01/solutions/MIE446_HW1_solution.docx) · [download the solution workbook (Excel)](https://raw.githubusercontent.com/Ehsan-Roohi/Aerospace-Structures/main/assignments/homework-01/solutions/MIE446_HW1_NACA2412_Data.xlsx) · [solution overview](assignments/homework-01/README.md#released-solutions).
 
@@ -90,7 +116,14 @@ Every team then performs an **unloaded, non-contact dimensional inspection** wit
 
 [![Open updated Wing Project in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/main/notebooks/MIE446_Code_to_Print_Wing.ipynb)
 
-**[Project guide and code documentation](PROJECT.md)** · **[Printed-wing structural solver](notebooks/MIE446_Printed_Wing_Structural_Solver.ipynb)** · [SolidWorks cross-check](SOLIDWORKS_SIMULATION_GUIDE.md) · [Project rubric](SYLLABUS.md#4-project-brief--code-to-print-wing--fabrication-machine-vision-inspection-and-damage-diagnostics) · **[General OrcaSlicer + USB guide](PRINTING.md)** ([Word](docs/OrcaSlicer_Offline_USB_3D_Printing_Guide.docx) · [PDF](docs/OrcaSlicer_Offline_USB_3D_Printing_Guide.pdf)) · [AI-use log template](AI_USE_LOG_TEMPLATE.md)
+### Project resources
+
+- **[Project guide and code documentation](PROJECT.md)**
+- **[Printed-wing structural solver](notebooks/MIE446_Printed_Wing_Structural_Solver.ipynb)**
+- **[SolidWorks cross-check](SOLIDWORKS_SIMULATION_GUIDE.md)**
+- **[Project rubric](SYLLABUS.md#4-project-brief--code-to-print-wing--fabrication-machine-vision-inspection-and-damage-diagnostics)**
+- **[OrcaSlicer and USB guide](PRINTING.md)** — [Word download](docs/OrcaSlicer_Offline_USB_3D_Printing_Guide.docx) or [PDF download](docs/OrcaSlicer_Offline_USB_3D_Printing_Guide.pdf).
+- **[AI-use log template](AI_USE_LOG_TEMPLATE.md)**
 
 ### Download the printing examples
 

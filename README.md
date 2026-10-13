@@ -38,6 +38,8 @@ Lectures 01 and 02 and the independent wing-structure lecture are released. Late
 
 ### Engineering case studies
 
+**[Gliding, unpowered landing and structural loads](GLIDING_AND_UNPOWERED_LANDING.md)** includes the English translation of the supplied Zoomit article, eight original engineering diagrams, glide force/energy equations, best-glide versus minimum-sink comparisons, wind and landing-control explanations, and documented aircraft examples. An expanded structures section follows landing-gear and water-impact load paths, derives a transparent impact-energy example and distinguishes occupant survival from an undamaged airframe.
+
 **[Dewoitine D.520: from a 1940 manual to a stressed wing](computational/d520-wing/README.md)** reconstructs a complete fighter from its scanned maintenance manual (168 pages, every number traced to a page), exports CAD for SolidWorks and ANSYS, analyses the stressed-skin wing with a 41 066-element shell model ([report](computational/d520-wing/stress/REPORT.md)) and repeats the analysis in the browser with Wing Lab's full-scale metal-wing mode.
 
 

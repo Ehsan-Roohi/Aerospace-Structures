@@ -67,7 +67,7 @@ Lectures 01 and 02 and the independent wing-structure lecture are released. Late
 
 ### Wright flight controls and structural flexibility
 
-[Open the illustrated Wright controls reading](WRIGHT_FLIGHT_CONTROLS.md): twelve original teaching diagrams and credited historical/model photographs. Covers forward-elevator moments, trim and stability, the bicycle-inner-tube box analogy, wing warping, rudder coordination, pressure integration and CP motion, wind-tunnel balances, the rear-tail transition, Chanute/Langley correspondence, and Aerodrome launch failures and scaling. Includes the NPS replica demonstration video and classroom calculations.
+[Open the illustrated Wright controls reading](WRIGHT_FLIGHT_CONTROLS.md): large teaching diagrams, historical portraits and clearly dated aircraft photographs. Covers wing warping, stability, CP motion, wind-tunnel balances, rear-tail development, Chanute/Langley correspondence, and aircraft-region diagrams of both Aerodrome launch failures. Continues through Flyer II, Flyer III, the Military Flyer, Model B and the Wright factory. Includes classroom calculations and the NPS replica demonstration video.
 
 **[Gliding, unpowered landing and structural loads](GLIDING_AND_UNPOWERED_LANDING.md)** includes the English translation of the supplied Zoomit article, eight original engineering diagrams and five real photographs: the Air Transat A330, the Hudson A320, glider airbrakes, a cockpit and a glider landing. It explains glide energy, performance, practical landing equipment and documented aircraft examples. An expanded structures section follows landing-gear and water-impact load paths, derives a transparent impact-energy example and distinguishes occupant survival from an undamaged airframe.
 

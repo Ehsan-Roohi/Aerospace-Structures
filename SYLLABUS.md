@@ -387,7 +387,7 @@ The [released Homework 2 guide and starter files](assignments/homework-02/README
 give the current assignment specification and the exact Lecture 1 reading route.
 Canvas carries the authoritative submission deadline and any announced changes.
 
-**Deadline correction:** Homework 2 is due Sunday, October 18, 2026. This supersedes the November 5 date in the downloadable Word syllabus. Use the updated web schedule above and the submission time in Canvas.
+**Homework 2 deadline:** Sunday, October 18, 2026, in both this web syllabus and the downloadable Word syllabus. Use the submission time specified in Canvas.
 
 ## 8. Course policies
 

@@ -20,7 +20,7 @@ Dr. Ehsan Roohi Golkhatmi · Gunness Laboratory, Room 1 · [roohie@umass.edu](ma
 
 - **[Lecture notebooks](#lecture-notebooks)** — open the class lessons in Colab.
 - **[Engineering case studies](#engineering-case-studies)** — historical aircraft, failure analysis and real load paths.
-- **[Wright flight controls](WRIGHT_FLIGHT_CONTROLS.md)** — forward elevator, cardboard-box inspiration, wing warping and rudder coordination.
+- **[Wright flight controls and experiments](WRIGHT_FLIGHT_CONTROLS.md)** — canard, wing warping, centre of pressure, wind tunnel, Chanute and Langley's Aerodrome failures.
 - **[Gliding and unpowered landing](GLIDING_AND_UNPOWERED_LANDING.md)** — real aircraft photos, glider controls and landing loads.
 - **[Stipa-Caproni](STIPA_CAPRONI.md)** — the Venturi-fuselage aircraft.
 - **[Boeing 747 mass balance](BOEING_747_MASS_BALANCE.md)** — uranium counterweights and flutter.
@@ -67,7 +67,7 @@ Lectures 01 and 02 and the independent wing-structure lecture are released. Late
 
 ### Wright flight controls and structural flexibility
 
-[Open the illustrated Wright controls reading](WRIGHT_FLIGHT_CONTROLS.md): five original teaching diagrams, historical and model photographs, forward-elevator moments, trim versus stability, the bicycle-inner-tube box analogy, wing-warping mechanics, rudder coordination and a corrected centre-of-pressure calculation. Includes the NPS replica demonstration video.
+[Open the illustrated Wright controls reading](WRIGHT_FLIGHT_CONTROLS.md): twelve original teaching diagrams and credited historical/model photographs. Covers forward-elevator moments, trim and stability, the bicycle-inner-tube box analogy, wing warping, rudder coordination, pressure integration and CP motion, wind-tunnel balances, the rear-tail transition, Chanute/Langley correspondence, and Aerodrome launch failures and scaling. Includes the NPS replica demonstration video and classroom calculations.
 
 **[Gliding, unpowered landing and structural loads](GLIDING_AND_UNPOWERED_LANDING.md)** includes the English translation of the supplied Zoomit article, eight original engineering diagrams and five real photographs: the Air Transat A330, the Hudson A320, glider airbrakes, a cockpit and a glider landing. It explains glide energy, performance, practical landing equipment and documented aircraft examples. An expanded structures section follows landing-gear and water-impact load paths, derives a transparent impact-energy example and distinguishes occupant survival from an undamaged airframe.
 

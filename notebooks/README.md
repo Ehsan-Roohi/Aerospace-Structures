@@ -39,7 +39,7 @@ section for local browser viewing. B-2 is explicitly identified as crewed, not a
 
 [Open Lecture 03 in Colab](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/main/notebooks/MIE446_Lecture_03_Beam_Reactions_Stress_and_Deflection.ipynb) · [View the notebook](MIE446_Lecture_03_Beam_Reactions_Stress_and_Deflection.ipynb).
 
-This 90-minute lesson follows Lecture 02 distributed loads: ideal support constraints and unknown reactions; cantilever free bodies and internal resultants; bending and transverse shear stress; curvature and displacement; and a short pin–roller/fixed–fixed comparison. Eight saved instructional figures and numerical examples connect to five preloaded, automatically solved beam studies in Wing Lab. The aircraft-wing connection is preserved without treating a solid rectangular beam as the actual printed wing. Modes and advanced load combinations are after-class material.
+This 90-minute lesson follows Lecture 02 distributed loads: ideal support constraints and unknown reactions; cantilever free bodies and internal resultants; bending and transverse shear stress; curvature and displacement; and a short pin–roller/fixed–fixed comparison. Fifteen annotated figures and numerical examples connect to five preloaded, automatically solved beam studies in Wing Lab. Section dimensions, stress sample calculations, fibre-length strain geometry and root boundary conditions are explained before interpreting results. The aircraft-wing connection is preserved without treating a solid rectangular beam as the actual printed wing. Circular-tube torsion, modes and advanced load combinations are optional or after-class material.
 
 ### Numerical wing structural design — two sessions and a design studio
 

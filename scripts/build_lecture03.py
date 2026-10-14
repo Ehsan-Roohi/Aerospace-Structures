@@ -4,6 +4,7 @@ import base64
 import contextlib
 import io
 import json
+import re
 import uuid
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -398,6 +399,8 @@ Submit one page with: a labelled free body; reaction unknowns and constraints; o
 ''')
 
 def build():
+    from enrich_lecture03 import enrich
+    enrich(cells)
     # Saved outputs are generated from the same executable cells students receive.
     env = {}
     import matplotlib

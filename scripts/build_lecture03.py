@@ -409,6 +409,8 @@ def build():
     enrich(cells)
     from restructure_lecture03 import restructure
     restructure(cells)
+    from separate_lecture03_fbd import separate
+    separate(cells)
     # Saved outputs are generated from the same executable cells students receive.
     env = {}
     import matplotlib

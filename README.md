@@ -4,87 +4,32 @@
 Tuesday & Thursday · 11:30 a.m.–12:45 p.m. · ELAB 323<br>
 Dr. Ehsan Roohi Golkhatmi · Gunness Laboratory, Room 1 · [roohie@umass.edu](mailto:roohie@umass.edu)
 
-## Open for class
+This is the classroom home for released MIE 446 learning materials. Start with the syllabus and numbered lecture notebooks; use the software for worked studies, then find assignments and supplementary readings below.
 
-**[Launch Wing Lab: beams → printed wing](https://ehsan-roohi.github.io/Aerospace-Structures/wing-lab.html)** — start with cantilever, fixed–fixed and simply supported beams; then compare skin-only, reinforced, ribbed and modular wings. Apply point or distributed loads and explore reactions, stress, deflection and modes. No installation; internet access is required for the wing's 3-D graphics library. [Learning pathway and model limits](computational/printed-wing-solver/README.md#progressive-learning-pathway).
+## Software tools used in class
 
-**[New: a real aircraft wing — Dewoitine D.520 (1940)](computational/d520-wing/README.md)** — the scanned 1940 manual of the French fighter, translated and rebuilt as a [3-D model you can explore](https://ehsan-roohi.github.io/Aerospace-Structures/d520/), with SolidWorks/ANSYS CAD, a shell finite-element stress analysis and a **[full-scale metal-wing mode in Wing Lab](https://ehsan-roohi.github.io/Aerospace-Structures/wing-lab.html#d520)**: lifting-line loads, two-cell thin-walled sections, shear centre, tapered spar, skin buckling and post-buckling collapse, checked against the shell model.
+1. **[Software 1 · Beam and printed-wing lab](https://ehsan-roohi.github.io/Aerospace-Structures/wing-lab.html)** — start with cantilever, fixed–fixed and simply supported beams; then compare skin-only, reinforced, ribbed and modular wings. Apply point or distributed loads and explore reactions, stress, deflection and modes. No installation; internet access is required for the wing's 3-D graphics library. [Learning pathway and model limits](computational/printed-wing-solver/README.md#progressive-learning-pathway).
 
-### Course information
+2. **[Software 2 · Dewoitine D.520 — French aircraft wing](https://ehsan-roohi.github.io/Aerospace-Structures/wing-lab.html#d520)** — the scanned 1940 manual of the French fighter, translated and rebuilt as a [3-D model you can explore](https://ehsan-roohi.github.io/Aerospace-Structures/d520/), with SolidWorks/ANSYS CAD, a shell finite-element stress analysis and a **[full-scale metal-wing mode in Wing Lab](https://ehsan-roohi.github.io/Aerospace-Structures/wing-lab.html#d520)**: lifting-line loads, two-cell thin-walled sections, shear centre, tapered spar, skin buckling and post-buckling collapse, checked against the shell model.
+
+## Course information
 
 - **[Syllabus](SYLLABUS.md)** — course requirements and assessment.
 - **[Download the Word syllabus](docs/MIE_446_Aerospace_Structures_Fall_2026_Syllabus_Updated.docx)**
 - **[Weekly schedule](SYLLABUS.md#7-weekly-schedule--fall-2026)**
 
-### Lessons and engineering readings
-
-- **[Lecture notebooks](#lecture-notebooks)** — open the class lessons in Colab.
-- **[Engineering case studies](#engineering-case-studies)** — historical aircraft, failure analysis and real load paths.
-- **[Wright and Langley illustrated history](WRIGHT_FLIGHT_CONTROLS.md)** — home and workshop, Chanute, the 1896 unpiloted flights, flight controls, Aerodrome failures, funding and factory production.
-- **[Gliding and unpowered landing](GLIDING_AND_UNPOWERED_LANDING.md)** — real aircraft photos, glider controls and landing loads.
-- **[Stipa-Caproni](STIPA_CAPRONI.md)** — the Venturi-fuselage aircraft.
-- **[Boeing 747 mass balance](BOEING_747_MASS_BALANCE.md)** — uranium counterweights and flutter.
-- **[Gimli Glider](GIMLI_GLIDER.md)** — emergency landing and changing structural load paths.
-- **[Navier–Stokes and AI](NAVIER_STOKES_AI.md)** — translation and technical reading.
-
-### Wing project and fabrication
-
-- **[Wing project guide](PROJECT.md)**
-- **[Design and build workflow](#design-and-build-a-wing)**
-- **[OrcaSlicer and USB printing guide](PRINTING.md)**
-
-### Homework
-
-- **[All homework and submission information](ASSIGNMENTS.md)**
-- **[Homework 1 — questions (PDF)](assignments/homework-01/MIE446_HW1_Surface_Pressure.pdf)**
-- **[Homework 1 — data (Excel)](assignments/homework-01/MIE446_HW1_NACA2412_Data.xlsx)**
-
-**Homework 1 solutions are available:** [download the solution (Word)](https://raw.githubusercontent.com/Ehsan-Roohi/Aerospace-Structures/main/assignments/homework-01/solutions/MIE446_HW1_solution.docx) · [download the solution workbook (Excel)](https://raw.githubusercontent.com/Ehsan-Roohi/Aerospace-Structures/main/assignments/homework-01/solutions/MIE446_HW1_NACA2412_Data.xlsx) · [solution overview](assignments/homework-01/README.md#released-solutions).
-
-This is the classroom home for released MIE 446 learning materials. Open a lecture below, save your own copy in Google Drive, and work through the predictions, theory and experiments. No prior aerospace course is assumed.
-
-**Homework 2 — due Sunday, October 18, 2026:** [step-by-step guide (PDF)](assignments/homework-02/MIE446_HW2_Control_Forces_Moments.pdf)
-and [student package with MATLAB and Excel starters](assignments/homework-02/MIE446_HW2_Student_Pack.zip).
-Use the [Lecture 1 reading map](assignments/homework-02/README.md) for the Lilienthal,
-force/moment and modern-control sections.
-
-> **What makes an engineering answer trustworthy?**<br>
-> Learn to frame the problem, predict behavior, justify the model, check the evidence and defend the decision—even when AI supplies the calculation or code.
-
 ## Lecture notebooks
-
-**[Lecture 03 — Supports, equilibrium, stress, strain and beam displacement](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/main/notebooks/MIE446_Lecture_03_Beam_Reactions_Stress_and_Deflection.ipynb)** — a 90-minute core lesson: each support has a worked force/moment balance; tip and uniform cases belong to the cantilever section. Twenty-three saved figures locate symbols, pair loaded beams with diagrams, introduce stress/strain tensors, show bending/shear contours and explain Q through actual force transfer. Six links open matching solved beam studies; advanced algebra and torsion are supporting reading.
 
 | Lecture | What we study | Open and run |
 |---|---|---|
 | **01 · Aircraft forces and airfoils** | Flight-path equilibrium, CG/trim/static margin, airfoil/NACA geometry and wing/empennage load paths; Lilienthal tail and tip controls; modern UAV photo atlas (MQ-9, X-48B, X-36, X-47B), MAGMA blown-air control and interactive elevon mixing · Multi-session lecture | [![Open Lecture 01 in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/main/notebooks/MIE446_Lecture_01_Trust_Forces_Airfoils.ipynb) |
 | **02 · Finite wings and load paths** | Span, chord, taper, aspect ratio, sweep, dihedral, induced drag, distributed loads and root reactions · 75 min | [![Open Lecture 02 in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/main/notebooks/MIE446_Lecture_02_Finite_Wings_and_Load_Paths.ipynb) |
+| **03 · Beam reactions, stress, strain and deflection** | Physical beam and separate free-body diagram; reactions for cantilever, pin–roller and fixed–fixed beams; normal/shear stress, strain, section properties and deflection · 90 min | [Open Lecture 03 in Colab](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/main/notebooks/MIE446_Lecture_03_Beam_Reactions_Stress_and_Deflection.ipynb) |
 | **Independent lecture · Wing structure, buckling, materials and flutter** | Spars, ribs, stringers and skins; clear displacement views; Wright wings; Horikoshi's 7-Shi, 9-Shi and Zero; built-up/extruded spars, duralumin and aeroelastic energy. Historical photographs, original schematics and short numerical activities. | [![Open Wing Structure lecture in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/main/notebooks/MIE446_Wing_Structure_Buckling_Materials_and_Flutter.ipynb) |
 | **Numerical wing structural design** | Two teaching sessions + design studio: theory, schematics, signed load cases, bending/shear/torsion, cap buckling, whole-span fit, independent beam FEM, Pareto search, uncertainty and downloadable CAD/report data. No lab or Excel required. | [![Open Numerical Wing Design in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/main/notebooks/MIE446_Wing_Structural_Design_Numerical.ipynb) |
 | **Printed-wing structural solver** | Analyse your team's as-printed semi-wing: exact shell/sleeve/rod section, 2-D FE torsion and shear centre, lift or tip-force loads, V–M–T, deflection, twist, skin buckling, rod and seam checks, natural frequencies and assembly comparison. [Launch Wing Lab 3-D app](https://ehsan-roohi.github.io/Aerospace-Structures/wing-lab.html) (runs directly in your browser) · [SolidWorks cross-check guide](SOLIDWORKS_SIMULATION_GUIDE.md) | [![Open Printed-Wing Solver in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/main/notebooks/MIE446_Printed_Wing_Structural_Solver.ipynb) |
 
 Lectures 01, 02 and 03 and the independent wing-structure lecture are released. Later lecture notebooks will appear here when ready; the [syllabus schedule](SYLLABUS.md#7-weekly-schedule--fall-2026) describes the full semester, not a list of already-published notebooks.
-
-### Engineering case studies
-
-### Wright flight controls and structural flexibility
-
-[Open the illustrated Wright and Langley reading](WRIGHT_FLIGHT_CONTROLS.md): homes and bicycle shops, Chanute's biography and gliders, Langley's successful 1896 unpiloted flights, controls and structural failures, clearly qualified funding charts, later Flyers, and four real historical factory-interior photographs. Includes the free 286-page NPS factory report with a reading guide, classroom calculations and the NPS replica demonstration video.
-
-**[Gliding, unpowered landing and structural loads](GLIDING_AND_UNPOWERED_LANDING.md)** includes the English translation of the supplied Zoomit article, eight original engineering diagrams and five real photographs: the Air Transat A330, the Hudson A320, glider airbrakes, a cockpit and a glider landing. It explains glide energy, performance, practical landing equipment and documented aircraft examples. An expanded structures section follows landing-gear and water-impact load paths, derives a transparent impact-energy example and distinguishes occupant survival from an undamaged airframe.
-
-**[Dewoitine D.520: from a 1940 manual to a stressed wing](computational/d520-wing/README.md)** reconstructs a complete fighter from its scanned maintenance manual (168 pages, every number traced to a page), exports CAD for SolidWorks and ANSYS, analyses the stressed-skin wing with a 41 066-element shell model ([report](computational/d520-wing/stress/REPORT.md)) and repeats the analysis in the browser with Wing Lab's full-scale metal-wing mode.
-
-
-**[Aircraft windows and the Comet fatigue failures](COMET_WINDOWS_AND_FATIGUE.md)** explains cabin-pressure load paths, rounded corners, fastener-hole crack origins and the two 1954 accidents. Includes two licensed historical images, seven original teaching diagrams, documented 296.5–315.1 MPa local stress estimates, a reproducible analytical stress-map example and modern damage-tolerance lessons.
-
-**[Why did early Boeing 747s carry uranium counterweights?](BOEING_747_MASS_BALANCE.md)** distinguishes whole-aircraft CG from local control-surface mass balance, explains compact dense weights and flutter, follows attachment load paths, and compares tungsten substitution with modern aeroelastic validation. Includes three real photographs, three original teaching diagrams, transparent numerical examples, discussion questions and official FAA/NRC/Airbus sources.
-
-**[Stipa-Caproni: when the fuselage becomes a duct](STIPA_CAPRONI.md)** connects the unusual ducted-propeller aircraft to pressure forces, lift, thrust, wooden shell construction, wire-braced wing load paths and structural tradeoffs. Includes original schematics, a historical construction-photo link, archival video and NACA sources, a worked numerical example and an AI-audit discussion.
-
-**[How did OpenAI solve Navier–Stokes in 88 hours? — full Zoomit translation](NAVIER_STOKES_AI.md)** presents the complete English translation of the supplied Zoomit article, credited to Pooyesh Pourmohammad, with all 11 article visuals, including seven diagrams redrawn entirely in English. A separate technical supplement derives the energy scaling, clarifies the Euler result, updates the data-use discussion and links the original video player, English lectures, proof and Lean repository.
-
-**[The Gimli Glider: an aerospace-structures case study](GIMLI_GLIDER.md)** follows Air Canada Flight 143 from a failed fuel-quantity defense to a 17-minute unpowered glide and emergency landing. It connects unit discipline, system redundancy, landing loads, changing load paths, local damage, crashworthiness and occupant survival. The reading includes licensed historical photographs, original engineering diagrams, discussion questions, the official investigation report and video links.
 
 ### Your classroom workflow
 
@@ -96,13 +41,29 @@ Lectures 01, 02 and 03 and the independent wing-structure lecture are released. 
 
 [Notebook index and troubleshooting](notebooks/README.md)
 
-## Design and build a wing
+## Homework and wing design / fabrication
 
-### Assigned teams and October build
+- **[All homework and submission information](ASSIGNMENTS.md)**
+- **[Homework 1 — questions (PDF)](assignments/homework-01/MIE446_HW1_Surface_Pressure.pdf)**
+- **[Homework 1 — data (Excel)](assignments/homework-01/MIE446_HW1_NACA2412_Data.xlsx)**
+
+**Homework 1 solutions are available:** [download the solution (Word)](https://raw.githubusercontent.com/Ehsan-Roohi/Aerospace-Structures/main/assignments/homework-01/solutions/MIE446_HW1_solution.docx) · [download the solution workbook (Excel)](https://raw.githubusercontent.com/Ehsan-Roohi/Aerospace-Structures/main/assignments/homework-01/solutions/MIE446_HW1_NACA2412_Data.xlsx) · [solution overview](assignments/homework-01/README.md#released-solutions).
+
+**Homework 2 — due Sunday, October 18, 2026:** [step-by-step guide (PDF)](assignments/homework-02/MIE446_HW2_Control_Forces_Moments.pdf)
+and [student package with MATLAB and Excel starters](assignments/homework-02/MIE446_HW2_Student_Pack.zip).
+Use the [Lecture 1 reading map](assignments/homework-02/README.md) for the Lilienthal,
+force/moment and modern-control sections.
+
+
+<a id="design-and-build-a-wing"></a>
+
+### Wing design and fabrication project
+
+#### Assigned teams and October build
 
 Three-person teams are already assigned. **Three meetings remain before the October 13 build: October 1, 6 and 8.** Finish Lecture 1 and the seven-rib R01 layout on October 1; use October 6 for geometry/load checks and coupon evidence; complete R02 and slicer review on October 8. See the [three-meeting teaching plan](SYLLABUS.md#class-plan-before-october-fabrication) and [project milestones](SYLLABUS.md#5-project-workflow-and-deliverables). Physical coupon printing/testing requires an earlier authorized appointment; if the first printer access is October 13, start with the coupon, not final wing modules. Canvas assigns supervised ELab slots.
 
-### September 29 wing-design packet
+#### September 29 wing-design packet
 
 Use the fillable worksheet and fit/release record below, retaining a copy for your team. **Their original timing is superseded by the October 1/6/8 plan above.** On R01, mark all seven baseline ribs using the updated [project explanation](PROJECT.md#why-the-baseline-has-seven-ribs). The September 29 instructor guide is retained as a previous lesson plan, not the current timetable. Canvas remains authoritative for submissions and supervised appointments.
 
@@ -123,7 +84,7 @@ Every team then performs an **unloaded, non-contact dimensional inspection** wit
 
 [![Open updated Wing Project in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/main/notebooks/MIE446_Code_to_Print_Wing.ipynb)
 
-### Project resources
+#### Project resources
 
 - **[Project guide and code documentation](PROJECT.md)**
 - **[Printed-wing structural solver](notebooks/MIE446_Printed_Wing_Structural_Solver.ipynb)**
@@ -132,7 +93,7 @@ Every team then performs an **unloaded, non-contact dimensional inspection** wit
 - **[OrcaSlicer and USB guide](PRINTING.md)** — [Word download](docs/OrcaSlicer_Offline_USB_3D_Printing_Guide.docx) or [PDF download](docs/OrcaSlicer_Offline_USB_3D_Printing_Guide.pdf).
 - **[AI-use log template](AI_USE_LOG_TEMPLATE.md)**
 
-### Download the printing examples
+#### Download the printing examples
 
 Use these files to practice the STL-to-G-code workflow and to inspect a successful reference output:
 
@@ -140,6 +101,27 @@ Use these files to practice the STL-to-G-code workflow and to inspect a successf
 - **[Download the matching reference G-code](https://raw.githubusercontent.com/Ehsan-Roohi/Aerospace-Structures/main/docs/printing/examples/reference-k2pro-orcaslicer.gcode)**
 
 The G-code is provided for inspection only. Do not send it directly to a printer; import the STL into OrcaSlicer and generate new G-code using the validated profile for the exact printer, nozzle and material.
+
+## Engineering readings and case studies
+
+### Wright flight controls and structural flexibility
+
+[Open the illustrated Wright and Langley reading](WRIGHT_FLIGHT_CONTROLS.md): homes and bicycle shops, Chanute's biography and gliders, Langley's successful 1896 unpiloted flights, controls and structural failures, clearly qualified funding charts, later Flyers, and four real historical factory-interior photographs. Includes the free 286-page NPS factory report with a reading guide, classroom calculations and the NPS replica demonstration video.
+
+**[Gliding, unpowered landing and structural loads](GLIDING_AND_UNPOWERED_LANDING.md)** includes the English translation of the supplied Zoomit article, eight original engineering diagrams and five real photographs: the Air Transat A330, the Hudson A320, glider airbrakes, a cockpit and a glider landing. It explains glide energy, performance, practical landing equipment and documented aircraft examples. An expanded structures section follows landing-gear and water-impact load paths, derives a transparent impact-energy example and distinguishes occupant survival from an undamaged airframe.
+
+**[Dewoitine D.520: from a 1940 manual to a stressed wing](computational/d520-wing/README.md)** reconstructs a complete fighter from its scanned maintenance manual (168 pages, every number traced to a page), exports CAD for SolidWorks and ANSYS, analyses the stressed-skin wing with a 41 066-element shell model ([report](computational/d520-wing/stress/REPORT.md)) and repeats the analysis in the browser with Wing Lab's full-scale metal-wing mode.
+
+
+**[Aircraft windows and the Comet fatigue failures](COMET_WINDOWS_AND_FATIGUE.md)** explains cabin-pressure load paths, rounded corners, fastener-hole crack origins and the two 1954 accidents. Includes two licensed historical images, seven original teaching diagrams, documented 296.5–315.1 MPa local stress estimates, a reproducible analytical stress-map example and modern damage-tolerance lessons.
+
+**[Why did early Boeing 747s carry uranium counterweights?](BOEING_747_MASS_BALANCE.md)** distinguishes whole-aircraft CG from local control-surface mass balance, explains compact dense weights and flutter, follows attachment load paths, and compares tungsten substitution with modern aeroelastic validation. Includes three real photographs, three original teaching diagrams, transparent numerical examples, discussion questions and official FAA/NRC/Airbus sources.
+
+**[Stipa-Caproni: when the fuselage becomes a duct](STIPA_CAPRONI.md)** connects the unusual ducted-propeller aircraft to pressure forces, lift, thrust, wooden shell construction, wire-braced wing load paths and structural tradeoffs. Includes original schematics, a historical construction-photo link, archival video and NACA sources, a worked numerical example and an AI-audit discussion.
+
+**[How did OpenAI solve Navier–Stokes in 88 hours? — full Zoomit translation](NAVIER_STOKES_AI.md)** presents the complete English translation of the supplied Zoomit article, credited to Pooyesh Pourmohammad, with all 11 article visuals, including seven diagrams redrawn entirely in English. A separate technical supplement derives the energy scaling, clarifies the Euler result, updates the data-use discussion and links the original video player, English lectures, proof and Lean repository.
+
+**[The Gimli Glider: an aerospace-structures case study](GIMLI_GLIDER.md)** follows Air Canada Flight 143 from a failed fuel-quantity defense to a 17-minute unpowered glide and emergency landing. It connects unit discipline, system redundancy, landing loads, changing load paths, local damage, crashworthiness and occupant survival. The reading includes licensed historical photographs, original engineering diagrams, discussion questions, the official investigation report and video links.
 
 ## Assessment and course support
 

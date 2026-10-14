@@ -9,6 +9,8 @@ These notebooks support the Fall 2026 MIE 446 Aerospace Structures course. They 
 | Type | Notebook | Student work | Launch |
 |---|---|---|---|
 | Interactive lecture | [Lecture 01 — From Airfoil Geometry to Trustworthy Wing Loads](MIE446_Lecture_01_Trust_Forces_Airfoils.ipynb) | FAA controls/empennage, wing anatomy and load paths; Lilienthal tail and tip-vane photographs; MQ-9, X-48B, X-36 and X-47B photo atlas; elevons, ruddervators, finless control, thrust vectoring and MAGMA; interactive elevon mixing; trim/static margin | [![Open Lecture 01 in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/main/notebooks/MIE446_Lecture_01_Trust_Forces_Airfoils.ipynb) |
+| Interactive lecture | [Lecture 02 — Finite Wings and Load Paths](MIE446_Lecture_02_Finite_Wings_and_Load_Paths.ipynb) | Wing geometry, finite-wing lift, distributed loads and root reactions | [Open Lecture 02 in Colab](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/main/notebooks/MIE446_Lecture_02_Finite_Wings_and_Load_Paths.ipynb) |
+| Interactive lecture | [Lecture 03 — Beam Reactions, Stress, Strain and Deflection](MIE446_Lecture_03_Beam_Reactions_Stress_and_Deflection.ipynb) | Separate physical systems and free bodies; support reactions, stress/strain, section properties and displacement; matching beam-software examples | [Open Lecture 03 in Colab](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/main/notebooks/MIE446_Lecture_03_Beam_Reactions_Stress_and_Deflection.ipynb) |
 | Independent visual lecture | [Wing Structure: Buckling, Materials, Manufacturing and Flutter](MIE446_Wing_Structure_Buckling_Materials_and_Flutter.ipynb) | Identify spars/ribs/stringers/skins; interpret red/blue displacement curves; compare Wright, 7-Shi, 9-Shi and Zero; study extrusion, duralumin and flutter energy with short numerical activities | [![Open Wing Structure lecture in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/main/notebooks/MIE446_Wing_Structure_Buckling_Materials_and_Flutter.ipynb) |
 | Guided project | [Code-to-Print Wing](MIE446_Code_to_Print_Wing.ipynb) | Define a team design, document predictions and AI use, complete the physical coupon gate, generate verified geometry and export the submission archive | [![Open updated Wing Project in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/main/notebooks/MIE446_Code_to_Print_Wing.ipynb) |
 | Structural analysis | [Printed-Wing Structural Solver](MIE446_Printed_Wing_Structural_Solver.ipynb) | Enter the released team geometry, choose material cards and joints, run lift or tip-force cases, read V–M–T, deflection, twist, stresses and screening checks, predict force–deflection slope and natural frequency, compare assemblies; optional [SolidWorks cross-check](../SOLIDWORKS_SIMULATION_GUIDE.md) | [![Open Printed-Wing Solver in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/main/notebooks/MIE446_Printed_Wing_Structural_Solver.ipynb) |
@@ -33,8 +35,6 @@ section for local browser viewing. B-2 is explicitly identified as crewed, not a
 
 [View the notebook](MIE446_Lecture_02_Finite_Wings_and_Load_Paths.ipynb). This 75-minute lesson connects span, chord, taper, aspect ratio, sweep and dihedral to induced drag, spanwise load distributions, structural load paths and cantilever root reactions. Students predict, change simple form inputs, verify equations and audit an AI-generated claim. Optional derivations are after-class material. No CAD installation is required.
 
-## Recommended Colab workflow
-
 ### Lecture 03 — Beam reactions, stress and deflection
 
 [Open Lecture 03 in Colab](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/main/notebooks/MIE446_Lecture_03_Beam_Reactions_Stress_and_Deflection.ipynb) · [View the notebook](MIE446_Lecture_03_Beam_Reactions_Stress_and_Deflection.ipynb).
@@ -47,6 +47,8 @@ This 90-minute core lesson follows Lecture 02 distributed loads. Each of three s
 The notebook teaches the equilibrium and constitutive equations before running calculations. Its studio adds three load cases, web shear and cap buckling screens, whole-span NACA clearance, an independent NumPy beam FEM, mass/constraint maps, a Pareto frontier, seeded uncertainty trials, and a ZIP export of inputs, results, coordinates and a report template. Saved figures are visible before execution. All calculations run inside the notebook; external CAD/FEA installations and physical tests are not required.
 
 Start at the top with **Run all** for a baseline. After changing the studio input panel, rerun every studio cell below it. Numerical agreement verifies the implementation under shared assumptions; it is not experimental validation of a real wing.
+
+## Recommended Colab workflow
 
 1. Open the notebook using its **Open in Colab** button.
 2. In Colab, choose **File → Save a copy in Drive** before changing any inputs.

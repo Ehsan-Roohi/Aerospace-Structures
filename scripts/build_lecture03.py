@@ -37,7 +37,13 @@ def md(s):
         r'(n=L_{\mathrm{aero}}/W\)': r'$n=L_{\mathrm{aero}}/W$',
         r'(P\times2\)': r'$P\times2$', r'(E\times2\)': r'$E\times2$', r'(h\times2\)': r'$h\times2$',
     }
-    for old, new in replacements.items(): s=s.replace(old,new)
+    # Never perform prose substitutions inside a display-math expression.
+    # Replacing "(x)" there previously corrupted "\theta(x)" into "\thetax".
+    parts = re.split(r'(\$\$.*?\$\$)',s,flags=re.S)
+    for i in range(0,len(parts),2):
+        for old,new in replacements.items():
+            parts[i]=parts[i].replace(old,new)
+    s=''.join(parts)
     cell('markdown', s)
 def code(s): cell('code', s)
 def link(case, label): return f'[Open and solve {label}]({APP}?beamCase=l03-{case})'

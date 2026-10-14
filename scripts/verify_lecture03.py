@@ -30,7 +30,16 @@ for c in nb['cells']:
         assert c['execution_count'] is not None
         assert not any(o['output_type']=='error' for o in c['outputs'])
         figures+=sum('image/png' in o.get('data',{}) for o in c['outputs'])
-assert figures==15
+assert figures==17
+assert r'\theta(x)' in markdown
+assert r'\thetax' not in markdown
+assert '$$V(x)=P' in markdown
+allowed_commands={'theta','frac','sum','qquad','mathrm','boxed','sigma','max','tau',
+                  'left','right','varepsilon','mathbf','int','kappa','Delta','ell',
+                  'approx','text','pi','phi','propto','times'}
+for equation in re.findall(r'\$\$(.*?)\$\$',markdown,flags=re.S):
+    unknown=set(re.findall(r'\\([A-Za-z]+)',equation))-allowed_commands
+    assert not unknown, f'Unrecognized/corrupted LaTeX commands: {unknown}'
 
 L,b,h,E,P=450.,20.,10.,2000.,2.
 I=b*h**3/12

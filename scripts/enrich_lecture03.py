@@ -48,6 +48,95 @@ def dimension(ax, start, end, label, offset=(0,0), color='#19394e', rotation=0):
 Use the figure first, then the equation, then the numerical substitution. A subscript names a direction or station; it is not an extra multiplier. The figure dimensions are teaching inputs, not measured properties of the full course wing.
 ''')
 
+    insert_before('## 1. What a support', 'code', r'''
+#@title Figure 0A — locate coordinates, section dimensions and load symbols
+fig,axes=plt.subplots(2,1,figsize=(12,9),layout='constrained')
+ax=axes[0]
+clean_beam(ax,'Side view: x follows the beam; z points upward; v points downward')
+support(ax,0,'fixed')
+for at in [90,150,210,270]: arrow(ax,(at,35),(at,3))
+ax.text(125,43,'q: distributed load (N/mm)',fontsize=13)
+arrow(ax,(L,40),(L,3));ax.text(385,48,'P: point force (N)',fontsize=13)
+arrow(ax,(0,-27),(0,-2),'#176441');ax.text(12,-24,'RA: reaction (N)',fontsize=12)
+ax.add_patch(FancyArrowPatch((25,20),(-28,20),connectionstyle='arc3,rad=1',
+                            arrowstyle='-|>',mutation_scale=18,color='#176441',lw=2))
+ax.text(-45,51,'CA: reaction couple (N mm)',fontsize=12)
+ax.axvline(300,ymin=.3,ymax=.65,color='#d46a1f',ls='--')
+ax.text(305,13,'cut station',fontsize=12,color='#d46a1f')
+dimension(ax,(0,-38),(300,-38),'x: root to cut (mm)',(0,-7))
+dimension(ax,(0,-53),(L,-53),'L: full length (mm)',(0,-7))
+arrow(ax,(330,-20),(385,-20),'#19394e');ax.text(385,-23,'+x',fontsize=12)
+arrow(ax,(330,-20),(330,15),'#19394e');ax.text(335,7,'+z',fontsize=12)
+ax.set_ylim(-70,65)
+ax=axes[1]
+ax.add_patch(Rectangle((-10,-5),20,10,facecolor='#e3eef5',edgecolor='#19394e',lw=2))
+ax.plot([-10,10],[0,0],'--',color='gray')
+dimension(ax,(-10,-8),(10,-8),'b: width along y',(0,-1.5))
+dimension(ax,(-14,-5),(-14,5),'h: depth',(-3,0),rotation=90)
+dimension(ax,(13,0),(13,5),'c = h/2',(4,0))
+dimension(ax,(-4,0),(-4,3),'z',(-2,0))
+arrow(ax,(0,0),(0,7),'#19394e');ax.text(.6,7,'+z',fontsize=12)
+arrow(ax,(0,0),(8,0),'#19394e');ax.text(8,-1.2,'+y',fontsize=12)
+ax.add_patch(Circle((-8,-3),.4,fill=False,color='#19394e'));ax.plot(-8,-3,'.',color='#19394e')
+ax.text(-7,-3.5,'x out of page',fontsize=12)
+ax.text(-9,4,'Upper surface: z = +c',fontsize=12)
+ax.text(-9,-6.5,'Lower surface: z = −c',fontsize=12)
+ax.text(0,11,'Neutral axis: z = 0; bending is about y',ha='center',fontsize=13)
+ax.set(xlim=(-22,24),ylim=(-12,15),title='Cross-section view: the same beam viewed along x')
+ax.set_aspect('equal');ax.axis('off')
+plt.show()
+''')
+    insert_before('## 1. What a support', 'code', r'''
+#@title Figure 0B — motion, internal actions and stress are different quantities
+fig,axes=plt.subplots(3,1,figsize=(12,11),layout='constrained')
+ax=axes[0]
+xs=np.linspace(0,L,200); motion=P*xs**2*(3*L-xs)/(6*EI)
+ax.plot(xs,np.zeros_like(xs),'--',color='gray',label='Original centreline')
+ax.plot(xs,motion,color='#236bb4',lw=3,label='Deflected centreline')
+at=300.; vt=P*at**2*(3*L-at)/(6*EI); slope=P*at*(2*L-at)/(2*EI)
+ax.plot([at-65,at+65],[vt-65*slope,vt+65*slope],color='#d46a1f',lw=2,label='Local tangent')
+ax.plot([at,at+65],[vt,vt],'--',color='#777777',lw=1.5)
+aa=np.linspace(0,np.arctan(slope),50)
+ax.plot(at+35*np.cos(aa),vt+35*np.sin(aa),color='#d46a1f',lw=2)
+dimension(ax,(at,0),(at,vt),'v: displacement (mm)',(-105,0))
+ax.annotate('θ: tangent relative to horizontal\nθ ≈ 0.054 rad here',
+            xy=(at+35,vt+.95),xytext=(340,3),fontsize=11,color='#d46a1f',
+            arrowprops=dict(arrowstyle='->',color='#d46a1f'))
+ax.text(35,11,'κ: how rapidly θ changes with x (1/mm)',fontsize=12)
+ax.set(xlim=(-10,470),ylim=(-2,22),title='v is motion; θ is rotation; κ is curvature')
+ax.invert_yaxis();ax.set_xlabel('x along beam (mm)');ax.set_ylabel('v down (mm)');ax.legend(fontsize=11,loc='lower left')
+ax=axes[1]
+clean_beam(ax,'A cut transmits internal shear V and bending moment M')
+ax.lines[0].remove();ax.plot([150,L],[0,0],lw=5,color='#19394e')
+arrow(ax,(150,-30),(150,-2),'#d46a1f')
+ax.text(165,-30,'V: cut force (N), not displacement v',fontsize=13)
+ax.add_patch(FancyArrowPatch((175,20),(125,20),connectionstyle='arc3,rad=1',
+                            arrowstyle='-|>',mutation_scale=18,color='#d46a1f',lw=2))
+ax.text(95,50,'M: cut couple about y (N mm)',fontsize=13)
+arrow(ax,(L,40),(L,2));ax.text(390,49,'Applied P',fontsize=12)
+ax.text(190,15,'Outboard free body',fontsize=13)
+ax=axes[2];ax.set(xlim=(0,1),ylim=(0,1));ax.axis('off')
+ax.set_title('Stress acts on a section; strain measures a fibre; E and I are properties')
+ax.add_patch(Rectangle((.06,.30),.18,.45,facecolor='#e3eef5',edgecolor='#19394e',lw=2))
+ax.plot([.06,.24],[.525,.525],'--',color='gray')
+ax.scatter([.14],[.66],s=80,facecolors='none',edgecolors='#b1322e',linewidths=1.5)
+ax.plot(.14,.66,'.',color='#b1322e')
+ax.text(.255,.67,'σx along x\n(out of section)',fontsize=12,color='#b1322e')
+arrow(ax,(.255,.34),(.255,.53),'#236bb4')
+ax.text(.275,.37,'τxz: shear',fontsize=12,color='#236bb4')
+ax.text(.03,.14,'E: material modulus\nI: section geometry; EI: bending stiffness',fontsize=12)
+ax.plot([.52,.86],[.70,.70],color='gray',lw=3)
+ax.plot([.52,.91],[.43,.43],color='#b1322e',lw=3)
+dimension(ax,(.52,.85),(.86,.85),'Original length ℓ0')
+dimension(ax,(.86,.30),(.91,.30),'Δℓ',(0,-.07))
+arrow(ax,(.91,.43),(.96,.43),'#b1322e')
+ax.text(.52,.55,'Same fibre after stretching',fontsize=12)
+ax.text(.52,.14,'εx = Δℓ/ℓ0; σx = E εx\nExtension exaggerated for visibility',fontsize=12)
+plt.show()
+''')
+    append('A symbol map before we start', '''
+Figures 0A and 0B locate these symbols in views of the beam and its section. Figure 0A illustrates possible point and distributed loads; Example A below uses only the point force. Blue shows motion, purple shows applied loading, green shows support actions, and orange shows cut actions or a local tangent. Material properties and section stiffness are not extra applied forces.
+''')
     append('## 1. What a support', r'''
 **How to draw a reaction:** imagine the support removed, leaving only the beam. Replace each motion that was prevented by a possible force or couple. Initially assume a direction; a negative solution means the real direction is opposite. The fixed support requires a couple because it prevents the end section rotating. A pin lets that section rotate, so an ideal pin has no reaction couple.
 

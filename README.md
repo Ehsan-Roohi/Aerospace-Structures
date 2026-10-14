@@ -53,6 +53,8 @@ force/moment and modern-control sections.
 
 ## Lecture notebooks
 
+**[Lecture 03 — Beam reactions, stress and deflection](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/main/notebooks/MIE446_Lecture_03_Beam_Reactions_Stress_and_Deflection.ipynb)** — a 90-minute guided lesson: support constraints and reaction unknowns, cantilever equilibrium, internal shear/moment, bending/shear stress and displacement. Saved teaching figures and worked numerical examples open matching solved cases in Wing Lab.
+
 | Lecture | What we study | Open and run |
 |---|---|---|
 | **01 · Aircraft forces and airfoils** | Flight-path equilibrium, CG/trim/static margin, airfoil/NACA geometry and wing/empennage load paths; Lilienthal tail and tip controls; modern UAV photo atlas (MQ-9, X-48B, X-36, X-47B), MAGMA blown-air control and interactive elevon mixing · Multi-session lecture | [![Open Lecture 01 in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/main/notebooks/MIE446_Lecture_01_Trust_Forces_Airfoils.ipynb) |
@@ -61,7 +63,7 @@ force/moment and modern-control sections.
 | **Numerical wing structural design** | Two teaching sessions + design studio: theory, schematics, signed load cases, bending/shear/torsion, cap buckling, whole-span fit, independent beam FEM, Pareto search, uncertainty and downloadable CAD/report data. No lab or Excel required. | [![Open Numerical Wing Design in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/main/notebooks/MIE446_Wing_Structural_Design_Numerical.ipynb) |
 | **Printed-wing structural solver** | Analyse your team's as-printed semi-wing: exact shell/sleeve/rod section, 2-D FE torsion and shear centre, lift or tip-force loads, V–M–T, deflection, twist, skin buckling, rod and seam checks, natural frequencies and assembly comparison. [Launch Wing Lab 3-D app](https://ehsan-roohi.github.io/Aerospace-Structures/wing-lab.html) (runs directly in your browser) · [SolidWorks cross-check guide](SOLIDWORKS_SIMULATION_GUIDE.md) | [![Open Printed-Wing Solver in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/main/notebooks/MIE446_Printed_Wing_Structural_Solver.ipynb) |
 
-Lectures 01 and 02 and the independent wing-structure lecture are released. Later lecture notebooks will appear here when ready; the [syllabus schedule](SYLLABUS.md#7-weekly-schedule--fall-2026) describes the full semester, not a list of already-published notebooks.
+Lectures 01, 02 and 03 and the independent wing-structure lecture are released. Later lecture notebooks will appear here when ready; the [syllabus schedule](SYLLABUS.md#7-weekly-schedule--fall-2026) describes the full semester, not a list of already-published notebooks.
 
 ### Engineering case studies
 

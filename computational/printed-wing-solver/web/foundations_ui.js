@@ -1,9 +1,20 @@
+/* Lecture 03 links deliberately replace loads rather than adding to an old study. */
+const Lecture03BeamCases = Object.freeze({
+  'l03-tip': {support:'cantilever',loads:[{kind:'point',position:450,force:2}]},
+  'l03-uniform': {support:'cantilever',loads:[{kind:'distributed',start:0,end:450,qStart:2/450,qEnd:2/450}]},
+  'l03-simple': {support:'simply-supported',loads:[{kind:'point',position:225,force:2}]},
+  'l03-fixed': {support:'fixed-fixed',loads:[{kind:'point',position:225,force:2}]},
+  'l03-lift': {support:'cantilever',loads:[{kind:'distributed',start:0,end:450,qStart:-2/450,qEnd:-2/450}]}
+});
 /* Progressive, dependency-free beam UI. All figures use the solved beam arrays. */
 (() => {
   'use strict';
   const B=BeamLearningEngine, $=s=>document.querySelector(s), host=$('#foundations');
   const f=(x,n=3)=>Number(x).toFixed(n), max=a=>Math.max(...a.map(Math.abs),1e-12);
   const st={length:450,width:20,height:10,E:2000,density:1.24,support:'cantilever',elements:30,loads:[{kind:'point',position:450,force:2}]};
+  const lectureCaseName=new URLSearchParams(window.location.search).get('beamCase');
+  const lectureCase=Object.prototype.hasOwnProperty.call(Lecture03BeamCases,lectureCaseName)?Lecture03BeamCases[lectureCaseName]:null;
+  if(lectureCase) Object.assign(st,JSON.parse(JSON.stringify(lectureCase)));
   let result=null, mode=0, animated=false, phase=0;
   const style=document.createElement('style'); style.textContent=`
     #foundations{max-width:1450px;margin:auto;padding:22px;font-size:16px;line-height:1.55}
@@ -89,4 +100,6 @@
   $('#beamRefine').onclick=()=>{try{$('#beamConvergence').innerHTML='<table><tr><th>Requested elements</th><th>Max |v| (mm)</th><th>f₁ (Hz)</th></tr>'+[10,20,40].map(elements=>{const r=B.solve({...st,elements});return `<tr><td>${elements} (+ load-boundary nodes)</td><td>${f(r.maxima.deflection,6)}</td><td>${f(r.modes[0].frequencyHz,4)}</td></tr>`;}).join('')+'</table>';}catch(e){$('#beamStatus').textContent=e.message;}};
   $('#beamDownload').onclick=()=>{const blob=new Blob([JSON.stringify({input:st,explanation:$('#beamExplain').value,reactions:result.reactions,maxima:result.maxima,equilibrium:result.equilibrium,modes:result.modes.map(m=>({frequencyHz:m.frequencyHz})),assumptions:result.assumptions},null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='MIE446-beam-study.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);};
   attempt(()=>{});
+  host.querySelectorAll('[data-stage]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.stage===st.support)));
+  if(lectureCase) $('#beamStatus').textContent='Lecture 03 example loaded and solved. Dimensions: 450 × 20 × 10 mm; E = 2000 MPa. Change one input at a time.';
 })();

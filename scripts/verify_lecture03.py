@@ -34,7 +34,7 @@ assert figures==17
 assert r'\theta(x)' in markdown
 assert r'\thetax' not in markdown
 assert '$$V(x)=P' in markdown
-allowed_commands={'theta','frac','sum','qquad','mathrm','boxed','sigma','max','tau',
+allowed_commands={'theta','frac','sum','quad','qquad','mathrm','boxed','sigma','max','tau',
                   'left','right','varepsilon','mathbf','int','kappa','Delta','ell',
                   'approx','text','pi','phi','propto','times'}
 for equation in re.findall(r'\$\$(.*?)\$\$',markdown,flags=re.S):

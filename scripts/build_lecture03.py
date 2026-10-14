@@ -407,6 +407,8 @@ Submit one page with: a labelled free body; reaction unknowns and constraints; o
 def build():
     from enrich_lecture03 import enrich
     enrich(cells)
+    from restructure_lecture03 import restructure
+    restructure(cells)
     # Saved outputs are generated from the same executable cells students receive.
     env = {}
     import matplotlib

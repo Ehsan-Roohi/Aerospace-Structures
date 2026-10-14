@@ -17,8 +17,10 @@ markdown = '\n\n'.join(c['source'] for c in nb['cells'] if c['cell_type']=='mark
 assert not re.search(r'(?<!\$)\$(?!\$)',markdown), 'Visible inline dollar delimiters'
 assert not any(ord(c)<32 and c not in '\n\r' for c in markdown), 'Control character in prose'
 assert '\\(' not in markdown and '\\)' not in markdown
-assert markdown.count('beamCase=l03-')==5
-assert 'How Figure 4 is actually calculated' in markdown
+assert markdown.count('beamCase=l03-')==6
+assert 'First draw the cross-section' in markdown
+assert 'Stress tensor' in markdown and 'strain tensor' in markdown
+assert 'Why that selected area requires shear transfer' in markdown
 assert 'Hooke' in markdown and 'radius R' in markdown
 assert 'v(0) = 0' in markdown and 'C₁ = 0' in markdown
 ids=[c['id'] for c in nb['cells']]
@@ -30,13 +32,13 @@ for c in nb['cells']:
         assert c['execution_count'] is not None
         assert not any(o['output_type']=='error' for o in c['outputs'])
         figures+=sum('image/png' in o.get('data',{}) for o in c['outputs'])
-assert figures==17
+assert figures==23
 assert r'\theta(x)' in markdown
 assert r'\thetax' not in markdown
 assert '$$V(x)=P' in markdown
 allowed_commands={'theta','frac','sum','quad','qquad','mathrm','boxed','sigma','max','tau',
                   'left','right','varepsilon','mathbf','int','kappa','Delta','ell',
-                  'approx','text','pi','phi','propto','times'}
+                  'approx','text','pi','phi','propto','times','lim','to','Delta','begin','end','partial','bar','Longrightarrow','boldsymbol','gamma'}
 for equation in re.findall(r'\$\$(.*?)\$\$',markdown,flags=re.S):
     unknown=set(re.findall(r'\\([A-Za-z]+)',equation))-allowed_commands
     assert not unknown, f'Unrecognized/corrupted LaTeX commands: {unknown}'
@@ -51,4 +53,8 @@ assert close(P*L**3/(48*E*I),1.1390625)
 assert close(P*L**3/(192*E*I),.284765625)
 assert close((P*L/(E*I))*(h/2),.00135)
 assert close(E*.00135,2.7)
-print(f'PASS: {len(nb["cells"])} cells, {figures} saved figures, no inline dollar signs; five app links and numerical stress/strain/deflection checks.')
+assert close(P*(L/2),450)
+assert close(P*L/8,112.5)
+assert close(P*(L/2)**2*(3*L-L/2)/(6*E*I),5.6953125)
+assert close((2*187.5/I)*10,2.25)
+print(f'PASS: {len(nb["cells"])} cells, {figures} saved figures, no inline dollar signs; six app links and numerical reaction/stress/strain/deflection checks.')

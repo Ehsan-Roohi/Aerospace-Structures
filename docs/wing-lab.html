@@ -739,6 +739,7 @@ if(typeof window!=='undefined')window.BeamLearningEngine=BeamLearningEngine;
 </script>
 <script>/* Lecture 03 links deliberately replace loads rather than adding to an old study. */
 const Lecture03BeamCases = Object.freeze({
+  'l03-centre': {support:'cantilever',loads:[{kind:'point',position:225,force:2}]},
   'l03-tip': {support:'cantilever',loads:[{kind:'point',position:450,force:2}]},
   'l03-uniform': {support:'cantilever',loads:[{kind:'distributed',start:0,end:450,qStart:2/450,qEnd:2/450}]},
   'l03-simple': {support:'simply-supported',loads:[{kind:'point',position:225,force:2}]},

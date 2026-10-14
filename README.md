@@ -53,7 +53,7 @@ force/moment and modern-control sections.
 
 ## Lecture notebooks
 
-**[Lecture 03 — Beam reactions, stress and deflection](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/main/notebooks/MIE446_Lecture_03_Beam_Reactions_Stress_and_Deflection.ipynb)** — a 90-minute guided lesson: support constraints and reaction unknowns, cantilever equilibrium, internal shear/moment, bending/shear stress and displacement. Seventeen annotated figures include a visual symbol map, section dimensions, stress calculations, the geometric origin of strain, root constraints and integration to displacement. Worked examples open matching solved cases in Wing Lab; a circular-tube torsion orientation is optional.
+**[Lecture 03 — Supports, equilibrium, stress, strain and beam displacement](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/main/notebooks/MIE446_Lecture_03_Beam_Reactions_Stress_and_Deflection.ipynb)** — a 90-minute core lesson: each support has a worked force/moment balance; tip and uniform cases belong to the cantilever section. Twenty-three saved figures locate symbols, pair loaded beams with diagrams, introduce stress/strain tensors, show bending/shear contours and explain Q through actual force transfer. Six links open matching solved beam studies; advanced algebra and torsion are supporting reading.
 
 | Lecture | What we study | Open and run |
 |---|---|---|

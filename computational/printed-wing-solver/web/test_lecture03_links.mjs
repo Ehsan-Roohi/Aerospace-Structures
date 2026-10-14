@@ -6,6 +6,7 @@ const require=createRequire(import.meta.url);
 const {JSDOM}=require(process.env.MIE446_JSDOM_MODULE || 'jsdom');
 const read=f=>readFileSync(new URL(f,import.meta.url),'utf8');
 const expected=[['l03-tip','cantilever',18.225,2.7],
+ ['l03-centre','cantilever',5.6953125,1.35],
  ['l03-uniform','cantilever',6.834375,1.35],
  ['l03-simple','simply-supported',1.1390625,.675],
  ['l03-fixed','fixed-fixed',.284765625,.3375],
@@ -24,4 +25,4 @@ for(const [name,support,deflection,stress] of expected){
  if(name==='l03-lift')assert.ok(w.document.querySelector('#beamLoads').textContent.includes('-0.004'));
  dom.window.close();
 }
-console.log('Lecture 03: all five deep links and unknown-case fallback pass DOM/numerical checks.');
+console.log('Lecture 03: all six deep links and unknown-case fallback pass DOM/numerical checks.');

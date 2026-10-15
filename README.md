@@ -29,6 +29,8 @@ This is the classroom home for released MIE 446 learning materials. Start with t
 | **Numerical wing structural design** | Two teaching sessions + design studio: theory, schematics, signed load cases, bending/shear/torsion, cap buckling, whole-span fit, independent beam FEM, Pareto search, uncertainty and downloadable CAD/report data. No lab or Excel required. | [![Open Numerical Wing Design in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/main/notebooks/MIE446_Wing_Structural_Design_Numerical.ipynb) |
 | **Printed-wing structural solver** | Analyse your team's as-printed semi-wing: exact shell/sleeve/rod section, 2-D FE torsion and shear centre, lift or tip-force loads, V–M–T, deflection, twist, skin buckling, rod and seam checks, natural frequencies and assembly comparison. [Launch Wing Lab 3-D app](https://ehsan-roohi.github.io/Aerospace-Structures/wing-lab.html) (runs directly in your browser) · [SolidWorks cross-check guide](SOLIDWORKS_SIMULATION_GUIDE.md) | [![Open Printed-Wing Solver in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/main/notebooks/MIE446_Printed_Wing_Structural_Solver.ipynb) |
 
+**Project lesson — [Code-to-Print Wing: coupon first, final wing second](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/main/notebooks/MIE446_Code_to_Print_Wing.ipynb).** Follow the [project start-here checklist](#wing-project--start-here-lesson-coupon-then-final-wing) below; this fabrication notebook is separate from the analysis solver.
+
 Lectures 01, 02 and 03 and the independent wing-structure lecture are released. Later lecture notebooks will appear here when ready; the [syllabus schedule](SYLLABUS.md#7-weekly-schedule--fall-2026) describes the full semester, not a list of already-published notebooks.
 
 ### Your classroom workflow
@@ -57,7 +59,27 @@ force/moment and modern-control sections.
 
 <a id="design-and-build-a-wing"></a>
 
-### Wing design and fabrication project
+## Wing project — start here: lesson, coupon, then final wing
+
+**[OPEN THE PROJECT LESSON / COUPON NOTEBOOK IN COLAB](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/main/notebooks/MIE446_Code_to_Print_Wing.ipynb)**
+
+This is the **Code-to-Print Wing project lesson**, not Lecture 03 and not the structural-analysis solver. The coupon and the final wing are two stages of this same notebook. Start with **Coupon Only**; do not start by printing the whole wing.
+
+| Stage | Open this resource | What your team does / produces |
+|---|---|---|
+| **1 · Learn and prepare** | [Project lesson in Colab](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/main/notebooks/MIE446_Code_to_Print_Wing.ipynb) · [Two-run workflow](PROJECT.md#3-the-two-run-workflow) | Save a copy in Drive. Read the instructions, run setup, enter your assigned team ID and members, choose **Coupon Only**, record your design and predictions. |
+| **2 · Generate the coupon** | Same notebook, **Step 4: Print and record the rod-fit coupon** · [Coupon instructions](PROJECT.md#step-4-print-and-record-the-rod-fit-coupon) | Run the coupon stage and download the **FitCoupon ZIP**. Extract the coupon STL. This is a small three-hole test piece, **not a wing**; no skin or ribs should appear in it. |
+| **3 · Print and test the fit** | [OrcaSlicer / printing instructions](PRINTING.md) · [Coupon fit and release record (PDF)](docs/course-packets/2026-09-29/MIE446_Coupon_Fit_and_R02_Release_Record.pdf) | Slice the coupon with the staff-approved printer/nozzle/material profile. At your supervised ELab appointment, print it and test the **actual course rod** without forcing it. Measure the rod and record the selected clearance, fit, tester, date and coupon revision; retain photos and the coupon. If the rod is unavailable, do not claim that fit has been confirmed. |
+| **4 · Generate the final wing after approval** | Same notebook, **Final Wing**, Steps 2–6 · [Full project guide](PROJECT.md) | Enter the factual coupon record, change to a later final-wing revision, rerun and inspect the generated geometry. Download the final package with printable wing-module STLs. Obtain staff release before final printing. |
+
+**Bring to ELab:** your laptop with OrcaSlicer, the downloaded coupon ZIP and extracted STL, your saved Colab notebook/design values, and the fit-record form. Staff confirm printer settings and rod availability. **The Colab notebook generates geometry; OrcaSlicer generates printer-specific G-code.** Never send an unrelated sample G-code directly to the printer.
+
+**Where are the ribs and skin?** They belong to the **Final Wing** geometry, not the coupon. A successful Coupon Only run intentionally skips the final wing. [Why the baseline has seven ribs](PROJECT.md#why-the-baseline-has-seven-ribs).
+
+**Appointments and release:** follow the current Canvas announcement and your assigned supervised ELab slot. Earlier September/October preparation plans below are retained as background, not new appointments or permission to print.
+
+<details>
+<summary>Earlier preparation schedule and printable planning sheets</summary>
 
 #### Assigned teams and October build
 
@@ -71,6 +93,7 @@ Use the fillable worksheet and fit/release record below, retaining a copy for yo
 - [September 29 Wing Lecture Guide (instructor)](docs/course-packets/2026-09-29/MIE446_September_29_Instructor_Guide.pdf)
 - [Coupon Fit and R02 Release Record (team and staff form)](docs/course-packets/2026-09-29/MIE446_Coupon_Fit_and_R02_Release_Record.pdf)
 
+</details>
 
 <img src="docs/baseline_preview.png" alt="Code-generated baseline semi-wing with printed shell, ribs and rod interfaces" width="640">
 

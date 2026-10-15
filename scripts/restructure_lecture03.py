@@ -127,15 +127,63 @@ $$R_A+R_B-2=0,$$
 
 $$C_A+C_B+450R_B-2(225)=0.$$
 
-These two equations cannot determine four unknowns. For identical clamps and this symmetric constant-EI beam, symmetry gives Rₐ = Rᵦ = 1 N and Cᵦ = −Cₐ. Still, **equilibrium has not found the couple magnitude**.
+#### Why do we need two more equations?
 
-On the left half the internal moment is M(x) = −Cₐ + (P/2)x. Integrate curvature from the fixed root, whose rotation is zero. Symmetry requires zero rotation at the centre too:
+Equilibrium says that the beam does not accelerate; it does **not** say whether its bent shape fits its supports. Four transverse reactions but only two equilibrium equations leave two unknowns undetermined. This is a **statically indeterminate beam of degree two** in the transverse bending model. Axial reactions are outside this model.
 
-$$\theta(L/2)=-\frac{1}{EI}\int_0^{L/2}\left(-C_A+\frac{P}{2}x\right)dx=0.$$
+**Compatibility means that the deformed beam must still fit the supports.** A perfect clamp does not let the end move vertically or rotate. Therefore v(0) = 0, θ(0) = 0, v(L) = 0 and θ(L) = 0. The centre may move downward; a clamp does not mean the whole beam stays straight.
 
-Hence Cₐ L/2 − PL²/16 = 0:
+We build the shape starting at A with v(0) = θ(0) = 0. The **two additional requirements at B** are:
+
+$$\boxed{\theta(L)=0}\qquad\boxed{v(L)=0}.$$
+
+The first says “the right end must finish horizontal”; the second says “the right end must finish at its original height.” These are geometric conditions, not extra force balances. If guessed reactions leave a tilted or vertically displaced right end, they cannot be the reactions of this fixed–fixed beam.
+
+#### How do these geometric conditions become equations for reactions?
+
+For small elastic bending, moment makes curvature. With v positive downward and M positive in sagging, our sign convention gives:
+
+$$\theta=\frac{dv}{dx},\qquad \frac{d\theta}{dx}=-\frac{M(x)}{EI}.$$
+
+Think of a tiny length dx: curvature changes its slope by −M dx/(EI). Adding all these slope changes gives the end rotation. Adding slopes along the beam gives displacement. Section 5 derives this material/geometry relation more fully. For constant EI and the zero starting displacement and rotation at A:
+
+$$\boxed{\theta(L)=-\frac{1}{EI}\int_0^L M(x)\,dx=0}$$
+
+$$\boxed{v(L)=-\frac{1}{EI}\int_0^L (L-x)M(x)\,dx=0}$$
+
+Why the factor L − x? A small change of slope created at station x contributes displacement over the remaining distance to B. The first integral has units of rotation (dimensionless, reported in radians); the second has units of length. Positive and negative moment regions must cancel in the required ways.
+
+For a point force at a = L/2, a cut of the left portion gives:
+
+$$M(x)=
+\begin{cases}
+-C_A+R_Ax,&0\leq x<a,\\
+-C_A+R_Ax-P(x-a),&a\leq x\leq L.
+\end{cases}$$
+
+The load contributes only after the cut passes its location. Substituting this piecewise moment into the two compatibility integrals gives two simple algebraic equations:
+
+$$\boxed{-C_A L+\frac{R_A L^2}{2}-\frac{P(L-a)^2}{2}=0}$$
+
+$$\boxed{-\frac{C_A L^2}{2}+\frac{R_A L^3}{6}-\frac{P(L-a)^3}{6}=0}.$$
+
+These are **zero rotation and zero displacement**, respectively—not new laws of equilibrium. The common nonzero EI cancels because it is constant here. It cannot generally be taken outside the integral for a tapered or variable-stiffness beam.
+
+#### Solve the two equations, then return to equilibrium
+
+For L = 450 mm, a = 225 mm and P = 2 N:
+
+$$-450C_A+101250R_A-50625=0,$$
+
+$$-101250C_A+15187500R_A-3796875=0.$$
+
+Multiply the first equation by L/2 = 225 mm and subtract the second. This gives Rₐ = 1 N. Substitution in the first gives Cₐ = 112.5 N mm CCW. Equilibrium then gives Rᵦ = 1 N and Cᵦ = −112.5 N mm (clockwise). Equal vertical reactions are also an independent symmetry check.
 
 $$C_A=\frac{PL}{8}=112.5\ \mathrm{N\,mm\ CCW},\qquad C_B=-112.5\ \mathrm{N\,mm\ CW}.$$
+
+**Check the shape, not only the forces:** these reactions give θ(L) = 0 and v(L) = 0, while the centre displacement is PL³/(192EI) = 0.2848 mm downward. The midpoint tangent is horizontal by symmetry, but the midpoint displacement is not zero.
+
+**Today's method:** equilibrium + elastic bending + compatibility. **Lecture 04 will use virtual work to solve this type of beam**; no virtual-work calculation is required here.
 
 Substitution into the whole-beam moment equation gives 112.5 − 112.5 + 450 − 450 = 0 N mm. The app reports −112.5 at A and +112.5 at B because its positive couple direction is clockwise. Both **internal** end moments are −112.5 N mm; that is a different sign convention on different cut faces. The displacement/curvature relation used here is explained geometrically in Section 5.
 ''')

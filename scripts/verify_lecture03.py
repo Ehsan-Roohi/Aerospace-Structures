@@ -38,12 +38,18 @@ assert r'\thetax' not in markdown
 assert '$$V(x)=P' in markdown
 allowed_commands={'theta','frac','sum','quad','qquad','mathrm','boxed','sigma','max','tau',
                   'left','right','varepsilon','mathbf','int','kappa','Delta','ell',
-                  'approx','text','pi','phi','propto','times','lim','to','Delta','begin','end','partial','bar','Longrightarrow','boldsymbol','gamma'}
+                  'approx','text','pi','phi','propto','times','lim','to','Delta','begin','end','partial','bar','Longrightarrow','boldsymbol','gamma','leq'}
 for equation in re.findall(r'\$\$(.*?)\$\$',markdown,flags=re.S):
     unknown=set(re.findall(r'\\([A-Za-z]+)',equation))-allowed_commands
     assert not unknown, f'Unrecognized/corrupted LaTeX commands: {unknown}'
 
 L,b,h,E,P=450.,20.,10.,2000.,2.
+a=L/2
+RA=P/2
+CA=P*L/8
+assert abs(-CA*L+RA*L**2/2-P*(L-a)**2/2)<1e-8
+assert abs(-CA*L**2/2+RA*L**3/6-P*(L-a)**3/6)<1e-8
+assert 'Compatibility means' in markdown and 'two additional requirements at B' in markdown
 I=b*h**3/12
 close=lambda a,b: abs(a-b)<1e-9
 assert close(P*L*h/(2*I),2.7)

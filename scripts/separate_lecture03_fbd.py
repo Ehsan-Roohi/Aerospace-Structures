@@ -58,6 +58,25 @@ beam_system_or_fbd(axes[0],{kind!r},'1. {name}: physical beam, supports and appl
 beam_system_or_fbd(axes[1],{kind!r},'2. Same beam isolated: supports removed, replaced by reactions',fbd=True)
 plt.show()
 '''
+    fixed=get('#@title Figure 1C')
+    fixed['source']=fixed['source'].replace(
+        "plt.subplots(2,1,figsize=(12,8)", "plt.subplots(3,1,figsize=(12,12)")
+    fixed['source']=fixed['source'].replace('plt.show()',r'''
+ax=axes[2]
+xx=np.linspace(0,L,301)
+shape=-25*16*(xx/L)**2*(1-xx/L)**2
+ax.plot(xx,np.zeros_like(xx),'--',color='gray',label='Original centreline')
+ax.plot(xx,shape,color='#196caa',lw=3,label='Bent shape (exaggerated schematic)')
+for end,label in [(0,'A'),(L,'B')]:
+    ax.plot([end-20,end+20],[0,0],color='#176441',lw=4)
+    ax.text(end,8,label+': v = 0; theta = 0',ha='center',fontsize=12)
+ax.annotate('',xy=(L/2,-25),xytext=(L/2,0),arrowprops=dict(arrowstyle='<->',color='#196caa'))
+ax.text(L/2+15,-15,'Centre moves down;\nhorizontal tangent',fontsize=12)
+ax.set(xlim=(-65,L+65),ylim=(-48,30))
+ax.set_title('3. Compatibility: both ends keep their height AND horizontal tangent')
+ax.axis('off');ax.legend(loc='lower center',fontsize=11)
+plt.show()
+''')
     tip=get('Figure 2 — external free body')
     # Preserve the existing isolated outboard-cut drawing, which has no support.
     cut=tip['source'].split('ax=panels[1]',1)[1].rsplit('plt.show()',1)[0]

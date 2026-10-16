@@ -1,68 +1,48 @@
 # Homework 2: Flight-Control Forces, Moments, and Structural Load Paths
 
-MIE 446 Aerospace Structures, Fall 2026. Released October 1, 2026. **Due: Sunday, October 18, 2026.** Submit through Canvas at the time specified there.
+MIE 446 Aerospace Structures, Fall 2026. Split-release clarification, October 16, 2026.
+Homework 2 is submitted in two parts. Canvas is authoritative for deadlines
+and submission links. This release supersedes the earlier single-handout HW 2 files.
 
-Start with the illustrated [student guide (PDF)](MIE446_HW2_Control_Forces_Moments.pdf).
-It gives the required reading, numbered steps, MATLAB commands, exact Excel cell
-references, independent checks, and submission requirements for every question.
+| Part | Content | Points | Due |
+|---|---|---:|---|
+| [HW 2A](HW2A/) | Part 1, Lilienthal evidence; Part 3, side-force moment geometry | 35 | Tue. Oct. 20 |
+| [HW 2B](HW2B/) | Part 2, spanwise integration; Part 4, elevon mixing; Part 5, local load paths; HW 2 portfolio | 65 | Thu. Nov. 5 |
 
-## Download the student files
+**For the first submission, complete ONLY Parts 1 and 3 (HW 2A), not all five parts.** The earlier combined PDF/ZIP remains in repository history/resources but is superseded; use the A/B downloads below. The previous October 18 combined deadline is superseded by this split release; Canvas supplies the exact submission times.
 
-- [Complete student package (ZIP)](MIE446_HW2_Student_Pack.zip)
-- [Student guide (PDF)](MIE446_HW2_Control_Forces_Moments.pdf)
-- [Excel starter workbook](MIE446_HW2_Excel_Starter.xlsx)
-- [MATLAB starter script](MIE446_HW2_Starter.m)
-- [Guide source (HTML)](MIE446_HW2_Control_Forces_Moments.html)
+## HW 2A downloads
 
-Download and extract the ZIP before opening its files. In MATLAB, make the
-extracted folder your Current Folder and open `MIE446_HW2_Starter.m`. In Excel,
-save a working copy of the starter. The unfinished calculation cells and MATLAB
-TODOs are intentional. Follow the guide to complete them; a blank answer is not
-a zero result.
+- [Student guide (PDF)](HW2A/MIE446_HW2A_Evidence_and_Moment_Geometry.pdf)
+- [Complete HW 2A package (ZIP)](MIE446_HW2A_Student_Pack.zip)
+- [MATLAB starter](HW2A/MIE446_HW2A_Starter.m) · [Excel starter](HW2A/MIE446_HW2A_Excel_Starter.xlsx)
 
-## Read alongside Lecture 1
+HW 2A submission: individually authored report PDF, MATLAB file and Excel workbook. Include the short process note in the report. The slide, README, Engineering Judgment Record and reflection belong with HW 2B, not HW 2A.
 
-Open [Lecture 1 in Google Colab](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/main/notebooks/MIE446_Lecture_01_Trust_Forces_Airfoils.ipynb).
-Use the section numbers and titles below to find each explanation.
+## HW 2B downloads
 
-| Question | Points | Lecture 1 reference | What you produce |
-|---|---:|---|---|
-| 1. Read the historical evidence | 15 | 7A-3, 7A-3a and 7A-3b | Annotated hardware sketch; approximate graph readings; interpretation |
-| 2. Integrate force and moment increments | 35 | 7A-3b and the coefficient/force-scaling lesson | MATLAB integration, Excel panel sums, plots, convergence and speed checks |
-| 3. Move a lateral force | 20 | 7A-3b | Hand cross products, MATLAB and Excel checks, signed moment interpretation |
-| 4. Mix elevon commands | 20 | 7A-11 and its elevon-mixer code cell | Requested/limited commands, forces, moments and saturation explanation |
-| 5. Trace local structural loads | 10 | 7A-1 and 7A-5 | Two load-path drawings and control-string force calculations |
+- [Student guide (PDF)](HW2B/MIE446_HW2B_Integration_Mixing_Load_Paths.pdf)
+- [Complete HW 2B package (ZIP)](MIE446_HW2B_Student_Pack.zip)
+- [MATLAB starter](HW2B/MIE446_HW2B_Starter.m) · [Excel starter](HW2B/MIE446_HW2B_Excel_Starter.xlsx)
 
-The required paper is Raffel et al., [Flight Controls of Otto Lilienthal's
-Experimental Monoplane from 1895](https://elib.dlr.de/191143/1/JoA_Paper_Lilienthal_Flight_Controls.pdf),
-especially the device descriptions and Section II.C, Figures 11 and 12. Read the
-plotted markers; the dashed fitted lines are not additional measurements.
-
-The computational wing and elevon models are specified instructional models.
-They are not measurements from the paper or performance claims for the printed
-course wing. The numerical wing matches the course baseline dimensions so that
-students can connect geometry, forces, moments and structural interfaces.
-
-Discuss and cross-check within the existing three-person teams. Each student
-submits independently authored work through Canvas under the course's individual
-homework policy. The PDF handout is the authoritative task and submission list.
-
-The paper retains its aerodynamic-axis coefficient convention. Questions 2-4
-use the declared body axes and moments about the CG. Question 5 uses a local
-mechanism pivot. Whole-aircraft control moments and local hinge moments are
-different quantities.
+Read alongside [Lecture 1 in Google Colab](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/main/notebooks/MIE446_Lecture_01_Trust_Forces_Airfoils.ipynb)
+and Raffel et al., [Flight Controls of Otto Lilienthal's Experimental Monoplane
+from 1895](https://elib.dlr.de/191143/1/JoA_Paper_Lilienthal_Flight_Controls.pdf).
+Discuss and cross-check within the existing three-person teams; each student
+submits independently authored work through Canvas. Keep graded work out of
+this public repository.
 
 ## Visual credits
 
-`assets/HW2_Wing_Model` and `assets/HW2_Control_Lever` are original teaching
-schematics supplied as PNG and editable SVG. They show the given model and
-mechanism geometry. The course Lecture 1 figures retain the source information
-in [the lecture visual register](https://github.com/Ehsan-Roohi/Aerospace-Structures/blob/main/docs/assets/lecture01/VISUAL_SOURCES.md).
+`HW2B/assets/HW2_Wing_Model` and `HW2B/assets/HW2_Control_Lever` are original
+teaching schematics supplied as PNG and editable SVG. `HW2_Body_Axes.png` (in
+both `assets` folders) is Lecture 1, Figure 7A-3b-1. Source information for the Lecture 1 figures is in
+[the lecture visual register](https://github.com/Ehsan-Roohi/Aerospace-Structures/blob/main/docs/assets/lecture01/VISUAL_SOURCES.md).
 
-## Help with MATLAB syntax
+## MATLAB references
 
-Official MathWorks references: [linspace](https://www.mathworks.com/help/matlab/ref/double.linspace.html),
+[linspace](https://www.mathworks.com/help/matlab/ref/double.linspace.html),
 [trapz](https://www.mathworks.com/help/matlab/ref/trapz.html),
-[cross](https://www.mathworks.com/help/matlab/ref/cross.html), and
+[cross](https://www.mathworks.com/help/matlab/ref/cross.html) and
 [exportgraphics](https://www.mathworks.com/help/matlab/ref/exportgraphics.html).
-The guide explains the specific commands needed; no specialist toolbox is required.
+No specialist toolbox is required.

@@ -361,10 +361,10 @@ Meetings run from 11:30 a.m. to 12:45 p.m. Finish the remaining Lecture 1 wing m
 | 3 Sept. 22/24 | External and internal loads, equilibrium, stress and strain, and wing free-body diagrams. | Existing teams active; Sept. 25 optional Manela seminar. |
 | 4 Sept. 29/Oct. 1 | Continue Lecture 1; finish wing anatomy/load paths on Oct. 1, map the seven-rib baseline to R01 and start Coupon Only. | HW 1 due Oct. 1; R01 layout and coupon file/blocker. |
 | 5 Oct. 6/8 | Oct. 6: geometry, virtual-load shear/root-moment hand check and coupon evidence. Oct. 8: Final Wing/R02, slicer preview and print-release review. | Physical fit before R02; pre-print package reviewed Oct. 8–9. |
-| 6 Oct. 13/15 | Oct. 13: supervised wing-module fabrication launch in assigned slots, with beam-equilibrium studio for waiting teams. Oct. 15: beam shear/moment, bending stress, slope and deflection; inspect first-print evidence. | Wing construction starts Oct. 13 only for released teams; HW 2 due Sunday, Oct. 18, 2026. |
+| 6 Oct. 13/15 | Oct. 13: supervised wing-module fabrication launch in assigned slots, with beam-equilibrium studio for waiting teams. Oct. 15: beam shear/moment, bending stress, slope and deflection; inspect first-print evidence. | Wing construction starts Oct. 13 only for released teams; HW 2A (Parts 1 and 3) due Oct. 20. |
 | 7 Oct. 20/22 | Two- and three-dimensional stress transformation; Mohr's circle, principal stresses and directions; constitutive and plane-stress assumptions; audit a flawed solution. | As-built and reproducibility checkpoint Oct. 22. |
 | 8 Oct. 27/29 | Midterm Oct. 27; guest class Oct. 29 on electric propulsion, industry practice and internship/career pathways. | Midterm Oct. 27; Dr. Tsay Oct. 29. |
-| 9 Nov. 3/5 | Nov. 3: no class. Nov. 5: strain energy, virtual work and a beam-model validity check. | No HW 2 deadline this week; due Oct. 18. |
+| 9 Nov. 3/5 | Nov. 3: no class. Nov. 5: strain energy, virtual work and a beam-model validity check. | HW 2B (Parts 2, 4 and 5) due Nov. 5. |
 | 10 Nov. 10/12 | Nov. 10: Castigliano and determinate/indeterminate structures. Nov. 12: maneuver and landing loads, V–n diagrams, wing structural idealization and assembly review. | HW 3 due Nov. 12; design and assembly review. |
 | 11 Nov. 17/19 | Thin-walled wing-box idealization, shear flow, torsion and shear center; compare model with printed geometry and inspection evidence. | HW 4 due Nov. 19; Nov. 16 supervised assembly/inspection slot. |
 | 12 Nov. 24/26 | No regular MIE 446 meetings: Nov. 24 follows a Wednesday schedule; Thanksgiving recess. | Approved inspection or correction slots only if shared schedule permits. |
@@ -377,7 +377,7 @@ Meetings run from 11:30 a.m. to 12:45 p.m. Finish the remaining Lecture 1 wing m
 | Assignment | Primary focus | Due |
 | --- | --- | --- |
 | HW 1 | Read the structure: airfoil/wing load path, FBD, pre-calculation predictions, equilibrium, code plot | Oct. 1 |
-| HW 2 | Choose and check the control-load model: Lilienthal evidence, MATLAB/Excel force and moment integration, lateral-force geometry, elevon mixing and local structural load paths | Oct. 18, 2026 |
+| HW 2 (A + B) | HW 2A: Lilienthal evidence and lateral-force geometry (35 points). HW 2B: integration, elevon mixing, local load paths and portfolio (65 points). | HW 2A: Oct. 20; HW 2B: Nov. 5, 2026 |
 | HW 3 | Verify independently: wing-beam shear/moment, bending, deflection, strain energy, limiting/alternate check | Nov. 12 |
 | HW 4 | Audit AI reasoning: virtual work/Castigliano plus correction of a plausible but flawed generated solution | Nov. 19 |
 | HW 5 | Sensitivity and trade-offs: maneuver/landing loads, V-n diagram, computational exercise | Dec. 3 |
@@ -387,7 +387,7 @@ The [released Homework 2 guide and starter files](assignments/homework-02/README
 give the current assignment specification and the exact Lecture 1 reading route.
 Canvas carries the authoritative submission deadline and any announced changes.
 
-**Homework 2 deadline:** Sunday, October 18, 2026, in both this web syllabus and the downloadable Word syllabus. Use the submission time specified in Canvas.
+**Homework 2 split-release clarification (October 16):** HW 2A covers only Parts 1 and 3, due October 20; HW 2B covers Parts 2, 4 and 5, due November 5. These replace the former combined October 18 deadline, including that date in earlier Word/PDF copies. Use the current A/B handouts and the exact submission times in Canvas.
 
 ## 8. Course policies
 

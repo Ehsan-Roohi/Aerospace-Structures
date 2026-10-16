@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<title>MIE 446 Homework 2A — Read the Evidence, then Locate the Force</title>
+<style>
+@page{size:letter;margin:0.58in 0.65in 0.55in}
+*{box-sizing:border-box}body{font-family:"Times New Roman",Times,serif;color:#000;background:#fff;font-size:11pt;line-height:1.24;margin:0}a{color:#000;text-decoration:underline}h1{font-size:23pt;line-height:1.08;margin:0 0 9pt}h2{font-size:16pt;line-height:1.1;margin:0 0 9pt;border-bottom:1px solid #000;padding-bottom:5pt}h3{font-size:12pt;margin:10pt 0 4pt}p{margin:5pt 0}table{width:100%;border-collapse:collapse;margin:7pt 0;font-size:10.5pt}th,td{text-align:left;vertical-align:top;padding:4pt 5pt;border-bottom:0.5pt solid #888}th{border-top:1pt solid #000;border-bottom:1pt solid #000}code,pre{font-family:"Times New Roman",Times,serif;color:#000;font-size:10.5pt}code{white-space:nowrap}pre{white-space:pre-wrap;border:0.7pt solid #777;padding:7pt;margin:7pt 0;line-height:1.21}ol,ul{margin:5pt 0;padding-left:20pt}li{margin-bottom:5pt}.page{break-before:page;position:relative}.page:first-child{break-before:auto}.kicker{font-size:10pt;margin-bottom:6pt}.lead{font-size:13pt}.box{border:0.8pt solid #000;padding:7pt 9pt;margin:8pt 0;break-inside:avoid}.small{font-size:9.5pt}.caption{font-size:9.3pt;line-height:1.18}.eq{text-align:center;margin:6pt 0;break-inside:avoid}img{display:block;max-width:100%;height:auto;margin:6pt auto}.compact td,.compact th{padding:3pt 4pt}.footer{border-top:0.5pt solid #888;padding-top:4pt;margin-top:10pt;font-size:9pt}.step{font-weight:bold}h2,h3{break-after:avoid}table,pre,figure{break-inside:avoid}mjx-container{color:#000!important}mjx-container[display="true"]{margin:0.45em 0!important}figure{margin:7pt 0}.line{display:inline-block;border-bottom:1px solid #000;min-width:150pt;height:13pt}@media screen{body{max-width:8.5in;margin:auto;padding:0.6in}.page{padding-bottom:0.5in;margin-bottom:0.4in;border-bottom:1px solid #999}}@media print{.page{padding:0}.screen-only{display:none}}
+</style>
+<script>window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},svg:{fontCache:'none'},options:{enableMenu:false}};</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-svg.js"></script>
+</head><body>
+<section class="page" id="startA">
+<p class="kicker">MIE 446 · Aerospace Structures · Homework 2A · Due Tuesday, October 20, 2026 (Canvas shows the time)</p>
+<h1>Homework 2A: Read the Evidence,<br>then Locate the Force</h1>
+<p class="lead">Flight-control forces, moments and load paths · Parts 1 and 3</p>
+<p>Name: <span class="line"></span> &nbsp; Team: <span class="line" style="min-width:65pt"></span></p>
+<p><b>The question:</b> When a control device changes an aerodynamic force, which aircraft moments change, and where does the structure receive the load?</p>
+<p>Homework 2 is submitted in two parts. <b>HW 2A</b> (this handout) reads measured roll and yaw data from Lilienthal’s experimental monoplane and practices the moment geometry \(\mathbf M=\mathbf r\times\mathbf F\). <b>HW 2B</b> (due November 5) uses both skills to integrate spanwise loads, mix elevon commands and trace local structural loads. Part 3 comes before Part 2 because its sign conventions are used throughout HW 2B. Work in the order <b>predict → sketch → compute → cross-check → explain.</b></p>
+<div class="box"><b>How to work.</b> Use your existing three-person wing team to discuss figures and independently cross-check calculations. Rotate the roles of predictor, calculator and checker. <b>Each student submits an individually authored report, MATLAB file and Excel workbook.</b> Identify collaborators and explain any shared figure-reading procedure. Feedback on HW 2A is intended to return before the October 27 midterm.</div>
+<table><tr><th>Part</th><th>Task</th><th>Points</th></tr><tr><td>1</td><td>Read historical evidence; compare control mechanisms</td><td>15</td></tr><tr><td>3</td><td>Calculate the moment of a side force at three locations</td><td>20</td></tr><tr><th></th><th>HW 2A total (HW 2B carries the remaining 65 points)</th><th>35</th></tr></table>
+<h3>Download and open before starting</h3>
+<ol><li>Open <a href="https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/main/notebooks/MIE446_Lecture_01_Trust_Forces_Airfoils.ipynb">Lecture 1 in Google Colab</a>. Use <b>File → Save a copy in Drive</b> if you plan to change its controls.</li>
+<li>Download <a href="MIE446_HW2A_Starter.m">MIE446_HW2A_Starter.m</a> and <a href="MIE446_HW2A_Excel_Starter.xlsx">MIE446_HW2A_Excel_Starter.xlsx</a> into one folder. Keep original copies; rename working copies with your surname.</li>
+<li>Open the MATLAB file in the Editor, set the Current Folder to that folder, run the setup section, then use <b>Run Section</b>. In MATLAB Online, upload the file first.</li>
+<li>Open the Excel workbook and save your own copy. Gray cells are intentionally blank. Enter <b>formulas</b>, not results copied from MATLAB.</li></ol>
+<p class="small">The starter uses standard MATLAB functions and no add-on toolbox. <code>NaN</code> means “unfinished”; a file that runs with NaN entries is not a completed submission. The lecture notebook uses Python; your assessed computation uses MATLAB and Excel.</p>
+<p class="footer">1 · Start here. Keep this handout beside the lecture notebook and your two computation files.</p>
+</section>
+<section class="page" id="axes">
+<p class="kicker">Preparation · Read before calculating any moment</p><h2>Coordinate axes and moment reference points</h2>
+<p><b>Notebook route:</b> find <b>2D. Aircraft rotations</b>, <b>2E. Center of gravity</b>, then <a href="https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/main/notebooks/MIE446_Lecture_01_Trust_Forces_Airfoils.ipynb"><b>7A-3b. A vertical vane is not automatically a pure-yaw device</b></a>. Use Ctrl+F (Command+F on Mac) to find the section title. Read Figure 7A-3b-1 before the equations.</p>
+<img src="assets/HW2_Body_Axes.png" alt="Plan and rear views showing body axes and positive roll and yaw" style="max-height:200pt;object-fit:contain">
+<p class="caption">Lecture 1, Figure 7A-3b-1. Aircraft right means the pilot’s right looking forward. An axis drawn into the page is not absent.</p>
+<p>Use a right-handed body-axis system: <b>+x forward, +y right, +z down</b>. Positive \(M_x\) tends to lower the right wing; positive \(M_y\) tends to raise the nose; positive \(M_z\) tends to turn the nose right. A moment tendency does not by itself predict the complete flight trajectory.</p>
+<div class="eq">\[\mathbf M_{CG}=\mathbf r\times\mathbf F,\quad \mathbf r=(x,y,z).\]
+\[M_x=yF_z-zF_y,\quad M_y=zF_x-xF_z,\quad M_z=xF_y-yF_x.\]</div>
+<p>The coordinates in \(\mathbf r\) run <b>from the CG to the force application point</b>. Use metres and newtons, giving N·m. A positive coordinate locates a point; it is not automatically the perpendicular lever arm of every force component.</p>
+<div class="box"><b>Do not carry coordinate signs between different problems without checking.</b> HW1’s airfoil coordinates had x from leading edge to trailing edge and y upward. In HW 2, Parts 2–4 use body axes and moments about the CG; Part 5 uses a local aerodynamic moment about a vane pivot. The historical paper reports its own aerodynamic-axis coefficients; retain those labels and signs in Part 1. A lowercase roll coefficient \(c_l\) is not the lift coefficient \(C_L\).</div>
+<h3>Practice example — different numbers from the assessed cases</h3>
+<p>A force \(\mathbf F=(0,0,3)\) N acts at \(\mathbf r=(0.20,0,0)\) m. Then \(M_x=0\), \(M_y=-(0.20)(3)=-0.60\) N·m, and \(M_z=0\). Sketch why a downward force ahead of the CG produces a nose-down tendency.</p>
+<pre>r_demo = [0.20, 0, 0];       % row vector, m
+F_demo = [0, 0, 3];          % row vector, N
+M_demo = cross(r_demo,F_demo); % returns [Mx My Mz]</pre>
+<p class="small"><code>cross(F_demo,r_demo)</code> gives the opposite sign. Use the physical definition \(\mathbf r\times\mathbf F\), not whichever order produces the expected answer.</p>
+<p class="footer">2 · State both the coordinate convention and the moment reference point.</p>
+</section>
+<section class="page" id="part1">
+<p class="kicker">Part 1 · Historical evidence and modern control mechanisms · 15 points</p><h2>Read the device, then read the measurement</h2>
+<p><b>Notebook route:</b> <b>7A-3</b> (device names), <b>7A-3a</b> (Lilienthal’s tail), <b>7A-3b</b> (moments), and <b>7A-7–7A-13</b> (modern UAV examples). Open <a href="https://elib.dlr.de/191143/1/JoA_Paper_Lilienthal_Flight_Controls.pdf">Raffel et al., “Flight Controls of Otto Lilienthal’s Experimental Monoplane from 1895”</a>. Read the device description and <b>Section II.C, Controllability</b>; inspect <b>Figures 11 and 12</b>. You need not summarize the whole paper.</p>
+<h3>1A. Identify the hardware [4 points]</h3>
+<ol><li>Choose one historical photograph or the lecture’s labeled conceptual plan view. Record its source. Label the <b>aft horizontal tail, aft vertical tail, wing-tip vane,</b> and one <b>control-linkage route</b>. If a component is hidden in your photograph, say “not visible in this view” and add a separate labeled sketch.</li>
+<li>Write two or three sentences distinguishing <b>tail presence</b>, <b>surface motion</b>, and <b>control purpose</b>. Explain why the existence of a wing-tip rudder does not imply absence of an aft tail.</li></ol>
+<h3>1B. Extract and interpret six pairs of coefficients [7 points]</h3>
+<ol><li>In Figure 11, locate the roll-coefficient axis and the two marker series: <b>filled circles (●): spoileron, 90°</b>; <b>crosses (×): wing warping</b>. In Figure 12, find the corresponding yaw-coefficient series. <b>Do not use the open-square rudder markers (□)</b> in this comparison.</li>
+<li>At \(\alpha=6^\circ,10^\circ,14^\circ\), read the marker center for each mechanism. Use the nearest grid ticks to estimate the value. Read the <b>measured markers</b>, not the dashed fitted/trend line. Keep the plotted sign. Report sensible precision: graph reading does not justify many decimals.</li>
+<li>Enter the six rows in the Excel <b>Paper</b> sheet, rows <b>7:12</b>. Columns A/B identify angle and mechanism; enter roll coefficient in C, yaw coefficient in D, reading tolerance in E, and figure/marker notes in F. In E, write separate roll and yaw tolerances if their plot scales differ, for example “roll ±…; yaw ±…”.</li>
+<li>Use grid spacing and marker width to justify your tolerance. Compare one row with a teammate’s independent reading. If values differ by more than the declared reading tolerance, revisit the figure together and record the resolution. Tolerance describes <b>your reading</b>, not measurement scatter.</li>
+<li>Explain the observed difference between the two mechanisms’ roll–yaw coupling over these selected points. For each mechanism, do roll and yaw have the <b>same sign or opposite signs</b>, and how does Section II.C explain it? Cite the figure and the test configuration (model, tunnel, flow speed) from the opening of Section II. Do not claim a universal response at every angle of attack or every spoileron deflection.</li></ol>
+<p><b>Keep these coefficients nondimensional; compare signs and trends, not sizes.</b> Record the paper’s labels and axis convention; no conversion to N·m is required. The paper does not state the reference area and lengths behind \(c_l\) and \(c_n\), and the two figures use very different scales, so a larger \(c_n\) does not by itself mean a larger yawing than rolling moment.</p>
+<h3>1C. Compare two modern examples [4 points]</h3>
+<p>Choose <b>one of MQ-9 or X-48B</b> and <b>one of X-36, X-47B, or MAGMA</b> from the notebook. Make a two-row table with: aircraft; visible tail/canard/winglet arrangement; one <b>documented</b> control mechanism; physical quantity it changes; and structure receiving the reaction. Cite the relevant notebook section and its linked source. If a photograph alone cannot establish a mechanism, state that limitation instead of guessing.</p>
+<p class="box"><b>Submit for Part 1:</b> one annotated figure; the six-row coefficient table with tolerances; a short coupling explanation; and the two-aircraft comparison. Aim for about one to two report pages.</p>
+<p class="footer">3 · Observed hardware, measured data, and an instructional model are different kinds of evidence.</p>
+</section>
+<section class="page" id="part3">
+<p class="kicker">Part 3 · Side-force geometry · 20 points</p><h2>Does an outboard side force necessarily roll the aircraft?</h2>
+<p><b>Notebook route:</b> return to <b>7A-3b</b>, especially <b>Figure 7A-3b-3 — Same side force, different lines of action</b>. The lecture’s numbers are different from the assessed values below.</p>
+<p>Apply the same force \(\mathbf F=(0,2,0)\) N at each location relative to the CG:</p>
+<table><tr><th>Case</th><th>x (m)</th><th>y (m)</th><th>z (m)</th><th>Before calculation</th></tr><tr><td>A</td><td>0</td><td>0.35</td><td>0</td><td>Does the force line pass through the CG?</td></tr><tr><td>B</td><td>−0.15</td><td>0.35</td><td>+0.04</td><td>Aft of and below the CG</td></tr><tr><td>C</td><td>−0.15</td><td>0.35</td><td>−0.04</td><td>Aft of and above the CG</td></tr></table>
+<h3>3A. Sketch and predict [6 points]</h3>
+<ol><li>Draw <b>one plan view and one rear view</b> that show all three cases together. Mark the CG, positive axes, the three application points labeled A, B and C, each force arrow and its extended line of action. Sketches may be schematic; write the actual offsets beside the points.</li><li>Without multiplying numbers, predict which moment components are zero and the signs of the nonzero components. State which component should reverse between B and C and why.</li></ol>
+<h3>3B. Calculate three ways [9 points]</h3>
+<ol><li>Use the three component formulas in the coordinate-convention section. Show the substituted numbers for <b>Case B</b> by hand, including units; tabulate A/B/C.</li>
+<li>In MATLAB starter <b>Section 3</b>, the rows of <code>rCases</code> are A/B/C. In the loop, <code>rCases(j,:)</code> selects the current row. Replace the TODO with <code>cross(rCases(j,:),Fside)</code>. Compare all components against the hand calculation.</li>
+<li>In Excel <b>Controls</b>, rows <b>7:9</b> contain the same cases. Columns B/C/D hold x/y/z; E/F/G hold \(F_x/F_y/F_z\). Enter the formulas below in row 7 and fill through row 9.</li></ol>
+<table><tr><th>Cell</th><th>Component</th><th>Formula</th></tr><tr><td>H7</td><td>\(M_x\)</td><td><code>=C7*G7-D7*F7</code></td></tr><tr><td>I7</td><td>\(M_y\)</td><td><code>=D7*E7-B7*G7</code></td></tr><tr><td>J7</td><td>\(M_z\)</td><td><code>=B7*F7-C7*E7</code></td></tr></table>
+<h3>3C. Explain the geometry [5 points]</h3>
+<p>Answer in your own words: (i) Why is the outboard distance \(y=0.35\) m not sufficient by itself to create roll from this force? (ii) Which perpendicular arm controls roll and which controls yaw? (iii) Give one application point that produces nonzero yaw but zero roll for this same force. Verify your proposed point with <code>cross</code>.</p>
+<p class="box"><b>Submit:</b> the plan-view and rear-view sketches; a prediction table; the hand calculation for B; a three-case moment table checked in MATLAB and Excel; and the three geometric explanations. The zero-moment case still has a nonzero resultant force.</p>
+<p class="footer">4 · A force can create translation without creating a moment about the chosen reference point.</p>
+</section>
+<section class="page" id="submitA">
+<p class="kicker">HW 2A submission · Check the reasoning and the files</p><h2>Submit HW 2A</h2>
+<p>Submit through Canvas your individually authored <b>Surname_HW2A_Report.pdf</b>, <b>Surname_HW2A.m</b> and <b>Surname_HW2A.xlsx</b>. Include the sketches, tables and explanations in the PDF so a reader can follow your reasoning without opening the software. Keep graded work out of the public repository.</p>
+<table class="compact"><tr><th>Part</th><th>Evidence required in your report</th><th>Points</th></tr><tr><td>1</td><td>Labeled hardware figure with source; six pairs of paper coefficients with reading tolerances and the test configuration; sign-based coupling explanation; two-aircraft comparison</td><td>15</td></tr><tr><td>3</td><td>Plan-view and rear-view sketches; predicted signs; hand calculation for Case B; three-case table checked in MATLAB and Excel; three geometric explanations</td><td>20</td></tr></table>
+<h3>Short process note</h3>
+<p>End the report with three short lines: (i) your collaborators and one cross-check you performed independently (for example, a teammate’s independent reading of one Figure 11 row); (ii) tools used and, if any generative AI was used, what it contributed and how you verified it, or “No generative AI used”; (iii) your MATLAB and Excel versions. The one-slide brief, README, Engineering Judgment Record and reflection are submitted once, with HW 2B.</p>
+<h3>Before submitting</h3>
+<ol><li>Save, close and reopen your MATLAB file. Run it from the top. Confirm that the Part 3 table appears and <code>Q3_side_force.csv</code> is saved in <code>hw2a_outputs</code> next to the script.</li><li>Open the Excel workbook and click the Part 3 result cells. Confirm that they contain formulas referencing the intended inputs.</li><li>Check that every reading in the Paper sheet keeps the plotted sign and a sensible number of digits, and that column E states your tolerance.</li><li>Read every prediction beside its computed result. If a prediction was wrong, explain the correction; do not silently remove the original reasoning.</li><li>Distinguish historical measurements, your figure-reading estimates and the prescribed teaching cases. Cite the source of every copied figure.</li></ol>
+<div class="box"><b>Looking ahead to HW 2B.</b> Keep your Part 1 readings: the HW 2B Engineering Judgment Record asks which mechanism in Figures 11–12 shares the roll–yaw sign pattern of your spanwise load model. If HW 2A feedback identifies a sign or convention error, correct it before you use it in HW 2B and record the correction in your HW 2B process note.</div>
+<p class="footer">5 · Observed hardware, measured data and an instructional model are different kinds of evidence.</p>
+</section>
+</body></html>

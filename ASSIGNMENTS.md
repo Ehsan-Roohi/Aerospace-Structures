@@ -16,31 +16,28 @@ This page collects released assignment files, the revised September 26 syllabus 
 
 The September 28 revision removes the proof and extra physical-check subpart, explains numerical integration step by step, and simplifies the tabulated-data calculation to direct panel sums. The PDF and Excel workbook use a uniform black-and-white format suitable for printing. Complete the work individually and submit only through Canvas.
 
-### Homework 2 - Flight-control forces, moments, and structural load paths
+### Homework 2 — two separate submissions: HW 2A and HW 2B
 
-**Due: Sunday, October 18, 2026.** Submit through Canvas; use the submission time shown there.
+**First submission: HW 2A, ONLY Parts 1 and 3, 35 points; due Tuesday, October 20, 2026.**
 
-- **[Download the illustrated step-by-step guide (PDF)](assignments/homework-02/MIE446_HW2_Control_Forces_Moments.pdf)**
-- **[Download the complete student package (ZIP)](assignments/homework-02/MIE446_HW2_Student_Pack.zip)**
-- [Download the Excel starter](assignments/homework-02/MIE446_HW2_Excel_Starter.xlsx)
-- [Download the MATLAB starter](assignments/homework-02/MIE446_HW2_Starter.m)
-- [Assignment overview and Lecture 1 reading map](assignments/homework-02/README.md)
+- [HW 2A guide (PDF)](assignments/homework-02/HW2A/MIE446_HW2A_Evidence_and_Moment_Geometry.pdf) · [HW 2A student package (ZIP)](assignments/homework-02/MIE446_HW2A_Student_Pack.zip)
+- Part 1: historical hardware, Lilienthal graph readings and two modern control examples (15 points).
+- Part 3: sketches, predictions and side-force moments at three positions, checked by hand, MATLAB and Excel (20 points).
+- Submit your individual report PDF, MATLAB file and Excel workbook; include the guide's short process note. The slide, README and Engineering Judgment Record are submitted with HW 2B.
 
-The October 1 release connects Lilienthal's control experiments to the Lecture 1
-force/moment schematics, spanwise numerical integration, modern elevon mixing,
-and local structural load paths. Each question includes specific notebook
-references, MATLAB commands, Excel cell instructions and independent checks.
-The released handout is the current HW2 specification. Discuss and cross-check
-within your existing three-person team, then submit your own independently
-authored report, MATLAB script and Excel workbook through Canvas, together with
-the course-required one-slide brief, README and process/AI-use note.
+**Second submission: HW 2B, Parts 2, 4 and 5, 65 points; due Thursday, November 5, 2026.**
+
+- [HW 2B guide (PDF)](assignments/homework-02/HW2B/MIE446_HW2B_Integration_Mixing_Load_Paths.pdf) · [HW 2B student package (ZIP)](assignments/homework-02/MIE446_HW2B_Student_Pack.zip)
+- Spanwise integration, elevon mixing, local load paths and the HW 2 portfolio.
+
+[Full A/B instructions and reading map](assignments/homework-02/README.md). **These split handouts supersede the old combined five-part assignment and its October 18 deadline.** Canvas is authoritative for exact times and submission links. Discuss within your existing team, but submit independently authored work.
 
 ## Six homework portfolios
 
 | Assignment | Main focus | Syllabus due date, 2026 |
 |---|---|---|
 | HW 1 | NACA 2412 geometry, surface-pressure integration, lift, pressure drag and discrete panel sums | October 1 |
-| HW 2 | Lilienthal control evidence, force/moment integration, lateral-force geometry, elevon mixing and structural load paths | October 18, 2026 |
+| HW 2 (A + B) | Evidence/moment geometry, then integration, mixing and load paths | HW 2A: October 20; HW 2B: November 5 |
 | HW 3 | Beam shear/moment, bending, deflection, strain energy and independent checks | November 12 |
 | HW 4 | Virtual work/Castigliano and correction of a plausible but flawed AI solution | November 19 |
 | HW 5 | Maneuver/landing loads, V–n diagrams, sensitivity and trade-offs | December 3 |

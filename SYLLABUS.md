@@ -152,7 +152,7 @@ There is one in-class midterm (Tuesday, Oct. 27) and no final examination. The u
 
 ### Homework portfolio: six substantial assignments
 
-Each homework submission is individual and contains four connected artifacts organized around the engineering reasoning cycle:
+Unless the assignment handout specifies otherwise, each homework submission is individual and contains four connected artifacts organized around the engineering reasoning cycle. **HW 2B requires only one PDF with the three analytical solutions and software comparisons; no additional artifacts are required.**
 
 1. Analytical solution plus an Engineering Judgment Record for one instructor-designated problem: frame the system and load path; record predictions made before calculation; justify the model, assumptions, boundary conditions, and validity; show readable derivations; and interpret the result.
 
@@ -364,7 +364,7 @@ Meetings run from 11:30 a.m. to 12:45 p.m. Finish the remaining Lecture 1 wing m
 | 6 Oct. 13/15 | Oct. 13: supervised wing-module fabrication launch in assigned slots, with beam-equilibrium studio for waiting teams. Oct. 15: beam shear/moment, bending stress, slope and deflection; inspect first-print evidence. | Wing construction starts Oct. 13 only for released teams; HW 2A (Parts 1 and 3) due Oct. 20. |
 | 7 Oct. 20/22 | Two- and three-dimensional stress transformation; Mohr's circle, principal stresses and directions; constitutive and plane-stress assumptions; audit a flawed solution. | As-built and reproducibility checkpoint Oct. 22. |
 | 8 Oct. 27/29 | Midterm Oct. 27; guest class Oct. 29 on electric propulsion, industry practice and internship/career pathways. | Midterm Oct. 27; Dr. Tsay Oct. 29. |
-| 9 Nov. 3/5 | Nov. 3: no class. Nov. 5: strain energy, virtual work and a beam-model validity check. | HW 2B (Parts 2, 4 and 5) due Nov. 5. |
+| 9 Nov. 3/5 | Nov. 3: no class. Nov. 5: strain energy, virtual work and a beam-model validity check. | HW 2B (three beam cases) due Nov. 5. |
 | 10 Nov. 10/12 | Nov. 10: Castigliano and determinate/indeterminate structures. Nov. 12: maneuver and landing loads, V–n diagrams, wing structural idealization and assembly review. | HW 3 due Nov. 12; design and assembly review. |
 | 11 Nov. 17/19 | Thin-walled wing-box idealization, shear flow, torsion and shear center; compare model with printed geometry and inspection evidence. | HW 4 due Nov. 19; Nov. 16 supervised assembly/inspection slot. |
 | 12 Nov. 24/26 | No regular MIE 446 meetings: Nov. 24 follows a Wednesday schedule; Thanksgiving recess. | Approved inspection or correction slots only if shared schedule permits. |
@@ -377,7 +377,7 @@ Meetings run from 11:30 a.m. to 12:45 p.m. Finish the remaining Lecture 1 wing m
 | Assignment | Primary focus | Due |
 | --- | --- | --- |
 | HW 1 | Read the structure: airfoil/wing load path, FBD, pre-calculation predictions, equilibrium, code plot | Oct. 1 |
-| HW 2 (A + B) | HW 2A: Lilienthal evidence and lateral-force geometry (35 points). HW 2B: wing-member beam bending, compatibility, software checks and distributed loading (65 points). | HW 2A: Oct. 20; HW 2B: Nov. 5, 2026 |
+| HW 2 (A + B) | HW 2A: Lilienthal evidence and lateral-force geometry (35 points). HW 2B: reactions, support displacement and rotation for three distributed-load beams, analytically and with software (65 points). | HW 2A: Oct. 20; HW 2B: Nov. 5, 2026 |
 | HW 3 | Verify independently: wing-beam shear/moment, bending, deflection, strain energy, limiting/alternate check | Nov. 12 |
 | HW 4 | Audit AI reasoning: virtual work/Castigliano plus correction of a plausible but flawed generated solution | Nov. 19 |
 | HW 5 | Sensitivity and trade-offs: maneuver/landing loads, V-n diagram, computational exercise | Dec. 3 |
@@ -387,7 +387,7 @@ The [released Homework 2 guide and starter files](assignments/homework-02/README
 give the current assignment specification and the exact Lecture 1 reading route.
 Canvas carries the authoritative submission deadline and any announced changes.
 
-**Homework 2 deadlines:** HW 2A covers Parts 1 and 3, due October 20; HW 2B covers Parts 2, 4 and 5, due November 5. Use the A/B handouts and the exact submission times in Canvas.
+**Homework 2 deadlines:** HW 2A covers Parts 1 and 3, due October 20; HW 2B covers the three beam cases, due November 5. Use the A/B handouts and the exact submission times in Canvas.
 
 ## 8. Course policies
 

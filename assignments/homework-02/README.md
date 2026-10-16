@@ -5,7 +5,7 @@ MIE 446 Aerospace Structures, Fall 2026. Submit individually through Canvas at t
 | Assignment | Work | Points | Due |
 |---|---|---:|---|
 | HW 2A | Parts 1 and 3: Lilienthal control evidence and side-force moment geometry | 35 | October 20, 2026 |
-| HW 2B | Parts 2, 4 and 5: member bending and compatibility, software verification, distributed wing load and design check | 65 | November 5, 2026 |
+| HW 2B | Three distributed-load beam cases: reactions and support displacement/rotation, analytically and with software | 65 | November 5, 2026 |
 
 ## HW 2A
 
@@ -17,13 +17,16 @@ Submit the report PDF, MATLAB file and Excel workbook specified in the guide.
 
 ## HW 2B
 
-- [Guide PDF](HW2B/MIE446_HW2B_Lilienthal_Wing_Beam_Analysis.pdf)
-- [Editable Word handout](HW2B/MIE446_HW2B_Lilienthal_Wing_Beam_Analysis.docx)
+- [Guide PDF](HW2B/MIE446_HW2B_Three_Beams.pdf)
+- [Editable Word handout](HW2B/MIE446_HW2B_Three_Beams.docx)
 - [Student ZIP](MIE446_HW2B_Student_Pack.zip)
 - [Full instructions and software links](HW2B/README.md)
 
-Use [Lecture 03](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/main/notebooks/MIE446_Lecture_03_Beam_Reactions_Stress_and_Deflection.ipynb) and Wing Lab to investigate a scaled member inspired by Lilienthal's wing load path. Derive the centre-force cases using equilibrium and displacement/rotation conditions, verify them in the beam software, and examine the distributed-load and depth studies. Use the stated model assumptions; do not treat the fixture comparisons as historical reconstructions.
+Use [Lecture 03](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/main/notebooks/MIE446_Lecture_03_Beam_Reactions_Stress_and_Deflection.ipynb) and the course beam software.
 
-Submit a PDF report, software study records and any calculation files used, a short README and one Claim–Evidence–Check slide in PDF and PowerPoint. Include the process/AI-use note in the report. The Word handout is provided for reading and annotation; the report is submitted as PDF.
+- Case 1: cantilever, triangular load increasing toward the free end.
+- Case 2: left roller and right pin, trapezoidal load.
+- Case 3: fixed–fixed, triangular load greatest at the left end.
+- Submit one PDF with analytical reactions and support displacements/rotations, plus a comparison table from the software. No extra files are required.
 
 Discuss within your existing team and submit independently authored work.

@@ -70,7 +70,7 @@ Each homework submission combines an analytical solution, an Engineering Judgmen
 | 6 | Supervised wing-module fabrication starts Oct. 13; beam shear/moment, bending stress, slope and deflection | First-print evidence; HW 2A (Parts 1 and 3) due Oct. 20, 2026 |
 | 7 | 2D/3D stress transformation, Mohr's circle, principal stresses and constitutive assumptions | As-built checkpoint Oct. 22 |
 | 8 | Individual midterm; electric-propulsion guest class with Dr. Michael Tsay of Busek | Midterm Oct. 27 and guest class |
-| 9 | Nov. 3 no class; strain energy and virtual work on Nov. 5 | HW 2B (Parts 2, 4 and 5) due Nov. 5, 2026 |
+| 9 | Nov. 3 no class; strain energy and virtual work on Nov. 5 | HW 2B (three beam cases) due Nov. 5, 2026 |
 | 10 | Castigliano, maneuver/landing loads and V–n diagrams; wing idealization and assembly review | HW 3 due Nov. 12 |
 | 11 | Thin-walled wing-box shear flow, torsion and shear center; compare model with printed geometry | HW 4 due Nov. 19; Nov. 16 lab slot |
 | 12 | University schedule and Thanksgiving recess | Approved inspection/correction slots only |

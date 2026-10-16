@@ -1,5 +1,7 @@
 # HW 3B From Lilienthal wing control loads to beam bending
 
+**Download the handout:** [PDF](MIE446_HW3B_Lilienthal_Wing_Beam_Analysis.pdf) · [Editable Word](MIE446_HW3B_Lilienthal_Wing_Beam_Analysis.docx)
+
 MIE 446 Aerospace Structures, Fall 2026. This is **HW 3B**, separate from HW 2B. HW 2A and HW 2B are unchanged.
 
 **Schedule:** part of the HW 3 portfolio, due November 12, 2026; Canvas supplies the exact time, submission slot and grading allocation. Do not submit this work in the HW 2B slot.

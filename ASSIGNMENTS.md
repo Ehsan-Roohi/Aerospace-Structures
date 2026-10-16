@@ -34,7 +34,7 @@ The September 28 revision removes the proof and extra physical-check subpart, ex
 
 ### Homework 3B — Lilienthal wing loads, beam compatibility and software verification
 
-[Open HW 3B](assignments/homework-03/HW3B/README.md). Separate from HW 2B; linked to Lecture 03 and the Lilienthal control-load work in HW 2A/B. Compare three connection fixtures for one scaled wing-member model, derive reactions/displacements and verify in Wing Lab. Then carry HW 2B's prescribed spanwise load into the member model; distinguish historical evidence from assumed geometry and fixtures. Included in the HW 3 portfolio due November 12; Canvas specifies grading allocation and submission details. No virtual-work method is required.
+[Open HW 3B](assignments/homework-03/HW3B/README.md) · [PDF handout](assignments/homework-03/HW3B/MIE446_HW3B_Lilienthal_Wing_Beam_Analysis.pdf) · [Editable Word](assignments/homework-03/HW3B/MIE446_HW3B_Lilienthal_Wing_Beam_Analysis.docx). Separate from HW 2B; linked to Lecture 03 and the Lilienthal control-load work in HW 2A/B. Compare three connection fixtures for one scaled wing-member model, derive reactions/displacements and verify in Wing Lab. Then carry HW 2B's prescribed spanwise load into the member model; distinguish historical evidence from assumed geometry and fixtures. Included in the HW 3 portfolio due November 12; Canvas specifies grading allocation and submission details. No virtual-work method is required.
 
 ## Six homework portfolios
 

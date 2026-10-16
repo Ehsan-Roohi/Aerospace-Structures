@@ -58,7 +58,7 @@ Lectures 01, 02 and 03 and the independent wing-structure lecture are released. 
 
 [What to submit and which version to use](assignments/homework-02/README.md). Use Canvas for exact submission times.
 
-**HW 3B — [Beam compatibility and software verification](assignments/homework-03/HW3B/README.md):** follow Lecture 03, solve beam reactions/displacement by hand, and verify with the course software. Part of HW 3, due November 12; separate from HW 2B.
+**HW 3B — [From Lilienthal wing loads to beam bending](assignments/homework-03/HW3B/README.md):** connect HW 2A/B's Lilienthal control-load story to Lecture 03, solve member reactions/displacement, and verify with the course software. Part of HW 3, due November 12; separate from HW 2B.
 
 <a id="design-and-build-a-wing"></a>
 

@@ -1,4 +1,4 @@
-# HW 3B Beam equilibrium compatibility and software verification
+# HW 3B From Lilienthal wing control loads to beam bending
 
 MIE 446 Aerospace Structures, Fall 2026. This is **HW 3B**, separate from HW 2B. HW 2A and HW 2B are unchanged.
 
@@ -10,11 +10,23 @@ MIE 446 Aerospace Structures, Fall 2026. This is **HW 3B**, separate from HW 2B.
 
 Use **equilibrium and integration of the displacement/rotation equations**, not virtual work. Lecture 04 will introduce virtual work separately.
 
-The question is: how does preventing end rotation change reactions, stress and displacement under the same force? Can you verify a software result without treating the software as an answer key?
+## One aircraft story across the assignments
+
+In [HW 2A](../../homework-02/README.md), you identified Lilienthal's control devices and interpreted measured roll/yaw data. In HW 2B you turned a **prescribed teaching load law** into force increments and moments. Here you ask the next structural question: **when a control load reaches a wing member, how do its connections affect stress and deformation?**
+
+Use the same Lilienthal photograph/annotated view you used in HW 2A. Identify what is actually visible; draw a separate conceptual load path from the aerodynamic load into the wing structure and its connections. Do not invent hidden member dimensions, materials or joint fixity from the photograph. Label the boundary between historical evidence and your engineering idealization.
+
+![Conceptual wing member and three alternative test fixtures](lilienthal_member_models.svg)
+
+The figure is an original teaching schematic, **not a reconstruction of Lilienthal's wing**. We isolate a scaled member inspired by that wing's load-transfer problem and test three alternative connection arrangements. Case A represents a root-held, free-ended member idealization. Cases B and C represent a member supported at both ends in alternative test/design fixtures, with either free or restrained end rotations. They are **not three claims about how the historical half-wing was attached**. A simply supported bay or fixed-ended bay must have real load-bearing connections at both ends; adding a second support changes the physical system.
+
+Keep the aircraft question visible throughout: what can a connection transmit, where does the member bend, and what evidence would you need to choose a defensible model for the actual wing?
 
 ## Given model and conventions
 
-Use a straight, constant-section, linearly elastic beam: L = 400 mm, b = 16 mm, h = 8 mm, E = 2200 MPa, with a downward point force P = 3 N at a = L/2. These are prescribed teaching values, not measured PLA properties or a safe wing design. Ignore self-weight and shear deformation in the hand Euler–Bernoulli calculation.
+Use a straight, constant-section, linearly elastic **scaled wing-member model**: L = 450 mm (the HW 2B teaching semi-span), b = 16 mm, h = 8 mm, E = 2200 MPa, with a downward point-force increment P = 3 N at a = L/2 = 225 mm. This is a prescribed downward control-load increment for a support-comparison experiment; it is **not the complete upward lift**, a measured Lilienthal force, or the resultant of HW 2B's load distribution. The rectangle and modulus are teaching inputs, not a historical material/section identification. Ignore self-weight and shear deformation in the hand Euler–Bernoulli calculation.
+
+HW 2B used aircraft body axes. Here beam x runs outward along the right wing/member and beam z is upward across its depth: beam x corresponds to the earlier span coordinate s, **not aircraft-forward x**. Draw both conventions once. The retained transverse increment is positive downward; the drag increment and the real wing's other members, joints and bracing are outside this one-plane model.
 
 Compare three supports under this **same** load: (A) left cantilever, (B) pin–roller, (C) fixed–fixed. The rectangle's vertical depth is h and its width is b. Calculate A, I = bh³/12 and c = h/2 before using any stress formula.
 
@@ -32,7 +44,7 @@ For **each** support case draw two separate pictures:
 1. Physical beam with its actual supports, dimensions and applied load only.
 2. External free body: remove the supports and replace them with unknown reaction arrows/couples. Retain the applied load. Do not show a support symbol and its replacement reaction together.
 
-Predict which case has the greatest maximum displacement and which has the smallest maximum bending stress. Explain your prediction using constraints, not remembered numerical answers.
+On your Lilienthal image, mark where the conceptual member's load enters and where it would leave through its connections. Then predict which fixture has the greatest maximum displacement and which has the smallest maximum bending stress. Explain using constraints and load paths, not remembered numerical answers. A free wing tip must not become a clamp merely because the software offers that option.
 
 Add a cross-section drawing showing b, h, z, the neutral axis and c. Add a bent-centreline sketch showing what displacement and tangent rotation each support permits.
 
@@ -65,7 +77,7 @@ Open the corresponding **baseline lesson case** below. These links initially use
 - [B Simply supported centre force](https://ehsan-roohi.github.io/Aerospace-Structures/wing-lab.html?beamCase=l03-simple)
 - [C Fixed–fixed centre force](https://ehsan-roohi.github.io/Aerospace-Structures/wing-lab.html?beamCase=l03-fixed)
 
-In **Define your beam**, set L = 400 mm, b = 16 mm, h = 8 mm and E = 2200 MPa, then click **Apply beam dimensions**. Changing length can reset loads to the default tip force. Therefore set the load **after** applying geometry: use **Clear all loads**, add a single downward 3 N point load at 200 mm, and confirm the intended support. Do not leave the default 2 N tip force active. Confirm the displayed input summary and recalculate. This beam workspace uses mm, N and MPa.
+In **Define your beam**, set L = 450 mm, b = 16 mm, h = 8 mm and E = 2200 MPa, then click **Apply beam dimensions**. Changing length can reset loads to the default tip force. Therefore set the load **after** applying geometry: use **Clear all loads**, add a single downward 3 N point load at 225 mm, and confirm the intended support. Do not leave the default 2 N tip force active. Confirm the displayed input summary and recalculate. This beam workspace uses mm, N and MPa.
 
 Use **Download study record** for each solved case and include the records with your submission. In addition to the hand checks, use **Compare 10 / 20 / 40 elements** on one case. Explain why numerical convergence does not establish that a real clamp or material matches the model.
 
@@ -73,17 +85,37 @@ Capture the input panel and V/M, stress and displacement results. For each suppo
 
 Keep hand predictions even if wrong; explain corrections. If you cannot match a displayed input to the hand model, document the mismatch instead of silently changing your theory.
 
-## 4 One controlled change and a wing connection
+## 4 Bring the HW 2B aerodynamic load back into the member model
+
+Keep case A, the same 450 mm member section/modulus and the same downward-increment convention. From the **given** HW 2B law use the transverse increment only:
+
+$$\Delta f_z(s)=q\,c(s)A_zg(s),\qquad q=\frac12\rho V^2.$$
+
+Use the released HW 2B inputs: ρ = 1.225 kg/m³, V = 15 m/s, root/tip chords 0.160/0.100 m, activation at 0.300 m, tip at 0.450 m, and A_z = 0.30. The chord is linearly tapered and g grows linearly from zero at activation to one at the tip. These remain an educational control-load law, not measured historical pressure data.
+
+If HW 2B has not yet been completed, compute just this transverse load and its first moment for this section; a completed HW 2B submission is not a prerequisite. **Do not reuse aircraft roll/yaw moments as local hinge torques or beam end couples.** Re-derive the member-root reaction from this beam's free body.
+
+1. Plot the given transverse load against s. Keep the zero-load region from 0 to 300 mm.
+2. Represent 300–450 mm with three adjacent trapezoidal line-load segments, with endpoints at 300, 350, 400 and 450 mm. Evaluate the given law at each endpoint. Convert N/m to N/mm by dividing by 1000; coordinates in the app are mm.
+3. Clear the point load and enter only those three distributed segments in the beam software. Preserve the actual model assumptions: tapered aerodynamic chord controls the load, while the isolated structural section remains constant.
+4. Compare app force resultant and root moment against your integrals of Δf_z and sΔf_z, using consistent units. Refine to six segments. Explain the load-approximation error: chord times activation is generally quadratic, so a few straight segments do not reproduce it exactly.
+5. Compare with a **single equivalent force** at s-bar = integral(sΔf_z ds)/integral(Δf_z ds), not automatically L/2. The equivalent force should reproduce total force and root moment within the load-discretization error; it need not reproduce internal moment everywhere or maximum displacement. Show one displacement comparison and explain why.
+
+No full piecewise displacement integration of the multi-segment load is required; the hand displacement derivation is the centre-force comparison in Sections 1–2. This section carries your earlier aerodynamic-force calculation into a structural model rather than starting a disconnected problem.
+
+## 5 Change the member design and explain what the model leaves out
 
 **Depth study:** keep case A and the same load/material/length; change only h from 8 to 10 mm. Predict stress and displacement ratios using I = bh³/12 and c = h/2 before rerunning. Verify with the app; explain why greater depth changes stiffness without changing equilibrium reactions.
 
-**Wing connection:** use the app's wing navigation to open the skin-only printed-wing preset. Keep its released geometry/materials; select a single tip-force case and record the actual inputs. Show one inside-wing view and one displacement or stress view. Identify the root, skin, and any reinforcements actually present. Explain why a rectangular-beam hand value is not automatically the prediction for a tapered hollow airfoil, and why the root load path matters. Do not claim a three-dimensional finite-element stress result from the beam/section model.
+**Return to Lilienthal:** annotate your starting load-path sketch with what your solved member represents and what it omits. Explain which actual connection information would be needed before choosing a clamp, pin or elastic joint. Discuss why fabric, ribs, multiple members and any bracing identified in your cited source cannot automatically be replaced by a modern closed stressed-skin wing box.
+
+**Optional modern comparison, not an additional required model:** open the app's printed-wing workspace and identify how its skin/member load path differs from your Lilienthal-inspired member. It is a different structure; do not present its stress plot as a prediction for Lilienthal's aircraft or as a full 3-D finite-element result.
 
 Adding ribs is **not** required here. A short paragraph should distinguish global bending stiffness from rib functions such as section-shape retention and local skin support. This exercise does not approve a printed wing for loading or flight.
 
 ## Submit and explain
 
-Submit one individually authored PDF through Canvas, including your predictions, separate drawings, derivation, result/comparison tables, input/result screenshots, depth study and wing paragraph. Include any scripts/spreadsheets you actually used with a short README stating units, software version/date and how to reproduce your study. Do not publish student work here.
+Submit one individually authored PDF through Canvas, including your sourced Lilienthal image and load-path sketch, predictions, separate system/free-body drawings, derivation, result/comparison tables, input/result screenshots, the HW 2B load-transfer/refinement study, depth study and model-limit discussion. Include any scripts/spreadsheets you actually used with a short README stating units, software version/date and how to reproduce your study. Do not publish student work here.
 
 End with a brief process/AI-use note and answer:
 
@@ -91,5 +123,6 @@ End with a brief process/AI-use note and answer:
 - Does zero end displacement imply zero end rotation for every support?
 - Why does the outboard portion of the centre-loaded cantilever still move when its curvature is zero?
 - What does software agreement verify, and what material or model assumptions remain unvalidated?
+- Which parts of your model came from historical evidence, which came from HW 2B's prescribed load law, and which were deliberately assumed for this structural comparison?
 
 Be ready to explain one compatibility equation and one discrepancy in a short individual defense.

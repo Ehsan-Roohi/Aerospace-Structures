@@ -32,9 +32,9 @@ The September 28 revision removes the proof and extra physical-check subpart, ex
 
 [Full A/B instructions and reading map](assignments/homework-02/README.md). **Use only the HW 2A and HW 2B handouts linked here.** Canvas is authoritative for exact times and submission links. Discuss within your existing team, but submit independently authored work.
 
-### Homework 3B — beam compatibility and software verification
+### Homework 3B — Lilienthal wing loads, beam compatibility and software verification
 
-[Open HW 3B](assignments/homework-03/HW3B/README.md). Separate from HW 2B; linked to Lecture 03. Derive cantilever, pin–roller and fixed–fixed results using equilibrium and displacement/rotation conditions, then verify them in Wing Lab and explore a wing load path. Included in the HW 3 portfolio due November 12; Canvas specifies grading allocation and submission details. No virtual-work method is required.
+[Open HW 3B](assignments/homework-03/HW3B/README.md). Separate from HW 2B; linked to Lecture 03 and the Lilienthal control-load work in HW 2A/B. Compare three connection fixtures for one scaled wing-member model, derive reactions/displacements and verify in Wing Lab. Then carry HW 2B's prescribed spanwise load into the member model; distinguish historical evidence from assumed geometry and fixtures. Included in the HW 3 portfolio due November 12; Canvas specifies grading allocation and submission details. No virtual-work method is required.
 
 ## Six homework portfolios
 

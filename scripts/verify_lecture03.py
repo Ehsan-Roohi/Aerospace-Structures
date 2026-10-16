@@ -32,7 +32,11 @@ for c in nb['cells']:
         assert c['execution_count'] is not None
         assert not any(o['output_type']=='error' for o in c['outputs'])
         figures+=sum('image/png' in o.get('data',{}) for o in c['outputs'])
-assert figures==23
+assert figures==24
+assert markdown.count('beamCase=hw2b-')==3
+assert 'Free rotation does not mean zero rotation' in markdown
+assert 'does not solve uₓ' in markdown
+assert 'Left roller / right pin' in markdown
 assert r'\theta(x)' in markdown
 assert r'\thetax' not in markdown
 assert '$$V(x)=P' in markdown

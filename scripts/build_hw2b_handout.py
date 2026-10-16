@@ -35,6 +35,8 @@ doc.styles['Normal'].paragraph_format.line_spacing=1.06
 doc.styles['Title'].font.size=Pt(23)
 doc.styles['Heading 1'].font.size=Pt(15)
 doc.styles['Heading 1'].paragraph_format.space_before=Pt(12)
+doc.styles['Heading 2'].font.size=Pt(12)
+doc.styles['Heading 2'].paragraph_format.space_before=Pt(9)
 doc.core_properties.title='HW 2B From Lilienthal wing control loads to beam bending'
 doc.core_properties.author='Dr. Ehsan Roohi Golkhatmi'
 
@@ -57,13 +59,14 @@ def equation(parts):
  om=OxmlElement('m:oMath')
  for part in parts:om.append(part if not isinstance(part,str) else mr(part))
  p._p.append(om)
+ return p
 def equations(n):
  if n==0:
-  equation(['θ = ',fraction([mr('dv')],[mr('dx')]),'     EI ',fraction([mr('d²v')],[mr('dx²')]),' = −M(x)'])
+  equation(['θ = ',fraction([mr('dv')],[mr('dx')]),'     EI ',fraction([mr('d²v')],[mr('dx²')]),' = −M(x)']).paragraph_format.keep_with_next=True
   equation([group('sSub',[group('e',[mr('σ')]),group('sub',[mr('xx')])]),' = −',fraction([mr('M(x)z')],[mr('I')])])
  elif n==1:
   for name,expr in [('θ(L)','M(x) dx'),('v(L)','(L − x) M(x) dx')]:
-   equation([name+' = −',fraction([mr('1')],[mr('EI')]),integral(expr),' = 0'])
+   equation([name+' = −',fraction([mr('1')],[mr('EI')]),integral(expr),' = 0']).paragraph_format.keep_with_next=(name=='θ(L)')
  else:
   equation(['Δ',group('sSub',[group('e',[mr('f')]),group('sub',[mr('z')])]),'(s) = q c(s) ',group('sSub',[group('e',[mr('A')]),group('sub',[mr('z')])]),' g(s)     q = ',fraction([mr('1')],[mr('2')]),'ρV²'])
 
@@ -114,6 +117,7 @@ for block in blocks:
  if block.startswith('**Download the handout:**'):continue
  if block.startswith('# '):
   doc.add_paragraph(block[2:],style='Title');continue
+ if block.startswith('### '):doc.add_heading(block[4:],level=2);continue
  if block.startswith('## '):doc.add_heading(block[3:],level=1);continue
  if block.startswith('!['):figure();continue
  if block.startswith('$$'):equations(eq);eq+=1;continue
@@ -140,8 +144,11 @@ for block in blocks:
   continue
  if re.match(r'(- |\d+\. )',block):
   for line in block.splitlines():
-   p=doc.add_paragraph();p.paragraph_format.left_indent=Inches(.15)
-   inline(p,line)
+   p=doc.add_paragraph()
+   p.paragraph_format.left_indent=Inches(.18)
+   p.paragraph_format.first_line_indent=Inches(-.12)
+   p.paragraph_format.space_after=Pt(4)
+   inline(p,('• '+line[2:]) if line.startswith('- ') else line)
  else:inline(doc.add_paragraph(),block.replace('\n',' '))
 assert eq==3
 footer=sec.footer.paragraphs[0];footer.alignment=2

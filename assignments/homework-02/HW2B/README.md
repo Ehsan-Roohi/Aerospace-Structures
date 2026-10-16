@@ -6,176 +6,257 @@ MIE 446 Aerospace Structures, Fall 2026. **65 points.**
 
 **Due: Thursday, November 5, 2026.** Submit through Canvas at the time shown there.
 
-## Required parts and numbering
+## Scope and numbering
 
-HW 2B is the second submission of Homework 2. Complete **Part 2, Part 4 and Part 5** below, worth 35, 20 and 10 points respectively. Parts 1 and 3 belong to HW 2A and are not new tasks in this submission. Organize your report under the same Part 2, Part 4 and Part 5 headings.
+- Complete **Part 2, Part 4 and Part 5** for this HW 2B submission.
+- Use the numbered task headings below in your report.
+- Parts 1 and 3 belong to HW 2A; do not resubmit HW 2A.
+- Complete all three beam support cases. **Case A, Case B and Case C are beam cases, not assignment parts.**
+- Submit individually authored work. Discuss within your existing team, but write your own calculations and explanations.
+- Read [Lecture 03 in Colab](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/main/notebooks/MIE446_Lecture_03_Beam_Reactions_Stress_and_Deflection.ipynb), Sections 2A–2C, 3, 4 and 5.
+- Use equilibrium and integration of displacement and rotation equations. Virtual work is not required.
 
-The labels **Case A, Case B and Case C** refer only to three beam support arrangements within Part 2. They do not mean assignment parts 2A and 2B. Complete all three beam cases.
+## Prescribed model
 
-## Read before starting
-
-[Lecture 03 in Colab](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/main/notebooks/MIE446_Lecture_03_Beam_Reactions_Stress_and_Deflection.ipynb): Sections 2A–2C (supports and compatibility), 3 (cuts and V/M), 4 (stress and section properties), and 5 (strain, curvature and displacement).
-
-Use equilibrium and integration of the displacement and rotation equations. Virtual work is not required.
-
-## The wing member
-
-Using your annotated Lilienthal wing/control-device image from HW 2A, investigate how a transverse load reaches a structural member and how its connections affect stress and deformation.
-
-Use the Lilienthal glider image you annotated for **Part 1 of HW 2A**. Include a copy in this report with its source URL and a caption naming the aircraft or glider when known. You do not need a new photograph or a physical model. If your earlier image does not show a member clearly, add a sourced view that does and identify which image supports your interpretation.
-
-Highlight one visible rib, spar or other wing member that motivates the beam idealization. Label its apparent extent, attachment location(s), and the direction in which load would enter and leave it. Identify what is actually visible; draw a separate conceptual load path from the aerodynamic load into the wing structure and its connections. Do not infer hidden dimensions, materials or joint fixity from the photograph. Label observed features as evidence and the simplified beam and fixtures as engineering assumptions. Use the prescribed dimensions below for calculations, not dimensions estimated from the photograph.
+The three fixtures below are alternative teaching models of a scaled wing member. They are **not reconstructions of Lilienthal's actual wing attachments**. Cases B and C require load-bearing connections at both ends; they do not represent a free wing tip with an invented extra support.
 
 ![Conceptual wing member and three alternative test fixtures](lilienthal_member_models.svg)
 
-The figure is an original teaching schematic, **not a reconstruction of Lilienthal's wing**. We isolate a scaled member inspired by that wing's load-transfer problem and test three alternative connection arrangements. Case A represents a root-held, free-ended member idealization. Cases B and C represent a member supported at both ends in alternative test/design fixtures, with either free or restrained end rotations. They are **not three claims about how the historical half-wing was attached**. A simply supported bay or fixed-ended bay must have real load-bearing connections at both ends; adding a second support changes the physical system.
+- **Case A:** left end fixed and right end free.
+- **Case B:** pin at the left end and roller at the right end.
+- **Case C:** both ends fixed.
+- **Length:** L = 450 mm.
+- **Rectangular section:** width b = 16 mm; vertical depth h = 8 mm.
+- **Material modulus:** E = 2200 MPa = 2200 N/mm².
+- **Applied point load:** P = 3 N downward at a = L/2 = 225 mm, measured from the left end.
+- **Hand model:** straight, constant-section, linearly elastic Euler–Bernoulli beam; neglect self-weight and shear deformation.
+- **Interpretation:** the 3 N load is a prescribed downward increment for comparing supports. It is not measured historical lift and is not the resultant of the Part 5 distributed load.
+- **Historical limits:** the dimensions and modulus are teaching inputs; do not estimate them from the photograph.
 
-Keep the aircraft question visible throughout: what can a connection transmit, where does the member bend, and what evidence would you need to choose a defensible model for the actual wing?
+## Coordinates and signs
 
-## Given model and conventions
-
-Use a straight, constant-section, linearly elastic **scaled wing-member model**: L = 450 mm, b = 16 mm, h = 8 mm, E = 2200 MPa, with a downward point-force increment P = 3 N at a = L/2 = 225 mm. This is a prescribed downward control-load increment for a support-comparison experiment; it is **not the complete upward lift**, a measured Lilienthal force, or the resultant of the distributed-load case below. The rectangle and modulus are teaching inputs, not a historical material/section identification. Ignore self-weight and shear deformation in the hand Euler–Bernoulli calculation.
-
-In aircraft body axes, x points forward. In this beam model, beam x runs outward along the right wing/member and beam z is upward across its depth: beam x corresponds to the span coordinate s, **not aircraft-forward x**. Draw both conventions once. The retained transverse increment is positive downward; the drag increment and the real wing's other members, joints and bracing are outside this one-plane model.
-
-Compare three supports under this **same** load: (A) left cantilever, (B) pin–roller, (C) fixed–fixed. The rectangle's vertical depth is h and its width is b. Calculate A, I = bh³/12 and c = h/2 before using any stress formula.
-
-For the hand free body, upward forces and counterclockwise external couples are positive. Internal M is sagging-positive. Downward displacement v is positive:
+- Beam x starts at the left end and runs along the member toward the right end.
+- Beam z is upward from the cross-section neutral axis.
+- Span coordinate s in Part 5 follows the same direction as beam x.
+- Aircraft body x points forward; it is not beam x.
+- For hand free bodies, upward forces and counterclockwise external couples are positive.
+- Internal bending moment M is sagging-positive.
+- Displacement v is positive downward; rotation θ = dv/dx.
+- Use subscripts L and R for left and right support reactions.
+- A clamp can supply a transverse reaction force and a reaction couple.
+- A pin or roller supplies a transverse reaction but no reaction couple in this model.
+- No axial load is applied in these cases.
+- The governing hand relations are:
 
 $$\theta=\frac{dv}{dx},\qquad EI\frac{d^2v}{dx^2}=-M(x),\qquad
 \sigma_{xx}=-\frac{M(x)z}{I}.$$
 
-For transverse bending, a clamp supplies a vertical reaction and a couple; a pin/roller supplies a vertical reaction and no couple. There is no imposed axial load in these cases. The software uses its own force/couple signs: document the conversion before comparing numbers.
-
 ## Part 2 Beam model and hand solution 35 points
 
-Marking: drawings, model and predictions 5; equilibrium and internal forces 10; displacement/rotation and compatibility 15; stress and interpretation 5.
+### 2.1 Image drawings and predictions 5 points
 
-For **each** support case draw two separate pictures:
+- **Submit one annotated historical image:** reuse the Lilienthal glider image from Part 1 of HW 2A.
+- Add the source URL and a caption identifying the aircraft or glider when known.
+- Outline one visible rib, spar or other wing member that motivates your beam model.
+- Mark the visible locations where that member connects to other structure.
+- If your HW 2A image does not show a suitable member, add one sourced image that does; identify which image supports your interpretation.
+- Do not infer hidden dimensions, material properties or joint fixity from a photograph.
+- **Submit one separate load-transfer sketch:** draw the selected member and the neighboring structure that supports it.
+- Draw an arrow for the assumed external load acting on the selected member; label the structure or surface applying that load.
+- Mark the connection through which the member transfers force to the neighboring structure; name that neighboring structure.
+- Label any assumed features as assumptions and any visible features as observations. The sketch does not require measured historical forces.
+- **Submit three physical-beam drawings:** one each for Cases A, B and C, showing the actual support symbols, L, a and the downward 3 N load. Do not add support reaction arrows to these drawings.
+- **Submit three separate free-body diagrams:** remove the support symbols and replace them with unknown reaction forces and, for clamps, reaction couples. Retain the 3 N load and dimensions.
+- **Submit one cross-section sketch:** label b, h, the neutral axis, z, and the extreme-fibre distance c = h/2.
+- **Submit three bent-centreline sketches:** show which end displacements and rotations each fixture permits or prevents.
+- **Submit coordinate sketches:** distinguish aircraft-forward x from beam x and show the upward beam z direction.
+- **Submit two prediction rankings before calculation:** rank Cases A, B and C by maximum absolute displacement and by maximum absolute bending stress. State any predicted ties.
+- Give a short reason for each ranking using constraints and load transfer, not numerical answers.
 
-1. Physical beam with its actual supports, dimensions and applied load only.
-2. External free body: remove the supports and replace them with unknown reaction arrows/couples. Retain the applied load. Do not show a support symbol and its replacement reaction together.
+### 2.2 Reactions shear and moment 10 points
 
-On the sourced HW 2A image described above, highlight the selected member and mark the load-entry and connection locations. In a separate sketch, replace that member with the prescribed scaled beam. Before calculating, rank Cases A, B and C by maximum absolute displacement and by maximum absolute bending stress, stating any predicted ties. Explain your reasoning using constraints and load paths. A free wing tip must not become a clamp merely because the software offers that option.
+- Complete the following calculations separately for Cases A, B and C.
+- Write whole-beam vertical force equilibrium.
+- Write whole-beam moment equilibrium and state the moment reference point.
+- Identify which reactions equilibrium determines directly and which remain unknown.
+- Draw a cut in the interval 0 < x < 225 mm and derive V(x) and M(x).
+- Draw a second cut in the interval 225 < x < 450 mm and derive V(x) and M(x).
+- Submit the two piecewise expressions with their interval limits and units.
+- Submit labeled shear-force and bending-moment diagrams.
+- Mark the shear jump at the point load and the internal moments at x = 0+, 225 mm and 450 mm-.
+- Distinguish an external support couple from the signed internal moment immediately inside the beam.
 
-Add a cross-section drawing showing b, h, z, the neutral axis and c. Add a bent-centreline sketch showing what displacement and tangent rotation each support permits.
+### 2.3 Rotation displacement and compatibility 15 points
 
-## Part 2 calculation steps and required outputs
+- Integrate EI d²v/dx² = -M(x) in each interval for each support case.
+- Show the integration constants.
+- Write the physical condition used to determine each constant.
+- Enforce continuity of displacement and rotation at x = 225 mm; a point force is not a hinge.
+- Apply the end conditions listed below.
 
-Complete the following steps separately for Case A, Case B and Case C. Label left and right beam ends as x = 0 and x = L. Use subscripts L and R for support reactions so that case labels cannot be mistaken for support locations.
-
-For each case write whole-beam force and moment equilibrium. Derive the piecewise internal moment on 0 ≤ x ≤ a and a ≤ x ≤ L from a cut; sketch V and M with units.
-
-Integrate the curvature equation in each interval. Show your constants and the physical condition used to determine each one. At the point load, displacement and rotation remain continuous; shear jumps. A point force is not a hinge or an applied point couple.
-
-| Case | Geometric conditions you must explain and use |
+| Case | End conditions |
 |---|---|
-| A Cantilever | v(0) = θ(0) = 0; continuity at a. The unloaded outboard region has M = 0, so it remains straight but can be tilted. |
-| B Pin–roller | v(0) = v(L) = 0; continuity at a. End rotations are free, not prescribed zero. |
-| C Fixed–fixed | v(0) = θ(0) = v(L) = θ(L) = 0; continuity at a. Equilibrium alone cannot determine all four transverse reactions. |
+| A Cantilever | v(0) = θ(0) = 0. The unloaded outboard interval has M = 0; it is straight but may be tilted. |
+| B Pin–roller | v(0) = v(L) = 0. End rotations are free and must not be set to zero. |
+| C Fixed–fixed | v(0) = θ(0) = v(L) = θ(L) = 0. Equilibrium alone is insufficient. |
 
-For Case C, identify the two missing equations as **compatibility**, not additional equilibrium. Starting from the zero displacement and slope at the left end x = 0, show why:
+- For Case C, write the two additional compatibility equations below.
+- Explain that they enforce zero rotation and zero displacement at the right clamp, starting from zero rotation and displacement at the left clamp.
 
 $$\theta(L)=-\frac{1}{EI}\int_0^L M(x)\,dx=0,\qquad
 v(L)=-\frac{1}{EI}\int_0^L(L-x)M(x)\,dx=0.$$
 
-Explain the remaining-distance factor L − x in one sentence. Substitute your piecewise M and solve for the reactions. Symmetry may check your result but is not a substitute for writing both compatibility equations.
+- Explain the factor L - x in one sentence.
+- Substitute the piecewise moment expressions into both integrals and solve for the remaining reactions.
+- Use symmetry only to check the result, not to replace the two compatibility equations.
+- Submit v(x) and θ(x) for both intervals in each case.
+- Calculate v(225 mm) for each case.
+- Determine the maximum absolute displacement and its location for each case; do not assume that it occurs under the load in Case A.
 
-Report all nonzero support reactions, signed end/centre internal moments, maximum absolute bending stress, displacement at the load, and maximum displacement with its location. Distinguish external support couples from internal end moments. Do not assume the cantilever maximum occurs under the centre load.
+### 2.4 Stress and hand results 5 points
 
-**Part 2 required outputs**
-
-1. Sourced annotated image and a separate scaled-beam idealization.
-2. Predictions ranking all three cases, with reasons.
-3. Three physical-beam drawings and three separate reaction free bodies.
-4. Cross-section and bent-centreline sketches with labeled variables.
-5. Equilibrium, piecewise V and M, integration constants and compatibility calculations for all three cases.
-6. One results table with reactions, internal moments at x = 0+, 225 mm and 450 mm-, maximum absolute stress and its location, v(225 mm), and maximum absolute displacement and its location. Use one row per case and units in every column. State tensile and compressive extreme-fibre stress signs at a section of maximum absolute moment.
+- Calculate section area A = bh, second moment of area I = bh³/12, and c = h/2, with units.
+- Calculate the maximum absolute bending stress in each case using the largest absolute internal moment.
+- State the beam location of that maximum.
+- At a section with maximum absolute moment, calculate and label the upper- and lower-fibre stresses.
+- Identify which fibre is in tension and which is in compression.
+- Submit one hand-results table with one row per case and units in every column.
+- Include all nonzero reaction forces and couples in the table.
+- Include the signed internal moments at x = 0+, 225 mm and 450 mm-.
+- Include maximum absolute bending stress and its location.
+- Include v(225 mm), maximum absolute displacement and its location.
+- Compare your results with your two prediction rankings and explain any correction.
 
 ## Part 4 Software verification 20 points
 
-Marking: correct inputs and reproducible study records 5; hand–software comparison 10; boundary, equilibrium and mesh checks 5.
+### 4.1 Model setup and saved records 5 points
 
-Open the corresponding **baseline lesson case** below. These links initially use the Lecture 03 defaults, **not the assessed values above**:
+- Open each corresponding beam case:
 
-- [A Cantilever centre force](https://ehsan-roohi.github.io/Aerospace-Structures/wing-lab.html?beamCase=l03-centre)
-- [B Simply supported centre force](https://ehsan-roohi.github.io/Aerospace-Structures/wing-lab.html?beamCase=l03-simple)
-- [C Fixed–fixed centre force](https://ehsan-roohi.github.io/Aerospace-Structures/wing-lab.html?beamCase=l03-fixed)
+- [Case A Cantilever centre force](https://ehsan-roohi.github.io/Aerospace-Structures/wing-lab.html?beamCase=l03-centre)
+- [Case B Simply supported centre force](https://ehsan-roohi.github.io/Aerospace-Structures/wing-lab.html?beamCase=l03-simple)
+- [Case C Fixed–fixed centre force](https://ehsan-roohi.github.io/Aerospace-Structures/wing-lab.html?beamCase=l03-fixed)
 
-In **Define your beam**, set L = 450 mm, b = 16 mm, h = 8 mm and E = 2200 MPa, then click **Apply beam dimensions**. Changing length can reset loads to the default tip force. Therefore set the load **after** applying geometry: use **Clear all loads**, add a single downward 3 N point load at 225 mm, and confirm the intended support. Do not leave the default 2 N tip force active. Confirm the displayed input summary and recalculate. This beam workspace uses mm, N and MPa.
+- The links open baseline lessons, not the assessed HW 2B inputs.
+- In **Define your beam**, set L = 450 mm, b = 16 mm, h = 8 mm and E = 2200 MPa.
+- Click **Apply beam dimensions** before entering the load.
+- Click **Clear all loads**; changing geometry may restore the default tip force.
+- Add only one downward 3 N point force at x = 225 mm.
+- Confirm the intended support case and the displayed input summary.
+- Check that no default 2 N tip force remains.
+- Run the calculation.
+- Repeat the setup for all three support cases.
+- Submit three records using **Download study record**, one per case.
+- Submit a labeled input screenshot for each case.
 
-Use **Download study record** for each solved case and include the records with your submission. In addition to the hand checks, use **Compare 10 / 20 / 40 elements** on one case. Explain why numerical convergence does not establish that a real clamp or material matches the model.
+### 4.2 Hand and software comparisons 10 points
 
-Capture the input panel and V/M, stress and displacement results. For each support, submit a table with **hand result, software result, sign/unit conversion and relative difference**. For a zero expected value use an absolute residual rather than dividing by zero. Include force and moment balance residuals and a check of the end displacements/rotations. Do not rely on a rounded display of 0.0000 as proof of exact zero.
+- Submit result screenshots showing V, M, bending stress and displacement for each case.
+- Submit a hand-versus-software table for every quantity in your Part 2 hand-results table.
+- For each comparison, give the quantity, unit, hand value, software value, sign conversion, absolute difference and relative difference.
+- Document how the software force, moment and displacement signs map to the hand conventions.
+- For a nonzero hand value, calculate relative difference as 100 × absolute difference / absolute hand value.
+- For an expected zero, report the signed software value and its absolute residual with units; do not divide by zero.
+- Use the supplied CSV as a starting template and add rows for all required quantities.
+- Retain your original predictions and explain any corrections.
+- If the models do not match, identify the differing input or assumption rather than silently changing the hand theory.
 
-Compare every quantity requested in the Part 2 results table, not just tip displacement. Define relative difference as 100 times the absolute difference divided by the absolute nonzero hand result; report it as a percentage. For an expected zero, report the signed software value and its absolute residual with units. For the mesh study, identify the case and compare maximum displacement and maximum bending stress at 10, 20 and 40 elements.
+### 4.3 Independent checks and mesh study 5 points
 
-**Part 4 required outputs**
-
-1. Three downloaded study records, one for each point-load case.
-2. Clearly labeled input and result screenshots for each case.
-3. Hand versus software comparison tables and a sign-convention note.
-4. Force and moment residuals and end-displacement and rotation checks.
-5. One 10, 20 and 40 element comparison with a short explanation.
-
-The CSV in this pack is a starting template: add rows for all required quantities.
-
-Keep hand predictions even if wrong; explain corrections. If you cannot match a displayed input to the hand model, document the mismatch instead of silently changing your theory.
+- Calculate the signed sum of applied and reaction forces for each case and report the force residual in N.
+- Calculate the signed sum of applied and reaction moments about x = 0 and report the moment residual in N mm.
+- Check the constrained end displacements and rotations for each case.
+- Report small numerical values explicitly; a rounded display of 0.0000 does not establish exact zero.
+- Select one case and use **Compare 10 / 20 / 40 elements**.
+- Submit a table of maximum absolute displacement and maximum absolute bending stress for the three meshes.
+- Identify which case and load were used.
+- Explain whether the results converge.
+- Explain why convergence alone does not verify the real material, connection stiffness or historical wing model.
 
 ## Part 5 Distributed wing load and design check 10 points
 
-Marking: distributed-load input, resultant/root-moment check and refinement 5; equivalent-force interpretation 2; depth study and model limits 3.
+### Part 5 prescribed distributed load
 
-Keep case A, the same 450 mm member section/modulus and the same downward-increment convention. Use the prescribed transverse control-load increment:
+- Use Case A with L = 450 mm, b = 16 mm, h = 8 mm and E = 2200 MPa.
+- Keep the same downward-load convention.
+- Use the following educational load law, not measured historical pressure:
 
 $$\Delta f_z(s)=q\,c(s)A_zg(s),\qquad q=\frac12\rho V^2.$$
 
-Use these inputs: ρ = 1.225 kg/m³, V = 15 m/s, root/tip chords 0.160/0.100 m, activation at 0.300 m, tip at 0.450 m, and A_z = 0.30. The chord is linearly tapered and g grows linearly from zero at activation to one at the tip. These remain an educational control-load law, not measured historical pressure data.
+- Density ρ = 1.225 kg/m³; speed V = 15 m/s; dimensionless coefficient A_z = 0.30.
+- Use s in metres in this law.
+- Chord c(s) = 0.160 - (0.060/0.450)s in metres.
+- Activation g(s) = 0 for 0 ≤ s ≤ 0.300 m.
+- Activation g(s) = (s - 0.300)/0.150 for 0.300 < s ≤ 0.450 m.
+- Here c(s) is aerodynamic chord, not the stress distance c = h/2.
+- Δf_z is downward force per unit span in N/m, not a point force.
+- Aerodynamic chord varies along the span; the structural beam section remains constant.
+- Convert coordinates to mm and load intensity to N/mm before software input.
 
-Use s in metres in the load law: c(s) = 0.160 - (0.060/0.450)s. Set g(s) = 0 for 0 ≤ s ≤ 0.300 m and g(s) = (s - 0.300)/0.150 for 0.300 < s ≤ 0.450 m. Here c(s) is the aerodynamic chord, not the extreme-fibre distance c = h/2 used for stress. A_z is a prescribed dimensionless load coefficient. The symbol Δf_z denotes load per unit span in N/m, not a single force. Treat the law as the positive downward increment in this exercise, regardless of the app's signed input convention.
+### 5.1 Distributed load and refinement 5 points
 
-Compute the transverse resultant and its first moment about the member root. Do not reuse an aircraft roll/yaw moment as a local hinge torque or a beam end couple. State the reference point on each free body.
+- Plot Δf_z against s over the entire 0–450 mm span, including the zero-load region.
+- Independently integrate Δf_z to obtain total force in N.
+- Independently integrate sΔf_z to obtain the applied moment about the root; report it in N m and N mm.
+- State the reference point and sign used for the moment.
+- Prepare a load-intensity table at 300, 350, 400 and 450 mm.
+- Include each intensity in both N/m and N/mm; divide N/m by 1000 to obtain N/mm.
+- Clear the point force from the software.
+- Enter three adjacent trapezoidal segments spanning those four coordinates.
+- Submit the input screenshot and downloaded record.
+- Compare software total force and root moment with your independent integrals.
+- Refine to six equal segments over 300–450 mm, using endpoints spaced 25 mm apart.
+- Submit the six-segment endpoint table, screenshot, record and comparison.
+- Explain the change in error: chord times activation is quadratic, whereas each entered segment is linear.
+- Use software for distributed-load displacement; a hand derivation of its full displacement curve is not required.
 
-1. Plot the given transverse load against s. Keep the zero-load region from 0 to 300 mm.
-2. Represent 300–450 mm with three adjacent trapezoidal line-load segments, with endpoints at 300, 350, 400 and 450 mm. Evaluate the given law at each endpoint. Convert N/m to N/mm by dividing by 1000; coordinates in the app are mm.
-3. Clear the point load and enter only those three distributed segments in the beam software. Preserve the actual model assumptions: tapered aerodynamic chord controls the load, while the isolated structural section remains constant.
-4. Compare app force resultant and root moment against your integrals of Δf_z and sΔf_z, using consistent units. Refine to six segments. Explain the load-approximation error: chord times activation is generally quadratic, so a few straight segments do not reproduce it exactly.
-5. Compare with a **single equivalent force** at s-bar = integral(sΔf_z ds)/integral(Δf_z ds), not automatically L/2. The equivalent force should reproduce total force and root moment within the load-discretization error; it need not reproduce internal moment everywhere or maximum displacement. Show one displacement comparison and explain why.
+### 5.2 Equivalent point force 2 points
 
-The hand displacement derivation is required for the centre-force cases only. For the multi-segment distributed load, use the software and verify its resultant and root moment independently.
+- Calculate the equivalent force magnitude from your independent total-force integral.
+- Calculate its position s-bar = integral(sΔf_z ds) / integral(Δf_z ds), not automatically L/2.
+- Replace the distributed segments with that single downward force at s-bar.
+- Submit the point-force position, input screenshot and downloaded record.
+- Compare its total force and root moment with the distributed-load results.
+- Compare maximum absolute displacement with the six-segment model.
+- Explain why equivalent force and root moment do not guarantee the same internal moment distribution or displacement.
 
-## Part 5 depth study and model limits
+### 5.3 Depth comparison and model limits 3 points
 
-**Depth study:** keep case A and the same load/material/length; change only h from 8 to 10 mm. Predict stress and displacement ratios using I = bh³/12 and c = h/2 before rerunning. Verify with the app; explain why greater depth changes stiffness without changing equilibrium reactions.
+- Restore the Part 2 **single downward 3 N point force at 225 mm**; do not use the Part 5 distributed load for this depth study.
+- Use Case A and keep L = 450 mm, b = 16 mm and E = 2200 MPa unchanged.
+- Record maximum absolute bending stress and displacement at h = 8 mm.
+- Predict the ratios for h = 10 mm using I = bh³/12 and c = h/2.
+- Define each ratio as the 10 mm result divided by the 8 mm result.
+- Change only h to 10 mm, rerun, and submit a table of predictions, results and ratios.
+- Submit the two study records and a labeled comparison screenshot.
+- Explain why changing depth affects stress and stiffness but not the equilibrium reactions in this cantilever case.
+- Reuse your historical-image annotation and load-transfer sketch in a final labeled figure.
+- Mark what the isolated beam represents and what is omitted.
+- State which actual connection information is needed before choosing a clamp, pin or elastic joint.
+- Explain why fabric, ribs, multiple members and any source-supported bracing cannot automatically be modeled as a modern closed stressed-skin wing box.
+- Distinguish the role of ribs in shape retention and local skin support from the role of longitudinal members in global bending.
+- Do not add ribs or build an additional wing model for this assignment.
+- An optional printed-wing workspace comparison is not graded and is not a prediction for Lilienthal's aircraft or a full 3-D finite-element result.
+- This exercise does not approve a printed wing for loading or flight.
 
-For this depth comparison, use the **single 3 N downward point load at 225 mm** from Part 2, not the distributed load. Restore h = 8 mm for the baseline, record maximum absolute bending stress and maximum absolute displacement, then repeat at h = 10 mm. Define each ratio as the 10 mm result divided by the 8 mm result. Keep b = 16 mm, L = 450 mm, E = 2200 MPa, load position and support unchanged.
+## Report questions
 
-**Return to Lilienthal:** annotate your starting load-path sketch with what your solved member represents and what it omits. Explain which actual connection information would be needed before choosing a clamp, pin or elastic joint. Discuss why fabric, ribs, multiple members and any bracing identified in your cited source cannot automatically be replaced by a modern closed stressed-skin wing box.
+- Submit a short answer to each question below in your PDF report.
+- **Q1:** Why can equilibrium solve the cantilever reactions but not all fixed–fixed reactions?
+- **Q2:** Does zero end displacement imply zero end rotation for every support? Use your three cases.
+- **Q3:** Why can the unloaded outboard part of Case A move even though its curvature is zero?
+- **Q4:** What does hand–software agreement verify, and which material or model assumptions remain unvalidated?
+- **Q5:** Which features came from historical evidence, which from the prescribed load law, and which were engineering assumptions?
+- Include a short process/AI-use note identifying any tools used and how you checked their output.
 
-**Optional modern comparison, not an additional required model:** open the app's printed-wing workspace and identify how its skin/member load path differs from your Lilienthal-inspired member. It is a different structure; do not present its stress plot as a prediction for Lilienthal's aircraft or as a full 3-D finite-element result.
+## Files to submit through Canvas
 
-Adding ribs is **not** required here. A short paragraph should distinguish global bending stiffness from rib functions such as section-shape retention and local skin support. This exercise does not approve a printed wing for loading or flight.
-
-**Part 5 required outputs**
-
-1. Load-law plot and endpoint load tables for three and six segments, including units and signs.
-2. Independent integrals for resultant and root moment, compared with both software segment counts.
-3. Equivalent-force position and the displacement comparison with the distributed load.
-4. Two-depth predictions and a results table using the specified 3 N point load.
-5. Annotated final load path and a short model-limit discussion.
-
-## Submission
-
-Submit individually authored work through Canvas. Include all outputs listed for Parts 2, 4 and 5. Do not publish student work in the course repository.
-
-Include a short process/AI-use note. Answer:
-
-- Why can two equilibrium equations solve the cantilever reactions but not the fixed–fixed reactions?
-- Does zero end displacement imply zero end rotation for every support?
-- Why does the outboard portion of the centre-loaded cantilever still move when its curvature is zero?
-- What does software agreement verify, and what material or model assumptions remain unvalidated?
-- Which parts of your model came from historical evidence, which came from the prescribed load law, and which were deliberately assumed for this structural comparison?
-
-In your README, state units, software version/date and how to reproduce the studies. Be prepared to explain one compatibility equation and one discrepancy.
-
-**Submission checklist:** upload one report PDF organized as Part 2, Part 4 and Part 5; the downloaded study records for the three point-load cases and the Part 5 studies; the slide in PDF and PPTX; and a README plus any calculation files used. Name files with your name and HW2B. The editable Word file in this pack is the assignment handout, not a required report submission format. In the slide, state one engineering claim, give one quantitative comparison as evidence, and name one independent check or model limitation. Do not submit a second copy of HW 2A.
+1. **One report PDF:** include all drawings, calculations, tables, plots, screenshots and explanations requested in tasks 2.1–2.4, 4.1–4.3 and 5.1–5.3, followed by Q1–Q5 and the process/AI-use note.
+2. **Software study records:** include the three Part 4 point-load cases, the three- and six-segment Part 5 loads, the equivalent point force, and the h = 8 and 10 mm depth cases. Clearly label every record; reuse a saved record where the inputs are identical.
+3. **Calculation files:** include any scripts or spreadsheets actually used; do not create an extra script solely for submission.
+4. **One README:** state units, software version/date, file names, and how to reproduce each study.
+5. **One Claim–Evidence–Check slide in PDF and PPTX:** state one engineering claim, give a quantitative comparison supporting it, and identify one independent check or model limitation.
+6. **File names:** include your name and HW2B in each submitted file name.
+7. **Submission format:** the report is PDF; the editable Word handout is not a required report format.
+8. **Individual explanation:** be prepared to explain one compatibility equation and one discrepancy.
+9. **Submission limits:** do not resubmit HW 2A or publish student work in the course repository.

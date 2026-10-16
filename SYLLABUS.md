@@ -387,7 +387,7 @@ The [released Homework 2 guide and starter files](assignments/homework-02/README
 give the current assignment specification and the exact Lecture 1 reading route.
 Canvas carries the authoritative submission deadline and any announced changes.
 
-**Homework 2 split-release clarification (October 16):** HW 2A covers only Parts 1 and 3, due October 20; HW 2B covers Parts 2, 4 and 5, due November 5. These replace the former combined October 18 deadline, including that date in earlier Word/PDF copies. Use the current A/B handouts and the exact submission times in Canvas.
+**Homework 2 split-release clarification (October 16):** HW 2A covers only Parts 1 and 3, due October 20; HW 2B covers Parts 2, 4 and 5, due November 5. The downloadable Word syllabus uses the same split deadlines. Use the current A/B handouts and the exact submission times in Canvas.
 
 ## 8. Course policies
 

@@ -30,7 +30,11 @@ The September 28 revision removes the proof and extra physical-check subpart, ex
 - [HW 2B guide (PDF)](assignments/homework-02/HW2B/MIE446_HW2B_Integration_Mixing_Load_Paths.pdf) · [HW 2B student package (ZIP)](assignments/homework-02/MIE446_HW2B_Student_Pack.zip)
 - Spanwise integration, elevon mixing, local load paths and the HW 2 portfolio.
 
-[Full A/B instructions and reading map](assignments/homework-02/README.md). **These split handouts supersede the old combined five-part assignment and its October 18 deadline.** Canvas is authoritative for exact times and submission links. Discuss within your existing team, but submit independently authored work.
+[Full A/B instructions and reading map](assignments/homework-02/README.md). **Use only the HW 2A and HW 2B handouts linked here.** Canvas is authoritative for exact times and submission links. Discuss within your existing team, but submit independently authored work.
+
+### Homework 3B — beam compatibility and software verification
+
+[Open HW 3B](assignments/homework-03/HW3B/README.md). Separate from HW 2B; linked to Lecture 03. Derive cantilever, pin–roller and fixed–fixed results using equilibrium and displacement/rotation conditions, then verify them in Wing Lab and explore a wing load path. Included in the HW 3 portfolio due November 12; Canvas specifies grading allocation and submission details. No virtual-work method is required.
 
 ## Six homework portfolios
 

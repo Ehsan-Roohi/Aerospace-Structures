@@ -56,7 +56,9 @@ Lectures 01, 02 and 03 and the independent wing-structure lecture are released. 
 - **HW 2A: Parts 1 and 3 only · 35 points · due October 20, 2026.** [Guide (PDF)](assignments/homework-02/HW2A/MIE446_HW2A_Evidence_and_Moment_Geometry.pdf) · [Student ZIP](assignments/homework-02/MIE446_HW2A_Student_Pack.zip).
 - **HW 2B: Parts 2, 4 and 5 · 65 points · due November 5, 2026.** [Guide (PDF)](assignments/homework-02/HW2B/MIE446_HW2B_Integration_Mixing_Load_Paths.pdf) · [Student ZIP](assignments/homework-02/MIE446_HW2B_Student_Pack.zip).
 
-[What to submit and which version to use](assignments/homework-02/README.md). These replace the old combined handout and October 18 deadline; use Canvas for exact submission times.
+[What to submit and which version to use](assignments/homework-02/README.md). Use Canvas for exact submission times.
+
+**HW 3B — [Beam compatibility and software verification](assignments/homework-03/HW3B/README.md):** follow Lecture 03, solve beam reactions/displacement by hand, and verify with the course software. Part of HW 3, due November 12; separate from HW 2B.
 
 <a id="design-and-build-a-wing"></a>
 

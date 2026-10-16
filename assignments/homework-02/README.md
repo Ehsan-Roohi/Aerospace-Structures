@@ -9,7 +9,7 @@ and submission links. This release supersedes the earlier single-handout HW 2 fi
 | [HW 2A](HW2A/) | Part 1, Lilienthal evidence; Part 3, side-force moment geometry | 35 | Tue. Oct. 20 |
 | [HW 2B](HW2B/) | Part 2, spanwise integration; Part 4, elevon mixing; Part 5, local load paths; HW 2 portfolio | 65 | Thu. Nov. 5 |
 
-**For the first submission, complete ONLY Parts 1 and 3 (HW 2A), not all five parts.** The earlier combined PDF/ZIP remains in repository history/resources but is superseded; use the A/B downloads below. The previous October 18 combined deadline is superseded by this split release; Canvas supplies the exact submission times.
+**For the first submission, complete ONLY Parts 1 and 3 (HW 2A), not all five parts.** Use the A/B downloads below; Canvas supplies the exact submission times.
 
 ## HW 2A downloads
 

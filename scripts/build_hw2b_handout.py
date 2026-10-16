@@ -1,4 +1,4 @@
-"""Build an editable Word handout from the released HW3B Markdown."""
+"""Build an editable Word handout from the released HW2B Markdown."""
 import argparse,re
 from pathlib import Path
 from copy import deepcopy
@@ -14,10 +14,10 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Polygon,Rectangle
 
 root=Path(__file__).resolve().parents[1]
-source=root/'assignments/homework-03/HW3B'
+source=root/'assignments/homework-02/HW2B'
 ap=argparse.ArgumentParser();ap.add_argument('--out',type=Path,required=True);args=ap.parse_args()
 out=args.out;out.mkdir(parents=True,exist_ok=True)
-stem='MIE446_HW3B_Lilienthal_Wing_Beam_Analysis'
+stem='MIE446_HW2B_Lilienthal_Wing_Beam_Analysis'
 doc=Document()
 sec=doc.sections[0];sec.page_width=Inches(8.5);sec.page_height=Inches(11)
 sec.top_margin=sec.bottom_margin=Inches(.65);sec.left_margin=sec.right_margin=Inches(.7)
@@ -35,7 +35,7 @@ doc.styles['Normal'].paragraph_format.line_spacing=1.06
 doc.styles['Title'].font.size=Pt(23)
 doc.styles['Heading 1'].font.size=Pt(15)
 doc.styles['Heading 1'].paragraph_format.space_before=Pt(12)
-doc.core_properties.title='HW 3B From Lilienthal wing control loads to beam bending'
+doc.core_properties.title='HW 2B From Lilienthal wing control loads to beam bending'
 doc.core_properties.author='Dr. Ehsan Roohi Golkhatmi'
 
 def mr(s):
@@ -132,6 +132,7 @@ for block in blocks:
      e=OxmlElement('w:'+side);e.set(qn('w:val'),'single');e.set(qn('w:sz'),'4');e.set(qn('w:color'),'D9D9D9');borders.append(e)
     tcpr.append(borders)
     if ri==0:
+     for p in c.paragraphs:p.paragraph_format.keep_with_next=True
      shade=OxmlElement('w:shd');shade.set(qn('w:fill'),'E8EDF0');tcpr.append(shade)
      for run in c.paragraphs[0].runs:run.bold=True
    trpr=table.rows[-1]._tr.get_or_add_trPr();avoid=OxmlElement('w:cantSplit');trpr.append(avoid)
@@ -144,7 +145,7 @@ for block in blocks:
  else:inline(doc.add_paragraph(),block.replace('\n',' '))
 assert eq==3
 footer=sec.footer.paragraphs[0];footer.alignment=2
-footer.add_run('MIE 446  •  HW 3B  •  ')
+footer.add_run('MIE 446  •  HW 2B  •  ')
 field=OxmlElement('w:fldSimple');field.set(qn('w:instr'),'PAGE');footer._p.append(field)
 doc.save(out/(stem+'.docx'))
 print(out/(stem+'.docx'))

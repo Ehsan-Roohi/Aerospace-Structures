@@ -1,0 +1,10 @@
+Case,Support,Load description,Quantity,Unit,Hand result,Software result,Sign or unit conversion,Absolute difference,Relative difference or zero-value residual,Explanation
+A,Cantilever,3 N at 225 mm,Root vertical reaction,N,,,,,,
+A,Cantilever,3 N at 225 mm,Root reaction couple,N mm,,,,,,
+A,Cantilever,3 N at 225 mm,Maximum displacement,mm,,,,,,
+B,Pin and roller,3 N at 225 mm,Maximum displacement,mm,,,,,,
+C,Fixed and fixed,3 N at 225 mm,End reaction couples,N mm,,,,,,
+C,Fixed and fixed,3 N at 225 mm,Maximum displacement,mm,,,,,,
+Distributed,Cantilever,Three segments,Root internal moment,N mm,,,,,,
+Distributed,Cantilever,Six segments,Root internal moment,N mm,,,,,,
+Depth,Cantilever,3 N at 225 mm and h 10 mm,Displacement ratio,dimensionless,,,,,,

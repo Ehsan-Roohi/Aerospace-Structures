@@ -27,21 +27,17 @@ The September 28 revision removes the proof and extra physical-check subpart, ex
 
 **Second submission: HW 2B, Parts 2, 4 and 5, 65 points; due Thursday, November 5, 2026.**
 
-- [HW 2B guide (PDF)](assignments/homework-02/HW2B/MIE446_HW2B_Integration_Mixing_Load_Paths.pdf) · [HW 2B student package (ZIP)](assignments/homework-02/MIE446_HW2B_Student_Pack.zip)
-- Spanwise integration, elevon mixing, local load paths and the HW 2 portfolio.
+- [HW 2B guide (PDF)](assignments/homework-02/HW2B/MIE446_HW2B_Lilienthal_Wing_Beam_Analysis.pdf) · [Word](assignments/homework-02/HW2B/MIE446_HW2B_Lilienthal_Wing_Beam_Analysis.docx) · [HW 2B student package (ZIP)](assignments/homework-02/MIE446_HW2B_Student_Pack.zip)
+- Lilienthal-inspired member load paths; beam reactions, stress and displacement; compatibility; software verification and distributed-load checks.
 
 [Full A/B instructions and reading map](assignments/homework-02/README.md). **Use only the HW 2A and HW 2B handouts linked here.** Canvas is authoritative for exact times and submission links. Discuss within your existing team, but submit independently authored work.
-
-### Homework 3B — Lilienthal wing loads, beam compatibility and software verification
-
-[Open HW 3B](assignments/homework-03/HW3B/README.md) · [PDF handout](assignments/homework-03/HW3B/MIE446_HW3B_Lilienthal_Wing_Beam_Analysis.pdf) · [Editable Word](assignments/homework-03/HW3B/MIE446_HW3B_Lilienthal_Wing_Beam_Analysis.docx). Separate from HW 2B; linked to Lecture 03 and the Lilienthal control-load work in HW 2A/B. Compare three connection fixtures for one scaled wing-member model, derive reactions/displacements and verify in Wing Lab. Then carry HW 2B's prescribed spanwise load into the member model; distinguish historical evidence from assumed geometry and fixtures. Included in the HW 3 portfolio due November 12; Canvas specifies grading allocation and submission details. No virtual-work method is required.
 
 ## Six homework portfolios
 
 | Assignment | Main focus | Syllabus due date, 2026 |
 |---|---|---|
 | HW 1 | NACA 2412 geometry, surface-pressure integration, lift, pressure drag and discrete panel sums | October 1 |
-| HW 2 (A + B) | Evidence/moment geometry, then integration, mixing and load paths | HW 2A: October 20; HW 2B: November 5 |
+| HW 2 (A + B) | Evidence/moment geometry, then wing-member bending, compatibility and software verification | HW 2A: October 20; HW 2B: November 5 |
 | HW 3 | Beam shear/moment, bending, deflection, strain energy and independent checks | November 12 |
 | HW 4 | Virtual work/Castigliano and correction of a plausible but flawed AI solution | November 19 |
 | HW 5 | Maneuver/landing loads, V–n diagrams, sensitivity and trade-offs | December 3 |

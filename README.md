@@ -54,11 +54,9 @@ Lectures 01, 02 and 03 and the independent wing-structure lecture are released. 
 **Homework 2 is split into two submissions — do not complete all five parts for HW 2A.**
 
 - **HW 2A: Parts 1 and 3 only · 35 points · due October 20, 2026.** [Guide (PDF)](assignments/homework-02/HW2A/MIE446_HW2A_Evidence_and_Moment_Geometry.pdf) · [Student ZIP](assignments/homework-02/MIE446_HW2A_Student_Pack.zip).
-- **HW 2B: Parts 2, 4 and 5 · 65 points · due November 5, 2026.** [Guide (PDF)](assignments/homework-02/HW2B/MIE446_HW2B_Integration_Mixing_Load_Paths.pdf) · [Student ZIP](assignments/homework-02/MIE446_HW2B_Student_Pack.zip).
+- **HW 2B: Parts 2, 4 and 5 · 65 points · due November 5, 2026.** [Guide (PDF)](assignments/homework-02/HW2B/MIE446_HW2B_Lilienthal_Wing_Beam_Analysis.pdf) · [Word](assignments/homework-02/HW2B/MIE446_HW2B_Lilienthal_Wing_Beam_Analysis.docx) · [Student ZIP](assignments/homework-02/MIE446_HW2B_Student_Pack.zip).
 
 [What to submit and which version to use](assignments/homework-02/README.md). Use Canvas for exact submission times.
-
-**HW 3B — [From Lilienthal wing loads to beam bending](assignments/homework-03/HW3B/README.md):** connect HW 2A/B's Lilienthal control-load story to Lecture 03, solve member reactions/displacement, and verify with the course software. Part of HW 3, due November 12; separate from HW 2B.
 
 <a id="design-and-build-a-wing"></a>
 

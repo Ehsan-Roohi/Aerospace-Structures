@@ -12,7 +12,7 @@ replacements={
  'HW 2B (Parts 2, 4 and 5, 65 points) due Nov. 5.',
  'Oct. 18, 2026':'HW 2A: Oct. 20; HW 2B: Nov. 5, 2026',
  'Choose the model: 2D/3D stress transformation, principal stresses, constitutive assumptions and validity':
- 'HW 2A: Lilienthal evidence and side-force geometry (35 points). HW 2B: integration, elevon mixing and local load paths (65 points).',
+ 'HW 2A: Lilienthal evidence and side-force geometry (35 points). HW 2B: member bending, compatibility, software verification and distributed wing loads (65 points).',
 }
 paragraphs=list(doc.paragraphs)+[p for t in doc.tables for row in t.rows for cell in row.cells for p in cell.paragraphs]
 count=0

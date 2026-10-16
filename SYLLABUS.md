@@ -377,7 +377,7 @@ Meetings run from 11:30 a.m. to 12:45 p.m. Finish the remaining Lecture 1 wing m
 | Assignment | Primary focus | Due |
 | --- | --- | --- |
 | HW 1 | Read the structure: airfoil/wing load path, FBD, pre-calculation predictions, equilibrium, code plot | Oct. 1 |
-| HW 2 (A + B) | HW 2A: Lilienthal evidence and lateral-force geometry (35 points). HW 2B: integration, elevon mixing, local load paths and portfolio (65 points). | HW 2A: Oct. 20; HW 2B: Nov. 5, 2026 |
+| HW 2 (A + B) | HW 2A: Lilienthal evidence and lateral-force geometry (35 points). HW 2B: wing-member beam bending, compatibility, software checks and distributed loading (65 points). | HW 2A: Oct. 20; HW 2B: Nov. 5, 2026 |
 | HW 3 | Verify independently: wing-beam shear/moment, bending, deflection, strain energy, limiting/alternate check | Nov. 12 |
 | HW 4 | Audit AI reasoning: virtual work/Castigliano plus correction of a plausible but flawed generated solution | Nov. 19 |
 | HW 5 | Sensitivity and trade-offs: maneuver/landing loads, V-n diagram, computational exercise | Dec. 3 |
@@ -387,7 +387,7 @@ The [released Homework 2 guide and starter files](assignments/homework-02/README
 give the current assignment specification and the exact Lecture 1 reading route.
 Canvas carries the authoritative submission deadline and any announced changes.
 
-**Homework 2 split-release clarification (October 16):** HW 2A covers only Parts 1 and 3, due October 20; HW 2B covers Parts 2, 4 and 5, due November 5. The downloadable Word syllabus uses the same split deadlines. Use the current A/B handouts and the exact submission times in Canvas.
+**Homework 2 deadlines:** HW 2A covers Parts 1 and 3, due October 20; HW 2B covers Parts 2, 4 and 5, due November 5. Use the A/B handouts and the exact submission times in Canvas.
 
 ## 8. Course policies
 

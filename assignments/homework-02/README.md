@@ -1,48 +1,29 @@
-# Homework 2: Flight-Control Forces, Moments, and Structural Load Paths
+# Homework 2 Flight control loads and wing member mechanics
 
-MIE 446 Aerospace Structures, Fall 2026. Split-release clarification, October 16, 2026.
-Homework 2 is submitted in two parts. Canvas is authoritative for deadlines
-and submission links. This release supersedes the earlier single-handout HW 2 files.
+MIE 446 Aerospace Structures, Fall 2026. Submit individually through Canvas at the posted times.
 
-| Part | Content | Points | Due |
+| Assignment | Work | Points | Due |
 |---|---|---:|---|
-| [HW 2A](HW2A/) | Part 1, Lilienthal evidence; Part 3, side-force moment geometry | 35 | Tue. Oct. 20 |
-| [HW 2B](HW2B/) | Part 2, spanwise integration; Part 4, elevon mixing; Part 5, local load paths; HW 2 portfolio | 65 | Thu. Nov. 5 |
+| HW 2A | Parts 1 and 3: Lilienthal control evidence and side-force moment geometry | 35 | October 20, 2026 |
+| HW 2B | Parts 2, 4 and 5: member bending and compatibility, software verification, distributed wing load and design check | 65 | November 5, 2026 |
 
-**For the first submission, complete ONLY Parts 1 and 3 (HW 2A), not all five parts.** Use the A/B downloads below; Canvas supplies the exact submission times.
+## HW 2A
 
-## HW 2A downloads
-
-- [Student guide (PDF)](HW2A/MIE446_HW2A_Evidence_and_Moment_Geometry.pdf)
-- [Complete HW 2A package (ZIP)](MIE446_HW2A_Student_Pack.zip)
+- [Guide PDF](HW2A/MIE446_HW2A_Evidence_and_Moment_Geometry.pdf)
+- [Student ZIP](MIE446_HW2A_Student_Pack.zip)
 - [MATLAB starter](HW2A/MIE446_HW2A_Starter.m) · [Excel starter](HW2A/MIE446_HW2A_Excel_Starter.xlsx)
 
-HW 2A submission: individually authored report PDF, MATLAB file and Excel workbook. Include the short process note in the report. The slide, README, Engineering Judgment Record and reflection belong with HW 2B, not HW 2A.
+Submit the report PDF, MATLAB file and Excel workbook specified in the guide.
 
-## HW 2B downloads
+## HW 2B
 
-- [Student guide (PDF)](HW2B/MIE446_HW2B_Integration_Mixing_Load_Paths.pdf)
-- [Complete HW 2B package (ZIP)](MIE446_HW2B_Student_Pack.zip)
-- [MATLAB starter](HW2B/MIE446_HW2B_Starter.m) · [Excel starter](HW2B/MIE446_HW2B_Excel_Starter.xlsx)
+- [Guide PDF](HW2B/MIE446_HW2B_Lilienthal_Wing_Beam_Analysis.pdf)
+- [Editable Word handout](HW2B/MIE446_HW2B_Lilienthal_Wing_Beam_Analysis.docx)
+- [Student ZIP](MIE446_HW2B_Student_Pack.zip)
+- [Full instructions and software links](HW2B/README.md)
 
-Read alongside [Lecture 1 in Google Colab](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/main/notebooks/MIE446_Lecture_01_Trust_Forces_Airfoils.ipynb)
-and Raffel et al., [Flight Controls of Otto Lilienthal's Experimental Monoplane
-from 1895](https://elib.dlr.de/191143/1/JoA_Paper_Lilienthal_Flight_Controls.pdf).
-Discuss and cross-check within the existing three-person teams; each student
-submits independently authored work through Canvas. Keep graded work out of
-this public repository.
+Use [Lecture 03](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/main/notebooks/MIE446_Lecture_03_Beam_Reactions_Stress_and_Deflection.ipynb) and Wing Lab to investigate a scaled member inspired by Lilienthal's wing load path. Derive the centre-force cases using equilibrium and displacement/rotation conditions, verify them in the beam software, and examine the distributed-load and depth studies. Use the stated model assumptions; do not treat the fixture comparisons as historical reconstructions.
 
-## Visual credits
+Submit a PDF report, software study records and any calculation files used, a short README and one Claim–Evidence–Check slide in PDF and PowerPoint. Include the process/AI-use note in the report. The Word handout is provided for reading and annotation; the report is submitted as PDF.
 
-`HW2B/assets/HW2_Wing_Model` and `HW2B/assets/HW2_Control_Lever` are original
-teaching schematics supplied as PNG and editable SVG. `HW2_Body_Axes.png` (in
-both `assets` folders) is Lecture 1, Figure 7A-3b-1. Source information for the Lecture 1 figures is in
-[the lecture visual register](https://github.com/Ehsan-Roohi/Aerospace-Structures/blob/main/docs/assets/lecture01/VISUAL_SOURCES.md).
-
-## MATLAB references
-
-[linspace](https://www.mathworks.com/help/matlab/ref/double.linspace.html),
-[trapz](https://www.mathworks.com/help/matlab/ref/trapz.html),
-[cross](https://www.mathworks.com/help/matlab/ref/cross.html) and
-[exportgraphics](https://www.mathworks.com/help/matlab/ref/exportgraphics.html).
-No specialist toolbox is required.
+Discuss within your existing team and submit independently authored work.

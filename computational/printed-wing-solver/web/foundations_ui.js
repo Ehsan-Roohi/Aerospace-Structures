@@ -28,8 +28,10 @@ const Lecture03BeamCases = Object.freeze({
   const raf=fn=>(window.requestAnimationFrame?window.requestAnimationFrame(fn):setTimeout(fn,16));
   const reducedMotion=()=>!!(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches);
   const MAX_LOADS=Study.LIMITS.loads;   // the load form and imported/shared studies use the same limit
+  // Normal opening: a cantilever with NO applied load and self-weight off. Loads come only from the user, a study
+  // file or share link, or an explicitly chosen Lecture 03 / HW 2B example (buttons or ?beamCase= deep links).
   const BASE=Object.freeze({length:450,E:2000,density:1.24,elements:30,section:{shape:'rectangle',width:20,height:10},
-    supports:[{x:0,kind:'fixed'}],hinges:[],loads:[{kind:'point',position:450,force:2}],selfWeight:false});
+    supports:[{x:0,kind:'fixed'}],hinges:[],loads:[],selfWeight:false});
   const DESCRIBE={fixed:'v = 0 and θ = 0; vertical reaction and reaction couple',
     pin:'v = 0; rotation free; vertical reaction, no couple (horizontal translation restrained)',
     roller:'v = 0; rotation and horizontal translation free; vertical reaction, no couple',
@@ -52,9 +54,11 @@ const Lecture03BeamCases = Object.freeze({
     catch(e) {startMessage=`The shared beam link could not be opened: ${e.message} The default study is shown instead.`;}
   }
 
-  const st={model:initial,solved:null,error:'',mechanism:null,draftError:'',tab:'diagrams',cut:{x:initial.length/2,side:'left',limit:'left'},
+  // One cut station for the whole page: the Diagrams readout, the plot markers, the beam picture and Cut & section.
+  const st={model:initial,solved:null,error:'',mechanism:null,draftError:'',tab:'diagrams',cut:{x:initial.length/2,side:'both',limit:'left',note:''},
     mode:0,animated:false,phase:0,placing:null,drag:null,editLoad:null,compare:{A:null,B:null},showDeflection:true,autoSolve:false,
     cache:{},message:''};
+  const cutTab=()=>st.tab==='cut'||st.tab==='diagrams';   // tabs that show (and let you drag) the cut station
 
   /* ------------------------------------------------------------------ layout */
 
@@ -82,7 +86,7 @@ const Lecture03BeamCases = Object.freeze({
       <button type="button" data-stage="metal" aria-pressed="false">D.520 full-scale wing</button>
       <details class="bl-companion"><summary>Wing geometry tool</summary><div class="bl-companion-pop" data-companion="vinco"></div></details>
     </nav>
-    <p class="bl-intro">Predict → set supports and loads → solve → explain. Results always belong to the last <b>solved</b> model; edits stay pending until you press <b>Solve</b>.</p>
+    <p class="bl-intro">Predict → set supports and loads → solve → explain. Results always belong to the last <b>solved</b> model; edits stay pending until you press <b>Solve</b>. <button type="button" class="bl-btn bl-btn-sm" id="beamGuideOpen">Quick guide</button></p>
   </header>
   <div class="bl-app">
     <aside class="bl-side" aria-label="Beam inputs">
@@ -122,14 +126,12 @@ const Lecture03BeamCases = Object.freeze({
           <label class="bl-field" style="grid-column:1/-1"><span>Load type</span><select class="bl-select" id="beamLoadKind">
             <option value="point">Point force P</option><option value="moment">Point couple C</option><option value="rectangle">Uniform q</option>
             <option value="triangle">Triangular (zero at start)</option><option value="triangle-root">Triangular (zero at end)</option><option value="trapezoid">Trapezoidal</option></select></label>
-          ${field('beamLoadA','Position x','mm',"value='225' required")}${field('beamLoadB','End','mm',"value='450'")}
-          ${field('beamP','Force P (+ down)','N',"value='2'")}${field('beamC','Couple C (+ clockwise)','N·mm',"value='100'")}
-          ${field('beamQ0','q at start','N/mm',"value='0.004'")}${field('beamQ1','q at end','N/mm',"value='0.008'")}
+          ${field('beamLoadA','Position x','mm','required')}${field('beamLoadB','End','mm')}
+          ${field('beamP','Force P (+ down)','N')}${field('beamC','Couple C (+ clockwise)','N·mm')}
+          ${field('beamQ0','q at start','N/mm')}${field('beamQ1','q at end','N/mm')}
         </div><p class="bl-err" id="beamLoadError" role="alert" hidden></p>
         <div class="bl-row" style="margin-top:10px"><button type="submit" class="bl-btn bl-btn-primary" id="beamLoadSubmit">Add load &amp; solve</button><button type="button" class="bl-btn" id="beamLoadCancel" hidden>Cancel edit</button></div></form>
-        <div class="bl-row"><button type="button" class="bl-btn bl-btn-sm" id="beamCentre">Centre point · 2 N</button><button type="button" class="bl-btn bl-btn-sm bl-btn-danger" id="beamClear">Clear all loads</button></div>
-        <div><h4 class="bl-mini">Same total force (2 N), different shape</h4><div class="bl-row"><button type="button" class="bl-btn bl-btn-sm" data-shape="uniform">Uniform</button><button type="button" class="bl-btn bl-btn-sm" data-shape="root">Root-heavy triangle</button><button type="button" class="bl-btn bl-btn-sm" data-shape="tip">Tip-heavy triangle</button></div>
-        <p class="bl-help">These replace all loads. Equal area under q(x) does not mean equal bending moment.</p></div>
+        <div class="bl-row"><button type="button" class="bl-btn bl-btn-sm bl-btn-danger" id="beamClear">Clear all loads</button></div>
       </div></details>
       <details class="bl-acc"><summary><span class="bl-step">5</span>Examples &amp; presets</summary><div class="bl-acc-body">
         <div><h4 class="bl-mini">Lecture 03 examples · 450 × 20 × 10 mm, E = 2000 MPa</h4><div class="bl-row">
@@ -160,14 +162,54 @@ const Lecture03BeamCases = Object.freeze({
       </div>
       <div class="bl-stale" id="beamStale" role="status" hidden></div>
       <div class="bl-tabpanel" role="tabpanel" id="beamTab-diagrams" aria-labelledby="beamTabBtn-diagrams">
-        <div id="beamReactions"></div><p class="bl-help">Hover or touch a plot to read sampled values. At a jump (point force, couple, support or hinge) use the <b>Cut &amp; section</b> tab for exact left and right values.</p><div id="beamCharts" class="bl-charts"></div><div id="beamStressMap"></div>
+        <div class="bl-exportbar" role="group" aria-label="Download results">
+          <span class="bl-help">Download:</span>
+          <button type="button" class="bl-btn bl-btn-sm" data-export="stations">Station table (CSV)</button>
+          <button type="button" class="bl-btn bl-btn-sm" data-export="samples">Plot samples (CSV)</button>
+          <button type="button" class="bl-btn bl-btn-sm" data-export="reactions">Reactions (CSV)</button>
+          <button type="button" class="bl-btn bl-btn-sm" data-export="print">Report (print or PDF)</button>
+          <button type="button" class="bl-btn bl-btn-sm bl-btn-ghost" data-open-tab="report">Study file and share link</button>
+          <span class="bl-help">Each plot below has its own PNG button.</span>
+        </div>
+        <p class="bl-help" id="beamDiagExportStatus" role="status" aria-live="polite"></p>
+        <div id="beamReactions"></div>
+        <div id="beamReactionShear"></div>
+        <section class="bl-box bl-station" id="beamStation" aria-labelledby="beamStationTitle">
+          <h3 id="beamStationTitle">Exact values at a station x</h3>
+          <p class="bl-help bl-station-how">Type x, use a button, click or tap a plot, or drag the orange cut line on the beam picture. It is the same cut as in <b>Cut &amp; section</b>, and the plots below mark it.</p>
+          <form class="bl-station-bar" id="beamStationForm" novalidate>
+            <label class="bl-field bl-station-x"><span>Station x</span><span class="bl-input"><input id="beamStationX" type="number" step="any" inputmode="decimal" aria-describedby="beamStationRead"><span class="bl-unit">mm</span></span></label>
+            <div class="bl-field"><span>Go to</span><div class="bl-row" id="beamStationQuick"></div></div>
+            <div class="bl-field" id="beamStationLimitField" hidden><span>At the jump</span><div class="bl-seg" role="group" aria-label="Limit at the jump"><button type="button" data-cut-limit="left" aria-pressed="true">x⁻ just left</button><button type="button" data-cut-limit="right" aria-pressed="false">x⁺ just right</button></div></div>
+            <button type="submit" class="sr-only" tabindex="-1">Show the values at x</button>
+          </form>
+          <div class="bl-row" id="beamStationSnaps"></div>
+          <p class="bl-station-read" id="beamStationRead" role="status" aria-live="polite"></p>
+          <div class="bl-station-cards" id="beamStationCards"></div>
+          <p class="bl-help" id="beamStationMore"></p>
+          <div class="bl-cols bl-station-explain"><figure class="bl-figure" id="beamStationFaces"></figure><div class="bl-signkey" id="beamSignKey"></div></div>
+          <div class="bl-stationtable">
+            <h4>Station table: exact values at the x you list</h4>
+            <form class="bl-row bl-station-listform" id="beamStationListForm" novalidate>
+              <label class="bl-field bl-station-list"><span>Stations x (mm), separated by commas or spaces</span><span class="bl-input"><input id="beamStationList" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" aria-describedby="beamStationListError"></span></label>
+              <button type="submit" class="bl-btn bl-btn-sm">Show</button>
+              <button type="button" class="bl-btn bl-btn-sm" id="beamStationAdd">Add the current x</button>
+              <button type="button" class="bl-btn bl-btn-sm" id="beamStationReset">Default list</button>
+              <button type="button" class="bl-btn bl-btn-sm" data-export="stations">Download CSV</button>
+            </form>
+            <p class="bl-err" id="beamStationListError" role="alert" hidden></p>
+            <div class="bl-tablewrap"><table class="bl-table" id="beamStationTable"></table></div>
+            <p class="bl-help">V and M are exact (equilibrium); v and θ come from the Euler–Bernoulli finite element (node value or interpolation, as listed). Where V, M or θ jumps, the table has two rows: x⁻ (left) and x⁺ (right). The plots and the plot-samples CSV use sample points instead (mesh nodes and quarter points), so use this table for values at a chosen x.</p>
+          </div>
+        </section>
+        <div id="beamCharts" class="bl-charts"></div><div id="beamStressMap"></div>
       </div>
       <div class="bl-tabpanel" role="tabpanel" id="beamTab-cut" aria-labelledby="beamTabBtn-cut" hidden>
-        <p class="bl-sub" style="margin:0">Drag the orange cut line on the beam picture, use the slider, or type x. The free body shows the part you keep with the internal shear V and moment M acting on its cut face.</p>
+        <p class="bl-sub" style="margin:0">Drag the orange cut line on the beam picture, use the slider, or type x. The free bodies show the parts on either side of the cut, with the internal shear V and moment M on their cut faces: the same V and M act on both faces, in opposite directions.</p>
         <div class="bl-cutbar">
           <label class="bl-field bl-cutrange"><span>Cut position x</span><input type="range" id="beamCut" min="0" max="450" step="0.5" value="225" aria-describedby="beamCutRead"></label>
           ${field('beamCutX','x','mm',"value='225'")}
-          <div class="bl-field"><span>Part kept</span><div class="bl-seg" role="group" aria-label="Part kept"><button type="button" data-cut-side="left" aria-pressed="true">Left</button><button type="button" data-cut-side="right" aria-pressed="false">Right</button></div></div>
+          <div class="bl-field"><span>Parts shown</span><div class="bl-seg" role="group" aria-label="Parts shown"><button type="button" data-cut-side="both" aria-pressed="true">Both</button><button type="button" data-cut-side="left" aria-pressed="false">Left</button><button type="button" data-cut-side="right" aria-pressed="false">Right</button></div></div>
           <div class="bl-field" id="beamCutLimitField" hidden><span>At the jump</span><div class="bl-seg" role="group" aria-label="Limit at the discontinuity"><button type="button" data-cut-limit="left" aria-pressed="true">x⁻ just left</button><button type="button" data-cut-limit="right" aria-pressed="false">x⁺ just right</button></div></div>
         </div>
         <div class="bl-row" id="beamCutSnaps" aria-label="Jump to a station"></div>
@@ -201,15 +243,38 @@ const Lecture03BeamCases = Object.freeze({
           <button type="button" class="bl-btn bl-btn-primary" id="beamDownload">Save study (.json)</button>
           <button type="button" class="bl-btn" id="beamImport">Import study (.json)</button><input type="file" id="beamImportFile" accept=".json,application/json" class="sr-only" tabindex="-1" aria-hidden="true">
           <button type="button" class="bl-btn" id="beamShare">Copy share link</button>
-          <button type="button" class="bl-btn" id="beamCsv">Results CSV</button>
+          <button type="button" class="bl-btn" data-export="stations">Station table CSV</button>
+          <button type="button" class="bl-btn" id="beamCsv">Plot samples CSV</button>
           <button type="button" class="bl-btn" id="beamCsvReactions">Reactions CSV</button>
           <button type="button" class="bl-btn" id="beamPrintBtn">Print / save as PDF</button>
         </div>
         <p class="bl-help" id="beamExportStatus" role="status" aria-live="polite"></p>
         <input class="bl-linkbox" id="beamShareBox" readonly hidden aria-label="Share link">
         <p class="bl-help">Study files are versioned JSON. Imports and links are validated and solved again on this page; a file from a newer version is refused without changing your study. <b>Print / save as PDF</b> opens your browser's print dialog with a report (inputs, free-body diagram, assumptions, supports, plots and results); choose “Save as PDF” there.</p>
+        <p class="bl-help">CSV files have one header row with the units in the column names (x_mm, V_N, M_Nmm, v_mm, theta_rad, stresses in MPa) and open in Excel or any spreadsheet; they are CSV, not native Excel workbooks. <b>Station table</b>: exact values at the x you list on the Diagrams tab, with left and right rows at a jump. <b>Plot samples</b>: the points used to draw the plots (mesh nodes and quarter points; duplicate x rows are the left and right limits at a jump). Each plot on the Diagrams tab also downloads as a PNG image with its title, model, axes, units and sign convention.</p>
       </div>
       <div class="bl-tabpanel bl-learn" role="tabpanel" id="beamTab-learn" aria-labelledby="beamTabBtn-learn" hidden>
+        <section class="bl-box bl-guide" id="beamGuide" aria-labelledby="beamGuideTitle">
+          <h3 id="beamGuideTitle" tabindex="-1">Quick guide</h3>
+          <ol class="bl-guide-steps">
+            <li><b>Supports (panel 3).</b> Choose each end (fixed, pin, roller or free), add interior supports or hinges, or use <b>Place</b> on the beam picture. The status line says whether the beam is stable and how many reactions equilibrium alone cannot find.</li>
+            <li><b>Loads (panel 4).</b> The lab opens with no load. Add point forces P (↓ +), couples C (↻ +) and line loads q in N/mm (uniform, triangular or trapezoidal), or open an example in panel 5.</li>
+            <li><b>Solve.</b> Results always belong to the last solved model. After an edit they are marked “Not up to date” until you solve again.</li>
+            <li><b>Diagrams.</b> Read the support reactions first, then V, M, v, θ and the stresses. Reactions are external forces on the beam; V and M are internal forces on a cut. The table and thin slices under the reactions show how they are linked.</li>
+            <li><b>Station values.</b> Type x or press <b>L/2</b> to read exact V and M (equilibrium) and v, θ (Euler–Bernoulli finite element) at that x. At a point force, couple, support or hinge choose x⁻ or x⁺. <b>Cut &amp; section</b> shows the same cut with both parts and V and M on their faces.</li>
+            <li><b>Report and downloads.</b> Station table CSV (any x you list), plot-samples CSV, reactions CSV, each plot as PNG, a printable report (print or save as PDF), the study file (.json) and a share link.</li>
+          </ol>
+          <h4>Signs and units</h4>
+          <p>Units: mm, N, N/mm, N·mm and MPa. Forces, line loads and the deflection v are + down; couples, reaction couples C and the rotation θ are + clockwise. Inside the beam, V &gt; 0 acts ↓ on the left part's cut face and ↑ on the right part's, and M &gt; 0 is sagging (top in compression). A thin slice at a support then gives V(0⁺) = −R and M(0⁺) = +C at a left end, and V(L⁻) = +R and M(L⁻) = −C at a right end. For hand calculations with ↑ + and ↺ +, reverse the signs of R and C only.</p>
+          <h4>Fixed–fixed and other indeterminate beams</h4>
+          <p>Equilibrium gives two equations (plus one per hinge), but a fixed–fixed beam has four reaction unknowns. The other two come from compatibility: v = 0 and θ = 0 at both clamps. The Solution tab lists these conditions, and the solved beam satisfies them. Under downward loads the end moments are usually hogging (M &lt; 0).</p>
+          <h4>Midpoint and jumps</h4>
+          <p>Press <b>L/2</b> for the midpoint. Where a point force or a support acts, V has two values (x⁻ and x⁺) and its plot has a vertical step; a couple makes M jump and a hinge makes θ jump.</p>
+          <h4>Plots versus exact values</h4>
+          <p>Plots and the plot-samples CSV use sample points (mesh nodes and quarter points). The station readout and the station table compute V and M exactly at the x you choose, so you never have to guess from a sample.</p>
+          <h4>Model limits</h4>
+          <p>Straight, prismatic, linear-elastic Euler–Bernoulli beam with small displacements and ideal supports. No shear deformation, axial force, buckling, plasticity, contact or stress concentrations. Stresses are nominal beam stresses, not a strength or airworthiness check.</p>
+        </section>
         <article id="beamTheory"></article>
         <div id="beamSigns"></div>
         <h3>Supports, hinges and what they restrain</h3>
@@ -323,7 +388,7 @@ const Lecture03BeamCases = Object.freeze({
   function renderLoadList() {
     const loads=st.model.loads;
     $('#beamLoads').innerHTML=`<ol class="bl-list">${loads.map((p,i)=>`<li data-editing="${st.editLoad===i}"><span class="bl-tag load">${p.kind==='point'?'P':p.kind==='moment'?'C':'q'}</span><span class="bl-li-text">${esc(loadText(p))}</span>
-      <span class="bl-li-actions"><button type="button" class="bl-btn bl-btn-sm bl-btn-ghost" data-edit-load="${i}" aria-label="Edit load ${i+1}">Edit</button><button type="button" class="bl-btn bl-btn-sm bl-btn-ghost" data-delete-load="${i}" aria-label="Remove load ${i+1}">✕</button></span></li>`).join('')}</ol>${loads.length?'':'<p class="bl-help">No applied loads.</p>'}`;
+      <span class="bl-li-actions"><button type="button" class="bl-btn bl-btn-sm bl-btn-ghost" data-edit-load="${i}" aria-label="Edit load ${i+1}">Edit</button><button type="button" class="bl-btn bl-btn-sm bl-btn-ghost" data-delete-load="${i}" aria-label="Remove load ${i+1}">✕</button></span></li>`).join('')}</ol>${loads.length?'':'<p class="bl-help bl-empty-loads">No load defined. Add your own load.</p>'}`;
     $('#beamLoadBadge').textContent=`${loads.length}/${MAX_LOADS}`;
   }
   function renderInputs(m) {renderScalars(m);renderLists(m);syncLoadForm();renderSectionView();renderStability();}
@@ -385,7 +450,8 @@ const Lecture03BeamCases = Object.freeze({
     banner.hidden=!stale||!st.solved;
     banner.innerHTML=stale?`<span aria-hidden="true">⚠</span><span><b>${state==='error'?'Not solved.':'Not up to date.'}</b> These results belong to the last solved model, not to the inputs now on screen. ${state==='error'?'Fix the problem shown in the status bar, or revert.':'Press Solve to update them.'}</span>`:'';
     for(const id of ['#beamDownload','#beamShare','#beamCsv','#beamCsvReactions','#beamPrintBtn','#beamSaveA','#beamSaveB','#beamEqualMassBtn','#beamRefine']) {const b=$(id);if(b)b.disabled=stale||!st.solved;}
-    $('#beamExportStatus').textContent=stale&&st.solved?'Exports are disabled until the current inputs are solved.':$('#beamExportStatus').dataset.msg||'';
+    $$('[data-export], [data-png]',host).forEach(b=>{b.disabled=stale||!st.solved;});
+    for(const id of ['#beamExportStatus','#beamDiagExportStatus']) $(id).textContent=stale&&st.solved?'Exports are disabled until the current inputs are solved.':$(id).dataset.msg||'';
   }
 
   function message(text){st.message=text;$('#beamStatus').textContent=text;}
@@ -400,10 +466,11 @@ const Lecture03BeamCases = Object.freeze({
     catch(e) {st.error=e.message;st.mechanism=e.mechanism||null;st.model=stripRows(draft);renderStatus();renderStability();renderPicture();renderNotice();return false;}
     st.solved={model:Study.modelFromInput(result.input),result};
     st.model=clone(st.solved.model);st.error='';st.mechanism=null;st.draftError='';st.cache={};
-    st.cut.x=Math.min(Math.max(0,st.cut.x),st.model.length);
+    st.cut.x=Math.min(Math.max(0,st.cut.x),st.model.length);st.cut.note='';
     renderInputs(st.model);
     renderAll();
-    message(note||(result.warnings.length?result.warnings.join(' '):'Solved. Predict the next change before editing.'));
+    const unloaded=!st.solved.model.loads.length&&!st.solved.model.selfWeight;
+    message(note||(result.warnings.length?result.warnings.join(' '):unloaded?'Solved with no load: all results are zero.':'Solved. Predict the next change before editing.'));
     return true;
   }
   const stripRows=m=>({...m,supports:m.supports.map(s=>({x:s.x,kind:s.kind}))});
@@ -436,11 +503,12 @@ const Lecture03BeamCases = Object.freeze({
     st.drawn=model;st.drawnInvalid=!!invalid;
     const sw=current&&r&&r.selfWeight.enabled?{q:r.selfWeight.q}:(!current&&model.selfWeight?{q:SEC.selfWeightLine(SEC.properties(model.section),model.density,B.GRAVITY)}:null);
     pic.innerHTML=D.beamSchematic(model,{width:width(pic)-2,result:current?r:null,showDeflection:current&&st.showDeflection,
-      cut:st.tab==='cut'&&current?{x:st.cut.x}:null,ghost,selfWeight:sw,
+      cut:cutTab()&&current?{x:st.cut.x}:null,ghost,selfWeight:sw,
       label:`Physical beam with supports and applied loads${current?'':' (edited inputs, not solved yet)'}`});
     if(st.placing) pic.dataset.placing=st.placing; else delete pic.dataset.placing;
     const svg=pic.querySelector('svg'), factor=svg&&svg.dataset.exaggeration;
     $('#beamPictureNote').textContent=invalid?'Some inputs are invalid, so the picture shows the last valid model.':
+      current&&!model.loads.length&&!model.selfWeight?'Physical beam with its supports (green). No load is applied.':
       current?`Physical beam: supports (green) and applied loads (purple). This is not a free-body diagram — see Solution.${factor&&st.showDeflection?` Dashed blue: deflected shape drawn at ${factor} × true scale.`:''}`:
       'Showing your edited inputs — not solved yet. Press Solve to update the results.';
     const sup=model.supports, left=(sup.find(s=>s.x===0)||{kind:'free'}).kind, right=(sup.find(s=>s.x===model.length)||{kind:'free'}).kind, interior=sup.filter(s=>s.x>0&&s.x<model.length).length;
@@ -506,25 +574,268 @@ const Lecture03BeamCases = Object.freeze({
       const th=s.thetaLeft!==null&&s.thetaRight!==null&&s.thetaLeft!==undefined&&Math.abs(s.thetaLeft-s.thetaRight)>1e-12?`${f(s.thetaLeft,8)} | ${f(s.thetaRight,8)}`:f(s.thetaRight??s.thetaLeft??0,8);
       return `<tr><td>${D.supportName(i)} · ${q.kind} · x = ${plain(q.x)} mm</td><td class="num">${f(q.force,6)} N</td><td class="num">${f(q.moment,6)} N·mm</td><td class="num">${f(s.v??0,6)} mm</td><td class="num">${th} rad</td></tr>`;
     }).join('');
-    $('#beamReactions').innerHTML=`<h3>Support reactions and motion</h3><div class="bl-tablewrap"><table class="bl-table"><tr><th>Support</th><th class="num">Force (+down)</th><th class="num">Moment (+clockwise)</th><th class="num">v (+down)</th><th class="num">θ = dv/dx</th></tr>${rows||''}</table></div>
-      <p class="bl-help">For hand conventions (+up force, +counterclockwise couple), reverse the signs of both reaction columns. v and θ use the same downward-displacement convention as Lecture 03. A pin or roller has zero reaction couple but can have nonzero θ. ΣF residual = ${r.equilibrium.force.toExponential(2)} N; ΣM residual = ${r.equilibrium.moment.toExponential(2)} N·mm.</p>`;
+    $('#beamReactions').innerHTML=`<h3>Support reactions and motion</h3><div class="bl-tablewrap"><table class="bl-table"><tr><th>Support</th><th class="num">Force R (+down)</th><th class="num">Couple C (+clockwise)</th><th class="num">v (+down)</th><th class="num">θ = dv/dx</th></tr>${rows||''}</table></div>
+      <p class="bl-help">For hand conventions (+up force, +counterclockwise couple), reverse the signs of both reaction columns. v and θ use the same downward-displacement convention as Lecture 03. A pin or roller has zero reaction couple but can have nonzero θ. ΣF residual = ${r.equilibrium.force.toExponential(2)} N; ΣM residual = ${r.equilibrium.moment.toExponential(2)} N·mm.</p>
+      <p class="bl-help">These reactions are <b>external</b> forces on the beam. The shear V in the plots is an <b>internal</b> force on the faces of a cut, with its own sign convention; the next table links the two.</p>`;
+    renderReactionShear();
+  }
+  // Reaction (external) versus internal V and M beside each support: equilibrium of a thin slice around the
+  // support gives V(x⁺) − V(x⁻) = −(R + P) and M(x⁺) − M(x⁻) = +(C + C0), in the app's signs (↓ +, ↻ +), where
+  // R, C are the reaction force and couple and P, C0 point actions applied at the same station. At x = 0 that
+  // is V(0⁺) = −R and M(0⁺) = +C; at x = L, V(L⁻) = +R and M(L⁻) = −C.
+  function reactionShear(r) {
+    const L=r.input.length, eps=L*1e-10;
+    return r.reactions.map((q,i)=>{
+      const left=q.x>0?cleanField(B.fieldAt(r,q.x,'left'),r):null, right=q.x<L?cleanField(B.fieldAt(r,q.x,'right'),r):null;
+      const at=v=>Math.abs(v.position-q.x)<=eps, P=r.loadsApplied.filter(v=>v.kind==='point'&&at(v)).reduce((s,v)=>s+v.force,0);
+      const C0=r.loadsApplied.filter(v=>v.kind==='moment'&&at(v)).reduce((s,v)=>s+v.moment,0);
+      const Vl=left?left.V:0, Vr=right?right.V:0, Ml=left?left.M:0, Mr=right?right.M:0;
+      return {i,name:D.supportName(i),q,left,right,P,C0,dV:Vr-Vl,dM:Mr-Ml,expV:-(q.force+P),expM:q.moment+C0};
+    });
+  }
+  /** Equilibrium of the thin slice at one support, written out with its numbers (app signs). */
+  function sliceEquations(s,r) {
+    const n=s.name, L=r.input.length, lim=side=>side==='left'?(s.q.x===L?'L⁻':'x⁻'):(s.q.x===0?'0⁺':'x⁺');
+    const line=(terms,unit,scale)=>{
+      const sym=terms.map(([t,k],i)=>`${i?(k>0?' + ':' − '):(k>0?'':'−')}${t}`).join('');
+      const num=terms.map(([,k,v],i)=>`${i?(k>0?' + ':' − '):(k>0?'':'−')}(${D.signed(v,6)})`).join('');
+      const sum=terms.reduce((a,[,k,v])=>a+k*v,0), ok=Math.abs(sum)<=1e-7*scale+1e-12;
+      return `${sym} = ${num} = ${ok?'0':fmt(sum)} ${unit} ${ok?'<span class="bl-ok">✓</span>':'✗'}`;
+    };
+    const f=[[`R<sub>${n}</sub>`,1,s.q.force]];
+    if(s.P) f.push(['P',1,s.P]);
+    if(s.left) f.push([`V(${lim('left')})`,-1,s.left.V]);
+    if(s.right) f.push([`V(${lim('right')})`,1,s.right.V]);
+    let out=`<span class="bl-eqline"><span class="lbl">Forces (↓ +)</span>${line(f,'N',Math.abs(s.q.force)+Math.abs(s.P)+r.maxima.shear)}</span>`;
+    if(s.q.kind==='fixed'||s.C0) {
+      const m=[];
+      if(s.q.kind==='fixed') m.push([`C<sub>${n}</sub>`,1,s.q.moment]);
+      if(s.C0) m.push(['C',1,s.C0]);
+      if(s.left) m.push([`M(${lim('left')})`,1,s.left.M]);
+      if(s.right) m.push([`M(${lim('right')})`,-1,s.right.M]);
+      out+=`<span class="bl-eqline"><span class="lbl">Couples (↻ +)</span>${line(m,'N·mm',Math.abs(s.q.moment)+Math.abs(s.C0)+r.maxima.moment)}</span>`;
+    } else out+=`<span class="bl-eqline">${s.q.x===0||s.q.x===L?`No couple acts at a ${s.q.kind}, so M(${s.q.x===0?'0⁺':'L⁻'}) = 0.`:`No couple acts at a ${s.q.kind}: M is continuous there.`}</span>`;
+    return `<span class="bl-eq bl-eq-left bl-slice-eq">${out}</span>`;
+  }
+  function renderReactionShear() {
+    const r=st.solved.result, L=r.input.length, rows=reactionShear(r);
+    const okV=s=>Math.abs(s.dV-s.expV)<=1e-7*(Math.abs(s.q.force)+Math.abs(s.P)+r.maxima.shear)+1e-12;
+    const okM=s=>Math.abs(s.dM-s.expM)<=1e-7*(Math.abs(s.q.moment)+Math.abs(s.C0)+r.maxima.moment)+1e-12;
+    const dir=(v,pos,neg)=>Math.abs(v)<1e-13?'':` (${fmt(Math.abs(v),6)} ${v>0?pos:neg})`;
+    const side=fx=>fx?`V = ${D.signed(fx.V,6)} N<br>M = ${D.signed(fx.M,6)} N·mm`:'V = 0, M = 0<br>(outside the beam)';
+    const body=rows.map(s=>{
+      const n=s.name, moment=s.q.kind==='fixed'||Math.abs(s.C0)>0, Rn=`R<sub>${n}</sub>`, Cn=`C<sub>${n}</sub>`;
+      const vRule=s.P?`−(${Rn} + P), P = ${fmt(s.P,6)} N applied here`:`−${Rn}`, mRule=s.C0?`+(${Cn} + C), C = ${fmt(s.C0,6)} N·mm applied here`:`+${Cn}`;
+      return `<tr data-support="${n}"><td>${n} · ${s.q.kind}<br>x = ${plain(s.q.x)} mm</td>
+        <td>${Rn} = ${D.signed(s.q.force,6)} N${dir(s.q.force,'N ↓','N ↑')}${s.q.kind==='fixed'?`<br>${Cn} = ${D.signed(s.q.moment,6)} N·mm${dir(s.q.moment,'N·mm ↻','N·mm ↺')}`:''}</td>
+        <td>${side(s.left)}</td><td>${side(s.right)}</td>
+        <td><span class="bl-nowrap">ΔV = ${D.signed(s.dV,6)} N</span> <span class="bl-nowrap">= ${vRule} ${okV(s)?'<span class="bl-ok">✓</span>':'✗'}</span>${moment?`<br><span class="bl-nowrap">ΔM = ${D.signed(s.dM,6)} N·mm</span> <span class="bl-nowrap">= ${mRule} ${okM(s)?'<span class="bl-ok">✓</span>':'✗'}</span>`:''}</td></tr>`;
+    }).join('');
+    const fw=Math.min(440,Math.max(340,width($('#beamReactionShear'))));
+    const slices=rows.map(s=>`<figure class="bl-figure bl-slicefig" data-support="${s.name}">${D.supportSlice({name:s.name,kind:s.q.kind,x:s.q.x,end:s.q.x===0?'left':s.q.x===L?'right':null,
+      R:s.q.force,C:s.q.moment,P:s.P,C0:s.C0,left:s.left&&{V:s.left.V,M:s.left.M},right:s.right&&{V:s.right.V,M:s.right.M}},{width:fw})}<figcaption>${sliceEquations(s,r)}</figcaption></figure>`).join('');
+    $('#beamReactionShear').innerHTML=rows.length?`<h3>Reaction (external) and internal V, M beside each support</h3>
+      <div class="bl-tablewrap"><table class="bl-table bl-rvtable"><tr><th>Support</th><th>Reaction on the beam</th><th>Just left, x⁻</th><th>Just right, x⁺</th><th>Jump ΔV = V(x⁺) − V(x⁻), ΔM = M(x⁺) − M(x⁻)</th></tr>${body}</table></div>
+      <p class="bl-help">A reaction is the force R (and at a clamp the couple C) that a support applies to the beam. V and M act on the two faces of a cut, as an equal and opposite pair. Equilibrium of a thin slice around a support gives V(x⁺) − V(x⁻) = −R and M(x⁺) − M(x⁻) = +C (app signs: force ↓ +, couple ↻ +). So at a left end V(0⁺) = −R and M(0⁺) = +C; at a right end V(L⁻) = +R and M(L⁻) = −C.</p>
+      <details class="bl-reveal bl-slices" open><summary class="bl-btn bl-btn-sm">Thin slices at the supports: why V and M are not the reactions</summary>
+        <p class="bl-help">Each slice is cut out just left and just right of its support. Green: the reaction acting on the slice. Orange: the internal V and M on its cut faces, in their actual directions. The slice's left face is the face of the part to its right, where V &gt; 0 acts ↑ and M &gt; 0 acts ↻; its right face is the face of the part to its left, where V &gt; 0 acts ↓ and M &gt; 0 acts ↺. That is why, at a left end, V(0⁺) has the opposite sign to R while M(0⁺) has the same sign as C, and the other way round at a right end.</p>
+        <div class="bl-slicegrid">${slices}</div></details>`:'';
   }
   const CHART_KEYS=['shear','moment','deflection','rotation','stressTop','shearStressMax'];
   function chartWidth(container) {
     const w=width(container), cols=(window.getComputedStyle?getComputedStyle(container).gridTemplateColumns||'':'').split(' ').filter(Boolean).length||1;
     return Math.max(300,(w-(cols-1)*18)/cols);
   }
+  // Field of fieldAt() shown by each chart, its symbol, and the size used to tell a real jump from round-off.
+  const FIELD={shear:'V',moment:'M',deflection:'v',rotation:'theta',stressTop:'stressTop',shearStressMax:'tauMax'};
+  const SYMBOL={shear:'V',moment:'M',deflection:'v',rotation:'θ',stressTop:'σ',shearStressMax:'τ'};
+  const SCALE={V:'shear',M:'moment',v:'deflection',theta:'rotation',stressTop:'bendingStress',tauMax:'shearStress'};
+  const CHART_KEY={shear:"V &gt; 0 acts ↓ on the left part's cut face and ↑ on the right part's. It is an internal force, not a reaction. V = dM/dx.",
+    moment:"M &gt; 0 is sagging (top in compression): ↺ on the left part's cut face, ↻ on the right part's."};
+  const differs=(r,k,a,b)=>{const d=Math.abs(a-b);return d>1e-13&&d>1e-9*Math.max(r.maxima[SCALE[k]]||0,Math.abs(a),Math.abs(b));};
+  function chartMarks(c,key) {
+    const k=FIELD[key], s=SYMBOL[key];
+    return c.left&&c.right&&differs(c.r,k,c.left[k],c.right[k])?[{label:`${s}(x⁻)`,value:c.left[k]},{label:`${s}(x⁺)`,value:c.right[k]}]:[{label:`${s}(x)`,value:c.at[k]}];
+  }
+  /** Beam station under the pointer on a chart, and the size of one screen pixel in mm. */
+  function chartX(fig,e) {
+    const svg=fig.querySelector('svg'), b=svg&&svg.getBoundingClientRect();if(!b||!b.width)return null;
+    const W=+svg.dataset.w,x0=+svg.dataset.x0,x1=+svg.dataset.x1,L=+svg.dataset.length;
+    return {x:Math.max(0,Math.min(L,((e.clientX-b.left)/b.width*W-x0)/(x1-x0)*L)),mmPerPx:L/((x1-x0)*b.width/W)};
+  }
+  const QUICK=[[0,'x = 0'],[0.25,'L/4'],[0.5,'L/2'],[0.75,'3L/4'],[1,'x = L']];
+  /** A clicked station: a key station or a quarter point within 6 px, otherwise rounded to about L/1000. */
+  function snapStation(x,mmPerPx=0) {
+    const r=st.solved.result, L=r.input.length, tol=Math.max(6*mmPerPx,L*1e-9);
+    let best=null;
+    for(const t of [...r.stations.map(s=>s.x),...QUICK.map(([q])=>q*L)]) if(Math.abs(t-x)<=tol&&(best===null||Math.abs(t-x)<Math.abs(best-x))) best=t;
+    if(best!==null) return best;
+    const raw=L/1000, p=10**Math.floor(Math.log10(raw)), step=[1,2,5,10].map(k=>k*p).find(s=>s>=raw);
+    return Math.min(L,Math.max(0,Number((Math.round(x/step)*step).toPrecision(10))));
+  }
   function renderCharts() {
-    const r=st.solved.result, box=$('#beamCharts'), w=chartWidth(box), sup=r.input.supports.map(s=>s.x);
-    box.innerHTML=CHART_KEYS.map((k,i)=>`<figure data-beam-chart="${i}" data-key="${k}">${D.chart(r,k,{width:w,supports:sup})}<figcaption aria-live="polite"></figcaption></figure>`).join('');
-    box.querySelectorAll('[data-beam-chart]').forEach(fig=>{fig.onpointermove=e=>{
-      const svg=fig.querySelector('svg'), b=svg.getBoundingClientRect();if(!b.width)return;
-      const W=+svg.dataset.w,x0=+svg.dataset.x0,x1=+svg.dataset.x1,L=+svg.dataset.length,x=Math.max(0,Math.min(L,((e.clientX-b.left)/b.width*W-x0)/(x1-x0)*L));
-      let i=0;while(i<r.x.length-1&&r.x[i+1]<=x)i++;
-      const key=fig.dataset.key,meta=D.CHARTS[key];
-      fig.querySelector('figcaption').textContent=`${meta.title}: x = ${fmt(r.x[i])} mm → ${fmt(r[key][i])} ${meta.unit} (sampled value).`;
-    };});
-    $('#beamStressMap').innerHTML=D.stressMap(r,{width:width($('#beamStressMap'))});
+    const r=st.solved.result, box=$('#beamCharts'), w=chartWidth(box), sup=r.input.supports.map(s=>s.x), c=cutInfo(), L=r.input.length;
+    const off=statusState()!=='solved';
+    box.innerHTML=CHART_KEYS.map((k,i)=>`<figure data-beam-chart="${i}" data-key="${k}">${D.chart(r,k,{width:w,supports:sup,cut:{x:c.x,values:chartMarks(c,k)}})}<figcaption>${CHART_KEY[k]?`<span class="bl-chart-key">${CHART_KEY[k]}</span> `:''}<span class="bl-chart-hover" aria-live="polite"></span>
+      <span class="bl-chart-tools"><button type="button" class="bl-btn bl-btn-sm" data-png="${k}"${off?' disabled':''} aria-label="Download the ${D.CHARTS[k].title} plot as a PNG image">Download PNG</button></span></figcaption></figure>`).join('');
+    box.querySelectorAll('[data-beam-chart]').forEach(fig=>{
+      const key=fig.dataset.key, meta=D.CHARTS[key], out=fig.querySelector('.bl-chart-hover');
+      // Values under the pointer are evaluated at that x (not read from the plotted samples).
+      fig.addEventListener('pointermove',e=>{const p=chartX(fig,e);if(!p)return;const v=cleanField(B.fieldAt(r,p.x,p.x>=L?'left':'right'),r)[FIELD[key]];
+        out.textContent=`${meta.title}: x = ${fmt(p.x)} mm → ${fmt(v,6)} ${meta.unit} (${key==='deflection'||key==='rotation'?'Euler–Bernoulli finite element':'exact'}). Click to read every value there.`;});
+      fig.addEventListener('click',e=>{if(e.target.closest('button'))return;const p=chartX(fig,e);if(p)setCut(snapStation(p.x,p.mmPerPx));});
+    });
+  }
+  function renderStressMap() {$('#beamStressMap').innerHTML=D.stressMap(st.solved.result,{width:width($('#beamStressMap'))});}
+
+  /* ------------------------------------------- plot images (PNG) and station table */
+
+  const SIGN_TEXT={
+    shear:"Sign convention: V > 0 acts down on the left part's cut face and up on the right part's face (V = dM/dx, dV/dx = −q with q down +). Support reactions are external forces, not V: across a support V changes by −R.",
+    moment:"Sign convention: M > 0 is sagging (top fibre in compression); it acts counter-clockwise on the left part's cut face and clockwise on the right part's face.",
+    deflection:'Sign convention: v > 0 is downward and is plotted downward.',
+    rotation:'Sign convention: θ = dv/dx > 0 is clockwise.',
+    stressTop:'Sign convention: σ > 0 is tension; top fibre σ = −M c / I.',
+    shearStressMax:'Magnitude |τ|max = k |V| / A at the neutral axis (k depends on the cross-section).'};
+  function modelLines(m,r) {
+    const sup=m.supports.map((s,i)=>`${D.supportName(i)} ${s.kind} at x = ${plain(s.x)} mm`).join(', ')||'none';
+    return [`Model: L = ${plain(m.length)} mm · ${SEC.describe(m.section)} · E = ${plain(m.E)} MPa · EI = ${fmt(r.EI,6)} N·mm² · supports: ${sup}${m.hinges.length?` · hinges at x = ${m.hinges.map(plain).join(', ')} mm`:''}`,
+      `Loads (force and q down +, couple clockwise +): ${m.loads.length?m.loads.map(v=>Study.describeLoad(v)).join('; '):'none'}${m.selfWeight?`; self-weight ${fmt(r.selfWeight.q)} N/mm`:''}`];
+  }
+  /** The standalone image of one plot, exactly as the PNG download contains it. */
+  function plotImage(key) {
+    const r=st.solved.result, m=st.solved.model, c=cutInfo(), meta=D.CHARTS[key], marks=chartMarks(c,key);
+    return D.chartImage(r,key,{title:`${meta.title} (${meta.unit})`,lines:[...modelLines(m,r),SIGN_TEXT[key]],supports:r.input.supports.map(s=>s.x),
+      station:{x:c.x,values:marks},notes:[`Curve: values at the plotted sample points (mesh nodes and quarter points; both limits at a jump). Orange marker: station x = ${fmt(c.x,6)} mm, exact ${marks.map(q=>`${q.label} = ${fmt(q.value,6)} ${meta.unit}`).join(', ')}.`,
+        `Exact values at any x: station readout or station table. MIE 446 Beam Lab · Euler–Bernoulli beam model · ${new Date().toISOString().slice(0,10)}.`]});
+  }
+  /** Draw the plot's SVG on a white canvas at 2× and return a PNG blob. */
+  function rasterize(img,scale=2) {
+    return new Promise((resolve,reject)=>{
+      const canvas=document.createElement('canvas'), g=canvas.getContext&&canvas.getContext('2d');
+      if(!g||typeof Image==='undefined'){reject(new Error('this browser cannot draw images'));return;}
+      const im=new Image();
+      im.onload=()=>{try{canvas.width=Math.round(img.width*scale);canvas.height=Math.round(img.height*scale);
+        g.fillStyle='#ffffff';g.fillRect(0,0,canvas.width,canvas.height);g.drawImage(im,0,0,canvas.width,canvas.height);
+        canvas.toBlob(b=>b&&b.size?resolve(b):reject(new Error('the image is empty')),'image/png');}catch(e){reject(e);}};
+      im.onerror=()=>reject(new Error('the plot could not be drawn'));
+      im.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(img.svg);
+    });
+  }
+  async function chartPng(key) {
+    if(!guard()) return;
+    const img=plotImage(key);
+    try {
+      const blob=await rasterize(img);
+      downloadBlob(`MIE446-beam-${key}.png`,blob);
+      exportStatus(`${D.CHARTS[key].title} saved as PNG (${img.width*2} × ${img.height*2} px): plot with title, model and loads, axes with units and the sign convention, on a white background.`);
+    } catch(e) {exportStatus(`The PNG could not be made here (${e.message}). Use Report (print or PDF) instead.`);}
+  }
+  // Station table: exact values at listed x (default: 0, L/4, L/2, 3L/4, L and every key station).
+  function stationList() {
+    const r=st.solved.result, L=r.input.length;
+    const own=(st.stationList||[]).filter(x=>x>=0&&x<=L);
+    return own.length?own:[...new Set([...QUICK.map(([q])=>q*L),...r.stations.map(s=>s.x)])].sort((a,b)=>a-b);
+  }
+  function parseStations(text,L) {
+    const tokens=String(text).split(/[\s,;]+/).filter(Boolean);
+    if(!tokens.length) return {error:'List one or more stations, for example 200, 205.'};
+    if(tokens.length>200) return {error:'Use at most 200 stations.'};
+    const xs=[];
+    for(const t of tokens) {
+      const v=Number(t);
+      if(!Number.isFinite(v)) return {error:`“${t}” is not a number.`};
+      if(v<0||v>L) return {error:`x = ${t} mm is not on the beam (0 to ${plain(L)} mm).`};
+      xs.push(v);
+    }
+    return {xs};
+  }
+  function renderStationTable() {
+    if(!st.solved) return;
+    const r=st.solved.result, xs=stationList(), rows=Study.stationRows(r,xs), inp=$('#beamStationList');
+    if(document.activeElement!==inp) inp.value=xs.map(plain).join(', ');
+    $('#beamStationTable').innerHTML=`<tr><th class="num">x (mm)</th><th>Side</th><th class="num">V (N)</th><th class="num">M (N·mm)</th><th class="num">v (mm)</th><th class="num">θ (rad)</th><th class="num">σ top / bottom (MPa)</th><th class="num">τ<sub>max</sub> (MPa)</th><th>v, θ</th></tr>`+
+      rows.map(q=>`<tr data-x="${q.x}" data-side="${q.side}"><td class="num">${fmt(q.x,6)}</td><td>${q.side==='left'?'x⁻ (left)':q.side==='right'?'x⁺ (right)':''}</td><td class="num">${D.signed(q.V,6)}</td><td class="num">${D.signed(q.M,6)}</td><td class="num">${D.signed(q.v,6)}</td><td class="num">${D.signed(q.theta,6)}</td><td class="num">${D.signed(q.stressTop,6)} / ${D.signed(q.stressBottom,6)}</td><td class="num">${fmt(q.tauMax,6)}</td><td>${q.source==='FE node'?'node':'interp.'}</td></tr>`).join('');
+  }
+  function applyStationList() {
+    if(!st.solved) return;
+    const err=$('#beamStationListError'), res=parseStations($('#beamStationList').value,st.solved.model.length);
+    if(res.error) {err.textContent=res.error;err.hidden=false;return;}
+    err.hidden=true;st.stationList=res.xs;renderStationTable();
+  }
+  function exportAction(kind) {
+    if(!guard()) return;
+    const r=st.solved.result;
+    if(kind==='stations') {
+      // Stations typed but not yet shown are used too; an invalid list is reported and nothing is saved.
+      const box=$('#beamStationList');
+      if(box.value.trim()!==stationList().map(plain).join(', ')) {
+        const res=parseStations(box.value,r.input.length);
+        if(res.error) {$('#beamStationListError').textContent=res.error;$('#beamStationListError').hidden=false;exportStatus(`Station table not saved: ${res.error}`);return;}
+        st.stationList=res.xs;$('#beamStationListError').hidden=true;renderStationTable();
+      }
+      const n=Study.stationRows(r,stationList()).length;download('MIE446-beam-stations.csv',Study.stationsCsv(r,stationList()),'text/csv');exportStatus(`Station table saved as CSV (${n} rows): exact values at the listed x, with x⁻ and x⁺ rows at jumps. Columns carry their units.`);}
+    else if(kind==='samples') {download('MIE446-beam-plot-samples.csv',Study.resultsCsv(r),'text/csv');exportStatus('Plot samples saved as CSV: the points used to draw the plots (duplicate x rows are the left and right limits at a jump). For values at a chosen x use the station table.');}
+    else if(kind==='reactions') {download('MIE446-beam-reactions.csv',Study.reactionsCsv(r),'text/csv');exportStatus('Reactions saved as CSV (force ↓ +, couple ↻ +).');}
+    else if(kind==='print') printReport();
+  }
+
+  /* ------------------------------------------------- exact station readout */
+
+  function renderStation() {
+    if(!st.solved) return;
+    const c=cutInfo(), r=c.r, L=c.L, x=c.x, eps=L*1e-10, a=c.at;
+    const num=$('#beamStationX');num.min='0';num.max=String(L);if(document.activeElement!==num)num.value=Number(x.toPrecision(10));
+    $('#beamStationQuick').innerHTML=QUICK.map(([q,t])=>`<button type="button" class="bl-btn bl-btn-sm" data-station-frac="${q}"${Math.abs(q*L-x)<=eps?' aria-current="true"':''} aria-label="Go to ${q===0||q===1?t:`x = ${t}`} (${plain(q*L)} mm)">${t}</button>`).join('');
+    const interior=r.stations.filter(s=>s.x>eps&&s.x<L-eps);
+    $('#beamStationSnaps').innerHTML=interior.length?`<span class="bl-help">Stations with a jump or a load boundary:</span>${interior.map(s=>`<button type="button" class="bl-btn bl-btn-sm" data-cut-to="${s.x}"${Math.abs(s.x-x)<=eps?' aria-current="true"':''}>${plain(s.x)} mm · ${s.kinds.length?s.kinds.join(', '):'load boundary'}</button>`).join('')}`:'';
+    $('#beamStationLimitField').hidden=!c.jump;
+    $$('[data-cut-limit]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.cutLimit===c.limit)));
+    const name=(QUICK.find(([q])=>q>0&&q<1&&Math.abs(q*L-x)<=eps)||[])[1];
+    const end=x<=eps?'left end: values just inside the beam, at x = 0⁺':x>=L-eps?'right end: values just inside the beam, at x = L⁻':'';
+    $('#beamStationRead').textContent=`${st.cut.note?st.cut.note+' ':''}Station x = ${fmt(x,6)} mm${name?` = ${name}`:''}${end?` (${end})`:''}${c.jump?`: a jump occurs here. Both limits are listed; the ${c.limit==='left'?'left limit x⁻':'right limit x⁺'} is used for the figure, the plot markers and Cut & section.`:'.'}`;
+    // v and θ: Euler–Bernoulli FE. Nodal values equal the beam-theory solution for this constant-EI beam; between
+    // nodes the cubic Hermite interpolation is exact unless a line load acts on that element.
+    const node=r.nodes.some(n=>Math.abs(n-x)<=eps);
+    let e=0;while(e<r.nodes.length-2&&r.nodes[e+1]<x)e++;
+    const n0=r.nodes[e], n1=r.nodes[e+1], lineLoad=r.loadsApplied.some(v=>v.kind==='distributed'&&v.start<n1-eps&&v.end>n0+eps);
+    const fe=node?'Euler–Bernoulli finite element: value at a mesh node (equal to the beam-theory solution)':
+      `Euler–Bernoulli finite element: cubic Hermite interpolation between the nodes at ${fmt(n0,6)} and ${fmt(n1,6)} mm (${lineLoad?'very close, not exact, under the line load on this element':'exact here: no line load acts on this element'})`;
+    const both=k=>c.jump&&c.left&&c.right&&differs(r,k,c.left[k],c.right[k]);
+    const sgn=(v,pos,neg,zero)=>v>0?pos:v<0?neg:zero;
+    const card=(k,label,unit,meaning,source)=>{
+      const val=v=>`${D.signed(v,6)} ${unit}`;
+      const value=both(k)?`<span class="bl-stat-lim${c.limit==='left'?' is-sel':''}" data-limit="left">x⁻: ${val(c.left[k])}</span><span class="bl-stat-lim${c.limit==='right'?' is-sel':''}" data-limit="right">x⁺: ${val(c.right[k])}</span>`:val(a[k]);
+      return `<div class="bl-stat" data-q="${k}"><span class="bl-stat-k">${label}</span><b class="bl-stat-v">${value}</b><span class="bl-stat-m">${meaning(a[k])}</span><span class="bl-stat-s">${source}</span></div>`;
+    };
+    $('#beamStationCards').innerHTML=
+      card('V','Shear force V','N',v=>sgn(v,"↓ on the left part's cut face, ↑ on the right part's","↑ on the left part's cut face, ↓ on the right part's",'no shear at this cut'),'Exact: equilibrium of the part left of x, with the solved reactions')+
+      card('M','Bending moment M','N·mm',v=>sgn(v,'sagging: top in compression','hogging: top in tension','no bending at this cut'),'Exact: moments about x of the same part')+
+      card('v','Deflection v (+ down)','mm',v=>sgn(v,'downward','upward','no deflection'),fe)+
+      card('theta','Rotation θ = dv/dx (+ clockwise)','rad',v=>sgn(v,'clockwise','counter-clockwise','no rotation'),fe);
+    $('#beamStationMore').innerHTML=`${c.jump?`At ${c.limit==='left'?'x⁻':'x⁺'}: `:''}curvature κ = −M/EI = ${fmt(a.curvature,6)} mm⁻¹ · σ top = ${fmt(a.stressTop,6)} MPa, σ bottom = ${fmt(a.stressBottom,6)} MPa (tension +) · τ<sub>max</sub> = ${fmt(a.tauMax,6)} MPa at the neutral axis. They follow from the exact V and M at this x; nothing here is read from the plotted samples.`;
+    $('#beamStationFaces').innerHTML=D.cutFaces({x,V:a.V,M:a.M,limit:c.limit,jump:!!c.jump},{width:width($('#beamStationFaces'),380)})+
+      '<figcaption>The internal V and M at this station, in their actual directions on the two faces of the cut. They are not reactions: a reaction acts on the beam at a support.</figcaption>';
+    $('#beamSignKey').innerHTML=signKey(r);
+  }
+  /** Sign key beside the readout: internal V, M versus external reactions, with this model's end-support relation. */
+  function signKey(r) {
+    const L=r.input.length, rows=reactionShear(r), ends=rows.filter(s=>s.q.x===0||s.q.x===L), pick=ends.length?ends:rows.slice(0,1);
+    const size=(v,unit,pos,neg)=>Math.abs(v)<1e-13?'zero':`${fmt(Math.abs(v),6)} ${unit} ${v>0?pos:neg}`;
+    const here=s=>{
+      const n=s.name, R=`R<sub>${n}</sub>`, Cn=`C<sub>${n}</sub>`, fixed=s.q.kind==='fixed', P=s.P?' + P':'', C=s.C0?' + C':'';
+      const reaction=`${R} = ${D.signed(s.q.force,6)} N (${size(s.q.force,'N','↓','↑')})`;
+      const couple=fixed?`${Cn} = ${D.signed(s.q.moment,6)} N·mm (${size(s.q.moment,'N·mm','↻','↺')})`:'';
+      if(s.q.x===0) return `support ${n} at x = 0: ${reaction}, so V(0⁺) = ${P?`−(${R}${P})`:`−${R}`} = <b>${D.signed(s.right.V,6)} N</b>${fixed?`; ${couple}, so M(0⁺) = ${C?`+(${Cn}${C})`:`+${Cn}`} = <b>${D.signed(s.right.M,6)} N·mm</b>`:''}`;
+      if(s.q.x===L) return `support ${n} at x = L: ${reaction}, so V(L⁻) = ${P?`+(${R}${P})`:`+${R}`} = <b>${D.signed(s.left.V,6)} N</b>${fixed?`; ${couple}, so M(L⁻) = ${C?`−(${Cn}${C})`:`−${Cn}`} = <b>${D.signed(s.left.M,6)} N·mm</b>`:''}`;
+      return `support ${n} at x = ${plain(s.q.x)} mm: ${reaction}, so V jumps there by ${P?`−(${R}${P})`:`−${R}`} = <b>${D.signed(s.dV,6)} N</b>`;
+    };
+    return `<h4>Reading the signs</h4><ul class="bl-keylist">
+      <li><b>V and M are internal.</b> They act on both faces of a cut as an equal and opposite pair (figure). V &gt; 0 acts ↓ on the left part's face and ↑ on the right part's; M &gt; 0 (sagging) acts ↺ on the left part's face and ↻ on the right part's.</li>
+      <li><b>V = dM/dx and dV/dx = −q</b> (q + down): V is positive where M increases with x, and a downward line load makes V decrease.</li>
+      <li><b>A reaction is external</b>: the force R (and couple C) that a support applies to the beam, listed above with force ↓ + and couple ↻ +. It is not V or M. Across a support V changes by −R and M by +C (see the thin slices above).</li>
+      <li><b>Here</b>, ${pick.map(here).join('; ')}.</li>
+      <li>A text that takes V &gt; 0 as ↑ on the left part's face reports every V with the opposite sign for the same physical forces: compare the arrows, not only the signs.</li></ul>`;
   }
   function renderTheory() {
     const m=st.solved.model, L=m.length, left=(m.supports.find(s=>s.x===0)||{kind:'free'}).kind, right=(m.supports.find(s=>s.x===L)||{kind:'free'}).kind;
@@ -542,6 +853,8 @@ const Lecture03BeamCases = Object.freeze({
     } else if(st.error&&/must lie on the beam|0 ≤ x|beam length/.test(st.error)&&st.solved) {
       html+=`<div class="bl-notice bad"><p><b>Not solved.</b> ${esc(st.error)}</p><button type="button" class="bl-btn bl-btn-sm" id="beamScaleSpan">Scale all positions to the new span</button></div>`;
     }
+    if(st.solved&&isCurrent()&&!st.solved.model.loads.length&&!st.solved.model.selfWeight)
+      html+=`<div class="bl-notice" role="status" id="beamNoLoad"><b>No load defined. Add your own load.</b><p>With no load, every reaction, displacement, moment and stress is zero. Use <b>4 · Loads</b> to add a point force, a couple or a distributed load, or choose an example in <b>5 · Examples &amp; presets</b>.</p></div>`;
     if(st.solved&&isCurrent()) {
       const m=st.solved.model, at=x=>m.supports.some(s=>Math.abs(s.x-x)<=m.length*1e-10);
       if(m.loads.length&&!m.selfWeight&&m.loads.every(p=>p.kind==='point'&&Math.abs(p.force)>0&&at(p.position)))
@@ -604,7 +917,7 @@ const Lecture03BeamCases = Object.freeze({
   }
   function renderCut() {
     if(!st.solved) return;
-    const c=cutInfo(), r=c.r, L=c.L, side=st.cut.side;
+    const c=cutInfo(), r=c.r, L=c.L, side=st.cut.side, sides=side==='both'?['left','right']:[side];
     const range=$('#beamCut'), num=$('#beamCutX');
     range.max=L;range.step=Math.max(L/1000,0.001);range.value=c.x;if(document.activeElement!==num)num.value=Number(c.x.toPrecision(10));
     $$('[data-cut-side]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.cutSide===side)));
@@ -613,21 +926,26 @@ const Lecture03BeamCases = Object.freeze({
     const stations=r.stations;
     $('#beamCutSnaps').innerHTML=`<span class="bl-help">Go to:</span>`+stations.map(s=>`<button type="button" class="bl-btn bl-btn-sm" data-cut-to="${s.x}">${plain(s.x)}${s.kinds.length?` · ${s.kinds.join(', ')}`:''}</button>`).join('');
     const w=width($('#beamCutFbd'));
-    $('#beamCutFbd').innerHTML=D.segmentFbd(st.solved.model,r,{x:c.x,side,limit:c.limit,V:c.at.V,M:c.at.M,jump:!!c.jump},{width:w})+
-      `<figcaption>Free body of the ${side} part. Supports are replaced by their reactions (magnitudes, actual directions). V and M are drawn in their actual directions and labelled with their signed values: on this face V &gt; 0 acts ${side==='left'?'↓':'↑'} and M &gt; 0 (sagging) acts ${side==='left'?'↺':'↻'}.</figcaption>`;
+    // Both parts by default: the same V and M appear on the two cut faces with opposite arrows.
+    $('#beamCutFbd').innerHTML=sides.map(s=>D.segmentFbd(st.solved.model,r,{x:c.x,side:s,limit:c.limit,V:c.at.V,M:c.at.M,jump:!!c.jump},{width:w})).join('')+
+      (side==='both'?`<figcaption>Free bodies of the left part (top) and the right part (bottom), cut at the same x. The same V and M act on both cut faces in opposite directions: on the left part's face V &gt; 0 acts ↓ and M &gt; 0 (sagging) acts ↺; on the right part's face V &gt; 0 acts ↑ and M &gt; 0 acts ↻. Arrows show the actual directions, labels the signed values. Each support is replaced by its reaction, an external force (magnitude, actual direction).</figcaption>`
+      :`<figcaption>Free body of the ${side} part. Supports are replaced by their reactions (magnitudes, actual directions). V and M are drawn in their actual directions and labelled with their signed values: on this face V &gt; 0 acts ${side==='left'?'↓':'↑'} and M &gt; 0 (sagging) acts ${side==='left'?'↺':'↻'}.</figcaption>`);
     const lim=v=>v===null?'—':fmt(v);
     const pair=(k,unit)=>c.jump&&c.left&&c.right&&Math.abs(c.left[k]-c.right[k])>1e-9*Math.max(1,Math.abs(c.left[k]))?`${lim(c.left[k])} (x⁻) | ${lim(c.right[k])} (x⁺) ${unit}`:`${fmt(c.at[k])} ${unit}`;
     $('#beamCutRead').textContent=`Cut at x = ${fmt(c.x)} mm${c.jump?` — a jump occurs here; the free body uses the ${c.limit==='left'?'left limit x⁻':'right limit x⁺'}.`:'.'}`;
     $('#beamCutValues').innerHTML=`<h4>Values at the cut</h4><dl class="bl-props"><dt>Shear V</dt><dd>${pair('V','N')}</dd><dt>Moment M (sagging +)</dt><dd>${pair('M','N·mm')}</dd>
       <dt>Deflection v (+down)</dt><dd>${fmt(c.at.v)} mm</dd><dt>Rotation θ</dt><dd>${pair('theta','rad')}</dd><dt>Curvature κ = −M/EI</dt><dd>${fmt(c.at.curvature)} mm⁻¹</dd>
       <dt>σ top / bottom</dt><dd>${fmt(c.at.stressTop)} / ${fmt(c.at.stressBottom)} MPa</dd><dt>τ<sub>max</sub> (neutral axis)</dt><dd>${fmt(c.at.tauMax)} MPa</dd></dl>`;
-    const sums=partSums(r,c.x,side,c.limit), V=c.at.V, M=c.at.M;
-    const sF=side==='left'?sums.F+V:sums.F-V, sM=side==='left'?sums.M-M:sums.M+M, scaleF=sums.Fabs+Math.abs(V), scaleM=sums.Mabs+Math.abs(M);
+    const V=c.at.V, M=c.at.M;
     const ok=(v,s)=>Math.abs(v)<=1e-7*s+1e-12;   // relative to the size of the terms (round-off only)
-    $('#beamCutCheck').innerHTML=`<h4>Check the free body (app signs: ↓ +, ↻ +)</h4>
-      <div class="bl-eq bl-eq-left"><span class="bl-eqline"><span class="lbl">ΣF</span>${fmt(sums.F)} (applied + reactions) ${side==='left'?'+':'−'} V(${fmt(V)}) = <span class="bl-nowrap">${fmt(sF)} N ${ok(sF,scaleF)?'✓':'✗'}</span></span>
-      <span class="bl-eqline"><span class="lbl">ΣM about cut</span>${fmt(sums.M)} ${side==='left'?'−':'+'} M(${fmt(M)}) = <span class="bl-nowrap">${fmt(sM)} N·mm ${ok(sM,scaleM)?'✓':'✗'}</span></span></div>
-      <p class="bl-help">${side==='left'?'On the left part, positive V acts downward and positive M counter-clockwise on the cut face.':'On the right part, positive V acts upward and positive M clockwise on the cut face.'} ${sums.items.length?`Acting on this part besides V and M: ${esc(sums.items.map(i=>i.label).join(', '))}.`:'No load or reaction acts on this part besides V and M.'}</p>`;
+    const check=part=>{
+      const sums=partSums(r,c.x,part,c.limit);
+      const sF=part==='left'?sums.F+V:sums.F-V, sM=part==='left'?sums.M-M:sums.M+M, scaleF=sums.Fabs+Math.abs(V), scaleM=sums.Mabs+Math.abs(M);
+      return `${sides.length>1?`<h5 class="bl-mini">${part==='left'?'Left part':'Right part'}</h5>`:''}<div class="bl-eq bl-eq-left"><span class="bl-eqline"><span class="lbl">ΣF</span>${fmt(sums.F)} (applied + reactions) ${part==='left'?'+':'−'} V(${fmt(V)}) = <span class="bl-nowrap">${fmt(sF)} N ${ok(sF,scaleF)?'✓':'✗'}</span></span>
+      <span class="bl-eqline"><span class="lbl">ΣM about cut</span>${fmt(sums.M)} ${part==='left'?'−':'+'} M(${fmt(M)}) = <span class="bl-nowrap">${fmt(sM)} N·mm ${ok(sM,scaleM)?'✓':'✗'}</span></span></div>
+      <p class="bl-help">${part==='left'?'On the left part, positive V acts downward and positive M counter-clockwise on the cut face.':'On the right part, positive V acts upward and positive M clockwise on the cut face.'} ${sums.items.length?`Acting on this part besides V and M: ${esc(sums.items.map(i=>i.label).join(', '))}.`:'No load or reaction acts on this part besides V and M.'}</p>`;
+    };
+    $('#beamCutCheck').innerHTML=`<h4>Check the free bod${sides.length>1?'ies':'y'} (app signs: ↓ +, ↻ +)</h4>${sides.map(check).join('')}`;
     const cw=chartWidth($('#beamCutCharts'));
     const marks=k=>c.jump&&c.left&&c.right?[{label:`${k}(x⁻)`,value:c.left[k==='V'?'V':'M']},{label:`${k}(x⁺)`,value:c.right[k==='V'?'V':'M']}]:[{label:`${k}(x)`,value:c.at[k==='V'?'V':'M']}];
     $('#beamCutCharts').innerHTML=`<figure>${D.chart(r,'shear',{width:cw,cut:{x:c.x,values:marks('V')},extremes:false})}</figure><figure>${D.chart(r,'moment',{width:cw,cut:{x:c.x,values:marks('M')},extremes:false})}</figure>`;
@@ -635,7 +953,15 @@ const Lecture03BeamCases = Object.freeze({
     $('#beamCutSection').innerHTML=D.sectionStress(r.section,p,M,V,{width:width($('#beamCutSection'))});
     $('#beamCutSectionNote').textContent=`${p.label}: σ(z) = −Mz/I is linear through the depth (T = tension, C = compression). τ(z) = VQ/(Ib) uses the total material width b(z)${['tube','box'].includes(p.shape)?'; where the cut crosses two walls, b is their sum':''}${['ibeam','box'].includes(p.shape)?'; the jump at the flange–web junction comes from the change in b':''}. Local buckling and clamp or contact stress concentrations are outside this beam model.`;
   }
-  function setCut(x) {if(!st.solved)return;st.cut.x=Math.min(Math.max(0,x),st.solved.model.length);renderCut();renderPicture();}
+  /** Move the single cut station; every view that shows it (readout, plot markers, picture, Cut & section) follows. */
+  function setCut(x,note='') {if(!st.solved)return;st.cut.x=Math.min(Math.max(0,x),st.solved.model.length);st.cut.note=note;refreshCut();}
+  function refreshCut() {if(st.tab==='cut')renderCut();if(st.tab==='diagrams'){renderStation();renderCharts();}renderPicture();}
+  function applyStationInput() {
+    if(!st.solved) return;
+    const text=String($('#beamStationX').value).trim(), v=text===''?NaN:Number(text), L=st.solved.model.length;
+    if(!Number.isFinite(v)) {st.cut.note=`Type a number for x, from 0 to ${plain(L)} mm.`;renderStation();return;}
+    setCut(v,v<0||v>L?`x = ${plain(v)} mm is not on the beam (0 to ${plain(L)} mm), so the nearest end is shown.`:'');
+  }
 
   /* ------------------------------------------------------------ solution */
 
@@ -741,14 +1067,14 @@ const Lecture03BeamCases = Object.freeze({
 
   /* -------------------------------------------------- report and export */
 
-  function exportStatus(text){const s=$('#beamExportStatus');s.dataset.msg=text;s.textContent=text;}
+  function exportStatus(text){for(const id of ['#beamExportStatus','#beamDiagExportStatus']){const s=$(id);s.dataset.msg=text;s.textContent=text;}}
   function guard() {
     if(!st.solved||!isCurrent()) {exportStatus('Solve the current inputs before exporting; nothing was exported.');return false;}
     return true;
   }
-  function download(name,text,type) {
-    const blob=new Blob([text],{type}),a=document.createElement('a');
-    a.href=URL.createObjectURL(blob);a.download=name;document.body.append(a);a.click();a.remove();
+  function download(name,text,type) {downloadBlob(name,new Blob([text],{type}));}
+  function downloadBlob(name,blob) {
+    const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.append(a);a.click();a.remove();
     setTimeout(()=>URL.revokeObjectURL(a.href),1000);
   }
   function compareForExport(){const c={};for(const k of ['A','B'])if(st.compare[k])c[k]={label:k,model:st.compare[k].model};return Object.keys(c).length?c:null;}
@@ -781,12 +1107,14 @@ const Lecture03BeamCases = Object.freeze({
         <p>A = ${fmt(p.A)} mm², I = ${fmt(p.I)} mm⁴, c = ${fmt(p.c)} mm, S = ${fmt(p.S)} mm³, mass ${fmt(r.massG)} g</p>
         <figure>${D.beamSchematic(m,{width:W,selfWeight:r.selfWeight.enabled?{q:r.selfWeight.q}:null,label:'Input schematic: physical supports and applied loads'})}<figcaption>Input schematic (physical supports and loads).</figcaption></figure>
         <figure>${D.freeBody(m,r,{width:W,mode:'solved',label:'Free-body diagram with solved reactions'})}<figcaption>Free-body diagram: supports replaced by the solved reactions (drawn in their actual directions).</figcaption></figure></section>
-      <section><h2>Supports and loads</h2><table class="bl-table"><tr><th>Support</th><th>Type</th><th class="num">x (mm)</th><th class="num">Force (N, ↓ +)</th><th class="num">Moment (N·mm, ↻ +)</th><th class="num">v (mm)</th><th class="num">θ (rad)</th></tr>${reactions}</table>
+      <section><h2>Supports and loads</h2><table class="bl-table"><tr><th>Support</th><th>Type</th><th class="num">x (mm)</th><th class="num">Force R (N, ↓ +)</th><th class="num">Couple C (N·mm, ↻ +)</th><th class="num">v (mm)</th><th class="num">θ (rad)</th></tr>${reactions}</table>
         <p>Hinges: ${m.hinges.length?m.hinges.map(h=>`${fmt(h)} mm`).join(', '):'none'}. Loads: ${m.loads.length?m.loads.map(v=>esc(Study.describeLoad(v))).join('; '):'none'}.</p>
         <p>ΣF residual ${r.equilibrium.force.toExponential(2)} N; ΣM residual ${r.equilibrium.moment.toExponential(2)} N·mm. Stability: ${r.stability.degree===0?'statically determinate':`statically indeterminate to degree ${r.stability.degree}`}.</p></section>
       <section><h2>Results</h2><p>Max |v| = ${fmt(r.maxima.deflection)} mm at x = ${fmt(r.extremes.deflection.x)} mm · max |M| = ${fmt(r.maxima.moment)} N·mm at x = ${fmt(r.extremes.moment.x)} mm · max |σ| = ${fmt(r.maxima.bendingStress)} MPa · max |τ| = ${fmt(r.maxima.shearStress)} MPa · f₁ = ${r.modes[0]?fmt(r.modes[0].frequencyHz):'—'} Hz</p>
         <div class="bl-print-grid">${['shear','moment','deflection','stressTop'].map(k=>`<figure>${D.chart(r,k,{width:340,height:180,supports:r.input.supports.map(s=>s.x)})}</figure>`).join('')}</div>
         ${D.stressMap(r,{width:W})}</section>
+      <section><h2>Values at the listed stations</h2><table class="bl-table"><tr><th class="num">x (mm)</th><th>Side</th><th class="num">V (N)</th><th class="num">M (N·mm)</th><th class="num">v (mm)</th><th class="num">θ (rad)</th><th class="num">σ top (MPa)</th></tr>${Study.stationRows(r,stationList()).map(q=>`<tr><td class="num">${fmt(q.x,6)}</td><td>${q.side==='left'?'x⁻':q.side==='right'?'x⁺':''}</td><td class="num">${fmt(q.V,6)}</td><td class="num">${fmt(q.M,6)}</td><td class="num">${fmt(q.v,6)}</td><td class="num">${fmt(q.theta,6)}</td><td class="num">${fmt(q.stressTop,6)}</td></tr>`).join('')}</table>
+        <p>V and M are exact (equilibrium at each x); v and θ come from the Euler–Bernoulli finite element. Signs: forces, q and v ↓ +; couples, reaction couples C and θ ↻ +; V &gt; 0 acts ↓ on the left part's cut face and ↑ on the right part's; M &gt; 0 is sagging. Reactions are external: V(0⁺) = −R and M(0⁺) = +C at a left end, V(L⁻) = +R and M(L⁻) = −C at a right end.</p></section>
       <section><h2>Assumptions and limitations</h2><ul>${r.assumptions.map(a=>`<li>${esc(a)}</li>`).join('')}${r.warnings.map(a=>`<li>${esc(a)}</li>`).join('')}<li>Nominal beam stresses only: local buckling, clamp/contact concentrations, holes and printing defects are not modelled. Not an airworthiness or failure certification.</li></ul></section>
       ${$('#beamExplain').value.trim()?`<section><h2>Notes</h2><div class="bl-notes-print">${esc(Study.cleanText($('#beamExplain').value,4000))}</div></section>`:''}</div>`;
     // The class only changes @media print rules; it is removed after the dialog closes.
@@ -804,10 +1132,10 @@ const Lecture03BeamCases = Object.freeze({
     // Panels computed for an earlier solve (equal-mass table, share link, export message) no longer apply.
     $('#beamEqualMass').innerHTML='';
     const box=$('#beamShareBox');box.value='';box.hidden=true;
-    $('#beamExportStatus').dataset.msg='';
+    $('#beamExportStatus').dataset.msg='';$('#beamDiagExportStatus').dataset.msg='';
     renderStatus();renderPicture();
     if(!st.solved) return;
-    renderKpis();renderReactions();renderCharts();renderTheory();renderNotice();renderModeButtons();renderMode();
+    renderKpis();renderReactions();renderCharts();renderStressMap();renderStation();renderStationTable();renderTheory();renderNotice();renderModeButtons();renderMode();
     if(st.tab==='cut') renderCut();
     if(st.tab==='solution') renderSolution(); else st.cache.solution=false;
     renderCompare();
@@ -877,9 +1205,11 @@ const Lecture03BeamCases = Object.freeze({
     $$('.bl-tabs [role="tab"]').forEach(b=>{const on=b.dataset.tab===name;b.setAttribute('aria-selected',String(on));b.tabIndex=on?0:-1;if(on&&focus)b.focus();});
     $$('.bl-results [role="tabpanel"]').forEach(p=>{p.hidden=p.id!==`beamTab-${name}`;});
     if(name==='cut') renderCut();
+    if(name==='diagrams'&&st.solved) {renderStation();renderCharts();}
     if(name==='solution') renderSolution();
     if(name==='modes') renderMode();
-    if(name==='learn'&&!$('#beamSigns').innerHTML) $('#beamSigns').innerHTML=`<h3>Sign conventions</h3>${D.signConventions({width:width($('#beamSigns'))})}<p class="bl-help">Hand calculations often take reaction forces up and couples counter-clockwise as positive: reverse the signs of the app's reactions to compare. Displacement v is positive downward in both.</p>`;
+    if(name==='learn'&&!$('#beamSigns').innerHTML) $('#beamSigns').innerHTML=`<h3>Sign conventions</h3>${D.signConventions({width:width($('#beamSigns'))})}<p class="bl-help">Hand calculations often take reaction forces up and couples counter-clockwise as positive: reverse the signs of the app's reactions to compare. Displacement v is positive downward in both.</p>
+      <p class="bl-help">“Left face” and “right face” above are the faces of a small element: its left face is the cut face of the part to the right of a cut. Internal V and M are not reactions. Across a support V changes by −R and M by the reaction couple C (app signs), so at a left-end support V(0⁺) = −R and M(0⁺) = +C.</p>`;
     if(name==='compare') renderCompare();
     renderPicture();
   }
@@ -924,9 +1254,6 @@ const Lecture03BeamCases = Object.freeze({
   $('#beamLoadCancel').onclick=()=>{st.editLoad=null;renderLoadList();syncLoadForm();};
   $('#beamSelfWeight').onchange=()=>{renderSectionView();draftChanged();};
   $('#beamClear').onclick=()=>{replaceLoads([]);solve();};
-  $('#beamCentre').onclick=()=>{let L=st.model.length;try{L=readNumber(geometryInput('length'),'Length L');}catch(e){}replaceLoads([{kind:'point',position:L/2,force:2}]);solve();};
-  host.querySelectorAll('[data-shape]').forEach(b=>b.onclick=()=>{let L=st.model.length;try{L=readNumber(geometryInput('length'),'Length L');}catch(e){}
-    const k=b.dataset.shape,q=2/L;replaceLoads([{kind:'distributed',start:0,end:L,qStart:k==='tip'?0:k==='root'?2*q:q,qEnd:k==='root'?0:k==='tip'?2*q:q}]);solve();});
   host.querySelectorAll('[data-beam-preset]').forEach(b=>b.onclick=()=>{
     const name=b.dataset.beamPreset;st.model=presetModel(name);st.editLoad=null;renderInputs(st.model);fillFormFromSingleLoad();
     solve(name.startsWith('hw2b-')?'HW 2B case loaded: all previous loads replaced; 450 × 16 × 8 mm, E = 2200 MPa. Read support reactions and motion in the table.'
@@ -964,7 +1291,7 @@ const Lecture03BeamCases = Object.freeze({
       if(pic.setPointerCapture)try{pic.setPointerCapture(e.pointerId);}catch(x){}
       e.preventDefault();return;
     }
-    if(st.tab==='cut'&&st.solved&&isCurrent()) {st.drag={type:'cut'};const x=svgX(e);if(x!==null)setCut(x);if(pic.setPointerCapture)try{pic.setPointerCapture(e.pointerId);}catch(z){}}
+    if(cutTab()&&st.solved&&isCurrent()) {st.drag={type:'cut'};const x=svgX(e);if(x!==null)setCut(x);if(pic.setPointerCapture)try{pic.setPointerCapture(e.pointerId);}catch(z){}}
   });
   pic.addEventListener('pointermove',e=>{
     if(st.placing) {const x=svgX(e);if(x!==null)frame(()=>renderPicture({x:snap(x,st.model.length),kind:st.placing}));return;}
@@ -982,8 +1309,13 @@ const Lecture03BeamCases = Object.freeze({
   $('#beamCut').oninput=e=>setCut(+e.target.value);
   $('#beamCutX').onchange=e=>{const v=Number(e.target.value);if(Number.isFinite(v))setCut(v);};
   host.querySelectorAll('[data-cut-side]').forEach(b=>b.onclick=()=>{st.cut.side=b.dataset.cutSide;renderCut();});
-  host.querySelectorAll('[data-cut-limit]').forEach(b=>b.onclick=()=>{st.cut.limit=b.dataset.cutLimit;renderCut();});
+  host.querySelectorAll('[data-cut-limit]').forEach(b=>b.onclick=()=>{st.cut.limit=b.dataset.cutLimit;refreshCut();});
   $('#beamCutSnaps').onclick=e=>{const b=e.target.closest('[data-cut-to]');if(b)setCut(+b.dataset.cutTo);};
+  // Station readout (Diagrams): typed x (Enter or change), quarter points and key stations.
+  $('#beamStationForm').onsubmit=e=>{e.preventDefault();applyStationInput();};
+  $('#beamStationX').onchange=applyStationInput;
+  $('#beamStationQuick').onclick=e=>{const b=e.target.closest('[data-station-frac]');if(b&&st.solved)setCut(+b.dataset.stationFrac*st.solved.model.length);};
+  $('#beamStationSnaps').onclick=e=>{const b=e.target.closest('[data-cut-to]');if(b)setCut(+b.dataset.cutTo);};
   // Modes, verification, compare, export.
   $('#beamAnimate').onclick=()=>{st.animated=!st.animated;$('#beamAnimate').textContent=st.animated?'Pause mode':'Animate mode';renderMode();};
   setInterval(()=>{if(st.animated&&!host.hidden&&st.tab==='modes'&&!reducedMotion()){st.phase+=.18;renderMode();}},80);
@@ -992,8 +1324,16 @@ const Lecture03BeamCases = Object.freeze({
   $('#beamClearAB').onclick=()=>{st.compare={A:null,B:null};renderCompare();};
   $('#beamEqualMassBtn').onclick=equalMass;
   $('#beamDownload').onclick=()=>{if(!guard())return;download('MIE446-beam-study.json',exportText(),'application/json');exportStatus('Study saved as MIE446-beam-study.json (versioned JSON).');};
-  $('#beamCsv').onclick=()=>{if(!guard())return;download('MIE446-beam-results.csv',Study.resultsCsv(st.solved.result),'text/csv');exportStatus('Sampled results saved as CSV (duplicate x rows are the left/right limits at jumps).');};
-  $('#beamCsvReactions').onclick=()=>{if(!guard())return;download('MIE446-beam-reactions.csv',Study.reactionsCsv(st.solved.result),'text/csv');exportStatus('Reactions saved as CSV.');};
+  $('#beamCsv').onclick=()=>exportAction('samples');
+  $('#beamCsvReactions').onclick=()=>exportAction('reactions');
+  // Downloads offered on the Diagrams tab (and the station table) use the same guarded actions.
+  host.addEventListener('click',e=>{const b=e.target.closest('[data-export]');if(b&&!b.disabled)exportAction(b.dataset.export);
+    const t=e.target.closest('[data-open-tab]');if(t)openTab(t.dataset.openTab,true);});
+  $('#beamCharts').addEventListener('click',e=>{const b=e.target.closest('[data-png]');if(b&&!b.disabled)chartPng(b.dataset.png);});
+  $('#beamStationListForm').onsubmit=e=>{e.preventDefault();applyStationList();};
+  $('#beamStationAdd').onclick=()=>{if(!st.solved)return;st.stationList=[...stationList(),st.cut.x];$('#beamStationListError').hidden=true;renderStationTable();};
+  $('#beamStationReset').onclick=()=>{st.stationList=null;$('#beamStationListError').hidden=true;renderStationTable();};
+  $('#beamGuideOpen').onclick=()=>{openTab('learn');const h=$('#beamGuideTitle');if(h.scrollIntoView)h.scrollIntoView({block:'start'});h.focus();};
   $('#beamImport').onclick=()=>$('#beamImportFile').click();
   $('#beamImportFile').onchange=async e=>{
     const file=e.target.files&&e.target.files[0];e.target.value='';
@@ -1011,7 +1351,7 @@ const Lecture03BeamCases = Object.freeze({
   };
   $('#beamPrintBtn').onclick=printReport;
   let resizeTimer=0;
-  window.addEventListener('resize',()=>{clearTimeout(resizeTimer);resizeTimer=setTimeout(()=>{if(host.hidden)return;renderPicture();if(st.solved){renderCharts();renderMode();if(st.tab==='cut')renderCut();if(st.tab==='compare')renderCompare();if(st.tab==='solution'){st.cache.solution=false;renderSolution();}}},150);});
+  window.addEventListener('resize',()=>{clearTimeout(resizeTimer);resizeTimer=setTimeout(()=>{if(host.hidden)return;renderPicture();if(st.solved){renderCharts();renderStressMap();renderStation();renderMode();if(st.tab==='cut')renderCut();if(st.tab==='compare')renderCompare();if(st.tab==='solution'){st.cache.solution=false;renderSolution();}}},150);});
 
   /* ---------------------------------------------------------- start-up */
 
@@ -1021,5 +1361,7 @@ const Lecture03BeamCases = Object.freeze({
   if(lectureCase) message((lectureCase.startsWith('hw2b-')?'HW 2B':'Lecture 03')+' example loaded and solved. Dimensions: '+st.model.length+' × '+st.model.section.width+' × '+st.model.section.height+' mm; E = '+st.model.E+' MPa. Previous loads replaced.');
   else if(startMessage) message(startMessage);
   host.querySelectorAll('[data-stage]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.stage==='beam')));
-  window.BeamLab={version:B.VERSION,state:()=>st,solve,importText,exportText:()=>exportText(),openTab,setCut,snapshot,revert};
+  // readStation(): the exact values at the current cut station (both limits at a jump), as the readout shows them.
+  const readStation=()=>{if(!st.solved)return null;const c=cutInfo();return {x:c.x,limit:c.limit,jump:!!c.jump,left:c.left,right:c.right,at:c.at};};
+  window.BeamLab={version:B.VERSION,state:()=>st,solve,importText,exportText:()=>exportText(),openTab,setCut,readStation,plotImage,snapshot,revert};
 })();

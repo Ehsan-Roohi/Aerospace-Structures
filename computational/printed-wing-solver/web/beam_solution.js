@@ -21,6 +21,8 @@ const BeamSolution = (() => {
   const lbl = t => `<span class="lbl">${t}</span>`;
   const name = i => String.fromCharCode(65+i);
   const tiny = (v, scale) => Math.abs(v) <= 1e-9*Math.max(1, scale);
+  /** Direction mark for a printed value; none when the value prints as 0. */
+  const dir = (v, pos, neg) => Math.abs(v) < 1e-13 ? '' : v >= 0 ? pos : neg;
   /** Relative agreement for prose: round-off-level differences are not printed as "0". */
   const agreement = err => err<1e-12 ? 'better than 10⁻¹² (relative)' : `${f(err,2)} (relative)`;
 
@@ -72,7 +74,7 @@ const BeamSolution = (() => {
     const L=model.length, eps=L*1e-10, sup=model.supports, xA=sup.length?sup[0].x:0;
     const loads=result.loadsApplied, acts=actions(loads,xA);
     const unknowns=[];
-    sup.forEach((s,i)=>{unknowns.push({i,x:s.x,type:'R',html:S('R',name(i))});if(s.kind==='fixed')unknowns.push({i,x:s.x,type:'M',html:S('M',name(i))});});
+    sup.forEach((s,i)=>{unknowns.push({i,x:s.x,type:'R',html:S('R',name(i))});if(s.kind==='fixed')unknowns.push({i,x:s.x,type:'M',html:S('C',name(i))});});
     const Wtot=acts.reduce((a,b)=>a+b.W,0), Mtot=acts.reduce((a,b)=>a+b.M,0);
     // ΣF↑: Σ R − Σ W = 0.   ΣM_A (↺+): Σ M + Σ R (x − xA) − Σ M_cw(loads) = 0.
     const rows=[{key:'F',coeffs:unknowns.map(u=>u.type==='R'?1:0),constant:-Wtot},
@@ -165,11 +167,11 @@ const BeamSolution = (() => {
       <p>${esc(props.label)} · A = ${f(props.A)} mm² · I = ${f(props.I)} mm⁴ · c = ${f(props.c)} mm · E = ${f(model.E)} MPa · EI = ${f(EI)} N·mm²${result.selfWeight.enabled?` · self-weight ρgA = ${f(result.selfWeight.q)} N/mm (${f(result.selfWeight.total)} N in total)`:''}.</p></section>`;
 
     // 2 — free body
-    const unknownList=model.supports.map((s,i)=>`<tr><td><b>${name(i)}</b> · x = ${f(s.x)} mm</td><td>${s.kind}</td><td>${s.kind==='fixed'?`${S('R',name(i))}, ${S('H',name(i))}, ${S('M',name(i))}`:s.kind==='pin'?`${S('R',name(i))}, ${S('H',name(i))}`:S('R',name(i))}</td></tr>`).join('');
+    const unknownList=model.supports.map((s,i)=>`<tr><td><b>${name(i)}</b> · x = ${f(s.x)} mm</td><td>${s.kind}</td><td>${s.kind==='fixed'?`${S('R',name(i))}, ${S('H',name(i))}, ${S('C',name(i))}`:s.kind==='pin'?`${S('R',name(i))}, ${S('H',name(i))}`:S('R',name(i))}</td></tr>`).join('');
     html+=`<section><h3>Free-body diagram: replace every support by its reactions</h3>
       ${D.freeBody(model,result,{width:W,mode:'unknown',label:'Step 2: free-body diagram with unknown reactions in assumed directions; no support symbols'})}
       <div class="bl-tablewrap"><table class="bl-table"><tr><th>Support</th><th>Type</th><th>Planar reactions</th></tr>${unknownList}</table></div>
-      <p class="bl-help">A pin supplies R and H, a roller only R, a clamp R, H and a couple M. This model solves <b>transverse bending only</b> (v and θ). With no axial load and no temperature change, ΣF<sub>x</sub> = 0 gives H = 0 when one support restrains axial motion${st.axialRestraints>1?`; here ${st.axialRestraints} supports restrain it, so the axial problem is itself redundant (degree ${st.axialDegree}) but still gives H = 0 for these transverse loads`:''}. Axial force and thermal stress are not solved.</p></section>`;
+      <p class="bl-help">A pin supplies R and H, a roller only R, a clamp R, H and a couple C (a reaction couple, not the internal moment M). This model solves <b>transverse bending only</b> (v and θ). With no axial load and no temperature change, ΣF<sub>x</sub> = 0 gives H = 0 when one support restrains axial motion${st.axialRestraints>1?`; here ${st.axialRestraints} supports restrain it, so the axial problem is itself redundant (degree ${st.axialDegree}) but still gives H = 0 for these transverse loads`:''}. Axial force and thermal stress are not solved.</p></section>`;
 
     // 3 — count
     const verdict=degree===0?`<b>Statically determinate</b>: ${n} unknowns and ${2+h} independent equations, so equilibrium alone gives every reaction.`
@@ -219,7 +221,7 @@ const BeamSolution = (() => {
     }).join('');
     html+=`<section><h3>Reactions in their actual directions</h3>
       ${D.freeBody(model,result,{width:W,mode:'solved',label:'Step 6: free-body diagram with the solved reactions drawn in their actual directions'})}
-      <div class="bl-tablewrap"><table class="bl-table"><tr><th>Support</th><th class="num">R (N, ↑ +)</th><th class="num">M (N·mm, ↺ +)</th><th class="num">App R (↓ +)</th><th class="num">App M (↻ +)</th><th class="num">θ (rad)</th></tr>${rx}</table></div>
+      <div class="bl-tablewrap"><table class="bl-table"><tr><th>Support</th><th class="num">R (N, ↑ +)</th><th class="num">C (N·mm, ↺ +)</th><th class="num">App R (↓ +)</th><th class="num">App C (↻ +)</th><th class="num">θ (rad)</th></tr>${rx}</table></div>
       <p>Check: ΣF residual = ${f(result.equilibrium.force,3)} N; ΣM residual = ${f(result.equilibrium.moment,3)} N·mm (round-off only).</p></section>`;
 
     // 7 — internal resultants, curvature, stress, deflection
@@ -246,16 +248,20 @@ const BeamSolution = (() => {
     // Clockwise moments of the loads about A (the ones the reactions must balance).
     const cw=hs.acts.filter(a=>Math.abs(a.M)>1e-15).map(a=>({sign:Math.sign(a.M),body:momentBody(a,hs.xA)}));
     const momentSum=hs.acts.length<=4?signedSum(cw):f(hs.Mtot);
-    if(n===2&&hs.unknowns.every(u=>u.type==='R')) {
+    if(!hs.acts.length) {
+      // No applied load: every equation has nothing on its load side, so every reaction is zero.
+      html+=`<p>No load acts on the beam, so each equilibrium equation reads (reactions) = 0 and every reaction is zero.</p>`
+        +eq([hs.unknowns.map(u=>`${u.html} = <b>0</b> ${u.type==='R'?'N':'N·mm'}`).join(', &nbsp; ')]);
+    } else if(n===2&&hs.unknowns.every(u=>u.type==='R')) {
       const [a,b]=hs.unknowns, arm=b.x-a.x, Rb=hs.solution[1], Ra=hs.solution[0];
       html+=`<p>Two unknown forces: take moments about A to eliminate R<sub>A</sub>, then sum forces.</p>`+eq([
-        `${S('R','B')} = ${frac(momentSum,`${f(arm)}`)} = <b>${f(Rb,5)} N</b> ${Rb>=0?'(↑)':'(↓)'}`,
-        `${S('R','A')} = ${f(hs.Wtot)} − (${f(Rb,5)}) = <b>${f(Ra,5)} N</b> ${Ra>=0?'(↑)':'(↓)'}`]);
+        `${S('R','B')} = ${frac(momentSum,`${f(arm)}`)} = <b>${f(Rb,5)} N</b> ${dir(Rb,'(↑)','(↓)')}`,
+        `${S('R','A')} = ${f(hs.Wtot)} − (${f(Rb,5)}) = <b>${f(Ra,5)} N</b> ${dir(Ra,'(↑)','(↓)')}`]);
     } else if(n===2&&hs.unknowns[1].type==='M') {
       const R=hs.solution[0], M=hs.solution[1];
       html+=`<p>A single clamp: the force equation gives R directly and the moment equation gives the clamp couple.</p>`+eq([
-        `${S('R','A')} = ΣW = <b>${f(R,5)} N</b> ${R>=0?'(↑)':'(↓)'}`,
-        `${S('M','A')} = ${momentSum} = <b>${f(M,5)} N·mm</b> ${M>=0?'(↺)':'(↻)'}`]);
+        `${S('R','A')} = ΣW = <b>${f(R,5)} N</b> ${dir(R,'(↑)','(↓)')}`,
+        `${S('C','A')} = ${momentSum} = <b>${f(M,5)} N·mm</b> ${dir(M,'(↺)','(↻)')}`]);
     } else {
       html+=`<p>Solving these ${n} equations simultaneously (each hinge adds one equation, M = 0, for one extra unknown):</p>`+eq([hs.unknowns.map((u,k)=>`${u.html} = <b>${f(hs.solution[k],5)}</b> ${u.type==='R'?'N':'N·mm'}`).join(', &nbsp; ')]);
     }
@@ -271,7 +277,7 @@ const BeamSolution = (() => {
     let html=`<section><h3>Compatibility: the extra equations come from deformation</h3>
       <p>Every support also prescribes a displacement: <span class="num">${conds}</span>. Equilibrium cannot see these conditions; bending deformation (EI v″ = −M) links the reactions to them.</p>`;
     if(!fm.redundants.length) return html+`<p>${esc(fm.unavailable||'')}</p></section>`;
-    const labelOf=c=>`${c.type==='v'?'R':'M'}<sub>${supName(c.x)}</sub>`;
+    const labelOf=c=>`${c.type==='v'?'R':'C'}<sub>${supName(c.x)}</sub>`;
     const qty=c=>c.type==='v'?`v<sub>${supName(c.x)}</sub>`:`θ<sub>${supName(c.x)}</sub>`;
     const unitD=c=>c.type==='v'?'mm':'rad', unitF=(ci,cj)=>`${ci.type==='v'?'mm':'rad'}/${cj.type==='v'?'N':'N·mm'}`;
     const primary={...model,supports:fm.primarySupports};
@@ -314,7 +320,7 @@ const BeamSolution = (() => {
     const Mx=ex.moment, kappa=-Mx.value/EI, sigma=Math.abs(Mx.value)*props.c/props.I, Vx=ex.shear;
     const topState=Mx.value>0?'Compression on top, tension at the bottom (sagging)':Mx.value<0?'Tension on top, compression at the bottom (hogging)':'No bending';
     return `<section><h3>From reactions to V, M, curvature, stress and deflection</h3>
-      <p>Cut the beam at x and keep the left part: V(x) is the downward force on its cut face that balances the left-part forces, and M(x) the counter-clockwise couple that balances their moments. Hence dM/dx = V and dV/dx = −q. A point force P ↓ makes V drop by P; a clockwise couple C makes M jump up by C; a hinge forces M = 0; at a pin, roller or free end M = 0 unless a couple acts there, and θ is not prescribed.</p>
+      <p>Cut the beam at x and keep the left part: V(x) is the downward force on its cut face that balances the left-part forces, and M(x) the counter-clockwise couple that balances their moments. Hence dM/dx = V and dV/dx = −q. A point force P ↓ makes V drop by P, and a support reaction R (app sign, ↓ +) is such a force: V(x⁺) − V(x⁻) = −R, so V(0⁺) = −R at a left-end support; a clockwise couple C makes M jump up by C; a hinge forces M = 0; at a pin, roller or free end M = 0 unless a couple acts there, and θ is not prescribed.</p>
       <div class="bl-tablewrap"><table class="bl-table"><tr><th class="num">x (mm)</th><th>Station</th><th class="num">V (N) left | right</th><th class="num">M (N·mm) left | right</th><th class="num">v (mm)</th><th class="num">θ (rad) left | right</th></tr>${rows}</table></div>
       <div class="bl-cols"><div>${eq([`|M|<sub>max</sub> = ${f(Math.abs(Mx.value))} N·mm at x = ${f(Mx.x)} mm`,
         `κ = v″ = −${frac('M','EI')} = −${frac(f(Mx.value),f(EI))} = ${f(kappa)} mm⁻¹`,

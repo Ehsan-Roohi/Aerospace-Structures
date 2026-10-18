@@ -54,7 +54,9 @@ for(const [name,support,qStart,qEnd,arrangement] of cases){
    assert.deepEqual([...$('#beamPicture').querySelectorAll('[data-support-kind]')].map(x=>x.dataset.supportKind),['pin','roller']);
  }
  // A preset replaces all loads and updates the visible form, even after an old point study.
- $('#beamCentre').click();
+ $('#beamLoadKind').value='point';$('#beamLoadA').value=225;$('#beamP').value=2;
+ $('#beamLoadForm').dispatchEvent(new win.Event('submit',{bubbles:true,cancelable:true}));
+ assert.equal($('#beamLoads ol').children.length,2);
  $('[data-beam-preset="'+name+'"]').click();
  assert.equal($('#beamLoads ol').children.length,1);
  assert.equal($('#beamleftSupport').value,support==='simply-supported'?'roller':'fixed');

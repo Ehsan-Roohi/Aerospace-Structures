@@ -248,8 +248,39 @@ const BeamStudy = (() => {
     return rows.map(r=>r.join(',')).join('\r\n')+'\r\n';
   }
 
+  /**
+   * Exact values at chosen stations (not the plotted samples): V and M by equilibrium, v and θ from the
+   * Euler–Bernoulli finite element (value at a node, or cubic Hermite interpolation between nodes). A jump in V, M
+   * or θ gives two rows, side 'left' (x⁻) and 'right' (x⁺); x = 0 is the right limit 0⁺ and x = L the left limit
+   * L⁻. Values below 1e-9 of the field's largest magnitude are round-off and given as 0.
+   */
+  function stationRows(result, xs) {
+    const L=result.input.length, eps=L*1e-10, m=result.maxima;
+    const scale={V:m.shear,M:m.moment,v:m.deflection,theta:m.rotation,curvature:m.moment/result.EI,stressTop:m.bendingStress,stressBottom:m.bendingStress,tauMax:m.shearStress};
+    const clean=f=>{const o={...f};for(const k of Object.keys(scale)) if(Math.abs(o[k])<=1e-9*Math.max(scale[k],1e-300)) o[k]=0;return o;};
+    const list=[...new Set(xs.filter(Number.isFinite).map(x=>Math.min(L,Math.max(0,x))))].sort((a,b)=>a-b);
+    const rows=[];
+    for(const x of list) {
+      const left=x>eps?clean(B.fieldAt(result,x,'left')):null, right=x<L-eps?clean(B.fieldAt(result,x,'right')):null;
+      const source=result.nodes.some(n=>Math.abs(n-x)<=eps)?'FE node':'FE interpolation';
+      const differs=k=>Math.abs(left[k]-right[k])>Math.max(1e-13,1e-9*Math.max(scale[k]||0,Math.abs(left[k]),Math.abs(right[k])));
+      if(left&&right&&['V','M','theta'].some(differs)) rows.push({...left,x,side:'left',source},{...right,x,side:'right',source});
+      else if(!left) rows.push({...right,x,side:'right',source});
+      else if(!right) rows.push({...left,x,side:'left',source});
+      else rows.push({...right,x,side:'',source});
+    }
+    return rows;
+  }
+  /** Station table as CSV (plain header row with units, CRLF; opens in Excel and other spreadsheets). */
+  function stationsCsv(result, xs) {
+    const rows=[['x_mm','side','V_N','M_Nmm','v_mm','theta_rad','curvature_per_mm','sigma_top_MPa','sigma_bottom_MPa','tau_max_MPa','v_theta_source']];
+    for(const r of stationRows(result,xs)) rows.push([csvNumber(r.x),r.side,csvNumber(r.V),csvNumber(r.M),csvNumber(r.v),csvNumber(r.theta),
+      csvNumber(r.curvature),csvNumber(r.stressTop),csvNumber(r.stressBottom),csvNumber(r.tauMax),r.source]);
+    return rows.map(r=>r.join(',')).join('\r\n')+'\r\n';
+  }
+
   return {FORMAT,VERSION,LIMITS,escapeHtml,cleanText,modelFromInput,sanitizeModel,exportStudy,parseStudy,
-    encodeShare,decodeShare,shareUrl,diffModels,describeLoad,resultsCsv,reactionsCsv};
+    encodeShare,decodeShare,shareUrl,diffModels,describeLoad,resultsCsv,reactionsCsv,stationRows,stationsCsv};
 })();
 if(typeof module!=='undefined'&&module.exports)module.exports=BeamStudy;
 if(typeof window!=='undefined')window.BeamStudy=BeamStudy;

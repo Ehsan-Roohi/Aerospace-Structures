@@ -126,7 +126,7 @@
 .bl-list li[data-editing="true"] { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
 .bl-list .bl-li-text { min-width: 0; overflow-wrap: anywhere; font-family: var(--font-data); font-size: 12.5px; }
 .bl-list .bl-li-actions { display: flex; gap: 4px; }
-.bl-tag { display: inline-flex; align-items: center; justify-content: center; min-width: 26px; height: 22px; padding: 0 6px; border-radius: 6px; font: 700 11px var(--font-label); letter-spacing: 0.06em; text-transform: uppercase; background: var(--accent-soft); color: var(--bl-accent-text); }
+.bl-tag { display: inline-flex; align-items: center; justify-content: center; min-width: 26px; height: 22px; padding: 0 6px; border-radius: 6px; font: 700 11px var(--font-label); letter-spacing: 0.06em; text-transform: none; background: var(--accent-soft); color: var(--bl-accent-text); }   /* P, C, q, S1, H1 as written */
 .bl-tag.load { background: color-mix(in srgb, var(--bl-load) 14%, transparent); color: var(--bl-load); }
 .bl-tag.sup { background: var(--bl-support-fill); color: var(--bl-support); }
 .bl-inline { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr) auto; gap: 6px; align-items: center; }
@@ -183,7 +183,10 @@
 .bl-tablewrap { overflow-x: auto; max-width: 100%; }
 .bl-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
 .bl-table th, .bl-table td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
-.bl-table th { font: 700 11.5px/1.25 var(--font-label); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+/* Scientific labels keep their authored case: v (deflection) and V (shear), q, θ, mm and MPa must stay distinguishable.
+   The page's generic `th` rule (wing_lab_template.html) uppercases every table header, so the Beam Lab table rule resets
+   text-transform explicitly; it is not media-specific, so the printed report keeps the case too. */
+.bl-table th { font: 700 12px/1.25 var(--font-label); letter-spacing: 0.02em; text-transform: none; color: var(--muted); }
 .bl-table td.num, .bl-table th.num { text-align: right; white-space: nowrap; }
 .bl-table tr.hl td { background: var(--accent-soft); }
 .bl-table tr.hl .bl-help { color: var(--fg); }   /* muted text on the tinted row is below 4.5:1 in the dark theme */
@@ -333,7 +336,7 @@
 #foundations .bl-picture, #foundations .bl-box, #foundations .bl-eq { --bl-halo: var(--bl-inset); }
 
 /* ---------- sidebar details ---------- */
-.bl-mini { font: 700 12.5px/1.3 var(--font-label); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); margin: 0 0 6px; }
+.bl-mini { font: 700 12.5px/1.3 var(--font-label); letter-spacing: 0.03em; text-transform: none; color: var(--muted); margin: 0 0 6px; }   /* may carry units (mm, MPa) */
 .bl-rowedit { grid-template-columns: auto minmax(0, 0.9fr) minmax(0, 1.1fr) auto !important; }
 .bl-rowedit-h { grid-template-columns: auto minmax(0, 1fr) auto !important; }
 .bl-rowedit .bl-select { min-height: 34px; }
@@ -352,6 +355,48 @@
 .bl-reveal > summary::-webkit-details-marker { display: none; }
 .bl-solution > * + * { margin-top: 12px; }
 @media (max-width: 760px) { .bl-cutbar { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } .bl-cutbar .bl-cutrange { grid-column: 1 / -1; } }
+
+/* ---------- exact station readout and sign key (Diagrams tab) ---------- */
+.bl-station { display: grid; gap: 10px; }
+.bl-station > * { margin: 0; }
+.bl-station-bar { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: end; }
+.bl-station-x { width: 180px; }
+.bl-station-read { font-size: 14px; color: var(--fg); }
+.bl-station-cards { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.bl-stat { display: grid; gap: 4px; align-content: start; min-width: 0; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--bl-card); }
+.bl-stat-k { font: 600 12.5px/1.3 var(--font-label); letter-spacing: 0.04em; color: var(--muted); }
+.bl-stat-v { display: grid; gap: 2px; font: 700 19px/1.25 var(--font-data); font-variant-numeric: tabular-nums; color: var(--fg); overflow-wrap: anywhere; }
+.bl-stat-lim { font-size: 15px; font-weight: 500; color: var(--muted); }
+.bl-stat-lim.is-sel { font-size: 19px; font-weight: 700; color: var(--fg); }
+.bl-stat-m { font-size: 13px; color: var(--fg); }
+.bl-stat-s { font-size: 12px; color: var(--muted); }
+.bl-btn[aria-current="true"] { border-color: var(--accent); background: var(--accent-soft); color: var(--bl-accent-text); }
+.bl-station-explain { align-items: start; }
+.bl-signkey h4 { margin: 0 0 6px; }
+.bl-keylist { margin: 0; padding-left: 18px; display: grid; gap: 6px; font-size: 13.5px; }
+.bl-charts .bl-chart-key { color: var(--fg); }
+.bl-rvtable td { font-size: 13px; }
+#beamCutCheck .bl-mini { margin-top: 10px; }
+@media (max-width: 1180px) { .bl-station-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 640px) { .bl-station-x { width: 100%; } .bl-station-bar > .bl-field { width: 100%; } .bl-stat-v, .bl-stat-lim.is-sel { font-size: 17px; } }
+
+/* ---------- downloads, thin slices at supports, station table, quick guide ---------- */
+.bl-exportbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.bl-exportbar > .bl-help { margin: 0; }
+.bl-chart-tools { display: block; margin-top: 4px; }
+.bl-slicegrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); gap: 12px 18px; }
+.bl-slicefig figcaption { color: var(--fg); }
+.bl-slice-eq { display: block; font-size: 14px; line-height: 1.6; margin: 4px 0 0; }
+.bl-slice-eq .bl-eqline { white-space: normal; }
+.bl-stationtable { display: grid; gap: 8px; }
+.bl-stationtable h4 { margin: 0; }
+.bl-station-listform { align-items: end; }
+.bl-station-list { flex: 1 1 260px; }
+.bl-guide { display: grid; gap: 8px; }
+.bl-guide > * { margin: 0; }
+.bl-guide-steps { margin: 0; padding-left: 22px; display: grid; gap: 6px; }
+.bl-guide h4 { margin-top: 4px; }
+.bl-intro .bl-btn { margin-left: 6px; vertical-align: middle; }
 
 /* ---------- companion tool (external link card; shared by Beam Lab and Wing Lab) ---------- */
 .bl-companion { position: relative; }

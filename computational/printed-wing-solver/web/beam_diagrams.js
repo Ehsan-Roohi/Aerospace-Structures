@@ -6,7 +6,8 @@
  *
  * Physical diagrams show supports and never their reactions. Free-body diagrams show reactions
  * (and the cut-face V, M) and never support symbols. Sign conventions follow the engine:
- * load/v positive down, couples clockwise positive, sagging M positive, V = dM/dx.
+ * load/v positive down, couples clockwise positive, sagging M positive, V = dM/dx. Reaction couples are
+ * named C_A, C_B, … (as in Lecture 03) so that they are never confused with the internal moment M.
  */
 const BeamDiagrams = (() => {
   'use strict';
@@ -219,6 +220,16 @@ const BeamDiagrams = (() => {
   /* ------------------------------------------------------ free bodies */
 
   const supportName=i=>String.fromCharCode(65+i);
+  /** A solved reaction that is zero (to round-off, or printed as 0) is labelled 0 and drawn without an arrow. */
+  function zeroTolerance(loads, L) {
+    let F=0, C=0;
+    for(const v of loads) {
+      if(v.kind==='point') F+=Math.abs(v.force);
+      else if(v.kind==='moment') C+=Math.abs(v.moment);
+      else F+=Math.abs(v.end-v.start)*Math.max(Math.abs(v.qStart),Math.abs(v.qEnd));
+    }
+    return {force:Math.max(1e-12*(F+C/L),1e-13), moment:Math.max(1e-12*(F*L+C),1e-13)};
+  }
   /**
    * Whole-beam free-body diagram: supports removed and replaced by reactions.
    * mode 'unknown': symbolic reactions in assumed directions (R up, M counter-clockwise).
@@ -242,17 +253,18 @@ const BeamDiagrams = (() => {
       svg+=text(X(xbar),yBottom+42,`W = ${fmt(Math.abs(Wt))} N ${Wt>0?'↓':'↑'} at x̄ = ${fmt(xbar)}`,'bl-tx-s bl-tx-m');
     }
     const reactions=result?result.reactions:model.supports.map(s=>({x:s.x,kind:s.kind,force:NaN,moment:NaN}));
+    const tol=zeroTolerance(loads,L);
     reactions.forEach((r,i)=>{
       const x=X(r.x), n=supportName(i);
-      const up=mode==='unknown'?true:r.force<0;
-      svg+=up?arrow(x,yBottom+46,x,yBottom+2,'bl-react',9):arrow(x,yBottom+2,x,yBottom+46,'bl-react',9);
-      const rl=mode==='unknown'?`R_${n} (assumed ↑)`:`R_${n} = ${fmt(Math.abs(r.force))} N ${r.force<0?'↑':'↓'}`;
+      const up=mode==='unknown'?true:r.force<0, zeroF=mode!=='unknown'&&Math.abs(r.force)<=tol.force;
+      if(!zeroF) svg+=up?arrow(x,yBottom+46,x,yBottom+2,'bl-react',9):arrow(x,yBottom+2,x,yBottom+46,'bl-react',9);
+      const rl=mode==='unknown'?`R_${n} (assumed ↑)`:zeroF?`R_${n} = 0 N`:`R_${n} = ${fmt(Math.abs(r.force))} N ${r.force<0?'↑':'↓'}`;
       const anchor=r.x===0?'start':r.x===L?'end':'middle';
       svg+=label(anchor==='start'?x-30:anchor==='end'?x+30:x,yBottom+62,rl,'bl-tx-s bl-tx-react bl-tx-b',anchor);
       if(r.kind==='fixed') {
-        const cw=mode==='unknown'?false:r.moment>0;
-        svg+=coupleArrow(x,yAxis,22,cw,'bl-react');
-        const ml=mode==='unknown'?`M_${n} (assumed ↺)`:`M_${n} = ${fmt(Math.abs(r.moment))} N·mm ${r.moment>0?'↻':'↺'}`;
+        const cw=mode==='unknown'?false:r.moment>0, zeroM=mode!=='unknown'&&Math.abs(r.moment)<=tol.moment;
+        if(!zeroM) svg+=coupleArrow(x,yAxis,22,cw,'bl-react');
+        const ml=mode==='unknown'?`C_${n} (assumed ↺)`:zeroM?`C_${n} = 0 N·mm`:`C_${n} = ${fmt(Math.abs(r.moment))} N·mm ${r.moment>0?'↻':'↺'}`;
         svg+=label(anchor==='start'?x-30:anchor==='end'?x+30:x,yBottom+78,ml,'bl-tx-s bl-tx-react bl-tx-b',anchor);
       }
       if(r.kind!=='roller') {
@@ -274,9 +286,14 @@ const BeamDiagrams = (() => {
   function segmentFbd(model, result, cut, opts={}) {
     const W=clampWidth(opts.width), L=model.length, eps=L*1e-10, side=cut.side||'left', limit=cut.limit||'left';
     const a=side==='left'?0:cut.x, b=side==='left'?cut.x:L, span=Math.max(b-a,1e-9);
-    const face=Math.max(128,Math.min(176,W*0.36)), far=W<520?36:60;
-    const pad=side==='left'?far:face, padR=side==='left'?face:far;
-    const X=x=>pad+(W-pad-padR)*(x-a)/span;
+    // A cut at an end (x = 0⁺ or L⁻) leaves a part of zero length: draw it as a thin slice, its
+    // actions (the end support's reaction) at the outer end and the cut face SLICE px further in,
+    // with room on the outer side for the reaction labels.
+    const thin=b-a<=eps, SLICE=26;
+    const face=Math.max(128,Math.min(176,W*0.36)), far=W<520?36:60, outer=Math.max(far+118,W*0.4);
+    const pad=side==='left'?(thin?outer:far):face, padR=side==='left'?face:(thin?outer:far);
+    const X=thin?(()=>side==='left'?pad:W-padR):(x=>pad+(W-pad-padR)*(x-a)/span);
+    const x0=thin&&side==='right'?W-padR-SLICE:X(a), x1=thin&&side==='left'?pad+SLICE:X(b);
     // Actions on this part: x⁻ cut keeps actions at x on the RIGHT part, x⁺ keeps them on the LEFT part.
     const atCut=x=>Math.abs(x-cut.x)<=eps;
     const inside=x=>side==='left'?(x<cut.x-eps||(atCut(x)&&limit==='right')):(x>cut.x+eps||(atCut(x)&&limit==='left'));
@@ -291,18 +308,21 @@ const BeamDiagrams = (() => {
     const V=cut.V, M=cut.M;
     const yTop=12+loadHeight(loads), yAxis=yTop+6, yBottom=yTop+12, H=yBottom+104;
     let svg=svgOpen(W,H,`Free body of the ${side} part, cut at x = ${fmt(cut.x)} mm (${limit==='left'?'x⁻':'x⁺'})`,'bl-fbd bl-segment');
-    svg+=`<rect x="${r1(X(a))}" y="${r1(yTop)}" width="${r1(X(b)-X(a))}" height="12" rx="2" class="bl-beam"/>`;
-    const faceX=side==='left'?X(b):X(a);
+    svg+=`<rect x="${r1(x0)}" y="${r1(yTop)}" width="${r1(x1-x0)}" height="12" rx="2" class="bl-beam"/>`;
+    const faceX=side==='left'?x1:x0;
     svg+=line(faceX,yTop-10,faceX,yBottom+10,'bl-cutface');
     model.hinges.filter(h=>h>a+eps&&h<b-eps).forEach(h=>{svg+=`<circle cx="${r1(X(h))}" cy="${r1(yAxis)}" r="6" class="bl-hinge-c"/>`;});
     svg+=drawLoads(loads,X,yTop,{width:W}).svg;
+    const tol=zeroTolerance(result.loadsApplied,L);
     for(const r of reactions) {
-      const x=X(r.x);
-      svg+=r.force<0?arrow(x,yBottom+46,x,yBottom+2,'bl-react',9):arrow(x,yBottom+2,x,yBottom+46,'bl-react',9);
-      svg+=label(x,yBottom+62,`R_${r.name} = ${fmt(Math.abs(r.force))} N ${r.force<0?'↑':'↓'}`,'bl-tx-s bl-tx-react bl-tx-b',x<90?'start':x>W-90?'end':'middle');
-      if(r.kind==='fixed'&&Math.abs(r.moment)>0) {
+      const x=X(r.x), zeroF=Math.abs(r.force)<=tol.force;
+      // On a thin end slice the reaction labels go on the outer side, away from the V and M labels.
+      const lx=thin?(side==='left'?x-14:x+14):x, la=thin?(side==='left'?'end':'start'):x<90?'start':x>W-90?'end':'middle';
+      if(!zeroF) svg+=r.force<0?arrow(x,yBottom+46,x,yBottom+2,'bl-react',9):arrow(x,yBottom+2,x,yBottom+46,'bl-react',9);
+      svg+=label(lx,yBottom+62,zeroF?`R_${r.name} = 0 N`:`R_${r.name} = ${fmt(Math.abs(r.force))} N ${r.force<0?'↑':'↓'}`,'bl-tx-s bl-tx-react bl-tx-b',la);
+      if(r.kind==='fixed'&&Math.abs(r.moment)>tol.moment) {
         svg+=coupleArrow(x,yAxis,20,r.moment>0,'bl-react');
-        svg+=label(x,yBottom+78,`M_${r.name} = ${fmt(Math.abs(r.moment))} N·mm ${r.moment>0?'↻':'↺'}`,'bl-tx-s bl-tx-react bl-tx-b',x<90?'start':x>W-90?'end':'middle');
+        svg+=label(lx,yBottom+78,`C_${r.name} = ${fmt(Math.abs(r.moment))} N·mm ${r.moment>0?'↻':'↺'}`,'bl-tx-s bl-tx-react bl-tx-b',la);
       }
     }
     // Positive V acts DOWN on the left part's cut face and UP on the right part's face.
@@ -320,9 +340,116 @@ const BeamDiagrams = (() => {
     svg+=text(vx,my,`M = ${fmt(M)} N·mm`,'bl-tx-s bl-tx-int bl-tx-b',anchor);
     svg+=text(vx,my+16,M>0?'sagging (+)':M<0?'hogging (−)':'',`bl-tx-s bl-tx-m`,anchor);
     // span labels
-    svg+=text(X(a),yBottom+96,`${fmt(a)} mm${cut.jump&&side==='right'?(limit==='left'?' (x⁻)':' (x⁺)'):''}`,'bl-tx-s bl-tx-m',side==='left'?'start':'middle');
-    svg+=text(X(b),yBottom+96,`${fmt(b)} mm${cut.jump?(limit==='left'?' (x⁻)':' (x⁺)'):''}`,'bl-tx-s bl-tx-m',side==='left'?'middle':'end');
+    if(thin) svg+=text((x0+x1)/2,yBottom+96,`thin slice at x = ${fmt(a)} mm (${side==='left'?'0 to 0⁺':'L⁻ to L'})`,'bl-tx-s bl-tx-m');
+    else {
+      svg+=text(X(a),yBottom+96,`${fmt(a)} mm${cut.jump&&side==='right'?(limit==='left'?' (x⁻)':' (x⁺)'):''}`,'bl-tx-s bl-tx-m',side==='left'?'start':'middle');
+      svg+=text(X(b),yBottom+96,`${fmt(b)} mm${cut.jump?(limit==='left'?' (x⁻)':' (x⁺)'):''}`,'bl-tx-s bl-tx-m',side==='left'?'middle':'end');
+    }
     return svg+'</svg>';
+  }
+
+  /**
+   * The two faces of one cut, pulled apart. The internal shear V and moment M act on BOTH faces as an
+   * equal and opposite pair: positive V acts down on the left part's face and up on the right part's;
+   * positive (sagging) M acts counter-clockwise on the left part's face and clockwise on the right part's.
+   * Arrows are drawn in the actual directions of the given values. cut = {x, V, M, limit, jump};
+   * opts.labels = {V, M} replaces the value labels; opts.title replaces the heading.
+   */
+  function cutFaces(cut, opts={}) {
+    const W=clampWidth(opts.width), g=Math.max(140,Math.min(180,W*0.36)), xL=W/2-g/2, xR=W/2+g/2, y=82, H=184;
+    const V=cut.V, M=cut.M, hasV=Math.abs(V)>1e-12, hasM=Math.abs(M)>1e-12;
+    const where=Number.isFinite(cut.x)?`x = ${fmt(cut.x)} mm${cut.jump?(cut.limit==='right'?' (x⁺)':' (x⁻)'):''}`:'a cut';
+    const vText=opts.labels?opts.labels.V:`V = ${signed(V,6)} N`, mText=opts.labels?opts.labels.M:`M = ${signed(M,6)} N·mm`;
+    const dV=left=>(V>0)===left?'down':'up', dM=left=>(M>0)===left?'counter-clockwise':'clockwise';
+    const aria=`The two faces of the cut at ${where}: ${hasV?`${vText} acts ${dV(true)} on the left part's face and ${dV(false)} on the right part's face`:'V = 0'}; ${hasM?`${mText} acts ${dM(true)} on the left part's face and ${dM(false)} on the right part's face`:'M = 0'}.`;
+    let svg=svgOpen(W,H,aria,'bl-faces');
+    svg+=text(W/2,16,opts.title||`Cut at ${where}: the two faces pulled apart`,'bl-tx-s bl-tx-b');
+    svg+=`<rect x="10" y="${y-6}" width="${r1(xL-10)}" height="12" rx="2" class="bl-beam"/><rect x="${r1(xR)}" y="${y-6}" width="${r1(W-10-xR)}" height="12" rx="2" class="bl-beam"/>`;
+    svg+=line(xL,y-24,xL,y+24,'bl-cutface')+line(xR,y-24,xR,y+24,'bl-cutface');
+    if(hasV) {
+      const down=V>0;   // on the LEFT part's face
+      svg+=`<g data-face="left" data-v="${down?'down':'up'}">${down?arrow(xL+14,y-40,xL+14,y-2,'bl-int',9):arrow(xL+14,y+40,xL+14,y+2,'bl-int',9)}</g>`;
+      svg+=`<g data-face="right" data-v="${down?'up':'down'}">${down?arrow(xR-14,y+40,xR-14,y+2,'bl-int',9):arrow(xR-14,y-40,xR-14,y-2,'bl-int',9)}</g>`;
+    }
+    if(hasM) {
+      svg+=`<g data-face="left" data-m="${M>0?'ccw':'cw'}">${coupleArrow(xL+44,y,14,M<0,'bl-int',7)}</g>`;
+      svg+=`<g data-face="right" data-m="${M>0?'cw':'ccw'}">${coupleArrow(xR-44,y,14,M>0,'bl-int',7)}</g>`;
+    }
+    svg+=text(10,y-50,vText,'bl-tx-xs bl-tx-int bl-tx-b','start')+text(W-10,y-50,vText,'bl-tx-xs bl-tx-int bl-tx-b','end');
+    svg+=text(10,y+58,mText,'bl-tx-xs bl-tx-int bl-tx-b','start')+text(W-10,y+58,mText,'bl-tx-xs bl-tx-int bl-tx-b','end');
+    svg+=text(10,H-10,'face of the left part','bl-tx-xs bl-tx-m','start')+text(W-10,H-10,'face of the right part','bl-tx-xs bl-tx-m','end');
+    return svg+'</svg>';
+  }
+
+  /**
+   * Thin slice around one support (x⁻ to x⁺) as a free body. External actions on it: the reaction R and, at a
+   * clamp, the reaction couple C (green), plus any point force P or couple C0 applied at that station (purple).
+   * Internal actions on its cut faces (orange): the slice's LEFT face is the face of the part right of the cut at
+   * x⁻ (V > 0 acts up, M > 0 clockwise); its RIGHT face is the face of the part left of the cut at x⁺ (V > 0 acts
+   * down, M > 0 counter-clockwise). An end support has one face. Equilibrium (app signs ↓ +, ↻ +):
+   * R + P − V(x⁻) + V(x⁺) = 0 and C + C0 + M(x⁻) − M(x⁺) = 0.
+   * s = {name, kind, x, end:'left'|'right'|null, R, C, P, C0, left:{V,M}|null, right:{V,M}|null}
+   */
+  function supportSlice(s, opts={}) {
+    const W=Math.max(340,Math.min(560,opts.width||400)), H=206, cx=W/2, y=92, half=30, t=1e-12;
+    const at=s.end==='left'?'x = 0':s.end==='right'?'x = L':`x = ${fmt(s.x)} mm`;
+    const parts=[];
+    let svg=svgOpen(W,H,opts.label||`Thin slice at support ${s.name} (${at})`,'bl-fbd bl-slice');
+    svg+=text(cx,16,`Thin slice at support ${s.name} (${at})`,'bl-tx-s bl-tx-b');
+    svg+=`<rect x="${r1(cx-half)}" y="${y-6}" width="${2*half}" height="12" rx="2" class="bl-beam"/>`;
+    if(Math.abs(s.R)>t) {svg+=`<g data-ext="R" data-dir="${s.R<0?'up':'down'}">${s.R<0?arrow(cx,y+58,cx,y+8,'bl-react',9):arrow(cx,y+8,cx,y+58,'bl-react',9)}</g>`;parts.push('R');}
+    if(s.kind==='fixed'&&Math.abs(s.C)>t) svg+=`<g data-ext="C" data-dir="${s.C>0?'cw':'ccw'}">${coupleArrow(cx,y,22,s.C>0,'bl-react')}</g>`;
+    if(Math.abs(s.P||0)>t) svg+=s.P>0?arrow(cx,y-58,cx,y-8,'bl-load bl-point',9):arrow(cx,y-8,cx,y-58,'bl-load bl-point',9);
+    if(Math.abs(s.C0||0)>t) svg+=coupleArrow(cx,y,13,s.C0>0,'bl-load bl-couple',7);
+    svg+=label(cx,y+78,Math.abs(s.R)>t?`R_${s.name} = ${fmt(Math.abs(s.R))} N ${s.R<0?'↑':'↓'}`:`R_${s.name} = 0 N`,'bl-tx-xs bl-tx-react bl-tx-b');
+    if(s.kind==='fixed') svg+=label(cx,y+94,Math.abs(s.C)>t?`C_${s.name} = ${fmt(Math.abs(s.C))} N·mm ${s.C>0?'↻':'↺'}`:`C_${s.name} = 0 N·mm`,'bl-tx-xs bl-tx-react bl-tx-b');
+    if(Math.abs(s.P||0)>t||Math.abs(s.C0||0)>t) svg+=text(cx,y-66,[Math.abs(s.P||0)>t?`P = ${fmt(Math.abs(s.P))} N ${s.P>0?'↓':'↑'}`:'',Math.abs(s.C0||0)>t?`C = ${fmt(Math.abs(s.C0))} N·mm ${s.C0>0?'↻':'↺'}`:''].filter(Boolean).join(', '),'bl-tx-xs bl-tx-load bl-tx-b');
+    const face=(side,f)=>{
+      const fx=side==='left'?cx-half:cx+half, d=side==='left'?-1:1, vx=fx+d*14, anchor=side==='left'?'end':'start', lx=fx+d*26;
+      const lim=side==='left'?(s.end==='right'?'L⁻':'x⁻'):(s.end==='left'?'0⁺':'x⁺');
+      let g=line(fx,y-26,fx,y+26,'bl-cutface');
+      // Left face = face of a RIGHT part (V > 0 up); right face = face of a LEFT part (V > 0 down).
+      const up=side==='left'?f.V>0:f.V<0, cw=side==='left'?f.M>0:f.M<0;
+      if(Math.abs(f.V)>t) g+=`<g data-face="${side}" data-v="${up?'up':'down'}">${up?arrow(vx,y+40,vx,y+2,'bl-int',9):arrow(vx,y-40,vx,y-2,'bl-int',9)}</g>`;
+      if(Math.abs(f.M)>t) g+=`<g data-face="${side}" data-m="${cw?'cw':'ccw'}">${coupleArrow(fx+d*44,y,12,cw,'bl-int',7)}</g>`;
+      g+=text(lx,y-50,`V(${lim}) = ${signed(f.V,6)} N`,'bl-tx-xs bl-tx-int bl-tx-b',anchor);
+      g+=text(lx,y+58,`M(${lim}) = ${signed(f.M,6)} N·mm`,'bl-tx-xs bl-tx-int bl-tx-b',anchor);
+      return g;
+    };
+    if(s.left) svg+=face('left',s.left); else svg+=text(cx-half-8,y+4,'end of beam','bl-tx-xs bl-tx-m','end');
+    if(s.right) svg+=face('right',s.right); else svg+=text(cx+half+8,y+4,'end of beam','bl-tx-xs bl-tx-m','start');
+    return svg+'</svg>';
+  }
+
+  /**
+   * One plot as a standalone SVG for download (the page rasterizes it to PNG): white background and its own
+   * colours and fonts (no page CSS, so it reads the same in light or dark viewers and on paper), a title, the
+   * model and loads, both axes with units, the sign convention and a note on what the curve is.
+   * opts: {width, chartHeight, supports:[x], station:{x, values}, title, lines:[...], notes:[...]}.
+   * Returns {svg, width, height}.
+   */
+  function chartImage(result, key, opts={}) {
+    const meta=CHARTS[key]||{title:key,unit:''}, W=opts.width||960, pad=24, lh=19, cw=8.2;
+    const wrap=s=>{const max=Math.max(40,Math.floor((W-2*pad)/cw)), out=[];let cur='';
+      for(const w of String(s).split(' ')){if(cur&&(cur+' '+w).length>max){out.push(cur);cur=w;}else cur=cur?cur+' '+w:w;}
+      if(cur)out.push(cur);return out;};
+    const head=(opts.lines||[]).flatMap(wrap), foot=(opts.notes||[]).flatMap(wrap), ch=opts.chartHeight||380;
+    const top=pad+28+head.length*lh+6, H=Math.round(top+ch+10+foot.length*lh+pad-4);
+    const style='text{font-family:Arial,Helvetica,"Liberation Sans","DejaVu Sans",sans-serif;font-size:13px;fill:#111;paint-order:stroke;stroke:#fff;stroke-width:3px;stroke-linejoin:round}'+
+      '.bl-tx-s{font-size:12.5px}.bl-tx-xs{font-size:12px}.bl-tx-b{font-weight:700}.bl-tx-m{fill:#444}.bl-tx-cut{fill:#9a3f05}'+
+      '.bl-grid{stroke:#dfe5eb;stroke-width:1}.bl-zero{stroke:#555;stroke-width:1.3}.bl-axis{stroke:#555;stroke-width:1}'+
+      '.bl-curve{fill:none;stroke:#0b5cc0;stroke-width:2.4;stroke-linejoin:round}.bl-area{fill:#0b5cc0;opacity:.1}.bl-ext{fill:#0b5cc0}'+
+      '.bl-cut{stroke:#c2560c;stroke-width:2;stroke-dasharray:6 4}.bl-cut-dot{fill:#c2560c;stroke:#fff;stroke-width:2}'+
+      '.img-title{font-size:20px;font-weight:700}.img-line{font-size:14px;fill:#222}.img-note{font-size:13px;fill:#333}';
+    const inner=chart(result,key,{width:W-2*pad+8,height:ch,supports:opts.supports,cut:opts.station,noTitle:true,yLabel:true})
+      .replace(/^<svg /,`<svg x="${pad-8}" y="${r1(top)}" `);
+    let svg=`<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"><style>${style}</style>`;
+    svg+=`<rect x="0" y="0" width="${W}" height="${H}" fill="#ffffff"/>`;
+    svg+=`<text x="${pad}" y="${pad+14}" class="img-title">${esc(opts.title||`${meta.title} (${meta.unit})`)}</text>`;
+    head.forEach((l,i)=>{svg+=`<text x="${pad}" y="${r1(pad+38+i*lh)}" class="img-line">${esc(l)}</text>`;});
+    svg+=inner;
+    foot.forEach((l,i)=>{svg+=`<text x="${pad}" y="${r1(top+ch+22+i*lh)}" class="img-note">${esc(l)}</text>`;});
+    return {svg:svg+'</svg>',width:W,height:H};
   }
 
   /* -------------------------------------------------------------- charts */
@@ -353,7 +480,8 @@ const BeamDiagrams = (() => {
     const X=x=>m.l+(W-m.l-m.r)*x/L;
     const Y=v=>meta.invert?m.t+(H-m.t-m.b)*(v-lo)/(hi-lo):H-m.b-(H-m.t-m.b)*(v-lo)/(hi-lo);
     let svg=svgOpen(W,H,`${meta.title} in ${meta.unit} along the beam`,'bl-chart').replace('<svg ',`<svg data-x0="${m.l}" data-x1="${r1(W-m.r)}" data-length="${L}" data-w="${r1(W)}" `);
-    svg+=text(W<540?8:m.l,18,`${W<540?meta.short||meta.title:meta.title} (${meta.unit})`,'bl-tx-s bl-tx-b','start');
+    if(!opts.noTitle) svg+=text(W<540?8:m.l,18,`${W<540?meta.short||meta.title:meta.title} (${meta.unit})`,'bl-tx-s bl-tx-b','start');
+    if(opts.yLabel) svg+=`<text x="${r1(14)}" y="${r1((m.t+H-m.b)/2)}" class="bl-tx-xs bl-tx-b" text-anchor="middle" transform="rotate(-90 14 ${r1((m.t+H-m.b)/2)})">${esc(meta.axis)}</text>`;
     for(const v of t.ticks) svg+=line(m.l,Y(v),W-m.r,Y(v),v===0?'bl-zero':'bl-grid')+text(m.l-8,Y(v)+4,fmt(v,3),'bl-tx-xs bl-tx-m','end');
     for(const x of opts.supports||[]) svg+=line(X(x),H-m.b,X(x),H-m.b+6,'bl-axis');
     const xt=niceTicks(0,L,5);
@@ -365,27 +493,48 @@ const BeamDiagrams = (() => {
       if(k===0&&!opts.noFill) svg+=`<polygon points="${r1(X(xs[0]))},${r1(Y(0))} ${pts} ${r1(X(xs[xs.length-1]))},${r1(Y(0))}" class="bl-area"/>`;
       svg+=`<polyline points="${pts}" class="${s.cls||'bl-curve'}"/>`;
     });
+    // Data labels. The exact station values (cut) are placed first and are always shown; the sampled extremes follow.
+    // Each label takes the first candidate position that stays inside the plot area and clears every label already
+    // placed (widths over-estimated for bold 13 px type, so placed labels cannot overlap). An extreme whose value the
+    // station label already shows at the same point is redundant and left out; an extreme with no free position keeps
+    // its dot without text (its value is in the readout and the hover). Deterministic: same input, same layout.
+    const boxes=[], est=s=>7.6*String(s).length+4;
+    const boxOf=(c,s)=>{const w=est(s), x0=c.anchor==='start'?c.x:c.x-w;return {x0,x1:x0+w,y0:c.y-11,y1:c.y+4};};
+    const fits=b=>b.x0>=m.l-2&&b.x1<=W-2&&b.y0>=m.t-8&&b.y1<=H-m.b-1&&boxes.every(o=>b.x1<=o.x0||b.x0>=o.x1||b.y1<=o.y0||b.y0>=o.y1);
+    const spots=(px,py,dx,above)=>{
+      const sides=px<W-150?['start','end']:['end','start'], near=above?[py-8,py+16]:[py+16,py-8], far=above?[py-24,py+32]:[py+32,py-24], out=[];
+      for(const rows of [near,far]) for(const a of sides) for(const y of rows) out.push({x:a==='start'?px+dx:px-dx,y,anchor:a});
+      return out;
+    };
+    const take=(cands,s)=>{const c=cands.find(q=>fits(boxOf(q,s)));if(c)boxes.push(boxOf(c,s));return c;};
+    let cutSvg='', extSvg='';
+    const cutPts=[];
+    if(opts.cut&&Number.isFinite(opts.cut.x)) {
+      const cx=X(opts.cut.x);
+      cutSvg+=line(cx,m.t-4,cx,H-m.b,'bl-cut');
+      (opts.cut.values||[]).forEach((p,i)=>{
+        const y=Y(p.value), s=`${p.label} = ${fmt(p.value)}`, cands=spots(cx,y,9,i===0);
+        cutPts.push({x:cx,y,v:fmt(p.value)});
+        cutSvg+=`<circle cx="${r1(cx)}" cy="${r1(y)}" r="5" class="bl-cut-dot"/>`;
+        let c=take(cands,s);
+        if(!c) {c=cands[0];boxes.push(boxOf(c,s));}   // a station value is never dropped
+        cutSvg+=text(c.x,c.y,s,'bl-tx-xs bl-tx-cut bl-tx-b',c.anchor,' data-label="cut"');
+      });
+    }
     if(opts.extremes!==false&&series.length===1) {
       const ys=series[0].result[key], xs=series[0].result.x;
       let iMax=0,iMin=0;ys.forEach((v,i)=>{if(v>ys[iMax])iMax=i;if(v<ys[iMin])iMin=i;});
-      // Keep extreme labels inside the plot: below a point near the top, above one near the bottom.
-      const mark=(i,above)=>{const x=X(xs[i]),y=Y(ys[i]),right=x<W-120,up=above?y-7>m.t+10:y+14>H-m.b-2;
-        return `<circle cx="${r1(x)}" cy="${r1(y)}" r="3.5" class="bl-ext"/>`+text(x+(right?7:-7),up?y-7:y+15,`${fmt(ys[i])} at x = ${fmt(xs[i],3)}`,'bl-tx-xs bl-tx-b',right?'start':'end');};
+      const mark=(i,above)=>{
+        const x=X(xs[i]), y=Y(ys[i]), v=fmt(ys[i]);
+        if(cutPts.some(p=>Math.abs(p.y-y)<=6&&(Math.abs(p.x-x)<=4||(Math.abs(p.x-x)<=12&&p.v===v)))) return '';
+        const s=`${v} at x = ${fmt(xs[i],3)}`, c=take(spots(x,y,7,above),s);
+        return `<circle cx="${r1(x)}" cy="${r1(y)}" r="3.5" class="bl-ext"/>`+(c?text(c.x,c.y,s,'bl-tx-xs bl-tx-b',c.anchor,' data-label="ext"'):'');
+      };
       const scale=Math.max(Math.abs(ys[iMax]),Math.abs(ys[iMin]));
-      if(ys[iMax]>1e-9*scale&&scale>0) svg+=mark(iMax,!meta.invert);
-      if(ys[iMin]<-1e-9*scale&&scale>0) svg+=mark(iMin,!!meta.invert);
+      if(ys[iMax]>1e-9*scale&&scale>0) extSvg+=mark(iMax,!meta.invert);
+      if(ys[iMin]<-1e-9*scale&&scale>0) extSvg+=mark(iMin,!!meta.invert);
     }
-    if(opts.cut&&Number.isFinite(opts.cut.x)) {
-      const cx=X(opts.cut.x);
-      svg+=line(cx,m.t-4,cx,H-m.b,'bl-cut');
-      (opts.cut.values||[]).forEach((p,i)=>{
-        const y=Y(p.value),right=cx<W-150;
-        let ty=i===0?y-8:y+16;
-        if(ty<m.t+10) ty=y+16; else if(ty>H-m.b-4) ty=y-8;
-        svg+=`<circle cx="${r1(cx)}" cy="${r1(y)}" r="5" class="bl-cut-dot"/>`;
-        svg+=text(cx+(right?9:-9),ty,`${p.label} = ${fmt(p.value)}`,'bl-tx-xs bl-tx-cut bl-tx-b',right?'start':'end');
-      });
-    }
+    svg+=extSvg+cutSvg;
     if(opts.legend&&W>=420) {
       let lx=W-m.r;
       [...opts.legend].reverse().forEach(l=>{const w=12+7*l.label.length;lx-=w;svg+=`<line x1="${r1(lx)}" y1="12" x2="${r1(lx+14)}" y2="12" class="${l.cls}"/>`+text(lx+18,16,l.label,'bl-tx-xs','start');lx-=10;});
@@ -554,7 +703,7 @@ const BeamDiagrams = (() => {
     return svg+'</svg>';
   }
 
-  return {fmt,signed,niceTicks,esc,label,beamSchematic,freeBody,segmentFbd,chart,CHARTS,sectionDrawing,sectionStress,stressMap,stressColor,
+  return {fmt,signed,niceTicks,esc,label,beamSchematic,freeBody,segmentFbd,cutFaces,supportSlice,chart,chartImage,CHARTS,sectionDrawing,sectionStress,stressMap,stressColor,
     mechanismSketch,modeShape,signConventions,supportName};
 })();
 if(typeof module!=='undefined'&&module.exports)module.exports=BeamDiagrams;

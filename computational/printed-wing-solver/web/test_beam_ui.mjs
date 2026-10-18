@@ -24,15 +24,64 @@ function open(url='https://example.org/wing-lab.html') {
   };
   const env=loadBeamLab(dom);
   return {...env,dom,downloads,input:(sel,value)=>{const el=env.$(sel);el.value=value;el.dispatchEvent(new w.Event('input',{bubbles:true}));},
-    pointer:(type,target,clientX)=>{const Ctor=w.PointerEvent||w.MouseEvent;target.dispatchEvent(new Ctor(type,{bubbles:true,cancelable:true,clientX,clientY:20,pointerId:1}));}};
+    pointer:(type,target,clientX)=>{const Ctor=w.PointerEvent||w.MouseEvent;target.dispatchEvent(new Ctor(type,{bubbles:true,cancelable:true,clientX,clientY:20,pointerId:1}));},
+    // Enter one load through the load form, as a user does (the Beam Lab opens with no load).
+    addLoad:(kind,values)=>{const $=env.$;$('#beamLoadKind').value=kind;$('#beamLoadKind').dispatchEvent(new w.Event('change'));
+      for(const [id,v] of Object.entries(values))$('#'+id).value=String(v);
+      $('#beamLoadForm').dispatchEvent(new w.Event('submit',{bubbles:true,cancelable:true}));}};
 }
 const kpi=$=>$('#beamKpis').textContent;
 const lab=w=>w.BeamLab.state();
 const clean=html=>!/NaN|undefined|Infinity/.test(html);
 
+/* ---------- 0. normal opening: no applied load, self-weight off, nothing pre-filled ---------- */
+{
+  const t0=open(), $0=t0.$, w0=t0.w, s0=lab(w0).solved, r0=s0.result;
+  eq(s0.model.loads.length,0,'normal opening: no applied load');eq(s0.model.selfWeight,false,'self-weight off');eq($0('#beamSelfWeight').checked,false);
+  eq($0('#beamChip').textContent,'Solved','the unloaded beam is solved');ok(/Solved with no load/.test($0('#beamStatus').textContent),'run message says there is no load');
+  ok(r0.deflection.every(v=>v===0)&&r0.rotation.every(v=>v===0)&&r0.moment.every(v=>v===0)&&r0.shear.every(v=>v===0),'zero load: v, θ, V and M are exactly zero');
+  ok(r0.reactions.every(q=>q.force===0&&q.moment===0)&&r0.equilibrium.force===0&&r0.equilibrium.moment===0,'zero reactions, zero residuals');
+  ok(r0.modes.length===3&&r0.modes[0].frequencyHz>0,'vibration modes do not depend on the load');
+  ok(/0\.0000 mm/.test(kpi($0))&&/0\.000 N/.test(kpi($0)),'KPIs: zero deflection and zero total force');
+  eq($0('#beamLoads').textContent.trim(),'No load defined. Add your own load.','empty state of the load list');
+  ok($0('#beamNoLoad')&&/No load defined\. Add your own load\./.test($0('#beamNoLoad').textContent),'empty state on the model card');
+  eq($0('#beamPicture').querySelectorAll('.bl-load, .bl-point, .bl-couple, .bl-sw, .bl-load-fill, .bl-sw-fill').length,0,'no load arrows on the beam picture');
+  ok(!/P = |q = |C = |self-weight/.test($0('#beamPicture').textContent),'no load labels on the beam picture');
+  ok(/No load is applied/.test($0('#beamPictureNote').textContent),'picture caption says no load is applied');
+  eq($0('#beamCentre'),null,'no "Centre point · 2 N" shortcut');eq(t0.$$('[data-shape]').length,0,'no same-total-force shape buttons');
+  ok(!/Centre point|Same total force|different shape/i.test($0('#foundations').textContent),'no automatic-load shortcut text');
+  ok(['beamLoadA','beamLoadB','beamP','beamC','beamQ0','beamQ1'].every(id=>$0('#'+id).value===''),'the load form starts empty');
+  $0('#beamLoadForm').dispatchEvent(new w0.Event('submit',{bubbles:true,cancelable:true}));
+  eq($0('#beamLoadError').hidden,false,'submitting the untouched form is refused');eq(lab(w0).solved.model.loads.length,0,'and adds no load');
+  for(const tab of ['diagrams','cut','solution','modes','compare','report','learn']) {$0(`[data-tab="${tab}"]`).click();ok(clean($0('#foundations').innerHTML),`zero load: clean ${tab} tab`);}
+  const fbd=t0.$$('#beamSolution svg.bl-fbd').at(-1);
+  ok(fbd&&[...fbd.querySelectorAll('.bl-react')].every(e=>e.closest('.bl-axial')),'solved free body: no arrow for a zero reaction (only the dashed H = 0 marker)');
+  ok(/RA = 0 N/.test(fbd.textContent)&&/CA = 0 N·mm/.test(fbd.textContent),'zero reactions labelled 0 (reaction couple named C, as in Lecture 03)');
+  ok(/every reaction is zero/.test($0('#beamSolution').textContent),'hand solution states that every reaction is zero');
+  $0('[data-tab="cut"]').click();eq($0('#beamCutFbd').querySelectorAll('.bl-react, .bl-int').length,0,'cut free body: no arrows when nothing acts');
+  eq(($0('#beamCutCheck').textContent.match(/✓/g)||[]).length,4,'cut equilibrium closes on both parts (the default view shows both)');
+  $0('[data-tab="report"]').click();$0('#beamDownload').click();
+  const doc0=JSON.parse(await t0.downloads[0].text());eq(doc0.model.loads.length,0,'saved study has no load');eq(doc0.model.selfWeight,false);
+  $0('#beamCsv').click();ok((await t0.downloads[1].text()).split('\n').length>10,'results CSV exported');
+  $0('#beamShare').click();await new Promise(res=>setTimeout(res,20));
+  eq(Study.decodeShare(new URL($0('#beamShareBox').value).searchParams.get('beam')).loads.length,0,'share link carries no load');
+  t0.addLoad('point',{beamLoadA:300,beamP:1});eq(lab(w0).solved.model.loads.length,1,'a user load is added');eq($0('#beamNoLoad'),null,'empty-state notice gone');
+  ok($0('#beamPicture').querySelectorAll('.bl-load.bl-point').length===1&&/P = 1 N/.test($0('#beamPicture').textContent),'the user load is drawn (the arrow check above is not vacuous)');
+  ok(!/No load defined/.test($0('#beamLoads').textContent));
+  $0('#beamClear').click();eq(lab(w0).solved.model.loads.length,0,'Clear all loads');eq($0('#beamLoads').textContent.trim(),'No load defined. Add your own load.');ok($0('#beamNoLoad'));
+  t0.dom.window.close();
+  // Deliberately chosen examples keep their intended loads.
+  for(const [name,check] of [['l03-tip',m=>m.loads.length===1&&m.loads[0].kind==='point'&&m.loads[0].force===2&&m.loads[0].position===450],
+    ['hw2b-roller-pin',m=>m.loads.length===1&&m.loads[0].kind==='distributed']]) {
+    const te=open(`https://example.org/wing-lab.html?beamCase=${name}`);
+    ok(check(lab(te.w).solved.model),`?beamCase=${name} opens with its own load`);eq(te.$('#beamNoLoad'),null);te.dom.window.close();
+  }
+}
+
 /* ---------- 1. initial solve, pending state, stale flags, revert ---------- */
 let t=open(), {$,w}=t;
-ok(/18\.2250 mm/.test(kpi($)),'default cantilever KPI');
+t.addLoad('point',{beamLoadA:450,beamP:2});
+ok(/18\.2250 mm/.test(kpi($)),'2 N tip load entered by the user: 18.2250 mm');
 eq($('#beamChip').textContent,'Solved');eq($('.bl-results').dataset.stale,'false');eq($('#beamStale').hidden,true);
 eq($('#beamDownload').disabled,false);
 t.input('#beamGeometry [name="E"]','4000');
@@ -67,7 +116,7 @@ $('#beamleftSupport').value='pin';$('#beamrightSupport').value='roller';
 $('#beamAddSupport').click();
 eq(t.$$('#beamInteriorList [data-row="support"]').length,1);eq(+$('#beamInteriorList [data-field="x"]').value,225);
 ok(/indeterminate to degree 1/.test($('#beamSupportStatus').textContent),'live stability readout');
-$('[data-shape="uniform"]').click();     // replaces loads and solves the whole draft
+$('#beamClear').click();t.addLoad('rectangle',{beamLoadA:0,beamLoadB:450,beamQ0:2/450});     // uniform 2 N in total; solves the whole draft
 let r=lab(w).solved.result;
 eq(r.reactions.length,3);near(r.reactions[1].force,-10*(2/450)*225/8,1e-8,0,'two-span middle reaction');
 eq(t.$$('#beamReactions td.num').length,12);
@@ -132,9 +181,9 @@ $('[data-tab="cut"]').click();eq($('#beamTab-cut').hidden,false);ok($('#beamPict
 w.BeamLab.setCut(225);
 eq($('#beamCutLimitField').hidden,false,'jump at the point force offers x⁻ / x⁺');
 ok(/V = 2 N/.test($('#beamCutFbd').textContent)&&/M = 0 N·mm/.test($('#beamCutFbd').textContent),'x⁻ values on the cut face (M = 0 under the load)');
-eq((($('#beamCutCheck').textContent).match(/✓/g)||[]).length,2,'ΣF and ΣM close on the left part');
+eq((($('#beamCutCheck').textContent).match(/✓/g)||[]).length,4,'ΣF and ΣM close on the left and the right part (both shown by default)');
 ok(/2 \(x⁻\) \| 0 \(x⁺\) N/.test($('#beamCutValues').textContent.replace(/\s+/g,' ')),'both shear limits listed');
-$('[data-cut-limit="right"]').click();ok(/V = 0 N/.test($('#beamCutFbd').textContent));eq((($('#beamCutCheck').textContent).match(/✓/g)||[]).length,2);
+$('[data-cut-limit="right"]').click();ok(/V = 0 N/.test($('#beamCutFbd').textContent));eq((($('#beamCutCheck').textContent).match(/✓/g)||[]).length,4);
 $('[data-cut-side="right"]').click();eq((($('#beamCutCheck').textContent).match(/✓/g)||[]).length,2,'right part balances too');
 eq($('#beamCutFbd').querySelectorAll('[data-support-kind]').length,0,'cut free body has no support symbols');
 eq($('#beamCutCharts').querySelectorAll('.bl-cut-dot').length,4,'V and M markers at both limits');
@@ -181,7 +230,7 @@ eq(JSON.stringify(lab(w).compare.A.model),A0,'A unchanged by later edits');eq(JS
 const maps=t.$$('#beamCompare .bl-stressmap');eq(maps.length,2);
 const scaleOf=s=>s.getAttribute('aria-label').match(/±([^ ]+) MPa/)[1];eq(scaleOf(maps[0]),scaleOf(maps[1]),'same colour scale');
 ok(t.$$('#beamCompare .bl-chart').every(c=>c.querySelector('.bl-curve')&&c.querySelector('.bl-curve-b')),'A and B on the same axes');
-$('#beamCentre').click();$('#beamSaveB').click();ok(/The loads differ/.test($('#beamCompare').textContent),'warning when loads differ');
+t.addLoad('point',{beamLoadA:225,beamP:2});$('#beamSaveB').click();ok(/The loads differ/.test($('#beamCompare').textContent),'warning when loads differ');
 $('#beamRestoreA').click();eq(JSON.stringify(lab(w).solved.model),A0,'A reloaded into the editor');
 $('#beamEqualMassBtn').click();
 const em=t.$$('#beamEqualMass tr').slice(1);eq(em.length,7);ok(/same area A = 200/.test($('#beamEqualMass').textContent));
@@ -228,11 +277,11 @@ t=open(link);({$,w}=t);
 eq(JSON.stringify(lab(w).solved.model),before,'link reopens the same model');ok(/Shared study opened/.test($('#beamStatus').textContent));
 t.dom.window.close();
 t=open('https://example.org/wing-lab.html?beam=%3Cscript%3E');({$,w}=t);
-ok(/could not be opened/.test($('#beamStatus').textContent)&&/18\.2250 mm/.test(kpi($)),'bad link falls back to the default study');
+ok(/could not be opened/.test($('#beamStatus').textContent)&&lab(w).solved.model.loads.length===0&&/0\.0000 mm/.test(kpi($)),'bad link falls back to the default study (no load)');
 t.dom.window.close();
 // A well-formed link whose model the solver rejects also falls back to the solved default study.
 t=open(`https://example.org/wing-lab.html?beam=${Buffer.from(JSON.stringify({v:2,m:tooClose.model})).toString('base64url')}`);({$,w}=t);
-ok(/could not be opened.*too close/.test($('#beamStatus').textContent)&&/18\.2250 mm/.test(kpi($)),'unsolvable link falls back to the default study');
+ok(/could not be opened.*too close/.test($('#beamStatus').textContent)&&lab(w).solved.model.loads.length===0&&/0\.0000 mm/.test(kpi($)),'unsolvable link falls back to the default study (no load)');
 eq($('#beamChip').textContent,'Solved');t.dom.window.close();
 t=open(`https://example.org/wing-lab.html?beamCase=hw2b-fixed&${new URL(link).search.slice(1)}`);({$,w}=t);
 ok(/HW 2B/.test($('#beamStatus').textContent)&&lab(w).solved.model.E===2200,'beamCase deep link keeps priority');
@@ -286,14 +335,16 @@ t.dom.window.close();
 /* ---------- a load edit in progress never outlives the loads it refers to ---------- */
 {
   const t2=open(), $2=t2.$, w2=t2.w, submit=()=>$2('#beamLoadForm').dispatchEvent(new w2.Event('submit',{bubbles:true,cancelable:true}));
+  // Two user loads on the clamp: the "move to midspan" notice then replaces the loads programmatically.
+  t2.addLoad('point',{beamLoadA:0,beamP:1});t2.addLoad('point',{beamLoadA:0,beamP:2});eq(t2.$$('#beamLoads li').length,2);
   $2('[data-edit-load="0"]').click();eq($2('#beamLoadSubmit').textContent,'Update load 1 & solve');
   t2.input('#beamGeometry [name="E"]','2500');$2('#beamRevert').click();
   eq($2('#beamLoadSubmit').textContent,'Add load & solve','revert cancels a load edit in progress');eq($2('#beamLoadCancel').hidden,true);
-  $2('[data-edit-load="0"]').click();$2('[data-shape="uniform"]').click();
+  $2('[data-edit-load="1"]').click();ok($2('#beamMoveCentre'),'loads on the clamp: the notice offers to move them');$2('#beamMoveCentre').click();
   eq($2('#beamLoadSubmit').textContent,'Add load & solve','replacing the loads cancels the edit');
   $2('#beamLoadKind').value='point';$2('#beamLoadKind').dispatchEvent(new w2.Event('change'));
   $2('#beamLoadA').value='100';$2('#beamP').value='1';submit();
-  eq(t2.$$('#beamLoads li').length,2,'the next submit adds a load instead of overwriting a replaced one');
+  eq(t2.$$('#beamLoads li').length,3,'the next submit adds a load instead of overwriting a replaced one');
   $2('[data-edit-load="1"]').click();
   w2.BeamLab.importText(Study.exportStudy({result:B.solve({length:450,loads:[{kind:'point',position:450,force:2}]})}));
   eq($2('#beamLoadSubmit').textContent,'Add load & solve','importing a study cancels the edit');eq(t2.$$('#beamLoads li').length,1);
@@ -301,4 +352,4 @@ t.dom.window.close();
   eq(lab(w2).solved.result.input.loads.length,2,'no hole in the load list after an import during an edit');
   t2.dom.window.close();
 }
-console.log(`Beam Lab UI: ${checks} DOM workflow checks passed (pending/stale/revert, mechanisms, supports/hinges/placement/drag, couples, self-weight, sections, cut limits, solution, A/B, import/export/print safety, links, keyboard).`);
+console.log(`Beam Lab UI: ${checks} DOM workflow checks passed (no-load opening and exports, pending/stale/revert, mechanisms, supports/hinges/placement/drag, couples, self-weight, sections, cut limits, solution, A/B, import/export/print safety, links, keyboard).`);

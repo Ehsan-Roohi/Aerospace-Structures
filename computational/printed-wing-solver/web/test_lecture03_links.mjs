@@ -11,7 +11,8 @@ const expected=[['l03-tip','cantilever',18.225,2.7],
  ['l03-simple','simply-supported',1.1390625,.675],
  ['l03-fixed','fixed-fixed',.284765625,.3375],
  ['l03-lift','cantilever',6.834375,1.35],
- ['unknown','cantilever',18.225,2.7],['__proto__','cantilever',18.225,2.7],['toString','cantilever',18.225,2.7]];
+ // An unknown name selects no example: the normal opening, which has no applied load (all results zero).
+ ['unknown','cantilever',0,0],['__proto__','cantilever',0,0],['toString','cantilever',0,0]];
 for(const [name,support,deflection,stress] of expected){
  const dom=new JSDOM('<div id="foundations"></div>',{runScripts:'outside-only',url:'https://example.org/wing-lab.html?beamCase='+name});
  const w=dom.window,ctx=dom.getInternalVMContext();
@@ -21,6 +22,9 @@ for(const [name,support,deflection,stress] of expected){
  assert.ok(text.includes(stress.toFixed(3)+' MPa'),name+': stress');
  assert.equal(w.document.querySelector('[data-stage="beam"]').getAttribute('aria-pressed'),'true');
  if(name==='l03-lift')assert.ok(w.document.querySelector('#beamLoads').textContent.includes('-0.004'));
+ const examples=name.startsWith('l03-');
+ assert.equal(w.document.querySelector('#beamLoads ol').children.length,examples?1:0,name+': example loads only for a known example');
+ if(!examples)assert.equal(w.document.querySelector('#beamLoads').textContent.trim(),'No load defined. Add your own load.');
  dom.window.close();
 }
 console.log('Lecture 03: all six deep links and unknown-case fallback pass DOM/numerical checks.');

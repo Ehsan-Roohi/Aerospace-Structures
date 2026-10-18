@@ -1,7 +1,9 @@
 """Assemble the Wing Lab page: inline the verified engines into the HTML template.
 
-The printed-wing engine (engine.js) and the full-scale metal-wing engine (metal_wing_engine.js, with the
-D.520 shell-model reference numbers and its workspace metal_wing_ui.js) are inlined so the page is one file.
+The printed-wing engine (engine.js), the Beam Lab modules (beam_sections.js, beam_learning_engine.js,
+beam_study.js, beam_diagrams.js, beam_solution.js, companion_tools.js, foundations_ui.js and beam_lab.css)
+and the full-scale metal-wing engine (metal_wing_engine.js, with the D.520 shell-model reference numbers and
+its workspace metal_wing_ui.js) are inlined so the page is one file.
 
     python computational/printed-wing-solver/web/build_wing_lab.py
 
@@ -18,7 +20,11 @@ template = (HERE / "wing_lab_template.html").read_text(encoding="utf-8")
 engine = (HERE / "engine.js").read_text(encoding="utf-8")
 assert "/*__ENGINE__*/" in template
 page = template.replace("/*__ENGINE__*/", engine)
-for token, filename in [("/*__BEAM_ENGINE__*/", "beam_learning_engine.js"), ("/*__FOUNDATIONS__*/", "foundations_ui.js"), ("/*__TEACHING_MODELS__*/", "teaching_models.js"), ("/*__TEACHING_PANELS__*/", "teaching_panels.js"),
+# Beam Lab modules share one inline script (sections -> engine -> study/diagrams/solution -> companion
+# tools); its controller (foundations_ui.js) and stylesheet (beam_lab.css) have their own tokens.
+for token, filename in [("/*__BEAM_STYLES__*/", "beam_lab.css"), ("/*__BEAM_SECTIONS__*/", "beam_sections.js"), ("/*__BEAM_ENGINE__*/", "beam_learning_engine.js"),
+                        ("/*__BEAM_STUDY__*/", "beam_study.js"), ("/*__BEAM_DIAGRAMS__*/", "beam_diagrams.js"), ("/*__BEAM_SOLUTION__*/", "beam_solution.js"),
+                        ("/*__COMPANION_TOOLS__*/", "companion_tools.js"), ("/*__FOUNDATIONS__*/", "foundations_ui.js"), ("/*__TEACHING_MODELS__*/", "teaching_models.js"), ("/*__TEACHING_PANELS__*/", "teaching_panels.js"),
                         ("/*__METAL_ENGINE__*/", "metal_wing_engine.js"), ("/*__METAL_REFERENCE__*/", "metal_wing_reference.json"), ("/*__METAL_UI__*/", "metal_wing_ui.js")]:
     assert token in page
     text = (HERE / filename).read_text(encoding="utf-8")

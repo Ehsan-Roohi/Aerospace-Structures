@@ -296,7 +296,7 @@ $$\mathbf K\mathbf u=\mathbf f.$$
 
 Boundary conditions restrict selected components of (\mathbf u\). After solving the free components, the original equations recover reactions. The app reconstructs shear and moment from equilibrium and evaluates stress. Refining the mesh checks numerical sensitivity; it does not verify a real clamp, printed anisotropy or material strength. You do not need to derive element matrices today.
 
-**Software activity A:** open the tip-load link. Find −2 N, −900 N mm, 2.70 MPa and 18.225 mm. Use the probe at 150 mm and check (M=-600) N mm. Explain any sign differences before declaring an error. Download the study record.
+**Software activity A:** open the tip-load link. Find −2 N, −900 N mm, 2.70 MPa and 18.225 mm. In **Cut & section**, set the cut at x = 150 mm and check M = −600 N mm on the free body of the left part. Explain any sign differences before declaring an error. Save the study record (**Report & export → Save study (.json)**).
 ''')
 md(r'''## 6. Example B — uniform pressure reduced to a line load
 

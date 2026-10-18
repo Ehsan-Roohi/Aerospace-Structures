@@ -3,7 +3,7 @@ import {readFileSync} from 'node:fs';
 import {createRequire} from 'node:module';
 import vm from 'node:vm';
 const require=createRequire(import.meta.url);
-const {JSDOM}=require(process.env.MIE446_JSDOM_MODULE || 'jsdom');
+const {JSDOM,loadBeamLab}=await import('./beam_test_dom.mjs');
 const read=f=>readFileSync(new URL(f,import.meta.url),'utf8');
 const expected=[['l03-tip','cantilever',18.225,2.7],
  ['l03-centre','cantilever',5.6953125,1.35],
@@ -15,9 +15,7 @@ const expected=[['l03-tip','cantilever',18.225,2.7],
 for(const [name,support,deflection,stress] of expected){
  const dom=new JSDOM('<div id="foundations"></div>',{runScripts:'outside-only',url:'https://example.org/wing-lab.html?beamCase='+name});
  const w=dom.window,ctx=dom.getInternalVMContext();
- w.matchMedia=()=>({matches:true});w.setInterval=()=>0;
- vm.runInContext(read('./beam_learning_engine.js'),ctx);
- vm.runInContext(read('./foundations_ui.js'),ctx);
+ loadBeamLab(dom);
  const text=w.document.querySelector('#beamKpis').textContent;
  assert.ok(text.includes(deflection.toFixed(4)+' mm'),name+': displacement '+text);
  assert.ok(text.includes(stress.toFixed(3)+' MPa'),name+': stress');

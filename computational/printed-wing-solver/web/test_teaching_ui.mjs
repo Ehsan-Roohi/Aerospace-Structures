@@ -8,7 +8,13 @@ const E = require("./engine.js");
 const source = readFileSync(new URL("./wing_lab_template.html", import.meta.url), "utf8").replaceAll("\r\n", "\n");
 const engine = readFileSync(new URL("./engine.js", import.meta.url), "utf8").replaceAll("\r\n", "\n");
 const published = readFileSync(new URL("../../../docs/wing-lab.html", import.meta.url), "utf8").replaceAll("\r\n", "\n");
-const page = source.replace("/*__ENGINE__*/", engine).replace("/*__BEAM_ENGINE__*/",readFileSync(new URL("./beam_learning_engine.js",import.meta.url),"utf8").replaceAll("\r\n","\n")).replace("/*__FOUNDATIONS__*/",readFileSync(new URL("./foundations_ui.js",import.meta.url),"utf8").replaceAll("\r\n","\n")).replace("/*__TEACHING_MODELS__*/",readFileSync(new URL("./teaching_models.js",import.meta.url),"utf8").replaceAll("\r\n","\n")).replace("/*__TEACHING_PANELS__*/",readFileSync(new URL("./teaching_panels.js",import.meta.url),"utf8").replaceAll("\r\n","\n"))
+const page = source.replace("/*__ENGINE__*/", engine).replace("/*__BEAM_ENGINE__*/",()=>readFileSync(new URL("./beam_learning_engine.js",import.meta.url),"utf8").replaceAll("\r\n","\n")).replace("/*__FOUNDATIONS__*/",()=>readFileSync(new URL("./foundations_ui.js",import.meta.url),"utf8").replaceAll("\r\n","\n"))
+  .replace("/*__BEAM_STYLES__*/",()=>readFileSync(new URL("./beam_lab.css",import.meta.url),"utf8").replaceAll("\r\n","\n"))
+  .replace("/*__BEAM_SECTIONS__*/",()=>readFileSync(new URL("./beam_sections.js",import.meta.url),"utf8").replaceAll("\r\n","\n"))
+  .replace("/*__BEAM_STUDY__*/",()=>readFileSync(new URL("./beam_study.js",import.meta.url),"utf8").replaceAll("\r\n","\n"))
+  .replace("/*__BEAM_DIAGRAMS__*/",()=>readFileSync(new URL("./beam_diagrams.js",import.meta.url),"utf8").replaceAll("\r\n","\n"))
+  .replace("/*__BEAM_SOLUTION__*/",()=>readFileSync(new URL("./beam_solution.js",import.meta.url),"utf8").replaceAll("\r\n","\n"))
+  .replace("/*__COMPANION_TOOLS__*/",()=>readFileSync(new URL("./companion_tools.js",import.meta.url),"utf8").replaceAll("\r\n","\n")).replace("/*__TEACHING_MODELS__*/",readFileSync(new URL("./teaching_models.js",import.meta.url),"utf8").replaceAll("\r\n","\n")).replace("/*__TEACHING_PANELS__*/",readFileSync(new URL("./teaching_panels.js",import.meta.url),"utf8").replaceAll("\r\n","\n"))
   .replace("/*__METAL_ENGINE__*/",()=>readFileSync(new URL("./metal_wing_engine.js",import.meta.url),"utf8").replaceAll("\r\n","\n"))
   .replace("/*__METAL_REFERENCE__*/",()=>readFileSync(new URL("./metal_wing_reference.json",import.meta.url),"utf8").replaceAll("\r\n","\n").trim())
   .replace("/*__METAL_UI__*/",()=>readFileSync(new URL("./metal_wing_ui.js",import.meta.url),"utf8").replaceAll("\r\n","\n"));

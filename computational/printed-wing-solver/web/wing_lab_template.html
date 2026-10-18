@@ -278,6 +278,7 @@ body { margin: 0; }
   #wingNavigation strong { display: none; }
   #wingNavigation .btn { font-size: 12px; padding: 6px; min-height: 36px; }
 }
+/*__BEAM_STYLES__*/
 </style>
 
 <div id="foundations"></div>
@@ -436,6 +437,7 @@ body { margin: 0; }
         </div>
       </div>
       <p class="guide-note"><b>Numerical what-if, not a print-ready CAD update.</b> Custom rib positions change this app's model and 3-D view only. They do not update the Code-to-Print notebook, STL, G-code or the Python solver automatically. Record approved positions and reproduce them in CAD before manufacturing. Interface ribs stay locked to preserve the module-joint layout.</p>
+      <div class="companion-slot" data-companion="vinco" aria-label="External wing geometry tool"></div>
     </div>
     <div class="tabpanel" id="tab-members" role="tabpanel" hidden><div id="memberLesson"></div></div>
     <div class="tabpanel" id="tab-loads" role="tabpanel" hidden><div id="wingLoadLesson"></div></div>
@@ -494,7 +496,14 @@ body { margin: 0; }
   </section>
 </div>
 
-<script>/*__BEAM_ENGINE__*/</script>
+<script>
+/*__BEAM_SECTIONS__*/
+/*__BEAM_ENGINE__*/
+/*__BEAM_STUDY__*/
+/*__BEAM_DIAGRAMS__*/
+/*__BEAM_SOLUTION__*/
+/*__COMPANION_TOOLS__*/
+</script>
 <script>/*__FOUNDATIONS__*/</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>

@@ -3,7 +3,7 @@ import {readFileSync} from 'node:fs';
 import {createRequire} from 'node:module';
 import vm from 'node:vm';
 const require=createRequire(import.meta.url);
-const {JSDOM}=require(process.env.MIE446_JSDOM_MODULE || 'jsdom');
+const {JSDOM,loadBeamLab}=await import('./beam_test_dom.mjs');
 const B=require('./beam_learning_engine.js');
 const read=f=>readFileSync(new URL(f,import.meta.url),'utf8');
 const L=450,w=.002,EI=2200*16*8**3/12;
@@ -17,11 +17,12 @@ const cases=[
 for(const [name,support,qStart,qEnd,arrangement] of cases){
  const dom=new JSDOM('<div id="foundations"></div>',{runScripts:'outside-only',url:'https://example.org/wing-lab.html?beamCase='+name});
  const win=dom.window,ctx=dom.getInternalVMContext(),$=s=>win.document.querySelector(s);
- win.matchMedia=()=>({matches:true});win.setInterval=()=>0;
- vm.runInContext(read('./beam_learning_engine.js'),ctx);
- vm.runInContext(read('./foundations_ui.js'),ctx);
+ loadBeamLab(dom);
+ // Width and depth now live in the cross-section panel (rectangle), length and E in the span panel.
+ assert.equal($('#beamShape').value,'rectangle');
  for(const [key,value] of Object.entries({length:450,width:16,height:8,E:2200})){
-   assert.equal(+$('#beamGeometry [name="'+key+'"]').value,value);checks++;
+   const input=$('#beamGeometry [name="'+key+'"]')||$('#beamSectionFields [data-sec="'+key+'"]');
+   assert.equal(+input.value,value);checks++;
  }
  const r=B.solve({length:L,width:16,height:8,E:2200,support,elements:40,modes:false,loads:[{kind:'distributed',start:0,end:L,qStart,qEnd}]});
  assert.equal($('#beamLoads ol').children.length,1);
@@ -43,10 +44,13 @@ for(const [name,support,qStart,qEnd,arrangement] of cases){
    near(r.reactions[0].force,-.3);near(r.reactions[1].force,-.375);
    near(r.rotation[0],L**3*(8*w/2+7*w)/(360*EI));
    near(r.rotation.at(-1),-(L**3)*(7*w/2+8*w)/(360*EI));
-   const before=$('#beamKpis').textContent,rotations=$('#beamReactions').textContent;
-   $('#beamleftSupport').value='pin';$('#beamrightSupport').value='roller';$('#beamApplySupports').click();
+   // Swapping pin and roller changes only the axial restraint: every number in the table is unchanged.
+   const numbers=()=>[...$('#beamReactions').querySelectorAll('td.num')].map(td=>td.textContent);
+   const before=$('#beamKpis').textContent,rotations=numbers();
+   assert.equal(rotations.length,8);
+   $('#beamleftSupport').value='pin';$('#beamrightSupport').value='roller';$('#beamSolve').click();
    assert.equal($('#beamKpis').textContent,before);
-   assert.equal($('#beamReactions').textContent,rotations);
+   assert.deepEqual(numbers(),rotations);
    assert.deepEqual([...$('#beamPicture').querySelectorAll('[data-support-kind]')].map(x=>x.dataset.supportKind),['pin','roller']);
  }
  // A preset replaces all loads and updates the visible form, even after an old point study.

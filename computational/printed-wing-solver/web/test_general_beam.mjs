@@ -17,12 +17,13 @@ const r=B.solve({leftSupport:'free',rightSupport:'fixed',loads:[{kind:'point',po
 near(r.deflection[0],2*450**3/(3*r.EI));near(r.moment.at(-1),-900);near(r.shear.at(-1),-2);near(r.reactions[0].force,-2);near(r.reactions[0].moment,900);
 const propped=B.solve({leftSupport:'fixed',rightSupport:'pin',loads:[{kind:'distributed',start:0,end:450,qStart:.002,qEnd:.002}]});
 near(propped.reactions[0].force,-5*.002*450/8);near(propped.reactions[1].force,-3*.002*450/8);near(propped.reactions[0].moment,-.002*450**2/8);
-const {JSDOM}=require(process.env.MIE446_JSDOM_MODULE||'jsdom');
+const {JSDOM,loadBeamLab}=await import('./beam_test_dom.mjs');
 const dom=new JSDOM('<div id="foundations"></div>',{url:'https://example.org',runScripts:'outside-only'}),w=dom.window,$=s=>w.document.querySelector(s);
-w.matchMedia=()=>({matches:true});w.setInterval=()=>0;
-for(const file of ['beam_learning_engine.js','foundations_ui.js'])vm.runInContext(readFileSync(new URL(file,import.meta.url),'utf8'),dom.getInternalVMContext());
+loadBeamLab(dom);
 assert.equal(w.document.querySelectorAll('[data-stage="beam"]').length,1);assert.equal(w.document.querySelector('[data-stage="cantilever"]'),null);
-$('#beamleftSupport').value='free';$('#beamrightSupport').value='fixed';$('#beamApplySupports').click();assert.match($('#beamTheory').textContent,/free \/ fixed/);
-$('#beamleftSupport').value='free';$('#beamrightSupport').value='free';$('#beamApplySupports').click();assert.match($('#beamSupportStatus').textContent,/Unstable/);assert.match($('#beamTheory').textContent,/free \/ fixed/);
+// Supports are part of the draft; Solve applies the whole draft (the old "Apply both supports" step).
+$('#beamleftSupport').value='free';$('#beamrightSupport').value='fixed';$('#beamSolve').click();assert.match($('#beamTheory').textContent,/free \/ fixed/);
+$('#beamleftSupport').value='free';$('#beamrightSupport').value='free';$('#beamSolve').click();assert.match($('#beamSupportStatus').textContent,/Unstable/);assert.match($('#beamTheory').textContent,/free \/ fixed/);
+assert.match($('#beamRunStatus').textContent,/Not solved/);assert.equal($('.bl-results').dataset.stale,'true');
 assert.ok(!/NaN|undefined/.test($('#beamPicture').innerHTML));dom.window.close();
 console.log(`PASS: ${count} stable support pairs, mechanisms rejected, mirrored cantilever, propped-beam formulas, modes, general UI and rejected-change safety.`);

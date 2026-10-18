@@ -1,0 +1,561 @@
+/*
+ * Beam Diagrams — MIE 446 Beam Lab SVG builders. Pure functions: model/result in, SVG text out.
+ * Colours come from CSS classes (beam_lab.css), so every figure follows the light/dark theme and
+ * prints in black-and-white-safe form. One user unit is drawn at about one CSS pixel; callers pass
+ * the container width so labels stay readable from 360 px phones to wide desktops.
+ *
+ * Physical diagrams show supports and never their reactions. Free-body diagrams show reactions
+ * (and the cut-face V, M) and never support symbols. Sign conventions follow the engine:
+ * load/v positive down, couples clockwise positive, sagging M positive, V = dM/dx.
+ */
+const BeamDiagrams = (() => {
+  'use strict';
+  const esc = s => String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const r1 = v => Math.round(v*10)/10;
+  const clampWidth = w => Math.max(320,Math.min(1240,Number.isFinite(w)&&w>0?w:760));
+  const SUP = {'-':'⁻','0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹'};
+  let uid = 0;
+  const nextId = prefix => `${prefix}${++uid}`;
+
+  /** Readable engineering number: plain decimals for ordinary sizes, ×10ⁿ otherwise. */
+  function fmt(v, sig=4) {
+    if(v===null||v===undefined||!Number.isFinite(v)) return '—';
+    if(v===0||Math.abs(v)<1e-13) return '0';
+    const a=Math.abs(v);
+    if(a>=1e-3&&a<1e6) {
+      const digits=Math.max(0,sig-1-Math.floor(Math.log10(a)));
+      return String(Number(v.toFixed(Math.min(digits,8)))).replace('-','−');
+    }
+    const [m,e]=v.toExponential(sig-1).split('e');
+    return `${m.replace('-','−')} × 10${String(Number(e)).split('').map(c=>SUP[c]).join('')}`;
+  }
+  const signed = (v,sig=4) => (v>0?'+':'')+fmt(v,sig);
+
+  function niceStep(span, count) {
+    const raw=span/Math.max(1,count), p=10**Math.floor(Math.log10(raw)), n=raw/p;
+    return (n<=1?1:n<=2?2:n<=2.5?2.5:n<=5?5:10)*p;
+  }
+  function niceTicks(min, max, count=4) {
+    if(!(max>min)) {const d=Math.abs(min)||1;min-=d;max+=d;}
+    const step=niceStep(max-min,count), lo=Math.floor(min/step+1e-9)*step, hi=Math.ceil(max/step-1e-9)*step, ticks=[];
+    for(let v=lo;v<=hi+step*1e-6;v+=step) ticks.push(Math.abs(v)<step*1e-9?0:v);
+    return {ticks,min:lo,max:hi,step};
+  }
+
+  const svgOpen=(W,H,label,cls='')=>`<svg class="bl-svg ${cls}" viewBox="0 0 ${r1(W)} ${r1(H)}" width="${r1(W)}" height="${r1(H)}" style="max-width:${r1(W)}px" role="img" aria-label="${esc(label)}" preserveAspectRatio="xMidYMid meet"><title>${esc(label)}</title>`;
+  const text=(x,y,s,cls='bl-tx',anchor='middle',extra='')=>`<text x="${r1(x)}" y="${r1(y)}" class="${cls}" text-anchor="${anchor}"${extra}>${esc(s)}</text>`;
+  /** Text whose "_X" parts are drawn as subscripts (R_A, M_B, t_f); content is escaped. */
+  function label(x,y,s,cls='bl-tx',anchor='middle') {
+    const parts=String(s).split(/_([A-Za-z0-9]+)/);
+    if(parts.length===1) return text(x,y,s,cls,anchor);
+    let out='',low=false;
+    parts.forEach((p,i)=>{
+      if(!p) return;
+      const sub=i%2===1;
+      out+=sub!==low?`<tspan dy="${sub?3.5:-3.5}"${sub?' class="bl-subtx"':''}>${esc(p)}</tspan>`:`<tspan${low?' class="bl-subtx"':''}>${esc(p)}</tspan>`;
+      low=sub;
+    });
+    return `<text x="${r1(x)}" y="${r1(y)}" class="${cls}" text-anchor="${anchor}">${out}</text>`;
+  }
+  const line=(x1,y1,x2,y2,cls)=>`<line x1="${r1(x1)}" y1="${r1(y1)}" x2="${r1(x2)}" y2="${r1(y2)}" class="${cls}"/>`;
+
+  /** Straight arrow with a filled head at (x2, y2). */
+  function arrow(x1,y1,x2,y2,cls,head=8) {
+    const L=Math.hypot(x2-x1,y2-y1)||1, ux=(x2-x1)/L, uy=(y2-y1)/L, bx=x2-ux*head, by=y2-uy*head, w=head*0.45;
+    return `<g class="${cls}">${line(x1,y1,bx,by,'bl-shaft')}<path d="M${r1(x2)} ${r1(y2)}L${r1(bx-uy*w)} ${r1(by+ux*w)}L${r1(bx+uy*w)} ${r1(by-ux*w)}Z" class="bl-head"/></g>`;
+  }
+  /** Couple: 270° arc around (cx, cy); clockwise on screen when cw is true. */
+  function coupleArrow(cx,cy,r,cw,cls,head=8) {
+    const a0=cw?-200:20, a1=cw?60:-240, rad=a=>a*Math.PI/180;
+    const p=a=>[cx+r*Math.cos(rad(a)),cy+r*Math.sin(rad(a))];
+    const [x0,y0]=p(a0),[x1,y1]=p(a1);
+    const t=cw?[-Math.sin(rad(a1)),Math.cos(rad(a1))]:[Math.sin(rad(a1)),-Math.cos(rad(a1))];
+    const bx=x1-t[0]*head*0.2, by=y1-t[1]*head*0.2, tipx=x1+t[0]*head*0.8, tipy=y1+t[1]*head*0.8, w=head*0.5;
+    return `<g class="${cls}"><path d="M${r1(x0)} ${r1(y0)}A${r} ${r} 0 1 ${cw?1:0} ${r1(x1)} ${r1(y1)}" class="bl-shaft" fill="none"/><path d="M${r1(tipx)} ${r1(tipy)}L${r1(bx-t[1]*w)} ${r1(by+t[0]*w)}L${r1(bx+t[1]*w)} ${r1(by-t[0]*w)}Z" class="bl-head"/></g>`;
+  }
+  const hatch=(x1,y,x2,dir=1,step=7,len=7)=>{let d='';for(let x=x1;x<=x2+0.1;x+=step)d+=`M${r1(x)} ${r1(y)}l${-len*0.7*dir} ${len}`;return `<path d="${d}" class="bl-hatch"/>`;};
+
+  /* ----------------------------------------------------------- supports */
+
+  function supportSymbol(kind, x, yBottom, end, attrs='') {
+    const g=c=>`<g class="bl-support" data-support-kind="${kind}" ${attrs}>${c}</g>`;
+    if(kind==='fixed') {
+      if(end==='left') return g(`<rect x="${r1(x-14)}" y="${r1(yBottom-36)}" width="14" height="48" class="bl-wall"/>${line(x,yBottom-36,x,yBottom+12,'bl-ground')}${hatchV(x-14,yBottom-36,yBottom+12)}`);
+      if(end==='right') return g(`<rect x="${r1(x)}" y="${r1(yBottom-36)}" width="14" height="48" class="bl-wall"/>${line(x,yBottom-36,x,yBottom+12,'bl-ground')}${hatchV(x,yBottom-36,yBottom+12)}`);
+      return g(`<rect x="${r1(x-9)}" y="${r1(yBottom-30)}" width="18" height="44" class="bl-wall"/>${line(x-9,yBottom+14,x+9,yBottom+14,'bl-ground')}`);
+    }
+    const tri=`<path d="M${r1(x)} ${r1(yBottom)}l-12 19h24Z" class="bl-sup"/>`;
+    if(kind==='pin') return g(`${tri}${line(x-20,yBottom+19,x+20,yBottom+19,'bl-ground')}${hatch(x-16,yBottom+19,x+20)}`);
+    return g(`${tri}<circle cx="${r1(x-6)}" cy="${r1(yBottom+23.5)}" r="4" class="bl-roll"/><circle cx="${r1(x+6)}" cy="${r1(yBottom+23.5)}" r="4" class="bl-roll"/>${line(x-20,yBottom+28,x+20,yBottom+28,'bl-ground')}${hatch(x-16,yBottom+28,x+20)}`);
+  }
+  function hatchV(x,y1,y2){let d='';for(let y=y1+4;y<=y2;y+=7)d+=`M${r1(x)} ${r1(y)}l6 -6`;return `<path d="${d}" class="bl-hatch"/>`;}
+
+  /* --------------------------------------------------------------- loads */
+
+  const LANE = 52; // one distributed-load band (30 px) plus its label row
+  function lanesFor(list) {
+    const lanes=[];
+    return list.map(v=>{
+      let k=lanes.findIndex(end=>end<=v.start+1e-9);
+      if(k<0){k=lanes.length;lanes.push(v.end);} else lanes[k]=v.end;
+      return k;
+    });
+  }
+
+  /**
+   * Loads drawn above the beam whose top edge is at yTop. Returns {svg, labels}.
+   * Downward loads point down onto the beam; upward loads point up from it.
+   */
+  function drawLoads(loads, X, yTop, opts={}) {
+    const dist=loads.filter(v=>v.kind==='distributed'), lanes=lanesFor(dist), laneH=opts.laneH||LANE;
+    const qmax=Math.max(...dist.map(v=>Math.max(Math.abs(v.qStart),Math.abs(v.qEnd))),1e-12);
+    let svg='';
+    dist.forEach((v,i)=>{
+      const base=yTop-4-lanes[i]*laneH, h=30, x0=X(v.start), x1=X(v.end);
+      const hq=q=>h*Math.abs(q)/qmax;
+      const cls=v.selfWeight?'bl-sw':'bl-load';
+      const env=`M${r1(x0)} ${r1(base)}L${r1(x0)} ${r1(base-hq(v.qStart))}L${r1(x1)} ${r1(base-hq(v.qEnd))}L${r1(x1)} ${r1(base)}Z`;
+      svg+=`<path d="${env}" class="${cls}-fill"/>`;
+      const n=Math.max(2,Math.round((x1-x0)/26));
+      for(let k=0;k<=n;k++) {
+        const t=k/n,q=v.qStart+(v.qEnd-v.qStart)*t,x=x0+(x1-x0)*t,hh=hq(q);
+        if(hh<3) continue;
+        svg+=q>=0?arrow(x,base-hh,x,base,cls,6):arrow(x,base,x,base-hh,cls,6);
+      }
+      svg+=`<path d="M${r1(x0)} ${r1(base-hq(v.qStart))}L${r1(x1)} ${r1(base-hq(v.qEnd))}" class="${cls} bl-env"/>`;
+      const label=v.selfWeight?`self-weight ρgA = ${fmt(v.qStart)} N/mm`:v.qStart===v.qEnd?`q = ${fmt(v.qStart)} N/mm`:`q = ${fmt(v.qStart)} → ${fmt(v.qEnd)} N/mm`;
+      svg+=text(Math.min(Math.max((x0+x1)/2,90),opts.width-90),base-h-6,label,`bl-tx-s ${v.selfWeight?'bl-tx-m':'bl-tx-load'}`);
+    });
+    // Point forces and couples in front of the distributed loads; labels alternate rows if crowded.
+    const rows=[-1e9,-1e9];
+    const topOfLoads=yTop-4-Math.max(0,...lanes.map(k=>k+1))*laneH;
+    const len=Math.max(48,yTop-topOfLoads+8);
+    for(const v of loads.filter(p=>p.kind==='point')) {
+      const x=X(v.position);
+      svg+=v.force>=0?arrow(x,yTop-len,x,yTop-1,'bl-load bl-point',9):arrow(x,yTop-1,x,yTop-len,'bl-load bl-point',9);
+      const row=x-rows[0]>96?0:1;rows[row]=x;
+      svg+=text(Math.min(Math.max(x,48),opts.width-48),yTop-len-8-row*16,`P = ${fmt(Math.abs(v.force))} N ${v.force>=0?'↓':'↑'}`,'bl-tx-s bl-tx-load bl-tx-b');
+    }
+    for(const v of loads.filter(p=>p.kind==='moment')) {
+      const x=X(v.position);
+      svg+=coupleArrow(x,yTop+6,17,v.moment>=0,'bl-load bl-couple');
+      svg+=text(Math.min(Math.max(x,60),opts.width-60),yTop-18,`C = ${fmt(Math.abs(v.moment))} N·mm ${v.moment>=0?'↻':'↺'}`,'bl-tx-s bl-tx-load bl-tx-b');
+    }
+    return {svg,height:len+40};
+  }
+
+  function loadHeight(loads) {
+    const dist=loads.filter(v=>v.kind==='distributed'), lanes=lanesFor(dist);
+    const top=Math.max(0,...lanes.map(k=>k+1))*LANE;
+    // Point-force labels need two rows above the arrows; without point forces only a small margin.
+    return Math.max(48,top+12)+(loads.some(v=>v.kind==='point')?44:4);
+  }
+
+  function stationList(model) {
+    const xs=[0,model.length,...model.supports.map(s=>s.x),...model.hinges,
+      ...model.loads.flatMap(v=>v.kind==='distributed'?[v.start,v.end]:[v.position])];
+    return [...new Set(xs.map(v=>Number(v.toPrecision(12))))].sort((a,b)=>a-b);
+  }
+
+  function dimensionLine(model, X, y, W) {
+    const L=model.length, x0=X(0), x1=X(L);
+    let svg=line(x0,y,x1,y,'bl-dim')+line(x0,y-6,x0,y+6,'bl-dim')+line(x1,y-6,x1,y+6,'bl-dim');
+    let last=-1e9;
+    const stations=stationList(model);
+    stations.forEach((s,i)=>{
+      const x=X(s),end=i===0||i===stations.length-1;
+      svg+=line(x,y-4,x,y+4,'bl-dim');
+      if(end||(x-last>40&&x1-x>40)) {svg+=text(x,y+17,fmt(s),'bl-tx-s bl-tx-m');last=x;}
+    });
+    svg+=text((x0+x1)/2,y+34,`span L = ${fmt(L)} mm`,'bl-tx-s bl-tx-b');
+    return svg;
+  }
+
+  /* ------------------------------------------------- physical schematic */
+
+  /**
+   * Physical supported beam (supports + applied loads; never reactions).
+   * opts: width, result (deflected shape when showDeflection), cut:{x}, ghost:{x,kind}, selfWeight:{q}
+   */
+  function beamSchematic(model, opts={}) {
+    const W=clampWidth(opts.width), L=model.length, pad=58;
+    const X=x=>pad+(W-2*pad)*x/L;
+    const loads=[...model.loads];
+    if(opts.selfWeight&&opts.selfWeight.q>0) loads.push({kind:'distributed',start:0,end:L,qStart:opts.selfWeight.q,qEnd:opts.selfWeight.q,selfWeight:true});
+    const yTop=12+loadHeight(loads), yAxis=yTop+6, yBottom=yTop+12, yDim=yBottom+60, H=yDim+44;
+    let svg=svgOpen(W,H,opts.label||`Physical beam: ${model.supports.length} support(s), ${model.loads.length} applied load(s), span ${fmt(L)} mm`,'bl-schematic')
+      .replace('<svg ',`<svg data-x0="${r1(X(0))}" data-x1="${r1(X(L))}" data-length="${L}" data-w="${r1(W)}" `);
+    svg+=`<rect x="0" y="0" width="${r1(W)}" height="${r1(H)}" class="bl-hit" data-beam-hit="1"/>`;
+    svg+=`<rect x="${r1(X(0))}" y="${r1(yTop)}" width="${r1(X(L)-X(0))}" height="12" rx="2" class="bl-beam"/>`;
+    model.supports.forEach((s,i)=>{
+      const end=s.x===0?'left':s.x===L?'right':'interior';
+      const drag=end==='interior'?` data-draggable="support" tabindex="-1"`:'';
+      svg+=supportSymbol(s.kind,X(s.x),yBottom,end,`data-support-index="${i}" data-x="${s.x}"${drag}`);
+      svg+=text(end==='left'?X(s.x)-6:end==='right'?X(s.x)+6:X(s.x),yBottom+48,s.kind,`bl-tx-s bl-tx-m`,end==='left'?'start':end==='right'?'end':'middle');
+    });
+    model.hinges.forEach((h,i)=>{svg+=`<g class="bl-hinge" data-hinge="1" data-hinge-index="${i}" data-x="${h}" data-draggable="hinge"><circle cx="${r1(X(h))}" cy="${r1(yAxis)}" r="6" class="bl-hinge-c"/></g>`;});
+    svg+=drawLoads(loads,X,yTop,{width:W}).svg;
+    if(opts.result&&opts.showDeflection) {
+      const r=opts.result, peak=Math.max(...r.deflection.map(Math.abs));
+      if(peak>0) {
+        const amp=30, pts=r.x.map((x,i)=>`${r1(X(x))},${r1(yAxis+amp*r.deflection[i]/peak)}`).join(' ');
+        const factor=amp/(peak*(W-2*pad)/L);
+        svg=svg.replace('<svg ',`<svg data-exaggeration="${fmt(factor,2)}" `);
+        svg+=`<polyline points="${pts}" class="bl-defl"/>`;
+      }
+    }
+    if(opts.ghost&&Number.isFinite(opts.ghost.x)) {
+      const gx=X(opts.ghost.x);
+      svg+=`<g class="bl-ghost">${opts.ghost.kind==='hinge'?`<circle cx="${r1(gx)}" cy="${r1(yAxis)}" r="7" class="bl-hinge-c"/>`:supportSymbol(opts.ghost.kind,gx,yBottom,opts.ghost.x===0?'left':opts.ghost.x===L?'right':'interior').replace('data-support-kind','data-ghost-kind')}${text(gx,yBottom+48,`${opts.ghost.kind} at x = ${fmt(opts.ghost.x)} mm`,'bl-tx-s bl-tx-b')}</g>`;
+    }
+    svg+=dimensionLine(model,X,yDim,W);
+    if(opts.cut&&Number.isFinite(opts.cut.x)) {
+      const cx=X(opts.cut.x);
+      svg+=`<g class="bl-cutline" data-cut-handle="1">${line(cx,8,cx,yDim-12,'bl-cut')}<circle cx="${r1(cx)}" cy="14" r="9" class="bl-cut-handle"/>${text(cx+(cx>W-120?-14:14),18,`cut x = ${fmt(opts.cut.x)} mm`,'bl-tx-s bl-tx-cut',cx>W-120?'end':'start')}</g>`;
+    }
+    return svg+'</svg>';
+  }
+
+  /* ------------------------------------------------------ free bodies */
+
+  const supportName=i=>String.fromCharCode(65+i);
+  /**
+   * Whole-beam free-body diagram: supports removed and replaced by reactions.
+   * mode 'unknown': symbolic reactions in assumed directions (R up, M counter-clockwise).
+   * mode 'solved' : reactions in their actual directions with magnitudes from the result.
+   */
+  function freeBody(model, result, opts={}) {
+    const W=clampWidth(opts.width), L=model.length, pad=92, mode=opts.mode||'solved';
+    const X=x=>pad+(W-2*pad)*x/L;
+    const loads=result?result.loadsApplied:model.loads;
+    const yTop=12+loadHeight(loads), yAxis=yTop+6, yBottom=yTop+12, yDim=yBottom+100, H=yDim+44;
+    let svg=svgOpen(W,H,opts.label||(mode==='unknown'?'Free-body diagram: supports replaced by unknown reactions':'Free-body diagram: supports replaced by the solved reactions'),'bl-fbd');
+    svg+=`<rect x="${r1(X(0))}" y="${r1(yTop)}" width="${r1(X(L)-X(0))}" height="12" rx="2" class="bl-beam"/>`;
+    model.hinges.forEach(h=>{svg+=`<circle cx="${r1(X(h))}" cy="${r1(yAxis)}" r="6" class="bl-hinge-c"/>`;});
+    svg+=drawLoads(loads,X,yTop,{width:W}).svg;
+    if(opts.resultants===true) for(const v of loads.filter(p=>p.kind==='distributed')) {
+      const h=v.end-v.start, Wt=h*(v.qStart+v.qEnd)/2;
+      if(Math.abs(Wt)<1e-12) continue;
+      const xbar=v.start+h*(v.qStart+2*v.qEnd)/(3*(v.qStart+v.qEnd));
+      if(xbar<v.start-1e-9||xbar>v.end+1e-9) continue;
+      svg+=`<g class="bl-resultant">${line(X(xbar),yBottom+2,X(xbar),yBottom+30,'bl-res-line')}</g>`;
+      svg+=text(X(xbar),yBottom+42,`W = ${fmt(Math.abs(Wt))} N ${Wt>0?'↓':'↑'} at x̄ = ${fmt(xbar)}`,'bl-tx-s bl-tx-m');
+    }
+    const reactions=result?result.reactions:model.supports.map(s=>({x:s.x,kind:s.kind,force:NaN,moment:NaN}));
+    reactions.forEach((r,i)=>{
+      const x=X(r.x), n=supportName(i);
+      const up=mode==='unknown'?true:r.force<0;
+      svg+=up?arrow(x,yBottom+46,x,yBottom+2,'bl-react',9):arrow(x,yBottom+2,x,yBottom+46,'bl-react',9);
+      const rl=mode==='unknown'?`R_${n} (assumed ↑)`:`R_${n} = ${fmt(Math.abs(r.force))} N ${r.force<0?'↑':'↓'}`;
+      const anchor=r.x===0?'start':r.x===L?'end':'middle';
+      svg+=label(anchor==='start'?x-30:anchor==='end'?x+30:x,yBottom+62,rl,'bl-tx-s bl-tx-react bl-tx-b',anchor);
+      if(r.kind==='fixed') {
+        const cw=mode==='unknown'?false:r.moment>0;
+        svg+=coupleArrow(x,yAxis,22,cw,'bl-react');
+        const ml=mode==='unknown'?`M_${n} (assumed ↺)`:`M_${n} = ${fmt(Math.abs(r.moment))} N·mm ${r.moment>0?'↻':'↺'}`;
+        svg+=label(anchor==='start'?x-30:anchor==='end'?x+30:x,yBottom+78,ml,'bl-tx-s bl-tx-react bl-tx-b',anchor);
+      }
+      if(r.kind!=='roller') {
+        // Complete planar free body: the horizontal reaction exists but is zero for transverse loads.
+        const end=r.x===0||r.x===L, dir=r.x===L?1:-1;
+        const y=end?yAxis:yBottom+24, x1=end?x+dir*(r.kind==='fixed'?30:8):x-6, x0=end?x1+dir*44:x-40;
+        svg+=`<g class="bl-axial">${arrow(x0,y,x1,y,'bl-react bl-dashed',7)}</g>`;
+        svg+=label(end?(x0+x1)/2:x0-4,end?y-9:y+4,`H_${n} = 0`,'bl-tx-xs bl-tx-m',end?'middle':'end');
+      }
+    });
+    svg+=dimensionLine(model,X,yDim,W);
+    return svg+'</svg>';
+  }
+
+  /**
+   * Free body of the part left or right of a cut, with the internal V and M on the cut face.
+   * cut = {x, side:'left'|'right', limit:'left'|'right'} where limit selects x⁻ or x⁺ at a jump.
+   */
+  function segmentFbd(model, result, cut, opts={}) {
+    const W=clampWidth(opts.width), L=model.length, eps=L*1e-10, side=cut.side||'left', limit=cut.limit||'left';
+    const a=side==='left'?0:cut.x, b=side==='left'?cut.x:L, span=Math.max(b-a,1e-9);
+    const face=Math.max(128,Math.min(176,W*0.36)), far=W<520?36:60;
+    const pad=side==='left'?far:face, padR=side==='left'?face:far;
+    const X=x=>pad+(W-pad-padR)*(x-a)/span;
+    // Actions on this part: x⁻ cut keeps actions at x on the RIGHT part, x⁺ keeps them on the LEFT part.
+    const atCut=x=>Math.abs(x-cut.x)<=eps;
+    const inside=x=>side==='left'?(x<cut.x-eps||(atCut(x)&&limit==='right')):(x>cut.x+eps||(atCut(x)&&limit==='left'));
+    const loads=[];
+    for(const v of result.loadsApplied) {
+      if(v.kind==='distributed') {
+        const s=Math.max(v.start,a),e=Math.min(v.end,b);
+        if(e-s>eps) {const q=x=>v.qStart+(v.qEnd-v.qStart)*(x-v.start)/(v.end-v.start);loads.push({...v,start:s,end:e,qStart:q(s),qEnd:q(e)});}
+      } else if(inside(v.position)) loads.push(v);
+    }
+    const reactions=result.reactions.map((r,i)=>({...r,name:supportName(i)})).filter(r=>inside(r.x));
+    const V=cut.V, M=cut.M;
+    const yTop=12+loadHeight(loads), yAxis=yTop+6, yBottom=yTop+12, H=yBottom+104;
+    let svg=svgOpen(W,H,`Free body of the ${side} part, cut at x = ${fmt(cut.x)} mm (${limit==='left'?'x⁻':'x⁺'})`,'bl-fbd bl-segment');
+    svg+=`<rect x="${r1(X(a))}" y="${r1(yTop)}" width="${r1(X(b)-X(a))}" height="12" rx="2" class="bl-beam"/>`;
+    const faceX=side==='left'?X(b):X(a);
+    svg+=line(faceX,yTop-10,faceX,yBottom+10,'bl-cutface');
+    model.hinges.filter(h=>h>a+eps&&h<b-eps).forEach(h=>{svg+=`<circle cx="${r1(X(h))}" cy="${r1(yAxis)}" r="6" class="bl-hinge-c"/>`;});
+    svg+=drawLoads(loads,X,yTop,{width:W}).svg;
+    for(const r of reactions) {
+      const x=X(r.x);
+      svg+=r.force<0?arrow(x,yBottom+46,x,yBottom+2,'bl-react',9):arrow(x,yBottom+2,x,yBottom+46,'bl-react',9);
+      svg+=label(x,yBottom+62,`R_${r.name} = ${fmt(Math.abs(r.force))} N ${r.force<0?'↑':'↓'}`,'bl-tx-s bl-tx-react bl-tx-b',x<90?'start':x>W-90?'end':'middle');
+      if(r.kind==='fixed'&&Math.abs(r.moment)>0) {
+        svg+=coupleArrow(x,yAxis,20,r.moment>0,'bl-react');
+        svg+=label(x,yBottom+78,`M_${r.name} = ${fmt(Math.abs(r.moment))} N·mm ${r.moment>0?'↻':'↺'}`,'bl-tx-s bl-tx-react bl-tx-b',x<90?'start':x>W-90?'end':'middle');
+      }
+    }
+    // Positive V acts DOWN on the left part's cut face and UP on the right part's face.
+    // Positive (sagging) M is counter-clockwise on the left part's face, clockwise on the right part's.
+    const vDown=side==='left'?V>=0:V<0, dir=side==='left'?1:-1, anchor=dir>0?'start':'end';
+    // V arrow next to the face; its label sits at the arrow's tail. M arc further out, its label on
+    // the opposite side of the beam from the V label so that the two never overlap.
+    const vx=faceX+dir*16;
+    if(Math.abs(V)>1e-12) svg+=vDown?arrow(vx,yAxis-38,vx,yAxis-2,'bl-int',9):arrow(vx,yAxis+38,vx,yAxis+2,'bl-int',9);
+    const vAbove=Math.abs(V)<=1e-12||vDown;
+    svg+=text(vx,vAbove?yAxis-46:yAxis+54,`V = ${fmt(V)} N`,'bl-tx-s bl-tx-int bl-tx-b',anchor);
+    const mCw=side==='left'?M<0:M>0;
+    if(Math.abs(M)>1e-12) svg+=coupleArrow(faceX+dir*46,yAxis,15,mCw,'bl-int');
+    const my=vAbove?yAxis+40:yAxis-44;
+    svg+=text(vx,my,`M = ${fmt(M)} N·mm`,'bl-tx-s bl-tx-int bl-tx-b',anchor);
+    svg+=text(vx,my+16,M>0?'sagging (+)':M<0?'hogging (−)':'',`bl-tx-s bl-tx-m`,anchor);
+    // span labels
+    svg+=text(X(a),yBottom+96,`${fmt(a)} mm${cut.jump&&side==='right'?(limit==='left'?' (x⁻)':' (x⁺)'):''}`,'bl-tx-s bl-tx-m',side==='left'?'start':'middle');
+    svg+=text(X(b),yBottom+96,`${fmt(b)} mm${cut.jump?(limit==='left'?' (x⁻)':' (x⁺)'):''}`,'bl-tx-s bl-tx-m',side==='left'?'middle':'end');
+    return svg+'</svg>';
+  }
+
+  /* -------------------------------------------------------------- charts */
+
+  const CHARTS = {
+    shear:{title:'Shear force V',short:'Shear V',unit:'N',axis:'V (N)'},
+    moment:{title:'Bending moment M (sagging +)',short:'Moment M (sagging +)',unit:'N·mm',axis:'M (N·mm)'},
+    deflection:{title:'Deflection v (down +, drawn downward)',short:'Deflection v (down +)',unit:'mm',axis:'v (mm)',invert:true},
+    rotation:{title:'Rotation θ = dv/dx (clockwise +)',short:'Rotation θ (cw +)',unit:'rad',axis:'θ (rad)'},
+    stressTop:{title:'Top-fibre stress σ (tension +)',short:'Top-fibre σ (T +)',unit:'MPa',axis:'σ top (MPa)'},
+    stressBottom:{title:'Bottom-fibre stress σ (tension +)',short:'Bottom-fibre σ (T +)',unit:'MPa',axis:'σ bottom (MPa)'},
+    shearStressMax:{title:'Neutral-axis shear stress |τ|max',short:'Shear stress |τ|max',unit:'MPa',axis:'|τ| (MPa)'}
+  };
+
+  /**
+   * Line chart of a sampled result array. opts: width, height, yDomain:[min,max], cut:{x, values:[...]},
+   * series:[{result,key,cls,label}] for comparison overlays with identical axes, supports (x list).
+   */
+  function chart(result, key, opts={}) {
+    const meta=CHARTS[key]||{title:key,unit:'',axis:key};
+    const W=clampWidth(opts.width), H=opts.height||200, m={l:66,r:16,t:30,b:34};
+    const series=opts.series||[{result,key,cls:'bl-curve',label:null}];
+    const L=opts.xMax||Math.max(...series.map(q=>q.result.input.length));
+    let lo=opts.yDomain?opts.yDomain[0]:Math.min(0,...series.flatMap(s=>s.result[s.key]));
+    let hi=opts.yDomain?opts.yDomain[1]:Math.max(0,...series.flatMap(s=>s.result[s.key]));
+    if(hi-lo<1e-12*Math.max(1,Math.abs(hi),Math.abs(lo))) {hi+=1;lo-=1;}
+    const t=niceTicks(lo,hi,4);lo=t.min;hi=t.max;
+    const X=x=>m.l+(W-m.l-m.r)*x/L;
+    const Y=v=>meta.invert?m.t+(H-m.t-m.b)*(v-lo)/(hi-lo):H-m.b-(H-m.t-m.b)*(v-lo)/(hi-lo);
+    let svg=svgOpen(W,H,`${meta.title} in ${meta.unit} along the beam`,'bl-chart').replace('<svg ',`<svg data-x0="${m.l}" data-x1="${r1(W-m.r)}" data-length="${L}" data-w="${r1(W)}" `);
+    svg+=text(W<540?8:m.l,18,`${W<540?meta.short||meta.title:meta.title} (${meta.unit})`,'bl-tx-s bl-tx-b','start');
+    for(const v of t.ticks) svg+=line(m.l,Y(v),W-m.r,Y(v),v===0?'bl-zero':'bl-grid')+text(m.l-8,Y(v)+4,fmt(v,3),'bl-tx-xs bl-tx-m','end');
+    for(const x of opts.supports||[]) svg+=line(X(x),H-m.b,X(x),H-m.b+6,'bl-axis');
+    const xt=niceTicks(0,L,5);
+    for(const x of xt.ticks.filter(x=>x>=0&&x<=L+1e-9)) svg+=text(X(x),H-m.b+18,fmt(x,3),'bl-tx-xs bl-tx-m');
+    svg+=text(W-m.r,H-4,'x (mm)','bl-tx-xs bl-tx-m','end');
+    series.forEach((s,k)=>{
+      const xs=s.result.x, ys=s.result[s.key];
+      const pts=xs.map((x,i)=>`${r1(X(x))},${r1(Y(ys[i]))}`).join(' ');
+      if(k===0&&!opts.noFill) svg+=`<polygon points="${r1(X(xs[0]))},${r1(Y(0))} ${pts} ${r1(X(xs[xs.length-1]))},${r1(Y(0))}" class="bl-area"/>`;
+      svg+=`<polyline points="${pts}" class="${s.cls||'bl-curve'}"/>`;
+    });
+    if(opts.extremes!==false&&series.length===1) {
+      const ys=series[0].result[key], xs=series[0].result.x;
+      let iMax=0,iMin=0;ys.forEach((v,i)=>{if(v>ys[iMax])iMax=i;if(v<ys[iMin])iMin=i;});
+      // Keep extreme labels inside the plot: below a point near the top, above one near the bottom.
+      const mark=(i,above)=>{const x=X(xs[i]),y=Y(ys[i]),right=x<W-120,up=above?y-7>m.t+10:y+14>H-m.b-2;
+        return `<circle cx="${r1(x)}" cy="${r1(y)}" r="3.5" class="bl-ext"/>`+text(x+(right?7:-7),up?y-7:y+15,`${fmt(ys[i])} at x = ${fmt(xs[i],3)}`,'bl-tx-xs bl-tx-b',right?'start':'end');};
+      const scale=Math.max(Math.abs(ys[iMax]),Math.abs(ys[iMin]));
+      if(ys[iMax]>1e-9*scale&&scale>0) svg+=mark(iMax,!meta.invert);
+      if(ys[iMin]<-1e-9*scale&&scale>0) svg+=mark(iMin,!!meta.invert);
+    }
+    if(opts.cut&&Number.isFinite(opts.cut.x)) {
+      const cx=X(opts.cut.x);
+      svg+=line(cx,m.t-4,cx,H-m.b,'bl-cut');
+      (opts.cut.values||[]).forEach((p,i)=>{
+        const y=Y(p.value),right=cx<W-150;
+        let ty=i===0?y-8:y+16;
+        if(ty<m.t+10) ty=y+16; else if(ty>H-m.b-4) ty=y-8;
+        svg+=`<circle cx="${r1(cx)}" cy="${r1(y)}" r="5" class="bl-cut-dot"/>`;
+        svg+=text(cx+(right?9:-9),ty,`${p.label} = ${fmt(p.value)}`,'bl-tx-xs bl-tx-cut bl-tx-b',right?'start':'end');
+      });
+    }
+    if(opts.legend&&W>=420) {
+      let lx=W-m.r;
+      [...opts.legend].reverse().forEach(l=>{const w=12+7*l.label.length;lx-=w;svg+=`<line x1="${r1(lx)}" y1="12" x2="${r1(lx+14)}" y2="12" class="${l.cls}"/>`+text(lx+18,16,l.label,'bl-tx-xs','start');lx-=10;});
+    }
+    return svg+'</svg>';
+  }
+
+  /* ----------------------------------------------------- cross-sections */
+
+  /** Outline path(s) of a section centred at (cx, cy) with scale s px/mm; returns {outer, inner}. */
+  function sectionPaths(section, cx, cy, s) {
+    const R=(x,y,w,h)=>`M${r1(cx+x*s)} ${r1(cy-y*s)}h${r1(w*s)}v${r1(h*s)}h${r1(-w*s)}Z`;
+    const C=(r)=>`M${r1(cx-r*s)} ${r1(cy)}a${r1(r*s)} ${r1(r*s)} 0 1 0 ${r1(2*r*s)} 0a${r1(r*s)} ${r1(r*s)} 0 1 0 ${r1(-2*r*s)} 0Z`;
+    if(section.shape==='rectangle') return R(-section.width/2,section.height/2,section.width,section.height);
+    if(section.shape==='circle') return C(section.diameter/2);
+    if(section.shape==='tube') return C(section.outerDiameter/2)+C(section.outerDiameter/2-section.thickness);
+    if(section.shape==='box') {const {width:B,height:H,thickness:t}=section;return R(-B/2,H/2,B,H)+R(-B/2+t,H/2-t,B-2*t,H-2*t);}
+    const {flangeWidth:bf,height:h,flangeThickness:tf,webThickness:tw}=section;
+    return `M${r1(cx-bf/2*s)} ${r1(cy-h/2*s)}h${r1(bf*s)}v${r1(tf*s)}h${r1(-(bf-tw)/2*s)}v${r1((h-2*tf)*s)}h${r1((bf-tw)/2*s)}v${r1(tf*s)}h${r1(-bf*s)}v${r1(-tf*s)}h${r1((bf-tw)/2*s)}v${r1(-(h-2*tf)*s)}h${r1(-(bf-tw)/2*s)}Z`;
+  }
+
+  function dimH(x1,x2,y,s,cls='bl-dim'){return line(x1,y,x2,y,cls)+line(x1,y-5,x1,y+5,cls)+line(x2,y-5,x2,y+5,cls)+label((x1+x2)/2,y-6,s,'bl-tx-xs bl-tx-b');}
+  function dimV(x,y1,y2,s,left=false){return line(x,y1,x,y2,'bl-dim')+line(x-5,y1,x+5,y1,'bl-dim')+line(x-5,y2,x+5,y2,'bl-dim')+label(x+(left?-7:7),(y1+y2)/2+4,s,'bl-tx-xs bl-tx-b',left?'end':'start');}
+
+  /** Fully dimensioned cross-section with the neutral axis and extreme-fibre distance c. */
+  function sectionDrawing(section, props, opts={}) {
+    const W=Math.max(260,Math.min(420,opts.width||300)), depth=props.depth, width=props.width;
+    const s=Math.min((W-130)/width,150/depth), H=opts.height||Math.max(150,depth*s+86), cx=W/2-10, cy=(H-8)/2+(section.shape==='ibeam'?8:0);
+    let svg=svgOpen(W,H,`${props.label}: dimensioned cross-section`,'bl-section');
+    svg+=`<path d="${sectionPaths(section,cx,cy,s)}" class="bl-sec" fill-rule="evenodd"/>`;
+    svg+=line(cx-width/2*s-18,cy,cx+width/2*s+18,cy,'bl-na')+text(cx-width/2*s-20,cy+4,'NA','bl-tx-xs bl-tx-m','end');
+    svg+=`<circle cx="${r1(cx)}" cy="${r1(cy)}" r="2.5" class="bl-ext"/>`;
+    const top=cy-depth/2*s, bot=cy+depth/2*s, left=cx-width/2*s, right=cx+width/2*s;
+    const f=v=>fmt(v,3);
+    if(section.shape==='rectangle') {svg+=dimH(left,right,bot+20,`b = ${f(section.width)}`)+dimV(right+20,top,bot,`h = ${f(section.height)}`);}
+    else if(section.shape==='circle') {svg+=dimH(left,right,bot+20,`d = ${f(section.diameter)}`);}
+    else if(section.shape==='tube') {svg+=dimH(left,right,bot+20,`D = ${f(section.outerDiameter)}`)+text(right+6,cy-depth/2*s*0.62,`t = ${f(section.thickness)}`,'bl-tx-xs bl-tx-b','start');}
+    else if(section.shape==='box') {svg+=dimH(left,right,bot+20,`B = ${f(section.width)}`)+dimV(right+20,top,bot,`H = ${f(section.height)}`)+text(left+section.thickness*s+4,top+section.thickness*s+14,`t = ${f(section.thickness)}`,'bl-tx-xs bl-tx-b','start');}
+    else {svg+=dimH(left,right,top-12,`b_f = ${f(section.flangeWidth)}`)+dimV(right+20,top,bot,`h = ${f(section.height)}`)+label(left-4,top+section.flangeThickness*s/2+4,`t_f = ${f(section.flangeThickness)}`,'bl-tx-xs bl-tx-b','end')+label(cx+section.webThickness*s/2+5,cy+depth*s/4,`t_w = ${f(section.webThickness)}`,'bl-tx-xs bl-tx-b','start');}
+    svg+=dimV(left-30,top,cy,`c = ${f(props.c)}`,true);
+    svg+=text(8,H-8,'mm','bl-tx-xs bl-tx-m','start');
+    return svg+'</svg>';
+  }
+
+  /** Diverging colour for sigma/scale in [-1, 1]: compression blue, tension red. */
+  function stressColor(t) {
+    const u=Math.max(-1,Math.min(1,t));
+    const mix=(a,b,k)=>a.map((v,i)=>Math.round(v+(b[i]-v)*k));
+    const white=[247,247,247], red=[196,48,62], blue=[38,94,184];
+    const c=u>=0?mix(white,red,u):mix(white,blue,-u);
+    return `rgb(${c[0]},${c[1]},${c[2]})`;
+  }
+
+  /**
+   * Stress through the depth at one station: section shaded by sigma, the linear sigma(z) and the
+   * section-dependent tau(z) = V Q/(I b). opts.scale fixes the colour scale (A/B comparisons).
+   */
+  function sectionStress(section, props, M, V, opts={}) {
+    const S=typeof BeamSections!=='undefined'?BeamSections:require('./beam_sections.js');
+    const W=clampWidth(opts.width), c=props.c, stacked=W<640;
+    // Three panels side by side, or stacked on narrow screens so that nothing is squeezed.
+    const panelW=stacked?W-24:(W-40)/3, panelH=stacked?212:(opts.height||250), H=stacked?3*panelH:panelH;
+    const origin=i=>stacked?[12,i*panelH]:[20+i*panelW,0];
+    const sTop=-M*c/props.I, sBot=M*c/props.I, sMax=opts.scale||Math.max(Math.abs(sTop),1e-12);
+    const depthPx=panelH-104, s=Math.min(depthPx/props.depth,(Math.min(panelW,300)-70)/props.width);
+    let svg=svgOpen(W,H,`Stress through the depth: top ${fmt(sTop)} MPa, bottom ${fmt(sBot)} MPa`,'bl-secstress');
+    // 1. Section shaded by sigma (a vertical gradient is exact for a linear field).
+    let [x0,y0]=origin(0); let zY=z=>y0+panelH/2+2-z*s;
+    const cx=x0+panelW/2, id=nextId('blg');
+    svg+=`<defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1">${[0,0.25,0.5,0.75,1].map(k=>`<stop offset="${k}" stop-color="${stressColor((sTop+(sBot-sTop)*k)/sMax)}"/>`).join('')}</linearGradient></defs>`;
+    svg+=text(cx,y0+18,'Cross-section shaded by σ','bl-tx-xs bl-tx-b');
+    svg+=`<path d="${sectionPaths(section,cx,zY(0),s)}" fill="url(#${id})" class="bl-sec-shaded" fill-rule="evenodd"/>`;
+    svg+=line(cx-props.width/2*s-14,zY(0),cx+props.width/2*s+14,zY(0),'bl-na');
+    svg+=text(cx,zY(c)-8,sTop>1e-12?'T (tension)':sTop<-1e-12?'C (compression)':'σ = 0','bl-tx-xs bl-tx-b');
+    svg+=text(cx,zY(-c)+16,sBot>1e-12?'T (tension)':sBot<-1e-12?'C (compression)':'σ = 0','bl-tx-xs bl-tx-b');
+    svg+=text(cx,y0+panelH-10,props.label,'bl-tx-xs bl-tx-m');
+    // 2. sigma(z): linear distribution.
+    [x0,y0]=origin(1); zY=z=>y0+panelH/2+2-z*s;
+    const ox=x0+panelW/2, sw=Math.max(20,Math.min(panelW,320)/2-46)/Math.max(sMax,1e-12);
+    svg+=text(ox,y0+18,'Normal stress σ(z) = −Mz/I','bl-tx-xs bl-tx-b');
+    svg+=line(ox,zY(c),ox,zY(-c),'bl-axis');
+    svg+=`<path d="M${r1(ox)} ${r1(zY(c))}L${r1(ox+sTop*sw)} ${r1(zY(c))}L${r1(ox)} ${r1(zY(0))}Z" class="${sTop>=0?'bl-t':'bl-c'}"/>`;
+    svg+=`<path d="M${r1(ox)} ${r1(zY(-c))}L${r1(ox+sBot*sw)} ${r1(zY(-c))}L${r1(ox)} ${r1(zY(0))}Z" class="${sBot>=0?'bl-t':'bl-c'}"/>`;
+    svg+=line(ox+sTop*sw,zY(c),ox+sBot*sw,zY(-c),'bl-curve');
+    svg+=text(ox+sTop*sw,zY(c)-8,`σ top = ${fmt(sTop)} MPa`,'bl-tx-xs bl-tx-b');
+    svg+=text(ox+sBot*sw,zY(-c)+16,`σ bottom = ${fmt(sBot)} MPa`,'bl-tx-xs bl-tx-b');
+    svg+=text(ox-8,zY(0)+4,'0','bl-tx-xs bl-tx-m','end');
+    svg+=text(ox,y0+panelH-10,`|M| = ${fmt(Math.abs(M))} N·mm; c = ${fmt(c,3)} mm`,'bl-tx-xs bl-tx-m');
+    // 3. tau(z) with duplicate samples at width changes.
+    [x0,y0]=origin(2); zY=z=>y0+panelH/2+2-z*s;
+    const prof=S.shearProfile(S.properties(section),V,61), tmax=Math.max(...prof.map(p=>Math.abs(p.tau)),1e-12);
+    const tx=x0+Math.max(24,panelW/2-90), tw=Math.max(20,Math.min(panelW,320)-150)/tmax;
+    svg+=text(x0+panelW/2,y0+18,'Shear stress τ(z) = VQ/(Ib)','bl-tx-xs bl-tx-b');
+    svg+=line(tx,zY(c),tx,zY(-c),'bl-axis');
+    const pts=prof.map(p=>`${r1(tx+Math.abs(p.tau)*tw)},${r1(zY(p.z))}`).join(' ');
+    svg+=`<polygon points="${r1(tx)},${r1(zY(-c))} ${pts} ${r1(tx)},${r1(zY(c))}" class="bl-tau"/>`;
+    svg+=`<polyline points="${pts}" class="bl-curve"/>`;
+    const na=prof.reduce((p,q)=>Math.abs(q.z)<Math.abs(p.z)?q:p);
+    svg+=text(tx+Math.abs(na.tau)*tw+6,zY(0)-4,'τ max','bl-tx-xs bl-tx-m','start')+text(tx+Math.abs(na.tau)*tw+6,zY(0)+10,`${fmt(Math.abs(na.tau))} MPa`,'bl-tx-xs bl-tx-b','start');
+    svg+=text(x0+panelW/2,y0+panelH-10,`|V| = ${fmt(Math.abs(V))} N; b(z) = total material width`,'bl-tx-xs bl-tx-m');
+    return svg+'</svg>';
+  }
+
+  /** Elevation of the beam coloured by sigma(x, z) = -M z / I; identical scales for A/B. */
+  function stressMap(result, opts={}) {
+    const W=clampWidth(opts.width), H=opts.height||132, L=result.input.length, m={l:58,r:58,t:26,b:40};
+    const scale=opts.scale||Math.max(result.maxima.bendingStress,1e-12);
+    const X=x=>m.l+(W-m.l-m.r)*x/L, top=m.t, bot=H-m.b;
+    const id=nextId('bls');
+    let svg=svgOpen(W,H,`Bending stress map along the beam; colour scale ±${fmt(scale)} MPa`,'bl-stressmap');
+    svg+=text(W<560?8:m.l,16,opts.title||(W<560?`Bending stress σ (±${fmt(scale)} MPa)`:`Bending stress σ through the depth (colour scale ±${fmt(scale)} MPa)`),'bl-tx-s bl-tx-b','start');
+    let defs='',body='';
+    const n=Math.min(160,Math.max(24,Math.round((W-m.l-m.r)/6)));
+    for(let k=0;k<n;k++) {
+      const x0=L*k/n,x1=L*(k+1)/n,xm=(x0+x1)/2;
+      let i=0;while(i<result.x.length-1&&result.x[i+1]<=xm)i++;
+      const sT=result.stressTop[i],sB=result.stressBottom[i];
+      defs+=`<linearGradient id="${id}${k}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${stressColor(sT/scale)}"/><stop offset="0.5" stop-color="${stressColor(0)}"/><stop offset="1" stop-color="${stressColor(sB/scale)}"/></linearGradient>`;
+      body+=`<rect x="${r1(X(x0))}" y="${top}" width="${r1(X(x1)-X(x0)+0.6)}" height="${bot-top}" fill="url(#${id}${k})"/>`;
+    }
+    svg+=`<defs>${defs}</defs>${body}<rect x="${r1(X(0))}" y="${top}" width="${r1(X(L)-X(0))}" height="${bot-top}" class="bl-map-frame"/>`;
+    svg+=line(X(0),(top+bot)/2,X(L),(top+bot)/2,'bl-na');
+    svg+=text(X(0)-6,top+10,'top','bl-tx-xs bl-tx-m','end')+text(X(0)-6,bot-2,'bottom','bl-tx-xs bl-tx-m','end');
+    // Legend
+    const lx=X(0),lw=Math.min(220,X(L)-X(0)),ly=H-18;
+    let leg='';for(let k=0;k<=20;k++){const u=-1+k/10;leg+=`<rect x="${r1(lx+lw*k/21)}" y="${ly-8}" width="${r1(lw/21+0.5)}" height="8" fill="${stressColor(u)}"/>`;}
+    svg+=leg+text(lx,ly+12,`−${fmt(scale)} C`,'bl-tx-xs','start')+text(lx+lw,ly+12,`+${fmt(scale)} T`,'bl-tx-xs','end')+text(lx+lw/2,ly+12,'0','bl-tx-xs');
+    if(W>=600) svg+=text(X(L),ly+12,'C = compression · T = tension','bl-tx-xs bl-tx-m','end');
+    return svg+'</svg>';
+  }
+
+  /** Rigid-body mechanism motion (from the engine's kinematic null space). */
+  function mechanismSketch(model, mechanism, opts={}) {
+    const W=clampWidth(opts.width), L=model.length, pad=58, H=150, X=x=>pad+(W-2*pad)*x/L, y0=70;
+    let svg=svgOpen(W,H,'Mechanism: the rigid motion that the supports and hinges allow','bl-mech');
+    svg+=line(X(0),y0,X(L),y0,'bl-beam-line');
+    model.supports.forEach(s=>{svg+=supportSymbol(s.kind,X(s.x),y0+6,s.x===0?'left':s.x===L?'right':'interior','');});
+    model.hinges.forEach(h=>{svg+=`<circle cx="${r1(X(h))}" cy="${y0}" r="5" class="bl-hinge-c"/>`;});
+    for(const m of mechanism.motion||[]) svg+=line(X(m.start),y0+28*m.v0,X(m.end),y0+28*m.v1,'bl-mech-line');
+    svg+=text(W/2,H-10,W<560?'Dashed: a rigid motion the supports allow.':'Dashed: one possible rigid motion with no deformation — no unique static solution exists.','bl-tx-xs bl-tx-m');
+    return svg+'</svg>';
+  }
+
+  /** Mode shape with supports; amplitude normalized and arbitrary. */
+  function modeShape(model, mode, opts={}) {
+    const W=clampWidth(opts.width), L=model.length, pad=58, H=170, X=x=>pad+(W-2*pad)*x/L, y0=78, amp=44*(opts.phase===undefined?1:Math.sin(opts.phase));
+    let svg=svgOpen(W,H,`Bending mode ${opts.index+1}: ${fmt(mode.frequencyHz)} Hz, normalized shape`,'bl-mode');
+    svg+=line(X(0),y0,X(L),y0,'bl-zero');
+    model.supports.forEach(s=>{svg+=supportSymbol(s.kind,X(s.x),y0+8,s.x===0?'left':s.x===L?'right':'interior','');});
+    model.hinges.forEach(h=>{svg+=`<circle cx="${r1(X(h))}" cy="${y0}" r="5" class="bl-hinge-c"/>`;});
+    svg+=`<polyline points="${mode.x.map((x,i)=>`${r1(X(x))},${r1(y0+amp*mode.shape[i])}`).join(' ')}" class="bl-mode-line"/>`;
+    svg+=text(pad,20,`Mode ${opts.index+1} · ${fmt(mode.frequencyHz)} Hz`,'bl-tx-s bl-tx-b','start');
+    svg+=text(W<560?W/2:W-pad,H-8,W<560?'Arbitrary amplitude; slowed playback.':'Display amplitude is arbitrary; animation is slowed, not real time.','bl-tx-xs bl-tx-m',W<560?'middle':'end');
+    return svg+'</svg>';
+  }
+
+  /** Small sign-convention key used in the Learn tab and the printed report. */
+  function signConventions(opts={}) {
+    const W=clampWidth(opts.width), cols=W>=620?4:2, rows=4/cols, cellW=W/cols, cellH=118, H=rows*cellH;
+    let svg=svgOpen(W,H,'Sign conventions: load and v positive down, couples and rotation clockwise positive, sagging M positive','bl-signs');
+    const cell=(k,draw,l1,l2)=>{const cx=cellW*(k%cols+0.5), oy=cellH*Math.floor(k/cols);return draw(cx,oy)+text(cx,oy+90,l1,'bl-tx-xs bl-tx-b')+text(cx,oy+106,l2,'bl-tx-xs bl-tx-m');};
+    svg+=cell(0,(x,y)=>arrow(x,y+20,x,y+66,'bl-load',9),'+q, +P, +v','point downward');
+    svg+=cell(1,(x,y)=>coupleArrow(x,y+46,18,true,'bl-load'),'+C, +θ, reaction +M','clockwise');
+    svg+=cell(2,(x,y)=>`<path d="M${r1(x-40)} ${y+40} Q${r1(x)} ${y+64} ${r1(x+40)} ${y+40}" class="bl-defl"/>`+coupleArrow(x-50,y+46,12,true,'bl-int',7)+coupleArrow(x+50,y+46,12,false,'bl-int',7),'+M sagging','↻ left face, ↺ right face');
+    svg+=cell(3,(x,y)=>`<rect x="${r1(x-22)}" y="${y+34}" width="44" height="22" class="bl-beam"/>`+arrow(x-28,y+70,x-28,y+36,'bl-int',7)+arrow(x+28,y+20,x+28,y+54,'bl-int',7),'+V','↑ left face, ↓ right face');
+    return svg+'</svg>';
+  }
+
+  return {fmt,signed,niceTicks,esc,label,beamSchematic,freeBody,segmentFbd,chart,CHARTS,sectionDrawing,sectionStress,stressMap,stressColor,
+    mechanismSketch,modeShape,signConventions,supportName};
+})();
+if(typeof module!=='undefined'&&module.exports)module.exports=BeamDiagrams;
+if(typeof window!=='undefined')window.BeamDiagrams=BeamDiagrams;

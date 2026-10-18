@@ -44,8 +44,7 @@ for(const [name,support,qStart,qEnd,arrangement] of cases){
    near(r.rotation[0],L**3*(8*w/2+7*w)/(360*EI));
    near(r.rotation.at(-1),-(L**3)*(7*w/2+8*w)/(360*EI));
    const before=$('#beamKpis').textContent,rotations=$('#beamReactions').textContent;
-   $('#beamSimpleArrangement').value='pin-left';
-   $('#beamSimpleArrangement').dispatchEvent(new win.Event('change'));
+   $('#beamleftSupport').value='pin';$('#beamrightSupport').value='roller';$('#beamApplySupports').click();
    assert.equal($('#beamKpis').textContent,before);
    assert.equal($('#beamReactions').textContent,rotations);
    assert.deepEqual([...$('#beamPicture').querySelectorAll('[data-support-kind]')].map(x=>x.dataset.supportKind),['pin','roller']);
@@ -54,9 +53,9 @@ for(const [name,support,qStart,qEnd,arrangement] of cases){
  $('#beamCentre').click();
  $('[data-beam-preset="'+name+'"]').click();
  assert.equal($('#beamLoads ol').children.length,1);
- assert.equal($('#beamSimpleArrangement').value,arrangement);
+ assert.equal($('#beamleftSupport').value,support==='simply-supported'?'roller':'fixed');
  assert.equal(+$('#beamQ0').value,qStart);assert.equal(+$('#beamQ1').value,qEnd);
- assert.equal($('[data-stage="'+support+'"]').getAttribute('aria-pressed'),'true');
+ assert.equal($('[data-stage="beam"]').getAttribute('aria-pressed'),'true');
  assert.ok(!/NaN|undefined|Infinity/.test($('#foundations').innerHTML));
  if(name==='hw2b-fixed'){
    $('#beamClear').click();

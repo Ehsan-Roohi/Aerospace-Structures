@@ -22,6 +22,8 @@ An ideal **pin** prevents both translations but permits rotation. It can exert t
 The roller reaction is normal to the supporting surface. On an inclined surface it is generally not vertical. We use horizontal supporting surfaces here.
 """
 
+INTRO += "\n\n### Configure the software: one Beam workspace\n\nOpen [Beam: supports and loads](https://ehsan-roohi.github.io/Aerospace-Structures/wing-lab.html). Select **Left end** and **Right end** independently (fixed, pin, roller or free), then click **Apply both supports and solve**. Support pictures identify your choices. Loads are preserved when supports change.\n\n- Cantilever: left fixed, right free. Reverse these for a right-hand clamp.\n- Simply supported: one pin and one roller; HW 2B uses left roller, right pin.\n- Fixed–fixed: both fixed. A fixed–pin or fixed–roller beam is also possible, but needs displacement compatibility as well as equilibrium.\n- Free–free and single-pin/free combinations are mechanisms and are rejected. Two rollers leave axial rigid-body motion and are rejected. Pin–pin is a **vertical-bending-only** idealization: this model does not calculate axial redundancy or thermal stress.\n\nAfter each change, compare reactions, end displacement and rotation, shear, moment and stress. The reaction table uses positive downward force and clockwise couple. Optional HW 2B presets set the exact assigned dimensions and loads; they are not separate solvers. Existing example links still open the correct case.\n"
+
 FIGURE = r"""#@title Figure 1S — pin, roller and clamp; geometry first, replacement reactions second
 fig, axes = plt.subplots(2, 3, figsize=(15, 8.4), layout='constrained')
 support_names = ['Pin', 'Roller on horizontal ground', 'Fixed clamp']

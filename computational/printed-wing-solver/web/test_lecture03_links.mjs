@@ -21,7 +21,7 @@ for(const [name,support,deflection,stress] of expected){
  const text=w.document.querySelector('#beamKpis').textContent;
  assert.ok(text.includes(deflection.toFixed(4)+' mm'),name+': displacement '+text);
  assert.ok(text.includes(stress.toFixed(3)+' MPa'),name+': stress');
- assert.equal(w.document.querySelector('[data-stage="'+support+'"]').getAttribute('aria-pressed'),'true');
+ assert.equal(w.document.querySelector('[data-stage="beam"]').getAttribute('aria-pressed'),'true');
  if(name==='l03-lift')assert.ok(w.document.querySelector('#beamLoads').textContent.includes('-0.004'));
  dom.window.close();
 }

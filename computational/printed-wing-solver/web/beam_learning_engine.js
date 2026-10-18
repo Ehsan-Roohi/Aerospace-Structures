@@ -53,7 +53,15 @@ const BeamLearningEngine = (() => {
     for(const k of ['length','width','height','E','density']) {
       finite(o[k],k); if(o[k]<=0) throw new Error(`${k} must be greater than zero.`);
     }
-    if(!['cantilever','fixed-fixed','simply-supported'].includes(o.support)) throw new Error('Choose cantilever, fixed-fixed, or simply-supported.');
+    const legacy={'cantilever':['fixed','free'],'fixed-fixed':['fixed','fixed'],'simply-supported':options.simpleArrangement==='roller-left'?['roller','pin']:['pin','roller']};
+    const ends=legacy[o.support];
+    o.leftSupport=options.leftSupport ?? (ends&&ends[0]);
+    o.rightSupport=options.rightSupport ?? (ends&&ends[1]);
+    for(const end of ['leftSupport','rightSupport']) if(!['fixed','pin','roller','free'].includes(o[end])) throw new Error('Choose fixed, pin, roller or free at each end.');
+    const pair=[o.leftSupport,o.rightSupport];
+    o.support=pair[0]==='fixed'&&pair[1]==='free'?'cantilever':pair.every(s=>s==='fixed')?'fixed-fixed':pair.every(s=>s==='pin'||s==='roller')?'simply-supported':'custom';
+    if(!pair.includes('fixed') && pair.filter(s=>s!=='free').length<2) throw new Error('Unstable beam: a free rotation or translation remains. Add a clamp, or restrain vertical motion at both ends.');
+    if(pair.every(s=>s==='roller')) throw new Error('Two rollers leave horizontal rigid-body translation unrestrained. Choose a pin or fixed support at one end.');
     if(!Number.isInteger(o.elements)||o.elements<4||o.elements>100) throw new Error('Use an integer mesh size from 4 to 100 elements.');
     const list=o.loads===undefined?[{kind:'point',position:o.length,force:2}]:o.loads;
     if(!Array.isArray(list)||list.length>30) throw new Error('Provide an array of at most 30 loads.');
@@ -135,14 +143,19 @@ const BeamLearningEngine = (() => {
       if(j<0) throw new Error('Point load could not be located on mesh.');
       F[2*j]+=load.force;
     }
-    const fixed=o.support==='cantilever'?[0,1]:o.support==='fixed-fixed'?[0,1,nd-2,nd-1]:[0,nd-2];
+    const fixed=[];
+    for(const [s,j] of [[o.leftSupport,0],[o.rightSupport,nd-2]]) {
+      if(s!=='free') fixed.push(j);
+      if(s==='fixed') fixed.push(j+1);
+    }
     const free=Array.from({length:nd},(_,i)=>i).filter(i=>!fixed.includes(i));
     const k=free.map(i=>free.map(j=>K[i][j])),m=free.map(i=>free.map(j=>Mass[i][j]));
     const backsolve=factorSPD(k),uf=backsolve(free.map(i=>F[i])),u=zeros(nd);
     free.forEach((j,i)=>u[j]=uf[i]);
     const residual=matVec(K,u).map((v,i)=>v-F[i]);
-    const reactions=[{x:0,force:residual[0],moment:fixed.includes(1)?residual[1]:0}];
-    if(o.support!=='cantilever') reactions.push({x:L,force:residual[nd-2],moment:fixed.includes(nd-1)?residual[nd-1]:0});
+    const reactions=[];
+    if(o.leftSupport!=='free') reactions.push({x:0,force:residual[0],moment:fixed.includes(1)?residual[1]:0});
+    if(o.rightSupport!=='free') reactions.push({x:L,force:residual[nd-2],moment:fixed.includes(nd-1)?residual[nd-1]:0});
 
     function integrals(x) {
       let f=0,lever=0;
@@ -156,7 +169,8 @@ const BeamLearningEngine = (() => {
     }
     function internal(x,side='right') {
       const [f,lever]=integrals(x);
-      let V=-reactions[0].force-f,M=reactions[0].moment-reactions[0].force*x-lever;
+      const left=reactions.find(r=>r.x===0) || {force:0,moment:0};
+      let V=-left.force-f,M=left.moment-left.force*x-lever;
       for(const v of o.loads) if(v.kind==='point'&&(v.position<x-eps||(Math.abs(v.position-x)<=eps&&side==='right'))) {
         V-=v.force;M-=v.force*(x-v.position);
       }

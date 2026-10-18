@@ -214,8 +214,8 @@ $('#beamRefine').click();ok(/40/.test($('#beamConvergence').textContent));
 w.BeamLab.importText(Study.exportStudy({result:B.solve({length:450,leftSupport:'pin',rightSupport:'roller',loads:[{kind:'distributed',start:0,end:450,qStart:0.01,qEnd:-0.01}]})}));
 $('[data-tab="solution"]').click();sol=$('#beamSolution').textContent.replace(/\s+/g,' ');
 ok(/W = 0: a net couple/.test(sol),'zero-resultant load described as a net couple');
-ok(/\(450\) RB \+ 337\.5 = 0/.test(sol),'ΣM_A uses the couple 337.5 N·mm');ok(!/\(0\)\(/.test(sol),'no (0)(arm) term');
-ok(/RB = −337\.5 ?450 = −0\.75 N \(↓\)/.test(sol),'R_B = −337.5 / 450 = −0.75 N, downward');
+ok(/\(450\) RB − 337\.5 = 0/.test(sol),'ΣM_A (↻ +) uses the net couple of the load, −337.5 N·mm');ok(!/\(0\)\(/.test(sol),'no (0)(arm) term');
+ok(/RB = 337\.5 ?450 = 0\.75 N \(acts ↓\)/.test(sol),'R_B = 337.5 / 450 = +0.75 N (↓ +), acting downward');
 
 /* ---------- 8. Compare A/B: independent snapshots, identical axes and colour scale ---------- */
 $('[data-beam-preset="l03-tip"]').click();$('[data-tab="compare"]').click();

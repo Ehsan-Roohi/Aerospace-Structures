@@ -497,6 +497,7 @@ body { margin: 0; }
 </div>
 
 <script>
+/*__LOAD_PROFILES__*/
 /*__BEAM_SECTIONS__*/
 /*__BEAM_ENGINE__*/
 /*__BEAM_STUDY__*/
@@ -510,6 +511,7 @@ body { margin: 0; }
 <script>
 /*__ENGINE__*/
 /*__TEACHING_MODELS__*/
+/*__WING_LOADS_UI__*/
 </script>
 <script>
 (() => {
@@ -523,12 +525,15 @@ body { margin: 0; }
   const css = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 
   // ------------------------------------------------------------ study state
+  // Every opening starts without an applied load: an empty custom load case (no lift, no weight or
+  // inertia relief). Flight, tip and lesson loads are applied only when the student asks for them.
+  const noLoad = () => ({ kind: "custom", items: [], fos: E.DEFAULT_LOAD.fos, tipMass: 0 });
   const S = {
     geometry: { ...E.DEFAULT_GEOMETRY },
     plaKey: "pla_upright", rodKey: "rod_hobby",
     plaOver: { E: null, ft: null, fc: null, fs: null }, rodOver: { E: null },
     assembly: { ...E.DEFAULT_ASSEMBLY, seamFreeLength: 8 },
-    load: { ...E.DEFAULT_LOAD },
+    load: noLoad(),
     criteria: { ...E.DEFAULT_CRITERIA },
     selected: "part",
     plot: "model", deformed: false, scale: 1, xray: false, explode: 0, clip: false, clipY: 150,
@@ -565,13 +570,13 @@ body { margin: 0; }
   };
   function treeModel() {
     const g = S.geometry, { pla, rod } = materials(), L = S.load;
-    const loadLbl = L.kind === "flight" ? `Lift n = ${L.loadFactor}, m = ${L.aircraftMass} kg` : L.kind === "custom" ? `${L.items.length} custom loads` : `Tip force ${L.tipForce} N`;
+    const loadLbl = L.kind === "flight" ? `Lift n = ${L.loadFactor}, m = ${L.aircraftMass} kg` : L.kind === "custom" ? (L.items.length ? `${L.items.length} custom loads` : "No load defined") : `Tip force ${L.tipForce} N`;
     return [
       { id: "part", g: "part", b: "Semi-wing", i: `NACA ${g.naca} · ${g.semiSpan} mm · ${g.modules} modules` },
       { id: "materials", g: "mat", b: "Materials", kids: [{ id: "mat-pla", g: "mat", b: "Shell, ribs, sleeves", i: pla.short + ` · E ${pla.E} MPa` }, { id: "mat-rod", g: "mat", b: "Rods", i: rod.short + ` · E ${(rod.E / 1000).toFixed(0)} GPa` }] },
       { id: "connections", g: "link", b: "Connections", kids: [{ id: "con", g: "link", b: "Rods in sleeves", i: S.assembly.rodsBonded ? "Epoxied (bonded)" : "Slip fit" }, { id: "con-seam", g: "link", b: "Module seams", i: S.assembly.seamsBonded ? "Epoxied" : "Dry (rods only)" }] },
       { id: "fixtures", g: "fix", b: "Fixtures", kids: [{ id: "fix", g: "fix", b: "Fixed: root face", i: "Clamped cantilever" }] },
-      { id: "loads", g: "load", b: "External loads", kids: [{ id: "load", g: "load", b: L.kind === "flight" ? "Lift distribution" : "Tip force", i: loadLbl }] },
+      { id: "loads", g: "load", b: "External loads", kids: [{ id: "load", g: "load", b: L.kind === "flight" ? "Lift distribution" : L.kind === "custom" ? "Custom loads" : "Tip force", i: loadLbl }] },
       { id: "mesh", g: "mesh", b: "Mesh", i: "7 sections · 1-D beam" },
       { id: "results", g: "res", b: "Results", kids: [{ id: "res-stress", g: "res", b: "Stress", i: "Spanwise σ" }, { id: "res-disp", g: "res", b: "Displacement", i: "Resultant" }, { id: "res-fos", g: "res", b: "Factor of safety", i: "Strength" }, { id: "res-mode", g: "res", b: "Frequency modes", i: R ? `f₁ = ${nf(R.fem.fBending[0], 1)} Hz` : "–" }] },
     ];
@@ -688,9 +693,11 @@ body { margin: 0; }
       pm.append(el("p", { class: "note" }, "A real clamp is never perfectly rigid. If a measured slope is softer than predicted, the fixture is one of the first suspects."));
     } else if (id === "loads" || id === "load") {
       $("#pmHead").textContent = "External load";
-      head("Load case", S.load.kind === "flight" ? "Each semi-wing lifts L = n m g / 2. Inertia relief subtracts wing mass loading when enabled." : S.load.kind === "custom" ? "Custom point and distributed loads are active; edit them in Build a wing load." : "A signed upward-positive force at the tip. Self-weight is excluded in this idealized case.");
-      pm.append(segField([["flight", "Flight-like lift"], ["tip", "Tip force"]], S.load.kind, (v) => (S.load.kind = v), "Load case"));
-      pm.append(el("p",{class:"note"},"For arbitrary point, rectangular, triangular or trapezoidal loads, open the Build a wing load tab."));
+      const noLoadCase = S.load.kind === "custom" && !S.load.items.length;
+      head("Load case", noLoadCase ? "No load defined. The wing opens without loads: add your own in Build a wing load, or choose a flight-like or tip case below (a deliberate choice)." : S.load.kind === "flight" ? "Each semi-wing lifts L = n m g / 2. Inertia relief subtracts wing mass loading when enabled (n is applied once to the lift and once to the relief)." : S.load.kind === "custom" ? "Custom loads only (point, linear, elliptic, parabolic, table or Schrenk; no automatic lift, weight or inertia relief). Edit them in Build a wing load." : "A signed upward-positive force at the tip. Self-weight is excluded in this idealized case.");
+      // Switching the case is a deliberate request: start from the documented defaults of that case.
+      pm.append(segField([["flight", "Flight-like lift"], ["tip", "Tip force"]], S.load.kind, (v) => { if (S.load.kind !== v) S.load = { ...E.DEFAULT_LOAD, kind: v, fos: S.load.fos, tipMass: S.load.tipMass }; }, "Load case"));
+      pm.append(el("p",{class:"note"},"For point, rectangular, triangular, trapezoidal, elliptic, parabolic, Schrenk or CSV-table loads at any chord position x/c, open the Build a wing load tab."));
       if (S.load.kind === "flight") {
         pm.append(fs("Lift",
           numField("am", "Aircraft mass", "kg", S.load.aircraftMass, 0.1, (v) => (S.load.aircraftMass = v)),
@@ -750,6 +757,7 @@ body { margin: 0; }
     if (running) { chip.className = "chip idle"; chip.textContent = "Solving"; t.textContent = text || "Running the study"; return; }
     if (stale) { chip.className = "chip warn"; chip.textContent = "Out of date"; t.textContent = "Inputs changed — run the study"; return; }
     if (!R) return;
+    if (R.load.kind === "custom" && !R.load.items.length) { chip.className = "chip idle"; chip.textContent = "No load"; t.textContent = text || "No load defined. Add your own load, or apply a flight-like or tip case."; return; }
     const u = R.governing.U;
     chip.className = "chip " + (u <= 1 ? "warn" : "bad");
     chip.textContent = u <= 1 ? "Other checks within limits · buckling unresolved" : "Other model check exceeded";
@@ -1078,11 +1086,15 @@ body { margin: 0; }
       else grp.add(new THREE.ArrowHelper(new THREE.Vector3(0, -1, 0), new THREE.Vector3(y, zHigh + len + w, x), len, color, Math.min(10, len * 0.35), 5));
     };
     if (R.load.kind === "custom") {
-      const lines=R.load.items.filter(p=>p.kind==='distributed');
-      const qmax=Math.max(...lines.flatMap(p=>[Math.abs(p.qStart),Math.abs(p.qEnd)]),1e-12);
-      for(const p of lines) for(let i=0;i<=12;i++) {
-        const y=p.start+(p.end-p.start)*i/12,q=p.qStart+(p.qEnd-p.qStart)*i/12;
-        add(y,p.fraction*E.chordAt(g,y),1.2*q/qmax,q>=0?COLORS.load:COLORS.relief);
+      // Line loads of every shape (linear, elliptic, parabolic, table, Schrenk): 13 arrows each on its own span,
+      // at its chord position; heights relative to the largest intensity drawn.
+      const P=LoadProfiles, lines=R.load.items.filter(p=>p.kind!=='point');
+      const span=p=>p.kind==='table'?[p.points[0][0],p.points.at(-1)[0]]:p.kind==='schrenk'?[0,L]:[p.start,p.end];
+      const qAt=(p,y)=>p.kind==='distributed'?p.qStart+(p.qEnd-p.qStart)*(y-p.start)/(p.end-p.start):p.kind==='schrenk'?0.5*p.total*(E.chordAt(g,y)/(0.5*(g.rootChord+g.tipChord)*L)+4/(Math.PI*L)*Math.sqrt(Math.max(0,1-(y/L)**2))):P.valueAt(p,y);
+      const samples=p=>{const [a,b]=span(p);return Array.from({length:13},(_,i)=>{const y=a+(b-a)*i/12;return [Math.min(y,b),qAt(p,Math.min(y,b))];});};
+      const qmax=Math.max(...lines.flatMap(p=>samples(p).map(s=>Math.abs(s[1]))),1e-12);
+      for(const p of lines) for(const [y,q] of samples(p)) {
+        add(y,(p.kind==='table'?P.fractionAt(p,y):p.fraction)*E.chordAt(g,y),1.2*q/qmax,q>=0?COLORS.load:COLORS.relief);
       }
     } else if (lift && R.load.distribution !== "tip") {
       const wmax = Math.max(...R.w.map((v) => Math.abs(v))) || 1;
@@ -1421,7 +1433,8 @@ body { margin: 0; }
       `Wing: NACA ${g.naca}, semi-span ${g.semiSpan} mm, chords ${g.rootChord}/${g.tipChord} mm, ${g.modules} modules, skin ${g.skin} mm, ribs ${g.ribThickness} mm at ${E.ribStations(g).map((v) => nf(v, 1)).join(", ")} mm`,
       `Materials: ${R.pla.name} (E ${R.pla.E} MPa, tension ${R.pla.ft} MPa); ${R.rod.name} (E ${R.rod.E} MPa)`,
       `Joints: rods ${R.assembly.rodsBonded ? "epoxied" : "slip fit"}, seams ${R.assembly.seamsBonded ? "epoxied" : `dry (rod free length ${R.seam.freeLength} mm)`}`,
-      `Load: ${wingLoadName(R)}; factor of safety ${L.fos}; details ${JSON.stringify(L)}`,
+      `Load: ${wingLoadName(R)}; factor of safety ${L.fos}`,
+      ...(L.kind === "custom" ? (L.items.length ? L.items.map((q, k) => `  ${k + 1}. ${WingLoadsUI.describe(q, { length: "mm", line: "N/mm", force: "N", moment: "N·mm" })}`) : ["  No load defined."]) : [`  details ${JSON.stringify(L)}`]),
       ``,
       `Mass: printed PLA ${nf(R.mass.printed, 1)} g, rods ${nf(R.mass.rods, 1)} g`,
       `Physical ribs (${R.ribs.length}), y from root in mm: ${R.ribs.join(", ")}`,
@@ -1586,42 +1599,67 @@ body { margin: 0; }
   }
 
   function wingLoadName(r) {
-    return r.load.kind==='custom'?`${r.load.items.length} custom point / line loads (upward +)`:r.load.kind==='tip'?`Tip force ${nf(r.load.tipForce,2)} N at ${nf(r.load.tipFraction,2)}c`:`Flight-like lift: n=${r.load.loadFactor}, mass=${r.load.aircraftMass} kg`;
+    if(r.load.kind==='custom') return r.load.items.length?`${r.load.items.length} custom load${r.load.items.length>1?'s':''} (upward +; no automatic lift, weight or inertia relief)`:'No load defined';
+    return r.load.kind==='tip'?`Tip force ${nf(r.load.tipForce,2)} N at ${nf(r.load.tipFraction,2)}c`:`Flight-like lift: n=${r.load.loadFactor}, mass=${r.load.aircraftMass} kg, ${r.load.distribution}${r.load.inertiaRelief?', inertia relief':''}`;
+  }
+  const downloadText=(name,text,type)=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000);};
+  // Shared custom-load editor (wing_loads_ui.js); this adapter keeps the printed wing's ids, units and rules.
+  const wingLoadAdapter={
+    workspace:'printed',units:{length:'mm',line:'N/mm',force:'N',moment:'N·mm'},
+    ids:{form:'wingLoadForm',kind:'wingKind',a:'wingA',b:'wingB',P:'wingP',q0:'wingQ0',q1:'wingQ1',shape:'wingCurveShape',basis:'wingCurveBasis',value:'wingCurveValue',xc:'wingFraction',law:'wingCurveLaw',
+      list:'wingCustomList',clear:'wingClearLoad',flight:'wingFlightLoad',status:'wingLoadStatus',chord:'wingChordFigure',csv:'wingCsv'},
+    kindValue:{point:'point',uniform:'rectangle',rampUp:'triangle',rampDown:'triangleDown',trapezoid:'trapezoid',elliptic:'elliptic',parabolic:'parabolic',schrenk:'schrenk'},
+    deleteAttr:'data-delete-wing-load',
+    range:()=>({min:0,max:S.geometry.semiSpan}),
+    items:()=>S.load.kind==='custom'?S.load.items:[],
+    mode:()=>S.load.kind==='custom'?(S.load.items.length?'custom':'none'):S.load.kind,
+    validate:items=>E.normalize({...engineInput(),load:{...S.load,kind:'custom',items}}),
+    apply:items=>{S.load={...S.load,kind:'custom',items};changed();},
+    flight:{label:'Apply flight-like lift (n = 4, m = 1 kg, Schrenk, inertia relief)',apply:()=>{S.load={...E.DEFAULT_LOAD,fos:S.load.fos,tipMass:S.load.tipMass};changed();}},
+    allowSchrenk:true,refStation:0,refLabel:'the root y = 0',
+    section:y=>R&&!stale?{outline:E.outerContour(R.geometry,y),chord:E.chordAt(R.geometry,y),xsc:E.interp(y,R.y,R.props.xsc)}:null,
+    schrenkCentroid:()=>WingLoadsUI.schrenkData(S.geometry.semiSpan,y=>E.chordAt(R?R.geometry:E.makeGeometry(S.geometry),y),1,[S.geometry.rootChord,S.geometry.tipChord]).stats.schrenk.ybar,
+    defaults:()=>({a:+(S.geometry.semiSpan/2).toFixed(3),b:S.geometry.semiSpan,P:2,q0:.004,q1:.008,total:2,xc:.3}),
+    statusText:()=>R?`Solved case: ${wingLoadName(R)} · root V = ${nf(R.V[0],3)} N; root M = ${nf(R.M[0]/1000,4)} N·m; root T = ${nf(R.T[0]/1000,4)} N·m (nose-up +).${stale?' Inputs changed: solve to update.':''}`:'',
+    download:downloadText,
+    torqueNote:'In this printed-wing model the torque at an inboard cut uses that cut’s own shear centre, T(y) = Σ F[x_sc(y) − x_F]: in a tapered wing the shear centre moves along the span, so a force through one section’s shear centre can still twist other sections (see “Find zero tip twist” in the member lesson).',
+  };
+  let wingLoadKeeper=null;
+  const loadKeeperOf=()=>wingLoadKeeper||(wingLoadKeeper=WingLoadsUI.keeper(wingLoadAdapter));
+  function schrenkLesson(g) {
+    const L=g.semiSpan, cm=(g.rootChord+g.tipChord)/2;
+    const panels=[{title:`Rectangular wing, same span and area (c = ${nf(cm,1)} mm)`,short:'Rectangle',chord:()=>cm,data:WingLoadsUI.schrenkData(L,()=>cm,1,[cm,cm])},
+      {title:`This wing: root ${nf(g.rootChord,0)} mm, tip ${nf(g.tipChord,0)} mm`,short:'This wing',chord:y=>E.chordAt(g,y),data:WingLoadsUI.schrenkData(L,y=>E.chordAt(g,y),1,[g.rootChord,g.tipChord])}];
+    return `<section class="wle-schrenk"><h3>Schrenk's approximation: what it averages</h3>
+      <div class="equation">w<sub>S</sub>(y) = ½ [ F c(y) / ∫c dy + (4F/πL) √(1 − (y/L)²) ]</div>
+      <p>Both halves carry the same total lift F (equal area), so their mean does too; the root bending moment of the mean is the mean of the two root moments. The flight-like case uses exactly this formula with F = n m g / 2 (it is integrated on the solver's span grid); the custom “Schrenk” load uses it with the F you enter and exact integrals.</p>
+      ${WingLoadsUI.schrenkFigure(panels,{width:760,label:'Chord-proportional, elliptic and Schrenk span loads for a rectangular and this tapered wing, total F = 1 N each'})}
+      <div class="tablewrap">${WingLoadsUI.schrenkTable(panels.map(p=>({...p,data:{...p.data,stats:p.data.stats}})),{force:'N',length:'mm',moment:'N·mm'})}</div>
+      <p class="note">Per newton of total semi-wing lift. Assumptions: an unswept wing without twist, flaps or ailerons deflected, below stall, at a moderate aspect ratio. Sweep, twist and stall change the lift distribution and need a correction or a lifting-surface/CFD analysis; Schrenk is a teaching approximation of the lift per unit span, not a chordwise pressure (Cp) distribution and not a CFD result. Background: <a href="https://ntrs.nasa.gov/citations/19930093823" target="_blank" rel="noopener">NACA/NASA NTRS 19930093823, “A simple approximate method for obtaining spanwise lift distributions over swept wings”</a> (adapting simple methods of this kind to swept wings) and <a href="https://ntrs.nasa.gov/citations/19780008062" target="_blank" rel="noopener">NASA CR-132403 (NTRS 19780008062)</a>.</p></section>`;
   }
   function renderWingLoads() {
     if(!R)return;
-    const g=R.geometry,items=S.load.kind==='custom'?S.load.items:[];
-    $('#wingLoadLesson').innerHTML=`<h2>Build a wing load: force, position and distribution</h2><div class="learn-layout"><article class="learn-copy"><p><b>Wing convention: positive is upward.</b> This is opposite to the downward-positive introductory beam exercise. The root is clamped; the tip is free. The beam pathway is where you compare different support conditions.</p><p>A point force P is measured in N. A line load q(y) is N/mm. Pressure p is N/mm² and must first be integrated over the local chord to obtain q. Load arrows show location/direction, not a calibrated force scale.</p><div class="equation">F = ∫ q(y) dy + ΣP<br>M<sub>root</sub> = ∫ y q(y) dy + Σy<sub>P</sub>P</div><p>Two loads with the same total force can have different bending effects. A 2 N uniform load over length L has root moment FL/2; a root-heavy triangle gives FL/3 and a tip-heavy triangle gives 2FL/3.</p><h3>What does load factor mean?</h3><div class="equation">n = aerodynamic lift / aircraft weight<br>L<sub>semi-wing</sub> = nmg/2</div><p>Here both wings are assigned all aerodynamic lift symmetrically; tail/body lift is not separately allocated. n=2 prescribes twice the 1-g lift at the same aircraft mass. <b>Load factor is not factor of safety.</b> With inertia relief, wing mass contributes downward inertial loading; gross lift and net structural load differ.</p><p>Flight-like default: n=4, m=1 kg, Schrenk distribution. Schrenk averages an elliptic distribution and a chord-proportional distribution; it is a prescribed teaching load, not a CFD result.</p><p>Custom cases below contain only the loads you enter, with no automatic weight/inertia relief. A force exactly at the support is handled in the beam exercise, not as a flexible-span wing load here. Keep distinct load boundaries at least 0.1 mm apart from ribs/seams/ends, or use exactly the same station.</p><p><a href="https://www.faa.gov/sites/faa.gov/files/regulations_policies/handbooks_manuals/aviation/airplane_handbook/20_afh_glossary.pdf" target="_blank" rel="noopener">FAA terminology</a> · <a href="https://help.solidworks.com/2025/english/SolidWorks/cworks/c_Summary_of_Force_and_Torque_Load.htm" target="_blank" rel="noopener">SOLIDWORKS force/torque loading</a></p></article>
-      <div><form id="wingLoadForm" class="callout"><h3>Add a load to the current wing</h3><div class="field"><label for="wingKind">Shape</label><select id="wingKind"><option value="point">Point force</option><option value="rectangle">Rectangular / uniform</option><option value="triangle">Triangular (zero at start)</option><option value="trapezoid">Trapezoidal</option></select></div>${[['wingA','Point station or start (mm)',g.semiSpan/2],['wingB','Distributed end (mm)',g.semiSpan],['wingP','Point force (N, upward +)',2],['wingQ0','Start intensity (N/mm)',.004],['wingQ1','End intensity (N/mm)',.008],['wingFraction','Chord fraction (0–1)',.3]].map(([id,label,val])=>`<div class="field"><label for="${id}">${label}</label><input id="${id}" type="number" step="any" value="${val}" required></div>`).join('')}<button class="btn primary" type="submit">Add / solve wing load</button><p>The first custom load replaces the flight/tip case. Further loads are superposed.</p></form><div id="wingCustomList">${items.map((p,i)=>`<p>${i+1}. ${p.kind==='point'?`${p.force} N at ${p.position} mm`:`${p.qStart} → ${p.qEnd} N/mm from ${p.start} to ${p.end} mm`}; chord ${p.fraction}c <button class="btn" data-delete-wing-load="${i}">Remove</button></p>`).join('')}</div><div class="lesson-actions"><button class="btn" id="wingClearLoad">Clear custom loads</button><button class="btn" id="wingFlightLoad">Restore default flight loading</button></div><p id="wingLoadStatus" role="status">${wingLoadName(R)} · root V=${nf(R.V[0],3)} N; root M=${nf(R.M[0]/1000,4)} N·m.</p></div></div>`;
-    const apply=load=>{if(running||stale){$('#wingLoadStatus').textContent='Wait for a successful solve first.';return;}try{E.normalize({...engineInput(),load});S.load=load;changed();$('#wingLoadStatus').textContent='Solving custom loads…';}catch(e){$('#wingLoadStatus').textContent=e.message;}};
-    const reverse=document.createElement('option');reverse.value='triangleDown';reverse.textContent='Triangular (zero at end / root-heavy)';$('#wingKind').append(reverse);
-    $('#wingKind').querySelector('[value="triangle"]').textContent='Triangular (zero at start / tip-heavy)';
-    const updateFields=()=>{
-      const kind=$('#wingKind').value,point=kind==='point';
-      const visible={wingA:true,wingB:!point,wingP:point,wingQ0:!point&&kind!=='triangle',wingQ1:kind==='triangle'||kind==='trapezoid',wingFraction:true};
-      Object.entries(visible).forEach(([id,show])=>{const input=$('#'+id);input.closest('.field').hidden=!show;input.disabled=!show;input.required=show;});
-      document.querySelector('label[for="wingA"]').textContent=point?'Point station y (mm from root)':'Start station a (mm from root)';
-      document.querySelector('label[for="wingQ0"]').textContent=kind==='rectangle'?'Uniform intensity q (N/mm, upward +)':'Start intensity q(a) (N/mm, upward +)';
-      document.querySelector('label[for="wingQ1"]').textContent='End intensity q(b) (N/mm, upward +)';
-    };
-    $('#wingKind').onchange=updateFields;updateFields();
-    $('#wingLoadForm').insertAdjacentHTML('beforeend','<p class="note">This editor does not change the skin, rods, ribs or joints. Change chord fraction to explore torsion. After adding a load, inspect Model, Stress, Displacement and Diagrams. Add several loads to the same case; their signed effects are superposed.</p>');
-    $('#wingLoadForm').onsubmit=e=>{e.preventDefault();const kind=$('#wingKind').value,q0=+$('#wingQ0').value,q1=+$('#wingQ1').value;const p=kind==='point'?{kind:'point',position:+$('#wingA').value,force:+$('#wingP').value}:{kind:'distributed',start:+$('#wingA').value,end:+$('#wingB').value,qStart:kind==='triangle'?0:q0,qEnd:kind==='triangleDown'?0:kind==='rectangle'?q0:q1};p.fraction=+$('#wingFraction').value;apply({...S.load,kind:'custom',items:[...items,p]});};
-    $('#wingCustomList').querySelectorAll('[data-delete-wing-load]').forEach(b=>b.onclick=()=>apply({...S.load,kind:'custom',items:items.filter((_,i)=>i!==+b.dataset.deleteWingLoad)}));
-    $('#wingClearLoad').onclick=()=>apply({...S.load,kind:'custom',items:[]});
-    $('#wingFlightLoad').onclick=()=>apply({...E.DEFAULT_LOAD});
+    const g=R.geometry;
+    loadKeeperOf().detach();
+    $('#wingLoadLesson').innerHTML=`<h2>Build a wing load: force, position and distribution</h2><div class="learn-layout"><article class="learn-copy"><p><b>Wing convention: positive is upward.</b> This is opposite to the downward-positive introductory beam exercise. The root is clamped; the tip is free. The beam pathway is where you compare different support conditions.</p><p>A point force P is measured in N. A line load q(y) is N/mm. Pressure p is N/mm² and must first be integrated over the local chord to obtain q. Load arrows show location/direction, not a calibrated force scale.</p><div class="equation">F = ∫ q(y) dy + ΣP<br>M<sub>root</sub> = ∫ y q(y) dy + Σy<sub>P</sub>P</div><p>Two loads with the same total force can have different bending effects. A 2 N uniform load over length L has root moment FL/2; a root-heavy triangle gives FL/3 and a tip-heavy triangle gives 2FL/3. A root-heavy elliptic load w = w₀√(1 − (y/L)²) has w₀ = 4F/(πL) and acts at 4L/(3π), so its root moment is 4FL/(3π) ≈ 0.424FL; a root-heavy parabola w₀(1 − (y/L)²) acts at 3L/8.</p><h3>Bending and torsion from the same force</h3><p>x/c is measured from the local leading edge (0) to the trailing edge (1). V and M depend only on the force and its span station. The same force also twists the wing about the shear centre: T = F(x<sub>sc</sub> − x<sub>F</sub>), nose-up positive. The figure next to the form shows the force line, the shear centre and the lever arm for the load you are entering.</p><h3>What does load factor mean?</h3><div class="equation">n = aerodynamic lift / aircraft weight<br>L<sub>semi-wing</sub> = nmg/2</div><p>Here both wings are assigned all aerodynamic lift symmetrically; tail/body lift is not separately allocated. n=2 prescribes twice the 1-g lift at the same aircraft mass. <b>Load factor is not factor of safety.</b> With inertia relief, wing mass contributes downward inertial loading; gross lift and net structural load differ. The flight-like case applies n once to the lift and once to the inertia relief; the lift acts at the “Lift acts at” chord fraction (a quarter-chord teaching value), and this model has no separate airfoil pitching-moment term.</p><p><b>Every wing opens with no load.</b> Flight-like lift (n=4, m=1 kg, Schrenk) is applied only when you press its button. Custom cases contain only the loads you enter, with no automatic weight/inertia relief. A force exactly at the support is handled in the beam exercise, not as a flexible-span wing load here. Keep distinct load boundaries at least 0.1 mm apart from ribs/seams/ends, or use exactly the same station.</p><p><a href="https://www.faa.gov/sites/faa.gov/files/regulations_policies/handbooks_manuals/aviation/airplane_handbook/20_afh_glossary.pdf" target="_blank" rel="noopener">FAA terminology</a> · <a href="https://help.solidworks.com/2025/english/SolidWorks/cworks/c_Summary_of_Force_and_Torque_Load.htm" target="_blank" rel="noopener">SOLIDWORKS force/torque loading</a></p></article>
+      <div id="wingLoadEditorHome"></div></div>${schrenkLesson(g)}`;
+    // The left-panel container (#wingLoadEditor) when the layout has one, otherwise beside the lesson text.
+    loadKeeperOf().place(document.getElementById('wingLoadEditor'),$('#wingLoadEditorHome'));
   }
   function renderMemberLesson() {
     if(!R)return;
     const g=R.geometry,skin=Math.max(...R.stress.sigTop.map(Math.abs),...R.stress.sigBot.map(Math.abs)),rod=Math.max(...R.stress.sigRod.map(Math.abs));
     const supports=[0,...R.ribs,g.semiSpan],bay=Math.max(...supports.slice(1).map((x,i)=>x-supports[i]));
     const stage=$('#app').dataset.lessonStage||'project';
-    $('#memberLesson').innerHTML=`<h2>Starting preset: ${stage==='shell'?'4 · Wing skin only':stage==='rods'?'5 · Add spanwise rods and printed sleeves':stage==='ribs'?'6 · Add ribs':'7 · Course modular wing'}</h2><p><b>Current solved model:</b> ${g.modules} module(s), ${g.rodFractions.length} rods, ${R.ribs.length} ribs; ${g.modules===1?'continuous one-piece shell':R.assembly.seamsBonded?'bonded seams':'dry seams'}. ${wingLoadName(R)}.</p><p>The three introductory wing presets start as continuous one-piece teaching wings with the same 2 N tip load and material cards. The ribbed preset places seven ribs at the course coordinates without physical module seams. The course preset starts with three modules and flight-like loading. These are starting conditions: subsequent input edits change your study. Compare one change at a time under the same load and assembly assumptions.</p>
+    $('#memberLesson').innerHTML=`<h2>Starting preset: ${stage==='shell'?'4 · Wing skin only':stage==='rods'?'5 · Add spanwise rods and printed sleeves':stage==='ribs'?'6 · Add ribs':'7 · Course modular wing'}</h2><p><b>Current solved model:</b> ${g.modules} module(s), ${g.rodFractions.length} rods, ${R.ribs.length} ribs; ${g.modules===1?'continuous one-piece shell':R.assembly.seamsBonded?'bonded seams':'dry seams'}. ${wingLoadName(R)}.</p><p>The three introductory wing presets start as continuous one-piece teaching wings with the same material cards. The ribbed preset places seven ribs at the course coordinates without physical module seams. The course preset starts with three modules. <b>Every preset opens with no load</b>: apply the same lesson load to each one to compare them, or build your own in Build a wing load. These are starting conditions: subsequent input edits change your study. Compare one change at a time under the same load and assembly assumptions.</p><div class="lesson-actions"><button class="btn" type="button" id="lessonTipLoad">Apply the lesson load: 2 N upward tip force at 0.30c</button><button class="btn" type="button" id="lessonFlightLoad">Apply flight-like lift (n = 4, m = 1 kg, Schrenk)</button></div>
     <div class="learn-layout"><article class="learn-copy"><h3>What carries the load?</h3><p><b>Skin:</b> receives pressure, carries spanwise tension/compression under bending, and shear from transverse force and torsion. A closed skin already has EI and GJ; it is not just a cover.</p><p><b>Rods:</b> spanwise reinforcement; they also bridge dry modular joints. Our round carbon rods are <b>not a conventional deep spar</b> with caps and a web. Adding these rods also adds their printed sleeves. The comparison therefore changes both components and mass, not carbon alone.</p><p><b>Ribs:</b> preserve section shape, support skin bays and transfer local forces, including forces around rod holes. In this reduced beam model they change mass, bay spacing and joint-bearing estimates, but do not directly add diaphragm stiffness to EI/GJ.</p><h3>Why seven ribs?</h3><div class="equation">3 interior + (2 interfaces × 2 ribs/interface) = 7</div><p>Seven is the initial <b>manufacturing layout</b>, not a proved optimum or minimum. Removing ribs does not remove the applied load. It can permit skin distortion, local bending/buckling or poor joint support. Those effects need local analysis and manufacturing evidence; a similar global deflection is not proof ribs are unnecessary.</p><h3>Why is the root not moving?</h3><p>The clamp imposes zero displacement and rotation. It can still carry a large moment and high stress. For a uniform cantilever with a tip force, nominal bending stress is highest at the root. In a tapered/reinforced wing the peak also depends on EI, material and geometry. Local holes/contact can raise stress beyond this beam estimate.</p><h3>The calculation, in order</h3><div class="equation">Loads → V, M, T → section stiffness → displacement / stress<br>dV/dy = −q &nbsp; · &nbsp; dM/dy = −V<br>κ = M/EI &nbsp; · &nbsp; dθ/dy = κ &nbsp; · &nbsp; du/dy = θ<br>dφ/dy = T/GJ &nbsp; · &nbsp; σ = −Eκ(z−z<sub>NA</sub>)</div><p>The engine computes section properties, sums outboard loads, integrates bending/twist and independently checks displacement with beam finite elements. Dry joints add spring rotations. Sign conventions are upward load and positive nose-up torque; do not mix them with the downward-positive introductory beam plots.</p></article>
     <div><div class="callout"><h3>Separate stress results</h3><div class="lesson-actions"><button class="btn" id="skinStress">Show skin stress</button><button class="btn" id="rodStress">Show rod stress</button><button class="btn" id="ribBearingView">Show ribs / bearing</button></div><dl class="kv"><dt>Maximum nominal skin bending |σ|</dt><dd>${nf(skin,3)} MPa</dd><dt>Rod bending envelope (between seams)</dt><dd>${g.rodFractions.length?nf(rod,3)+' MPa':'No rods in this model'}</dd><dt>Physical ribs</dt><dd>${R.ribs.length}</dd><dt>Current colour field</dt><dd>${S.stressComponent==='rods'?'Rod bending':'Skin/sleeve bending'}</dd></dl><p>Stress colours are rescaled per run/component. Compare numbers, not just colour. Grey parts are not the selected stress field. Rod stress uses E<sub>rod</sub> and its own neutral axis for slip-fit rods; bonded rods use the composite neutral axis. This is nominal bending stress, not a full 3-D contact stress solution.</p>
       <h3>Rib-hole bearing: what is actually solved</h3><div class="equation">σ<sub>bearing</sub> ≈ F<sub>hole</sub> / (d<sub>rod</sub> t<sub>rib</sub>)</div>${R.ribBearing.length?`<table><thead><tr><th>Interface rib y</th><th>Estimated force per hole</th><th>Nominal bearing</th></tr></thead><tbody>${R.ribBearing.map(b=>`<tr><td>${nf(b.station,1)} mm</td><td>${nf(b.forcePerRod,2)} N</td><td>${nf(b.stress,3)} MPa</td></tr>`).join('')}</tbody></table><p>Limit-load estimate from a dry-joint force couple and distance to the adjacent support rib. The Checks tab applies the factor of safety. This is not the peak stress around a hole.</p>`:'<p>No dry-interface bearing result applies to this configuration. That means <b>not calculated / not applicable</b>, not zero rib stress.</p>'}<p><b>A full stress map inside every rib is not solved.</b> Ribs remain neutral gold; a shell/solid local FE model with contact/load-transfer assumptions is needed for that map.</p></div>
       <div class="callout" style="margin-top:14px"><h3>Read the animated modes</h3><div class="lesson-actions"><button class="btn" data-teach-mode="bending,0">First bending mode</button><button class="btn" data-teach-mode="bending,1">Second bending mode</button><button class="btn" data-teach-mode="torsion,0">First torsional mode</button></div><div class="equation">K φ = ω² M φ &nbsp; · &nbsp; f = ω/(2π)</div><p>Bending moves the centreline; torsion rotates sections around the span. These are normalized, undamped free-vibration patterns. The animation is magnified and slowed; its amplitude is <b>not</b> the response to your static force. Higher bending modes have more shape reversals. This model separates bending and torsion; it does not predict flutter, damping or forced vibration amplitudes.</p><p><a href="https://help.solidworks.com/2025/english/SolidWorks/cworks/HIDD_Mode_Shape_Amplitude.htm" target="_blank" rel="noopener">SOLIDWORKS explanation of mode amplitudes</a></p></div></div></div>
     <section id="localModels"></section><section id="bucklingModels"></section><section id="torsionLab"></section><section id="ribChange"></section><section id="observations"></section>`;
+    // Deliberate lesson loads (the presets themselves open without a load).
+    $('#lessonTipLoad').onclick=()=>{S.load={...E.DEFAULT_LOAD,kind:'tip',tipForce:2,tipFraction:.3,fos:S.load.fos,tipMass:S.load.tipMass};changed();};
+    $('#lessonFlightLoad').onclick=()=>{S.load={...E.DEFAULT_LOAD,fos:S.load.fos,tipMass:S.load.tipMass};changed();};
     $('#skinStress').onclick=()=>{S.stressComponent='skin';S.anatomy='assembled';setPlot('stress');renderMemberLesson();};
     $('#rodStress').onclick=()=>{S.stressComponent='rods';S.anatomy='inside';S.xray=true;setPlot('stress');applyXray();renderMemberLesson();};
     $('#ribBearingView').onclick=()=>setAnatomy('ribs');
@@ -1890,17 +1928,25 @@ body { margin: 0; }
     const stage=event.detail, project=stage==='project';
     S.geometry={...E.DEFAULT_GEOMETRY, rodFractions:[...E.DEFAULT_GEOMETRY.rodFractions]};
     S.assembly={...E.DEFAULT_ASSEMBLY,seamFreeLength:8};
-    S.load={...E.DEFAULT_LOAD}; S.plaKey='pla_upright';S.rodKey='rod_hobby';S.plaOver={};S.rodOver={};
+    S.load=noLoad(); S.plaKey='pla_upright';S.rodKey='rod_hobby';S.plaOver={};S.rodOver={};
     if (!project) {
       S.geometry.modules=1; S.geometry.customInteriorRibs=stage==='ribs'?[112.5,146,154,225,296,304,337.5]:[];
       if(stage==='shell')S.geometry.rodFractions=[];
-      S.assembly.seamsBonded=true; S.load={...S.load,kind:'tip',tipForce:2,tipFraction:.3};
+      S.assembly.seamsBonded=true;
     }
     S.stressComponent='skin'; S.anatomy='inside';S.xray=true;S.deformed=false;
     $('#foundations').hidden=true;$('#app').hidden=false;$('#wingNavigation').hidden=false;
-    $('#app').dataset.lessonStage=stage;
+    $('#app').dataset.lessonStage=stage; wingStudyOpened=true;
     setPlot('model'); openTab('members'); resize();lastViewSet=false;runStudy();
     $('#wingNavigation').scrollIntoView({block:'start'});
+  });
+  // Returning from another workspace shows the current printed-wing study unchanged; only a first
+  // visit opens the course wing (without loads).
+  let wingStudyOpened=false;
+  window.addEventListener('wing-show', () => {
+    if (!wingStudyOpened) { window.dispatchEvent(new CustomEvent('wing-learning-stage', { detail: 'project' })); return; }
+    $('#foundations').hidden=true;$('#app').hidden=false;$('#wingNavigation').hidden=false;
+    resize(); $('#wingNavigation').scrollIntoView({block:'start'});
   });
   function returnToBeams(support) {
     $('#app').hidden=true;$('#wingNavigation').hidden=true;$('#foundations').hidden=false;

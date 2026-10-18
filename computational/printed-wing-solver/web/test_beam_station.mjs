@@ -219,7 +219,8 @@ for(const [name,section,E] of [['20 × 10 mm, E = 2000',{shape:'rectangle',width
   // The root slice x = 0⁺: the reaction and V(0⁺) balance on a thin slice.
   t.w.BeamLab.setCut(0);
   const slice=$$('#beamCutFbd svg.bl-segment')[0];
-  ok(/thin slice at x = 0 mm/.test(slice.textContent)&&/RA = 0\.45 N ↑/.test(slice.textContent)&&/V = 0\.45 N/.test(slice.textContent),'thin root slice: R_A ↑ and V(0⁺) ↓');
+  ok(/thin slice at x = 0 mm/.test(slice.textContent)&&/RA = −0\.45 N/.test(slice.textContent)&&/V = 0\.45 N/.test(slice.textContent),'thin root slice: signed R_A = −0.45 N (↓ +) and V(0⁺)');
+  eq(slice.querySelector('[data-ext="R"]').dataset.dir,'up','thin root slice: the negative R_A is drawn in its actual direction, up');
   ok(down(vArrow(slice)),'V(0⁺) > 0 acts down on the slice face, balancing the upward reaction');
   eq(($('#beamCutCheck').textContent.match(/✓/g)||[]).length,4);
   $('[data-cut-side="left"]').click();eq($$('#beamCutFbd svg.bl-segment').length,1,'one part on request');eq($('[data-cut-side="left"]').getAttribute('aria-pressed'),'true');
@@ -309,9 +310,11 @@ for(const [name,section,E] of [['20 × 10 mm, E = 2000',{shape:'rectangle',width
   }
   $('[data-tab="cut"]').click();t.w.BeamLab.setCut(0);
   const parts=$$('#beamCutFbd svg.bl-segment');
-  ok(/RA = 0\.315 N ↑/.test(parts[0].textContent)&&/CA = 20\.25 N·mm ↺/.test(parts[0].textContent)&&/V = 0\.315 N/.test(parts[0].textContent),'Cut & section at 0⁺: R_A, C_A and V(0⁺) on the thin left slice');
+  ok(/RA = −0\.315 N/.test(parts[0].textContent)&&/CA = −20\.25 N·mm/.test(parts[0].textContent)&&/V = 0\.315 N/.test(parts[0].textContent),'Cut & section at 0⁺: signed R_A, C_A and V(0⁺) on the thin left slice');
+  ok(parts[0].querySelector('[data-ext="R"]').dataset.dir==='up'&&parts[0].querySelector('[data-ext="C"]').dataset.dir==='ccw','0⁺ slice: R_A acts up and C_A counter-clockwise (actual directions)');
   t.w.BeamLab.setCut(L);const partsL=$$('#beamCutFbd svg.bl-segment');
-  ok(/RB = 0\.135 N ↑/.test(partsL[1].textContent)&&/CB = 13\.5 N·mm ↻/.test(partsL[1].textContent)&&/V = −0\.135 N/.test(partsL[1].textContent),'Cut & section at L⁻: R_B, C_B and V(L⁻) on the thin right slice');
+  ok(/RB = −0\.135 N/.test(partsL[1].textContent)&&/CB = \+13\.5 N·mm/.test(partsL[1].textContent)&&/V = −0\.135 N/.test(partsL[1].textContent),'Cut & section at L⁻: signed R_B, C_B and V(L⁻) on the thin right slice');
+  ok(partsL[1].querySelector('[data-ext="R"]').dataset.dir==='up'&&partsL[1].querySelector('[data-ext="C"]').dataset.dir==='cw','L⁻ slice: R_B acts up and C_B clockwise (actual directions)');
   eq(($('#beamCutCheck').textContent.match(/✓/g)||[]).length,4,'both parts balance at L⁻');
   t.dom.window.close();
 }

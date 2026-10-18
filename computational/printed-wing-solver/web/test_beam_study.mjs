@@ -27,7 +27,7 @@ const withAB=S.exportStudy({result:r,compare:{A:{label:'A',model:back.model},B:{
 const ab=S.parseStudy(withAB);ok(ab.compare.A&&ab.compare.B,'snapshots imported');assert.equal(ab.compare.B.model.E,4000);checks++;
 
 // Versions: newer refused with an explanation; v1 legacy record converted; garbage refused.
-refuse(()=>S.parseStudy(JSON.stringify({...doc,version:3})),/newer Beam Lab.*unchanged/);
+refuse(()=>S.parseStudy(JSON.stringify({...doc,version:S.VERSION+1})),/newer Beam Lab.*unchanged/);
 refuse(()=>S.parseStudy(JSON.stringify({...doc,version:'2'})),/version/);
 refuse(()=>S.parseStudy(JSON.stringify({...doc,version:0})),/version/);
 refuse(()=>S.parseStudy(JSON.stringify({...doc,format:'other'})),/not an MIE 446/);
@@ -78,7 +78,7 @@ assert.deepEqual(S.decodeShare(token),back.model);checks++;
 const url=new URL(S.shareUrl(back.model,'https://ehsan-roohi.github.io/Aerospace-Structures/wing-lab.html?beamCase=l03-tip#d520'));
 assert.equal(url.searchParams.get('beamCase'),null);assert.equal(url.hash,'');assert.deepEqual(S.decodeShare(url.searchParams.get('beam')),back.model);checks+=3;
 const enc=o=>Buffer.from(JSON.stringify(o)).toString('base64').replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
-refuse(()=>S.decodeShare(enc({v:3,m:back.model})),/newer Beam Lab/);
+refuse(()=>S.decodeShare(enc({v:S.VERSION+1,m:back.model})),/newer Beam Lab/);
 refuse(()=>S.decodeShare(enc({v:1,m:back.model})),/Unsupported/);
 refuse(()=>S.decodeShare(enc({m:back.model})),/version/);
 refuse(()=>S.decodeShare(enc({v:2,m:{...back.model,supports:[]}})),/Unstable/);
@@ -107,5 +107,5 @@ const csv=S.resultsCsv(r).trim().split('\r\n');
 assert.equal(csv[0],'x_mm,side,v_mm,theta_rad,V_N,M_Nmm,sigma_top_MPa,sigma_bottom_MPa,tau_max_MPa');assert.equal(csv.length,r.x.length+1);checks+=2;
 ok(csv.slice(1).every(line=>/^[-0-9.e+]+,(left|right|),([-0-9.e+]+,){6}[-0-9.e+]+$/.test(line)),'numeric CSV rows');
 const sides=csv.slice(1).map(l=>l.split(',')[1]);assert.equal(sides.filter(x=>x==='left').length,sides.filter(x=>x==='right').length);checks++;
-const rc=S.reactionsCsv(r).trim().split('\r\n');assert.equal(rc.length,1+r.reactions.length);assert.ok(rc[1].startsWith('0,pin,'));checks+=2;
+const rc=S.reactionsCsv(r).trim().split('\r\n');assert.equal(rc.length,1+r.reactions.length);assert.equal(rc[0],'x_mm,support,type,R_y_N_down,C_Nmm_clockwise,v_mm,theta_rad','one convention: R_y down +, C clockwise +');assert.ok(rc[1].startsWith('0,A,pin,'));checks+=3;
 console.log(`Study files and links: ${checks} round-trip, version, legacy, hostile-input, URL, A/B-diff and CSV checks passed.`);

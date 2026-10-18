@@ -3,9 +3,12 @@
  * Browser: BeamStudy.*  Node: require('./beam_study.js') (needs beam_learning_engine.js).
  *
  * A study file is versioned JSON:
- *   {format:'mie446-beam-study', version:2, engine:'2.0.0', savedAt, model, notes, results, compare}
+ *   {format:'mie446-beam-study', version:2|3, engine:'2.0.0', savedAt, model, notes, results, compare}
  * model = {length, E, density, elements, section:{shape,...}, supports:[{x,kind}], hinges:[x],
- *          loads:[point|moment|distributed], selfWeight}
+ *          loads:[point|moment|distributed|elliptic|parabolic|table], selfWeight}
+ * Version 3 adds the curved loads {kind:'elliptic'|'parabolic', start, end, shape, total|peak} and the
+ * piecewise-linear table {kind:'table', points:[[x, w]], source?, label?}. A study (or link) without them is
+ * still written as version 2, so earlier pages keep reading it.
  * Imported files and links are untrusted: only whitelisted fields are copied, every number is
  * type-checked, sizes are limited, the engine re-validates the physics (including mechanisms),
  * and results are always recomputed, never read from the file. Notes stay plain text.
@@ -18,7 +21,8 @@ const BeamStudy = (() => {
     : (typeof require==='function' ? require('./beam_learning_engine.js') : null);
   if(!B) throw new Error('Load beam_learning_engine.js before beam_study.js.');
   const FORMAT = 'mie446-beam-study';
-  const VERSION = 2;
+  const VERSION = 3;                                  // highest version this page reads
+  const Profiles = B.loads.profiles;
   // loads: the Beam Lab load form allows 12 (as before); files and links use the same limit (the engine allows 30).
   const LIMITS = Object.freeze({fileBytes:200000, shareChars:8000, notes:4000, label:80, loads:Math.min(12,B.LIMITS.loads),
     supports:B.LIMITS.supports, hinges:B.LIMITS.hinges});
@@ -55,8 +59,24 @@ const BeamStudy = (() => {
   function modelFromInput(o) {
     return {length:o.length,E:o.E,density:o.density,elements:o.elements,section:{...o.section},
       supports:o.supports.map(s=>({x:s.x,kind:s.kind})),hinges:[...o.hinges],
-      loads:o.loads.map(v=>({...v})),selfWeight:o.selfWeight===true};
+      loads:o.loads.map(canonicalLoad),selfWeight:o.selfWeight===true};
   }
+  /** A curved load keeps only the value the student entered (total F or peak w0); a table keeps its rows. */
+  function canonicalLoad(v) {
+    if(v.kind==='elliptic'||v.kind==='parabolic') {
+      const out={kind:v.kind,start:v.start,end:v.end,shape:v.shape};
+      if((v.basis||(own(v,'total')?'total':'peak'))==='total') out.total=v.total; else out.peak=v.peak;
+      return out;
+    }
+    if(v.kind==='table') {
+      const out={kind:'table',points:v.points.map(r=>[r[0],r[1]])};
+      if(v.source) out.source={...v.source};
+      if(v.label) out.label=v.label;
+      return out;
+    }
+    return {...v};
+  }
+  const versionFor=model=>model.loads.some(v=>v.kind==='elliptic'||v.kind==='parabolic'||v.kind==='table')?3:2;
 
   /** Whitelist copy of an untrusted model, then full engine validation. Throws on any problem. */
   function sanitizeModel(raw) {
@@ -83,7 +103,31 @@ const BeamStudy = (() => {
       if(v.kind==='point') return {kind:'point',position:n('position'),force:n('force')};
       if(v.kind==='moment') return {kind:'moment',position:n('position'),moment:n('moment')};
       if(v.kind==='distributed') return {kind:'distributed',start:n('start'),end:n('end'),qStart:n('qStart'),qEnd:n('qEnd')};
-      throw new Error(`Load ${i+1} kind must be point, moment or distributed.`);
+      if(v.kind==='elliptic'||v.kind==='parabolic') {
+        if(!Profiles.SHAPES.includes(v.shape)) throw new Error(`Load ${i+1}: the shape must be start, end or middle.`);
+        const out={kind:v.kind,start:n('start'),end:n('end'),shape:v.shape};
+        if(own(v,'total')===own(v,'peak')) throw new Error(`Load ${i+1}: give either the total force or the peak intensity.`);
+        if(own(v,'total')) out.total=n('total'); else out.peak=n('peak');
+        return out;
+      }
+      if(v.kind==='table') {
+        if(!Array.isArray(v.points)||v.points.length<2||v.points.length>Profiles.LIMITS.tableRows)
+          throw new Error(`Load ${i+1}: a table needs 2 to ${Profiles.LIMITS.tableRows} rows.`);
+        const out={kind:'table',points:v.points.map((r,k)=>{
+          if(!Array.isArray(r)||r.length!==2||!r.every(x=>typeof x==='number'&&Number.isFinite(x))) throw new Error(`Load ${i+1} row ${k+1} must be two finite numbers [x, w].`);
+          return [r[0],r[1]];
+        })};
+        if(isObject(v.source)) {
+          const src={};
+          if(typeof v.source.filename==='string') src.filename=cleanText(v.source.filename,200);
+          if(typeof v.source.sha256==='string'&&/^[0-9a-f]{64}$/.test(v.source.sha256)) src.sha256=v.source.sha256;
+          if(Number.isInteger(v.source.rows)) src.rows=v.source.rows;
+          out.source=src;
+        }
+        if(typeof v.label==='string') out.label=cleanText(v.label,LIMITS.label);
+        return out;
+      }
+      throw new Error(`Load ${i+1} kind must be point, moment, distributed, elliptic, parabolic or table.`);
     });
     if(own(raw,'selfWeight')&&typeof raw.selfWeight!=='boolean') throw new Error('Self-weight must be true or false.');
     model.selfWeight=raw.selfWeight===true;
@@ -116,11 +160,14 @@ const BeamStudy = (() => {
   /** JSON text of a solved study. Results are informational only. */
   function exportStudy({result, notes='', compare=null, savedAt=new Date().toISOString()}) {
     if(!result||!result.input) throw new Error('Solve the study before saving it.');
-    const doc={format:FORMAT,version:VERSION,app:'MIE 446 Beam Lab',engine:B.VERSION,savedAt,
-      model:modelFromInput(result.input),notes:cleanText(notes,LIMITS.notes),results:summary(result)};
+    const model=modelFromInput(result.input);
+    let version=versionFor(model);
+    const doc={format:FORMAT,version,app:'MIE 446 Beam Lab',engine:B.VERSION,savedAt,
+      model,notes:cleanText(notes,LIMITS.notes),results:summary(result)};
     if(compare) {
       doc.compare={};
-      for(const key of ['A','B']) if(compare[key]) doc.compare[key]={label:cleanText(compare[key].label||key,LIMITS.label),model:compare[key].model};
+      for(const key of ['A','B']) if(compare[key]) {doc.compare[key]={label:cleanText(compare[key].label||key,LIMITS.label),model:compare[key].model};version=Math.max(version,versionFor(compare[key].model));}
+      doc.version=version;
     }
     return JSON.stringify(doc,null,2);
   }
@@ -171,7 +218,8 @@ const BeamStudy = (() => {
 
   /** URL-safe encoding of a validated model: base64url(JSON {v, m}). */
   function encodeShare(model) {
-    const token=toBase64Url(JSON.stringify({v:VERSION,m:sanitizeModel(model)}));
+    const clean=sanitizeModel(model);
+    const token=toBase64Url(JSON.stringify({v:versionFor(clean),m:clean}));
     if(token.length>LIMITS.shareChars) throw new Error('This study is too large for a link; save it as a file instead.');
     return token;
   }
@@ -198,12 +246,16 @@ const BeamStudy = (() => {
   /* ------------------------------------------------------------- compare */
 
   const fmt=v=>Number(Number(v).toPrecision(6));
+  const SHAPE_TEXT={start:'maximum at the start',end:'maximum at the end',middle:'symmetric, maximum in the middle'};
   function describeLoad(v) {
     if(v.kind==='point') return `P = ${fmt(v.force)} N at x = ${fmt(v.position)} mm`;
     if(v.kind==='moment') return `C = ${fmt(v.moment)} N·mm at x = ${fmt(v.position)} mm`;
+    if(v.kind==='elliptic'||v.kind==='parabolic') return `${v.kind} (${SHAPE_TEXT[v.shape]}) ${own(v,'total')&&v.basis!=='peak'?`F = ${fmt(v.total)} N`:`w₀ = ${fmt(v.peak)} N/mm`} on ${fmt(v.start)}–${fmt(v.end)} mm`;
+    if(v.kind==='table') return `table of ${v.points.length} rows (linear between rows) on ${fmt(v.points[0][0])}–${fmt(v.points[v.points.length-1][0])} mm${v.source&&v.source.filename?` from ${v.source.filename}`:''}`;
     return `q = ${fmt(v.qStart)} → ${fmt(v.qEnd)} N/mm on ${fmt(v.start)}–${fmt(v.end)} mm`;
   }
-  const loadKey=v=>JSON.stringify(v.kind==='point'?[v.kind,v.position,v.force]:v.kind==='moment'?[v.kind,v.position,v.moment]:[v.kind,v.start,v.end,v.qStart,v.qEnd]);
+  const loadKey=v=>{const c=canonicalLoad(v);return JSON.stringify(c.kind==='point'?[c.kind,c.position,c.force]:c.kind==='moment'?[c.kind,c.position,c.moment]:
+    c.kind==='table'?[c.kind,c.points]:c.kind==='distributed'?[c.kind,c.start,c.end,c.qStart,c.qEnd]:[c.kind,c.start,c.end,c.shape,c.total??null,c.peak??null]);};
 
   /** Changed input variables between two canonical models, and whether the loading differs. */
   function diffModels(a, b) {
@@ -240,11 +292,12 @@ const BeamStudy = (() => {
   }
   function reactionsCsv(result) {
     const i0=x=>result.x.findIndex(v=>Math.abs(v-x)<=result.input.length*1e-10);
-    const rows=[['x_mm','support','force_N_down','moment_Nmm_clockwise','v_mm','theta_rad']];
-    for(const r of result.reactions) {
+    // One sign convention (as the tables, the Solution tab and the report): R_y down +, C clockwise +, v down +, θ clockwise +.
+    const rows=[['x_mm','support','type','R_y_N_down','C_Nmm_clockwise','v_mm','theta_rad']];
+    result.reactions.forEach((r,i)=>{
       const st=result.stations.find(s=>Math.abs(s.x-r.x)<=result.input.length*1e-10);
-      rows.push([csvNumber(r.x),r.kind,csvNumber(r.force),csvNumber(r.moment),csvNumber(result.deflection[i0(r.x)]),csvNumber(st?(st.thetaRight??st.thetaLeft):result.rotation[i0(r.x)])]);
-    }
+      rows.push([csvNumber(r.x),String.fromCharCode(65+i),r.kind,csvNumber(r.force),csvNumber(r.moment),csvNumber(result.deflection[i0(r.x)]),csvNumber(st?(st.thetaRight??st.thetaLeft):result.rotation[i0(r.x)])]);
+    });
     return rows.map(r=>r.join(',')).join('\r\n')+'\r\n';
   }
 
@@ -279,7 +332,7 @@ const BeamStudy = (() => {
     return rows.map(r=>r.join(',')).join('\r\n')+'\r\n';
   }
 
-  return {FORMAT,VERSION,LIMITS,escapeHtml,cleanText,modelFromInput,sanitizeModel,exportStudy,parseStudy,
+  return {FORMAT,VERSION,LIMITS,escapeHtml,cleanText,modelFromInput,canonicalLoad,versionFor,sanitizeModel,exportStudy,parseStudy,
     encodeShare,decodeShare,shareUrl,diffModels,describeLoad,resultsCsv,reactionsCsv,stationRows,stationsCsv};
 })();
 if(typeof module!=='undefined'&&module.exports)module.exports=BeamStudy;

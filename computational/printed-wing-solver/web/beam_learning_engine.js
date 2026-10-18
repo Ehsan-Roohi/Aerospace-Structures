@@ -9,7 +9,9 @@
  *   selfWeight:false,                                         // adds rho g A as a line load when true
  *   loads:[{kind:'point',position:450,force:2},
  *          {kind:'moment',position:200,moment:50},
- *          {kind:'distributed',start:0,end:450,qStart:0,qEnd:0.01}]})
+ *          {kind:'distributed',start:0,end:450,qStart:0,qEnd:0.01},
+ *          {kind:'elliptic',start:0,end:450,shape:'start',total:0.45},   // or peak (N/mm); also 'parabolic'
+ *          {kind:'table',points:[[0,0.002],[225,0.001],[450,0]]}]})      // piecewise-linear table (CSV import)
  *
  * Units: mm, N, MPa = N/mm², N/mm, N·mm, density g/cm³; massG is grams, frequencyHz is Hz.
  * Positive transverse load/displacement is DOWNWARD. Rotation theta = dv/dx (clockwise).
@@ -29,6 +31,12 @@
  * shearStressMax = k |V| / A is the neutral-axis maximum of V Q/(I b) for the chosen section
  * (k = 1.5 for a solid rectangle, 4/3 for a solid circle); it is not the surface shear (zero).
  *
+ * Curved loads (elliptic, parabolic; shapes 'start' | 'end' | 'middle' give the maximum at the start, at the
+ * end or in the middle) are defined in load_profiles.js. Their resultants, V and M use closed-form integrals;
+ * their consistent element loads use Gauss–Legendre quadrature in the angle variable for the elliptic square
+ * root (round-off accurate) and exact Gauss rules for the polynomial and table loads. A table load is linear
+ * between its rows (at most 31 rows) and zero outside them. LIMITS.loads counts load segments: each load is
+ * one segment, a table is rows − 1.
  * Cubic Hermite beam FE, consistent load integration (3-point Gauss), exact consistent Hermite
  * mass matrix, reactions from r = K u - f, exact equilibrium recovery of V/M, generalized
  * inverse-iteration modes. The mesh inserts every load, support and hinge station; point
@@ -47,6 +55,9 @@ const BeamLearningEngine = (() => {
   const Sections = typeof BeamSections!=='undefined' ? BeamSections
     : (typeof require==='function' ? require('./beam_sections.js') : null);
   if(!Sections) throw new Error('Load beam_sections.js before beam_learning_engine.js.');
+  const Profiles = typeof LoadProfiles!=='undefined' ? LoadProfiles
+    : (typeof require==='function' ? require('./load_profiles.js') : null);
+  if(!Profiles) throw new Error('Load load_profiles.js before beam_learning_engine.js.');
   const DEFAULTS = {length:450,width:20,height:10,E:2000,density:1.24,
     support:'cantilever',elements:40};
   const LIMITS = Object.freeze({loads:30,supports:12,hinges:6});
@@ -65,6 +76,45 @@ const BeamLearningEngine = (() => {
   function finite(v,name) {
     if(typeof v!=='number'||!Number.isFinite(v)) throw new Error(`${name} must be a finite number.`);
     return v;
+  }
+
+  /* ------------------------------------------------- distributed-load helpers */
+  // 'distributed' is the linear (uniform, triangular, trapezoidal) load; its formulas below are unchanged.
+  const isProfile=v=>v.kind==='elliptic'||v.kind==='parabolic'||v.kind==='table';
+  const isDist=v=>v.kind==='distributed'||isProfile(v);
+  const loadSpan=v=>v.kind==='table'?[v.points[0][0],v.points[v.points.length-1][0]]:[v.start,v.end];
+  /** Stations a load defines (mesh nodes): position, or start/end, or every table row. */
+  const loadStations=v=>v.kind==='table'?v.points.map(p=>p[0]):isDist(v)?[v.start,v.end]:[v.position];
+  function loadValue(v,x) {
+    if(v.kind==='distributed') return x<v.start||x>v.end?0:v.qStart+(v.qEnd-v.qStart)*(x-v.start)/(v.end-v.start);
+    return Profiles.valueAt(v,x);
+  }
+  /** Part of a distributed load on [s, e]: resultant W (↓ +), centroid xbar and ∫(ξ − o) w dξ. */
+  function loadPortion(v,s,e,o=0) {
+    const [lo,hi]=loadSpan(v), a=Math.max(s,lo), b=Math.min(e,hi);
+    if(!(b>a)) return {W:0,Mo:0,xbar:null,start:a,end:a};
+    let W,Mo;
+    if(v.kind==='distributed') {
+      const q=x=>v.qStart+(v.qEnd-v.qStart)*(x-v.start)/(v.end-v.start), q0=q(a), q1=q(b), h=b-a;
+      W=h*(q0+q1)/2; Mo=a*W+h*h*(q0+2*q1)/6-W*o;
+    } else [W,Mo]=Profiles.integrals(v,a,b,o);
+    const scale=loadPeak(v)*(b-a);
+    return {W,Mo,xbar:Math.abs(W)>1e-12*Math.max(scale,1e-300)?o+Mo/W:null,start:a,end:b};
+  }
+  /** Largest |intensity| of a distributed load (for drawing scales and round-off tolerances). */
+  function loadPeak(v) {
+    if(v.kind==='distributed') return Math.max(Math.abs(v.qStart),Math.abs(v.qEnd));
+    if(v.kind==='table') return Math.max(...v.points.map(p=>Math.abs(p[1])));
+    return Math.abs(v.peak);
+  }
+  /** Polyline [[x, w]] of a distributed load on [s, e] for drawing (curves sampled; not used for any result). */
+  function loadSamples(v,s,e) {
+    const [lo,hi]=loadSpan(v), a=Math.max(s??lo,lo), b=Math.min(e??hi,hi);
+    if(!(b>a)) return [];
+    if(v.kind==='distributed') return [[a,loadValue(v,a)],[b,loadValue(v,b)]];
+    if(v.kind==='table') return [[a,loadValue(v,a)],...v.points.filter(p=>p[0]>a&&p[0]<b).map(p=>[p[0],p[1]]),[b,loadValue(v,b)]];
+    const n=64, xs=Array.from({length:n+1},(_,k)=>a+(b-a)*0.5*(1-Math.cos(Math.PI*k/n)));
+    return xs.map(x=>[x,loadValue(v,x)]);
   }
 
   /* ---------------------------------------------------------------- input */
@@ -119,7 +169,7 @@ const BeamLearningEngine = (() => {
     const L=o.length, eps=L*1e-10;
     const list=options.loads===undefined?[{kind:'point',position:L,force:2}]:options.loads;
     if(!Array.isArray(list)||list.length>LIMITS.loads) throw new Error(`Provide an array of at most ${LIMITS.loads} loads.`);
-    return list.map((v,i)=>{
+    const out=list.map((v,i)=>{
       if(!v || typeof v!=='object') throw new Error(`Load ${i+1} is invalid.`);
       if(v.kind==='point') {
         finite(v.position,'Point position'); finite(v.force,'Point force');
@@ -137,8 +187,14 @@ const BeamLearningEngine = (() => {
         if(v.start<0||v.end>L||v.end<=v.start) throw new Error('Distributed load needs 0 ≤ start < end ≤ beam length.');
         return {kind:'distributed',start:v.start,end:v.end,qStart:v.qStart,qEnd:v.qEnd};
       }
-      throw new Error('Load kind must be point, moment or distributed.');
+      if(v.kind==='elliptic'||v.kind==='parabolic')
+        return Profiles.normalizeCurve(v,{min:0,max:L,lengthUnit:'mm',name:`Load ${i+1} (${v.kind})`});
+      if(v.kind==='table') return Profiles.normalizeTable(v,{min:0,max:L,lengthUnit:'mm',allowFraction:false,eps,name:`Load ${i+1} (table)`});
+      throw new Error('Load kind must be point, moment, distributed, elliptic, parabolic or table.');
     });
+    const segments=Profiles.segmentCount(out);
+    if(segments>LIMITS.loads) throw new Error(`Use at most ${LIMITS.loads} load segments (each load is one, a table counts its rows − 1); this model has ${segments}.`);
+    return out;
   }
 
   /**
@@ -307,7 +363,7 @@ const BeamLearningEngine = (() => {
     const L=o.length, A=props.A, I=props.I, EI=o.E*I, eps=L*1e-10;
     // Preserve actual load coordinates; drop nearby regular mesh points to avoid
     // microscopic elements if a user enters a point nearly on a regular node.
-    const forced=[0,L,...loads.flatMap(v=>v.kind==='distributed'?[v.start,v.end]:[v.position]),
+    const forced=[0,L,...loads.flatMap(loadStations),
       ...o.supports.map(s=>s.x),...o.hinges,...stations].sort((a,b)=>a-b);
     const anchors=forced.filter((v,i)=>i===0||v-forced[i-1]>eps);
     const nodes=[...anchors];
@@ -338,6 +394,13 @@ const BeamLearningEngine = (() => {
         for(let i=0;i<4;i++) {
           F[d[i]]+=w*N[i]*q;
         }
+      }
+      // Curved and table loads: consistent element loads integrated on [a, a + h] (exact or round-off accurate).
+      for(const load of loads) if(isProfile(load)) {
+        const [lo,hi]=loadSpan(load);
+        if(hi<=a+eps||lo>=a+h-eps) continue;
+        const fe=Profiles.hermiteNodal(load,a,h);
+        for(let i=0;i<4;i++) F[d[i]]+=fe[i];
       }
     }
     // N_i*N_j has degree six: use the exact Hermite consistent mass matrix.
@@ -385,6 +448,9 @@ const BeamLearningEngine = (() => {
         const resultant=v.qStart*t+s*t*t/2;
         f+=resultant;
         lever+=(x-v.start)*resultant-v.qStart*t*t/2-s*t*t*t/3;
+      } else if(isProfile(v)) {
+        const lo=loadSpan(v)[0];
+        if(x>lo) {const [F,Mo]=Profiles.integrals(v,lo,x,x);f+=F;lever-=Mo;}
       }
       return [f,lever];
     }
@@ -434,11 +500,12 @@ const BeamLearningEngine = (() => {
     for(const v of loads) {
       if(v.kind==='point')appliedMoment+=v.force*v.position;
       else if(v.kind==='moment')appliedMoment+=v.moment;
-      else {const h=v.end-v.start;appliedMoment+=v.start*h*(v.qStart+v.qEnd)/2+h*h*(v.qStart+2*v.qEnd)/6;}
+      else if(v.kind==='distributed') {const h=v.end-v.start;appliedMoment+=v.start*h*(v.qStart+v.qEnd)/2+h*h*(v.qStart+2*v.qEnd)/6;}
+      else {const [lo,hi]=loadSpan(v);appliedMoment+=Profiles.integrals(v,lo,hi,0)[1];}
     }
     // Key stations: every anchor, with left/right limits of V, M and theta.
     const stations=nodes.map((s,j)=>({s,j})).filter(({s})=>s===0||s===L||stationKinds(s).length||
-      loads.some(v=>v.kind==='distributed'&&(Math.abs(v.start-s)<=eps||Math.abs(v.end-s)<=eps))).map(({s,j})=>{
+      loads.some(v=>isDist(v)&&loadSpan(v).some(t=>Math.abs(t-s)<=eps))).map(({s,j})=>{
       const left=internal(s,'left'),right=internal(s,'right');
       return {x:s,kinds:stationKinds(s),Vleft:s===0?null:left.V,Vright:s===L?null:right.V,Mleft:s===0?null:left.M,Mright:s===L?null:right.M,
         v:u[vDof[j]],thetaLeft:s===0?null:u[thL[j]],thetaRight:s===L?null:u[thR[j]]};
@@ -516,6 +583,9 @@ const BeamLearningEngine = (() => {
       else if(v.kind==='distributed') {
         const t=Math.max(0,Math.min(h,v.end)-v.start),s=(v.qEnd-v.qStart)/(v.end-v.start),R=v.qStart*t+s*t*t/2;
         M-=(h-v.start)*R-v.qStart*t*t/2-s*t*t*t/3;
+      } else if(isProfile(v)) {
+        const lo=loadSpan(v)[0];
+        if(h>lo) M+=Profiles.integrals(v,lo,h,h)[1];
       }
     }
     return M;
@@ -534,7 +604,8 @@ const BeamLearningEngine = (() => {
     for(const v of loads) {
       if(v.kind==='point'){F+=v.force;M0+=v.force*v.position;}
       else if(v.kind==='moment') M0+=v.moment;
-      else {const h=v.end-v.start;F+=h*(v.qStart+v.qEnd)/2;M0+=v.start*h*(v.qStart+v.qEnd)/2+h*h*(v.qStart+2*v.qEnd)/6;}
+      else if(v.kind==='distributed') {const h=v.end-v.start;F+=h*(v.qStart+v.qEnd)/2;M0+=v.start*h*(v.qStart+v.qEnd)/2+h*h*(v.qStart+2*v.qEnd)/6;}
+      else {const [lo,hi]=loadSpan(v),[f0,m0]=Profiles.integrals(v,lo,hi,0);F+=f0;M0+=m0;}
     }
     const rows=[{name:'ΣF = 0',about:null,coeffs:unknowns.map(q=>q.type==='force'?1:0),rhs:-F,applied:F},
       {name:'ΣM about x = 0',about:0,coeffs:unknowns.map(q=>q.type==='force'?q.x:1),rhs:-M0,applied:M0}];
@@ -610,6 +681,9 @@ const BeamLearningEngine = (() => {
     for(const v of loads) if(v.kind==='distributed') {
       const t=Math.max(0,Math.min(x,v.end)-v.start),s=(v.qEnd-v.qStart)/(v.end-v.start),R=v.qStart*t+s*t*t/2;
       V-=R;M-=(x-v.start)*R-v.qStart*t*t/2-s*t*t*t/3;
+    } else if(isProfile(v)) {
+      const lo=loadSpan(v)[0];
+      if(x>lo) {const [F,Mo]=Profiles.integrals(v,lo,x,x);V-=F;M+=Mo;}
     }
     const acts=a=>a<x-eps||(Math.abs(a-x)<=eps&&side==='right');
     for(const v of loads) {
@@ -647,7 +721,8 @@ const BeamLearningEngine = (() => {
     }
   }
 
-  return {VERSION,DEFAULTS,LIMITS,GRAVITY,normalize,solve,analyze,staticsSystem,forceMethod,internalForces,fieldAt,sections:Sections};
+  const loadsApi=Object.freeze({isProfile,isDist,span:loadSpan,stations:loadStations,value:loadValue,portion:loadPortion,peak:loadPeak,samples:loadSamples,profiles:Profiles});
+  return {VERSION,DEFAULTS,LIMITS,GRAVITY,normalize,solve,analyze,staticsSystem,forceMethod,internalForces,fieldAt,sections:Sections,loads:loadsApi};
 })();
 if(typeof module!=='undefined'&&module.exports)module.exports=BeamLearningEngine;
 if(typeof window!=='undefined')window.BeamLearningEngine=BeamLearningEngine;

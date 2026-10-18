@@ -71,6 +71,7 @@ const wingDOM=new JSDOM('<div id="app" data-lesson-stage="project"></div><div id
 const c=wingDOM.getInternalVMContext();
 c.E=E;c.nf=(x,d=2)=>Number(x).toFixed(d);c.R=E.solve({});
 c.TeachingModels=require('./teaching_models.js');c.frame=()=>Promise.resolve();
+c.WingLoadsUI=require('./wing_loads_ui.js');c.LoadProfiles=require('./load_profiles.js');
 c.S={geometry:c.R.geometry,load:c.R.load,stressComponent:'skin'};
 c.running=false;c.stale=false;
 c.$=s=>wingDOM.window.document.querySelector(s);

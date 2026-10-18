@@ -255,7 +255,8 @@ for(const [width,scheme] of [[1440,'light'],[390,'dark']]) {
     report(`case ${tab}`,await caseAudit('#foundations'));
   }
   const d=await page.evaluate(()=>{const th=[...document.querySelectorAll('#beamReactions th')];return th.map(x=>[x.textContent,getComputedStyle(x).textTransform,x.innerText]);});
-  check(d.some(([t,tt,shown])=>t==='v (+down)'&&tt==='none'&&shown==='v (+down)')&&d.some(([t,,shown])=>t==='θ = dv/dx'&&shown==='θ = dv/dx'),`case: reaction table shows "v (+down)" and "θ = dv/dx" as authored (${JSON.stringify(d)})`);
+  // v5: one sign convention, R_y (N, ↓ +) and C (N·mm, ↻ +) beside v and θ, shown exactly as authored (no CSS re-casing).
+  check(d.some(([t,tt,shown])=>t==='v (mm, ↓ +)'&&tt==='none'&&shown==='v (mm, ↓ +)')&&d.some(([t,,shown])=>t==='θ = dv/dx (rad, ↻ +)'&&shown==='θ = dv/dx (rad, ↻ +)')&&d.some(([t,,shown])=>t==='Ry (N, ↓ +)'&&/^Ry\s?\(N, ↓ \+\)$/.test(shown))&&d.some(([t,,shown])=>t==='C (N·mm, ↻ +)'&&shown==='C (N·mm, ↻ +)'),`case: reaction table shows "R_y (N, ↓ +)", "C (N·mm, ↻ +)", "v (mm, ↓ +)" and "θ = dv/dx (rad, ↻ +)" as authored (${JSON.stringify(d)})`);
   const s=await page.evaluate(()=>[...document.querySelectorAll('#beamStationTable th')].map(x=>x.innerText));
   check(s.includes('v (mm)')&&s.includes('V (N)')&&s.includes('M (N·mm)')&&s.some(x=>/MPa/.test(x)),`case: station table headers keep v (mm), V (N), N·mm and MPa (${s.join(' | ')})`);
   // Printed report: generate it, then audit in print media (the report is visible only there).

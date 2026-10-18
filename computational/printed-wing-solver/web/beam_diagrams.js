@@ -94,13 +94,27 @@ const BeamDiagrams = (() => {
   /* --------------------------------------------------------------- loads */
 
   const LANE = 52; // one distributed-load band (30 px) plus its label row
+  // Distributed-load helpers of the engine (linear, elliptic, parabolic, table); loaded lazily.
+  const LDS = () => (typeof BeamLearningEngine!=='undefined' ? BeamLearningEngine : require('./beam_learning_engine.js')).loads;
+  const isDist = v => v.kind==='distributed'||v.kind==='elliptic'||v.kind==='parabolic'||v.kind==='table';
+  // A clipped part of a curved or table load (free bodies) carries _clip = [s, e].
+  const spanOf = v => v._clip||(v.kind==='table'?[v.points[0][0],v.points[v.points.length-1][0]]:[v.start,v.end]);
   function lanesFor(list) {
     const lanes=[];
     return list.map(v=>{
-      let k=lanes.findIndex(end=>end<=v.start+1e-9);
-      if(k<0){k=lanes.length;lanes.push(v.end);} else lanes[k]=v.end;
+      const [a,b]=spanOf(v);
+      let k=lanes.findIndex(end=>end<=a+1e-9);
+      if(k<0){k=lanes.length;lanes.push(b);} else lanes[k]=b;
       return k;
     });
+  }
+  const SHAPE_SHORT={start:'max at start',end:'max at end',middle:'symmetric'};
+  // Draft models (not yet solved) hold a curved load as entered (total or peak): complete it for drawing.
+  function normLoad(v) {
+    if((v.kind==='elliptic'||v.kind==='parabolic')&&!(Number.isFinite(v.peak)&&Number.isFinite(v.total))) {
+      try {return {...v,...LDS().profiles.normalizeCurve(v,{min:-Infinity,max:Infinity,lengthUnit:'mm'})};} catch(e) {return {...v,peak:0,total:0};}
+    }
+    return v;
   }
 
   /**
@@ -108,10 +122,29 @@ const BeamDiagrams = (() => {
    * Downward loads point down onto the beam; upward loads point up from it.
    */
   function drawLoads(loads, X, yTop, opts={}) {
-    const dist=loads.filter(v=>v.kind==='distributed'), lanes=lanesFor(dist), laneH=opts.laneH||LANE;
-    const qmax=Math.max(...dist.map(v=>Math.max(Math.abs(v.qStart),Math.abs(v.qEnd))),1e-12);
+    loads=loads.map(normLoad);
+    const dist=loads.filter(isDist), lanes=lanesFor(dist), laneH=opts.laneH||LANE;
+    const qmax=Math.max(...dist.map(v=>v.kind==='distributed'?Math.max(Math.abs(v.qStart),Math.abs(v.qEnd)):LDS().peak(v)),1e-12);
     let svg='';
     dist.forEach((v,i)=>{
+      if(v.kind!=='distributed') {
+        // Curved and table loads: envelope through sampled intensities (drawing only; results use exact integrals).
+        const L=LDS(), [a,b]=spanOf(v), base=yTop-4-lanes[i]*laneH, h=30, x0=X(a), x1=X(b), hq=q=>h*Math.abs(q)/qmax, cls='bl-load';
+        const pts=L.samples(v,a,b);
+        svg+=`<path d="M${r1(x0)} ${r1(base)}${pts.map(([x,q])=>`L${r1(X(x))} ${r1(base-hq(q))}`).join('')}L${r1(x1)} ${r1(base)}Z" class="${cls}-fill" data-load-kind="${v.kind}"/>`;
+        const n=Math.max(2,Math.round((x1-x0)/26));
+        for(let k=0;k<=n;k++) {
+          const x=a+(b-a)*k/n,q=L.value(v,x),hh=hq(q),xx=X(x);
+          if(hh<3) continue;
+          svg+=q>=0?arrow(xx,base-hh,xx,base,cls,6):arrow(xx,base,xx,base-hh,cls,6);
+        }
+        svg+=`<polyline points="${pts.map(([x,q])=>`${r1(X(x))},${r1(base-hq(q))}`).join(' ')}" class="${cls} bl-env" fill="none"/>`;
+        const part=L.portion(v,a,b,0), F=part.W;
+        const name=v.kind==='table'?`table (${v.points.length} rows)`:`${v.kind} (${SHAPE_SHORT[v.shape]})`;
+        const label=v._clip?`${name} part: W = ${fmt(Math.abs(F))} N ${F>=0?'↓':'↑'}`:`${name}: F = ${fmt(Math.abs(F))} N ${F>=0?'↓':'↑'}${v.kind==='table'?'':`, w₀ = ${fmt(Math.abs(v.peak))} N/mm`}`;
+        svg+=text(Math.min(Math.max((x0+x1)/2,90),opts.width-90),base-h-6,label,'bl-tx-s bl-tx-load');
+        return;
+      }
       const base=yTop-4-lanes[i]*laneH, h=30, x0=X(v.start), x1=X(v.end);
       const hq=q=>h*Math.abs(q)/qmax;
       const cls=v.selfWeight?'bl-sw':'bl-load';
@@ -146,7 +179,7 @@ const BeamDiagrams = (() => {
   }
 
   function loadHeight(loads) {
-    const dist=loads.filter(v=>v.kind==='distributed'), lanes=lanesFor(dist);
+    const dist=loads.filter(isDist), lanes=lanesFor(dist);
     const top=Math.max(0,...lanes.map(k=>k+1))*LANE;
     // Point-force labels need two rows above the arrows; without point forces only a small margin.
     return Math.max(48,top+12)+(loads.some(v=>v.kind==='point')?44:4);
@@ -154,7 +187,7 @@ const BeamDiagrams = (() => {
 
   function stationList(model) {
     const xs=[0,model.length,...model.supports.map(s=>s.x),...model.hinges,
-      ...model.loads.flatMap(v=>v.kind==='distributed'?[v.start,v.end]:[v.position])];
+      ...model.loads.flatMap(v=>isDist(v)?spanOf(v):[v.position])];
     return [...new Set(xs.map(v=>Number(v.toPrecision(12))))].sort((a,b)=>a-b);
   }
 
@@ -217,55 +250,91 @@ const BeamDiagrams = (() => {
     return svg+'</svg>';
   }
 
+  /** Small plot of a line-load table w(x) for the CSV preview (rows as dots, linear between them). */
+  function tablePreview(points, opts={}) {
+    const W=Math.max(260,Math.min(560,opts.width||420)), H=164, padL=54, padR=14, padT=28, padB=34;   // axis title above the tick labels
+    const xs=points.map(p=>p[0]), ws=points.map(p=>p[1]);
+    const x0=Math.min(...xs), x1=Math.max(...xs), lo=Math.min(0,...ws), hi=Math.max(0,...ws), span=(hi-lo)||1;
+    const X=x=>padL+(W-padL-padR)*(x1>x0?(x-x0)/(x1-x0):0.5), Y=w=>padT+(H-padT-padB)*(hi-w)/span;
+    let svg=svgOpen(W,H,opts.label||`Line-load table: ${points.length} rows`,'bl-tablepreview');
+    svg+=line(padL,Y(0),W-padR,Y(0),'bl-axis')+line(padL,padT,padL,H-padB,'bl-axis');
+    svg+=`<polyline points="${points.map(p=>`${r1(X(p[0]))},${r1(Y(p[1]))}`).join(' ')}" class="bl-load bl-env" fill="none"/>`;
+    for(const p of points) svg+=`<circle cx="${r1(X(p[0]))}" cy="${r1(Y(p[1]))}" r="2.6" class="bl-dot"/>`;
+    svg+=text(padL,H-padB+16,fmt(x0),'bl-tx-s bl-tx-m','start')+text(W-padR,H-padB+16,fmt(x1),'bl-tx-s bl-tx-m','end')+text((padL+W-padR)/2,H-4,`${opts.xLabel||'x'} (${opts.xUnit||'mm'})`,'bl-tx-s bl-tx-m');
+    svg+=text(padL-6,Y(hi)+4,fmt(hi),'bl-tx-s bl-tx-m','end')+text(padL-6,Y(lo)+4,fmt(lo),'bl-tx-s bl-tx-m','end')+text(4,12,`w (${opts.wUnit||'N/mm'})`,'bl-tx-s bl-tx-m','start');
+    return svg+'</svg>';
+  }
+
   /* ------------------------------------------------------ free bodies */
 
   const supportName=i=>String.fromCharCode(65+i);
   /** A solved reaction that is zero (to round-off, or printed as 0) is labelled 0 and drawn without an arrow. */
   function zeroTolerance(loads, L) {
+    loads=loads.map(normLoad);
     let F=0, C=0;
     for(const v of loads) {
       if(v.kind==='point') F+=Math.abs(v.force);
       else if(v.kind==='moment') C+=Math.abs(v.moment);
-      else F+=Math.abs(v.end-v.start)*Math.max(Math.abs(v.qStart),Math.abs(v.qEnd));
+      else if(v.kind==='distributed') F+=Math.abs(v.end-v.start)*Math.max(Math.abs(v.qStart),Math.abs(v.qEnd));
+      else if(isDist(v)) {const [a,b]=spanOf(v);F+=Math.abs(b-a)*LDS().peak(v);}
     }
     return {force:Math.max(1e-12*(F+C/L),1e-13), moment:Math.max(1e-12*(F*L+C),1e-13)};
   }
   /**
    * Whole-beam free-body diagram: supports removed and replaced by reactions.
-   * mode 'unknown': symbolic reactions in assumed directions (R up, M counter-clockwise).
+   * mode 'unknown': symbolic reactions drawn in their positive (assumed) directions, R ↓ and C ↻.
+   * mode 'solved': solved reactions drawn in their ACTUAL directions and labelled with their SIGNED values in the
+   * single convention (R ↓ +, C ↻ +): a negative R points up, a negative C turns counter-clockwise.
    * mode 'solved' : reactions in their actual directions with magnitudes from the result.
    */
+  // Reaction labels below the beam, R first and then C at a clamp; a label that would overlap one already placed on
+  // its row moves down a row (widths over-estimated for 12.5 px semi-bold type). Returns the number of rows used.
+  function placeLabels(items) {
+    const est=s=>7*String(s).replace(/_([A-Za-z0-9]+)/g,'$1').length+8, rows=[];
+    for(const it of items) {
+      const w=est(it.s), x0=it.anchor==='start'?it.x:it.anchor==='end'?it.x-w:it.x-w/2, x1=x0+w;
+      let r=it.after?it.after.row+1:0;
+      while((rows[r]||[]).some(([a,b])=>!(x1<=a||x0>=b))) r++;
+      (rows[r]=rows[r]||[]).push([x0,x1]);it.row=r;
+    }
+    return rows.length;
+  }
   function freeBody(model, result, opts={}) {
-    const W=clampWidth(opts.width), L=model.length, pad=92, mode=opts.mode||'solved';
+    const W=clampWidth(opts.width), L=model.length, pad=92, mode=opts.mode||'solved', narrow=W<560;
     const X=x=>pad+(W-2*pad)*x/L;
     const loads=result?result.loadsApplied:model.loads;
-    const yTop=12+loadHeight(loads), yAxis=yTop+6, yBottom=yTop+12, yDim=yBottom+100, H=yDim+44;
-    let svg=svgOpen(W,H,opts.label||(mode==='unknown'?'Free-body diagram: supports replaced by unknown reactions':'Free-body diagram: supports replaced by the solved reactions'),'bl-fbd');
+    const reactions=result?result.reactions:model.supports.map(s=>({x:s.x,kind:s.kind,force:NaN,moment:NaN}));
+    const tol=zeroTolerance(loads,L);
+    // Unknowns: drawn in the positive directions (R ↓, C ↻). Solved: actual directions, labelled with signed values.
+    const items=[];
+    reactions.forEach((r,i)=>{
+      const n=supportName(i), x=X(r.x), anchor=r.x===0?'start':r.x===L?'end':'middle', lx=anchor==='start'?x-30:anchor==='end'?x+30:x;
+      const zeroF=mode!=='unknown'&&Math.abs(r.force)<=tol.force;
+      const R={x:lx,anchor,s:mode==='unknown'?`R_${n} (assumed ↓ +)`:zeroF?`R_${n} = 0 N`:`R_${n} = ${signed(r.force)} N`};items.push(R);
+      if(r.kind==='fixed') {const zeroM=mode!=='unknown'&&Math.abs(r.moment)<=tol.moment;items.push({x:lx,anchor,after:R,s:mode==='unknown'?`C_${n} (assumed ↻ +)`:zeroM?`C_${n} = 0 N·mm`:`C_${n} = ${signed(r.moment)} N·mm`});}
+    });
+    const nRows=placeLabels(items);
+    const yTop=12+loadHeight(loads), yAxis=yTop+6, yBottom=yTop+12, yDim=yBottom+100+Math.max(0,nRows-2)*16, H=yDim+(narrow?74:60);
+    let svg=svgOpen(W,H,opts.label||(mode==='unknown'?'Free-body diagram: supports replaced by unknown reactions in their positive directions (R down, C clockwise)':'Free-body diagram: supports replaced by the solved reactions, drawn in their actual directions and labelled with signed values (R down positive, C clockwise positive)'),'bl-fbd');
     svg+=`<rect x="${r1(X(0))}" y="${r1(yTop)}" width="${r1(X(L)-X(0))}" height="12" rx="2" class="bl-beam"/>`;
     model.hinges.forEach(h=>{svg+=`<circle cx="${r1(X(h))}" cy="${r1(yAxis)}" r="6" class="bl-hinge-c"/>`;});
     svg+=drawLoads(loads,X,yTop,{width:W}).svg;
-    if(opts.resultants===true) for(const v of loads.filter(p=>p.kind==='distributed')) {
-      const h=v.end-v.start, Wt=h*(v.qStart+v.qEnd)/2;
-      if(Math.abs(Wt)<1e-12) continue;
-      const xbar=v.start+h*(v.qStart+2*v.qEnd)/(3*(v.qStart+v.qEnd));
-      if(xbar<v.start-1e-9||xbar>v.end+1e-9) continue;
+    if(opts.resultants===true) for(const v of loads.filter(isDist).map(normLoad)) {
+      let Wt,xbar;
+      if(v.kind==='distributed') {const h=v.end-v.start;Wt=h*(v.qStart+v.qEnd)/2;if(Math.abs(Wt)<1e-12) continue;xbar=v.start+h*(v.qStart+2*v.qEnd)/(3*(v.qStart+v.qEnd));}
+      else {const [a,b]=spanOf(v),part=LDS().portion(v,a,b,0);Wt=part.W;xbar=part.xbar;if(xbar===null||Math.abs(Wt)<1e-12) continue;}
+      const [lo,hi]=spanOf(v);
+      if(xbar<lo-1e-9||xbar>hi+1e-9) continue;
       svg+=`<g class="bl-resultant">${line(X(xbar),yBottom+2,X(xbar),yBottom+30,'bl-res-line')}</g>`;
       svg+=text(X(xbar),yBottom+42,`W = ${fmt(Math.abs(Wt))} N ${Wt>0?'↓':'↑'} at x̄ = ${fmt(xbar)}`,'bl-tx-s bl-tx-m');
     }
-    const reactions=result?result.reactions:model.supports.map(s=>({x:s.x,kind:s.kind,force:NaN,moment:NaN}));
-    const tol=zeroTolerance(loads,L);
     reactions.forEach((r,i)=>{
       const x=X(r.x), n=supportName(i);
-      const up=mode==='unknown'?true:r.force<0, zeroF=mode!=='unknown'&&Math.abs(r.force)<=tol.force;
-      if(!zeroF) svg+=up?arrow(x,yBottom+46,x,yBottom+2,'bl-react',9):arrow(x,yBottom+2,x,yBottom+46,'bl-react',9);
-      const rl=mode==='unknown'?`R_${n} (assumed ↑)`:zeroF?`R_${n} = 0 N`:`R_${n} = ${fmt(Math.abs(r.force))} N ${r.force<0?'↑':'↓'}`;
-      const anchor=r.x===0?'start':r.x===L?'end':'middle';
-      svg+=label(anchor==='start'?x-30:anchor==='end'?x+30:x,yBottom+62,rl,'bl-tx-s bl-tx-react bl-tx-b',anchor);
+      const up=mode==='unknown'?false:r.force<0, zeroF=mode!=='unknown'&&Math.abs(r.force)<=tol.force;
+      if(!zeroF) svg+=`<g data-ext="R" data-support="${n}" data-dir="${up?'up':'down'}">${up?arrow(x,yBottom+46,x,yBottom+2,'bl-react',9):arrow(x,yBottom+2,x,yBottom+46,'bl-react',9)}</g>`;
       if(r.kind==='fixed') {
-        const cw=mode==='unknown'?false:r.moment>0, zeroM=mode!=='unknown'&&Math.abs(r.moment)<=tol.moment;
-        if(!zeroM) svg+=coupleArrow(x,yAxis,22,cw,'bl-react');
-        const ml=mode==='unknown'?`C_${n} (assumed ↺)`:zeroM?`C_${n} = 0 N·mm`:`C_${n} = ${fmt(Math.abs(r.moment))} N·mm ${r.moment>0?'↻':'↺'}`;
-        svg+=label(anchor==='start'?x-30:anchor==='end'?x+30:x,yBottom+78,ml,'bl-tx-s bl-tx-react bl-tx-b',anchor);
+        const cw=mode==='unknown'?true:r.moment>0, zeroM=mode!=='unknown'&&Math.abs(r.moment)<=tol.moment;
+        if(!zeroM) svg+=`<g data-ext="C" data-support="${n}" data-dir="${cw?'cw':'ccw'}">${coupleArrow(x,yAxis,22,cw,'bl-react')}</g>`;
       }
       if(r.kind!=='roller') {
         // Complete planar free body: the horizontal reaction exists but is zero for transverse loads.
@@ -275,7 +344,12 @@ const BeamDiagrams = (() => {
         svg+=label(end?(x0+x1)/2:x0-4,end?y-9:y+4,`H_${n} = 0`,'bl-tx-xs bl-tx-m',end?'middle':'end');
       }
     });
+    for(const it of items) svg+=label(it.x,yBottom+62+16*it.row,it.s,'bl-tx-s bl-tx-react bl-tx-b',it.anchor);
     svg+=dimensionLine(model,X,yDim,W);
+    if(reactions.length) {
+      const key=mode==='unknown'?['Unknown reactions drawn in their positive directions:','R ↓ +, C ↻ +.']:['Reactions: signed values (R ↓ +, C ↻ +);','arrows in the actual directions.'];
+      svg+=narrow?text(W/2,yDim+54,key[0],'bl-tx-xs bl-tx-m')+text(W/2,yDim+68,key[1],'bl-tx-xs bl-tx-m'):text(W/2,yDim+54,key.join(' '),'bl-tx-xs bl-tx-m');
+    }
     return svg+'</svg>';
   }
 
@@ -302,6 +376,9 @@ const BeamDiagrams = (() => {
       if(v.kind==='distributed') {
         const s=Math.max(v.start,a),e=Math.min(v.end,b);
         if(e-s>eps) {const q=x=>v.qStart+(v.qEnd-v.qStart)*(x-v.start)/(v.end-v.start);loads.push({...v,start:s,end:e,qStart:q(s),qEnd:q(e)});}
+      } else if(isDist(v)) {
+        const [lo,hi]=spanOf(v),s=Math.max(lo,a),e=Math.min(hi,b);
+        if(e-s>eps) loads.push({...v,_clip:[s,e]});
       } else if(inside(v.position)) loads.push(v);
     }
     const reactions=result.reactions.map((r,i)=>({...r,name:supportName(i)})).filter(r=>inside(r.x));
@@ -318,11 +395,12 @@ const BeamDiagrams = (() => {
       const x=X(r.x), zeroF=Math.abs(r.force)<=tol.force;
       // On a thin end slice the reaction labels go on the outer side, away from the V and M labels.
       const lx=thin?(side==='left'?x-14:x+14):x, la=thin?(side==='left'?'end':'start'):x<90?'start':x>W-90?'end':'middle';
-      if(!zeroF) svg+=r.force<0?arrow(x,yBottom+46,x,yBottom+2,'bl-react',9):arrow(x,yBottom+2,x,yBottom+46,'bl-react',9);
-      svg+=label(lx,yBottom+62,zeroF?`R_${r.name} = 0 N`:`R_${r.name} = ${fmt(Math.abs(r.force))} N ${r.force<0?'↑':'↓'}`,'bl-tx-s bl-tx-react bl-tx-b',la);
+      if(!zeroF) svg+=`<g data-ext="R" data-support="${r.name}" data-dir="${r.force<0?'up':'down'}">${r.force<0?arrow(x,yBottom+46,x,yBottom+2,'bl-react',9):arrow(x,yBottom+2,x,yBottom+46,'bl-react',9)}</g>`;
+      // Signed values in the single convention (R ↓ +, C ↻ +); the arrow shows the actual direction.
+      svg+=label(lx,yBottom+62,zeroF?`R_${r.name} = 0 N`:`R_${r.name} = ${signed(r.force)} N`,'bl-tx-s bl-tx-react bl-tx-b',la);
       if(r.kind==='fixed'&&Math.abs(r.moment)>tol.moment) {
-        svg+=coupleArrow(x,yAxis,20,r.moment>0,'bl-react');
-        svg+=label(lx,yBottom+78,`C_${r.name} = ${fmt(Math.abs(r.moment))} N·mm ${r.moment>0?'↻':'↺'}`,'bl-tx-s bl-tx-react bl-tx-b',la);
+        svg+=`<g data-ext="C" data-support="${r.name}" data-dir="${r.moment>0?'cw':'ccw'}">${coupleArrow(x,yAxis,20,r.moment>0,'bl-react')}</g>`;
+        svg+=label(lx,yBottom+78,`C_${r.name} = ${signed(r.moment)} N·mm`,'bl-tx-s bl-tx-react bl-tx-b',la);
       }
     }
     // Positive V acts DOWN on the left part's cut face and UP on the right part's face.
@@ -401,8 +479,9 @@ const BeamDiagrams = (() => {
     if(s.kind==='fixed'&&Math.abs(s.C)>t) svg+=`<g data-ext="C" data-dir="${s.C>0?'cw':'ccw'}">${coupleArrow(cx,y,22,s.C>0,'bl-react')}</g>`;
     if(Math.abs(s.P||0)>t) svg+=s.P>0?arrow(cx,y-58,cx,y-8,'bl-load bl-point',9):arrow(cx,y-8,cx,y-58,'bl-load bl-point',9);
     if(Math.abs(s.C0||0)>t) svg+=coupleArrow(cx,y,13,s.C0>0,'bl-load bl-couple',7);
-    svg+=label(cx,y+78,Math.abs(s.R)>t?`R_${s.name} = ${fmt(Math.abs(s.R))} N ${s.R<0?'↑':'↓'}`:`R_${s.name} = 0 N`,'bl-tx-xs bl-tx-react bl-tx-b');
-    if(s.kind==='fixed') svg+=label(cx,y+94,Math.abs(s.C)>t?`C_${s.name} = ${fmt(Math.abs(s.C))} N·mm ${s.C>0?'↻':'↺'}`:`C_${s.name} = 0 N·mm`,'bl-tx-xs bl-tx-react bl-tx-b');
+    // Reactions: signed values in the single convention (R ↓ +, C ↻ +); the arrows show the actual directions.
+    svg+=label(cx,y+78,Math.abs(s.R)>t?`R_${s.name} = ${signed(s.R,6)} N`:`R_${s.name} = 0 N`,'bl-tx-xs bl-tx-react bl-tx-b');
+    if(s.kind==='fixed') svg+=label(cx,y+94,Math.abs(s.C)>t?`C_${s.name} = ${signed(s.C,6)} N·mm`:`C_${s.name} = 0 N·mm`,'bl-tx-xs bl-tx-react bl-tx-b');
     if(Math.abs(s.P||0)>t||Math.abs(s.C0||0)>t) svg+=text(cx,y-66,[Math.abs(s.P||0)>t?`P = ${fmt(Math.abs(s.P))} N ${s.P>0?'↓':'↑'}`:'',Math.abs(s.C0||0)>t?`C = ${fmt(Math.abs(s.C0))} N·mm ${s.C0>0?'↻':'↺'}`:''].filter(Boolean).join(', '),'bl-tx-xs bl-tx-load bl-tx-b');
     const face=(side,f)=>{
       const fx=side==='left'?cx-half:cx+half, d=side==='left'?-1:1, vx=fx+d*14, anchor=side==='left'?'end':'start', lx=fx+d*26;
@@ -692,19 +771,48 @@ const BeamDiagrams = (() => {
   }
 
   /** Small sign-convention key used in the Learn tab and the printed report. */
+  /**
+   * Positive-direction sketch for the worked solution: one convention for every external action (forces, line loads
+   * and reactions ↓ +; couples, reaction couples and moments of forces ↻ +; v ↓ +, θ ↻ +) and, separately, the
+   * internal V and M on the left part's cut face (V ↓ +, sagging M acts ↺ there).
+   */
+  function positiveAxes(opts={}) {
+    const W=Math.max(320,Math.min(620,opts.width||520)), wide=W>=480, H=wide?132:236, pw=wide?W/2:W;
+    let svg=svgOpen(W,H,'Positive directions used by the worked solution: x to the right; forces, line loads, support reactions R and the deflection v downward; couples, reaction couples C, moments of forces and the rotation θ clockwise. Internal V and M on the left part\'s cut face: V downward, sagging M counter-clockwise.','bl-axes');
+    const panel=(ox,oy,title,body)=>text(ox+12,oy+16,title,'bl-tx-xs bl-tx-b','start')+body(ox,oy);
+    svg+=panel(0,0,'External actions: loads and reactions',(ox,oy)=>{
+      const yb=oy+66, bx0=ox+14, bx1=ox+pw-16;
+      let g=`<rect x="${r1(bx0)}" y="${yb-5}" width="${r1(bx1-bx0)}" height="10" rx="2" class="bl-beam"/>`;
+      g+=arrow(bx0,yb+30,bx0+46,yb+30,'bl-xaxis',7)+text(bx0+52,yb+34,'+x','bl-tx-xs','start');
+      const fx=ox+pw*0.36;g+=`<g data-axis="force" data-dir="down">${arrow(fx,yb-42,fx,yb-7,'bl-load',8)}</g>`+text(fx+8,yb-30,'+P, +q, +R, +v ↓','bl-tx-xs bl-tx-load bl-tx-b','start');
+      const cx=ox+pw*0.78;g+=`<g data-axis="couple" data-dir="cw">${coupleArrow(cx,yb,14,true,'bl-load',7)}</g>`+text(cx,yb+34,'+C, ΣM, +θ ↻','bl-tx-xs bl-tx-load bl-tx-b','middle');
+      return g;
+    });
+    const ox=wide?W/2:0, oy=wide?0:110;
+    svg+=panel(ox,oy,'Internal V, M on the left part\'s cut face',(ox,oy)=>{
+      const yb=oy+66, x0=ox+16, face=ox+pw*0.46;
+      let g=`<rect x="${r1(x0)}" y="${yb-5}" width="${r1(face-x0)}" height="10" rx="2" class="bl-beam"/>`+line(face,yb-16,face,yb+16,'bl-cutface');
+      g+=`<g data-axis="V" data-dir="down">${arrow(face+10,yb-30,face+10,yb-4,'bl-int',7)}</g>`+text(face+18,yb-20,'+V ↓','bl-tx-xs bl-tx-int bl-tx-b','start');
+      g+=`<g data-axis="M" data-dir="ccw">${coupleArrow(face+54,yb,11,false,'bl-int',7)}</g>`+text(face+72,yb+4,'+M (sagging) ↺','bl-tx-xs bl-tx-int bl-tx-b','start');
+      g+=text(ox+12,yb+34,'Internal, not reactions: V = dM/dx, dV/dx = −q','bl-tx-xs bl-tx-m','start');
+      return g;
+    });
+    return svg+'</svg>';
+  }
+
   function signConventions(opts={}) {
     const W=clampWidth(opts.width), cols=W>=620?4:2, rows=4/cols, cellW=W/cols, cellH=118, H=rows*cellH;
     let svg=svgOpen(W,H,'Sign conventions: load and v positive down, couples and rotation clockwise positive, sagging M positive','bl-signs');
     const cell=(k,draw,l1,l2)=>{const cx=cellW*(k%cols+0.5), oy=cellH*Math.floor(k/cols);return draw(cx,oy)+text(cx,oy+90,l1,'bl-tx-xs bl-tx-b')+text(cx,oy+106,l2,'bl-tx-xs bl-tx-m');};
-    svg+=cell(0,(x,y)=>arrow(x,y+20,x,y+66,'bl-load',9),'+q, +P, +v','point downward');
-    svg+=cell(1,(x,y)=>coupleArrow(x,y+46,18,true,'bl-load'),'+C, +θ, reaction +M','clockwise');
+    svg+=cell(0,(x,y)=>arrow(x,y+20,x,y+66,'bl-load',9),'+q, +P, +R, +v','point downward');
+    svg+=cell(1,(x,y)=>coupleArrow(x,y+46,18,true,'bl-load'),'+C (applied, reaction), +θ','clockwise');
     svg+=cell(2,(x,y)=>`<path d="M${r1(x-40)} ${y+40} Q${r1(x)} ${y+64} ${r1(x+40)} ${y+40}" class="bl-defl"/>`+coupleArrow(x-50,y+46,12,true,'bl-int',7)+coupleArrow(x+50,y+46,12,false,'bl-int',7),'+M sagging','↻ left face, ↺ right face');
     svg+=cell(3,(x,y)=>`<rect x="${r1(x-22)}" y="${y+34}" width="44" height="22" class="bl-beam"/>`+arrow(x-28,y+70,x-28,y+36,'bl-int',7)+arrow(x+28,y+20,x+28,y+54,'bl-int',7),'+V','↑ left face, ↓ right face');
     return svg+'</svg>';
   }
 
   return {fmt,signed,niceTicks,esc,label,beamSchematic,freeBody,segmentFbd,cutFaces,supportSlice,chart,chartImage,CHARTS,sectionDrawing,sectionStress,stressMap,stressColor,
-    mechanismSketch,modeShape,signConventions,supportName};
+    mechanismSketch,modeShape,signConventions,positiveAxes,supportName,tablePreview,zeroTolerance};
 })();
 if(typeof module!=='undefined'&&module.exports)module.exports=BeamDiagrams;
 if(typeof window!=='undefined')window.BeamDiagrams=BeamDiagrams;

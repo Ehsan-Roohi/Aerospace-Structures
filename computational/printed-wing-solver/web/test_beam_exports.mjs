@@ -87,10 +87,10 @@ const V=x=>RA-q0*(x-x*x/(2*L)), M=x=>-CA+RA*x-q0*(x*x/2-x**3/(6*L));
   s.dom.window.close();
   // Other downloads from the Diagrams tab.
   $('.bl-exportbar [data-export="samples"]').click();eq(t.downloads.at(-1).name,'MIE446-beam-plot-samples.csv');ok((await t.downloads.at(-1).text()).startsWith('x_mm,side,v_mm,theta_rad,V_N,M_Nmm'),'plot samples CSV');
-  $('.bl-exportbar [data-export="reactions"]').click();eq(t.downloads.at(-1).name,'MIE446-beam-reactions.csv');ok((await t.downloads.at(-1).text()).startsWith('x_mm,support,force_N_down,moment_Nmm_clockwise'),'reactions CSV');
+  $('.bl-exportbar [data-export="reactions"]').click();eq(t.downloads.at(-1).name,'MIE446-beam-reactions.csv');ok((await t.downloads.at(-1).text()).startsWith('x_mm,support,type,R_y_N_down,C_Nmm_clockwise,v_mm,theta_rad\r\n'),'reactions CSV: one convention, R_y down +, C clockwise +');
   $('.bl-exportbar [data-export="print"]').click();eq(w.printed,1,'report from the Diagrams tab');
   const report=$('#beamPrint');ok(/Values at the listed stations/.test(report.textContent)&&/V\(0⁺\) = −R and M\(0⁺\) = \+C/.test(report.textContent),'printed report: station table and signs');
-  ok(/Couple C \(N·mm, ↻ \+\)/.test(report.textContent),'printed report names the reaction couple C');
+  ok(/Ry \(N, ↓ \+\)/.test(report.textContent)&&/C \(N·mm, ↻ \+\)/.test(report.textContent)&&!/Force R \(|Couple C \(/.test(report.textContent),'printed report: one signed R_y column and one C column (↓ +, ↻ +)');
   w.dispatchEvent(new w.Event('afterprint'));
   $('.bl-exportbar [data-open-tab="report"]').click();eq($('#beamTab-report').hidden,false,'study file and share link: opens Report & export');
   ok($('#beamTab-report [data-export="stations"]'),'station table CSV also in Report & export');eq($('#beamCsv').textContent,'Plot samples CSV','plot-samples CSV named as such');

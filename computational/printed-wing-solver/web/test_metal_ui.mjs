@@ -23,11 +23,25 @@ w.MetalWingEngine={...M,solve:input=>{
   return {...baseline,input:JSON.parse(JSON.stringify(input)),n:input.n,failure};
 }};
 w.METAL_REFERENCE=JSON.parse(readFileSync(new URL('./metal_wing_reference.json',import.meta.url),'utf8'));
-vm.runInContext(readFileSync(new URL('./metal_wing_ui.js',import.meta.url),'utf8'),ctx);
+// Same order as the built page: shared load profiles and the custom-load editor, then the workspace.
+for(const f of ['./load_profiles.js','./wing_loads_ui.js','./metal_wing_ui.js']) vm.runInContext(readFileSync(new URL(f,import.meta.url),'utf8'),ctx);
 const q=s=>w.document.querySelector(s);
 const wait=async test=>{const deadline=Date.now()+10000;while(!test()){assert.ok(Date.now()<deadline,'UI did not settle');await new Promise(r=>setTimeout(r,25));}};
 try {
   w.MetalWingUI.open();
+  // First opening: no applied load, no inertia relief, multiplier 1, see-through structure view.
+  await wait(()=>q('#mChip').textContent==='No load');
+  assert.match(q('#mStateText').textContent,/No load defined/);
+  assert.equal(JSON.stringify(w.MetalWingUI.state.input.customLoads),'[]');
+  assert.equal(w.MetalWingUI.state.input.inertiaRelief,false);
+  assert.equal(w.MetalWingUI.state.input.n,1);
+  assert.equal(w.MetalWingUI.state.plot,'model');
+  // Flight loading is applied only on request.
+  q('[data-mtab="loads"]').click();
+  q('#mRestoreFlight').click();
+  assert.equal(w.MetalWingUI.state.input.customLoads,null);
+  assert.equal(w.MetalWingUI.state.input.inertiaRelief,true);
+  assert.equal(w.MetalWingUI.state.input.n,6);
   await wait(()=>q('#mChip').textContent.includes('meet assumed'));
   // Negative-side governing capacity 5 g meets 4.5 g, even though it is below +9 g.
   assert.ok(q('#mChip').classList.contains('ok'));
@@ -56,5 +70,5 @@ try {
   const record=JSON.parse(await exported.text());
   assert.equal(record.input.mass,2677);assert.equal(record.n,6);
   assert.equal(record.engine,'1.0.1');assert.ok(record.stations.length>20);
-  console.log('PASS: D.520 navigation, signed-demand status, persistent input errors, stale-export guard and valid JSON report (DOM; no WebGL).');
+  console.log('PASS: D.520 no-load opening and deliberate flight loading, navigation, signed-demand status, persistent input errors, stale-export guard and valid JSON report (DOM; no WebGL).');
 } finally {dom.window.close();}

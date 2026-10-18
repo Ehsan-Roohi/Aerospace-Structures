@@ -10,9 +10,19 @@
  *    in the last millimetres near the tip, the tiny overlap is counted twice);
  *  - transverse shear uses the same Prandtl-type shear function with Poisson's ratio 0, as the
  *    Python run does.
+ *
+ * Custom loads (load.kind 'custom', items; mm, N, N/mm, UPWARD +; fraction = x/c from the local leading edge):
+ * point, linear 'distributed', curved 'elliptic' | 'parabolic' {start, end, shape 'start'|'end'|'middle', total | peak},
+ * 'table' {points [[y, w]] or [[y, w, x/c]], linear between rows} and 'schrenk' {total}: the mean of the
+ * chord-proportional load F c(y)/∫c dy and the elliptic load 4F/(πL)√(1 − (y/L)²) over the whole semi-span
+ * (an unswept-planform approximation, as in the flight case). V, M and the chordwise first moment use exact
+ * integrals (load_profiles.js); the beam FE gets exact consistent loads for the elliptic parts.
+ * Torque at a cut y is about that section's shear centre: T(y) = Σ F [x_sc(y) − x_F] over the outboard loads.
  */
 const WingEngine = (() => {
   "use strict";
+  const Profiles = typeof LoadProfiles !== "undefined" ? LoadProfiles : (typeof require === "function" ? require("./load_profiles.js") : null);
+  if (!Profiles) throw new Error("Load load_profiles.js before engine.js.");
   const GRAV = 9.81;
   const VERSION = "1.0.0";
 
@@ -677,6 +687,7 @@ const WingEngine = (() => {
         const Lf = [1 - xi, xi], ip = IpLine(yq) * 1e-6;
         for (let a = 0; a < 2; a++) { for (let b = 0; b < 2; b++) mt[a][b] += w * h * ip * Lf[a] * Lf[b]; if (o.tLine) ftl[a] += w * h * o.tLine(yq) * Lf[a]; }
       }
+      if (o.wNodal) { const fx = o.wNodal(y0, h); for (let a = 0; a < 4; a++) fe[a] += fx[a]; }
       for (let a = 0; a < 4; a++) {
         fb[db[a]] += fe[a];
         for (let b = 0; b < 4; b++) { Kb[db[a] * nb + db[b]] += (ei / h ** 3) * ke[a][b]; Mb[db[a] * nb + db[b]] += me[a][b]; }
@@ -769,7 +780,7 @@ const WingEngine = (() => {
     if (!["flight", "tip", "custom"].includes(load.kind)) throw new Error("Choose flight, tip or custom loading.");
     if (load.kind === "custom") {
       load.items = validateLoads(load.items, g.semiSpan);
-      const essential=[...new Set([0,g.semiSpan,...seams(g),...ribStations(g),...load.items.flatMap(p=>p.kind==='point'?[p.position]:[p.start,p.end])])].sort((a,b)=>a-b);
+      const essential=[...new Set([0,g.semiSpan,...seams(g),...ribStations(g),...load.items.flatMap(p=>loadStations(p,g.semiSpan))])].sort((a,b)=>a-b);
       for(let i=1;i<essential.length;i++) if(essential[i]-essential[i-1]<.1-1e-8) throw new Error("Keep distinct wing load boundaries at least 0.1 mm from each other, ribs, seams and ends, or use exactly the same station. This avoids degenerate beam elements.");
     }
     const crit = { ...DEFAULT_CRITERIA, ...(input.criteria || {}) };
@@ -779,29 +790,67 @@ const WingEngine = (() => {
   }
   function validateLoads(items, L) {
     if (!Array.isArray(items) || items.length > 12) throw new Error("Use a list of at most 12 loads.");
-    return items.map(p => {
+    const out = items.map((p, i) => {
       const r = { ...p, fraction: p.fraction == null ? .3 : p.fraction };
       if (!Number.isFinite(r.fraction) || r.fraction < 0 || r.fraction > 1) throw new Error("Load chord fraction must be between 0 and 1.");
       if (r.kind === "point") {
         if (!Number.isFinite(r.position) || r.position <= 0 || r.position > L || !Number.isFinite(r.force)) throw new Error("Wing point loads need 0 < station ≤ span and a finite force. A force applied exactly at the fixed root acts directly on the support; use the beam lesson for that case.");
       } else if (r.kind === "distributed") {
         if (![r.start,r.end,r.qStart,r.qEnd].every(Number.isFinite) || r.start < 0 || r.end > L || r.end <= r.start) throw new Error("Distributed load needs 0 ≤ start < end ≤ span and finite end intensities.");
-      } else throw new Error("Choose point or distributed loading.");
+      } else if (r.kind === "elliptic" || r.kind === "parabolic") {
+        return { ...Profiles.normalizeCurve(r, { min: 0, max: L, lengthUnit: "mm", name: `Wing load ${i + 1} (${r.kind})` }), fraction: r.fraction };
+      } else if (r.kind === "table") {
+        const t = Profiles.normalizeTable(r, { min: 0, max: L, lengthUnit: "mm", allowFraction: true, name: `Wing load ${i + 1} (table)` });
+        return { ...t, fraction: r.fraction };
+      } else if (r.kind === "schrenk") {
+        if (!Number.isFinite(r.total)) throw new Error("A Schrenk load needs a finite total force F (N).");
+        return { kind: "schrenk", total: r.total, fraction: r.fraction };
+      } else throw new Error("Choose point, distributed, elliptic, parabolic, table or Schrenk loading.");
       return r;
     });
+    const segments = Profiles.segmentCount(out);
+    if (segments > Profiles.LIMITS.segments) throw new Error(`Use at most ${Profiles.LIMITS.segments} load segments (each load is one, a table counts its rows − 1); this case has ${segments}.`);
+    return out;
   }
+  // Load stations that must be beam-element boundaries (exact consistent loads, no element straddles a kink).
+  const loadStations = (p, L) => p.kind === "point" ? [p.position] : p.kind === "table" ? p.points.map((r) => r[0]) : p.kind === "schrenk" ? [0, L] : [p.start, p.end];
+  // The two halves of a Schrenk load as engine primitives: chord-proportional (linear for this taper) and elliptic.
+  function schrenkParts(p, g) {
+    const L = g.semiSpan, S = 0.5 * (g.rootChord + g.tipChord) * L, F = p.total;
+    return [
+      { kind: "distributed", start: 0, end: L, qStart: (0.5 * F * g.rootChord) / S, qEnd: (0.5 * F * g.tipChord) / S },
+      Profiles.normalizeCurve({ kind: "elliptic", start: 0, end: L, shape: "start", total: 0.5 * F }, { min: 0, max: L, lengthUnit: "mm" }),
+    ];
+  }
+  /** Intensity (N/mm) and chord fraction of a distributed custom load at y. */
+  function customLine(p, g, y) {
+    if (p.kind === "schrenk") return schrenkParts(p, g).reduce((q, part) => q + Profiles.valueAt(part, y), 0);
+    return Profiles.valueAt(p, y);
+  }
+  const customFraction = (p, y) => Profiles.fractionAt(p, y);
   function customResultants(items, g, y) {
     let V = 0, M = 0, X = 0;
     for (const p of items) {
       if (p.kind === "point") {
         if (p.position >= y) { V += p.force; M += p.force * (p.position-y); X += p.force * p.fraction * chordAt(g,p.position); }
-      } else {
+      } else if (p.kind === "distributed") {
         const a = Math.max(y,p.start), b = p.end;
         if (b <= a) continue;
         const k = (p.qEnd-p.qStart)/(p.end-p.start), c = p.qStart-k*p.start;
         const F = c*(b-a)+k*(b*b-a*a)/2, Y = c*(b*b-a*a)/2+k*(b**3-a**3)/3;
         V += F; M += Y-y*F;
         X += p.fraction*(g.rootChord*F+(g.tipChord-g.rootChord)/g.semiSpan*Y);
+      } else {
+        // Curved, table and Schrenk loads: exact ∫w and ∫(η − y)w over the outboard part; chord is linear in y.
+        const parts = p.kind === "schrenk" ? schrenkParts(p, g) : [p];
+        const kc = (g.tipChord - g.rootChord) / g.semiSpan;
+        for (const q of parts) {
+          const [F, Mo] = Profiles.integrals(q, y, Infinity, y);
+          if (!F && !Mo) continue;
+          V += F; M += Mo;
+          if (q.kind === "table" && q.points[0].length === 3) X += Profiles.weighted(q, y, Infinity, (eta) => customFraction(q, eta) * chordAt(g, eta));
+          else X += p.fraction * (g.rootChord * F + kc * (Mo + y * F));
+        }
       }
     }
     return { V, M, X };
@@ -825,7 +874,7 @@ const WingEngine = (() => {
     const ribs = ribStations(g);
     const sections = ySec.map((y) => cachedSection(g, pla, rod, asm, y));
     const col = (k) => sections.map((s) => s[k]);
-    const loadNodes = load.kind === "custom" ? load.items.flatMap(p => p.kind === "point" ? [p.position] : [p.start,p.end]) : [];
+    const loadNodes = load.kind === "custom" ? load.items.flatMap(p => loadStations(p, L)) : [];
     const yset = new Set([...linspace(0, L, nGrid), ...seams(g), ...ribs, ...loadNodes].map((v) => +v.toFixed(9)));
     const y = Float64Array.from([...yset].sort((a, b) => a - b));
     const lin = (k) => (yy) => interpLin(yy, ySec, col(k));
@@ -876,10 +925,11 @@ const WingEngine = (() => {
     } else if (load.kind === "custom") {
       for (const p of load.items) {
         if (p.kind === "point") point.push([p.position,p.force,p.fraction*chordAt(g,p.position)]);
-        else for (let i=0;i<y.length;i++) if (y[i]>=p.start && y[i]<=p.end) {
+        else if (p.kind === "distributed") { for (let i=0;i<y.length;i++) if (y[i]>=p.start && y[i]<=p.end) {
           const q=p.qStart+(p.qEnd-p.qStart)*(y[i]-p.start)/(p.end-p.start);
           w[i]+=q; wx[i]+=q*p.fraction*chordAt(g,y[i]);
-        }
+        } }
+        else for (let i=0;i<y.length;i++) { const q=customLine(p,g,y[i]); if (q) { w[i]+=q; wx[i]+=q*(p.kind==="table"?customFraction(p,y[i]):p.fraction)*chordAt(g,y[i]); } }
       }
     } else {
       point.push([L, load.tipForce, load.tipFraction * g.tipChord]);
@@ -939,7 +989,12 @@ const WingEngine = (() => {
     const EIf = (q) => interpLog(q, ySec, col("EIf"));
     const GJf = (q) => interpLog(q, ySec, col("GJ"));
     const mf = (q) => interp(q, y, P.mass), Ipf = (q) => interp(q, y, P.polarInertia);
-    const wf = load.kind === "custom" ? q => load.items.reduce((sum,p) => sum + (p.kind === "distributed" && q>=p.start && q<=p.end ? p.qStart+(p.qEnd-p.qStart)*(q-p.start)/(p.end-p.start) : 0),0) : q => interp(q,y,w);
+    // Polynomial and table loads go through wLine (4-point Gauss, exact for these degrees because every load
+    // station is an element boundary); elliptic parts get exact consistent nodal loads through wNodal.
+    const ellipticParts = load.kind === "custom" ? load.items.flatMap(p => p.kind === "elliptic" ? [p] : p.kind === "schrenk" ? [schrenkParts(p, g)[1]] : []) : [];
+    const wf = load.kind === "custom" ? q => load.items.reduce((sum,p) => sum + (p.kind === "distributed" && q>=p.start && q<=p.end ? p.qStart+(p.qEnd-p.qStart)*(q-p.start)/(p.end-p.start)
+      : p.kind === "parabolic" || p.kind === "table" ? Profiles.valueAt(p, q) : p.kind === "schrenk" ? Profiles.valueAt(schrenkParts(p, g)[0], q) : 0),0) : q => interp(q,y,w);
+    const wNodal = ellipticParts.length ? (y0, h) => ellipticParts.reduce((acc, part) => { const f = Profiles.hermiteNodal(part, y0, h); return acc.map((v, k) => v + f[k]); }, [0, 0, 0, 0]) : null;
     const pointTorques = point.map(([yp, F, xp]) => [yp, F * (interp(yp, y, P.xsc) - xp)]);
     const Tpoint = new Float64Array(y.length);
     point.forEach(([yp], k) => { for (let i = 0; i < y.length; i++) if (y[i] <= yp + 1e-9) Tpoint[i] += pointTorques[k][1]; });
@@ -956,7 +1011,7 @@ const WingEngine = (() => {
     const lumpedI = ribs.map((r, k) => [r, ribPolar[k]]);
     const kb = seamsActive.length ? kBend : Infinity;
     const fem = beamFEM(nodes, EIf, GJf, mf, Ipf, {
-      seams: seamsActive, kBend: kb, kTors: kTorsAt, wLine: wf, tLine: tf,
+      seams: seamsActive, kBend: kb, kTors: kTorsAt, wLine: wf, wNodal, tLine: tf,
       pointForces: point.map(([yp, F]) => [yp, F]), pointTorques, pointMasses: lumped, pointInertias: lumpedI,
       pointTorquesOutboard: load.kind==='custom',
     });

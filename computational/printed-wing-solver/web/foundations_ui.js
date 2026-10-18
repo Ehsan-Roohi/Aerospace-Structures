@@ -28,6 +28,12 @@ const Lecture03BeamCases = Object.freeze({
   const raf=fn=>(window.requestAnimationFrame?window.requestAnimationFrame(fn):setTimeout(fn,16));
   const reducedMotion=()=>!!(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches);
   const MAX_LOADS=Study.LIMITS.loads;   // the load form and imported/shared studies use the same limit
+  const LD=B.loads, LP=LD.profiles;      // distributed-load helpers (linear, elliptic, parabolic, table)
+  const CURVE_LAW={
+    elliptic:{start:'w(x) = w₀√(1 − s²), s = (x − a)/ℓ: maximum w₀ at a, zero at b',end:'w(x) = w₀√(1 − (1 − s)²): zero at a, maximum w₀ at b',middle:'w(x) = w₀√(1 − (2s − 1)²): zero at a and b, maximum w₀ at the middle'},
+    parabolic:{start:'w(x) = w₀(1 − s²), s = (x − a)/ℓ: maximum w₀ at a with zero slope, zero at b',end:'w(x) = w₀(1 − (1 − s)²): zero at a, maximum w₀ at b with zero slope',middle:'w(x) = 4w₀ s(1 − s): zero at a and b, maximum w₀ at the middle'}};
+  const CURVE_F={elliptic:'F = πw₀ℓ/4, so w₀ = 4F/(πℓ)',parabolic:'F = 2w₀ℓ/3, so w₀ = 3F/(2ℓ)'};
+  const CENTROID_TEXT={elliptic:{start:'x̄ = a + 4ℓ/(3π)',end:'x̄ = b − 4ℓ/(3π)',middle:'x̄ = (a + b)/2'},parabolic:{start:'x̄ = a + 3ℓ/8',end:'x̄ = a + 5ℓ/8',middle:'x̄ = (a + b)/2'}};
   // Normal opening: a cantilever with NO applied load and self-weight off. Loads come only from the user, a study
   // file or share link, or an explicitly chosen Lecture 03 / HW 2B example (buttons or ?beamCase= deep links).
   const BASE=Object.freeze({length:450,E:2000,density:1.24,elements:30,section:{shape:'rectangle',width:20,height:10},
@@ -125,12 +131,30 @@ const Lecture03BeamCases = Object.freeze({
         <form id="beamLoadForm" novalidate class="bl-box"><div class="bl-grid2">
           <label class="bl-field" style="grid-column:1/-1"><span>Load type</span><select class="bl-select" id="beamLoadKind">
             <option value="point">Point force P</option><option value="moment">Point couple C</option><option value="rectangle">Uniform q</option>
-            <option value="triangle">Triangular (zero at start)</option><option value="triangle-root">Triangular (zero at end)</option><option value="trapezoid">Trapezoidal</option></select></label>
+            <option value="triangle">Triangular (zero at start)</option><option value="triangle-root">Triangular (zero at end)</option><option value="trapezoid">Trapezoidal</option>
+            <option value="elliptic">Elliptic (curved)</option><option value="parabolic">Parabolic (curved)</option></select></label>
           ${field('beamLoadA','Position x','mm','required')}${field('beamLoadB','End','mm')}
           ${field('beamP','Force P (+ down)','N')}${field('beamC','Couple C (+ clockwise)','N·mm')}
           ${field('beamQ0','q at start','N/mm')}${field('beamQ1','q at end','N/mm')}
-        </div><p class="bl-err" id="beamLoadError" role="alert" hidden></p>
+          <label class="bl-field" id="beamCurveShapeField" style="grid-column:1/-1"><span>Where is the maximum?</span><select class="bl-select" id="beamCurveShape">
+            <option value="start">At the start a, zero at the end b (root-heavy)</option><option value="end">At the end b, zero at the start a (reversed)</option>
+            <option value="middle">Symmetric: zero at both ends, maximum in the middle</option></select></label>
+          <label class="bl-field" id="beamCurveBasisField"><span>Enter</span><select class="bl-select" id="beamCurveBasis">
+            <option value="total">Total force F</option><option value="peak">Peak intensity w₀</option></select></label>
+          ${field('beamCurveValue','Total force F (+ down)','N')}
+        </div><p class="bl-help bl-curve-law" id="beamCurveLaw" hidden></p><p class="bl-err" id="beamLoadError" role="alert" hidden></p>
         <div class="bl-row" style="margin-top:10px"><button type="submit" class="bl-btn bl-btn-primary" id="beamLoadSubmit">Add load &amp; solve</button><button type="button" class="bl-btn" id="beamLoadCancel" hidden>Cancel edit</button></div></form>
+        <details class="bl-box bl-csv" id="beamCsvBox"><summary>Import a line-load table (CSV)</summary>
+          <p class="bl-help">Two columns with units in the header: <code>x_mm,w_N_per_mm</code> (w + down). 2–${LP.LIMITS.tableRows} rows, x strictly increasing on 0–L. The load is <b>linear between rows</b> and zero outside the first and last row; nothing is resampled or truncated. Lines starting with # are ignored. <button type="button" class="bl-btn bl-btn-sm" id="beamCsvTemplate">Download template</button></p>
+          <label class="bl-field"><span>CSV file</span><input type="file" id="beamCsvFile" accept=".csv,text/csv,text/plain"></label>
+          <label class="bl-field"><span>…or paste the table here</span><textarea id="beamCsvText" rows="5" spellcheck="false" class="bl-notes" placeholder="x_mm,w_N_per_mm&#10;0,0.002&#10;450,0"></textarea></label>
+          <div class="bl-row"><button type="button" class="bl-btn" id="beamCsvPreview">Preview table</button></div>
+          <div id="beamCsvResult" role="status" aria-live="polite"></div>
+          <fieldset class="bl-csv-mode" id="beamCsvMode" hidden><legend>Apply the table</legend>
+            <label class="bl-check"><input type="radio" name="beamCsvMode" value="add" checked><span>Add it to the current loads</span></label>
+            <label class="bl-check"><input type="radio" name="beamCsvMode" value="replace"><span>Replace all current loads with it</span></label></fieldset>
+          <div class="bl-row"><button type="button" class="bl-btn bl-btn-primary" id="beamCsvApply" disabled>Apply table &amp; solve</button><button type="button" class="bl-btn" id="beamCsvCancel">Cancel</button></div>
+        </details>
         <div class="bl-row"><button type="button" class="bl-btn bl-btn-sm bl-btn-danger" id="beamClear">Clear all loads</button></div>
       </div></details>
       <details class="bl-acc"><summary><span class="bl-step">5</span>Examples &amp; presets</summary><div class="bl-acc-body">
@@ -258,20 +282,22 @@ const Lecture03BeamCases = Object.freeze({
           <h3 id="beamGuideTitle" tabindex="-1">Quick guide</h3>
           <ol class="bl-guide-steps">
             <li><b>Supports (panel 3).</b> Choose each end (fixed, pin, roller or free), add interior supports or hinges, or use <b>Place</b> on the beam picture. The status line says whether the beam is stable and how many reactions equilibrium alone cannot find.</li>
-            <li><b>Loads (panel 4).</b> The lab opens with no load. Add point forces P (↓ +), couples C (↻ +) and line loads q in N/mm (uniform, triangular or trapezoidal), or open an example in panel 5.</li>
+            <li><b>Loads (panel 4).</b> The lab opens with no load. Add point forces P (↓ +), couples C (↻ +), line loads q in N/mm (uniform, triangular or trapezoidal), elliptic or parabolic loads, or a CSV table of w(x); or open an example in panel 5.</li>
             <li><b>Solve.</b> Results always belong to the last solved model. After an edit they are marked “Not up to date” until you solve again.</li>
             <li><b>Diagrams.</b> Read the support reactions first, then V, M, v, θ and the stresses. Reactions are external forces on the beam; V and M are internal forces on a cut. The table and thin slices under the reactions show how they are linked.</li>
             <li><b>Station values.</b> Type x or press <b>L/2</b> to read exact V and M (equilibrium) and v, θ (Euler–Bernoulli finite element) at that x. At a point force, couple, support or hinge choose x⁻ or x⁺. <b>Cut &amp; section</b> shows the same cut with both parts and V and M on their faces.</li>
             <li><b>Report and downloads.</b> Station table CSV (any x you list), plot-samples CSV, reactions CSV, each plot as PNG, a printable report (print or save as PDF), the study file (.json) and a share link.</li>
           </ol>
           <h4>Signs and units</h4>
-          <p>Units: mm, N, N/mm, N·mm and MPa. Forces, line loads and the deflection v are + down; couples, reaction couples C and the rotation θ are + clockwise. Inside the beam, V &gt; 0 acts ↓ on the left part's cut face and ↑ on the right part's, and M &gt; 0 is sagging (top in compression). A thin slice at a support then gives V(0⁺) = −R and M(0⁺) = +C at a left end, and V(L⁻) = +R and M(L⁻) = −C at a right end. For hand calculations with ↑ + and ↺ +, reverse the signs of R and C only.</p>
+          <p>Units: mm, N, N/mm, N·mm and MPa. Forces, line loads and the deflection v are + down; couples, reaction couples C and the rotation θ are + clockwise. Inside the beam, V &gt; 0 acts ↓ on the left part's cut face and ↑ on the right part's, and M &gt; 0 is sagging (top in compression). A thin slice at a support then gives V(0⁺) = −R and M(0⁺) = +C at a left end, and V(L⁻) = +R and M(L⁻) = −C at a right end. Hand equations use the same signs: write ΣF = 0 with forces ↓ + (loads and reactions R<sub>y</sub>) and ΣM = 0 with couples and moments ↻ +. A negative reaction acts upward (or counter-clockwise).</p>
           <h4>Fixed–fixed and other indeterminate beams</h4>
           <p>Equilibrium gives two equations (plus one per hinge), but a fixed–fixed beam has four reaction unknowns. The other two come from compatibility: v = 0 and θ = 0 at both clamps. The Solution tab lists these conditions, and the solved beam satisfies them. Under downward loads the end moments are usually hogging (M &lt; 0).</p>
           <h4>Midpoint and jumps</h4>
           <p>Press <b>L/2</b> for the midpoint. Where a point force or a support acts, V has two values (x⁻ and x⁺) and its plot has a vertical step; a couple makes M jump and a hinge makes θ jump.</p>
           <h4>Plots versus exact values</h4>
           <p>Plots and the plot-samples CSV use sample points (mesh nodes and quarter points). The station readout and the station table compute V and M exactly at the x you choose, so you never have to guess from a sample.</p>
+          <h4>Curved loads and CSV tables</h4>
+          <p>An elliptic or parabolic load runs from a to b with its maximum where you choose: at the start (zero at the end), at the end, or in the middle (zero at both ends). Enter either the total force F or the peak w₀; the other is shown, with the resultant location x̄. Root-heavy on a cantilever 0..L: elliptic w₀ = 4F/(πL), x̄ = 4L/(3π), root couple 4FL/(3π); parabolic x̄ = 3L/8. These loads are integrated exactly, not split into straight pieces. A CSV table (<code>x_mm,w_N_per_mm</code>, w + down, 2–31 rows) is linear between its rows and zero outside them; the preview shows the rows, F, x̄ and the moment about x = 0 before you choose Add or Replace and press Apply. A table with an error is not imported and your loads stay as they were.</p>
           <h4>Model limits</h4>
           <p>Straight, prismatic, linear-elastic Euler–Bernoulli beam with small displacements and ideal supports. No shear deformation, axial force, buckling, plasticity, contact or stress concentrations. Stresses are nominal beam stresses, not a strength or airworthiness check.</p>
         </section>
@@ -380,14 +406,21 @@ const Lecture03BeamCases = Object.freeze({
     list.insertAdjacentHTML('beforeend',type==='support'?supportRow(value,n):hingeRow(value,n));
     relabelRows(list,type);
   }
+  const SHAPE_WORD={start:'max at start',end:'max at end',middle:'symmetric'};
   function loadText(p) {
     if(p.kind==='point') return `${plain(p.force)} N at x=${plain(p.position)} mm`;
     if(p.kind==='moment') return `${plain(p.moment)} N·mm couple at x=${plain(p.position)} mm`;
+    if(p.kind==='elliptic'||p.kind==='parabolic') {
+      const n=Number.isFinite(p.total)&&Number.isFinite(p.peak)?p:LP.normalizeCurve(p,{min:-Infinity,max:Infinity,lengthUnit:'mm'});
+      return `${p.kind} (${SHAPE_WORD[p.shape]}) over ${plain(p.start)}–${plain(p.end)} mm: ${n.basis==='total'?`F = ${plain(n.total)} N (w₀ = ${plain(n.peak)} N/mm)`:`w₀ = ${plain(n.peak)} N/mm (F = ${plain(n.total)} N)`}`;
+    }
+    if(p.kind==='table') {const t=LP.stats(p);return `table of ${p.points.length} rows over ${plain(t.start)}–${plain(t.end)} mm, linear between rows: F = ${plain(t.total)} N${p.source&&p.source.filename?` · ${p.source.filename}`:''}`;}
     return `${plain(p.qStart)} → ${plain(p.qEnd)} N/mm over ${plain(p.start)}–${plain(p.end)} mm`;
   }
+  const loadTag=p=>p.kind==='point'?'P':p.kind==='moment'?'C':p.kind==='elliptic'?'ell':p.kind==='parabolic'?'par':p.kind==='table'?'CSV':'q';
   function renderLoadList() {
     const loads=st.model.loads;
-    $('#beamLoads').innerHTML=`<ol class="bl-list">${loads.map((p,i)=>`<li data-editing="${st.editLoad===i}"><span class="bl-tag load">${p.kind==='point'?'P':p.kind==='moment'?'C':'q'}</span><span class="bl-li-text">${esc(loadText(p))}</span>
+    $('#beamLoads').innerHTML=`<ol class="bl-list">${loads.map((p,i)=>`<li data-editing="${st.editLoad===i}"><span class="bl-tag load">${loadTag(p)}</span><span class="bl-li-text">${esc(loadText(p))}</span>
       <span class="bl-li-actions"><button type="button" class="bl-btn bl-btn-sm bl-btn-ghost" data-edit-load="${i}" aria-label="Edit load ${i+1}">Edit</button><button type="button" class="bl-btn bl-btn-sm bl-btn-ghost" data-delete-load="${i}" aria-label="Remove load ${i+1}">✕</button></span></li>`).join('')}</ol>${loads.length?'':'<p class="bl-help bl-empty-loads">No load defined. Add your own load.</p>'}`;
     $('#beamLoadBadge').textContent=`${loads.length}/${MAX_LOADS}`;
   }
@@ -526,7 +559,7 @@ const Lecture03BeamCases = Object.freeze({
   function snap(x,L) {
     const raw=L/90,p=10**Math.floor(Math.log10(raw)),step=[1,2,5,10].map(k=>k*p).find(s=>s>=raw)||10*p;
     let s=Math.round(x/step)*step;
-    const stations=[0,L,...st.model.loads.flatMap(v=>v.kind==='distributed'?[v.start,v.end]:[v.position])];
+    const stations=[0,L,...st.model.loads.flatMap(v=>LD.isDist(v)?LD.span(v):[v.position])];
     for(const t of stations) if(Math.abs(t-x)<L*0.012) s=t;
     return Math.max(0,Math.min(L,Number(s.toPrecision(10))));
   }
@@ -572,10 +605,10 @@ const Lecture03BeamCases = Object.freeze({
     const rows=r.reactions.map((q,i)=>{
       const s=r.stations.find(t=>Math.abs(t.x-q.x)<=L*1e-10)||{};
       const th=s.thetaLeft!==null&&s.thetaRight!==null&&s.thetaLeft!==undefined&&Math.abs(s.thetaLeft-s.thetaRight)>1e-12?`${f(s.thetaLeft,8)} | ${f(s.thetaRight,8)}`:f(s.thetaRight??s.thetaLeft??0,8);
-      return `<tr><td>${D.supportName(i)} · ${q.kind} · x = ${plain(q.x)} mm</td><td class="num">${f(q.force,6)} N</td><td class="num">${f(q.moment,6)} N·mm</td><td class="num">${f(s.v??0,6)} mm</td><td class="num">${th} rad</td></tr>`;
+      return `<tr><td>${D.supportName(i)} · ${q.kind} · x = ${plain(q.x)} mm</td><td class="num">${f(q.force,6)} N</td><td class="num">${q.kind==='fixed'?`${f(q.moment,6)} N·mm`:'0 (rotation free)'}</td><td class="num">${f(s.v??0,6)} mm</td><td class="num">${th} rad</td></tr>`;
     }).join('');
-    $('#beamReactions').innerHTML=`<h3>Support reactions and motion</h3><div class="bl-tablewrap"><table class="bl-table"><tr><th>Support</th><th class="num">Force R (+down)</th><th class="num">Couple C (+clockwise)</th><th class="num">v (+down)</th><th class="num">θ = dv/dx</th></tr>${rows||''}</table></div>
-      <p class="bl-help">For hand conventions (+up force, +counterclockwise couple), reverse the signs of both reaction columns. v and θ use the same downward-displacement convention as Lecture 03. A pin or roller has zero reaction couple but can have nonzero θ. ΣF residual = ${r.equilibrium.force.toExponential(2)} N; ΣM residual = ${r.equilibrium.moment.toExponential(2)} N·mm.</p>
+    $('#beamReactions').innerHTML=`<h3>Support reactions and motion</h3><div class="bl-tablewrap"><table class="bl-table"><tr><th>Support</th><th class="num">R<sub>y</sub> (N, ↓ +)</th><th class="num">C (N·mm, ↻ +)</th><th class="num">v (mm, ↓ +)</th><th class="num">θ = dv/dx (rad, ↻ +)</th></tr>${rows||''}</table></div>
+      <p class="bl-help">One sign convention throughout the lab, also for hand equations: reaction force R<sub>y</sub> positive downward, reaction couple C positive clockwise, like the applied loads. A negative R<sub>y</sub> pushes the beam up; a negative C turns it counter-clockwise. A pin or roller transmits no couple (C = 0) and leaves the rotation free, so θ there is generally not zero. ΣF residual = ${r.equilibrium.force.toExponential(2)} N; ΣM residual = ${r.equilibrium.moment.toExponential(2)} N·mm.</p>
       <p class="bl-help">These reactions are <b>external</b> forces on the beam. The shear V in the plots is an <b>internal</b> force on the faces of a cut, with its own sign convention; the next table links the two.</p>`;
     renderReactionShear();
   }
@@ -798,7 +831,7 @@ const Lecture03BeamCases = Object.freeze({
     // nodes the cubic Hermite interpolation is exact unless a line load acts on that element.
     const node=r.nodes.some(n=>Math.abs(n-x)<=eps);
     let e=0;while(e<r.nodes.length-2&&r.nodes[e+1]<x)e++;
-    const n0=r.nodes[e], n1=r.nodes[e+1], lineLoad=r.loadsApplied.some(v=>v.kind==='distributed'&&v.start<n1-eps&&v.end>n0+eps);
+    const n0=r.nodes[e], n1=r.nodes[e+1], lineLoad=r.loadsApplied.some(v=>LD.isDist(v)&&LD.span(v)[0]<n1-eps&&LD.span(v)[1]>n0+eps);
     const fe=node?'Euler–Bernoulli finite element: value at a mesh node (equal to the beam-theory solution)':
       `Euler–Bernoulli finite element: cubic Hermite interpolation between the nodes at ${fmt(n0,6)} and ${fmt(n1,6)} mm (${lineLoad?'very close, not exact, under the line load on this element':'exact here: no line load acts on this element'})`;
     const both=k=>c.jump&&c.left&&c.right&&differs(r,k,c.left[k],c.right[k]);
@@ -870,7 +903,7 @@ const Lecture03BeamCases = Object.freeze({
     const k=L1/L0;
     interiorRows().forEach(row=>{const i=row.querySelector('[data-field="x"]');i.value=Number((Number(i.value)*k).toPrecision(12));});
     hingeRows().forEach(row=>{const i=row.querySelector('[data-field="x"]');i.value=Number((Number(i.value)*k).toPrecision(12));});
-    replaceLoads(st.model.loads.map(p=>p.kind==='distributed'?{...p,start:p.start*k,end:p.end*k}:{...p,position:p.position*k}));draftChanged();solve(`All positions scaled by ${fmt(k)} to the new span.`);
+    replaceLoads(st.model.loads.map(p=>p.kind==='table'?{...p,points:p.points.map(([x,w])=>[x*k,w])}:LD.isDist(p)?{...p,start:p.start*k,end:p.end*k}:{...p,position:p.position*k}));draftChanged();solve(`All positions scaled by ${fmt(k)} to the new span.`);
   }
 
   /* ----------------------------------------------------------------- cut */
@@ -899,7 +932,13 @@ const Lecture03BeamCases = Object.freeze({
     // Fabs, Mabs: sizes of the individual terms (no cancellation), the scale for the round-off tolerance.
     let F=0,Mc=0,Fabs=0,Mabs=0;const items=[];
     for(const v of r.loadsApplied) {
-      if(v.kind==='distributed') {
+      if(LD.isProfile(v)) {
+        const [lo,hi]=LD.span(v), s=side==='left'?lo:Math.max(lo,x), e=side==='left'?Math.min(hi,x):hi;
+        if(e-s<=eps) continue;
+        const part=LD.portion(v,s,e,x), W=part.W, Mabout=part.Mo;
+        F+=W;Mc+=Mabout;items.push({label:`${v.kind==='table'?'table':v.kind}-load portion`,F:W,M:Mabout,xbar:part.xbar??(s+e)/2});
+        const qmax=LD.peak(v);Fabs+=qmax*(e-s);Mabs+=qmax*(e-s)*Math.max(Math.abs(s-x),Math.abs(e-x));
+      } else if(v.kind==='distributed') {
         const s=side==='left'?v.start:Math.max(v.start,x), e=side==='left'?Math.min(v.end,x):v.end;
         if(e-s<=eps) continue;
         const q=t=>v.qStart+(v.qEnd-v.qStart)*(t-v.start)/(v.end-v.start), q0=q(s), q1=q(e), h=e-s, W=h*(q0+q1)/2;
@@ -929,7 +968,7 @@ const Lecture03BeamCases = Object.freeze({
     // Both parts by default: the same V and M appear on the two cut faces with opposite arrows.
     $('#beamCutFbd').innerHTML=sides.map(s=>D.segmentFbd(st.solved.model,r,{x:c.x,side:s,limit:c.limit,V:c.at.V,M:c.at.M,jump:!!c.jump},{width:w})).join('')+
       (side==='both'?`<figcaption>Free bodies of the left part (top) and the right part (bottom), cut at the same x. The same V and M act on both cut faces in opposite directions: on the left part's face V &gt; 0 acts ↓ and M &gt; 0 (sagging) acts ↺; on the right part's face V &gt; 0 acts ↑ and M &gt; 0 acts ↻. Arrows show the actual directions, labels the signed values. Each support is replaced by its reaction, an external force (magnitude, actual direction).</figcaption>`
-      :`<figcaption>Free body of the ${side} part. Supports are replaced by their reactions (magnitudes, actual directions). V and M are drawn in their actual directions and labelled with their signed values: on this face V &gt; 0 acts ${side==='left'?'↓':'↑'} and M &gt; 0 (sagging) acts ${side==='left'?'↺':'↻'}.</figcaption>`);
+      :`<figcaption>Free body of the ${side} part. Supports are replaced by their reactions, labelled with their signed values (R ↓ +, C ↻ +) and drawn in their actual directions. V and M are drawn in their actual directions and labelled with their signed values: on this face V &gt; 0 acts ${side==='left'?'↓':'↑'} and M &gt; 0 (sagging) acts ${side==='left'?'↺':'↻'}.</figcaption>`);
     const lim=v=>v===null?'—':fmt(v);
     const pair=(k,unit)=>c.jump&&c.left&&c.right&&Math.abs(c.left[k]-c.right[k])>1e-9*Math.max(1,Math.abs(c.left[k]))?`${lim(c.left[k])} (x⁻) | ${lim(c.right[k])} (x⁺) ${unit}`:`${fmt(c.at[k])} ${unit}`;
     $('#beamCutRead').textContent=`Cut at x = ${fmt(c.x)} mm${c.jump?` — a jump occurs here; the free body uses the ${c.limit==='left'?'left limit x⁻':'right limit x⁺'}.`:'.'}`;
@@ -1029,7 +1068,7 @@ const Lecture03BeamCases = Object.freeze({
       const pct=Math.abs(a)>1e-12?` (${delta>0?'+':''}${fmt(100*delta/Math.abs(a),3)} %)`:'';
       return `<tr><td>${name}</td><td class="num">${fmt(a,d)} ${unit}</td><td class="num">${fmt(b,d)} ${unit}</td><td class="num">${delta>0?'+':''}${fmt(delta,d)}${pct}</td></tr>`;};
     const sameSupports=JSON.stringify(A.model.supports)===JSON.stringify(Bs.model.supports);
-    const reactions=sameSupports?ra.reactions.map((q,i)=>row(`Reaction ${D.supportName(i)} force (+down)`,q.force,rb.reactions[i].force,'N')+(q.kind==='fixed'?row(`Reaction ${D.supportName(i)} couple (+cw)`,q.moment,rb.reactions[i].moment,'N·mm'):'')).join('')
+    const reactions=sameSupports?ra.reactions.map((q,i)=>row(`R<sub>y</sub> at ${D.supportName(i)} (↓ +)`,q.force,rb.reactions[i].force,'N')+(q.kind==='fixed'?row(`C at ${D.supportName(i)} (↻ +)`,q.moment,rb.reactions[i].moment,'N·mm'):'')).join('')
       :`<tr><td>Reactions</td><td>${ra.reactions.map((q,i)=>`${D.supportName(i)}: ${fmt(q.force)} N${q.kind==='fixed'?`, ${fmt(q.moment)} N·mm`:''}`).join('<br>')}</td><td>${rb.reactions.map((q,i)=>`${D.supportName(i)}: ${fmt(q.force)} N${q.kind==='fixed'?`, ${fmt(q.moment)} N·mm`:''}`).join('<br>')}</td><td>supports differ</td></tr>`;
     const cols=window.matchMedia&&window.matchMedia('(max-width: 1180px)').matches?1:2, full=width(box), w=Math.max(300,(full-(cols-1)*18)/cols);
     const series=key=>[{result:ra,key,cls:'bl-curve',label:'A'},{result:rb,key,cls:'bl-curve-b',label:'B'}];
@@ -1101,13 +1140,13 @@ const Lecture03BeamCases = Object.freeze({
   function printReport() {
     if(!guard()) return;
     const m=st.solved.model, r=st.solved.result, W=700, p=r.sectionProperties, date=new Date().toLocaleString();
-    const reactions=r.reactions.map((q,i)=>{const s=r.stations.find(t=>Math.abs(t.x-q.x)<=m.length*1e-10)||{};return `<tr><td>${D.supportName(i)}</td><td>${q.kind}</td><td class="num">${plain(q.x)}</td><td class="num">${fmt(q.force,5)}</td><td class="num">${fmt(q.moment,5)}</td><td class="num">${fmt(s.v??0,4)}</td><td class="num">${fmt(s.thetaRight??s.thetaLeft??0,4)}</td></tr>`;}).join('');
+    const reactions=r.reactions.map((q,i)=>{const s=r.stations.find(t=>Math.abs(t.x-q.x)<=m.length*1e-10)||{};return `<tr><td>${D.supportName(i)}</td><td>${q.kind}</td><td class="num">${plain(q.x)}</td><td class="num">${fmt(q.force,5)}</td><td class="num">${q.kind==='fixed'?fmt(q.moment,5):'0 (rotation free)'}</td><td class="num">${fmt(s.v??0,4)}</td><td class="num">${fmt(s.thetaRight??s.thetaLeft??0,4)}</td></tr>`;}).join('');
     $('#beamPrint').innerHTML=`<div class="bl-print"><h1>MIE 446 Beam Lab · study report</h1><p>${esc(date)} · engine ${esc(B.VERSION)} · units mm, N, MPa</p>
       <section><h2>Model</h2><p>L = ${fmt(m.length)} mm · ${esc(SEC.describe(m.section))} · E = ${fmt(m.E)} MPa · ρ = ${fmt(m.density)} g/cm³ · ${r.dofs.elements} elements · self-weight ${m.selfWeight?`included (${fmt(r.selfWeight.q)} N/mm)`:'not included'}</p>
         <p>A = ${fmt(p.A)} mm², I = ${fmt(p.I)} mm⁴, c = ${fmt(p.c)} mm, S = ${fmt(p.S)} mm³, mass ${fmt(r.massG)} g</p>
         <figure>${D.beamSchematic(m,{width:W,selfWeight:r.selfWeight.enabled?{q:r.selfWeight.q}:null,label:'Input schematic: physical supports and applied loads'})}<figcaption>Input schematic (physical supports and loads).</figcaption></figure>
         <figure>${D.freeBody(m,r,{width:W,mode:'solved',label:'Free-body diagram with solved reactions'})}<figcaption>Free-body diagram: supports replaced by the solved reactions (drawn in their actual directions).</figcaption></figure></section>
-      <section><h2>Supports and loads</h2><table class="bl-table"><tr><th>Support</th><th>Type</th><th class="num">x (mm)</th><th class="num">Force R (N, ↓ +)</th><th class="num">Couple C (N·mm, ↻ +)</th><th class="num">v (mm)</th><th class="num">θ (rad)</th></tr>${reactions}</table>
+      <section><h2>Supports and loads</h2><table class="bl-table"><tr><th>Support</th><th>Type</th><th class="num">x (mm)</th><th class="num">R<sub>y</sub> (N, ↓ +)</th><th class="num">C (N·mm, ↻ +)</th><th class="num">v (mm, ↓ +)</th><th class="num">θ (rad, ↻ +)</th></tr>${reactions}</table>
         <p>Hinges: ${m.hinges.length?m.hinges.map(h=>`${fmt(h)} mm`).join(', '):'none'}. Loads: ${m.loads.length?m.loads.map(v=>esc(Study.describeLoad(v))).join('; '):'none'}.</p>
         <p>ΣF residual ${r.equilibrium.force.toExponential(2)} N; ΣM residual ${r.equilibrium.moment.toExponential(2)} N·mm. Stability: ${r.stability.degree===0?'statically determinate':`statically indeterminate to degree ${r.stability.degree}`}.</p></section>
       <section><h2>Results</h2><p>Max |v| = ${fmt(r.maxima.deflection)} mm at x = ${fmt(r.extremes.deflection.x)} mm · max |M| = ${fmt(r.maxima.moment)} N·mm at x = ${fmt(r.extremes.moment.x)} mm · max |σ| = ${fmt(r.maxima.bendingStress)} MPa · max |τ| = ${fmt(r.maxima.shearStress)} MPa · f₁ = ${r.modes[0]?fmt(r.modes[0].frequencyHz):'—'} Hz</p>
@@ -1147,14 +1186,36 @@ const Lecture03BeamCases = Object.freeze({
 
   function syncLoadForm() {
     if(st.editLoad!==null&&!(st.editLoad<st.model.loads.length)) st.editLoad=null;
-    const k=$('#beamLoadKind').value, point=k==='point'||k==='moment';
+    const k=$('#beamLoadKind').value, point=k==='point'||k==='moment', curve=k==='elliptic'||k==='parabolic';
     const show=(id,on)=>{$(`#${id}Field`).hidden=!on;};
     show('beamLoadB',!point);show('beamP',k==='point');show('beamC',k==='moment');
     show('beamQ0',['rectangle','triangle-root','trapezoid'].includes(k));show('beamQ1',['triangle','trapezoid'].includes(k));
-    $('#beamLoadALabel').textContent=point?'Position x':'Start';
+    show('beamCurveShape',curve);show('beamCurveBasis',curve);show('beamCurveValue',curve);
+    const total=$('#beamCurveBasis').value==='total';
+    $('#beamCurveValueLabel').textContent=total?'Total force F (+ down)':'Peak intensity w₀ (+ down)';
+    $('#beamCurveValueField').querySelector('.bl-unit').textContent=total?'N':'N/mm';
+    $('#beamLoadALabel').textContent=point?'Position x':curve?'Start a':'Start';
+    if($('#beamLoadBLabel')) $('#beamLoadBLabel').textContent=curve?'End b':'End';
+    curveLaw();
     $('#beamQ0Label').textContent=k==='rectangle'?'q (uniform)':'q at start';
     $('#beamLoadSubmit').textContent=st.editLoad===null?'Add load & solve':`Update load ${st.editLoad+1} & solve`;
     $('#beamLoadCancel').hidden=st.editLoad===null;
+  }
+  /** Live law, F ↔ w₀ conversion and centroid for the curved-load form (no rounding of what is applied). */
+  function curveLaw() {
+    const k=$('#beamLoadKind').value, out=$('#beamCurveLaw');
+    if(k!=='elliptic'&&k!=='parabolic') {out.hidden=true;return;}
+    const shape=$('#beamCurveShape').value, basis=$('#beamCurveBasis').value;
+    let extra='';
+    try {
+      const a=Number($('#beamLoadA').value), b=Number($('#beamLoadB').value), v=Number($('#beamCurveValue').value);
+      if([a,b,v].every(Number.isFinite)&&b>a&&String($('#beamCurveValue').value).trim()!=='') {
+        const n=LP.normalizeCurve({kind:k,start:a,end:b,shape,[basis]:v},{min:-Infinity,max:Infinity,lengthUnit:'mm'}), xbar=a+LP.CENTROID[k][shape]*(b-a);
+        extra=` With ℓ = ${plain(b-a)} mm: ${basis==='total'?`w₀ = ${plain(n.peak)} N/mm`:`F = ${plain(n.total)} N`}; resultant at x̄ = ${plain(xbar)} mm; moment of the load about x = 0: ${plain(n.total*xbar)} N·mm (clockwise +).`;
+      }
+    } catch(e) {}
+    out.innerHTML=`${esc(CURVE_LAW[k][shape])}. ${esc(CURVE_F[k])}; ${esc(CENTROID_TEXT[k][shape])}.${esc(extra)} <span class="bl-help">Integrated exactly (not split into straight segments).</span>`;
+    out.hidden=false;
   }
   function loadFromForm() {
     const k=$('#beamLoadKind').value, n=(id,label)=>readNumber($(id),label);
@@ -1162,13 +1223,17 @@ const Lecture03BeamCases = Object.freeze({
     let load;
     if(k==='point') load={kind:'point',position:n('#beamLoadA','Position x'),force:n('#beamP','Force P')};
     else if(k==='moment') load={kind:'moment',position:n('#beamLoadA','Position x'),moment:n('#beamC','Couple C')};
-    else {
+    else if(k==='elliptic'||k==='parabolic') {
+      const basis=$('#beamCurveBasis').value;
+      load={kind:k,start:n('#beamLoadA','Start a'),end:n('#beamLoadB','End b'),shape:$('#beamCurveShape').value,
+        [basis]:n('#beamCurveValue',basis==='total'?'Total force F':'Peak intensity w₀')};
+    } else {
       const a=n('#beamLoadA','Start'),b=n('#beamLoadB','End'),q0=k==='triangle'?0:n('#beamQ0','q at start'),q1=k==='triangle-root'?0:k==='rectangle'?q0:n('#beamQ1','q at end');
       load={kind:'distributed',start:a,end:b,qStart:q0,qEnd:q1};
     }
-    const at=load.kind==='distributed'?[load.start,load.end]:[load.position];
+    const at=LD.isDist(load)?[load.start,load.end]:[load.position];
     if(at.some(x=>x<0||x>L)) throw new Error(`Loads must lie on the beam (0 to ${plain(L)} mm).`);
-    if(load.kind==='distributed'&&!(load.end>load.start)) throw new Error('A distributed load needs start < end.');
+    if(LD.isDist(load)&&!(load.end>load.start)) throw new Error('A distributed load needs start < end.');
     return load;
   }
   function submitLoad(e) {
@@ -1185,9 +1250,76 @@ const Lecture03BeamCases = Object.freeze({
     const p=st.model.loads[i];st.editLoad=i;
     if(p.kind==='point'){$('#beamLoadKind').value='point';$('#beamLoadA').value=p.position;$('#beamP').value=p.force;}
     else if(p.kind==='moment'){$('#beamLoadKind').value='moment';$('#beamLoadA').value=p.position;$('#beamC').value=p.moment;}
+    else if(p.kind==='table'){st.editLoad=null;openCsv(i);return;}
+    else if(p.kind==='elliptic'||p.kind==='parabolic'){$('#beamLoadKind').value=p.kind;$('#beamLoadA').value=p.start;$('#beamLoadB').value=p.end;$('#beamCurveShape').value=p.shape;
+      const basis=Object.prototype.hasOwnProperty.call(p,'total')?'total':'peak';$('#beamCurveBasis').value=basis;$('#beamCurveValue').value=p[basis];}
     else {$('#beamLoadKind').value=p.qStart===p.qEnd?'rectangle':p.qStart===0?'triangle':p.qEnd===0?'triangle-root':'trapezoid';$('#beamLoadA').value=p.start;$('#beamLoadB').value=p.end;$('#beamQ0').value=p.qStart;$('#beamQ1').value=p.qEnd;}
     renderLoadList();syncLoadForm();$('#beamLoadKind').focus();
   }
+  /* ---------------------------------------------------- CSV line-load table */
+  // A table is previewed and validated together with the whole current model before anything changes.
+  st.csv={text:'',filename:'',sha256:'',candidate:null,editIndex:null,previewText:null};
+  const csvFromTable=p=>`x_mm,w_N_per_mm\n${p.points.map(r=>`${r[0]},${r[1]}`).join('\n')}\n`;
+  function openCsv(editIndex=null) {
+    const box=$('#beamCsvBox');box.open=true;st.csv.editIndex=editIndex;
+    if(editIndex!==null) {const p=st.model.loads[editIndex];$('#beamCsvText').value=csvFromTable(p);st.csv.fromFile=$('#beamCsvText').value;st.csv.filename=p.source&&p.source.filename||'';st.csv.sha256=p.source&&p.source.sha256||'';previewCsv();}
+    $('#beamCsvMode').querySelectorAll('input').forEach(i=>{i.disabled=editIndex!==null;});
+    box.scrollIntoView&&box.scrollIntoView({block:'nearest'});
+  }
+  async function sha256Hex(text) {
+    try {
+      if(!(window.crypto&&crypto.subtle&&window.TextEncoder)) return '';
+      const d=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(text));
+      return [...new Uint8Array(d)].map(b=>b.toString(16).padStart(2,'0')).join('');
+    } catch(e) {return '';}
+  }
+  function csvMode(){const r=$('#beamCsvMode input:checked');return st.csv.editIndex!==null?'edit':r?r.value:'add';}
+  function csvCandidateLoads(table) {
+    const mode=csvMode(), now=clone(st.model.loads);
+    if(mode==='edit') {now[st.csv.editIndex]=table;return now;}
+    return mode==='replace'?[table]:[...now,table];
+  }
+  function previewCsv() {
+    const out=$('#beamCsvResult'), apply=$('#beamCsvApply'), text=$('#beamCsvText').value;
+    apply.disabled=true;st.csv.candidate=null;st.csv.previewText=null;$('#beamCsvMode').hidden=true;
+    let L;
+    try {L=readNumber(geometryInput('length'),'Length L');} catch(e) {out.innerHTML=`<p class="bl-err">${esc(e.message)}</p>`;return;}
+    const res=LP.parseCsv(text,{workspace:'beam',min:0,max:L,ref:0});
+    if(!res.ok) {out.innerHTML=`<div class="bl-callout warn"><b>Not imported — the table has ${res.errors.length} problem${res.errors.length>1?'s':''}.</b><ul>${res.errors.slice(0,12).map(e=>`<li>${esc(e)}</li>`).join('')}</ul><p class="bl-help">Your loads are unchanged.</p></div>`;return;}
+    const table={kind:'table',points:res.rows,source:{filename:st.csv.filename||'pasted table',rows:res.rows.length,...(st.csv.sha256?{sha256:st.csv.sha256}:{})}};
+    const loads=csvCandidateLoads(table);
+    let problem='';
+    if(loads.length>MAX_LOADS) problem=`This would make ${loads.length} loads; the limit is ${MAX_LOADS}. Choose “Replace” or remove a load.`;
+    else {
+      try {const d=readDraft();B.normalize({...d,supports:d.supports.map(q=>({x:q.x,kind:q.kind})),loads,_transverseOnly:true});}
+      catch(e) {problem=e.message;}
+    }
+    const t=res.stats, rows=res.rows.map(r=>`<tr><td class="num">${esc(plain(r[0]))}</td><td class="num">${esc(plain(r[1]))}</td></tr>`).join('');
+    out.innerHTML=`<div class="bl-csv-preview"><p><b>Preview: ${t.rows} rows, ${t.segments} linear segments</b> from ${esc(table.source.filename)}${st.csv.sha256?` (SHA-256 ${esc(st.csv.sha256.slice(0,12))}…)`:''}.</p>
+      ${D.tablePreview?D.tablePreview(res.rows,{width:Math.min(width(out,340),520)}):''}
+      <dl class="bl-props"><dt>Total force F = ∫w dx</dt><dd>${esc(plain(t.total))} N (${t.total>0?'↓':t.total<0?'↑':'zero'})</dd>
+        <dt>Resultant location x̄</dt><dd>${t.centroid===null?'undefined (zero net force: the table acts as a couple)':`${esc(plain(t.centroid))} mm`}</dd>
+        <dt>Moment about x = 0</dt><dd>${esc(plain(t.momentAboutRef))} N·mm (clockwise +)</dd>
+        <dt>Range</dt><dd>x = ${esc(plain(t.start))}–${esc(plain(t.end))} mm; w = ${esc(plain(t.wMin))} to ${esc(plain(t.wMax))} N/mm</dd></dl>
+      ${res.warnings.length?`<ul class="bl-help">${res.warnings.map(w=>`<li>${esc(w)}</li>`).join('')}</ul>`:''}
+      <details><summary>Rows (x mm, w N/mm)</summary><div class="bl-tablewrap"><table class="bl-table"><tr><th>x (mm)</th><th>w (N/mm, + down)</th></tr>${rows}</table></div></details>
+      ${problem?`<p class="bl-err">Cannot apply: ${esc(problem)} Your loads are unchanged.</p>`:`<p class="bl-help">${st.csv.editIndex!==null?`Apply replaces table load ${st.csv.editIndex+1} only.`:'Choose how to apply it, then press Apply. Until then nothing changes.'}</p>`}</div>`;
+    if(problem) return;
+    st.csv.candidate=table;st.csv.previewText=text;$('#beamCsvMode').hidden=st.csv.editIndex!==null;apply.disabled=false;
+  }
+  function applyCsv() {
+    if(!st.csv.candidate||st.csv.previewText!==$('#beamCsvText').value) {previewCsv();return;}
+    const loads=csvCandidateLoads(st.csv.candidate);
+    try {const d=readDraft();B.normalize({...d,supports:d.supports.map(q=>({x:q.x,kind:q.kind})),loads,_transverseOnly:true});}
+    catch(e) {$('#beamCsvResult').insertAdjacentHTML('beforeend',`<p class="bl-err">Cannot apply: ${esc(e.message)}</p>`);return;}
+    const n=st.csv.candidate.points.length, mode=csvMode();
+    replaceLoads(loads);closeCsv();
+    solve(`Line-load table applied (${n} rows, ${mode==='replace'?'all previous loads replaced':mode==='edit'?'table updated':'added to the current loads'}).`);
+  }
+  function closeCsv() {st.csv={text:'',filename:'',sha256:'',candidate:null,editIndex:null,previewText:null};$('#beamCsvText').value='';$('#beamCsvFile').value='';$('#beamCsvResult').innerHTML='';$('#beamCsvMode').hidden=true;$('#beamCsvApply').disabled=true;$('#beamCsvBox').open=false;
+    // the next table is added again unless the user chooses Replace for it (Replace is never remembered)
+    const add=$('#beamCsvMode input[value="add"]');if(add)add.checked=true;$('#beamCsvMode').querySelectorAll('input').forEach(i=>{i.disabled=false;});}
+
   /** Replace the applied loads programmatically; an edit in progress no longer refers to them. */
   function replaceLoads(loads) {st.model.loads=loads;st.editLoad=null;$('#beamLoadError').hidden=true;renderLoadList();syncLoadForm();}
   function fillFormFromSingleLoad() {
@@ -1208,7 +1340,7 @@ const Lecture03BeamCases = Object.freeze({
     if(name==='diagrams'&&st.solved) {renderStation();renderCharts();}
     if(name==='solution') renderSolution();
     if(name==='modes') renderMode();
-    if(name==='learn'&&!$('#beamSigns').innerHTML) $('#beamSigns').innerHTML=`<h3>Sign conventions</h3>${D.signConventions({width:width($('#beamSigns'))})}<p class="bl-help">Hand calculations often take reaction forces up and couples counter-clockwise as positive: reverse the signs of the app's reactions to compare. Displacement v is positive downward in both.</p>
+    if(name==='learn'&&!$('#beamSigns').innerHTML) $('#beamSigns').innerHTML=`<h3>Sign conventions</h3>${D.signConventions({width:width($('#beamSigns'))})}<p class="bl-help">These are the only signs used in this lab — in the equations of the Solution tab, the tables, the free-body diagrams, the CSV files and the report: every external force (applied load or support reaction R<sub>y</sub>) and v positive downward, every external couple (applied or reaction couple C), moment of a force and θ positive clockwise. A negative reaction acts upward or counter-clockwise.</p>
       <p class="bl-help">“Left face” and “right face” above are the faces of a small element: its left face is the cut face of the part to the right of a cut. Internal V and M are not reactions. Across a support V changes by −R and M by the reaction couple C (app signs), so at a left-end support V(0⁺) = −R and M(0⁺) = +C.</p>`;
     if(name==='compare') renderCompare();
     renderPicture();
@@ -1250,6 +1382,40 @@ const Lecture03BeamCases = Object.freeze({
     if(ed) editLoad(+ed.dataset.editLoad);
   });
   $('#beamLoadKind').onchange=syncLoadForm;
+  $('#beamCurveShape').onchange=syncLoadForm;
+  // Switching between F and w0 keeps the same load: the entered value is converted, not reinterpreted.
+  $('#beamCurveBasis').dataset.prev='total';
+  let curveMemo=null;   // switching back without editing restores exactly what was typed
+  $('#beamCurveBasis').onchange=e=>{
+    const prev=e.target.dataset.prev, next=e.target.value;e.target.dataset.prev=next;
+    try {
+      const k=$('#beamLoadKind').value,a=Number($('#beamLoadA').value),b=Number($('#beamLoadB').value),raw=$('#beamCurveValue').value,v=Number(raw),shape=$('#beamCurveShape').value;
+      const key=JSON.stringify([k,a,b,shape]);
+      if(curveMemo&&curveMemo.key===key&&curveMemo.basis===next&&curveMemo.shown===raw) $('#beamCurveValue').value=curveMemo.raw;
+      else if(String(raw).trim()!==''&&[a,b,v].every(Number.isFinite)&&b>a) {
+        const nrm=LP.normalizeCurve({kind:k,start:a,end:b,shape,[prev]:v},{min:-Infinity,max:Infinity,lengthUnit:'mm'});
+        const shown=String(Number(nrm[next].toPrecision(12)));
+        curveMemo={key,basis:prev,raw,shown};$('#beamCurveValue').value=shown;
+      }
+    } catch(x) {}
+    syncLoadForm();
+  };
+  $('#beamCsvTemplate').onclick=()=>download('beam_line_load_template.csv',LP.csvTemplate('beam'),'text/csv');
+  $('#beamCsvPreview').onclick=previewCsv;
+  $('#beamCsvApply').onclick=applyCsv;
+  $('#beamCsvCancel').onclick=closeCsv;
+  $('#beamCsvMode').addEventListener('change',previewCsv);
+  // Editing the text after choosing a file makes it a different table: drop the file name and hash.
+  $('#beamCsvText').addEventListener('input',()=>{$('#beamCsvApply').disabled=true;if(st.csv.fromFile!==$('#beamCsvText').value){st.csv.filename='';st.csv.sha256='';}});
+  $('#beamCsvFile').onchange=async e=>{
+    const file=e.target.files&&e.target.files[0];if(!file) return;
+    if(file.size>LP.LIMITS.csvBytes){$('#beamCsvResult').innerHTML=`<p class="bl-err">The file is larger than ${LP.LIMITS.csvBytes/1000} kB; a load table needs at most ${LP.LIMITS.tableRows} rows. Your loads are unchanged.</p>`;return;}
+    const text=await file.text();
+    // the hash is of the file's own bytes; the text area shows them with its line breaks normalised to LF
+    $('#beamCsvText').value=text;st.csv.fromFile=$('#beamCsvText').value;st.csv.filename=String(file.name).slice(0,120);st.csv.sha256=await sha256Hex(text);
+    previewCsv();
+  };
+  $('#beamLoadForm').addEventListener('input',curveLaw);
   $('#beamLoadForm').onsubmit=submitLoad;
   $('#beamLoadCancel').onclick=()=>{st.editLoad=null;renderLoadList();syncLoadForm();};
   $('#beamSelfWeight').onchange=()=>{renderSectionView();draftChanged();};

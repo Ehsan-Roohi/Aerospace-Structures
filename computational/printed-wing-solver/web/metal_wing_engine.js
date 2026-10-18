@@ -22,9 +22,18 @@
  *
  * Checked against the Python pipeline and a 41 066-element CalculiX shell model of the same wing by
  * test_metal_wing.mjs (reference numbers in metal_wing_reference.json).
+ *
+ * Custom bench loads (customLoads; m, N, N/m, UPWARD +; fraction = x/c from the local leading edge) replace
+ * flight lift and inertia relief: point, linear 'distributed', curved 'elliptic' | 'parabolic'
+ * {start, end, shape 'start'|'end'|'middle', total | peak} and piecewise-linear 'table' {points [[y, w]] or
+ * [[y, w, x/c]]} between the fittings and the last rib. V and M use exact integrals (load_profiles.js);
+ * each load's torque is about the local shear centre at its own station, T = F (x_sc − x/c) c, as for the
+ * flight loads. customLoads [] means "no load defined". A Schrenk shape is a flight-mode lift distribution here.
  */
 const MetalWingEngine = (() => {
   "use strict";
+  const Profiles = typeof LoadProfiles !== "undefined" ? LoadProfiles : (typeof require === "function" ? require("./load_profiles.js") : null);
+  if (!Profiles) throw new Error("Load load_profiles.js before metal_wing_engine.js.");
   const VERSION = "1.0.1";
   const G0 = 9.80665;
 
@@ -710,11 +719,17 @@ const MetalWingEngine = (() => {
     if (inp.customLoads != null) {
       if (!Array.isArray(inp.customLoads) || inp.customLoads.length > 30) throw new Error('Use at most 30 custom loads');
       const limit=P.ribs[P.ribs.length-1];
-      for(const p of inp.customLoads) {
-        if(!['point','distributed'].includes(p.kind) || !Number.isFinite(p.fraction) || p.fraction<0 || p.fraction>1) throw new Error('Choose a valid load type and chord fraction 0–1');
+      if(input.customLoads.some(p=>p&&p.kind==='schrenk')) throw new Error('A Schrenk shape is a flight-mode lift distribution for the D.520 (Aircraft & load case): custom loads are limited to the fitting-to-last-rib span, while a Schrenk shape is defined over the whole semi-span.');
+      inp.customLoads=inp.customLoads.map((p,i)=>{
+        if(!p||!['point','distributed','elliptic','parabolic','table'].includes(p.kind) || !Number.isFinite(p.fraction) || p.fraction<0 || p.fraction>1) throw new Error('Choose a valid load type and chord fraction 0–1');
         if(p.kind==='point') {if(!Number.isFinite(p.position)||p.position<P.fittingY||p.position>limit||!Number.isFinite(p.force))throw new Error(`Point station must be between fitting ${P.fittingY} and structural tip ${limit} m; force is in N`);}
-        else if(![p.start,p.end,p.qStart,p.qEnd].every(Number.isFinite)||p.start<P.fittingY||p.end>limit||p.end<=p.start)throw new Error(`Distributed bounds must increase from fitting ${P.fittingY} to structural tip ${limit} m; intensity is N/m`);
-      }
+        else if(p.kind==='distributed') {if(![p.start,p.end,p.qStart,p.qEnd].every(Number.isFinite)||p.start<P.fittingY||p.end>limit||p.end<=p.start)throw new Error(`Distributed bounds must increase from fitting ${P.fittingY} to structural tip ${limit} m; intensity is N/m`);}
+        else if(p.kind==='table') return {...Profiles.normalizeTable(p,{min:P.fittingY,max:limit,lengthUnit:'m',allowFraction:true,name:`D.520 load ${i+1} (table)`}),fraction:p.fraction};
+        else return {...Profiles.normalizeCurve(p,{min:P.fittingY,max:limit,lengthUnit:'m',lineUnit:'N/m',name:`D.520 load ${i+1} (${p.kind})`}),fraction:p.fraction};
+        return p;
+      });
+      const segments=Profiles.segmentCount(inp.customLoads);
+      if(segments>Profiles.LIMITS.segments) throw new Error(`Use at most ${Profiles.LIMITS.segments} load segments (each load is one, a table counts its rows − 1); this case has ${segments}`);
       // Custom bench loads replace flight lift AND gravity/inertia relief.
       inp.inertiaRelief=false;
     }
@@ -726,6 +741,7 @@ const MetalWingEngine = (() => {
     let V=0,M=0;
     for(const p of loads) {
       if(p.kind==='point') {if(y<p.position){V+=p.force;M+=p.force*(p.position-y);}continue;}
+      if(p.kind!=='distributed') {const [F,Mo]=Profiles.integrals(p,y,Infinity,y);V+=F;M+=Mo;continue;}
       const a=Math.max(y,p.start),b=p.end;if(a>=b)continue;
       const h=b-a,k=(p.qEnd-p.qStart)/(p.end-p.start),qa=p.qStart+k*(a-p.start);
       const F=qa*h+k*h*h/2;V+=F;M+=(a-y)*F+qa*h*h/2+k*h*h*h/3;
@@ -769,12 +785,14 @@ const MetalWingEngine = (() => {
     const Wt = P.aircraft.mass * G0;
     const shape = spanShape(P, W, inp.distribution, ys, P.aircraft.CL);
     const custom=inp.customLoads!=null;
-    const lineAt=y=>inp.customLoads.filter(p=>p.kind==='distributed'&&y>=p.start&&y<=p.end).reduce((q,p)=>q+p.qStart+(p.qEnd-p.qStart)*(y-p.start)/(p.end-p.start),0);
+    const isLine=p=>p.kind!=='point';
+    const lineAt=y=>inp.customLoads.filter(isLine).reduce((q,p)=>q+(p.kind==='distributed'?(y>=p.start&&y<=p.end?p.qStart+(p.qEnd-p.qStart)*(y-p.start)/(p.end-p.start):0):Profiles.valueAt(p,y)),0);
     const lift = custom?ys.map(lineAt):shape.l.map((v) => v * Wt);
     const xscAt = (y) => interp(Math.min(y, yTipStruct), st, props.map((p) => p.xscFrac));
     const relief = inp.inertiaRelief ? 1 : 0;
     const wLine = ys.map((y, i) => lift[i] - relief * mLine[i] * G0);
-    const torqueAt=y=>inp.customLoads.filter(p=>p.kind==='distributed'&&y>=p.start&&y<=p.end).reduce((t,p)=>t+(p.qStart+(p.qEnd-p.qStart)*(y-p.start)/(p.end-p.start))*(xscAt(y)-p.fraction)*W.chord(y),0);
+    const torqueAt=y=>inp.customLoads.filter(isLine).reduce((t,p)=>t+(p.kind==='distributed'?(y>=p.start&&y<=p.end?(p.qStart+(p.qEnd-p.qStart)*(y-p.start)/(p.end-p.start))*(xscAt(y)-p.fraction)*W.chord(y):0)
+      :Profiles.valueAt(p,y)*(xscAt(y)-Profiles.fractionAt(p,y))*W.chord(y)),0);
     const tLine = ys.map((y, i) => { const c = W.chord(y), xs = xscAt(y); return custom?torqueAt(y):lift[i] * (xs - P.aircraft.xcp) * c - relief * mLine[i] * G0 * (xs - xmAt(Math.min(y, yTipStruct))) * c; });
     const points = [];
     if(custom) for(const p of inp.customLoads.filter(p=>p.kind==='point'))points.push({y:p.position,F:p.force,T:p.force*(xscAt(p.position)-p.fraction)*W.chord(p.position),name:'custom point'});
@@ -791,16 +809,27 @@ const MetalWingEngine = (() => {
       T1[i] = T1[i + 1] + 0.5 * (tLine[i] + tLine[i + 1]) * dy;
     }
     for (const p of points) for (let i = 0; i < N; i++) if (ys[i] < p.y) { V1[i] += p.F; M1[i] += p.F * (p.y - ys[i]); T1[i] += p.T; }
-    let customLineT=null;
+    let customLineTAt=null;
     if(custom) {
       // Integrate torque over clipped load intervals (no smeared load edges).
       const lineT=new Array(N).fill(0);
-      for(let i=N-2;i>=0;i--){let dT=0;for(const p of inp.customLoads.filter(p=>p.kind==='distributed')){
-        const a=Math.max(ys[i],p.start),b=Math.min(ys[i+1],p.end);if(b<=a)continue;
-        const mid=(a+b)/2,h=(b-a)/2,dt=h/Math.sqrt(3);
-        for(const y of [mid-dt,mid+dt])dT+=h*(p.qStart+(p.qEnd-p.qStart)*(y-p.start)/(p.end-p.start))*(xscAt(y)-p.fraction)*W.chord(y);
-      }lineT[i]=lineT[i+1]+dT;}
-      customLineT=lineT;
+      const linear=inp.customLoads.filter(p=>p.kind==='distributed');
+      const profiled=inp.customLoads.filter(p=>isLine(p)&&p.kind!=='distributed');
+      const dTon=(y1,y2)=>{let dT=0;
+        for(const p of linear){
+          const a=Math.max(y1,p.start),b=Math.min(y2,p.end);if(b<=a)continue;
+          const mid=(a+b)/2,h=(b-a)/2,dt=h/Math.sqrt(3);
+          for(const y of [mid-dt,mid+dt])dT+=h*(p.qStart+(p.qEnd-p.qStart)*(y-p.start)/(p.end-p.start))*(xscAt(y)-p.fraction)*W.chord(y);
+        }
+        // Curved and table loads: the profile's own quadrature (angle variable for an elliptic zero end).
+        for(const p of profiled) dT+=Profiles.weighted(p,y1,y2,y=>(xscAt(y)-Profiles.fractionAt(p,y))*W.chord(y));
+        return dT;};
+      for(let i=N-2;i>=0;i--) lineT[i]=lineT[i+1]+dTon(ys[i],ys[i+1]);
+      // Between grid nodes add the partial interval instead of interpolating, so a load edge that is not a grid
+      // node (the fitting, a user station) gets its torque without a linear-interpolation error.
+      const dyG=ys[1]-ys[0];
+      customLineTAt=y=>{if(y>=ys[N-1])return 0;let i=Math.min(N-2,Math.max(0,Math.floor(y/dyG)));while(i>0&&ys[i]>y)i--;while(i<N-2&&ys[i+1]<=y)i++;
+        return y<=ys[i]?lineT[i]:lineT[i+1]+dTon(y,ys[i+1]);};
       for(let i=0;i<N;i++){const d=customDemand(inp.customLoads,ys[i]);V1[i]=d.V;M1[i]=d.M;T1[i]=lineT[i]+points.filter(p=>ys[i]<p.y).reduce((t,p)=>t+p.T,0);}
     }
     const VL = new Array(N).fill(0), ML = new Array(N).fill(0);
@@ -815,7 +844,7 @@ const MetalWingEngine = (() => {
     // per-station loads, stresses and shear flows at load factor n
     const at = (arr, y) => {
       if(custom&&(arr===Vd||arr===Md)){const d=customDemand(inp.customLoads,y);return arr===Vd?d.V-(y<yf?totalUp:0):d.M-(y<yf?totalUp*(yf-y):0);}
-      if(custom&&arr===Td)return y<yf?0:interp(y,ys,customLineT)+points.filter(p=>y<p.y).reduce((t,p)=>t+p.T,0);
+      if(custom&&arr===Td)return y<yf?0:customLineTAt(y)+points.filter(p=>y<p.y).reduce((t,p)=>t+p.T,0);
       return interp(y, ys, arr);
     };
     const stations = secs.map((s, k) => loadSection(s, props[k], n * at(Vd, s.y), n * at(Md, s.y), n * at(Td, s.y), inp.taper !== false));

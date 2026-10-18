@@ -123,8 +123,10 @@
 
   // ------------------------------------------------------------------ state
   const MS = {
-    input: { n: 6, distribution: "liftingLine", inertiaRelief: true, include: { fuel: true, guns: true, ammo: true }, scales: { skin: 1, web: 1, boom: 1, stringer: 1 }, support: "fittings", taper: true, mass: E.D520.aircraft.mass, CL: E.D520.aircraft.CL, material: { ...E.D520.material } },
-    selected: "aircraft", plot: "sigma", show: "all", deformed: true, scale: 1, mirror: false, arrows: true, clip: false, clipY: 2.35,
+    // Opens without an applied load (customLoads [] : no lift, no gravity or inertia relief, multiplier 1).
+    // Flight loading (lift n W, inertia relief) is applied only when the student asks for it.
+    input: { n: 1, distribution: "liftingLine", inertiaRelief: false, include: { fuel: true, guns: true, ammo: true }, scales: { skin: 1, web: 1, boom: 1, stringer: 1 }, support: "fittings", taper: true, mass: E.D520.aircraft.mass, CL: E.D520.aircraft.CL, material: { ...E.D520.material }, customLoads: [] },
+    selected: "aircraft", plot: "model", show: "inside", deformed: true, scale: 1, mirror: false, arrows: true, clip: false, clipY: 2.35,
     secY: 2.35, secField: "sigma", tab: "start", mode: { kind: "bending", index: 0 },
   };
   let R = null, R1 = null, running = false, pending = false, stale = true, opened = false, timer = null, lastError = null;
@@ -137,6 +139,7 @@
     if (lastError) { chip.className = "chip bad"; chip.textContent = "Input error"; t.textContent = lastError; return; }
     if (stale) { chip.className = "chip warn"; chip.textContent = "Out of date"; t.textContent = "Inputs changed — run the study"; return; }
     if (!R) return;
+    if (R.input.customLoads != null && !R.input.customLoads.length) { chip.className = "chip idle"; chip.textContent = "No load"; t.textContent = text || "No load defined. Add your own load, or apply flight loading, in Loads."; return; }
     const g = governing(R);
     const ok = g && g.ratio >= 1;
     chip.className = "chip " + (kind || (ok ? "ok" : "bad"));
@@ -215,7 +218,7 @@
     const pm = $("#mPm"); pm.innerHTML = "";
     const i = MS.input, P = E.D520, id = MS.selected;
     const head = (t, lede) => { pm.append(el("h2", {}, t)); if (lede) pm.append(el("p", { class: "lede" }, lede)); };
-    if(id==='aircraft'&&i.customLoads!=null){head('Custom bench load case','Entered point and line loads only. No automatic flight lift or gravity/inertia relief. Mass is still present in the modal model.');pm.append(numField('mN','Load multiplier','dimensionless, not flight g',i.n,.5,v=>{i.n=v;syncN();}));if(R)pm.append(kv([['Custom loads',i.customLoads.length],['Applied net force',nf(E.customDemand(i.customLoads,0).V*i.n,2)+' N'],['Tip displacement',nf(R.tip.wMax*1000,3)+' mm'],['Tip twist',nf(R.tip.twistDeg,4)+'°']]));return;}
+    if(id==='aircraft'&&i.customLoads!=null){head(i.customLoads.length?'Custom bench load case':'No load defined',i.customLoads.length?'Entered point and line loads only. No automatic flight lift or gravity/inertia relief. Mass is still present in the modal model.':'The wing opens without a load: no lift, no gravity or inertia relief. Enter loads in Loads, or apply flight loading there. Mass is still present in the modal model.');pm.append(numField('mN','Load multiplier','dimensionless, not flight g',i.n,.5,v=>{i.n=v;syncN();}));if(R)pm.append(kv([['Custom loads',i.customLoads.length],['Applied net force',nf(E.customDemand(i.customLoads,0).V*i.n,2)+' N'],['Tip displacement',nf(R.tip.wMax*1000,3)+' mm'],['Tip twist',nf(R.tip.twistDeg,4)+'°']]));return;}
     if (id === "aircraft") {
       $("#mPmHead").textContent = "Load case";
       head("Aircraft and load case", "Lift = n W, shaped along the span by the chosen method. Inertia relief subtracts n × (structure + fuel + guns + ammunition) weight at the right span and chord positions.");
@@ -257,7 +260,7 @@
       $("#mPmHead").textContent = "Model and solver";
       head("How the answer is computed", "Beam theory on the real thin-walled sections, not a 3-D finite-element model. The shell model of the same wing is the check (Compare tab).");
       pm.append(fs("Tapered beam", (() => { const w = el("label", { class: "note", style: "display:flex;gap:8px;align-items:center;font-size:13px;color:var(--fg)" }, `<input type="checkbox" ${i.taper ? "checked" : ""}> Inclined booms carry part of the shear and torque`); w.querySelector("input").addEventListener("change", (e) => { i.taper = e.target.checked; changed(); }); return w; })()));
-      if (R) pm.append(kv([["Analysis sections", R.stations.length], ["Walls per section", R.sections[10].walls.length], ["Closed cells", `${R.sections[R.sections.length - 1].cells.length} (nose + box)`], ["Strength sections", R.checks.length], ["Shear resultant error", R.verification.shearResultantError.toExponential(1)], ["Lift: W/2 check", R.verification.halfLiftError.toExponential(1)], ["Beam FE vs integration (tip)", `${nf(100 * R.verification.femTipDiff, 2)} %`], ["Beam FE vs integration (twist)", `${nf(100 * R.verification.femTwistDiff, 2)} %`]]));
+      if (R) pm.append(kv([["Analysis sections", R.stations.length], ["Walls per section", R.sections[10].walls.length], ["Closed cells", `${R.sections[R.sections.length - 1].cells.length} (nose + box)`], ["Strength sections", R.checks.length], ["Shear resultant error", R.verification.shearResultantError.toExponential(1)], ["Lift: W/2 check", R.input.customLoads==null ? R.verification.halfLiftError.toExponential(1) : "not applicable (custom loads)"], ["Beam FE vs integration (tip)", `${nf(100 * R.verification.femTipDiff, 2)} %`], ["Beam FE vs integration (twist)", `${nf(100 * R.verification.femTwistDiff, 2)} %`]]));
     } else {
       $("#mPmHead").textContent = "Results";
       head("Results at the current load factor", "Pick a plot in the toolbar. Hover over the wing to read values.");
@@ -410,7 +413,7 @@
     while (g.children.length) g.remove(g.children[0]);
     if (!R || !MS.arrows) return;
     if(R.input.customLoads!=null){
-      for(const p of R.input.customLoads){const ys=p.kind==='point'?[p.position]:E.linspace(p.start,p.end,12);for(const y of ys){const force=R.n*(p.kind==='point'?p.force:p.qStart+(p.qEnd-p.qStart)*(y-p.start)/(p.end-p.start));if(!force)continue;const sc=R.wing.section(y,[p.fraction]),base=V3(y,sc.up[0][0],force>0?sc.up[0][1]:sc.lo[0][1]);const arrow=new THREE.ArrowHelper(new THREE.Vector3(0,Math.sign(force),0),new THREE.Vector3(...base),.35,0xd25ad6,.06,.035);arrow.userData={kind:'arrow',y,base};g.add(arrow);}}
+      for(const p of R.input.customLoads){const ys=p.kind==='point'?[p.position]:p.kind==='table'?E.linspace(p.points[0][0],p.points.at(-1)[0],12):E.linspace(p.start,p.end,12);for(const y of ys){const force=R.n*(p.kind==='point'?p.force:p.kind==='distributed'?p.qStart+(p.qEnd-p.qStart)*(y-p.start)/(p.end-p.start):LoadProfiles.valueAt(p,y));if(!force)continue;const sc=R.wing.section(y,[p.kind==='table'?LoadProfiles.fractionAt(p,y):p.fraction]),base=V3(y,sc.up[0][0],force>0?sc.up[0][1]:sc.lo[0][1]);const arrow=new THREE.ArrowHelper(new THREE.Vector3(0,Math.sign(force),0),new THREE.Vector3(...base),.35,0xd25ad6,.06,.035);arrow.userData={kind:'arrow',y,base};g.add(arrow);}}
       return;
     }
     const W = R.wing, ys = E.linspace(0.1, W.b2 - 0.15, 16), lmax = Math.max(...R.grid.lift.map(Math.abs)) || 1;
@@ -630,6 +633,7 @@
     if (!R) return;
     ({ start: renderStart, theory: renderTheory, loads: renderLoads, diagrams: renderDiagrams, section: renderSection, strength: renderStrength, compare: renderCompare, modes: renderModes, method: renderMethod, report: renderReport })[t]();
     if(R.input.customLoads!=null&&['strength','diagrams','method','report'].includes(t)){
+      if(!R.input.customLoads.length){$('#mtab-'+t).insertAdjacentHTML('afterbegin','<p class="callout"><b>No load defined.</b> Stresses, deflections and margins are zero or undefined until you apply a load (Loads tab).</p>');return;}
       const panel=$('#mtab-'+t);panel.insertAdjacentHTML('afterbegin','<p class="callout"><b>Custom load case:</b> capacity numbers are multipliers of the entered reference pattern, not flight g. Original flight-limit/FE references do not certify this case. Linear nominal beam stresses exclude local point-load contact stresses.</p>');
       if(t==='strength'){const walk=document.createTreeWalker(panel,4);while(walk.nextNode())walk.currentNode.textContent=walk.currentNode.textContent.replace(/\bg\b/g,'× reference');}
     }
@@ -642,6 +646,12 @@
   }
   function renderStart() {
     const g = governing(R), r = R, P = r.P;
+    if(r.input.customLoads!=null&&!r.input.customLoads.length){$('#mtab-start').innerHTML=`<div class="mw-grid2"><article class="mw-story"><h2>The Dewoitine D.520 (1940) wing — opened without a load</h2>
+      <p class="callout"><b>No load defined.</b> The structure is shown on its own: no lift, no weight or inertia relief and no custom force acts, so every reaction, stress, deflection and twist is zero. Natural frequencies do not need a load. Open <b>Loads</b> to enter your own loads, or press <b>Apply flight loading</b> there for the classic flight case (lift = n W shaped by the lifting line, inertia relief of the structure, fuel, guns and ammunition).</p>
+      <p><b>Educational reconstruction, not an airworthiness assessment.</b> The D.520 wing is a stressed-skin duralumin structure: one I-section main spar at 37 % chord, a false spar at 73 %, 22 pressed ribs, a smooth skin and blade stringers, reconstructed from the scanned 1940 manual and labelled assumptions (see <b>Method &amp; sources</b>).</p>
+      <h3>Try this</h3><ol><li>Apply flight loading in <b>Loads</b>, then switch the plot to <b>Spanwise σ</b>. Where is the boom stress highest?</li><li>Add one point force of 1000 N at y = 3 m and change only its chord position x/c. Read the torque about the shear centre in <b>Loads</b>.</li><li>Compare a uniform and an elliptic load with the same total force: which gives the larger moment at the fittings?</li></ol></article>
+      <div><div class="mw-kpis"><div><span>Applied load</span><b>none</b><span>custom case with no entries</span></div><div><span>Half-wing structure</span><b>${nf(r.mass.structuralHalf, 0)} kg</b><span>shell model 116 kg</span></div>
+      <div><span>First bending mode</span><b>${r.fem ? nf(r.fem.fBending[0], 1) : '–'} Hz</b><span>independent of the static load</span></div><div><span>First torsion mode</span><b>${r.fem ? nf(r.fem.fTorsion[0], 0) : '–'} Hz</b><span>fuselage held fixed</span></div></div></div></div>`;return;}
     if(r.input.customLoads!=null){$('#mtab-start').innerHTML=`<h2>D.520 custom-load experiment</h2><p class="callout">Same wing structure; ${r.input.customLoads.length} entered loads, multiplied by ${r.n}. This is not a flight load-factor case. Open Loads to edit positions and intensities, then compare stress, bending and torsion. Strength-table values labelled g in the historical flight pathway represent <b>multipliers of this custom reference load pattern</b> here, not flight g limits. A static load change does not alter linear natural frequencies.</p><p>Tip displacement: ${nf(r.tip.wMax*1000,3)} mm; twist: ${nf(r.tip.twistDeg,4)}°. Point/line loads are section resultants; local load-introduction stresses need shell/solid FE.</p>`;return;}
     const sk = r.failure.find((f) => f.key === "skinBuckle");
     $("#mtab-start").innerHTML = `<div class="mw-grid2"><article class="mw-story">
@@ -730,8 +740,10 @@
   }
   function renderLoads() {
     const r = R, g = r.grid;
+    if (loadKeeper) loadKeeper.detach();
     if(r.input.customLoads!=null){
-      $('#mtab-loads').innerHTML=`<h2>Custom half-wing bench loads</h2><p class="callout">Custom forces replace flight lift and inertia relief. Values entered are multiplied by n = ${r.n}; here n is a <b>load multiplier, not a flight g factor</b>. Both half wings are assumed symmetrically loaded. Load locations are restricted to the fittings-to-last-rib span; local contact stresses are not solved.</p><div class="charts">${chart('Applied line load','N/m',[{name:'q',x:g.y,y:g.lift}])}${chart('Shear force','N',[{name:'V',x:g.y,y:g.V}])}${chart('Bending moment','N·m',[{name:'M',x:g.y,y:g.M}])}${chart('Torque about shear centre','N·m',[{name:'T',x:g.y,y:g.T}])}</div><p>For each cut: V = sum of outboard forces; M = sum of force × spanwise lever arm; T = sum of force × chordwise offset from the local shear centre. The signed stresses and deformation use the same section solver as the flight cases.</p>`;
+      const none=!r.input.customLoads.length;
+      $('#mtab-loads').innerHTML=`<h2>${none?'No load defined':'Custom half-wing bench loads'}</h2><p class="callout">${none?'The wing opens without a load. Enter point, linear, elliptic, parabolic or CSV-table loads below, or apply flight loading. ':''}Custom forces replace flight lift and inertia relief. Values entered are multiplied by n = ${r.n}; here n is a <b>load multiplier, not a flight g factor</b>. Both half wings are assumed symmetrically loaded. Load locations are restricted to the fittings-to-last-rib span; local contact stresses are not solved.</p><div class="charts">${chart('Applied line load','N/m',[{name:'q',x:g.y,y:g.lift}])}${chart('Shear force','N',[{name:'V',x:g.y,y:g.V}])}${chart('Bending moment','N·m',[{name:'M',x:g.y,y:g.M}])}${chart('Torque about shear centre','N·m',[{name:'T',x:g.y,y:g.T}])}</div><p>For each cut: V = sum of outboard forces; M = sum of force × spanwise lever arm; T = sum of each force × its chordwise offset from the shear centre at its own station, T = F(x<sub>sc</sub> − x<sub>F</sub>), nose-up +. The inclined spar booms of the tapered wing also carry part of the torque (Model &amp; solver), so a load through the shear centre can still twist the wing slightly. The signed stresses and deformation use the same section solver as the flight cases.</p>${schrenkSection(r)}`;
       renderLoadEditor();return;
     }
     const rows = [["Wing structure (skins, webs, booms, stringers)", r.mass.shellsBoomsStringers, "line mass along the span"], ["22 ribs", r.mass.ribs, "at the rib stations"], ...Object.entries(r.masses.reduce((a, p) => { a[p.name] = (a[p.name] || 0) + p.mass; return a; }, {})).map(([k, v]) => [{ fuel: "Fuel (122 l × 0.72 kg/l)", gun: "Machine guns MAC 1934 (2)", ammo: "Ammunition (2 × 650 rounds)" }[k] || k, v, k === "fuel" ? "y 2.07–3.49 m at 0.17c" : "y 1.79 and 1.955 m"])];
@@ -740,17 +752,55 @@
       <div><h3 style="margin:0 0 6px;font:700 15px var(--font-label)">Half-wing masses (inertia relief)</h3><div class="tablewrap"><table><thead><tr><th>Item</th><th>Mass kg</th><th>Where</th></tr></thead><tbody>${rows.map(([a, b, c]) => `<tr><td>${a}</td><td class="num">${nf(b, 1)}</td><td>${c}</td></tr>`).join("")}<tr><td><b>Total</b></td><td class="num"><b>${nf(r.mass.structuralHalf + r.mass.nonStructuralHalf, 1)}</b></td><td></td></tr></tbody></table></div>
       <p class="note">At load factor n every mass pulls down with n × its weight, so it relieves the wing bending moment. The fittings then react ${nf((-r.fitting.Fz_per_g * r.n) / 1e3, 2)} kN instead of the full half-wing lift.</p></div></div>
       <div class="charts" style="margin-top:12px">${chart("Shear force V", "kN", [{ name: "with inertia relief", x: g.y, y: g.V.map((v) => v / 1e3) }, { name: "lift only", x: g.y, y: g.VliftOnly.map((v) => v / 1e3), dash: "5 4" }])}${chart("Bending moment M", "kN·m", [{ name: "with inertia relief", x: g.y, y: g.M.map((v) => v / 1e3) }, { name: "lift only", x: g.y, y: g.MliftOnly.map((v) => v / 1e3), dash: "5 4" }])}${chart("Torque about the shear centre", "N·m, nose-up +", [{ name: "T", x: g.y, y: g.T }])}</div>
-      <p class="note">Inboard of the fittings (y &lt; ${r.P.fittingY} m) the fittings have taken out the shear; the centre section between the fuselage sides carries an almost constant moment by symmetry.</p>`;
+      <p class="note">Inboard of the fittings (y &lt; ${r.P.fittingY} m) the fittings have taken out the shear; the centre section between the fuselage sides carries an almost constant moment by symmetry.</p>${schrenkSection(r)}`;
     renderLoadEditor();
   }
-  function renderLoadEditor(){
-    const list=MS.input.customLoads||[],a=R.P.fittingY,b=R.P.ribs.at(-1);
-    $('#mtab-loads').insertAdjacentHTML('afterbegin',`<section class="callout"><h2>Apply D.520 wing loads</h2><p><b>SI units:</b> position in m, point force in N, line intensity in N/m. Upward positive. Chord fraction: 0 = leading edge, 1 = trailing edge. First custom load replaces flight loading; additional loads are superposed without changing the wing structure.</p><form id="mLoadForm"><div class="field"><label for="mLoadShape">Load shape</label><select id="mLoadShape"><option value="point">Point force</option><option value="uniform">Uniform</option><option value="up">Triangle: zero at start</option><option value="down">Triangle: zero at end</option><option value="trapezoid">Trapezoid</option></select></div>${[['mLa','Point station / start (m)',2],['mLb','End station (m)',b],['mLP','Point force (N)',1000],['mLq0','Start intensity (N/m)',500],['mLq1','End intensity (N/m)',1000],['mLxc','Chord fraction (0–1)',.25]].map(([id,label,v])=>`<div class="field"><label for="${id}">${label}</label><input id="${id}" type="number" step="any" value="${v}" required></div>`).join('')}<button class="btn primary" type="submit">Add / solve D.520 load</button></form><p id="mLoadError" role="status"></p><p>Allowed span: ${a}–${b} m. The first custom case starts at multiplier 1; toolbar buttons then scale all entered loads.</p>${list.map((p,i)=>`<p>${i+1}. ${p.kind==='point'?`${p.force} N at ${p.position} m`:`${p.qStart} → ${p.qEnd} N/m over ${p.start}–${p.end} m`}; ${p.fraction}c <button class="btn" data-mdelete="${i}">Remove load ${i+1}</button></p>`).join('')}<button class="btn" id="mClearLoads">Clear all custom loads</button> <button class="btn" id="mRestoreFlight">Restore flight loading</button></section>`);
-    const fields=()=>{const s=$('#mLoadShape').value,visible={mLa:true,mLb:s!=='point',mLP:s==='point',mLq0:['uniform','down','trapezoid'].includes(s),mLq1:['up','trapezoid'].includes(s),mLxc:true};Object.entries(visible).forEach(([id,v])=>{const e=$('#'+id);e.disabled=!v;e.closest('.field').hidden=!v;});};$('#mLoadShape').onchange=fields;fields();
-    const apply=loads=>{if(running||stale){$('#mLoadError').textContent='Wait for a successful solve first.';return;}try{const next={...MS.input,customLoads:loads,n:MS.input.customLoads==null?1:MS.input.n};E.normalise(next);MS.input=next;syncN();changed();}catch(e){$('#mLoadError').textContent=e.message;}};
-    $('#mLoadForm').onsubmit=e=>{e.preventDefault();const s=$('#mLoadShape').value,q0=+$('#mLq0').value,q1=+$('#mLq1').value,p=s==='point'?{kind:'point',position:+$('#mLa').value,force:+$('#mLP').value}:{kind:'distributed',start:+$('#mLa').value,end:+$('#mLb').value,qStart:s==='up'?0:q0,qEnd:s==='down'?0:s==='uniform'?q0:q1};p.fraction=+$('#mLxc').value;apply([...list,p]);};
-    $$('[data-mdelete]').forEach(e=>e.onclick=()=>apply(list.filter((_,i)=>i!==+e.dataset.mdelete)));
-    $('#mClearLoads').onclick=()=>apply([]);$('#mRestoreFlight').onclick=()=>{MS.input.customLoads=null;MS.input.inertiaRelief=true;MS.input.n=6;syncN();changed();};
+  /** Schrenk teaching figure for the D.520 planform: chord-proportional, elliptic and their mean, equal area. */
+  function schrenkSection(r) {
+    if (typeof WingLoadsUI === "undefined") return "";
+    const W = r.wing, L = W.b2, cm = W.area() / (2 * L);
+    const panels = [{ title: `Rectangular wing, same span and area (c = ${nf(cm, 2)} m)`, short: "Rectangle", chord: () => cm, data: WingLoadsUI.schrenkData(L, () => cm, 1, [cm, cm]) },
+      { title: "D.520 planform (straight taper + rounded tip)", short: "D.520", chord: (y) => W.chord(y), data: WingLoadsUI.schrenkData(L, (y) => W.chord(y), 1) }];
+    return `<section class="mw-story" style="margin-top:14px"><h3>Schrenk's approximation on this planform</h3>
+      <div class="mw-eq">w<sub>S</sub>(y) = ½ [ F c(y)/∫c dy + (4F/πb) √(1 − (y/b)²) ],&nbsp; b = ${nf(L, 2)} m semi-span</div>
+      <p>The flight option “Schrenk” uses this mean of a chord-proportional and an elliptic load with the same half-wing lift F = nW/2 (equal areas, so the root moment of the mean is the mean of the two). The default lifting-line option solves Glauert's equations on the real planform instead. Custom loads are entered between the fittings and the last rib, so a Schrenk shape (defined over the whole semi-span from the centreline) is offered only as a flight distribution.</p>
+      ${WingLoadsUI.schrenkFigure(panels, { width: 760, label: "Chord-proportional, elliptic and Schrenk span loads for a rectangular wing and the D.520 planform, total F = 1 N" })}
+      <div class="tablewrap">${WingLoadsUI.schrenkTable(panels, { force: "N", length: "m", moment: "N·m" })}</div>
+      <p class="note">Per newton of half-wing lift, moments about the centreline y = 0. Valid for an unswept wing without twist or deflected flaps, below stall; sweep, twist and stall need a correction or a lifting-surface/CFD method. Not a chordwise pressure (Cp) distribution, not a CFD result. Background: <a href="https://ntrs.nasa.gov/citations/19930093823" target="_blank" rel="noopener">NTRS 19930093823, “A simple approximate method for obtaining spanwise lift distributions over swept wings”</a> · <a href="https://ntrs.nasa.gov/citations/19780008062" target="_blank" rel="noopener">NASA CR-132403 (NTRS 19780008062)</a>.</p></section>`;
+  }
+  // Shared custom-load editor (wing_loads_ui.js) with the D.520 ids, SI units and span limits.
+  const loadAdapter = {
+    workspace: "d520", units: { length: "m", line: "N/m", force: "N", moment: "N·m" },
+    ids: { form: "mLoadForm", kind: "mLoadShape", a: "mLa", b: "mLb", P: "mLP", q0: "mLq0", q1: "mLq1", shape: "mLshape", basis: "mLbasis", value: "mLvalue", xc: "mLxc", law: "mLlaw",
+      list: "mLoadList", clear: "mClearLoads", flight: "mRestoreFlight", status: "mLoadError", chord: "mChordFigure", csv: "mCsv" },
+    kindValue: { point: "point", uniform: "uniform", rampUp: "up", rampDown: "down", trapezoid: "trapezoid", elliptic: "elliptic", parabolic: "parabolic" },
+    deleteAttr: "data-mdelete",
+    range: () => ({ min: E.D520.fittingY, max: E.D520.ribs.at(-1) }),
+    items: () => MS.input.customLoads || [],
+    mode: () => (MS.input.customLoads == null ? "flight" : MS.input.customLoads.length ? "custom" : "none"),
+    validate: (items) => E.normalise({ ...MS.input, customLoads: items, n: MS.input.customLoads == null ? 1 : MS.input.n }),
+    apply: (items) => { MS.input = { ...MS.input, customLoads: items, n: MS.input.customLoads == null ? 1 : MS.input.n, inertiaRelief: false }; lastError = null; syncN(); changed(); },
+    flight: { label: "Apply flight loading (n = +6 limit, lifting line, inertia relief)", apply: () => { MS.input.customLoads = null; MS.input.inertiaRelief = true; MS.input.n = 6; lastError = null; syncN(); changed(); } },
+    allowSchrenk: false, refStation: E.D520.fittingY, refLabel: `the fittings (y = ${E.D520.fittingY} m)`,
+    section: (y) => {
+      if (!R || stale) return null;
+      const W = R.wing, xs = E.linspace(0, 1, 61).map((t) => 0.5 * (1 - Math.cos(Math.PI * t))), sec = W.section(y, xs), le = W.S_LE(y);
+      const outline = [...sec.up, ...sec.lo.slice().reverse()].map(([S, Z]) => [S - le, Z]);
+      const frac = E.interp(y, R.stations.map((t) => t.y), R.stations.map((t) => t.xsc));
+      return { outline, chord: sec.c, xsc: frac * sec.c };
+    },
+    defaults: () => ({ a: 2, b: E.D520.ribs.at(-1), P: 1000, q0: 500, q1: 1000, total: 2000, xc: 0.25 }),
+    statusText: () => (R ? `Solved case: ${R.input.customLoads == null ? `flight loading, n = ${sgn(R.n, 1)} g` : R.input.customLoads.length ? `${R.input.customLoads.length} custom load(s) × ${sgn(R.n, 1)}` : "no load defined"} · fitting reaction ${nf((-R.fitting.Fz_per_g * R.n) / 1e3, 3)} kN · moment at the fittings ${nf((R.fitting.M_per_g * R.n) / 1e3, 3)} kN·m · torque ${nf(R.fitting.T_per_g * R.n, 1)} N·m (nose-up +).${stale ? " Inputs changed: run the study to update." : ""}` : ""),
+    download: (name, text, type) => { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([text], { type })); a.download = name; document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 1000); },
+    torqueNote: "In the D.520 model each load's torque is taken about the shear centre at its own station (as for the flight loads); the tapered-beam option also lets the inclined booms carry part of the torque.",
+  };
+  const loadKeeper = typeof WingLoadsUI !== "undefined" ? WingLoadsUI.keeper(loadAdapter) : null;
+  function renderLoadEditor() {
+    if (!loadKeeper) return;
+    const preferred = document.getElementById("mLoadEditor");
+    let slot = null;
+    if (!preferred) { $("#mtab-loads").insertAdjacentHTML("afterbegin", '<section class="callout"><h2>Apply D.520 wing loads</h2><p><b>SI units:</b> position in m, point force in N, line intensity in N/m. Upward positive. Chord fraction: 0 = leading edge, 1 = trailing edge.</p><div id="mLoadEditorHome"></div></section>'); slot = $("#mLoadEditorHome"); }
+    loadKeeper.place(preferred, slot);
   }
   function renderDiagrams() {
     const st = R.stations, y = st.map((s) => s.y), n = R.n;
@@ -905,7 +955,11 @@
     const r = R, P = r.P, g = governing(r), f = r.failure;
     const L = [];
     L.push(`MIE 446 Wing Lab · full-scale metal wing · ${P.name}`, `Engine ${E.VERSION} · ${new Date().toISOString().slice(0, 10)}`, "");
-    L.push("INPUTS", `  gross mass ${nf(MS.input.mass, 0)} kg · load factor n = ${sgn(r.n, 2)} · span loading ${MS.input.distribution} · inertia relief ${MS.input.inertiaRelief ? "on" : "off"} (fuel ${MS.input.include.fuel ? "on" : "off"}, guns ${MS.input.include.guns ? "on" : "off"}, ammunition ${MS.input.include.ammo ? "on" : "off"})`);
+    if (r.input.customLoads != null) {
+      L.push("INPUTS", `  load case: custom bench loads only (no automatic lift, no gravity or inertia relief) · multiplier ×${sgn(r.n, 2)}`);
+      if (!r.input.customLoads.length) L.push("  No load defined.");
+      r.input.customLoads.forEach((q, k) => L.push(`  ${k + 1}. ${typeof WingLoadsUI !== "undefined" ? WingLoadsUI.describe(q, { length: "m", line: "N/m", force: "N", moment: "N·m" }) : q.kind}`));
+    } else L.push("INPUTS", `  flight case: gross mass ${nf(MS.input.mass, 0)} kg · load factor n = ${sgn(r.n, 2)} · span loading ${MS.input.distribution} · inertia relief ${MS.input.inertiaRelief ? "on" : "off"} (fuel ${MS.input.include.fuel ? "on" : "off"}, guns ${MS.input.include.guns ? "on" : "off"}, ammunition ${MS.input.include.ammo ? "on" : "off"})`);
     L.push(`  scales: skin ×${MS.input.scales.skin}, webs ×${MS.input.scales.web}, booms ×${MS.input.scales.boom}, stringers ×${MS.input.scales.stringer} · support: ${MS.input.support} · tapered-beam effect ${MS.input.taper ? "on" : "off"}`);
     L.push(`  material ${P.material.name}: E ${nf(P.material.E / 1e9, 0)} GPa, Fty ${MPa(P.material.Fty, 0)} MPa, Ftu ${MPa(P.material.Ftu, 0)} MPa`, "");
     L.push("RESULTS AT n", `  half-wing structure ${nf(r.mass.structuralHalf, 1)} kg, non-structural ${nf(r.mass.nonStructuralHalf, 1)} kg`);
@@ -966,7 +1020,7 @@
   function closeMetal(to) {
     host.hidden = true;
     if (location.hash === "#d520") history.replaceState(null, "", location.pathname + location.search);
-    if (to === "wing" && document.documentElement.dataset.wingReady === "true") window.dispatchEvent(new CustomEvent("wing-learning-stage", { detail: "project" }));
+    if (to === "wing" && document.documentElement.dataset.wingReady === "true") window.dispatchEvent(new CustomEvent("wing-show"));
     else { const f = document.getElementById("foundations"); if (f) { f.hidden = false; f.scrollIntoView({ block: "start" }); } }
   }
   $("#mBackBeams").addEventListener("click", () => closeMetal("beams"));

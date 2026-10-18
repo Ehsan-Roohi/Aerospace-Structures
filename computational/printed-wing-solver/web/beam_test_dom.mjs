@@ -6,7 +6,7 @@ import vm from 'node:vm';
 const require=createRequire(import.meta.url);
 export const {JSDOM}=require(process.env.MIE446_JSDOM_MODULE || 'jsdom');
 // Same order as the inline script in wing_lab_template.html, then the controller.
-export const BEAM_SCRIPTS=['beam_sections.js','beam_learning_engine.js','beam_study.js','beam_diagrams.js','beam_solution.js','companion_tools.js','foundations_ui.js'];
+export const BEAM_SCRIPTS=['load_profiles.js','beam_sections.js','beam_learning_engine.js','beam_study.js','beam_diagrams.js','beam_solution.js','companion_tools.js','foundations_ui.js'];
 export const read=f=>readFileSync(new URL(f,import.meta.url),'utf8');
 /** Load the Beam Lab into a JSDOM context; reduced motion and timers as in the original tests. */
 export function loadBeamLab(dom,{scripts=BEAM_SCRIPTS,matches=true}={}) {

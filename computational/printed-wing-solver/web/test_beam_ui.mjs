@@ -68,11 +68,11 @@ const clean=html=>!/NaN|undefined|Infinity/.test(html);
   t0.addLoad('point',{beamLoadA:300,beamP:1});eq(lab(w0).solved.model.loads.length,1,'a user load is added');eq($0('#beamNoLoad'),null,'empty-state notice gone');
   ok($0('#beamPicture').querySelectorAll('.bl-load.bl-point').length===1&&/P = 1 N/.test($0('#beamPicture').textContent),'the user load is drawn (the arrow check above is not vacuous)');
   ok(!/No load defined/.test($0('#beamLoads').textContent));
-  $0('#beamClear').click();eq(lab(w0).solved.model.loads.length,0,'Clear all loads');eq($0('#beamLoads').textContent.trim(),'No load defined. Add your own load.');ok($0('#beamNoLoad'));
+  $0('#beamClear').click();eq($0('#beamChip').textContent,'Pending','Clear preserves the previous solved result until Solve');$0('#beamSolve').click();eq(lab(w0).solved.model.loads.length,0,'Clear all loads');eq($0('#beamLoads').textContent.trim(),'No load defined. Add your own load.');ok($0('#beamNoLoad'));
   t0.dom.window.close();
   // Deliberately chosen examples keep their intended loads.
   for(const [name,check] of [['l03-tip',m=>m.loads.length===1&&m.loads[0].kind==='point'&&m.loads[0].force===2&&m.loads[0].position===450],
-    ['hw2b-roller-pin',m=>m.loads.length===1&&m.loads[0].kind==='distributed']]) {
+    ['l03-uniform',m=>m.loads.length===1&&m.loads[0].kind==='distributed']]) {
     const te=open(`https://example.org/wing-lab.html?beamCase=${name}`);
     ok(check(lab(te.w).solved.model),`?beamCase=${name} opens with its own load`);eq(te.$('#beamNoLoad'),null);te.dom.window.close();
   }
@@ -207,8 +207,8 @@ for(const f of physical) ok(f.querySelectorAll('.bl-react').length===0,'physical
 ok(clean($('#beamSolution').innerHTML));
 $('[data-beam-preset="l03-simple"]').click();sol=$('#beamSolution').textContent;
 ok(/Statically determinate/.test(sol)&&/agree with the FE reactions/.test(sol),'determinate hand solution');
-$('[data-beam-preset="hw2b-roller-pin"]').click();
-ok($('#beamSolution details.bl-reveal'),'HW 2B worked steps are behind a reveal');ok(/HW 2B Case 2/.test($('#beamSolution').textContent));
+w.BeamLab.importText(Study.exportStudy({result:B.solve({length:450,E:2200,width:16,height:8,elements:30,leftSupport:'roller',rightSupport:'pin',loads:[{kind:'distributed',start:0,end:450,qStart:.001,qEnd:.002}]})}));
+ok(!/HW 2B Case 2/.test($('#beamSolution').textContent),'manually configured models have no homework labels');ok(/Statically determinate/.test($('#beamSolution').textContent));
 $('#beamRefine').click();ok(/40/.test($('#beamConvergence').textContent));
 // A load whose intensity changes sign can have W = 0: it enters ΣM as its net couple, never as (0)(arm).
 w.BeamLab.importText(Study.exportStudy({result:B.solve({length:450,leftSupport:'pin',rightSupport:'roller',loads:[{kind:'distributed',start:0,end:450,qStart:0.01,qEnd:-0.01}]})}));
@@ -283,8 +283,8 @@ t.dom.window.close();
 t=open(`https://example.org/wing-lab.html?beam=${Buffer.from(JSON.stringify({v:2,m:tooClose.model})).toString('base64url')}`);({$,w}=t);
 ok(/could not be opened.*too close/.test($('#beamStatus').textContent)&&lab(w).solved.model.loads.length===0&&/0\.0000 mm/.test(kpi($)),'unsolvable link falls back to the default study (no load)');
 eq($('#beamChip').textContent,'Solved');t.dom.window.close();
-t=open(`https://example.org/wing-lab.html?beamCase=hw2b-fixed&${new URL(link).search.slice(1)}`);({$,w}=t);
-ok(/HW 2B/.test($('#beamStatus').textContent)&&lab(w).solved.model.E===2200,'beamCase deep link keeps priority');
+t=open(`https://example.org/wing-lab.html?beamCase=l03-fixed&${new URL(link).search.slice(1)}`);({$,w}=t);
+ok(/Lecture 03/.test($('#beamStatus').textContent)&&lab(w).solved.model.E===2000,'valid lecture beamCase deep link keeps priority');
 /* ---------- 11. keyboard tabs, companion link, clean markup ---------- */
 const tabs=t.$$('[role="tab"]');tabs[0].dispatchEvent(new w.KeyboardEvent('keydown',{key:'ArrowRight',bubbles:true}));
 eq(w.document.activeElement,tabs[1]);eq($('#beamTab-cut').hidden,false);

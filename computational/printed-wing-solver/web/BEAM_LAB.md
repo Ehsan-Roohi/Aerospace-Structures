@@ -11,6 +11,15 @@ The optional exponent-based generator creates an explicitly approximate 31-point
 piecewise-linear CSV table, normalized to the requested total and applied only after
 separate validation and confirmation. See `WING_IMPORT.md` for the shared workflow.
 
+Graphical handles select loads, supports and hinges. Delete removes the selected item
+(an end support becomes free); Enter or double-click edits a load. Delete never acts
+while typing in an input. Clear loads asks for confirmation, removes self-weight too,
+and retains geometry and supports. Edits mark analysis pending and disable stale exports.
+Distributed-load drawing lanes follow spatial overlap, not creation order.
+
+Printed-wing geometry edits preview ribs, rods and dimensions before solving. The preview
+is undeformed, with analysis fields and load arrows hidden; only Solve updates results.
+
 ## Files
 
 | File | Role |

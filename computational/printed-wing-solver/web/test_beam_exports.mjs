@@ -58,7 +58,8 @@ const V=x=>RA-q0*(x-x*x/(2*L)), M=x=>-CA+RA*x-q0*(x*x/2-x**3/(6*L));
 
 /* ---------- 2. the station table on the Diagrams tab; CSV download equals the table ---------- */
 {
-  const t=open('?beamCase=hw2b-fixed'), {$,$$,w}=t;
+  const t=open(), {$,$$,w}=t;
+  w.BeamLab.importText(Study.exportStudy({result:B.solve(model)}));
   const rows=()=>$$('#beamStationTable tr[data-x]');
   eq($('#beamStationList').value,'0, 112.5, 225, 337.5, 450','default list: 0, L/4, L/2, 3L/4, L');eq(rows().length,5);
   t.list('200, 205');eq(rows().map(x=>x.dataset.x).join(),'200,205','typed stations');
@@ -108,7 +109,8 @@ const V=x=>RA-q0*(x-x*x/(2*L)), M=x=>-CA+RA*x-q0*(x*x/2-x**3/(6*L));
 
 /* ---------- 3. plot images: what the PNG contains ---------- */
 {
-  const t=open('?beamCase=hw2b-fixed'), {$,$$,w}=t, parser=new w.DOMParser();
+  const t=open(), {$,$$,w}=t, parser=new w.DOMParser();
+  w.BeamLab.importText(Study.exportStudy({result:B.solve(model)}));
   eq($$('#beamCharts [data-png]').length,6,'a PNG button under every plot');
   ok(/Download the Shear force V plot as a PNG image/.test($('#beamCharts [data-png="shear"]').getAttribute('aria-label')));
   const want={shear:['Shear force V (N)','V (N)',/V > 0 acts down on the left part's cut face and up on the right part's face/],moment:['Bending moment M (sagging +) (N·mm)','M (N·mm)',/M > 0 is sagging/],

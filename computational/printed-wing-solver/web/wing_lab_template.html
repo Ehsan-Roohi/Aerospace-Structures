@@ -1164,12 +1164,33 @@ body { margin: 0; }
 
   // ------------------------------------------------------------ run control
   let runTimer;
+  let geometryPreview = false;
+  // Geometry only: no section analysis, stress or deformation is calculated here.
+  function previewGeometry() {
+    if (!model || running) return;
+    geometryPreview = true;
+    lastGeoKey = null;
+    try {
+      const g = E.makeGeometry(engineInput().geometry);
+      buildModel({ geometry: g });
+      lastGeoKey = null; // Rebuild solved geometry even if edits return to the old dimensions.
+      updateModel(); frameView(false); renderViewReadout(true); renderPlotInfo();
+      $('#probe').hidden = true;
+      $('#viewStale').textContent = 'Geometry preview of current inputs; stress, deformation and load arrows are hidden. Press Solve to update analysis. Results below still belong to the last solved model.';
+    } catch (err) {
+      updateModel();
+      $('#probe').hidden = true;
+      $('#viewStale').textContent = 'Geometry preview unavailable: correct the geometry inputs. Previous geometry remains visible; analysis is not up to date.';
+      $('#plotinfo').textContent = 'Invalid geometry inputs: previous geometry shown undeformed, without stress or load arrows. Correct inputs and press Solve.';
+    }
+  }
   // Deliberate study actions (lesson experiments, presets, Design-lab buttons, adding or removing a load) solve at once.
   function changed() {
     stale = true; inputError = null;
     setStatus();
     renderTree();
     renderInventory();
+    previewGeometry();
     clearTimeout(runTimer);
     runTimer = setTimeout(runStudy, 450);
   }
@@ -1179,6 +1200,7 @@ body { margin: 0; }
     setStatus();
     renderTree();
     renderInventory();
+    previewGeometry();
     clearTimeout(runTimer);
     if (autoSolve) runTimer = setTimeout(runStudy, 300);
   }
@@ -1243,6 +1265,7 @@ body { margin: 0; }
       if (inputError === errorAtStart) inputError = null;
       if (fieldErrors === fieldErrorsAtStart) fieldErrors = {};
       if (!designBaseline || saveDesignAfterRun) { designBaseline = R; saveDesignAfterRun = false; }
+      geometryPreview = false;
       if (heavy) { buildModel(R); lastGeoKey = geoKey; frameView(heavy && !lastViewSet); }
       applyResult();
       renderAll();
@@ -1470,7 +1493,7 @@ body { margin: 0; }
     if (!force && key === readoutKey) return;
     readoutKey = key;
     $("#viewReadout").dataset.distance = dist.toFixed(3);
-    $("#viewDims").innerHTML = `<b>View zoom only.</b> Actual size of the solved model: semi-span <b>${nf(g.semiSpan, 1)} mm</b>, root chord <b>${nf(g.rootChord, 1)} mm</b>, tip chord <b>${nf(g.tipChord, 1)} mm</b> (NACA ${g.naca}).`;
+    $("#viewDims").innerHTML = `<b>View zoom only.</b> Actual size of the ${geometryPreview ? 'unsolved geometry preview' : 'solved model'}: semi-span <b>${nf(g.semiSpan, 1)} mm</b>, root chord <b>${nf(g.rootChord, 1)} mm</b>, tip chord <b>${nf(g.tipChord, 1)} mm</b> (NACA ${g.naca}).`;
     const nice = [1, 2, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000, 2000].find((mm) => mm * pxPerMm >= 48) || 2000;
     const px = isFinite(pxPerMm) && pxPerMm > 0 ? Math.min(150, nice * pxPerMm) : 0;
     $("#viewScaleBar").style.width = `${Math.round(px)}px`;
@@ -1522,6 +1545,7 @@ body { margin: 0; }
   }
   let modeT = 0;
   function sectionMotion(y) {
+    if (geometryPreview) return [0, 0];
     // returns [w, phi] displacement of the section at y for the current display (static or mode)
     if (S.plot === "mode" && R) {
       const shape = S.mode.kind === "bending" ? R.fem.modesBending[S.mode.index] : R.fem.modesTorsion[S.mode.index];
@@ -1534,7 +1558,7 @@ body { margin: 0; }
   function updateModel() {
     if (!model || !R) return;
     const kind = { stress: "sigma", disp: "disp", fos: "fos" }[S.plot];
-    const useField = !!kind;
+    const useField = !!kind && !geometryPreview;
     if (useField) range = computeRange(kind);
     const reqFos = R.load.fos;
     const colorOf = (y, x, z, base) => {
@@ -1546,9 +1570,10 @@ body { margin: 0; }
     const explode = S.explode;
     const motionCache = new Map();
     const motion = (y) => { const k = Math.round(y * 4); if (!motionCache.has(k)) motionCache.set(k, sectionMotion(y)); return motionCache.get(k); };
-    const xscAt = (y) => at(R.props.xsc, y);
+    const xscAt = (y) => geometryPreview ? 0 : at(R.props.xsc, y);
     const place = (y, x, z, out, mod) => {
       const [w, a] = motion(y);
+      if (geometryPreview) { out[0] = y + (mod || 0) * explode; out[1] = z; out[2] = x; return; }
       const xs = xscAt(y), zs = zscAt(y), dx = x - xs, dz = z - zs, ca = Math.cos(a), sa = Math.sin(a);
       out[0] = y + (mod || 0) * explode;
       out[1] = zs + dz * ca - dx * sa + w;
@@ -1562,8 +1587,8 @@ body { margin: 0; }
       for (let i = 0; i < u.by.length; i++) {
         place(u.by[i], u.bx[i], u.bz[i], tmp, isRod ? 0 : u.module);
         pos[3 * i] = tmp[0]; pos[3 * i + 1] = tmp[1]; pos[3 * i + 2] = tmp[2];
-        const selectedStress = S.plot==='stress' && (S.stressComponent==='rods'?isRod:!isRod);
-        const c = selectedStress ? colorOf(u.by[i],u.bx[i],u.bz[i],base[u.kind]) : S.plot==='stress'?new THREE.Color(0x7f8c98):isRod?base.rod:colorOf(u.by[i],u.bx[i],u.bz[i],base[u.kind]);
+        const selectedStress = !geometryPreview && S.plot==='stress' && (S.stressComponent==='rods'?isRod:!isRod);
+        const c = geometryPreview ? base[u.kind] : selectedStress ? colorOf(u.by[i],u.bx[i],u.bz[i],base[u.kind]) : S.plot==='stress'?new THREE.Color(0x7f8c98):isRod?base.rod:colorOf(u.by[i],u.bx[i],u.bz[i],base[u.kind]);
         col[3 * i] = c.r; col[3 * i + 1] = c.g; col[3 * i + 2] = c.b;
       }
       m.geometry.attributes.position.needsUpdate = true;
@@ -1582,12 +1607,13 @@ body { margin: 0; }
       p.position.x = (p.userData.module || 0) * explode;
     }
     drawLoads();
-    renderLegend(kind);
+    renderLegend(geometryPreview ? null : kind);
+    if (geometryPreview) { $('#legend').hidden = true; $('#legendTitle').textContent = 'Geometry preview · not solved'; }
   }
   function drawLoads() {
     const grp = model.loads;
     while (grp.children.length) { const c = grp.children.pop(); c.traverse((o) => { if (o.geometry) o.geometry.dispose(); if (o.material) o.material.dispose(); }); }
-    if (!R || S.plot === "mode") return;
+    if (!R || geometryPreview || S.plot === "mode") return;
     const g = R.geometry, L = g.semiSpan;
     const lift = R.load.kind === "flight";
     const scaleLen = 60;
@@ -1623,6 +1649,7 @@ body { margin: 0; }
   }
   function renderLegend(kind) {
     const lg = $("#legend"), lt = $("#legendTitle");
+    lg.hidden = false;
     if (!kind) { lg.innerHTML = ""; lt.textContent = ""; return; }
     const unit = { sigma: "MPa", disp: "mm", fos: "" }[kind];
     lt.textContent = { sigma: "Stress σ, span (MPa)", disp: "Displacement (mm)", fos: "Factor of safety" }[kind];
@@ -1637,6 +1664,11 @@ body { margin: 0; }
   }
   function renderPlotInfo() {
     if (!R) return;
+    if (geometryPreview) {
+      const g = model.g;
+      $('#plotinfo').textContent = `UNSOLVED GEOMETRY PREVIEW · NACA ${g.naca} · semi-span ${g.semiSpan} mm · ${model.ribs.length} ribs · ${model.rods.length} rods. Stress and deformation hidden; press Solve for analysis.`;
+      return;
+    }
     const g = R.geometry;
     const kind = { stress: "Spanwise normal stress σ, beam theory, limit load", disp: "Resultant displacement, limit load", fos: `Factor of safety on PLA strength (red: below ${R.load.fos})`, mode: "Natural frequency mode", model: "Model" }[S.plot];
     const d = deformAmount();
@@ -1688,7 +1720,7 @@ body { margin: 0; }
     })(accept);
   }
   canvas.addEventListener("pointermove", (ev) => {
-    if (!model || !R) return;
+    if (!model || !R || geometryPreview) return;
     const r = canvas.getBoundingClientRect();
     ndc.set(((ev.clientX - r.left) / r.width) * 2 - 1, -((ev.clientY - r.top) / r.height) * 2 + 1);
     raycaster.setFromCamera(ndc, camera);
@@ -1738,7 +1770,7 @@ body { margin: 0; }
     controls.update();
     renderViewReadout();
     positionRibLabels();
-    if (S.plot === "mode" && R && model) {
+    if (S.plot === "mode" && R && model && !geometryPreview) {
       const f = (S.mode.kind === "bending" ? R.fem.fBending : R.fem.fTorsion)[S.mode.index];
       const visualHz = Math.min(1.2, 0.35 + f / 120);
       if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) modeT += ((t - lastT) / 1000) * 2 * Math.PI * visualHz;

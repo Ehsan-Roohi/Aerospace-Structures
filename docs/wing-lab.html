@@ -2859,13 +2859,16 @@ const BeamDiagrams = (() => {
   // A clipped part of a curved or table load (free bodies) carries _clip = [s, e].
   const spanOf = v => v._clip||(v.kind==='table'?[v.points[0][0],v.points[v.points.length-1][0]]:[v.start,v.end]);
   function lanesFor(list) {
-    const lanes=[];
-    return list.map(v=>{
-      const [a,b]=spanOf(v);
+    // Colour intervals in spatial order, not insertion order. Keep the result indexed
+    // by the original load so editing/reordering never detaches its diagram or handle.
+    const lanes=[], assigned=[];
+    const ordered=list.map((v,i)=>({i,span:spanOf(v)})).sort((u,v)=>u.span[0]-v.span[0]||u.span[1]-v.span[1]||u.i-v.i);
+    ordered.forEach(({i,span:[a,b]})=>{
       let k=lanes.findIndex(end=>end<=a+1e-9);
       if(k<0){k=lanes.length;lanes.push(b);} else lanes[k]=b;
-      return k;
+      assigned[i]=k;
     });
+    return assigned;
   }
   const SHAPE_SHORT={start:'max at start',end:'max at end',middle:'symmetric'};
   // Draft models (not yet solved) hold a curved load as entered (total or peak): complete it for drawing.
@@ -2989,11 +2992,14 @@ const BeamDiagrams = (() => {
     });
     model.hinges.forEach((h,i)=>{svg+=`<g class="bl-hinge" data-hinge="1" data-hinge-index="${i}" data-x="${h}" data-draggable="hinge"><circle cx="${r1(X(h))}" cy="${r1(yAxis)}" r="6" class="bl-hinge-c"/></g>`;});
     svg+=drawLoads(loads,X,yTop,{width:W,scaleMode:opts.loadScale}).svg;
+    const handleLanes=lanesFor(loads.filter(isDist));
+    let distributedHandle=0;
     if(opts.interactive) model.loads.forEach((v,i)=>{
       const a=v.kind==='table'?v.points[0][0]:isDist(v)?v.start:v.position;
       const b=v.kind==='table'?v.points.at(-1)[0]:isDist(v)?v.end:v.position;
-      const x=X((a+b)/2), y=yTop-14-(i%3)*23;
-      svg+=`<g class="bl-load-handle" data-load-handle="${i}" tabindex="0" role="button" aria-label="Load ${i+1}: drag to move or press Enter to edit"><title>Load ${i+1}: drag to move; click or Enter to edit magnitude and position</title>${line(x,y+10,X((a+b)/2),yTop-2,'bl-load-link')}<circle cx="${r1(x)}" cy="${y}" r="10"/>${text(x,y+4,String(i+1),'bl-tx-s')}</g>`;
+      const lane=isDist(v)?handleLanes[distributedHandle++]:0;
+      const x=X((a+b)/2), y=yTop-14-(isDist(v)?lane*LANE:(i%3)*23);
+      svg+=`<g class="bl-load-handle" data-load-handle="${i}" tabindex="0" role="button" aria-label="Load ${i+1}: click to select, Delete to remove, drag to move, Enter or double-click to edit"><title>Load ${i+1}: click to select; Delete to remove; drag to move; Enter or double-click to edit magnitude and position</title>${line(x,y+10,X((a+b)/2),yTop-2,'bl-load-link')}<circle cx="${r1(x)}" cy="${y}" r="10"/>${text(x,y+4,String(i+1),'bl-tx-s')}</g>`;
     });
     if(opts.loadPreview) {
       const a=X(opts.loadPreview.start),b=X(opts.loadPreview.end);
@@ -4195,7 +4201,8 @@ const Lecture03BeamCases = Object.freeze({
         ${[['point','↓ Point force'],['moment','↻ Couple'],['rectangle','↓↓ Uniform'],['triangle','◿ Triangle →'],['triangle-root','◺ Triangle ←'],['trapezoid','▱ Trapezoid'],['elliptic','◠ Elliptic'],['parabolic','⌒ Parabolic']].map(([k,label])=>`<button type="button" class="bl-tool" data-place="load:${k}" aria-pressed="false">${label}</button>`).join('')}
         <button type="button" class="bl-tool" id="beamStopPlacing">Cancel / select</button>
       </div>
-      <p class="bl-help" id="beamGraphicHelp" role="status">Choose a force/couple and click its station; for a line load, drag over its interval. Enter signed magnitude in Loads and confirm. Purple numbered handles: drag to move, click or Enter to edit. No load is added by selecting a tool.</p>
+      <p class="bl-help" id="beamGraphicHelp" role="status">Choose a force/couple and click its station; for a line load, drag over its interval. Enter signed magnitude in Loads and confirm. Purple numbered handles: click to select, Delete to remove, drag to move, Enter or double-click to edit. No load is added by selecting a tool.</p>
+      <div class="bl-row"><button type="button" class="bl-btn bl-btn-sm" id="beamDeleteSelected" disabled>Delete selected item</button><button type="button" class="bl-btn bl-btn-sm" id="beamClearPicture">Clear loads</button><span id="beamSelection" class="bl-help" role="status">Select a load, support or hinge; press Delete to remove it.</span></div>
       <div id="beamPicture" class="bl-picture"></div>
       <p class="bl-picture-note" id="beamPictureNote"></p>
       <div id="beamKpis" class="bl-kpis" aria-label="Key results"></div>
@@ -4448,7 +4455,7 @@ const Lecture03BeamCases = Object.freeze({
       <span class="bl-li-actions"><button type="button" class="bl-btn bl-btn-sm bl-btn-ghost" data-edit-load="${i}" aria-label="Edit load ${i+1}">Edit</button><button type="button" class="bl-btn bl-btn-sm bl-btn-ghost" data-delete-load="${i}" aria-label="Remove load ${i+1}">✕</button></span></li>`).join('')}</ol>${loads.map((p,i)=>`<details class="bl-box"><summary>Load ${i+1}: profile, total force & resultant</summary>${previewLoad(p,loads)}</details>`).join('')}${loads.length?'':'<p class="bl-help bl-empty-loads">No load defined. Add your own load.</p>'}`;
     $('#beamLoadBadge').textContent=`${loads.length}/${MAX_LOADS}`;
   }
-  function renderInputs(m) {renderScalars(m);renderLists(m);syncLoadForm();renderSectionView();renderStability();}
+  function renderInputs(m) {selection=null;renderScalars(m);renderLists(m);syncLoadForm();renderSectionView();renderStability();}
 
   function sectionFromDraft() {
     const shape=$('#beamShape').value, s={shape};
@@ -4555,6 +4562,48 @@ const Lecture03BeamCases = Object.freeze({
       return {model:st.solved?st.solved.model:BASE,current:false,invalid:true};
     }
   }
+  let selection=null;
+  function selectionFrom(el) {
+    const item=el.closest('[data-load-handle], [data-support-index], [data-hinge-index]');
+    if(!item||!$('#beamPicture').contains(item))return null;
+    if(item.hasAttribute('data-load-handle'))return {type:'load',index:+item.dataset.loadHandle};
+    if(item.hasAttribute('data-hinge-index'))return {type:'hinge',index:+item.dataset.hingeIndex};
+    return {type:'support',index:+item.dataset.supportIndex};
+  }
+  function decorateSelection() {
+    const items=$$('#beamPicture [data-load-handle], #beamPicture [data-support-index], #beamPicture [data-hinge-index]');
+    items.forEach(el=>{
+      const s=selectionFrom(el),on=!!(selection&&s&&s.type===selection.type&&s.index===selection.index);
+      el.setAttribute('tabindex','0');el.setAttribute('role','button');
+      el.setAttribute('aria-label',`${s.type} ${s.index+1}; select, then Delete to remove`);
+      el.setAttribute('aria-pressed',String(on));
+      el.style.cursor='pointer';el.style.filter=on?'drop-shadow(0 0 4px #e28b00) drop-shadow(0 0 2px #e28b00)':'';
+    });
+    $('#beamDeleteSelected').disabled=!selection||st.drawnInvalid;
+    $('#beamSelection').textContent=selection?`Selected ${selection.type} ${selection.index+1}. Delete removes this item; end supports become free.`:'Select a load, support or hinge; press Delete to remove it.';
+  }
+  function deleteSelection() {
+    if(!selection||st.drawnInvalid||st.drag)return;
+    const s=selection;
+    if(s.type==='load'){
+      if(!st.model.loads[s.index])return;
+      st.model.loads.splice(s.index,1);st.editLoad=null;renderLoadList();syncLoadForm();
+    }else if(s.type==='hinge'){
+      const row=hingeRows()[s.index];if(!row)return;const list=row.parentElement;row.remove();relabelRows(list,'hinge');
+    }else{
+      const support=st.drawn.supports[s.index];if(!support)return;
+      if(support.x===0)$('#beamleftSupport').value='free';
+      else if(support.x===st.drawn.length)$('#beamrightSupport').value='free';
+      else {const row=interiorRows()[support.row];if(!row)return;const list=row.parentElement;row.remove();relabelRows(list,'support');}
+    }
+    selection=null;draftChanged();message('Selected item removed. Press Solve to update results (or enable auto-solve).');
+  }
+  function clearLoads() {
+    if(!st.model.loads.length&&!$('#beamSelfWeight').checked){message('There are no applied loads to clear. Supports are unchanged.');return;}
+    if(!window.confirm('Clear all applied loads, including self-weight? Supports and geometry will be retained.'))return;
+    selection=null;replaceLoads([]);$('#beamSelfWeight').checked=false;draftChanged();
+    message('All loads cleared; supports and geometry retained. Press Solve to update results.');
+  }
   function renderPicture(ghost) {
     const pic=$('#beamPicture'), {model,current,invalid}=drawnModel(), r=st.solved&&st.solved.result;
     st.drawn=model;st.drawnInvalid=!!invalid;
@@ -4562,6 +4611,7 @@ const Lecture03BeamCases = Object.freeze({
     pic.innerHTML=D.beamSchematic(model,{width:width(pic)-2,result:current?r:null,showDeflection:current&&st.showDeflection,
       cut:cutTab()&&current?{x:st.cut.x}:null,ghost,selfWeight:sw,interactive:true,loadPreview:st.graphicPreview,loadScale:$('#beamLoadScale').value,
       label:`Physical beam with supports and applied loads${current?'':' (edited inputs, not solved yet)'}`});
+    decorateSelection();
     if(st.placing) pic.dataset.placing=st.placing; else delete pic.dataset.placing;
     const svg=pic.querySelector('svg'), factor=svg&&svg.dataset.exaggeration;
     $('#beamPictureNote').textContent=invalid?'Some inputs are invalid, so the picture shows the last valid model.':
@@ -5292,7 +5342,7 @@ const Lecture03BeamCases = Object.freeze({
     if(st.editLoad===null&&st.model.loads.length>=MAX_LOADS) {err.textContent=`Use at most ${MAX_LOADS} loads.`;err.hidden=false;return;}
     if(st.editLoad===null) st.model.loads.push(load); else st.model.loads[st.editLoad]=load;
     st.editLoad=null;st.graphicPreview=null;renderLoadList();syncLoadForm();solve();
-    $('#beamGraphicHelp').textContent='Load registered. Drag its purple numbered handle to move it; click or Enter on the handle to edit. Choose another load tool to add a new load.';
+    $('#beamGraphicHelp').textContent='Load registered. Click its purple numbered handle to select; Delete removes it, drag moves it, Enter or double-click edits it. Choose another load tool to add a new load.';
   }
   function editLoad(i) {
     const p=st.model.loads[i];st.editLoad=i;
@@ -5369,7 +5419,7 @@ const Lecture03BeamCases = Object.freeze({
     const add=$('#beamCsvMode input[value="add"]');if(add)add.checked=true;$('#beamCsvMode').querySelectorAll('input').forEach(i=>{i.disabled=false;});}
 
   /** Replace the applied loads programmatically; an edit in progress no longer refers to them. */
-  function replaceLoads(loads) {st.model.loads=loads;st.editLoad=null;$('#beamLoadError').hidden=true;renderLoadList();syncLoadForm();}
+  function replaceLoads(loads) {selection=null;st.model.loads=loads;st.editLoad=null;$('#beamLoadError').hidden=true;renderLoadList();syncLoadForm();}
   function fillFormFromSingleLoad() {
     if(st.model.loads.length!==1||st.model.loads[0].kind!=='distributed') return;
     const p=st.model.loads[0];
@@ -5425,8 +5475,8 @@ const Lecture03BeamCases = Object.freeze({
   };
   host.querySelector('.bl-side').addEventListener('click',e=>{
     const rm=e.target.closest('[data-remove-row]'), de=e.target.closest('[data-delete-load]'), ed=e.target.closest('[data-edit-load]');
-    if(rm){const row=rm.closest('[data-row]'),list=row.parentElement,type=row.dataset.row;row.remove();relabelRows(list,type);draftChanged();}
-    if(de){const i=+de.dataset.deleteLoad;st.model.loads.splice(i,1);if(st.editLoad!==null){st.editLoad=null;syncLoadForm();}renderLoadList();solve();}
+    if(rm){selection=null;const row=rm.closest('[data-row]'),list=row.parentElement,type=row.dataset.row;row.remove();relabelRows(list,type);draftChanged();}
+    if(de){selection=null;const i=+de.dataset.deleteLoad;st.model.loads.splice(i,1);if(st.editLoad!==null){st.editLoad=null;syncLoadForm();}renderLoadList();draftChanged();}
     if(ed) editLoad(+ed.dataset.editLoad);
   });
   $('#beamLoadKind').onchange=syncLoadForm;
@@ -5469,7 +5519,9 @@ const Lecture03BeamCases = Object.freeze({
   $('#beamLoadForm').onsubmit=submitLoad;
   $('#beamLoadCancel').onclick=()=>{st.editLoad=null;renderLoadList();syncLoadForm();};
   $('#beamSelfWeight').onchange=()=>{renderSectionView();draftChanged();};
-  $('#beamClear').onclick=()=>{replaceLoads([]);solve();};
+  $('#beamClear').onclick=clearLoads;
+  $('#beamClearPicture').onclick=clearLoads;
+  $('#beamDeleteSelected').onclick=deleteSelection;
   host.querySelectorAll('[data-beam-preset]').forEach(b=>b.onclick=()=>{
     const name=b.dataset.beamPreset;st.model=presetModel(name);st.editLoad=null;renderInputs(st.model);fillFormFromSingleLoad();
     solve('Lecture 03 example loaded: all previous loads replaced; 450 × 20 × 10 mm, E = 2000 MPa.');
@@ -5491,12 +5543,18 @@ const Lecture03BeamCases = Object.freeze({
   function cancelPlacement() {if(st.drag&&st.drag.type==='load')st.model.loads[st.drag.index]=st.drag.original;st.placing=null;st.drag=null;st.graphicPreview=null;$$('[data-place]').forEach(b=>b.setAttribute('aria-pressed','false'));renderLoadList();renderPicture();renderStatus();message('Placement cancelled. Existing loads are unchanged.');}
   $('#beamStopPlacing').onclick=cancelPlacement;
   $('#beamShowDefl').onclick=e=>{st.showDeflection=!st.showDeflection;e.currentTarget.setAttribute('aria-pressed',String(st.showDeflection));renderPicture();};
-  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&(st.placing||st.drag||st.graphicPreview))cancelPlacement();});
+  document.addEventListener('keydown',e=>{
+    if(e.key==='Escape'&&(st.placing||st.drag||st.graphicPreview))cancelPlacement();
+    if(e.key!=='Delete'||e.ctrlKey||e.altKey||e.metaKey||host.hidden||!host.contains(e.target))return;
+    if(e.target.closest('input,textarea,select,[contenteditable="true"],[role="textbox"]'))return;
+    if(selection){e.preventDefault();deleteSelection();}
+  });
   const pic=$('#beamPicture');
   let pending=false;
   const frame=fn=>{if(pending)return;pending=true;raf(()=>{pending=false;fn();});};
   pic.addEventListener('pointerdown',e=>{
     if(e.button!==undefined&&e.button!==0)return;
+    if(!st.placing){selection=selectionFrom(e.target);decorateSelection();if(selection&&e.target.closest('[tabindex]'))e.target.closest('[tabindex]').focus();}
     const loadHandle=e.target.closest('[data-load-handle]');
     if(st.placing&&st.placing.startsWith('load:')&&!['load:point','load:moment'].includes(st.placing)) {
       const x=svgX(e);if(x===null||st.drawnInvalid)return;
@@ -5550,11 +5608,13 @@ const Lecture03BeamCases = Object.freeze({
   });
   const endDrag=e=>{if(!st.drag)return;const d=st.drag;st.drag=null;
     if(d.type==='load-range'){const x=svgX(e);st.suppressPlaceClick=true;if(x!==null&&Math.abs(snap(x,st.drawn.length)-d.start)>st.drawn.length*1e-9)prepareGraphicLoad(d.kind,d.start,snap(x,st.drawn.length));else {st.graphicPreview=null;renderPicture();message('Choose a non-zero interval by dragging along the beam.');}return;}
-    if(d.type==='load'){if(d.moved){draftChanged();message('Load moved. Press Solve to update results (or enable auto-solve).');}else editLoad(d.index);return;}
-    if(d.type!=='cut')draftChanged();};
+    if(d.type==='load'){if(d.moved){draftChanged();message('Load moved. Press Solve to update results (or enable auto-solve).');}else message(`Load ${d.index+1} selected. Press Delete to remove; Enter or double-click to edit.`);const selected=pic.querySelector(`[data-load-handle="${d.index}"]`);if(selected)selected.focus();return;}
+    if(d.type!=='cut'){draftChanged();const selected=selection&&pic.querySelector(selection.type==='hinge'?`[data-hinge-index="${selection.index}"]`:`[data-support-index="${selection.index}"]`);if(selected)selected.focus();}};
   pic.addEventListener('pointerup',endDrag);
   pic.addEventListener('pointercancel',()=>{if(st.drag&&st.drag.type==='load')st.model.loads[st.drag.index]=st.drag.original;st.drag=null;st.graphicPreview=null;renderLoadList();renderPicture();renderStatus();});
-  pic.addEventListener('keydown',e=>{const h=e.target.closest('[data-load-handle]');if(h&&(e.key==='Enter'||e.key===' ')){e.preventDefault();editLoad(+h.dataset.loadHandle);}});
+  pic.addEventListener('focusin',e=>{const s=selectionFrom(e.target);if(s){selection=s;decorateSelection();}});
+  pic.addEventListener('dblclick',e=>{const s=selectionFrom(e.target);if(s&&s.type==='load')editLoad(s.index);});
+  pic.addEventListener('keydown',e=>{const s=selectionFrom(e.target);if(s&&(e.key==='Enter'||e.key===' ')){e.preventDefault();selection=s;decorateSelection();if(s.type==='load')editLoad(s.index);}});
   pic.addEventListener('click',e=>{if(st.suppressPlaceClick){st.suppressPlaceClick=false;return;}if(!st.placing)return;const x=svgX(e);if(x!==null)placeAt(snap(x,st.model.length));});
   // Cut controls.
   $('#beamCut').oninput=e=>setCut(+e.target.value);
@@ -9930,12 +9990,33 @@ if (typeof window !== 'undefined') window.WingLoadsUI = WingLoadsUI;
 
   // ------------------------------------------------------------ run control
   let runTimer;
+  let geometryPreview = false;
+  // Geometry only: no section analysis, stress or deformation is calculated here.
+  function previewGeometry() {
+    if (!model || running) return;
+    geometryPreview = true;
+    lastGeoKey = null;
+    try {
+      const g = E.makeGeometry(engineInput().geometry);
+      buildModel({ geometry: g });
+      lastGeoKey = null; // Rebuild solved geometry even if edits return to the old dimensions.
+      updateModel(); frameView(false); renderViewReadout(true); renderPlotInfo();
+      $('#probe').hidden = true;
+      $('#viewStale').textContent = 'Geometry preview of current inputs; stress, deformation and load arrows are hidden. Press Solve to update analysis. Results below still belong to the last solved model.';
+    } catch (err) {
+      updateModel();
+      $('#probe').hidden = true;
+      $('#viewStale').textContent = 'Geometry preview unavailable: correct the geometry inputs. Previous geometry remains visible; analysis is not up to date.';
+      $('#plotinfo').textContent = 'Invalid geometry inputs: previous geometry shown undeformed, without stress or load arrows. Correct inputs and press Solve.';
+    }
+  }
   // Deliberate study actions (lesson experiments, presets, Design-lab buttons, adding or removing a load) solve at once.
   function changed() {
     stale = true; inputError = null;
     setStatus();
     renderTree();
     renderInventory();
+    previewGeometry();
     clearTimeout(runTimer);
     runTimer = setTimeout(runStudy, 450);
   }
@@ -9945,6 +10026,7 @@ if (typeof window !== 'undefined') window.WingLoadsUI = WingLoadsUI;
     setStatus();
     renderTree();
     renderInventory();
+    previewGeometry();
     clearTimeout(runTimer);
     if (autoSolve) runTimer = setTimeout(runStudy, 300);
   }
@@ -10009,6 +10091,7 @@ if (typeof window !== 'undefined') window.WingLoadsUI = WingLoadsUI;
       if (inputError === errorAtStart) inputError = null;
       if (fieldErrors === fieldErrorsAtStart) fieldErrors = {};
       if (!designBaseline || saveDesignAfterRun) { designBaseline = R; saveDesignAfterRun = false; }
+      geometryPreview = false;
       if (heavy) { buildModel(R); lastGeoKey = geoKey; frameView(heavy && !lastViewSet); }
       applyResult();
       renderAll();
@@ -10236,7 +10319,7 @@ if (typeof window !== 'undefined') window.WingLoadsUI = WingLoadsUI;
     if (!force && key === readoutKey) return;
     readoutKey = key;
     $("#viewReadout").dataset.distance = dist.toFixed(3);
-    $("#viewDims").innerHTML = `<b>View zoom only.</b> Actual size of the solved model: semi-span <b>${nf(g.semiSpan, 1)} mm</b>, root chord <b>${nf(g.rootChord, 1)} mm</b>, tip chord <b>${nf(g.tipChord, 1)} mm</b> (NACA ${g.naca}).`;
+    $("#viewDims").innerHTML = `<b>View zoom only.</b> Actual size of the ${geometryPreview ? 'unsolved geometry preview' : 'solved model'}: semi-span <b>${nf(g.semiSpan, 1)} mm</b>, root chord <b>${nf(g.rootChord, 1)} mm</b>, tip chord <b>${nf(g.tipChord, 1)} mm</b> (NACA ${g.naca}).`;
     const nice = [1, 2, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000, 2000].find((mm) => mm * pxPerMm >= 48) || 2000;
     const px = isFinite(pxPerMm) && pxPerMm > 0 ? Math.min(150, nice * pxPerMm) : 0;
     $("#viewScaleBar").style.width = `${Math.round(px)}px`;
@@ -10288,6 +10371,7 @@ if (typeof window !== 'undefined') window.WingLoadsUI = WingLoadsUI;
   }
   let modeT = 0;
   function sectionMotion(y) {
+    if (geometryPreview) return [0, 0];
     // returns [w, phi] displacement of the section at y for the current display (static or mode)
     if (S.plot === "mode" && R) {
       const shape = S.mode.kind === "bending" ? R.fem.modesBending[S.mode.index] : R.fem.modesTorsion[S.mode.index];
@@ -10300,7 +10384,7 @@ if (typeof window !== 'undefined') window.WingLoadsUI = WingLoadsUI;
   function updateModel() {
     if (!model || !R) return;
     const kind = { stress: "sigma", disp: "disp", fos: "fos" }[S.plot];
-    const useField = !!kind;
+    const useField = !!kind && !geometryPreview;
     if (useField) range = computeRange(kind);
     const reqFos = R.load.fos;
     const colorOf = (y, x, z, base) => {
@@ -10312,9 +10396,10 @@ if (typeof window !== 'undefined') window.WingLoadsUI = WingLoadsUI;
     const explode = S.explode;
     const motionCache = new Map();
     const motion = (y) => { const k = Math.round(y * 4); if (!motionCache.has(k)) motionCache.set(k, sectionMotion(y)); return motionCache.get(k); };
-    const xscAt = (y) => at(R.props.xsc, y);
+    const xscAt = (y) => geometryPreview ? 0 : at(R.props.xsc, y);
     const place = (y, x, z, out, mod) => {
       const [w, a] = motion(y);
+      if (geometryPreview) { out[0] = y + (mod || 0) * explode; out[1] = z; out[2] = x; return; }
       const xs = xscAt(y), zs = zscAt(y), dx = x - xs, dz = z - zs, ca = Math.cos(a), sa = Math.sin(a);
       out[0] = y + (mod || 0) * explode;
       out[1] = zs + dz * ca - dx * sa + w;
@@ -10328,8 +10413,8 @@ if (typeof window !== 'undefined') window.WingLoadsUI = WingLoadsUI;
       for (let i = 0; i < u.by.length; i++) {
         place(u.by[i], u.bx[i], u.bz[i], tmp, isRod ? 0 : u.module);
         pos[3 * i] = tmp[0]; pos[3 * i + 1] = tmp[1]; pos[3 * i + 2] = tmp[2];
-        const selectedStress = S.plot==='stress' && (S.stressComponent==='rods'?isRod:!isRod);
-        const c = selectedStress ? colorOf(u.by[i],u.bx[i],u.bz[i],base[u.kind]) : S.plot==='stress'?new THREE.Color(0x7f8c98):isRod?base.rod:colorOf(u.by[i],u.bx[i],u.bz[i],base[u.kind]);
+        const selectedStress = !geometryPreview && S.plot==='stress' && (S.stressComponent==='rods'?isRod:!isRod);
+        const c = geometryPreview ? base[u.kind] : selectedStress ? colorOf(u.by[i],u.bx[i],u.bz[i],base[u.kind]) : S.plot==='stress'?new THREE.Color(0x7f8c98):isRod?base.rod:colorOf(u.by[i],u.bx[i],u.bz[i],base[u.kind]);
         col[3 * i] = c.r; col[3 * i + 1] = c.g; col[3 * i + 2] = c.b;
       }
       m.geometry.attributes.position.needsUpdate = true;
@@ -10348,12 +10433,13 @@ if (typeof window !== 'undefined') window.WingLoadsUI = WingLoadsUI;
       p.position.x = (p.userData.module || 0) * explode;
     }
     drawLoads();
-    renderLegend(kind);
+    renderLegend(geometryPreview ? null : kind);
+    if (geometryPreview) { $('#legend').hidden = true; $('#legendTitle').textContent = 'Geometry preview · not solved'; }
   }
   function drawLoads() {
     const grp = model.loads;
     while (grp.children.length) { const c = grp.children.pop(); c.traverse((o) => { if (o.geometry) o.geometry.dispose(); if (o.material) o.material.dispose(); }); }
-    if (!R || S.plot === "mode") return;
+    if (!R || geometryPreview || S.plot === "mode") return;
     const g = R.geometry, L = g.semiSpan;
     const lift = R.load.kind === "flight";
     const scaleLen = 60;
@@ -10389,6 +10475,7 @@ if (typeof window !== 'undefined') window.WingLoadsUI = WingLoadsUI;
   }
   function renderLegend(kind) {
     const lg = $("#legend"), lt = $("#legendTitle");
+    lg.hidden = false;
     if (!kind) { lg.innerHTML = ""; lt.textContent = ""; return; }
     const unit = { sigma: "MPa", disp: "mm", fos: "" }[kind];
     lt.textContent = { sigma: "Stress σ, span (MPa)", disp: "Displacement (mm)", fos: "Factor of safety" }[kind];
@@ -10403,6 +10490,11 @@ if (typeof window !== 'undefined') window.WingLoadsUI = WingLoadsUI;
   }
   function renderPlotInfo() {
     if (!R) return;
+    if (geometryPreview) {
+      const g = model.g;
+      $('#plotinfo').textContent = `UNSOLVED GEOMETRY PREVIEW · NACA ${g.naca} · semi-span ${g.semiSpan} mm · ${model.ribs.length} ribs · ${model.rods.length} rods. Stress and deformation hidden; press Solve for analysis.`;
+      return;
+    }
     const g = R.geometry;
     const kind = { stress: "Spanwise normal stress σ, beam theory, limit load", disp: "Resultant displacement, limit load", fos: `Factor of safety on PLA strength (red: below ${R.load.fos})`, mode: "Natural frequency mode", model: "Model" }[S.plot];
     const d = deformAmount();
@@ -10454,7 +10546,7 @@ if (typeof window !== 'undefined') window.WingLoadsUI = WingLoadsUI;
     })(accept);
   }
   canvas.addEventListener("pointermove", (ev) => {
-    if (!model || !R) return;
+    if (!model || !R || geometryPreview) return;
     const r = canvas.getBoundingClientRect();
     ndc.set(((ev.clientX - r.left) / r.width) * 2 - 1, -((ev.clientY - r.top) / r.height) * 2 + 1);
     raycaster.setFromCamera(ndc, camera);
@@ -10504,7 +10596,7 @@ if (typeof window !== 'undefined') window.WingLoadsUI = WingLoadsUI;
     controls.update();
     renderViewReadout();
     positionRibLabels();
-    if (S.plot === "mode" && R && model) {
+    if (S.plot === "mode" && R && model && !geometryPreview) {
       const f = (S.mode.kind === "bending" ? R.fem.fBending : R.fem.fTorsion)[S.mode.index];
       const visualHz = Math.min(1.2, 0.35 + f / 120);
       if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) modeT += ((t - lastT) / 1000) * 2 * Math.PI * visualHz;
@@ -14766,7 +14858,7 @@ const METAL_REFERENCE = {
     chip.textContent = ok ? "Model checks meet assumed ultimate" : "Below assumed ultimate";
     t.textContent = text || (g ? `Weakest: ${g.name.toLowerCase()} at ${nf(g.n, 1)} ${R.input.customLoads!=null?'× reference load':'g'} (y = ${nf(g.y, 2)} m)` : "");
   }
-  function changed() { stale = true; setStatus(); renderTree(); clearTimeout(timer); timer = setTimeout(runStudy, 500); }
+  function changed() { stale = true; setStatus(); renderTree(); updateModel(); clearTimeout(timer); timer = setTimeout(runStudy, 500); }
   async function runStudy() {
     if (running) { pending = true; return; }
     running = true; stale = false; lastError = null; setStatus();
@@ -15098,6 +15190,7 @@ const METAL_REFERENCE = {
     if (ar) ar.children.forEach((a) => { const d = dfn(a.userData.y); a.position.set(a.userData.base[0], a.userData.base[1] + d.w, a.userData.base[2]); });
   }
   function animateMode(t) {
+    if (stale || running) return;
     const ph = Math.sin(t / 420);
     deformAll((y) => modeDisp(y, ph));
   }
@@ -15160,7 +15253,7 @@ const METAL_REFERENCE = {
       const col = o.geometry.attributes.color, u = o.userData;
       for (let i = 0; i < col.count; i++) {
         let c;
-        if (p === "model" || p === "mode") c = PART_COL[u.kind] || [0.8, 0.8, 0.8];
+        if (stale || p === "model" || p === "mode") c = PART_COL[u.kind] || [0.8, 0.8, 0.8];
         else {
           const v = valueFor(o, i);
           if (!isFinite(v)) c = [0.55, 0.58, 0.62];
@@ -15176,6 +15269,7 @@ const METAL_REFERENCE = {
   }
   function renderLegend(lo, hi) {
     const p = MS.plot, L = $("#mLegend"), T = $("#mLegendTitle"), info = $("#mPlotinfo");
+    L.hidden = false;
     const title = { sigma: "Spanwise normal stress σ (MPa) · compression blue", tau: "Shear stress |τ| in skins and webs (MPa)", vm: "Von Mises stress (MPa)", disp: "Vertical displacement (mm)", buckle: "Buckling load factor ÷ current n (red < 1: buckled)", model: "", mode: "" }[p];
     T.textContent = title;
     if (p === "model" || p === "mode") { L.innerHTML = ""; }
@@ -15189,6 +15283,15 @@ const METAL_REFERENCE = {
   }
   function updateModel() {
     if (!model || !R) return;
+    if (stale) {
+      colourAll(); deformAll(() => ({ w: 0, tw: 0, xsc: 0 }));
+      const arrows = model.getObjectByName('arrows'); if (arrows) arrows.visible = false;
+      $('#mLegend').hidden = true;
+      $('#mLegendTitle').textContent = 'Inputs changed · analysis pending';
+      $('#mPlotinfo').textContent = 'Previous structure shown undeformed. D.520 updates automatically after valid edits; results are pending.';
+      return;
+    }
+    const arrows = model.getObjectByName('arrows'); if (arrows) arrows.visible = true;
     colourAll();
     if (MS.plot !== "mode") deformAll((y) => { const d = dispAt(y), k = deformScale(); return { w: d.w * k, tw: d.tw * k, xsc: d.xsc }; });
     buildArrows();

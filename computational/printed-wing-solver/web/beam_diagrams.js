@@ -100,13 +100,16 @@ const BeamDiagrams = (() => {
   // A clipped part of a curved or table load (free bodies) carries _clip = [s, e].
   const spanOf = v => v._clip||(v.kind==='table'?[v.points[0][0],v.points[v.points.length-1][0]]:[v.start,v.end]);
   function lanesFor(list) {
-    const lanes=[];
-    return list.map(v=>{
-      const [a,b]=spanOf(v);
+    // Colour intervals in spatial order, not insertion order. Keep the result indexed
+    // by the original load so editing/reordering never detaches its diagram or handle.
+    const lanes=[], assigned=[];
+    const ordered=list.map((v,i)=>({i,span:spanOf(v)})).sort((u,v)=>u.span[0]-v.span[0]||u.span[1]-v.span[1]||u.i-v.i);
+    ordered.forEach(({i,span:[a,b]})=>{
       let k=lanes.findIndex(end=>end<=a+1e-9);
       if(k<0){k=lanes.length;lanes.push(b);} else lanes[k]=b;
-      return k;
+      assigned[i]=k;
     });
+    return assigned;
   }
   const SHAPE_SHORT={start:'max at start',end:'max at end',middle:'symmetric'};
   // Draft models (not yet solved) hold a curved load as entered (total or peak): complete it for drawing.
@@ -230,11 +233,14 @@ const BeamDiagrams = (() => {
     });
     model.hinges.forEach((h,i)=>{svg+=`<g class="bl-hinge" data-hinge="1" data-hinge-index="${i}" data-x="${h}" data-draggable="hinge"><circle cx="${r1(X(h))}" cy="${r1(yAxis)}" r="6" class="bl-hinge-c"/></g>`;});
     svg+=drawLoads(loads,X,yTop,{width:W,scaleMode:opts.loadScale}).svg;
+    const handleLanes=lanesFor(loads.filter(isDist));
+    let distributedHandle=0;
     if(opts.interactive) model.loads.forEach((v,i)=>{
       const a=v.kind==='table'?v.points[0][0]:isDist(v)?v.start:v.position;
       const b=v.kind==='table'?v.points.at(-1)[0]:isDist(v)?v.end:v.position;
-      const x=X((a+b)/2), y=yTop-14-(i%3)*23;
-      svg+=`<g class="bl-load-handle" data-load-handle="${i}" tabindex="0" role="button" aria-label="Load ${i+1}: drag to move or press Enter to edit"><title>Load ${i+1}: drag to move; click or Enter to edit magnitude and position</title>${line(x,y+10,X((a+b)/2),yTop-2,'bl-load-link')}<circle cx="${r1(x)}" cy="${y}" r="10"/>${text(x,y+4,String(i+1),'bl-tx-s')}</g>`;
+      const lane=isDist(v)?handleLanes[distributedHandle++]:0;
+      const x=X((a+b)/2), y=yTop-14-(isDist(v)?lane*LANE:(i%3)*23);
+      svg+=`<g class="bl-load-handle" data-load-handle="${i}" tabindex="0" role="button" aria-label="Load ${i+1}: click to select, Delete to remove, drag to move, Enter or double-click to edit"><title>Load ${i+1}: click to select; Delete to remove; drag to move; Enter or double-click to edit magnitude and position</title>${line(x,y+10,X((a+b)/2),yTop-2,'bl-load-link')}<circle cx="${r1(x)}" cy="${y}" r="10"/>${text(x,y+4,String(i+1),'bl-tx-s')}</g>`;
     });
     if(opts.loadPreview) {
       const a=X(opts.loadPreview.start),b=X(opts.loadPreview.end);

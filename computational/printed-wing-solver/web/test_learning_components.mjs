@@ -37,6 +37,7 @@ assert.match(kpi(),/0\.7119 mm/);
 click('#beamRefine');
 assert.match($('#beamConvergence').textContent,/40/);
 click('#beamClear');
+click('#beamSolve');
 assert.match(kpi(),/0\.0000 mm/);
 $('#beamLoadKind').value='trapezoid';$('#beamLoadA').value='0';$('#beamLoadB').value='450';
 $('#beamQ0').value='.002';$('#beamQ1').value='.006';
@@ -51,6 +52,8 @@ assert.ok(!/NaN|undefined|Infinity/.test($('#foundations').innerHTML));
 const navigationSource=read('./wing_lab_template.html');
 w.document.body.insertAdjacentHTML('beforeend',navigationSource.slice(navigationSource.indexOf('<nav id="wingNavigation"'),navigationSource.indexOf('<div id="app"'))+'<div id="app"></div>');
 ctx.$=$;
+// The extracted navigation closure also references the real lazy load-editor keeper.
+ctx.wingLoadKeeper=require('./wing_loads_ui.js').keeper({});
 vm.runInContext(navigationSource.slice(navigationSource.indexOf('  function returnToBeams('),navigationSource.indexOf("  document.documentElement.dataset.wingReady='true'")),ctx);
 for(const support of ['beam']) {
   $('#foundations').hidden=true;$('#app').hidden=false;$('#wingNavigation').hidden=false;
@@ -74,6 +77,8 @@ c.TeachingModels=require('./teaching_models.js');c.frame=()=>Promise.resolve();
 c.WingLoadsUI=require('./wing_loads_ui.js');c.LoadProfiles=require('./load_profiles.js');
 c.S={geometry:c.R.geometry,load:c.R.load,stressComponent:'skin'};
 c.running=false;c.stale=false;
+c.model=null; // DOM-only harness: no WebGL model has been constructed.
+c.geometryPreview=null; // These draw-load assertions exercise the solved model, not a draft preview.
 c.$=s=>wingDOM.window.document.querySelector(s);
 c.setPlot=p=>{c.lastPlot=p;};c.applyXray=()=>{};c.setAnatomy=p=>{c.lastAnatomy=p;};
 c.changed=()=>{c.changeCount=(c.changeCount||0)+1;};c.flash=s=>{throw Error(s);};

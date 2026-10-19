@@ -219,7 +219,7 @@
     chip.textContent = ok ? "Model checks meet assumed ultimate" : "Below assumed ultimate";
     t.textContent = text || (g ? `Weakest: ${g.name.toLowerCase()} at ${nf(g.n, 1)} ${R.input.customLoads!=null?'× reference load':'g'} (y = ${nf(g.y, 2)} m)` : "");
   }
-  function changed() { stale = true; setStatus(); renderTree(); clearTimeout(timer); timer = setTimeout(runStudy, 500); }
+  function changed() { stale = true; setStatus(); renderTree(); updateModel(); clearTimeout(timer); timer = setTimeout(runStudy, 500); }
   async function runStudy() {
     if (running) { pending = true; return; }
     running = true; stale = false; lastError = null; setStatus();
@@ -551,6 +551,7 @@
     if (ar) ar.children.forEach((a) => { const d = dfn(a.userData.y); a.position.set(a.userData.base[0], a.userData.base[1] + d.w, a.userData.base[2]); });
   }
   function animateMode(t) {
+    if (stale || running) return;
     const ph = Math.sin(t / 420);
     deformAll((y) => modeDisp(y, ph));
   }
@@ -613,7 +614,7 @@
       const col = o.geometry.attributes.color, u = o.userData;
       for (let i = 0; i < col.count; i++) {
         let c;
-        if (p === "model" || p === "mode") c = PART_COL[u.kind] || [0.8, 0.8, 0.8];
+        if (stale || p === "model" || p === "mode") c = PART_COL[u.kind] || [0.8, 0.8, 0.8];
         else {
           const v = valueFor(o, i);
           if (!isFinite(v)) c = [0.55, 0.58, 0.62];
@@ -629,6 +630,7 @@
   }
   function renderLegend(lo, hi) {
     const p = MS.plot, L = $("#mLegend"), T = $("#mLegendTitle"), info = $("#mPlotinfo");
+    L.hidden = false;
     const title = { sigma: "Spanwise normal stress σ (MPa) · compression blue", tau: "Shear stress |τ| in skins and webs (MPa)", vm: "Von Mises stress (MPa)", disp: "Vertical displacement (mm)", buckle: "Buckling load factor ÷ current n (red < 1: buckled)", model: "", mode: "" }[p];
     T.textContent = title;
     if (p === "model" || p === "mode") { L.innerHTML = ""; }
@@ -642,6 +644,15 @@
   }
   function updateModel() {
     if (!model || !R) return;
+    if (stale) {
+      colourAll(); deformAll(() => ({ w: 0, tw: 0, xsc: 0 }));
+      const arrows = model.getObjectByName('arrows'); if (arrows) arrows.visible = false;
+      $('#mLegend').hidden = true;
+      $('#mLegendTitle').textContent = 'Inputs changed · analysis pending';
+      $('#mPlotinfo').textContent = 'Previous structure shown undeformed. D.520 updates automatically after valid edits; results are pending.';
+      return;
+    }
+    const arrows = model.getObjectByName('arrows'); if (arrows) arrows.visible = true;
     colourAll();
     if (MS.plot !== "mode") deformAll((y) => { const d = dispAt(y), k = deformScale(); return { w: d.w * k, tw: d.tw * k, xsc: d.xsc }; });
     buildArrows();

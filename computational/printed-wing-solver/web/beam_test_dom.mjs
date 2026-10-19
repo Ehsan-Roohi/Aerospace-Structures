@@ -12,6 +12,8 @@ export const read=f=>readFileSync(new URL(f,import.meta.url),'utf8');
 export function loadBeamLab(dom,{scripts=BEAM_SCRIPTS,matches=true}={}) {
   const w=dom.window, ctx=dom.getInternalVMContext();
   w.matchMedia=()=>({matches});
+  // Tests model an intentional confirmation by default; cancel-path tests override this.
+  w.confirm=()=>true;
   w.setInterval=()=>0;
   if(!w.HTMLElement.prototype.scrollIntoView) w.HTMLElement.prototype.scrollIntoView=function(){};
   for(const file of scripts) vm.runInContext(read('./'+file),ctx,{filename:file});

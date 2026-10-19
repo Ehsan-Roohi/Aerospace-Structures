@@ -179,7 +179,8 @@ const Lecture03BeamCases = Object.freeze({
         ${[['point','↓ Point force'],['moment','↻ Couple'],['rectangle','↓↓ Uniform'],['triangle','◿ Triangle →'],['triangle-root','◺ Triangle ←'],['trapezoid','▱ Trapezoid'],['elliptic','◠ Elliptic'],['parabolic','⌒ Parabolic']].map(([k,label])=>`<button type="button" class="bl-tool" data-place="load:${k}" aria-pressed="false">${label}</button>`).join('')}
         <button type="button" class="bl-tool" id="beamStopPlacing">Cancel / select</button>
       </div>
-      <p class="bl-help" id="beamGraphicHelp" role="status">Choose a force/couple and click its station; for a line load, drag over its interval. Enter signed magnitude in Loads and confirm. Purple numbered handles: drag to move, click or Enter to edit. No load is added by selecting a tool.</p>
+      <p class="bl-help" id="beamGraphicHelp" role="status">Choose a force/couple and click its station; for a line load, drag over its interval. Enter signed magnitude in Loads and confirm. Purple numbered handles: click to select, Delete to remove, drag to move, Enter or double-click to edit. No load is added by selecting a tool.</p>
+      <div class="bl-row"><button type="button" class="bl-btn bl-btn-sm" id="beamDeleteSelected" disabled>Delete selected item</button><button type="button" class="bl-btn bl-btn-sm" id="beamClearPicture">Clear loads</button><span id="beamSelection" class="bl-help" role="status">Select a load, support or hinge; press Delete to remove it.</span></div>
       <div id="beamPicture" class="bl-picture"></div>
       <p class="bl-picture-note" id="beamPictureNote"></p>
       <div id="beamKpis" class="bl-kpis" aria-label="Key results"></div>
@@ -432,7 +433,7 @@ const Lecture03BeamCases = Object.freeze({
       <span class="bl-li-actions"><button type="button" class="bl-btn bl-btn-sm bl-btn-ghost" data-edit-load="${i}" aria-label="Edit load ${i+1}">Edit</button><button type="button" class="bl-btn bl-btn-sm bl-btn-ghost" data-delete-load="${i}" aria-label="Remove load ${i+1}">✕</button></span></li>`).join('')}</ol>${loads.map((p,i)=>`<details class="bl-box"><summary>Load ${i+1}: profile, total force & resultant</summary>${previewLoad(p,loads)}</details>`).join('')}${loads.length?'':'<p class="bl-help bl-empty-loads">No load defined. Add your own load.</p>'}`;
     $('#beamLoadBadge').textContent=`${loads.length}/${MAX_LOADS}`;
   }
-  function renderInputs(m) {renderScalars(m);renderLists(m);syncLoadForm();renderSectionView();renderStability();}
+  function renderInputs(m) {selection=null;renderScalars(m);renderLists(m);syncLoadForm();renderSectionView();renderStability();}
 
   function sectionFromDraft() {
     const shape=$('#beamShape').value, s={shape};
@@ -539,6 +540,48 @@ const Lecture03BeamCases = Object.freeze({
       return {model:st.solved?st.solved.model:BASE,current:false,invalid:true};
     }
   }
+  let selection=null;
+  function selectionFrom(el) {
+    const item=el.closest('[data-load-handle], [data-support-index], [data-hinge-index]');
+    if(!item||!$('#beamPicture').contains(item))return null;
+    if(item.hasAttribute('data-load-handle'))return {type:'load',index:+item.dataset.loadHandle};
+    if(item.hasAttribute('data-hinge-index'))return {type:'hinge',index:+item.dataset.hingeIndex};
+    return {type:'support',index:+item.dataset.supportIndex};
+  }
+  function decorateSelection() {
+    const items=$$('#beamPicture [data-load-handle], #beamPicture [data-support-index], #beamPicture [data-hinge-index]');
+    items.forEach(el=>{
+      const s=selectionFrom(el),on=!!(selection&&s&&s.type===selection.type&&s.index===selection.index);
+      el.setAttribute('tabindex','0');el.setAttribute('role','button');
+      el.setAttribute('aria-label',`${s.type} ${s.index+1}; select, then Delete to remove`);
+      el.setAttribute('aria-pressed',String(on));
+      el.style.cursor='pointer';el.style.filter=on?'drop-shadow(0 0 4px #e28b00) drop-shadow(0 0 2px #e28b00)':'';
+    });
+    $('#beamDeleteSelected').disabled=!selection||st.drawnInvalid;
+    $('#beamSelection').textContent=selection?`Selected ${selection.type} ${selection.index+1}. Delete removes this item; end supports become free.`:'Select a load, support or hinge; press Delete to remove it.';
+  }
+  function deleteSelection() {
+    if(!selection||st.drawnInvalid||st.drag)return;
+    const s=selection;
+    if(s.type==='load'){
+      if(!st.model.loads[s.index])return;
+      st.model.loads.splice(s.index,1);st.editLoad=null;renderLoadList();syncLoadForm();
+    }else if(s.type==='hinge'){
+      const row=hingeRows()[s.index];if(!row)return;const list=row.parentElement;row.remove();relabelRows(list,'hinge');
+    }else{
+      const support=st.drawn.supports[s.index];if(!support)return;
+      if(support.x===0)$('#beamleftSupport').value='free';
+      else if(support.x===st.drawn.length)$('#beamrightSupport').value='free';
+      else {const row=interiorRows()[support.row];if(!row)return;const list=row.parentElement;row.remove();relabelRows(list,'support');}
+    }
+    selection=null;draftChanged();message('Selected item removed. Press Solve to update results (or enable auto-solve).');
+  }
+  function clearLoads() {
+    if(!st.model.loads.length&&!$('#beamSelfWeight').checked){message('There are no applied loads to clear. Supports are unchanged.');return;}
+    if(!window.confirm('Clear all applied loads, including self-weight? Supports and geometry will be retained.'))return;
+    selection=null;replaceLoads([]);$('#beamSelfWeight').checked=false;draftChanged();
+    message('All loads cleared; supports and geometry retained. Press Solve to update results.');
+  }
   function renderPicture(ghost) {
     const pic=$('#beamPicture'), {model,current,invalid}=drawnModel(), r=st.solved&&st.solved.result;
     st.drawn=model;st.drawnInvalid=!!invalid;
@@ -546,6 +589,7 @@ const Lecture03BeamCases = Object.freeze({
     pic.innerHTML=D.beamSchematic(model,{width:width(pic)-2,result:current?r:null,showDeflection:current&&st.showDeflection,
       cut:cutTab()&&current?{x:st.cut.x}:null,ghost,selfWeight:sw,interactive:true,loadPreview:st.graphicPreview,loadScale:$('#beamLoadScale').value,
       label:`Physical beam with supports and applied loads${current?'':' (edited inputs, not solved yet)'}`});
+    decorateSelection();
     if(st.placing) pic.dataset.placing=st.placing; else delete pic.dataset.placing;
     const svg=pic.querySelector('svg'), factor=svg&&svg.dataset.exaggeration;
     $('#beamPictureNote').textContent=invalid?'Some inputs are invalid, so the picture shows the last valid model.':
@@ -1276,7 +1320,7 @@ const Lecture03BeamCases = Object.freeze({
     if(st.editLoad===null&&st.model.loads.length>=MAX_LOADS) {err.textContent=`Use at most ${MAX_LOADS} loads.`;err.hidden=false;return;}
     if(st.editLoad===null) st.model.loads.push(load); else st.model.loads[st.editLoad]=load;
     st.editLoad=null;st.graphicPreview=null;renderLoadList();syncLoadForm();solve();
-    $('#beamGraphicHelp').textContent='Load registered. Drag its purple numbered handle to move it; click or Enter on the handle to edit. Choose another load tool to add a new load.';
+    $('#beamGraphicHelp').textContent='Load registered. Click its purple numbered handle to select; Delete removes it, drag moves it, Enter or double-click edits it. Choose another load tool to add a new load.';
   }
   function editLoad(i) {
     const p=st.model.loads[i];st.editLoad=i;
@@ -1353,7 +1397,7 @@ const Lecture03BeamCases = Object.freeze({
     const add=$('#beamCsvMode input[value="add"]');if(add)add.checked=true;$('#beamCsvMode').querySelectorAll('input').forEach(i=>{i.disabled=false;});}
 
   /** Replace the applied loads programmatically; an edit in progress no longer refers to them. */
-  function replaceLoads(loads) {st.model.loads=loads;st.editLoad=null;$('#beamLoadError').hidden=true;renderLoadList();syncLoadForm();}
+  function replaceLoads(loads) {selection=null;st.model.loads=loads;st.editLoad=null;$('#beamLoadError').hidden=true;renderLoadList();syncLoadForm();}
   function fillFormFromSingleLoad() {
     if(st.model.loads.length!==1||st.model.loads[0].kind!=='distributed') return;
     const p=st.model.loads[0];
@@ -1409,8 +1453,8 @@ const Lecture03BeamCases = Object.freeze({
   };
   host.querySelector('.bl-side').addEventListener('click',e=>{
     const rm=e.target.closest('[data-remove-row]'), de=e.target.closest('[data-delete-load]'), ed=e.target.closest('[data-edit-load]');
-    if(rm){const row=rm.closest('[data-row]'),list=row.parentElement,type=row.dataset.row;row.remove();relabelRows(list,type);draftChanged();}
-    if(de){const i=+de.dataset.deleteLoad;st.model.loads.splice(i,1);if(st.editLoad!==null){st.editLoad=null;syncLoadForm();}renderLoadList();solve();}
+    if(rm){selection=null;const row=rm.closest('[data-row]'),list=row.parentElement,type=row.dataset.row;row.remove();relabelRows(list,type);draftChanged();}
+    if(de){selection=null;const i=+de.dataset.deleteLoad;st.model.loads.splice(i,1);if(st.editLoad!==null){st.editLoad=null;syncLoadForm();}renderLoadList();draftChanged();}
     if(ed) editLoad(+ed.dataset.editLoad);
   });
   $('#beamLoadKind').onchange=syncLoadForm;
@@ -1453,7 +1497,9 @@ const Lecture03BeamCases = Object.freeze({
   $('#beamLoadForm').onsubmit=submitLoad;
   $('#beamLoadCancel').onclick=()=>{st.editLoad=null;renderLoadList();syncLoadForm();};
   $('#beamSelfWeight').onchange=()=>{renderSectionView();draftChanged();};
-  $('#beamClear').onclick=()=>{replaceLoads([]);solve();};
+  $('#beamClear').onclick=clearLoads;
+  $('#beamClearPicture').onclick=clearLoads;
+  $('#beamDeleteSelected').onclick=deleteSelection;
   host.querySelectorAll('[data-beam-preset]').forEach(b=>b.onclick=()=>{
     const name=b.dataset.beamPreset;st.model=presetModel(name);st.editLoad=null;renderInputs(st.model);fillFormFromSingleLoad();
     solve('Lecture 03 example loaded: all previous loads replaced; 450 × 20 × 10 mm, E = 2000 MPa.');
@@ -1475,12 +1521,18 @@ const Lecture03BeamCases = Object.freeze({
   function cancelPlacement() {if(st.drag&&st.drag.type==='load')st.model.loads[st.drag.index]=st.drag.original;st.placing=null;st.drag=null;st.graphicPreview=null;$$('[data-place]').forEach(b=>b.setAttribute('aria-pressed','false'));renderLoadList();renderPicture();renderStatus();message('Placement cancelled. Existing loads are unchanged.');}
   $('#beamStopPlacing').onclick=cancelPlacement;
   $('#beamShowDefl').onclick=e=>{st.showDeflection=!st.showDeflection;e.currentTarget.setAttribute('aria-pressed',String(st.showDeflection));renderPicture();};
-  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&(st.placing||st.drag||st.graphicPreview))cancelPlacement();});
+  document.addEventListener('keydown',e=>{
+    if(e.key==='Escape'&&(st.placing||st.drag||st.graphicPreview))cancelPlacement();
+    if(e.key!=='Delete'||e.ctrlKey||e.altKey||e.metaKey||host.hidden||!host.contains(e.target))return;
+    if(e.target.closest('input,textarea,select,[contenteditable="true"],[role="textbox"]'))return;
+    if(selection){e.preventDefault();deleteSelection();}
+  });
   const pic=$('#beamPicture');
   let pending=false;
   const frame=fn=>{if(pending)return;pending=true;raf(()=>{pending=false;fn();});};
   pic.addEventListener('pointerdown',e=>{
     if(e.button!==undefined&&e.button!==0)return;
+    if(!st.placing){selection=selectionFrom(e.target);decorateSelection();if(selection&&e.target.closest('[tabindex]'))e.target.closest('[tabindex]').focus();}
     const loadHandle=e.target.closest('[data-load-handle]');
     if(st.placing&&st.placing.startsWith('load:')&&!['load:point','load:moment'].includes(st.placing)) {
       const x=svgX(e);if(x===null||st.drawnInvalid)return;
@@ -1534,11 +1586,13 @@ const Lecture03BeamCases = Object.freeze({
   });
   const endDrag=e=>{if(!st.drag)return;const d=st.drag;st.drag=null;
     if(d.type==='load-range'){const x=svgX(e);st.suppressPlaceClick=true;if(x!==null&&Math.abs(snap(x,st.drawn.length)-d.start)>st.drawn.length*1e-9)prepareGraphicLoad(d.kind,d.start,snap(x,st.drawn.length));else {st.graphicPreview=null;renderPicture();message('Choose a non-zero interval by dragging along the beam.');}return;}
-    if(d.type==='load'){if(d.moved){draftChanged();message('Load moved. Press Solve to update results (or enable auto-solve).');}else editLoad(d.index);return;}
-    if(d.type!=='cut')draftChanged();};
+    if(d.type==='load'){if(d.moved){draftChanged();message('Load moved. Press Solve to update results (or enable auto-solve).');}else message(`Load ${d.index+1} selected. Press Delete to remove; Enter or double-click to edit.`);const selected=pic.querySelector(`[data-load-handle="${d.index}"]`);if(selected)selected.focus();return;}
+    if(d.type!=='cut'){draftChanged();const selected=selection&&pic.querySelector(selection.type==='hinge'?`[data-hinge-index="${selection.index}"]`:`[data-support-index="${selection.index}"]`);if(selected)selected.focus();}};
   pic.addEventListener('pointerup',endDrag);
   pic.addEventListener('pointercancel',()=>{if(st.drag&&st.drag.type==='load')st.model.loads[st.drag.index]=st.drag.original;st.drag=null;st.graphicPreview=null;renderLoadList();renderPicture();renderStatus();});
-  pic.addEventListener('keydown',e=>{const h=e.target.closest('[data-load-handle]');if(h&&(e.key==='Enter'||e.key===' ')){e.preventDefault();editLoad(+h.dataset.loadHandle);}});
+  pic.addEventListener('focusin',e=>{const s=selectionFrom(e.target);if(s){selection=s;decorateSelection();}});
+  pic.addEventListener('dblclick',e=>{const s=selectionFrom(e.target);if(s&&s.type==='load')editLoad(s.index);});
+  pic.addEventListener('keydown',e=>{const s=selectionFrom(e.target);if(s&&(e.key==='Enter'||e.key===' ')){e.preventDefault();selection=s;decorateSelection();if(s.type==='load')editLoad(s.index);}});
   pic.addEventListener('click',e=>{if(st.suppressPlaceClick){st.suppressPlaceClick=false;return;}if(!st.placing)return;const x=svgX(e);if(x!==null)placeAt(snap(x,st.model.length));});
   // Cut controls.
   $('#beamCut').oninput=e=>setCut(+e.target.value);

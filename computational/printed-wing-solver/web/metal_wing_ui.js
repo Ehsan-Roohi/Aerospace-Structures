@@ -1223,7 +1223,7 @@
   function reportText() {
     const r = R, P = r.P, g = governing(r), f = r.failure;
     const L = [];
-    L.push(`MIE 446 Wing Lab · full-scale metal wing · ${P.name}`, `Engine ${E.VERSION} · ${new Date().toISOString().slice(0, 10)}`, "");
+    L.push(`MIE 446 Wing Virtual Lab · full-scale metal wing · ${P.name}`, `Engine ${E.VERSION} · ${new Date().toISOString().slice(0, 10)}`, "");
     if (r.input.customLoads != null) {
       L.push("INPUTS", `  load case: custom bench loads only (no automatic lift, no gravity or inertia relief) · multiplier ×${sgn(r.n, 2)}`);
       if (!r.input.customLoads.length) L.push("  No load defined.");

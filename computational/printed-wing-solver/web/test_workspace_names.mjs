@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {JSDOM,loadBeamLab} from './beam_test_dom.mjs';
+const src=readFileSync(new URL('./wing_lab_template.html',import.meta.url),'utf8');
+assert.ok(src.includes('<b>Wing Virtual Lab</b>'));
+assert.ok(src.includes('id="wingShellMaterial"'));assert.ok(src.includes('id="wingRodMaterial"'));
+assert.ok(src.includes("select('mat-pla')"));assert.ok(src.includes("select('mat-rod')"));
+const dom=new JSDOM('<div id="foundations"></div>',{runScripts:'outside-only',url:'https://example.org/?beamCase=l03-tip'});
+loadBeamLab(dom);const d=dom.window.document;
+assert.equal(d.querySelector('.bl-brand b').textContent,'Beam Virtual Lab');
+assert.equal(d.querySelector('#beamCsv').textContent,'Download Chart Data (CSV)');
+assert.equal(d.querySelector('[data-export="samples"]').textContent,'Download Chart Data (CSV)');
+for(const b of d.querySelectorAll('[data-png]'))assert.equal(b.textContent,'Download Chart Image (PNG)');
+assert.equal(d.querySelectorAll('[data-png]').length,6);
+dom.window.close();console.log('Virtual Lab names, distinct chart image/data actions and material-card shortcuts PASS.');

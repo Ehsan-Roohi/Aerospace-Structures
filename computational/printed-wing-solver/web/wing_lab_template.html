@@ -1,4 +1,4 @@
-<title>MIE 446 Wing Lab</title>
+<title>MIE 446 · Beam Virtual Lab and Wing Virtual Lab</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Semi+Condensed:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
@@ -393,7 +393,7 @@ body { margin: 0; }
   <header class="bar panel" aria-label="Commands">
     <div class="brand">
       <svg viewBox="0 0 76 44" aria-hidden="true"><path d="M3 24 C 12 8, 40 6, 73 21 L 73 23 C 40 30, 14 32, 3 24 Z" fill="none" stroke="currentColor" stroke-width="3"/><circle cx="24" cy="21" r="3.2" fill="currentColor"/><circle cx="46" cy="21" r="3.2" fill="currentColor"/></svg>
-      <div><b>Wing Lab</b><small>MIE 446 · Aerospace Structures</small></div>
+      <div><b>Wing Virtual Lab</b><small>MIE 446 · Aerospace Structures</small></div>
     </div>
     <div class="group"><span>Study</span>
       <div class="row">
@@ -432,6 +432,12 @@ body { margin: 0; }
       <summary>Loads</summary>
       <div class="wl-acc-body"><div id="wingLoadEditor"></div><p class="note wl-fallback">Load case and factor of safety: <b>Study tree → External loads</b> below. Point and line loads: the <b>Build a wing load</b> tab under the 3-D view.</p></div>
     </details>
+    <div class="wl-acc-body" id="wingMaterialShortcuts" aria-label="Material controls">
+      <b>Materials</b>
+      <button class="btn" type="button" id="wingShellMaterial">Shell / rib material &amp; E</button>
+      <button class="btn" type="button" id="wingRodMaterial">Rod material &amp; E</button>
+      <p class="note">Open the material card to edit the shell/rib elastic modulus and strengths, or the rod modulus. These are engineering inputs; use measured coupon data for printed parts.</p>
+    </div>
     <details class="wl-acc" id="wlTreeSection" open>
       <summary>Materials, joints, support &amp; results</summary>
       <div class="wl-acc-body wl-treepm">
@@ -765,6 +771,8 @@ body { margin: 0; }
     renderTree();
     renderPM();
   }
+  $('#wingShellMaterial').addEventListener('click',()=>{select('mat-pla');$('#pmHead').scrollIntoView({block:'center'});});
+  $('#wingRodMaterial').addEventListener('click',()=>{select('mat-rod');$('#pmHead').scrollIntoView({block:'center'});});
 
   // ------------------------------------------------------------ property manager
   // Property fields are input edits: they mark the study out of date (Solve, or automatic solving when chosen).
@@ -1996,7 +2004,7 @@ body { margin: 0; }
     if (!R) return "";
     const g = R.geometry, L = R.load;
     const lines = [
-      `MIE 446 Wing Lab — study report (engine v${R.version})`,
+      `MIE 446 Wing Virtual Lab — study report (engine v${R.version})`,
       ``,
       `Wing: NACA ${g.naca}, semi-span ${g.semiSpan} mm, chords ${g.rootChord}/${g.tipChord} mm, ${g.modules} modules, skin ${g.skin} mm, ribs ${g.ribThickness} mm at ${E.ribStations(g).map((v) => nf(v, 1)).join(", ")} mm`,
       `Geometry inventory of the solved model (generic browser study model: edits do not update the printable CAD/STL or the approved fabrication layout; presets are historical / course starting points):`,

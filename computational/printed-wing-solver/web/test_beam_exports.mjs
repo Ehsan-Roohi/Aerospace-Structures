@@ -94,7 +94,7 @@ const V=x=>RA-q0*(x-x*x/(2*L)), M=x=>-CA+RA*x-q0*(x*x/2-x**3/(6*L));
   ok(/Ry \(N, ↓ \+\)/.test(report.textContent)&&/C \(N·mm, ↻ \+\)/.test(report.textContent)&&!/Force R \(|Couple C \(/.test(report.textContent),'printed report: one signed R_y column and one C column (↓ +, ↻ +)');
   w.dispatchEvent(new w.Event('afterprint'));
   $('.bl-exportbar [data-open-tab="report"]').click();eq($('#beamTab-report').hidden,false,'study file and share link: opens Report & export');
-  ok($('#beamTab-report [data-export="stations"]'),'station table CSV also in Report & export');eq($('#beamCsv').textContent,'Plot samples CSV','plot-samples CSV named as such');
+  ok($('#beamTab-report [data-export="stations"]'),'station table CSV also in Report & export');eq($('#beamCsv').textContent,'Download Chart Data (CSV)','chart-data CSV distinguished from images');
   $('[data-tab="diagrams"]').click();
   // Stale results: every download is disabled and refuses.
   const before=t.downloads.length, E=$('#beamGeometry [name="E"]');E.value='2500';E.dispatchEvent(new w.Event('input',{bubbles:true}));

@@ -77,7 +77,7 @@ const Lecture03BeamCases = Object.freeze({
   host.innerHTML=`
   <header class="bl-header">
     <div class="bl-brand"><svg viewBox="0 0 40 28" aria-hidden="true"><path d="M3 12h34" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><path d="M6 15l-4 7h8z M34 15l-4 7h8z" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M20 2v8" stroke="currentColor" stroke-width="2"/><path d="M17 7l3 3 3-3" fill="none" stroke="currentColor" stroke-width="2"/></svg>
-      <div><b>Beam Lab</b><small>MIE 446 · Aerospace Structures</small></div></div>
+      <div><b>Beam Virtual Lab</b><small>MIE 446 · Aerospace Structures</small></div></div>
     <button type="button" class="bl-navtoggle" id="beamNavToggle" aria-expanded="false" aria-controls="beamNav">Workspaces</button>
     <nav class="bl-nav" id="beamNav" aria-label="Workspaces">
       <button type="button" data-stage="beam" aria-pressed="true">Beam</button>
@@ -200,11 +200,11 @@ const Lecture03BeamCases = Object.freeze({
         <div class="bl-exportbar" role="group" aria-label="Download results">
           <span class="bl-help">Download:</span>
           <button type="button" class="bl-btn bl-btn-sm" data-export="stations">Station table (CSV)</button>
-          <button type="button" class="bl-btn bl-btn-sm" data-export="samples">Plot samples (CSV)</button>
+          <button type="button" class="bl-btn bl-btn-sm" data-export="samples">Download Chart Data (CSV)</button>
           <button type="button" class="bl-btn bl-btn-sm" data-export="reactions">Reactions (CSV)</button>
           <button type="button" class="bl-btn bl-btn-sm" data-export="print">Report (print or PDF)</button>
           <button type="button" class="bl-btn bl-btn-sm bl-btn-ghost" data-open-tab="report">Study file and share link</button>
-          <span class="bl-help">Each plot below has its own PNG button.</span>
+          <span class="bl-help">Images: use Download Chart Image (PNG) below each chart. CSV downloads contain numbers, not pictures.</span>
         </div>
         <p class="bl-help" id="beamDiagExportStatus" role="status" aria-live="polite"></p>
         <div id="beamReactions"></div>
@@ -279,7 +279,7 @@ const Lecture03BeamCases = Object.freeze({
           <button type="button" class="bl-btn" id="beamImport">Import study (.json)</button><input type="file" id="beamImportFile" accept=".json,application/json" class="sr-only" tabindex="-1" aria-hidden="true">
           <button type="button" class="bl-btn" id="beamShare">Copy share link</button>
           <button type="button" class="bl-btn" data-export="stations">Station table CSV</button>
-          <button type="button" class="bl-btn" id="beamCsv">Plot samples CSV</button>
+          <button type="button" class="bl-btn" id="beamCsv">Download Chart Data (CSV)</button>
           <button type="button" class="bl-btn" id="beamCsvReactions">Reactions CSV</button>
           <button type="button" class="bl-btn" id="beamPrintBtn">Print / save as PDF</button>
         </div>
@@ -802,7 +802,7 @@ const Lecture03BeamCases = Object.freeze({
     const r=st.solved.result, box=$('#beamCharts'), w=chartWidth(box), sup=r.input.supports.map(s=>s.x), c=cutInfo(), L=r.input.length;
     const off=statusState()!=='solved';
     box.innerHTML=CHART_KEYS.map((k,i)=>`<figure data-beam-chart="${i}" data-key="${k}">${D.chart(r,k,{width:w,supports:sup,cut:{x:c.x,values:chartMarks(c,k)}})}<figcaption>${CHART_KEY[k]?`<span class="bl-chart-key">${CHART_KEY[k]}</span> `:''}<span class="bl-chart-hover" aria-live="polite"></span>
-      <span class="bl-chart-tools"><button type="button" class="bl-btn bl-btn-sm" data-png="${k}"${off?' disabled':''} aria-label="Download the ${D.CHARTS[k].title} plot as a PNG image">Download PNG</button></span></figcaption></figure>`).join('');
+      <span class="bl-chart-tools"><button type="button" class="bl-btn bl-btn-sm" data-png="${k}"${off?' disabled':''} aria-label="Download the ${D.CHARTS[k].title} plot as a PNG image">Download Chart Image (PNG)</button></span></figcaption></figure>`).join('');
     box.querySelectorAll('[data-beam-chart]').forEach(fig=>{
       const key=fig.dataset.key, meta=D.CHARTS[key], out=fig.querySelector('.bl-chart-hover');
       // Values under the pointer are evaluated at that x (not read from the plotted samples).
@@ -832,7 +832,7 @@ const Lecture03BeamCases = Object.freeze({
     const r=st.solved.result, m=st.solved.model, c=cutInfo(), meta=D.CHARTS[key], marks=chartMarks(c,key);
     return D.chartImage(r,key,{title:`${meta.title} (${meta.unit})`,lines:[...modelLines(m,r),SIGN_TEXT[key]],supports:r.input.supports.map(s=>s.x),
       station:{x:c.x,values:marks},notes:[`Curve: values at the plotted sample points (mesh nodes and quarter points; both limits at a jump). Orange marker: station x = ${fmt(c.x,6)} mm, exact ${marks.map(q=>`${q.label} = ${fmt(q.value,6)} ${meta.unit}`).join(', ')}.`,
-        `Exact values at any x: station readout or station table. MIE 446 Beam Lab · Euler–Bernoulli beam model · ${new Date().toISOString().slice(0,10)}.`]});
+        `Exact values at any x: station readout or station table. MIE 446 Beam Virtual Lab · Euler–Bernoulli beam model · ${new Date().toISOString().slice(0,10)}.`]});
   }
   /** Draw the plot's SVG on a white canvas at 2× and return a PNG blob. */
   function rasterize(img,scale=2) {
@@ -1228,7 +1228,7 @@ const Lecture03BeamCases = Object.freeze({
     if(!guard()) return;
     const m=st.solved.model, r=st.solved.result, W=700, p=r.sectionProperties, date=new Date().toLocaleString();
     const reactions=r.reactions.map((q,i)=>{const s=r.stations.find(t=>Math.abs(t.x-q.x)<=m.length*1e-10)||{};return `<tr><td>${D.supportName(i)}</td><td>${q.kind}</td><td class="num">${plain(q.x)}</td><td class="num">${fmt(q.force,5)}</td><td class="num">${q.kind==='fixed'?fmt(q.moment,5):'0 (rotation free)'}</td><td class="num">${fmt(s.v??0,4)}</td><td class="num">${fmt(s.thetaRight??s.thetaLeft??0,4)}</td></tr>`;}).join('');
-    $('#beamPrint').innerHTML=`<div class="bl-print"><h1>MIE 446 Beam Lab · study report</h1><p>${esc(date)} · engine ${esc(B.VERSION)} · units mm, N, MPa</p>
+    $('#beamPrint').innerHTML=`<div class="bl-print"><h1>MIE 446 Beam Virtual Lab · study report</h1><p>${esc(date)} · engine ${esc(B.VERSION)} · units mm, N, MPa</p>
       <section><h2>Model</h2><p>L = ${fmt(m.length)} mm · ${esc(SEC.describe(m.section))} · E = ${fmt(m.E)} MPa · ρ = ${fmt(m.density)} g/cm³ · ${r.dofs.elements} elements · self-weight ${m.selfWeight?`included (${fmt(r.selfWeight.q)} N/mm)`:'not included'}</p>
         <p>A = ${fmt(p.A)} mm², I = ${fmt(p.I)} mm⁴, c = ${fmt(p.c)} mm, S = ${fmt(p.S)} mm³, mass ${fmt(r.massG)} g</p>
         <figure>${D.beamSchematic(m,{width:W,selfWeight:r.selfWeight.enabled?{q:r.selfWeight.q}:null,label:'Input schematic: physical supports and applied loads'})}<figcaption>Input schematic (physical supports and loads).</figcaption></figure>

@@ -9,6 +9,7 @@ for(const name of ['cantilever','roller-pin','fixed']){
   assert.equal(d.querySelectorAll('[data-beam-preset^="hw"]').length,0);
   assert.ok(!d.querySelector('#beamStatus').textContent.includes('HW 3 example loaded'));
   assert.ok(d.querySelector('#beamGeometry').parentElement.textContent.includes('Why choose 10, 30 or 40 elements?'));
+  assert.ok(!/HW\s*3|homework|assignment/i.test(d.querySelector('#beamGeometry').parentElement.textContent));
   dom.window.close();
  }
 }

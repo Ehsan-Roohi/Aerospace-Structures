@@ -1,0 +1,33 @@
+{
+  "format": "mie446-wing-parameters",
+  "version": 1,
+  "notes": "Template for transferring an outer wing shape into the MIE 446 Wing Lab by hand. Replace the example values with your design. Lengths use units.length; angles are degrees and must be 0. See WING_IMPORT.md.",
+  "source": {
+    "app": "manual transfer",
+    "appVersion": "",
+    "filename": "",
+    "exportedAt": ""
+  },
+  "units": {
+    "length": "mm"
+  },
+  "span": {
+    "value": 450,
+    "kind": "semi"
+  },
+  "frame": {
+    "span": "y",
+    "chord": "x",
+    "up": "z",
+    "origin": "root leading edge"
+  },
+  "airfoil": {
+    "type": "naca4",
+    "code": "2412"
+  },
+  "rootChord": 160,
+  "tipChord": 100,
+  "sweepDeg": 0,
+  "dihedralDeg": 0,
+  "twistDeg": 0
+}

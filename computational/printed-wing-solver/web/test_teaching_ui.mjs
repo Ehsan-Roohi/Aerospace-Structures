@@ -15,7 +15,7 @@ const page = source.replace("/*__ENGINE__*/", engine).replace("/*__BEAM_ENGINE__
   .replace("/*__BEAM_STUDY__*/",()=>readFileSync(new URL("./beam_study.js",import.meta.url),"utf8").replaceAll("\r\n","\n"))
   .replace("/*__BEAM_DIAGRAMS__*/",()=>readFileSync(new URL("./beam_diagrams.js",import.meta.url),"utf8").replaceAll("\r\n","\n"))
   .replace("/*__BEAM_SOLUTION__*/",()=>readFileSync(new URL("./beam_solution.js",import.meta.url),"utf8").replaceAll("\r\n","\n"))
-  .replace("/*__COMPANION_TOOLS__*/",()=>readFileSync(new URL("./companion_tools.js",import.meta.url),"utf8").replaceAll("\r\n","\n")).replace("/*__WING_LOADS_UI__*/",()=>readFileSync(new URL("./wing_loads_ui.js",import.meta.url),"utf8").replaceAll("\r\n","\n")).replace("/*__TEACHING_MODELS__*/",readFileSync(new URL("./teaching_models.js",import.meta.url),"utf8").replaceAll("\r\n","\n")).replace("/*__TEACHING_PANELS__*/",readFileSync(new URL("./teaching_panels.js",import.meta.url),"utf8").replaceAll("\r\n","\n"))
+  .replace("/*__COMPANION_TOOLS__*/",()=>readFileSync(new URL("./companion_tools.js",import.meta.url),"utf8").replaceAll("\r\n","\n")).replace("/*__WING_LOADS_UI__*/",()=>readFileSync(new URL("./wing_loads_ui.js",import.meta.url),"utf8").replaceAll("\r\n","\n")).replace("/*__WING_STUDY_IO__*/",()=>readFileSync(new URL("./wing_study_io.js",import.meta.url),"utf8").replaceAll("\r\n","\n")).replace("/*__TEACHING_MODELS__*/",readFileSync(new URL("./teaching_models.js",import.meta.url),"utf8").replaceAll("\r\n","\n")).replace("/*__TEACHING_PANELS__*/",readFileSync(new URL("./teaching_panels.js",import.meta.url),"utf8").replaceAll("\r\n","\n"))
   .replace("/*__METAL_ENGINE__*/",()=>readFileSync(new URL("./metal_wing_engine.js",import.meta.url),"utf8").replaceAll("\r\n","\n"))
   .replace("/*__METAL_REFERENCE__*/",()=>readFileSync(new URL("./metal_wing_reference.json",import.meta.url),"utf8").replaceAll("\r\n","\n").trim())
   .replace("/*__METAL_UI__*/",()=>readFileSync(new URL("./metal_wing_ui.js",import.meta.url),"utf8").replaceAll("\r\n","\n"));
@@ -32,7 +32,11 @@ for (const match of published.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/gi))
 assert.equal(scripts, 5);
 assert.ok(published.includes('data-stage="metal"') && published.includes('const MetalWingEngine') && published.includes('id="toMetalWing"'), 'full-scale metal wing workspace is built in');
 assert.ok(source.includes('<div id="foundations"></div>'));
-assert.ok(source.includes('<div id="app" class="learning-view" hidden>'));
+// The input column is shown by default (Beam-like layout); "Hide inputs" folds it away at run time.
+assert.ok(source.includes('<div id="app" hidden>'));
+for (const id of ['wingSide', 'runBtn', 'stateChip', 'wingAutoSolve', 'wingLoadEditor', 'wingStudyFiles', 'wingViewPanel', 'zoomIn', 'zoomOut', 'zoomFit', 'zoomReset'])
+  assert.ok(source.includes(`id="${id}"`), `${id} is in the wing workspace`);
+assert.ok(/<div id="wingLoadEditor"><\/div>/.test(source) && /<div id="wingStudyFiles"><\/div>/.test(source), 'load-editor and study-file containers start empty');
 const context = vm.createContext({ E, nf: (v, d = 2) => Number(v).toFixed(d) });
 const figures = source.slice(source.indexOf("  function svgFrame("), source.indexOf("  function renderDesignLab("));
 vm.runInContext(figures, context);

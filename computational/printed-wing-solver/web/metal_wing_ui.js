@@ -12,6 +12,7 @@
   const nf = (v, d = 2) => (v == null || !isFinite(v) ? "–" : Number(v).toFixed(d));
   const sgn = (v, d = 2) => (v == null || !isFinite(v) ? "–" : (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v).toFixed(d));
   const MPa = (v, d = 1) => nf(v / 1e6, d);
+  const esc = (v) => String(v).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
   const frame = () => new Promise((r) => setTimeout(r, 30));
   const REPO = "https://github.com/Ehsan-Roohi/Aerospace-Structures/tree/main/computational/d520-wing";
   const MODEL3D = location.protocol === "file:" ? "https://ehsan-roohi.github.io/Aerospace-Structures/d520/" : "./d520/index.html";
@@ -23,7 +24,33 @@
   #metalNav { position: sticky; top: 0; z-index: 50; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 10px 16px; background: var(--panel); border-bottom: 2px solid var(--accent); box-shadow: var(--shadow); }
   #metalNav .btn { min-height: 38px; } #metalNav .title { font: 700 16px/1.2 var(--font-label); letter-spacing: .02em; margin: 0 8px; }
   #metalNav a.btn { text-decoration: none; color: inherit; }
-  #metalApp { min-height: 1040px; padding: 12px 16px; display: grid; gap: 10px; grid-template-columns: 238px minmax(0, 1fr) 320px; grid-template-rows: auto minmax(460px, 1fr) minmax(420px, 44%); grid-template-areas: "bar bar bar" "tree view pm" "dock dock dock"; }
+  /* Same layout idea as the printed wing: input column (Solve + status on top) | 3-D view | view panel; results below. */
+  #metalApp { --wl-top: 70px; --wl-view-h: clamp(400px, 58vh, 640px); padding: 12px 16px 28px; display: grid; gap: 12px; align-items: start; grid-template-columns: 340px minmax(0, 1fr) 272px; grid-template-rows: auto auto 1fr; grid-template-areas: "bar bar bar" "side view vpanel" "side dock dock"; }
+  #metalApp > * { min-width: 0; }
+  #mSide .wl-run { grid-template-columns: minmax(0, 1fr); }
+  #mSide .wl-run-actions { justify-content: flex-start; }
+  .mw-parts { display: grid; gap: 4px; }
+  #mParts button[aria-pressed] { color: var(--fg); }
+  .mw-parts button { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 34px; padding: 5px 8px; border: 1px solid var(--line); border-radius: 7px; background: var(--panel-2); color: var(--fg); font: 600 12.5px/1.25 var(--font-label); text-align: left; cursor: pointer; }
+  .mw-parts button i { width: 12px; height: 12px; border-radius: 3px; flex: none; border: 1px solid rgba(0, 0, 0, 0.35); }
+  #mParts button[aria-pressed="false"] { color: var(--muted); background: transparent; border-style: dashed; }
+  .mw-parts button[aria-pressed="false"] i { opacity: 0.25; }
+  .mw-parts button::after { content: "shown"; margin-left: auto; font: 500 11px var(--font-data); color: var(--muted); }
+  .mw-parts button[aria-pressed="false"]::after { content: "hidden"; }
+  .mw-label { position: absolute; transform: translate(-50%, calc(-100% - 8px)); padding: 2px 7px; border-radius: 5px; font: 700 12px/1.3 var(--font-label); color: #0b1017; white-space: nowrap; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3); }
+  .mw-label::after { content: ""; position: absolute; left: calc(50% - 1px); top: 100%; width: 2px; height: 8px; background: #0b1017; }
+  .mw-label[data-mlabel="mainSpar"] { background: #8fc0ef; border: 1px solid #1d5d9b; }
+  .mw-label[data-mlabel="falseSpar"] { background: #cfe2f5; border: 1px solid #3f6f9e; }
+  .mw-inv { display: grid; gap: 10px; font-size: 13px; }
+  .mw-inv article { display: grid; gap: 4px; padding: 0 0 10px; border-bottom: 1px solid var(--line); }
+  .mw-inv article:last-of-type { border-bottom: 0; }
+  .mw-inv h5 { margin: 0; display: flex; gap: 8px; align-items: baseline; font: 700 13.5px/1.25 var(--font-label); }
+  .mw-inv h5 b { font: 600 12px var(--font-data); color: var(--muted); }
+  .mw-inv p { margin: 0; overflow-wrap: anywhere; }
+  .mw-inv .src { font-size: 12px; color: var(--muted); }
+  .mw-tag { display: inline-block; margin: 0 4px 2px 0; padding: 0 7px; border-radius: 99px; border: 1px solid currentColor; font: 700 10.5px/1.6 var(--font-label); letter-spacing: 0.05em; }
+  /* text tokens from the page (per theme, at least 4.5:1) so the small tags keep their contrast */
+  .mw-tag.PRINTED, .mw-tag.SCALED { color: var(--wl-good-text, var(--good)); } .mw-tag.EXTERNAL { color: var(--wl-accent-text, var(--accent)); } .mw-tag.GUESS { color: var(--wl-warn-text, var(--warn)); } .mw-tag.UNLISTED { color: var(--muted); }
   #mgl { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
   .mw-kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin: 10px 0; }
   .mw-kpis div { background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; }
@@ -45,12 +72,13 @@
   .mw-check .num { font: 500 13px var(--font-data); text-align: right; }
   .mw-check.head { background: transparent; border: 0; font: 700 11px var(--font-label); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
   .mw-eq { padding: 8px 12px; border-left: 3px solid var(--accent); background: var(--panel-2); font: 15.5px/1.7 Georgia, serif; overflow-x: auto; margin: 8px 0; }
+  .mw-ab { margin-top: 18px; } .mw-ab h3 { margin: 0 0 6px; font: 700 16px var(--font-label); } .mw-ab .btn { height: auto; min-height: 38px; } .mw-ab th, .mw-ab td { padding: 6px; } .mw-ab td:first-child { white-space: normal; min-width: 8em; } .mw-ab .mw-unit { color: var(--muted); white-space: nowrap; } .mw-ab td.num { text-align: right; font-family: var(--font-data); white-space: nowrap; }
   #mReport { width: 100%; min-height: 260px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); font: 12px/1.5 var(--font-data); padding: 10px; }
   .mw-legend { display: flex; gap: 8px; font: 11px/1 var(--font-data); }
   .mw-legend .bar-c { width: 16px; height: 150px; border: 1px solid rgba(0,0,0,.35); }
   .mw-legend .ticks { display: flex; flex-direction: column; justify-content: space-between; height: 150px; }
-  @media (max-width: 1180px) { #metalApp { grid-template-columns: 210px minmax(0, 1fr) 290px; } }
-  @media (max-width: 1100px) { #metalApp { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; grid-template-areas: "bar" "view" "pm" "dock" "tree"; } #metalApp .view { height: 62vh; min-height: 340px; } .mw-grid2 { grid-template-columns: minmax(0, 1fr); } }
+  @media (max-width: 1279px) { #metalApp { grid-template-columns: 320px minmax(0, 1fr); grid-template-rows: auto auto auto 1fr; grid-template-areas: "bar bar" "side view" "side vpanel" "side dock"; } #metalApp .wl-vpanel { height: auto; } }
+  @media (max-width: 1100px) { #metalApp { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; grid-template-areas: "bar" "view" "vpanel" "side" "dock"; } .mw-grid2 { grid-template-columns: minmax(0, 1fr); } #mSide .wl-auto { display: none; } }
   @media (max-width: 760px) { .mw-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } .mw-check { grid-template-columns: minmax(0, 1fr) 70px 70px; } .mw-check .hide-s { display: none; } }
   @media (max-width: 560px) { #metalApp { padding: 8px; } #metalNav .title { display: none; } }
   `;
@@ -70,29 +98,72 @@
     <header class="bar panel" aria-label="Commands">
       <div class="brand"><svg viewBox="0 0 76 44" aria-hidden="true"><path d="M2 24 L 30 18 L 74 20 L 74 23 L 30 27 Z" fill="none" stroke="currentColor" stroke-width="3"/><path d="M26 18 V 28 M44 19 V 26" stroke="currentColor" stroke-width="2.4"/></svg>
         <div><b>Wing Lab</b><small>Full-scale metal wing</small></div></div>
-      <div class="group"><span>Study</span><div class="row"><button class="run" id="mRun" type="button"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M4 2 L14 8 L4 14 Z" fill="currentColor"/></svg>Run study</button></div></div>
       <div class="group"><span>Load factor</span><div class="row" id="mNbtns">
         <button class="tool" type="button" data-n="1">1 g</button><button class="tool" type="button" data-n="6">+6 g limit</button><button class="tool" type="button" data-n="9">+9 g ultimate</button><button class="tool" type="button" data-n="-3">−3 g</button></div></div>
       <div class="group"><span>Plot</span><div class="row" id="mPlots">
         <button class="tool" type="button" data-mplot="model">Model</button><button class="tool" type="button" data-mplot="sigma">Spanwise σ</button><button class="tool" type="button" data-mplot="tau">Shear τ</button><button class="tool" type="button" data-mplot="vm">Von Mises</button><button class="tool" type="button" data-mplot="buckle">Buckling n</button><button class="tool" type="button" data-mplot="disp">Displacement</button><button class="tool" type="button" data-mplot="mode">Modes</button></div></div>
-      <div class="status" aria-live="polite"><span class="chip idle" id="mChip">Ready</span><span id="mStateText">Open to run</span></div>
     </header>
-    <aside class="tree panel" aria-label="Study tree"><div class="panel-head">Study · D.520 wing</div><ul id="mTree"></ul></aside>
+    <aside class="wl-side panel" id="mSide" aria-label="D.520 inputs">
+      <div class="wl-run">
+        <div class="wl-status" role="status" aria-live="polite"><span class="chip idle" id="mChip">Ready</span><span id="mStateText">Open to run</span></div>
+        <div class="wl-run-actions"><button class="run" id="mRun" type="button"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M4 2 L14 8 L4 14 Z" fill="currentColor"/></svg>Solve</button></div>
+        <p class="wl-auto">This workspace solves automatically after each valid change; Solve runs it again.</p>
+      </div>
+      <p class="wl-modelnote"><b>Educational reconstruction</b> of the 1940 wing. What the model contains, and which numbers come from the manual or are assumptions: <b>Inventory &amp; sources</b> below.</p>
+      <details class="wl-acc" id="mSecParams" open>
+        <summary>Aircraft &amp; load case · structure · supports</summary>
+        <div class="wl-acc-body wl-treepm">
+          <aside class="tree panel" aria-label="Study tree"><div class="panel-head">Study · D.520 wing</div><ul id="mTree"></ul></aside>
+          <aside class="pm panel" aria-label="Properties"><div class="panel-head"><span id="mPmHead">Properties</span></div><div class="pm-body" id="mPm"></div></aside>
+        </div>
+      </details>
+      <details class="wl-acc" id="mSecLoads" open>
+        <summary>Loads</summary>
+        <div class="wl-acc-body"><div id="mLoadEditor"></div><p class="note wl-fallback">Point and line loads, and flight loading: the <b>Loads</b> tab under the 3-D view. Load factor or multiplier: the toolbar above.</p></div>
+      </details>
+      <details class="wl-acc" id="mSecFiles">
+        <summary>Study files</summary>
+        <div class="wl-acc-body"><div id="mStudyFiles"></div><div id="mShare"></div><p class="note wl-fallback">Saving and opening study files is not available in this build.</p></div>
+      </details>
+      <details class="wl-acc" id="mSecInventory" open>
+        <summary>Inventory &amp; sources <span class="wl-badge" id="mInvBadge"></span></summary>
+        <div class="wl-acc-body" id="mInventory"></div>
+      </details>
+    </aside>
     <section class="view panel" aria-label="3-D viewport" id="mView">
       <canvas id="mgl"></canvas>
+      <div class="anatomy-labels" id="mPartLabels" aria-hidden="true"><span class="mw-label" data-mlabel="mainSpar" hidden>Main (front) spar · 0.37c</span><span class="mw-label" data-mlabel="falseSpar" hidden>False (rear) spar · 0.73c</span></div>
       <div class="overlay infocol"><div class="plotinfo" id="mPlotinfo"></div><div class="legend-title" id="mLegendTitle"></div><div class="mw-legend" id="mLegend"></div></div>
-      <details class="hud" id="mHud" open aria-label="View and display"><summary>View</summary>
-        <div class="hud-row"><button type="button" data-mview="iso">Isometric</button><button type="button" data-mview="plan">Planform</button><button type="button" data-mview="front">Front</button><button type="button" data-mview="root">From root</button></div>
-        <div class="hud-row"><button type="button" data-mshow="all" aria-pressed="true">Complete wing</button><button type="button" data-mshow="inside" aria-pressed="false">Inside (skins see-through)</button><button type="button" data-mshow="frame" aria-pressed="false">Spar, ribs, stringers</button></div>
-        <div class="hud-row"><button type="button" id="mDef" aria-pressed="true">Deformed</button><label>Scale <input id="mScale" type="range" min="0" max="3" step="0.05" value="1"></label><button type="button" id="mMirror" aria-pressed="false">Both wings</button><button type="button" id="mArrows" aria-pressed="true">Loads</button></div>
-        <div class="hud-row"><button type="button" id="mClip" aria-pressed="false">Cut at y</button><label><span class="sr">Cut station</span><input id="mClipY" type="range" min="0" max="4930" step="10" value="2350"></label></div>
-      </details>
       <div class="probe" id="mProbe" hidden></div>
       <div class="overlay footline" id="mFoot"></div>
       <div class="modeplayer" id="mModePlayer" hidden><span>Mode</span><div class="seg" id="mModeSeg"></div></div>
       <div class="loading" id="mLoading" hidden><div class="card"><h3 id="mLoadTitle">Solving the D.520 wing</h3><p id="mLoadStep">Lifting line · sections · strength</p><div class="progress"><div id="mLoadBar"></div></div></div></div>
     </section>
-    <aside class="pm panel" aria-label="Properties"><div class="panel-head"><span id="mPmHead">Properties</span></div><div class="pm-body" id="mPm"></div></aside>
+    <aside class="wl-vpanel panel" id="mViewPanel" aria-label="View and display">
+      <div class="panel-head">View &amp; display</div>
+      <div class="wl-vbody">
+        <div>
+          <span class="wl-vlabel" id="mZoomLabel">Zoom · changes the view only</span>
+          <div class="wl-zoom" role="group" aria-labelledby="mZoomLabel"><button class="btn" type="button" id="mZoomOut" aria-label="Zoom out" title="Zoom out">−</button><button class="btn" type="button" id="mZoomIn" aria-label="Zoom in" title="Zoom in">+</button><button class="btn" type="button" id="mZoomFit" title="Fit the whole wing in the view">Fit</button><button class="btn" type="button" id="mZoomReset" title="Isometric view at the starting distance">Reset view</button></div>
+        </div>
+        <div class="wl-readout" id="mViewReadout"><p id="mViewDims"><b>View zoom only.</b> Zooming never changes the size of the wing.</p><div class="wl-scale"><span class="wl-scalebar" id="mScaleBar" style="width:60px"></span><span id="mScaleText">–</span></div><p class="note" id="mZoomText">Drag to rotate · right-drag or two fingers to pan · wheel or pinch to zoom.</p></div>
+        <details class="hud" id="mHud" open aria-label="View and display">
+          <summary>View &amp; display controls</summary>
+          <span class="wl-vlabel">Standard views</span>
+          <div class="hud-row"><button type="button" data-mview="iso">Isometric</button><button type="button" data-mview="plan">Planform</button><button type="button" data-mview="front">Front</button><button type="button" data-mview="root">From root</button></div>
+          <span class="wl-vlabel">Quick views</span>
+          <div class="hud-row"><button type="button" data-mshow="all" aria-pressed="false">Complete wing</button><button type="button" data-mshow="inside" aria-pressed="true">Inside (skins see-through)</button><button type="button" data-mshow="frame" aria-pressed="false">Spar, ribs, stringers</button></div>
+          <span class="wl-vlabel" id="mSkinLabel">Skin</span>
+          <div class="seg" role="group" aria-labelledby="mSkinLabel"><button type="button" data-mskin="opaque" aria-pressed="false">Opaque</button><button type="button" data-mskin="see-through" aria-pressed="true">See-through</button><button type="button" data-mskin="cutaway" aria-pressed="false">Upper skin off</button></div>
+          <span class="wl-vlabel" id="mPartsLabel">Show parts · display only</span>
+          <div class="mw-parts" role="group" aria-labelledby="mPartsLabel" id="mParts"></div>
+          <p class="note" id="mPartsNote">Hiding a part changes only the picture. Stiffness, mass, loads and every result stay the same.</p>
+          <span class="wl-vlabel">Results display</span>
+          <div class="hud-row"><button type="button" id="mDef" aria-pressed="true">Deformed</button><label>Scale <input id="mScale" type="range" min="0" max="3" step="0.05" value="1"></label><button type="button" id="mMirror" aria-pressed="false">Both wings</button><button type="button" id="mArrows" aria-pressed="true">Loads</button></div>
+          <div class="hud-row"><button type="button" id="mClip" aria-pressed="false">Cut at y</button><label><span class="sr">Cut station</span><input id="mClipY" type="range" min="0" max="4930" step="10" value="2350"></label></div>
+        </details>
+      </div>
+    </aside>
     <section class="dock panel" aria-label="Results">
       <div class="tabs" role="tablist" id="mTabs">
         <button role="tab" type="button" data-mtab="start" aria-selected="true">Start here · D.520</button>
@@ -135,6 +206,8 @@
   function setStatus(text, kind) {
     const chip = $("#mChip"), t = $("#mStateText");
     $("#mRun").classList.toggle("stale", stale && !running);
+    // a link made for the previous inputs disappears as soon as they change
+    if ((stale || running) && $("#mShareBox") && !$("#mShareBox").hidden) { $("#mShareBox").hidden = true; $("#mShareBox").value = ""; $("#mShareMsg").textContent = ""; }
     if (running) { chip.className = "chip idle"; chip.textContent = "Solving"; t.textContent = text || "Running"; return; }
     if (lastError) { chip.className = "chip bad"; chip.textContent = "Input error"; t.textContent = lastError; return; }
     if (stale) { chip.className = "chip warn"; chip.textContent = "Out of date"; t.textContent = "Inputs changed — run the study"; return; }
@@ -289,7 +362,7 @@
     canvas.addEventListener("pointermove", onProbe); canvas.addEventListener("pointerleave", () => ($("#mProbe").hidden = true));
     new ResizeObserver(resize).observe($("#mView"));
     resize();
-    const loop = (t) => { raf = requestAnimationFrame(loop); if (host.hidden) return; controls.update(); if (MS.plot === "mode" && R && R.fem) animateMode(t); renderer.render(scene, camera); };
+    const loop = (t) => { raf = requestAnimationFrame(loop); if (host.hidden) return; controls.update(); if (MS.plot === "mode" && R && R.fem) animateMode(t); positionPartLabels(); renderReadout(); renderer.render(scene, camera); };
     raf = requestAnimationFrame(loop);
   }
   function resize() { if (!renderer) return; const v = $("#mView"), w = v.clientWidth, h = v.clientHeight; if (!w || !h) return; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); }
@@ -388,10 +461,10 @@
       const sc = W.section(P.fittingY, [ix === iSp ? P.sparX : P.falseSparX]);
       const h = sc.up[0][1] - sc.lo[0][1];
       const fit = new THREE.Mesh(new THREE.BoxGeometry(0.04, h * 0.9, 0.06), new THREE.MeshPhongMaterial({ color: 0x33c587, clippingPlanes: [] }));
-      const p = V3(P.fittingY, sc.up[0][0], 0.5 * (sc.up[0][1] + sc.lo[0][1])); fit.position.set(p[0], p[1], p[2]); extras.add(fit);
+      const p = V3(P.fittingY, sc.up[0][0], 0.5 * (sc.up[0][1] + sc.lo[0][1])); fit.position.set(p[0], p[1], p[2]); fit.userData = { part: "fittings" }; extras.add(fit);
     }
     const sym = new THREE.Mesh(new THREE.PlaneGeometry(3.0, 1.2), new THREE.MeshBasicMaterial({ color: 0x33c587, transparent: true, opacity: 0.08, side: THREE.DoubleSide, depthWrite: false }));
-    sym.rotation.y = Math.PI / 2; sym.position.set(0, 0, 1.1); extras.add(sym);
+    sym.rotation.y = Math.PI / 2; sym.position.set(0, 0, 1.1); sym.userData = { part: "fittings" }; extras.add(sym);
     // lift arrows
     const arrows = new THREE.Group(); arrows.name = "arrows";
     const skins = new THREE.Group(); skins.name = "skins"; skins.add(upper, lower);
@@ -437,7 +510,8 @@
   }
   function deformScale() {
     if (!R) return 0;
-    const tip = Math.abs(R.tip.wMax) || 1e-6;
+    const tip = Math.abs(R.tip.wMax);
+    if (!(tip > 1e-9)) return 0;
     return MS.deformed ? (MS.scale * 0.28) / tip : 0;
   }
   let modeT = 0;
@@ -560,15 +634,57 @@
     if (MS.plot !== "mode") deformAll((y) => { const d = dispAt(y), k = deformScale(); return { w: d.w * k, tw: d.tw * k, xsc: d.xsc }; });
     buildArrows();
   }
+  // ------------------------------------------------------------------ part display (visual only)
+  // Only parts that buildModel draws can be toggled. Hiding one never changes the inputs, the solver or any result.
+  const PARTS = [["skin", "Skin (upper and lower)", "#c9d4de"], ["mainSpar", "Main (front) spar: web + booms", "#3b8fdb"], ["falseSpar", "False (rear) spar web", "#8ab8ea"], ["ribs", "Ribs", "#ffcc4d"],
+    ["stringers", "Blade stringers", "#8cc766"], ["trailing", "Trailing edge and tip cap (non-structural)", "#9fb2c4"], ["equipment", "Fuel tank, guns, ammunition (mass only)", "#3b82c4"], ["fittings", "Fuselage fittings, symmetry plane", "#33c587"]];
+  const PART_OF = { skinU: "skin", skinL: "skin", web: "mainSpar", boomU: "mainSpar", boomL: "mainSpar", fs: "falseSpar", strU: "stringers", strL: "stringers", rib: "ribs", ghost: "trailing", tank: "equipment", point: "equipment" };
+  const SHOW_PRESETS = {
+    all: { skin: "opaque", parts: { skin: true, mainSpar: true, falseSpar: true, ribs: true, stringers: true, trailing: true, equipment: true, fittings: true } },
+    inside: { skin: "see-through", parts: { skin: true, mainSpar: true, falseSpar: true, ribs: true, stringers: true, trailing: false, equipment: true, fittings: true } },
+    frame: { skin: "see-through", parts: { skin: false, mainSpar: true, falseSpar: true, ribs: true, stringers: true, trailing: false, equipment: false, fittings: true } },
+  };
+  const VIEW = { preset: null, skin: "see-through", parts: { ...SHOW_PRESETS.inside.parts } };
+  const partOf = (o) => (o.userData && (o.userData.part || PART_OF[o.userData.kind])) || null;
+  $("#mParts").innerHTML = PARTS.map(([k, label, colour]) => `<button type="button" data-mpart="${k}" aria-pressed="true"><i style="background:${colour}"></i><span>${k === "ribs" ? `Ribs (${E.D520.ribs.length})` : k === "stringers" ? `Blade stringers (${E.D520.stringer.x.length} per surface)` : label}</span></button>`).join("");
   function applyShow() {
+    if (SHOW_PRESETS[MS.show] && VIEW.preset !== MS.show) { VIEW.preset = MS.show; VIEW.skin = SHOW_PRESETS[MS.show].skin; Object.assign(VIEW.parts, SHOW_PRESETS[MS.show].parts); }
+    $$("[data-mshow]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.mshow === VIEW.preset)));
+    $$("[data-mskin]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.mskin === VIEW.skin)));
+    $$("[data-mpart]").forEach((b) => b.setAttribute("aria-pressed", String(VIEW.parts[b.dataset.mpart])));
     if (!model) return;
-    const s = MS.show;
-    const skins = model.getObjectByName("skins");
-    skins.visible = s !== "frame";
-    skinMats.forEach((m) => { m.opacity = s === "inside" ? 0.32 : 1; m.depthWrite = s !== "inside"; m.needsUpdate = true; });
-    model.getObjectByName("ghost").visible = s === "all";
-    $$("[data-mshow]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.mshow === s)));
+    for (const name of ["skins", "structure", "ribs", "ghost", "extras"]) { const grp = model.getObjectByName(name); if (grp) grp.visible = true; }
+    model.traverse((o) => {
+      const part = o.isMesh ? partOf(o) : null;
+      if (!part) return;
+      o.visible = !!VIEW.parts[part] && !(VIEW.skin === "cutaway" && o.userData.kind === "skinU");
+    });
+    const see = VIEW.skin === "see-through";
+    skinMats.forEach((m) => { m.transparent = true; m.opacity = see ? 0.16 : 1; m.depthWrite = !see; m.needsUpdate = true; });
     if (MS.mirror) rebuildMirror();
+  }
+  function setPart(part, on) { VIEW.parts[part] = on; VIEW.preset = "custom"; MS.show = "custom"; applyShow(); }
+  $$("[data-mpart]").forEach((b) => b.addEventListener("click", () => setPart(b.dataset.mpart, !VIEW.parts[b.dataset.mpart])));
+  $$("[data-mskin]").forEach((b) => b.addEventListener("click", () => { VIEW.skin = b.dataset.mskin; setPart("skin", true); }));
+  // Visible / total meshes of each part (tests and the study-file module read this; display only).
+  function partVisibility() {
+    const out = Object.fromEntries(PARTS.map(([k]) => [k, { visible: 0, total: 0 }]));
+    if (model) model.traverse((o) => { const part = o.isMesh ? partOf(o) : null; if (!part) return; out[part].total++; if (o.visible && o.parent && o.parent.visible) out[part].visible++; });
+    return out;
+  }
+  // Spar labels in the view: placed on the upper surface at the spar chord positions, following the deformed shape.
+  function positionPartLabels() {
+    const box = $("#mPartLabels");
+    if (!box || !model || !R || !camera) return;
+    const cv = $("#mgl"), W = R.wing, P = R.P, k = MS.plot === "mode" ? 0 : deformScale();
+    for (const lab of box.children) {
+      const part = lab.dataset.mlabel, x = part === "mainSpar" ? P.sparX : P.falseSparX, y = part === "mainSpar" ? 2.2 : 3.4;
+      const top = W.section(y, [x]).up[0], d = dispAt(y);
+      const v = new THREE.Vector3(...V3(y, top[0], top[1] + k * (d.w + d.tw * (d.xsc - top[0])))).project(camera);
+      const show = !!VIEW.parts[part] && v.z > -1 && v.z < 1 && Math.abs(v.x) < 1 && Math.abs(v.y) < 1;
+      lab.hidden = !show;
+      if (show) { lab.style.left = `${((v.x + 1) * cv.clientWidth) / 2}px`; lab.style.top = `${((1 - v.y) * cv.clientHeight) / 2}px`; }
+    }
   }
   function applyClip() {
     if (!model) return;
@@ -583,7 +699,116 @@
     camera.position.set(pos[0], pos[1], pos[2]); controls.target.copy(c);
     if (v === "plan") camera.up.set(0, 0, -1); else camera.up.set(0, 1, 0);
     camera.lookAt(c); controls.update();
+    controls.minDistance = 0.3; controls.maxDistance = 60;
+    placeAtFit(false);
+    if (v === "iso") resetDist = camera.position.distanceTo(controls.target);
+    renderReadout(true);
   }
+  // Zoom moves the camera toward or away from the orbit target; it never scales the wing (see the readout).
+  let resetDist = 0, readKey = "";
+  // Fit to the undeformed skin outline (both halves when "Both wings" is on), not to a bounding box.
+  function fitPoints() {
+    const pts = [], skins = model && model.getObjectByName("skins");
+    if (skins) for (const m of skins.children) { const b = m.userData.base; if (!b) continue; for (let i = 0; i < b.length; i += 3 * 7) { pts.push(new THREE.Vector3(b[i], b[i + 1], b[i + 2])); if (MS.mirror) pts.push(new THREE.Vector3(-b[i], b[i + 1], b[i + 2])); } }
+    return pts;
+  }
+  function placeAtFit(retarget) {
+    const pts = fitPoints();
+    if (!pts.length) return;
+    if (retarget) { const centre = new THREE.Box3().setFromPoints(pts).getCenter(new THREE.Vector3()); camera.position.add(centre.clone().sub(controls.target)); controls.target.copy(centre); }
+    camera.updateMatrixWorld();
+    const d0 = camera.position.distanceTo(controls.target), tanV = Math.tan((camera.fov * Math.PI) / 360), tanH = tanV * Math.max(camera.aspect || 1, 0.2), m = 0.9;
+    let need = 0;
+    for (const p of pts) {
+      const q = p.clone().applyMatrix4(camera.matrixWorldInverse);
+      need = Math.max(need, d0 + q.z + Math.max(Math.abs(q.x) / (m * tanH), Math.abs(q.y) / (m * tanV)));
+    }
+    const d = Math.min(controls.maxDistance, Math.max(controls.minDistance, need));
+    const dir = camera.position.clone().sub(controls.target).normalize();
+    camera.position.copy(controls.target).add(dir.multiplyScalar(d));
+    controls.update();
+  }
+  function zoomBy(f) {
+    if (!camera) return;
+    const off = camera.position.clone().sub(controls.target);
+    off.setLength(Math.min(controls.maxDistance, Math.max(controls.minDistance, off.length() * f)));
+    camera.position.copy(controls.target).add(off); controls.update(); renderReadout(true);
+  }
+  function renderReadout(force) {
+    if (!camera || !R) return;
+    const W = R.wing, dist = camera.position.distanceTo(controls.target), h = $("#mgl").clientHeight;
+    const key = [dist.toFixed(4), h].join();
+    if (!force && key === readKey) return;
+    readKey = key;
+    const pxPerM = h / 2 / (dist * Math.tan((camera.fov * Math.PI) / 360));
+    $("#mViewReadout").dataset.distance = dist.toFixed(4);
+    $("#mViewDims").innerHTML = `<b>View zoom only.</b> Actual size of the modelled half wing: half-span <b>${nf(W.b2, 2)} m</b> (structure to rib 1 at ${nf(R.P.ribs.at(-1), 2)} m), root chord <b>${nf(W.chord(0), 2)} m</b>, tip chord <b>${nf(R.P.planform.ct, 2)} m</b>.`;
+    const nice = [0.05, 0.1, 0.2, 0.25, 0.5, 1, 2, 5].find((v) => v * pxPerM >= 48) || 5, px = isFinite(pxPerM) && pxPerM > 0 ? Math.min(150, nice * pxPerM) : 0;
+    $("#mScaleBar").style.width = `${Math.round(px)}px`;
+    $("#mScaleText").textContent = px ? (nice < 1 ? `${nice * 100} cm` : `${nice} m`) : "–";
+    $("#mZoomText").textContent = `Zoom ×${resetDist ? nf(resetDist / dist, 2) : "1.00"} relative to Reset view. The scale bar holds at the centre of the view; in perspective, nearer parts look larger.`;
+  }
+
+  // ------------------------------------------------------------------ inventory & sources
+  // Counts and stations come from the engine's D.520 data; each item carries the status of its row in
+  // E.D520.sources. "Modelled in this app" is kept apart from "documented in the 1940 manual": only PRINTED
+  // and SCALED rows are manual values; EXTERNAL is an outside reference, GUESS an assumption, and an item
+  // with no row in the source table is reported as such (an assumption of this model), never as history.
+  const STATUS = { PRINTED: "printed in the manual", SCALED: "measured on a manual plate", EXTERNAL: "outside reference", GUESS: "assumption", UNLISTED: "not in the source table" };
+  function sourceRow(re) { const row = E.D520.sources.find(([item]) => re.test(item)); return row ? { item: row[0], text: row[1], tags: [...new Set(row[1].match(/\b(PRINTED|SCALED|EXTERNAL|GUESS)\b/g) || [])] } : null; }
+  const unlisted = (text) => ({ item: "", text, tags: ["UNLISTED"] });
+  function inventoryRows() {
+    const P = E.D520, W = R ? R.wing : E.makeWing(P), zones = R ? R.zones : E.boomZones(P, W), sc = MS.input.scales, mm = (v, k = 1) => nf(v * 1e3 * k, 1);
+    const ribsLine = P.ribs.map((v) => nf(v, 2)).join(", ");
+    // Direct-stress items of the solved root section, when there is one: booms and stringers as the solver sees them.
+    const items = R && R.sections[0] && R.sections[0].items, nItems = (kind, fallback) => (items ? items.filter((it) => it.kind === kind).length : fallback);
+    const nBooms = nItems("boom", 2), nStringers = nItems("stringer", 2 * P.stringer.x.length) / 2;
+    return [
+      { key: "planform", item: "Planform", count: null, modeled: `half-span ${nf(W.b2, 2)} m (structure to rib 1 at y = ${nf(P.ribs.at(-1), 2)} m), root chord ${nf(W.chord(0), 2)} m, tip chord ${nf(P.planform.ct, 2)} m`, sources: [sourceRow(/^Span/)] },
+      { key: "ribs", item: "Ribs", count: P.ribs.length, modeled: `${P.ribs.length} pressed ribs at y = ${ribsLine} m; ${mm(P.rib.t)} mm sheet, ${mm(P.rib.tKink)} mm at the kink ribs (y = ${P.kinkRibs.map((v) => nf(v, 2)).join(" and ")} m); the root rib's nose is cut by the wheel well`, sources: [sourceRow(/^Rib stations/)] },
+      { key: "mainSpar", item: "Main (front) spar", count: 1, modeled: `1 I-spar at ${P.sparX}c: a web (gauge by zone) and 2 booms`, sources: [sourceRow(/^Main spar/)] },
+      { key: "booms", item: "Main-spar booms (caps)", count: nBooms, modeled: `${nBooms} per section (upper and lower); root ${nf(P.boom.rootWidth * 1e3, 0)} × ${nf(P.boom.rootThickness * 1e3, 0)} mm, area ∝ M/h outboard: ${zones.map((z) => nf(z.area * 1e6 * sc.boom, 0)).join(", ")} mm² by zone`, sources: [sourceRow(/^Spar booms/)] },
+      { key: "falseSpar", item: "False (rear) spar", count: 1, modeled: `1 web at ${P.falseSparX}c; no booms in this model`, sources: [sourceRow(/^Main spar/), sourceRow(/gauges/)] },
+      { key: "stringers", item: "Blade stringers", count: nStringers, modeled: `${nStringers} per surface (${2 * nStringers} in all) at x/c ${P.stringer.x.join(", ")}, ${nf(P.stringer.h * 1e3, 0)} mm high`, sources: [unlisted("Stringer count and positions are not in the source table: an assumption of this model."), sourceRow(/gauges/)] },
+      { key: "zones", item: "Gauge zones", count: P.zones.length, modeled: `${P.zones.length} zones, breaks at y = ${P.zones.slice(1).map((z) => nf(z[0], 2)).join(", ")} m; skin ${P.skin.map((v) => mm(v, sc.skin)).join(" / ")} mm, spar web ${P.web.map((v) => mm(v, sc.web)).join(" / ")} mm, false-spar web ${P.falseSpar.map((v) => mm(v, sc.web)).join(" / ")} mm, stringers ${P.stringer.t.map((v) => mm(v, sc.stringer)).join(" / ")} mm`, sources: [sourceRow(/gauges/)] },
+      { key: "fittings", item: "Fuselage fittings (support)", count: null, modeled: `one support station at y = ${P.fittingY} m (drawn as one block on each spar); the fitting hardware is not modelled`, sources: [unlisted("Not in the source table. The Supports page of this app cites manual p.14 for the fitting arrangement.")] },
+      { key: "wheelWell", item: "Wheel-well cut-out", count: null, modeled: `circular opening r = ${P.wheelWell.r} m centred at y = ${P.wheelWell.yc} m, ${P.wheelWell.xc}c; the nose cell is open there`, sources: [unlisted("Not in the source table: an assumption of this model.")] },
+      { key: "equipment", item: "Equipment (mass only)", count: null, modeled: `fuel ${P.masses.fuel.volume} l between y = ${P.masses.fuel.y0} and ${P.masses.fuel.y1} m; ${P.masses.guns.y.length} guns and ${P.masses.ammo.rounds} rounds per gun at y = ${P.masses.guns.y.join(" and ")} m (unit masses ${P.masses.guns.mass} kg per gun, ${P.masses.ammo.roundMass} kg per round are model inputs)`, sources: [sourceRow(/^Fuel/)] },
+      { key: "material", item: "Material", count: null, modeled: P.material.name, sources: [sourceRow(/duralumin properties/)] },
+      { key: "aircraft", item: "Gross mass and load factors", count: null, modeled: `${P.aircraft.mass} kg; +${P.aircraft.nLimitPos} / ${P.aircraft.nLimitNeg} g limit, ×${P.aircraft.safetyFactor} ultimate`, sources: [sourceRow(/^Gross mass/), sourceRow(/^Load factors/)] },
+    ];
+  }
+  // The verdict covers only what the source line(s) name; anything else in "Modelled in this app" is a model input.
+  function documented(sources) {
+    const tags = new Set(sources.filter(Boolean).flatMap((x) => x.tags));
+    if (tags.has("PRINTED") || tags.has("SCALED")) return tags.has("GUESS") || tags.has("UNLISTED") ? "Partly: manual values combined with assumptions (see the source lines)" : "Yes, for the values named in the source line below";
+    if (tags.has("EXTERNAL")) return tags.has("GUESS") ? "No: an outside reference and assumptions" : "No: an outside reference";
+    return tags.has("GUESS") ? "No: an assumption of this model" : "Not stated in the source table";
+  }
+  function renderInventory() {
+    const rows = inventoryRows();
+    $("#mInventory").innerHTML = `<div class="mw-inv">
+      <p class="note">What the beam/section model contains, counted from the engine's D.520 data, and where each number comes from. Status tags: ${Object.entries(STATUS).map(([k, v]) => `<span class="mw-tag ${k}">${k === "UNLISTED" ? "NOT LISTED" : k}</span>${v}`).join(" · ")}.</p>
+      ${rows.map((r) => `<article data-minv="${r.key}"><h5>${r.item}${r.count != null ? ` <b>× <span data-minv-count="${r.key}">${r.count}</span></b>` : ""}</h5>
+        <p><b>Modelled in this app:</b> ${r.modeled}</p>
+        <p><b>Documented in the 1940 manual?</b> <span data-minv-doc="${r.key}">${documented(r.sources)}</span></p>
+        <p class="src">${r.sources.filter(Boolean).map((x) => `${x.tags.map((t) => `<span class="mw-tag ${t}" data-minv-tag="${r.key}">${t === "UNLISTED" ? "NOT LISTED" : t}</span>`).join("")}${x.item ? `${x.item}: ` : ""}${x.text}`).join("<br>")}</p></article>`).join("")}
+      <p class="note">A verdict covers only the values named in its source line; other numbers shown here are inputs of this model. Not modelled: rivets, the fitting hardware and the fuselage, rib stresses, shear lag and local load introduction (Method &amp; sources).</p></div>`;
+    $("#mInvBadge").textContent = `${E.D520.ribs.length} ribs · 2 spars · ${E.D520.stringer.x.length}/surface stringers`;
+  }
+  // The input column sticks below the sticky D.520 navigation bar.
+  const stickBelowNav = () => { const nav = $("#metalNav"); $("#metalApp").style.setProperty("--wl-top", `${Math.round(nav ? nav.getBoundingClientRect().height : 0) + 10}px`); };
+  window.addEventListener("resize", stickBelowNav);
+  if (window.ResizeObserver) new ResizeObserver(stickBelowNav).observe($("#metalNav"));
+  // Read-only hooks for tests and the study-file module (display state only; results are MetalWingUI.result()).
+  $("#mZoomIn").addEventListener("click", () => zoomBy(1 / 1.25));
+  $("#mZoomOut").addEventListener("click", () => zoomBy(1.25));
+  $("#mZoomFit").addEventListener("click", () => { if (!camera) return; placeAtFit(true); renderReadout(true); });
+  $("#mZoomReset").addEventListener("click", () => setView("iso"));
+  window.MetalWingView = {
+    parts: partVisibility, display: () => ({ preset: VIEW.preset, skin: VIEW.skin, parts: { ...VIEW.parts } }), inventory: inventoryRows,
+    camera: () => (camera ? { distance: camera.position.distanceTo(controls.target), resetDistance: resetDist } : null),
+  };
   const ray = typeof THREE !== "undefined" ? new THREE.Raycaster() : null;
   function onProbe(e) {
     if (!R || !model || !ray) return;
@@ -628,7 +853,7 @@
   // ------------------------------------------------------------------ tabs
   const TABS = ["start", "theory", "loads", "diagrams", "section", "strength", "compare", "modes", "method", "report"];
   let dirtyTabs = new Set();
-  function renderAll() { renderTree(); renderPM(); dirtyTabs = new Set(TABS); renderTab(MS.tab); dirtyTabs.delete(MS.tab); if (MS.plot === "mode") renderModeSeg(); }
+  function renderAll() { renderTree(); renderPM(); dirtyTabs = new Set(TABS); renderTab(MS.tab); dirtyTabs.delete(MS.tab); if (MS.plot === "mode") renderModeSeg(); renderInventory(); renderLoadEditor(); }   // the load editor lives in the input column, whatever results tab is open
   function renderTab(t) {
     if (!R) return;
     ({ start: renderStart, theory: renderTheory, loads: renderLoads, diagrams: renderDiagrams, section: renderSection, strength: renderStrength, compare: renderCompare, modes: renderModes, method: renderMethod, report: renderReport })[t]();
@@ -684,7 +909,7 @@
     const r = R, W = r.W, half = r.n * W / 2;
     $("#mtab-theory").innerHTML = `<article class="mw-story">
       <h2>Understand the wing before reading its colours</h2>
-      <p>Learning goals: trace the load into the fuselage; distinguish force, moment, stress and displacement; explain why a light wing needs several kinds of member; and judge what this simplified solver can and cannot establish. Start at 1 g, make a prediction, change only one input, press <b>Run study</b>, and compare with your prediction.</p>
+      <p>Learning goals: trace the load into the fuselage; distinguish force, moment, stress and displacement; explain why a light wing needs several kinds of member; and judge what this simplified solver can and cannot establish. Start at 1 g, make a prediction, change only one input, let it solve (or press <b>Solve</b>), and compare with your prediction.</p>
       <h3>1. Pressure becomes a structural load</h3>
       <p>Air pressure acts over the skin, not directly on an isolated spar. Integrating pressure around each airfoil section gives lift per unit span ℓ(y), in N/m. The structural problem replaces those many small pressures by an equivalent spanwise load and a torque. Here y is distance from the aircraft centreline toward the tip, x is chordwise, and z is upward.</p>
       <div class="mw-sec"><svg viewBox="0 0 900 225" role="img" aria-label="Load path: pressure on skin to ribs, skin stiffeners, spar and fuselage fittings">
@@ -974,13 +1199,65 @@
     L.push("", "Educational reconstruction; not an airworthiness assessment. Beam theory on thin-walled sections, not a 3-D finite-element result. Gauges, boom taper, material allowables, load factors and gross mass are assumptions. Approximate section collapse does not validate whole-wing collapse, joints, post-buckling safety or flutter (see Method & sources).");
     return L.join("\n");
   }
+  // ------------------------------------------------------------------ A/B: two solved D.520 studies side by side
+  // Snapshots of the solved inputs and their key results (this browser session); kept in the JSON results export.
+  const AB = { A: null, B: null };
+  const abInput = (inp) => JSON.parse(JSON.stringify(inp));
+  function abMetrics(r) {
+    const g = governing(r), boom = Math.max(...r.stations.map((s) => Math.max(Math.abs(s.boomU), Math.abs(s.boomL)))), web = Math.max(...r.stations.map((s) => Math.abs(s.tauWeb)));
+    return [
+      ["Structure, half wing", r.mass.structuralHalf, "kg", 2], ["Fitting reaction", (r.fitting.Fz_per_g * r.n) / 1e3, "kN", 3],
+      ["Moment at the fittings", (r.fitting.M_per_g * r.n) / 1e3, "kN·m", 3], ["Torque at the fittings (nose-up +)", r.fitting.T_per_g * r.n, "N·m", 1],
+      ["Tip deflection at rib 1", r.tip.wMax * 1e3, "mm", 2], ["Tip twist (nose-up +)", r.tip.twistDeg, "°", 3],
+      ["Max boom stress", boom / 1e6, "MPa", 1], ["Max spar-web shear", web / 1e6, "MPa", 2],
+      ["First bending frequency", r.fem ? r.fem.fBending[0] : NaN, "Hz", 2], ["Weakest check: reached / required factor", g ? g.ratio : NaN, "", 3],
+    ].map(([name, value, unit, d]) => ({ name, value, unit, d }));
+  }
+  const weakest = (r) => { const g = governing(r); return g ? `${g.name} (${g.side === "pos" ? "+" : "−"} side, y = ${nf(g.y, 2)} m)` : "–"; };
+  const DIST = { liftingLine: "lifting line", schrenk: "Schrenk", elliptic: "elliptic" };
+  const loadCase = (inp) => (inp.customLoads == null ? `flight loading, n = ${sgn(inp.n, 1)} g, ${DIST[inp.distribution] || inp.distribution}${inp.inertiaRelief ? ", inertia relief" : ""}` : inp.customLoads.length ? `${inp.customLoads.length} custom load${inp.customLoads.length > 1 ? "s" : ""} × ${sgn(inp.n, 1)}` : "no load defined");
+  function abDiff(a, b) {
+    const out = [], same = (x, y) => JSON.stringify(x) === JSON.stringify(y);
+    if (!same(a.customLoads, b.customLoads) || a.n !== b.n || a.distribution !== b.distribution || a.inertiaRelief !== b.inertiaRelief || !same(a.include, b.include)) out.push("load case");
+    if (!same(a.scales, b.scales)) out.push("gauge scales");
+    if (a.support !== b.support) out.push("support");
+    if (a.taper !== b.taper) out.push("tapered-beam effect");
+    if (a.mass !== b.mass || a.CL !== b.CL) out.push("aircraft mass / CL");
+    if (!same(a.material, b.material)) out.push("material");
+    return out;
+  }
+  function renderAB() {
+    const box = $("#mAB"); if (!box) return;
+    const { A, B } = AB;
+    if (!A && !B) { box.innerHTML = '<p class="note">Save one solved study as A, change one input, solve, and save it as B: both keep their inputs and key results.</p>'; return; }
+    const at = (iso) => new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+    const head = `<p class="note">${A ? `<b>A</b>: ${esc(loadCase(A.input))} (saved ${esc(at(A.savedAt))})` : "<b>A</b>: not saved"} · ${B ? `<b>B</b>: ${esc(loadCase(B.input))} (saved ${esc(at(B.savedAt))})` : "<b>B</b>: not saved"}</p>`;
+    if (!A || !B) { box.innerHTML = head; return; }
+    const diff = abDiff(A.input, B.input);
+    const num = (v, d) => { if (v == null || !isFinite(v)) return "–"; const t = Math.abs(v).toFixed(d); return (v < 0 && /[1-9]/.test(t) ? "−" : "") + t; };   // one minus sign (U+2212) in every column
+    const rows = A.metrics.map((m, i) => { const b = B.metrics[i]; const d = b.value - m.value, zero = Math.abs(d) <= 1e-9 * Math.max(Math.abs(m.value), Math.abs(b.value)); return `<tr><td>${esc(m.name)}${m.unit ? ` <span class="mw-unit">(${m.unit})</span>` : ""}</td><td class="num">${num(m.value, m.d)}</td><td class="num">${num(b.value, b.d)}</td><td class="num">${zero ? "0" : sgn(d, m.d)}</td></tr>`; }).join("");
+    box.innerHTML = `${head}<p class="note">${diff.length ? `Inputs that differ: <b>${esc(diff.join(", "))}</b>.${diff.length > 1 ? " More than one thing changed: this is not a one-variable comparison." : ""}` : "The inputs are identical."}</p>
+      <div class="tablewrap"><table aria-label="A/B comparison" id="mABTable"><thead><tr><th>Quantity</th><th>A</th><th>B</th><th>B − A</th></tr></thead><tbody>${rows}</tbody></table></div>
+      <p class="note" id="mABWeakest">Weakest check: <b>A</b> ${esc(A.weakest)}; <b>B</b> ${esc(B.weakest)}${A.weakest === B.weakest ? " (the same check)" : ""}.</p>
+      <p class="note">Each column is that study's solved result at its own load factor (flight) or multiplier (custom loads). A custom-load multiplier is not a flight g factor; compare flight and custom cases only with care.</p>`;
+  }
+  function saveAB(label) {
+    if (!R || stale || running || lastError) { $("#mABState").textContent = "Run the study first: only solved inputs can be saved."; return; }
+    AB[label] = { input: abInput(MS.input), metrics: abMetrics(R), weakest: weakest(R), savedAt: new Date().toISOString() };
+    $("#mABState").textContent = `Saved the solved study as ${label}.`; renderAB();
+  }
   function renderReport() {
-    $("#mtab-report").innerHTML = `<div class="lesson-actions"><button class="btn primary" type="button" id="mCopy">Copy report</button><button class="btn" type="button" id="mJson">Download results (JSON)</button><span class="note" id="mCopyState">Plain-text study summary.</span></div><textarea id="mReport" readonly aria-label="Study report"></textarea>`;
+    $("#mtab-report").innerHTML = `<div class="lesson-actions"><button class="btn primary" type="button" id="mCopy">Copy report</button><button class="btn" type="button" id="mJson">Download results (JSON)</button><span class="note" id="mCopyState">Plain-text study summary.</span></div><textarea id="mReport" readonly aria-label="Study report"></textarea>
+      <section class="mw-ab"><h3>Compare two solved studies (A/B)</h3><div class="lesson-actions"><button class="btn" type="button" id="mSaveA">Save current as A</button><button class="btn" type="button" id="mSaveB">Save current as B</button><button class="btn" type="button" id="mClearAB">Clear A and B</button><span class="note" id="mABState" role="status"></span></div><div id="mAB"></div></section>`;
+    $("#mSaveA").addEventListener("click", () => saveAB("A")); $("#mSaveB").addEventListener("click", () => saveAB("B"));
+    $("#mClearAB").addEventListener("click", () => { AB.A = AB.B = null; $("#mABState").textContent = "A and B cleared."; renderAB(); });
+    renderAB();
     $("#mReport").value = reportText();
     $("#mCopy").addEventListener("click", async () => { try { await navigator.clipboard.writeText($("#mReport").value); $("#mCopyState").textContent = "Copied."; } catch { $("#mReport").select(); $("#mCopyState").textContent = "Select-all done; press Ctrl/Cmd+C."; } });
     $("#mJson").addEventListener("click", () => {
       if (stale || running) { $("#mCopyState").textContent = "Correct the inputs and run the study before exporting."; return; }
-      const r = R, out = { input: r.input, engine: E.VERSION, n: r.n, mass: r.mass, fitting: r.fitting, tip: r.tip, failure: r.failure, frequencies: r.fem && { bending: r.fem.fBending, torsion: r.fem.fTorsion }, stations: r.stations.map((s) => ({ y: s.y, V: s.V, M: s.M, T: s.T, Vw: s.Vw, EI: s.EI, GJ: s.GJ, xsc: s.xsc, boomU: s.boomU, boomL: s.boomL, tauWeb: s.tauWeb, w: s.w, twist: s.twist })) };
+      const r = R, out = { input: r.input, engine: E.VERSION, n: r.n, mass: r.mass, fitting: r.fitting, tip: r.tip, failure: r.failure, frequencies: r.fem && { bending: r.fem.fBending, torsion: r.fem.fTorsion }, stations: r.stations.map((s) => ({ y: s.y, V: s.V, M: s.M, T: s.T, Vw: s.Vw, EI: s.EI, GJ: s.GJ, xsc: s.xsc, boomU: s.boomU, boomL: s.boomL, tauWeb: s.tauWeb, w: s.w, twist: s.twist })),
+        compare: AB.A || AB.B ? { A: AB.A, B: AB.B } : null };
       const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([JSON.stringify(out, null, 1)], { type: "application/json" })); a.download = "D520-wing-lab-results.json"; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
     });
   }
@@ -1012,7 +1289,7 @@
   function openMetal() {
     for (const id of ["foundations", "app", "wingNavigation"]) { const n = document.getElementById(id); if (n) n.hidden = true; }
     host.hidden = false;
-    if (!opened) { opened = true; initGL(); syncN(); setPlot(MS.plot); renderTree(); renderPM(); runStudy(); }
+    if (!opened) { opened = true; initGL(); syncN(); setPlot(MS.plot); renderTree(); renderPM(); renderInventory(); applyShow(); renderLoadEditor(); runStudy(); }
     else resize();
     host.scrollIntoView({ block: "start" });
     if (location.hash !== "#d520") history.replaceState(null, "", "#d520");
@@ -1027,9 +1304,56 @@
   const toMetal = document.getElementById("toMetalWing"); if (toMetal) toMetal.addEventListener("click", openMetal);
   $("#mBackWing").addEventListener("click", () => closeMetal("wing"));
   window.addEventListener("wing-learning-stage", (e) => { if (e.detail === "metal") openMetal(); else host.hidden = true; });
+  window.addEventListener("wing-show", () => { host.hidden = true; });   // the printed wing is shown (also by a damaged printed-wing link)
   window.addEventListener("metal-wing-open", openMetal);
-  const fromHash = () => { if (["#d520", "#metal", "#metal-wing"].includes(location.hash)) openMetal(); };
+  // ------------------------------------------------------------------ study files and links (wing_study_io.js)
+  // A study file or link replaces the D.520 inputs (validated, all or nothing); the workspace then solves as after any
+  // D.520 input change. Hand-made files may give material, mass or CL as null: the D.520 preset values are used.
+  function applyD520State(state) {
+    MS.input = { ...state, include: { ...state.include }, scales: { ...state.scales },
+      customLoads: state.customLoads == null ? null : JSON.parse(JSON.stringify(state.customLoads)),
+      mass: state.mass ?? E.D520.aircraft.mass, CL: state.CL ?? E.D520.aircraft.CL, material: state.material ? { ...state.material } : { ...E.D520.material } };
+    lastError = null; syncN();
+  }
+  const downloadFile = (name, text, type) => { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([text], { type })); a.download = name; document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 1000); };
+  const studyFiles = typeof WingStudyIO !== "undefined" && $("#mStudyFiles") ? WingStudyIO.mount($("#mStudyFiles"), {
+    workspace: "d520", engine: E, download: downloadFile, getState: () => MS.input,
+    applyState: (state) => { applyD520State(state); renderTree(); renderPM(); changed(); },
+  }) : null;
+  function renderShare() {
+    const box = $("#mShare");
+    if (!box || typeof WingStudyIO === "undefined") return;
+    box.innerHTML = `<div class="lesson-actions"><button class="btn" type="button" id="mShareBtn">Copy a link to this solved study</button></div>
+      <input type="text" id="mShareBox" class="wl-share" readonly hidden aria-label="Link to this D.520 study"><p class="note" id="mShareMsg" role="status"></p>`;
+    $("#mShareBtn").onclick = async () => {
+      const out = $("#mShareBox"), msg = $("#mShareMsg");
+      out.hidden = true; out.value = "";
+      if (!R || stale || running || lastError) { msg.textContent = "Run the study first: a link opens the same D.520 inputs and solves them."; return; }
+      try {
+        const token = WingStudyIO.encodeShare(WingStudyIO.d520StudyDocument(MS.input, E), { metalEngine: E });
+        out.value = `${location.href.replace(/[?#].*$/, "")}#d520&${WingStudyIO.SHARE_KEY}=${token}`; out.hidden = false; out.select();
+        try { await navigator.clipboard.writeText(out.value); msg.textContent = "Link copied. It opens these D.520 inputs and solves them on the page (nothing is uploaded)."; }
+        catch (e) { msg.textContent = "Select the link and copy it. It opens these D.520 inputs and solves them on the page (nothing is uploaded)."; }
+      } catch (e) { msg.textContent = e.message; }
+    };
+  }
+  renderShare();
+  function openD520Link(h) {
+    const res = WingStudyIO.decodeShare(h, { engine: typeof WingEngine !== "undefined" ? WingEngine : undefined, metalEngine: E });
+    const ok = res.ok && res.workspace === "d520";
+    if (ok) applyD520State(res.state);
+    const first = !opened;
+    openMetal();
+    if (ok && !first) { renderTree(); renderPM(); changed(); }
+    $("#mSecFiles").open = true;
+    $("#mShareMsg").textContent = ok ? `Shared D.520 study opened from the link${res.warnings.length ? ` (${res.warnings.slice(0, 2).join(" ")})` : ""}.` : `The study link could not be opened: ${(res.errors && res.errors[0]) || "it is not a D.520 study"}. The D.520 opens with its current inputs.`;
+  }
+  const fromHash = () => {
+    const h = location.hash || "";
+    if (/^#d520&/.test(h) && typeof WingStudyIO !== "undefined" && new RegExp(`&${WingStudyIO.SHARE_KEY}=`).test(h)) { openD520Link(h); return; }
+    if (["#d520", "#metal", "#metal-wing"].includes(h)) openMetal();
+  };
   window.addEventListener("hashchange", fromHash);
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", fromHash); else setTimeout(fromHash, 0);
-  window.MetalWingUI = { open: openMetal, close: closeMetal, state: MS, result: () => R };
+  window.MetalWingUI = { open: openMetal, close: closeMetal, state: MS, result: () => R, studyFiles: () => studyFiles };
 })();

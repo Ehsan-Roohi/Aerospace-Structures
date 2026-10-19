@@ -17,6 +17,7 @@
   --accent: #4ea6ff;
   --accent-soft: rgba(78, 166, 255, 0.14);
   --accent-ink: #061322;
+  --run-hover: brightness(1.08);
   --fixture: #33c587;
   --load: #d25ad6;
   --good: #33c587;
@@ -35,7 +36,7 @@
     color-scheme: light;
     --bg: #e3e9ef; --panel: #f7f9fb; --panel-2: #eef2f6; --raise: #ffffff; --line: #cbd6e1;
     --fg: #142130; --muted: #566778; --faint: #8394a5; --accent: #0b6fd8; --accent-soft: rgba(11, 111, 216, 0.1);
-    --accent-ink: #ffffff; --good: #148a59; --warn: #b7760a; --bad: #cc2f43;
+    --accent-ink: #ffffff; --good: #148a59; --warn: #b7760a; --bad: #cc2f43; --run-hover: brightness(0.9);
     --vp-top: #b4c5d6; --vp-bottom: #f1f5f9; --vp-ink: #1c2a38; --shadow: 0 10px 30px rgba(30, 50, 70, 0.15);
   }
 }
@@ -43,7 +44,7 @@
   color-scheme: light;
   --bg: #e3e9ef; --panel: #f7f9fb; --panel-2: #eef2f6; --raise: #ffffff; --line: #cbd6e1;
   --fg: #142130; --muted: #566778; --faint: #8394a5; --accent: #0b6fd8; --accent-soft: rgba(11, 111, 216, 0.1);
-  --accent-ink: #ffffff; --good: #148a59; --warn: #b7760a; --bad: #cc2f43;
+  --accent-ink: #ffffff; --good: #148a59; --warn: #b7760a; --bad: #cc2f43; --run-hover: brightness(0.9);
   --vp-top: #b4c5d6; --vp-bottom: #f1f5f9; --vp-ink: #1c2a38; --shadow: 0 10px 30px rgba(30, 50, 70, 0.15);
 }
 
@@ -58,16 +59,21 @@ body { height: auto; min-height: 100%; }
 button, input, select { font: inherit; color: inherit; }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
+/* Wing workspace, like the Beam Lab: a sticky input column on the left (Solve + status on top), the 3-D view
+   (about half a desktop screen) with its view panel, then the results dock. One column below 1100 px. */
 #app {
-  height: 100%;
-  min-height: 1020px;
-  padding: 12px 16px;
+  --wl-top: 76px;
+  --wl-view-h: clamp(400px, 58vh, 640px);
+  padding: 12px 16px 28px;
   display: grid;
-  gap: 10px;
-  grid-template-columns: 238px minmax(0, 1fr) 312px;
-  grid-template-rows: auto auto minmax(440px, 1fr) minmax(390px, 40%);
-  grid-template-areas: "bar bar bar" "loads loads loads" "tree view pm" "dock dock dock";
+  gap: 12px;
+  align-items: start;
+  grid-template-columns: 360px minmax(0, 1fr) 272px;
+  /* the last (results) row is flexible so a tall input column never stretches the view row */
+  grid-template-rows: auto auto auto 1fr;
+  grid-template-areas: "bar bar bar" "side view vpanel" "side loads loads" "side dock dock";
 }
+#app > * { min-width: 0; }
 .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; min-width: 0; min-height: 0; }
 
 /* ---------- command bar ---------- */
@@ -85,7 +91,7 @@ button, input, select { font: inherit; color: inherit; }
 .tool[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
 .tool svg { width: 16px; height: 16px; flex: none; }
 .run { background: var(--accent); color: var(--accent-ink); border-radius: 8px; padding: 0 16px; height: 100%; min-height: 44px; border: 0; font: 700 15px/1 var(--font-label); letter-spacing: 0.04em; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
-.run:hover { filter: brightness(1.08); }
+.run:hover { filter: var(--run-hover); }   /* the ink keeps ≥ 4.5:1 in both themes */
 .run.stale { animation: pulse 1.6s ease-in-out infinite; }
 @keyframes pulse { 50% { box-shadow: 0 0 0 6px var(--accent-soft); } }
 .status { display: flex; flex-direction: column; justify-content: center; gap: 2px; min-width: 150px; font-size: 12px; color: var(--muted); margin-left: auto; padding-left: 6px; }
@@ -112,7 +118,7 @@ button, input, select { font: inherit; color: inherit; }
 .view { grid-area: view; position: relative; overflow: hidden; background: linear-gradient(180deg, var(--vp-top), var(--vp-bottom)); }
 #gl { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
 .overlay { position: absolute; pointer-events: none; color: var(--vp-ink); }
-.infocol { left: 14px; top: 12px; display: flex; flex-direction: column; gap: 10px; max-width: calc(100% - 380px); }
+.infocol { left: 14px; top: 12px; display: flex; flex-direction: column; gap: 10px; max-width: calc(100% - 28px); }
 .plotinfo { font: 12px/1.5 var(--font-data); text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25); }
 .plotinfo b { font-weight: 500; color: var(--vp-ink); opacity: 0.65; }
 .legend { display: flex; gap: 8px; font: 11px/1 var(--font-data); margin-top: -4px; }
@@ -226,20 +232,117 @@ td.num { font-family: var(--font-data); font-variant-numeric: tabular-nums; text
 .anatomy-key span { display: inline-block; margin-right: 12px; }
 .anatomy-key i { display: inline-block; width: 11px; height: 11px; border-radius: 2px; margin-right: 4px; }
 .anatomy-key b { display: block; margin-bottom: 4px; }
-.view .hud { top: 10px; }
 .anatomy-labels { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
 .rib-label { position: absolute; transform: translate(-50%, -100%); background: #ffcc4d; color: #17202c; font: 700 12px var(--font-label); padding: 2px 5px; border: 1px solid #17202c; border-radius: 4px; }
 .guide-note { font-size: 13px; color: var(--muted); margin: 6px 0; }
-#app.learning-view { height: auto; min-height: 0; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto 520px auto; grid-template-areas: "bar" "loads" "view" "dock"; }
-#app.learning-view > .tree, #app.learning-view > .pm { display: none; }
-#app.learning-view .dock, #app.learning-view .tabpanel { overflow: visible; }
+/* "Hide inputs" folds the input column away; the view keeps its size next to its panel. */
+#app.learning-view { grid-template-columns: minmax(0, 1fr) 272px; grid-template-areas: "bar bar" "view vpanel" "loads loads" "dock dock"; }
+#app.learning-view > .wl-side { display: none; }
 @media (max-width: 760px) { .learn-layout { grid-template-columns: minmax(0, 1fr); } }
 
-@media (max-width: 1180px) { #app { grid-template-columns: 210px minmax(0, 1fr) 280px; } .charts { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+/* ---------- input column (printed wing and D.520): sticky, scrolls by itself, Solve and status on top ---------- */
+.wl-side { grid-area: side; position: sticky; top: var(--wl-top, 76px); max-height: calc(100vh - var(--wl-top, 76px) - 12px); overflow: auto; overscroll-behavior: contain; display: flex; flex-direction: column; }
+.wl-run { position: sticky; top: 0; z-index: 3; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px 10px; align-items: center; padding: 12px 14px; background: var(--panel); border-bottom: 1px solid var(--line); border-radius: 10px 10px 0 0; }
+.wl-status { display: flex; flex-direction: column; gap: 4px; min-width: 0; font-size: 12.5px; color: var(--muted); }
+.wl-status .chip { white-space: nowrap; }
+.wl-status span:last-child { overflow-wrap: anywhere; }
+.wl-run-actions { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; align-items: center; }
+.wl-run .run { height: auto; min-height: 44px; }
+.wl-run .btn { min-height: 38px; }
+.run[data-pending="true"] { box-shadow: 0 0 0 4px var(--accent-soft); }
+.wl-auto { grid-column: 1 / -1; display: flex; align-items: center; gap: 8px; margin: 0; font-size: 13px; color: var(--muted); }
+.wl-auto input { width: 18px; height: 18px; accent-color: var(--accent); flex: none; }
+.wl-modelnote { margin: 0; padding: 10px 14px; font-size: 12px; line-height: 1.45; color: var(--muted); border-bottom: 1px solid var(--line); }
+.wl-gate { margin: 0; padding: 10px 14px; border-bottom: 1px solid var(--line); background: color-mix(in srgb, var(--warn) 12%, var(--panel)); font-size: 13px; line-height: 1.45; }
+.wl-gate p { margin: 0 0 6px; } .wl-gate-list { margin: 4px 0 8px; padding: 0; list-style: none; display: grid; gap: 4px; }
+.wl-gate-list label { display: flex; gap: 8px; align-items: flex-start; } .wl-gate-list input { margin-top: 3px; flex: none; width: 18px; height: 18px; }
+.wio-root { display: grid; gap: 8px; min-width: 0; }
+.wio-title { margin: 0; font: 700 14px/1.3 var(--font-label); }
+.wio-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.wio-btn { position: relative; display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 12px; border-radius: 7px; border: 1px solid var(--line); background: var(--panel-2); color: var(--fg); cursor: pointer; font: 600 13px/1.1 var(--font-label); letter-spacing: 0.03em; }
+.wio-btn:hover, .wio-btn:focus-within { border-color: var(--accent); }
+.wio-file-input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+.wio-apply, .wio-apply-geometry, .wio-apply-complete { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.wio-status { margin: 0; font-size: 12.5px; color: var(--muted); }
+.wio-preview { border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; background: var(--panel); display: grid; gap: 6px; font-size: 13px; min-width: 0; overflow-x: auto; }
+.wio-preview-title { margin: 0; font: 700 13.5px/1.3 var(--font-label); }
+.wio-preview ul { margin: 2px 0; padding-left: 18px; } .wio-errors { color: var(--bad); } .wio-list-heading { margin: 4px 0 0; font-weight: 600; }
+.wio-table { border-collapse: collapse; font: 12px var(--font-data); } .wio-table caption { text-align: left; font-weight: 600; padding: 2px 0; }
+.wio-table td, .wio-table th { border: 1px solid var(--line); padding: 2px 6px; text-align: left; text-transform: none; overflow-wrap: anywhere; }
+.wio-provenance { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 2px 10px; margin: 0; font-size: 12px; } .wio-provenance dd { margin: 0; overflow-wrap: anywhere; }
+.wio-paste { display: grid; gap: 6px; } .wio-paste-text { width: 100%; box-sizing: border-box; font: 12px var(--font-data); background: var(--bg); color: var(--fg); border: 1px solid var(--line); border-radius: 6px; padding: 6px; }
+.wl-share { width: 100%; box-sizing: border-box; margin-top: 6px; font: 12px var(--font-data); padding: 6px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: var(--fg); }
+.wl-acc { border-bottom: 1px solid var(--line); }
+.wl-acc:last-child { border-bottom: 0; }
+.wl-acc > summary { list-style: none; display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 10px 14px; cursor: pointer; font: 700 14.5px/1.2 var(--font-label); letter-spacing: 0.02em; }
+.wl-acc > summary::-webkit-details-marker { display: none; }
+.wl-acc > summary::after { content: ""; margin-left: auto; flex: none; width: 7px; height: 7px; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted); transform: rotate(45deg); }
+.wl-acc[open] > summary::after { transform: rotate(-135deg); }
+.wl-badge { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 500 11.5px var(--font-data); color: var(--muted); }
+.wl-acc-body { padding: 2px 14px 14px; display: grid; gap: 9px; min-width: 0; }
+.wl-acc-body > * { min-width: 0; }
+.wl-acc-body h4 { margin: 8px 0 0; font: 700 11px/1.2 var(--font-label); letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+.wl-acc-body .field { grid-template-columns: minmax(0, 1fr) 112px; }
+.wl-err { margin: -3px 0 0; color: var(--bad); font-size: 12.5px; line-height: 1.4; }
+.wl-side input[aria-invalid="true"] { border-color: var(--bad); }
+.wl-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 13px; }
+.wl-row input { width: 86px; height: 34px; padding: 0 8px; border-radius: 6px; border: 1px solid var(--line); background: var(--panel-2); font: 13px var(--font-data); }
+.wl-side .btn, .wl-vpanel .btn { min-height: 34px; }
+.wl-list { display: table; width: 100%; font-size: 13px; }
+.wl-list td, .wl-list th { padding: 4px 6px 4px 0; white-space: normal; vertical-align: middle; }
+.wl-list th { font-size: 10.5px; }
+.wl-list input { width: 82px; height: 32px; padding: 0 6px; border-radius: 6px; border: 1px solid var(--line); background: var(--panel-2); font: 13px var(--font-data); }
+.wl-list tr.locked td { color: var(--muted); }
+.wl-list .num { font-family: var(--font-data); font-variant-numeric: tabular-nums; }
+.wl-kv { font-size: 12.5px; }
+.wl-treepm .tree, .wl-treepm .pm { grid-area: auto; border: 0; background: transparent; border-radius: 0; overflow: visible; }
+.wl-treepm .tree ul { overflow: visible; padding: 2px 0 6px; }
+.wl-treepm .pm-body { overflow: visible; padding: 10px 0 4px; }
+.wl-treepm .panel-head { padding: 8px 0 6px; }
+.wl-treepm .pm .panel-head { border-top: 1px solid var(--line); }
+#wingLoadEditor:not(:empty) ~ .wl-fallback, #mLoadEditor:not(:empty) ~ .wl-fallback, #wingStudyFiles:not(:empty) ~ .wl-fallback, #mStudyFiles:not(:empty) ~ .wl-fallback { display: none; }
+.wl-inv { display: grid; gap: 8px; font-size: 13px; }
+.wl-inv dl { margin: 0; }
+.wl-tag { display: inline-block; padding: 1px 7px; border-radius: 99px; border: 1px solid var(--line); font: 600 11px/1.5 var(--font-label); letter-spacing: 0.04em; white-space: nowrap; }
+/* ---------- view panel beside the 3-D view: zoom, actual dimensions, display controls ---------- */
+#app .view, #metalApp .view { height: var(--wl-view-h); }
+.wl-vpanel { grid-area: vpanel; height: var(--wl-view-h); overflow: auto; overscroll-behavior: contain; display: flex; flex-direction: column; }
+.wl-vbody { padding: 10px 12px 12px; display: grid; gap: 10px; align-content: start; }
+.wl-vlabel { display: block; margin: 0 0 5px; font: 700 10.5px/1.2 var(--font-label); letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+.wl-vpanel .hud { position: static; display: grid; gap: 8px; max-width: none; max-height: none; align-items: stretch; flex-direction: column; overflow: visible; background: transparent; }
+.wl-vpanel .hud-row { justify-content: flex-start; flex-wrap: wrap; background: var(--panel-2); backdrop-filter: none; }
+.wl-vpanel .hud button { min-height: 34px; padding: 6px 9px; font-size: 12.5px; }
+.wl-vpanel .hud label { min-height: 34px; }
+.wl-zoom { display: flex; flex-wrap: wrap; gap: 6px; }
+.wl-zoom .btn { min-width: 44px; justify-content: center; }
+.wl-readout { display: grid; gap: 5px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel-2); font-size: 12.5px; }
+.wl-readout p { margin: 0; }
+.wl-scale { display: flex; align-items: center; gap: 8px; font: 12px var(--font-data); }
+.wl-scalebar { display: inline-block; height: 7px; border: 2px solid var(--fg); border-top: 0; flex: none; }
+/* Text versions of the accent / good / warn colours with at least 4.5:1 on panels and pale accent fills, per theme
+   (plain rgb values: the contrast audit reads computed rgb colours). */
+:root { --wl-accent-text: #7dbdff; --wl-good-text: #4fd79b; --wl-warn-text: #f3c05e; }
+@media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) { --wl-accent-text: #0a5bb5; --wl-good-text: #0f7a4b; --wl-warn-text: #8a5a00; } }
+:root[data-theme="light"] { --wl-accent-text: #0a5bb5; --wl-good-text: #0f7a4b; --wl-warn-text: #8a5a00; }
+.wl-viewstale { color: var(--wl-warn-text); font-weight: 600; }
+/* Pressed tools, view buttons and the selected tree node keep 4.5:1 on their pale accent background. */
+.tool[aria-pressed="true"], .hud-row button[aria-pressed="true"], .node[aria-current="true"] { color: var(--wl-accent-text); }
+/* stale results: the dock says so and the solved numbers fade */
+.wl-stale { display: flex; gap: 8px; align-items: flex-start; margin: 8px 12px 0; padding: 8px 12px; border: 1px solid var(--warn); border-radius: 8px; background: color-mix(in srgb, var(--warn) 10%, transparent); font-size: 13px; line-height: 1.45; }
+#app[data-stale="true"] :is(#tab-diagrams, #tab-checks, #tab-section, #tab-report) > * { opacity: 0.55; filter: grayscale(0.4); }
+
+@media (max-width: 1180px) { .charts { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 1279px) {
+  #app, #app.learning-view { grid-template-rows: auto auto auto auto 1fr; }
+  #app { grid-template-columns: 340px minmax(0, 1fr); grid-template-areas: "bar bar" "side view" "side vpanel" "side loads" "side dock"; }
+  #app.learning-view { grid-template-columns: minmax(0, 1fr); grid-template-areas: "bar" "view" "vpanel" "loads" "dock"; }
+  .wl-vpanel { height: auto; }
+}
 @media (max-width: 1100px) {
-  #app { height: auto; grid-template-columns: minmax(0, 1fr); grid-template-rows: none; grid-template-areas: "bar" "loads" "view" "pm" "dock" "tree"; }
-  .view { height: 62vh; min-height: 340px; }
-  .tree ul { max-height: 360px; }
+  #app, #app.learning-view { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; grid-template-areas: "bar" "view" "vpanel" "side" "loads" "dock"; }
+  #app, #metalApp { --wl-view-h: clamp(320px, 58vh, 560px); }
+  .wl-side { position: static; max-height: none; overflow: visible; }
+  .wl-run { order: 1; position: sticky; top: auto; bottom: 0; border-radius: 0 0 10px 10px; border-top: 1px solid var(--line); border-bottom: 0; box-shadow: 0 -6px 16px rgba(0, 0, 0, 0.14); }
   .checks, .secwrap, .predict { grid-template-columns: minmax(0, 1fr); }
 }
 @media (max-width: 560px) {
@@ -268,9 +371,7 @@ body { margin: 0; }
 .hud summary { display: none; cursor: pointer; padding: 8px; font-weight: 600; }
 @media(max-width:560px) {
   #app { padding: 8px; }
-  #app.learning-view { grid-template-rows: auto auto 470px auto; }
   .learn-layout, #localForm { grid-template-columns: minmax(0,1fr); }
-  .view .hud { top: auto; bottom: 12px; left: 8px; right: 8px; display: block; max-height: 170px; overflow: auto; background: var(--panel); }
   .hud summary { display: block; }
   .hud-row { flex-wrap: wrap; justify-content: flex-start; }
   .view { width: 100%; min-width: 0; }
@@ -288,7 +389,7 @@ body { margin: 0; }
   <button class="btn" type="button" data-return-beam="beam">Beam · choose supports and loads</button>
   <button class="btn" type="button" id="toMetalWing">Full-scale metal wing: D.520 →</button>
 </nav>
-<div id="app" class="learning-view" hidden>
+<div id="app" hidden>
   <header class="bar panel" aria-label="Commands">
     <div class="brand">
       <svg viewBox="0 0 76 44" aria-hidden="true"><path d="M3 24 C 12 8, 40 6, 73 21 L 73 23 C 40 30, 14 32, 3 24 Z" fill="none" stroke="currentColor" stroke-width="3"/><circle cx="24" cy="21" r="3.2" fill="currentColor"/><circle cx="46" cy="21" r="3.2" fill="currentColor"/></svg>
@@ -296,7 +397,6 @@ body { margin: 0; }
     </div>
     <div class="group"><span>Study</span>
       <div class="row">
-        <button class="run" id="runBtn" type="button"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M4 2 L14 8 L4 14 Z" fill="currentColor"/></svg>Run study</button>
         <button class="btn" id="wingLoadBtn" type="button">Apply wing loads</button>
       </div>
     </div>
@@ -309,13 +409,50 @@ body { margin: 0; }
         <button class="tool" data-plot="mode" type="button">Modes</button>
       </div>
     </div>
-    <div class="group"><span>Learn first</span><div class="row"><button class="tool" type="button" id="learnBtn">Guided lesson</button><button class="tool" type="button" id="inputsBtn" aria-pressed="false">Edit inputs</button></div></div>
-    <div class="status" aria-live="polite"><span class="chip idle" id="stateChip">Starting</span><span id="stateText">Loading the solver</span></div>
+    <div class="group"><span>Learn first</span><div class="row"><button class="tool" type="button" id="learnBtn">Guided lesson</button><button class="tool" type="button" id="inputsBtn" aria-controls="wingSide" aria-expanded="true">Hide inputs</button></div></div>
   </header>
 
-  <aside class="tree panel" aria-label="Study tree">
-    <div class="panel-head">Study tree</div>
-    <ul id="tree"></ul>
+  <aside class="wl-side panel" id="wingSide" aria-label="Wing inputs">
+    <div class="wl-run">
+      <div class="wl-status" role="status" aria-live="polite"><span class="chip idle" id="stateChip">Starting</span><span id="stateText">Loading the solver</span></div>
+      <div class="wl-run-actions"><button class="run" id="runBtn" type="button"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M4 2 L14 8 L4 14 Z" fill="currentColor"/></svg>Solve</button></div>
+      <label class="wl-auto"><input type="checkbox" id="wingAutoSolve"> Solve automatically after each valid change</label>
+    </div>
+    <div id="wingImportGate" class="wl-gate" role="region" aria-label="Imported outer geometry: structural inputs to confirm" hidden></div>
+    <p class="wl-modelnote" id="wingModelNote"><b>Generic browser study model.</b> Edits change this app's analysis and 3-D view only. They do not update the printable CAD/STL or the approved fabrication layout. Presets are historical / course starting points.</p>
+    <details class="wl-acc" id="wlGeometry" open>
+      <summary>Geometry <span class="wl-badge" id="wlGeometryBadge"></span></summary>
+      <div class="wl-acc-body" id="wingGeometryForm"></div>
+    </details>
+    <details class="wl-acc" id="wlStructure" open>
+      <summary>Structure <span class="wl-badge" id="wlStructureBadge"></span></summary>
+      <div class="wl-acc-body" id="wingStructureForm"></div>
+    </details>
+    <details class="wl-acc" id="wlLoads" open>
+      <summary>Loads</summary>
+      <div class="wl-acc-body"><div id="wingLoadEditor"></div><p class="note wl-fallback">Load case and factor of safety: <b>Study tree → External loads</b> below. Point and line loads: the <b>Build a wing load</b> tab under the 3-D view.</p></div>
+    </details>
+    <details class="wl-acc" id="wlTreeSection" open>
+      <summary>Materials, joints, support &amp; results</summary>
+      <div class="wl-acc-body wl-treepm">
+        <aside class="tree panel" aria-label="Study tree">
+          <div class="panel-head">Study tree</div>
+          <ul id="tree"></ul>
+        </aside>
+        <aside class="pm panel" aria-label="Properties">
+          <div class="panel-head"><span id="pmHead">Properties</span></div>
+          <div class="pm-body" id="pm"></div>
+        </aside>
+      </div>
+    </details>
+    <details class="wl-acc" id="wlFiles">
+      <summary>Study files</summary>
+      <div class="wl-acc-body"><div id="wingStudyFiles"></div><div id="wingShare"></div><p class="note wl-fallback">Saving and opening study files is not available in this build.</p></div>
+    </details>
+    <details class="wl-acc" id="wlInventory">
+      <summary>Model inventory <span class="wl-badge" id="wlInventoryBadge"></span></summary>
+      <div class="wl-acc-body" id="wingInventory"></div>
+    </details>
   </aside>
 
   <section class="panel" style="grid-area:loads;padding:12px 18px" aria-label="Wing load shortcuts">
@@ -336,31 +473,6 @@ body { margin: 0; }
       <div class="legend-title" id="legendTitle"></div>
       <div class="legend" id="legend"></div>
     </div>
-    <details class="hud" id="hudControls" open aria-label="View and display">
-      <summary>View &amp; display controls</summary>
-      <div class="hud-row" role="group" aria-label="Standard views">
-        <button type="button" data-view="iso">Isometric</button>
-        <button type="button" data-view="plan">Planform</button>
-        <button type="button" data-view="section">Section</button>
-        <button type="button" data-view="front">Leading edge</button>
-      </div>
-      <div class="hud-row" role="group" aria-label="Wing anatomy">
-        <button type="button" data-anatomy="assembled" aria-pressed="true">Complete wing</button>
-        <button type="button" data-anatomy="inside" aria-pressed="false">Inside wing</button>
-        <button type="button" data-anatomy="ribs" aria-pressed="false">Ribs only</button>
-        <button type="button" data-anatomy="rods" aria-pressed="false">Rods &amp; sleeves</button>
-      </div>
-      <div class="hud-row">
-        <button type="button" id="defBtn" aria-pressed="false">Deformed</button>
-        <label for="scaleIn">Scale <input id="scaleIn" type="range" min="0" max="2" step="0.05" value="1"></label>
-        <button type="button" id="xrayBtn" aria-pressed="false">See-through</button>
-      </div>
-      <div class="hud-row">
-        <label for="explodeIn">Explode <input id="explodeIn" type="range" min="0" max="60" step="1" value="0"></label>
-        <button type="button" id="clipBtn" aria-pressed="false">Clip</button>
-        <label for="clipIn"><span class="sr">Clip station</span><input id="clipIn" type="range" min="0" max="450" step="1" value="150"></label>
-      </div>
-    </details>
     <div class="probe" id="probe" hidden></div>
     <div class="anatomy-key" id="anatomyKey">
       <b>Undeformed project geometry · select “Inside wing” to reveal the ribs</b>
@@ -380,9 +492,53 @@ body { margin: 0; }
     </div>
   </main>
 
-  <aside class="pm panel" aria-label="Properties">
-    <div class="panel-head"><span id="pmHead">Properties</span></div>
-    <div class="pm-body" id="pm"></div>
+  <aside class="wl-vpanel panel" id="wingViewPanel" aria-label="View and display">
+    <div class="panel-head">View &amp; display</div>
+    <div class="wl-vbody">
+      <div>
+        <span class="wl-vlabel" id="zoomLabel">Zoom · changes the view only</span>
+        <div class="wl-zoom" role="group" aria-labelledby="zoomLabel">
+          <button class="btn" type="button" id="zoomOut" aria-label="Zoom out" title="Zoom out">−</button>
+          <button class="btn" type="button" id="zoomIn" aria-label="Zoom in" title="Zoom in">+</button>
+          <button class="btn" type="button" id="zoomFit" title="Fit the whole wing in the view">Fit</button>
+          <button class="btn" type="button" id="zoomReset" title="Isometric view at the starting distance">Reset view</button>
+        </div>
+      </div>
+      <div class="wl-readout" id="viewReadout">
+        <p id="viewDims"><b>View zoom only.</b> Zooming never changes the size of the wing.</p>
+        <div class="wl-scale"><span class="wl-scalebar" id="viewScaleBar" style="width:60px"></span><span id="viewScaleText">–</span></div>
+        <p class="note" id="viewZoomText">Drag to rotate · right-drag or two fingers to pan · wheel or pinch to zoom.</p>
+        <p class="note wl-viewstale" id="viewStale" hidden>Showing the last solved model. Press Solve to update the 3-D view.</p>
+      </div>
+      <details class="hud" id="hudControls" open aria-label="View and display">
+        <summary>View &amp; display controls</summary>
+        <span class="wl-vlabel">Standard views</span>
+        <div class="hud-row" role="group" aria-label="Standard views">
+          <button type="button" data-view="iso">Isometric</button>
+          <button type="button" data-view="plan">Planform</button>
+          <button type="button" data-view="section">Section</button>
+          <button type="button" data-view="front">Leading edge</button>
+        </div>
+        <span class="wl-vlabel">Show</span>
+        <div class="hud-row" role="group" aria-label="Wing anatomy">
+          <button type="button" data-anatomy="assembled" aria-pressed="true">Complete wing</button>
+          <button type="button" data-anatomy="inside" aria-pressed="false">Inside wing</button>
+          <button type="button" data-anatomy="ribs" aria-pressed="false">Ribs only</button>
+          <button type="button" data-anatomy="rods" aria-pressed="false">Rods &amp; sleeves</button>
+        </div>
+        <span class="wl-vlabel">Results display</span>
+        <div class="hud-row">
+          <button type="button" id="defBtn" aria-pressed="false">Deformed</button>
+          <label for="scaleIn">Scale <input id="scaleIn" type="range" min="0" max="2" step="0.05" value="1"></label>
+          <button type="button" id="xrayBtn" aria-pressed="false">See-through</button>
+        </div>
+        <div class="hud-row">
+          <label for="explodeIn">Explode <input id="explodeIn" type="range" min="0" max="60" step="1" value="0"></label>
+          <button type="button" id="clipBtn" aria-pressed="false">Clip</button>
+          <label for="clipIn"><span class="sr">Clip station</span><input id="clipIn" type="range" min="0" max="450" step="1" value="150"></label>
+        </div>
+      </details>
+    </div>
   </aside>
 
   <section class="dock panel" aria-label="Results">
@@ -398,6 +554,7 @@ body { margin: 0; }
       <button role="tab" type="button" data-tab="predict" aria-selected="false">Predict &amp; challenge</button>
       <button role="tab" type="button" data-tab="report" aria-selected="false">Report</button>
     </div>
+    <div class="wl-stale" id="wingStale" role="status" hidden></div>
     <div class="tabpanel" id="tab-learn" role="tabpanel">
       <nav class="learn-nav" aria-label="Learning steps">
         <button class="btn" data-lesson="0" aria-pressed="true">1 · Identify the parts</button>
@@ -469,7 +626,7 @@ body { margin: 0; }
       <div class="predict">
         <div class="callout">
           <h3>Predict, then run</h3>
-          <p>Write down your expectation before you press Run. Change one input, predict, run, compare.</p>
+          <p>Write down your expectation before you press Solve. Change one input, predict, solve, compare.</p>
           <div class="field"><label for="pDefl">Tip deflection <small>mm, limit load</small></label><input id="pDefl" type="number" step="0.1" placeholder="e.g. 12"></div>
           <div class="field"><label for="pGov">Other governing check (buckling unresolved)</label><select id="pGov"></select></div>
           <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" id="pLock" type="button">Lock prediction</button><span class="note" id="pState">No prediction locked.</span></div>
@@ -512,6 +669,7 @@ body { margin: 0; }
 /*__ENGINE__*/
 /*__TEACHING_MODELS__*/
 /*__WING_LOADS_UI__*/
+/*__WING_STUDY_IO__*/
 </script>
 <script>
 (() => {
@@ -545,6 +703,9 @@ body { margin: 0; }
   const lessonAnswers = new Map();
   let savedLessonLoad = null;
   let designBaseline = null, saveDesignAfterRun = false;
+  // Explicit Solve, as in the Beam Lab: field edits stay pending until Solve (or "Solve automatically");
+  // a rejected edit leaves the previous valid inputs and the last solved result in place.
+  let autoSolve = false, inputError = null, fieldErrors = {};
 
   function materials() {
     const pla = { ...E.MATERIALS[S.plaKey] };
@@ -599,26 +760,37 @@ body { margin: 0; }
     S.selected = id;
     const plotFor = { "res-stress": "stress", "res-disp": "disp", "res-fos": "fos", "res-mode": "mode" };
     if (plotFor[id]) setPlot(plotFor[id]);
+    $("#wlTreeSection").open = true;
     renderTree();
     renderPM();
   }
 
   // ------------------------------------------------------------ property manager
-  function numField(id, label, hint, value, step, onSet) {
+  // Property fields are input edits: they mark the study out of date (Solve, or automatic solving when chosen).
+  // An optional check(v) returns a message for a value the engine cannot use; nothing is applied then.
+  const chordFraction = (v) => (v >= 0 && v <= 1 ? null : "must lie between 0 (leading edge) and 1 (trailing edge)");
+  function numField(id, label, hint, value, step, onSet, check) {
     const w = el("div", { class: "field" }, `<label for="${id}">${label}${hint ? `<small>${hint}</small>` : ""}</label><input id="${id}" type="number" step="${step}" value="${value}">`);
-    w.querySelector("input").addEventListener("change", (e) => { const v = parseFloat(e.target.value); if (isFinite(v)) { onSet(v); changed(); } });
+    w.querySelector("input").addEventListener("change", (e) => {
+      const v = parseFloat(e.target.value), problem = !e.target.value.trim() || !isFinite(v) ? "enter a finite number" : check ? check(v) : null;
+      e.target.setAttribute("aria-invalid", String(!!problem));
+      if (problem) { e.target.value = value; flash(`${label.replace(/<[^>]+>/g, "")}: ${problem}. Not applied; the previous value ${value} is kept.`); return; }
+      value = v; onSet(v); edited();
+    });
     return w;
   }
+  const positive = (v) => (v > 0 ? null : "must be greater than zero");
+  const REJECT = Symbol("rejected");
   function selField(id, label, options, value, onSet) {
     const w = el("div", { class: "field" }, `<label for="${id}">${label}</label><select id="${id}">${options.map(([v, t]) => `<option value="${v}" ${String(v) === String(value) ? "selected" : ""}>${t}</option>`).join("")}</select>`);
-    w.querySelector("select").addEventListener("change", (e) => { onSet(e.target.value); changed(); });
+    w.querySelector("select").addEventListener("change", (e) => { onSet(e.target.value); edited(); });
     return w;
   }
   function segField(options, value, onSet, label) {
     const w = el("div", { class: "seg", role: "group", "aria-label": label || "" });
     options.forEach(([v, t]) => {
       const b = el("button", { type: "button", "aria-pressed": String(v === value) }, t);
-      b.addEventListener("click", () => { onSet(v); changed(); renderPM(); });
+      b.addEventListener("click", () => { if (onSet(v) !== REJECT) edited(); renderPM(); });
       w.append(b);
     });
     return w;
@@ -634,43 +806,39 @@ body { margin: 0; }
     const head = (t, lede) => { pm.append(el("h2", {}, t)); if (lede) pm.append(el("p", { class: "lede" }, lede)); };
     if (id === "part") {
       $("#pmHead").textContent = "Part properties";
-      head("Semi-wing geometry", "Copy the values from your team's Code-to-Print form (R02). The solver rebuilds the printed section with the same rules as the CAD code.");
-      pm.append(fs("Airfoil and planform",
-        (() => { const w = el("div", { class: "field" }, `<label for="naca">NACA code</label><input id="naca" type="text" value="${g.naca}" maxlength="9">`); w.querySelector("input").addEventListener("change", (e) => { try { S.geometry.naca = E.normalizeNaca(e.target.value); changed(); } catch (err) { flash(err.message); } }); return w; })(),
-        numField("span", "Semi-span", "mm", g.semiSpan, 5, (v) => (S.geometry.semiSpan = v)),
-        numField("rc", "Root chord", "mm", g.rootChord, 5, (v) => (S.geometry.rootChord = v)),
-        numField("tc", "Tip chord", "mm", g.tipChord, 5, (v) => (S.geometry.tipChord = v))));
-      pm.append(fs("Printed structure",
-        numField("skin", "Skin thickness", "mm, measured vertically", g.skin, 0.1, (v) => (S.geometry.skin = v)),
-        numField("rib", "Rib thickness", "mm", g.ribThickness, 0.1, (v) => (S.geometry.ribThickness = v)),
-        selField("mods", "Modules", [[1, "1 · one-piece teaching wing"], [2, "2"], [3, "3"]], g.modules, (v) => (S.geometry.modules = +v)),
-        selField("clr", "Rod clearance <small>radial, from coupon</small>", [[0.15, "0.15 mm"], [0.25, "0.25 mm"], [0.35, "0.35 mm"]], g.clearance, (v) => (S.geometry.clearance = +v))));
-      const area = 0.5 * (g.rootChord + g.tipChord) * g.semiSpan, taper = g.tipChord / g.rootChord;
+      head("Semi-wing geometry", "Edit the airfoil, planform, skin, ribs and rods in Geometry and Structure at the top of this column. Copy the values from your team's Code-to-Print form (R02); edits here do not change that CAD.");
+      const area = 0.5 * (g.rootChord + g.tipChord) * g.semiSpan, taper = g.tipChord / g.rootChord, ribs = E.ribStations(E.makeGeometry(g));
+      pm.append(fs("Inputs on screen", kv([
+        ["Airfoil", `NACA ${g.naca}`], ["Semi-span · chords", `${nf(g.semiSpan, 1)} mm · ${nf(g.rootChord, 1)} / ${nf(g.tipChord, 1)} mm`],
+        ["Modules · seams", `${g.modules} · ${E.seams(g).map((v) => nf(v, 1)).join(", ") || "none"}${E.seams(g).length ? " mm" : ""}`],
+        ["Skin · rib thickness", `${nf(g.skin, 2)} · ${nf(g.ribThickness, 2)} mm`], ["Ribs", `${ribs.length}${ribs.length ? ` at ${ribs.map((v) => nf(v, 1)).join(", ")} mm` : ""}`],
+        ["Rods", g.rodFractions.length ? `${g.rodFractions.length} × ⌀${nf(g.rodDiameter, 2)} mm at x/c ${g.rodFractions.map((f) => f.toFixed(2)).join(", ")}` : "none"]])));
       pm.append(fs("Derived", kv([
         ["Semi-wing area", `${nf(area / 100, 1)} cm²`], ["Taper ratio", nf(taper, 3)], ["Aspect ratio (full wing)", nf((4 * g.semiSpan ** 2) / (2 * area), 2)],
-        ["Ribs", `${E.ribStations(g).length} at ${E.ribStations(g).map((v) => nf(v, 1)).join(", ")} mm`], ["Seams", E.seams(g).map((v) => nf(v, 0)).join(", ") + " mm"],
-        ["Rods", `${g.rodFractions.length} × ⌀${g.rodDiameter} mm at ${g.rodFractions.map((f) => f.toFixed(2)).join(" and ")} c`],
-        ["Printed PLA mass", R ? `${nf(R.mass.printed, 1)} g` : "–"]])));
+        [stale ? "Printed PLA mass (last solved model)" : "Printed PLA mass", R ? `${nf(R.mass.printed, 1)} g` : "–"]])));
+      const jump = el("div", { class: "lesson-actions" }, '<button class="btn" type="button" data-wl-open="wlGeometry">Edit geometry</button><button class="btn" type="button" data-wl-open="wlStructure">Edit structure</button>');
+      jump.querySelectorAll("[data-wl-open]").forEach((b) => b.addEventListener("click", () => openSection(b.dataset.wlOpen)));
+      pm.append(jump);
     } else if (id === "materials" || id === "mat-pla") {
       $("#pmHead").textContent = "Material";
       head("Printed PLA card", "Printed PLA is anisotropic. Upright modules put bending stress across layer interfaces, the weakest direction. Replace these placeholder values with coupon data.");
       pm.append(fs("Card", segField([["pla_upright", "Upright (span = print Z)"], ["pla_flat", "Flat (span in plane)"]], S.plaKey, (v) => { S.plaKey = v; S.plaOver = { E: null, ft: null, fc: null, fs: null }; }, "PLA orientation"),
-        numField("pE", "Elastic modulus E", "MPa", pla.E, 50, (v) => (S.plaOver.E = v)),
-        numField("pft", "Tensile strength", "MPa", pla.ft, 1, (v) => (S.plaOver.ft = v)),
-        numField("pfc", "Compressive strength", "MPa", pla.fc, 1, (v) => (S.plaOver.fc = v)),
-        numField("pfs", "Shear strength", "MPa", pla.fs, 1, (v) => (S.plaOver.fs = v))));
+        numField("pE", "Elastic modulus E", "MPa", pla.E, 50, (v) => (S.plaOver.E = v), positive),
+        numField("pft", "Tensile strength", "MPa", pla.ft, 1, (v) => (S.plaOver.ft = v), positive),
+        numField("pfc", "Compressive strength", "MPa", pla.fc, 1, (v) => (S.plaOver.fc = v), positive),
+        numField("pfs", "Shear strength", "MPa", pla.fs, 1, (v) => (S.plaOver.fs = v), positive)));
       pm.append(fs("Fixed values", kv([["Poisson's ratio", pla.nu], ["Shear modulus G", `${nf(pla.E / (2 * (1 + pla.nu)), 0)} MPa`], ["Density", `${pla.rho} g/cm³`]])));
       pm.append(el("p", { class: "note" }, pla.source));
     } else if (id === "mat-rod") {
       $("#pmHead").textContent = "Material";
       head("Carbon rod card", "Hobby-grade and aerospace-grade pultruded rods differ by about five times in stiffness. Measure your rod with a hanging weight if you can.");
       pm.append(fs("Card", segField([["rod_hobby", "Hobby grade"], ["rod_t700", "T700 aerospace"]], S.rodKey, (v) => { S.rodKey = v; S.rodOver = { E: null }; }, "Rod card"),
-        numField("rE", "Elastic modulus E", "MPa (flexural)", rod.E, 1000, (v) => (S.rodOver.E = v))));
+        numField("rE", "Elastic modulus E", "MPa (flexural)", rod.E, 1000, (v) => (S.rodOver.E = v), positive)));
       pm.append(fs("Fixed values", kv([["Tension / compression", `${rod.ft} / ${rod.fc} MPa`], ["Shear", `${rod.fs} MPa`], ["Density", `${rod.rho} g/cm³`]])));
       const hang = el("fieldset", {}, `<legend>Measure E with a hanging weight</legend><p class="note">Clamp the rod, hang a mass at length L, measure the drop δ. E = P L³ / (3 δ I).</p>`);
       const st = { m: 100, L: 300, d: 0 };
       const out = el("p", { class: "scoreline" }, "Enter a measured drop.");
-      const upd = () => { if (st.d > 0) { const I = (Math.PI * g.rodDiameter ** 4) / 64; const Ev = (st.m * 9.81e-3 * st.L ** 3) / (3 * st.d * I); out.innerHTML = `E ≈ <b>${nf(Ev / 1000, 1)} GPa</b> <button class="btn" type="button" id="useE">Use it</button>`; out.querySelector("#useE").addEventListener("click", () => { S.rodOver.E = Math.round(Ev); changed(); renderPM(); }); } };
+      const upd = () => { if (st.d > 0) { const I = (Math.PI * g.rodDiameter ** 4) / 64; const Ev = (st.m * 9.81e-3 * st.L ** 3) / (3 * st.d * I); out.innerHTML = `E ≈ <b>${nf(Ev / 1000, 1)} GPa</b> <button class="btn" type="button" id="useE">Use it</button>`; out.querySelector("#useE").addEventListener("click", () => { S.rodOver.E = Math.round(Ev); edited(); renderPM(); }); } };
       for (const [k, lab, step] of [["m", "Hanging mass (g)", 10], ["L", "Free length L (mm)", 10], ["d", "Measured drop δ (mm)", 0.1]]) {
         const w = el("div", { class: "field" }, `<label for="h${k}">${lab}</label><input id="h${k}" type="number" step="${step}" value="${st[k]}">`);
         w.querySelector("input").addEventListener("input", (e) => { st[k] = parseFloat(e.target.value) || 0; upd(); });
@@ -683,9 +851,10 @@ body { margin: 0; }
       $("#pmHead").textContent = "Connections";
       head("How the parts are joined", "Same printed parts, very different structures. A slip-fit rod only bends with the wing. Across a dry seam the shell is cut, and only the two rods carry the bending moment.");
       pm.append(fs("Rods in sleeves", segField([[false, "Slip fit"], [true, "Epoxied"]], S.assembly.rodsBonded, (v) => (S.assembly.rodsBonded = v), "Rods")));
-      pm.append(fs("Module seams", segField([[false, "Dry"], [true, "Epoxied"]], S.assembly.seamsBonded, (v) => (S.assembly.seamsBonded = v), "Seams"),
-        numField("lf", "Rod free length at a dry seam", "mm (between the paired interface ribs)", S.assembly.seamFreeLength, 1, (v) => (S.assembly.seamFreeLength = v)),
-        numField("adh", "Epoxy butt-joint strength", "MPa", S.assembly.adhesiveTensile, 0.5, (v) => (S.assembly.adhesiveTensile = v))));
+      // A dry seam with no rods would disconnect the modules: reject that switch instead of failing at Solve.
+      pm.append(fs("Module seams", segField([[false, "Dry"], [true, "Epoxied"]], S.assembly.seamsBonded, (v) => { if (!v && !g.rodFractions.length && E.seams(g).length) { flash("Dry seams need at least one rod across each seam (Structure → Rods); the wing would fall apart into modules. Not applied: seams stay epoxied."); return REJECT; } S.assembly.seamsBonded = v; }, "Seams"),
+        numField("lf", "Rod free length at a dry seam", "mm (between the paired interface ribs)", S.assembly.seamFreeLength, 1, (v) => (S.assembly.seamFreeLength = v), positive),
+        numField("adh", "Epoxy butt-joint strength", "MPa", S.assembly.adhesiveTensile, 0.5, (v) => (S.assembly.adhesiveTensile = v), positive)));
       if (R) pm.append(fs("Seam model", kv([["Seam spring k = n E I / L_f", `${nf(R.seam.kBend / 1000, 1)} N·m/rad`], ["Clearance dead band at tip", `${nf(R.seam.freePlay, 2)} mm`], ["Tip stiffness, this joint", `${nf(R.stiffness.tip, 3)} N/mm`], ["Tip stiffness, rigid seams", `${nf(R.stiffness.rigidSeams, 3)} N/mm`]])));
     } else if (id === "fixtures" || id === "fix") {
       $("#pmHead").textContent = "Fixture";
@@ -700,21 +869,21 @@ body { margin: 0; }
       pm.append(el("p",{class:"note"},"For point, rectangular, triangular, trapezoidal, elliptic, parabolic, Schrenk or CSV-table loads at any chord position x/c, open the Build a wing load tab."));
       if (S.load.kind === "flight") {
         pm.append(fs("Lift",
-          numField("am", "Aircraft mass", "kg", S.load.aircraftMass, 0.1, (v) => (S.load.aircraftMass = v)),
+          numField("am", "Aircraft mass", "kg", S.load.aircraftMass, 0.1, (v) => (S.load.aircraftMass = v), (v) => (v > 0 ? null : "must be greater than 0 kg")),
           numField("nf", "Load factor n", "", S.load.loadFactor, 0.5, (v) => (S.load.loadFactor = v)),
           selField("dist", "Spanwise shape", [["schrenk", "Schrenk"], ["elliptic", "Elliptic"], ["planform", "Planform"], ["uniform", "Uniform"], ["tip", "Point load at tip"]], S.load.distribution, (v) => (S.load.distribution = v)),
-          numField("lcf", "Lift acts at", "fraction of chord", S.load.liftFraction, 0.01, (v) => (S.load.liftFraction = v)),
+          numField("lcf", "Lift acts at", "fraction of chord", S.load.liftFraction, 0.01, (v) => (S.load.liftFraction = v), chordFraction),
           selField("ir", "Inertia relief", [["true", "Included"], ["false", "Ignored"]], String(S.load.inertiaRelief), (v) => (S.load.inertiaRelief = v === "true"))));
       } else if (S.load.kind === "tip") {
         pm.append(fs("Tip force",
           numField("tf", "Force", "N, upward", S.load.tipForce, 1, (v) => (S.load.tipForce = v)),
-          numField("tfc", "Applied at", "fraction of tip chord", S.load.tipFraction, 0.01, (v) => (S.load.tipFraction = v))));
+          numField("tfc", "Applied at", "fraction of tip chord", S.load.tipFraction, 0.01, (v) => (S.load.tipFraction = v), chordFraction)));
       }
       pm.append(fs("Checks",
-        numField("fos", "Factor of safety", "on strength and buckling", S.load.fos, 0.1, (v) => (S.load.fos = v)),
-        numField("tm", "Tip sensor mass", "g (lowers the frequency)", S.load.tipMass, 1, (v) => (S.load.tipMass = v)),
-        numField("cd", "Max tip deflection", "mm", S.criteria.maxTipDeflection, 1, (v) => (S.criteria.maxTipDeflection = v)),
-        numField("ct", "Max tip twist", "deg", S.criteria.maxTipTwist, 0.1, (v) => (S.criteria.maxTipTwist = v))));
+        numField("fos", "Factor of safety", "on strength and buckling", S.load.fos, 0.1, (v) => (S.load.fos = v), (v) => (v > 0 ? null : "must be greater than 0 (a factor of 0 or less would make every factored check pass)")),
+        numField("tm", "Tip sensor mass", "g (lowers the frequency)", S.load.tipMass, 1, (v) => (S.load.tipMass = v), (v) => (v >= 0 ? null : "cannot be negative")),
+        numField("cd", "Max tip deflection", "mm", S.criteria.maxTipDeflection, 1, (v) => (S.criteria.maxTipDeflection = v), (v) => (v > 0 ? null : "must be greater than 0 mm")),
+        numField("ct", "Max tip twist", "deg", S.criteria.maxTipTwist, 0.1, (v) => (S.criteria.maxTipTwist = v), (v) => (v > 0 ? null : "must be greater than 0°"))));
       if (R && S.load.kind === "flight") pm.append(kv([["Semi-wing lift", `${nf(R.liftN, 2)} N`], ["Net force after relief", `${nf(R.appliedForce, 2)} N`]]));
     } else if (id === "mesh") {
       $("#pmHead").textContent = "Mesh and solver";
@@ -736,38 +905,316 @@ body { margin: 0; }
       if (R) pm.append(kv([["Tip deflection", `${nf(R.deflection.at(-1), 2)} mm`], ["Tip twist", `${nf((R.twist.at(-1) * 180) / Math.PI, 3)}°`], ["Root bending moment", `${nf(R.M[0] / 1000, 3)} N·m`], ["Root torque (nose-up +)", `${nf(R.T[0] / 1000, 4)} N·m`], ["First bending mode", `${nf(R.fem.fBending[0], 2)} Hz`], ["First torsion mode", `${nf(R.fem.fTorsion[0], 1)} Hz`], ["Other governing check (buckling unresolved)", `${R.governing.name.replace(/ \(.*\)/, "")} · U ${nf(R.governing.U, 2)}`]]));
     }
   }
-  let flashTimer;
+  // An input error stays on screen (chip "Input error") until the next valid edit or a successful solve;
+  // the previous valid inputs and the last solved result are kept meanwhile.
   function flash(msg) {
-    $("#stateChip").className = "chip bad"; $("#stateChip").textContent = "Input error"; $("#stateText").textContent = msg;
-    clearTimeout(flashTimer); flashTimer = setTimeout(() => setStatus(), 5000);
+    inputError = msg;
+    setStatus();
+  }
+
+  // ------------------------------------------------------------ input column: geometry and structure
+  // Only what the engine models is offered. Every edit is validated atomically: the candidate geometry goes
+  // through WingEngine.makeGeometry plus the explicit fit and bound checks below, and nothing is applied
+  // (no clipping, no partial update) unless all of them pass.
+  const CONTACT_TOL = 0.1;   // mm: a sleeve may touch (fuse with) an inner skin, a cavity wall or another sleeve by this much
+  const MAX_RODS = 8;
+  const GEO_FIELDS = { naca: "NACA airfoil", semiSpan: "Semi-span", rootChord: "Root chord", tipChord: "Tip chord", modules: "Modules", skin: "Skin thickness", ribThickness: "Rib thickness", ribs: "Rib layout", rods: "Rods", rodDiameter: "Rod diameter", clearance: "Rod clearance", sleeveWall: "Sleeve wall" };
+  const esc = (s) => String(s).replace(/[&<>"]/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[ch]);
+  const mm = (v, d = 1) => `${nf(v, d)} mm`;
+  const describeLoad = (p, i) => `Load ${i + 1} (${p.kind === "point" ? `point force ${sig(p.force, 3)} N at y = ${mm(p.position)}` : Number.isFinite(p.start) && Number.isFinite(p.end) ? `line load from ${mm(p.start)} to ${mm(p.end)}` : p.kind})`;
+  const loadReach = (p) => Math.max(...["position", "start", "end"].map((k) => (Number.isFinite(p[k]) ? p[k] : -Infinity)));
+  function checkGeometry(candidate) {
+    const c = { ...candidate, modules: +candidate.modules, rodFractions: [...(candidate.rodFractions || [])] };
+    for (const k of ["semiSpan", "rootChord", "tipChord", "skin", "ribThickness", "rodDiameter", "sleeveWall"])
+      if (!Number.isFinite(c[k]) || !(c[k] > 0)) throw new Error(`${GEO_FIELDS[k]} must be a positive number of millimetres.`);
+    if (!Number.isFinite(c.clearance) || c.clearance < 0 || c.clearance > 0.8) throw new Error("Radial rod clearance must lie between 0 and 0.8 mm (the engine's slip-fit range).");
+    if (c.tipChord > c.rootChord) throw new Error(`Tip chord ${mm(c.tipChord)} exceeds root chord ${mm(c.rootChord)}. This model is a straight taper with tip chord ≤ root chord.`);
+    if (![1, 2, 3].includes(c.modules)) throw new Error("Use 1, 2 or 3 modules.");
+    if (c.rodFractions.length > MAX_RODS) throw new Error(`Use at most ${MAX_RODS} rods in this browser model.`);
+    c.rodFractions.forEach((f, i) => { if (!Number.isFinite(f) || f <= 0 || f >= 1) throw new Error(`Rod ${i + 1}: x/c must be a fraction between 0 and 1.`); });
+    // Custom interior ribs against the (new) span, end caps, seams and each other, named rib by rib.
+    if (c.customInteriorRibs != null) {
+      const ribs = [...c.customInteriorRibs].sort((a, b) => a - b), seamsNew = E.moduleBounds(c).slice(1, -1);
+      if (ribs.length > 16) throw new Error("Use at most 16 interior ribs.");
+      const lo = c.cap + c.ribThickness / 2, hi = c.semiSpan - c.cap - c.ribThickness / 2;
+      for (const y of ribs) {
+        if (!Number.isFinite(y)) throw new Error("Enter every rib station as a number of millimetres from the root.");
+        if (y <= lo || y >= hi) throw new Error(`Interior rib at y = ${mm(y)} lies outside the span or inside a ${mm(c.cap)} end cap: stations must lie between ${mm(lo)} and ${mm(hi)}.`);
+        const s = seamsNew.find((v) => Math.abs(y - v) <= c.interfaceOffset + c.ribThickness);
+        if (s != null) throw new Error(`Interior rib at y = ${mm(y)} lies in the protected zone of the seam at y = ${mm(s)} (±${mm(c.interfaceOffset + c.ribThickness)}), where the two locked interface ribs sit.`);
+      }
+      for (let i = 1; i < ribs.length; i++) if (ribs[i] - ribs[i - 1] <= c.ribThickness) throw new Error(`Interior ribs at y = ${mm(ribs[i - 1])} and ${mm(ribs[i])} overlap: their centres must be more than one rib thickness (${mm(c.ribThickness, 2)}) apart.`);
+    }
+    const g = E.makeGeometry(c);   // the engine's own rules (NACA code, interface offset, rib count, …)
+    const stations = [...new Set([0, ...E.seams(g), ...E.ribStations(g), g.semiSpan])].sort((a, b) => a - b);
+    for (const y of [0, g.semiSpan]) {
+      try { E.ringLoops(g, y); } catch (err) { throw new Error(`${err.message} Use a thinner skin, a thicker airfoil or a larger chord.`); }
+    }
+    // Sleeves: inside the cavity chordwise, between the inner skins vertically, and clear of each other, at every
+    // station (root, ribs, seams, tip: the smallest chord is the critical one).
+    // For each rod (and each pair) keep the worst gap over all stations and the first station where it fails.
+    const Rs = E.sleeveRadius(g), n = g.rodFractions.length, rod = (i) => `Rod ${i + 1} at ${nf(g.rodFractions[i], 2)}c`;
+    const at = (y) => `y = ${mm(y)} (chord ${mm(E.chordAt(g, y))})`, D = `outer ⌀${mm(2 * Rs, 2)}`;
+    const worst = { front: {}, rear: {}, fit: {}, pair: {} };
+    const keep = (list, key, gap, y, side) => {
+      const w = list[key] || (list[key] = { gap: Infinity, y: 0, side: "", first: null });
+      if (gap < w.gap) Object.assign(w, { gap, y, side });
+      if (gap < -CONTACT_TOL && w.first == null) w.first = y;
+    };
+    for (const y of stations) {
+      const ch = E.chordAt(g, y), centres = E.rodCentres(g, y);
+      centres.forEach(([xc, zc], i) => {
+        keep(worst.front, i, xc - Rs - g.cavityStart * ch, y);
+        keep(worst.rear, i, g.cavityEnd * ch - (xc + Rs), y);
+        for (let k = -24; k <= 24; k++) {
+          const x = xc + (Rs * k) / 24, dz = Math.sqrt(Math.max(0, Rs * Rs - (x - xc) ** 2)), v = E.verticalOrdinates(g.naca, x / ch, ch, g.te);
+          keep(worst.fit, i, v.upper - g.skin - (zc + dz), y, "upper");
+          keep(worst.fit, i, zc - dz - (v.lower + g.skin), y, "lower");
+        }
+      });
+      for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) keep(worst.pair, `${i},${j}`, Math.hypot(centres[i][0] - centres[j][0], centres[i][1] - centres[j][1]) - 2 * Rs, y);
+    }
+    const from = (w) => (w.first != null && Math.abs(w.first - w.y) > 1e-9 ? ` It already fails at y = ${mm(w.first)}.` : "");
+    for (let i = 0; i < n; i++) {
+      const f = worst.front[i], r = worst.rear[i];
+      if (f.gap < -CONTACT_TOL) throw new Error(`${rod(i)}: its sleeve (${D}) reaches ${mm(-f.gap, 2)} ahead of the cavity's front wall (${nf(g.cavityStart, 2)}c) at ${at(f.y)}.${from(f)} Move the rod aft, or use a smaller rod, clearance or sleeve wall.`);
+      if (r.gap < -CONTACT_TOL) throw new Error(`${rod(i)}: its sleeve (${D}) reaches ${mm(-r.gap, 2)} behind the cavity's rear wall (${nf(g.cavityEnd, 2)}c) at ${at(r.y)}.${from(r)} Move the rod forward, or use a smaller rod, clearance or sleeve wall.`);
+    }
+    for (let i = 0; i < n; i++) {
+      const v = worst.fit[i];
+      if (v.gap < -CONTACT_TOL) throw new Error(`${rod(i)}: its sleeve (${D}) does not fit between the inner skin surfaces at ${at(v.y)}: it would cut ${mm(-v.gap, 2)} into the ${v.side} skin (contact allowed: ${mm(CONTACT_TOL, 2)}).${from(v)} Use a smaller rod, clearance or sleeve wall, move the rod toward the thickest part of the airfoil (about 0.3c), or use a thinner skin, a thicker airfoil or a larger tip chord.`);
+    }
+    for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) {
+      const p = worst.pair[`${i},${j}`];
+      if (p.gap < -CONTACT_TOL) throw new Error(`Rods ${i + 1} and ${j + 1} (${nf(g.rodFractions[i], 2)}c and ${nf(g.rodFractions[j], 2)}c) overlap: their sleeves need centres at least ${mm(2 * Rs, 2)} apart, but they are ${mm(p.gap + 2 * Rs, 2)} apart at ${at(p.y)}.`);
+    }
+    if (!n && !S.assembly.seamsBonded && E.seams(g).length) throw new Error(`With ${g.modules} modules and dry seams the rods are the only parts that carry load across a seam. Keep at least one rod, use 1 module, or choose epoxied seams (Study tree → Connections).`);
+    // Loads are read, never edited: a geometry change that would strand a load is refused.
+    if (S.load.kind === "custom" && Array.isArray(S.load.items)) {
+      const beyond = S.load.items.map((p, i) => [p, i]).filter(([p]) => loadReach(p) > g.semiSpan + 1e-9);
+      if (beyond.length) throw new Error(`${beyond.map(([p, i]) => describeLoad(p, i)).join("; ")} ${beyond.length > 1 ? "lie" : "lies"} beyond the new semi-span (${mm(g.semiSpan)}). Move or remove ${beyond.length > 1 ? "those loads" : "that load"} first (Loads); geometry edits never move your loads.`);
+    }
+    try { E.normalize({ ...engineInput(), geometry: g }); }
+    catch (err) { throw new Error(`This geometry conflicts with the current load case or joints: ${err.message}`); }
+    return g;
+  }
+  const keyForPatch = (patch) => { const k = Object.keys(patch); return k.includes("customInteriorRibs") || k.includes("interiorRibs") ? "ribs" : k.includes("rodFractions") ? "rods" : k.find((x) => x in GEO_FIELDS) || "geometry"; };
+  // Apply a geometry patch atomically. On rejection: the message goes next to the field and into the status chip,
+  // the field shows the previous valid value again, and S and the last solved result R stay exactly as they were.
+  function applyGeometry(patch, key = keyForPatch(patch), tried = "") {
+    let g;
+    try { g = checkGeometry({ ...S.geometry, ...patch }); }
+    catch (err) {
+      fieldErrors = { [key]: `Not applied${tried ? ` (${tried})` : ""}. ${err.message}` };
+      flash(`${GEO_FIELDS[key] || "Geometry"}: not applied${tried ? ` (${tried})` : ""}. ${err.message} The previous valid inputs are kept.`);
+      setTimeout(() => renderInputs(true), 0);
+      return { ok: false, error: err.message };
+    }
+    S.geometry = { ...g, rodFractions: [...g.rodFractions], customInteriorRibs: g.customInteriorRibs == null ? null : [...g.customInteriorRibs] };
+    fieldErrors = {};
+    edited();
+    setTimeout(() => renderInputs(true), 0);
+    if (S.selected === "part") renderPM();
+    return { ok: true, geometry: S.geometry };
+  }
+  function openSection(id, focusId) {
+    const d = $("#" + id);
+    if (!d) return;
+    if ($("#app").classList.contains("learning-view")) showInputs(true);
+    d.open = true;
+    const f = focusId ? $("#" + focusId) : d.querySelector("input, select");
+    (f || d).scrollIntoView({ block: "nearest" });
+    if (f) f.focus({ preventScroll: true });
+  }
+  const numberFrom = (input) => (input.value.trim() === "" ? NaN : Number(input.value));
+  function geoField(key, id, label, hint, value, step, type = "number") {
+    const err = fieldErrors[key];
+    const attrs = type === "number" ? `type="number" step="${step}" inputmode="decimal"` : 'type="text" maxlength="9" autocomplete="off" spellcheck="false"';
+    return `<div class="field"><label for="${id}">${label}${hint ? `<small>${hint}</small>` : ""}</label><input id="${id}" ${attrs} value="${esc(value)}" aria-invalid="${!!err}" aria-describedby="wgErr-${key}"></div>${errLine(key)}`;
+  }
+  const errLine = (key) => `<p class="wl-err" id="wgErr-${key}" role="alert"${fieldErrors[key] ? "" : " hidden"}>${fieldErrors[key] ? esc(fieldErrors[key]) : ""}</p>`;
+  let inputsKey = "";
+  // Rebuild the Geometry and Structure forms when the inputs (or their messages) change; keep keyboard focus.
+  function renderInputs(force) {
+    const key = JSON.stringify([S.geometry, fieldErrors, S.assembly.seamsBonded]);
+    if (!force && key === inputsKey) return;
+    inputsKey = key;
+    const active = document.activeElement, focusId = active && active.id && $("#wingSide").contains(active) ? active.id : null;
+    renderGeometryForm();
+    renderStructureForm();
+    if (focusId && document.getElementById(focusId)) document.getElementById(focusId).focus({ preventScroll: true });
+  }
+  function renderGeometryForm() {
+    const g = S.geometry, area = 0.5 * (g.rootChord + g.tipChord) * g.semiSpan;
+    $("#wingGeometryForm").innerHTML = `${geoField("naca", "wgNaca", "NACA airfoil", "4-digit, e.g. 2412", g.naca, null, "text")}
+      ${geoField("semiSpan", "wgSpan", "Semi-span", "mm, root to tip", g.semiSpan, 1)}
+      ${geoField("rootChord", "wgRoot", "Root chord", "mm", g.rootChord, 1)}
+      ${geoField("tipChord", "wgTip", "Tip chord", "mm, straight taper, ≤ root chord", g.tipChord, 1)}
+      <div class="field"><label for="wgModules">Printed modules<small>equal lengths; seams between them</small></label><select id="wgModules" aria-invalid="${!!fieldErrors.modules}" aria-describedby="wgErr-modules">${[1, 2, 3].map((m) => `<option value="${m}" ${m === +g.modules ? "selected" : ""}>${m === 1 ? "1 · one piece" : m}</option>`).join("")}</select></div>${errLine("modules")}
+      <dl class="kv wl-kv"><dt>Semi-wing area</dt><dd>${nf(area / 100, 1)} cm²</dd><dt>Taper ratio</dt><dd>${nf(g.tipChord / g.rootChord, 3)}</dd><dt>Aspect ratio (full wing)</dt><dd>${nf((4 * g.semiSpan ** 2) / (2 * area), 2)}</dd><dt>Module length</dt><dd>${mm(g.semiSpan / g.modules)}</dd></dl>`;
+    $("#wlGeometryBadge").textContent = `NACA ${g.naca} · ${nf(g.semiSpan, 0)} × ${nf(g.rootChord, 0)}/${nf(g.tipChord, 0)} mm`;
+    $("#wgNaca").addEventListener("change", (e) => applyGeometry({ naca: e.target.value.trim() }, "naca", `NACA “${e.target.value.trim()}”`));
+    for (const [id, k] of [["wgSpan", "semiSpan"], ["wgRoot", "rootChord"], ["wgTip", "tipChord"]])
+      $("#" + id).addEventListener("change", (e) => applyGeometry({ [k]: numberFrom(e.target) }, k, e.target.value.trim() === "" ? "an empty value" : mm(numberFrom(e.target))));
+    $("#wgModules").addEventListener("change", (e) => applyGeometry({ modules: +e.target.value }, "modules", `${e.target.value} module${e.target.value === "1" ? "" : "s"}`));
+  }
+  function suggestRib(g, ribs) {
+    const sup = [0, ...ribs, g.semiSpan];
+    let best = g.semiSpan / 8, gap = -1;
+    for (let i = 1; i < sup.length; i++) {
+      const mid = (sup[i] + sup[i - 1]) / 2;
+      if (sup[i] - sup[i - 1] > gap && E.seams(g).every((s) => Math.abs(mid - s) > g.interfaceOffset + g.ribThickness)) { gap = sup[i] - sup[i - 1]; best = mid; }
+    }
+    return +best.toFixed(1);
+  }
+  function renderStructureForm() {
+    const g = S.geometry, gg = E.makeGeometry(g), ribs = E.ribStations(gg), interiors = interiorStations(gg), seams = E.seams(gg);
+    const Rs = E.sleeveRadius(gg), rh = E.holeRadius(gg), n = gg.rodFractions.length;
+    const ribRows = ribs.map((y, k) => {
+      const i = interiors.indexOf(y);
+      if (i < 0) {
+        const si = seams.reduce((b, s, j) => (Math.abs(s - y) < Math.abs(seams[b] - y) ? j : b), 0);
+        return `<tr class="locked"><td>R${k + 1}</td><td class="num">${nf(y, 1)}</td><td>interface · seam ${si + 1} · locked</td></tr>`;
+      }
+      return `<tr><td>R${k + 1}</td><td><input id="wgRibY${i}" type="number" step="0.1" inputmode="decimal" value="${y}" aria-label="Station of rib R${k + 1}, mm from the root"></td><td><button class="btn" type="button" data-wg-rib-remove="${i}" aria-label="Remove rib R${k + 1}">Remove</button></td></tr>`;
+    }).join("");
+    const rodRows = gg.rodFractions.map((f, i) => `<tr><td>Rod ${i + 1}</td><td><input id="wgRod${i}" type="number" step="0.01" min="0" max="1" inputmode="decimal" value="${f}" aria-label="Chord position x/c of rod ${i + 1}"></td><td><button class="btn" type="button" data-wg-rod-remove="${i}" aria-label="Remove rod ${i + 1}">Remove</button></td></tr>`).join("");
+    $("#wingStructureForm").innerHTML = `${geoField("skin", "wgSkin", "Skin thickness", "mm, measured vertically", g.skin, 0.1)}
+      ${geoField("ribThickness", "wgRibT", "Rib thickness", "mm, every rib", g.ribThickness, 0.1)}
+      <h4>Ribs</h4>
+      <p class="note">${ribs.length} physical rib${ribs.length === 1 ? "" : "s"} = ${interiors.length} interior (editable) + ${ribs.length - interiors.length} interface (locked: two beside each seam at ±${mm(gg.interfaceOffset)}). Root and tip caps are separate. Ribs change mass, bay length and modes; this beam model gives them no EI or GJ of their own.</p>
+      <div class="tablewrap"><table class="wl-list" aria-label="Rib stations"><thead><tr><th>Rib</th><th>y (mm)</th><th>Edit</th></tr></thead><tbody>${ribRows || '<tr><td colspan="3">No ribs in this layout.</td></tr>'}</tbody></table></div>
+      <div class="wl-row"><label for="wgRibNew">Add a rib at y =</label><input id="wgRibNew" type="number" step="0.1" inputmode="decimal" value="${suggestRib(gg, ribs)}"><span>mm</span><button class="btn" type="button" id="wgRibAdd">Add rib</button></div>
+      <div class="wl-row"><label for="wgRibCount">Evenly spaced interior ribs</label><input id="wgRibCount" type="number" min="0" max="16" step="1" value="${interiors.length}"><button class="btn" type="button" id="wgRibEqual">Apply spacing</button></div>
+      <div class="wl-row"><button class="btn" type="button" id="wgRibReset">Course rib rule (3 interior)</button></div>
+      ${errLine("ribs")}
+      <p class="note">Edit a station and press Enter to move that rib. Equal spacing puts N ribs at iL/(N+1) and skips stations inside a seam zone, so fewer may appear.</p>
+      <h4>Rods and sleeves</h4>
+      <p class="note">${n ? `${n} continuous carbon rod${n === 1 ? "" : "s"} on the camber line, one diameter for all; each runs through a printed sleeve in every module.` : "No rods: a skin-only wing (one module or epoxied seams)."}</p>
+      ${n ? `<div class="tablewrap"><table class="wl-list" aria-label="Rod positions"><thead><tr><th>Rod</th><th>x/c</th><th>Edit</th></tr></thead><tbody>${rodRows}</tbody></table></div>` : ""}
+      <div class="wl-row"><button class="btn" type="button" id="wgRodAdd"${n >= MAX_RODS ? " disabled" : ""}>Add rod</button><span class="note">${n}/${MAX_RODS} rods</span></div>
+      ${errLine("rods")}
+      ${geoField("rodDiameter", "wgRodD", "Rod diameter", "mm, all rods", g.rodDiameter, 0.1)}
+      ${geoField("clearance", "wgClear", "Rod clearance", "mm, radial, from coupons (0–0.8)", g.clearance, 0.05)}
+      ${geoField("sleeveWall", "wgWall", "Sleeve wall", "mm", g.sleeveWall, 0.1)}
+      <dl class="kv wl-kv"><dt>Hole ⌀ (rod + clearance)</dt><dd>${mm(2 * rh, 2)}</dd><dt>Sleeve outer ⌀</dt><dd>${mm(2 * Rs, 2)}</dd></dl>
+      <p class="note">Sleeves must fit inside the cavity (${nf(gg.cavityStart, 2)}c–${nf(gg.cavityEnd, 2)}c) and between the inner skins at every station, including the ${mm(gg.tipChord)} tip chord; they may touch a skin or each other by at most ${mm(CONTACT_TOL, 2)}.</p>`;
+    $("#wlStructureBadge").textContent = `${gg.modules} module${gg.modules === 1 ? "" : "s"} · ${ribs.length} rib${ribs.length === 1 ? "" : "s"} · ${n} rod${n === 1 ? "" : "s"}`;
+    for (const [id, k] of [["wgSkin", "skin"], ["wgRibT", "ribThickness"], ["wgRodD", "rodDiameter"], ["wgClear", "clearance"], ["wgWall", "sleeveWall"]])
+      $("#" + id).addEventListener("change", (e) => applyGeometry({ [k]: numberFrom(e.target) }, k, e.target.value.trim() === "" ? "an empty value" : mm(numberFrom(e.target), 2)));
+    interiors.forEach((y, i) => $("#wgRibY" + i).addEventListener("change", (e) => applyGeometry({ customInteriorRibs: interiors.map((v, j) => (j === i ? numberFrom(e.target) : v)) }, "ribs", `moving that rib to y = ${mm(numberFrom(e.target))}`)));
+    document.querySelectorAll("[data-wg-rib-remove]").forEach((b) => b.addEventListener("click", () => applyGeometry({ customInteriorRibs: interiors.filter((_, j) => j !== +b.dataset.wgRibRemove) }, "ribs", "removing that rib")));
+    $("#wgRibAdd").addEventListener("click", () => applyGeometry({ customInteriorRibs: [...interiors, numberFrom($("#wgRibNew"))] }, "ribs", `a rib at y = ${mm(numberFrom($("#wgRibNew")))}`));
+    $("#wgRibEqual").addEventListener("click", () => { const N = numberFrom($("#wgRibCount")); applyGeometry({ customInteriorRibs: null, interiorRibs: N }, "ribs", `${$("#wgRibCount").value} evenly spaced ribs`); });
+    $("#wgRibReset").addEventListener("click", () => applyGeometry({ customInteriorRibs: null, interiorRibs: 3 }, "ribs", "the course rib rule"));
+    gg.rodFractions.forEach((f, i) => $("#wgRod" + i).addEventListener("change", (e) => applyGeometry({ rodFractions: gg.rodFractions.map((v, j) => (j === i ? numberFrom(e.target) : v)) }, "rods", `rod ${i + 1} at x/c = ${e.target.value.trim() || "(empty)"}`)));
+    document.querySelectorAll("[data-wg-rod-remove]").forEach((b) => b.addEventListener("click", () => applyGeometry({ rodFractions: gg.rodFractions.filter((_, j) => j !== +b.dataset.wgRodRemove) }, "rods", `removing rod ${+b.dataset.wgRodRemove + 1}`)));
+    $("#wgRodAdd").addEventListener("click", () => {
+      // First position, from the thick part of the airfoil outward, that passes every check.
+      const spot = [0.45, 0.3, 0.6, 0.2, 0.5, 0.4, 0.35, 0.55, 0.25, 0.65, 0.7, 0.15].filter((f) => !gg.rodFractions.some((v) => Math.abs(v - f) < 1e-9))
+        .find((f) => { try { checkGeometry({ ...S.geometry, rodFractions: [...gg.rodFractions, f] }); return true; } catch { return false; } });
+      if (spot == null) { fieldErrors = { rods: "No free chord position fits another rod and its sleeve. Remove or move a rod, or use a smaller rod, clearance or sleeve wall." }; flash(`Rods: ${fieldErrors.rods}`); renderInputs(true); return; }
+      applyGeometry({ rodFractions: [...gg.rodFractions, spot] }, "rods", `a rod at ${spot}c`);
+    });
+  }
+  // ------------------------------------------------------------ model inventory (inputs on screen, engine functions)
+  function inventoryData(geometry) {
+    const g = E.makeGeometry(geometry), ribs = E.ribStations(g), interiors = interiorStations(g), seams = E.seams(g);
+    return {
+      naca: g.naca, semiSpan: g.semiSpan, rootChord: g.rootChord, tipChord: g.tipChord, modules: g.modules, moduleLength: g.semiSpan / g.modules, seams,
+      ribs: ribs.map((y) => ({ y, kind: interiors.includes(y) ? "interior" : "interface" })), interiorRibs: interiors.length, interfaceRibs: ribs.length - interiors.length,
+      ribThickness: g.ribThickness, caps: 2, capThickness: g.cap, rods: g.rodFractions.length, rodDiameter: g.rodDiameter, rodFractions: [...g.rodFractions],
+      sleeves: g.rodFractions.length * g.modules, holeDiameter: 2 * E.holeRadius(g), sleeveDiameter: 2 * E.sleeveRadius(g), sleeveWall: g.sleeveWall, clearance: g.clearance,
+      skin: g.skin, cavity: [g.cavityStart, g.cavityEnd], te: g.te, interfaceOffset: g.interfaceOffset, customRibs: g.customInteriorRibs != null,
+    };
+  }
+  function inventoryLines(geometry) {
+    const v = inventoryData(geometry);
+    return [
+      `  Planform: NACA ${v.naca}, semi-span ${mm(v.semiSpan)}, root chord ${mm(v.rootChord)}, tip chord ${mm(v.tipChord)} (straight taper)`,
+      `  Modules: ${v.modules} × ${mm(v.moduleLength)}; seams at ${v.seams.length ? v.seams.map((y) => nf(y, 1)).join(", ") + " mm" : "none (one piece)"}`,
+      `  Ribs: ${v.ribs.length} physical (${v.interiorRibs} interior${v.customRibs ? ", custom stations" : ", course/even-spacing rule"} + ${v.interfaceRibs} locked interface), ${mm(v.ribThickness, 2)} thick: ${v.ribs.map((r, i) => `R${i + 1} ${nf(r.y, 1)}${r.kind === "interface" ? " (interface)" : ""}`).join(", ") || "none"}`,
+      `  End caps: ${v.caps} solid caps (root, tip), ${mm(v.capThickness, 2)}, not counted as ribs`,
+      `  Rods: ${v.rods ? `${v.rods} × ⌀${mm(v.rodDiameter, 2)} carbon, continuous root to tip, at x/c ${v.rodFractions.map((f) => nf(f, 2)).join(", ")}` : "none"}`,
+      `  Sleeves: ${v.sleeves} printed segments (${v.rods} rods × ${v.modules} modules), hole ⌀${mm(v.holeDiameter, 2)} (clearance ${mm(v.clearance, 2)} radial), outer ⌀${mm(v.sleeveDiameter, 2)} (wall ${mm(v.sleeveWall, 2)})`,
+      `  Skin: ${mm(v.skin, 2)} measured vertically; hollow cavity ${nf(v.cavity[0], 2)}c–${nf(v.cavity[1], 2)}c; trailing edge ${mm(v.te, 2)}`,
+      `  Support: root face clamped. Not modelled: spar webs, stringers, rib diaphragm stiffness in EI/GJ, local stresses at holes and joints.`,
+    ];
+  }
+  function renderInventory() {
+    const v = inventoryData(S.geometry), list = (a, d = 1) => a.map((x) => nf(x, d)).join(", ");
+    $("#wingInventory").innerHTML = `<div class="wl-inv">
+      <p class="note">${stale && R ? "<b>Inputs on screen</b> — not solved yet; press Solve." : "<b>Inputs on screen</b>, counted with the solver's own geometry functions."} A generic browser study model: it does not update the printable CAD/STL or the approved fabrication layout.</p>
+      <dl class="kv wl-kv">
+        <dt>Airfoil · planform</dt><dd>NACA <span data-inv="naca">${v.naca}</span> · <span data-inv="semiSpan">${nf(v.semiSpan, 1)}</span> × <span data-inv="rootChord">${nf(v.rootChord, 1)}</span>/<span data-inv="tipChord">${nf(v.tipChord, 1)}</span> mm</dd>
+        <dt>Modules</dt><dd><span data-inv="modules">${v.modules}</span> × ${mm(v.moduleLength)}</dd>
+        <dt>Seams</dt><dd data-inv="seams">${v.seams.length ? list(v.seams) + " mm" : "none"}</dd>
+        <dt>Ribs</dt><dd><span data-inv="ribs">${v.ribs.length}</span> = <span data-inv="interiorRibs">${v.interiorRibs}</span> interior + <span data-inv="interfaceRibs">${v.interfaceRibs}</span> interface, <span data-inv="ribThickness">${nf(v.ribThickness, 2)}</span> mm</dd>
+        <dt>End caps</dt><dd><span data-inv="caps">${v.caps}</span> × ${mm(v.capThickness, 2)} (root, tip; not ribs)</dd>
+        <dt>Rods</dt><dd><span data-inv="rods">${v.rods}</span> × ⌀<span data-inv="rodDiameter">${nf(v.rodDiameter, 2)}</span> mm${v.rods ? ` at x/c <span data-inv="rodFractions">${list(v.rodFractions, 2)}</span>` : ""}</dd>
+        <dt>Sleeves</dt><dd><span data-inv="sleeves">${v.sleeves}</span> segments, ⌀${nf(v.holeDiameter, 2)}/${nf(v.sleeveDiameter, 2)} mm</dd>
+        <dt>Skin</dt><dd><span data-inv="skin">${nf(v.skin, 2)}</span> mm; cavity ${nf(v.cavity[0], 2)}c–${nf(v.cavity[1], 2)}c</dd>
+        <dt>Support</dt><dd>root face clamped</dd>
+      </dl>
+      <div class="tablewrap"><table class="wl-list" aria-label="Rib inventory"><thead><tr><th>Rib</th><th>y (mm)</th><th>Type</th></tr></thead><tbody data-inv="ribStations">${v.ribs.map((r, i) => `<tr><td>R${i + 1}</td><td class="num">${nf(r.y, 1)}</td><td>${r.kind}${r.kind === "interface" ? " · locked" : ""}</td></tr>`).join("") || '<tr><td colspan="3">No ribs.</td></tr>'}</tbody></table></div>
+      <p class="note">Not modelled: spar webs, stringers, rib diaphragm stiffness in EI/GJ, local stresses at rod holes and joints. Presets are historical / course starting points.</p></div>`;
+    $("#wlInventoryBadge").textContent = `${v.modules} mod · ${v.ribs.length} ribs · ${v.rods} rods`;
   }
 
   // ------------------------------------------------------------ run control
   let runTimer;
+  // Deliberate study actions (lesson experiments, presets, Design-lab buttons, adding or removing a load) solve at once.
   function changed() {
-    stale = true;
+    stale = true; inputError = null;
     setStatus();
     renderTree();
+    renderInventory();
     clearTimeout(runTimer);
     runTimer = setTimeout(runStudy, 450);
   }
+  // Field edits stay pending until Solve, unless "Solve automatically after each valid change" is ticked.
+  function edited() {
+    stale = true; inputError = null;
+    setStatus();
+    renderTree();
+    renderInventory();
+    clearTimeout(runTimer);
+    if (autoSolve) runTimer = setTimeout(runStudy, 300);
+  }
+  let reportBlocked = false;
   function setStatus(text) {
     const chip = $("#stateChip"), t = $("#stateText"), btn = $("#runBtn");
+    const out = stale && !!R;
     btn.classList.toggle("stale", stale && !running);
-    if (running) { chip.className = "chip idle"; chip.textContent = "Solving"; t.textContent = text || "Running the study"; return; }
-    if (stale) { chip.className = "chip warn"; chip.textContent = "Out of date"; t.textContent = "Inputs changed — run the study"; return; }
+    btn.dataset.pending = String(stale && !running);
+    $("#app").dataset.stale = String(out);
+    $("#wingStale").hidden = !out;
+    $("#wingStale").innerHTML = out ? '<span aria-hidden="true">⚠</span><span><b>Not up to date.</b> These results belong to the last solved model, not to the inputs now on screen. Press <b>Solve</b> to update them.</span>' : "";
+    $("#viewStale").hidden = !out;
+    $("#copyBtn").disabled = out || !R;
+    if (out !== reportBlocked) { reportBlocked = out; $("#copyState").textContent = out ? "Copying is disabled until the inputs on screen are solved." : "Plain-text study summary for your engineering record."; }
+    if (stale && $("#wingShareBox") && !$("#wingShareBox").hidden) { $("#wingShareBox").hidden = true; $("#wingShareBox").value = ""; $("#wingShareMsg").textContent = ""; }
+    if (running) { chip.className = "chip idle"; chip.textContent = "Solving"; t.textContent = text || "Solving the inputs on screen"; return; }
+    if (gateOpen()) { chip.className = "chip warn"; chip.textContent = "Analysis blocked"; t.textContent = "Imported outer geometry: confirm its structural inputs (list at the top of this column) before solving."; return; }
+    if (inputError) { chip.className = "chip bad"; chip.textContent = "Input error"; t.textContent = inputError + (!R ? "" : stale ? " Results shown are for the last solved model." : " The results shown still match the inputs on screen."); return; }
+    if (stale) { chip.className = "chip warn"; chip.textContent = "Out of date"; t.textContent = R ? "Inputs changed — press Solve. Results shown are for the last solved model." : "Press Solve to compute the first result."; return; }
     if (!R) return;
-    if (R.load.kind === "custom" && !R.load.items.length) { chip.className = "chip idle"; chip.textContent = "No load"; t.textContent = text || "No load defined. Add your own load, or apply a flight-like or tip case."; return; }
+    // Solved without a load (as in the Beam workspace): the chip reports the solve state, the text says why everything is zero.
+    if (R.load.kind === "custom" && !R.load.items.length) { chip.className = "chip idle"; chip.textContent = "Solved"; t.textContent = text || "Solved with no load: no load defined. Add your own load, or apply a flight-like or tip case."; return; }
     const u = R.governing.U;
-    chip.className = "chip " + (u <= 1 ? "warn" : "bad");
-    chip.textContent = u <= 1 ? "Other checks within limits · buckling unresolved" : "Other model check exceeded";
-    t.textContent = text || `Other-check U = ${nf(u, 2)} · ${R.governing.name.replace(/ \(.*\)/, "")}`;
+    chip.className = "chip ok"; chip.textContent = "Solved";
+    t.textContent = text || `Results match the inputs · other-check U = ${nf(u, 2)} (${R.governing.name.replace(/ \(.*\)/, "")})${u > 1 ? ", exceeded" : ""} · buckling unresolved`;
   }
   // Do not stall a study when the browser suspends animation in a background tab.
   const frame = () => new Promise((r) => setTimeout(r, 0));
   async function runStudy() {
     if (running) { pending = true; return; }
+    // Outer geometry imported from a design-parameter file: no analysis until its structure is confirmed here.
+    if (gateOpen()) { clearTimeout(runTimer); stale = true; setStatus(); renderImportGate(); return; }
+    if (importGate) { importGate = null; renderImportGate(); }   // every item confirmed: analyse the imported wing
     running = true; stale = false;
+    renderInputs();
+    const errorAtStart = inputError, fieldErrorsAtStart = fieldErrors;
     setStatus();
     const input = engineInput();
     const geoKey = JSON.stringify(input.geometry);
@@ -791,6 +1238,9 @@ body { margin: 0; }
         await frame();
       }
       R = TeachingModels.studentResult(E.solve(input));
+      // A successful solve clears an error message that was on screen when it started (not one entered meanwhile).
+      if (inputError === errorAtStart) inputError = null;
+      if (fieldErrors === fieldErrorsAtStart) fieldErrors = {};
       if (!designBaseline || saveDesignAfterRun) { designBaseline = R; saveDesignAfterRun = false; }
       if (heavy) { buildModel(R); lastGeoKey = geoKey; frameView(heavy && !lastViewSet); }
       applyResult();
@@ -951,17 +1401,77 @@ body { margin: 0; }
     if (force || !lastViewSet) { setView("iso"); lastViewSet = true; }
     $("#clipIn").max = g.semiSpan; $("#secY").max = g.semiSpan;
   }
+  // Standard views look from a fixed direction; the distance is chosen so that the whole wing fits the
+  // viewport at its current shape (the view is about half a desktop screen, or a phone in portrait).
   function setView(v) {
     if (!model) return;
     const g = model.g, L = g.semiSpan, c = g.rootChord;
-    const target = new THREE.Vector3(L / 2, 0, c / 2);
-    const aspect = Math.max(camera.aspect || 1.6, 0.3);
-    const d = Math.max(L, c) * 1.25 * Math.max(1, 1.5 / aspect);
-    const pos = { iso: [L * 0.5 + d * 0.55, d * 0.42, c / 2 + d * 0.72], plan: [L / 2, d * 1.05, c / 2 + 0.01], section: [L + d * 0.9, 0.0001, c / 2], front: [L / 2, 0.0001, -d * 0.95] }[v];
-    camera.position.set(...pos);
-    controls.target.copy(target);
+    const dir = { iso: [0.55, 0.42, 0.72], plan: [0, 1, 1e-4], section: [1, 1e-6, 0], front: [0, 1e-6, -1] }[v] || [0.55, 0.42, 0.72];
+    controls.target.set(L / 2, 0, c / 2);
     camera.up.set(0, 1, 0);
+    camera.position.copy(controls.target).add(new THREE.Vector3(...dir).normalize().multiplyScalar(2 * Math.max(L, c)));
+    controls.minDistance = 0.04 * Math.max(L, c);
+    controls.maxDistance = 12 * Math.max(L, c);
     controls.update();
+    placeAtFit(false);
+    if (v === "iso") resetDistance = camera.position.distanceTo(controls.target);
+    renderViewReadout(true);
+  }
+  // Move the camera along its line of sight until the wing (root and tip outlines, clamp plate) fills about 86 %
+  // of the view. Points, not a bounding box: a box of a tapered wing seen obliquely is much larger than the wing.
+  function fitPoints() {
+    const g = model.g, pts = [];
+    for (const y of [0, g.semiSpan]) for (const [x, z] of E.outerContour(g, y, 25)) pts.push(new THREE.Vector3(y, z, x));
+    for (const z of [-0.075 * g.rootChord, 1.075 * g.rootChord]) for (const yy of [-15, 19]) pts.push(new THREE.Vector3(-3, yy, z));
+    return pts;
+  }
+  function placeAtFit(retarget) {
+    const pts = fitPoints();
+    if (retarget) { const centre = new THREE.Box3().setFromPoints(pts).getCenter(new THREE.Vector3()); camera.position.add(centre.clone().sub(controls.target)); controls.target.copy(centre); }
+    camera.updateMatrixWorld();
+    const d0 = camera.position.distanceTo(controls.target), tanV = Math.tan((camera.fov * Math.PI) / 360), tanH = tanV * Math.max(camera.aspect || 1, 0.2), m = 0.86;
+    let need = 0;
+    for (const p of pts) {
+      const q = p.clone().applyMatrix4(camera.matrixWorldInverse);
+      need = Math.max(need, d0 + q.z + Math.max(Math.abs(q.x) / (m * tanH), Math.abs(q.y) / (m * tanV)));
+    }
+    const d = Math.min(controls.maxDistance, Math.max(controls.minDistance, need));
+    const dir = camera.position.clone().sub(controls.target).normalize();
+    camera.position.copy(controls.target).add(dir.multiplyScalar(d));
+    controls.update();
+  }
+  // Zoom moves the camera (perspective dolly) toward or away from the orbit target. It never scales the model:
+  // the readout below the view always states the solved model's actual dimensions.
+  let resetDistance = 0;
+  function zoomBy(factor) {
+    if (!model) return;
+    const offset = camera.position.clone().sub(controls.target);
+    const d = Math.min(controls.maxDistance, Math.max(controls.minDistance, offset.length() * factor));
+    camera.position.copy(controls.target).add(offset.setLength(d));
+    controls.update();
+    renderViewReadout(true);
+  }
+  function fitView() {
+    if (!model) return;
+    placeAtFit(true);
+    renderViewReadout(true);
+  }
+  // Actual size of the solved model, a scale bar valid at the orbit target, and the zoom relative to Reset view.
+  let readoutKey = "";
+  function renderViewReadout(force) {
+    if (!model || !R) return;
+    const g = model.g, dist = camera.position.distanceTo(controls.target);
+    const pxPerMm = canvas.clientHeight / 2 / (dist * Math.tan((camera.fov * Math.PI) / 360));
+    const key = [g.semiSpan, g.rootChord, g.tipChord, dist.toFixed(1), canvas.clientHeight].join();
+    if (!force && key === readoutKey) return;
+    readoutKey = key;
+    $("#viewReadout").dataset.distance = dist.toFixed(3);
+    $("#viewDims").innerHTML = `<b>View zoom only.</b> Actual size of the solved model: semi-span <b>${nf(g.semiSpan, 1)} mm</b>, root chord <b>${nf(g.rootChord, 1)} mm</b>, tip chord <b>${nf(g.tipChord, 1)} mm</b> (NACA ${g.naca}).`;
+    const nice = [1, 2, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000, 2000].find((mm) => mm * pxPerMm >= 48) || 2000;
+    const px = isFinite(pxPerMm) && pxPerMm > 0 ? Math.min(150, nice * pxPerMm) : 0;
+    $("#viewScaleBar").style.width = `${Math.round(px)}px`;
+    $("#viewScaleText").textContent = px ? `${nice} mm` : "–";
+    $("#viewZoomText").textContent = `Zoom ×${resetDistance ? nf(resetDistance / dist, 2) : "1.00"} relative to Reset view. The scale bar holds at the centre of the view; in perspective, nearer parts look larger. Drag to rotate; right-drag or two fingers to pan.`;
   }
 
   // ------------------------------------------------------------ results on the model
@@ -1201,6 +1711,7 @@ body { margin: 0; }
     if ($("#app").hidden) { lastT=t; requestAnimationFrame(loop); return; }
     resize();
     controls.update();
+    renderViewReadout();
     positionRibLabels();
     if (S.plot === "mode" && R && model) {
       const f = (S.mode.kind === "bending" ? R.fem.fBending : R.fem.fTorsion)[S.mode.index];
@@ -1421,7 +1932,7 @@ body { margin: 0; }
     if (!isFinite(d)) { $("#pState").textContent = "Enter a tip deflection first."; return; }
     prediction = { defl: d, gov: $("#pGov").value, after: false };
     store.set("prediction", prediction);
-    $("#pState").textContent = "Locked. Now press Run study.";
+    $("#pState").textContent = "Locked. Now change an input and press Solve.";
     $("#pResult").innerHTML = "";
   });
   function reportText() {
@@ -1431,6 +1942,8 @@ body { margin: 0; }
       `MIE 446 Wing Lab — study report (engine v${R.version})`,
       ``,
       `Wing: NACA ${g.naca}, semi-span ${g.semiSpan} mm, chords ${g.rootChord}/${g.tipChord} mm, ${g.modules} modules, skin ${g.skin} mm, ribs ${g.ribThickness} mm at ${E.ribStations(g).map((v) => nf(v, 1)).join(", ")} mm`,
+      `Geometry inventory of the solved model (generic browser study model: edits do not update the printable CAD/STL or the approved fabrication layout; presets are historical / course starting points):`,
+      ...inventoryLines(g),
       `Materials: ${R.pla.name} (E ${R.pla.E} MPa, tension ${R.pla.ft} MPa); ${R.rod.name} (E ${R.rod.E} MPa)`,
       `Joints: rods ${R.assembly.rodsBonded ? "epoxied" : "slip fit"}, seams ${R.assembly.seamsBonded ? "epoxied" : `dry (rod free length ${R.seam.freeLength} mm)`}`,
       `Load: ${wingLoadName(R)}; factor of safety ${L.fos}`,
@@ -1489,6 +2002,7 @@ body { margin: 0; }
     if (!R) return;
     renderTree(); renderPM(); renderCharts(); renderChecks(); renderPredict();
     renderLesson(); renderDesignLab(); renderMemberLesson(); renderWingLoads();
+    renderInputs(); renderInventory(); renderViewReadout(true);
     if (!$("#tab-section").hidden) renderSection();
     $("#report").value = reportText();
     if (prediction && !prediction.after) { prediction.after = true; store.set("prediction", prediction); renderPredict(); }
@@ -1698,42 +2212,15 @@ body { margin: 0; }
     const g = R.geometry, interiors = interiorStations(g);
     const locked = R.ribs.filter(y => !interiors.includes(y));
     const controls = $("#designControls");
+    // One rib editor for the whole workspace: Structure, in the input column. Edits there are validated
+    // atomically and wait for Solve (or automatic solving); this tab then compares the solved design with the baseline.
     controls.innerHTML = `<h3>Edit the rib layout</h3>
       <p><b>${R.ribs.length} ribs = ${interiors.length} editable interior + ${locked.length} locked interface.</b> Locked stations: ${locked.length ? locked.map(y => nf(y, 1)).join(", ") + " mm" : "none (one module)"}. Root/tip caps are separate.</p>
-      <form id="ribAddForm" class="lesson-actions"><label for="ribNew">New rib station y (mm)</label><input id="ribNew" type="number" step="0.1" min="0" max="${g.semiSpan}" value="${nf(g.semiSpan / 8, 1)}" required style="width:100px"><button class="btn primary" type="submit">Add rib</button></form>
-      <div class="tablewrap"><table><thead><tr><th>Interior rib</th><th>Station y (mm)</th><th>Actions</th></tr></thead><tbody>${interiors.map((y, i) => `<tr><td>R${R.ribs.indexOf(y) + 1}</td><td><input aria-label="Station of interior rib ${i + 1}" id="ribPosition${i}" type="number" step="0.1" value="${y}" style="width:95px"></td><td><button class="btn" type="button" data-move-rib="${i}">Move</button> <button class="btn" type="button" data-remove-rib="${i}">Remove</button></td></tr>`).join("") || '<tr><td colspan="3">No interior ribs. Add one above; interface ribs remain.</td></tr>'}</tbody></table></div>
-      <form id="ribUniformForm" class="lesson-actions" style="margin-top:10px"><label for="ribCount">Requested evenly spaced interior ribs</label><input id="ribCount" type="number" min="0" max="16" step="1" value="${interiors.length}" required style="width:70px"><button class="btn" type="submit">Replace interior layout</button></form>
-      <p class="note">Even spacing starts at iL/(N+1). Stations inside an interface zone are omitted; the actual count above can be smaller. Manual positions are rejected if they overlap a rib, cap or protected seam zone. Up to 16 interior ribs.</p>
-      <button class="btn" id="ribReset" type="button">Reset to course rib rule</button>
-      <h3>Try another design variable</h3><p>Keep the load fixed and change only one thickness. Skin thickness affects the section stiffness and mass; rib thickness affects rib mass and the available layout space.</p>
-      <form id="designThicknessForm"><div class="field"><label for="labSkin">Skin thickness (mm, vertical)</label><input id="labSkin" type="number" min="0.8" max="2.4" step="0.1" value="${g.skin}" required></div><div class="field"><label for="labRib">Rib thickness (mm)</label><input id="labRib" type="number" min="0.8" max="3" step="0.1" value="${g.ribThickness}" required></div><button class="btn" type="submit">Apply thicknesses</button></form>`;
-    const update = (patch, message) => {
-      if (running || stale) { $("#designMessage").textContent = "Wait for a successful study before editing the layout."; return; }
-      try {
-        const next = E.makeGeometry({ ...S.geometry, ...patch });
-        // Reject an unprintable cavity before replacing the last successful design.
-        for (const y of [0, next.semiSpan, ...E.ribStations(next), ...E.stations({ geometry: next })]) E.ringLoops(next, y);
-        S.geometry = { ...next };
-        $("#designMessage").textContent = message + " Recomputing…";
-        setAnatomy("inside"); changed();
-      } catch (err) { $("#designMessage").textContent = err.message; }
-    };
-    $("#ribAddForm").addEventListener("submit", e => {
-      e.preventDefault();
-      update({ customInteriorRibs: [...interiors, +$("#ribNew").value] }, "Rib added.");
-    });
-    controls.querySelectorAll("[data-remove-rib]").forEach(b => b.addEventListener("click", () => update({ customInteriorRibs: interiors.filter((_, i) => i !== +b.dataset.removeRib) }, "Interior rib removed; interface ribs retained.")));
-    controls.querySelectorAll("[data-move-rib]").forEach(b => b.addEventListener("click", () => {
-      const i = +b.dataset.moveRib, field = $("#ribPosition" + i);
-      if (!field.value || !Number.isFinite(+field.value)) { $("#designMessage").textContent = "Enter a finite station in mm."; return; }
-      update({ customInteriorRibs: interiors.map((y, j) => i === j ? +field.value : y) }, "Rib moved.");
-    }));
-    $("#ribUniformForm").addEventListener("submit", e => { e.preventDefault(); update({ customInteriorRibs: null, interiorRibs: +$("#ribCount").value }, "Interior layout replaced using the spacing rule."); });
-    $("#ribReset").addEventListener("click", () => update({ customInteriorRibs: null, interiorRibs: 3 }, "Course rib rule restored for the current module count."));
-    $("#designThicknessForm").addEventListener("submit", e => {
-      e.preventDefault();
-      update({ skin: +$("#labSkin").value, ribThickness: +$("#labRib").value }, "Thicknesses updated.");
-    });
+      <p>Add, move or remove ribs, set equal spacing, and change rib or skin thickness in <b>Structure</b> in the input column (below the 3-D view on a phone). Changes wait for <b>Solve</b> unless “Solve automatically” is ticked; this comparison then updates against your saved baseline. Up to 16 interior ribs; positions that overlap a rib, an end cap or a protected seam zone are refused with a reason.</p>
+      <div class="lesson-actions"><button class="btn primary" id="designEditRibs" type="button">Edit ribs in Structure</button><button class="btn" id="designEditSkin" type="button">Edit skin thickness</button></div>
+      <h3>Try another design variable</h3><p>Keep the load fixed and change only one thickness. Skin thickness affects the section stiffness and mass; rib thickness affects rib mass and the available layout space.</p>`;
+    $("#designEditRibs").addEventListener("click", () => openSection("wlStructure", "wgRibNew"));
+    $("#designEditSkin").addEventListener("click", () => openSection("wlStructure", "wgSkin"));
     $("#designFigure").innerHTML = ribPlanFigure(g) + `<figcaption>Live layout: gold = ribs; blue = carbon rods; dashed = seams. Stations: ${R.ribs.length ? R.ribs.map((y, i) => `R${i + 1} = ${nf(y, 1)} mm${locked.includes(y) ? " (locked)" : ""}`).join("; ") : "none; no ribs in this preset"}. The 3-D view uses these same stations.</figcaption>`;
     const a = designMetrics(designBaseline), b = designMetrics(R);
     const sameContext = comparisonContext(designBaseline) === comparisonContext(R);
@@ -1850,17 +2337,18 @@ body { margin: 0; }
     const fig = anatomy ? ribPlanFigure(g) : section ? sectionFigure(g) : beamFigure(S.lesson);
     const caption = anatomy ? `Physical rib stations: ${ribs.length ? ribs.map((y,i)=>`R${i+1}: ${nf(y,1)} mm`).join("; ") : "none in this preset"}. Dashed lines show seams when present. Rod paths are blue when rods exist.` : section ? `Selected airfoil-section geometry: grey shell; ${g.rodFractions.length ? "orange sleeves and blue rods." : "no rods or sleeves."} No separate stringers or full-height spar webs. Rib diaphragms are present only at the listed rib stations.` : "Isolated tip-force sketch; the general load case may include distributed and multiple point forces.";
     $("#lessonFigure").innerHTML = fig + `<figcaption>${caption}</figcaption>`;
-    $("#lessonReading").innerHTML = R ? `<h3>Read your current result</h3><p>${wingLoadName(R)} · ${g.modules===1 ? "continuous one-piece shell" : R.assembly.seamsBonded ? "bonded seams" : "dry seams"}</p><dl class="kv"><dt>Root shear magnitude</dt><dd>${nf(Math.abs(R.V[0]), 2)} N</dd><dt>Root bending moment magnitude</dt><dd>${nf(Math.abs(R.M[0]) / 1000, 3)} N·m</dd><dt>Signed tip deflection</dt><dd>${nf(R.deflection.at(-1), 3)} mm</dd><dt>Signed tip twist</dt><dd>${nf(R.twist.at(-1) * 180 / Math.PI, 3)}°</dd></dl><p>Run study recomputes this case; with identical inputs the numbers stay the same. Property edits also trigger a solve automatically.</p>` : "<p>Preparing the first result. You can read the lesson while the solver starts.</p>";
+    $("#lessonReading").innerHTML = R ? `<h3>Read your current result</h3><p>${wingLoadName(R)} · ${g.modules===1 ? "continuous one-piece shell" : R.assembly.seamsBonded ? "bonded seams" : "dry seams"}</p><dl class="kv"><dt>Root shear magnitude</dt><dd>${nf(Math.abs(R.V[0]), 2)} N</dd><dt>Root bending moment magnitude</dt><dd>${nf(Math.abs(R.M[0]) / 1000, 3)} N·m</dd><dt>Signed tip deflection</dt><dd>${nf(R.deflection.at(-1), 3)} mm</dd><dt>Signed tip twist</dt><dd>${nf(R.twist.at(-1) * 180 / Math.PI, 3)}°</dd></dl><p>Solve recomputes this case; with identical inputs the numbers stay the same. Input edits wait for Solve unless “Solve automatically” is ticked; lesson buttons solve at once.</p>` : "<p>Preparing the first result. You can read the lesson while the solver starts.</p>";
   }
 
+  // The input column is shown by default (like the Beam Lab); "Hide inputs" folds it away for a lesson.
   function showInputs(show) {
     $("#app").classList.toggle("learning-view", !show);
-    $("#inputsBtn").textContent = show ? "Hide inputs" : "Edit inputs";
-    $("#inputsBtn").setAttribute("aria-pressed", String(show));
+    $("#inputsBtn").textContent = show ? "Hide inputs" : "Show inputs";
+    $("#inputsBtn").setAttribute("aria-expanded", String(show));
     resize(); if (model) setView("iso");
   }
   $("#inputsBtn").addEventListener("click", () => showInputs($("#app").classList.contains("learning-view")));
-  $("#learnBtn").addEventListener("click", () => { showInputs(false); openTab("learn"); $("#tab-learn").scrollIntoView({ block: "nearest" }); });
+  $("#learnBtn").addEventListener("click", () => { openTab("learn"); $("#tab-learn").scrollIntoView({ block: "nearest" }); });
   document.querySelectorAll("[data-anatomy]").forEach((b) => b.addEventListener("click", () => setAnatomy(b.dataset.anatomy)));
   document.querySelectorAll("[data-lesson]").forEach((b) => b.addEventListener("click", () => {
     S.lesson = +b.dataset.lesson;
@@ -1896,6 +2384,15 @@ body { margin: 0; }
   $("#clipIn").addEventListener("input", (e) => { S.clipY = parseFloat(e.target.value); if (!S.clip) { S.clip = true; $("#clipBtn").setAttribute("aria-pressed", "true"); } applyClip(); S.secY = S.clipY; $("#secY").value = S.clipY; if (!$("#tab-section").hidden) { clearTimeout(secTimer); secTimer = setTimeout(renderSection, 120); } });
   document.querySelectorAll("[data-view]").forEach((b) => b.addEventListener("click", () => setView(b.dataset.view)));
   $("#runBtn").addEventListener("click", () => { clearTimeout(runTimer); runStudy(); });
+  $("#wingAutoSolve").addEventListener("change", (e) => { autoSolve = e.target.checked; if (autoSolve && stale && !inputError) { clearTimeout(runTimer); runStudy(); } });
+  $("#zoomIn").addEventListener("click", () => zoomBy(1 / 1.25));
+  $("#zoomOut").addEventListener("click", () => zoomBy(1.25));
+  $("#zoomFit").addEventListener("click", fitView);
+  $("#zoomReset").addEventListener("click", () => setView("iso"));
+  // The input column sticks below the sticky wing navigation bar.
+  const stickBelowNav = () => { const nav = $("#wingNavigation"), h = nav && !nav.hidden ? nav.getBoundingClientRect().height : 0; $("#app").style.setProperty("--wl-top", `${Math.round(h) + 10}px`); };
+  window.addEventListener("resize", stickBelowNav);
+  if (window.ResizeObserver) new ResizeObserver(stickBelowNav).observe($("#wingNavigation"));
   $('#wingLoadBtn').addEventListener('click',()=>{openTab('loads');$('#tab-loads').scrollIntoView({behavior:'smooth',block:'start'});});
   document.querySelectorAll('[data-wing-load-shape]').forEach(b=>b.addEventListener('click',()=>{
     openTab('loads');const select=$('#wingKind');
@@ -1922,10 +2419,125 @@ body { margin: 0; }
   renderTree();
   renderPM();
   renderLesson();
+  renderInputs(true);
+  renderInventory();
+  // ------------------------------------------------------------ study files, design parameters and links
+  // (wing_study_io.js). Opening a file or a design-parameter import never solves by itself: the inputs become the study
+  // on screen and Solve runs them. An outer geometry from a design-parameter file blocks the analysis until each
+  // structural item the file did not supply is confirmed here; the previous geometry can be restored.
+  let importGate = null;
+  function gateOpen() { return !!importGate && importGate.required.some((r) => !importGate.confirmed.has(r.id)); }
+  function loadCaseText() {
+    const l = S.load;
+    if (l.kind === "custom") return l.items.length ? `${l.items.length} custom load${l.items.length > 1 ? "s" : ""}` : "no load defined";
+    return l.kind === "tip" ? `tip force ${nf(l.tipForce, 2)} N` : `flight-like lift, n = ${l.loadFactor}`;
+  }
+  function gateNow(id) {
+    let v = null; try { v = inventoryData(S.geometry); } catch (e) { return "invalid geometry: fix it first"; }
+    const pla = E.MATERIALS[S.plaKey], rod = E.MATERIALS[S.rodKey];
+    return {
+      skin: `${nf(v.skin, 2)} mm`, ribs: `${v.ribs.length} ribs (${v.interiorRibs} interior), ${nf(v.ribThickness, 2)} mm thick`,
+      rods: v.rods ? `${v.rods} rods ⌀${nf(v.rodDiameter, 2)} mm at x/c ${v.rodFractions.map((f) => nf(f, 2)).join(", ")}` : "no rods",
+      modules: `${v.modules} module${v.modules > 1 ? `s, ${S.assembly.seamsBonded ? "bonded" : "dry"} seams` : ""}`,
+      material: `${pla ? pla.name || S.plaKey : S.plaKey}${v.rods ? `; rods: ${rod ? rod.name || S.rodKey : S.rodKey}` : ""}`,
+      support: "clamped root face (the only support of this model)", loads: loadCaseText(),
+    }[id] || "";
+  }
+  function renderImportGate() {
+    const box = $("#wingImportGate");
+    if (!box) return;
+    if (!importGate) { box.hidden = true; box.innerHTML = ""; return; }
+    const g = S.geometry, p = importGate.provenance || {}, all = !gateOpen();
+    box.hidden = false;
+    box.innerHTML = `<p><b id="wingGateHead">${all ? "Structure confirmed." : "Analysis blocked."}</b> The design-parameter file supplied the outer shape (NACA ${esc(g.naca)}, semi-span ${nf(g.semiSpan, 1)} mm, chords ${nf(g.rootChord, 1)}/${nf(g.tipChord, 1)} mm) from <b>${esc(p.filename || "pasted text")}</b>${p.sha256 ? ` (SHA-256 ${esc(String(p.sha256).slice(0, 12))}…)` : ""}. It did not supply the items below: set each one in this column, then tick it. The study is not analysed until every item is ticked.</p>
+      <ul class="wl-gate-list">${importGate.required.map((r) => `<li><label><input type="checkbox" data-gate="${esc(r.id)}"${importGate.confirmed.has(r.id) ? " checked" : ""}> ${esc(r.label)} <span class="note">— now: ${esc(gateNow(r.id))}</span></label></li>`).join("")}</ul>
+      ${importGate.conflicts && importGate.conflicts.length ? `<p class="wle-err">Fix first: ${importGate.conflicts.map(esc).join(" · ")}</p>` : ""}
+      <div class="lesson-actions"><button class="btn" type="button" id="wingGateRestore">Discard the imported shape (restore the previous geometry)</button></div>`;
+    // Ticking updates the state in place (the list is not rebuilt, so keyboard focus stays on the box just ticked).
+    box.querySelectorAll("[data-gate]").forEach((c) => { c.onchange = () => { c.checked ? importGate.confirmed.add(c.dataset.gate) : importGate.confirmed.delete(c.dataset.gate); $("#wingGateHead").textContent = gateOpen() ? "Analysis blocked." : "Structure confirmed: press Solve."; setStatus(); }; });
+    $("#wingGateRestore").onclick = () => { S.geometry = importGate.previous; importGate = null; fieldErrors = {}; renderImportGate(); edited(); renderInputs(true); filesNote("The imported outer shape was discarded; the previous geometry is back."); };
+  }
+  const blockedText = "Confirm the structural inputs of the imported outer geometry first (list at the top of the input column).";
+  // Messages about files and links (not input errors): shown in Study files, which is opened.
+  function filesNote(msg) { const n = $("#wingFilesNote"); if (n) n.textContent = msg; const d = $("#wlFiles"); if (d) d.open = true; }
+  function applyStudyState(state, info) {
+    if (info.kind === "outer-geometry") {
+      const previous = { ...S.geometry, rodFractions: [...S.geometry.rodFractions], customInteriorRibs: S.geometry.customInteriorRibs == null ? null : [...S.geometry.customInteriorRibs] };
+      const res = applyGeometry(state.geometry);   // the same all-or-nothing rules as the geometry fields
+      if (!res.ok) throw new Error(`The imported outer geometry does not fit the current structure: ${res.error}`);
+      importGate = { required: info.required.map((r) => ({ id: r.id, label: r.label })), confirmed: new Set(), provenance: info.provenance, conflicts: info.conflicts || [], previous };
+    } else {
+      S.geometry = { ...state.geometry, rodFractions: [...state.geometry.rodFractions], customInteriorRibs: state.geometry.customInteriorRibs == null ? null : [...state.geometry.customInteriorRibs] };
+      Object.assign(S, { plaKey: state.plaKey, plaOver: { ...state.plaOver }, rodKey: state.rodKey, rodOver: { ...state.rodOver }, assembly: { ...state.assembly }, criteria: { ...state.criteria } });
+      S.load = { ...E.DEFAULT_LOAD, ...JSON.parse(JSON.stringify(state.load)) };   // the page expects every load field; the file stores the active case
+      importGate = null; fieldErrors = {}; edited();
+    }
+    renderImportGate(); renderInputs(true); renderTree(); renderPM(); setStatus();
+    $("#wlFiles").open = true;
+  }
+  const studyFiles = typeof WingStudyIO !== "undefined" && $("#wingStudyFiles") ? WingStudyIO.mount($("#wingStudyFiles"), {
+    workspace: "printed", engine: E, download: downloadText,
+    getState: () => { if (gateOpen()) throw new Error(blockedText); return S; },
+    applyState: applyStudyState,
+  }) : null;
+  function renderShare() {
+    const box = $("#wingShare");
+    if (!box || typeof WingStudyIO === "undefined") return;
+    box.innerHTML = `<p class="note" id="wingFilesNote" role="status"></p><div class="lesson-actions"><button class="btn" type="button" id="wingShareBtn">Copy a link to this solved study</button></div>
+      <input type="text" id="wingShareBox" class="wl-share" readonly hidden aria-label="Link to this study"><p class="note" id="wingShareMsg" role="status"></p>`;
+    $("#wingShareBtn").onclick = async () => {
+      const out = $("#wingShareBox"), msg = $("#wingShareMsg");
+      out.hidden = true; out.value = "";
+      if (gateOpen()) { msg.textContent = blockedText; return; }
+      if (!R || stale || running) { msg.textContent = "Solve the inputs on screen first: a link opens the same study and solves it."; return; }
+      try {
+        const token = WingStudyIO.encodeShare(WingStudyIO.printedStudyDocument(S, E), { engine: E });
+        out.value = `${location.href.replace(/[?#].*$/, "")}${WingStudyIO.shareFragment(token)}`; out.hidden = false; out.select();
+        try { await navigator.clipboard.writeText(out.value); msg.textContent = "Link copied. It opens these inputs and solves them on the page (nothing is uploaded)."; }
+        catch (e) { msg.textContent = "Select the link and copy it. It opens these inputs and solves them on the page (nothing is uploaded)."; }
+      } catch (e) { msg.textContent = e.message; }
+    };
+  }
+  renderShare();
+  // A "#wingstudy=…" link opens the printed workspace with that study and solves it; a damaged link opens the course
+  // wing with no load and says why. D.520 links ("#d520&wingstudy=…") are opened by the D.520 workspace.
+  function openStudyLink() {
+    if (typeof WingStudyIO === "undefined") return false;
+    const h = location.hash || "";
+    if (!new RegExp(`(^#|&)${WingStudyIO.SHARE_KEY}=`).test(h) || /^#d520&/.test(h)) return false;
+    const res = WingStudyIO.decodeShare(h, { engine: E, metalEngine: window.MetalWingEngine });
+    if (res.ok && res.workspace === "printed") {
+      window.dispatchEvent(new CustomEvent("wing-learning-stage", { detail: "project" }));
+      clearTimeout(runTimer);
+      applyStudyState(res.state, { kind: "study" });
+      clearTimeout(runTimer); runStudy();
+      filesNote(`Shared study opened from the link${res.warnings.length ? ` (${res.warnings.length} note${res.warnings.length > 1 ? "s" : ""}: ${res.warnings.slice(0, 2).join(" ")})` : ""}.`);
+      return true;
+    }
+    // A damaged link is checked before anything changes: a first visit shows the course wing; a study that is
+    // already open (link pasted into an open page) stays exactly as it was.
+    const first = !wingStudyOpened;
+    window.dispatchEvent(first ? new CustomEvent("wing-learning-stage", { detail: "project" }) : new CustomEvent("wing-show"));
+    filesNote(`The study link could not be opened: ${(res.errors && res.errors[0]) || "it is not a printed-wing study"}. ${first ? "The course wing is shown with no load." : "The printed-wing study is shown unchanged."}`);
+    return true;
+  }
+
+  // Read-only access for tests and for the study-file module; geometry goes through the same atomic validation.
+  window.WingLabUI = {
+    state: () => S, result: () => R, isStale: () => stale, isRunning: () => running, inputError: () => inputError,
+    engineInput, inventory: () => inventoryData(S.geometry),
+    checkGeometry: (patch) => checkGeometry({ ...S.geometry, ...patch }),
+    applyGeometry: (patch) => applyGeometry(patch),
+    solve: () => { clearTimeout(runTimer); return runStudy(); },
+    importGate: () => (importGate ? { required: importGate.required.map((r) => r.id), confirmed: [...importGate.confirmed], open: gateOpen() } : null),
+    studyFiles: () => studyFiles,
+    view: () => (model ? { distance: camera.position.distanceTo(controls.target), resetDistance, solved: { semiSpan: model.g.semiSpan, rootChord: model.g.rootChord, tipChord: model.g.tipChord } } : null),
+  };
   requestAnimationFrame(loop);
   window.addEventListener('wing-learning-stage', event => {
     if (event.detail === 'metal' || running) return;
     const stage=event.detail, project=stage==='project';
+    importGate=null; renderImportGate();
     S.geometry={...E.DEFAULT_GEOMETRY, rodFractions:[...E.DEFAULT_GEOMETRY.rodFractions]};
     S.assembly={...E.DEFAULT_ASSEMBLY,seamFreeLength:8};
     S.load=noLoad(); S.plaKey='pla_upright';S.rodKey='rod_hobby';S.plaOver={};S.rodOver={};
@@ -1957,6 +2569,9 @@ body { margin: 0; }
   $('#backFoundations').addEventListener('click',()=>returnToBeams());
   document.querySelectorAll('[data-return-beam]').forEach(b=>b.addEventListener('click',()=>returnToBeams(b.dataset.returnBeam)));
   document.documentElement.dataset.wingReady='true';
+  // A printed-wing study link opens straight into its workspace (also when pasted into an open page).
+  openStudyLink();
+  window.addEventListener('hashchange',openStudyLink);
 })();
 </script>
 <script>

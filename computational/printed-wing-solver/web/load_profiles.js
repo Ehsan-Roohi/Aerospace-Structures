@@ -333,10 +333,43 @@ const LoadProfiles = (() => {
     return '';
   }
 
+  /** Pure UI renderer; sampling draws the curve only. Resultants use the existing exact integrals. */
+  function powerTable({start,end,total,exponent,shape='start'}) {
+    if(![start,end,total,exponent].every(Number.isFinite)||!(end>start)||exponent<.1||exponent>12||!SHAPES.includes(shape))throw new Error('Power profile: finite start < end, total force, exponent 0.1–12 and a valid maximum location are required.');
+    const points=Array.from({length:31},(_,i)=>{const s=i/30,g=shape==='start'?1-s:shape==='end'?s:4*s*(1-s);return [start+(end-start)*s,g**exponent];});
+    const area=stats({kind:'table',points}).total;
+    return {kind:'table',points:points.map(([x,q])=>[x,q*total/area]),label:`Power-law n=${exponent}; 31-point piecewise-linear representation`};
+  }
+  function powerControls(prefix,units) {
+    const input=(key,label,value='')=>`<label style="display:block;margin:6px 0">${escapeHtml(label)} <input id="${prefix}Power${key}" type="number" step="any" value="${value}"></label>`;
+    return `<details class="power-profile-generator"><summary>Nonlinear power-law table · exponent n</summary><p>q ∝ (1−s)ⁿ, sⁿ, or [4s(1−s)]ⁿ; s=(station−a)/(b−a). 0.1 ≤ n ≤ 12. This produces an explicitly approximate 31-point, piecewise-linear load table, rescaled so its integrated total is exactly your F. It is not a new exact nonlinear solver law. Preview first; nothing is applied automatically.</p>${input('A','Start a ('+units.length+')')}${input('B','End b ('+units.length+')')}${input('F','Total force F ('+units.force+')')}${input('N','Exponent n',2)}<label>Maximum location <select id="${prefix}PowerShape"><option value="start">Start · (1−s)ⁿ</option><option value="end">End · sⁿ</option><option value="middle">Middle · [4s(1−s)]ⁿ</option></select></label><button type="button" id="${prefix}PowerPreview">Generate table &amp; preview only</button></details>`;
+  }
+  function previewFigure(input,opts={}) {
+    const u={length:'mm',line:'N/mm',force:'N',moment:'N·mm',...opts.units},esc=escapeHtml;
+    const f=n=>Number.isFinite(n)?String(Number(n.toPrecision(5))):'—';
+    let p=input;
+    if(!p) return '<p>Enter the load parameters to see its live schematic.</p>';
+    if(p.kind==='point'||p.kind==='moment') {
+      const v=p.kind==='point'?p.force:p.moment;
+      if(!Number.isFinite(v)||!Number.isFinite(p.position))throw new Error('Enter a finite magnitude and position.');
+      return `<figure class="load-profile-preview"><svg role="img" aria-label="${p.kind==='point'?'Point force':'Point couple'} schematic" viewBox="0 0 520 150" style="width:100%;max-width:640px"><path d="M40 110H480" stroke="currentColor"/>${v===0?'':p.kind==='point'?`<path d="M260 30V100m-7 -10l7 10 7 -10" fill="none" stroke="#9140a3" stroke-width="3" transform="${(opts.positive==='down'?v<0:v>=0)?'translate(0 135) scale(1 -1)':''}"/>`:'<text x="238" y="88" font-size="48" fill="#9140a3">' + (v>=0?'↻':'↺') + '</text>'}<text x="260" y="132" text-anchor="middle" fill="currentColor" font-size="13">station = ${esc(f(p.position))} ${esc(u.length)}</text><text x="260" y="20" text-anchor="middle" fill="currentColor" font-size="14">${p.kind==='point'?'F':'C'} = ${esc(f(v))} ${esc(p.kind==='point'?u.force:u.moment)} (${p.kind==='moment'?(v>=0?'clockwise':'counter-clockwise'):(v>=0?opts.positive||'up':opts.positive==='down'?'up':'down')})</text></svg><figcaption>${p.kind==='point'?'Point force: measured in '+esc(u.force)+', not force per length.':'Point couple: measured in '+esc(u.moment)+', not a force.'}</figcaption></figure>`;
+    }
+    if(CURVES.includes(p.kind))p=normalizeCurve(p,{min:-Infinity,max:Infinity,lengthUnit:u.length});
+    const s=opts.summary||stats(p),a=s.start,b=s.end;
+    if(!Number.isFinite(a)||!Number.isFinite(b)||!(b>a))throw new Error('A line load needs finite start < end.');
+    const xs=p.kind==='table'?p.points.map(r=>r[0]):Array.from({length:81},(_,i)=>a+(b-a)*i/80);
+    const points=xs.map(x=>[x,valueAt(p,x)]);
+    if(points.some(r=>!r.every(Number.isFinite)))throw new Error('Non-finite load profile.');
+    const ownPeak=Math.max(...points.map(r=>Math.abs(r[1]))),bound=Math.max(ownPeak,opts.scalePeak||0,1e-30);
+    const X=x=>52+(x-a)/(b-a)*440,Y=q=>112-q/bound*67;
+    const poly=points.map(([x,q])=>`${f(X(x))},${f(Y(q))}`).join(' ');
+    const marker=s.centroid!==null&&s.centroid>=a&&s.centroid<=b?`<path d="M${f(X(s.centroid))} 32V187" stroke="#0873e8" stroke-dasharray="4 3"/><text x="${f(X(s.centroid))}" y="28" text-anchor="middle" fill="#0873e8" font-size="12">resultant station</text>`:'';
+    return `<figure class="load-profile-preview" data-peak="${ownPeak}" data-total="${s.total}"><svg role="img" aria-label="${esc(p.kind)} line load, signed intensity against station" viewBox="0 0 540 225" style="width:100%;max-width:640px"><path d="M52 40V187H500M52 112H500" stroke="currentColor" fill="none" opacity=".6"/><text x="8" y="20" fill="currentColor" font-size="12">q (${esc(u.line)})</text><text x="8" y="49" fill="currentColor" font-size="11">${esc(f(bound))}</text><text x="32" y="116" fill="currentColor" font-size="11">0</text><text x="4" y="180" fill="currentColor" font-size="11">${esc(f(-bound))}</text><polygon points="${f(X(a))},112 ${poly} ${f(X(b))},112" fill="#9140a3" fill-opacity=".12"/><polyline data-profile-curve="1" points="${poly}" fill="none" stroke="#9140a3" stroke-width="2.5"/>${marker}<text x="52" y="205" fill="currentColor" font-size="12">a=${esc(f(a))}</text><text x="492" y="205" text-anchor="end" fill="currentColor" font-size="12">b=${esc(f(b))}</text><text x="280" y="221" text-anchor="middle" fill="currentColor" font-size="12">span station (${esc(u.length)}) · intensity axis is signed</text></svg><figcaption><b>Total force F = ${esc(f(s.total))} ${esc(u.force)}</b> · peak |q| = ${esc(f(ownPeak))} ${esc(u.line)} · length ℓ = ${esc(f(b-a))} ${esc(u.length)}<br>Resultant station = ${s.centroid===null?'not defined (zero net force)':esc(f(s.centroid))+' '+esc(u.length)} · moment about ${esc(f(opts.reference||0))} ${esc(u.length)} = ${esc(f(s.firstMoment-(opts.reference||0)*s.total))} ${esc(u.moment)}<br>${opts.scalePeak?'Shared intensity scale: heights compare actual intensities.':'Independent height: inspect the shape, not relative force magnitudes.'} Positive force direction: ${esc(opts.positive||'up')}.${CURVES.includes(p.kind)?'<br>'+esc(lawText(p)):opts.note?'<br>'+esc(opts.note):p.kind==='table'?'<br>CSV: piecewise-linear between the supplied stations; no hidden smoothing.':''}</figcaption></figure>`;
+  }
   return {
     SHAPES, CURVES, AREA, CENTROID, LIMITS, CSV_SPECS, GL3, GL8, GL16, gaussLegendre,
     valueAt, fractionAt, integrals, weighted, hermiteNodal, normalizeCurve, normalizeTable,
-    segmentsOf, segmentCount, stats, parseCsv, csvTemplate, escapeHtml, lawText, curveMap,
+    segmentsOf, segmentCount, stats, parseCsv, csvTemplate, escapeHtml, lawText, curveMap, previewFigure, powerTable, powerControls,
   };
 })();
 if (typeof module !== 'undefined' && module.exports) module.exports = LoadProfiles;

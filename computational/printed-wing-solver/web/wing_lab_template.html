@@ -1594,7 +1594,7 @@ body { margin: 0; }
     const add = (y, x, F, color) => {
       if (Math.abs(F) < 1e-9) return;
       const w = sectionMotion(y)[0];
-      const len = Math.max(14, Math.min(90, scaleLen * Math.abs(F)));
+      const len = Math.min(90, scaleLen * Math.abs(F));if(len<0.01)return;
       const zLow = at(R.props.zBot, y) - 4, zHigh = at(R.props.zTop, y) + 4;
       if (F > 0) grp.add(new THREE.ArrowHelper(new THREE.Vector3(0, 1, 0), new THREE.Vector3(y, zLow - len + w, x), len, color, Math.min(10, len * 0.35), 5));
       else grp.add(new THREE.ArrowHelper(new THREE.Vector3(0, -1, 0), new THREE.Vector3(y, zHigh + len + w, x), len, color, Math.min(10, len * 0.35), 5));
@@ -1608,7 +1608,8 @@ body { margin: 0; }
       const samples=p=>{const [a,b]=span(p);return Array.from({length:13},(_,i)=>{const y=a+(b-a)*i/12;return [Math.min(y,b),qAt(p,Math.min(y,b))];});};
       const qmax=Math.max(...lines.flatMap(p=>samples(p).map(s=>Math.abs(s[1]))),1e-12);
       for(const p of lines) for(const [y,q] of samples(p)) {
-        add(y,(p.kind==='table'?P.fractionAt(p,y):p.fraction)*E.chordAt(g,y),1.2*q/qmax,q>=0?COLORS.load:COLORS.relief);
+        const denom=S.lineArrowScale==='independent'?Math.max(...samples(p).map(s=>Math.abs(s[1])),1e-12):qmax;
+        add(y,(p.kind==='table'?P.fractionAt(p,y):p.fraction)*E.chordAt(g,y),1.2*q/denom,q>=0?COLORS.load:COLORS.relief);
       }
     } else if (lift && R.load.distribution !== "tip") {
       const wmax = Math.max(...R.w.map((v) => Math.abs(v))) || 1;
@@ -2143,6 +2144,8 @@ body { margin: 0; }
   const downloadText=(name,text,type)=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000);};
   // Shared custom-load editor (wing_loads_ui.js); this adapter keeps the printed wing's ids, units and rules.
   const wingLoadAdapter={
+    onScale:mode=>{S.lineArrowScale=mode;if(model&&R)drawLoads();},
+    schrenkProfile:total=>{const g=E.makeGeometry(S.geometry);return WingLoadsUI.schrenkData(g.semiSpan,y=>E.chordAt(g,y),total,[g.rootChord,g.tipChord]);},
     pickOnModel:accept=>beginPrintedSurfacePick(accept),
     showDeformation:()=>{if(!R||stale||running||gateOpen())throw new Error('Solve the applied loads first.');S.deformed=true;$('#defBtn').setAttribute('aria-pressed','true');setPlot('disp');applyResult();canvas.scrollIntoView({block:'center'});},
     workspace:'printed',units:{length:'mm',line:'N/mm',force:'N',moment:'N·mm'},

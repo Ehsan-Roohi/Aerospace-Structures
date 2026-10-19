@@ -1477,10 +1477,43 @@ const LoadProfiles = (() => {
     return '';
   }
 
+  /** Pure UI renderer; sampling draws the curve only. Resultants use the existing exact integrals. */
+  function powerTable({start,end,total,exponent,shape='start'}) {
+    if(![start,end,total,exponent].every(Number.isFinite)||!(end>start)||exponent<.1||exponent>12||!SHAPES.includes(shape))throw new Error('Power profile: finite start < end, total force, exponent 0.1–12 and a valid maximum location are required.');
+    const points=Array.from({length:31},(_,i)=>{const s=i/30,g=shape==='start'?1-s:shape==='end'?s:4*s*(1-s);return [start+(end-start)*s,g**exponent];});
+    const area=stats({kind:'table',points}).total;
+    return {kind:'table',points:points.map(([x,q])=>[x,q*total/area]),label:`Power-law n=${exponent}; 31-point piecewise-linear representation`};
+  }
+  function powerControls(prefix,units) {
+    const input=(key,label,value='')=>`<label style="display:block;margin:6px 0">${escapeHtml(label)} <input id="${prefix}Power${key}" type="number" step="any" value="${value}"></label>`;
+    return `<details class="power-profile-generator"><summary>Nonlinear power-law table · exponent n</summary><p>q ∝ (1−s)ⁿ, sⁿ, or [4s(1−s)]ⁿ; s=(station−a)/(b−a). 0.1 ≤ n ≤ 12. This produces an explicitly approximate 31-point, piecewise-linear load table, rescaled so its integrated total is exactly your F. It is not a new exact nonlinear solver law. Preview first; nothing is applied automatically.</p>${input('A','Start a ('+units.length+')')}${input('B','End b ('+units.length+')')}${input('F','Total force F ('+units.force+')')}${input('N','Exponent n',2)}<label>Maximum location <select id="${prefix}PowerShape"><option value="start">Start · (1−s)ⁿ</option><option value="end">End · sⁿ</option><option value="middle">Middle · [4s(1−s)]ⁿ</option></select></label><button type="button" id="${prefix}PowerPreview">Generate table &amp; preview only</button></details>`;
+  }
+  function previewFigure(input,opts={}) {
+    const u={length:'mm',line:'N/mm',force:'N',moment:'N·mm',...opts.units},esc=escapeHtml;
+    const f=n=>Number.isFinite(n)?String(Number(n.toPrecision(5))):'—';
+    let p=input;
+    if(!p) return '<p>Enter the load parameters to see its live schematic.</p>';
+    if(p.kind==='point'||p.kind==='moment') {
+      const v=p.kind==='point'?p.force:p.moment;
+      if(!Number.isFinite(v)||!Number.isFinite(p.position))throw new Error('Enter a finite magnitude and position.');
+      return `<figure class="load-profile-preview"><svg role="img" aria-label="${p.kind==='point'?'Point force':'Point couple'} schematic" viewBox="0 0 520 150" style="width:100%;max-width:640px"><path d="M40 110H480" stroke="currentColor"/>${v===0?'':p.kind==='point'?`<path d="M260 30V100m-7 -10l7 10 7 -10" fill="none" stroke="#9140a3" stroke-width="3" transform="${(opts.positive==='down'?v<0:v>=0)?'translate(0 135) scale(1 -1)':''}"/>`:'<text x="238" y="88" font-size="48" fill="#9140a3">' + (v>=0?'↻':'↺') + '</text>'}<text x="260" y="132" text-anchor="middle" fill="currentColor" font-size="13">station = ${esc(f(p.position))} ${esc(u.length)}</text><text x="260" y="20" text-anchor="middle" fill="currentColor" font-size="14">${p.kind==='point'?'F':'C'} = ${esc(f(v))} ${esc(p.kind==='point'?u.force:u.moment)} (${p.kind==='moment'?(v>=0?'clockwise':'counter-clockwise'):(v>=0?opts.positive||'up':opts.positive==='down'?'up':'down')})</text></svg><figcaption>${p.kind==='point'?'Point force: measured in '+esc(u.force)+', not force per length.':'Point couple: measured in '+esc(u.moment)+', not a force.'}</figcaption></figure>`;
+    }
+    if(CURVES.includes(p.kind))p=normalizeCurve(p,{min:-Infinity,max:Infinity,lengthUnit:u.length});
+    const s=opts.summary||stats(p),a=s.start,b=s.end;
+    if(!Number.isFinite(a)||!Number.isFinite(b)||!(b>a))throw new Error('A line load needs finite start < end.');
+    const xs=p.kind==='table'?p.points.map(r=>r[0]):Array.from({length:81},(_,i)=>a+(b-a)*i/80);
+    const points=xs.map(x=>[x,valueAt(p,x)]);
+    if(points.some(r=>!r.every(Number.isFinite)))throw new Error('Non-finite load profile.');
+    const ownPeak=Math.max(...points.map(r=>Math.abs(r[1]))),bound=Math.max(ownPeak,opts.scalePeak||0,1e-30);
+    const X=x=>52+(x-a)/(b-a)*440,Y=q=>112-q/bound*67;
+    const poly=points.map(([x,q])=>`${f(X(x))},${f(Y(q))}`).join(' ');
+    const marker=s.centroid!==null&&s.centroid>=a&&s.centroid<=b?`<path d="M${f(X(s.centroid))} 32V187" stroke="#0873e8" stroke-dasharray="4 3"/><text x="${f(X(s.centroid))}" y="28" text-anchor="middle" fill="#0873e8" font-size="12">resultant station</text>`:'';
+    return `<figure class="load-profile-preview" data-peak="${ownPeak}" data-total="${s.total}"><svg role="img" aria-label="${esc(p.kind)} line load, signed intensity against station" viewBox="0 0 540 225" style="width:100%;max-width:640px"><path d="M52 40V187H500M52 112H500" stroke="currentColor" fill="none" opacity=".6"/><text x="8" y="20" fill="currentColor" font-size="12">q (${esc(u.line)})</text><text x="8" y="49" fill="currentColor" font-size="11">${esc(f(bound))}</text><text x="32" y="116" fill="currentColor" font-size="11">0</text><text x="4" y="180" fill="currentColor" font-size="11">${esc(f(-bound))}</text><polygon points="${f(X(a))},112 ${poly} ${f(X(b))},112" fill="#9140a3" fill-opacity=".12"/><polyline data-profile-curve="1" points="${poly}" fill="none" stroke="#9140a3" stroke-width="2.5"/>${marker}<text x="52" y="205" fill="currentColor" font-size="12">a=${esc(f(a))}</text><text x="492" y="205" text-anchor="end" fill="currentColor" font-size="12">b=${esc(f(b))}</text><text x="280" y="221" text-anchor="middle" fill="currentColor" font-size="12">span station (${esc(u.length)}) · intensity axis is signed</text></svg><figcaption><b>Total force F = ${esc(f(s.total))} ${esc(u.force)}</b> · peak |q| = ${esc(f(ownPeak))} ${esc(u.line)} · length ℓ = ${esc(f(b-a))} ${esc(u.length)}<br>Resultant station = ${s.centroid===null?'not defined (zero net force)':esc(f(s.centroid))+' '+esc(u.length)} · moment about ${esc(f(opts.reference||0))} ${esc(u.length)} = ${esc(f(s.firstMoment-(opts.reference||0)*s.total))} ${esc(u.moment)}<br>${opts.scalePeak?'Shared intensity scale: heights compare actual intensities.':'Independent height: inspect the shape, not relative force magnitudes.'} Positive force direction: ${esc(opts.positive||'up')}.${CURVES.includes(p.kind)?'<br>'+esc(lawText(p)):opts.note?'<br>'+esc(opts.note):p.kind==='table'?'<br>CSV: piecewise-linear between the supplied stations; no hidden smoothing.':''}</figcaption></figure>`;
+  }
   return {
     SHAPES, CURVES, AREA, CENTROID, LIMITS, CSV_SPECS, GL3, GL8, GL16, gaussLegendre,
     valueAt, fractionAt, integrals, weighted, hermiteNodal, normalizeCurve, normalizeTable,
-    segmentsOf, segmentCount, stats, parseCsv, csvTemplate, escapeHtml, lawText, curveMap,
+    segmentsOf, segmentCount, stats, parseCsv, csvTemplate, escapeHtml, lawText, curveMap, previewFigure, powerTable, powerControls,
   };
 })();
 if (typeof module !== 'undefined' && module.exports) module.exports = LoadProfiles;
@@ -2855,7 +2888,7 @@ const BeamDiagrams = (() => {
     dist.forEach((v,i)=>{
       if(v.kind!=='distributed') {
         // Curved and table loads: envelope through sampled intensities (drawing only; results use exact integrals).
-        const L=LDS(), [a,b]=spanOf(v), base=yTop-4-lanes[i]*laneH, h=30, x0=X(a), x1=X(b), hq=q=>h*Math.abs(q)/qmax, cls='bl-load';
+        const L=LDS(), [a,b]=spanOf(v), base=yTop-4-lanes[i]*laneH, h=30, x0=X(a), x1=X(b), denom=opts.scaleMode==='independent'?Math.max(L.peak(v),1e-30):qmax, hq=q=>h*Math.abs(q)/denom, cls='bl-load';
         const pts=L.samples(v,a,b);
         svg+=`<path d="M${r1(x0)} ${r1(base)}${pts.map(([x,q])=>`L${r1(X(x))} ${r1(base-hq(q))}`).join('')}L${r1(x1)} ${r1(base)}Z" class="${cls}-fill" data-load-kind="${v.kind}"/>`;
         const n=Math.max(2,Math.round((x1-x0)/26));
@@ -2872,7 +2905,8 @@ const BeamDiagrams = (() => {
         return;
       }
       const base=yTop-4-lanes[i]*laneH, h=30, x0=X(v.start), x1=X(v.end);
-      const hq=q=>h*Math.abs(q)/qmax;
+      const denom=opts.scaleMode==='independent'?Math.max(Math.abs(v.qStart),Math.abs(v.qEnd),1e-30):qmax;
+      const hq=q=>h*Math.abs(q)/denom;
       const cls=v.selfWeight?'bl-sw':'bl-load';
       const env=`M${r1(x0)} ${r1(base)}L${r1(x0)} ${r1(base-hq(v.qStart))}L${r1(x1)} ${r1(base-hq(v.qEnd))}L${r1(x1)} ${r1(base)}Z`;
       svg+=`<path d="${env}" class="${cls}-fill"/>`;
@@ -2954,11 +2988,11 @@ const BeamDiagrams = (() => {
       svg+=text(end==='left'?X(s.x)-6:end==='right'?X(s.x)+6:X(s.x),yBottom+48,s.kind,`bl-tx-s bl-tx-m`,end==='left'?'start':end==='right'?'end':'middle');
     });
     model.hinges.forEach((h,i)=>{svg+=`<g class="bl-hinge" data-hinge="1" data-hinge-index="${i}" data-x="${h}" data-draggable="hinge"><circle cx="${r1(X(h))}" cy="${r1(yAxis)}" r="6" class="bl-hinge-c"/></g>`;});
-    svg+=drawLoads(loads,X,yTop,{width:W}).svg;
+    svg+=drawLoads(loads,X,yTop,{width:W,scaleMode:opts.loadScale}).svg;
     if(opts.interactive) model.loads.forEach((v,i)=>{
       const a=v.kind==='table'?v.points[0][0]:isDist(v)?v.start:v.position;
       const b=v.kind==='table'?v.points.at(-1)[0]:isDist(v)?v.end:v.position;
-      const x=X((a+b)/2), y=30+(i%3)*22;
+      const x=X((a+b)/2), y=yTop-14-(i%3)*23;
       svg+=`<g class="bl-load-handle" data-load-handle="${i}" tabindex="0" role="button" aria-label="Load ${i+1}: drag to move or press Enter to edit"><title>Load ${i+1}: drag to move; click or Enter to edit magnitude and position</title>${line(x,y+10,X((a+b)/2),yTop-2,'bl-load-link')}<circle cx="${r1(x)}" cy="${y}" r="10"/>${text(x,y+4,String(i+1),'bl-tx-s')}</g>`;
     });
     if(opts.loadPreview) {
@@ -4124,9 +4158,10 @@ const Lecture03BeamCases = Object.freeze({
           <label class="bl-field" id="beamCurveBasisField"><span>Enter</span><select class="bl-select" id="beamCurveBasis">
             <option value="total">Total force F</option><option value="peak">Peak intensity w₀</option></select></label>
           ${field('beamCurveValue','Total force F (+ down)','N')}
-        </div><p class="bl-help bl-curve-law" id="beamCurveLaw" hidden></p><p class="bl-err" id="beamLoadError" role="alert" hidden></p>
+        </div><p class="bl-help"><b>F (N) is total force; q (N/mm) is force per length.</b> A uniform 1000 N total over 450 mm means q = 2.222 N/mm, not 1000 N/mm. Curves: enter either total F or peak w₀; the other is derived. Change start/end and maximum location to inspect the law. Other nonlinear laws can be entered as a CSV table (piecewise-linear approximation).</p><p class="bl-help bl-curve-law" id="beamCurveLaw" hidden></p><div id="beamLoadPreview" aria-live="polite"></div><p class="bl-err" id="beamLoadError" role="alert" hidden></p>
         <div class="bl-row" style="margin-top:10px"><button type="submit" class="bl-btn bl-btn-primary" id="beamLoadSubmit">Add load &amp; solve</button><button type="button" class="bl-btn" id="beamLoadCancel" hidden>Cancel edit</button></div></form>
         <details class="bl-box bl-csv" id="beamCsvBox"><summary>Import a line-load table (CSV)</summary>
+          ${LP.powerControls('beam',{length:'mm',force:'N'})}
           <p class="bl-help">Two columns with units in the header: <code>x_mm,w_N_per_mm</code> (w + down). 2–${LP.LIMITS.tableRows} rows, x strictly increasing on 0–L. The load is <b>linear between rows</b> and zero outside the first and last row; nothing is resampled or truncated. Lines starting with # are ignored. <button type="button" class="bl-btn bl-btn-sm" id="beamCsvTemplate">Download template</button></p>
           <label class="bl-field"><span>CSV file</span><input type="file" id="beamCsvFile" accept=".csv,text/csv,text/plain"></label>
           <label class="bl-field"><span>…or paste the table here</span><textarea id="beamCsvText" rows="5" spellcheck="false" class="bl-notes" placeholder="x_mm,w_N_per_mm&#10;0,0.002&#10;450,0"></textarea></label>
@@ -4155,6 +4190,7 @@ const Lecture03BeamCases = Object.freeze({
           ${['pin','roller','fixed','hinge'].map(k=>`<button type="button" class="bl-tool" data-place="${k}" aria-pressed="false" title="Click the beam to place a ${k}">${icon[k]}${k[0].toUpperCase()+k.slice(1)}</button>`).join('')}
           <button type="button" class="bl-tool" id="beamShowDefl" aria-pressed="true" title="Show the exaggerated deflected shape">Deflected shape</button></div></div>
       <div class="bl-toolbar bl-load-tools" role="toolbar" aria-label="Place loads on the beam"><span>Loads</span>
+        <label>Drawing scale <select id="beamLoadScale" class="bl-select"><option value="common">Shared intensity scale</option><option value="independent">Independent heights · shape only</option></select></label>
         ${[['point','↓ Point force'],['moment','↻ Couple'],['rectangle','↓↓ Uniform'],['triangle','◿ Triangle →'],['triangle-root','◺ Triangle ←'],['trapezoid','▱ Trapezoid'],['elliptic','◠ Elliptic'],['parabolic','⌒ Parabolic']].map(([k,label])=>`<button type="button" class="bl-tool" data-place="load:${k}" aria-pressed="false">${label}</button>`).join('')}
         <button type="button" class="bl-tool" id="beamStopPlacing">Cancel / select</button>
       </div>
@@ -4408,7 +4444,7 @@ const Lecture03BeamCases = Object.freeze({
   function renderLoadList() {
     const loads=st.model.loads;
     $('#beamLoads').innerHTML=`<ol class="bl-list">${loads.map((p,i)=>`<li data-editing="${st.editLoad===i}"><span class="bl-tag load">${loadTag(p)}</span><span class="bl-li-text">${esc(loadText(p))}</span>
-      <span class="bl-li-actions"><button type="button" class="bl-btn bl-btn-sm bl-btn-ghost" data-edit-load="${i}" aria-label="Edit load ${i+1}">Edit</button><button type="button" class="bl-btn bl-btn-sm bl-btn-ghost" data-delete-load="${i}" aria-label="Remove load ${i+1}">✕</button></span></li>`).join('')}</ol>${loads.length?'':'<p class="bl-help bl-empty-loads">No load defined. Add your own load.</p>'}`;
+      <span class="bl-li-actions"><button type="button" class="bl-btn bl-btn-sm bl-btn-ghost" data-edit-load="${i}" aria-label="Edit load ${i+1}">Edit</button><button type="button" class="bl-btn bl-btn-sm bl-btn-ghost" data-delete-load="${i}" aria-label="Remove load ${i+1}">✕</button></span></li>`).join('')}</ol>${loads.map((p,i)=>`<details class="bl-box"><summary>Load ${i+1}: profile, total force & resultant</summary>${previewLoad(p,loads)}</details>`).join('')}${loads.length?'':'<p class="bl-help bl-empty-loads">No load defined. Add your own load.</p>'}`;
     $('#beamLoadBadge').textContent=`${loads.length}/${MAX_LOADS}`;
   }
   function renderInputs(m) {renderScalars(m);renderLists(m);syncLoadForm();renderSectionView();renderStability();}
@@ -4523,7 +4559,7 @@ const Lecture03BeamCases = Object.freeze({
     st.drawn=model;st.drawnInvalid=!!invalid;
     const sw=current&&r&&r.selfWeight.enabled?{q:r.selfWeight.q}:(!current&&model.selfWeight?{q:SEC.selfWeightLine(SEC.properties(model.section),model.density,B.GRAVITY)}:null);
     pic.innerHTML=D.beamSchematic(model,{width:width(pic)-2,result:current?r:null,showDeflection:current&&st.showDeflection,
-      cut:cutTab()&&current?{x:st.cut.x}:null,ghost,selfWeight:sw,interactive:true,loadPreview:st.graphicPreview,
+      cut:cutTab()&&current?{x:st.cut.x}:null,ghost,selfWeight:sw,interactive:true,loadPreview:st.graphicPreview,loadScale:$('#beamLoadScale').value,
       label:`Physical beam with supports and applied loads${current?'':' (edited inputs, not solved yet)'}`});
     if(st.placing) pic.dataset.placing=st.placing; else delete pic.dataset.placing;
     const svg=pic.querySelector('svg'), factor=svg&&svg.dataset.exaggeration;
@@ -4531,6 +4567,7 @@ const Lecture03BeamCases = Object.freeze({
       current&&!model.loads.length&&!model.selfWeight?'Physical beam with its supports (green). No load is applied.':
       current?`Physical beam: supports (green) and applied loads (purple). This is not a free-body diagram — see Solution.${factor&&st.showDeflection?` Dashed blue: deflected shape drawn at ${factor} × true scale.`:''}`:
       'Showing your edited inputs — not solved yet. Press Solve to update the results.';
+    $('#beamPictureNote').textContent+=$('#beamLoadScale').value==='independent'?' Independent load heights show shape only; they do NOT compare force magnitudes.':' Shared intensity scale: a much smaller intensity can look flat; choose independent heights to inspect its shape.';
     const sup=model.supports, left=(sup.find(s=>s.x===0)||{kind:'free'}).kind, right=(sup.find(s=>s.x===model.length)||{kind:'free'}).kind, interior=sup.filter(s=>s.x>0&&s.x<model.length).length;
     $('#beamModelTitle').textContent=`${left} / ${right}${interior?` + ${interior} interior support${interior>1?'s':''}`:''}${model.hinges.length?` + ${model.hinges.length} hinge${model.hinges.length>1?'s':''}`:''}`;
     $('#beamModelSub').textContent=`L = ${fmt(model.length)} mm · ${SEC.describe(model.section)} · E = ${fmt(model.E)} MPa${model.selfWeight?' · self-weight on':''}`;
@@ -5204,6 +5241,7 @@ const Lecture03BeamCases = Object.freeze({
     $('#beamLoadALabel').textContent=point?'Position x':curve?'Start a':'Start';
     if($('#beamLoadBLabel')) $('#beamLoadBLabel').textContent=curve?'End b':'End';
     curveLaw();
+    renderLoadPreview();
     $('#beamQ0Label').textContent=k==='rectangle'?'q (uniform)':'q at start';
     $('#beamLoadSubmit').textContent=st.editLoad===null?'Add load & solve':`Update load ${st.editLoad+1} & solve`;
     $('#beamLoadCancel').hidden=st.editLoad===null;
@@ -5243,6 +5281,13 @@ const Lecture03BeamCases = Object.freeze({
     if(LD.isDist(load)&&!(load.end>load.start)) throw new Error('A distributed load needs start < end.');
     return load;
   }
+  function previewLoad(p,others=[]) {
+    try {
+      const peak=q=>{if(q.kind==='point'||q.kind==='moment')return 0;const v=['elliptic','parabolic'].includes(q.kind)?LP.normalizeCurve(q,{min:-Infinity,max:Infinity,lengthUnit:'mm'}):q;return v.kind==='distributed'?Math.max(Math.abs(v.qStart),Math.abs(v.qEnd)):v.kind==='table'?Math.max(...v.points.map(r=>Math.abs(r[1]))):Math.abs(v.peak);};
+      return LP.previewFigure(p,{positive:'down',scalePeak:$('#beamLoadScale').value==='common'?Math.max(...others.map(peak),peak(p)):null});
+    } catch(e){return `<p class="bl-help">${esc(e.message)}</p>`;}
+  }
+  function renderLoadPreview() {let p;try{p=loadFromForm();}catch(e){$('#beamLoadPreview').textContent='Enter complete parameters to preview the load (not applied until confirmed).';return;}$('#beamLoadPreview').innerHTML='<b>Live input preview — not applied until confirmed</b>'+previewLoad(p,st.model.loads);}
   function submitLoad(e) {
     if(e) e.preventDefault();
     const err=$('#beamLoadError');err.hidden=true;
@@ -5409,6 +5454,7 @@ const Lecture03BeamCases = Object.freeze({
     syncLoadForm();
   };
   $('#beamCsvTemplate').onclick=()=>download('beam_line_load_template.csv',LP.csvTemplate('beam'),'text/csv');
+  $('#beamPowerPreview').onclick=()=>{try{const n=k=>readNumber($('#beamPower'+k),k);const p=LP.powerTable({start:n('A'),end:n('B'),total:n('F'),exponent:n('N'),shape:$('#beamPowerShape').value});$('#beamCsvText').value='x_mm,w_N_per_mm\n'+p.points.map(r=>r.join(',')).join('\n');previewCsv();}catch(e){$('#beamCsvResult').textContent=e.message;}};
   $('#beamCsvPreview').onclick=previewCsv;
   $('#beamCsvApply').onclick=applyCsv;
   $('#beamCsvCancel').onclick=closeCsv;
@@ -5423,7 +5469,8 @@ const Lecture03BeamCases = Object.freeze({
     $('#beamCsvText').value=text;st.csv.fromFile=$('#beamCsvText').value;st.csv.filename=String(file.name).slice(0,120);st.csv.sha256=await sha256Hex(text);
     previewCsv();
   };
-  $('#beamLoadForm').addEventListener('input',curveLaw);
+  $('#beamLoadForm').addEventListener('input',()=>{curveLaw();renderLoadPreview();});
+  $('#beamLoadScale').onchange=()=>{renderPicture();renderLoadList();renderLoadPreview();};
   $('#beamLoadForm').onsubmit=submitLoad;
   $('#beamLoadCancel').onclick=()=>{st.editLoad=null;renderLoadList();syncLoadForm();};
   $('#beamSelfWeight').onchange=()=>{renderSectionView();draftChanged();};
@@ -7076,6 +7123,9 @@ const WingLoadsUI = (() => {
         ${field(id.value, `Total force F (${u.force}, upward +)`, d.total)}
         ${field(id.xc, 'Chord position x/c (0 = leading edge, 1 = trailing edge)', d.xc)}
         <p class="wle-law" id="${id.law}" hidden></p>
+        <p class="note"><b>Total F (${esc(u.force)}) ≠ intensity q (${esc(u.line)}).</b> Total force is the signed area under q(y). Curved loads accept either F or peak w₀; the other is calculated, not entered independently. Positions and the maximum-location selector define the supported nonlinear shape.</p>
+        <label>Profile display scale <select class="wle-scale"><option value="independent">Independent height · inspect shape</option><option value="common">Shared intensity scale · compare loads</option></select></label>
+        <div class="wle-live-preview" aria-live="polite"></div>
         <button class="btn primary" type="submit">Add load</button>
         <p class="note">The first custom load replaces any flight or tip case; further loads are superposed (signed). Curved loads are integrated exactly, not split into straight segments.</p>
       </form>
@@ -7084,6 +7134,7 @@ const WingLoadsUI = (() => {
       <p id="${id.status}" class="wle-status" role="status"></p>
       <figure class="wle-chordfig"><div id="${id.chord}"></div><figcaption id="${id.chord}Cap"></figcaption></figure>
       <details class="wle-csv" id="${id.csv}"><summary>Import a spanwise line-load table (CSV)</summary>
+        ${P.powerControls(id.csv,u)}
         <p class="note">Header with units: <code>${P.CSV_SPECS[ad.workspace].columns.join(',')}</code> and optionally <code>,x_over_c</code>. 2–${P.LIMITS.tableRows} rows, stations strictly increasing within ${fmt(ad.range().min)}–${fmt(ad.range().max)} ${u.length}; w upward +. The load is linear between rows and zero outside the first and last row; nothing is resampled or truncated. <button class="btn" type="button" id="${id.csv}Template">Download template</button></p>
         <div class="field"><label for="${id.csv}File">CSV file</label><input type="file" id="${id.csv}File" accept=".csv,text/csv,text/plain"></div>
         <div class="field"><label for="${id.csv}Text">…or paste the table</label><textarea id="${id.csv}Text" rows="5" spellcheck="false"></textarea></div>
@@ -7136,9 +7187,9 @@ const WingLoadsUI = (() => {
       container.querySelector(`label[for="${id.q0}"]`).textContent = k === 'uniform' ? `Uniform intensity q (${u.line}, upward +)` : `Start intensity q(a) (${u.line}, upward +)`;
       container.querySelector(`label[for="${id.q1}"]`).textContent = `End intensity q(b) (${u.line}, upward +)`;
       const total = schrenk || byId(id.basis).value === 'total';
-      if (schrenk) byId(id.basis).value = 'total';
+      if (schrenk) {byId(id.basis).value = 'total';lastBasis='total';}
       container.querySelector(`label[for="${id.value}"]`).textContent = total ? `Total force F (${u.force}, upward +)` : `Peak intensity w₀ (${u.line}, upward +)`;
-      law(); chord();
+      law(); chord();livePreview();
     }
     function itemFromForm() {
       const k = canon(byId(id.kind).value), xc = readNum(id.xc, 'Chord position x/c');
@@ -7199,12 +7250,22 @@ const WingLoadsUI = (() => {
     function renderList() {
       const items = ad.items(), mode = ad.mode();
       byId(id.list).innerHTML = items.length
-        ? items.map((p, i) => `<p>${i + 1}. ${esc(describe(p, u))} <button class="btn" type="button" ${ad.deleteAttr}="${i}">Remove</button>${p.kind === 'table' ? ` <button class="btn" type="button" data-wle-edit-table="${i}">Edit table</button>` : ''}</p>`).join('')
+        ? items.map((p, i) => `<p>${i + 1}. ${esc(describe(p, u))} <button class="btn" type="button" ${ad.deleteAttr}="${i}">Remove</button>${p.kind === 'table' ? ` <button class="btn" type="button" data-wle-edit-table="${i}">Edit table</button>` : ''}</p><details><summary>Load ${i+1}: profile &amp; resultant</summary>${profile(p,items)}</details>`).join('')
         : `<p class="wle-empty">${mode === 'flight' ? 'Flight-like loading is active; no custom loads.' : mode === 'tip' ? 'A tip-force case is active; no custom loads.' : 'No load defined. Add your own load.'}</p>`;
       container.querySelectorAll(`[${ad.deleteAttr}]`).forEach((b) => { b.onclick = () => { const i = +b.getAttribute(ad.deleteAttr); tryApply(ad.items().filter((_, k) => k !== i), `Load ${i + 1} removed.`); }; });
       container.querySelectorAll('[data-wle-edit-table]').forEach((b) => { b.onclick = () => openCsv(+b.dataset.wleEditTable); });
       if (ad.statusText) status(ad.statusText());
     }
+    function profile(p,items=[]) {
+      try {
+        const drawable=q=>{if(q.kind!=='schrenk')return {p:q};if(!ad.schrenkProfile)throw new Error('Schrenk preview requires the current planform.');const d=ad.schrenkProfile(q.total);return {p:{kind:'table',points:Array.from({length:81},(_,i)=>[d.L*i/80,d.ws(d.L*i/80)])},summary:{total:q.total,firstMoment:d.stats.schrenk.M,centroid:d.stats.schrenk.ybar,start:0,end:d.L},note:'Schrenk curve sampled for drawing only; displayed resultant uses the chord/ellipse mean integrals, not the plotted polyline.'};};
+        const peak=q=>{if(q.kind==='point')return 0;const raw=drawable(q).p,n=['elliptic','parabolic'].includes(raw.kind)?curveOf(raw,u):raw;return n.kind==='distributed'?Math.max(Math.abs(n.qStart),Math.abs(n.qEnd)):n.kind==='table'?Math.max(...n.points.map(r=>Math.abs(r[1]))):Math.abs(n.peak);};
+        const v=drawable(p);
+        return P.previewFigure(v.p,{units:u,positive:'up',reference:ad.refStation,summary:v.summary,note:v.note,scalePeak:$('.wle-scale').value==='common'?Math.max(peak(p),...items.map(peak)):null});
+      }catch(e){return `<p class="note">${esc(e.message)}</p>`;}
+    }
+    function livePreview() {const out=$('.wle-live-preview');try{out.innerHTML='<b>Live input preview — not applied until Add load</b>'+profile(itemFromForm(),ad.items());}catch(e){out.textContent='Enter complete load parameters to see the live schematic.';}}
+    $('.wle-scale').onchange=()=>{renderList();livePreview();if(ad.onScale)ad.onScale($('.wle-scale').value);};
     function tryApply(items, note) {
       cancelPick();
       try { ad.validate(items); } catch (e) { status(`<span class="wle-err">${esc(e.message)}</span> Nothing was changed.`); return false; }
@@ -7218,8 +7279,10 @@ const WingLoadsUI = (() => {
       const base = ad.mode() === 'custom' ? ad.items() : [];
       tryApply([...base, p], 'Load added.');
     };
-    byId(id.kind).onchange = ()=>{cancelPick();visible();}; byId(id.shape).onchange = visible; byId(id.basis).onchange = visible;
-    byId(id.form).addEventListener('input', () => { law(); chord(); });
+    byId(id.kind).onchange = ()=>{cancelPick();visible();}; byId(id.shape).onchange = visible;
+    let lastBasis='total';
+    byId(id.basis).onchange=()=>{const next=byId(id.basis).value,k=canon(byId(id.kind).value);try{if(['elliptic','parabolic'].includes(k)&&byId(id.value).value.trim()!==''){const p=P.normalizeCurve({kind:k,start:readNum(id.a,'Start'),end:readNum(id.b,'End'),shape:byId(id.shape).value,[lastBasis]:readNum(id.value,'Magnitude')},{min:-Infinity,max:Infinity,lengthUnit:u.length});byId(id.value).value=p[next];}}catch(e){}lastBasis=next;visible();};
+    byId(id.form).addEventListener('input', () => { law(); chord();livePreview(); });
     byId(id.clear).onclick = () => tryApply([], 'All custom loads cleared: no load defined.');
     if (ad.flight) byId(id.flight).onclick = () => { cancelPick();ad.flight.apply(); renderList(); };
     // ---------------------------------------------------------- CSV
@@ -7261,6 +7324,7 @@ const WingLoadsUI = (() => {
         ${res.warnings.length ? `<ul class="note">${res.warnings.map((w) => `<li>${esc(w)}</li>`).join('')}</ul>` : ''}
         <details><summary>Rows</summary><table><tr><th>${esc(res.spec.columns[0])}</th><th>${esc(res.spec.columns[1])}</th>${res.hasFraction ? '<th>x_over_c</th>' : ''}</tr>${res.rows.map((row) => `<tr>${row.map((v) => `<td>${esc(fmt(v, 6))}</td>`).join('')}</tr>`).join('')}</table></details>
         ${problem ? `<p class="wle-err">Cannot apply: ${esc(problem)} The current loads are unchanged.</p>` : `<p class="note">${mode === 'edit' ? `Apply replaces table load ${csv.edit + 1} only.` : 'Choose add or replace, then Apply. Until then nothing changes.'}</p>`}`;
+      out.insertAdjacentHTML('beforeend',P.previewFigure(table,{units:u,positive:'up',reference:ad.refStation}));
       if (problem) return;
       csv.candidate = table; csv.text = text; byId(id.csv + 'Mode').hidden = mode === 'edit'; apply.disabled = false;
     }
@@ -7289,8 +7353,9 @@ const WingLoadsUI = (() => {
       preview();
     };
     byId(id.csv + 'Template').onclick = () => { if (ad.download) ad.download(`${ad.workspace}_line_load_template.csv`, P.csvTemplate(ad.workspace), 'text/csv'); };
-    visible(); renderList();
-    return { refresh() { renderList(); chord(); }, preview, openCsv, container, acceptPick, cancelPick };
+    byId(id.csv+'PowerPreview').onclick=()=>{try{const n=k=>readNum(id.csv+'Power'+k,k);const p=P.powerTable({start:n('A'),end:n('B'),total:n('F'),exponent:n('N'),shape:byId(id.csv+'PowerShape').value});byId(id.csv+'Text').value=P.CSV_SPECS[ad.workspace].columns.join(',')+'\n'+p.points.map(r=>r.join(',')).join('\n');preview();}catch(e){byId(id.csv+'Out').textContent=e.message;}};
+    visible(); renderList();if(ad.onScale)ad.onScale($('.wle-scale').value);
+    return { refresh() { renderList(); chord();livePreview(); }, preview, openCsv, container, acceptPick, cancelPick };
   }
 
   /**
@@ -10301,7 +10366,7 @@ if (typeof window !== 'undefined') window.WingLoadsUI = WingLoadsUI;
     const add = (y, x, F, color) => {
       if (Math.abs(F) < 1e-9) return;
       const w = sectionMotion(y)[0];
-      const len = Math.max(14, Math.min(90, scaleLen * Math.abs(F)));
+      const len = Math.min(90, scaleLen * Math.abs(F));if(len<0.01)return;
       const zLow = at(R.props.zBot, y) - 4, zHigh = at(R.props.zTop, y) + 4;
       if (F > 0) grp.add(new THREE.ArrowHelper(new THREE.Vector3(0, 1, 0), new THREE.Vector3(y, zLow - len + w, x), len, color, Math.min(10, len * 0.35), 5));
       else grp.add(new THREE.ArrowHelper(new THREE.Vector3(0, -1, 0), new THREE.Vector3(y, zHigh + len + w, x), len, color, Math.min(10, len * 0.35), 5));
@@ -10315,7 +10380,8 @@ if (typeof window !== 'undefined') window.WingLoadsUI = WingLoadsUI;
       const samples=p=>{const [a,b]=span(p);return Array.from({length:13},(_,i)=>{const y=a+(b-a)*i/12;return [Math.min(y,b),qAt(p,Math.min(y,b))];});};
       const qmax=Math.max(...lines.flatMap(p=>samples(p).map(s=>Math.abs(s[1]))),1e-12);
       for(const p of lines) for(const [y,q] of samples(p)) {
-        add(y,(p.kind==='table'?P.fractionAt(p,y):p.fraction)*E.chordAt(g,y),1.2*q/qmax,q>=0?COLORS.load:COLORS.relief);
+        const denom=S.lineArrowScale==='independent'?Math.max(...samples(p).map(s=>Math.abs(s[1])),1e-12):qmax;
+        add(y,(p.kind==='table'?P.fractionAt(p,y):p.fraction)*E.chordAt(g,y),1.2*q/denom,q>=0?COLORS.load:COLORS.relief);
       }
     } else if (lift && R.load.distribution !== "tip") {
       const wmax = Math.max(...R.w.map((v) => Math.abs(v))) || 1;
@@ -10850,6 +10916,8 @@ if (typeof window !== 'undefined') window.WingLoadsUI = WingLoadsUI;
   const downloadText=(name,text,type)=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000);};
   // Shared custom-load editor (wing_loads_ui.js); this adapter keeps the printed wing's ids, units and rules.
   const wingLoadAdapter={
+    onScale:mode=>{S.lineArrowScale=mode;if(model&&R)drawLoads();},
+    schrenkProfile:total=>{const g=E.makeGeometry(S.geometry);return WingLoadsUI.schrenkData(g.semiSpan,y=>E.chordAt(g,y),total,[g.rootChord,g.tipChord]);},
     pickOnModel:accept=>beginPrintedSurfacePick(accept),
     showDeformation:()=>{if(!R||stale||running||gateOpen())throw new Error('Solve the applied loads first.');S.deformed=true;$('#defBtn').setAttribute('aria-pressed','true');setPlot('disp');applyResult();canvas.scrollIntoView({block:'center'});},
     workspace:'printed',units:{length:'mm',line:'N/mm',force:'N',moment:'N·mm'},
@@ -14971,7 +15039,19 @@ const METAL_REFERENCE = {
     while (g.children.length) g.remove(g.children[0]);
     if (!R || !MS.arrows) return;
     if(R.input.customLoads!=null){
-      for(const p of R.input.customLoads){const ys=p.kind==='point'?[p.position]:p.kind==='table'?E.linspace(p.points[0][0],p.points.at(-1)[0],12):E.linspace(p.start,p.end,12);for(const y of ys){const force=R.n*(p.kind==='point'?p.force:p.kind==='distributed'?p.qStart+(p.qEnd-p.qStart)*(y-p.start)/(p.end-p.start):LoadProfiles.valueAt(p,y));if(!force)continue;const sc=R.wing.section(y,[p.kind==='table'?LoadProfiles.fractionAt(p,y):p.fraction]),base=V3(y,sc.up[0][0],force>0?sc.up[0][1]:sc.lo[0][1]);const arrow=new THREE.ArrowHelper(new THREE.Vector3(0,Math.sign(force),0),new THREE.Vector3(...base),.35,0xd25ad6,.06,.035);arrow.userData={kind:'arrow',y,base};g.add(arrow);}}
+      const lines=R.input.customLoads.filter(p=>p.kind!=='point');
+      const samples=p=>p.kind==='table'?p.points.map(r=>r[0]):E.linspace(p.start,p.end,25);
+      const qAt=(p,y)=>R.n*(p.kind==='distributed'?p.qStart+(p.qEnd-p.qStart)*(y-p.start)/(p.end-p.start):LoadProfiles.valueAt(p,y));
+      const common=Math.max(...lines.flatMap(p=>samples(p).map(y=>Math.abs(qAt(p,y)))),1e-30);
+      for(const p of R.input.customLoads){
+        const ys=p.kind==='point'?[p.position]:samples(p),denom=p.kind==='point'?1:MS.lineArrowScale==='independent'?Math.max(...ys.map(y=>Math.abs(qAt(p,y))),1e-30):common;
+        for(const y of ys){
+          const force=p.kind==='point'?R.n*p.force:qAt(p,y);if(!force)continue;
+          const len=p.kind==='point'?.35:.45*Math.abs(force)/denom;if(len<1e-6)continue;
+          const sc=R.wing.section(y,[p.kind==='table'?LoadProfiles.fractionAt(p,y):p.fraction]),base=V3(y,sc.up[0][0],force>0?sc.up[0][1]:sc.lo[0][1]);
+          const arrow=new THREE.ArrowHelper(new THREE.Vector3(0,Math.sign(force),0),new THREE.Vector3(...base),len,0xd25ad6,Math.min(.06,len*.3),Math.min(.035,len*.2));arrow.userData={kind:'arrow',y,base};g.add(arrow);
+        }
+      }
       return;
     }
     const W = R.wing, ys = E.linspace(0.1, W.b2 - 0.15, 16), lmax = Math.max(...R.grid.lift.map(Math.abs)) || 1;
@@ -15498,6 +15578,7 @@ const METAL_REFERENCE = {
   }
   // Shared custom-load editor (wing_loads_ui.js) with the D.520 ids, SI units and span limits.
   const loadAdapter = {
+    onScale:mode=>{MS.lineArrowScale=mode;if(model&&R)buildArrows();},
     pickOnModel:beginMetalSurfacePick,
     showDeformation:()=>{if(!R||stale||running||lastError)throw new Error('Solve the applied loads first.');MS.deformed=true;$('#mDef').setAttribute('aria-pressed','true');setPlot('disp');updateModel();$('#mgl').scrollIntoView({block:'center'});},
     workspace: "d520", units: { length: "m", line: "N/m", force: "N", moment: "N·m" },

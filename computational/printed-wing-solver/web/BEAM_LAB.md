@@ -3,6 +3,14 @@
 The Beam workspace of `docs/wing-lab.html` (the landing screen of Wing Lab). It is an
 Euler–Bernoulli teaching model: transverse displacement `v` and rotation `θ` only.
 
+Load forms include a live signed intensity profile, total force, peak intensity and
+resultant station. Saved loads have individual expandable previews. The graphical toolbar
+switches between shared intensity scale (magnitude comparison) and independent heights
+(shape inspection only); this never alters the solution. F is measured in N, q in N/mm.
+The optional exponent-based generator creates an explicitly approximate 31-point
+piecewise-linear CSV table, normalized to the requested total and applied only after
+separate validation and confirmation. See `WING_IMPORT.md` for the shared workflow.
+
 ## Files
 
 | File | Role |

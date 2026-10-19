@@ -42,6 +42,7 @@ function printedAdapter(state,downloads) {
     allowSchrenk:true,refStation:0,refLabel:'the root (y = 0)',
     section:y=>{const c=E.chordAt(g,y),xs=E.interp(y,solved.y,solved.props.xsc);return {outline:[[0,0],[0.3*c,0.06*c],[c,0],[0.3*c,-0.04*c]],chord:c,xsc:xs};},
     schrenkCentroid:()=>{const d=globalThis.__W.schrenkData(L,y=>E.chordAt(g,y),1,[g.rootChord,g.tipChord]);return d.stats.schrenk.ybar;},
+    schrenkProfile:total=>globalThis.__W.schrenkData(L,y=>E.chordAt(g,y),total,[g.rootChord,g.tipChord]),
     defaults:{a:100,b:L,P:2,q0:0.004,q1:0.002,total:2,xc:0.3},
     statusText:()=>`mode ${state.load.kind}`,download:(n,t,ty)=>downloads.push({n,t,ty}),
     torqueNote:'Printed-wing note.',
@@ -76,6 +77,13 @@ const ad520=(state)=>({
   const stop=w.WingLoadsUI.surfacePicker(can,()=>({station:1,fraction:.2}),()=>()=>{restored++;})(()=>{count++;});
   const pe=(type,x)=>can.dispatchEvent(new w.MouseEvent(type,{clientX:x,clientY:10,button:0}));
   pe('pointerdown',0);pe('pointerup',30);eq(count,0,'orbit drag does not count as a pick');pe('pointerdown',10);pe('pointerup',11);eq(count,1);stop();pe('pointerdown',10);pe('pointerup',10);eq(count,1);eq(restored,1);
+  $('#wk').value='elliptic';$('#wk').dispatchEvent(new w.Event('change'));$('#wa').value=0;$('#wb').value=450;$('#wv').value=2;$('#wf').dispatchEvent(new w.Event('input',{bubbles:true}));
+  ok($('#host .wle-live-preview').textContent.includes('Total force F = 2 N'),'live curve preview');
+  $('#wbasis').value='peak';$('#wbasis').dispatchEvent(new w.Event('change'));near(+$('#wv').value,2/(450*Math.PI/4),1e-12,'basis conversion preserves force');
+  $('#wbasis').value='total';$('#wbasis').dispatchEvent(new w.Event('change'));near(+$('#wv').value,2,1e-12,'basis round trip');
+  const before=JSON.stringify(state.load);$('#host .wle-scale').value='common';$('#host .wle-scale').dispatchEvent(new w.Event('change'));eq(JSON.stringify(state.load),before,'display scale does not change applied loads');
+  for(const [k,v]of Object.entries({A:0,B:450,F:5,N:3}))$('#wcsvPower'+k).value=v;$('#wcsvPowerPreview').click();
+  eq(state.applied.length,1,'nonlinear generator does not apply automatically');eq($('#wcsvText').value.split('\n').length,32);ok($('#wcsvOut .load-profile-preview'),'power-table schematic appears before apply');
   dom.window.close();
 }
 {

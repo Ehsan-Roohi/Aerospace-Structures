@@ -129,7 +129,7 @@ const BeamDiagrams = (() => {
     dist.forEach((v,i)=>{
       if(v.kind!=='distributed') {
         // Curved and table loads: envelope through sampled intensities (drawing only; results use exact integrals).
-        const L=LDS(), [a,b]=spanOf(v), base=yTop-4-lanes[i]*laneH, h=30, x0=X(a), x1=X(b), hq=q=>h*Math.abs(q)/qmax, cls='bl-load';
+        const L=LDS(), [a,b]=spanOf(v), base=yTop-4-lanes[i]*laneH, h=30, x0=X(a), x1=X(b), denom=opts.scaleMode==='independent'?Math.max(L.peak(v),1e-30):qmax, hq=q=>h*Math.abs(q)/denom, cls='bl-load';
         const pts=L.samples(v,a,b);
         svg+=`<path d="M${r1(x0)} ${r1(base)}${pts.map(([x,q])=>`L${r1(X(x))} ${r1(base-hq(q))}`).join('')}L${r1(x1)} ${r1(base)}Z" class="${cls}-fill" data-load-kind="${v.kind}"/>`;
         const n=Math.max(2,Math.round((x1-x0)/26));
@@ -146,7 +146,8 @@ const BeamDiagrams = (() => {
         return;
       }
       const base=yTop-4-lanes[i]*laneH, h=30, x0=X(v.start), x1=X(v.end);
-      const hq=q=>h*Math.abs(q)/qmax;
+      const denom=opts.scaleMode==='independent'?Math.max(Math.abs(v.qStart),Math.abs(v.qEnd),1e-30):qmax;
+      const hq=q=>h*Math.abs(q)/denom;
       const cls=v.selfWeight?'bl-sw':'bl-load';
       const env=`M${r1(x0)} ${r1(base)}L${r1(x0)} ${r1(base-hq(v.qStart))}L${r1(x1)} ${r1(base-hq(v.qEnd))}L${r1(x1)} ${r1(base)}Z`;
       svg+=`<path d="${env}" class="${cls}-fill"/>`;
@@ -228,11 +229,11 @@ const BeamDiagrams = (() => {
       svg+=text(end==='left'?X(s.x)-6:end==='right'?X(s.x)+6:X(s.x),yBottom+48,s.kind,`bl-tx-s bl-tx-m`,end==='left'?'start':end==='right'?'end':'middle');
     });
     model.hinges.forEach((h,i)=>{svg+=`<g class="bl-hinge" data-hinge="1" data-hinge-index="${i}" data-x="${h}" data-draggable="hinge"><circle cx="${r1(X(h))}" cy="${r1(yAxis)}" r="6" class="bl-hinge-c"/></g>`;});
-    svg+=drawLoads(loads,X,yTop,{width:W}).svg;
+    svg+=drawLoads(loads,X,yTop,{width:W,scaleMode:opts.loadScale}).svg;
     if(opts.interactive) model.loads.forEach((v,i)=>{
       const a=v.kind==='table'?v.points[0][0]:isDist(v)?v.start:v.position;
       const b=v.kind==='table'?v.points.at(-1)[0]:isDist(v)?v.end:v.position;
-      const x=X((a+b)/2), y=30+(i%3)*22;
+      const x=X((a+b)/2), y=yTop-14-(i%3)*23;
       svg+=`<g class="bl-load-handle" data-load-handle="${i}" tabindex="0" role="button" aria-label="Load ${i+1}: drag to move or press Enter to edit"><title>Load ${i+1}: drag to move; click or Enter to edit magnitude and position</title>${line(x,y+10,X((a+b)/2),yTop-2,'bl-load-link')}<circle cx="${r1(x)}" cy="${y}" r="10"/>${text(x,y+4,String(i+1),'bl-tx-s')}</g>`;
     });
     if(opts.loadPreview) {

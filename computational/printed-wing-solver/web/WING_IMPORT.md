@@ -1,5 +1,23 @@
 # Wing Lab study files and design-parameter import
 
+## Live load profiles and drawing scales
+
+Load inputs preview the signed intensity against span before application. Each saved load
+also has an expandable profile with its total force, peak intensity and resultant station.
+Total force F is in N; intensity q is in N/mm for printed wings and N/m for D.520.
+They are different quantities: integrating q over span gives F. Curved loads accept either
+total force or peak intensity; changing the input basis preserves the physical load.
+
+Shared intensity scale compares line-load magnitudes; a small load can look nearly flat.
+Independent heights show each profile clearly but must not be used to compare magnitudes.
+The selection changes drawing only, never the solved load. Point-force arrows are schematic
+and cannot share an intensity scale with line loads.
+
+The optional power-law generator accepts interval, signed total force, maximum location
+and exponent (0.1–12). It previews a 31-point piecewise-linear table, normalized to the
+specified total. This is an approximation of the power law, not an additional exact solver
+law. Generating or previewing a table does not apply it; confirm the validated CSV separately.
+
 ## Selecting load coordinates on the 3-D model
 
 Both wing workspaces open without applied loads. In **Loads**, select a shape and press

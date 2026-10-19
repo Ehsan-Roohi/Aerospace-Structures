@@ -486,7 +486,19 @@
     while (g.children.length) g.remove(g.children[0]);
     if (!R || !MS.arrows) return;
     if(R.input.customLoads!=null){
-      for(const p of R.input.customLoads){const ys=p.kind==='point'?[p.position]:p.kind==='table'?E.linspace(p.points[0][0],p.points.at(-1)[0],12):E.linspace(p.start,p.end,12);for(const y of ys){const force=R.n*(p.kind==='point'?p.force:p.kind==='distributed'?p.qStart+(p.qEnd-p.qStart)*(y-p.start)/(p.end-p.start):LoadProfiles.valueAt(p,y));if(!force)continue;const sc=R.wing.section(y,[p.kind==='table'?LoadProfiles.fractionAt(p,y):p.fraction]),base=V3(y,sc.up[0][0],force>0?sc.up[0][1]:sc.lo[0][1]);const arrow=new THREE.ArrowHelper(new THREE.Vector3(0,Math.sign(force),0),new THREE.Vector3(...base),.35,0xd25ad6,.06,.035);arrow.userData={kind:'arrow',y,base};g.add(arrow);}}
+      const lines=R.input.customLoads.filter(p=>p.kind!=='point');
+      const samples=p=>p.kind==='table'?p.points.map(r=>r[0]):E.linspace(p.start,p.end,25);
+      const qAt=(p,y)=>R.n*(p.kind==='distributed'?p.qStart+(p.qEnd-p.qStart)*(y-p.start)/(p.end-p.start):LoadProfiles.valueAt(p,y));
+      const common=Math.max(...lines.flatMap(p=>samples(p).map(y=>Math.abs(qAt(p,y)))),1e-30);
+      for(const p of R.input.customLoads){
+        const ys=p.kind==='point'?[p.position]:samples(p),denom=p.kind==='point'?1:MS.lineArrowScale==='independent'?Math.max(...ys.map(y=>Math.abs(qAt(p,y))),1e-30):common;
+        for(const y of ys){
+          const force=p.kind==='point'?R.n*p.force:qAt(p,y);if(!force)continue;
+          const len=p.kind==='point'?.35:.45*Math.abs(force)/denom;if(len<1e-6)continue;
+          const sc=R.wing.section(y,[p.kind==='table'?LoadProfiles.fractionAt(p,y):p.fraction]),base=V3(y,sc.up[0][0],force>0?sc.up[0][1]:sc.lo[0][1]);
+          const arrow=new THREE.ArrowHelper(new THREE.Vector3(0,Math.sign(force),0),new THREE.Vector3(...base),len,0xd25ad6,Math.min(.06,len*.3),Math.min(.035,len*.2));arrow.userData={kind:'arrow',y,base};g.add(arrow);
+        }
+      }
       return;
     }
     const W = R.wing, ys = E.linspace(0.1, W.b2 - 0.15, 16), lmax = Math.max(...R.grid.lift.map(Math.abs)) || 1;
@@ -1013,6 +1025,7 @@
   }
   // Shared custom-load editor (wing_loads_ui.js) with the D.520 ids, SI units and span limits.
   const loadAdapter = {
+    onScale:mode=>{MS.lineArrowScale=mode;if(model&&R)buildArrows();},
     pickOnModel:beginMetalSurfacePick,
     showDeformation:()=>{if(!R||stale||running||lastError)throw new Error('Solve the applied loads first.');MS.deformed=true;$('#mDef').setAttribute('aria-pressed','true');setPlot('disp');updateModel();$('#mgl').scrollIntoView({block:'center'});},
     workspace: "d520", units: { length: "m", line: "N/m", force: "N", moment: "N·m" },

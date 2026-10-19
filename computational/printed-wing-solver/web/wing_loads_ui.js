@@ -260,6 +260,9 @@ const WingLoadsUI = (() => {
         ${field(id.value, `Total force F (${u.force}, upward +)`, d.total)}
         ${field(id.xc, 'Chord position x/c (0 = leading edge, 1 = trailing edge)', d.xc)}
         <p class="wle-law" id="${id.law}" hidden></p>
+        <p class="note"><b>Total F (${esc(u.force)}) ≠ intensity q (${esc(u.line)}).</b> Total force is the signed area under q(y). Curved loads accept either F or peak w₀; the other is calculated, not entered independently. Positions and the maximum-location selector define the supported nonlinear shape.</p>
+        <label>Profile display scale <select class="wle-scale"><option value="independent">Independent height · inspect shape</option><option value="common">Shared intensity scale · compare loads</option></select></label>
+        <div class="wle-live-preview" aria-live="polite"></div>
         <button class="btn primary" type="submit">Add load</button>
         <p class="note">The first custom load replaces any flight or tip case; further loads are superposed (signed). Curved loads are integrated exactly, not split into straight segments.</p>
       </form>
@@ -268,6 +271,7 @@ const WingLoadsUI = (() => {
       <p id="${id.status}" class="wle-status" role="status"></p>
       <figure class="wle-chordfig"><div id="${id.chord}"></div><figcaption id="${id.chord}Cap"></figcaption></figure>
       <details class="wle-csv" id="${id.csv}"><summary>Import a spanwise line-load table (CSV)</summary>
+        ${P.powerControls(id.csv,u)}
         <p class="note">Header with units: <code>${P.CSV_SPECS[ad.workspace].columns.join(',')}</code> and optionally <code>,x_over_c</code>. 2–${P.LIMITS.tableRows} rows, stations strictly increasing within ${fmt(ad.range().min)}–${fmt(ad.range().max)} ${u.length}; w upward +. The load is linear between rows and zero outside the first and last row; nothing is resampled or truncated. <button class="btn" type="button" id="${id.csv}Template">Download template</button></p>
         <div class="field"><label for="${id.csv}File">CSV file</label><input type="file" id="${id.csv}File" accept=".csv,text/csv,text/plain"></div>
         <div class="field"><label for="${id.csv}Text">…or paste the table</label><textarea id="${id.csv}Text" rows="5" spellcheck="false"></textarea></div>
@@ -320,9 +324,9 @@ const WingLoadsUI = (() => {
       container.querySelector(`label[for="${id.q0}"]`).textContent = k === 'uniform' ? `Uniform intensity q (${u.line}, upward +)` : `Start intensity q(a) (${u.line}, upward +)`;
       container.querySelector(`label[for="${id.q1}"]`).textContent = `End intensity q(b) (${u.line}, upward +)`;
       const total = schrenk || byId(id.basis).value === 'total';
-      if (schrenk) byId(id.basis).value = 'total';
+      if (schrenk) {byId(id.basis).value = 'total';lastBasis='total';}
       container.querySelector(`label[for="${id.value}"]`).textContent = total ? `Total force F (${u.force}, upward +)` : `Peak intensity w₀ (${u.line}, upward +)`;
-      law(); chord();
+      law(); chord();livePreview();
     }
     function itemFromForm() {
       const k = canon(byId(id.kind).value), xc = readNum(id.xc, 'Chord position x/c');
@@ -383,12 +387,22 @@ const WingLoadsUI = (() => {
     function renderList() {
       const items = ad.items(), mode = ad.mode();
       byId(id.list).innerHTML = items.length
-        ? items.map((p, i) => `<p>${i + 1}. ${esc(describe(p, u))} <button class="btn" type="button" ${ad.deleteAttr}="${i}">Remove</button>${p.kind === 'table' ? ` <button class="btn" type="button" data-wle-edit-table="${i}">Edit table</button>` : ''}</p>`).join('')
+        ? items.map((p, i) => `<p>${i + 1}. ${esc(describe(p, u))} <button class="btn" type="button" ${ad.deleteAttr}="${i}">Remove</button>${p.kind === 'table' ? ` <button class="btn" type="button" data-wle-edit-table="${i}">Edit table</button>` : ''}</p><details><summary>Load ${i+1}: profile &amp; resultant</summary>${profile(p,items)}</details>`).join('')
         : `<p class="wle-empty">${mode === 'flight' ? 'Flight-like loading is active; no custom loads.' : mode === 'tip' ? 'A tip-force case is active; no custom loads.' : 'No load defined. Add your own load.'}</p>`;
       container.querySelectorAll(`[${ad.deleteAttr}]`).forEach((b) => { b.onclick = () => { const i = +b.getAttribute(ad.deleteAttr); tryApply(ad.items().filter((_, k) => k !== i), `Load ${i + 1} removed.`); }; });
       container.querySelectorAll('[data-wle-edit-table]').forEach((b) => { b.onclick = () => openCsv(+b.dataset.wleEditTable); });
       if (ad.statusText) status(ad.statusText());
     }
+    function profile(p,items=[]) {
+      try {
+        const drawable=q=>{if(q.kind!=='schrenk')return {p:q};if(!ad.schrenkProfile)throw new Error('Schrenk preview requires the current planform.');const d=ad.schrenkProfile(q.total);return {p:{kind:'table',points:Array.from({length:81},(_,i)=>[d.L*i/80,d.ws(d.L*i/80)])},summary:{total:q.total,firstMoment:d.stats.schrenk.M,centroid:d.stats.schrenk.ybar,start:0,end:d.L},note:'Schrenk curve sampled for drawing only; displayed resultant uses the chord/ellipse mean integrals, not the plotted polyline.'};};
+        const peak=q=>{if(q.kind==='point')return 0;const raw=drawable(q).p,n=['elliptic','parabolic'].includes(raw.kind)?curveOf(raw,u):raw;return n.kind==='distributed'?Math.max(Math.abs(n.qStart),Math.abs(n.qEnd)):n.kind==='table'?Math.max(...n.points.map(r=>Math.abs(r[1]))):Math.abs(n.peak);};
+        const v=drawable(p);
+        return P.previewFigure(v.p,{units:u,positive:'up',reference:ad.refStation,summary:v.summary,note:v.note,scalePeak:$('.wle-scale').value==='common'?Math.max(peak(p),...items.map(peak)):null});
+      }catch(e){return `<p class="note">${esc(e.message)}</p>`;}
+    }
+    function livePreview() {const out=$('.wle-live-preview');try{out.innerHTML='<b>Live input preview — not applied until Add load</b>'+profile(itemFromForm(),ad.items());}catch(e){out.textContent='Enter complete load parameters to see the live schematic.';}}
+    $('.wle-scale').onchange=()=>{renderList();livePreview();if(ad.onScale)ad.onScale($('.wle-scale').value);};
     function tryApply(items, note) {
       cancelPick();
       try { ad.validate(items); } catch (e) { status(`<span class="wle-err">${esc(e.message)}</span> Nothing was changed.`); return false; }
@@ -402,8 +416,10 @@ const WingLoadsUI = (() => {
       const base = ad.mode() === 'custom' ? ad.items() : [];
       tryApply([...base, p], 'Load added.');
     };
-    byId(id.kind).onchange = ()=>{cancelPick();visible();}; byId(id.shape).onchange = visible; byId(id.basis).onchange = visible;
-    byId(id.form).addEventListener('input', () => { law(); chord(); });
+    byId(id.kind).onchange = ()=>{cancelPick();visible();}; byId(id.shape).onchange = visible;
+    let lastBasis='total';
+    byId(id.basis).onchange=()=>{const next=byId(id.basis).value,k=canon(byId(id.kind).value);try{if(['elliptic','parabolic'].includes(k)&&byId(id.value).value.trim()!==''){const p=P.normalizeCurve({kind:k,start:readNum(id.a,'Start'),end:readNum(id.b,'End'),shape:byId(id.shape).value,[lastBasis]:readNum(id.value,'Magnitude')},{min:-Infinity,max:Infinity,lengthUnit:u.length});byId(id.value).value=p[next];}}catch(e){}lastBasis=next;visible();};
+    byId(id.form).addEventListener('input', () => { law(); chord();livePreview(); });
     byId(id.clear).onclick = () => tryApply([], 'All custom loads cleared: no load defined.');
     if (ad.flight) byId(id.flight).onclick = () => { cancelPick();ad.flight.apply(); renderList(); };
     // ---------------------------------------------------------- CSV
@@ -445,6 +461,7 @@ const WingLoadsUI = (() => {
         ${res.warnings.length ? `<ul class="note">${res.warnings.map((w) => `<li>${esc(w)}</li>`).join('')}</ul>` : ''}
         <details><summary>Rows</summary><table><tr><th>${esc(res.spec.columns[0])}</th><th>${esc(res.spec.columns[1])}</th>${res.hasFraction ? '<th>x_over_c</th>' : ''}</tr>${res.rows.map((row) => `<tr>${row.map((v) => `<td>${esc(fmt(v, 6))}</td>`).join('')}</tr>`).join('')}</table></details>
         ${problem ? `<p class="wle-err">Cannot apply: ${esc(problem)} The current loads are unchanged.</p>` : `<p class="note">${mode === 'edit' ? `Apply replaces table load ${csv.edit + 1} only.` : 'Choose add or replace, then Apply. Until then nothing changes.'}</p>`}`;
+      out.insertAdjacentHTML('beforeend',P.previewFigure(table,{units:u,positive:'up',reference:ad.refStation}));
       if (problem) return;
       csv.candidate = table; csv.text = text; byId(id.csv + 'Mode').hidden = mode === 'edit'; apply.disabled = false;
     }
@@ -473,8 +490,9 @@ const WingLoadsUI = (() => {
       preview();
     };
     byId(id.csv + 'Template').onclick = () => { if (ad.download) ad.download(`${ad.workspace}_line_load_template.csv`, P.csvTemplate(ad.workspace), 'text/csv'); };
-    visible(); renderList();
-    return { refresh() { renderList(); chord(); }, preview, openCsv, container, acceptPick, cancelPick };
+    byId(id.csv+'PowerPreview').onclick=()=>{try{const n=k=>readNum(id.csv+'Power'+k,k);const p=P.powerTable({start:n('A'),end:n('B'),total:n('F'),exponent:n('N'),shape:byId(id.csv+'PowerShape').value});byId(id.csv+'Text').value=P.CSV_SPECS[ad.workspace].columns.join(',')+'\n'+p.points.map(r=>r.join(',')).join('\n');preview();}catch(e){byId(id.csv+'Out').textContent=e.message;}};
+    visible(); renderList();if(ad.onScale)ad.onScale($('.wle-scale').value);
+    return { refresh() { renderList(); chord();livePreview(); }, preview, openCsv, container, acceptPick, cancelPick };
   }
 
   /**

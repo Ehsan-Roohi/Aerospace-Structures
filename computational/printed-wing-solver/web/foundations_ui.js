@@ -142,9 +142,10 @@ const Lecture03BeamCases = Object.freeze({
           <label class="bl-field" id="beamCurveBasisField"><span>Enter</span><select class="bl-select" id="beamCurveBasis">
             <option value="total">Total force F</option><option value="peak">Peak intensity w₀</option></select></label>
           ${field('beamCurveValue','Total force F (+ down)','N')}
-        </div><p class="bl-help bl-curve-law" id="beamCurveLaw" hidden></p><p class="bl-err" id="beamLoadError" role="alert" hidden></p>
+        </div><p class="bl-help"><b>F (N) is total force; q (N/mm) is force per length.</b> A uniform 1000 N total over 450 mm means q = 2.222 N/mm, not 1000 N/mm. Curves: enter either total F or peak w₀; the other is derived. Change start/end and maximum location to inspect the law. Other nonlinear laws can be entered as a CSV table (piecewise-linear approximation).</p><p class="bl-help bl-curve-law" id="beamCurveLaw" hidden></p><div id="beamLoadPreview" aria-live="polite"></div><p class="bl-err" id="beamLoadError" role="alert" hidden></p>
         <div class="bl-row" style="margin-top:10px"><button type="submit" class="bl-btn bl-btn-primary" id="beamLoadSubmit">Add load &amp; solve</button><button type="button" class="bl-btn" id="beamLoadCancel" hidden>Cancel edit</button></div></form>
         <details class="bl-box bl-csv" id="beamCsvBox"><summary>Import a line-load table (CSV)</summary>
+          ${LP.powerControls('beam',{length:'mm',force:'N'})}
           <p class="bl-help">Two columns with units in the header: <code>x_mm,w_N_per_mm</code> (w + down). 2–${LP.LIMITS.tableRows} rows, x strictly increasing on 0–L. The load is <b>linear between rows</b> and zero outside the first and last row; nothing is resampled or truncated. Lines starting with # are ignored. <button type="button" class="bl-btn bl-btn-sm" id="beamCsvTemplate">Download template</button></p>
           <label class="bl-field"><span>CSV file</span><input type="file" id="beamCsvFile" accept=".csv,text/csv,text/plain"></label>
           <label class="bl-field"><span>…or paste the table here</span><textarea id="beamCsvText" rows="5" spellcheck="false" class="bl-notes" placeholder="x_mm,w_N_per_mm&#10;0,0.002&#10;450,0"></textarea></label>
@@ -173,6 +174,7 @@ const Lecture03BeamCases = Object.freeze({
           ${['pin','roller','fixed','hinge'].map(k=>`<button type="button" class="bl-tool" data-place="${k}" aria-pressed="false" title="Click the beam to place a ${k}">${icon[k]}${k[0].toUpperCase()+k.slice(1)}</button>`).join('')}
           <button type="button" class="bl-tool" id="beamShowDefl" aria-pressed="true" title="Show the exaggerated deflected shape">Deflected shape</button></div></div>
       <div class="bl-toolbar bl-load-tools" role="toolbar" aria-label="Place loads on the beam"><span>Loads</span>
+        <label>Drawing scale <select id="beamLoadScale" class="bl-select"><option value="common">Shared intensity scale</option><option value="independent">Independent heights · shape only</option></select></label>
         ${[['point','↓ Point force'],['moment','↻ Couple'],['rectangle','↓↓ Uniform'],['triangle','◿ Triangle →'],['triangle-root','◺ Triangle ←'],['trapezoid','▱ Trapezoid'],['elliptic','◠ Elliptic'],['parabolic','⌒ Parabolic']].map(([k,label])=>`<button type="button" class="bl-tool" data-place="load:${k}" aria-pressed="false">${label}</button>`).join('')}
         <button type="button" class="bl-tool" id="beamStopPlacing">Cancel / select</button>
       </div>
@@ -426,7 +428,7 @@ const Lecture03BeamCases = Object.freeze({
   function renderLoadList() {
     const loads=st.model.loads;
     $('#beamLoads').innerHTML=`<ol class="bl-list">${loads.map((p,i)=>`<li data-editing="${st.editLoad===i}"><span class="bl-tag load">${loadTag(p)}</span><span class="bl-li-text">${esc(loadText(p))}</span>
-      <span class="bl-li-actions"><button type="button" class="bl-btn bl-btn-sm bl-btn-ghost" data-edit-load="${i}" aria-label="Edit load ${i+1}">Edit</button><button type="button" class="bl-btn bl-btn-sm bl-btn-ghost" data-delete-load="${i}" aria-label="Remove load ${i+1}">✕</button></span></li>`).join('')}</ol>${loads.length?'':'<p class="bl-help bl-empty-loads">No load defined. Add your own load.</p>'}`;
+      <span class="bl-li-actions"><button type="button" class="bl-btn bl-btn-sm bl-btn-ghost" data-edit-load="${i}" aria-label="Edit load ${i+1}">Edit</button><button type="button" class="bl-btn bl-btn-sm bl-btn-ghost" data-delete-load="${i}" aria-label="Remove load ${i+1}">✕</button></span></li>`).join('')}</ol>${loads.map((p,i)=>`<details class="bl-box"><summary>Load ${i+1}: profile, total force & resultant</summary>${previewLoad(p,loads)}</details>`).join('')}${loads.length?'':'<p class="bl-help bl-empty-loads">No load defined. Add your own load.</p>'}`;
     $('#beamLoadBadge').textContent=`${loads.length}/${MAX_LOADS}`;
   }
   function renderInputs(m) {renderScalars(m);renderLists(m);syncLoadForm();renderSectionView();renderStability();}
@@ -541,7 +543,7 @@ const Lecture03BeamCases = Object.freeze({
     st.drawn=model;st.drawnInvalid=!!invalid;
     const sw=current&&r&&r.selfWeight.enabled?{q:r.selfWeight.q}:(!current&&model.selfWeight?{q:SEC.selfWeightLine(SEC.properties(model.section),model.density,B.GRAVITY)}:null);
     pic.innerHTML=D.beamSchematic(model,{width:width(pic)-2,result:current?r:null,showDeflection:current&&st.showDeflection,
-      cut:cutTab()&&current?{x:st.cut.x}:null,ghost,selfWeight:sw,interactive:true,loadPreview:st.graphicPreview,
+      cut:cutTab()&&current?{x:st.cut.x}:null,ghost,selfWeight:sw,interactive:true,loadPreview:st.graphicPreview,loadScale:$('#beamLoadScale').value,
       label:`Physical beam with supports and applied loads${current?'':' (edited inputs, not solved yet)'}`});
     if(st.placing) pic.dataset.placing=st.placing; else delete pic.dataset.placing;
     const svg=pic.querySelector('svg'), factor=svg&&svg.dataset.exaggeration;
@@ -549,6 +551,7 @@ const Lecture03BeamCases = Object.freeze({
       current&&!model.loads.length&&!model.selfWeight?'Physical beam with its supports (green). No load is applied.':
       current?`Physical beam: supports (green) and applied loads (purple). This is not a free-body diagram — see Solution.${factor&&st.showDeflection?` Dashed blue: deflected shape drawn at ${factor} × true scale.`:''}`:
       'Showing your edited inputs — not solved yet. Press Solve to update the results.';
+    $('#beamPictureNote').textContent+=$('#beamLoadScale').value==='independent'?' Independent load heights show shape only; they do NOT compare force magnitudes.':' Shared intensity scale: a much smaller intensity can look flat; choose independent heights to inspect its shape.';
     const sup=model.supports, left=(sup.find(s=>s.x===0)||{kind:'free'}).kind, right=(sup.find(s=>s.x===model.length)||{kind:'free'}).kind, interior=sup.filter(s=>s.x>0&&s.x<model.length).length;
     $('#beamModelTitle').textContent=`${left} / ${right}${interior?` + ${interior} interior support${interior>1?'s':''}`:''}${model.hinges.length?` + ${model.hinges.length} hinge${model.hinges.length>1?'s':''}`:''}`;
     $('#beamModelSub').textContent=`L = ${fmt(model.length)} mm · ${SEC.describe(model.section)} · E = ${fmt(model.E)} MPa${model.selfWeight?' · self-weight on':''}`;
@@ -1222,6 +1225,7 @@ const Lecture03BeamCases = Object.freeze({
     $('#beamLoadALabel').textContent=point?'Position x':curve?'Start a':'Start';
     if($('#beamLoadBLabel')) $('#beamLoadBLabel').textContent=curve?'End b':'End';
     curveLaw();
+    renderLoadPreview();
     $('#beamQ0Label').textContent=k==='rectangle'?'q (uniform)':'q at start';
     $('#beamLoadSubmit').textContent=st.editLoad===null?'Add load & solve':`Update load ${st.editLoad+1} & solve`;
     $('#beamLoadCancel').hidden=st.editLoad===null;
@@ -1261,6 +1265,13 @@ const Lecture03BeamCases = Object.freeze({
     if(LD.isDist(load)&&!(load.end>load.start)) throw new Error('A distributed load needs start < end.');
     return load;
   }
+  function previewLoad(p,others=[]) {
+    try {
+      const peak=q=>{if(q.kind==='point'||q.kind==='moment')return 0;const v=['elliptic','parabolic'].includes(q.kind)?LP.normalizeCurve(q,{min:-Infinity,max:Infinity,lengthUnit:'mm'}):q;return v.kind==='distributed'?Math.max(Math.abs(v.qStart),Math.abs(v.qEnd)):v.kind==='table'?Math.max(...v.points.map(r=>Math.abs(r[1]))):Math.abs(v.peak);};
+      return LP.previewFigure(p,{positive:'down',scalePeak:$('#beamLoadScale').value==='common'?Math.max(...others.map(peak),peak(p)):null});
+    } catch(e){return `<p class="bl-help">${esc(e.message)}</p>`;}
+  }
+  function renderLoadPreview() {let p;try{p=loadFromForm();}catch(e){$('#beamLoadPreview').textContent='Enter complete parameters to preview the load (not applied until confirmed).';return;}$('#beamLoadPreview').innerHTML='<b>Live input preview — not applied until confirmed</b>'+previewLoad(p,st.model.loads);}
   function submitLoad(e) {
     if(e) e.preventDefault();
     const err=$('#beamLoadError');err.hidden=true;
@@ -1427,6 +1438,7 @@ const Lecture03BeamCases = Object.freeze({
     syncLoadForm();
   };
   $('#beamCsvTemplate').onclick=()=>download('beam_line_load_template.csv',LP.csvTemplate('beam'),'text/csv');
+  $('#beamPowerPreview').onclick=()=>{try{const n=k=>readNumber($('#beamPower'+k),k);const p=LP.powerTable({start:n('A'),end:n('B'),total:n('F'),exponent:n('N'),shape:$('#beamPowerShape').value});$('#beamCsvText').value='x_mm,w_N_per_mm\n'+p.points.map(r=>r.join(',')).join('\n');previewCsv();}catch(e){$('#beamCsvResult').textContent=e.message;}};
   $('#beamCsvPreview').onclick=previewCsv;
   $('#beamCsvApply').onclick=applyCsv;
   $('#beamCsvCancel').onclick=closeCsv;
@@ -1441,7 +1453,8 @@ const Lecture03BeamCases = Object.freeze({
     $('#beamCsvText').value=text;st.csv.fromFile=$('#beamCsvText').value;st.csv.filename=String(file.name).slice(0,120);st.csv.sha256=await sha256Hex(text);
     previewCsv();
   };
-  $('#beamLoadForm').addEventListener('input',curveLaw);
+  $('#beamLoadForm').addEventListener('input',()=>{curveLaw();renderLoadPreview();});
+  $('#beamLoadScale').onchange=()=>{renderPicture();renderLoadList();renderLoadPreview();};
   $('#beamLoadForm').onsubmit=submitLoad;
   $('#beamLoadCancel').onclick=()=>{st.editLoad=null;renderLoadList();syncLoadForm();};
   $('#beamSelfWeight').onchange=()=>{renderSectionView();draftChanged();};

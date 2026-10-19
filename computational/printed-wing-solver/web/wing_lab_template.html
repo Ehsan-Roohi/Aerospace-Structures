@@ -1666,6 +1666,26 @@ body { margin: 0; }
   // ------------------------------------------------------------ probe
   const raycaster = new THREE.Raycaster();
   const ndc = new THREE.Vector2();
+  function beginPrintedSurfacePick(accept) {
+    return WingLoadsUI.surfacePicker(canvas,ev=>{
+      if(!model||!R||stale||running)return null;
+      const r=canvas.getBoundingClientRect();
+      ndc.set((ev.clientX-r.left)/r.width*2-1,-(ev.clientY-r.top)/r.height*2+1);raycaster.setFromCamera(ndc,camera);
+      const visible=o=>{for(let p=o;p;p=p.parent)if(!p.visible)return false;return true;};
+      const h=raycaster.intersectObjects(model.skins.filter(visible),false).find(h=>!S.clip||h.point.x<=S.clipY);
+      if(!h||!h.face)return null;
+      const p=h.object.geometry.attributes.position,tri=new THREE.Triangle(),bc=new THREE.Vector3(),local=h.object.worldToLocal(h.point.clone());
+      tri.set(...[h.face.a,h.face.b,h.face.c].map(i=>new THREE.Vector3().fromBufferAttribute(p,i)));tri.getBarycoord(local,bc);
+      const u=h.object.userData;
+      return WingLoadsUI.surfaceSample([h.face.a,h.face.b,h.face.c].map(i=>({station:u.by[i],fraction:u.bx[i]/E.chordAt(R.geometry,u.by[i])})),[bc.x,bc.y,bc.z]);
+    },()=>{
+      if(!model||!R||stale||running||gateOpen())throw new Error('Solve valid structural inputs before picking on the 3-D model.');
+      S.deformed=false;$('#defBtn').setAttribute('aria-pressed','false');setPlot('model');applyResult();
+      const enabled=controls.enabled;controls.enabled=false;
+      canvas.scrollIntoView({block:'center'});
+      return ()=>{controls.enabled=enabled;};
+    })(accept);
+  }
   canvas.addEventListener("pointermove", (ev) => {
     if (!model || !R) return;
     const r = canvas.getBoundingClientRect();
@@ -2123,6 +2143,8 @@ body { margin: 0; }
   const downloadText=(name,text,type)=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000);};
   // Shared custom-load editor (wing_loads_ui.js); this adapter keeps the printed wing's ids, units and rules.
   const wingLoadAdapter={
+    pickOnModel:accept=>beginPrintedSurfacePick(accept),
+    showDeformation:()=>{if(!R||stale||running||gateOpen())throw new Error('Solve the applied loads first.');S.deformed=true;$('#defBtn').setAttribute('aria-pressed','true');setPlot('disp');applyResult();canvas.scrollIntoView({block:'center'});},
     workspace:'printed',units:{length:'mm',line:'N/mm',force:'N',moment:'N·mm'},
     ids:{form:'wingLoadForm',kind:'wingKind',a:'wingA',b:'wingB',P:'wingP',q0:'wingQ0',q1:'wingQ1',shape:'wingCurveShape',basis:'wingCurveBasis',value:'wingCurveValue',xc:'wingFraction',law:'wingCurveLaw',
       list:'wingCustomList',clear:'wingClearLoad',flight:'wingFlightLoad',status:'wingLoadStatus',chord:'wingChordFigure',csv:'wingCsv'},
@@ -2565,6 +2587,7 @@ body { margin: 0; }
     resize(); $('#wingNavigation').scrollIntoView({block:'start'});
   });
   function returnToBeams(support) {
+    if(wingLoadKeeper&&wingLoadKeeper.editor)wingLoadKeeper.editor.cancelPick();
     $('#app').hidden=true;$('#wingNavigation').hidden=true;$('#foundations').hidden=false;
     if(support) $('#foundations').querySelector(`[data-stage="${support}"]`).click();
     $('#foundations').scrollIntoView({block:'start'});

@@ -59,6 +59,26 @@ const ad520=(state)=>({
 
 /* ---------- 1. printed wing: every kind through the form ---------- */
 {
+  const {w,$,dom}=page();globalThis.__W=w.WingLoadsUI;
+  const state={load:{kind:'custom',items:[]},applied:[]},ad=printedAdapter(state,[]);
+  let receive,stops=0;
+  ad.pickOnModel=callback=>{receive=callback;return ()=>{stops++;};};
+  w.WingLoadsUI.mount($('#host'),ad);
+  $('#host .wle-pick').click();eq(state.applied.length,0,'arming picker applies no default');
+  receive({station:200,fraction:.65});eq($('#wa').value,'200');eq($('#wxc').value,'0.65');eq($('#wp').value,'','picked force magnitude is blank');eq(state.applied.length,0);eq(stops,1);
+  $('#wp').value='3';$('#wf').dispatchEvent(new w.Event('submit',{bubbles:true,cancelable:true}));eq(state.load.items[0].fraction,.65);eq(state.load.items[0].position,200);eq(state.load.items[0].force,3);
+  $('#wk').value='rectangle';$('#wk').dispatchEvent(new w.Event('change'));$('#host .wle-pick').click();
+  receive({station:350,fraction:.3});eq(state.applied.length,1);receive({station:100,fraction:.9});eq($('#wa').value,'100');eq($('#wb').value,'350');eq($('#wxc').value,'0.3','whole line uses first picked x/c');eq($('#wq0').value,'');
+  $('#host .wle-pick').click();receive({station:600,fraction:.5});ok(/Pick visible skin/.test($('#wstatus').textContent));eq(state.applied.length,1,'out of range does not modify loads');
+  dom.window.document.dispatchEvent(new w.KeyboardEvent('keydown',{key:'Escape'}));eq($('#host .wle-pick').getAttribute('aria-pressed'),'false');
+  const p=w.WingLoadsUI.surfaceSample([{station:0,fraction:.1},{station:300,fraction:.5},{station:300,fraction:.9}],[.2,.3,.5]);near(p.station,240,1e-12,'barycentric span');near(p.fraction,.62,1e-12,'barycentric chord');eq(w.WingLoadsUI.surfaceSample([{station:0,fraction:0},{station:1,fraction:1},{station:1,fraction:0}],[2,-1,0]),null);
+  const can=dom.window.document.createElement('canvas');let count=0,restored=0;
+  const stop=w.WingLoadsUI.surfacePicker(can,()=>({station:1,fraction:.2}),()=>()=>{restored++;})(()=>{count++;});
+  const pe=(type,x)=>can.dispatchEvent(new w.MouseEvent(type,{clientX:x,clientY:10,button:0}));
+  pe('pointerdown',0);pe('pointerup',30);eq(count,0,'orbit drag does not count as a pick');pe('pointerdown',10);pe('pointerup',11);eq(count,1);stop();pe('pointerdown',10);pe('pointerup',10);eq(count,1);eq(restored,1);
+  dom.window.close();
+}
+{
   const {w,$,$$,dom}=page();globalThis.__W=w.WingLoadsUI;
   const state={load:{kind:'custom',items:[]},applied:[]}, downloads=[];
   const ad=printedAdapter(state,downloads), L=E.makeGeometry().semiSpan;

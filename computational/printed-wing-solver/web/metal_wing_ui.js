@@ -810,6 +810,24 @@
     camera: () => (camera ? { distance: camera.position.distanceTo(controls.target), resetDistance: resetDist } : null),
   };
   const ray = typeof THREE !== "undefined" ? new THREE.Raycaster() : null;
+  function beginMetalSurfacePick(accept) {
+    return WingLoadsUI.surfacePicker($('#mgl'),e=>{
+      if(!R||!model||!ray||stale||running)return null;
+      const r=$('#mgl').getBoundingClientRect(),v=new THREE.Vector2((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);
+      ray.setFromCamera(v,camera);
+      const targets=[];model.traverse(o=>{if(!o.isMesh||!['skinU','skinL'].includes(o.userData.kind))return;for(let p=o;p;p=p.parent)if(!p.visible)return;targets.push(o);});
+      const h=ray.intersectObjects(targets,false).find(h=>!MS.clip||Math.abs(h.point.x)<=MS.clipY);
+      if(!h||!h.face)return null;
+      const pos=h.object.geometry.attributes.position,u=h.object.userData,tri=new THREE.Triangle(),bc=new THREE.Vector3(),local=h.object.worldToLocal(h.point.clone());
+      tri.set(...[h.face.a,h.face.b,h.face.c].map(i=>new THREE.Vector3().fromBufferAttribute(pos,i)));tri.getBarycoord(local,bc);
+      return WingLoadsUI.surfaceSample([h.face.a,h.face.b,h.face.c].map(i=>({station:u.base[3*i],fraction:R.sections[u.vj[i]].x[u.vk[i]]})),[bc.x,bc.y,bc.z]);
+    },()=>{
+      if(!R||!model||stale||running||lastError)throw new Error('Solve valid D.520 inputs before picking on its skin.');
+      MS.deformed=false;$('#mDef').setAttribute('aria-pressed','false');setPlot('model');updateModel();
+      const enabled=controls.enabled;controls.enabled=false;$('#mgl').scrollIntoView({block:'center'});
+      return ()=>{controls.enabled=enabled;};
+    })(accept);
+  }
   function onProbe(e) {
     if (!R || !model || !ray) return;
     const r = e.currentTarget.getBoundingClientRect();
@@ -995,6 +1013,8 @@
   }
   // Shared custom-load editor (wing_loads_ui.js) with the D.520 ids, SI units and span limits.
   const loadAdapter = {
+    pickOnModel:beginMetalSurfacePick,
+    showDeformation:()=>{if(!R||stale||running||lastError)throw new Error('Solve the applied loads first.');MS.deformed=true;$('#mDef').setAttribute('aria-pressed','true');setPlot('disp');updateModel();$('#mgl').scrollIntoView({block:'center'});},
     workspace: "d520", units: { length: "m", line: "N/m", force: "N", moment: "N·m" },
     ids: { form: "mLoadForm", kind: "mLoadShape", a: "mLa", b: "mLb", P: "mLP", q0: "mLq0", q1: "mLq1", shape: "mLshape", basis: "mLbasis", value: "mLvalue", xc: "mLxc", law: "mLlaw",
       list: "mLoadList", clear: "mClearLoads", flight: "mRestoreFlight", status: "mLoadError", chord: "mChordFigure", csv: "mCsv" },
@@ -1295,6 +1315,7 @@
     if (location.hash !== "#d520") history.replaceState(null, "", "#d520");
   }
   function closeMetal(to) {
+    if(loadKeeper&&loadKeeper.editor)loadKeeper.editor.cancelPick();
     host.hidden = true;
     if (location.hash === "#d520") history.replaceState(null, "", location.pathname + location.search);
     if (to === "wing" && document.documentElement.dataset.wingReady === "true") window.dispatchEvent(new CustomEvent("wing-show"));

@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import {createRequire} from 'node:module';
+const require=createRequire(import.meta.url),E=require('./engine.js'),M=require('./metal_wing_engine.js');
+const printed=fraction=>E.solve({load:{kind:'custom',items:[{kind:'point',position:225,force:2,fraction}]}});
+const a=printed(.1),b=printed(.7);
+assert.equal(a.V[0],b.V[0]);assert.equal(a.M[0],b.M[0]);
+assert.ok(a.T[0]>0&&b.T[0]<0,'printed: fore/aft load selection reverses torsion');
+assert.ok(a.twist.at(-1)*b.twist.at(-1)<0,'printed: visible twist reverses');
+const metal=fraction=>M.solve({customLoads:[{kind:'point',position:2,force:1000,fraction}],n:1,collapse:false,modes:false});
+const c=metal(.1),d=metal(.7),y=M.D520.fittingY+1e-8;
+assert.equal(c.perG.V(y),d.perG.V(y));assert.equal(c.perG.M(y),d.perG.M(y));
+assert.ok(c.perG.T(y)>0&&d.perG.T(y)<0,'D520: fore/aft selection reverses torsion');
+console.log('Surface load physics: same force/station leaves V/M unchanged; forward/aft chord selection reverses torque in both wings and printed-wing twist.');

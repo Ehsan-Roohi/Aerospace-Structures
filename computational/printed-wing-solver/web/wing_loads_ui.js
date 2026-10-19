@@ -215,6 +215,22 @@ const WingLoadsUI = (() => {
   }
 
   /* ------------------------------------------------------------------ editor */
+  // Triangle parameters are interpolated on the actual picked skin mesh, not on a screen-space rectangle.
+  function surfaceSample(vertices,weights) {
+    if(vertices.length!==3||weights.length!==3||weights.some(w=>!Number.isFinite(w)||w < -1e-6)||Math.abs(weights.reduce((a,b)=>a+b,0)-1)>1e-6)return null;
+    if(vertices.some(v=>!Number.isFinite(v.station)||!Number.isFinite(v.fraction)||v.fraction < -1e-6||v.fraction>1+1e-6))return null;
+    return {station:vertices.reduce((s,v,i)=>s+v.station*weights[i],0),fraction:Math.max(0,Math.min(1,vertices.reduce((s,v,i)=>s+v.fraction*weights[i],0)))};
+  }
+  function surfacePicker(canvas,sample,prepare) {
+    return accept=>{
+      const restore=prepare();let down=null,active=true,dot=null;
+      const begin=e=>{if(e.button===undefined||e.button===0)down={x:e.clientX,y:e.clientY};};
+      const end=e=>{if(!active||!down)return;const d=down;down=null;if(Math.hypot(e.clientX-d.x,e.clientY-d.y)>6)return;const p=sample(e);if(p){if(dot)dot.remove();dot=canvas.ownerDocument.createElement('span');dot.textContent='⊙';dot.title='Selected location only — not an applied force';Object.assign(dot.style,{position:'fixed',left:`${e.clientX-10}px`,top:`${e.clientY-15}px`,color:'#0873e8',background:'white',borderRadius:'50%',fontSize:'24px',pointerEvents:'none',zIndex:10000});canvas.ownerDocument.body.appendChild(dot);accept(p);}};
+      const abort=()=>{down=null;};
+      canvas.style.cursor='crosshair';canvas.addEventListener('pointerdown',begin);canvas.addEventListener('pointerup',end);canvas.addEventListener('pointercancel',abort);
+      return ()=>{active=false;if(dot)dot.remove();canvas.removeEventListener('pointerdown',begin);canvas.removeEventListener('pointerup',end);canvas.removeEventListener('pointercancel',abort);canvas.style.cursor='';if(restore)restore();};
+    };
+  }
   /**
    * Mount the custom-load editor in container. adapter = {
    *   workspace:'printed'|'d520', units:{length, line, force, moment}, ids:{...element ids}, kindValue:{canonical:option},
@@ -234,6 +250,8 @@ const WingLoadsUI = (() => {
     const select = (fid, label, options, value) => `<div class="field"><label for="${fid}">${label}</label><select id="${fid}">${options.map(([v, t]) => `<option value="${v}"${v === value ? ' selected' : ''}>${t}</option>`).join('')}</select></div>`;
     container.innerHTML = `<div class="wle" data-workspace="${ad.workspace}">
       <form id="${id.form}" class="callout wle-form" novalidate><h3>Add a load to the current wing</h3>
+        ${ad.pickOnModel ? '<button class="btn wle-pick" type="button" aria-pressed="false">⌖ Pick on 3-D wing</button><p class="note">Select the shape below, then pick on the undeformed skin. A point force needs one click; a line load needs start and end clicks. The first click fixes x/c for the whole interval. Schrenk uses the whole span. Picking only fills coordinates: enter magnitude and confirm Add load. No automatic force. Cancel with Esc.</p>' : ''}
+        ${ad.showDeformation ? '<button class="btn wle-show-deformation" type="button">Show bending &amp; twist</button>' : ''}
         ${select(id.kind, 'Shape', kinds.map(([k, t]) => [val(k), t]), val('point'))}
         ${field(id.a, 'Point station or start', d.a)}${field(id.b, 'Distributed end', d.b)}${field(id.P, `Point force (${u.force}, upward +)`, d.P)}
         ${field(id.q0, `Start intensity (${u.line})`, d.q0)}${field(id.q1, `End intensity (${u.line})`, d.q1)}
@@ -263,6 +281,30 @@ const WingLoadsUI = (() => {
     const $ = (sel) => container.querySelector(sel);
     const byId = (x) => container.querySelector('#' + x);
     const status = (t) => { byId(id.status).innerHTML = t; };
+    let stopPick=null,firstPick=null;
+    function cancelPick() {if(stopPick)stopPick();stopPick=null;firstPick=null;const b=container.querySelector('.wle-pick');if(b){b.textContent='⌖ Pick on 3-D wing';b.setAttribute('aria-pressed','false');}}
+    function acceptPick(p) {
+      const range=ad.range();
+      if(!p||!Number.isFinite(p.station)||!Number.isFinite(p.fraction)||p.station<range.min||p.station>range.max||p.fraction<0||p.fraction>1){status(`<span class="wle-err">Pick visible skin between ${fmt(range.min)} and ${fmt(range.max)} ${esc(u.length)}. No load changed.</span>`);return false;}
+      const kind=canon(byId(id.kind).value), point=kind==='point'||kind==='schrenk';
+      if(!point&&!firstPick){firstPick={...p};status(`Start selected at y = ${fmt(p.station)} ${esc(u.length)}, x/c = ${fmt(p.fraction,4)}. Click the other end; x/c stays fixed at this first value.`);return false;}
+      const first=firstPick||p;
+      if(!point&&Math.abs(p.station-first.station)<1e-9*Math.max(1,range.max)){status('Choose a different span station for the end of the line load.');return false;}
+      byId(id.a).value=point?p.station:Math.min(first.station,p.station);
+      byId(id.b).value=point?p.station:Math.max(first.station,p.station);
+      byId(id.xc).value=first.fraction;
+      for(const k of [id.P,id.q0,id.q1,id.value])byId(k).value='';
+      visible();cancelPick();
+      status(`Selection only: ${kind==='schrenk'?'whole semi-span':`y = ${fmt(+byId(id.a).value)}${point?'':`–${fmt(+byId(id.b).value)}`} ${esc(u.length)}`}, x/c = ${fmt(first.fraction,4)}. Enter signed magnitude (upward +) and press Add load. Nothing has been applied.`);
+      const input=byId(kind==='point'?id.P:kind==='rampUp'?id.q1:['elliptic','parabolic','schrenk'].includes(kind)?id.value:id.q0);
+      input.scrollIntoView&&input.scrollIntoView({block:'center'});input.focus();return true;
+    }
+    const pickButton=container.querySelector('.wle-pick');
+    const deformationButton=container.querySelector('.wle-show-deformation');
+    if(deformationButton)deformationButton.onclick=()=>{cancelPick();try{ad.showDeformation();}catch(e){status(`<span class="wle-err">${esc(e.message)}</span>`);}};
+    if(pickButton)pickButton.onclick=()=>{if(stopPick){cancelPick();status('3-D selection cancelled. Loads unchanged.');return;}try{firstPick=null;stopPick=ad.pickOnModel(acceptPick);pickButton.textContent='Cancel 3-D picking';pickButton.setAttribute('aria-pressed','true');status('Click visible wing skin; orbit is paused during picking. Empty space does nothing. Coordinates use the undeformed model.');}catch(e){cancelPick();status(`<span class="wle-err">${esc(e.message)}</span>`);}};
+    if(pickButton)doc.addEventListener('keydown',e=>{if(e.key==='Escape'&&stopPick){cancelPick();status('3-D selection cancelled. Loads unchanged.');}});
+    if(pickButton&&doc.defaultView)for(const name of ['wing-learning-stage','wing-show','metal-wing-open'])doc.defaultView.addEventListener(name,cancelPick);
     const readNum = (fid, label) => {
       const raw = String(byId(fid).value).trim(), v = raw === '' ? NaN : Number(raw);
       if (!Number.isFinite(v)) throw new Error(`${label}: enter a finite number.`);
@@ -348,20 +390,22 @@ const WingLoadsUI = (() => {
       if (ad.statusText) status(ad.statusText());
     }
     function tryApply(items, note) {
+      cancelPick();
       try { ad.validate(items); } catch (e) { status(`<span class="wle-err">${esc(e.message)}</span> Nothing was changed.`); return false; }
       ad.apply(items, note); renderList(); return true;
     }
     byId(id.form).onsubmit = (e) => {
+      cancelPick();
       e.preventDefault();
       let p;
       try { p = itemFromForm(); } catch (x) { status(`<span class="wle-err">${esc(x.message)}</span>`); return; }
       const base = ad.mode() === 'custom' ? ad.items() : [];
       tryApply([...base, p], 'Load added.');
     };
-    byId(id.kind).onchange = visible; byId(id.shape).onchange = visible; byId(id.basis).onchange = visible;
+    byId(id.kind).onchange = ()=>{cancelPick();visible();}; byId(id.shape).onchange = visible; byId(id.basis).onchange = visible;
     byId(id.form).addEventListener('input', () => { law(); chord(); });
     byId(id.clear).onclick = () => tryApply([], 'All custom loads cleared: no load defined.');
-    if (ad.flight) byId(id.flight).onclick = () => { ad.flight.apply(); renderList(); };
+    if (ad.flight) byId(id.flight).onclick = () => { cancelPick();ad.flight.apply(); renderList(); };
     // ---------------------------------------------------------- CSV
     const csv = { filename: '', sha256: '', fromFile: null, candidate: null, text: null, edit: null };
     const csvMode = () => (csv.edit !== null ? 'edit' : (container.querySelector(`input[name="${id.csv}Mode"]:checked`) || { value: 'add' }).value);
@@ -430,7 +474,7 @@ const WingLoadsUI = (() => {
     };
     byId(id.csv + 'Template').onclick = () => { if (ad.download) ad.download(`${ad.workspace}_line_load_template.csv`, P.csvTemplate(ad.workspace), 'text/csv'); };
     visible(); renderList();
-    return { refresh() { renderList(); chord(); }, preview, openCsv, container };
+    return { refresh() { renderList(); chord(); }, preview, openCsv, container, acceptPick, cancelPick };
   }
 
   /**
@@ -456,7 +500,7 @@ const WingLoadsUI = (() => {
     };
   }
 
-  return { mount, keeper, describe, chordFigure, chordCaption, schrenkData, schrenkFigure, schrenkTable, fmt, signed, LAW, LAW_F, CENTROID_LAW, SHAPE_TEXT };
+  return { mount, keeper, surfacePicker, surfaceSample, describe, chordFigure, chordCaption, schrenkData, schrenkFigure, schrenkTable, fmt, signed, LAW, LAW_F, CENTROID_LAW, SHAPE_TEXT };
 })();
 if (typeof module !== 'undefined' && module.exports) module.exports = WingLoadsUI;
 if (typeof window !== 'undefined') window.WingLoadsUI = WingLoadsUI;

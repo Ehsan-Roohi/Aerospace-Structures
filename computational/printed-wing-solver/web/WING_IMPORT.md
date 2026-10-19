@@ -1,5 +1,28 @@
 # Wing Lab study files and design-parameter import
 
+## Selecting load coordinates on the 3-D model
+
+Both wing workspaces open without applied loads. In **Loads**, select a shape and press
+**Pick on 3-D wing**. The view switches to undeformed geometry and pauses orbit controls.
+Click visible skin to select a point force's span station and chord fraction; for a line load,
+click its two end stations. Its chord fraction is fixed by the first click throughout the interval.
+The Schrenk option (printed wing) always uses the full semi-span and only takes x/c from the pick.
+
+Coordinates are interpolated on the actual skin triangle hit by the camera ray. They are not
+inferred from a screen rectangle or from the deformation exaggeration. Printed-wing stations use
+mm; D.520 uses m, within its modelled support-to-last-rib loading interval. Hidden or clipped skin
+and empty background cannot receive a pick. The same numeric fields remain editable for precision.
+An unsupported/incomplete study must be corrected and solved before picking.
+
+Picking fills coordinates and clears magnitude; it does not apply a force. Enter signed magnitude
+(upward positive) and confirm **Add load**. **Esc** or the picking button cancels selection.
+**Show bending & twist** displays the solved, exaggerated deflected/twisted model. The existing
+stress plot remains available. Changing x/c changes the force's lever arm about the shear centre;
+it does not change the prescribed spanwise force or its bending moment. The beam/section
+idealization still does not resolve local contact stress at the picked point, or turn the load
+into an airfoil pressure distribution. No new load type or direct applied torque is implied.
+
+
 This page describes how the MIE 446 Wing Lab saves and opens studies, how a study travels in a link,
 and how the outer shape of a wing designed in another program can be brought into the printed-wing
 workspace. The code is `wing_study_io.js`; its tests are `test_wing_study_io.mjs`.

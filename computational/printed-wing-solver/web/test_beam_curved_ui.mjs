@@ -23,6 +23,7 @@ function open(query='') {
   w.print=()=>{w.printed=(w.printed||0)+1;};
   Object.defineProperty(w,'crypto',{value:webcrypto,configurable:true});w.TextEncoder=TextEncoder;   // SHA-256 of a chosen file
   const env=loadBeamLab(dom), $=env.$;
+  if(!query){$('#beamleftSupport').value='fixed';$('#beamSolve').click();} // User-configured test fixture.
   const set=(id,v)=>{$('#'+id).value=String(v);};
   return {...env,dom,downloads,set,
     kind:k=>{$('#beamLoadKind').value=k;$('#beamLoadKind').dispatchEvent(new w.Event('change'));},

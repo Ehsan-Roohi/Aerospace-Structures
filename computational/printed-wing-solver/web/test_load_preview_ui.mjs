@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import {JSDOM,loadBeamLab} from './beam_test_dom.mjs';
 const dom=new JSDOM('<div id="foundations"></div>',{url:'https://example.org',runScripts:'outside-only'}),w=dom.window;
 const {$}=loadBeamLab(dom),state=()=>w.BeamLab.state();
+$('#beamleftSupport').value='fixed';$('#beamSolve').click(); // Deliberate test fixture, not a default support.
 const set=(id,value)=>{$('#'+id).value=value;$('#'+id).dispatchEvent(new w.Event('input',{bubbles:true}));};
 $('#beamLoadKind').value='elliptic';$('#beamLoadKind').dispatchEvent(new w.Event('change'));
 set('beamLoadA',0);set('beamLoadB',450);set('beamCurveValue',1000);

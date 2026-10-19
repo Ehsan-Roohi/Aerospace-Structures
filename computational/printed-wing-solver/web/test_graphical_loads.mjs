@@ -5,6 +5,8 @@ const w=dom.window;
 const rect=w.Element.prototype.getBoundingClientRect;
 w.Element.prototype.getBoundingClientRect=function(){if(this.tagName.toLowerCase()==='svg'){const width=+this.getAttribute('width')||760;return {left:0,top:0,width,height:250};}return rect.call(this);};
 const { $ }=loadBeamLab(dom), state=()=>w.BeamLab.state();
+assert.equal(state().model.supports.length,0); // User must place restraints before analysis.
+$('#beamleftSupport').value='fixed';$('#beamSolve').click();
 const x=station=>{const s=$('#beamPicture svg');return +s.dataset.x0+(+s.dataset.x1-s.dataset.x0)*station/450;};
 const event=(type,target,station)=>target.dispatchEvent(new w.MouseEvent(type,{bubbles:true,cancelable:true,button:0,clientX:x(station),clientY:30}));
 const pick=kind=>$(`[data-place="load:${kind}"]`).click();

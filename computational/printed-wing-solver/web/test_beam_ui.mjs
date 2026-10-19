@@ -23,6 +23,9 @@ function open(url='https://example.org/wing-lab.html') {
     return rect.call(this);
   };
   const env=loadBeamLab(dom);
+  // Most tests below analyze an explicitly configured cantilever; bare-start behavior
+  // is separately asserted by test_empty_workspace.mjs (no supports and no solve).
+  if(!new URL(url).search){env.$('#beamleftSupport').value='fixed';env.$('#beamSolve').click();}
   return {...env,dom,downloads,input:(sel,value)=>{const el=env.$(sel);el.value=value;el.dispatchEvent(new w.Event('input',{bubbles:true}));},
     pointer:(type,target,clientX)=>{const Ctor=w.PointerEvent||w.MouseEvent;target.dispatchEvent(new Ctor(type,{bubbles:true,cancelable:true,clientX,clientY:20,pointerId:1}));},
     // Enter one load through the load form, as a user does (the Beam Lab opens with no load).
@@ -277,12 +280,12 @@ t=open(link);({$,w}=t);
 eq(JSON.stringify(lab(w).solved.model),before,'link reopens the same model');ok(/Shared study opened/.test($('#beamStatus').textContent));
 t.dom.window.close();
 t=open('https://example.org/wing-lab.html?beam=%3Cscript%3E');({$,w}=t);
-ok(/could not be opened/.test($('#beamStatus').textContent)&&lab(w).solved.model.loads.length===0&&/0\.0000 mm/.test(kpi($)),'bad link falls back to the default study (no load)');
+ok(/could not be opened/.test($('#beamStatus').textContent)&&lab(w).solved===null&&lab(w).model.loads.length===0&&lab(w).model.supports.length===0,'bad link falls back to the empty, unsolved workspace');
 t.dom.window.close();
-// A well-formed link whose model the solver rejects also falls back to the solved default study.
+// A well-formed link whose model the solver rejects also falls back to the empty workspace.
 t=open(`https://example.org/wing-lab.html?beam=${Buffer.from(JSON.stringify({v:2,m:tooClose.model})).toString('base64url')}`);({$,w}=t);
-ok(/could not be opened.*too close/.test($('#beamStatus').textContent)&&lab(w).solved.model.loads.length===0&&/0\.0000 mm/.test(kpi($)),'unsolvable link falls back to the default study (no load)');
-eq($('#beamChip').textContent,'Solved');t.dom.window.close();
+ok(/could not be opened.*too close/.test($('#beamStatus').textContent)&&lab(w).solved===null&&lab(w).model.loads.length===0&&lab(w).model.supports.length===0,'unsolvable link falls back to the empty workspace');
+eq($('#beamChip').textContent,'Pending');t.dom.window.close();
 t=open(`https://example.org/wing-lab.html?beamCase=l03-fixed&${new URL(link).search.slice(1)}`);({$,w}=t);
 ok(/Lecture 03/.test($('#beamStatus').textContent)&&lab(w).solved.model.E===2000,'valid lecture beamCase deep link keeps priority');
 /* ---------- 11. keyboard tabs, companion link, clean markup ---------- */

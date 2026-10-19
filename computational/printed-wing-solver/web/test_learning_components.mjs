@@ -13,6 +13,7 @@ w.HTMLElement.prototype.scrollIntoView=function(){};
 const {loadBeamLab}=await import('./beam_test_dom.mjs');
 loadBeamLab(dom);
 const $=s=>w.document.querySelector(s), click=s=>$(s).click();
+$('#beamleftSupport').value='fixed';click('#beamSolve'); // Explicitly configure the test cantilever.
 const kpi=()=>$('#beamKpis').textContent;
 // The Beam Lab opens with no applied load; every load below is entered through the load form.
 const addLoad=(kind,values)=>{$('#beamLoadKind').value=kind;$('#beamLoadKind').dispatchEvent(new w.Event('change'));

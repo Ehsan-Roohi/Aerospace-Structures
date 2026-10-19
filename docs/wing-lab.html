@@ -567,7 +567,7 @@ body { margin: 0; }
 .bl-tabpanel > * + * { margin-top: 14px; }
 .bl-tabpanel h3 { font-size: 17px; margin-bottom: 6px; }
 .bl-tabpanel h4 { font-size: 15px; margin-bottom: 4px; }
-.bl-results[data-stale="true"] .bl-tabpanel > :not(.bl-stale) { opacity: 0.48; filter: grayscale(0.4); }
+.bl-results[data-stale="true"] .bl-tabpanel:not(.bl-learn) > :not(.bl-stale) { opacity: 0.48; filter: grayscale(0.4); }
 .bl-stale { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--bl-warn); border-left-width: 4px; background: var(--bl-inset); font-size: 14px; }
 .bl-stale b { color: var(--bl-warn); }
 .bl-charts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 18px; }
@@ -791,7 +791,10 @@ body { margin: 0; }
 .bl-stationtable h4 { margin: 0; }
 .bl-station-listform { align-items: end; }
 .bl-station-list { flex: 1 1 260px; }
-.bl-guide { display: grid; gap: 8px; }
+.bl-guide { display: grid; gap: 12px; color: var(--fg); background: var(--bl-card); font-size: 16px; line-height: 1.7; border: 2px solid var(--bl-accent-text); }
+.bl-guide p, .bl-guide li, .bl-guide h3, .bl-guide h4 { color: var(--fg); opacity: 1; }
+.bl-guide-steps > li { padding: 8px 4px; border-bottom: 1px solid var(--line); }
+.bl-clear { border: 2px solid var(--bl-accent-text); color: var(--bl-accent-text); font-weight: 700; }
 .bl-guide > * { margin: 0; }
 .bl-guide-steps { margin: 0; padding-left: 22px; display: grid; gap: 6px; }
 .bl-guide h4 { margin-top: 4px; }
@@ -4053,10 +4056,10 @@ const Lecture03BeamCases = Object.freeze({
     parabolic:{start:'w(x) = w₀(1 − s²), s = (x − a)/ℓ: maximum w₀ at a with zero slope, zero at b',end:'w(x) = w₀(1 − (1 − s)²): zero at a, maximum w₀ at b with zero slope',middle:'w(x) = 4w₀ s(1 − s): zero at a and b, maximum w₀ at the middle'}};
   const CURVE_F={elliptic:'F = πw₀ℓ/4, so w₀ = 4F/(πℓ)',parabolic:'F = 2w₀ℓ/3, so w₀ = 3F/(2ℓ)'};
   const CENTROID_TEXT={elliptic:{start:'x̄ = a + 4ℓ/(3π)',end:'x̄ = b − 4ℓ/(3π)',middle:'x̄ = (a + b)/2'},parabolic:{start:'x̄ = a + 3ℓ/8',end:'x̄ = a + 5ℓ/8',middle:'x̄ = (a + b)/2'}};
-  // Normal opening: a cantilever with NO applied load and self-weight off. Loads come only from the user, a study
+  // Normal opening: an unrestrained beam with NO applied load and self-weight off. Supports and loads come from the user, a study
   // file or share link, or an explicitly chosen Lecture 03 example (buttons or ?beamCase= deep links).
   const BASE=Object.freeze({length:450,E:2000,density:1.24,elements:30,section:{shape:'rectangle',width:20,height:10},
-    supports:[{x:0,kind:'fixed'}],hinges:[],loads:[],selfWeight:false});
+    supports:[],hinges:[],loads:[],selfWeight:false});
   const DESCRIBE={fixed:'v = 0 and θ = 0; vertical reaction and reaction couple',
     pin:'v = 0; rotation free; vertical reaction, no couple (horizontal translation restrained)',
     roller:'v = 0; rotation and horizontal translation free; vertical reaction, no couple',
@@ -4111,7 +4114,7 @@ const Lecture03BeamCases = Object.freeze({
       <button type="button" data-stage="metal" aria-pressed="false">D.520 full-scale wing</button>
       <details class="bl-companion"><summary>Wing geometry tool</summary><div class="bl-companion-pop" data-companion="vinco"></div></details>
     </nav>
-    <p class="bl-intro">Predict → set supports and loads → solve → explain. Results always belong to the last <b>solved</b> model; edits stay pending until you press <b>Solve</b>. <button type="button" class="bl-btn bl-btn-sm" id="beamGuideOpen">Quick guide</button></p>
+    <p class="bl-intro"><button type="button" class="bl-btn bl-btn-primary" id="beamGuideOpen">User manual · Quick guide</button> Start with an empty beam → place supports → add loads → Solve. Results always belong to the last <b>solved</b> model; edits stay pending until you press <b>Solve</b>.</p>
   </header>
   <div class="bl-app">
     <aside class="bl-side" aria-label="Beam inputs">
@@ -4152,6 +4155,7 @@ const Lecture03BeamCases = Object.freeze({
       <details class="bl-acc" open><summary><span class="bl-step">4</span>Loads <span class="bl-badge" id="beamLoadBadge"></span></summary><div class="bl-acc-body">
         <p class="bl-help" style="margin-top:0">Positive force, line load and displacement point <b>down</b>; negative values point up. Positive couples are <b>clockwise</b>. q is force per length (N/mm), not pressure.</p>
         <div id="beamLoads"></div>
+        <div class="bl-row"><button type="button" class="bl-btn bl-btn-sm bl-clear" id="beamClear">Clear All Loads</button></div>
         <label class="bl-check"><input type="checkbox" id="beamSelfWeight"><span>Include self-weight ρgA <span class="bl-help" id="beamSelfWeightValue"></span></span></label>
         <form id="beamLoadForm" novalidate class="bl-box"><div class="bl-grid2">
           <label class="bl-field" style="grid-column:1/-1"><span>Load type</span><select class="bl-select" id="beamLoadKind">
@@ -4181,7 +4185,6 @@ const Lecture03BeamCases = Object.freeze({
             <label class="bl-check"><input type="radio" name="beamCsvMode" value="replace"><span>Replace all current loads with it</span></label></fieldset>
           <div class="bl-row"><button type="button" class="bl-btn bl-btn-primary" id="beamCsvApply" disabled>Apply table &amp; solve</button><button type="button" class="bl-btn" id="beamCsvCancel">Cancel</button></div>
         </details>
-        <div class="bl-row"><button type="button" class="bl-btn bl-btn-sm bl-btn-danger" id="beamClear">Clear all loads</button></div>
       </div></details>
       <details class="bl-acc"><summary><span class="bl-step">5</span>Examples &amp; presets</summary><div class="bl-acc-body">
         <div><h4 class="bl-mini">Lecture 03 examples · 450 × 20 × 10 mm, E = 2000 MPa</h4><div class="bl-row">
@@ -4195,14 +4198,16 @@ const Lecture03BeamCases = Object.freeze({
       <div class="bl-card-head"><div><h2 id="beamModelTitle">Beam</h2><p class="bl-sub" id="beamModelSub"></p></div>
         <div class="bl-toolbar" role="toolbar" aria-label="Place on the beam"><span>Place</span>
           ${['pin','roller','fixed','hinge'].map(k=>`<button type="button" class="bl-tool" data-place="${k}" aria-pressed="false" title="Click the beam to place a ${k}">${icon[k]}${k[0].toUpperCase()+k.slice(1)}</button>`).join('')}
+          <button type="button" class="bl-tool bl-clear" id="beamClearSupports">Clear All Supports</button>
           <button type="button" class="bl-tool" id="beamShowDefl" aria-pressed="true" title="Show the exaggerated deflected shape">Deflected shape</button></div></div>
       <div class="bl-toolbar bl-load-tools" role="toolbar" aria-label="Place loads on the beam"><span>Loads</span>
         <label>Drawing scale <select id="beamLoadScale" class="bl-select"><option value="common">Shared intensity scale</option><option value="independent">Independent heights · shape only</option></select></label>
         ${[['point','↓ Point force'],['moment','↻ Couple'],['rectangle','↓↓ Uniform'],['triangle','◿ Triangle →'],['triangle-root','◺ Triangle ←'],['trapezoid','▱ Trapezoid'],['elliptic','◠ Elliptic'],['parabolic','⌒ Parabolic']].map(([k,label])=>`<button type="button" class="bl-tool" data-place="load:${k}" aria-pressed="false">${label}</button>`).join('')}
         <button type="button" class="bl-tool" id="beamStopPlacing">Cancel / select</button>
+        <button type="button" class="bl-tool bl-clear" id="beamClearPicture">Clear All Loads</button>
       </div>
       <p class="bl-help" id="beamGraphicHelp" role="status">Choose a force/couple and click its station; for a line load, drag over its interval. Enter signed magnitude in Loads and confirm. Purple numbered handles: click to select, Delete to remove, drag to move, Enter or double-click to edit. No load is added by selecting a tool.</p>
-      <div class="bl-row"><button type="button" class="bl-btn bl-btn-sm" id="beamDeleteSelected" disabled>Delete selected item</button><button type="button" class="bl-btn bl-btn-sm" id="beamClearPicture">Clear loads</button><span id="beamSelection" class="bl-help" role="status">Select a load, support or hinge; press Delete to remove it.</span></div>
+      <div class="bl-row"><button type="button" class="bl-btn bl-btn-sm" id="beamDeleteSelected" disabled>Delete selected item</button><span id="beamSelection" class="bl-help" role="status">Select a load, support or hinge; press Delete to remove it.</span></div>
       <div id="beamPicture" class="bl-picture"></div>
       <p class="bl-picture-note" id="beamPictureNote"></p>
       <div id="beamKpis" class="bl-kpis" aria-label="Key results"></div>
@@ -4310,11 +4315,17 @@ const Lecture03BeamCases = Object.freeze({
       </div>
       <div class="bl-tabpanel bl-learn" role="tabpanel" id="beamTab-learn" aria-labelledby="beamTabBtn-learn" hidden>
         <section class="bl-box bl-guide" id="beamGuide" aria-labelledby="beamGuideTitle">
-          <h3 id="beamGuideTitle" tabindex="-1">Quick guide</h3>
+          <h3 id="beamGuideTitle" tabindex="-1">User manual · Quick guide</h3>
+          <p><b>First visit?</b> The normal workspace starts with no supports, no loads and self-weight off. It is a drawing workspace, not a solved beam yet. Follow these steps; no example is loaded unless you choose one.</p>
           <ol class="bl-guide-steps">
-            <li><b>Supports (panel 3).</b> Choose each end (fixed, pin, roller or free), add interior supports or hinges, or use <b>Place</b> on the beam picture. The status line says whether the beam is stable and how many reactions equilibrium alone cannot find.</li>
-            <li><b>Loads (panel 4).</b> The lab opens with no load. Add point forces P (↓ +), couples C (↻ +), line loads q in N/mm (uniform, triangular or trapezoidal), elliptic or parabolic loads, or a CSV table of w(x); or open an example in panel 5.</li>
-            <li><b>Solve.</b> Results always belong to the last solved model. After an edit they are marked “Not up to date” until you solve again.</li>
+            <li><b>Set dimensions and material.</b> In panels 1–2 enter length L, elastic modulus E, density and cross-section dimensions in the displayed units. Elements are numerical subdivisions, not physical parts; open the mesh help for accuracy guidance.</li>
+            <li><b>Place supports.</b> Select <b>Fixed</b>, <b>Pin</b> or <b>Roller</b> above the picture, then click the beam at the intended station. A click near an end sets its restraint; an interior click adds an interior support. Drag an interior support to move it, or type its exact x in panel 3. End restraints can also be selected in the Left/Right end menus. A hinge is a moment release, <b>not a support to ground</b>.</li>
+            <li><b>Check stability.</b> For a first simple model, place one Fixed support at x = 0 (a cantilever). Alternatively use a pin and a roller at different stations. With no supports, one pin alone, or rollers only, the beam cannot be solved as a stable planar structure. Read the stability message; the software never adds a missing support for you.</li>
+            <li><b>Place a point force or couple.</b> Select <b>Point force</b> or <b>Couple</b> in the Loads toolbar, then click the required station on the beam. Panel 4 opens with that x: enter the signed force P in N or couple C in N·mm and press its add/confirm button. Selecting an icon alone does not apply a load. Positive P points down; positive C is clockwise.</li>
+            <li><b>Place a distributed load.</b> Select Uniform, Triangle, Trapezoid, Elliptic or Parabolic; press and drag along the beam from the start to the end of its interval, then release. In panel 4 verify start/end x, enter intensity q in N/mm or the explicitly labelled total force F in N for a curved profile, choose its shape and confirm. Inspect the live profile before adding. You can instead enter all positions numerically; CSV loads are validated and previewed before application. Drawing scale changes the picture only, never the force.</li>
+            <li><b>Select, edit, move or remove.</b> Click a purple numbered load handle to select it; drag it to move the load. Press Enter or double-click to edit its numbers. Select a support, hinge or load and press <b>Delete</b>, or use <b>Delete selected item</b>. Delete while typing only edits the input, not the model. Removing an end support makes that end free.</li>
+            <li><b>Clear independently.</b> <b>Clear All Loads</b> beside the Loads tools removes applied loads and self-weight after confirmation, retaining supports and geometry. <b>Clear All Supports</b> beside the support tools removes end and interior restraints after confirmation, retaining loads, geometry and internal hinges. The beam is then unrestrained until you add supports again.</li>
+            <li><b>Solve and verify.</b> Press <b>Solve</b> after the model is stable. Load confirmation may solve the model immediately; subsequent support or geometry edits stay pending unless auto-solve is enabled. Results always belong to the last successful solve. A pending or unstable model cannot export current results; add/fix supports and solve again, or revert to the previous solved model.</li>
             <li><b>Diagrams.</b> Read the support reactions first, then V, M, v, θ and the stresses. Reactions are external forces on the beam; V and M are internal forces on a cut. The table and thin slices under the reactions show how they are linked.</li>
             <li><b>Station values.</b> Type x or press <b>L/2</b> to read exact V and M (equilibrium) and v, θ (Euler–Bernoulli finite element) at that x. At a point force, couple, support or hinge choose x⁻ or x⁺. <b>Cut &amp; section</b> shows the same cut with both parts and V and M on their faces.</li>
             <li><b>Report and downloads.</b> Station table CSV (any x you list), plot-samples CSV, reactions CSV, each plot as PNG, a printable report (print or save as PDF), the study file (.json) and a share link.</li>
@@ -4481,6 +4492,7 @@ const Lecture03BeamCases = Object.freeze({
     const box=$('#beamSupportStatus');
     let m;
     try {m=readDraft();} catch(e) {box.className='bl-stability bad';box.textContent=e.message;return;}
+    if(!m.supports.length&&!st.error){box.className='bl-stability';box.innerHTML='<b>No supports yet.</b> Place restraints before solving: for example, one Fixed support, or a pin and a roller at different stations. A free beam can translate and rotate; the software will not add supports automatically.';return;}
     const a=B.analyze(m);
     if(a.ok) {
       const s=a.stability;
@@ -4504,7 +4516,7 @@ const Lecture03BeamCases = Object.freeze({
     chip.className=`bl-chip ${state==='solved'?'ok':state==='error'?'bad':'warn'}`;
     chip.textContent=state==='solved'?'Solved':state==='error'?'Not solved':'Pending';
     text.textContent=state==='solved'?'Results match the inputs.':state==='error'?`${st.error}${st.solved?' Results shown are for the last solved model.':''}`:
-      (st.draftError?`${st.draftError} `:'')+'Inputs changed — press Solve. Results shown are for the last solved model.';
+      (st.draftError?`${st.draftError} `:'')+(st.solved?'Inputs changed — press Solve. Results shown are for the last solved model.':'No analysis yet. Place enough supports for stability, add your loads, then press Solve.');
     $('#beamSolve').dataset.pending=String(state!=='solved');
     $('#beamRevert').hidden=!(st.solved&&state!=='solved');
     const stale=state!=='solved';
@@ -4601,8 +4613,18 @@ const Lecture03BeamCases = Object.freeze({
   function clearLoads() {
     if(!st.model.loads.length&&!$('#beamSelfWeight').checked){message('There are no applied loads to clear. Supports are unchanged.');return;}
     if(!window.confirm('Clear all applied loads, including self-weight? Supports and geometry will be retained.'))return;
+    cancelPlacement();
     selection=null;replaceLoads([]);$('#beamSelfWeight').checked=false;draftChanged();
     message('All loads cleared; supports and geometry retained. Press Solve to update results.');
+  }
+  function clearSupports() {
+    if($('#beamleftSupport').value==='free'&&$('#beamrightSupport').value==='free'&&!interiorRows().length){message('There are no supports to clear. Loads and geometry are unchanged.');return;}
+    if(!window.confirm('Clear all end and interior supports? Loads, geometry and internal hinges will be retained. The unrestrained beam cannot be solved until you add supports.'))return;
+    cancelPlacement();selection=null;
+    $('#beamleftSupport').value='free';$('#beamrightSupport').value='free';
+    $('#beamInteriorList').innerHTML='';
+    draftChanged();
+    message('All supports cleared. Loads, geometry and internal hinges retained. Place supports to make the beam stable before solving.');
   }
   function renderPicture(ghost) {
     const pic=$('#beamPicture'), {model,current,invalid}=drawnModel(), r=st.solved&&st.solved.result;
@@ -4976,6 +4998,7 @@ const Lecture03BeamCases = Object.freeze({
   }
   function renderNotice() {
     const box=$('#beamNotice');let html='';
+    if(!st.solved) html+=`<div class="bl-notice" role="status" id="beamSetup"><b>Build your own beam.</b><p>No default supports or loads are applied. Choose a support icon and click its station, then use the Loads tools. The stability panel explains any missing restraints. Open <b>User manual · Quick guide</b> above for step-by-step instructions. No analysis results are available until a stable model is solved.</p></div>`;
     if(st.mechanism&&st.mechanism.kind==='transverse'&&!isCurrent()) {
       try {const d=stripRows(readDraft());html+=`<div class="bl-notice bad"><p><b>Mechanism — not solved.</b> ${esc(st.error)}</p>${D.mechanismSketch(d,st.mechanism,{width:width(box)-28})}</div>`;} catch(e) {}
     } else if(st.error&&/must lie on the beam|0 ≤ x|beam length/.test(st.error)&&st.solved) {
@@ -5521,6 +5544,7 @@ const Lecture03BeamCases = Object.freeze({
   $('#beamSelfWeight').onchange=()=>{renderSectionView();draftChanged();};
   $('#beamClear').onclick=clearLoads;
   $('#beamClearPicture').onclick=clearLoads;
+  $('#beamClearSupports').onclick=clearSupports;
   $('#beamDeleteSelected').onclick=deleteSelection;
   host.querySelectorAll('[data-beam-preset]').forEach(b=>b.onclick=()=>{
     const name=b.dataset.beamPreset;st.model=presetModel(name);st.editLoad=null;renderInputs(st.model);fillFormFromSingleLoad();
@@ -5668,7 +5692,8 @@ const Lecture03BeamCases = Object.freeze({
 
   renderInputs(st.model);
   fillFormFromSingleLoad();
-  solve();
+  if(st.model.supports.length) solve();
+  else {draftChanged();message('Start with an empty beam. Place supports, add loads, then Solve. Open User manual · Quick guide for help.');}
   if(lectureCase) message('Lecture 03 example loaded and solved. Dimensions: '+st.model.length+' × '+st.model.section.width+' × '+st.model.section.height+' mm; E = '+st.model.E+' MPa. Previous loads replaced.');
   else if(startMessage) message(startMessage);
   host.querySelectorAll('[data-stage]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.stage==='beam')));

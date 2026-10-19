@@ -131,7 +131,8 @@ const V=x=>RA-q0*(x-x*x/(2*L)), M=x=>-CA+RA*x-q0*(x*x/2-x**3/(6*L));
   }
   ok(/station x = 225 mm, exact V\(x\) = −0\.0225 N/.test(w.BeamLab.plotImage('shear').svg),'the marker value in the note is the exact one');
   t.dom.window.close();
-  const n=open(), none=n.w.BeamLab.plotImage('moment').svg;
+  const n=open();n.$('#beamleftSupport').value='fixed';n.$('#beamSolve').click();
+  const none=n.w.BeamLab.plotImage('moment').svg;
   ok(/Loads \(force and q down \+, couple clockwise \+\): none/.test(none),'no-load opening: the image says no load');
   const zr=n.$$('#beamStationTable tr[data-x]');eq(zr.length,5);
   ok(zr.every(tr=>[...tr.children].slice(2,8).every(td=>/^0( \/ 0)?$/.test(td.textContent))),'no load: V, M, v, θ, σ and τ are 0 at every listed station');
@@ -143,7 +144,7 @@ const V=x=>RA-q0*(x-x*x/(2*L)), M=x=>-CA+RA*x-q0*(x*x/2-x**3/(6*L));
   const t=open(), {$,w}=t, g=$('#beamGuide');
   ok(g&&g.closest('#beamTab-learn'),'guide in the Learn tab');
   const steps=[...g.querySelectorAll('.bl-guide-steps > li')].map(li=>li.querySelector('b').textContent);
-  eq(steps.join(' | '),'Supports (panel 3). | Loads (panel 4). | Solve. | Diagrams. | Station values. | Report and downloads.','workflow: supports → loads → solve → diagrams → station → report/downloads');
+  eq(steps.join(' | '),'Set dimensions and material. | Place supports. | Check stability. | Place a point force or couple. | Place a distributed load. | Select, edit, move or remove. | Clear independently. | Solve and verify. | Diagrams. | Station values. | Report and downloads.','beginner workflow covers setup, graphical input, clearing and results');
   const text=g.textContent.replace(/\s+/g,' ');
   for(const h of ['Signs and units','Fixed–fixed and other indeterminate beams','Midpoint and jumps','Plots versus exact values','Model limits']) ok([...g.querySelectorAll('h4')].some(x=>x.textContent===h),`guide section: ${h}`);
   ok(/mm, N, N\/mm, N·mm and MPa/.test(text)&&/V\(0⁺\) = −R and M\(0⁺\) = \+C at a left end/.test(text),'units and the reaction/internal relation');

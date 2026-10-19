@@ -5,7 +5,8 @@ for(const name of ['cantilever','roller-pin','fixed']){
   const dom=new JSDOM('<div id="foundations"></div>',{runScripts:'outside-only',url:'https://example.org/wing-lab.html?beamCase='+prefix+'-'+name});
   loadBeamLab(dom);const d=dom.window.document;
   assert.equal(d.querySelector('#beamLoads').textContent.trim(),'No load defined. Add your own load.');
-  assert.ok(d.querySelector('#beamKpis').textContent.includes('0.0000 mm'));
+  assert.equal(dom.window.BeamLab.state().solved,null);
+  assert.equal(dom.window.BeamLab.state().model.supports.length,0);
   assert.equal(d.querySelectorAll('[data-beam-preset^="hw"]').length,0);
   assert.ok(!d.querySelector('#beamStatus').textContent.includes('HW 3 example loaded'));
   assert.ok(d.querySelector('#beamGeometry').parentElement.textContent.includes('Why choose 10, 30 or 40 elements?'));

@@ -105,8 +105,10 @@ Studies and links with curved or table loads are written as version 3; others st
 * Legacy inputs (`support: 'cantilever' | 'fixed-fixed' | 'simply-supported'`, `leftSupport/rightSupport`,
   `width/height`) give bit-identical arrays, reactions and modes to commit 0cba4ec.
 * Only `?beamCase=l03-*` (6) selects worked lecture examples. Homework presets and both `hw3-*`/`hw2b-*` aliases are retired; they open the normal unloaded workspace.
-* The normal opening has **no applied load** and self-weight off (an unloaded cantilever, all results zero, with the
-  message "No load defined. Add your own load."). Loads come only from the load form, a study file or share link, or
+* The normal opening has **no supports, no applied load** and self-weight off. It is an unsolved drawing workspace,
+  not a zero-result solution of an unrestrained beam. Users must place adequate restraints before solving.
+  Clear All Loads is beside the load toolbar; Clear All Supports is beside the support tools and retains internal hinges.
+  The high-contrast beginner manual remains readable even when analysis is pending. Loads come only from the load form, a study file or share link, or
   an explicitly chosen Lecture 03 example (buttons or `?beamCase=`). The load form starts empty, and nothing
   adds a load automatically. Solved reactions that are zero are labelled 0 and drawn without an arrow.
 * One cut station for the whole page (`st.cut`): the Diagrams readout, the markers on every plot, the orange

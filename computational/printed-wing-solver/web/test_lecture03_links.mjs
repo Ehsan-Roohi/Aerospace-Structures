@@ -11,15 +11,17 @@ const expected=[['l03-tip','cantilever',18.225,2.7],
  ['l03-simple','simply-supported',1.1390625,.675],
  ['l03-fixed','fixed-fixed',.284765625,.3375],
  ['l03-lift','cantilever',6.834375,1.35],
- // An unknown name selects no example: the normal opening, which has no applied load (all results zero).
+ // An unknown name selects no example: the normal empty, unsolved workspace.
  ['unknown','cantilever',0,0],['__proto__','cantilever',0,0],['toString','cantilever',0,0]];
 for(const [name,support,deflection,stress] of expected){
  const dom=new JSDOM('<div id="foundations"></div>',{runScripts:'outside-only',url:'https://example.org/wing-lab.html?beamCase='+name});
  const w=dom.window,ctx=dom.getInternalVMContext();
  loadBeamLab(dom);
  const text=w.document.querySelector('#beamKpis').textContent;
+ if(name.startsWith('l03-')){
  assert.ok(text.includes(deflection.toFixed(4)+' mm'),name+': displacement '+text);
  assert.ok(text.includes(stress.toFixed(3)+' MPa'),name+': stress');
+ }else{assert.equal(w.BeamLab.state().solved,null);assert.equal(w.BeamLab.state().model.supports.length,0);}
  assert.equal(w.document.querySelector('[data-stage="beam"]').getAttribute('aria-pressed'),'true');
  if(name==='l03-lift')assert.ok(w.document.querySelector('#beamLoads').textContent.includes('-0.004'));
  const examples=name.startsWith('l03-');

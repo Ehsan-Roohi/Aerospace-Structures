@@ -953,6 +953,7 @@ body { margin: 0; }
     <div class="anatomy-key" id="anatomyKey">
       <b>Undeformed project geometry · select “Inside wing” to reveal the ribs</b>
       <span><i style="background:#c9d3dd"></i>PLA skin</span><span><i style="background:#ffcc4d"></i>Ribs</span><span><i style="background:#e39a4b"></i>Printed sleeves</span><span><i style="background:#329bdd"></i>Carbon rods</span>
+      <span><i style="background:#33c587"></i>Clamped root · hatched support, not a force</span>
     </div>
     <div class="overlay footline" id="footline"></div>
     <div class="modeplayer" id="modeplayer" hidden>
@@ -9953,16 +9954,19 @@ if (typeof window !== 'undefined') window.WingLoadsUI = WingLoadsUI;
       root.add(r);
       return r;
     });
-    // fixture symbol at the root
+    // Clamped root: a hatched backing plate, never force-like arrows.
     const fix = new THREE.Group();
     const c0 = g.rootChord;
     const plate = new THREE.Mesh(new THREE.BoxGeometry(2, 34, c0 * 1.15), new THREE.MeshPhongMaterial({ color: COLORS.fixture, transparent: true, opacity: 0.35 }));
     plate.position.set(-2, 2, c0 / 2);
     fix.add(plate);
-    for (let i = 0; i < 6; i++) {
-      const a = new THREE.ArrowHelper(new THREE.Vector3(1, 0, 0), new THREE.Vector3(-24, (i % 2 ? 7 : -3), c0 * (0.1 + 0.16 * i)), 20, COLORS.fixture, 7, 4);
-      fix.add(a);
+    const hatchPoints = [];
+    for (let i = 0; i < 9; i++) {
+      const z = c0 * (-0.02 + 0.13 * i);
+      hatchPoints.push(new THREE.Vector3(-3.2, -14, z), new THREE.Vector3(-3.2, 18, z + c0 * 0.08));
     }
+    fix.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(hatchPoints), new THREE.LineBasicMaterial({ color: COLORS.fixture })));
+    fix.name = "Clamped root (support only; no applied force)";
     root.add(fix);
     const loads = new THREE.Group(); root.add(loads);
     const marker = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ color: COLORS.seam, transparent: true, opacity: 0.18, side: THREE.DoubleSide, depthWrite: false }));

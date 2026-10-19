@@ -27,7 +27,7 @@ for(const [name,support,qStart,qEnd,arrangement] of cases){
  const r=B.solve({length:L,width:16,height:8,E:2200,support,elements:40,modes:false,loads:[{kind:'distributed',start:0,end:L,qStart,qEnd}]});
  assert.equal($('#beamLoads ol').children.length,1);
  assert.ok(!$('#beamLoads').textContent.includes(' N at x='));
- assert.match($('#beamStatus').textContent,/HW 2B/);
+ assert.match($('#beamStatus').textContent,/HW 3/);
  assert.match($('#beamReactions').textContent,/rad/);
  assert.equal($('#beamReactions tr').querySelectorAll('th').length,5);
  if(support==='cantilever'){

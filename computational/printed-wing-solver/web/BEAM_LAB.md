@@ -71,8 +71,8 @@ at a support (app signs ↓ +, ↻ +), V and M are an equal and opposite pair on
 support `V(x⁺) − V(x⁻) = −(R + P)` and `M(x⁺) − M(x⁻) = +(C + C₀)` (R, C: reaction force and couple; P, C₀: applied
 point actions at that station), so `V(0⁺) = −R` and `M(0⁺) = +C` at a left end, `V(L⁻) = +R` and `M(L⁻) = −C` at a
 right end. Reaction couples are named C (C_A, C_B, … as in Lecture 03), never M. Benchmarks (`test_beam_station.mjs`):
-HW 2B Case 1, cantilever, q = 0 → 0.002 N/mm: W = 0.45 N at x̄ = 300 mm, R = −0.45 N, C = −135 N·mm,
-V(0⁺) = +0.45 N, V(L/2) = +0.3375 N, M(L/2) = −42.1875 N·mm. HW 2B Case 3, fixed–fixed, q = 0.002 → 0 N/mm:
+HW 3 Case 1, cantilever, q = 0 → 0.002 N/mm: W = 0.45 N at x̄ = 300 mm, R = −0.45 N, C = −135 N·mm,
+V(0⁺) = +0.45 N, V(L/2) = +0.3375 N, M(L/2) = −42.1875 N·mm. HW 3 Case 3, fixed–fixed, q = 0.002 → 0 N/mm:
 R_A = −0.315 N, R_B = −0.135 N, C_A = −20.25 N·mm, C_B = +13.5 N·mm, V(0⁺) = +0.315 N, V(L⁻) = −0.135 N,
 M(0⁺) = −20.25 N·mm, M(L⁻) = −13.5 N·mm.
 
@@ -101,7 +101,7 @@ Studies and links with curved or table loads are written as version 3; others st
 * `?beamCase=l03-*` (6) and `?beamCase=hw2b-*` (3) set exact inputs; `beamCase` wins over `?beam=`.
 * The normal opening has **no applied load** and self-weight off (an unloaded cantilever, all results zero, with the
   message "No load defined. Add your own load."). Loads come only from the load form, a study file or share link, or
-  an explicitly chosen Lecture 03 / HW 2B example (buttons or `?beamCase=`). The load form starts empty, and nothing
+  an explicitly chosen Lecture 03 / HW 3 example (buttons or `?beamCase=`). The load form starts empty, and nothing
   adds a load automatically. Solved reactions that are zero are labelled 0 and drawn without an arrow.
 * One cut station for the whole page (`st.cut`): the Diagrams readout, the markers on every plot, the orange
   line on the beam picture (draggable on the Diagrams and Cut tabs) and Cut & section. The readout evaluates

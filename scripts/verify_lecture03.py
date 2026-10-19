@@ -32,8 +32,11 @@ for c in nb['cells']:
         assert c['execution_count'] is not None
         assert not any(o['output_type']=='error' for o in c['outputs'])
         figures+=sum('image/png' in o.get('data',{}) for o in c['outputs'])
-assert figures==24
-assert markdown.count('beamCase=hw2b-')==3
+assert figures==25
+assert markdown.count('beamCase=hw3-')==3
+assert 'A grounded pin does not cut the beam' in markdown
+assert 'Shared intensity scale' in markdown and 'Independent heights' in markdown
+assert 'HW 2B' not in markdown
 assert 'Free rotation does not mean zero rotation' in markdown
 assert 'does not solve uₓ' in markdown
 assert 'Left roller / right pin' in markdown
@@ -49,10 +52,10 @@ for equation in re.findall(r'\$\$(.*?)\$\$',markdown,flags=re.S):
 
 L,b,h,E,P=450.,20.,10.,2000.,2.
 a=L/2
-RA=P/2
-CA=P*L/8
-assert abs(-CA*L+RA*L**2/2-P*(L-a)**2/2)<1e-8
-assert abs(-CA*L**2/2+RA*L**3/6-P*(L-a)**3/6)<1e-8
+RA=-P/2
+CA=-P*L/8
+assert abs(CA*L-RA*L**2/2-P*(L-a)**2/2)<1e-8
+assert abs(CA*L**2/2-RA*L**3/6-P*(L-a)**3/6)<1e-8
 assert 'Compatibility means' in markdown and 'two additional requirements at B' in markdown
 I=b*h**3/12
 close=lambda a,b: abs(a-b)<1e-9

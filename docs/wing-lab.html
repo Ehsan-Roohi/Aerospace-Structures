@@ -4015,7 +4015,7 @@ if (typeof window !== 'undefined') window.CompanionTools = CompanionTools;
 
 </script>
 <script>/* Lecture 03 links deliberately replace loads rather than adding to an old study. */
-const Lecture03BeamCases = Object.freeze({
+const Lecture03BeamCases = (()=>{const cases={
   'l03-centre': {support:'cantilever',loads:[{kind:'point',position:225,force:2}]},
   'l03-tip': {support:'cantilever',loads:[{kind:'point',position:450,force:2}]},
   'l03-uniform': {support:'cantilever',loads:[{kind:'distributed',start:0,end:450,qStart:2/450,qEnd:2/450}]},
@@ -4025,7 +4025,7 @@ const Lecture03BeamCases = Object.freeze({
   'hw2b-cantilever': {length:450,width:16,height:8,E:2200,support:'cantilever',loads:[{kind:'distributed',start:0,end:450,qStart:0,qEnd:.002}]},
   'hw2b-roller-pin': {length:450,width:16,height:8,E:2200,support:'simply-supported',simpleArrangement:'roller-left',loads:[{kind:'distributed',start:0,end:450,qStart:.001,qEnd:.002}]},
   'hw2b-fixed': {length:450,width:16,height:8,E:2200,support:'fixed-fixed',loads:[{kind:'distributed',start:0,end:450,qStart:.002,qEnd:0}]}
-});
+};for(const suffix of ['cantilever','roller-pin','fixed'])cases['hw3-'+suffix]=cases['hw2b-'+suffix];return Object.freeze(cases);})();
 /*
  * MIE 446 Beam Lab — controller for the beam workspace (#foundations).
  * Uses BeamSections, BeamLearningEngine, BeamStudy, BeamDiagrams, BeamSolution and CompanionTools.
@@ -4179,7 +4179,7 @@ const Lecture03BeamCases = Object.freeze({
           <button type="button" class="bl-btn bl-btn-sm" data-beam-preset="l03-tip">A · tip force</button><button type="button" class="bl-btn bl-btn-sm" data-beam-preset="l03-centre">Cantilever · centre force</button>
           <button type="button" class="bl-btn bl-btn-sm" data-beam-preset="l03-uniform">B · uniform 2 N</button><button type="button" class="bl-btn bl-btn-sm" data-beam-preset="l03-lift">B · uniform lift</button>
           <button type="button" class="bl-btn bl-btn-sm" data-beam-preset="l03-simple">C1 · pin–roller</button><button type="button" class="bl-btn bl-btn-sm" data-beam-preset="l03-fixed">C2 · fixed–fixed</button></div></div>
-        <div><h4 class="bl-mini">Optional presets · HW 2B</h4><p class="bl-help" style="margin-top:0">Each button replaces all current loads and sets L = 450 mm, b = 16 mm, h = 8 mm and E = 2200 MPa. These are different from the Lecture 03 numerical examples.</p><div class="bl-row">
+        <div><h4 class="bl-mini">Optional presets · HW 3</h4><p class="bl-help" style="margin-top:0">Each button replaces all current loads and sets L = 450 mm, b = 16 mm, h = 8 mm and E = 2200 MPa. These are different from the Lecture 03 numerical examples.</p><div class="bl-row">
           <button type="button" class="bl-btn bl-btn-sm" data-beam-preset="hw2b-cantilever">1 · Cantilever · triangle toward tip</button><button type="button" class="bl-btn bl-btn-sm" data-beam-preset="hw2b-roller-pin">2 · Left roller / right pin · trapezoid</button><button type="button" class="bl-btn bl-btn-sm" data-beam-preset="hw2b-fixed">3 · Fixed–fixed · triangle toward root</button></div></div>
       </div></details>
     </aside>
@@ -5051,7 +5051,7 @@ const Lecture03BeamCases = Object.freeze({
   function assessedCase(m) {
     for(const k of ['hw2b-cantilever','hw2b-roller-pin','hw2b-fixed']) {
       const p=presetModel(k);
-      if(canonical({...p,density:m.density,elements:m.elements})===canonical(m)) return `This study matches HW 2B ${k==='hw2b-cantilever'?'Case 1':k==='hw2b-roller-pin'?'Case 2':'Case 3'}.`;
+      if(canonical({...p,density:m.density,elements:m.elements})===canonical(m)) return `This study matches HW 3 ${k==='hw2b-cantilever'?'Case 1':k==='hw2b-roller-pin'?'Case 2':'Case 3'}.`;
     }
     return '';
   }
@@ -5477,7 +5477,7 @@ const Lecture03BeamCases = Object.freeze({
   $('#beamClear').onclick=()=>{replaceLoads([]);solve();};
   host.querySelectorAll('[data-beam-preset]').forEach(b=>b.onclick=()=>{
     const name=b.dataset.beamPreset;st.model=presetModel(name);st.editLoad=null;renderInputs(st.model);fillFormFromSingleLoad();
-    solve(name.startsWith('hw2b-')?'HW 2B case loaded: all previous loads replaced; 450 × 16 × 8 mm, E = 2200 MPa. Read support reactions and motion in the table.'
+    solve(/^hw(?:2b|3)-/.test(name)?'HW 3 case loaded: all previous loads replaced; 450 × 16 × 8 mm, E = 2200 MPa. Read support reactions and motion in the table.'
       :'Lecture 03 example loaded: all previous loads replaced; 450 × 20 × 10 mm, E = 2000 MPa.');
     host.querySelectorAll('[data-stage]').forEach(x=>x.setAttribute('aria-pressed',String(x.dataset.stage==='beam')));
   });
@@ -5615,7 +5615,7 @@ const Lecture03BeamCases = Object.freeze({
   renderInputs(st.model);
   fillFormFromSingleLoad();
   solve();
-  if(lectureCase) message((lectureCase.startsWith('hw2b-')?'HW 2B':'Lecture 03')+' example loaded and solved. Dimensions: '+st.model.length+' × '+st.model.section.width+' × '+st.model.section.height+' mm; E = '+st.model.E+' MPa. Previous loads replaced.');
+  if(lectureCase) message((/^hw(?:2b|3)-/.test(lectureCase)?'HW 3':'Lecture 03')+' example loaded and solved. Dimensions: '+st.model.length+' × '+st.model.section.width+' × '+st.model.section.height+' mm; E = '+st.model.E+' MPa. Previous loads replaced.');
   else if(startMessage) message(startMessage);
   host.querySelectorAll('[data-stage]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.stage==='beam')));
   // readStation(): the exact values at the current cut station (both limits at a jump), as the readout shows them.

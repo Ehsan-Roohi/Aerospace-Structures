@@ -39,7 +39,11 @@ section for local browser viewing. B-2 is explicitly identified as crewed, not a
 
 [Open Lecture 03 in Colab](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/main/notebooks/MIE446_Lecture_03_Beam_Reactions_Stress_and_Deflection.ipynb) · [View the notebook](MIE446_Lecture_03_Beam_Reactions_Stress_and_Deflection.ipynb).
 
-This 90-minute core lesson follows Lecture 02 distributed loads. Each of three supports receives its own loaded-beam drawing, force/moment balance and numerical reactions under the same centre force; tip/uniform examples remain with the cantilever. Twenty-three saved figures locate the variables on geometry, place the beam before V/M diagrams, introduce normal/shear stress and stress/strain tensors, display cross-sectional contours and explain Q as selected-area force transfer. Six links open exact solved app cases. The solid rectangle is a wing-load-path teaching surrogate, not the printed wing itself. Detailed algebra and circular-tube torsion remain supporting reading.
+This 90-minute core lesson follows Lecture 02 distributed loads. Each of three supports receives its own loaded-beam drawing, force/moment balance and numerical reactions under the same centre force; tip/uniform examples remain with the cantilever. Saved figures locate the variables on geometry, place the beam before V/M diagrams, introduce normal/shear stress and stress/strain tensors, display cross-sectional contours and explain Q as selected-area force transfer. Six links open lecture examples and three links open HW 3 models. The support section distinguishes grounded interior pins/rollers from internal hinges, including overhangs, and uses the app’s downward-force/clockwise-external-couple signs. Live load profiles, shared/independent drawing scales and exports are explained. The solid rectangle is a wing-load-path teaching surrogate, not the printed wing itself. Detailed algebra and circular-tube torsion remain supporting reading.
+
+### HW 3 Three beams student workspace
+
+[Open in Colab](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/main/notebooks/MIE446_HW3_Three_Beams.ipynb) · [View notebook](MIE446_HW3_Three_Beams.ipynb) · [Assignment](../assignments/homework-03/README.md). Optional blank workspace; no worked answers and no additional submission required.
 
 ### Numerical wing structural design — two sessions and a design studio
 

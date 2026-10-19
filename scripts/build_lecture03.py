@@ -413,6 +413,8 @@ def build():
     separate(cells)
     from enhance_lecture03_supports import enhance as enhance_supports
     enhance_supports(cells)
+    from modernize_lecture03 import modernize
+    modernize(cells)
     # Saved outputs are generated from the same executable cells students receive.
     env = {}
     import matplotlib

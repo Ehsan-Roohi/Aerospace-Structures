@@ -16,7 +16,7 @@ This page collects released assignment files, the revised September 26 syllabus 
 
 The September 28 revision removes the proof and extra physical-check subpart, explains numerical integration step by step, and simplifies the tabulated-data calculation to direct panel sums. The PDF and Excel workbook use a uniform black-and-white format suitable for printing. Complete the work individually and submit only through Canvas.
 
-### Homework 2 — two separate submissions: HW 2A and HW 2B
+### Homework 2A Evidence and moment geometry
 
 **First submission: HW 2A, ONLY Parts 1 and 3, 35 points; due Tuesday, October 20, 2026.**
 
@@ -25,21 +25,23 @@ The September 28 revision removes the proof and extra physical-check subpart, ex
 - Part 3: sketches, predictions and side-force moments at three positions, checked by hand, MATLAB and Excel (20 points).
 - Submit your individual report PDF, MATLAB file and Excel workbook; include the guide's short process note.
 
-**Second submission: HW 2B, three beam cases, 65 points; due Thursday, November 5, 2026.**
+### Homework 3 Three beams under distributed loads
 
-- [HW 2B guide (PDF)](assignments/homework-02/HW2B/MIE446_HW2B_Three_Beams.pdf) · [Word](assignments/homework-02/HW2B/MIE446_HW2B_Three_Beams.docx) · [HW 2B student package (ZIP)](assignments/homework-02/MIE446_HW2B_Student_Pack.zip)
+**65 points; due Thursday, November 5, 2026.**
+
+- [HW 3 instructions](assignments/homework-03/README.md) · [PDF](assignments/homework-03/MIE446_HW3_Three_Beams.pdf) · [Word](assignments/homework-03/MIE446_HW3_Three_Beams.docx) · [Student notebook](notebooks/MIE446_HW3_Three_Beams.ipynb) · [Student ZIP](assignments/homework-03/MIE446_HW3_Student_Pack.zip)
 - Cantilever with a right-heavy triangular load; roller–pin beam with a trapezoidal load; fixed–fixed beam with a left-heavy triangular load.
 - Calculate support reactions, support displacements and rotations analytically and compare with the beam software. Submit one PDF only.
 
-[Full A/B instructions and reading map](assignments/homework-02/README.md). **Use only the HW 2A and HW 2B handouts linked here.** Canvas is authoritative for exact times and submission links. Discuss within your existing team, but submit independently authored work.
+[HW 2A instructions](assignments/homework-02/README.md) · [HW 3 instructions](assignments/homework-03/README.md). Canvas is authoritative for exact times and submission links. Discuss within your existing team, but submit independently authored work.
 
 ## Six homework portfolios
 
 | Assignment | Main focus | Syllabus due date, 2026 |
 |---|---|---|
 | HW 1 | NACA 2412 geometry, surface-pressure integration, lift, pressure drag and discrete panel sums | October 1 |
-| HW 2 (A + B) | HW 2A: evidence/moment geometry. HW 2B: reactions and support motion for three distributed-load beam cases, by hand and software. | HW 2A: October 20; HW 2B: November 5 |
-| HW 3 | Beam shear/moment, bending, deflection, strain energy and independent checks | November 12 |
+| HW 2A | Evidence and moment geometry | October 20 |
+| HW 3 | Three distributed-load beams: reactions, compatibility and selected deformation, by hand and software | November 5 |
 | HW 4 | Virtual work/Castigliano and correction of a plausible but flawed AI solution | November 19 |
 | HW 5 | Maneuver/landing loads, V–n diagrams, sensitivity and trade-offs | December 3 |
 | HW 6 | Wing-box shear/torsion/shear center and reconciliation with project evidence | December 10 |
@@ -48,7 +50,7 @@ Each homework is individual and worth **8.75%** of the course. The six together 
 
 ## Before submitting
 
-Follow the deliverables in the individual handout. **HW 2B requires only one PDF with analytical solutions and software comparisons; the general slide and supporting-file requirements do not apply to HW 2B.**
+Follow the deliverables in the individual handout. **HW 3 requires only one PDF with analytical solutions and software comparisons; the general slide and supporting-file requirements do not apply to HW 3.**
 
 - [ ] Include readable analytical solutions and an Engineering Judgment Record for the instructor-designated problem.
 - [ ] State the system, load path, prediction, model, assumptions, boundary conditions and limitations.
@@ -60,7 +62,7 @@ Follow the deliverables in the individual handout. **HW 2B requires only one PDF
 
 ## One-slide brief and oral check
 
-Everyone prepares a slide for every homework. A preassigned rotation of about 10–11 students completes a **90-second explanation plus one short question** after each deadline, in a 20–25-minute workshop block. Across six homeworks, each student completes one live oral check. The rotation is posted by Week 3.
+Except where the individual handout provides an exemption, everyone prepares a slide for every homework. HW 3 is exempt. A preassigned rotation of about 10–11 students completes a **90-second explanation plus one short question** after each deadline, in a 20–25-minute workshop block. Across six homeworks, each student completes one live oral check. The rotation is posted by Week 3.
 
 A narrated recording is an approved absence/accessibility alternative, not a routine requirement for all six assignments. The oral check is a pass/revise authenticity gate.
 

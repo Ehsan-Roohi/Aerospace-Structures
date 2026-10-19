@@ -23,6 +23,24 @@ Euler–Bernoulli teaching model: transverse displacement `v` and rotation `θ` 
 
 ## Conventions
 
+### Graphical load placement
+
+The **Loads** toolbar above the physical beam places point forces and couples by a click, and uniform,
+triangular, trapezoidal, elliptic and parabolic line loads by dragging an interval. The blue selection
+is not a load: enter signed magnitude in the existing Loads form and confirm **Add load & solve**.
+Intervals are ordered left to right even when drawn right to left; triangle icons describe the
+intensity variation, not force direction. Positive values remain down / clockwise.
+
+Purple numbered handles on applied loads can be dragged horizontally (their magnitude and interval
+length stay fixed, and movement stops at the beam ends). Click a handle, or focus it and press Enter,
+to edit exact positions and magnitudes in the form. Numeric input remains available for accessibility
+and precision. Escape or **Cancel / select** cancels placement; a cancelled drag restores its load.
+Moving an existing load makes the results stale until Solve, unless auto-solve is enabled.
+Self-weight is not draggable. These handles are on the physical editor only, not reaction FBDs.
+
+Regression: `test_graphical_loads.mjs` covers all eight tools, no automatic load insertion, reversed
+interval gestures, signed values, whole-interval boundary clipping, cancellation and keyboard editing.
+
 mm, N, MPa, N/mm, N·mm; density g/cm³ (self-weight q = ρ[g/cm³]·1000 · A[mm²]·10⁻⁶ · 9.80665 / 1000 N/mm).
 Loads and `v` positive **down**; `θ = dv/dx` and applied/reaction couples positive **clockwise**;
 internal `M` positive **sagging** (`M = −EI v″`, `V = dM/dx`, `dV/dx = −q`; a clockwise couple raises M by C).

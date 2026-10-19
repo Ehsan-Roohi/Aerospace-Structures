@@ -229,6 +229,16 @@ const BeamDiagrams = (() => {
     });
     model.hinges.forEach((h,i)=>{svg+=`<g class="bl-hinge" data-hinge="1" data-hinge-index="${i}" data-x="${h}" data-draggable="hinge"><circle cx="${r1(X(h))}" cy="${r1(yAxis)}" r="6" class="bl-hinge-c"/></g>`;});
     svg+=drawLoads(loads,X,yTop,{width:W}).svg;
+    if(opts.interactive) model.loads.forEach((v,i)=>{
+      const a=v.kind==='table'?v.points[0][0]:isDist(v)?v.start:v.position;
+      const b=v.kind==='table'?v.points.at(-1)[0]:isDist(v)?v.end:v.position;
+      const x=X((a+b)/2), y=30+(i%3)*22;
+      svg+=`<g class="bl-load-handle" data-load-handle="${i}" tabindex="0" role="button" aria-label="Load ${i+1}: drag to move or press Enter to edit"><title>Load ${i+1}: drag to move; click or Enter to edit magnitude and position</title>${line(x,y+10,X((a+b)/2),yTop-2,'bl-load-link')}<circle cx="${r1(x)}" cy="${y}" r="10"/>${text(x,y+4,String(i+1),'bl-tx-s')}</g>`;
+    });
+    if(opts.loadPreview) {
+      const a=X(opts.loadPreview.start),b=X(opts.loadPreview.end);
+      svg+=`<g class="bl-selection" aria-label="Selected load position, not applied"><rect x="${r1(a-2)}" y="${r1(yTop-10)}" width="${r1(Math.max(4,b-a+4))}" height="32"/>${text((a+b)/2,yTop-16,'Selection only — enter magnitude','bl-tx-s')}</g>`;
+    }
     if(opts.result&&opts.showDeflection) {
       const r=opts.result, peak=Math.max(...r.deflection.map(Math.abs));
       if(peak>0) {

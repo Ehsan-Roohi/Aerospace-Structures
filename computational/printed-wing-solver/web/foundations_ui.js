@@ -172,6 +172,11 @@ const Lecture03BeamCases = Object.freeze({
         <div class="bl-toolbar" role="toolbar" aria-label="Place on the beam"><span>Place</span>
           ${['pin','roller','fixed','hinge'].map(k=>`<button type="button" class="bl-tool" data-place="${k}" aria-pressed="false" title="Click the beam to place a ${k}">${icon[k]}${k[0].toUpperCase()+k.slice(1)}</button>`).join('')}
           <button type="button" class="bl-tool" id="beamShowDefl" aria-pressed="true" title="Show the exaggerated deflected shape">Deflected shape</button></div></div>
+      <div class="bl-toolbar bl-load-tools" role="toolbar" aria-label="Place loads on the beam"><span>Loads</span>
+        ${[['point','↓ Point force'],['moment','↻ Couple'],['rectangle','↓↓ Uniform'],['triangle','◿ Triangle →'],['triangle-root','◺ Triangle ←'],['trapezoid','▱ Trapezoid'],['elliptic','◠ Elliptic'],['parabolic','⌒ Parabolic']].map(([k,label])=>`<button type="button" class="bl-tool" data-place="load:${k}" aria-pressed="false">${label}</button>`).join('')}
+        <button type="button" class="bl-tool" id="beamStopPlacing">Cancel / select</button>
+      </div>
+      <p class="bl-help" id="beamGraphicHelp" role="status">Choose a force/couple and click its station; for a line load, drag over its interval. Enter signed magnitude in Loads and confirm. Purple numbered handles: drag to move, click or Enter to edit. No load is added by selecting a tool.</p>
       <div id="beamPicture" class="bl-picture"></div>
       <p class="bl-picture-note" id="beamPictureNote"></p>
       <div id="beamKpis" class="bl-kpis" aria-label="Key results"></div>
@@ -536,7 +541,7 @@ const Lecture03BeamCases = Object.freeze({
     st.drawn=model;st.drawnInvalid=!!invalid;
     const sw=current&&r&&r.selfWeight.enabled?{q:r.selfWeight.q}:(!current&&model.selfWeight?{q:SEC.selfWeightLine(SEC.properties(model.section),model.density,B.GRAVITY)}:null);
     pic.innerHTML=D.beamSchematic(model,{width:width(pic)-2,result:current?r:null,showDeflection:current&&st.showDeflection,
-      cut:cutTab()&&current?{x:st.cut.x}:null,ghost,selfWeight:sw,
+      cut:cutTab()&&current?{x:st.cut.x}:null,ghost,selfWeight:sw,interactive:true,loadPreview:st.graphicPreview,
       label:`Physical beam with supports and applied loads${current?'':' (edited inputs, not solved yet)'}`});
     if(st.placing) pic.dataset.placing=st.placing; else delete pic.dataset.placing;
     const svg=pic.querySelector('svg'), factor=svg&&svg.dataset.exaggeration;
@@ -566,6 +571,12 @@ const Lecture03BeamCases = Object.freeze({
   const endSupports=()=>($('#beamleftSupport').value!=='free')+($('#beamrightSupport').value!=='free');
   const supportLimitReached=()=>interiorRows().length+endSupports()>=B.LIMITS.supports;
   function placeAt(x) {
+    if(st.placing&&st.placing.startsWith('load:')) {
+      const kind=st.placing.slice(5);
+      if(kind==='point'||kind==='moment') prepareGraphicLoad(kind,x,x);
+      else message('Drag from the start to the end of the loaded interval (or enter exact start/end in Loads).');
+      return;
+    }
     const L=st.model.length, eps=L*1e-9;
     if(st.placing==='hinge') {
       if(x<=eps||x>=L-eps) {message('A hinge must be inside the span, not at an end.');return;}
@@ -586,10 +597,24 @@ const Lecture03BeamCases = Object.freeze({
     message(`${st.placing[0].toUpperCase()+st.placing.slice(1)} placed at x = ${fmt(x)} mm. ${st.autoSolve?'':'Press Solve when ready.'}`);
   }
   function setPlacing(kind) {
+    st.drag=null;st.graphicPreview=null;
     st.placing=st.placing===kind?null:kind;
     $$('[data-place]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.place===st.placing)));
     renderPicture();
-    if(st.placing) message(`Click the beam to place a ${st.placing}. Press Esc or the button again to stop.`);
+    if(st.placing) message(st.placing.startsWith('load:')?'Point force/couple: click a station. Distributed load: drag an interval. Then enter magnitude in Loads; nothing is applied until confirmed. Esc cancels.':`Click the beam to place a ${st.placing}. Press Esc or the button again to stop.`);
+  }
+  function prepareGraphicLoad(kind,a,b) {
+    st.editLoad=null;
+    $('#beamLoadKind').value=kind;
+    $('#beamLoadA').value=Math.min(a,b);$('#beamLoadB').value=Math.max(a,b);
+    for(const id of ['beamP','beamC','beamQ0','beamQ1','beamCurveValue']) $('#'+id).value='';
+    st.graphicPreview={start:Math.min(a,b),end:Math.max(a,b)};
+    st.placing=null;$$('[data-place]').forEach(btn=>btn.setAttribute('aria-pressed','false'));
+    syncLoadForm();renderPicture();
+    const field=kind==='point'?'beamP':kind==='moment'?'beamC':kind==='triangle'?'beamQ1':kind==='elliptic'||kind==='parabolic'?'beamCurveValue':'beamQ0';
+    const input=$('#'+field), details=input.closest('details');if(details)details.open=true;
+    input.scrollIntoView&&input.scrollIntoView({block:'center'});input.focus();
+    $('#beamGraphicHelp').textContent=`Selected ${kind} at ${fmt(Math.min(a,b))}${a===b?'':`–${fmt(Math.max(a,b))}`} mm. Enter magnitude (+ down / clockwise; − up / counter-clockwise), then Add load & solve. This blue selection is not an applied load.`;
   }
 
   /* ---------------------------------------------------------- KPIs etc. */
@@ -1244,7 +1269,8 @@ const Lecture03BeamCases = Object.freeze({
     if(st.editLoad!==null&&!(st.editLoad<st.model.loads.length)) st.editLoad=null;
     if(st.editLoad===null&&st.model.loads.length>=MAX_LOADS) {err.textContent=`Use at most ${MAX_LOADS} loads.`;err.hidden=false;return;}
     if(st.editLoad===null) st.model.loads.push(load); else st.model.loads[st.editLoad]=load;
-    st.editLoad=null;renderLoadList();syncLoadForm();solve();
+    st.editLoad=null;st.graphicPreview=null;renderLoadList();syncLoadForm();solve();
+    $('#beamGraphicHelp').textContent='Load registered. Drag its purple numbered handle to move it; click or Enter on the handle to edit. Choose another load tool to add a new load.';
   }
   function editLoad(i) {
     const p=st.model.loads[i];st.editLoad=i;
@@ -1439,12 +1465,29 @@ const Lecture03BeamCases = Object.freeze({
     if(j>=0){e.preventDefault();openTab(tabs[j].dataset.tab,true);}};});
   // Placement tools and dragging on the picture.
   host.querySelectorAll('[data-place]').forEach(b=>b.onclick=()=>setPlacing(b.dataset.place));
+  function cancelPlacement() {if(st.drag&&st.drag.type==='load')st.model.loads[st.drag.index]=st.drag.original;st.placing=null;st.drag=null;st.graphicPreview=null;$$('[data-place]').forEach(b=>b.setAttribute('aria-pressed','false'));renderLoadList();renderPicture();renderStatus();message('Placement cancelled. Existing loads are unchanged.');}
+  $('#beamStopPlacing').onclick=cancelPlacement;
   $('#beamShowDefl').onclick=e=>{st.showDeflection=!st.showDeflection;e.currentTarget.setAttribute('aria-pressed',String(st.showDeflection));renderPicture();};
-  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&st.placing)setPlacing(st.placing);});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&(st.placing||st.drag||st.graphicPreview))cancelPlacement();});
   const pic=$('#beamPicture');
   let pending=false;
   const frame=fn=>{if(pending)return;pending=true;raf(()=>{pending=false;fn();});};
   pic.addEventListener('pointerdown',e=>{
+    if(e.button!==undefined&&e.button!==0)return;
+    const loadHandle=e.target.closest('[data-load-handle]');
+    if(st.placing&&st.placing.startsWith('load:')&&!['load:point','load:moment'].includes(st.placing)) {
+      const x=svgX(e);if(x===null||st.drawnInvalid)return;
+      st.drag={type:'load-range',start:snap(x,st.drawn.length),kind:st.placing.slice(5)};
+      st.graphicPreview={start:st.drag.start,end:st.drag.start};
+      if(pic.setPointerCapture)try{pic.setPointerCapture(e.pointerId);}catch(z){}e.preventDefault();return;
+    }
+    if(!st.placing&&loadHandle) {
+      if(st.drawnInvalid){message('Fix invalid inputs before moving a load.');return;}
+      const x=svgX(e),index=+loadHandle.dataset.loadHandle;
+      if(x===null||!st.model.loads[index])return;
+      st.drag={type:'load',index,start:x,original:clone(st.model.loads[index]),moved:false};
+      if(pic.setPointerCapture)try{pic.setPointerCapture(e.pointerId);}catch(z){}e.preventDefault();return;
+    }
     const drag=e.target.closest('[data-draggable]');
     if(st.placing) return;
     if(drag&&!e.target.closest('.bl-ghost')) {
@@ -1460,6 +1503,20 @@ const Lecture03BeamCases = Object.freeze({
     if(cutTab()&&st.solved&&isCurrent()) {st.drag={type:'cut'};const x=svgX(e);if(x!==null)setCut(x);if(pic.setPointerCapture)try{pic.setPointerCapture(e.pointerId);}catch(z){}}
   });
   pic.addEventListener('pointermove',e=>{
+    if(st.drag&&st.drag.type==='load-range') {const x=svgX(e);if(x!==null){st.graphicPreview={start:Math.min(st.drag.start,snap(x,st.drawn.length)),end:Math.max(st.drag.start,snap(x,st.drawn.length))};frame(()=>renderPicture());}return;}
+    if(st.drag&&st.drag.type==='load') {
+      const x=svgX(e);if(x===null)return;
+      const d=st.drag,p=d.original,L=st.drawn.length;
+      let delta=snap(x,L)-snap(d.start,L);
+      const a=p.kind==='table'?p.points[0][0]:LD.isDist(p)?p.start:p.position;
+      const b=p.kind==='table'?p.points.at(-1)[0]:LD.isDist(p)?p.end:p.position;
+      delta=Math.max(-a,Math.min(L-b,delta));d.moved=Math.abs(delta)>L*1e-10;
+      const q=clone(p);
+      if(p.kind==='table'){q.points=q.points.map(([s,w])=>[s+delta,w]);delete q.source;}
+      else if(LD.isDist(p)){q.start+=delta;q.end+=delta;}else q.position+=delta;
+      st.model.loads[d.index]=q;renderLoadList();frame(()=>{renderPicture();renderStatus();});return;
+    }
+    if(st.placing&&st.placing.startsWith('load:')) {const x=svgX(e);if(x!==null){st.graphicPreview={start:snap(x,st.drawn.length),end:snap(x,st.drawn.length)};frame(()=>renderPicture());}return;}
     if(st.placing) {const x=svgX(e);if(x!==null)frame(()=>renderPicture({x:snap(x,st.model.length),kind:st.placing}));return;}
     if(!st.drag) return;
     const x=svgX(e);if(x===null)return;
@@ -1468,9 +1525,14 @@ const Lecture03BeamCases = Object.freeze({
     const rows=st.drag.type==='hinge'?hingeRows():interiorRows(), input=rows[st.drag.index]&&rows[st.drag.index].querySelector('[data-field="x"]');
     if(input){input.value=sx;frame(()=>{renderPicture();renderStatus();});}
   });
-  const endDrag=()=>{if(!st.drag)return;const t=st.drag.type;st.drag=null;if(t!=='cut')draftChanged();};
-  pic.addEventListener('pointerup',endDrag);pic.addEventListener('pointercancel',endDrag);
-  pic.addEventListener('click',e=>{if(!st.placing)return;const x=svgX(e);if(x!==null)placeAt(snap(x,st.model.length));});
+  const endDrag=e=>{if(!st.drag)return;const d=st.drag;st.drag=null;
+    if(d.type==='load-range'){const x=svgX(e);st.suppressPlaceClick=true;if(x!==null&&Math.abs(snap(x,st.drawn.length)-d.start)>st.drawn.length*1e-9)prepareGraphicLoad(d.kind,d.start,snap(x,st.drawn.length));else {st.graphicPreview=null;renderPicture();message('Choose a non-zero interval by dragging along the beam.');}return;}
+    if(d.type==='load'){if(d.moved){draftChanged();message('Load moved. Press Solve to update results (or enable auto-solve).');}else editLoad(d.index);return;}
+    if(d.type!=='cut')draftChanged();};
+  pic.addEventListener('pointerup',endDrag);
+  pic.addEventListener('pointercancel',()=>{if(st.drag&&st.drag.type==='load')st.model.loads[st.drag.index]=st.drag.original;st.drag=null;st.graphicPreview=null;renderLoadList();renderPicture();renderStatus();});
+  pic.addEventListener('keydown',e=>{const h=e.target.closest('[data-load-handle]');if(h&&(e.key==='Enter'||e.key===' ')){e.preventDefault();editLoad(+h.dataset.loadHandle);}});
+  pic.addEventListener('click',e=>{if(st.suppressPlaceClick){st.suppressPlaceClick=false;return;}if(!st.placing)return;const x=svgX(e);if(x!==null)placeAt(snap(x,st.model.length));});
   // Cut controls.
   $('#beamCut').oninput=e=>setCut(+e.target.value);
   $('#beamCutX').onchange=e=>{const v=Number(e.target.value);if(Number.isFinite(v))setCut(v);};

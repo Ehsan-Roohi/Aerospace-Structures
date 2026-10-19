@@ -11,6 +11,7 @@ const published = readFileSync(new URL("../../../docs/wing-lab.html", import.met
 const page = source.replace("/*__ENGINE__*/", engine).replace("/*__BEAM_ENGINE__*/",()=>readFileSync(new URL("./beam_learning_engine.js",import.meta.url),"utf8").replaceAll("\r\n","\n")).replace("/*__FOUNDATIONS__*/",()=>readFileSync(new URL("./foundations_ui.js",import.meta.url),"utf8").replaceAll("\r\n","\n"))
   .replace("/*__BEAM_STYLES__*/",()=>readFileSync(new URL("./beam_lab.css",import.meta.url),"utf8").replaceAll("\r\n","\n"))
   .replace("/*__LOAD_PROFILES__*/",()=>readFileSync(new URL("./load_profiles.js",import.meta.url),"utf8").replaceAll("\r\n","\n"))
+  .replace("/*__WING_SPARS__*/",()=>readFileSync(new URL("./wing_spars.js",import.meta.url),"utf8").replaceAll("\r\n","\n"))
   .replace("/*__BEAM_SECTIONS__*/",()=>readFileSync(new URL("./beam_sections.js",import.meta.url),"utf8").replaceAll("\r\n","\n"))
   .replace("/*__BEAM_STUDY__*/",()=>readFileSync(new URL("./beam_study.js",import.meta.url),"utf8").replaceAll("\r\n","\n"))
   .replace("/*__BEAM_DIAGRAMS__*/",()=>readFileSync(new URL("./beam_diagrams.js",import.meta.url),"utf8").replaceAll("\r\n","\n"))

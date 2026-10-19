@@ -39,6 +39,7 @@ const baseS = () => ({
 function uiEngineInput(S) {           // engineInput() of the page
   const pla = { ...E.MATERIALS[S.plaKey] };
   for (const k of ['E', 'ft', 'fc', 'fs']) if (S.plaOver[k] > 0) pla[k] = S.plaOver[k];
+  if(S.plaOver.rho>0)pla.rho=S.plaOver.rho;if(S.plaOver.nu!=null)pla.nu=S.plaOver.nu;
   const rod = { ...E.MATERIALS[S.rodKey] };
   if (S.rodOver.E > 0) rod.E = S.rodOver.E;
   return { geometry: { ...S.geometry }, pla, rod, assembly: { ...S.assembly }, load: { ...S.load }, criteria: { ...S.criteria } };
@@ -158,9 +159,9 @@ await group('printed round trips reproduce WingEngine results exactly', () => {
   // canonical forms: sorted ribs, effective overrides only, tip-load fields only
   const sorted = JSON.parse(IO.exportPrintedStudy(three, E)).study;
   deq(sorted.geometry.customInteriorRibs, [112.5, 146, 154, 225, 296, 304, 337.5], 'rib stations stored in engine order');
-  deq(JSON.parse(IO.exportPrintedStudy(other, E)).study.materials.plaOver, { E: 3200, ft: 40, fc: null, fs: null }, 'non-positive override stored as card value (as the page uses it)');
+  deq(JSON.parse(IO.exportPrintedStudy(other, E)).study.materials.plaOver, { E: 3200, ft: 40, fc: null, fs: null,rho:null,nu:null }, 'non-positive override stored as card value (as the page uses it)');
   deq(Object.keys(JSON.parse(IO.exportPrintedStudy(cases[3][1], E)).study.load), ['kind', 'tipForce', 'tipFraction', 'fos', 'tipMass'], 'only the active load case is stored');
-  deq(JSON.parse(IO.exportPrintedStudy(shell, E)).study.materials, { plaKey: 'pla_upright', plaOver: { E: null, ft: null, fc: null, fs: null }, rodKey: 'rod_hobby', rodOver: { E: null } }, 'empty override objects');
+  deq(JSON.parse(IO.exportPrintedStudy(shell, E)).study.materials, { plaKey: 'pla_upright', plaOver: { E: null, ft: null, fc: null, fs: null,rho:null,nu:null }, rodKey: 'rod_hobby', rodOver: { E: null } }, 'empty override objects');
   // exporting an invalid UI state is refused with the reasons
   const broken = baseS(); broken.geometry.skin = 8;
   assert.throws(() => IO.exportPrintedStudy(broken, E), (e) => /cavity collapses/.test(e.message) && Array.isArray(e.errors)); checks++;
@@ -614,6 +615,7 @@ await group('module source, template file and browser global', () => {
   const dom = new JSDOM('<!doctype html><body></body>', { runScripts: 'outside-only' });
   const ctx = dom.getInternalVMContext();
   vm.runInContext(read('./load_profiles.js'), ctx, { filename: 'load_profiles.js' });   // the engines need the shared load profiles (v5)
+  vm.runInContext(read('./wing_spars.js'),ctx,{filename:'wing_spars.js'});
   vm.runInContext(read('./engine.js'), ctx, { filename: 'engine.js' });
   vm.runInContext(read('./metal_wing_engine.js'), ctx, { filename: 'metal_wing_engine.js' });
   vm.runInContext(src, ctx, { filename: 'wing_study_io.js' });

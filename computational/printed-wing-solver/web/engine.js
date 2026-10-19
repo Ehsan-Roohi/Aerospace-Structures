@@ -22,12 +22,14 @@
 const WingEngine = (() => {
   "use strict";
   const Profiles = typeof LoadProfiles !== "undefined" ? LoadProfiles : (typeof require === "function" ? require("./load_profiles.js") : null);
+  const Spars = typeof WingSpars !== 'undefined' ? WingSpars : (typeof require === 'function' ? require('./wing_spars.js') : null);
   if (!Profiles) throw new Error("Load load_profiles.js before engine.js.");
   const GRAV = 9.81;
-  const VERSION = "1.0.0";
+  const VERSION = "1.1.0";
 
   // ------------------------------------------------------------------ materials
   const MATERIALS = {
+    custom_shell:{key:'custom_shell',kind:'pla',name:'Custom effective shell / rib material',short:'Custom shell',E:2000,nu:.35,rho:1.24,ft:15,fc:50,fs:10,G:null,source:'User-supplied effective isotropic beam properties. Initial numbers are PLA teaching placeholders, not certified properties; replace E, nu, density and allowables before material comparisons.'},
     pla_upright: {
       key: "pla_upright", kind: "pla", name: "Printed PLA Pro — span along printer Z",
       short: "PLA upright", E: 2000, nu: 0.35, rho: 1.24, ft: 15, fc: 50, fs: 10, G: null,
@@ -93,6 +95,7 @@ const WingEngine = (() => {
     naca: "2412", semiSpan: 450, rootChord: 160, tipChord: 100, skin: 1.2, ribThickness: 1.6,
     modules: 3, te: 1.2, interiorRibs: 3, customInteriorRibs: null, interfaceOffset: 4, cap: 2, cavityStart: 0.06,
     cavityEnd: 0.9, rodFractions: [0.3, 0.6], rodDiameter: 4, clearance: 0.25, sleeveWall: 1.2,
+    spars: [],
   };
 
   function normalizeNaca(code) {
@@ -108,9 +111,12 @@ const WingEngine = (() => {
     const g = { ...DEFAULT_GEOMETRY, ...opts };
     g.naca = normalizeNaca(g.naca);
     g.rodFractions = [...g.rodFractions];
+    g.spars = Spars.specs(g.spars,g.semiSpan);
+    if(g.spars.length&&g.rodFractions.length)throw new Error('Compare shell + rods and shell + bonded spars separately: mixed rod/spar connections are not validated in this model. Remove rods before adding a spar.');
     if (g.rodFractions.some(f => !Number.isFinite(f) || f <= 0 || f >= 1)) throw new Error("Rod positions must be fractions between 0 and 1.");
     const pos = ["semiSpan", "rootChord", "tipChord", "skin", "ribThickness", "te", "cap", "rodDiameter", "sleeveWall"];
-    for (const k of pos) if (!(g[k] > 0)) throw new Error(`${k} must be positive.`);
+    for (const k of pos) if (!Number.isFinite(g[k])||!(g[k] > 0)) throw new Error(`${k} must be positive and finite.`);
+    if(!Number.isFinite(g.cavityStart)||!Number.isFinite(g.cavityEnd)||g.cavityStart<=0||g.cavityEnd>=1||g.cavityStart>=g.cavityEnd)throw new Error('Cavity limits must satisfy 0 < start < end < 1.');
     if (g.tipChord > g.rootChord) throw new Error("Tip chord cannot exceed root chord.");
     if (![1, 2, 3].includes(+g.modules)) throw new Error("Use 1, 2 or 3 modules.");
     if (g.interfaceOffset <= g.ribThickness) throw new Error("Interface rib offset must exceed rib thickness.");
@@ -133,6 +139,7 @@ const WingEngine = (() => {
       }
       g.customInteriorRibs = Object.freeze(ribs);
     }
+    if(g.spars.length)for(let i=0;i<=32;i++)Spars.parts(g,g.semiSpan*i/32,verticalOrdinates);
     return Object.freeze(g);
   }
 
@@ -481,7 +488,9 @@ const WingEngine = (() => {
   // Geometry-only part of a section (mesh, warping FE, Bredt check): cached by geometry and station.
   const geoCache = new Map();
   function geometricSection(g, y, layers = 4) {
-    const key = JSON.stringify([g, y, layers]);
+    // Warping mesh depends only on this shell outline, not on spar materials,
+    // rods, rib layout or module labels. Reuse exactly the same immutable FE data.
+    const key = JSON.stringify([g.naca,chordAt(g,y),g.skin,g.te,g.cavityStart,g.cavityEnd,layers]);
     if (!geoCache.has(key)) {
       if (geoCache.size > 120) geoCache.clear();
       const loops = ringLoops(g, y);
@@ -499,11 +508,13 @@ const WingEngine = (() => {
     const shellInt = [fe.A, fe.A * fe.zc, fe.A * fe.xc, fe.Ixx + fe.A * fe.zc ** 2, fe.Iyy + fe.A * fe.xc ** 2, fe.Ixy + fe.A * fe.xc * fe.zc];
     const sleeveInts = centres.map((cc) => annulusIntegrals(cc, Rs, rh));
     const rodInts = centres.map((cc) => diskIntegrals(cc, rr));
+    const sparParts=Spars.parts(g,y,verticalOrdinates),sparInts=sparParts.flatMap(p=>p.polygons.map((polygon,k)=>({index:p.index,kind:['top cap','bottom cap','web'][k],m:p.s.material,polygon,int:polyIntegrals(polygon)})));
     const sums = [0, 0, 0, 0, 0, 0];
     const add = (arr, E) => arr.forEach((v, i) => (sums[i] += E * v));
     add(shellInt, Ep);
     sleeveInts.forEach((s) => add(s, Ep));
     if (asm.rodsBonded) rodInts.forEach((s) => add(s, Er));
+    sparInts.forEach(s=>add(s.int,s.m.E));
     const EA = sums[0], zc = sums[1] / EA, xc = sums[2] / EA;
     let EIf = sums[3] - EA * zc * zc, EIc = sums[4] - EA * xc * xc;
     const EIxz = sums[5] - EA * xc * zc;
@@ -514,17 +525,22 @@ const WingEngine = (() => {
     const Jfloat = centres.length * (Math.PI / 2) * (Rs ** 4 - rh ** 4);
     let GJ = shearModulus(pla) * (fe.J + Jfloat);
     if (asm.rodsBonded) GJ += centres.length * shearModulus(rod) * (Math.PI * g.rodDiameter ** 4) / 32;
+    const sparNetwork=sparParts.length?Spars.network(loops.inner,loops.outer,pla,sparParts):null;
+    const bendCoupling=sparNetwork?EIxz/EIc:0;
+    if(sparNetwork){EIf-=EIxz*EIxz/EIc;GJ=sparNetwork.GJ;}
+    const xsc=sparNetwork?sparNetwork.xsc:fe.xsc,zsc=sparNetwork?sparNetwork.zsc:fe.zsc;
     // mass, centre of gravity and polar mass moment about the shear centre (g/mm, g·mm²/mm)
     const rp = pla.rho * 1e-3, rr_ = rod.rho * 1e-3;
     const plaInt = shellInt.map((v, i) => v + sleeveInts.reduce((s, a) => s + a[i], 0));
     const rodInt = rodInts.reduce((s, a) => s.map((v, i) => v + a[i]), [0, 0, 0, 0, 0, 0]);
-    const mass = rp * plaInt[0] + rr_ * rodInt[0];
-    const cgx = (rp * plaInt[2] + rr_ * rodInt[2]) / mass;
-    const polar = (I) => I[4] - 2 * fe.xsc * I[2] + fe.xsc ** 2 * I[0] + (I[3] - 2 * fe.zsc * I[1] + fe.zsc ** 2 * I[0]);
-    const polarInertia = rp * polar(plaInt) + rr_ * polar(rodInt);
+    const sparMass=sparInts.reduce((a,s)=>a+s.m.rho*1e-3*s.int[0],0);
+    const mass = rp * plaInt[0] + rr_ * rodInt[0]+sparMass;
+    const cgx = (rp * plaInt[2] + rr_ * rodInt[2]+sparInts.reduce((a,s)=>a+s.m.rho*1e-3*s.int[2],0)) / mass;
+    const polar = (I) => I[4] - 2 * xsc * I[2] + xsc ** 2 * I[0] + (I[3] - 2 * zsc * I[1] + zsc ** 2 * I[0]);
+    const polarInertia = rp * polar(plaInt) + rr_ * polar(rodInt)+sparInts.reduce((a,s)=>a+s.m.rho*1e-3*polar(s.int),0);
     const outerInt = polyIntegrals(outer);
     const holeInt = centres.map((cc) => diskIntegrals(cc, rh)).reduce((s, a) => s.map((v, i) => v + a[i]), [0, 0, 0, 0, 0, 0]);
-    const ribInt = outerInt.map((v, i) => v - holeInt[i]);
+    const ribInt = outerInt.map((v, i) => v - holeInt[i]-sparInts.reduce((a,s)=>a+s.int[i],0));
     const ribExtra = ribInt[0] - plaInt[0];
     let zTop = -Infinity, zBot = Infinity;
     for (const p of outer) { zTop = Math.max(zTop, p[1]); zBot = Math.min(zBot, p[1]); }
@@ -537,7 +553,8 @@ const WingEngine = (() => {
     const radius = circleRadius(us[0], us[us.length >> 1], us[us.length - 1]);
     return {
       y, chord: loops.chord, EA, xc, zc, EIf, EIc, EIxz, principal, EIrods, GJ, Jfe: fe.J, Jbredt: bredt.J,
-      bredtArea: bredt.Am, xsc: fe.xsc, zsc: fe.zsc, mass, cgx, polarInertia, zTop, zBot,
+      bredtArea: bredt.Am, xsc, zsc, mass, cgx, polarInertia, zTop, zBot,
+      sparParts,sparInts,sparMass,sparNetwork,bendCoupling,
       plaArea: plaInt[0], shellArea: fe.A, rodArea: rodInt[0], ribExtra, ribCgx: ribInt[2] / ribInt[0],
       ribPolar: polar(ribInt), skinWidth: width, skinRadius: radius, mesh, fe, corners: loops.corners,
       outer, centres, Rs, rh, rr,
@@ -772,8 +789,11 @@ const WingEngine = (() => {
   function normalize(input = {}) {
     const g = makeGeometry(input.geometry || {});
     const pla = { ...MATERIALS.pla_upright, ...(input.pla || {}) };
+    for(const k of ['E','rho','ft','fc','fs'])if(!Number.isFinite(pla[k])||pla[k]<=0)throw new Error(`Shell material ${k} must be finite and positive.`);
+    if(!Number.isFinite(pla.nu)||pla.nu<0||pla.nu>=.5)throw new Error('Shell material nu must be 0 ≤ nu < 0.5.');
     const rod = { ...MATERIALS.rod_hobby, ...(input.rod || {}) };
     const asm = { ...DEFAULT_ASSEMBLY, ...(input.assembly || {}) };
+    if(g.spars.length&&!asm.seamsBonded&&seams(g).length)throw new Error('Bonded spars require bonded module seams (or a one-piece shell). Dry-seam joint mechanics with spars are not validated.');
     const load = { ...DEFAULT_LOAD, ...(input.load || {}) };
     if (!g.rodFractions.length && !asm.seamsBonded && seams(g).length)
       throw new Error("Removing every rod from a dry multi-module joint disconnects the wing. Use the one-piece teaching wing or explicitly model bonded seams.");
@@ -784,8 +804,13 @@ const WingEngine = (() => {
       for(let i=1;i<essential.length;i++) if(essential[i]-essential[i-1]<.1-1e-8) throw new Error("Keep distinct wing load boundaries at least 0.1 mm from each other, ribs, seams and ends, or use exactly the same station. This avoids degenerate beam elements.");
     }
     const crit = { ...DEFAULT_CRITERIA, ...(input.criteria || {}) };
+    if(g.spars.length){
+      const xs=[...new Set([0,g.semiSpan,...seams(g),...ribStations(g),...g.spars.map(s=>s.length),...(load.kind==='custom'?load.items.flatMap(p=>loadStations(p,g.semiSpan)):[])])].sort((a,b)=>a-b);
+      for(let i=1;i<xs.length;i++)if(xs[i]-xs[i-1]<.1-1e-8)throw new Error('Keep distinct spar ends at least 0.1 mm from loads, ribs, seams and each other, or use exactly the same station.');
+    }
     const nSections = input.nSections || 7;
-    const ySec = linspace(0, 0.95 * g.semiSpan, nSections);
+    const ends=g.spars.filter(s=>s.length<g.semiSpan).flatMap(s=>[s.length,Math.min(g.semiSpan,s.length+.001)]);
+    const ySec = [...new Set([...linspace(0, 0.95 * g.semiSpan, nSections),...ends,...(g.spars.length?[g.semiSpan]:[])])].sort((a,b)=>a-b);
     return { g, pla, rod, asm, load, crit, nSections, ySec };
   }
   function validateLoads(items, L) {
@@ -875,14 +900,24 @@ const WingEngine = (() => {
     const sections = ySec.map((y) => cachedSection(g, pla, rod, asm, y));
     const col = (k) => sections.map((s) => s[k]);
     const loadNodes = load.kind === "custom" ? load.items.flatMap(p => loadStations(p, L)) : [];
-    const yset = new Set([...linspace(0, L, nGrid), ...seams(g), ...ribs, ...loadNodes].map((v) => +v.toFixed(9)));
+    const sparEnds=g.spars.map(s=>s.length);
+    const yset = new Set([...linspace(0, L, nGrid), ...seams(g), ...ribs, ...loadNodes,...sparEnds].map((v) => +v.toFixed(9)));
     const y = Float64Array.from([...yset].sort((a, b) => a - b));
-    const lin = (k) => (yy) => interpLin(yy, ySec, col(k));
+    // Never smear a spar runout into the next bay: interpolate only within the
+    // same active-spar segment. End values are inboard limits.
+    const active=q=>g.spars.map(s=>q<=s.length+1e-8?1:0).join('');
+    const sectionValue=(k,q,log=false)=>{
+      if(!g.spars.length)return log?interpLog(q,ySec,col(k)):interpLin(q,ySec,col(k));
+      const ids=ySec.map((v,i)=>active(v)===active(q)?i:-1).filter(i=>i>=0),xp=ids.map(i=>ySec[i]),fp=ids.map(i=>sections[i][k]);
+      if(!ids.length)throw Error('No section in the spar segment.');
+      return log?Math.exp(interp(q,xp,fp.map(Math.log))):interp(q,xp,fp);
+    };
+    const lin = (k) => (yy) => sectionValue(k,yy);
     const P = {};
     P.chord = y.map((v) => chordAt(g, v));
-    for (const k of ["xsc", "xc", "zc", "zTop", "zBot", "mass", "cgx", "polarInertia", "skinWidth", "skinRadius", "EIrods", "rodArea"]) P[k] = y.map(lin(k));
-    P.EI = y.map((v) => interpLog(v, ySec, col("EIf")));
-    P.GJ = y.map((v) => interpLog(v, ySec, col("GJ")));
+    for (const k of ["xsc", "xc", "zc", "zTop", "zBot", "mass", "cgx", "polarInertia", "skinWidth", "skinRadius", "EIrods", "rodArea","sparMass","bendCoupling"]) P[k] = y.map(lin(k));
+    P.EI = y.map((v) => sectionValue('EIf',v,true));
+    P.GJ = y.map((v) => sectionValue('GJ',v,true));
 
     // mass
     const rho = pla.rho * 1e-3;
@@ -890,14 +925,15 @@ const WingEngine = (() => {
     const ribCg = ribs.map((r) => lin("ribCgx")(r));
     const ribPolar = ribs.map((r) => rho * g.ribThickness * lin("ribPolar")(r));
     const capMass = [0, L].map((r) => rho * g.cap * lin("ribExtra")(r));
-    const plaLine = y.map((v, i) => P.mass[i] - rod.rho * 1e-3 * P.rodArea[i]);
+    const plaLine = y.map((v, i) => P.mass[i] - rod.rho * 1e-3 * P.rodArea[i]-P.sparMass[i]);
     const shellMass = trapz(plaLine, y);
     const rodsMass = rod.rho * 1e-3 * g.rodFractions.length * Math.PI * rodRadius(g) ** 2 * L;
     const mass = { shell: shellMass, ribs: ribMass.reduce((a, b) => a + b, 0), caps: capMass[0] + capMass[1] };
     mass.printed = mass.shell + mass.ribs + mass.caps;
     mass.rods = rodsMass;
+    mass.spars=trapz(P.sparMass,y);
     mass.tip = load.tipMass;
-    mass.total = mass.printed + mass.rods + load.tipMass;
+    mass.total = mass.printed + mass.rods + mass.spars + load.tipMass;
 
     // loads (upward +, N/mm and N)
     let w = new Float64Array(y.length), wx = new Float64Array(y.length);
@@ -963,7 +999,7 @@ const WingEngine = (() => {
       // across a point-torque jump. This also handles loads close to the root.
       const gx=[.0694318442029737,.330009478207572,.669990521792428,.930568155797026],gw=[.173927422568727,.326072577431273,.326072577431273,.173927422568727];
       twist[0]=0;
-      for(let i=1;i<y.length;i++) { const h=y[i]-y[i-1];let inc=0;for(let k=0;k<4;k++){const q=y[i-1]+h*gx[k],rr=customResultants(load.items,g,q);inc+=gw[k]*(lin('xsc')(q)*rr.V-rr.X)/interpLog(q,ySec,col('GJ'));}twist[i]=twist[i-1]+h*inc; }
+      for(let i=1;i<y.length;i++) { const h=y[i]-y[i-1];let inc=0;for(let k=0;k<4;k++){const q=y[i-1]+h*gx[k],rr=customResultants(load.items,g,q);inc+=gw[k]*(lin('xsc')(q)*rr.V-rr.X)/sectionValue('GJ',q,true);}twist[i]=twist[i-1]+h*inc; }
     }
     const seamRot = [];
     for (const s of seamsActive) {
@@ -973,6 +1009,7 @@ const WingEngine = (() => {
       seamRot.push({ y: s, M: Ms, T: Ts, dtheta: dth, dphi: dph });
     }
     const deflection = cumFromRoot(slope, y);
+    const chordwiseDeflection=g.spars.length?cumFromRoot(cumFromRoot(y.map((_,i)=>-P.bendCoupling[i]*kappa[i]),y),y):new Float64Array(y.length);
     const bounds = moduleBounds(g);
     let freePlay = 0;
     if (!asm.seamsBonded)
@@ -982,12 +1019,12 @@ const WingEngine = (() => {
       });
 
     // 1-D FEM: static and modal
-    const mandatory=[0,L,...seams(g),...ribs,...loadNodes];
+    const mandatory=[0,L,...seams(g),...ribs,...loadNodes,...sparEnds];
     const regular=linspace(0,L,nElem+1).filter(v=>load.kind!=='custom'||!mandatory.some(p=>Math.abs(v-p)<.1));
     const nodeSet = new Set([...regular,...mandatory].map((v) => +v.toFixed(9)));
     const nodes = [...nodeSet].sort((a, b) => a - b);
-    const EIf = (q) => interpLog(q, ySec, col("EIf"));
-    const GJf = (q) => interpLog(q, ySec, col("GJ"));
+    const EIf = (q) => sectionValue('EIf',q,true);
+    const GJf = (q) => sectionValue('GJ',q,true);
     const mf = (q) => interp(q, y, P.mass), Ipf = (q) => interp(q, y, P.polarInertia);
     // Polynomial and table loads go through wLine (4-point Gauss, exact for these degrees because every load
     // station is an element boundary); elliptic parts get exact consistent nodal loads through wNodal.
@@ -1026,11 +1063,15 @@ const WingEngine = (() => {
 
     // stresses at limit load
     const Ep = pla.E, t = g.skin;
-    const sigTop = y.map((_, i) => -Ep * kappa[i] * (P.zTop[i] - P.zc[i]));
-    const sigBot = y.map((_, i) => -Ep * kappa[i] * (P.zBot[i] - P.zc[i]));
+    let sigTop = y.map((_, i) => -Ep * kappa[i] * (P.zTop[i] - P.zc[i]));
+    let sigBot = y.map((_, i) => -Ep * kappa[i] * (P.zBot[i] - P.zc[i]));
+    if(g.spars.length){
+      const ext=y.map((v,i)=>{const a=outerContour(g,v,49).map(([x,z])=>-Ep*kappa[i]*((z-P.zc[i])-P.bendCoupling[i]*(x-P.xc[i])));return [Math.min(...a),Math.max(...a)];});
+      sigTop=y.map((_,i)=>ext[i][0]);sigBot=y.map((_,i)=>ext[i][1]);
+    }
     const skinTop = y.map((_, i) => -Ep * kappa[i] * (P.zTop[i] - t / 2 - P.zc[i]));
     const skinBot = y.map((_, i) => -Ep * kappa[i] * (P.zBot[i] + t / 2 - P.zc[i]));
-    const skinComp = y.map((_, i) => Math.max(Math.max(-skinTop[i], 0), Math.max(-skinBot[i], 0)));
+    const skinComp = y.map((_, i) => g.spars.length?Math.max(0,-sigTop[i],-sigBot[i]):Math.max(Math.max(-skinTop[i], 0), Math.max(-skinBot[i], 0)));
     const sup = skinSupports(g);
     const bay = y.map((v) => {
       if (v >= L) return sup[sup.length - 1] - sup[sup.length - 2];
@@ -1050,12 +1091,16 @@ const WingEngine = (() => {
     } else sigRod = y.map((_, i) => rod.E * Math.abs(kappa[i]) * rr);
 
     // shear stress at analysis stations (2-D FE, away from the sharp cavity corners)
-    const tau = [], tauPeak = [];
+    const tau = [], tauPeak = [],sparStress=[];
     sections.forEach((s) => {
       const Vs = interp(s.y, y, V), Ts = interp(s.y, y, T);
       const fld = shearField(s, Vs, Ts, g);
       tau.push(fld.nominal);
       tauPeak.push(fld.peak);
+      if(s.sparNetwork){
+        const curvature=interp(s.y,y,kappa),stress=(p,E)=>-E*curvature*((p[1]-s.zc)-s.bendCoupling*(p[0]-s.xc));
+        s.sparInts.forEach(p=>{const values=p.polygon.map(v=>stress(v,p.m.E)),shear=fld.spar.filter(v=>v.index===p.index&&v.kind===p.kind).map(v=>v.tau);sparStress.push({y:s.y,index:p.index,kind:p.kind,tension:Math.max(0,...values),compression:Math.max(0,...values.map(v=>-v)),shear:Math.max(0,...shear),material:p.m});});
+      }
     });
     const tauBredt = sections.map((s) => Math.abs(interp(s.y, y, T)) / (2 * s.bredtArea * t));
 
@@ -1071,6 +1116,11 @@ const WingEngine = (() => {
     add("PLA compression (bending)", F * Math.max(comp[iC], 0), pla.fc, "MPa", y[iC], `FoS ${F} × limit stress vs compressive strength`, "strength");
     const kTau = argmaxArr(tau);
     add("PLA shear (transverse shear + torsion, 2-D FE)", F * tau[kTau], pla.fs, "MPa", ySec[kTau], "Max nominal resultant shear away from sharp cavity corners", "strength");
+    if(g.spars.length){checks.at(-1).name='Shell shear · bonded thin-wall network';checks.at(-1).basis='Equilibrium + minimum shear energy; thin-wall approximation, not local joint stress';}
+    for(let j=0;j<g.spars.length;j++)for(const kind of ['top cap','bottom cap','web'])for(const [quantity,capacity]of [['tension','ft'],['compression','fc'],['shear','fs']]){
+      const a=sparStress.filter(v=>v.index===j&&v.kind===kind),v=a.reduce((u,v)=>!u||v[quantity]>u[quantity]?v:u,null);
+      if(v)add(`Spar ${j+1} ${kind} · ${quantity}`,F*v[quantity],v.material[capacity],'MPa',v.y,quantity==='shear'?'Bonded thin-wall shear-flow network; local adhesive/runout/crippling not resolved':'Compatible elastic strain about E-weighted neutral axes; cap/web material allowable','spar');
+    }
     const ratio = y.map((_, i) => skinComp[i] / sigCr[i]);
     const iB = argmaxArr(ratio);
     add("Skin compression buckling (screening)", F * skinComp[iB], sigCr[iB], "MPa", y[iB], "max(flat plate between ribs, SP-8007 knocked-down cylinder)", "stability");
@@ -1103,6 +1153,7 @@ const WingEngine = (() => {
     add("Tip deflection at limit load", Math.abs(deflection[deflection.length - 1]), crit.maxTipDeflection, "mm", L, "Stiffness criterion (limit load, no FoS)", "stiffness");
     add("Tip twist at limit load", Math.abs((twist[twist.length - 1] * 180) / Math.PI), crit.maxTipTwist, "deg", L, "Stiffness criterion (limit load, no FoS)", "stiffness");
     const governing = checks.reduce((a, b) => (b.U > a.U ? b : a));
+    if(pla.key==='custom_shell')checks.forEach(c=>{if(c.name.startsWith('PLA '))c.name='Shell '+c.name.slice(4);});
 
     const verification = {
       rootShearError: Math.abs(V[0] - appliedForce) / Math.max(Math.abs(appliedForce), 1e-12),
@@ -1116,10 +1167,11 @@ const WingEngine = (() => {
 
     return {
       version: VERSION, geometry: g, pla, rod, assembly: asm, load, criteria: crit, sections, ySec,
-      y, props: P, w, point, V, M, T, kappa, slope, deflection, twist, fem, seamsActive, seamRot,
+      y, props: P, w, point, V, M, T, kappa, slope, deflection,chordwiseDeflection, twist, fem, seamsActive, seamRot,
       seam: { kBend, freeLength: Lf, freePlay: asm.seamsBonded ? 0 : freePlay },
       ribs, seams: seams(g), mass, stiffness, liftN, appliedForce, appliedMoment,
-      stress: { sigTop, sigBot, skinComp, sigCr, sigFlat, sigCyl, sigRod, tau, tauPeak, tauBredt },
+      stress: { sigTop, sigBot, skinComp, sigCr, sigFlat, sigCyl, sigRod, tau, tauPeak, tauBredt,spars:sparStress },
+      sparModel:g.spars.length?{method:'Bonded thin-wall beam: transformed section bending + energy-compatible shear-flow network',limitations:['Perfect continuous bond; adhesive stress and debonding not calculated','Sectionwise locally prismatic shear flow; no 3-D taper/runout stress','Cap/web local buckling, crippling and spar runout stresses unresolved','Independent normal/shear allowable checks; combined material failure interaction not resolved','Open-cap local Saint-Venant torsion neglected','Modes are uncoupled beam modes, not a coupled 3-D flutter spectrum','Mixed rod/spar joint model not validated; compare them separately'],rootNetwork:sections[0].sparNetwork.method}:null,
       checks, governing, verification, ribBearing,
     };
   }
@@ -1133,6 +1185,15 @@ const WingEngine = (() => {
   // Resultant shear stress on a section for upward shear V and nose-up torque T
   // (sectionproperties mapping: vy = −V, mzz = +T).
   function shearField(section, Vup, Tnose, g) {
+    if(section.sparNetwork){
+      const n=section.sparNetwork,a=Spars.field(n,Vup,Tnose),skin=n.edges.map((e,i)=>({e,i})).filter(v=>v.e.kind==='skin');
+      const vals=new Float64Array(section.mesh.tris.length/3);
+      for(let k=0;k<vals.length;k++){
+        const ids=[0,1,2].map(j=>section.mesh.tris[3*k+j]),x=ids.reduce((s,i)=>s+section.mesh.nodes[2*i],0)/3,z=ids.reduce((s,i)=>s+section.mesh.nodes[2*i+1],0)/3;
+        const near=skin.reduce((best,v)=>{const p=n.nodes[v.e.a],q=n.nodes[v.e.b],d=(x-(p[0]+q[0])/2)**2+(z-(p[1]+q[1])/2)**2;return !best||d<best.d?{d,i:v.i}:best;},null);vals[k]=a[near.i];
+      }
+      const max=Math.max(0,...skin.map(v=>a[v.i]));return {values:vals,nominal:max,peak:max,spar:n.edges.flatMap((e,i)=>e.index>=0&&!e.tie?[{index:e.index,kind:e.kind,tau:a[i]}]:[])};
+    }
     const fe = section.fe, mesh = section.mesh;
     const nT = mesh.tris.length / 3;
     const vals = new Float64Array(nT);
@@ -1175,6 +1236,7 @@ const WingEngine = (() => {
     makeGeometry, chordAt, seams, ribStations, moduleBounds, rodCentres, rodRadius, holeRadius, sleeveRadius,
     airfoilSurfaces, verticalOrdinates, outerContour, ringLoops, ringMesh, shellFE, analyseSection, solve,
     shearField, compareAssemblies, interp, camber, normalizeNaca, normalize, stations, warmStation, sectionAt,
+    sparParts:(g,y)=>Spars.parts(g,y,verticalOrdinates),
   };
 })();
 

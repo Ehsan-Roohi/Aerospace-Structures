@@ -817,11 +817,11 @@
       checkKeys(issues, o, p, fields);
       for (const f of fields) {
         if (!own(o, f) || o[f] === null) { out[f] = null; continue; }
-        out[f] = num(issues, o, f, p, { gt: 0, unit: 'MPa', label: 'override (null keeps the card value)' });
+        out[f] = num(issues, o, f, p, { ...(f==='nu'?{ge:0,lt:.5}:{gt:0}), unit:f==='nu'?'dimensionless':f==='rho'?'g/cm³':'MPa', label: 'override (null keeps the card value)' });
       }
       return out;
     };
-    const m = { plaKey: card('plaKey', 'pla'), plaOver: over('plaOver', ['E', 'ft', 'fc', 'fs']), rodKey: card('rodKey', 'rod'), rodOver: over('rodOver', ['E']) };
+    const m = { plaKey: card('plaKey', 'pla'), plaOver: over('plaOver', ['E', 'ft', 'fc', 'fs','rho','nu']), rodKey: card('rodKey', 'rod'), rodOver: over('rodOver', ['E']) };
     return issues.count > n0 ? undefined : m;
   }
   function checkAssembly(issues, raw, path, E) {
@@ -930,7 +930,8 @@
   function printedEngineInput(state, engine) {
     const E = engine || globalWing();
     const pla = { ...E.MATERIALS[state.plaKey] };
-    for (const k of ['E', 'ft', 'fc', 'fs']) if (state.plaOver && state.plaOver[k] > 0) pla[k] = state.plaOver[k];
+    for (const k of ['E', 'ft', 'fc', 'fs','rho']) if (state.plaOver && state.plaOver[k] > 0) pla[k] = state.plaOver[k];
+    if(state.plaOver&&state.plaOver.nu!=null)pla.nu=state.plaOver.nu;
     const rod = { ...E.MATERIALS[state.rodKey] };
     if (state.rodOver && state.rodOver.E > 0) rod.E = state.rodOver.E;
     return { geometry: clone(state.geometry), pla, rod, assembly: clone(state.assembly), load: clone(state.load), criteria: clone(state.criteria) };
@@ -997,13 +998,13 @@
     const geometry = pick(S.geometry, E.DEFAULT_GEOMETRY);
     // The engine sorts custom rib stations; the file stores them in that (canonical) order.
     if (Array.isArray(geometry.customInteriorRibs) && geometry.customInteriorRibs.every(isNum)) geometry.customInteriorRibs.sort((a, b) => a - b);
-    const over = (o, keys) => Object.fromEntries(keys.map((k) => [k, isObj(o) && isNum(o[k]) && o[k] > 0 ? o[k] : null]));
+    const over = (o, keys) => Object.fromEntries(keys.map((k) => [k, isObj(o) && isNum(o[k]) && (k==='nu'?o[k]>=0:o[k]>0) ? o[k] : null]));
     const l = { ...E.DEFAULT_LOAD, ...(isObj(S.load) ? S.load : {}) };
     const load = { kind: l.kind };
     if (own(PRINTED_LOAD_KEYS, l.kind)) for (const k of PRINTED_LOAD_KEYS[l.kind]) load[k] = k === 'items' ? (Array.isArray(l.items) ? l.items.map((it) => canonicalItemFromUi(it, true)) : clone(l.items)) : clone(l[k]);
     return {
       geometry,
-      materials: { plaKey: S.plaKey, plaOver: over(S.plaOver, ['E', 'ft', 'fc', 'fs']), rodKey: S.rodKey, rodOver: over(S.rodOver, ['E']) },
+      materials: { plaKey: S.plaKey, plaOver: over(S.plaOver, ['E', 'ft', 'fc', 'fs','rho','nu']), rodKey: S.rodKey, rodOver: over(S.rodOver, ['E']) },
       assembly: pick(S.assembly, E.DEFAULT_ASSEMBLY), load, criteria: pick(S.criteria, E.DEFAULT_CRITERIA),
     };
   }
@@ -1016,12 +1017,14 @@
     add('Structure', 'Skin / rib thickness', `${fmt(g.skin)} / ${fmt(g.ribThickness)} mm`);
     add('Structure', 'Interior ribs', g.customInteriorRibs ? (g.customInteriorRibs.length ? `custom stations ${g.customInteriorRibs.map(fmt).join(', ')} mm` : 'none (empty custom list)') : `${g.interiorRibs} requested, evenly spaced (interface ribs are added at seams)`);
     add('Structure', 'Rods', g.rodFractions.length ? `${g.rodFractions.length} × ⌀${fmt(g.rodDiameter)} mm at ${g.rodFractions.map((f) => `${fmt(f)}c`).join(', ')}; radial clearance ${fmt(g.clearance)} mm; sleeve wall ${fmt(g.sleeveWall)} mm` : 'none');
+    for(const [i,s]of (g.spars||[]).entries())add('Structure',`Bonded spar ${i+1}`,`x/c ${fmt(s.fraction)}; root-to-end ${fmt(s.length)} mm; upper cap ${fmt(s.topWidth)} × ${fmt(s.topThickness)} mm; lower cap ${fmt(s.bottomWidth)} × ${fmt(s.bottomThickness)} mm; web ${fmt(s.webThickness)} mm, skin-derived height; ${s.material.name}, E ${fmt(s.material.E)} MPa, nu ${fmt(s.material.nu)}, rho ${fmt(s.material.rho)} g/cm³, ft/fc/fs ${fmt(s.material.ft)}/${fmt(s.material.fc)}/${fmt(s.material.fs)} MPa; perfect bond, thin-wall model`);
     add('Structure', 'Other', `trailing edge ${fmt(g.te)} mm; root/tip caps ${fmt(g.cap)} mm; interface rib offset ${fmt(g.interfaceOffset)} mm; cavity ${fmt(g.cavityStart)}–${fmt(g.cavityEnd)}c`);
     const card = (key, over, fields, unit) => {
       const m = E.MATERIALS[key];
       return `${m.short || m.name}: ${fields.map((f) => `${f} ${fmt(over[f] > 0 ? over[f] : m[f])} ${unit}${over[f] > 0 ? ' (override)' : ''}`).join(', ')}`;
     };
     add('Materials', 'Shell, ribs, sleeves', card(state.plaKey, state.plaOver, ['E', 'ft', 'fc', 'fs'], 'MPa'));
+    add('Materials','Shell Poisson ratio / density',`${fmt(state.plaOver.nu!=null?state.plaOver.nu:E.MATERIALS[state.plaKey].nu)} / ${fmt(state.plaOver.rho>0?state.plaOver.rho:E.MATERIALS[state.plaKey].rho)} g/cm³`);
     add('Materials', 'Rods', card(state.rodKey, state.rodOver, ['E'], 'MPa'));
     const a = state.assembly;
     add('Joints', 'Rods in sleeves', a.rodsBonded ? 'epoxied (bonded)' : 'slip fit');

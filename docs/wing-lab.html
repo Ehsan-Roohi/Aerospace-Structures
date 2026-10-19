@@ -992,6 +992,7 @@ body { margin: 0; }
   <aside class="wl-vpanel panel" id="wingViewPanel" aria-label="View and display">
     <div class="panel-head">View &amp; display</div>
     <div class="wl-vbody">
+      <section id="wingSparResults" aria-label="Spar mechanics and results"></section>
       <div>
         <span class="wl-vlabel" id="zoomLabel">Zoom · changes the view only</span>
         <div class="wl-zoom" role="group" aria-labelledby="zoomLabel">
@@ -1022,6 +1023,7 @@ body { margin: 0; }
           <button type="button" data-anatomy="inside" aria-pressed="false">Inside wing</button>
           <button type="button" data-anatomy="ribs" aria-pressed="false">Ribs only</button>
           <button type="button" data-anatomy="rods" aria-pressed="false">Rods &amp; sleeves</button>
+          <button type="button" data-anatomy="spars" aria-pressed="false">Spars · caps &amp; webs</button>
         </div>
         <span class="wl-vlabel">Results display</span>
         <div class="hud-row">
@@ -5711,6 +5713,144 @@ const Lecture03BeamCases = Object.freeze({
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 <script>
+/* Bonded thin-wall spar sections. mm, N, MPa, g/cm3.
+ * Skin panels and spar web form a shear-flow network; caps are open panel branches.
+ * Perfect ties transfer shear without adding fictitious material. Energy minimization
+ * enforces nodal longitudinal equilibrium and torque, including closed-cell compatibility.
+ * This is a thin-wall beam model, NOT 3-D joint, adhesive, runout or buckling analysis.
+ * Network derivation: minimize 1/2 sum(q_e^2 l_e/(G_e t_e)), subject to
+ * B q = -EA_i (z_i-zbar-c(x_i-xbar)) V/EI and a.q = T about the reference.
+ * The torque row enforces closed-cell compatibility by complementary energy.
+ * Zero cross-energy between unit V and T defines the shear centre. Panel area
+ * is lumped to its end nodes for the shear-flow source; normal-stress section
+ * integrals use the actual nonoverlapping cap/web polygons. Skin is sampled
+ * to approximately 90 panels with extra cap-bond nodes. Curved caps use the
+ * horizontal median-panel idealization in shear flow. Refinement is tested.
+ * Theory context: MIT 16.20, Unit 15, Shearing and Torsion of Shell Beams:
+ * https://ocw.mit.edu/courses/16-20-structural-mechanics-fall-2002/resources/unit15/
+ */
+const WingSpars=(()=>{
+  'use strict';
+  const MAT={name:'Printed PLA · teaching input',E:2000,nu:.35,rho:1.24,ft:15,fc:50,fs:10};
+  const keys=['fraction','length','topWidth','topThickness','bottomWidth','bottomThickness','webThickness','material'];
+  const G=m=>m.E/(2*(1+m.nu));
+  function specs(raw,L){
+    if(raw==null)return [];
+    if(!Array.isArray(raw)||raw.length>2)throw Error('Use zero, one or two bonded spars.');
+    return raw.map((s,i)=>{
+      if(!s||typeof s!=='object'||Array.isArray(s)||Object.keys(s).some(k=>!keys.includes(k)))throw Error(`Spar ${i+1}: unsupported field.`);
+      const v={...s};
+      for(const k of keys.filter(k=>k!=='material'))if(!Number.isFinite(v[k])||v[k]<=0)throw Error(`Spar ${i+1}: ${k} must be finite and positive.`);
+      if(v.fraction>=1||v.length>L||v.length<Math.min(20,L))throw Error('Spar station must be inside the chord; length must be 20 mm to the semi-span (or the full shorter span).');
+      if(v.topThickness>v.topWidth/5||v.bottomThickness>v.bottomWidth/5)throw Error('Thin-wall spar caps require thickness ≤ width/5.');
+      if(v.webThickness>=Math.min(v.topWidth,v.bottomWidth))throw Error('Spar web must be narrower than both caps.');
+      const m=s.material;
+      if(!m||Object.keys(m).some(k=>!Object.keys(MAT).includes(k)))throw Error('Supply spar material name, E, nu, rho, ft, fc and fs.');
+      for(const k of ['E','rho','ft','fc','fs'])if(!Number.isFinite(m[k])||m[k]<=0)throw Error(`Spar material ${k} must be finite and positive.`);
+      if(!Number.isFinite(m.nu)||m.nu<0||m.nu>=.5)throw Error('Spar material Poisson ratio must be 0 ≤ nu < 0.5.');
+      if(typeof m.name!=='string'||!m.name.trim()||m.name.length>80)throw Error('Spar material name must contain 1–80 characters.');
+      return Object.freeze({...v,material:Object.freeze({...m})});
+    });
+  }
+  function parts(g,y,ordinates){
+    const c=g.rootChord+(g.tipChord-g.rootChord)*y/g.semiSpan,out=[];
+    (g.spars||[]).forEach((s,index)=>{
+      if(y>s.length+1e-8)return;
+      const x=s.fraction*c,top=[],bottom=[];
+      for(let j=0;j<=8;j++){
+        const xt=x+s.topWidth*(j/8-.5),xb=x+s.bottomWidth*(j/8-.5);
+        if(Math.min(xt,xb)<=g.cavityStart*c||Math.max(xt,xb)>=g.cavityEnd*c)throw Error(`Spar ${index+1} caps must fit wholly inside the cavity at y=${y.toFixed(1)} mm.`);
+        const u=ordinates(g.naca,xt/c,c,g.te).upper-g.skin;
+        const b=ordinates(g.naca,xb/c,c,g.te).lower+g.skin;
+        top.push([xt,u]);bottom.push([xb,b]);
+      }
+      const v=ordinates(g.naca,s.fraction,c,g.te),zt=v.upper-g.skin-s.topThickness/2,zb=v.lower+g.skin+s.bottomThickness/2;
+      const h=zt-zb-(s.topThickness+s.bottomThickness)/2;
+      if(h<=0||s.webThickness>h/5)throw Error(`Spar ${index+1}: positive web height and web thickness ≤ height/5 required at y=${y.toFixed(1)} mm.`);
+      const at=(line,q)=>{let i=1;while(i<line.length-1&&line[i][0]<q)i++;const a=line[i-1],b=line[i];return a[1]+(b[1]-a[1])*(q-a[0])/(b[0]-a[0]);};
+      const xl=x-s.webThickness/2,xr=x+s.webThickness/2,tu=q=>at(top,q)-s.topThickness,bl=q=>at(bottom,q)+s.bottomThickness;
+      const web=[[xl,bl(xl)],...bottom.filter(p=>p[0]>xl&&p[0]<xr).map(p=>[p[0],bl(p[0])]),[xr,bl(xr)],[xr,tu(xr)],...[...top].reverse().filter(p=>p[0]>xl&&p[0]<xr).map(p=>[p[0],tu(p[0])]),[xl,tu(xl)]];
+      const polygons=[top.concat([...top].reverse().map(([a,b])=>[a,b-s.topThickness])),bottom.concat([...bottom].reverse().map(([a,b])=>[a,b+s.bottomThickness])),web];
+      const outline=[...top,[top.at(-1)[0],tu(top.at(-1)[0])],...[...top].reverse().filter(p=>p[0]>xr&&p[0]<top.at(-1)[0]).map(p=>[p[0],tu(p[0])]),[xr,tu(xr)],[xr,bl(xr)],...bottom.filter(p=>p[0]>xr).map(p=>[p[0],bl(p[0])]),...bottom.slice().reverse(),[bottom[0][0],bl(bottom[0][0])],...bottom.filter(p=>p[0]>bottom[0][0]&&p[0]<xl).map(p=>[p[0],bl(p[0])]),[xl,bl(xl)],[xl,tu(xl)],...[...top].reverse().filter(p=>p[0]<xl).map(p=>[p[0],tu(p[0])])];
+      out.push({index,s,x,zt,zb,h,top,bottom,polygons,outline});
+    });
+    for(let i=0;i<out.length;i++)for(let j=0;j<i;j++){
+      const a=out[i],b=out[j],half=(Math.max(a.s.topWidth,a.s.bottomWidth)+Math.max(b.s.topWidth,b.s.bottomWidth))/2;
+      if(Math.abs(a.x-b.x)<=half)throw Error('Bonded spar caps must not overlap each other.');
+    }
+    return out;
+  }
+  function polygon(p){
+    const a=[0,0,0,0,0,0];
+    p.forEach(([x,z],i)=>{const [u,v]=p[(i+1)%p.length],d=x*v-u*z;a[0]+=d/2;a[1]+=(z+v)*d/6;a[2]+=(x+u)*d/6;a[3]+=(z*z+z*v+v*v)*d/12;a[4]+=(x*x+x*u+u*u)*d/12;a[5]+=(2*x*z+x*v+u*z+2*u*v)*d/24;});
+    return a[0]<0?a.map(v=>-v):a;
+  }
+  function linearSolve(A,b){
+    const n=b.length,L=Array.from({length:n},()=>new Float64Array(n));
+    for(let i=0;i<n;i++)for(let j=0;j<=i;j++){let s=A[i][j];for(let k=0;k<j;k++)s-=L[i][k]*L[j][k];if(i===j){if(!(s>1e-18))throw Error('Disconnected or degenerate spar shear-flow network.');L[i][j]=Math.sqrt(s);}else L[i][j]=s/L[j][j];}
+    const y=new Float64Array(n),x=new Float64Array(n);
+    for(let i=0;i<n;i++){let s=b[i];for(let j=0;j<i;j++)s-=L[i][j]*y[j];y[i]=s/L[i][i];}
+    for(let i=n-1;i>=0;i--){let s=y[i];for(let j=i+1;j<n;j++)s-=L[j][i]*x[j];x[i]=s/L[i][i];}return x;
+  }
+  function network(inner,outer,pla,ps,resolution=90){
+    const nodes=[],edges=[],EA=[];
+    const node=(p)=>{nodes.push(p);EA.push(0);return nodes.length-1;};
+    const edge=(a,b,t,m,kind,index=-1,tie=false)=>{
+      const p=nodes[a],q=nodes[b],l=Math.hypot(q[0]-p[0],q[1]-p[1]);if(l<1e-8)return;
+      edges.push({a,b,t,m,l,kind,index,tie});if(!tie){EA[a]+=m.E*t*l/2;EA[b]+=m.E*t*l/2;}
+    };
+    // Keep roughly 90 skin edges; section resolution is independent of beam-element count.
+    const stride=Math.max(1,Math.floor(inner.length/resolution)),ids=[];
+    for(let i=0;i<inner.length;i+=stride)ids.push(i);
+    ids.forEach(i=>node([(inner[i][0]+outer[i][0])/2,(inner[i][1]+outer[i][1])/2]));
+    ids.forEach((i,k)=>{const j=ids[(k+1)%ids.length],poly=[];let v=i;while(v!==j){poly.push(outer[v]);v=(v+1)%inner.length;}poly.push(outer[j],inner[j]);v=(j-1+inner.length)%inner.length;while(v!==i){poly.push(inner[v]);v=(v-1+inner.length)%inner.length;}poly.push(inner[i]);const a=polygon(poly)[0],p=nodes[k],q=nodes[(k+1)%ids.length],l=Math.hypot(q[0]-p[0],q[1]-p[1]);edge(k,(k+1)%ids.length,a/l,pla,'skin');});
+    ps.forEach(p=>{
+      const m=p.s.material,ut=node([p.x,p.zt]),lt=node([p.x,p.zb]);
+      const attach=(id,upper)=>{
+        const x=nodes[id][0],ei=edges.findIndex(e=>e.kind==='skin'&&((nodes[e.a][1]+nodes[e.b][1])/2>(p.zt+p.zb)/2)===upper&&x>=Math.min(nodes[e.a][0],nodes[e.b][0])-1e-9&&x<=Math.max(nodes[e.a][0],nodes[e.b][0])+1e-9);
+        if(ei<0)throw Error('Spar cap has no matching bonded skin panel.');
+        const e=edges[ei],a=nodes[e.a],b=nodes[e.b],u=(x-a[0])/(b[0]-a[0]);let to;
+        if(u<1e-8)to=e.a;else if(u>1-1e-8)to=e.b;else{
+          to=node([x,a[1]+u*(b[1]-a[1])]);edges.splice(ei,1);EA[e.a]-=e.m.E*e.t*e.l/2;EA[e.b]-=e.m.E*e.t*e.l/2;
+          edge(e.a,to,e.t,e.m,'skin');edge(to,e.b,e.t,e.m,'skin');
+        }
+        edge(id,to,1,m,'bond',p.index,true);
+      };
+      attach(ut,true);attach(lt,false);
+      // Cap branches include independent upper/lower dimensions; the web excludes cap thickness.
+      for(const [mid,width,t,kind] of [[ut,p.s.topWidth,p.s.topThickness,'top cap'],[lt,p.s.bottomWidth,p.s.bottomThickness,'bottom cap']])for(const sign of [-1,1]){
+        const base=nodes[mid],a=node([base[0]+sign*width/4,base[1]]),b=node([base[0]+sign*width/2,base[1]]);edge(mid,a,t,m,kind,p.index);edge(a,b,t,m,kind,p.index);attach(a,mid===ut);attach(b,mid===ut);
+      }
+      const lo=node([p.x,p.zb+p.s.bottomThickness/2]),hi=node([p.x,p.zt-p.s.topThickness/2]);
+      edge(lt,lo,1,m,'bond',p.index,true);edge(hi,ut,1,m,'bond',p.index,true);
+      edge(lo,hi,p.s.webThickness,m,'web',p.index);
+    });
+    let sum=EA.reduce((a,b)=>a+b,0),xc=0,zc=0;
+    EA.forEach((a,i)=>{xc+=a*nodes[i][0]/sum;zc+=a*nodes[i][1]/sum;});
+    let Izz=0,Ixx=0,Ixz=0;EA.forEach((a,i)=>{const x=nodes[i][0]-xc,z=nodes[i][1]-zc;Izz+=a*z*z;Ixx+=a*x*x;Ixz+=a*x*z;});
+    const coupling=Ixz/Ixx,EI=Izz-Ixz*coupling,N=nodes.length,K=Array.from({length:N},()=>new Float64Array(N));
+    const maxC=Math.max(...edges.filter(e=>!e.tie).map(e=>G(e.m)*e.t/e.l));
+    edges.forEach(e=>{
+      e.c=e.tie?maxC*1e4:G(e.m)*e.t/e.l;
+      const a=nodes[e.a],b=nodes[e.b];e.torque=(a[0]-xc)*(b[1]-a[1])-(a[1]-zc)*(b[0]-a[0]);
+      e.row=[];if(e.a<N-1)e.row.push([e.a,1]);if(e.b<N-1)e.row.push([e.b,-1]);e.row.push([N-1,e.torque]);
+      for(const [i,v]of e.row)for(const [j,w]of e.row)K[i][j]+=e.c*v*w;
+    });
+    const bV=new Float64Array(N),bT=new Float64Array(N);bT[N-1]=1;
+    for(let i=0;i<N-1;i++)bV[i]=-EA[i]*((nodes[i][1]-zc)-coupling*(nodes[i][0]-xc))/EI;
+    const flow=b=>{const u=linearSolve(K,b);return edges.map(e=>e.c*e.row.reduce((a,[i,v])=>a+v*u[i],0));};
+    const qV=flow(bV),qT=flow(bT),dot=(a,b)=>edges.reduce((s,e,i)=>s+a[i]*b[i]/e.c,0);
+    const fTT=dot(qT,qT),offset=-dot(qV,qT)/fTT,qVs=qV.map((v,i)=>v+offset*qT[i]);
+    const resultants=q=>edges.reduce((s,e,i)=>{const a=nodes[e.a],b=nodes[e.b];s[0]+=q[i]*(b[0]-a[0]);s[1]+=q[i]*(b[1]-a[1]);s[2]+=q[i]*e.torque;return s;},[0,0,0]);
+    const residual=(q,b)=>{const r=new Float64Array(N);edges.forEach((e,i)=>e.row.forEach(([j,v])=>r[j]+=q[i]*v));return Math.max(...r.map((v,i)=>Math.abs(v-b[i])));};
+    const loadV=Float64Array.from(bV);loadV[N-1]=offset;
+    return {nodes,edges,qV:qVs,qT,GJ:1/fTT,xsc:xc+offset,zsc:zc,referenceX:xc,unitV:resultants(qVs),unitT:resultants(qT),coupling,energyVT:dot(qVs,qT),residualV:residual(qVs,loadV),residualT:residual(qT,bT),method:'bonded thin-wall shear-flow network; cap-local Saint-Venant torsion neglected'};
+  }
+  function field(net,V,T){return net.edges.map((e,i)=>e.tie?0:Math.abs(-V*net.qV[i]+T*net.qT[i])/e.t);}
+  return {MAT,specs,parts,polygon,network,field,G};
+})();
+if(typeof module!=='undefined'&&module.exports)module.exports=WingSpars;
+
 /*
  * MIE 446 Wing Lab — structural engine.
  * JavaScript port of computational/printed-wing-solver/printed_wing_solver.py (tested Python solver).
@@ -5735,12 +5875,14 @@ const Lecture03BeamCases = Object.freeze({
 const WingEngine = (() => {
   "use strict";
   const Profiles = typeof LoadProfiles !== "undefined" ? LoadProfiles : (typeof require === "function" ? require("./load_profiles.js") : null);
+  const Spars = typeof WingSpars !== 'undefined' ? WingSpars : (typeof require === 'function' ? require('./wing_spars.js') : null);
   if (!Profiles) throw new Error("Load load_profiles.js before engine.js.");
   const GRAV = 9.81;
-  const VERSION = "1.0.0";
+  const VERSION = "1.1.0";
 
   // ------------------------------------------------------------------ materials
   const MATERIALS = {
+    custom_shell:{key:'custom_shell',kind:'pla',name:'Custom effective shell / rib material',short:'Custom shell',E:2000,nu:.35,rho:1.24,ft:15,fc:50,fs:10,G:null,source:'User-supplied effective isotropic beam properties. Initial numbers are PLA teaching placeholders, not certified properties; replace E, nu, density and allowables before material comparisons.'},
     pla_upright: {
       key: "pla_upright", kind: "pla", name: "Printed PLA Pro — span along printer Z",
       short: "PLA upright", E: 2000, nu: 0.35, rho: 1.24, ft: 15, fc: 50, fs: 10, G: null,
@@ -5806,6 +5948,7 @@ const WingEngine = (() => {
     naca: "2412", semiSpan: 450, rootChord: 160, tipChord: 100, skin: 1.2, ribThickness: 1.6,
     modules: 3, te: 1.2, interiorRibs: 3, customInteriorRibs: null, interfaceOffset: 4, cap: 2, cavityStart: 0.06,
     cavityEnd: 0.9, rodFractions: [0.3, 0.6], rodDiameter: 4, clearance: 0.25, sleeveWall: 1.2,
+    spars: [],
   };
 
   function normalizeNaca(code) {
@@ -5821,9 +5964,12 @@ const WingEngine = (() => {
     const g = { ...DEFAULT_GEOMETRY, ...opts };
     g.naca = normalizeNaca(g.naca);
     g.rodFractions = [...g.rodFractions];
+    g.spars = Spars.specs(g.spars,g.semiSpan);
+    if(g.spars.length&&g.rodFractions.length)throw new Error('Compare shell + rods and shell + bonded spars separately: mixed rod/spar connections are not validated in this model. Remove rods before adding a spar.');
     if (g.rodFractions.some(f => !Number.isFinite(f) || f <= 0 || f >= 1)) throw new Error("Rod positions must be fractions between 0 and 1.");
     const pos = ["semiSpan", "rootChord", "tipChord", "skin", "ribThickness", "te", "cap", "rodDiameter", "sleeveWall"];
-    for (const k of pos) if (!(g[k] > 0)) throw new Error(`${k} must be positive.`);
+    for (const k of pos) if (!Number.isFinite(g[k])||!(g[k] > 0)) throw new Error(`${k} must be positive and finite.`);
+    if(!Number.isFinite(g.cavityStart)||!Number.isFinite(g.cavityEnd)||g.cavityStart<=0||g.cavityEnd>=1||g.cavityStart>=g.cavityEnd)throw new Error('Cavity limits must satisfy 0 < start < end < 1.');
     if (g.tipChord > g.rootChord) throw new Error("Tip chord cannot exceed root chord.");
     if (![1, 2, 3].includes(+g.modules)) throw new Error("Use 1, 2 or 3 modules.");
     if (g.interfaceOffset <= g.ribThickness) throw new Error("Interface rib offset must exceed rib thickness.");
@@ -5846,6 +5992,7 @@ const WingEngine = (() => {
       }
       g.customInteriorRibs = Object.freeze(ribs);
     }
+    if(g.spars.length)for(let i=0;i<=32;i++)Spars.parts(g,g.semiSpan*i/32,verticalOrdinates);
     return Object.freeze(g);
   }
 
@@ -6194,7 +6341,9 @@ const WingEngine = (() => {
   // Geometry-only part of a section (mesh, warping FE, Bredt check): cached by geometry and station.
   const geoCache = new Map();
   function geometricSection(g, y, layers = 4) {
-    const key = JSON.stringify([g, y, layers]);
+    // Warping mesh depends only on this shell outline, not on spar materials,
+    // rods, rib layout or module labels. Reuse exactly the same immutable FE data.
+    const key = JSON.stringify([g.naca,chordAt(g,y),g.skin,g.te,g.cavityStart,g.cavityEnd,layers]);
     if (!geoCache.has(key)) {
       if (geoCache.size > 120) geoCache.clear();
       const loops = ringLoops(g, y);
@@ -6212,11 +6361,13 @@ const WingEngine = (() => {
     const shellInt = [fe.A, fe.A * fe.zc, fe.A * fe.xc, fe.Ixx + fe.A * fe.zc ** 2, fe.Iyy + fe.A * fe.xc ** 2, fe.Ixy + fe.A * fe.xc * fe.zc];
     const sleeveInts = centres.map((cc) => annulusIntegrals(cc, Rs, rh));
     const rodInts = centres.map((cc) => diskIntegrals(cc, rr));
+    const sparParts=Spars.parts(g,y,verticalOrdinates),sparInts=sparParts.flatMap(p=>p.polygons.map((polygon,k)=>({index:p.index,kind:['top cap','bottom cap','web'][k],m:p.s.material,polygon,int:polyIntegrals(polygon)})));
     const sums = [0, 0, 0, 0, 0, 0];
     const add = (arr, E) => arr.forEach((v, i) => (sums[i] += E * v));
     add(shellInt, Ep);
     sleeveInts.forEach((s) => add(s, Ep));
     if (asm.rodsBonded) rodInts.forEach((s) => add(s, Er));
+    sparInts.forEach(s=>add(s.int,s.m.E));
     const EA = sums[0], zc = sums[1] / EA, xc = sums[2] / EA;
     let EIf = sums[3] - EA * zc * zc, EIc = sums[4] - EA * xc * xc;
     const EIxz = sums[5] - EA * xc * zc;
@@ -6227,17 +6378,22 @@ const WingEngine = (() => {
     const Jfloat = centres.length * (Math.PI / 2) * (Rs ** 4 - rh ** 4);
     let GJ = shearModulus(pla) * (fe.J + Jfloat);
     if (asm.rodsBonded) GJ += centres.length * shearModulus(rod) * (Math.PI * g.rodDiameter ** 4) / 32;
+    const sparNetwork=sparParts.length?Spars.network(loops.inner,loops.outer,pla,sparParts):null;
+    const bendCoupling=sparNetwork?EIxz/EIc:0;
+    if(sparNetwork){EIf-=EIxz*EIxz/EIc;GJ=sparNetwork.GJ;}
+    const xsc=sparNetwork?sparNetwork.xsc:fe.xsc,zsc=sparNetwork?sparNetwork.zsc:fe.zsc;
     // mass, centre of gravity and polar mass moment about the shear centre (g/mm, g·mm²/mm)
     const rp = pla.rho * 1e-3, rr_ = rod.rho * 1e-3;
     const plaInt = shellInt.map((v, i) => v + sleeveInts.reduce((s, a) => s + a[i], 0));
     const rodInt = rodInts.reduce((s, a) => s.map((v, i) => v + a[i]), [0, 0, 0, 0, 0, 0]);
-    const mass = rp * plaInt[0] + rr_ * rodInt[0];
-    const cgx = (rp * plaInt[2] + rr_ * rodInt[2]) / mass;
-    const polar = (I) => I[4] - 2 * fe.xsc * I[2] + fe.xsc ** 2 * I[0] + (I[3] - 2 * fe.zsc * I[1] + fe.zsc ** 2 * I[0]);
-    const polarInertia = rp * polar(plaInt) + rr_ * polar(rodInt);
+    const sparMass=sparInts.reduce((a,s)=>a+s.m.rho*1e-3*s.int[0],0);
+    const mass = rp * plaInt[0] + rr_ * rodInt[0]+sparMass;
+    const cgx = (rp * plaInt[2] + rr_ * rodInt[2]+sparInts.reduce((a,s)=>a+s.m.rho*1e-3*s.int[2],0)) / mass;
+    const polar = (I) => I[4] - 2 * xsc * I[2] + xsc ** 2 * I[0] + (I[3] - 2 * zsc * I[1] + zsc ** 2 * I[0]);
+    const polarInertia = rp * polar(plaInt) + rr_ * polar(rodInt)+sparInts.reduce((a,s)=>a+s.m.rho*1e-3*polar(s.int),0);
     const outerInt = polyIntegrals(outer);
     const holeInt = centres.map((cc) => diskIntegrals(cc, rh)).reduce((s, a) => s.map((v, i) => v + a[i]), [0, 0, 0, 0, 0, 0]);
-    const ribInt = outerInt.map((v, i) => v - holeInt[i]);
+    const ribInt = outerInt.map((v, i) => v - holeInt[i]-sparInts.reduce((a,s)=>a+s.int[i],0));
     const ribExtra = ribInt[0] - plaInt[0];
     let zTop = -Infinity, zBot = Infinity;
     for (const p of outer) { zTop = Math.max(zTop, p[1]); zBot = Math.min(zBot, p[1]); }
@@ -6250,7 +6406,8 @@ const WingEngine = (() => {
     const radius = circleRadius(us[0], us[us.length >> 1], us[us.length - 1]);
     return {
       y, chord: loops.chord, EA, xc, zc, EIf, EIc, EIxz, principal, EIrods, GJ, Jfe: fe.J, Jbredt: bredt.J,
-      bredtArea: bredt.Am, xsc: fe.xsc, zsc: fe.zsc, mass, cgx, polarInertia, zTop, zBot,
+      bredtArea: bredt.Am, xsc, zsc, mass, cgx, polarInertia, zTop, zBot,
+      sparParts,sparInts,sparMass,sparNetwork,bendCoupling,
       plaArea: plaInt[0], shellArea: fe.A, rodArea: rodInt[0], ribExtra, ribCgx: ribInt[2] / ribInt[0],
       ribPolar: polar(ribInt), skinWidth: width, skinRadius: radius, mesh, fe, corners: loops.corners,
       outer, centres, Rs, rh, rr,
@@ -6485,8 +6642,11 @@ const WingEngine = (() => {
   function normalize(input = {}) {
     const g = makeGeometry(input.geometry || {});
     const pla = { ...MATERIALS.pla_upright, ...(input.pla || {}) };
+    for(const k of ['E','rho','ft','fc','fs'])if(!Number.isFinite(pla[k])||pla[k]<=0)throw new Error(`Shell material ${k} must be finite and positive.`);
+    if(!Number.isFinite(pla.nu)||pla.nu<0||pla.nu>=.5)throw new Error('Shell material nu must be 0 ≤ nu < 0.5.');
     const rod = { ...MATERIALS.rod_hobby, ...(input.rod || {}) };
     const asm = { ...DEFAULT_ASSEMBLY, ...(input.assembly || {}) };
+    if(g.spars.length&&!asm.seamsBonded&&seams(g).length)throw new Error('Bonded spars require bonded module seams (or a one-piece shell). Dry-seam joint mechanics with spars are not validated.');
     const load = { ...DEFAULT_LOAD, ...(input.load || {}) };
     if (!g.rodFractions.length && !asm.seamsBonded && seams(g).length)
       throw new Error("Removing every rod from a dry multi-module joint disconnects the wing. Use the one-piece teaching wing or explicitly model bonded seams.");
@@ -6497,8 +6657,13 @@ const WingEngine = (() => {
       for(let i=1;i<essential.length;i++) if(essential[i]-essential[i-1]<.1-1e-8) throw new Error("Keep distinct wing load boundaries at least 0.1 mm from each other, ribs, seams and ends, or use exactly the same station. This avoids degenerate beam elements.");
     }
     const crit = { ...DEFAULT_CRITERIA, ...(input.criteria || {}) };
+    if(g.spars.length){
+      const xs=[...new Set([0,g.semiSpan,...seams(g),...ribStations(g),...g.spars.map(s=>s.length),...(load.kind==='custom'?load.items.flatMap(p=>loadStations(p,g.semiSpan)):[])])].sort((a,b)=>a-b);
+      for(let i=1;i<xs.length;i++)if(xs[i]-xs[i-1]<.1-1e-8)throw new Error('Keep distinct spar ends at least 0.1 mm from loads, ribs, seams and each other, or use exactly the same station.');
+    }
     const nSections = input.nSections || 7;
-    const ySec = linspace(0, 0.95 * g.semiSpan, nSections);
+    const ends=g.spars.filter(s=>s.length<g.semiSpan).flatMap(s=>[s.length,Math.min(g.semiSpan,s.length+.001)]);
+    const ySec = [...new Set([...linspace(0, 0.95 * g.semiSpan, nSections),...ends,...(g.spars.length?[g.semiSpan]:[])])].sort((a,b)=>a-b);
     return { g, pla, rod, asm, load, crit, nSections, ySec };
   }
   function validateLoads(items, L) {
@@ -6588,14 +6753,24 @@ const WingEngine = (() => {
     const sections = ySec.map((y) => cachedSection(g, pla, rod, asm, y));
     const col = (k) => sections.map((s) => s[k]);
     const loadNodes = load.kind === "custom" ? load.items.flatMap(p => loadStations(p, L)) : [];
-    const yset = new Set([...linspace(0, L, nGrid), ...seams(g), ...ribs, ...loadNodes].map((v) => +v.toFixed(9)));
+    const sparEnds=g.spars.map(s=>s.length);
+    const yset = new Set([...linspace(0, L, nGrid), ...seams(g), ...ribs, ...loadNodes,...sparEnds].map((v) => +v.toFixed(9)));
     const y = Float64Array.from([...yset].sort((a, b) => a - b));
-    const lin = (k) => (yy) => interpLin(yy, ySec, col(k));
+    // Never smear a spar runout into the next bay: interpolate only within the
+    // same active-spar segment. End values are inboard limits.
+    const active=q=>g.spars.map(s=>q<=s.length+1e-8?1:0).join('');
+    const sectionValue=(k,q,log=false)=>{
+      if(!g.spars.length)return log?interpLog(q,ySec,col(k)):interpLin(q,ySec,col(k));
+      const ids=ySec.map((v,i)=>active(v)===active(q)?i:-1).filter(i=>i>=0),xp=ids.map(i=>ySec[i]),fp=ids.map(i=>sections[i][k]);
+      if(!ids.length)throw Error('No section in the spar segment.');
+      return log?Math.exp(interp(q,xp,fp.map(Math.log))):interp(q,xp,fp);
+    };
+    const lin = (k) => (yy) => sectionValue(k,yy);
     const P = {};
     P.chord = y.map((v) => chordAt(g, v));
-    for (const k of ["xsc", "xc", "zc", "zTop", "zBot", "mass", "cgx", "polarInertia", "skinWidth", "skinRadius", "EIrods", "rodArea"]) P[k] = y.map(lin(k));
-    P.EI = y.map((v) => interpLog(v, ySec, col("EIf")));
-    P.GJ = y.map((v) => interpLog(v, ySec, col("GJ")));
+    for (const k of ["xsc", "xc", "zc", "zTop", "zBot", "mass", "cgx", "polarInertia", "skinWidth", "skinRadius", "EIrods", "rodArea","sparMass","bendCoupling"]) P[k] = y.map(lin(k));
+    P.EI = y.map((v) => sectionValue('EIf',v,true));
+    P.GJ = y.map((v) => sectionValue('GJ',v,true));
 
     // mass
     const rho = pla.rho * 1e-3;
@@ -6603,14 +6778,15 @@ const WingEngine = (() => {
     const ribCg = ribs.map((r) => lin("ribCgx")(r));
     const ribPolar = ribs.map((r) => rho * g.ribThickness * lin("ribPolar")(r));
     const capMass = [0, L].map((r) => rho * g.cap * lin("ribExtra")(r));
-    const plaLine = y.map((v, i) => P.mass[i] - rod.rho * 1e-3 * P.rodArea[i]);
+    const plaLine = y.map((v, i) => P.mass[i] - rod.rho * 1e-3 * P.rodArea[i]-P.sparMass[i]);
     const shellMass = trapz(plaLine, y);
     const rodsMass = rod.rho * 1e-3 * g.rodFractions.length * Math.PI * rodRadius(g) ** 2 * L;
     const mass = { shell: shellMass, ribs: ribMass.reduce((a, b) => a + b, 0), caps: capMass[0] + capMass[1] };
     mass.printed = mass.shell + mass.ribs + mass.caps;
     mass.rods = rodsMass;
+    mass.spars=trapz(P.sparMass,y);
     mass.tip = load.tipMass;
-    mass.total = mass.printed + mass.rods + load.tipMass;
+    mass.total = mass.printed + mass.rods + mass.spars + load.tipMass;
 
     // loads (upward +, N/mm and N)
     let w = new Float64Array(y.length), wx = new Float64Array(y.length);
@@ -6676,7 +6852,7 @@ const WingEngine = (() => {
       // across a point-torque jump. This also handles loads close to the root.
       const gx=[.0694318442029737,.330009478207572,.669990521792428,.930568155797026],gw=[.173927422568727,.326072577431273,.326072577431273,.173927422568727];
       twist[0]=0;
-      for(let i=1;i<y.length;i++) { const h=y[i]-y[i-1];let inc=0;for(let k=0;k<4;k++){const q=y[i-1]+h*gx[k],rr=customResultants(load.items,g,q);inc+=gw[k]*(lin('xsc')(q)*rr.V-rr.X)/interpLog(q,ySec,col('GJ'));}twist[i]=twist[i-1]+h*inc; }
+      for(let i=1;i<y.length;i++) { const h=y[i]-y[i-1];let inc=0;for(let k=0;k<4;k++){const q=y[i-1]+h*gx[k],rr=customResultants(load.items,g,q);inc+=gw[k]*(lin('xsc')(q)*rr.V-rr.X)/sectionValue('GJ',q,true);}twist[i]=twist[i-1]+h*inc; }
     }
     const seamRot = [];
     for (const s of seamsActive) {
@@ -6686,6 +6862,7 @@ const WingEngine = (() => {
       seamRot.push({ y: s, M: Ms, T: Ts, dtheta: dth, dphi: dph });
     }
     const deflection = cumFromRoot(slope, y);
+    const chordwiseDeflection=g.spars.length?cumFromRoot(cumFromRoot(y.map((_,i)=>-P.bendCoupling[i]*kappa[i]),y),y):new Float64Array(y.length);
     const bounds = moduleBounds(g);
     let freePlay = 0;
     if (!asm.seamsBonded)
@@ -6695,12 +6872,12 @@ const WingEngine = (() => {
       });
 
     // 1-D FEM: static and modal
-    const mandatory=[0,L,...seams(g),...ribs,...loadNodes];
+    const mandatory=[0,L,...seams(g),...ribs,...loadNodes,...sparEnds];
     const regular=linspace(0,L,nElem+1).filter(v=>load.kind!=='custom'||!mandatory.some(p=>Math.abs(v-p)<.1));
     const nodeSet = new Set([...regular,...mandatory].map((v) => +v.toFixed(9)));
     const nodes = [...nodeSet].sort((a, b) => a - b);
-    const EIf = (q) => interpLog(q, ySec, col("EIf"));
-    const GJf = (q) => interpLog(q, ySec, col("GJ"));
+    const EIf = (q) => sectionValue('EIf',q,true);
+    const GJf = (q) => sectionValue('GJ',q,true);
     const mf = (q) => interp(q, y, P.mass), Ipf = (q) => interp(q, y, P.polarInertia);
     // Polynomial and table loads go through wLine (4-point Gauss, exact for these degrees because every load
     // station is an element boundary); elliptic parts get exact consistent nodal loads through wNodal.
@@ -6739,11 +6916,15 @@ const WingEngine = (() => {
 
     // stresses at limit load
     const Ep = pla.E, t = g.skin;
-    const sigTop = y.map((_, i) => -Ep * kappa[i] * (P.zTop[i] - P.zc[i]));
-    const sigBot = y.map((_, i) => -Ep * kappa[i] * (P.zBot[i] - P.zc[i]));
+    let sigTop = y.map((_, i) => -Ep * kappa[i] * (P.zTop[i] - P.zc[i]));
+    let sigBot = y.map((_, i) => -Ep * kappa[i] * (P.zBot[i] - P.zc[i]));
+    if(g.spars.length){
+      const ext=y.map((v,i)=>{const a=outerContour(g,v,49).map(([x,z])=>-Ep*kappa[i]*((z-P.zc[i])-P.bendCoupling[i]*(x-P.xc[i])));return [Math.min(...a),Math.max(...a)];});
+      sigTop=y.map((_,i)=>ext[i][0]);sigBot=y.map((_,i)=>ext[i][1]);
+    }
     const skinTop = y.map((_, i) => -Ep * kappa[i] * (P.zTop[i] - t / 2 - P.zc[i]));
     const skinBot = y.map((_, i) => -Ep * kappa[i] * (P.zBot[i] + t / 2 - P.zc[i]));
-    const skinComp = y.map((_, i) => Math.max(Math.max(-skinTop[i], 0), Math.max(-skinBot[i], 0)));
+    const skinComp = y.map((_, i) => g.spars.length?Math.max(0,-sigTop[i],-sigBot[i]):Math.max(Math.max(-skinTop[i], 0), Math.max(-skinBot[i], 0)));
     const sup = skinSupports(g);
     const bay = y.map((v) => {
       if (v >= L) return sup[sup.length - 1] - sup[sup.length - 2];
@@ -6763,12 +6944,16 @@ const WingEngine = (() => {
     } else sigRod = y.map((_, i) => rod.E * Math.abs(kappa[i]) * rr);
 
     // shear stress at analysis stations (2-D FE, away from the sharp cavity corners)
-    const tau = [], tauPeak = [];
+    const tau = [], tauPeak = [],sparStress=[];
     sections.forEach((s) => {
       const Vs = interp(s.y, y, V), Ts = interp(s.y, y, T);
       const fld = shearField(s, Vs, Ts, g);
       tau.push(fld.nominal);
       tauPeak.push(fld.peak);
+      if(s.sparNetwork){
+        const curvature=interp(s.y,y,kappa),stress=(p,E)=>-E*curvature*((p[1]-s.zc)-s.bendCoupling*(p[0]-s.xc));
+        s.sparInts.forEach(p=>{const values=p.polygon.map(v=>stress(v,p.m.E)),shear=fld.spar.filter(v=>v.index===p.index&&v.kind===p.kind).map(v=>v.tau);sparStress.push({y:s.y,index:p.index,kind:p.kind,tension:Math.max(0,...values),compression:Math.max(0,...values.map(v=>-v)),shear:Math.max(0,...shear),material:p.m});});
+      }
     });
     const tauBredt = sections.map((s) => Math.abs(interp(s.y, y, T)) / (2 * s.bredtArea * t));
 
@@ -6784,6 +6969,11 @@ const WingEngine = (() => {
     add("PLA compression (bending)", F * Math.max(comp[iC], 0), pla.fc, "MPa", y[iC], `FoS ${F} × limit stress vs compressive strength`, "strength");
     const kTau = argmaxArr(tau);
     add("PLA shear (transverse shear + torsion, 2-D FE)", F * tau[kTau], pla.fs, "MPa", ySec[kTau], "Max nominal resultant shear away from sharp cavity corners", "strength");
+    if(g.spars.length){checks.at(-1).name='Shell shear · bonded thin-wall network';checks.at(-1).basis='Equilibrium + minimum shear energy; thin-wall approximation, not local joint stress';}
+    for(let j=0;j<g.spars.length;j++)for(const kind of ['top cap','bottom cap','web'])for(const [quantity,capacity]of [['tension','ft'],['compression','fc'],['shear','fs']]){
+      const a=sparStress.filter(v=>v.index===j&&v.kind===kind),v=a.reduce((u,v)=>!u||v[quantity]>u[quantity]?v:u,null);
+      if(v)add(`Spar ${j+1} ${kind} · ${quantity}`,F*v[quantity],v.material[capacity],'MPa',v.y,quantity==='shear'?'Bonded thin-wall shear-flow network; local adhesive/runout/crippling not resolved':'Compatible elastic strain about E-weighted neutral axes; cap/web material allowable','spar');
+    }
     const ratio = y.map((_, i) => skinComp[i] / sigCr[i]);
     const iB = argmaxArr(ratio);
     add("Skin compression buckling (screening)", F * skinComp[iB], sigCr[iB], "MPa", y[iB], "max(flat plate between ribs, SP-8007 knocked-down cylinder)", "stability");
@@ -6816,6 +7006,7 @@ const WingEngine = (() => {
     add("Tip deflection at limit load", Math.abs(deflection[deflection.length - 1]), crit.maxTipDeflection, "mm", L, "Stiffness criterion (limit load, no FoS)", "stiffness");
     add("Tip twist at limit load", Math.abs((twist[twist.length - 1] * 180) / Math.PI), crit.maxTipTwist, "deg", L, "Stiffness criterion (limit load, no FoS)", "stiffness");
     const governing = checks.reduce((a, b) => (b.U > a.U ? b : a));
+    if(pla.key==='custom_shell')checks.forEach(c=>{if(c.name.startsWith('PLA '))c.name='Shell '+c.name.slice(4);});
 
     const verification = {
       rootShearError: Math.abs(V[0] - appliedForce) / Math.max(Math.abs(appliedForce), 1e-12),
@@ -6829,10 +7020,11 @@ const WingEngine = (() => {
 
     return {
       version: VERSION, geometry: g, pla, rod, assembly: asm, load, criteria: crit, sections, ySec,
-      y, props: P, w, point, V, M, T, kappa, slope, deflection, twist, fem, seamsActive, seamRot,
+      y, props: P, w, point, V, M, T, kappa, slope, deflection,chordwiseDeflection, twist, fem, seamsActive, seamRot,
       seam: { kBend, freeLength: Lf, freePlay: asm.seamsBonded ? 0 : freePlay },
       ribs, seams: seams(g), mass, stiffness, liftN, appliedForce, appliedMoment,
-      stress: { sigTop, sigBot, skinComp, sigCr, sigFlat, sigCyl, sigRod, tau, tauPeak, tauBredt },
+      stress: { sigTop, sigBot, skinComp, sigCr, sigFlat, sigCyl, sigRod, tau, tauPeak, tauBredt,spars:sparStress },
+      sparModel:g.spars.length?{method:'Bonded thin-wall beam: transformed section bending + energy-compatible shear-flow network',limitations:['Perfect continuous bond; adhesive stress and debonding not calculated','Sectionwise locally prismatic shear flow; no 3-D taper/runout stress','Cap/web local buckling, crippling and spar runout stresses unresolved','Independent normal/shear allowable checks; combined material failure interaction not resolved','Open-cap local Saint-Venant torsion neglected','Modes are uncoupled beam modes, not a coupled 3-D flutter spectrum','Mixed rod/spar joint model not validated; compare them separately'],rootNetwork:sections[0].sparNetwork.method}:null,
       checks, governing, verification, ribBearing,
     };
   }
@@ -6846,6 +7038,15 @@ const WingEngine = (() => {
   // Resultant shear stress on a section for upward shear V and nose-up torque T
   // (sectionproperties mapping: vy = −V, mzz = +T).
   function shearField(section, Vup, Tnose, g) {
+    if(section.sparNetwork){
+      const n=section.sparNetwork,a=Spars.field(n,Vup,Tnose),skin=n.edges.map((e,i)=>({e,i})).filter(v=>v.e.kind==='skin');
+      const vals=new Float64Array(section.mesh.tris.length/3);
+      for(let k=0;k<vals.length;k++){
+        const ids=[0,1,2].map(j=>section.mesh.tris[3*k+j]),x=ids.reduce((s,i)=>s+section.mesh.nodes[2*i],0)/3,z=ids.reduce((s,i)=>s+section.mesh.nodes[2*i+1],0)/3;
+        const near=skin.reduce((best,v)=>{const p=n.nodes[v.e.a],q=n.nodes[v.e.b],d=(x-(p[0]+q[0])/2)**2+(z-(p[1]+q[1])/2)**2;return !best||d<best.d?{d,i:v.i}:best;},null);vals[k]=a[near.i];
+      }
+      const max=Math.max(0,...skin.map(v=>a[v.i]));return {values:vals,nominal:max,peak:max,spar:n.edges.flatMap((e,i)=>e.index>=0&&!e.tie?[{index:e.index,kind:e.kind,tau:a[i]}]:[])};
+    }
     const fe = section.fe, mesh = section.mesh;
     const nT = mesh.tris.length / 3;
     const vals = new Float64Array(nT);
@@ -6888,6 +7089,7 @@ const WingEngine = (() => {
     makeGeometry, chordAt, seams, ribStations, moduleBounds, rodCentres, rodRadius, holeRadius, sleeveRadius,
     airfoilSurfaces, verticalOrdinates, outerContour, ringLoops, ringMesh, shellFE, analyseSection, solve,
     shearField, compareAssemblies, interp, camber, normalizeNaca, normalize, stations, warmStation, sectionAt,
+    sparParts:(g,y)=>Spars.parts(g,y,verticalOrdinates),
   };
 })();
 
@@ -8290,11 +8492,11 @@ if (typeof window !== 'undefined') window.WingLoadsUI = WingLoadsUI;
       checkKeys(issues, o, p, fields);
       for (const f of fields) {
         if (!own(o, f) || o[f] === null) { out[f] = null; continue; }
-        out[f] = num(issues, o, f, p, { gt: 0, unit: 'MPa', label: 'override (null keeps the card value)' });
+        out[f] = num(issues, o, f, p, { ...(f==='nu'?{ge:0,lt:.5}:{gt:0}), unit:f==='nu'?'dimensionless':f==='rho'?'g/cm³':'MPa', label: 'override (null keeps the card value)' });
       }
       return out;
     };
-    const m = { plaKey: card('plaKey', 'pla'), plaOver: over('plaOver', ['E', 'ft', 'fc', 'fs']), rodKey: card('rodKey', 'rod'), rodOver: over('rodOver', ['E']) };
+    const m = { plaKey: card('plaKey', 'pla'), plaOver: over('plaOver', ['E', 'ft', 'fc', 'fs','rho','nu']), rodKey: card('rodKey', 'rod'), rodOver: over('rodOver', ['E']) };
     return issues.count > n0 ? undefined : m;
   }
   function checkAssembly(issues, raw, path, E) {
@@ -8403,7 +8605,8 @@ if (typeof window !== 'undefined') window.WingLoadsUI = WingLoadsUI;
   function printedEngineInput(state, engine) {
     const E = engine || globalWing();
     const pla = { ...E.MATERIALS[state.plaKey] };
-    for (const k of ['E', 'ft', 'fc', 'fs']) if (state.plaOver && state.plaOver[k] > 0) pla[k] = state.plaOver[k];
+    for (const k of ['E', 'ft', 'fc', 'fs','rho']) if (state.plaOver && state.plaOver[k] > 0) pla[k] = state.plaOver[k];
+    if(state.plaOver&&state.plaOver.nu!=null)pla.nu=state.plaOver.nu;
     const rod = { ...E.MATERIALS[state.rodKey] };
     if (state.rodOver && state.rodOver.E > 0) rod.E = state.rodOver.E;
     return { geometry: clone(state.geometry), pla, rod, assembly: clone(state.assembly), load: clone(state.load), criteria: clone(state.criteria) };
@@ -8470,13 +8673,13 @@ if (typeof window !== 'undefined') window.WingLoadsUI = WingLoadsUI;
     const geometry = pick(S.geometry, E.DEFAULT_GEOMETRY);
     // The engine sorts custom rib stations; the file stores them in that (canonical) order.
     if (Array.isArray(geometry.customInteriorRibs) && geometry.customInteriorRibs.every(isNum)) geometry.customInteriorRibs.sort((a, b) => a - b);
-    const over = (o, keys) => Object.fromEntries(keys.map((k) => [k, isObj(o) && isNum(o[k]) && o[k] > 0 ? o[k] : null]));
+    const over = (o, keys) => Object.fromEntries(keys.map((k) => [k, isObj(o) && isNum(o[k]) && (k==='nu'?o[k]>=0:o[k]>0) ? o[k] : null]));
     const l = { ...E.DEFAULT_LOAD, ...(isObj(S.load) ? S.load : {}) };
     const load = { kind: l.kind };
     if (own(PRINTED_LOAD_KEYS, l.kind)) for (const k of PRINTED_LOAD_KEYS[l.kind]) load[k] = k === 'items' ? (Array.isArray(l.items) ? l.items.map((it) => canonicalItemFromUi(it, true)) : clone(l.items)) : clone(l[k]);
     return {
       geometry,
-      materials: { plaKey: S.plaKey, plaOver: over(S.plaOver, ['E', 'ft', 'fc', 'fs']), rodKey: S.rodKey, rodOver: over(S.rodOver, ['E']) },
+      materials: { plaKey: S.plaKey, plaOver: over(S.plaOver, ['E', 'ft', 'fc', 'fs','rho','nu']), rodKey: S.rodKey, rodOver: over(S.rodOver, ['E']) },
       assembly: pick(S.assembly, E.DEFAULT_ASSEMBLY), load, criteria: pick(S.criteria, E.DEFAULT_CRITERIA),
     };
   }
@@ -8489,12 +8692,14 @@ if (typeof window !== 'undefined') window.WingLoadsUI = WingLoadsUI;
     add('Structure', 'Skin / rib thickness', `${fmt(g.skin)} / ${fmt(g.ribThickness)} mm`);
     add('Structure', 'Interior ribs', g.customInteriorRibs ? (g.customInteriorRibs.length ? `custom stations ${g.customInteriorRibs.map(fmt).join(', ')} mm` : 'none (empty custom list)') : `${g.interiorRibs} requested, evenly spaced (interface ribs are added at seams)`);
     add('Structure', 'Rods', g.rodFractions.length ? `${g.rodFractions.length} × ⌀${fmt(g.rodDiameter)} mm at ${g.rodFractions.map((f) => `${fmt(f)}c`).join(', ')}; radial clearance ${fmt(g.clearance)} mm; sleeve wall ${fmt(g.sleeveWall)} mm` : 'none');
+    for(const [i,s]of (g.spars||[]).entries())add('Structure',`Bonded spar ${i+1}`,`x/c ${fmt(s.fraction)}; root-to-end ${fmt(s.length)} mm; upper cap ${fmt(s.topWidth)} × ${fmt(s.topThickness)} mm; lower cap ${fmt(s.bottomWidth)} × ${fmt(s.bottomThickness)} mm; web ${fmt(s.webThickness)} mm, skin-derived height; ${s.material.name}, E ${fmt(s.material.E)} MPa, nu ${fmt(s.material.nu)}, rho ${fmt(s.material.rho)} g/cm³, ft/fc/fs ${fmt(s.material.ft)}/${fmt(s.material.fc)}/${fmt(s.material.fs)} MPa; perfect bond, thin-wall model`);
     add('Structure', 'Other', `trailing edge ${fmt(g.te)} mm; root/tip caps ${fmt(g.cap)} mm; interface rib offset ${fmt(g.interfaceOffset)} mm; cavity ${fmt(g.cavityStart)}–${fmt(g.cavityEnd)}c`);
     const card = (key, over, fields, unit) => {
       const m = E.MATERIALS[key];
       return `${m.short || m.name}: ${fields.map((f) => `${f} ${fmt(over[f] > 0 ? over[f] : m[f])} ${unit}${over[f] > 0 ? ' (override)' : ''}`).join(', ')}`;
     };
     add('Materials', 'Shell, ribs, sleeves', card(state.plaKey, state.plaOver, ['E', 'ft', 'fc', 'fs'], 'MPa'));
+    add('Materials','Shell Poisson ratio / density',`${fmt(state.plaOver.nu!=null?state.plaOver.nu:E.MATERIALS[state.plaKey].nu)} / ${fmt(state.plaOver.rho>0?state.plaOver.rho:E.MATERIALS[state.plaKey].rho)} g/cm³`);
     add('Materials', 'Rods', card(state.rodKey, state.rodOver, ['E'], 'MPa'));
     const a = state.assembly;
     add('Joints', 'Rods in sleeves', a.rodsBonded ? 'epoxied (bonded)' : 'slip fit');
@@ -9567,7 +9772,8 @@ if (typeof window !== 'undefined') window.WingLoadsUI = WingLoadsUI;
 
   function materials() {
     const pla = { ...E.MATERIALS[S.plaKey] };
-    for (const k of ["E", "ft", "fc", "fs"]) if (S.plaOver[k] > 0) pla[k] = S.plaOver[k];
+    for (const k of ["E", "ft", "fc", "fs","rho"]) if (S.plaOver[k] > 0) pla[k] = S.plaOver[k];
+    if(S.plaOver.nu!=null)pla.nu=S.plaOver.nu;
     const rod = { ...E.MATERIALS[S.rodKey] };
     if (S.rodOver.E > 0) rod.E = S.rodOver.E;
     return { pla, rod };
@@ -9681,13 +9887,15 @@ if (typeof window !== 'undefined') window.WingLoadsUI = WingLoadsUI;
       pm.append(jump);
     } else if (id === "materials" || id === "mat-pla") {
       $("#pmHead").textContent = "Material";
-      head("Printed PLA card", "Printed PLA is anisotropic. Upright modules put bending stress across layer interfaces, the weakest direction. Replace these placeholder values with coupon data.");
-      pm.append(fs("Card", segField([["pla_upright", "Upright (span = print Z)"], ["pla_flat", "Flat (span in plane)"]], S.plaKey, (v) => { S.plaKey = v; S.plaOver = { E: null, ft: null, fc: null, fs: null }; }, "PLA orientation"),
+      head("Shell / rib material", "Select a PLA orientation card, or supply custom effective isotropic properties. Printed material is anisotropic; these scalar values describe the spanwise beam model, not a full anisotropic failure law. Replace placeholders with coupon data.");
+      pm.append(fs("Card", segField([["pla_upright", "PLA upright"], ["pla_flat", "PLA flat"],['custom_shell','Custom']], S.plaKey, (v) => { S.plaKey = v; S.plaOver = { E: null, ft: null, fc: null, fs: null }; }, "Shell material card"),
         numField("pE", "Elastic modulus E", "MPa", pla.E, 50, (v) => (S.plaOver.E = v), positive),
         numField("pft", "Tensile strength", "MPa", pla.ft, 1, (v) => (S.plaOver.ft = v), positive),
         numField("pfc", "Compressive strength", "MPa", pla.fc, 1, (v) => (S.plaOver.fc = v), positive),
-        numField("pfs", "Shear strength", "MPa", pla.fs, 1, (v) => (S.plaOver.fs = v), positive)));
-      pm.append(fs("Fixed values", kv([["Poisson's ratio", pla.nu], ["Shear modulus G", `${nf(pla.E / (2 * (1 + pla.nu)), 0)} MPa`], ["Density", `${pla.rho} g/cm³`]])));
+        numField("pfs", "Shear strength", "MPa", pla.fs, 1, (v) => (S.plaOver.fs = v), positive),
+        numField('prho','Density','g/cm³',pla.rho,.01,v=>S.plaOver.rho=v,positive),
+        numField('pnu','Poisson ratio','0 ≤ ν < 0.5',pla.nu,.01,v=>S.plaOver.nu=v,v=>Number.isFinite(v)&&v>=0&&v<.5?null:'must lie between 0 inclusive and 0.5 exclusive')));
+      pm.append(fs("Derived value", kv([["Shear modulus G", `${nf(pla.E / (2 * (1 + pla.nu)), 0)} MPa`]])));
       pm.append(el("p", { class: "note" }, pla.source));
     } else if (id === "mat-rod") {
       $("#pmHead").textContent = "Material";
@@ -9902,6 +10110,7 @@ if (typeof window !== 'undefined') window.WingLoadsUI = WingLoadsUI;
     const active = document.activeElement, focusId = active && active.id && $("#wingSide").contains(active) ? active.id : null;
     renderGeometryForm();
     renderStructureForm();
+    renderSparResults();
     if (focusId && document.getElementById(focusId)) document.getElementById(focusId).focus({ preventScroll: true });
   }
   function renderGeometryForm() {
@@ -9976,6 +10185,55 @@ if (typeof window !== 'undefined') window.WingLoadsUI = WingLoadsUI;
       if (spot == null) { fieldErrors = { rods: "No free chord position fits another rod and its sleeve. Remove or move a rod, or use a smaller rod, clearance or sleeve wall." }; flash(`Rods: ${fieldErrors.rods}`); renderInputs(true); return; }
       applyGeometry({ rodFractions: [...gg.rodFractions, spot] }, "rods", `a rod at ${spot}c`);
     });
+    renderSparForm(gg);
+  }
+  function renderSparForm(g){
+    const host=el('section',{class:'wl-spars'},'');$('#wingStructureForm').append(host);
+    const fields=[['fraction','Position x/c','fraction'],['length','Length from root','mm'],['topWidth','Upper cap width','mm'],['topThickness','Upper cap thickness','mm'],['bottomWidth','Lower cap width','mm'],['bottomThickness','Lower cap thickness','mm'],['webThickness','Web thickness','mm']];
+    const mats=[['E','Elastic modulus E','MPa'],['nu','Poisson ratio',''],['rho','Density','g/cm³'],['ft','Tensile allowable','MPa'],['fc','Compressive allowable','MPa'],['fs','Shear allowable','MPa']];
+    host.innerHTML=`<h3>Bonded spars · separate from rods</h3><p class="note">Thin-wall beam model: upper/lower caps carry bending tension and compression; the web participates in transverse shear and closed-cell torsion. Perfect skin/rib bonds are assumed. Compare shell only, shell + rods and shell + spars separately; mixed rod/spar joints are not validated. No load is changed by these controls.</p><div class="lesson-actions"><button class="btn" type="button" id="wsShell">Shell only</button><button class="btn" type="button" id="wsRods">Shell + rods</button><button class="btn" type="button" id="wsAdd">+ Bonded spar</button></div>${errLine('spars')}${g.spars.map((s,i)=>{
+      const p=E.sparParts(g,0).find(p=>p.index===i),tip=E.sparParts(g,s.length).find(p=>p.index===i);
+      return `<fieldset><legend>Spar ${i+1} · perfectly bonded</legend>${fields.map(([k,label,unit])=>`<div class="field"><label for="ws${i}_${k}">${label}<small>${unit}</small></label><input id="ws${i}_${k}" type="number" step="any" value="${s[k]}"></div>`).join('')}<p class="note">Web clear height is derived from the bonded skin surfaces and cap thicknesses: root ${nf(p.h,2)} mm; end ${nf(tip.h,2)} mm. It is not an independent gap-producing dimension. Caps follow the inner skin; width and thickness are vertical section dimensions.</p><div class="field"><label for="ws${i}_name">Material name</label><input id="ws${i}_name" type="text" maxlength="80" value="${esc(s.material.name)}"></div>${mats.map(([k,label,unit])=>`<div class="field"><label for="ws${i}_m${k}">${label}<small>${unit}</small></label><input id="ws${i}_m${k}" type="number" step="any" value="${s.material[k]}"></div>`).join('')}<button class="btn" type="button" id="ws${i}_apply">Apply spar ${i+1} inputs</button> <button class="btn" type="button" id="ws${i}_remove">Remove spar ${i+1}</button></fieldset>`;
+    }).join('')}<p class="note"><b>Model limits:</b> cap/web buckling, adhesive stresses, debonding, crippling and local runout stresses are not resolved. Thin-wall shear flow and elastic beam stresses are not a manufacturing approval or a 3-D FE result. Changing material does not change the exported CAD.</p>`;
+    const configure=(patch)=>{const previous=S.assembly;S.assembly={...previous,seamsBonded:true};const result=applyGeometry(patch,'spars','bonded structural layout');if(!result.ok)S.assembly=previous;renderTree();return result;};
+    $('#wsShell').onclick=()=>{if(!confirm('Remove rods and spars, retain ribs, geometry and loads, and use a continuous/bonded shell?'))return;configure({rodFractions:[],spars:[]});};
+    $('#wsRods').onclick=()=>{if(!confirm('Use rods instead of spars? Spars will be removed and module seams set to bonded for this comparison; loads are retained.'))return;configure({spars:[],rodFractions:[.3,.6]});};
+    $('#wsAdd').onclick=()=>{if(g.spars.length>=2){flash('At most two bonded spars.');return;}if(!confirm('Add a bonded spar? Existing rods will be removed and module seams set to bonded. Loads are retained.'))return;
+      configure({rodFractions:[],spars:[...g.spars,{fraction:g.spars.length?.6:.35,length:g.semiSpan,topWidth:8,topThickness:.8,bottomWidth:8,bottomThickness:.8,webThickness:.6,material:{...WingSpars.MAT}}]});};
+    g.spars.forEach((s,i)=>{
+      const p=E.sparParts(g,0).find(v=>v.index===i),diagram=el('div',{},`<svg viewBox="0 0 290 215" role="img" aria-label="Spar ${i+1} root dimensions, schematic not to scale" style="width:100%;max-width:360px;background:var(--raise);color:var(--fg)"><rect x="84" y="43" width="100" height="14" fill="#9871dd"/><rect x="128" y="57" width="12" height="106" fill="#39a3b7"/><rect x="74" y="163" width="120" height="14" fill="#9871dd"/><g stroke="currentColor" fill="none"><path d="M84 35v-9h100v9 M74 185v9h120v-9 M214 57h8v106h-8 M120 112h-18m38 0h18"/></g><g fill="currentColor" font-size="11" font-family="system-ui"><text x="134" y="19" text-anchor="middle">Upper cap bᵤ = ${nf(s.topWidth,2)} mm</text><text x="134" y="210" text-anchor="middle">Lower cap bₗ = ${nf(s.bottomWidth,2)} mm</text><text x="8" y="53">tᵤ = ${nf(s.topThickness,2)}</text><text x="8" y="174">tₗ = ${nf(s.bottomThickness,2)}</text><text x="150" y="140">t_w = ${nf(s.webThickness,2)} mm</text><text x="228" y="105">h_web</text><text x="228" y="121">${nf(p.h,2)} mm</text><text x="6" y="147">Web</text></g></svg><p class="note">Root schematic, not to scale. Actual caps follow the inner skin contours. b = cap width, t = thickness; h_web is the clear height between caps. Upper/lower cap dimensions are independent.</p>`);
+      $('#ws'+i+'_apply').closest('fieldset').querySelector('legend').after(diagram);
+      $('#ws'+i+'_remove').onclick=()=>configure({spars:g.spars.filter((_,j)=>j!==i)});
+      $('#ws'+i+'_apply').onclick=()=>{const next=JSON.parse(JSON.stringify(s));fields.forEach(([k])=>next[k]=numberFrom($('#ws'+i+'_'+k)));mats.forEach(([k])=>next.material[k]=numberFrom($('#ws'+i+'_m'+k)));next.material.name=$('#ws'+i+'_name').value.trim();configure({spars:g.spars.map((v,j)=>j===i?next:v)});};
+    });
+  }
+  function renderSparResults(){
+    const box=$('#wingSparResults');if(!box)return;
+    const specs=S.geometry.spars||[];
+    if(!specs.length){box.innerHTML='<h3>Spars</h3><p class="note">No spars in the current inputs. Add one in Structure → Bonded spars. Rods and spars are distinct alternatives.</p>';return;}
+    const pending=stale||running||!R||!R.sparModel;
+    const rows=pending?'':specs.flatMap((s,i)=>['top cap','bottom cap','web'].map(kind=>{
+      const a=R.stress.spars.filter(v=>v.index===i&&v.kind===kind),max=k=>Math.max(0,...a.map(v=>v[k]));
+      return `<tr><td>S${i+1} ${kind}</td><td>${nf(max('tension'),3)}</td><td>${nf(max('compression'),3)}</td><td>${nf(max('shear'),3)}</td></tr>`;
+    })).join('');
+    box.innerHTML=`<h3>Bonded spar mechanics</h3><p>Caps: longitudinal tension/compression from bending. Web: transverse shear and cell shear flow under twist. Skin and ribs transfer force into the perfectly bonded spar.</p><p class="note">Bending: ε = −κ[(z − z̄) − (EIₓ𝓏/EIₓ)(x − x̄)], σ = Eε. The neutral axes use E-weighted areas; every material has its own σ. Shear: panel τ = q/t, with q from nodal force equilibrium, applied torque and minimum shear energy. Web height follows the bonded skin/cap geometry.</p><p><b>${pending?'Inputs changed: geometry preview only; Solve to calculate spar stresses.':'Limit-load section stresses · MPa (not adhesive or runout peaks)'}</b></p>${pending?'':`<div style="overflow:auto"><table><thead><tr><th>Member</th><th>Tension σ</th><th>Compression σ</th><th>Shear |τ|</th></tr></thead><tbody>${rows}</tbody></table></div><p>Spar mass ${nf(R.mass.spars,2)} g, counted once. Root EI ${nf(R.sections[0].EIf/1e6,3)} N·m²; GJ ${nf(R.sections[0].GJ/1e6,3)} N·m². Checks apply the chosen load factor of safety to these limit stresses.</p>`}<div class="lesson-actions"><button class="btn" type="button" id="wsInside">Reveal structure</button><button class="btn" type="button" id="wsStress" ${pending?'disabled':''}>Spar normal-stress colours</button><button class="btn" type="button" id="wsSection" ${pending?'disabled':''}>Section shear / stress</button></div><p class="note"><b>Thin-wall beam approximation, not 3-D FEA.</b> Perfect ties have no added material; caps and web are counted separately without overlap. No adhesive, cap/web buckling, crippling, debonding or runout failure prediction is available. Local open-cap torsion is neglected. A favourable strength ratio is not a complete structural clearance.</p>`;
+    $('#wsInside').onclick=()=>{setPlot('model');setAnatomy('inside');};
+    $('#wsStress').onclick=()=>{S.stressComponent='spars';setAnatomy('inside');setPlot('stress');};
+    $('#wsSection').onclick=()=>openTab('section');
+    const compare=el('button',{class:'btn',type:'button'},'Compare shell / rods / spars');compare.disabled=pending;box.querySelector('.lesson-actions').append(compare);
+    const output=el('div',{class:'tablewrap',id:'wsCompareTable'},'');box.append(output);
+    compare.onclick=async()=>{
+      compare.disabled=true;const stamp=JSON.stringify(engineInput()),base=JSON.parse(stamp),rows=[];
+      output.textContent='Solving three independent layouts; the current model is not replaced.';
+      const layouts=[['Shell baseline (ribs retained)',[] ,[]],['2 rods at 0.30c / 0.60c',[.3,.6],[]],['Current bonded spars',[],base.geometry.spars]];
+      for(const [name,rodFractions,spars]of layouts){await frame();
+        if(JSON.stringify(engineInput())!==stamp)return;
+        try{const geometry=checkGeometry({...base.geometry,rodFractions,spars}),r=E.solve({...base,geometry,assembly:{...base.assembly,seamsBonded:true},nElements:40});
+          rows.push(`<tr><td>${esc(name)}</td><td>${nf(r.mass.total,2)}</td><td>${nf(r.sections[0].EIf/1e6,3)}</td><td>${nf(r.deflection.at(-1),3)}</td><td>${nf(r.twist.at(-1)*180/Math.PI,3)}</td><td>${nf(r.V[0],3)}</td></tr>`);
+        }catch(e){rows.push(`<tr><td>${esc(name)}</td><td colspan="5">Not applicable: ${esc(e.message)}</td></tr>`);}
+      }
+      output.innerHTML=`<p class="note">Same geometry, ribs, material cards and load inputs; bonded module seams in every row. Rods: ⌀${nf(base.geometry.rodDiameter,2)} mm, ${esc(materials().rod.name)}, ${base.assembly.rodsBonded?'bonded':'slip-fit'}. These are not equal-mass designs. Flight inertia relief may change net loads as mass changes; root V is included to expose this. The live model is unchanged.</p><table><thead><tr><th>Layout</th><th>Mass g</th><th>Root EI N·m²</th><th>Tip v mm</th><th>Tip twist °</th><th>Root V N</th></tr></thead><tbody>${rows.join('')}</tbody></table>`;compare.disabled=false;
+    };
   }
   // ------------------------------------------------------------ model inventory (inputs on screen, engine functions)
   function inventoryData(geometry) {
@@ -9985,7 +10243,7 @@ if (typeof window !== 'undefined') window.WingLoadsUI = WingLoadsUI;
       ribs: ribs.map((y) => ({ y, kind: interiors.includes(y) ? "interior" : "interface" })), interiorRibs: interiors.length, interfaceRibs: ribs.length - interiors.length,
       ribThickness: g.ribThickness, caps: 2, capThickness: g.cap, rods: g.rodFractions.length, rodDiameter: g.rodDiameter, rodFractions: [...g.rodFractions],
       sleeves: g.rodFractions.length * g.modules, holeDiameter: 2 * E.holeRadius(g), sleeveDiameter: 2 * E.sleeveRadius(g), sleeveWall: g.sleeveWall, clearance: g.clearance,
-      skin: g.skin, cavity: [g.cavityStart, g.cavityEnd], te: g.te, interfaceOffset: g.interfaceOffset, customRibs: g.customInteriorRibs != null,
+      skin: g.skin, cavity: [g.cavityStart, g.cavityEnd], te: g.te, interfaceOffset: g.interfaceOffset, customRibs: g.customInteriorRibs != null,spars:g.spars.length,
     };
   }
   function inventoryLines(geometry) {
@@ -10013,11 +10271,12 @@ if (typeof window !== 'undefined') window.WingLoadsUI = WingLoadsUI;
         <dt>End caps</dt><dd><span data-inv="caps">${v.caps}</span> × ${mm(v.capThickness, 2)} (root, tip; not ribs)</dd>
         <dt>Rods</dt><dd><span data-inv="rods">${v.rods}</span> × ⌀<span data-inv="rodDiameter">${nf(v.rodDiameter, 2)}</span> mm${v.rods ? ` at x/c <span data-inv="rodFractions">${list(v.rodFractions, 2)}</span>` : ""}</dd>
         <dt>Sleeves</dt><dd><span data-inv="sleeves">${v.sleeves}</span> segments, ⌀${nf(v.holeDiameter, 2)}/${nf(v.sleeveDiameter, 2)} mm</dd>
+        <dt>Bonded spars</dt><dd>${v.spars} · upper/lower caps + webs, separate from rods</dd>
         <dt>Skin</dt><dd><span data-inv="skin">${nf(v.skin, 2)}</span> mm; cavity ${nf(v.cavity[0], 2)}c–${nf(v.cavity[1], 2)}c</dd>
         <dt>Support</dt><dd>root face clamped</dd>
       </dl>
       <div class="tablewrap"><table class="wl-list" aria-label="Rib inventory"><thead><tr><th>Rib</th><th>y (mm)</th><th>Type</th></tr></thead><tbody data-inv="ribStations">${v.ribs.map((r, i) => `<tr><td>R${i + 1}</td><td class="num">${nf(r.y, 1)}</td><td>${r.kind}${r.kind === "interface" ? " · locked" : ""}</td></tr>`).join("") || '<tr><td colspan="3">No ribs.</td></tr>'}</tbody></table></div>
-      <p class="note">Not modelled: spar webs, stringers, rib diaphragm stiffness in EI/GJ, local stresses at rod holes and joints. Presets are historical / course starting points.</p></div>`;
+      <p class="note">Optional spar caps/webs use a bonded thin-wall beam approximation. Not resolved: stringers, rib diaphragm stiffness in EI/GJ, adhesive/runout stresses, cap/web buckling and local stresses at rod holes and joints. Presets are historical / course starting points.</p></div>`;
     $("#wlInventoryBadge").textContent = `${v.modules} mod · ${v.ribs.length} ribs · ${v.rods} rods`;
   }
 
@@ -10034,6 +10293,7 @@ if (typeof window !== 'undefined') window.WingLoadsUI = WingLoadsUI;
       buildModel({ geometry: g });
       lastGeoKey = null; // Rebuild solved geometry even if edits return to the old dimensions.
       updateModel(); frameView(false); renderViewReadout(true); renderPlotInfo();
+      renderSparResults();
       $('#probe').hidden = true;
       $('#viewStale').textContent = 'Geometry preview of current inputs; stress, deformation and load arrows are hidden. Press Solve to update analysis. Results below still belong to the last solved model.';
     } catch (err) {
@@ -10129,7 +10389,7 @@ if (typeof window !== 'undefined') window.WingLoadsUI = WingLoadsUI;
       applyResult();
       renderAll();
       const ms = performance.now() - t0;
-      $("#footline").textContent = `Solved in ${(ms / 1000).toFixed(2)} s · ${R.sections.length} sections × ${(R.sections[0].mesh.tris.length / 3).toLocaleString()} triangles · ${R.fem.y.length - 1} beam elements · beam theory on exact printed sections, not 3-D FE`;
+      $("#footline").textContent = `Solved in ${(ms / 1000).toFixed(2)} s · ${R.sections.length} sections × ${(R.sections[0].mesh.tris.length / 3).toLocaleString()} triangles · ${R.fem.y.length - 1} beam elements · ${R.sparModel?"bonded thin-wall section approximation":"beam theory on exact printed sections"}, not 3-D FE`;
     } catch (err) {
       stale = true;
       saveDesignAfterRun = false;
@@ -10140,6 +10400,7 @@ if (typeof window !== 'undefined') window.WingLoadsUI = WingLoadsUI;
       running = false;
       setStatus();
       renderTree();
+      renderSparResults();
       if (pending) { pending = false; runStudy(); }
     }
   }
@@ -10185,8 +10446,10 @@ if (typeof window !== 'undefined') window.WingLoadsUI = WingLoadsUI;
   }
   function circleLoop(c, r, n = 28) { return Array.from({ length: n }, (_, k) => [c[0] + r * Math.cos((2 * Math.PI * k) / n), c[1] + r * Math.sin((2 * Math.PI * k) / n)]); }
   function shapeFrom(outer, holes) {
-    const sh = new THREE.Shape(outer.map(([x, z]) => new THREE.Vector2(x, z)));
-    holes.forEach((h) => sh.holes.push(new THREE.Path(h.map(([x, z]) => new THREE.Vector2(x, z)))));
+    const contour=outer.map(([x,z])=>new THREE.Vector2(x,z));
+    if(!THREE.ShapeUtils.isClockWise(contour))contour.reverse();
+    const sh = new THREE.Shape(contour);
+    holes.forEach(h=>{const p=h.map(([x,z])=>new THREE.Vector2(x,z));if(THREE.ShapeUtils.isClockWise(p))p.reverse();sh.holes.push(new THREE.Path(p));});
     return sh;
   }
   // map shape space (X = chord, Y = up, Z = extrusion) to three space (X = span, Y = up, Z = chord)
@@ -10228,7 +10491,7 @@ if (typeof window !== 'undefined') window.WingLoadsUI = WingLoadsUI;
         const outer = outerAt(ye);
         const cav = E.ringLoops(g, Math.min(Math.max(ye, 0.01), L)).inner;
         const solidEnd = (ye === 0 || ye === L);
-        const holes = solidEnd ? E.rodCentres(g, ye).map((c) => circleLoop(c, E.holeRadius(g), 24)) : [cav];
+        const holes = solidEnd ? E.rodCentres(g, ye).map((c) => circleLoop(c, E.holeRadius(g), 24)).concat(E.sparParts(g,ye).map(p=>p.outline)) : [cav];
         const t = solidEnd ? g.cap : 0.6;
         const yy = ye === y0 ? ye : ye - t;
         const face = platePart(outer, holes, t, yy, COLORS.pla);
@@ -10244,11 +10507,16 @@ if (typeof window !== 'undefined') window.WingLoadsUI = WingLoadsUI;
     const ribs = [];
     for (const yr of E.ribStations(g)) {
       const k = bounds.findIndex((b, i) => i < bounds.length - 1 && yr >= b && yr <= bounds[i + 1]);
-      const holes = E.rodCentres(g, yr).map((c) => circleLoop(c, E.holeRadius(g), 24));
+      const holes = E.rodCentres(g, yr).map((c) => circleLoop(c, E.holeRadius(g), 24)).concat(E.sparParts(g,yr).map(p=>p.outline));
       const rib = platePart(outerAt(yr), holes, g.ribThickness, yr - g.ribThickness / 2, COLORS.rib);
       rib.userData.kind = "rib"; rib.userData.module = k;
       modules[k].add(rib); ribs.push(rib); rigid.push(rib);
     }
+    const sparMeshes=[];
+    g.spars.forEach((s,i)=>{for(let k=0;k<3;k++){
+      const stations=Array.from({length:31},(_,j)=>s.length*j/30),part=swept(stations,y=>E.sparParts(g,y).find(p=>p.index===i).polygons[k],{shininess:40});
+      part.userData.kind='spar';part.userData.sparIndex=i;part.userData.memberKind=['top cap','bottom cap','web'][k];part.userData.material=s.material;root.add(part);sparMeshes.push(part);
+    }});
     const rods = g.rodFractions.map((f, fIdx) => {
       const st = Array.from({ length: 31 }, (_, i) => (L * i) / 30);
       const r = swept(st, (y) => circleLoop(E.rodCentres(g, y)[fIdx], E.rodRadius(g), 18), { shininess: 60 });
@@ -10274,7 +10542,7 @@ if (typeof window !== 'undefined') window.WingLoadsUI = WingLoadsUI;
     const marker = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ color: COLORS.seam, transparent: true, opacity: 0.18, side: THREE.DoubleSide, depthWrite: false }));
     marker.visible = false; root.add(marker);
     world.add(root);
-    model = { g, root, modules, skins, sleeves, rods, ribs, rigid, loads, marker, fix };
+    model = { g, root, modules, skins, sleeves, rods, ribs, rigid, loads, marker, fix,spars:sparMeshes };
     applyClip();
     applyXray();
     $("#ribLabels").innerHTML = ribs.map((_, i) => `<span class="rib-label">R${i + 1}</span>`).join("");
@@ -10370,18 +10638,20 @@ if (typeof window !== 'undefined') window.WingLoadsUI = WingLoadsUI;
   }
   const at = (arr, y) => E.interp(y, R.y, arr);
   const zscAt = (y) => E.interp(y, R.ySec, R.sections.map((s) => s.zsc));
-  function fieldValue(y, x, z, kind) {
+  function fieldValue(y, x, z, kind,member) {
     const k = at(R.kappa, y), zc = at(R.props.zc, y);
     const isRod=kind==='sigma' && S.stressComponent==='rods';
     const centres=E.rodCentres(R.geometry,y);
     const nearest=centres.length?centres.reduce((a,b)=>Math.abs(b[0]-x)<Math.abs(a[0]-x)?b:a):[x,zc];
-    const sigma = -(isRod?R.rod.E:R.pla.E) * k * (z - (isRod&&!R.assembly.rodsBonded?nearest[1]:zc));
+    const material=member&&member.kind==='spar'?member.material:isRod?R.rod:R.pla;
+    const coupling=R.props.bendCoupling?at(R.props.bendCoupling,y):0,xc=at(R.props.xc,y);
+    const sigma = -material.E * k * (z - (isRod&&!R.assembly.rodsBonded?nearest[1]:zc)-coupling*(x-xc));
     if (kind === "sigma") return sigma;
-    if (kind === "fos") { const ult = Math.abs(sigma); if (ult < 1e-9) return 99; return (sigma >= 0 ? R.pla.ft : R.pla.fc) / ult; }
+    if (kind === "fos") { const ult = Math.abs(sigma); if (ult < 1e-9) return 99; return (sigma >= 0 ? material.ft : material.fc) / ult; }
     if (kind === "disp") {
       const w = at(R.deflection, y), phi = at(R.twist, y), xsc = at(R.props.xsc, y);
       const zsc = zscAt(y);
-      const dz = w + phi * (xsc - x), dx = phi * (z - zsc);
+      const dz = w + phi * (xsc - x), dx = phi * (z - zsc)+(R.chordwiseDeflection?at(R.chordwiseDeflection,y):0);
       return Math.hypot(dz, dx);
     }
     return 0;
@@ -10389,8 +10659,8 @@ if (typeof window !== 'undefined') window.WingLoadsUI = WingLoadsUI;
   let range = { min: 0, max: 1 };
   function computeRange(kind) {
     let mn = Infinity, mx = -Infinity;
-    const meshes = kind==='sigma'&&S.stressComponent==='rods'?model.rods:model.skins.concat(model.sleeves);
-    for (const m of meshes) { const u = m.userData; for (let i = 0; i < u.by.length; i += 3) { const v = fieldValue(u.by[i], u.bx[i], u.bz[i], kind); if (v < mn) mn = v; if (v > mx) mx = v; } }
+    const meshes = kind==='sigma'&&S.stressComponent==='rods'?model.rods:kind==='sigma'&&S.stressComponent==='spars'?(model.spars||[]):kind==='sigma'?model.skins.concat(model.sleeves):model.skins.concat(model.sleeves,model.spars||[]);
+    for (const m of meshes) { const u = m.userData; for (let i = 0; i < u.by.length; i += 3) { const v = fieldValue(u.by[i], u.bx[i], u.bz[i], kind,u); if (v < mn) mn = v; if (v > mx) mx = v; } }
     if (kind === "fos") { mn = 0; mx = Math.min(Math.max(mx, 1), 10); }
     if (!isFinite(mx)||!isFinite(mn)) return {min:0,max:1};
     if (mx - mn < 1e-12) mx = mn + 1;
@@ -10398,7 +10668,7 @@ if (typeof window !== 'undefined') window.WingLoadsUI = WingLoadsUI;
   }
   function deformAmount() {
     if (!R) return 0;
-    const maxU = Math.max(...R.deflection.map(Math.abs)) + Math.max(...R.twist.map(Math.abs)) * R.geometry.rootChord * 0.6;
+    const maxU = Math.max(...R.deflection.map(Math.abs)) + (R.chordwiseDeflection?Math.max(...R.chordwiseDeflection.map(Math.abs)):0)+Math.max(...R.twist.map(Math.abs)) * R.geometry.rootChord * 0.6;
     const auto = maxU > 1e-9 ? (0.08 * R.geometry.semiSpan) / maxU : 1;
     return { auto, scale: S.deformed ? auto * S.scale : 0 };
   }
@@ -10420,9 +10690,9 @@ if (typeof window !== 'undefined') window.WingLoadsUI = WingLoadsUI;
     const useField = !!kind && !geometryPreview;
     if (useField) range = computeRange(kind);
     const reqFos = R.load.fos;
-    const colorOf = (y, x, z, base) => {
+    const colorOf = (y, x, z, base,member) => {
       if (!useField) return base;
-      const v = fieldValue(y, x, z, kind);
+      const v = fieldValue(y, x, z, kind,member);
       if (kind === "fos") return v < reqFos ? new THREE.Color(0xff1f3d) : rainbow(1 - (Math.min(v, range.max) - range.min) / (range.max - range.min));
       return rainbow((v - range.min) / (range.max - range.min));
     };
@@ -10436,18 +10706,18 @@ if (typeof window !== 'undefined') window.WingLoadsUI = WingLoadsUI;
       const xs = xscAt(y), zs = zscAt(y), dx = x - xs, dz = z - zs, ca = Math.cos(a), sa = Math.sin(a);
       out[0] = y + (mod || 0) * explode;
       out[1] = zs + dz * ca - dx * sa + w;
-      out[2] = xs + dz * sa + dx * ca;
+      out[2] = xs + dz * sa + dx * ca+(S.plot!=='mode'&&R.chordwiseDeflection?deformAmount().scale*at(R.chordwiseDeflection,y):0);
     };
     const tmp = [0, 0, 0];
-    const base = { skin: new THREE.Color(COLORS.pla), sleeve: new THREE.Color(COLORS.sleeve), rod: new THREE.Color(COLORS.rod) };
-    for (const m of model.skins.concat(model.sleeves, model.rods)) {
+    const base = { skin: new THREE.Color(COLORS.pla), sleeve: new THREE.Color(COLORS.sleeve), rod: new THREE.Color(COLORS.rod),spar:new THREE.Color(0x9871dd) };
+    for (const m of model.skins.concat(model.sleeves, model.rods,model.spars||[])) {
       const u = m.userData, pos = m.geometry.attributes.position.array, col = m.geometry.attributes.color.array;
       const isRod = u.kind === "rod";
       for (let i = 0; i < u.by.length; i++) {
         place(u.by[i], u.bx[i], u.bz[i], tmp, isRod ? 0 : u.module);
         pos[3 * i] = tmp[0]; pos[3 * i + 1] = tmp[1]; pos[3 * i + 2] = tmp[2];
-        const selectedStress = !geometryPreview && S.plot==='stress' && (S.stressComponent==='rods'?isRod:!isRod);
-        const c = geometryPreview ? base[u.kind] : selectedStress ? colorOf(u.by[i],u.bx[i],u.bz[i],base[u.kind]) : S.plot==='stress'?new THREE.Color(0x7f8c98):isRod?base.rod:colorOf(u.by[i],u.bx[i],u.bz[i],base[u.kind]);
+        const selectedStress = !geometryPreview && S.plot==='stress' && (S.stressComponent==='rods'?isRod:S.stressComponent==='spars'?u.kind==='spar':!isRod&&u.kind!=='spar');
+        const c = geometryPreview ? base[u.kind] : selectedStress ? colorOf(u.by[i],u.bx[i],u.bz[i],base[u.kind],u) : S.plot==='stress'?new THREE.Color(0x7f8c98):isRod?base.rod:colorOf(u.by[i],u.bx[i],u.bz[i],base[u.kind],u);
         col[3 * i] = c.r; col[3 * i + 1] = c.g; col[3 * i + 2] = c.b;
       }
       m.geometry.attributes.position.needsUpdate = true;
@@ -10462,7 +10732,7 @@ if (typeof window !== 'undefined') window.WingLoadsUI = WingLoadsUI;
       p.rotation.set(a, 0, 0);
       const ca = Math.cos(a), sa = Math.sin(a);
       p.position.y = zs - (zs * ca - xs * sa) + w;
-      p.position.z = xs - (zs * sa + xs * ca);
+      p.position.z = xs - (zs * sa + xs * ca)+(!geometryPreview&&S.plot!=='mode'&&R.chordwiseDeflection?deformAmount().scale*at(R.chordwiseDeflection,y):0);
       p.position.x = (p.userData.module || 0) * explode;
     }
     drawLoads();
@@ -10512,7 +10782,8 @@ if (typeof window !== 'undefined') window.WingLoadsUI = WingLoadsUI;
     if (!kind) { lg.innerHTML = ""; lt.textContent = ""; return; }
     const unit = { sigma: "MPa", disp: "mm", fos: "" }[kind];
     lt.textContent = { sigma: "Stress σ, span (MPa)", disp: "Displacement (mm)", fos: "Factor of safety" }[kind];
-    if(kind==='sigma')lt.textContent=(S.stressComponent==='rods'?'Rod bending σ':'Skin / sleeve bending σ')+' (MPa)';
+    if(kind==='sigma')lt.textContent=(S.stressComponent==='rods'?'Rod bending σ':S.stressComponent==='spars'?'Spar cap / web bending σ':'Skin / sleeve bending σ')+' (MPa)';
+    if(kind==='fos'&&R.sparModel)lt.textContent='Normal-stress strength ratio only · see Checks for shear and unresolved failures';
     const bands = Array.from({ length: 12 }, (_, i) => rainbow((11 - i) / 11.0001 + 1e-6));
     const ticks = kind === "fos"
       ? Array.from({ length: 7 }, (_, i) => range.min + ((range.max - range.min) * i) / 6)
@@ -10583,7 +10854,7 @@ if (typeof window !== 'undefined') window.WingLoadsUI = WingLoadsUI;
     const r = canvas.getBoundingClientRect();
     ndc.set(((ev.clientX - r.left) / r.width) * 2 - 1, -((ev.clientY - r.top) / r.height) * 2 + 1);
     raycaster.setFromCamera(ndc, camera);
-    const hits = raycaster.intersectObjects(model.skins.concat(model.sleeves, model.rods), false).filter((h) => !S.clip || h.point.x <= S.clipY);
+    const hits = raycaster.intersectObjects(model.skins.concat(model.sleeves, model.rods,model.spars||[]), false).filter((h) => !S.clip || h.point.x <= S.clipY);
     const pr = $("#probe");
     if (!hits.length || ev.buttons) { pr.hidden = true; return; }
     const h = hits[0], u = h.object.userData;
@@ -10600,6 +10871,9 @@ if (typeof window !== 'undefined') window.WingLoadsUI = WingLoadsUI;
       const rc = E.rodCentres(R.geometry, y).reduce((a, b) => (Math.abs(b[0] - x) < Math.abs(a[0] - x) ? b : a));
       const sRod = R.assembly.rodsBonded ? -R.rod.E * k * (z - at(R.props.zc, y)) : -R.rod.E * k * (z - rc[1]);
       body = `<b>Carbon rod</b><br>y ${nf(y, 1)} mm<br>σ ${nf(sRod, 2)} MPa`;
+    } else if(u.kind==='spar'){
+      const sg=fieldValue(y,x,z,'sigma',u),ds=fieldValue(y,x,z,'disp',u);
+      body=`<b>Spar ${u.sparIndex+1} · ${esc(u.memberKind)}</b><br>${esc(u.material.name)}<br>y ${nf(y,1)} mm · σ ${nf(sg,3)} MPa<br>URES ${nf(ds,3)} mm<br>Perfect bond; local joint stress unresolved`;
     } else {
       const sg = fieldValue(y, x, z, "sigma"), ds = fieldValue(y, x, z, "disp"), fos = fieldValue(y, x, z, "fos");
       body = `<b>${u.kind === "sleeve" ? "Printed sleeve" : "Printed skin"} · module ${u.module + 1}</b><br>y ${nf(y, 1)} mm · x/c ${nf(x / c, 3)}<br>σ ${nf(sg, 3)} MPa ${sg < 0 ? "(compression)" : "(tension)"}<br>URES ${nf(ds, 3)} mm · FoS ${fos > 50 ? ">50" : nf(fos, 1)}`;
@@ -10740,6 +11014,7 @@ if (typeof window !== 'undefined') window.WingLoadsUI = WingLoadsUI;
     const W = cv.clientWidth, H = cv.clientHeight;
     cv.width = W * dpr; cv.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, W, H);
+    if(stale||running){$('#secNote').textContent='Inputs changed. Solve before viewing section stresses; no new-section stress is inferred from the old result.';return;}
     const y = S.secY;
     $("#secYv").textContent = `${y.toFixed(0)} mm (chord ${nf(E.chordAt(R.geometry, y), 1)} mm)`;
     let sec;
@@ -10757,17 +11032,25 @@ if (typeof window !== 'undefined') window.WingLoadsUI = WingLoadsUI;
     const shear = field === "tau" ? E.shearField(sec, V, T, R.geometry) : null;
     for (let e = 0; e < nT; e++) {
       let v;
-      if (field === "sigma") { const zm = (nodes[2 * tris[3 * e] + 1] + nodes[2 * tris[3 * e + 1] + 1] + nodes[2 * tris[3 * e + 2] + 1]) / 3; v = -R.pla.E * k * (zm - sec.zc); }
+      if (field === "sigma") { const zm = (nodes[2 * tris[3 * e] + 1] + nodes[2 * tris[3 * e + 1] + 1] + nodes[2 * tris[3 * e + 2] + 1]) / 3,xm=(nodes[2*tris[3*e]]+nodes[2*tris[3*e+1]]+nodes[2*tris[3*e+2]])/3; v = -R.pla.E * k * (zm - sec.zc-(sec.bendCoupling||0)*(xm-sec.xc)); }
       else v = shear.values[e];
       vals[e] = v; if (v < lo) lo = v; if (v > hi) hi = v;
     }
-    if (field === "tau") hi = Math.max(shear.nominal * 1.05, 1e-9), lo = 0;
+    const memberValue=(part,x,z)=>field==='sigma'?-part.m.E*k*((z-sec.zc)-(sec.bendCoupling||0)*(x-sec.xc)):Math.max(0,...(shear.spar||[]).filter(v=>v.index===part.index&&v.kind===part.kind).map(v=>v.tau));
+    for(const part of sec.sparInts||[])for(const [x,z]of part.polygon){const v=memberValue(part,x,z);lo=Math.min(lo,v);hi=Math.max(hi,v);}
+    if (field === "tau") hi = Math.max(hi,shear.nominal * 1.05, 1e-9), lo = 0;
     for (let e = 0; e < nT; e++) {
       const t = Math.min(1, Math.max(0, (vals[e] - lo) / (hi - lo || 1)));
       ctx.fillStyle = "#" + rainbow(t).getHexString();
       ctx.beginPath();
       for (let v = 0; v < 3; v++) { const n = tris[3 * e + v]; const [px, py] = P(nodes[2 * n], nodes[2 * n + 1]); v ? ctx.lineTo(px, py) : ctx.moveTo(px, py); }
       ctx.closePath(); ctx.fill();
+    }
+    for(const part of sec.sparInts||[]){
+      const zz=part.polygon.map(p=>p[1]),z0=Math.min(...zz),z1=Math.max(...zz),x=part.polygon.reduce((a,p)=>a+p[0],0)/part.polygon.length;
+      const color=z=>'#'+rainbow(Math.max(0,Math.min(1,(memberValue(part,x,z)-lo)/(hi-lo||1)))).getHexString();
+      const grad=ctx.createLinearGradient(0,P(x,z0)[1],0,P(x,z1)[1]);grad.addColorStop(0,color(z0));grad.addColorStop(1,color(z1));ctx.fillStyle=grad;
+      ctx.beginPath();part.polygon.forEach(([x,z],i)=>{const p=P(x,z);i?ctx.lineTo(...p):ctx.moveTo(...p);});ctx.closePath();ctx.fill();ctx.strokeStyle=css('--fg');ctx.lineWidth=.5;ctx.stroke();
     }
     const ink = css("--fg"), muted = css("--muted");
     for (const cc of sec.centres) {
@@ -10777,7 +11060,7 @@ if (typeof window !== 'undefined') window.WingLoadsUI = WingLoadsUI;
     }
     const [cx, cz] = P(sec.xc, sec.zc), [sx, sz] = P(sec.xsc, sec.zsc);
     ctx.strokeStyle = "#f05b6c"; ctx.lineWidth = 1; ctx.setLineDash([5, 4]);
-    ctx.beginPath(); ctx.moveTo(P(0, 0)[0] - 6, cz); ctx.lineTo(P(c, 0)[0] + 6, cz); ctx.stroke(); ctx.setLineDash([]);
+    ctx.beginPath(); ctx.moveTo(...P(0,sec.zc-(sec.bendCoupling||0)*sec.xc)); ctx.lineTo(...P(c,sec.zc+(sec.bendCoupling||0)*(c-sec.xc))); ctx.stroke(); ctx.setLineDash([]);
     ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(cx - 7, cz); ctx.lineTo(cx + 7, cz); ctx.moveTo(cx, cz - 7); ctx.lineTo(cx, cz + 7); ctx.stroke();
     ctx.strokeStyle = "#33c587"; ctx.beginPath(); ctx.moveTo(sx - 6, sz - 6); ctx.lineTo(sx + 6, sz + 6); ctx.moveTo(sx + 6, sz - 6); ctx.lineTo(sx - 6, sz + 6); ctx.stroke();
     ctx.font = "11px JetBrains Mono, monospace"; ctx.fillStyle = muted;
@@ -10791,12 +11074,13 @@ if (typeof window !== 'undefined') window.WingLoadsUI = WingLoadsUI;
       ["Shear centre", `${nf(sec.xsc / c, 3)} c`], ["Centroid", `${nf(sec.xc / c, 3)} c`], ["Mass", `${nf(sec.mass, 3)} g/mm`],
       ["V, M, T here", `${nf(V, 2)} N · ${nf(E.interp(y, R.y, R.M) / 1000, 3)} N·m · ${nf(T, 0)} N·mm`],
     ].map(([a, b]) => `<dt>${a}</dt><dd>${b}</dd>`).join("");
-    $("#secNote").textContent = "Orange: printed sleeves, tied to the shell only at the ribs. They add to bending stiffness, not to the torsion cell. Black: carbon rods.";
+    $("#secNote").textContent = sec.sparNetwork?'Spar caps and web are included. Normal stress uses each material E; shear colours on each spar polygon show its maximum panel shear. Skin shear is mapped from the thin-wall network. Perfect ties, not local adhesive/runout stresses. Dashed neutral axis is E-weighted.':'Orange: printed sleeves, tied to the shell only at the ribs. They add to bending stiffness, not to the torsion cell. Black: carbon rods.';
   }
 
   // ------------------------------------------------------------ comparison, prediction, challenge, report
   async function runCompare() {
     const btn = $("#cmpBtn"), host = $("#cmpTable");
+    if((S.geometry.spars||[]).length){host.innerHTML='<p class="note">This table compares rod/dry-joint assumptions and does not apply to bonded spars. Use the independent structural layouts in Structure, retaining the same loads, and solve each layout.</p>';return;}
     btn.disabled = true;
     host.innerHTML = '<p class="note">Running 8 studies…</p>';
     await frame();
@@ -10865,7 +11149,8 @@ if (typeof window !== 'undefined') window.WingLoadsUI = WingLoadsUI;
       `Load: ${wingLoadName(R)}; factor of safety ${L.fos}`,
       ...(L.kind === "custom" ? (L.items.length ? L.items.map((q, k) => `  ${k + 1}. ${WingLoadsUI.describe(q, { length: "mm", line: "N/mm", force: "N", moment: "N·mm" })}`) : ["  No load defined."]) : [`  details ${JSON.stringify(L)}`]),
       ``,
-      `Mass: printed PLA ${nf(R.mass.printed, 1)} g, rods ${nf(R.mass.rods, 1)} g`,
+      `Mass: shell/ribs/end caps ${nf(R.mass.printed, 1)} g, rods ${nf(R.mass.rods, 1)} g, spars ${nf(R.mass.spars,1)} g (no material counted twice)`,
+      ...(R.sparModel?[`Spar method: ${R.sparModel.method}`,...R.geometry.spars.map((s,i)=>`Spar ${i+1}: ${JSON.stringify(s)}`),...R.sparModel.limitations.map(v=>'UNRESOLVED: '+v)]:[]),
       `Physical ribs (${R.ribs.length}), y from root in mm: ${R.ribs.join(", ")}`,
       `Interior layout: ${R.geometry.customInteriorRibs == null ? "course/even-spacing rule" : "custom browser-only layout; transfer to CAD separately"}`,
       `Rib thickness: ${nf(R.geometry.ribThickness, 2)} mm`,
@@ -10917,8 +11202,10 @@ if (typeof window !== 'undefined') window.WingLoadsUI = WingLoadsUI;
   function renderAll() {
     if (!R) return;
     renderTree(); renderPM(); renderCharts(); renderChecks(); renderPredict();
+    if(R.sparModel)$('#govCallout').append(el('p',{class:'note'},'Bonded spar stresses use a sectionwise thin-wall beam approximation. Normal/shear checks are independent, not a combined material failure envelope. Adhesive and runout stresses, cap/web buckling, crippling and debonding are unresolved. Reported modes are uncoupled beam modes, not a coupled 3-D aeroelastic spectrum.'));
     renderLesson(); renderDesignLab(); renderMemberLesson(); renderWingLoads();
     renderInputs(); renderInventory(); renderViewReadout(true);
+    renderSparResults();
     if (!$("#tab-section").hidden) renderSection();
     $("#report").value = reportText();
     if (prediction && !prediction.after) { prediction.after = true; store.set("prediction", prediction); renderPredict(); }
@@ -10944,16 +11231,17 @@ if (typeof window !== 'undefined') window.WingLoadsUI = WingLoadsUI;
 
   function applyAnatomy() {
     if (!model) return;
-    const k = S.anatomy, onlyRibs = k === "ribs", onlyRods = k === "rods";
-    for (const m of model.skins) m.visible = !onlyRibs && !onlyRods;
+    const k = S.anatomy, onlyRibs = k === "ribs", onlyRods = k === "rods",onlySpars=k==='spars';
+    for (const m of model.skins) m.visible = !onlyRibs && !onlyRods&&!onlySpars;
     for (const m of model.sleeves) {
-      m.visible = !onlyRibs;
+      m.visible = !onlyRibs&&!onlySpars;
       m.material.transparent = onlyRods || k === "inside";
       m.material.opacity = m.material.transparent ? 0.22 : 1;
       m.material.depthWrite = !m.material.transparent;
     }
-    for (const m of model.rods) m.visible = !onlyRibs;
-    for (const m of model.rigid) m.visible = m.userData.kind === "rib" ? !onlyRods : !onlyRibs && !onlyRods;
+    for (const m of model.rods) m.visible = !onlyRibs&&!onlySpars;
+    for(const m of model.spars||[])m.visible=!onlyRibs&&!onlyRods;
+    for (const m of model.rigid) m.visible = m.userData.kind === "rib" ? !onlyRods&&!onlySpars : !onlyRibs && !onlyRods&&!onlySpars;
     model.loads.visible = S.plot !== "mode" && !onlyRibs && !onlyRods;
     $("#anatomyKey").hidden = S.plot !== "model";
     $("#anatomyKey b").textContent = {
@@ -10961,6 +11249,7 @@ if (typeof window !== 'undefined') window.WingLoadsUI = WingLoadsUI;
       inside: "Skin made transparent for teaching · material is not removed",
       ribs: "Physical printed ribs R1–R" + model.ribs.length + " · skin and rods hidden",
       rods: "Continuous carbon rods (blue) inside printed sleeves (transparent orange)",
+      spars:'Bonded spars (purple) · upper cap, lower cap and web; separate from rods',
     }[k];
     document.querySelectorAll("[data-anatomy]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.anatomy === k)));
     $("#ribLabels").hidden = !(S.plot === "model" && (onlyRibs || k === "inside") && !S.deformed && !S.clip);
@@ -11314,7 +11603,7 @@ function renderObservations() {
     const anatomy = S.lesson === 0 || S.lesson === 4;
     const section = S.lesson === 3 || S.lesson === 5;
     const fig = anatomy ? ribPlanFigure(g) : section ? sectionFigure(g) : beamFigure(S.lesson);
-    const caption = anatomy ? `Physical rib stations: ${ribs.length ? ribs.map((y,i)=>`R${i+1}: ${nf(y,1)} mm`).join("; ") : "none in this preset"}. Dashed lines show seams when present. Rod paths are blue when rods exist.` : section ? `Selected airfoil-section geometry: grey shell; ${g.rodFractions.length ? "orange sleeves and blue rods." : "no rods or sleeves."} No separate stringers or full-height spar webs. Rib diaphragms are present only at the listed rib stations.` : "Isolated tip-force sketch; the general load case may include distributed and multiple point forces.";
+    const caption = anatomy ? `Physical rib stations: ${ribs.length ? ribs.map((y,i)=>`R${i+1}: ${nf(y,1)} mm`).join("; ") : "none in this preset"}. Dashed lines show seams when present. Rod paths are blue when rods exist.` : section ? `Selected airfoil-section geometry: grey shell; ${g.rodFractions.length ? "orange sleeves and blue rods." : "no rods or sleeves."} ${g.spars.length ? `${g.spars.length} bonded thin-wall spar(s), with separate caps and webs.` : "No separate stringers or full-height spar webs."} Rib diaphragms are present only at the listed rib stations.` : "Isolated tip-force sketch; the general load case may include distributed and multiple point forces.";
     $("#lessonFigure").innerHTML = fig + `<figcaption>${caption}</figcaption>`;
     $("#lessonReading").innerHTML = R ? `<h3>Read your current result</h3><p>${wingLoadName(R)} · ${g.modules===1 ? "continuous one-piece shell" : R.assembly.seamsBonded ? "bonded seams" : "dry seams"}</p><dl class="kv"><dt>Root shear magnitude</dt><dd>${nf(Math.abs(R.V[0]), 2)} N</dd><dt>Root bending moment magnitude</dt><dd>${nf(Math.abs(R.M[0]) / 1000, 3)} N·m</dd><dt>Signed tip deflection</dt><dd>${nf(R.deflection.at(-1), 3)} mm</dd><dt>Signed tip twist</dt><dd>${nf(R.twist.at(-1) * 180 / Math.PI, 3)}°</dd></dl><p>Solve recomputes this case; with identical inputs the numbers stay the same. Input edits wait for Solve unless “Solve automatically” is ticked; lesson buttons solve at once.</p>` : "<p>Preparing the first result. You can read the lesson while the solver starts.</p>";
   }
@@ -11510,7 +11799,7 @@ function renderObservations() {
     solve: () => { clearTimeout(runTimer); return runStudy(); },
     importGate: () => (importGate ? { required: importGate.required.map((r) => r.id), confirmed: [...importGate.confirmed], open: gateOpen() } : null),
     studyFiles: () => studyFiles,
-    view: () => (model ? { distance: camera.position.distanceTo(controls.target), resetDistance, solved: { semiSpan: model.g.semiSpan, rootChord: model.g.rootChord, tipChord: model.g.tipChord } } : null),
+    view: () => (model ? { distance: camera.position.distanceTo(controls.target), resetDistance, solved: { semiSpan: model.g.semiSpan, rootChord: model.g.rootChord, tipChord: model.g.tipChord },preview:geometryPreview,members:{ribs:model.ribs.length,rods:model.rods.length,sparParts:(model.spars||[]).length} } : null),
   };
   requestAnimationFrame(loop);
   window.addEventListener('wing-learning-stage', event => {

@@ -1,15 +1,12 @@
 /* Lecture 03 links deliberately replace loads rather than adding to an old study. */
-const Lecture03BeamCases = (()=>{const cases={
+const Lecture03BeamCases = Object.freeze({
   'l03-centre': {support:'cantilever',loads:[{kind:'point',position:225,force:2}]},
   'l03-tip': {support:'cantilever',loads:[{kind:'point',position:450,force:2}]},
   'l03-uniform': {support:'cantilever',loads:[{kind:'distributed',start:0,end:450,qStart:2/450,qEnd:2/450}]},
   'l03-simple': {support:'simply-supported',loads:[{kind:'point',position:225,force:2}]},
   'l03-fixed': {support:'fixed-fixed',loads:[{kind:'point',position:225,force:2}]},
-  'l03-lift': {support:'cantilever',loads:[{kind:'distributed',start:0,end:450,qStart:-2/450,qEnd:-2/450}]},
-  'hw2b-cantilever': {length:450,width:16,height:8,E:2200,support:'cantilever',loads:[{kind:'distributed',start:0,end:450,qStart:0,qEnd:.002}]},
-  'hw2b-roller-pin': {length:450,width:16,height:8,E:2200,support:'simply-supported',simpleArrangement:'roller-left',loads:[{kind:'distributed',start:0,end:450,qStart:.001,qEnd:.002}]},
-  'hw2b-fixed': {length:450,width:16,height:8,E:2200,support:'fixed-fixed',loads:[{kind:'distributed',start:0,end:450,qStart:.002,qEnd:0}]}
-};for(const suffix of ['cantilever','roller-pin','fixed'])cases['hw3-'+suffix]=cases['hw2b-'+suffix];return Object.freeze(cases);})();
+  'l03-lift': {support:'cantilever',loads:[{kind:'distributed',start:0,end:450,qStart:-2/450,qEnd:-2/450}]}
+});
 /*
  * MIE 446 Beam Lab — controller for the beam workspace (#foundations).
  * Uses BeamSections, BeamLearningEngine, BeamStudy, BeamDiagrams, BeamSolution and CompanionTools.
@@ -35,7 +32,7 @@ const Lecture03BeamCases = (()=>{const cases={
   const CURVE_F={elliptic:'F = πw₀ℓ/4, so w₀ = 4F/(πℓ)',parabolic:'F = 2w₀ℓ/3, so w₀ = 3F/(2ℓ)'};
   const CENTROID_TEXT={elliptic:{start:'x̄ = a + 4ℓ/(3π)',end:'x̄ = b − 4ℓ/(3π)',middle:'x̄ = (a + b)/2'},parabolic:{start:'x̄ = a + 3ℓ/8',end:'x̄ = a + 5ℓ/8',middle:'x̄ = (a + b)/2'}};
   // Normal opening: a cantilever with NO applied load and self-weight off. Loads come only from the user, a study
-  // file or share link, or an explicitly chosen Lecture 03 / HW 2B example (buttons or ?beamCase= deep links).
+  // file or share link, or an explicitly chosen Lecture 03 example (buttons or ?beamCase= deep links).
   const BASE=Object.freeze({length:450,E:2000,density:1.24,elements:30,section:{shape:'rectangle',width:20,height:10},
     supports:[{x:0,kind:'fixed'}],hinges:[],loads:[],selfWeight:false});
   const DESCRIBE={fixed:'v = 0 and θ = 0; vertical reaction and reaction couple',
@@ -106,7 +103,13 @@ const Lecture03BeamCases = (()=>{const cases={
         <form id="beamGeometry" novalidate><div class="bl-grid2">
           ${named('length','Length L','mm')}${named('E','Elastic modulus E','MPa')}${named('density','Density ρ','g/cm³')}${named('elements','Requested elements','',"step='1' min='4' max='100'")}
         </div><button type="submit" class="sr-only">Solve</button></form>
-        <p class="bl-help">Support, load and hinge stations are always mesh nodes. The mesh only refines between them.</p>
+        <p class="bl-help">Elements are numerical subdivisions, not physical parts. Use 30 for HW 3; no mesh study is required for that assignment. Support, point-load, load-boundary and hinge stations are always mesh nodes.</p>
+        <details class="bl-box"><summary>Why choose 10, 30 or 40 elements?</summary>
+          <p class="bl-help">Each Euler–Bernoulli element joins two nodes. The solver finds nodal displacement and rotation, then interpolates the shape between nodes. For a 450 mm beam, nominal lengths are 45 mm with 10 elements, 15 mm with 30, and 11.25 mm with 40. Extra required stations can change the actual count and spacing.</p>
+          <svg role="img" aria-label="The same beam divided into 10, 30 and 40 numerical elements" viewBox="0 0 430 120" style="width:100%">${[10,30,40].map((n,j)=>`<text x="4" y="${24+j*36}" fill="currentColor" font-size="13">${n}</text><path d="M42 ${20+j*36}H420" stroke="#166bbb" stroke-width="3"/>${Array.from({length:n+1},(_,k)=>`<path d="M${42+378*k/n} ${15+j*36}v10" stroke="currentColor"/>`).join('')}`).join('')}</svg>
+          <p class="bl-help">More elements usually improve interpolation and vibration estimates but cost more calculation; they do not strengthen the beam or repair wrong inputs. In these constant-EI teaching beams, exact load integration and equilibrium recovery can already give almost unchanged reactions and V/M, even on a coarse mesh. Between-node displacement/rotation and frequencies can still change. Similar numbers do not make a mesh study pointless or prove the physical model correct.</p>
+          <p class="bl-help">For optional checking, solve the same model with 10, 30 and 40, keeping loads, supports, section and material fixed. Compare the same displacement/rotation station and, when relevant, the same mode. Check absolute differences as well as relative differences; do not divide by a near-zero value. There is no universal guaranteed element count. HW 3 uses 30 only and requires no convergence table.</p>
+        </details>
       </div></details>
       <details class="bl-acc" open><summary><span class="bl-step">2</span>Cross-section <span class="bl-badge" id="beamSectionBadge"></span></summary><div class="bl-acc-body">
         <label class="bl-field"><span>Shape</span><select class="bl-select" id="beamShape">${Object.entries(SEC.SHAPES).map(([k,v])=>`<option value="${k}">${v.label}</option>`).join('')}</select></label>
@@ -163,8 +166,6 @@ const Lecture03BeamCases = (()=>{const cases={
           <button type="button" class="bl-btn bl-btn-sm" data-beam-preset="l03-tip">A · tip force</button><button type="button" class="bl-btn bl-btn-sm" data-beam-preset="l03-centre">Cantilever · centre force</button>
           <button type="button" class="bl-btn bl-btn-sm" data-beam-preset="l03-uniform">B · uniform 2 N</button><button type="button" class="bl-btn bl-btn-sm" data-beam-preset="l03-lift">B · uniform lift</button>
           <button type="button" class="bl-btn bl-btn-sm" data-beam-preset="l03-simple">C1 · pin–roller</button><button type="button" class="bl-btn bl-btn-sm" data-beam-preset="l03-fixed">C2 · fixed–fixed</button></div></div>
-        <div><h4 class="bl-mini">Optional presets · HW 3</h4><p class="bl-help" style="margin-top:0">Each button replaces all current loads and sets L = 450 mm, b = 16 mm, h = 8 mm and E = 2200 MPa. These are different from the Lecture 03 numerical examples.</p><div class="bl-row">
-          <button type="button" class="bl-btn bl-btn-sm" data-beam-preset="hw2b-cantilever">1 · Cantilever · triangle toward tip</button><button type="button" class="bl-btn bl-btn-sm" data-beam-preset="hw2b-roller-pin">2 · Left roller / right pin · trapezoid</button><button type="button" class="bl-btn bl-btn-sm" data-beam-preset="hw2b-fixed">3 · Fixed–fixed · triangle toward root</button></div></div>
       </div></details>
     </aside>
 
@@ -1032,13 +1033,7 @@ const Lecture03BeamCases = (()=>{const cases={
 
   /* ------------------------------------------------------------ solution */
 
-  function assessedCase(m) {
-    for(const k of ['hw2b-cantilever','hw2b-roller-pin','hw2b-fixed']) {
-      const p=presetModel(k);
-      if(canonical({...p,density:m.density,elements:m.elements})===canonical(m)) return `This study matches HW 3 ${k==='hw2b-cantilever'?'Case 1':k==='hw2b-roller-pin'?'Case 2':'Case 3'}.`;
-    }
-    return '';
-  }
+  function assessedCase() {return '';}
   function renderSolution() {
     if(!st.solved) return;
     const r=st.solved.result;
@@ -1461,8 +1456,7 @@ const Lecture03BeamCases = (()=>{const cases={
   $('#beamClear').onclick=()=>{replaceLoads([]);solve();};
   host.querySelectorAll('[data-beam-preset]').forEach(b=>b.onclick=()=>{
     const name=b.dataset.beamPreset;st.model=presetModel(name);st.editLoad=null;renderInputs(st.model);fillFormFromSingleLoad();
-    solve(/^hw(?:2b|3)-/.test(name)?'HW 3 case loaded: all previous loads replaced; 450 × 16 × 8 mm, E = 2200 MPa. Read support reactions and motion in the table.'
-      :'Lecture 03 example loaded: all previous loads replaced; 450 × 20 × 10 mm, E = 2000 MPa.');
+    solve('Lecture 03 example loaded: all previous loads replaced; 450 × 20 × 10 mm, E = 2000 MPa.');
     host.querySelectorAll('[data-stage]').forEach(x=>x.setAttribute('aria-pressed',String(x.dataset.stage==='beam')));
   });
   host.querySelectorAll('[data-stage]').forEach(b=>b.onclick=()=>{
@@ -1599,7 +1593,7 @@ const Lecture03BeamCases = (()=>{const cases={
   renderInputs(st.model);
   fillFormFromSingleLoad();
   solve();
-  if(lectureCase) message((/^hw(?:2b|3)-/.test(lectureCase)?'HW 3':'Lecture 03')+' example loaded and solved. Dimensions: '+st.model.length+' × '+st.model.section.width+' × '+st.model.section.height+' mm; E = '+st.model.E+' MPa. Previous loads replaced.');
+  if(lectureCase) message('Lecture 03 example loaded and solved. Dimensions: '+st.model.length+' × '+st.model.section.width+' × '+st.model.section.height+' mm; E = '+st.model.E+' MPa. Previous loads replaced.');
   else if(startMessage) message(startMessage);
   host.querySelectorAll('[data-stage]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.stage==='beam')));
   // readStation(): the exact values at the current cut station (both limits at a jump), as the readout shows them.

@@ -22,7 +22,8 @@ md('''## Preparation
 1. Calculate A and I and check their units.
 2. Draw or state your sign convention before integrating.
 3. Distinguish a load intensity in N/mm from its resultant force in N.
-4. Use the full handout for the exact required quantities. This notebook adds no tasks.
+4. Set Requested elements = 30 for all assigned runs. Elements are numerical segments, not physical pieces. On a 450 mm beam, 10, 30 and 40 give nominal segment lengths 45, 15 and 11.25 mm; required stations may change the final count. More elements can improve interpolation and modal estimates, but do not repair wrong supports, loads or material data. This assignment requires no mesh study.
+5. Use the full handout for the exact required quantities. This notebook adds no tasks.
 ''')
 for n,title,kind,q0,q1 in [(1,'Cantilever','fixed / free','0','0.002'),(2,'Roller and pin','roller / pin','0.001','0.002'),(3,'Fixed–fixed','fixed / fixed','0.002','0')]:
     key=['cantilever','roller-pin','fixed'][n-1]
@@ -45,7 +46,7 @@ _Enter your own work here._
 
 Configure the model yourself in [Beam Lab](https://ehsan-roohi.github.io/Aerospace-Structures/wing-lab.html). Clear unwanted loads, supports and hinges. Set the stated geometry and material and keep self-weight off. Check the live profile before applying it and solve before reading outputs.
 
-[Optional exact setup for Case {n}](https://ehsan-roohi.github.io/Aerospace-Structures/wing-lab.html?beamCase=hw3-{key}) replaces the current study with this assigned model and solves it.
+Enter the supports, geometry, material and line load yourself; there is no preconfigured HW 3 study. Keep Requested elements at 30. After solving, use the station table rather than estimating a number from a plotted curve.
 
 | Location and quantity | Analytical result | Software result | Unit | Brief discrepancy explanation |
 |---|---|---|---|---|

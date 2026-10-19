@@ -61,6 +61,12 @@ def modernize(cells):
             for old,new in [('RA = 2 N up','RA = -2 N (up)'),('RA = 1 N up','RA = -1 N (up)'),('RB = 1 N up','RB = -1 N (up)'),('CA = 112.5 N mm CCW','CA = -112.5 N mm (CCW)'),('CA = 450 N mm CCW','CA = -450 N mm (CCW)'),('CA = 900 N mm CCW','CA = -900 N mm (CCW)'),('CB = 112.5 N mm CW','CB = +112.5 N mm (CW)')]:c['source']=c['source'].replace(old,new)
             continue
         s=c['source']
+        s=s.replace('Optional HW 3 presets set the exact assigned dimensions and loads; they are not separate solvers. Existing example links still open the correct case.','HW 3 students enter all model inputs themselves. Lecture example links remain available for the separate teaching examples, not for the assigned models.')
+        if s.startswith('### HW 3 three distributed loads'):
+            s='''### HW 3 manual model setup
+
+Open the blank [Beam Lab](https://ehsan-roohi.github.io/Aerospace-Structures/wing-lab.html), not a lecture preset. Configure the left/right supports, rectangular section, L, E and distributed load from the [HW 3 handout](https://github.com/Ehsan-Roohi/Aerospace-Structures/blob/main/assignments/homework-03/README.md). Remove unintended loads, interior supports and hinges; leave self-weight off. Use Requested elements = 30. No mesh study or extra screenshots are required. The assigned cases are not available as preconfigured solved examples.
+'''
         s=s.replace('Reverse those two reaction signs to compare with hand calculations using upward and counterclockwise positive. Displacement remains downward-positive in both.','Use the same signs in the hand solution and app: force downward positive, external couple clockwise positive, displacement downward positive. Negative results identify the opposite physical direction.')
         s=s.replace('Hand free bodies use upward forces and counterclockwise (CCW) couples as positive. The app uses downward force and clockwise couples as positive, so its reaction signs are reversed.','Hand calculations and the app both use downward-positive reactions and clockwise-positive external couples. Negative force means upward; negative external couple means counterclockwise (CCW). Internal M is separately sagging-positive.')
         if s.startswith('The free end is not a support'):
@@ -90,4 +96,29 @@ def modernize(cells):
     cells[i:i]=[new('markdown',INTERIOR),new('code',DRAW)]
     j=next(i for i,c in enumerate(cells) if c['source'].startswith('### What the app actually solves'))
     cells.insert(j,new('markdown',WORKFLOW))
+    cells[j+1:j+1]=[new('markdown',MESH),new('code',MESH_DRAW)]
     for c in cells:c['id']=uuid.uuid5(uuid.NAMESPACE_URL,c['source']).hex[:8]
+
+MESH='''### What are 10, 30 or 40 elements?
+
+An element is a numerical segment, not a separate physical beam piece. Every node has displacement v and rotation θ. The solver assembles stiffness and consistent loads, solves nodal values and interpolates displacement between nodes. With L = 450 mm, nominal element lengths L/N are 45 mm (N = 10), 15 mm (N = 30) and 11.25 mm (N = 40).
+
+Support, point-load, line-load boundary and hinge stations become nodes even if they miss a regular grid point. Thus the requested count is not always the actual count. Mesh lines are not ribs, joints, cracks or new supports.
+
+More elements generally improve between-node interpolation and mode estimates at greater computational cost. They do not change E or I and do not make the physical beam stronger. For the constant-EI examples, exact consistent loading can already produce highly accurate nodal motion and equilibrium-recovered V/M, so some numbers may barely change as N changes. This is not a guarantee for arbitrary models or between-node motion.
+
+To study mesh sensitivity, keep every physical input fixed and compare the same quantity at the same x for 10, 30 and 40 elements. Check absolute differences as well as relative differences; relative error near a zero result is misleading. Do not compare different mesh-node locations as if they were the same station. Modal convergence and static convergence need not be the same. Numerical convergence does not validate the material, clamp or small-deflection assumptions.
+
+**HW 3 instruction: use 30 requested elements for all three cases. No convergence table or extra mesh runs are required.** Other problems have no universally guaranteed element count.
+'''
+MESH_DRAW='''#@title Figure 7M — same physical beam with three numerical meshes
+fig, axes = plt.subplots(3,1,figsize=(11,5.3),layout='constrained')
+for ax,n in zip(axes,[10,30,40]):
+    xx=np.linspace(0,450,n+1)
+    ax.plot(xx,np.zeros_like(xx),'-o',color='#236bb4',lw=2,ms=3)
+    ax.set(xlim=(-8,458),ylim=(-.5,.6),title=f'{n} requested elements: nominal length 450/{n} = {450/n:g} mm')
+    ax.text(225,-.25,'Same physical span L = 450 mm',ha='center',fontsize=12)
+    ax.axis('off')
+fig.supxlabel('Uniform meshes shown for explanation; required load/support/hinge stations can add or move nodes.',fontsize=12)
+plt.show()
+'''

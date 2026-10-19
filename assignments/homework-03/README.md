@@ -40,13 +40,21 @@ MIE 446 Aerospace Structures, Fall 2026. **65 points.**
    - Case 1: **Left fixed / Right free**.
    - Case 2: **Left roller / Right pin**.
    - Case 3: **Left fixed / Right fixed**.
-2. Set L = 450 mm and E = 2200 MPa; choose **Solid rectangle**, b = 16 mm, h = 8 mm. Check A = 128 mm² and I ≈ 682.67 mm⁴. Remove all interior supports and internal hinges. Clear previous loads and leave **Include self-weight** unchecked.
+2. Set L = 450 mm and E = 2200 MPa; choose **Solid rectangle**, b = 16 mm, h = 8 mm. Check A = 128 mm² and I ≈ 682.67 mm⁴. Set **Requested elements = 30**. This is a numerical subdivision count, not a physical beam parameter; use the same value in all three cases. Remove all interior supports and internal hinges. Clear previous loads and leave **Include self-weight** unchecked.
 3. Add exactly one full-span segment from 0 to 450 mm. Use **Triangular zero at start** for Case 1; **Trapezoidal** for Case 2; **Triangular zero at end** for Case 3. Enter the stated endpoint intensities as positive downward values in N/mm. Do not enter these intensities as total force in N and do not add a point force.
 4. Inspect the live profile and confirm the interval and orientation. Confirm **Add load** and press **Solve**. Pending results do not belong to edited inputs. Interior supports are supported by the software but are not part of these three assigned models.
 5. In **Support reactions and motion**, record reaction forces, couples and the required end rotations. In the station table enter x = L/2 or x = L for the deformation quantities specified in Part A4. Use the exact station table, not an estimated point read from a plot.
 6. Submit one comparison table containing analytical and software reactions at every support, plus all selected deformation quantities from Part A4. Include units and consistent signs, and briefly explain discrepancies. The app solves transverse bending and does not report independent axial reactions; state their zero values analytically under the stated no-axial-load assumptions.
 
-Optional setup checks, after completing your own model: [Case 1](https://ehsan-roohi.github.io/Aerospace-Structures/wing-lab.html?beamCase=hw3-cantilever) · [Case 2](https://ehsan-roohi.github.io/Aerospace-Structures/wing-lab.html?beamCase=hw3-roller-pin) · [Case 3](https://ehsan-roohi.github.io/Aerospace-Structures/wing-lab.html?beamCase=hw3-fixed). These links deliberately replace the current study with the assigned inputs and solve it.
+Build each model yourself in the blank Beam workspace; no preconfigured homework model is provided. The lecture's worked examples are teaching examples with different inputs, not substitutes for your setup.
+
+### What does Requested elements mean?
+
+An element is a short numerical segment joining two nodes; each node has displacement and rotation unknowns. With a 450 mm span, 10, 30 and 40 nominal elements correspond to 45, 15 and 11.25 mm segments. Required stations at supports, point loads, load boundaries and hinges are inserted automatically, so actual element count and lengths may differ.
+
+A finer mesh can improve between-node displacement/rotation and vibration estimates, but does not change E, geometry or applied load, and cannot correct a wrong physical model. With constant EI and the app's exact distributed-load integration/equilibrium recovery, reactions and shear/moment can change very little even on a coarse mesh. Do not infer that every output is exact or every problem is mesh independent.
+
+For optional exploration only, keep the model fixed and compare the same output at the same x with 10, 30 and 40 elements. Inspect absolute differences; relative differences near zero can be misleading. **For HW 3, use 30; no mesh-convergence calculation, extra runs or table is required.**
 
 ## Submit
 

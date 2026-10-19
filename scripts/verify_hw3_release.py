@@ -10,7 +10,8 @@ nb=json.loads((ROOT/'notebooks/MIE446_HW3_Three_Beams.ipynb').read_text(encoding
 assert all(c['cell_type']=='markdown' for c in nb['cells'])
 student='\n'.join(''.join(c['source']) for c in nb['cells'])
 assert 'HW 2B' not in student
-assert all('beamCase=hw3-'+n in student for n in ['cantilever','roller-pin','fixed'])
+assert 'beamCase=hw3-' not in student and 'beamCase=hw2b-' not in student
+assert 'Requested elements = 30' in student
 assert all(x not in student for x in ['5.005646','0.533272','0.0711029','-20.25','−20.25'])
 with ZipFile(folder/'MIE446_HW3_Student_Pack.zip') as z:
     assert len(z.namelist())==6 and not any('solution' in n.lower() for n in z.namelist())

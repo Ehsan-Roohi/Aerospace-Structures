@@ -88,15 +88,9 @@ EXPLANATION = """### 1.2 Why the bending app can give the same answer after swap
 - The app reports positive reaction force downward and positive reaction couple clockwise. Reverse those two reaction signs to compare with hand calculations using upward and counterclockwise positive. Displacement remains downward-positive in both.
 """
 
-HW_LINKS = """### HW 2B three distributed loads in the software
+HW_LINKS = """### HW 3 manual model setup
 
-These links set the complete assessed model: L = 450 mm, b = 16 mm, h = 8 mm, E = 2200 MPa. They replace all previous loads. They are **not** the 2 N point-force examples used earlier in this lecture.
-
-1. [Case 1 cantilever with a triangle increasing toward the free end](https://ehsan-roohi.github.io/Aerospace-Structures/wing-lab.html?beamCase=hw2b-cantilever): load intensity 0 to 0.002 N/mm.
-2. [Case 2 left roller and right pin with a trapezoidal load](https://ehsan-roohi.github.io/Aerospace-Structures/wing-lab.html?beamCase=hw2b-roller-pin): 0.001 to 0.002 N/mm.
-3. [Case 3 fixed–fixed with a triangle greatest at the left end](https://ehsan-roohi.github.io/Aerospace-Structures/wing-lab.html?beamCase=hw2b-fixed): 0.002 to 0 N/mm.
-
-Read the support reaction force, reaction couple, vertical displacement and rotation from the table. The software also lets you select a triangle with zero intensity at either end. This section is a setup aid for the existing HW 2B tasks, not an additional assignment.
+Open the blank [Beam Lab](https://ehsan-roohi.github.io/Aerospace-Structures/wing-lab.html) and enter the supports, section, material and line load from the [HW 3 handout](https://github.com/Ehsan-Roohi/Aerospace-Structures/blob/main/assignments/homework-03/README.md). Clear unwanted loads, supports and hinges, leave self-weight off and use Requested elements = 30. No homework preset or convergence table is provided or required. Solve after editing inputs and read the exact station table.
 """
 
 def extra_cells():

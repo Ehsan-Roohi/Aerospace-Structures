@@ -12,7 +12,7 @@ try {
  assert.ok($('#beamGuideOpen').closest('.bl-start-guide'));
  assert.equal(w.BeamLab.state().model.loads.length,0);
  assert.equal(w.BeamLab.state().model.supports.length,0);
- assert.equal($('#beamGeometry [name="length"]').value,'');assert.equal($('#beamGeometry [name="elements"]').value,'');assert.equal($('#beamShape').value,'');
+ assert.equal($('#beamGeometry [name="length"]').value,'450');assert.equal($('#beamGeometry [name="elements"]').value,'30');assert.equal($('#beamShape').value,'rectangle');
  configureBlankBeam(dom);
  $('#beamleftSupport').value='fixed';$('#beamSolve').click();
  $('#beamLoadKind').value='point';$('#beamLoadKind').dispatchEvent(new w.Event('change'));

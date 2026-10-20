@@ -59,7 +59,7 @@ const Lecture03BeamCases = Object.freeze({
 
   // One cut station for the whole page: the Diagrams readout, the plot markers, the beam picture and Cut & section.
   const st={model:initial,solved:null,error:'',mechanism:null,draftError:'',tab:'diagrams',cut:{x:initial.length/2,side:'both',limit:'left',note:''},
-    mode:0,animated:false,phase:0,placing:null,drag:null,editLoad:null,editorLoad:null,blankSetup:!hasInitialStudy,compare:{A:null,B:null},showDeflection:true,autoSolve:false,
+    mode:0,animated:false,phase:0,placing:null,drag:null,editLoad:null,editorLoad:null,blankSetup:false,compare:{A:null,B:null},showDeflection:true,autoSolve:false,
     cache:{},message:''};
   const cutTab=()=>st.tab==='cut'||st.tab==='diagrams';   // tabs that show (and let you drag) the cut station
 
@@ -290,7 +290,7 @@ const Lecture03BeamCases = Object.freeze({
       <div class="bl-tabpanel bl-learn" role="tabpanel" id="beamTab-learn" aria-labelledby="beamTabBtn-learn" hidden>
         <section class="bl-box bl-guide" id="beamGuide" aria-labelledby="beamGuideTitle">
           <h3 id="beamGuideTitle" tabindex="-1">User manual · Quick guide</h3>
-          <p><b>First visit?</b> Length, material properties, mesh count and cross-section are initially unset. No supports or loads are applied, and self-weight is off. Empty fields are not zeros: enter a valid beam before drawing or solving. Only an explicitly chosen example, shared link or imported study fills in a model.</p>
+          <p><b>First visit?</b> An editable initial beam is shown: L = 450 mm, rectangular section 20 × 10 mm, E = 2000 MPa, density 1.24 g/cm³ and 30 requested elements. These are starting values, not prescribed design data. Change length, material, mesh and section in panels 1–2; valid changes update the drawing. No supports or loads are applied, self-weight is off, and no structural solution is shown until you define stable restraints and press Solve. Examples, shared links and imported studies explicitly load their own models.</p>
           <ol class="bl-guide-steps">
             <li><b>Set dimensions and material.</b> In panels 1–2 enter length L, elastic modulus E, density and cross-section dimensions in the displayed units. Elements are numerical subdivisions, not physical parts; open the mesh help for accuracy guidance.</li>
             <li><b>Place supports.</b> Select <b>Fixed</b>, <b>Pin</b> or <b>Roller</b> above the picture, then click the beam at the intended station. A click near an end sets its restraint; an interior click adds an interior support. Drag an interior support to move it, or type its exact x in panel 3. End restraints can also be selected in the Left/Right end menus. A hinge is a moment release, <b>not a support to ground</b>.</li>
@@ -1730,10 +1730,9 @@ const Lecture03BeamCases = Object.freeze({
   $('#beamTab-learn').insertAdjacentHTML('beforeend','<section class="bl-box"><h3>Two materials: compatibility before stress</h3><p>The bonded two-material rectangle has lower material 1 and upper material 2. The E and density inputs define material 1; E₂/E₁ and ρ₂/ρ₁ define material 2. Upper thickness h₂ is measured down from the top surface. Both materials are individually linear isotropic; this is not a fibre-composite laminate model.</p><p><b>Compatibility:</b> perfect bonding makes the axial strain continuous across the interface and preserves plane sections. <b>Axial equilibrium:</b> with no applied axial force, ∫σ dA=0, so zNA=Σ(EᵢAᵢzᵢ)/Σ(EᵢAᵢ). <b>Bending:</b> D=Σ Eᵢ[Iᵢ,c+Aᵢ(zᵢ−zNA)²]=E₁Itrans. Thus εx=−M(z−zNA)/D and σᵢ=Eᵢεx. The strain is continuous, but stress generally jumps when E changes.</p><p><b>Shear transfer:</b> define Qtrans(z)=∫above (Eᵢ/E₁)(z′−zNA)dA. Then qₛ=VQtrans/Itrans and τ=qₛ/b for this rectangular two-layer section. At the bond this is the longitudinal shear transferred per unit beam length. It is an average elastic demand, not a prediction of adhesive peel stress or debonding strength. V and M come from the same beam equilibrium as before; curvature uses the composite D, while mass and self-weight use ΣρᵢAᵢ. Unequal densities make equal area different from equal mass.</p><p><b>Limits:</b> straight prismatic layers, perfect bond and small deflection; no slip, delamination, adhesive failure, temperature strain, plasticity or anisotropic laminate coupling. The shear-centre example in Cut &amp; section is a separate open-channel calculation, not an added torsional degree of freedom.</p><p>Reference: <a href="https://ocw.mit.edu/courses/1-050-solid-mechanics-fall-2004/resources/emech9_04/" target="_blank" rel="noopener noreferrer">MIT Solid Mechanics: composite beams, compatibility, constitutive relations and shear</a>.</p></section>');
 
   renderInputs(st.model);
-  if(!hasInitialStudy){for(const k of ['length','E','density','elements']){geometryInput(k).value='';geometryInput(k).placeholder='Enter value';}$('#beamShape').value='';renderSectionFields({shape:''});renderSectionView();}
   fillFormFromSingleLoad();
   if(st.model.supports.length) solve();
-  else {draftChanged();message('Start by entering length, material, mesh count and cross-section. Then place supports, add loads and Solve. Open User manual · Start here for help.');}
+  else {draftChanged();message('Initial beam: 450 mm, rectangular section 20 × 10 mm. Edit its dimensions and material on the left; then place supports, add loads and Solve. No load or support is applied automatically.');}
   if(lectureCase) message('Lecture 03 example loaded and solved. Dimensions: '+st.model.length+' × '+st.model.section.width+' × '+st.model.section.height+' mm; E = '+st.model.E+' MPa. Previous loads replaced.');
   else if(startMessage) message(startMessage);
   if(!hasInitialStudy)$$('.bl-input[data-invalid]',host).forEach(el=>el.dataset.invalid='false');

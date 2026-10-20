@@ -43,6 +43,11 @@ try {
   assert.equal(w.MetalWingUI.state.input.inertiaRelief,true);
   assert.equal(w.MetalWingUI.state.input.n,6);
   await wait(()=>q('#mChip').textContent.includes('meet assumed'));
+  assert.equal(w.MetalWingUI.state.show,'all','loaded solve shows the complete wing');
+  assert.equal(w.MetalWingUI.state.plot,'disp');
+  assert.equal(w.MetalWingUI.state.deformed,true);
+  assert.equal(w.MetalWingUI.state.arrows,true);
+  assert.equal(w.MetalWingUI.state.clip,false);
   // Negative-side governing capacity 5 g meets 4.5 g, even though it is below +9 g.
   assert.ok(q('#mChip').classList.contains('ok'));
   q('[data-mtab="theory"]').click();

@@ -246,14 +246,15 @@ const WingLoadsUI = (() => {
     const kinds = FORM_KINDS.filter(([k]) => k !== 'schrenk' || ad.allowSchrenk);
     const val = (k) => ad.kindValue[k] || k, canon = (v) => (Object.entries(ad.kindValue).find(([, x]) => x === v) || [v])[0];
     const d = typeof ad.defaults === 'function' ? ad.defaults() : ad.defaults || {};
-    const field = (fid, label, value, extra = '') => `<div class="field"><label for="${fid}">${label}</label><input id="${fid}" type="number" step="any" value="${value}" ${extra}></div>`;
+    const field = (fid, label, value, extra = '') => `<div class="field"><label for="${fid}">${label}</label><input id="${fid}" type="number" step="any" value="${value}" aria-describedby="${fid}Error" ${extra}><small id="${fid}Error" class="wle-err"></small></div>`;
     const select = (fid, label, options, value) => `<div class="field"><label for="${fid}">${label}</label><select id="${fid}">${options.map(([v, t]) => `<option value="${v}"${v === value ? ' selected' : ''}>${t}</option>`).join('')}</select></div>`;
     container.innerHTML = `<div class="wle" data-workspace="${ad.workspace}">
       <form id="${id.form}" class="callout wle-form" novalidate><h3>Add a load to the current wing</h3>
+        <div class="wle-submitbar" style="position:sticky;top:0;z-index:3;background:var(--panel,#fff);padding:8px 0"><button class="btn primary" type="submit">Add load</button><p class="wle-draft-error wle-err" role="alert"></p><p class="note" style="margin:4px 0">Draft only until confirmed. Add load registers the force and updates the analysis; Solve alone does not register this form.</p></div>
         ${ad.pickOnModel ? '<button class="btn wle-pick" type="button" aria-pressed="false">⌖ Pick on 3-D wing</button><p class="note">Select the shape below, then pick on the undeformed skin. A point force needs one click; a line load needs start and end clicks. The first click fixes x/c for the whole interval. Schrenk uses the whole span. Picking only fills coordinates: enter magnitude and confirm Add load. No automatic force. Cancel with Esc.</p>' : ''}
         ${ad.showDeformation ? '<button class="btn wle-show-deformation" type="button">Show bending &amp; twist</button>' : ''}
         ${select(id.kind, 'Shape', kinds.map(([k, t]) => [val(k), t]), val('point'))}
-        ${field(id.a, 'Point station or start', d.a)}${field(id.b, 'Distributed end', d.b)}${field(id.P, `Point force (${u.force}, upward +)`, d.P)}
+        <p class="note wle-range"></p>${field(id.a, 'Point station or start', d.a)}${field(id.b, 'Distributed end', d.b)}${field(id.P, `Point force (${u.force}, upward +)`, d.P)}
         ${field(id.q0, `Start intensity (${u.line})`, d.q0)}${field(id.q1, `End intensity (${u.line})`, d.q1)}
         ${select(id.shape, 'Where is the maximum?', [['start', 'At the start (root side), zero at the end'], ['end', 'At the end (tip side), zero at the start'], ['middle', 'Symmetric: zero at both ends, maximum in the middle']], 'start')}
         ${select(id.basis, 'Enter', [['total', 'Total force F'], ['peak', 'Peak intensity w₀']], 'total')}
@@ -324,11 +325,18 @@ const WingLoadsUI = (() => {
       container.querySelector(`label[for="${id.q0}"]`).textContent = k === 'uniform' ? `Uniform intensity q (${u.line}, upward +)` : `Start intensity q(a) (${u.line}, upward +)`;
       container.querySelector(`label[for="${id.q1}"]`).textContent = `End intensity q(b) (${u.line}, upward +)`;
       const total = schrenk || byId(id.basis).value === 'total';
+      const bounds=ad.range();$('.wle-range').textContent=`Allowed stations: ${fmt(bounds.min)}–${fmt(bounds.max)} ${u.length} from root. Enter bounds within this interval; no load is clipped or moved automatically.`;
+      for(const fid of [id.a,id.b]){byId(fid).min=bounds.min;byId(fid).max=bounds.max;}
       if (schrenk) {byId(id.basis).value = 'total';lastBasis='total';}
       container.querySelector(`label[for="${id.value}"]`).textContent = total ? `Total force F (${u.force}, upward +)` : `Peak intensity w₀ (${u.line}, upward +)`;
       law(); chord();livePreview();
     }
     function itemFromForm() {
+      const p=parseItemFromForm(),base=ad.mode()==='custom'?ad.items():[];
+      ad.validate([...base,p]);
+      return p;
+    }
+    function parseItemFromForm() {
       const k = canon(byId(id.kind).value), xc = readNum(id.xc, 'Chord position x/c');
       if (!(xc >= 0 && xc <= 1)) throw new Error('Chord position x/c must be between 0 (leading edge) and 1 (trailing edge).');
       if (k === 'point') return { kind: 'point', position: readNum(id.a, 'Point station'), force: readNum(id.P, 'Point force'), fraction: xc };
@@ -401,7 +409,15 @@ const WingLoadsUI = (() => {
         return P.previewFigure(v.p,{units:u,positive:'up',reference:ad.refStation,summary:v.summary,note:v.note,scalePeak:$('.wle-scale').value==='common'?Math.max(peak(p),...items.map(peak)):null});
       }catch(e){return `<p class="note">${esc(e.message)}</p>`;}
     }
-    function livePreview() {const out=$('.wle-live-preview');try{out.innerHTML='<b>Live input preview — not applied until Add load</b>'+profile(itemFromForm(),ad.items());}catch(e){out.textContent='Enter complete load parameters to see the live schematic.';}}
+    function livePreview() {
+      const out=$('.wle-live-preview'),range=ad.range(),a=byId(id.a),b=byId(id.b);
+      for(const field of [a,b]){const v=field.value.trim()===''?NaN:Number(field.value);field.setAttribute('aria-invalid',String(!field.disabled&&Number.isFinite(v)&&(v<range.min||v>range.max)));}
+      const invalidOrder=!a.disabled&&!b.disabled&&a.value!==''&&b.value!==''&&+b.value<=+a.value;
+      if(invalidOrder){a.setAttribute('aria-invalid','true');b.setAttribute('aria-invalid','true');}
+      for(const f of [a,b]){const bad=f.getAttribute('aria-invalid')==='true';f.style.borderColor=bad?'#c72839':'';byId(f.id+'Error').textContent=bad?(invalidOrder?'End must be greater than start.':`Use ${fmt(range.min)}–${fmt(range.max)} ${u.length}.`):'';}
+      try{const p=itemFromForm();$('.wle-draft-error').textContent='';out.innerHTML='<b>Live input preview — not applied until Add load</b>'+profile(p,ad.items());container.querySelectorAll('button[type="submit"]').forEach(b=>b.disabled=false);}
+      catch(e){$('.wle-draft-error').textContent='Not applied: '+e.message;out.innerHTML='<p class="wle-err" role="alert">Not applied: '+esc(e.message)+' Current loads and results are unchanged.</p>';container.querySelectorAll('button[type="submit"]').forEach(b=>b.disabled=true);}
+    }
     $('.wle-scale').onchange=()=>{renderList();livePreview();if(ad.onScale)ad.onScale($('.wle-scale').value);};
     function tryApply(items, note) {
       cancelPick();
@@ -412,7 +428,7 @@ const WingLoadsUI = (() => {
       cancelPick();
       e.preventDefault();
       let p;
-      try { p = itemFromForm(); } catch (x) { status(`<span class="wle-err">${esc(x.message)}</span>`); return; }
+      try { p = itemFromForm(); } catch (x) { status(`<span class="wle-err">${esc(x.message)}</span> Nothing was changed.`); return; }
       const base = ad.mode() === 'custom' ? ad.items() : [];
       tryApply([...base, p], 'Load added.');
     };

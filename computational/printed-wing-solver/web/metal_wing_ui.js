@@ -238,6 +238,12 @@
       await frame();
       R = E.solve({ ...MS.input, collapse: true });
       R1 = MS.input.n === 1 ? R : E.solve({ ...MS.input, n: 1, collapse: true });
+      const loaded=R.input.customLoads==null||R.input.customLoads.length>0;
+      if(loaded){
+        MS.show='all';VIEW.preset=null;MS.deformed=true;MS.scale=MS.scale>0?MS.scale:1;MS.arrows=true;MS.clip=false;
+        $('#mDef').setAttribute('aria-pressed','true');$('#mArrows').setAttribute('aria-pressed','true');$('#mClip').setAttribute('aria-pressed','false');$('#mScale').value=MS.scale;
+        applyShow();applyClip();setPlot('disp');
+      }
       $("#mLoadBar").style.width = "100%";
       updateModel(); renderAll();
       $("#mFoot").textContent = `Solved in ${((performance.now() - t0) / 1000).toFixed(2)} s · ${R.stations.length} thin-walled sections × ${R.sections[0].walls.length} walls · lifting line N = 60 · beam FE ${R.fem ? R.fem.y.length - 1 : 0} elements · ${R.checks.length} strength sections`;
@@ -640,7 +646,7 @@
       const ticks = p === "buckle" ? [3, 2, 1, 0].map((v) => (v === 3 ? "≥ 3" : String(v))) : Array.from({ length: N }, (_, i) => fmt(hi - ((hi - lo) * i) / (N - 1)));
       L.innerHTML = `<div class="bar-c" style="background:linear-gradient(${cols.join(",")})"></div><div class="ticks">${ticks.map((t) => `<span>${t}</span>`).join("")}</div>`;
     }
-    if (R) info.innerHTML = `<b>${R.input.customLoads!=null?'Custom load multiplier':'Load factor'}</b> ${sgn(R.n, 1)} ${R.input.customLoads!=null?'×':'g'} &nbsp; <b>tip</b> ${nf(R.tip.wMax * 1e3, 1)} mm &nbsp; <b>twist</b> ${sgn(R.tip.twistDeg, 2)}°<br><b>deformation shown</b> ×${nf(deformScale(), 0)}`;
+    if (R) info.innerHTML = `<b>${R.input.customLoads!=null?'Custom load multiplier':'Load factor'}</b> ${sgn(R.n, 1)} ${R.input.customLoads!=null?'×':'g'} &nbsp; <b>tip</b> ${nf(R.tip.wMax * 1e3, 3)} mm &nbsp; <b>twist</b> ${sgn(R.tip.twistDeg, 4)}°<br><b>visual deformation</b> ×${nf(deformScale(), 1)} · colour legend shows actual values, not amplified motion`;
   }
   function updateModel() {
     if (!model || !R) return;
@@ -704,7 +710,7 @@
       const part = lab.dataset.mlabel, x = part === "mainSpar" ? P.sparX : P.falseSparX, y = part === "mainSpar" ? 2.2 : 3.4;
       const top = W.section(y, [x]).up[0], d = dispAt(y);
       const v = new THREE.Vector3(...V3(y, top[0], top[1] + k * (d.w + d.tw * (d.xsc - top[0])))).project(camera);
-      const show = !!VIEW.parts[part] && v.z > -1 && v.z < 1 && Math.abs(v.x) < 1 && Math.abs(v.y) < 1;
+      const show = VIEW.skin!=='opaque' && !!VIEW.parts[part] && v.z > -1 && v.z < 1 && Math.abs(v.x) < 1 && Math.abs(v.y) < 1;
       lab.hidden = !show;
       if (show) { lab.style.left = `${((v.x + 1) * cv.clientWidth) / 2}px`; lab.style.top = `${((1 - v.y) * cv.clientHeight) / 2}px`; }
     }

@@ -212,6 +212,14 @@ const ad520=(state)=>({
   near(r.perG.M(0.46+1e-12),10000*4*(4.93-0.46)/(3*Math.PI),1e-12,'moment at the fittings = 4ℓF/(3π)');
   set('ma',0.3);set('mb',3);$('#mf').dispatchEvent(new w.Event('submit',{bubbles:true,cancelable:true}));
   ok(/Nothing was changed/.test($('#mstatus').textContent)&&state.customLoads.length===1,'inboard of the fittings: refused, unchanged');
+  $('#mf').dispatchEvent(new w.Event('input',{bubbles:true}));
+  ok(/Not applied:/.test($('#host .wle-live-preview').textContent),'out-of-range draft warns before submission');
+  eq($('#ma').getAttribute('aria-invalid'),'true','invalid station marked beside its field');
+  ok([...$('#mf').querySelectorAll('button[type="submit"]')].every(b=>b.disabled),'both Add load buttons disabled for an invalid draft');
+  eq($('#host .wle-live-preview svg'),null,'invalid draft has no force schematic');
+  set('ma',0.46);$('#mf').dispatchEvent(new w.Event('input',{bubbles:true}));
+  ok([...$('#mf').querySelectorAll('button[type="submit"]')].every(b=>!b.disabled),'correcting the bound enables registration');
+  eq($('#ma').getAttribute('aria-invalid'),'false');
   const csv=text=>{$('#mcsvText').value=text;$('#mcsvPreview').click();return $('#mcsvOut').textContent;};
   ok(/Not imported/.test(csv('y_mm,w_N_per_mm\n460,1\n4930,0')),'mm columns refused in the D.520 (m, N/m)');
   ok(/Preview: 3 rows/.test(csv('y_m,w_N_per_m,x_over_c\n0.46,3000,0.25\n2.5,1500,0.3\n4.93,0,0.5'))&&/N·m/.test($('#mcsvOut').textContent),'SI preview');

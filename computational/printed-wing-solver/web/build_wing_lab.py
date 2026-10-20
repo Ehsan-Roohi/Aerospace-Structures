@@ -45,3 +45,6 @@ standalone = (
 )
 (REPO / "docs" / "wing-lab.html").write_text(standalone, encoding="utf-8", newline="\n")
 print(f"dist/wing-lab.html {len(page)/1024:.0f} KB; docs/wing-lab.html written")
+# Keep the linked planar-truss workspace reproducible with the same course-site build.
+import runpy
+runpy.run_path(str(HERE / 'build_truss_lab.py'), run_name='__main__')

@@ -57,7 +57,10 @@
 .bl-nav button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
 .bl-intro { color: var(--muted); font-size: 14.5px; margin: 10px 0 0; max-width: 92ch; }
 .bl-start-guide { display:flex; flex-wrap:wrap; align-items:center; gap:12px; flex-basis:100%; color:var(--fg); }
-.bl-load-editor { border:2px solid var(--accent); border-radius:12px; padding:14px; margin:14px 0; min-width:0; }
+.bl-load-editor { position:relative; border:2px solid var(--accent); border-radius:12px; padding:14px; margin:14px 0; min-width:0; }
+.bl-load-editor[hidden] { display:none; }
+.bl-editor-close { position:absolute; right:8px; top:8px; font-size:24px; min-width:40px; }
+.bl-load-editor h3 { padding-right:48px; }
 .bl-load-editor h3 { margin:0 0 8px; }
 .bl-load-editor .bl-grid2 { grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr)); }
 .bl-load-editor .bl-box { margin-bottom:0; }

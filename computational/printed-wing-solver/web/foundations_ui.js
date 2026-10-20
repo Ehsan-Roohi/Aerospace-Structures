@@ -82,10 +82,11 @@ const Lecture03BeamCases = Object.freeze({
     <nav class="bl-nav" id="beamNav" aria-label="Workspaces">
       <button type="button" data-stage="beam" aria-pressed="true">Beam</button>
       <button type="button" data-stage="wing" aria-pressed="false">Wing</button>
+      <a class="bl-btn" href="truss-lab.html">Truss Lab</a>
       <button type="button" data-stage="metal" aria-pressed="false">D.520 full-scale wing</button>
       <details class="bl-companion"><summary>Wing geometry tool</summary><div class="bl-companion-pop" data-companion="vinco"></div></details>
     </nav>
-    <div class="bl-start-guide"><button type="button" class="bl-btn bl-btn-primary" id="beamGuideOpen">User manual · Start here</button><span>1 · Place supports → 2 · Place loads → 3 · Enter values below the picture → 4 · Solve</span></div>
+    <div class="bl-start-guide"><button type="button" class="bl-btn bl-btn-primary" id="beamGuideOpen">User manual · Start here</button><span>1 · Place supports → 2 · Place loads → 3 · Enter load values → 4 · Solve</span></div>
     <p class="bl-intro">Results belong to the last <b>solved</b> model. Changes remain pending until you press <b>Solve</b>.</p>
   </header>
   <div class="bl-app">
@@ -182,7 +183,7 @@ const Lecture03BeamCases = Object.freeze({
       <div class="bl-row"><button type="button" class="bl-btn bl-btn-sm" id="beamDeleteSelected" disabled>Delete selected item</button><span id="beamSelection" class="bl-help" role="status">Select a load, support or hinge; press Delete to remove it.</span></div>
       <div id="beamPicture" class="bl-picture"></div>
       <p class="bl-picture-note" id="beamPictureNote"></p>
-      <section class="bl-load-editor" id="beamLoadEditor" aria-labelledby="beamLoadEditorTitle"><h3 id="beamLoadEditorTitle">Load parameters</h3><p class="bl-help">Pick a load tool above and click a station or drag an interval. Edit the coordinates and magnitude here, then confirm. Zero is a valid coordinate; it is not an applied force. No force is added automatically.</p></section>
+      <section class="bl-load-editor" id="beamLoadEditor" aria-labelledby="beamLoadEditorTitle" hidden><button type="button" class="bl-btn bl-editor-close" id="beamLoadEditorClose" aria-label="Close graphical load editor and return parameters to the left">×</button><h3 id="beamLoadEditorTitle">Load parameters</h3><p class="bl-help">Edit position, interval and magnitude, then confirm. Close × to return this form to the left. Closing never deletes an applied load.</p></section>
       <div id="beamKpis" class="bl-kpis" aria-label="Key results"></div>
       <div id="beamNotice"></div>
       <p id="beamStatus" class="bl-message" role="status" aria-live="polite"></p>
@@ -338,9 +339,17 @@ const Lecture03BeamCases = Object.freeze({
   </div>
   <div id="beamPrint" class="bl-print" aria-hidden="true"></div>`;
   // Keep one form and its listeners: graphical placement never sends the user away from the model.
-  const editorLink=document.createElement('p');editorLink.className='bl-help';editorLink.innerHTML='Set positions and magnitudes in <a href="#beamLoadEditor">Load parameters below the beam picture</a>.';
-  $('#beamLoadForm').before(editorLink);
-  $('#beamLoadEditor').append($('#beamLoadForm'));
+  const loadFormHome=document.createElement('div');loadFormHome.id='beamLoadFormHome';
+  $('#beamLoadForm').before(loadFormHome);loadFormHome.append($('#beamLoadForm'));
+  function showGraphicEditor(open) {
+    $('#beamLoadEditor').hidden=!open;
+    (open?$('#beamLoadEditor'):loadFormHome).append($('#beamLoadForm'));
+  }
+  $('#beamLoadEditorClose').onclick=()=>{
+    showGraphicEditor(false);st.graphicPreview=null;st.editLoad=null;syncLoadForm();renderPicture();
+    message('Graphical load editor closed. Parameters are available on the left; applied loads are unchanged.');
+    $('#beamStopPlacing').focus({preventScroll:true});
+  };
   if(typeof CompanionTools!=='undefined') CompanionTools.fill(host);
 
   /* ------------------------------------------------------------- inputs */
@@ -677,6 +686,7 @@ const Lecture03BeamCases = Object.freeze({
     if(st.placing) message(st.placing.startsWith('load:')?'Point force/couple: click a station. Distributed load: drag an interval. Enter magnitude in Load parameters below the picture; nothing is applied until confirmed. Esc cancels.':`Click the beam to place a ${st.placing}. Press Esc or the button again to stop.`);
   }
   function prepareGraphicLoad(kind,a,b) {
+    showGraphicEditor(true);
     st.editLoad=null;
     $('#beamLoadKind').value=kind;
     $('#beamLoadA').value=Math.min(a,b);$('#beamLoadB').value=Math.max(a,b);
@@ -1552,7 +1562,8 @@ const Lecture03BeamCases = Object.freeze({
   $('#beamShowDefl').onclick=e=>{st.showDeflection=!st.showDeflection;e.currentTarget.setAttribute('aria-pressed',String(st.showDeflection));renderPicture();};
   document.addEventListener('keydown',e=>{
     if(e.key==='Escape'&&(st.placing||st.drag||st.graphicPreview))cancelPlacement();
-    if(e.key!=='Delete'||e.ctrlKey||e.altKey||e.metaKey||host.hidden||!host.contains(e.target))return;
+    if(e.key!=='Delete'||e.ctrlKey||e.altKey||e.metaKey||host.hidden)return;
+    if(!host.contains(e.target)&&e.target!==document.body&&e.target!==document.documentElement)return;
     if(e.target.closest('input,textarea,select,[contenteditable="true"],[role="textbox"]'))return;
     if(selection){e.preventDefault();deleteSelection();}
   });
@@ -1622,7 +1633,7 @@ const Lecture03BeamCases = Object.freeze({
   pic.addEventListener('focusin',e=>{const s=selectionFrom(e.target);if(s){selection=s;decorateSelection();}});
   pic.addEventListener('dblclick',e=>{const s=selectionFrom(e.target);if(s&&s.type==='load')editLoad(s.index);});
   pic.addEventListener('keydown',e=>{const s=selectionFrom(e.target);if(s&&(e.key==='Enter'||e.key===' ')){e.preventDefault();selection=s;decorateSelection();if(s.type==='load')editLoad(s.index);}});
-  pic.addEventListener('click',e=>{if(st.suppressPlaceClick){st.suppressPlaceClick=false;return;}if(!st.placing)return;const x=svgX(e);if(x!==null)placeAt(snap(x,st.model.length));});
+  pic.addEventListener('click',e=>{if(st.suppressPlaceClick){st.suppressPlaceClick=false;return;}if(!st.placing){const s=selectionFrom(e.target);if(s){selection=s;decorateSelection();e.target.closest('[tabindex]')?.focus();}return;}const x=svgX(e);if(x!==null)placeAt(snap(x,st.model.length));});
   // Cut controls.
   $('#beamCut').oninput=e=>setCut(+e.target.value);
   $('#beamCutX').onchange=e=>{const v=Number(e.target.value);if(Number.isFinite(v))setCut(v);};

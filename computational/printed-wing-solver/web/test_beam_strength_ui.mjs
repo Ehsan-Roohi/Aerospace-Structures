@@ -3,6 +3,7 @@ const dom=new JSDOM('<div id="foundations"></div>',{runScripts:'outside-only'}),
 const change=(id,value)=>{$(id).value=String(value);$(id).dispatchEvent(new w.Event('change',{bubbles:true}));};
 let csvText='',downloadName='';w.Blob=class{constructor(parts){this.parts=parts;}};w.URL.createObjectURL=blob=>{csvText=blob.parts.join('');return 'blob:test';};w.URL.revokeObjectURL=()=>{};w.HTMLAnchorElement.prototype.click=function(){downloadName=this.download;};
 try{
+ assert.ok($('#beamLoadEditor').compareDocumentPosition($('#beamStrengthInspector')) & w.Node.DOCUMENT_POSITION_FOLLOWING,'load-value editor must precede strength inspector');
  assert.match($('#beamStrengthResult').textContent,/NOT CHECKED/);assert.equal($('#strength0_yield').value,'');assert.equal($('#beamStrengthCsv').disabled,true);
  $('#beamleftSupport').value='fixed';$('#beamSolve').click();assert.equal(w.BeamStrengthUI.assessment().status,'unchecked');assert.match($('#beamStrengthResult').textContent,/missing/);
  change('#strengthRequired',2);change('#strength0_yield',27);assert.equal(w.BeamStrengthUI.assessment().status,'within');assert.equal(w.BeamStrengthUI.assessment().maxBound,0);

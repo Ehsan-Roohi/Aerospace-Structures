@@ -2,7 +2,11 @@
  * Beam Sections — MIE 446 cross-section library for the Euler–Bernoulli teaching model.
  * Browser: BeamSections.properties(section). Node: require('./beam_sections.js').
  *
- * Homogeneous, prismatic, doubly symmetric sections bent about their horizontal axis.
+ * Homogeneous, prismatic, doubly symmetric sections bent about their horizontal axis;
+ * also a perfectly bonded two-layer rectangle, transformed to lower material 1.
+ * Layered: E2/E1 and rho2/rho1 are dimensionless; z is from geometric mid-depth,
+ * zNA is the elastic neutral-axis offset, I is transformed, not geometric.
+ * Reference: MIT 1.050 Solid Mechanics, emech9_04 (composite beams).
  * Units: mm, N, MPa = N/mm². z is measured UPWARD from the neutral (centroidal) axis and
  * c is the extreme-fibre distance (depth/2 for every shape here).
  *
@@ -29,6 +33,7 @@ const BeamSections = (() => {
   const SHAPES = Object.freeze({
     rectangle: {label:'Solid rectangle', fields:[['width','b','Width'],['height','h','Depth']],
       defaults:{width:20,height:10}},
+    layered: {label:'Bonded two-material rectangle',fields:[['width','b','Width'],['height','h','Total depth'],['topThickness','h_2','Upper layer thickness'],['modulusRatio','E₂/E₁','Modulus ratio'],['densityRatio','ρ₂/ρ₁','Density ratio']],defaults:{width:20,height:10,topThickness:5,modulusRatio:2,densityRatio:1}},
     circle: {label:'Solid circle', fields:[['diameter','d','Diameter']], defaults:{diameter:16}},
     tube: {label:'Circular tube', fields:[['outerDiameter','D','Outer diameter'],['thickness','t','Wall thickness']],
       defaults:{outerDiameter:20,thickness:2}},
@@ -51,9 +56,10 @@ const BeamSections = (() => {
     if(!section||typeof section!=='object') throw new Error('Choose a cross-section.');
     const shape=section.shape===undefined?'rectangle':section.shape;
     if(typeof shape!=='string'||!Object.prototype.hasOwnProperty.call(SHAPES,shape))
-      throw new Error('Cross-section must be rectangle, circle, tube, box or ibeam.');
+      throw new Error('Cross-section must be rectangle, layered, circle, tube, box or ibeam.');
     const out={shape};
     for(const [key,symbol,label] of SHAPES[shape].fields) out[key]=positive(section[key],`${label} ${symbol}`);
+    if(shape==='layered'&&out.topThickness>=out.height)throw new Error('Upper layer thickness must be smaller than the total depth; both layers must have positive thickness.');
     if(shape==='tube'&&!(out.thickness<out.outerDiameter/2))
       throw new Error(`Tube wall thickness t must be less than D/2 = ${out.outerDiameter/2} mm. Use the solid circle for a filled section.`);
     if(shape==='box'&&!(2*out.thickness<Math.min(out.width,out.height)))
@@ -68,6 +74,14 @@ const BeamSections = (() => {
   /** Area, second moment, extreme fibre, first moment and shear factor for a section. */
   function properties(section) {
     const s=normalize(section);
+    if(s.shape==='layered'){
+      const b=s.width,h=s.height,t=s.topThickness,r=s.modulusRatio,c=h/2,j=c-t,h1=h-t;
+      const a1=b*h1,a2=b*t,z1=-t/2,z2=h1/2,zNA=(a1*z1+r*a2*z2)/(a1+r*a2);
+      const I=b*h1**3/12+a1*(z1-zNA)**2+r*(b*t**3/12+a2*(z2-zNA)**2);
+      const firstMoment=z=>{if(z<=-c||z>=c)return 0;const integ=(a,d,n)=>n*b*((d*d-a*a)/2-zNA*(d-a));return z>=j?integ(z,c,r):integ(z,j,1)+integ(j,c,r);};
+      const Qna=firstMoment(zNA),A=b*h;
+      return {shape:s.shape,label:SHAPES[s.shape].label,section:s,A,I,c,depth:h,width:b,S:I/Math.max(c-zNA,c+zNA),zNA,interfaceZ:j,modulusRatio:r,massArea:b*(h1+s.densityRatio*t),geometricI:b*h**3/12,Qna,bNA:b,shearFactor:A*Qna/(I*b),junctions:[j],slender:['Perfect bonding, linear isotropic layers and plane sections are assumed. No slip, delamination, adhesive failure, thermal mismatch or laminate coupling is solved. I is transformed to lower-layer material 1; E and density above are material 1.'],widthAt:z=>Math.abs(z)<=c?b:0,firstMoment};
+    }
     let A,I,c,Qna,bNA,width,shearFactor,widthAt,firstMoment,junctions=[],slender=[];
     if(s.shape==='rectangle') {
       const b=s.width,h=s.height;
@@ -109,10 +123,15 @@ const BeamSections = (() => {
 
   /** sigma(z) = -M z / I. Returns samples from the bottom fibre to the top fibre. */
   function stressProfile(props, M, n=21) {
+    if(props.shape==='layered'){
+      const z=[...new Set([...Array.from({length:n},(_,i)=>-props.c+2*props.c*i/(n-1)),props.interfaceZ])].sort((a,b)=>a-b);
+      return z.flatMap(v=>Math.abs(v-props.interfaceZ)<1e-12?[{z:v,sigma:normalStress(props,M,v,-1)},{z:v,sigma:normalStress(props,M,v,1)}]:[{z:v,sigma:normalStress(props,M,v)}]);
+    }
     const out=[];
     for(let i=0;i<n;i++){const z=-props.c+2*props.c*i/(n-1);out.push({z,sigma:-M*z/props.I});}
     return out;
   }
+  const normalStress=(p,M,z,side=0)=>-M*(z-(p.zNA||0))/p.I*(p.shape==='layered'&&(z>p.interfaceZ||(z===p.interfaceZ&&side>0))?p.modulusRatio:1);
 
   /**
    * tau(z) = V Q / (I b) from the bottom fibre to the top fibre. At a flange–web junction the
@@ -135,9 +154,9 @@ const BeamSections = (() => {
   }
 
   /** Mass per unit length in g/mm from density in g/cm³ (1 g/cm³ = 1e-3 g/mm³). */
-  const massPerLength=(props,density)=>density*props.A/1000;
+  const massPerLength=(props,density)=>density*(props.massArea||props.A)/1000;
   /** Self-weight line load in N/mm: rho[g/cm³]·1e3 kg/m³ × A[mm²]·1e-6 m² × g[m/s²] / 1000 mm/m. */
-  const selfWeightLine=(props,density,g=9.80665)=>density*1000*props.A*1e-6*g/1000;
+  const selfWeightLine=(props,density,g=9.80665)=>density*1000*(props.massArea||props.A)*1e-6*g/1000;
 
   /** Sections with the same area A as the given one, using stated, fixed proportions. */
   function equalMassCandidates(A) {
@@ -156,13 +175,26 @@ const BeamSections = (() => {
   function describe(section) {
     const s=normalize(section),f=v=>Number(v.toFixed(3));
     if(s.shape==='rectangle') return `Solid rectangle ${f(s.width)} × ${f(s.height)} mm (b × h)`;
+    if(s.shape==='layered')return `Bonded two-material rectangle ${f(s.width)} × ${f(s.height)} mm; upper h₂=${f(s.topThickness)} mm, E₂/E₁=${f(s.modulusRatio)}, ρ₂/ρ₁=${f(s.densityRatio)}`;
     if(s.shape==='circle') return `Solid circle d = ${f(s.diameter)} mm`;
     if(s.shape==='tube') return `Circular tube D = ${f(s.outerDiameter)} mm, t = ${f(s.thickness)} mm`;
     if(s.shape==='box') return `Hollow box ${f(s.width)} × ${f(s.height)} mm (B × H), t = ${f(s.thickness)} mm`;
     return `I-section b_f = ${f(s.flangeWidth)}, h = ${f(s.height)}, t_f = ${f(s.flangeThickness)}, t_w = ${f(s.webThickness)} mm`;
   }
+  // Homogeneous uniform-thickness open channel, centre-line geometry, thin-wall approximation.
+  // Open-section shear flow and torque equivalence: MIT 16.20, General Beam Theory.
+  function channelFlow({height:h,width:b,thickness:t},V){
+    positive(h,'Channel midline height');positive(b,'Channel flange midline width');positive(t,'Wall thickness');
+    if(!Number.isFinite(V))throw new Error('Shear force must be finite.');
+    if(t>Math.min(h,b)/10)throw new Error('This channel calculator requires t ≤ min(h,b)/10 (thin walls).');
+    const I=t*h**3/12+2*t*b*(h/2)**2,e=t*h*h*b*b/(4*I),centroidY=b*b/(h+2*b);
+    return {h,b,t,V,I,centroidY,shearCentreY:-e,offsetFromCentroid:-e-centroidY,
+      flangeForce:V*t*h*b*b/(4*I),qFlange:s=>V*t*h*s/(2*I),
+      qWeb:z=>V*t/I*(b*h/2+(h*h/4-z*z)/2),
+      tauMax:Math.abs(V)/I*(b*h/2+h*h/8)};
+  }
 
-  return {SHAPES,MAX_DIMENSION,normalize,properties,stressProfile,shearProfile,massPerLength,selfWeightLine,equalMassCandidates,describe};
+  return {SHAPES,MAX_DIMENSION,normalize,properties,normalStress,stressProfile,shearProfile,massPerLength,selfWeightLine,equalMassCandidates,describe,channelFlow};
 })();
 if(typeof module!=='undefined'&&module.exports)module.exports=BeamSections;
 if(typeof window!=='undefined')window.BeamSections=BeamSections;

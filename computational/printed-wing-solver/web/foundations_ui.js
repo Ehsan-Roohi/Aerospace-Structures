@@ -385,7 +385,7 @@ const Lecture03BeamCases = Object.freeze({
   }
   function renderSectionFields(section) {
     $('#beamSectionFields').innerHTML=SEC.SHAPES[section.shape].fields.map(([key,symbol,label])=>
-      `<label class="bl-field"><span>${label} ${symbol.replace(/_(\w+)/,'<sub>$1</sub>')}</span><span class="bl-input"><input data-sec="${key}" type="number" step="any" inputmode="decimal" value="${section[key]}"><span class="bl-unit">mm</span></span></label>`).join('');
+      `<label class="bl-field"><span>${label} ${symbol.replace(/_(\w+)/,'<sub>$1</sub>')}</span><span class="bl-input"><input data-sec="${key}" type="number" step="any" inputmode="decimal" value="${section[key]}"><span class="bl-unit">${key.endsWith('Ratio')?'ratio':'mm'}</span></span></label>`).join('');
   }
   const EMPTY={support:'<li class="bl-empty">None — use “+ Interior support” or Place on the picture.</li>',hinge:'<li class="bl-empty">None.</li>'};
   const supportRow=(s,i)=>`<li data-row="support" class="bl-rowedit"><span class="bl-tag sup">S${i+1}</span>
@@ -450,11 +450,15 @@ const Lecture03BeamCases = Object.freeze({
       const s=sectionFromDraft(), p=SEC.properties(s), rho=Number(geometryInput('density').value), L=Number(geometryInput('length').value);
       const mass=Number.isFinite(rho)&&Number.isFinite(L)?SEC.massPerLength(p,rho)*L:NaN, q=Number.isFinite(rho)?SEC.selfWeightLine(p,rho,B.GRAVITY):NaN;
       html=`<div class="bl-secview">${D.sectionDrawing(s,p,{width:300})}<dl class="bl-props">
-        <dt>Area A</dt><dd>${fmt(p.A)} mm²</dd><dt>Second moment I</dt><dd>${fmt(p.I)} mm⁴</dd><dt>Extreme fibre c</dt><dd>${fmt(p.c)} mm</dd>
-        <dt>Section modulus S = I/c</dt><dd>${fmt(p.S)} mm³</dd><dt>Shear factor k (τ<sub>max</sub> = k|V|/A)</dt><dd>${fmt(p.shearFactor,4)}</dd>
+        <dt>Area A</dt><dd>${fmt(p.A)} mm²</dd><dt>${s.shape==='layered'?'Transformed I (reference E₁)':'Second moment I'}</dt><dd>${fmt(p.I)} mm⁴</dd><dt>${s.shape==='layered'?'Geometric half-depth h/2':'Extreme fibre c'}</dt><dd>${fmt(p.c)} mm</dd>
+        <dt>${s.shape==='layered'?'Reference Itrans/cmax (not a universal stress modulus)':'Section modulus S = I/c'}</dt><dd>${fmt(p.S)} mm³</dd><dt>Shear factor k (τ<sub>max</sub> = k|V|/A)</dt><dd>${fmt(p.shearFactor,4)}</dd>
         <dt>Beam mass</dt><dd>${Number.isFinite(mass)?fmt(mass)+' g':'—'}</dd><dt>Self-weight ρgA</dt><dd>${Number.isFinite(q)?fmt(q)+' N/mm':'—'}</dd></dl></div>
         ${p.slender.map(t=>`<p class="bl-help bl-warnline">${esc(t)}</p>`).join('')}`;
       $('#beamSectionBadge').textContent=p.label;
+      if(s.shape==='layered'){
+        const E1=Number(geometryInput('E').value);
+        html+=`<p class="bl-help"><b>Material 1 = lower layer:</b> E₁=${fmt(E1)} MPa, ρ₁=${fmt(rho)} g/cm³. <b>Material 2 = upper layer:</b> E₂=${fmt(E1*s.modulusRatio)} MPa, ρ₂=${fmt(rho*s.densityRatio)} g/cm³. Edit E₁ and ρ₁ in Span/material and the ratios here. The displayed I is transformed to material 1, not the geometric I. zNA is measured upward from geometric mid-depth. Shared strain does not mean shared stress: σᵢ=−(Eᵢ/E₁)M(z−zNA)/Itrans. Perfect bond only; no slip or adhesive strength check. Changes affect the full beam solve, self-weight, stress, modal mass and all exports.</p>`;
+      }
       $('#beamSelfWeightValue').textContent=Number.isFinite(q)?`(${fmt(q)} N/mm, ${Number.isFinite(L)?fmt(q*L):'—'} N in total)`:'';
     } catch(e) {html=`<p class="bl-err">${esc(e.message)}</p>`;}
     $('#beamSectionView').innerHTML=html;
@@ -816,7 +820,7 @@ const Lecture03BeamCases = Object.freeze({
     moment:"Sign convention: M > 0 is sagging (top fibre in compression); it acts counter-clockwise on the left part's cut face and clockwise on the right part's face.",
     deflection:'Sign convention: v > 0 is downward and is plotted downward.',
     rotation:'Sign convention: θ = dv/dx > 0 is clockwise.',
-    stressTop:'Sign convention: σ > 0 is tension; top fibre σ = −M c / I.',
+    stressTop:'σ > 0 is tension. Homogeneous: σ = −Mz/I. Bonded layers: σᵢ = −(Eᵢ/E₁)M(z−zNA)/Itrans; shared strain, generally different stresses.',
     shearStressMax:'Magnitude |τ|max = k |V| / A at the neutral axis (k depends on the cross-section).'};
   function modelLines(m,r) {
     const sup=m.supports.map((s,i)=>`${D.supportName(i)} ${s.kind} at x = ${plain(s.x)} mm`).join(', ')||'none';
@@ -1080,6 +1084,7 @@ const Lecture03BeamCases = Object.freeze({
     const p=r.sectionProperties;
     $('#beamCutSection').innerHTML=D.sectionStress(r.section,p,M,V,{width:width($('#beamCutSection'))});
     $('#beamCutSectionNote').textContent=`${p.label}: σ(z) = −Mz/I is linear through the depth (T = tension, C = compression). τ(z) = VQ/(Ib) uses the total material width b(z)${['tube','box'].includes(p.shape)?'; where the cut crosses two walls, b is their sum':''}${['ibeam','box'].includes(p.shape)?'; the jump at the flange–web junction comes from the change in b':''}. Local buckling and clamp or contact stress concentrations are outside this beam model.`;
+    if(p.shape==='layered')$('#beamCutSectionNote').textContent='Perfectly bonded layers: axial strain is continuous; σᵢ=−(Eᵢ/E₁)M(z−zNA)/Itrans is piecewise linear and can jump at the interface. The figure checks both sides of the bond. Interface qₛ=VQtrans/Itrans and τ=qₛ/b are elastic transfer demands, not adhesive failure predictions.';
   }
   /** Move the single cut station; every view that shows it (readout, plot markers, picture, Cut & section) follows. */
   function setCut(x,note='') {if(!st.solved)return;st.cut.x=Math.min(Math.max(0,x),st.solved.model.length);st.cut.note=note;refreshCut();}
@@ -1177,6 +1182,7 @@ const Lecture03BeamCases = Object.freeze({
   function equalMass() {
     if(!st.solved) return;
     const base=st.solved.model, r0=st.solved.result;
+    if(base.section.shape==='layered'){$('#beamEqualMass').innerHTML='<p class="bl-help">Different layer densities make equal area different from equal mass. Use independent A/B studies and compare the reported masses; the homogeneous same-area shortcut is disabled for bonded layers.</p>';return;}
     const rows=[{name:'Your section',rule:SEC.describe(base.section),section:base.section,result:r0}];
     for(const c of SEC.equalMassCandidates(r0.area)) {
       try {rows.push({...c,result:B.solve({...base,section:c.section})});} catch(e) {rows.push({...c,error:e.message});}
@@ -1450,7 +1456,7 @@ const Lecture03BeamCases = Object.freeze({
   $('#beamShape').onchange=()=>{
     const shape=$('#beamShape').value;let depth=10,w=20;
     try {const p=SEC.properties(st.model.section);depth=p.depth;w=p.width;} catch(e) {}
-    const t=Math.max(Math.min(w,depth)/8,0.1), dims={rectangle:{width:w,height:depth},circle:{diameter:depth},tube:{outerDiameter:depth,thickness:Number((depth/10).toPrecision(3))},
+    const t=Math.max(Math.min(w,depth)/8,0.1), dims={rectangle:{width:w,height:depth},layered:{width:w,height:depth,topThickness:depth/2,modulusRatio:2,densityRatio:1},circle:{diameter:depth},tube:{outerDiameter:depth,thickness:Number((depth/10).toPrecision(3))},
       box:{width:w,height:depth,thickness:Number(t.toPrecision(3))},ibeam:{flangeWidth:w,height:depth,flangeThickness:Number((depth/8).toPrecision(3)),webThickness:Number(Math.min(w/8,depth/4).toPrecision(3))}}[shape];
     renderSectionFields({shape,...dims});renderSectionView();draftChanged();
   };
@@ -1660,6 +1666,23 @@ const Lecture03BeamCases = Object.freeze({
   window.addEventListener('resize',()=>{clearTimeout(resizeTimer);resizeTimer=setTimeout(()=>{if(host.hidden)return;renderPicture();if(st.solved){renderCharts();renderStressMap();renderStation();renderMode();if(st.tab==='cut')renderCut();if(st.tab==='compare')renderCompare();if(st.tab==='solution'){st.cache.solution=false;renderSolution();}}},150);});
 
   /* ---------------------------------------------------------- start-up */
+
+  // Independent open-channel section calculator. It does not silently replace the solved beam.
+  $('#beamTab-cut').insertAdjacentHTML('beforeend',`<section class="bl-box" id="beamFlowLab"><h3>Shear flow &amp; shear centre</h3><p>Shear flow qₛ is longitudinal force per unit member length (N/mm), not applied line load q(x), and not shear stress τ (N/mm²). For a homogeneous open thin wall: qₛ=VQ/I and τ=qₛ/t. For two bonded materials use the transformed Q and I; the interface flow is shown in the two-material stress view.</p><p>Rectangle, circle, tube, box and symmetric I-section have their shear centre at the centroid by double symmetry. The vertical-symmetry plane prevents torsion from vertical shear in the bonded rectangle, but this solver does not compute its full shear-centre position for arbitrary loading.</p><h4>Open-channel example · separate section calculator</h4><p>Uniform isotropic wall; h and b are <b>midline</b> dimensions. This is not an additional channel beam or torsional FE model. Corners, thickness offsets, warping restraint and closed-cell redundant flows are not solved. No load is added to your beam by these fields.</p><div class="bl-grid2">${[['bfH','Midline web height h','40'],['bfB','Flange midline width b','20'],['bfT','Wall thickness t','1'],['bfV','Shear V (N, upward +)','10'],['bfY','Force-line y from web (mm)','0']].map(([id,label,val])=>`<label class="bl-field"><span>${label}</span><input id="${id}" type="number" step="any" value="${val}"></label>`).join('')}</div><button class="bl-btn" type="button" id="bfUseCut">Use |V| at the current beam cut</button><div id="bfResult" aria-live="polite"></div><p class="bl-help">Theory: <a href="https://ocw.mit.edu/courses/16-20-structural-mechanics-fall-2002/13881c48c7c4654e4b5b689cb6987803_unit14.pdf" target="_blank" rel="noopener noreferrer">MIT 16.20: beam shear and shear centre</a>. Open-channel values below use thin-wall force and moment equilibrium, not a universal closed-section formula.</p></section>`);
+  function renderFlowLab(){
+    try{
+      const get=id=>readNumber($('#'+id),id),c=SEC.channelFlow({height:get('bfH'),width:get('bfB'),thickness:get('bfT')},get('bfV')),yF=get('bfY'),s=Math.min(140/c.h,100/c.b),wx=170,cy=125,yt=cy-c.h*s/2,yb=cy+c.h*s/2,sc=wx+c.shearCentreY*s,g=wx+c.centroidY*s;
+      $('#bfResult').innerHTML=`<svg viewBox="0 0 420 250" role="img" aria-label="Open channel with shear centre outside the web, centroid, force and shear-flow directions" style="width:100%;max-width:600px"><path d="M${wx+c.b*s} ${yt}H${wx}V${yb}H${wx+c.b*s}" fill="none" stroke="#145d85" stroke-width="10"/><path d="M60 ${cy}H320" stroke="#71879b" stroke-dasharray="5 4"/><circle cx="${sc}" cy="${cy}" r="5" fill="#bf3d42"/><circle cx="${g}" cy="${cy}" r="4" fill="#16836b"/><g font-family="system-ui" font-size="13" fill="currentColor"><text x="${sc-8}" y="${cy+23}">S</text><text x="${g-3}" y="${cy-10}">G</text><text x="${wx+10}" y="${yt-16}">${c.V>=0?'→':'←'} flange flow</text><text x="${wx+10}" y="${yb+27}">${c.V>=0?'←':'→'} flange flow</text><text x="${wx-28}" y="${cy-25}">${c.V>=0?'↑':'↓'}</text><text x="12" y="22">S: shear centre · G: area centroid</text><text x="12" y="239">Web y=0; flanges extend toward +y</text></g><path d="M${sc} ${cy+65}V${cy+10}m-5 9 5-9 5 9" fill="none" stroke="#bf3d42" stroke-width="2"/></svg><dl class="bl-props"><dt>Thin-wall I</dt><dd>${fmt(c.I)} mm⁴</dd><dt>Centroid yG from web</dt><dd>${fmt(c.centroidY)} mm</dd><dt>Shear centre yS from web</dt><dd>${fmt(c.shearCentreY)} mm (outside)</dd><dt>Offset S−G</dt><dd>${fmt(c.offsetFromCentroid)} mm</dd><dt>Maximum web flow |qₛ|</dt><dd>${fmt(Math.abs(c.qWeb(0)))} N/mm</dd><dt>Maximum |τ|</dt><dd>${fmt(c.tauMax)} MPa</dd><dt>Torque if applied at yF</dt><dd>${fmt(c.V*(yF-c.shearCentreY))} N·mm</dd></dl><p>I=th³/12+2tb(h/2)². e=th²b²/(4I), yS=−e. A flange has resultant Ff=Vthb²/(4I); Ff h = V e locates S by torque equilibrium. qₛ,flange(s)=Vths/(2I), where s runs from the free edge toward the web. qₛ,web(z)=Vt[bh/2+(h²/4−z²)/2]/I. At free edges qₛ=0. Along each wall τ=qₛ/t.</p><p class="bl-help">The red arrow illustrates applying shear through S (no eccentric-shear torque). The torque number instead uses your entered yF=${fmt(yF)} mm: T=V(yF−yS). No twist angle is calculated in this section example.</p>`;
+      const forceArrow=$('#bfResult svg path[stroke="#bf3d42"]');
+      if(c.V<0)forceArrow.setAttribute('transform',`translate(0 ${2*cy}) scale(1 -1)`);
+      if(c.V===0){forceArrow.style.display='none';$('#bfResult svg').querySelectorAll('text').forEach(t=>{if(t.textContent.includes('flange flow'))t.textContent='qₛ = 0';if(t.textContent==='↑'||t.textContent==='↓')t.textContent='';});}
+    }catch(e){$('#bfResult').innerHTML='<p class="bl-err">'+esc(e.message)+'</p>';}
+  }
+  $('#beamFlowLab').addEventListener('input',renderFlowLab);
+  for(const id of ['bfH','bfB','bfT'])$('#'+id).closest('label').querySelector('span').textContent+=' (mm)';
+  $('#bfUseCut').onclick=()=>{if(!st.solved||statusState()!=='solved'){$('#bfResult').innerHTML='<p class="bl-err">Solve the current beam first.</p>';return;}$('#bfV').value=Math.abs(B.fieldAt(st.solved.result,st.cut.x).V);renderFlowLab();};
+  renderFlowLab();
+  $('#beamTab-learn').insertAdjacentHTML('beforeend','<section class="bl-box"><h3>Two materials: compatibility before stress</h3><p>The bonded two-material rectangle has lower material 1 and upper material 2. The E and density inputs define material 1; E₂/E₁ and ρ₂/ρ₁ define material 2. Upper thickness h₂ is measured down from the top surface. Both materials are individually linear isotropic; this is not a fibre-composite laminate model.</p><p><b>Compatibility:</b> perfect bonding makes the axial strain continuous across the interface and preserves plane sections. <b>Axial equilibrium:</b> with no applied axial force, ∫σ dA=0, so zNA=Σ(EᵢAᵢzᵢ)/Σ(EᵢAᵢ). <b>Bending:</b> D=Σ Eᵢ[Iᵢ,c+Aᵢ(zᵢ−zNA)²]=E₁Itrans. Thus εx=−M(z−zNA)/D and σᵢ=Eᵢεx. The strain is continuous, but stress generally jumps when E changes.</p><p><b>Shear transfer:</b> define Qtrans(z)=∫above (Eᵢ/E₁)(z′−zNA)dA. Then qₛ=VQtrans/Itrans and τ=qₛ/b for this rectangular two-layer section. At the bond this is the longitudinal shear transferred per unit beam length. It is an average elastic demand, not a prediction of adhesive peel stress or debonding strength. V and M come from the same beam equilibrium as before; curvature uses the composite D, while mass and self-weight use ΣρᵢAᵢ. Unequal densities make equal area different from equal mass.</p><p><b>Limits:</b> straight prismatic layers, perfect bond and small deflection; no slip, delamination, adhesive failure, temperature strain, plasticity or anisotropic laminate coupling. The shear-centre example in Cut &amp; section is a separate open-channel calculation, not an added torsional degree of freedom.</p><p>Reference: <a href="https://ocw.mit.edu/courses/1-050-solid-mechanics-fall-2004/resources/emech9_04/" target="_blank" rel="noopener noreferrer">MIT Solid Mechanics: composite beams, compatibility, constitutive relations and shear</a>.</p></section>');
 
   renderInputs(st.model);
   fillFormFromSingleLoad();

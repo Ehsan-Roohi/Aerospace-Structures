@@ -1,0 +1,21 @@
+import assert from 'node:assert/strict';import{createRequire}from'node:module';
+const require=createRequire(import.meta.url),S=require('./beam_sections.js'),B=require('./beam_learning_engine.js'),Study=require('./beam_study.js'),D=require('./beam_diagrams.js');
+const near=(a,b,t=1e-8)=>assert.ok(Math.abs(a-b)<=t*Math.max(1,Math.abs(b)),a+' != '+b);
+const sec={shape:'layered',width:20,height:10,topThickness:5,modulusRatio:3,densityRatio:2},p=S.properties(sec);
+near(p.zNA,1.25);near(p.I,2708.333333333333);near(S.massPerLength(p,1),.3);
+const input={length:100,E:70000,density:1,elements:20,section:sec,support:'cantilever',loads:[{kind:'point',position:100,force:10}]};
+const r=B.solve(input);near(Math.abs(r.deflection.at(-1)),10*100**3/(3*70000*p.I),1e-7);near(r.massG,30);
+near(B.fieldAt(r,0).stressTop,r.stressTop[0]);near(B.fieldAt(r,0).stressBottom,r.stressBottom[0]);
+const prof=S.stressProfile(p,1000);const bond=prof.filter(v=>v.z===p.interfaceZ);assert.equal(bond.length,2);near(bond[1].sigma/bond[0].sigma,3);
+let N=0,M=0,V=0;const n=10000,dz=10/n;for(let i=0;i<n;i++){const z=-5+(i+.5)*dz,sigma=S.normalStress(p,1000,z);N+=sigma*20*dz;M+=sigma*(z-p.zNA)*20*dz;V+=12*p.firstMoment(z)/p.I*dz;}
+near(N,0,1e-6);near(M,-1000,1e-7);near(V,12,1e-7);
+const uniform={...sec,modulusRatio:1,densityRatio:1},ru=B.solve({...input,section:uniform}),ref=B.solve({...input,section:{shape:'rectangle',width:20,height:10}});
+near(ru.EI,ref.EI);near(ru.massG,ref.massG);near(ru.deflection.at(-1),ref.deflection.at(-1));near(ru.modes[0].frequencyHz,ref.modes[0].frequencyHz);
+const sw=B.solve({...input,loads:[],selfWeight:true});near(sw.selfWeight.total,sw.massG*.00980665);
+const doc=Study.parseStudy(Study.exportStudy({result:r}));assert.equal(doc.model.section.modulusRatio,3);
+for(const width of[320,760])for(const svg of[D.sectionDrawing(sec,p,{width}),D.sectionStress(sec,p,1000,12,{width}),D.stressMap(r,{width})])assert.ok(!/NaN|undefined|Infinity/.test(svg),'finite labelled graphic');
+assert.throws(()=>S.normalize({...sec,topThickness:10}));assert.throws(()=>S.normalize({...sec,modulusRatio:0}));
+const ch=S.channelFlow({height:40,width:20,thickness:1},10);near(ch.shearCentreY,-7.5);near(ch.centroidY,5);near(ch.flangeForce*40,-ch.V*ch.shearCentreY);near(ch.qFlange(0),0);
+let webForce=0;for(let i=0;i<10000;i++)webForce+=ch.qWeb(-20+(i+.5)*40/10000)*40/10000;near(webForce,10,1e-7);near(ch.tauMax,ch.qWeb(0));
+assert.throws(()=>S.channelFlow({height:40,width:20,thickness:3},10));
+console.log('Two-material beam PASS: transformed axis/EI, full FE deflection, mass/modes/self-weight, stress jump, axial/moment/shear equilibrium, cut values, invalid inputs and finite graphics.');

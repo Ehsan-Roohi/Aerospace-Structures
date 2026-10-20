@@ -1547,7 +1547,11 @@ if (typeof window !== 'undefined') window.LoadProfiles = LoadProfiles;
  * Beam Sections — MIE 446 cross-section library for the Euler–Bernoulli teaching model.
  * Browser: BeamSections.properties(section). Node: require('./beam_sections.js').
  *
- * Homogeneous, prismatic, doubly symmetric sections bent about their horizontal axis.
+ * Homogeneous, prismatic, doubly symmetric sections bent about their horizontal axis;
+ * also a perfectly bonded two-layer rectangle, transformed to lower material 1.
+ * Layered: E2/E1 and rho2/rho1 are dimensionless; z is from geometric mid-depth,
+ * zNA is the elastic neutral-axis offset, I is transformed, not geometric.
+ * Reference: MIT 1.050 Solid Mechanics, emech9_04 (composite beams).
  * Units: mm, N, MPa = N/mm². z is measured UPWARD from the neutral (centroidal) axis and
  * c is the extreme-fibre distance (depth/2 for every shape here).
  *
@@ -1574,6 +1578,7 @@ const BeamSections = (() => {
   const SHAPES = Object.freeze({
     rectangle: {label:'Solid rectangle', fields:[['width','b','Width'],['height','h','Depth']],
       defaults:{width:20,height:10}},
+    layered: {label:'Bonded two-material rectangle',fields:[['width','b','Width'],['height','h','Total depth'],['topThickness','h_2','Upper layer thickness'],['modulusRatio','E₂/E₁','Modulus ratio'],['densityRatio','ρ₂/ρ₁','Density ratio']],defaults:{width:20,height:10,topThickness:5,modulusRatio:2,densityRatio:1}},
     circle: {label:'Solid circle', fields:[['diameter','d','Diameter']], defaults:{diameter:16}},
     tube: {label:'Circular tube', fields:[['outerDiameter','D','Outer diameter'],['thickness','t','Wall thickness']],
       defaults:{outerDiameter:20,thickness:2}},
@@ -1596,9 +1601,10 @@ const BeamSections = (() => {
     if(!section||typeof section!=='object') throw new Error('Choose a cross-section.');
     const shape=section.shape===undefined?'rectangle':section.shape;
     if(typeof shape!=='string'||!Object.prototype.hasOwnProperty.call(SHAPES,shape))
-      throw new Error('Cross-section must be rectangle, circle, tube, box or ibeam.');
+      throw new Error('Cross-section must be rectangle, layered, circle, tube, box or ibeam.');
     const out={shape};
     for(const [key,symbol,label] of SHAPES[shape].fields) out[key]=positive(section[key],`${label} ${symbol}`);
+    if(shape==='layered'&&out.topThickness>=out.height)throw new Error('Upper layer thickness must be smaller than the total depth; both layers must have positive thickness.');
     if(shape==='tube'&&!(out.thickness<out.outerDiameter/2))
       throw new Error(`Tube wall thickness t must be less than D/2 = ${out.outerDiameter/2} mm. Use the solid circle for a filled section.`);
     if(shape==='box'&&!(2*out.thickness<Math.min(out.width,out.height)))
@@ -1613,6 +1619,14 @@ const BeamSections = (() => {
   /** Area, second moment, extreme fibre, first moment and shear factor for a section. */
   function properties(section) {
     const s=normalize(section);
+    if(s.shape==='layered'){
+      const b=s.width,h=s.height,t=s.topThickness,r=s.modulusRatio,c=h/2,j=c-t,h1=h-t;
+      const a1=b*h1,a2=b*t,z1=-t/2,z2=h1/2,zNA=(a1*z1+r*a2*z2)/(a1+r*a2);
+      const I=b*h1**3/12+a1*(z1-zNA)**2+r*(b*t**3/12+a2*(z2-zNA)**2);
+      const firstMoment=z=>{if(z<=-c||z>=c)return 0;const integ=(a,d,n)=>n*b*((d*d-a*a)/2-zNA*(d-a));return z>=j?integ(z,c,r):integ(z,j,1)+integ(j,c,r);};
+      const Qna=firstMoment(zNA),A=b*h;
+      return {shape:s.shape,label:SHAPES[s.shape].label,section:s,A,I,c,depth:h,width:b,S:I/Math.max(c-zNA,c+zNA),zNA,interfaceZ:j,modulusRatio:r,massArea:b*(h1+s.densityRatio*t),geometricI:b*h**3/12,Qna,bNA:b,shearFactor:A*Qna/(I*b),junctions:[j],slender:['Perfect bonding, linear isotropic layers and plane sections are assumed. No slip, delamination, adhesive failure, thermal mismatch or laminate coupling is solved. I is transformed to lower-layer material 1; E and density above are material 1.'],widthAt:z=>Math.abs(z)<=c?b:0,firstMoment};
+    }
     let A,I,c,Qna,bNA,width,shearFactor,widthAt,firstMoment,junctions=[],slender=[];
     if(s.shape==='rectangle') {
       const b=s.width,h=s.height;
@@ -1654,10 +1668,15 @@ const BeamSections = (() => {
 
   /** sigma(z) = -M z / I. Returns samples from the bottom fibre to the top fibre. */
   function stressProfile(props, M, n=21) {
+    if(props.shape==='layered'){
+      const z=[...new Set([...Array.from({length:n},(_,i)=>-props.c+2*props.c*i/(n-1)),props.interfaceZ])].sort((a,b)=>a-b);
+      return z.flatMap(v=>Math.abs(v-props.interfaceZ)<1e-12?[{z:v,sigma:normalStress(props,M,v,-1)},{z:v,sigma:normalStress(props,M,v,1)}]:[{z:v,sigma:normalStress(props,M,v)}]);
+    }
     const out=[];
     for(let i=0;i<n;i++){const z=-props.c+2*props.c*i/(n-1);out.push({z,sigma:-M*z/props.I});}
     return out;
   }
+  const normalStress=(p,M,z,side=0)=>-M*(z-(p.zNA||0))/p.I*(p.shape==='layered'&&(z>p.interfaceZ||(z===p.interfaceZ&&side>0))?p.modulusRatio:1);
 
   /**
    * tau(z) = V Q / (I b) from the bottom fibre to the top fibre. At a flange–web junction the
@@ -1680,9 +1699,9 @@ const BeamSections = (() => {
   }
 
   /** Mass per unit length in g/mm from density in g/cm³ (1 g/cm³ = 1e-3 g/mm³). */
-  const massPerLength=(props,density)=>density*props.A/1000;
+  const massPerLength=(props,density)=>density*(props.massArea||props.A)/1000;
   /** Self-weight line load in N/mm: rho[g/cm³]·1e3 kg/m³ × A[mm²]·1e-6 m² × g[m/s²] / 1000 mm/m. */
-  const selfWeightLine=(props,density,g=9.80665)=>density*1000*props.A*1e-6*g/1000;
+  const selfWeightLine=(props,density,g=9.80665)=>density*1000*(props.massArea||props.A)*1e-6*g/1000;
 
   /** Sections with the same area A as the given one, using stated, fixed proportions. */
   function equalMassCandidates(A) {
@@ -1701,13 +1720,26 @@ const BeamSections = (() => {
   function describe(section) {
     const s=normalize(section),f=v=>Number(v.toFixed(3));
     if(s.shape==='rectangle') return `Solid rectangle ${f(s.width)} × ${f(s.height)} mm (b × h)`;
+    if(s.shape==='layered')return `Bonded two-material rectangle ${f(s.width)} × ${f(s.height)} mm; upper h₂=${f(s.topThickness)} mm, E₂/E₁=${f(s.modulusRatio)}, ρ₂/ρ₁=${f(s.densityRatio)}`;
     if(s.shape==='circle') return `Solid circle d = ${f(s.diameter)} mm`;
     if(s.shape==='tube') return `Circular tube D = ${f(s.outerDiameter)} mm, t = ${f(s.thickness)} mm`;
     if(s.shape==='box') return `Hollow box ${f(s.width)} × ${f(s.height)} mm (B × H), t = ${f(s.thickness)} mm`;
     return `I-section b_f = ${f(s.flangeWidth)}, h = ${f(s.height)}, t_f = ${f(s.flangeThickness)}, t_w = ${f(s.webThickness)} mm`;
   }
+  // Homogeneous uniform-thickness open channel, centre-line geometry, thin-wall approximation.
+  // Open-section shear flow and torque equivalence: MIT 16.20, General Beam Theory.
+  function channelFlow({height:h,width:b,thickness:t},V){
+    positive(h,'Channel midline height');positive(b,'Channel flange midline width');positive(t,'Wall thickness');
+    if(!Number.isFinite(V))throw new Error('Shear force must be finite.');
+    if(t>Math.min(h,b)/10)throw new Error('This channel calculator requires t ≤ min(h,b)/10 (thin walls).');
+    const I=t*h**3/12+2*t*b*(h/2)**2,e=t*h*h*b*b/(4*I),centroidY=b*b/(h+2*b);
+    return {h,b,t,V,I,centroidY,shearCentreY:-e,offsetFromCentroid:-e-centroidY,
+      flangeForce:V*t*h*b*b/(4*I),qFlange:s=>V*t*h*s/(2*I),
+      qWeb:z=>V*t/I*(b*h/2+(h*h/4-z*z)/2),
+      tauMax:Math.abs(V)/I*(b*h/2+h*h/8)};
+  }
 
-  return {SHAPES,MAX_DIMENSION,normalize,properties,stressProfile,shearProfile,massPerLength,selfWeightLine,equalMassCandidates,describe};
+  return {SHAPES,MAX_DIMENSION,normalize,properties,normalStress,stressProfile,shearProfile,massPerLength,selfWeightLine,equalMassCandidates,describe,channelFlow};
 })();
 if(typeof module!=='undefined'&&module.exports)module.exports=BeamSections;
 if(typeof window!=='undefined')window.BeamSections=BeamSections;
@@ -1765,7 +1797,7 @@ if(typeof window!=='undefined')window.BeamSections=BeamSections;
  */
 const BeamLearningEngine = (() => {
   'use strict';
-  const VERSION = '2.0.0';
+  const VERSION = '2.1.0';
   const Sections = typeof BeamSections!=='undefined' ? BeamSections
     : (typeof require==='function' ? require('./beam_sections.js') : null);
   if(!Sections) throw new Error('Load beam_sections.js before beam_learning_engine.js.');
@@ -2119,7 +2151,7 @@ const BeamLearningEngine = (() => {
     }
     // N_i*N_j has degree six: use the exact Hermite consistent mass matrix.
     for(let e=0;e<n-1;e++) {
-      const h=nodes[e+1]-nodes[e],h2=h*h,m0=rho*A*h/420,d=elementDofs(e);
+      const h=nodes[e+1]-nodes[e],h2=h*h,m0=rho*(props.massArea||A)*h/420,d=elementDofs(e);
       const me=[[156,22*h,54,-13*h],[22*h,4*h2,13*h,-3*h2],[54,13*h,156,-22*h],[-13*h,-3*h2,-22*h,4*h2]];
       for(let i=0;i<4;i++)for(let j=0;j<4;j++)Mass[d[i]][d[j]]+=m0*me[i][j];
     }
@@ -2196,7 +2228,7 @@ const BeamLearningEngine = (() => {
       const h=nodes[e+1]-nodes[e],N=shape(t,h),Ns=slopeShape(t,h),ue=elementDofs(e).map(d=>u[d]);
       const {V,M}=internal(s,side);
       x.push(s);deflection.push(dot(N,ue));rotation.push(dot(Ns,ue));shear.push(V);moment.push(M);
-      stressTop.push(-M*depth/(2*I));stressBottom.push(M*depth/(2*I));shearStressMax.push(props.shearFactor*Math.abs(V)/A);
+      stressTop.push(Sections.normalStress(props,M,depth/2));stressBottom.push(Sections.normalStress(props,M,-depth/2));shearStressMax.push(props.shearFactor*Math.abs(V)/A);
     }
     for(let e=0;e<n-1;e++) for(let j=0;j<4;j++) {
       const s=nodes[e]+(nodes[e+1]-nodes[e])*j/4;
@@ -2265,21 +2297,22 @@ const BeamLearningEngine = (() => {
     warnings.push(...props.slender);
     const extremeOf=a=>{let i=0;for(let j=1;j<a.length;j++)if(Math.abs(a[j])>Math.abs(a[i]))i=j;return {value:a[i],x:x[i],index:i};};
     const shapeName=props.label.toLowerCase();
+    const stressEnvelope=props.shape==='layered'?moment.map(M=>Math.max(...Sections.stressProfile(props,M,3).map(v=>Math.abs(v.sigma)))):stressTop;
     const sectionProperties={shape:props.shape,label:props.label,A,I,c:props.c,depth,width:props.width,S:props.S,
-      Qna:props.Qna,bNA:props.bNA,shearFactor:props.shearFactor,junctions:props.junctions,slender:props.slender,
+      Qna:props.Qna,bNA:props.bNA,shearFactor:props.shearFactor,junctions:props.junctions,slender:props.slender,zNA:props.zNA||0,interfaceZ:props.interfaceZ,modulusRatio:props.modulusRatio,
       massPerLength:Sections.massPerLength(props,o.density)};
     return {version:VERSION,input:o,x,deflection,rotation,shear,moment,stressTop,stressBottom,shearStressMax,
-      nodes,nodalDisplacement:u,reactions,jumps,momentJumps,discontinuities,stations,modes,area:A,I,EI,massG:o.density*A*L/1000,
+      nodes,nodalDisplacement:u,reactions,jumps,momentJumps,discontinuities,stations,modes,area:A,I,EI,massG:Sections.massPerLength(props,o.density)*L,
       section:o.section,sectionProperties,selfWeight:{enabled:o.selfWeight,q:sw?sw.qStart:0,total:sw?sw.qStart*L:0,gravity:GRAVITY},
       loadsApplied:loads.map(v=>({...v})),
       resultant,appliedMoment,equilibrium:{force:resultant+reactions.reduce((s,r)=>s+r.force,0),
         moment:appliedMoment+reactions.reduce((s,r)=>s+r.force*r.x+r.moment,0)},
       stability:{...stability,nullspace:undefined},
       dofs:{nodes:n,elements:n-1,total:nd,free:free.length,constrained:sys.constrained,hingeNodes:nodes.filter((_,j)=>hingeNode[j])},
-      maxima:{deflection:maxAbs(deflection),moment:maxAbs(moment),shear:maxAbs(shear),bendingStress:maxAbs(stressTop),shearStress:maxAbs(shearStressMax),rotation:maxAbs(rotation)},
-      extremes:{deflection:extremeOf(deflection),moment:extremeOf(moment),shear:extremeOf(shear),rotation:extremeOf(rotation),bendingStress:extremeOf(stressTop)},
-      equations:['EI v⁗ = q','M = −EI v″','V = dM/dx','dV/dx = −q','σx = −Mz/I',`τ = VQ/(Ib); τmax = ${props.shape==='rectangle'?'3|V|/(2A)':props.shape==='circle'?'4|V|/(3A)':'k|V|/A, k = '+props.shearFactor.toFixed(3)}`,'K u = f','K φ = ω² M φ'],
-      assumptions:[`Straight, prismatic ${shapeName}; homogeneous, isotropic material`,'Linear elastic, small displacement, slender beam',
+      maxima:{deflection:maxAbs(deflection),moment:maxAbs(moment),shear:maxAbs(shear),bendingStress:maxAbs(stressEnvelope),shearStress:maxAbs(shearStressMax),rotation:maxAbs(rotation)},
+      extremes:{deflection:extremeOf(deflection),moment:extremeOf(moment),shear:extremeOf(shear),rotation:extremeOf(rotation),bendingStress:extremeOf(stressEnvelope)},
+      equations:['EI v⁗ = q','M = −EI v″','V = dM/dx','dV/dx = −q',props.shape==='layered'?'σᵢ = −(Eᵢ/E₁)M(z−zNA)/Itrans':'σx = −Mz/I',`τ = VQ/(Ib); τmax = ${props.shape==='rectangle'?'3|V|/(2A)':props.shape==='circle'?'4|V|/(3A)':'k|V|/A, k = '+props.shearFactor.toFixed(3)}`,'K u = f','K φ = ω² M φ'],
+      assumptions:[`Straight, prismatic ${shapeName}; ${props.shape==='layered'?'two perfectly bonded isotropic materials; E₁Itrans is bending stiffness':'homogeneous, isotropic material'}`,'Linear elastic, small displacement, slender beam',
         'Perfectly rigid ideal supports; local clamp/contact stresses are not resolved',
         `No torsion, transverse-shear deformation, buckling or plasticity; self-weight ${o.selfWeight?'included as ρgA':'not included'}`,
         'Transverse bending only: axial displacement is not a degree of freedom; horizontal reactions are zero for these transverse loads',
@@ -2420,9 +2453,9 @@ const BeamLearningEngine = (() => {
     if(side==='left') while(e<n-2&&nodes[e+1]<x-eps) e++;
     else while(e<n-2&&nodes[e+1]<=x+eps) e++;
     const a=nodes[e],h=nodes[e+1]-a,t=Math.min(1,Math.max(0,(x-a)/h)),ue=[u[vDof[e]],u[thR[e]],u[vDof[e+1]],u[thL[e+1]]];
-    const {V,M}=internalForces(result,x,side), p=result.sectionProperties;
+    const {V,M}=internalForces(result,x,side), p=Sections.properties(result.section);
     return {x,side,V,M,v:dot(shape(t,h),ue),theta:dot(slopeShape(t,h),ue),curvature:-M/result.EI,
-      stressTop:-M*p.depth/(2*p.I),stressBottom:M*p.depth/(2*p.I),tauMax:p.shearFactor*Math.abs(V)/p.A};
+      stressTop:Sections.normalStress(p,M,p.depth/2),stressBottom:Sections.normalStress(p,M,-p.depth/2),tauMax:p.shearFactor*Math.abs(V)/p.A};
   }
 
   /** Validation and stability classification without solving (for live UI status). */
@@ -3427,7 +3460,7 @@ const BeamDiagrams = (() => {
   function sectionPaths(section, cx, cy, s) {
     const R=(x,y,w,h)=>`M${r1(cx+x*s)} ${r1(cy-y*s)}h${r1(w*s)}v${r1(h*s)}h${r1(-w*s)}Z`;
     const C=(r)=>`M${r1(cx-r*s)} ${r1(cy)}a${r1(r*s)} ${r1(r*s)} 0 1 0 ${r1(2*r*s)} 0a${r1(r*s)} ${r1(r*s)} 0 1 0 ${r1(-2*r*s)} 0Z`;
-    if(section.shape==='rectangle') return R(-section.width/2,section.height/2,section.width,section.height);
+    if(section.shape==='rectangle'||section.shape==='layered') return R(-section.width/2,section.height/2,section.width,section.height);
     if(section.shape==='circle') return C(section.diameter/2);
     if(section.shape==='tube') return C(section.outerDiameter/2)+C(section.outerDiameter/2-section.thickness);
     if(section.shape==='box') {const {width:B,height:H,thickness:t}=section;return R(-B/2,H/2,B,H)+R(-B/2+t,H/2-t,B-2*t,H-2*t);}
@@ -3440,6 +3473,7 @@ const BeamDiagrams = (() => {
 
   /** Fully dimensioned cross-section with the neutral axis and extreme-fibre distance c. */
   function sectionDrawing(section, props, opts={}) {
+    if(section.shape==='layered')return layeredDrawing(section,props,opts);
     const W=Math.max(260,Math.min(420,opts.width||300)), depth=props.depth, width=props.width;
     const s=Math.min((W-130)/width,150/depth), H=opts.height||Math.max(150,depth*s+86), cx=W/2-10, cy=(H-8)/2+(section.shape==='ibeam'?8:0);
     let svg=svgOpen(W,H,`${props.label}: dimensioned cross-section`,'bl-section');
@@ -3472,6 +3506,7 @@ const BeamDiagrams = (() => {
    * section-dependent tau(z) = V Q/(I b). opts.scale fixes the colour scale (A/B comparisons).
    */
   function sectionStress(section, props, M, V, opts={}) {
+    if(section.shape==='layered')return layeredDrawing(section,props,{...opts,M,V,stress:true});
     const S=typeof BeamSections!=='undefined'?BeamSections:require('./beam_sections.js');
     const W=clampWidth(opts.width), c=props.c, stacked=W<640;
     // Three panels side by side, or stacked on narrow screens so that nothing is squeezed.
@@ -3516,6 +3551,31 @@ const BeamDiagrams = (() => {
     svg+=text(x0+panelW/2,y0+panelH-10,`|V| = ${fmt(Math.abs(V))} N; b(z) = total material width`,'bl-tx-xs bl-tx-m');
     return svg+'</svg>';
   }
+  function layeredDrawing(section,p,opts={}){
+    const SEC=typeof BeamSections!=='undefined'?BeamSections:require('./beam_sections.js');
+    p=SEC.properties(section);
+    const W=Math.max(300,opts.width||760),H=opts.stress?450:300,left=65,top=65,bw=Math.min(110,W*.25),bh=150,s=bh/p.depth,Y=z=>top+bh/2-z*s;
+    let svg=svgOpen(W,H,'Perfectly bonded two-material section: shifted neutral axis, stress jump and interface shear','bl-section');
+    svg+=text(12,24,'Two-material rectangle · perfect bond','bl-tx-xs bl-tx-b','start');
+    svg+=`<rect x="${left}" y="${top}" width="${bw}" height="${section.topThickness*s}" fill="#c9b4ed" stroke="#654795"/><rect x="${left}" y="${Y(p.interfaceZ)}" width="${bw}" height="${(p.depth-section.topThickness)*s}" fill="#b8ddeb" stroke="#145d85"/>`;
+    svg+=text(left+bw+8,top+18,'E₂/E₁='+fmt(section.modulusRatio),'bl-tx-xs','start')+text(left+bw+8,top+bh-6,'Lower: E₁, ρ₁','bl-tx-xs','start');
+    svg+=line(left-12,Y(p.zNA),left+bw+12,Y(p.zNA),'bl-na')+text(left-15,Y(p.zNA)+4,'NA','bl-tx-xs bl-tx-b','end');
+    svg+=dimH(left,left+bw,top+bh+20,'b = '+fmt(section.width)+' mm')+dimV(left-30,top,top+bh,'h = '+fmt(p.depth),true);
+    svg+=text(12,top+bh+52,'zNA='+fmt(p.zNA)+' mm; h₂='+fmt(section.topThickness)+' mm','bl-tx-xs','start');
+    svg+=text(12,top+bh+72,'Itrans='+fmt(p.I)+' mm⁴; D=E₁Itrans','bl-tx-xs bl-tx-b','start');
+    if(opts.stress){
+      const M=opts.M||0,V=opts.V||0,profile=SEC.stressProfile(p,M,21),max=Math.max(1e-12,...profile.map(v=>Math.abs(v.sigma)));
+      const rows=profile.filter((v,i)=>i===0||i===profile.length-1||v.z===p.interfaceZ);
+      svg+=text(12,top+bh+104,'ε continuous · σ jumps at the bond','bl-tx-xs','start');
+      rows.forEach((r,i)=>{svg+=text(12,top+bh+126+18*i,'z = '+fmt(r.z)+' mm: σ = '+fmt(r.sigma)+' MPa','bl-tx-xs','start');});
+      // Shade by the actual piecewise stress, not a false single linear gradient.
+      for(let i=0;i<60;i++){const z=p.c-(i+.5)*p.depth/60;svg+=`<rect x="${left}" y="${top+i*bh/60}" width="${bw}" height="${bh/60+.2}" fill="${stressColor(SEC.normalStress(p,M,z)/max)}"/>`;}
+      svg+=line(left-12,Y(p.zNA),left+bw+12,Y(p.zNA),'bl-na')+line(left,Y(p.interfaceZ),left+bw,Y(p.interfaceZ),'bl-axis');
+      const q=V*p.firstMoment(p.interfaceZ)/p.I;
+      svg+=text(12,H-32,'Interface q = '+fmt(q)+' N/mm','bl-tx-xs bl-tx-b','start')+text(12,H-16,'Interface τ = q/b = '+fmt(q/section.width)+' MPa','bl-tx-xs bl-tx-b','start');
+    }
+    return svg+'</svg>';
+  }
 
   /** Elevation of the beam coloured by sigma(x, z) = -M z / I; identical scales for A/B. */
   function stressMap(result, opts={}) {
@@ -3531,11 +3591,17 @@ const BeamDiagrams = (() => {
       const x0=L*k/n,x1=L*(k+1)/n,xm=(x0+x1)/2;
       let i=0;while(i<result.x.length-1&&result.x[i+1]<=xm)i++;
       const sT=result.stressTop[i],sB=result.stressBottom[i];
+      if(result.section.shape==='layered'){
+        const SEC=typeof BeamSections!=='undefined'?BeamSections:require('./beam_sections.js'),p=SEC.properties(result.section);
+        for(let j=0;j<32;j++){const z=p.c-(j+.5)*p.depth/32;body+=`<rect x="${r1(X(x0))}" y="${top+(bot-top)*j/32}" width="${r1(X(x1)-X(x0)+.6)}" height="${(bot-top)/32+.3}" fill="${stressColor(SEC.normalStress(p,result.moment[i],z)/scale)}"/>`;}
+        continue;
+      }
       defs+=`<linearGradient id="${id}${k}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${stressColor(sT/scale)}"/><stop offset="0.5" stop-color="${stressColor(0)}"/><stop offset="1" stop-color="${stressColor(sB/scale)}"/></linearGradient>`;
       body+=`<rect x="${r1(X(x0))}" y="${top}" width="${r1(X(x1)-X(x0)+0.6)}" height="${bot-top}" fill="url(#${id}${k})"/>`;
     }
     svg+=`<defs>${defs}</defs>${body}<rect x="${r1(X(0))}" y="${top}" width="${r1(X(L)-X(0))}" height="${bot-top}" class="bl-map-frame"/>`;
-    svg+=line(X(0),(top+bot)/2,X(L),(top+bot)/2,'bl-na');
+    const naY=(top+bot)/2-(result.sectionProperties.zNA||0)/result.sectionProperties.depth*(bot-top);
+    svg+=line(X(0),naY,X(L),naY,'bl-na');
     svg+=text(X(0)-6,top+10,'top','bl-tx-xs bl-tx-m','end')+text(X(0)-6,bot-2,'bottom','bl-tx-xs bl-tx-m','end');
     // Legend
     const lx=X(0),lw=Math.min(220,X(L)-X(0)),ly=H-18;
@@ -3881,7 +3947,7 @@ const BeamSolution = (() => {
       <p>For any supports and loads, the computer divides the beam into ${result.dofs.elements} cubic Hermite elements (every load, support and hinge station is a node). Each node has a displacement v and a rotation θ${result.dofs.hingeNodes.length?`; a hinge node has two rotations (θ⁻, θ⁺) so the moment there is released`:''}. Element stiffness matrices and consistent load vectors are assembled into</p>
       ${eq([`<b>K</b> <b>u</b> = <b>f</b>, &nbsp; ${result.dofs.total} unknown nodal values`])}
       <div class="bl-cols"><div><h4>Boundary conditions imposed (${result.dofs.constrained.length})</h4><p class="num">${cons}</p></div>
-      <div><h4>What is solved</h4><p>The ${result.dofs.free} free values of <b>u</b> come from the reduced system; reactions are recovered as <b>r</b> = <b>K u</b> − <b>f</b> at the constrained values. V and M then follow exactly from equilibrium with those reactions; σ = −Mz/I and τ = VQ/(Ib) from the section. For a uniform beam the nodal values are exact (cubic elements reproduce EI v⁗ = q at the nodes).</p></div></div>
+      <div><h4>What is solved</h4><p>The ${result.dofs.free} free values of <b>u</b> come from the reduced system; reactions are recovered as <b>r</b> = <b>K u</b> − <b>f</b> at the constrained values. V and M then follow exactly from equilibrium with those reactions; ${result.section.shape==='layered'?'σᵢ = −(Eᵢ/E₁)M(z−zNA)/Itrans and τ=VQtrans/(Itrans b), with perfect bonding':'σ = −Mz/I and τ = VQ/(Ib)'} from the section. For a uniform beam the nodal values are exact (cubic elements reproduce EI v⁗ = q at the nodes).</p></div></div>
       ${bm?`<div class="bl-box"><h4>Hand-check available for this exact textbook case: ${esc(bm.name)}</h4>${eq([`${bm.formula} = ${bm.subst} = <b>${f(bm.exact)} ${bm.unit||'mm'}</b>`])}<p>Solver: ${f(bm.fe)} ${bm.unit||'mm'} at ${esc(bm.where)} (difference ${bm.fe===null?'—':f(Math.abs(bm.fe-bm.exact)/Math.max(Math.abs(bm.exact),1e-30)*100,2)+' %'}). Use closed forms only for the cases they were derived for.</p></div>`
         :`<p class="bl-help">No closed-form formula is shown because this study is not one of the classic textbook cases; the equilibrium, compatibility and K u = f results above are the solution.</p>`}
     </section>`;
@@ -3969,14 +4035,14 @@ const BeamSolution = (() => {
       const pair=(a,b,d=4)=>a===null?f(b,d):b===null?f(a,d):Math.abs(a-b)<=1e-9*Math.max(1,Math.abs(a),Math.abs(b))?f(a,d):`${f(a,d)} | ${f(b,d)}`;
       return `<tr><td class="num">${f(s.x)}</td><td>${esc(what.join(', ')||'load boundary')}</td><td class="num">${pair(s.Vleft,s.Vright)}</td><td class="num">${pair(s.Mleft,s.Mright)}</td><td class="num">${f(s.v,4)}</td><td class="num">${pair(s.thetaLeft,s.thetaRight,4)}</td></tr>`;
     }).join('');
-    const Mx=ex.moment, kappa=-Mx.value/EI, sigma=Math.abs(Mx.value)*props.c/props.I, Vx=ex.shear;
+    const Mx=ex.moment, kappa=-Mx.value/EI, sigma=result.section.shape==='layered'?result.maxima.bendingStress:Math.abs(Mx.value)*props.c/props.I, Vx=ex.shear;
     const topState=Mx.value>0?'Compression on top, tension at the bottom (sagging)':Mx.value<0?'Tension on top, compression at the bottom (hogging)':'No bending';
     return `<section><h3>From reactions to V, M, curvature, stress and deflection</h3>
       <p>Cut the beam at x and keep the left part: V(x) is the downward force on its cut face that balances the left-part forces, and M(x) the counter-clockwise couple that balances their moments. Hence dM/dx = V and dV/dx = −q. A point force P ↓ makes V drop by P, and a support reaction R (↓ +, like every external force here) is such a force: V(x⁺) − V(x⁻) = −R, so V(0⁺) = −R at a left-end support; a clockwise couple C makes M jump up by C; a hinge forces M = 0; at a pin, roller or free end M = 0 unless a couple acts there, and θ is not prescribed.</p>
       <div class="bl-tablewrap"><table class="bl-table"><tr><th class="num">x (mm)</th><th>Station</th><th class="num">V (N) left | right</th><th class="num">M (N·mm) left | right</th><th class="num">v (mm)</th><th class="num">θ (rad) left | right</th></tr>${rows}</table></div>
       <div class="bl-cols"><div>${eq([`|M|<sub>max</sub> = ${f(Math.abs(Mx.value))} N·mm at x = ${f(Mx.x)} mm`,
         `κ = v″ = −${frac('M','EI')} = −${frac(f(Mx.value),f(EI))} = ${f(kappa)} mm⁻¹`,
-        `σ<sub>max</sub> = ${frac('|M| c','I')} = ${frac(`${f(Math.abs(Mx.value))} × ${f(props.c)}`,f(props.I))} = <b>${f(sigma)} MPa</b>`])}
+        result.section.shape==='layered'?`σmax = max |(Eᵢ/E₁) M(z−zNA)/Itrans| = <b>${f(sigma)} MPa</b> (outer fibres and both sides of bond checked)`:`σ<sub>max</sub> = ${frac('|M| c','I')} = ${frac(`${f(Math.abs(Mx.value))} × ${f(props.c)}`,f(props.I))} = <b>${f(sigma)} MPa</b>`])}
         <p>${esc(topState)}. Curvature is largest where |M| is largest, not where the deflection is largest.</p></div>
         <div>${eq([`|V|<sub>max</sub> = ${f(Math.abs(Vx.value))} N at x = ${f(Vx.x)} mm`,
         `τ<sub>max</sub> = ${frac('|V| Q<sub>NA</sub>','I b<sub>NA</sub>')} = ${f(props.shearFactor,4)} ${frac('|V|','A')} = <b>${f(props.shearFactor*Math.abs(Vx.value)/props.A)} MPa</b>`,
@@ -4431,7 +4497,7 @@ const Lecture03BeamCases = Object.freeze({
   }
   function renderSectionFields(section) {
     $('#beamSectionFields').innerHTML=SEC.SHAPES[section.shape].fields.map(([key,symbol,label])=>
-      `<label class="bl-field"><span>${label} ${symbol.replace(/_(\w+)/,'<sub>$1</sub>')}</span><span class="bl-input"><input data-sec="${key}" type="number" step="any" inputmode="decimal" value="${section[key]}"><span class="bl-unit">mm</span></span></label>`).join('');
+      `<label class="bl-field"><span>${label} ${symbol.replace(/_(\w+)/,'<sub>$1</sub>')}</span><span class="bl-input"><input data-sec="${key}" type="number" step="any" inputmode="decimal" value="${section[key]}"><span class="bl-unit">${key.endsWith('Ratio')?'ratio':'mm'}</span></span></label>`).join('');
   }
   const EMPTY={support:'<li class="bl-empty">None — use “+ Interior support” or Place on the picture.</li>',hinge:'<li class="bl-empty">None.</li>'};
   const supportRow=(s,i)=>`<li data-row="support" class="bl-rowedit"><span class="bl-tag sup">S${i+1}</span>
@@ -4496,11 +4562,15 @@ const Lecture03BeamCases = Object.freeze({
       const s=sectionFromDraft(), p=SEC.properties(s), rho=Number(geometryInput('density').value), L=Number(geometryInput('length').value);
       const mass=Number.isFinite(rho)&&Number.isFinite(L)?SEC.massPerLength(p,rho)*L:NaN, q=Number.isFinite(rho)?SEC.selfWeightLine(p,rho,B.GRAVITY):NaN;
       html=`<div class="bl-secview">${D.sectionDrawing(s,p,{width:300})}<dl class="bl-props">
-        <dt>Area A</dt><dd>${fmt(p.A)} mm²</dd><dt>Second moment I</dt><dd>${fmt(p.I)} mm⁴</dd><dt>Extreme fibre c</dt><dd>${fmt(p.c)} mm</dd>
-        <dt>Section modulus S = I/c</dt><dd>${fmt(p.S)} mm³</dd><dt>Shear factor k (τ<sub>max</sub> = k|V|/A)</dt><dd>${fmt(p.shearFactor,4)}</dd>
+        <dt>Area A</dt><dd>${fmt(p.A)} mm²</dd><dt>${s.shape==='layered'?'Transformed I (reference E₁)':'Second moment I'}</dt><dd>${fmt(p.I)} mm⁴</dd><dt>${s.shape==='layered'?'Geometric half-depth h/2':'Extreme fibre c'}</dt><dd>${fmt(p.c)} mm</dd>
+        <dt>${s.shape==='layered'?'Reference Itrans/cmax (not a universal stress modulus)':'Section modulus S = I/c'}</dt><dd>${fmt(p.S)} mm³</dd><dt>Shear factor k (τ<sub>max</sub> = k|V|/A)</dt><dd>${fmt(p.shearFactor,4)}</dd>
         <dt>Beam mass</dt><dd>${Number.isFinite(mass)?fmt(mass)+' g':'—'}</dd><dt>Self-weight ρgA</dt><dd>${Number.isFinite(q)?fmt(q)+' N/mm':'—'}</dd></dl></div>
         ${p.slender.map(t=>`<p class="bl-help bl-warnline">${esc(t)}</p>`).join('')}`;
       $('#beamSectionBadge').textContent=p.label;
+      if(s.shape==='layered'){
+        const E1=Number(geometryInput('E').value);
+        html+=`<p class="bl-help"><b>Material 1 = lower layer:</b> E₁=${fmt(E1)} MPa, ρ₁=${fmt(rho)} g/cm³. <b>Material 2 = upper layer:</b> E₂=${fmt(E1*s.modulusRatio)} MPa, ρ₂=${fmt(rho*s.densityRatio)} g/cm³. Edit E₁ and ρ₁ in Span/material and the ratios here. The displayed I is transformed to material 1, not the geometric I. zNA is measured upward from geometric mid-depth. Shared strain does not mean shared stress: σᵢ=−(Eᵢ/E₁)M(z−zNA)/Itrans. Perfect bond only; no slip or adhesive strength check. Changes affect the full beam solve, self-weight, stress, modal mass and all exports.</p>`;
+      }
       $('#beamSelfWeightValue').textContent=Number.isFinite(q)?`(${fmt(q)} N/mm, ${Number.isFinite(L)?fmt(q*L):'—'} N in total)`:'';
     } catch(e) {html=`<p class="bl-err">${esc(e.message)}</p>`;}
     $('#beamSectionView').innerHTML=html;
@@ -4862,7 +4932,7 @@ const Lecture03BeamCases = Object.freeze({
     moment:"Sign convention: M > 0 is sagging (top fibre in compression); it acts counter-clockwise on the left part's cut face and clockwise on the right part's face.",
     deflection:'Sign convention: v > 0 is downward and is plotted downward.',
     rotation:'Sign convention: θ = dv/dx > 0 is clockwise.',
-    stressTop:'Sign convention: σ > 0 is tension; top fibre σ = −M c / I.',
+    stressTop:'σ > 0 is tension. Homogeneous: σ = −Mz/I. Bonded layers: σᵢ = −(Eᵢ/E₁)M(z−zNA)/Itrans; shared strain, generally different stresses.',
     shearStressMax:'Magnitude |τ|max = k |V| / A at the neutral axis (k depends on the cross-section).'};
   function modelLines(m,r) {
     const sup=m.supports.map((s,i)=>`${D.supportName(i)} ${s.kind} at x = ${plain(s.x)} mm`).join(', ')||'none';
@@ -5126,6 +5196,7 @@ const Lecture03BeamCases = Object.freeze({
     const p=r.sectionProperties;
     $('#beamCutSection').innerHTML=D.sectionStress(r.section,p,M,V,{width:width($('#beamCutSection'))});
     $('#beamCutSectionNote').textContent=`${p.label}: σ(z) = −Mz/I is linear through the depth (T = tension, C = compression). τ(z) = VQ/(Ib) uses the total material width b(z)${['tube','box'].includes(p.shape)?'; where the cut crosses two walls, b is their sum':''}${['ibeam','box'].includes(p.shape)?'; the jump at the flange–web junction comes from the change in b':''}. Local buckling and clamp or contact stress concentrations are outside this beam model.`;
+    if(p.shape==='layered')$('#beamCutSectionNote').textContent='Perfectly bonded layers: axial strain is continuous; σᵢ=−(Eᵢ/E₁)M(z−zNA)/Itrans is piecewise linear and can jump at the interface. The figure checks both sides of the bond. Interface qₛ=VQtrans/Itrans and τ=qₛ/b are elastic transfer demands, not adhesive failure predictions.';
   }
   /** Move the single cut station; every view that shows it (readout, plot markers, picture, Cut & section) follows. */
   function setCut(x,note='') {if(!st.solved)return;st.cut.x=Math.min(Math.max(0,x),st.solved.model.length);st.cut.note=note;refreshCut();}
@@ -5223,6 +5294,7 @@ const Lecture03BeamCases = Object.freeze({
   function equalMass() {
     if(!st.solved) return;
     const base=st.solved.model, r0=st.solved.result;
+    if(base.section.shape==='layered'){$('#beamEqualMass').innerHTML='<p class="bl-help">Different layer densities make equal area different from equal mass. Use independent A/B studies and compare the reported masses; the homogeneous same-area shortcut is disabled for bonded layers.</p>';return;}
     const rows=[{name:'Your section',rule:SEC.describe(base.section),section:base.section,result:r0}];
     for(const c of SEC.equalMassCandidates(r0.area)) {
       try {rows.push({...c,result:B.solve({...base,section:c.section})});} catch(e) {rows.push({...c,error:e.message});}
@@ -5496,7 +5568,7 @@ const Lecture03BeamCases = Object.freeze({
   $('#beamShape').onchange=()=>{
     const shape=$('#beamShape').value;let depth=10,w=20;
     try {const p=SEC.properties(st.model.section);depth=p.depth;w=p.width;} catch(e) {}
-    const t=Math.max(Math.min(w,depth)/8,0.1), dims={rectangle:{width:w,height:depth},circle:{diameter:depth},tube:{outerDiameter:depth,thickness:Number((depth/10).toPrecision(3))},
+    const t=Math.max(Math.min(w,depth)/8,0.1), dims={rectangle:{width:w,height:depth},layered:{width:w,height:depth,topThickness:depth/2,modulusRatio:2,densityRatio:1},circle:{diameter:depth},tube:{outerDiameter:depth,thickness:Number((depth/10).toPrecision(3))},
       box:{width:w,height:depth,thickness:Number(t.toPrecision(3))},ibeam:{flangeWidth:w,height:depth,flangeThickness:Number((depth/8).toPrecision(3)),webThickness:Number(Math.min(w/8,depth/4).toPrecision(3))}}[shape];
     renderSectionFields({shape,...dims});renderSectionView();draftChanged();
   };
@@ -5706,6 +5778,23 @@ const Lecture03BeamCases = Object.freeze({
   window.addEventListener('resize',()=>{clearTimeout(resizeTimer);resizeTimer=setTimeout(()=>{if(host.hidden)return;renderPicture();if(st.solved){renderCharts();renderStressMap();renderStation();renderMode();if(st.tab==='cut')renderCut();if(st.tab==='compare')renderCompare();if(st.tab==='solution'){st.cache.solution=false;renderSolution();}}},150);});
 
   /* ---------------------------------------------------------- start-up */
+
+  // Independent open-channel section calculator. It does not silently replace the solved beam.
+  $('#beamTab-cut').insertAdjacentHTML('beforeend',`<section class="bl-box" id="beamFlowLab"><h3>Shear flow &amp; shear centre</h3><p>Shear flow qₛ is longitudinal force per unit member length (N/mm), not applied line load q(x), and not shear stress τ (N/mm²). For a homogeneous open thin wall: qₛ=VQ/I and τ=qₛ/t. For two bonded materials use the transformed Q and I; the interface flow is shown in the two-material stress view.</p><p>Rectangle, circle, tube, box and symmetric I-section have their shear centre at the centroid by double symmetry. The vertical-symmetry plane prevents torsion from vertical shear in the bonded rectangle, but this solver does not compute its full shear-centre position for arbitrary loading.</p><h4>Open-channel example · separate section calculator</h4><p>Uniform isotropic wall; h and b are <b>midline</b> dimensions. This is not an additional channel beam or torsional FE model. Corners, thickness offsets, warping restraint and closed-cell redundant flows are not solved. No load is added to your beam by these fields.</p><div class="bl-grid2">${[['bfH','Midline web height h','40'],['bfB','Flange midline width b','20'],['bfT','Wall thickness t','1'],['bfV','Shear V (N, upward +)','10'],['bfY','Force-line y from web (mm)','0']].map(([id,label,val])=>`<label class="bl-field"><span>${label}</span><input id="${id}" type="number" step="any" value="${val}"></label>`).join('')}</div><button class="bl-btn" type="button" id="bfUseCut">Use |V| at the current beam cut</button><div id="bfResult" aria-live="polite"></div><p class="bl-help">Theory: <a href="https://ocw.mit.edu/courses/16-20-structural-mechanics-fall-2002/13881c48c7c4654e4b5b689cb6987803_unit14.pdf" target="_blank" rel="noopener noreferrer">MIT 16.20: beam shear and shear centre</a>. Open-channel values below use thin-wall force and moment equilibrium, not a universal closed-section formula.</p></section>`);
+  function renderFlowLab(){
+    try{
+      const get=id=>readNumber($('#'+id),id),c=SEC.channelFlow({height:get('bfH'),width:get('bfB'),thickness:get('bfT')},get('bfV')),yF=get('bfY'),s=Math.min(140/c.h,100/c.b),wx=170,cy=125,yt=cy-c.h*s/2,yb=cy+c.h*s/2,sc=wx+c.shearCentreY*s,g=wx+c.centroidY*s;
+      $('#bfResult').innerHTML=`<svg viewBox="0 0 420 250" role="img" aria-label="Open channel with shear centre outside the web, centroid, force and shear-flow directions" style="width:100%;max-width:600px"><path d="M${wx+c.b*s} ${yt}H${wx}V${yb}H${wx+c.b*s}" fill="none" stroke="#145d85" stroke-width="10"/><path d="M60 ${cy}H320" stroke="#71879b" stroke-dasharray="5 4"/><circle cx="${sc}" cy="${cy}" r="5" fill="#bf3d42"/><circle cx="${g}" cy="${cy}" r="4" fill="#16836b"/><g font-family="system-ui" font-size="13" fill="currentColor"><text x="${sc-8}" y="${cy+23}">S</text><text x="${g-3}" y="${cy-10}">G</text><text x="${wx+10}" y="${yt-16}">${c.V>=0?'→':'←'} flange flow</text><text x="${wx+10}" y="${yb+27}">${c.V>=0?'←':'→'} flange flow</text><text x="${wx-28}" y="${cy-25}">${c.V>=0?'↑':'↓'}</text><text x="12" y="22">S: shear centre · G: area centroid</text><text x="12" y="239">Web y=0; flanges extend toward +y</text></g><path d="M${sc} ${cy+65}V${cy+10}m-5 9 5-9 5 9" fill="none" stroke="#bf3d42" stroke-width="2"/></svg><dl class="bl-props"><dt>Thin-wall I</dt><dd>${fmt(c.I)} mm⁴</dd><dt>Centroid yG from web</dt><dd>${fmt(c.centroidY)} mm</dd><dt>Shear centre yS from web</dt><dd>${fmt(c.shearCentreY)} mm (outside)</dd><dt>Offset S−G</dt><dd>${fmt(c.offsetFromCentroid)} mm</dd><dt>Maximum web flow |qₛ|</dt><dd>${fmt(Math.abs(c.qWeb(0)))} N/mm</dd><dt>Maximum |τ|</dt><dd>${fmt(c.tauMax)} MPa</dd><dt>Torque if applied at yF</dt><dd>${fmt(c.V*(yF-c.shearCentreY))} N·mm</dd></dl><p>I=th³/12+2tb(h/2)². e=th²b²/(4I), yS=−e. A flange has resultant Ff=Vthb²/(4I); Ff h = V e locates S by torque equilibrium. qₛ,flange(s)=Vths/(2I), where s runs from the free edge toward the web. qₛ,web(z)=Vt[bh/2+(h²/4−z²)/2]/I. At free edges qₛ=0. Along each wall τ=qₛ/t.</p><p class="bl-help">The red arrow illustrates applying shear through S (no eccentric-shear torque). The torque number instead uses your entered yF=${fmt(yF)} mm: T=V(yF−yS). No twist angle is calculated in this section example.</p>`;
+      const forceArrow=$('#bfResult svg path[stroke="#bf3d42"]');
+      if(c.V<0)forceArrow.setAttribute('transform',`translate(0 ${2*cy}) scale(1 -1)`);
+      if(c.V===0){forceArrow.style.display='none';$('#bfResult svg').querySelectorAll('text').forEach(t=>{if(t.textContent.includes('flange flow'))t.textContent='qₛ = 0';if(t.textContent==='↑'||t.textContent==='↓')t.textContent='';});}
+    }catch(e){$('#bfResult').innerHTML='<p class="bl-err">'+esc(e.message)+'</p>';}
+  }
+  $('#beamFlowLab').addEventListener('input',renderFlowLab);
+  for(const id of ['bfH','bfB','bfT'])$('#'+id).closest('label').querySelector('span').textContent+=' (mm)';
+  $('#bfUseCut').onclick=()=>{if(!st.solved||statusState()!=='solved'){$('#bfResult').innerHTML='<p class="bl-err">Solve the current beam first.</p>';return;}$('#bfV').value=Math.abs(B.fieldAt(st.solved.result,st.cut.x).V);renderFlowLab();};
+  renderFlowLab();
+  $('#beamTab-learn').insertAdjacentHTML('beforeend','<section class="bl-box"><h3>Two materials: compatibility before stress</h3><p>The bonded two-material rectangle has lower material 1 and upper material 2. The E and density inputs define material 1; E₂/E₁ and ρ₂/ρ₁ define material 2. Upper thickness h₂ is measured down from the top surface. Both materials are individually linear isotropic; this is not a fibre-composite laminate model.</p><p><b>Compatibility:</b> perfect bonding makes the axial strain continuous across the interface and preserves plane sections. <b>Axial equilibrium:</b> with no applied axial force, ∫σ dA=0, so zNA=Σ(EᵢAᵢzᵢ)/Σ(EᵢAᵢ). <b>Bending:</b> D=Σ Eᵢ[Iᵢ,c+Aᵢ(zᵢ−zNA)²]=E₁Itrans. Thus εx=−M(z−zNA)/D and σᵢ=Eᵢεx. The strain is continuous, but stress generally jumps when E changes.</p><p><b>Shear transfer:</b> define Qtrans(z)=∫above (Eᵢ/E₁)(z′−zNA)dA. Then qₛ=VQtrans/Itrans and τ=qₛ/b for this rectangular two-layer section. At the bond this is the longitudinal shear transferred per unit beam length. It is an average elastic demand, not a prediction of adhesive peel stress or debonding strength. V and M come from the same beam equilibrium as before; curvature uses the composite D, while mass and self-weight use ΣρᵢAᵢ. Unequal densities make equal area different from equal mass.</p><p><b>Limits:</b> straight prismatic layers, perfect bond and small deflection; no slip, delamination, adhesive failure, temperature strain, plasticity or anisotropic laminate coupling. The shear-centre example in Cut &amp; section is a separate open-channel calculation, not an added torsional degree of freedom.</p><p>Reference: <a href="https://ocw.mit.edu/courses/1-050-solid-mechanics-fall-2004/resources/emech9_04/" target="_blank" rel="noopener noreferrer">MIT Solid Mechanics: composite beams, compatibility, constitutive relations and shear</a>.</p></section>');
 
   renderInputs(st.model);
   fillFormFromSingleLoad();

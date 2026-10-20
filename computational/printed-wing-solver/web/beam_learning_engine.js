@@ -51,7 +51,7 @@
  */
 const BeamLearningEngine = (() => {
   'use strict';
-  const VERSION = '2.0.0';
+  const VERSION = '2.1.0';
   const Sections = typeof BeamSections!=='undefined' ? BeamSections
     : (typeof require==='function' ? require('./beam_sections.js') : null);
   if(!Sections) throw new Error('Load beam_sections.js before beam_learning_engine.js.');
@@ -405,7 +405,7 @@ const BeamLearningEngine = (() => {
     }
     // N_i*N_j has degree six: use the exact Hermite consistent mass matrix.
     for(let e=0;e<n-1;e++) {
-      const h=nodes[e+1]-nodes[e],h2=h*h,m0=rho*A*h/420,d=elementDofs(e);
+      const h=nodes[e+1]-nodes[e],h2=h*h,m0=rho*(props.massArea||A)*h/420,d=elementDofs(e);
       const me=[[156,22*h,54,-13*h],[22*h,4*h2,13*h,-3*h2],[54,13*h,156,-22*h],[-13*h,-3*h2,-22*h,4*h2]];
       for(let i=0;i<4;i++)for(let j=0;j<4;j++)Mass[d[i]][d[j]]+=m0*me[i][j];
     }
@@ -482,7 +482,7 @@ const BeamLearningEngine = (() => {
       const h=nodes[e+1]-nodes[e],N=shape(t,h),Ns=slopeShape(t,h),ue=elementDofs(e).map(d=>u[d]);
       const {V,M}=internal(s,side);
       x.push(s);deflection.push(dot(N,ue));rotation.push(dot(Ns,ue));shear.push(V);moment.push(M);
-      stressTop.push(-M*depth/(2*I));stressBottom.push(M*depth/(2*I));shearStressMax.push(props.shearFactor*Math.abs(V)/A);
+      stressTop.push(Sections.normalStress(props,M,depth/2));stressBottom.push(Sections.normalStress(props,M,-depth/2));shearStressMax.push(props.shearFactor*Math.abs(V)/A);
     }
     for(let e=0;e<n-1;e++) for(let j=0;j<4;j++) {
       const s=nodes[e]+(nodes[e+1]-nodes[e])*j/4;
@@ -551,21 +551,22 @@ const BeamLearningEngine = (() => {
     warnings.push(...props.slender);
     const extremeOf=a=>{let i=0;for(let j=1;j<a.length;j++)if(Math.abs(a[j])>Math.abs(a[i]))i=j;return {value:a[i],x:x[i],index:i};};
     const shapeName=props.label.toLowerCase();
+    const stressEnvelope=props.shape==='layered'?moment.map(M=>Math.max(...Sections.stressProfile(props,M,3).map(v=>Math.abs(v.sigma)))):stressTop;
     const sectionProperties={shape:props.shape,label:props.label,A,I,c:props.c,depth,width:props.width,S:props.S,
-      Qna:props.Qna,bNA:props.bNA,shearFactor:props.shearFactor,junctions:props.junctions,slender:props.slender,
+      Qna:props.Qna,bNA:props.bNA,shearFactor:props.shearFactor,junctions:props.junctions,slender:props.slender,zNA:props.zNA||0,interfaceZ:props.interfaceZ,modulusRatio:props.modulusRatio,
       massPerLength:Sections.massPerLength(props,o.density)};
     return {version:VERSION,input:o,x,deflection,rotation,shear,moment,stressTop,stressBottom,shearStressMax,
-      nodes,nodalDisplacement:u,reactions,jumps,momentJumps,discontinuities,stations,modes,area:A,I,EI,massG:o.density*A*L/1000,
+      nodes,nodalDisplacement:u,reactions,jumps,momentJumps,discontinuities,stations,modes,area:A,I,EI,massG:Sections.massPerLength(props,o.density)*L,
       section:o.section,sectionProperties,selfWeight:{enabled:o.selfWeight,q:sw?sw.qStart:0,total:sw?sw.qStart*L:0,gravity:GRAVITY},
       loadsApplied:loads.map(v=>({...v})),
       resultant,appliedMoment,equilibrium:{force:resultant+reactions.reduce((s,r)=>s+r.force,0),
         moment:appliedMoment+reactions.reduce((s,r)=>s+r.force*r.x+r.moment,0)},
       stability:{...stability,nullspace:undefined},
       dofs:{nodes:n,elements:n-1,total:nd,free:free.length,constrained:sys.constrained,hingeNodes:nodes.filter((_,j)=>hingeNode[j])},
-      maxima:{deflection:maxAbs(deflection),moment:maxAbs(moment),shear:maxAbs(shear),bendingStress:maxAbs(stressTop),shearStress:maxAbs(shearStressMax),rotation:maxAbs(rotation)},
-      extremes:{deflection:extremeOf(deflection),moment:extremeOf(moment),shear:extremeOf(shear),rotation:extremeOf(rotation),bendingStress:extremeOf(stressTop)},
-      equations:['EI v⁗ = q','M = −EI v″','V = dM/dx','dV/dx = −q','σx = −Mz/I',`τ = VQ/(Ib); τmax = ${props.shape==='rectangle'?'3|V|/(2A)':props.shape==='circle'?'4|V|/(3A)':'k|V|/A, k = '+props.shearFactor.toFixed(3)}`,'K u = f','K φ = ω² M φ'],
-      assumptions:[`Straight, prismatic ${shapeName}; homogeneous, isotropic material`,'Linear elastic, small displacement, slender beam',
+      maxima:{deflection:maxAbs(deflection),moment:maxAbs(moment),shear:maxAbs(shear),bendingStress:maxAbs(stressEnvelope),shearStress:maxAbs(shearStressMax),rotation:maxAbs(rotation)},
+      extremes:{deflection:extremeOf(deflection),moment:extremeOf(moment),shear:extremeOf(shear),rotation:extremeOf(rotation),bendingStress:extremeOf(stressEnvelope)},
+      equations:['EI v⁗ = q','M = −EI v″','V = dM/dx','dV/dx = −q',props.shape==='layered'?'σᵢ = −(Eᵢ/E₁)M(z−zNA)/Itrans':'σx = −Mz/I',`τ = VQ/(Ib); τmax = ${props.shape==='rectangle'?'3|V|/(2A)':props.shape==='circle'?'4|V|/(3A)':'k|V|/A, k = '+props.shearFactor.toFixed(3)}`,'K u = f','K φ = ω² M φ'],
+      assumptions:[`Straight, prismatic ${shapeName}; ${props.shape==='layered'?'two perfectly bonded isotropic materials; E₁Itrans is bending stiffness':'homogeneous, isotropic material'}`,'Linear elastic, small displacement, slender beam',
         'Perfectly rigid ideal supports; local clamp/contact stresses are not resolved',
         `No torsion, transverse-shear deformation, buckling or plasticity; self-weight ${o.selfWeight?'included as ρgA':'not included'}`,
         'Transverse bending only: axial displacement is not a degree of freedom; horizontal reactions are zero for these transverse loads',
@@ -706,9 +707,9 @@ const BeamLearningEngine = (() => {
     if(side==='left') while(e<n-2&&nodes[e+1]<x-eps) e++;
     else while(e<n-2&&nodes[e+1]<=x+eps) e++;
     const a=nodes[e],h=nodes[e+1]-a,t=Math.min(1,Math.max(0,(x-a)/h)),ue=[u[vDof[e]],u[thR[e]],u[vDof[e+1]],u[thL[e+1]]];
-    const {V,M}=internalForces(result,x,side), p=result.sectionProperties;
+    const {V,M}=internalForces(result,x,side), p=Sections.properties(result.section);
     return {x,side,V,M,v:dot(shape(t,h),ue),theta:dot(slopeShape(t,h),ue),curvature:-M/result.EI,
-      stressTop:-M*p.depth/(2*p.I),stressBottom:M*p.depth/(2*p.I),tauMax:p.shearFactor*Math.abs(V)/p.A};
+      stressTop:Sections.normalStress(p,M,p.depth/2),stressBottom:Sections.normalStress(p,M,-p.depth/2),tauMax:p.shearFactor*Math.abs(V)/p.A};
   }
 
   /** Validation and stability classification without solving (for live UI status). */

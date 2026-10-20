@@ -644,7 +644,7 @@ const BeamDiagrams = (() => {
   function sectionPaths(section, cx, cy, s) {
     const R=(x,y,w,h)=>`M${r1(cx+x*s)} ${r1(cy-y*s)}h${r1(w*s)}v${r1(h*s)}h${r1(-w*s)}Z`;
     const C=(r)=>`M${r1(cx-r*s)} ${r1(cy)}a${r1(r*s)} ${r1(r*s)} 0 1 0 ${r1(2*r*s)} 0a${r1(r*s)} ${r1(r*s)} 0 1 0 ${r1(-2*r*s)} 0Z`;
-    if(section.shape==='rectangle') return R(-section.width/2,section.height/2,section.width,section.height);
+    if(section.shape==='rectangle'||section.shape==='layered') return R(-section.width/2,section.height/2,section.width,section.height);
     if(section.shape==='circle') return C(section.diameter/2);
     if(section.shape==='tube') return C(section.outerDiameter/2)+C(section.outerDiameter/2-section.thickness);
     if(section.shape==='box') {const {width:B,height:H,thickness:t}=section;return R(-B/2,H/2,B,H)+R(-B/2+t,H/2-t,B-2*t,H-2*t);}
@@ -657,6 +657,7 @@ const BeamDiagrams = (() => {
 
   /** Fully dimensioned cross-section with the neutral axis and extreme-fibre distance c. */
   function sectionDrawing(section, props, opts={}) {
+    if(section.shape==='layered')return layeredDrawing(section,props,opts);
     const W=Math.max(260,Math.min(420,opts.width||300)), depth=props.depth, width=props.width;
     const s=Math.min((W-130)/width,150/depth), H=opts.height||Math.max(150,depth*s+86), cx=W/2-10, cy=(H-8)/2+(section.shape==='ibeam'?8:0);
     let svg=svgOpen(W,H,`${props.label}: dimensioned cross-section`,'bl-section');
@@ -689,6 +690,7 @@ const BeamDiagrams = (() => {
    * section-dependent tau(z) = V Q/(I b). opts.scale fixes the colour scale (A/B comparisons).
    */
   function sectionStress(section, props, M, V, opts={}) {
+    if(section.shape==='layered')return layeredDrawing(section,props,{...opts,M,V,stress:true});
     const S=typeof BeamSections!=='undefined'?BeamSections:require('./beam_sections.js');
     const W=clampWidth(opts.width), c=props.c, stacked=W<640;
     // Three panels side by side, or stacked on narrow screens so that nothing is squeezed.
@@ -733,6 +735,31 @@ const BeamDiagrams = (() => {
     svg+=text(x0+panelW/2,y0+panelH-10,`|V| = ${fmt(Math.abs(V))} N; b(z) = total material width`,'bl-tx-xs bl-tx-m');
     return svg+'</svg>';
   }
+  function layeredDrawing(section,p,opts={}){
+    const SEC=typeof BeamSections!=='undefined'?BeamSections:require('./beam_sections.js');
+    p=SEC.properties(section);
+    const W=Math.max(300,opts.width||760),H=opts.stress?450:300,left=65,top=65,bw=Math.min(110,W*.25),bh=150,s=bh/p.depth,Y=z=>top+bh/2-z*s;
+    let svg=svgOpen(W,H,'Perfectly bonded two-material section: shifted neutral axis, stress jump and interface shear','bl-section');
+    svg+=text(12,24,'Two-material rectangle · perfect bond','bl-tx-xs bl-tx-b','start');
+    svg+=`<rect x="${left}" y="${top}" width="${bw}" height="${section.topThickness*s}" fill="#c9b4ed" stroke="#654795"/><rect x="${left}" y="${Y(p.interfaceZ)}" width="${bw}" height="${(p.depth-section.topThickness)*s}" fill="#b8ddeb" stroke="#145d85"/>`;
+    svg+=text(left+bw+8,top+18,'E₂/E₁='+fmt(section.modulusRatio),'bl-tx-xs','start')+text(left+bw+8,top+bh-6,'Lower: E₁, ρ₁','bl-tx-xs','start');
+    svg+=line(left-12,Y(p.zNA),left+bw+12,Y(p.zNA),'bl-na')+text(left-15,Y(p.zNA)+4,'NA','bl-tx-xs bl-tx-b','end');
+    svg+=dimH(left,left+bw,top+bh+20,'b = '+fmt(section.width)+' mm')+dimV(left-30,top,top+bh,'h = '+fmt(p.depth),true);
+    svg+=text(12,top+bh+52,'zNA='+fmt(p.zNA)+' mm; h₂='+fmt(section.topThickness)+' mm','bl-tx-xs','start');
+    svg+=text(12,top+bh+72,'Itrans='+fmt(p.I)+' mm⁴; D=E₁Itrans','bl-tx-xs bl-tx-b','start');
+    if(opts.stress){
+      const M=opts.M||0,V=opts.V||0,profile=SEC.stressProfile(p,M,21),max=Math.max(1e-12,...profile.map(v=>Math.abs(v.sigma)));
+      const rows=profile.filter((v,i)=>i===0||i===profile.length-1||v.z===p.interfaceZ);
+      svg+=text(12,top+bh+104,'ε continuous · σ jumps at the bond','bl-tx-xs','start');
+      rows.forEach((r,i)=>{svg+=text(12,top+bh+126+18*i,'z = '+fmt(r.z)+' mm: σ = '+fmt(r.sigma)+' MPa','bl-tx-xs','start');});
+      // Shade by the actual piecewise stress, not a false single linear gradient.
+      for(let i=0;i<60;i++){const z=p.c-(i+.5)*p.depth/60;svg+=`<rect x="${left}" y="${top+i*bh/60}" width="${bw}" height="${bh/60+.2}" fill="${stressColor(SEC.normalStress(p,M,z)/max)}"/>`;}
+      svg+=line(left-12,Y(p.zNA),left+bw+12,Y(p.zNA),'bl-na')+line(left,Y(p.interfaceZ),left+bw,Y(p.interfaceZ),'bl-axis');
+      const q=V*p.firstMoment(p.interfaceZ)/p.I;
+      svg+=text(12,H-32,'Interface q = '+fmt(q)+' N/mm','bl-tx-xs bl-tx-b','start')+text(12,H-16,'Interface τ = q/b = '+fmt(q/section.width)+' MPa','bl-tx-xs bl-tx-b','start');
+    }
+    return svg+'</svg>';
+  }
 
   /** Elevation of the beam coloured by sigma(x, z) = -M z / I; identical scales for A/B. */
   function stressMap(result, opts={}) {
@@ -748,11 +775,17 @@ const BeamDiagrams = (() => {
       const x0=L*k/n,x1=L*(k+1)/n,xm=(x0+x1)/2;
       let i=0;while(i<result.x.length-1&&result.x[i+1]<=xm)i++;
       const sT=result.stressTop[i],sB=result.stressBottom[i];
+      if(result.section.shape==='layered'){
+        const SEC=typeof BeamSections!=='undefined'?BeamSections:require('./beam_sections.js'),p=SEC.properties(result.section);
+        for(let j=0;j<32;j++){const z=p.c-(j+.5)*p.depth/32;body+=`<rect x="${r1(X(x0))}" y="${top+(bot-top)*j/32}" width="${r1(X(x1)-X(x0)+.6)}" height="${(bot-top)/32+.3}" fill="${stressColor(SEC.normalStress(p,result.moment[i],z)/scale)}"/>`;}
+        continue;
+      }
       defs+=`<linearGradient id="${id}${k}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${stressColor(sT/scale)}"/><stop offset="0.5" stop-color="${stressColor(0)}"/><stop offset="1" stop-color="${stressColor(sB/scale)}"/></linearGradient>`;
       body+=`<rect x="${r1(X(x0))}" y="${top}" width="${r1(X(x1)-X(x0)+0.6)}" height="${bot-top}" fill="url(#${id}${k})"/>`;
     }
     svg+=`<defs>${defs}</defs>${body}<rect x="${r1(X(0))}" y="${top}" width="${r1(X(L)-X(0))}" height="${bot-top}" class="bl-map-frame"/>`;
-    svg+=line(X(0),(top+bot)/2,X(L),(top+bot)/2,'bl-na');
+    const naY=(top+bot)/2-(result.sectionProperties.zNA||0)/result.sectionProperties.depth*(bot-top);
+    svg+=line(X(0),naY,X(L),naY,'bl-na');
     svg+=text(X(0)-6,top+10,'top','bl-tx-xs bl-tx-m','end')+text(X(0)-6,bot-2,'bottom','bl-tx-xs bl-tx-m','end');
     // Legend
     const lx=X(0),lw=Math.min(220,X(L)-X(0)),ly=H-18;

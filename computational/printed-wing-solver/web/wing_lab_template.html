@@ -518,6 +518,19 @@ body { margin: 0; }
         <p class="note" id="viewZoomText">Drag to rotate · right-drag or two fingers to pan · wheel or pinch to zoom.</p>
         <p class="note wl-viewstale" id="viewStale" hidden>Showing the last solved model. Press Solve to update the 3-D view.</p>
       </div>
+      <section id="wingPartEditor" class="box" aria-label="Edit wing ribs and spars" style="padding:12px;border:2px solid var(--line);border-radius:10px;margin:10px 0">
+        <b>Ribs &amp; spars · select, move, remove</b>
+        <div class="wl-row">
+          <button class="btn" id="wpPick" type="button" aria-pressed="false">Select parts on model</button>
+          <label for="wpChoice">Part</label><select id="wpChoice" aria-label="Select a wing rib or spar"></select>
+          <button class="btn" id="wpDelete" type="button">Delete selected</button>
+          <button class="btn" id="wpDeselect" type="button">Deselect</button>
+        </div>
+        <p class="note" id="wpStatus" role="status" aria-live="polite"></p>
+        <div class="wl-row"><label for="wpPosition" id="wpPositionLabel">Position</label><input id="wpPosition" type="number" step="any" style="max-width:130px"><button class="btn" id="wpMove" type="button">Move selected</button><button class="btn" id="wpDuplicate" type="button">Duplicate at position</button><button class="btn" id="wpEdit" type="button">Edit dimensions / material</button></div>
+        <div class="wl-row"><label for="wpNewRib">New rib y (mm)</label><input id="wpNewRib" type="number" step="0.1" style="max-width:130px"><button class="btn" id="wpAddRib" type="button">+ Rib</button><button class="btn" id="wpAddSpar" type="button">+ Spar</button><button class="btn" id="wpUndo" type="button">Undo last part edit</button></div>
+        <p class="note">Enable model selection to reveal the interior, then click a rib or any cap/web of a spar. Highlighting marks selection, not stress. Delete removes the whole selected spar. Drag rotates the view; it does not move a part. Use the position field for precise moves. Seam ribs are locked; change module layout to remove a seam. Geometry updates immediately; results need Solve.</p>
+      </section>
       <details class="hud" id="hudControls" open aria-label="View and display">
         <summary>View &amp; display controls</summary>
         <span class="wl-vlabel">Standard views</span>
@@ -1058,6 +1071,7 @@ body { margin: 0; }
     renderGeometryForm();
     renderStructureForm();
     renderSparResults();
+    renderPartEditor();
     if (focusId && document.getElementById(focusId)) document.getElementById(focusId).focus({ preventScroll: true });
   }
   function renderGeometryForm() {
@@ -1348,12 +1362,14 @@ body { margin: 0; }
       setStatus();
       renderTree();
       renderSparResults();
+      renderPartEditor();
       if (pending) { pending = false; runStudy(); }
     }
   }
 
   // ------------------------------------------------------------ 3-D scene
   const canvas = $("#gl");
+  canvas.tabIndex=0;canvas.setAttribute('aria-label','Wing model: select a rib or spar, then press Delete to remove it');
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, preserveDrawingBuffer: false });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
   renderer.localClippingEnabled = true;
@@ -1456,7 +1472,7 @@ body { margin: 0; }
       const k = bounds.findIndex((b, i) => i < bounds.length - 1 && yr >= b && yr <= bounds[i + 1]);
       const holes = E.rodCentres(g, yr).map((c) => circleLoop(c, E.holeRadius(g), 24)).concat(E.sparParts(g,yr).map(p=>p.outline));
       const rib = platePart(outerAt(yr), holes, g.ribThickness, yr - g.ribThickness / 2, COLORS.rib);
-      rib.userData.kind = "rib"; rib.userData.module = k;
+      rib.userData.kind = "rib"; rib.userData.module = k; rib.userData.station = yr;
       modules[k].add(rib); ribs.push(rib); rigid.push(rib);
     }
     const sparMeshes=[];
@@ -1769,6 +1785,7 @@ body { margin: 0; }
   function applyResult() {
     updateModel();
     applyAnatomy();
+    renderPartEditor();
     renderPlotInfo();
     renderModePlayer();
   }
@@ -1776,7 +1793,97 @@ body { margin: 0; }
   // ------------------------------------------------------------ probe
   const raycaster = new THREE.Raycaster();
   const ndc = new THREE.Vector2();
+  let partSelection=null, partPick=false, partUndo=null, partPointer=null, partDragged=false;
+  const partStamp=()=>JSON.stringify([S.geometry,S.assembly]);
+  const partSnapshot=()=>({geometry:JSON.parse(JSON.stringify(S.geometry)),assembly:JSON.parse(JSON.stringify(S.assembly))});
+  const editablePart=()=>partSelection&&(partSelection.kind==='spar'?S.geometry.spars[partSelection.index]:interiorStations(E.makeGeometry(S.geometry)).includes(partSelection.station));
+  function partOptions(){
+    const g=E.makeGeometry(S.geometry),ins=interiorStations(g);
+    return [...E.ribStations(g).map((y,i)=>({key:'rib:'+y,kind:'rib',station:y,label:'Rib R'+(i+1)+' · y '+nf(y,1)+' mm'+(ins.includes(y)?'':' · seam locked')})),
+      ...g.spars.map((s,i)=>({key:'spar:'+i,kind:'spar',index:i,label:'Spar '+(i+1)+' · '+nf(s.fraction,3)+'c'}))];
+  }
+  function selectWingPart(key){
+    partSelection=partOptions().find(p=>p.key===key)||null;
+    renderPartEditor();
+  }
+  function partChange(patch,key){
+    if(running||gateOpen())return {ok:false};
+    const previous=partSnapshot(),out=applyGeometry(patch,key,'editing selected wing part');
+    if(out.ok){partUndo={...previous,after:partStamp()};partSelection=null;renderPartEditor();}
+    return out;
+  }
+  function deleteWingPart(){
+    if(!partSelection||!editablePart()){flash('Select an editable interior rib or spar. Interface ribs belong to a module seam and remain locked.');return;}
+    if(partSelection.kind==='spar')partChange({spars:S.geometry.spars.filter((_,i)=>i!==partSelection.index)},'spars');
+    else partChange({customInteriorRibs:interiorStations(E.makeGeometry(S.geometry)).filter(y=>y!==partSelection.station)},'ribs');
+  }
+  function renderPartEditor(){
+    const host=$('#wingPartEditor');if(!host)return;
+    if(partUndo&&partUndo.after!==partStamp())partUndo=null;
+    const options=partOptions();if(partSelection&&!options.some(p=>p.key===partSelection.key))partSelection=null;
+    const choice=$('#wpChoice'),value=partSelection?.key||'';
+    choice.innerHTML='<option value="">Choose rib or spar…</option>'+options.map(p=>'<option value="'+p.key+'">'+esc(p.label)+'</option>').join('');choice.value=value;
+    const editable=!!editablePart(),spar=partSelection?.kind==='spar';
+    $('#wpStatus').textContent=partSelection?partSelection.label+(editable?' · selected; Delete or use the controls below.':' · required seam rib; not individually removable.'):'No part selected. Use the model-selection button or the part list.';
+    ['wpDelete','wpMove','wpDuplicate','wpEdit'].forEach(id=>$('#'+id).disabled=!editable||running);
+    $('#wpUndo').disabled=!partUndo||running;
+    ['wpAddRib','wpAddSpar'].forEach(id=>$('#'+id).disabled=running);
+    $('#wpPosition').disabled=!editable;$('#wpPositionLabel').textContent=spar?'Spar position x/c':'Rib station y (mm)';
+    $('#wpPosition').value=editable?(spar?S.geometry.spars[partSelection.index].fraction:partSelection.station):'';
+    $('#wpPick').setAttribute('aria-pressed',String(partPick));
+    if(!$('#wpNewRib').value)$('#wpNewRib').value=suggestRib(E.makeGeometry(S.geometry),E.ribStations(E.makeGeometry(S.geometry)));
+    if(model)for(const m of [...model.ribs,...(model.spars||[])]){
+      const selected=partSelection&&(m.userData.kind==='spar'?spar&&m.userData.sparIndex===partSelection.index:!spar&&m.userData.station===partSelection.station);
+      if(m.material.emissive?.setHex)m.material.emissive.setHex(selected?0xa64c00:0x000000);
+      m.userData.editorSelected=!!selected;
+    }
+  }
+  $('#wpChoice').onchange=e=>selectWingPart(e.target.value);
+  $('#wpPick').onclick=()=>{partPick=!partPick;if(partPick){$('#app').querySelector('.wle-pick[aria-pressed="true"]')?.click();setAnatomy('inside');}renderPartEditor();};
+  $('#wpDeselect').onclick=()=>{partSelection=null;partPick=false;renderPartEditor();};
+  $('#wpDelete').onclick=deleteWingPart;
+  $('#wpUndo').onclick=()=>{if(!partUndo||running||gateOpen())return;const previous=partSnapshot(),restore=partUndo;S.assembly=restore.assembly;const out=applyGeometry(restore.geometry,'geometry','undoing the last part edit');if(out.ok){partUndo={...previous,after:partStamp()};partSelection=null;}else S.assembly=previous.assembly;renderTree();renderPartEditor();};
+  function moveOrDuplicatePart(duplicate){
+    if(!editablePart())return;
+    const x=numberFrom($('#wpPosition'));
+    if(partSelection.kind==='rib'){
+      const ribs=interiorStations(E.makeGeometry(S.geometry));
+      partChange({customInteriorRibs:duplicate?[...ribs,x]:ribs.map(y=>y===partSelection.station?x:y)},'ribs');
+    }else{
+      const list=JSON.parse(JSON.stringify(S.geometry.spars)),copy={...list[partSelection.index],fraction:x};
+      if(duplicate)list.push(copy);else list[partSelection.index]=copy;
+      partChange({spars:list},'spars');
+    }
+  }
+  $('#wpMove').onclick=()=>moveOrDuplicatePart(false);$('#wpDuplicate').onclick=()=>moveOrDuplicatePart(true);
+  $('#wpEdit').onclick=()=>{if(!editablePart())return;openSection('wlStructure',partSelection.kind==='spar'?'ws'+partSelection.index+'_fraction':'wgRibY'+interiorStations(E.makeGeometry(S.geometry)).indexOf(partSelection.station));};
+  $('#wpAddRib').onclick=()=>partChange({customInteriorRibs:[...interiorStations(E.makeGeometry(S.geometry)),numberFrom($('#wpNewRib'))]},'ribs');
+  $('#wpAddSpar').onclick=()=>{if(running||gateOpen())return;const previous=partSnapshot(),stamp=partStamp();$('#wsAdd')?.click();if(partStamp()!==stamp)partUndo={...previous,after:partStamp()};renderPartEditor();};
+  canvas.addEventListener('pointerdown',ev=>{partDragged=false;partPointer=partPick?{x:ev.clientX,y:ev.clientY,id:ev.pointerId}:null;});
+  canvas.addEventListener('pointermove',ev=>{if(partPointer&&Math.hypot(ev.clientX-partPointer.x,ev.clientY-partPointer.y)>5)partDragged=true;});
+  canvas.addEventListener('pointercancel',()=>{partPointer=null;});
+  function pickWingPartAt(ev){
+    if(!partPick||partDragged||running||gateOpen()||!model)return;
+    const r=canvas.getBoundingClientRect();ndc.set((ev.clientX-r.left)/r.width*2-1,-(ev.clientY-r.top)/r.height*2+1);raycaster.setFromCamera(ndc,camera);
+    const visible=o=>{for(let p=o;p;p=p.parent)if(!p.visible)return false;return true;};
+    const hit=raycaster.intersectObjects([...model.ribs,...(model.spars||[])].filter(visible),false).find(h=>!S.clip||h.point.x<=S.clipY);
+    if(hit){const u=hit.object.userData;selectWingPart(u.kind==='spar'?'spar:'+u.sparIndex:'rib:'+u.station);}
+    else $('#wpStatus').textContent='No rib or spar at that point. Click a visible member, zoom in, or use the part list.';
+  }
+  canvas.addEventListener('pointerup',ev=>{
+    const start=partPointer;partPointer=null;
+    if(!start||start.id!==ev.pointerId||Math.hypot(ev.clientX-start.x,ev.clientY-start.y)>5)return;
+    pickWingPartAt(ev);
+  });
+  canvas.addEventListener('click',pickWingPartAt);
+  document.addEventListener('keydown',ev=>{
+    if($('#app').hidden||gateOpen()||running||!partSelection||ev.ctrlKey||ev.metaKey||ev.altKey)return;
+    const target=ev.target;if(target?.isContentEditable||target?.closest?.('input,textarea,[contenteditable="true"]'))return;
+    if(ev.key==='Escape'){partSelection=null;partPick=false;renderPartEditor();}
+    if(ev.key==='Delete'){ev.preventDefault();deleteWingPart();}
+  });
   function beginPrintedSurfacePick(accept) {
+    partPick=false;renderPartEditor();
     return WingLoadsUI.surfacePicker(canvas,ev=>{
       if(!model||!R||stale||running)return null;
       const r=canvas.getBoundingClientRect();
@@ -2692,6 +2799,7 @@ body { margin: 0; }
   requestAnimationFrame(loop);
   window.addEventListener('wing-learning-stage', event => {
     if (event.detail === 'metal' || running) return;
+    partSelection=null;partUndo=null;partPick=false;
     const stage=event.detail, project=stage==='project';
     importGate=null; renderImportGate();
     S.geometry={...E.DEFAULT_GEOMETRY, rodFractions:[...E.DEFAULT_GEOMETRY.rodFractions]};

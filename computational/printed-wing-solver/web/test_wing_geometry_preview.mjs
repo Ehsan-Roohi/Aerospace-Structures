@@ -11,7 +11,7 @@ const nodes=new Map(),ctx={E,model:{},running:false,geometryPreview:false,lastGe
  engineInput:()=>({geometry:{interiorRibs:5,rodFractions:[.25,.65],semiSpan:480}}),
  $:s=>{if(!nodes.has(s))nodes.set(s,{});return nodes.get(s);},
  buildModel:r=>{ctx.g=r.geometry;ctx.calls.push('build');},updateModel:()=>ctx.calls.push('update'),
- frameView:()=>ctx.calls.push('frame'),renderViewReadout:()=>{},renderPlotInfo:()=>{},renderSparResults:()=>{},
+ frameView:()=>ctx.calls.push('frame'),renderViewReadout:()=>{},renderPlotInfo:()=>{},renderSparResults:()=>{},renderPartEditor:()=>{},
 };
 vm.createContext(ctx);vm.runInContext(src.slice(start,end)+'\npreviewGeometry();',ctx);
 assert.equal(ctx.g.interiorRibs,5);assert.equal(ctx.g.rodFractions.length,2);assert.equal(ctx.g.semiSpan,480);

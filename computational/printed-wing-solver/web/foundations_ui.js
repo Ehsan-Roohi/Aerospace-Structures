@@ -85,7 +85,8 @@ const Lecture03BeamCases = Object.freeze({
       <button type="button" data-stage="metal" aria-pressed="false">D.520 full-scale wing</button>
       <details class="bl-companion"><summary>Wing geometry tool</summary><div class="bl-companion-pop" data-companion="vinco"></div></details>
     </nav>
-    <p class="bl-intro"><button type="button" class="bl-btn bl-btn-primary" id="beamGuideOpen">User manual · Quick guide</button> Start with an empty beam → place supports → add loads → Solve. Results always belong to the last <b>solved</b> model; edits stay pending until you press <b>Solve</b>.</p>
+    <div class="bl-start-guide"><button type="button" class="bl-btn bl-btn-primary" id="beamGuideOpen">User manual · Start here</button><span>1 · Place supports → 2 · Place loads → 3 · Enter values below the picture → 4 · Solve</span></div>
+    <p class="bl-intro">Results belong to the last <b>solved</b> model. Changes remain pending until you press <b>Solve</b>.</p>
   </header>
   <div class="bl-app">
     <aside class="bl-side" aria-label="Beam inputs">
@@ -181,6 +182,7 @@ const Lecture03BeamCases = Object.freeze({
       <div class="bl-row"><button type="button" class="bl-btn bl-btn-sm" id="beamDeleteSelected" disabled>Delete selected item</button><span id="beamSelection" class="bl-help" role="status">Select a load, support or hinge; press Delete to remove it.</span></div>
       <div id="beamPicture" class="bl-picture"></div>
       <p class="bl-picture-note" id="beamPictureNote"></p>
+      <section class="bl-load-editor" id="beamLoadEditor" aria-labelledby="beamLoadEditorTitle"><h3 id="beamLoadEditorTitle">Load parameters</h3><p class="bl-help">Pick a load tool above and click a station or drag an interval. Edit the coordinates and magnitude here, then confirm. Zero is a valid coordinate; it is not an applied force. No force is added automatically.</p></section>
       <div id="beamKpis" class="bl-kpis" aria-label="Key results"></div>
       <div id="beamNotice"></div>
       <p id="beamStatus" class="bl-message" role="status" aria-live="polite"></p>
@@ -335,6 +337,10 @@ const Lecture03BeamCases = Object.freeze({
     </section>
   </div>
   <div id="beamPrint" class="bl-print" aria-hidden="true"></div>`;
+  // Keep one form and its listeners: graphical placement never sends the user away from the model.
+  const editorLink=document.createElement('p');editorLink.className='bl-help';editorLink.innerHTML='Set positions and magnitudes in <a href="#beamLoadEditor">Load parameters below the beam picture</a>.';
+  $('#beamLoadForm').before(editorLink);
+  $('#beamLoadEditor').append($('#beamLoadForm'));
   if(typeof CompanionTools!=='undefined') CompanionTools.fill(host);
 
   /* ------------------------------------------------------------- inputs */
@@ -668,7 +674,7 @@ const Lecture03BeamCases = Object.freeze({
     st.placing=st.placing===kind?null:kind;
     $$('[data-place]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.place===st.placing)));
     renderPicture();
-    if(st.placing) message(st.placing.startsWith('load:')?'Point force/couple: click a station. Distributed load: drag an interval. Then enter magnitude in Loads; nothing is applied until confirmed. Esc cancels.':`Click the beam to place a ${st.placing}. Press Esc or the button again to stop.`);
+    if(st.placing) message(st.placing.startsWith('load:')?'Point force/couple: click a station. Distributed load: drag an interval. Enter magnitude in Load parameters below the picture; nothing is applied until confirmed. Esc cancels.':`Click the beam to place a ${st.placing}. Press Esc or the button again to stop.`);
   }
   function prepareGraphicLoad(kind,a,b) {
     st.editLoad=null;
@@ -680,7 +686,7 @@ const Lecture03BeamCases = Object.freeze({
     syncLoadForm();renderPicture();
     const field=kind==='point'?'beamP':kind==='moment'?'beamC':kind==='triangle'?'beamQ1':kind==='elliptic'||kind==='parabolic'?'beamCurveValue':'beamQ0';
     const input=$('#'+field), details=input.closest('details');if(details)details.open=true;
-    input.scrollIntoView&&input.scrollIntoView({block:'center'});input.focus();
+    input.focus({preventScroll:true});
     $('#beamGraphicHelp').textContent=`Selected ${kind} at ${fmt(Math.min(a,b))}${a===b?'':`–${fmt(Math.max(a,b))}`} mm. Enter magnitude (+ down / clockwise; − up / counter-clockwise), then Add load & solve. This blue selection is not an applied load.`;
   }
 

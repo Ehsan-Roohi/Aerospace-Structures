@@ -56,6 +56,11 @@
 .bl-nav button:hover { border-color: var(--accent); color: var(--bl-accent-text); }
 .bl-nav button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
 .bl-intro { color: var(--muted); font-size: 14.5px; margin: 10px 0 0; max-width: 92ch; }
+.bl-start-guide { display:flex; flex-wrap:wrap; align-items:center; gap:12px; flex-basis:100%; color:var(--fg); }
+.bl-load-editor { border:2px solid var(--accent); border-radius:12px; padding:14px; margin:14px 0; min-width:0; }
+.bl-load-editor h3 { margin:0 0 8px; }
+.bl-load-editor .bl-grid2 { grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr)); }
+.bl-load-editor .bl-box { margin-bottom:0; }
 
 /* ---------- app grid ---------- */
 .bl-app { display: grid; grid-template-columns: 368px minmax(0, 1fr); grid-template-areas: "side model" "side results"; gap: 18px; align-items: start; margin-top: 16px; }

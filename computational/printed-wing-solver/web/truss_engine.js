@@ -8,8 +8,8 @@
   const ids=new Set();
   const nodes=raw.nodes.map(n=>{
    if(!Number.isInteger(n.id)||n.id<1||ids.has(n.id))throw Error('Node IDs must be unique positive integers.');ids.add(n.id);
-   if(!['free','pin','rollerY','rollerX'].includes(n.support))throw Error('Unknown support.');
-   return {id:n.id,x:finite(n.x,'x'),y:finite(n.y,'y'),fx:finite(n.fx,'Fx'),fy:finite(n.fy,'Fy'),support:n.support};
+   if(!['free','pin','rollerY','rollerX','roller'].includes(n.support))throw Error('Unknown support.');
+   return {id:n.id,x:finite(n.x,'x'),y:finite(n.y,'y'),fx:finite(n.fx,'Fx'),fy:finite(n.fy,'Fy'),support:n.support,supportAngle:finite(n.supportAngle??(n.support==='rollerX'?90:0),'Support surface angle')};
   });
   const pairs=new Set();
   const members=raw.members.map(m=>{
@@ -21,7 +21,14 @@
    finite(Kfactor,'Effective length factor');if(Kfactor<=0||(Imin!==null&&Imin<=0))throw Error('Imin and effective length factor must be positive.');
    return {a:m.a,b:m.b,E,A,type,Imin,Kfactor};
   });
-  return {nodes,members};
+  const lineLoads=raw.lineLoads??[];if(!Array.isArray(lineLoads)||lineLoads.length>30)throw Error('At most 30 nodal-transfer line loads.');
+  const loads=lineLoads.map(v=>{if(!Array.isArray(v.nodes)||v.nodes.length<2||v.nodes.length>60||new Set(v.nodes).size!==v.nodes.length||v.nodes.some(id=>!ids.has(id)))throw Error('A line load needs an ordered path of at least two distinct existing nodes.');return {nodes:[...v.nodes],qStart:finite(v.qStart,'Start intensity'),qEnd:finite(v.qEnd,'End intensity'),angle:finite(v.angle,'Load angle')};});
+  return {nodes,members,lineLoads:loads};
+ }
+ function equivalentLoads(raw){const model=normalize(raw),map=new Map(model.nodes.map(n=>[n.id,n])),forces=new Map(model.nodes.map(n=>[n.id,{fx:0,fy:0}])),transfers=[];
+  for(const [index,v]of model.lineLoads.entries()){const path=v.nodes.map(id=>map.get(id)),lengths=path.slice(1).map((n,i)=>Math.hypot(n.x-path[i].x,n.y-path[i].y)),length=lengths.reduce((a,b)=>a+b,0);if(lengths.some(l=>l<1e-8))throw Error('Line-load path has coincident nodes.');const a=v.angle*Math.PI/180,c=Math.cos(a),s=Math.sin(a);let station=0;const rows=[];
+   for(let i=0;i<lengths.length;i++){const L=lengths[i],qa=v.qStart+(v.qEnd-v.qStart)*station/length,qb=v.qStart+(v.qEnd-v.qStart)*(station+L)/length,fa=L*(2*qa+qb)/6,fb=L*(qa+2*qb)/6;for(const [node,F]of [[path[i],fa],[path[i+1],fb]]){const f=forces.get(node.id);f.fx+=F*c;f.fy+=F*s;rows.push({id:node.id,fx:F*c,fy:F*s});}station+=L;}transfers.push({index,length,total:(v.qStart+v.qEnd)*length/2,rows});
+  }return {nodes:model.nodes.map(n=>({id:n.id,...forces.get(n.id)})),transfers};
  }
  function linear(K,F){
   const n=F.length;if(!n)return [];
@@ -40,20 +47,20 @@
  function solve(raw){
   const model=normalize(raw),{nodes,members}=model,n=nodes.length,N=2*n;
   if(n<2||!members.length)throw Error('Add nodes, members, supports and nodal loads, then Solve.');
-  const ix=new Map(nodes.map((v,i)=>[v.id,i])),F=nodes.flatMap(v=>[v.fx,v.fy]);
+  const ix=new Map(nodes.map((v,i)=>[v.id,i])),distributed=equivalentLoads(model),F=nodes.flatMap((v,i)=>[v.fx+distributed.nodes[i].fx,v.fy+distributed.nodes[i].fy]);
   const geom=members.map(m=>{
    const i=ix.get(m.a),j=ix.get(m.b),dx=nodes[j].x-nodes[i].x,dy=nodes[j].y-nodes[i].y,L=Math.hypot(dx,dy);
    if(L<1e-8)throw Error('Coincident member ends.');
    const c=dx/L,s=dy/L,t=[-c,-s,c,s],dof=[2*i,2*i+1,2*j,2*j+1],k=m.E*m.A/L;
    return {L,t,dof,k};
   });
-  const fixed=new Set();nodes.forEach((v,i)=>{if(v.support==='pin'||v.support==='rollerX')fixed.add(2*i);if(v.support==='pin'||v.support==='rollerY')fixed.add(2*i+1);});
-  const free=Array.from({length:N},(_,i)=>i).filter(i=>!fixed.has(i)),cables=members.map((m,i)=>m.type==='cable'?i:-1).filter(i=>i>=0);
+  const basis=[];nodes.forEach((v,i)=>{const axis=(x,y)=>{const b=Array(N).fill(0);b[2*i]=x;b[2*i+1]=y;basis.push(b);};if(v.support==='free'){axis(1,0);axis(0,1);}else if(v.support==='rollerX')axis(0,1);else if(v.support==='rollerY')axis(1,0);else if(v.support==='roller'){const a=v.supportAngle*Math.PI/180;axis(Math.cos(a),Math.sin(a));}});
+  const dot=(a,b)=>a.reduce((s,v,i)=>s+v*b[i],0),cables=members.map((m,i)=>m.type==='cable'?i:-1).filter(i=>i>=0);
   const forceTol=1e-9*Math.max(1,...F.map(Math.abs));
   function candidate(active){
    const K=Array.from({length:N},()=>Array(N).fill(0));
    geom.forEach((g,i)=>{if(members[i].type==='cable'&&!active.has(i))return;for(let a=0;a<4;a++)for(let b=0;b<4;b++)K[g.dof[a]][g.dof[b]]+=g.k*g.t[a]*g.t[b];});
-   const u=Array(N).fill(0),uf=linear(free.map(i=>free.map(j=>K[i][j])),free.map(i=>F[i]));free.forEach((d,i)=>u[d]=uf[i]);
+   const kb=basis.map(v=>K.map(row=>dot(row,v))),u=Array(N).fill(0),uf=linear(basis.map(v=>kb.map(w=>dot(v,w))),basis.map(v=>dot(v,F)));basis.forEach((v,i)=>v.forEach((a,d)=>u[d]+=a*uf[i]));
    const trial=geom.map(g=>g.k*g.t.reduce((a,v,j)=>a+v*u[g.dof[j]],0));
    const valid=cables.every(i=>active.has(i)?trial[i]>=-forceTol:trial[i]<=forceTol);
    return {u,trial,active,valid};
@@ -75,8 +82,8 @@
   const {u,trial}=solved;
   const forces=trial.map((v,i)=>members[i].type==='cable'?(solved.active.has(i)?Math.max(0,v):0):v),internal=Array(N).fill(0);
   geom.forEach((g,i)=>g.dof.forEach((d,j)=>internal[d]+=g.t[j]*forces[i]));const R=internal.map((v,i)=>v-F[i]);
-  const residual=Math.max(0,...free.map(i=>Math.abs(R[i])));if(residual>1e-7*Math.max(1,...F.map(Math.abs)))throw Error('Cable equilibrium tolerance was not met. No results accepted.');
-  const resultNodes=nodes.map((v,i)=>({...v,ux:u[2*i],uy:u[2*i+1],rx:fixed.has(2*i)?R[2*i]:0,ry:fixed.has(2*i+1)?R[2*i+1]:0}));
+  const residual=Math.max(0,...basis.map(v=>Math.abs(dot(v,R))));if(residual>1e-7*Math.max(1,...F.map(Math.abs)))throw Error('Cable equilibrium tolerance was not met. No results accepted.');
+  const resultNodes=nodes.map((v,i)=>{let rx=0,ry=0;if(v.support==='pin'){rx=R[2*i];ry=R[2*i+1];}else if(v.support==='rollerX')rx=R[2*i];else if(v.support==='rollerY')ry=R[2*i+1];else if(v.support==='roller'){const a=v.supportAngle*Math.PI/180,nx=-Math.sin(a),ny=Math.cos(a),r=nx*R[2*i]+ny*R[2*i+1];rx=nx*r;ry=ny*r;}return {...v,fx:F[2*i],fy:F[2*i+1],ux:u[2*i],uy:u[2*i+1],rx,ry};});
   const resultMembers=members.map((m,i)=>{const g=geom[i],extension=g.t.reduce((a,v,j)=>a+v*u[g.dof[j]],0),force=forces[i],stress=force/m.A,strain=stress/m.E;
    const cableState=m.type!=='cable'?null:force>forceTol?'taut':trial[i]<-forceTol?'slack':'zero-force boundary';
    const Pcr=m.type==='bar'&&m.Imin!==null?Math.PI**2*m.E*m.Imin/(m.Kfactor*g.L)**2:null;
@@ -85,7 +92,7 @@
   const equilibrium=resultNodes.reduce((e,v)=>({fx:e.fx+v.fx+v.rx,fy:e.fy+v.fy+v.ry,m:e.m+v.x*(v.fy+v.ry)-v.y*(v.fx+v.rx)}),{fx:0,fy:0,m:0});
   const maxDisplacement=Math.max(...resultNodes.map(v=>Math.hypot(v.ux,v.uy)));
   if([...u,...R,...resultMembers.flatMap(v=>[v.force,v.stress])].some(v=>!Number.isFinite(v)))throw Error('Non-finite result: check geometry and stiffness.');
-  return {model,nodes:resultNodes,members:resultMembers,equilibrium,maxDisplacement,iterations,slackCables:resultMembers.filter(m=>m.cableState==='slack').length};
+  return {model,nodes:resultNodes,members:resultMembers,distributed,equilibrium,maxDisplacement,iterations,slackCables:resultMembers.filter(m=>m.cableState==='slack').length};
  }
- root.TrussEngine={normalize,solve};
+ root.TrussEngine={normalize,solve,equivalentLoads};
 })(typeof globalThis!=='undefined'?globalThis:this);

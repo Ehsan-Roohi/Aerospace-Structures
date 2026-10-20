@@ -13,7 +13,7 @@ const BeamStrength=(()=>{
   const layers=Array.from({length:2},(_,i)=>{const p=raw.layers?.[i]??{};return Object.fromEntries(['yield','tension','compression','shear'].map(k=>[k,limit(p[k],`Material ${i+1} ${k} strength`)]));});
   return {version:1,criterion,requiredFos,layers,deflectionLimit:limit(raw.deflectionLimit,'Deflection limit')};
  }
- function evaluate(r,raw){
+ function evaluate(r,raw,station=null){
   const config=normalize(raw),p=S.properties(r.section),L=r.input.length,nLayers=p.shape==='layered'?2:1;
   const missing=[];if(config.requiredFos===null)missing.push('required factor of safety');
   for(let i=0;i<nLayers;i++)for(const k of config.criterion==='vonMises'?['yield']:['tension','compression','shear'])if(config.layers[i][k]===null)missing.push(`material ${i+1}: ${k} strength`);
@@ -33,9 +33,9 @@ const BeamStrength=(()=>{
   }
   const anchors=[...new Set([0,L,...r.nodes])].sort((a,b)=>a-b),qBound=r.loadsApplied.filter(B.loads.isDist).reduce((s,v)=>s+B.loads.peak(v),0);
   let critical=null,maxRatio=0,maxBound=0;const cells=[];
-  function point(x,side){const f=B.internalForces(r,x,side);let best={ratio:0,x,side,z:0,layer:0,sigma:0,tau:0,criterion:'zero demand or unchecked'};
-   for(const c of coefficients){const sigma=f.M*c.sigma,tau=f.V*c.tau,u=utilization(sigma,tau,c.layer);if(u.ratio>best.ratio)best={...u,x,side,z:c.z,layer:c.layer,sigma,tau};}
-   return {f,best};
+  function point(x,side){const f=B.internalForces(r,x,side);let best={ratio:0,x,side,z:0,layer:0,sigma:0,tau:0,criterion:'zero demand or unchecked'},fallback=best;
+   for(const c of coefficients){const sigma=f.M*c.sigma,tau=f.V*c.tau,u=utilization(sigma,tau,c.layer),v={...u,x,side,z:c.z,layer:c.layer,sigma,tau};if(u.ratio>best.ratio)best=v;if(Math.hypot(sigma,tau)>Math.hypot(fallback.sigma,fallback.tau))fallback=v;}
+   return {f,best,fallback};
   }
   for(let j=1;j<anchors.length;j++){
    const subdivisions=Math.max(1,Math.ceil((anchors[j]-anchors[j-1])/(L/240)));
@@ -72,10 +72,12 @@ const BeamStrength=(()=>{
   }
   const modelWarning=maxDeflection>L*.05?'Maximum FE displacement exceeds 5% of span: small-displacement assumptions may be inappropriate. Nominal stresses are provisional, not a validated large-deformation assessment.':null;
   if(modelWarning&&missing.length===0&&status!=='exceeded'){status='model';for(const c of cells)if(c.status!=='exceeded')c.status='model';}
-  return {config,status,missing,modelWarning,complete:missing.length===0,critical,maxRatio,maxBound,fosLower,pointFos,zeroDemand:maxRatio===0,cells,
+  let selected=null;if(station){if(!Number.isFinite(station.x)||station.x<0||station.x>L||!['left','right'].includes(station.side))throw Error('Invalid strength station.');const v=point(station.x,station.side);let c=v.best.ratio>0?v.best:v.fallback;if(station.z!==undefined){if(!Number.isFinite(station.z)||Math.abs(station.z)>p.c)throw Error('Depth must lie within the section.');const z=station.z,side=station.depthSide===1?1:-1,layer=p.shape==='layered'&&(z>p.interfaceZ||(z===p.interfaceZ&&side>0))?1:0,b=p.widthAt(z,side),sigma=S.normalStress(p,v.f.M,z,side),tau=b>0?v.f.V*p.firstMoment(z)/(p.I*b):0;c={...utilization(sigma,tau,layer),x:station.x,side:station.side,z,layer,sigma,tau};}const outside=station.x===0&&station.side==='left'||station.x===L&&station.side==='right';selected={...c,outside,V:v.f.V,M:v.f.M,fos:outside||missing.length?null:c.ratio>0?1/c.ratio:Infinity,status:outside?'unchecked':classify(c.ratio,c.ratio)};if(modelWarning&&selected.status==='within')selected.status='model';}
+  return {config,status,missing,modelWarning,complete:missing.length===0,critical,maxRatio,maxBound,fosLower,pointFos,zeroDemand:maxRatio===0,cells,selected,
    deflection:{limit:config.deflectionLimit,value:maxDeflection,status:config.deflectionLimit===null?'unchecked':maxDeflection>config.deflectionLimit?'exceeded':'within'},
    method:'Pointwise σ and τ evaluated together at section-depth samples and three stations per interval; conservative span/depth envelopes govern a within-limits result. The critical marker is the most highly utilized evaluated material point, not an exact fracture location.'};
  }
- return {normalize,evaluate};
+ function mohr(sigmaX,sigmaZ,tauXZ){if(![sigmaX,sigmaZ,tauXZ].every(Number.isFinite))throw Error('Finite stresses are required.');const center=sigmaX/2+sigmaZ/2,radius=Math.hypot(sigmaX/2-sigmaZ/2,tauXZ),vm=Math.hypot(Math.sqrt(3)*(sigmaX/2-sigmaZ/2),center,Math.sqrt(3)*tauXZ);return {sigmaX,sigmaZ,tauXZ,center,radius,sigma1:center+radius,sigma2:center-radius,tauMax:radius,thetaDeg:radius===0?null:Math.atan2(tauXZ,sigmaX/2-sigmaZ/2)*90/Math.PI,vm};}
+ return {normalize,evaluate,mohr};
 })();
 if(typeof module!=='undefined')module.exports=BeamStrength;

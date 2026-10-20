@@ -652,6 +652,7 @@ const Lecture03BeamCases = Object.freeze({
     $('#beamPictureNote').textContent+=$('#beamLoadScale').value==='independent'?' Independent load heights show shape only; they do NOT compare force magnitudes.':' Shared intensity scale: a much smaller intensity can look flat; choose independent heights to inspect its shape.';
     const sup=model.supports, left=(sup.find(s=>s.x===0)||{kind:'free'}).kind, right=(sup.find(s=>s.x===model.length)||{kind:'free'}).kind, interior=sup.filter(s=>s.x>0&&s.x<model.length).length;
     $('#beamModelTitle').title=`${left} / ${right}${interior?` + ${interior} interior supports`:''}`;
+    if(window.BeamStrengthUI)window.BeamStrengthUI.updatePicture();
   }
 
   function svgX(evt) {
@@ -1630,7 +1631,7 @@ const Lecture03BeamCases = Object.freeze({
       if(pic.setPointerCapture)try{pic.setPointerCapture(e.pointerId);}catch(x){}
       e.preventDefault();return;
     }
-    if(cutTab()&&st.solved&&isCurrent()) {st.drag={type:'cut'};const x=svgX(e);if(x!==null)setCut(x);if(pic.setPointerCapture)try{pic.setPointerCapture(e.pointerId);}catch(z){}}
+    if(cutTab()&&st.solved&&isCurrent()) {st.drag={type:'cut'};const x=svgX(e);if(x!==null){setCut(x);if(window.BeamStrengthUI)window.BeamStrengthUI.inspectAt(x);}if(pic.setPointerCapture)try{pic.setPointerCapture(e.pointerId);}catch(z){}}
   });
   pic.addEventListener('pointermove',e=>{
     if(st.drag&&st.drag.type==='load-range') {const x=svgX(e);if(x!==null){st.graphicPreview={start:Math.min(st.drag.start,snap(x,st.drawn.length)),end:Math.max(st.drag.start,snap(x,st.drawn.length))};frame(()=>renderPicture());}return;}

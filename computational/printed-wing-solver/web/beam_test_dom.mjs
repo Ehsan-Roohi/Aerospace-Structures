@@ -19,3 +19,10 @@ export function loadBeamLab(dom,{scripts=BEAM_SCRIPTS,matches=true}={}) {
   for(const file of scripts) vm.runInContext(read('./'+file),ctx,{filename:file});
   return {w,ctx,$:s=>w.document.querySelector(s),$$:s=>[...w.document.querySelectorAll(s)]};
 }
+/** Explicitly enter a test model through the same controls as a user; production now starts blank. */
+export function configureBlankBeam(dom){
+ const w=dom.window,$=s=>w.document.querySelector(s);
+ for(const [name,value] of Object.entries({length:450,E:2000,density:1.24,elements:30}))$(`#beamGeometry [name="${name}"]`).value=String(value);
+ $('#beamShape').value='rectangle';$('#beamShape').dispatchEvent(new w.Event('change'));
+ $('#beamSectionFields [data-sec="width"]').value='20';$('#beamSectionFields [data-sec="height"]').value='10';$('#beamSectionFields [data-sec="height"]').dispatchEvent(new w.Event('input',{bubbles:true}));
+}

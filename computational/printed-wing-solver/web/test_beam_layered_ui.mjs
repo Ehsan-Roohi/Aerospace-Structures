@@ -1,6 +1,6 @@
 import assert from'node:assert/strict';import{createRequire}from'node:module';const require=createRequire(import.meta.url),{JSDOM}=require(process.env.MIE446_JSDOM_MODULE||'jsdom');
 const dom=new JSDOM('<div id="foundations"></div>',{runScripts:'outside-only'}),w=dom.window;w.HTMLElement.prototype.scrollIntoView=function(){};
-const{loadBeamLab}=await import('./beam_test_dom.mjs');loadBeamLab(dom);const $=s=>w.document.querySelector(s);
+const{loadBeamLab,configureBlankBeam}=await import('./beam_test_dom.mjs');loadBeamLab(dom);configureBlankBeam(dom);const $=s=>w.document.querySelector(s);
 try{
  $('#beamShape').value='layered';$('#beamShape').dispatchEvent(new w.Event('change'));
  assert.equal($('#beamSectionFields [data-sec="topThickness"]').value,'5');

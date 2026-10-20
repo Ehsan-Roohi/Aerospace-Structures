@@ -3,7 +3,7 @@ import {createRequire} from 'node:module';
 const require=createRequire(import.meta.url),{JSDOM}=require(process.env.MIE446_JSDOM_MODULE||'jsdom');
 const dom=new JSDOM('<div id="foundations"></div>',{runScripts:'outside-only'}),w=dom.window;
 w.HTMLElement.prototype.scrollIntoView=function(){};
-const {loadBeamLab}=await import('./beam_test_dom.mjs');loadBeamLab(dom);
+const {loadBeamLab,configureBlankBeam}=await import('./beam_test_dom.mjs');loadBeamLab(dom);
 const $=s=>w.document.querySelector(s);
 try {
  assert.equal(w.document.querySelectorAll('#beamLoadForm').length,1);
@@ -12,12 +12,15 @@ try {
  assert.ok($('#beamGuideOpen').closest('.bl-start-guide'));
  assert.equal(w.BeamLab.state().model.loads.length,0);
  assert.equal(w.BeamLab.state().model.supports.length,0);
+ assert.equal($('#beamGeometry [name="length"]').value,'');assert.equal($('#beamGeometry [name="elements"]').value,'');assert.equal($('#beamShape').value,'');
+ configureBlankBeam(dom);
  $('#beamleftSupport').value='fixed';$('#beamSolve').click();
  $('#beamLoadKind').value='point';$('#beamLoadKind').dispatchEvent(new w.Event('change'));
  $('#beamLoadA').value='0';$('#beamP').value='2';
  $('#beamLoadForm').dispatchEvent(new w.Event('submit',{bubbles:true,cancelable:true}));
  assert.equal(w.BeamLab.state().model.loads[0].position,0);
  assert.equal(w.BeamLab.state().model.loads[0].force,2);
+ assert.equal($('#beamEditorDelete').disabled,false);
  // Model the same transfer used by graphical placement, then close without deleting a load.
  $('#beamLoadEditor').hidden=false;$('#beamLoadEditor').append($('#beamLoadForm'));
  $('#beamLoadEditorClose').click();assert.ok($('#beamLoadEditor').hidden);

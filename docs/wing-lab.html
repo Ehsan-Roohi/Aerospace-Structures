@@ -448,6 +448,7 @@ body { margin: 0; }
 .bl-load-editor[hidden] { display:none; }
 .bl-editor-close { position:absolute; right:8px; top:8px; font-size:24px; min-width:40px; }
 .bl-load-editor h3 { padding-right:48px; }
+.bl-load-editor > .bl-help { padding-right:44px; }
 .bl-load-editor h3 { margin:0 0 8px; }
 .bl-load-editor .bl-grid2 { grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr)); }
 .bl-load-editor .bl-box { margin-bottom:0; }
@@ -4175,16 +4176,16 @@ const Lecture03BeamCases = Object.freeze({
   const params=new URLSearchParams(window.location.search);
   const caseName=params.get('beamCase');
   const lectureCase=caseName!==null&&Object.prototype.hasOwnProperty.call(Lecture03BeamCases,caseName)?caseName:null;
-  let startMessage='', initial=clone(BASE);
+  let startMessage='', initial=clone(BASE), hasInitialStudy=!!lectureCase;
   if(lectureCase) initial=presetModel(lectureCase);
   else if(params.has('beam')) {
-    try {const shared=Study.decodeShare(params.get('beam'));B.solve({...shared,modes:false});initial=shared;startMessage='Shared study opened from the link and solved.';}
-    catch(e) {startMessage=`The shared beam link could not be opened: ${e.message} The default study is shown instead.`;}
+    try {const shared=Study.decodeShare(params.get('beam'));B.solve({...shared,modes:false});initial=shared;hasInitialStudy=true;startMessage='Shared study opened from the link and solved.';}
+    catch(e) {startMessage=`The shared beam link could not be opened: ${e.message} Start by entering a new beam model.`;}
   }
 
   // One cut station for the whole page: the Diagrams readout, the plot markers, the beam picture and Cut & section.
   const st={model:initial,solved:null,error:'',mechanism:null,draftError:'',tab:'diagrams',cut:{x:initial.length/2,side:'both',limit:'left',note:''},
-    mode:0,animated:false,phase:0,placing:null,drag:null,editLoad:null,compare:{A:null,B:null},showDeflection:true,autoSolve:false,
+    mode:0,animated:false,phase:0,placing:null,drag:null,editLoad:null,editorLoad:null,blankSetup:!hasInitialStudy,compare:{A:null,B:null},showDeflection:true,autoSolve:false,
     cache:{},message:''};
   const cutTab=()=>st.tab==='cut'||st.tab==='diagrams';   // tabs that show (and let you drag) the cut station
 
@@ -4211,7 +4212,7 @@ const Lecture03BeamCases = Object.freeze({
       <button type="button" data-stage="metal" aria-pressed="false">D.520 full-scale wing</button>
       <details class="bl-companion"><summary>Wing geometry tool</summary><div class="bl-companion-pop" data-companion="vinco"></div></details>
     </nav>
-    <div class="bl-start-guide"><button type="button" class="bl-btn bl-btn-primary" id="beamGuideOpen">User manual · Start here</button><span>1 · Place supports → 2 · Place loads → 3 · Enter load values → 4 · Solve</span></div>
+    <div class="bl-start-guide"><button type="button" class="bl-btn bl-btn-primary" id="beamGuideOpen">User manual · Start here</button><span>1 · Length, material &amp; mesh → 2 · Section shape &amp; dimensions → 3 · Supports → 4 · Loads &amp; values → 5 · Solve</span></div>
     <p class="bl-intro">Results belong to the last <b>solved</b> model. Changes remain pending until you press <b>Solve</b>.</p>
   </header>
   <div class="bl-app">
@@ -4235,7 +4236,7 @@ const Lecture03BeamCases = Object.freeze({
         </details>
       </div></details>
       <details class="bl-acc" open><summary><span class="bl-step">2</span>Cross-section <span class="bl-badge" id="beamSectionBadge"></span></summary><div class="bl-acc-body">
-        <label class="bl-field"><span>Shape</span><select class="bl-select" id="beamShape">${Object.entries(SEC.SHAPES).map(([k,v])=>`<option value="${k}">${v.label}</option>`).join('')}</select></label>
+        <label class="bl-field"><span>Shape</span><select class="bl-select" id="beamShape"><option value="">Choose a cross-section…</option>${Object.entries(SEC.SHAPES).map(([k,v])=>`<option value="${k}">${v.label}</option>`).join('')}</select></label>
         <div class="bl-grid2" id="beamSectionFields"></div>
         <div id="beamSectionView"></div>
       </div></details>
@@ -4308,7 +4309,7 @@ const Lecture03BeamCases = Object.freeze({
       <div class="bl-row"><button type="button" class="bl-btn bl-btn-sm" id="beamDeleteSelected" disabled>Delete selected item</button><span id="beamSelection" class="bl-help" role="status">Select a load, support or hinge; press Delete to remove it.</span></div>
       <div id="beamPicture" class="bl-picture"></div>
       <p class="bl-picture-note" id="beamPictureNote"></p>
-      <section class="bl-load-editor" id="beamLoadEditor" aria-labelledby="beamLoadEditorTitle" hidden><button type="button" class="bl-btn bl-editor-close" id="beamLoadEditorClose" aria-label="Close graphical load editor and return parameters to the left">×</button><h3 id="beamLoadEditorTitle">Load parameters</h3><p class="bl-help">Edit position, interval and magnitude, then confirm. Close × to return this form to the left. Closing never deletes an applied load.</p></section>
+      <section class="bl-load-editor" id="beamLoadEditor" aria-labelledby="beamLoadEditorTitle" hidden><button type="button" class="bl-btn bl-editor-close" id="beamLoadEditorClose" aria-label="Close graphical load editor and return parameters to the left">×</button><h3 id="beamLoadEditorTitle">Load parameters</h3><p class="bl-help">Edit position, interval and magnitude, then confirm. Close × only hides this editor; it does not delete a load. Use the removal controls below or select a purple handle and press Delete.</p><div class="bl-row"><button type="button" class="bl-btn bl-btn-sm" id="beamEditorDelete" disabled>Delete this load</button><button type="button" class="bl-btn bl-btn-sm bl-clear" id="beamEditorClear">Clear All Loads</button></div></section>
       <div id="beamKpis" class="bl-kpis" aria-label="Key results"></div>
       <div id="beamNotice"></div>
       <p id="beamStatus" class="bl-message" role="status" aria-live="polite"></p>
@@ -4415,13 +4416,13 @@ const Lecture03BeamCases = Object.freeze({
       <div class="bl-tabpanel bl-learn" role="tabpanel" id="beamTab-learn" aria-labelledby="beamTabBtn-learn" hidden>
         <section class="bl-box bl-guide" id="beamGuide" aria-labelledby="beamGuideTitle">
           <h3 id="beamGuideTitle" tabindex="-1">User manual · Quick guide</h3>
-          <p><b>First visit?</b> The normal workspace starts with no supports, no loads and self-weight off. It is a drawing workspace, not a solved beam yet. Follow these steps; no example is loaded unless you choose one.</p>
+          <p><b>First visit?</b> Length, material properties, mesh count and cross-section are initially unset. No supports or loads are applied, and self-weight is off. Empty fields are not zeros: enter a valid beam before drawing or solving. Only an explicitly chosen example, shared link or imported study fills in a model.</p>
           <ol class="bl-guide-steps">
             <li><b>Set dimensions and material.</b> In panels 1–2 enter length L, elastic modulus E, density and cross-section dimensions in the displayed units. Elements are numerical subdivisions, not physical parts; open the mesh help for accuracy guidance.</li>
             <li><b>Place supports.</b> Select <b>Fixed</b>, <b>Pin</b> or <b>Roller</b> above the picture, then click the beam at the intended station. A click near an end sets its restraint; an interior click adds an interior support. Drag an interior support to move it, or type its exact x in panel 3. End restraints can also be selected in the Left/Right end menus. A hinge is a moment release, <b>not a support to ground</b>.</li>
             <li><b>Check stability.</b> For a first simple model, place one Fixed support at x = 0 (a cantilever). Alternatively use a pin and a roller at different stations. With no supports, one pin alone, or rollers only, the beam cannot be solved as a stable planar structure. Read the stability message; the software never adds a missing support for you.</li>
-            <li><b>Place a point force or couple.</b> Select <b>Point force</b> or <b>Couple</b> in the Loads toolbar, then click the required station on the beam. Panel 4 opens with that x: enter the signed force P in N or couple C in N·mm and press its add/confirm button. Selecting an icon alone does not apply a load. Positive P points down; positive C is clockwise.</li>
-            <li><b>Place a distributed load.</b> Select Uniform, Triangle, Trapezoid, Elliptic or Parabolic; press and drag along the beam from the start to the end of its interval, then release. In panel 4 verify start/end x, enter intensity q in N/mm or the explicitly labelled total force F in N for a curved profile, choose its shape and confirm. Inspect the live profile before adding. You can instead enter all positions numerically; CSV loads are validated and previewed before application. Drawing scale changes the picture only, never the force.</li>
+            <li><b>Place a point force or couple.</b> Select <b>Point force</b> or <b>Couple</b> in the Loads toolbar, then click the required station on the beam. Load parameters opens below the picture with that x: enter signed P in N or C in N·mm and confirm. Selecting an icon alone does not apply a load. Positive P points down; positive C is clockwise. Close × hides the editor and returns the form to the left. Delete load N removes the associated applied load; Clear All Loads removes all applied loads after confirmation.</li>
+            <li><b>Place a distributed load.</b> Select Uniform, Triangle, Trapezoid, Elliptic or Parabolic; drag its start-to-end interval on the beam. In Load parameters below the picture verify start/end x, enter intensity q in N/mm or explicitly labelled total force F in N for a curved profile, choose its shape and confirm. Inspect the live profile before adding. You can also enter positions numerically in the form on the left; CSV loads are validated and previewed before application. Drawing scale changes the picture only, never the force.</li>
             <li><b>Select, edit, move or remove.</b> Click a purple numbered load handle to select it; drag it to move the load. Press Enter or double-click to edit its numbers. Select a support, hinge or load and press <b>Delete</b>, or use <b>Delete selected item</b>. Delete while typing only edits the input, not the model. Removing an end support makes that end free.</li>
             <li><b>Clear independently.</b> <b>Clear All Loads</b> beside the Loads tools removes applied loads and self-weight after confirmation, retaining supports and geometry. <b>Clear All Supports</b> beside the support tools removes end and interior restraints after confirmation, retaining loads, geometry and internal hinges. The beam is then unrestrained until you add supports again.</li>
             <li><b>Solve and verify.</b> Press <b>Solve</b> after the model is stable. Load confirmation may solve the model immediately; subsequent support or geometry edits stay pending unless auto-solve is enabled. Results always belong to the last successful solve. A pending or unstable model cannot export current results; add/fix supports and solve again, or revert to the previous solved model.</li>
@@ -4471,7 +4472,7 @@ const Lecture03BeamCases = Object.freeze({
     (open?$('#beamLoadEditor'):loadFormHome).append($('#beamLoadForm'));
   }
   $('#beamLoadEditorClose').onclick=()=>{
-    showGraphicEditor(false);st.graphicPreview=null;st.editLoad=null;syncLoadForm();renderPicture();
+    showGraphicEditor(false);st.graphicPreview=null;st.editLoad=null;st.editorLoad=null;syncLoadForm();renderPicture();
     message('Graphical load editor closed. Parameters are available on the left; applied loads are unchanged.');
     $('#beamStopPlacing').focus({preventScroll:true});
   };
@@ -4495,7 +4496,7 @@ const Lecture03BeamCases = Object.freeze({
     const m={};
     m.length=readNumber(geometryInput('length'),'Length L');m.E=readNumber(geometryInput('E'),'Elastic modulus E');
     m.density=readNumber(geometryInput('density'),'Density ρ');m.elements=readNumber(geometryInput('elements'),'Requested elements');
-    const shape=$('#beamShape').value;m.section={shape};
+    const shape=$('#beamShape').value;if(!SEC.SHAPES[shape])throw new Error('Choose a cross-section and enter its dimensions.');m.section={shape};
     for(const [key,symbol,label] of SEC.SHAPES[shape].fields) m.section[key]=readNumber($(`#beamSectionFields [data-sec="${key}"]`),`${label} ${symbol}`);
     m.supports=[];
     const left=$('#beamleftSupport').value, right=$('#beamrightSupport').value;
@@ -4524,6 +4525,7 @@ const Lecture03BeamCases = Object.freeze({
     $$('.bl-input[data-invalid]',host).forEach(w=>w.dataset.invalid='false');
   }
   function renderSectionFields(section) {
+    if(!SEC.SHAPES[section.shape]){$('#beamSectionFields').innerHTML='';return;}
     $('#beamSectionFields').innerHTML=SEC.SHAPES[section.shape].fields.map(([key,symbol,label])=>
       `<label class="bl-field"><span>${label} ${symbol.replace(/_(\w+)/,'<sub>$1</sub>')}</span><span class="bl-input"><input data-sec="${key}" type="number" step="any" inputmode="decimal" value="${section[key]}"><span class="bl-unit">${key.endsWith('Ratio')?'ratio':'mm'}</span></span></label>`).join('');
   }
@@ -4576,18 +4578,21 @@ const Lecture03BeamCases = Object.freeze({
     $('#beamLoads').innerHTML=`<ol class="bl-list">${loads.map((p,i)=>`<li data-editing="${st.editLoad===i}"><span class="bl-tag load">${loadTag(p)}</span><span class="bl-li-text">${esc(loadText(p))}</span>
       <span class="bl-li-actions"><button type="button" class="bl-btn bl-btn-sm bl-btn-ghost" data-edit-load="${i}" aria-label="Edit load ${i+1}">Edit</button><button type="button" class="bl-btn bl-btn-sm bl-btn-ghost" data-delete-load="${i}" aria-label="Remove load ${i+1}">✕</button></span></li>`).join('')}</ol>${loads.map((p,i)=>`<details class="bl-box"><summary>Load ${i+1}: profile, total force & resultant</summary>${previewLoad(p,loads)}</details>`).join('')}${loads.length?'':'<p class="bl-help bl-empty-loads">No load defined. Add your own load.</p>'}`;
     $('#beamLoadBadge').textContent=`${loads.length}/${MAX_LOADS}`;
+    renderEditorActions();
   }
   function renderInputs(m) {selection=null;renderScalars(m);renderLists(m);syncLoadForm();renderSectionView();renderStability();}
 
   function sectionFromDraft() {
     const shape=$('#beamShape').value, s={shape};
+    if(!SEC.SHAPES[shape])throw new Error('Choose a cross-section, then enter its dimensions.');
     for(const [key,symbol,label] of SEC.SHAPES[shape].fields) s[key]=readNumber($(`#beamSectionFields [data-sec="${key}"]`),`${label} ${symbol}`);
     return s;
   }
   function renderSectionView() {
     let html;
     try {
-      const s=sectionFromDraft(), p=SEC.properties(s), rho=Number(geometryInput('density').value), L=Number(geometryInput('length').value);
+      const scalar=k=>geometryInput(k).value.trim()===''?NaN:Number(geometryInput(k).value);
+      const s=sectionFromDraft(), p=SEC.properties(s), rho=scalar('density'), L=scalar('length');
       const mass=Number.isFinite(rho)&&Number.isFinite(L)?SEC.massPerLength(p,rho)*L:NaN, q=Number.isFinite(rho)?SEC.selfWeightLine(p,rho,B.GRAVITY):NaN;
       html=`<div class="bl-secview">${D.sectionDrawing(s,p,{width:300})}<dl class="bl-props">
         <dt>Area A</dt><dd>${fmt(p.A)} mm²</dd><dt>${s.shape==='layered'?'Transformed I (reference E₁)':'Second moment I'}</dt><dd>${fmt(p.I)} mm⁴</dd><dt>${s.shape==='layered'?'Geometric half-depth h/2':'Extreme fibre c'}</dt><dd>${fmt(p.c)} mm</dd>
@@ -4596,17 +4601,17 @@ const Lecture03BeamCases = Object.freeze({
         ${p.slender.map(t=>`<p class="bl-help bl-warnline">${esc(t)}</p>`).join('')}`;
       $('#beamSectionBadge').textContent=p.label;
       if(s.shape==='layered'){
-        const E1=Number(geometryInput('E').value);
+        const E1=scalar('E');
         html+=`<p class="bl-help"><b>Material 1 = lower layer:</b> E₁=${fmt(E1)} MPa, ρ₁=${fmt(rho)} g/cm³. <b>Material 2 = upper layer:</b> E₂=${fmt(E1*s.modulusRatio)} MPa, ρ₂=${fmt(rho*s.densityRatio)} g/cm³. Edit E₁ and ρ₁ in Span/material and the ratios here. The displayed I is transformed to material 1, not the geometric I. zNA is measured upward from geometric mid-depth. Shared strain does not mean shared stress: σᵢ=−(Eᵢ/E₁)M(z−zNA)/Itrans. Perfect bond only; no slip or adhesive strength check. Changes affect the full beam solve, self-weight, stress, modal mass and all exports.</p>`;
       }
       $('#beamSelfWeightValue').textContent=Number.isFinite(q)?`(${fmt(q)} N/mm, ${Number.isFinite(L)?fmt(q*L):'—'} N in total)`:'';
-    } catch(e) {html=`<p class="bl-err">${esc(e.message)}</p>`;}
+    } catch(e) {html=`<p class="${st.blankSetup?'bl-help':'bl-err'}">${esc(e.message)}</p>`;$('#beamSectionBadge').textContent='';$('#beamSelfWeightValue').textContent='';}
     $('#beamSectionView').innerHTML=html;
   }
   function renderStability() {
     const box=$('#beamSupportStatus');
     let m;
-    try {m=readDraft();} catch(e) {box.className='bl-stability bad';box.textContent=e.message;return;}
+    try {m=readDraft();} catch(e) {box.className=st.blankSetup?'bl-stability':'bl-stability bad';box.textContent=st.blankSetup?'First enter length, material, mesh and section; then place supports.':e.message;return;}
     if(!m.supports.length&&!st.error){box.className='bl-stability';box.innerHTML='<b>No supports yet.</b> Place restraints before solving: for example, one Fixed support, or a pin and a roller at different stations. A free beam can translate and rotate; the software will not add supports automatically.';return;}
     const a=B.analyze(m);
     if(a.ok) {
@@ -4632,6 +4637,7 @@ const Lecture03BeamCases = Object.freeze({
     chip.textContent=state==='solved'?'Solved':state==='error'?'Not solved':'Pending';
     text.textContent=state==='solved'?'Results match the inputs.':state==='error'?`${st.error}${st.solved?' Results shown are for the last solved model.':''}`:
       (st.draftError?`${st.draftError} `:'')+(st.solved?'Inputs changed — press Solve. Results shown are for the last solved model.':'No analysis yet. Place enough supports for stability, add your loads, then press Solve.');
+    if(st.blankSetup&&!st.solved&&!st.error)text.textContent='Enter length, material, mesh and section to define your beam. No analysis yet.';
     $('#beamSolve').dataset.pending=String(state!=='solved');
     $('#beamRevert').hidden=!(st.solved&&state!=='solved');
     const stale=state!=='solved';
@@ -4683,9 +4689,10 @@ const Lecture03BeamCases = Object.freeze({
       const d=readDraft();
       B.normalize({...d,supports:d.supports.map(s=>({x:s.x,kind:s.kind})),_transverseOnly:true,
         hinges:d.hinges.filter(h=>h>0&&h<d.length)});
+      st.blankSetup=false;
       return {model:d,current:isCurrent()};
     } catch(e) {
-      if(e.code==='mechanism') {try {const d=readDraft();return {model:d,current:false};} catch(x) {}}
+      if(e.code==='mechanism') {try {const d=readDraft();st.blankSetup=false;return {model:d,current:false};} catch(x) {}}
       return {model:st.solved?st.solved.model:BASE,current:false,invalid:true};
     }
   }
@@ -4708,6 +4715,12 @@ const Lecture03BeamCases = Object.freeze({
     });
     $('#beamDeleteSelected').disabled=!selection||st.drawnInvalid;
     $('#beamSelection').textContent=selection?`Selected ${selection.type} ${selection.index+1}. Delete removes this item; end supports become free.`:'Select a load, support or hinge; press Delete to remove it.';
+    renderEditorActions();
+  }
+  function renderEditorActions(){
+    const i=selection?.type==='load'?selection.index:st.editorLoad;
+    $('#beamEditorDelete').disabled=i===null||!st.model.loads[i];
+    $('#beamEditorDelete').textContent=i!==null&&st.model.loads[i]?`Delete load ${i+1}`:'Delete this load';
   }
   function deleteSelection() {
     if(!selection||st.drawnInvalid||st.drag)return;
@@ -4723,7 +4736,7 @@ const Lecture03BeamCases = Object.freeze({
       else if(support.x===st.drawn.length)$('#beamrightSupport').value='free';
       else {const row=interiorRows()[support.row];if(!row)return;const list=row.parentElement;row.remove();relabelRows(list,'support');}
     }
-    selection=null;draftChanged();message('Selected item removed. Press Solve to update results (or enable auto-solve).');
+    selection=null;st.editorLoad=null;draftChanged();message('Selected item removed. Press Solve to update results (or enable auto-solve).');
   }
   function clearLoads() {
     if(!st.model.loads.length&&!$('#beamSelfWeight').checked){message('There are no applied loads to clear. Supports are unchanged.');return;}
@@ -4744,6 +4757,12 @@ const Lecture03BeamCases = Object.freeze({
   function renderPicture(ghost) {
     const pic=$('#beamPicture'), {model,current,invalid}=drawnModel(), r=st.solved&&st.solved.result;
     st.drawn=model;st.drawnInvalid=!!invalid;
+    $('#beamModelTitle').textContent='Supports';$('#beamModelSub').hidden=true;
+    if(invalid&&!st.solved){
+      pic.innerHTML='<div class="bl-empty-model" role="status"><b>Define your beam first</b><p>Enter length, elastic modulus, density and mesh count; choose a section and enter its dimensions. Then place supports and loads. No default beam dimensions or material are being analysed.</p></div>';
+      $('#beamPictureNote').textContent='No configured model yet. Empty fields are not treated as zero or replaced with assumed values.';
+      decorateSelection();return;
+    }
     const sw=current&&r&&r.selfWeight.enabled?{q:r.selfWeight.q}:(!current&&model.selfWeight?{q:SEC.selfWeightLine(SEC.properties(model.section),model.density,B.GRAVITY)}:null);
     pic.innerHTML=D.beamSchematic(model,{width:width(pic)-2,result:current?r:null,showDeflection:current&&st.showDeflection,
       cut:cutTab()&&current?{x:st.cut.x}:null,ghost,selfWeight:sw,interactive:true,loadPreview:st.graphicPreview,loadScale:$('#beamLoadScale').value,
@@ -4757,8 +4776,7 @@ const Lecture03BeamCases = Object.freeze({
       'Showing your edited inputs — not solved yet. Press Solve to update the results.';
     $('#beamPictureNote').textContent+=$('#beamLoadScale').value==='independent'?' Independent load heights show shape only; they do NOT compare force magnitudes.':' Shared intensity scale: a much smaller intensity can look flat; choose independent heights to inspect its shape.';
     const sup=model.supports, left=(sup.find(s=>s.x===0)||{kind:'free'}).kind, right=(sup.find(s=>s.x===model.length)||{kind:'free'}).kind, interior=sup.filter(s=>s.x>0&&s.x<model.length).length;
-    $('#beamModelTitle').textContent=`${left} / ${right}${interior?` + ${interior} interior support${interior>1?'s':''}`:''}${model.hinges.length?` + ${model.hinges.length} hinge${model.hinges.length>1?'s':''}`:''}`;
-    $('#beamModelSub').textContent=`L = ${fmt(model.length)} mm · ${SEC.describe(model.section)} · E = ${fmt(model.E)} MPa${model.selfWeight?' · self-weight on':''}`;
+    $('#beamModelTitle').title=`${left} / ${right}${interior?` + ${interior} interior supports`:''}`;
   }
 
   function svgX(evt) {
@@ -4804,6 +4822,7 @@ const Lecture03BeamCases = Object.freeze({
     message(`${st.placing[0].toUpperCase()+st.placing.slice(1)} placed at x = ${fmt(x)} mm. ${st.autoSolve?'':'Press Solve when ready.'}`);
   }
   function setPlacing(kind) {
+    if(st.drawnInvalid&&!st.solved){message('First complete Length, material & mesh and Cross-section on the left. No default dimensions are used.');return;}
     st.drag=null;st.graphicPreview=null;
     st.placing=st.placing===kind?null:kind;
     $$('[data-place]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.place===st.placing)));
@@ -4811,6 +4830,7 @@ const Lecture03BeamCases = Object.freeze({
     if(st.placing) message(st.placing.startsWith('load:')?'Point force/couple: click a station. Distributed load: drag an interval. Enter magnitude in Load parameters below the picture; nothing is applied until confirmed. Esc cancels.':`Click the beam to place a ${st.placing}. Press Esc or the button again to stop.`);
   }
   function prepareGraphicLoad(kind,a,b) {
+    st.editorLoad=null;selection=null;
     showGraphicEditor(true);
     st.editLoad=null;
     $('#beamLoadKind').value=kind;
@@ -5478,16 +5498,19 @@ const Lecture03BeamCases = Object.freeze({
   function submitLoad(e) {
     if(e) e.preventDefault();
     const err=$('#beamLoadError');err.hidden=true;
+    if(st.blankSetup){err.textContent='Complete length, material, mesh and cross-section before applying a load.';err.hidden=false;return;}
     let load;
     try {load=loadFromForm();} catch(x) {err.textContent=x.message;err.hidden=false;return;}
     if(st.editLoad!==null&&!(st.editLoad<st.model.loads.length)) st.editLoad=null;
     if(st.editLoad===null&&st.model.loads.length>=MAX_LOADS) {err.textContent=`Use at most ${MAX_LOADS} loads.`;err.hidden=false;return;}
+    const appliedIndex=st.editLoad===null?st.model.loads.length:st.editLoad;
     if(st.editLoad===null) st.model.loads.push(load); else st.model.loads[st.editLoad]=load;
     st.editLoad=null;st.graphicPreview=null;renderLoadList();syncLoadForm();solve();
+    st.editorLoad=appliedIndex;selection={type:'load',index:appliedIndex};decorateSelection();
     $('#beamGraphicHelp').textContent='Load registered. Click its purple numbered handle to select; Delete removes it, drag moves it, Enter or double-click edits it. Choose another load tool to add a new load.';
   }
   function editLoad(i) {
-    const p=st.model.loads[i];st.editLoad=i;
+    const p=st.model.loads[i];st.editLoad=i;st.editorLoad=i;selection={type:'load',index:i};
     if(p.kind==='point'){$('#beamLoadKind').value='point';$('#beamLoadA').value=p.position;$('#beamP').value=p.force;}
     else if(p.kind==='moment'){$('#beamLoadKind').value='moment';$('#beamLoadA').value=p.position;$('#beamC').value=p.moment;}
     else if(p.kind==='table'){st.editLoad=null;openCsv(i);return;}
@@ -5561,7 +5584,7 @@ const Lecture03BeamCases = Object.freeze({
     const add=$('#beamCsvMode input[value="add"]');if(add)add.checked=true;$('#beamCsvMode').querySelectorAll('input').forEach(i=>{i.disabled=false;});}
 
   /** Replace the applied loads programmatically; an edit in progress no longer refers to them. */
-  function replaceLoads(loads) {selection=null;st.model.loads=loads;st.editLoad=null;$('#beamLoadError').hidden=true;renderLoadList();syncLoadForm();}
+  function replaceLoads(loads) {selection=null;st.editorLoad=null;st.model.loads=loads;st.editLoad=null;$('#beamLoadError').hidden=true;renderLoadList();syncLoadForm();}
   function fillFormFromSingleLoad() {
     if(st.model.loads.length!==1||st.model.loads[0].kind!=='distributed') return;
     const p=st.model.loads[0];
@@ -5597,10 +5620,11 @@ const Lecture03BeamCases = Object.freeze({
   host.querySelector('.bl-side').addEventListener('change',e=>{if(e.target.closest('#beamLoadForm')||e.target.id==='beamAutoSolve')return;if(e.target.dataset.field==='kind')draftChanged();});
   $('#beamShape').onchange=()=>{
     const shape=$('#beamShape').value;let depth=10,w=20;
+    if(!SEC.SHAPES[shape]){renderSectionFields({shape});renderSectionView();draftChanged();return;}
     try {const p=SEC.properties(st.model.section);depth=p.depth;w=p.width;} catch(e) {}
     const t=Math.max(Math.min(w,depth)/8,0.1), dims={rectangle:{width:w,height:depth},layered:{width:w,height:depth,topThickness:depth/2,modulusRatio:2,densityRatio:1},circle:{diameter:depth},tube:{outerDiameter:depth,thickness:Number((depth/10).toPrecision(3))},
       box:{width:w,height:depth,thickness:Number(t.toPrecision(3))},ibeam:{flangeWidth:w,height:depth,flangeThickness:Number((depth/8).toPrecision(3)),webThickness:Number(Math.min(w/8,depth/4).toPrecision(3))}}[shape];
-    renderSectionFields({shape,...dims});renderSectionView();draftChanged();
+    renderSectionFields({shape,...dims});if(st.blankSetup)$$('#beamSectionFields [data-sec]').forEach(el=>el.value='');renderSectionView();draftChanged();
   };
   const rowValues=type=>(type==='support'?interiorRows():hingeRows()).map(r=>Number(r.querySelector('[data-field="x"]').value));
   function freeSpot(taken) {
@@ -5608,17 +5632,19 @@ const Lecture03BeamCases = Object.freeze({
     return [0.5,0.25,0.75,0.375,0.625,0.125,0.875].map(k=>Number((L*k).toPrecision(10))).find(v=>!taken.some(t=>Math.abs(t-v)<1e-9))??Number((L/3).toPrecision(10));
   }
   $('#beamAddSupport').onclick=()=>{
+    if(st.blankSetup){message('Define length, material, mesh and section first.');return;}
     if(supportLimitReached()){message(`At most ${B.LIMITS.supports} supports.`);return;}
     addRow('support',{x:freeSpot(rowValues('support')),kind:'roller'});draftChanged();
   };
   $('#beamAddHinge').onclick=()=>{
+    if(st.blankSetup){message('Define length, material, mesh and section first.');return;}
     if(hingeRows().length>=B.LIMITS.hinges){message(`At most ${B.LIMITS.hinges} hinges.`);return;}
     addRow('hinge',freeSpot([...rowValues('hinge'),...rowValues('support')]));draftChanged();
   };
   host.querySelector('.bl-side').addEventListener('click',e=>{
     const rm=e.target.closest('[data-remove-row]'), de=e.target.closest('[data-delete-load]'), ed=e.target.closest('[data-edit-load]');
     if(rm){selection=null;const row=rm.closest('[data-row]'),list=row.parentElement,type=row.dataset.row;row.remove();relabelRows(list,type);draftChanged();}
-    if(de){selection=null;const i=+de.dataset.deleteLoad;st.model.loads.splice(i,1);if(st.editLoad!==null){st.editLoad=null;syncLoadForm();}renderLoadList();draftChanged();}
+    if(de){selection=null;st.editorLoad=null;const i=+de.dataset.deleteLoad;st.model.loads.splice(i,1);if(st.editLoad!==null){st.editLoad=null;syncLoadForm();}renderLoadList();draftChanged();}
     if(ed) editLoad(+ed.dataset.editLoad);
   });
   $('#beamLoadKind').onchange=syncLoadForm;
@@ -5665,6 +5691,8 @@ const Lecture03BeamCases = Object.freeze({
   $('#beamClearPicture').onclick=clearLoads;
   $('#beamClearSupports').onclick=clearSupports;
   $('#beamDeleteSelected').onclick=deleteSelection;
+  $('#beamEditorClear').onclick=clearLoads;
+  $('#beamEditorDelete').onclick=()=>{const i=selection?.type==='load'?selection.index:st.editorLoad;if(i===null||!st.model.loads[i])return;selection={type:'load',index:i};st.graphicPreview=null;deleteSelection();};
   host.querySelectorAll('[data-beam-preset]').forEach(b=>b.onclick=()=>{
     const name=b.dataset.beamPreset;st.model=presetModel(name);st.editLoad=null;renderInputs(st.model);fillFormFromSingleLoad();
     solve('Lecture 03 example loaded: all previous loads replaced; 450 × 20 × 10 mm, E = 2000 MPa.');
@@ -5828,11 +5856,13 @@ const Lecture03BeamCases = Object.freeze({
   $('#beamTab-learn').insertAdjacentHTML('beforeend','<section class="bl-box"><h3>Two materials: compatibility before stress</h3><p>The bonded two-material rectangle has lower material 1 and upper material 2. The E and density inputs define material 1; E₂/E₁ and ρ₂/ρ₁ define material 2. Upper thickness h₂ is measured down from the top surface. Both materials are individually linear isotropic; this is not a fibre-composite laminate model.</p><p><b>Compatibility:</b> perfect bonding makes the axial strain continuous across the interface and preserves plane sections. <b>Axial equilibrium:</b> with no applied axial force, ∫σ dA=0, so zNA=Σ(EᵢAᵢzᵢ)/Σ(EᵢAᵢ). <b>Bending:</b> D=Σ Eᵢ[Iᵢ,c+Aᵢ(zᵢ−zNA)²]=E₁Itrans. Thus εx=−M(z−zNA)/D and σᵢ=Eᵢεx. The strain is continuous, but stress generally jumps when E changes.</p><p><b>Shear transfer:</b> define Qtrans(z)=∫above (Eᵢ/E₁)(z′−zNA)dA. Then qₛ=VQtrans/Itrans and τ=qₛ/b for this rectangular two-layer section. At the bond this is the longitudinal shear transferred per unit beam length. It is an average elastic demand, not a prediction of adhesive peel stress or debonding strength. V and M come from the same beam equilibrium as before; curvature uses the composite D, while mass and self-weight use ΣρᵢAᵢ. Unequal densities make equal area different from equal mass.</p><p><b>Limits:</b> straight prismatic layers, perfect bond and small deflection; no slip, delamination, adhesive failure, temperature strain, plasticity or anisotropic laminate coupling. The shear-centre example in Cut &amp; section is a separate open-channel calculation, not an added torsional degree of freedom.</p><p>Reference: <a href="https://ocw.mit.edu/courses/1-050-solid-mechanics-fall-2004/resources/emech9_04/" target="_blank" rel="noopener noreferrer">MIT Solid Mechanics: composite beams, compatibility, constitutive relations and shear</a>.</p></section>');
 
   renderInputs(st.model);
+  if(!hasInitialStudy){for(const k of ['length','E','density','elements']){geometryInput(k).value='';geometryInput(k).placeholder='Enter value';}$('#beamShape').value='';renderSectionFields({shape:''});renderSectionView();}
   fillFormFromSingleLoad();
   if(st.model.supports.length) solve();
-  else {draftChanged();message('Start with an empty beam. Place supports, add loads, then Solve. Open User manual · Quick guide for help.');}
+  else {draftChanged();message('Start by entering length, material, mesh count and cross-section. Then place supports, add loads and Solve. Open User manual · Start here for help.');}
   if(lectureCase) message('Lecture 03 example loaded and solved. Dimensions: '+st.model.length+' × '+st.model.section.width+' × '+st.model.section.height+' mm; E = '+st.model.E+' MPa. Previous loads replaced.');
   else if(startMessage) message(startMessage);
+  if(!hasInitialStudy)$$('.bl-input[data-invalid]',host).forEach(el=>el.dataset.invalid='false');
   host.querySelectorAll('[data-stage]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.stage==='beam')));
   // readStation(): the exact values at the current cut station (both limits at a jump), as the readout shows them.
   const readStation=()=>{if(!st.solved)return null;const c=cutInfo();return {x:c.x,limit:c.limit,jump:!!c.jump,left:c.left,right:c.right,at:c.at};};

@@ -486,7 +486,7 @@ const BeamDiagrams = (() => {
    * s = {name, kind, x, end:'left'|'right'|null, R, C, P, C0, left:{V,M}|null, right:{V,M}|null}
    */
   function supportSlice(s, opts={}) {
-    const W=Math.max(340,Math.min(560,opts.width||400)), H=206, cx=W/2, y=92, half=30, t=1e-12;
+    const W=Math.max(340,Math.min(560,opts.width||400)), H=296, cx=W/2, y=92, half=30, t=1e-12;
     const at=s.end==='left'?'x = 0':s.end==='right'?'x = L':`x = ${fmt(s.x)} mm`;
     const parts=[];
     let svg=svgOpen(W,H,opts.label||`Thin slice at support ${s.name} (${at})`,'bl-fbd bl-slice');
@@ -514,6 +514,11 @@ const BeamDiagrams = (() => {
     };
     if(s.left) svg+=face('left',s.left); else svg+=text(cx-half-8,y+4,'end of beam','bl-tx-xs bl-tx-m','end');
     if(s.right) svg+=face('right',s.right); else svg+=text(cx+half+8,y+4,'end of beam','bl-tx-xs bl-tx-m','start');
+    const xs=fmt(s.x,6);
+    svg+=text(W/4,216,s.left?`Left face: x = ${xs} − ε mm`:`Beam end: x = ${xs} mm`,'bl-tx-xs bl-tx-b');
+    svg+=text(3*W/4,234,s.right?`Right face: x = ${xs} + ε mm`:`Beam end: x = ${xs} mm`,'bl-tx-xs bl-tx-b');
+    svg+=dimH(cx-half,cx+half,257,s.left&&s.right?'Δx = 2ε → 0':'Δx = ε → 0');
+    svg+=text(cx,286,'ε → 0 mm: limiting faces; width exaggerated, not to scale.','bl-tx-xs bl-tx-m');
     return svg+'</svg>';
   }
 

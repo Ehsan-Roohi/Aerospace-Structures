@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict';import {readFileSync} from 'node:fs';import vm from 'node:vm';
+const ctx=vm.createContext({});vm.runInContext(readFileSync(new URL('./truss_engine.js',import.meta.url),'utf8'),ctx);const T=ctx.TrussEngine;
+const near=(a,b,t=1e-7)=>assert.ok(Math.abs(a-b)<t*Math.max(1,Math.abs(b)),`${a} != ${b}`);
+const n=(id,x,y,support='free',fx=0,fy=0)=>({id,x,y,support,fx,fy}),m=(a,b,type='bar')=>({a,b,type,E:70000,A:100,Imin:1000,Kfactor:1});
+const bay={nodes:[n(1,0,0,'pin'),n(2,1000,0,'rollerY'),n(3,0,400),n(4,1000,400,'free',20)],members:[m(1,2),m(1,3),m(2,4),m(3,4),m(1,4,'cable'),m(2,3,'cable')]};
+let r=T.solve(bay);near(r.members[4].force,20*Math.hypot(1000,400)/1000);near(r.members[5].force,0);assert.equal(r.members[4].cableState,'taut');assert.equal(r.members[5].cableState,'slack');assert.ok(r.members[5].extension<0);near(r.members[5].elasticExtension,0);near(r.nodes[0].rx,-20);near(r.nodes[1].ry,8);
+for(const v of Object.values(r.equilibrium))near(v,0);
+const reverse=structuredClone(bay);reverse.nodes[3].fx=-20;const rr=T.solve(reverse);near(rr.members[4].force,0);near(rr.members[5].force,20*Math.hypot(1000,400)/1000);assert.equal(rr.members[4].cableState,'slack');assert.equal(rr.members[5].cableState,'taut');
+for(const v of [...r.members,...rr.members].filter(m=>m.type==='cable'))assert.ok(v.force>=0&&v.stress>=0);
+const rod={nodes:[n(1,0,0,'pin'),n(2,1000,0,'rollerY',-1000)],members:[{a:1,b:2,type:'bar',E:200000,A:100,Imin:1000,Kfactor:1}]};
+r=T.solve(rod);near(r.members[0].Pcr,Math.PI**2*200000*1000/1000**2);near(r.members[0].utilization,1000/r.members[0].Pcr);near(r.members[0].slenderness,1000/Math.sqrt(10));
+const two=structuredClone(rod);two.members[0].Kfactor=2;const r2=T.solve(two);near(r2.members[0].Pcr,r.members[0].Pcr/4);assert.ok(r2.members[0].utilization>1);
+delete two.members[0].Imin;assert.equal(T.solve(two).members[0].Pcr,null,'unknown section must never be marked passed');
+const wire=structuredClone(rod);wire.members[0].type='cable';assert.throws(()=>T.solve(wire),/tension-only|Mechanism/);wire.nodes[1].fx=100;const rw=T.solve(wire);near(rw.members[0].force,100);assert.equal(rw.members[0].Pcr,null);
+const perm=structuredClone(bay);perm.members.reverse();const rp=T.solve(perm);near(rp.nodes[3].ux,T.solve(bay).nodes[3].ux);
+console.log('Wires/buckling PASS: crossed wires swap active state on load reversal, exact brace force/reactions, slack wire zero force/elastic strain, equilibrium, order invariance, compression-only mechanism rejection, Euler load/K²/slenderness/utilization and unspecified-I rejection.');

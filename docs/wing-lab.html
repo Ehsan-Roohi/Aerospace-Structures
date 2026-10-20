@@ -3310,7 +3310,7 @@ const BeamDiagrams = (() => {
    * s = {name, kind, x, end:'left'|'right'|null, R, C, P, C0, left:{V,M}|null, right:{V,M}|null}
    */
   function supportSlice(s, opts={}) {
-    const W=Math.max(340,Math.min(560,opts.width||400)), H=206, cx=W/2, y=92, half=30, t=1e-12;
+    const W=Math.max(340,Math.min(560,opts.width||400)), H=296, cx=W/2, y=92, half=30, t=1e-12;
     const at=s.end==='left'?'x = 0':s.end==='right'?'x = L':`x = ${fmt(s.x)} mm`;
     const parts=[];
     let svg=svgOpen(W,H,opts.label||`Thin slice at support ${s.name} (${at})`,'bl-fbd bl-slice');
@@ -3338,6 +3338,11 @@ const BeamDiagrams = (() => {
     };
     if(s.left) svg+=face('left',s.left); else svg+=text(cx-half-8,y+4,'end of beam','bl-tx-xs bl-tx-m','end');
     if(s.right) svg+=face('right',s.right); else svg+=text(cx+half+8,y+4,'end of beam','bl-tx-xs bl-tx-m','start');
+    const xs=fmt(s.x,6);
+    svg+=text(W/4,216,s.left?`Left face: x = ${xs} − ε mm`:`Beam end: x = ${xs} mm`,'bl-tx-xs bl-tx-b');
+    svg+=text(3*W/4,234,s.right?`Right face: x = ${xs} + ε mm`:`Beam end: x = ${xs} mm`,'bl-tx-xs bl-tx-b');
+    svg+=dimH(cx-half,cx+half,257,s.left&&s.right?'Δx = 2ε → 0':'Δx = ε → 0');
+    svg+=text(cx,286,'ε → 0 mm: limiting faces; width exaggerated, not to scale.','bl-tx-xs bl-tx-m');
     return svg+'</svg>';
   }
 
@@ -4899,6 +4904,7 @@ const Lecture03BeamCases = Object.freeze({
       <div class="bl-tablewrap"><table class="bl-table bl-rvtable"><tr><th>Support</th><th>Reaction on the beam</th><th>Just left, x⁻</th><th>Just right, x⁺</th><th>Jump ΔV = V(x⁺) − V(x⁻), ΔM = M(x⁺) − M(x⁻)</th></tr>${body}</table></div>
       <p class="bl-help">A reaction is the force R (and at a clamp the couple C) that a support applies to the beam. V and M act on the two faces of a cut, as an equal and opposite pair. Equilibrium of a thin slice around a support gives V(x⁺) − V(x⁻) = −R and M(x⁺) − M(x⁻) = +C (app signs: force ↓ +, couple ↻ +). So at a left end V(0⁺) = −R and M(0⁺) = +C; at a right end V(L⁻) = +R and M(L⁻) = −C.</p>
       <details class="bl-reveal bl-slices" open><summary class="bl-btn bl-btn-sm">Thin slices at the supports: why V and M are not the reactions</summary>
+        <p class="bl-help"><b>Where are these faces?</b> At a support station x = xₛ, the faces approach xₛ − ε and xₛ + ε as ε → 0 mm. Each face is ε from the support; their separation is 2ε → 0 (one ε at a beam end). The drawing is exaggerated, not a finite section length. For values at actual distances, enter those numerical x coordinates in the station table or Cut &amp; section.</p>
         <p class="bl-help">Each slice is cut out just left and just right of its support. Green: the reaction acting on the slice. Orange: the internal V and M on its cut faces, in their actual directions. The slice's left face is the face of the part to its right, where V &gt; 0 acts ↑ and M &gt; 0 acts ↻; its right face is the face of the part to its left, where V &gt; 0 acts ↓ and M &gt; 0 acts ↺. That is why, at a left end, V(0⁺) has the opposite sign to R while M(0⁺) has the same sign as C, and the other way round at a right end.</p>
         <div class="bl-slicegrid">${slices}</div></details>`:'';
   }

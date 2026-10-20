@@ -81,11 +81,7 @@ const Lecture03BeamCases = Object.freeze({
     <button type="button" class="bl-navtoggle" id="beamNavToggle" aria-expanded="false" aria-controls="beamNav">Workspaces</button>
     <nav class="bl-nav" id="beamNav" aria-label="Workspaces">
       <button type="button" data-stage="beam" aria-pressed="true">Beam</button>
-      <span>Printed wing</span>
-      <button type="button" data-stage="shell" aria-pressed="false">Skin only</button>
-      <button type="button" data-stage="rods" aria-pressed="false">+ Rods</button>
-      <button type="button" data-stage="ribs" aria-pressed="false">+ Ribs</button>
-      <button type="button" data-stage="project" aria-pressed="false">Course wing</button>
+      <button type="button" data-stage="wing" aria-pressed="false">Wing</button>
       <button type="button" data-stage="metal" aria-pressed="false">D.520 full-scale wing</button>
       <details class="bl-companion"><summary>Wing geometry tool</summary><div class="bl-companion-pop" data-companion="vinco"></div></details>
     </nav>

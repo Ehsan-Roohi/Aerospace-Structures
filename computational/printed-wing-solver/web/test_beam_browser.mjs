@@ -420,7 +420,7 @@ function preexisting(rows,where) {
   if(!ready) notes.push('WebGL wing workspace not tested: three.js did not load (set BEAM_THREE_DIR or allow the CDN).');
   else {
     const before=await page.textContent('#beamKpis');
-    await page.click('[data-stage="shell"]');
+    await page.click('[data-stage="wing"]');
     await page.waitForFunction(()=>!document.querySelector('#app').hidden&&document.querySelector('#stateChip').textContent!=='Starting',null,{timeout:60000});
     check(await page.evaluate(()=>{const c=document.querySelector('#gl');const gl=c.getContext('webgl2')||c.getContext('webgl');return !!gl&&c.width>0;}),'wing WebGL canvas is live');
     await page.click('[data-tab="design"]');
@@ -447,7 +447,7 @@ function preexisting(rows,where) {
 {
   const {ctx,page,errors}=await openPage(1440,900,'dark');
   if(await page.evaluate(()=>document.documentElement.dataset.wingReady==='true')) {
-    await page.click('[data-stage="shell"]');
+    await page.click('[data-stage="wing"]');
     await page.waitForFunction(()=>!document.querySelector('#app').hidden&&document.querySelector('#stateChip').textContent!=='Starting',null,{timeout:60000});
     await page.click('[data-tab="design"]');
     await designTabContrast(page,'1440 dark');

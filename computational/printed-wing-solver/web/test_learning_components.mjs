@@ -44,11 +44,11 @@ $('#beamLoadKind').value='trapezoid';$('#beamLoadA').value='0';$('#beamLoadB').v
 $('#beamQ0').value='.002';$('#beamQ1').value='.006';
 $('#beamLoadForm').dispatchEvent(new w.Event('submit',{bubbles:true,cancelable:true}));
 assert.match(kpi(),/1\.800 N/);
-click('[data-stage="shell"]');
+click('[data-stage="wing"]');
 assert.match($('#beamStatus').textContent,/not ready/);
 w.document.documentElement.dataset.wingReady='true';
 let requested='';w.addEventListener('wing-learning-stage',e=>requested=e.detail);
-click('[data-stage="shell"]');assert.equal(requested,'shell');
+click('[data-stage="wing"]');assert.equal(requested,'wing');
 assert.ok(!/NaN|undefined|Infinity/.test($('#foundations').innerHTML));
 const navigationSource=read('./wing_lab_template.html');
 w.document.body.insertAdjacentHTML('beforeend',navigationSource.slice(navigationSource.indexOf('<nav id="wingNavigation"'),navigationSource.indexOf('<div id="app"'))+'<div id="app"></div>');

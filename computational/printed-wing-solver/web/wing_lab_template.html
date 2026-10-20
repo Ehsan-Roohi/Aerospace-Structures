@@ -1076,7 +1076,7 @@ body { margin: 0; }
   }
   function renderGeometryForm() {
     const g = S.geometry, area = 0.5 * (g.rootChord + g.tipChord) * g.semiSpan;
-    $("#wingGeometryForm").innerHTML = `${geoField("naca", "wgNaca", "NACA airfoil", "4-digit, e.g. 2412", g.naca, null, "text")}
+    $("#wingGeometryForm").innerHTML = `<h3>Build your wing</h3><p class="note">Choose the span, root/tip chords and airfoil here, then add or remove ribs, rods or bonded spars in Structure or beside the 3-D model. Loads are added separately by you. Supported geometry: straight, unswept, rectangular or tapered half-wings with a four-digit NACA airfoil; not arbitrary CAD, swept/delta wings or a full aircraft.</p><button class="btn" type="button" id="wgCourseExample">Optional course wing example</button>${geoField("naca", "wgNaca", "NACA airfoil", "4-digit, e.g. 2412", g.naca, null, "text")}
       ${geoField("semiSpan", "wgSpan", "Semi-span", "mm, root to tip", g.semiSpan, 1)}
       ${geoField("rootChord", "wgRoot", "Root chord", "mm", g.rootChord, 1)}
       ${geoField("tipChord", "wgTip", "Tip chord", "mm, straight taper, ≤ root chord", g.tipChord, 1)}
@@ -1084,6 +1084,7 @@ body { margin: 0; }
       <dl class="kv wl-kv"><dt>Semi-wing area</dt><dd>${nf(area / 100, 1)} cm²</dd><dt>Taper ratio</dt><dd>${nf(g.tipChord / g.rootChord, 3)}</dd><dt>Aspect ratio (full wing)</dt><dd>${nf((4 * g.semiSpan ** 2) / (2 * area), 2)}</dd><dt>Module length</dt><dd>${mm(g.semiSpan / g.modules)}</dd></dl>`;
     $("#wlGeometryBadge").textContent = `NACA ${g.naca} · ${nf(g.semiSpan, 0)} × ${nf(g.rootChord, 0)}/${nf(g.tipChord, 0)} mm`;
     $("#wgNaca").addEventListener("change", (e) => applyGeometry({ naca: e.target.value.trim() }, "naca", `NACA “${e.target.value.trim()}”`));
+    $("#wgCourseExample").onclick=()=>{if(confirm('Replace the current wing with the course example? Geometry, materials and connections will reset, and applied loads will be cleared.'))window.dispatchEvent(new CustomEvent('wing-learning-stage',{detail:'project'}));};
     for (const [id, k] of [["wgSpan", "semiSpan"], ["wgRoot", "rootChord"], ["wgTip", "tipChord"]])
       $("#" + id).addEventListener("change", (e) => applyGeometry({ [k]: numberFrom(e.target) }, k, e.target.value.trim() === "" ? "an empty value" : mm(numberFrom(e.target))));
     $("#wgModules").addEventListener("change", (e) => applyGeometry({ modules: +e.target.value }, "modules", `${e.target.value} module${e.target.value === "1" ? "" : "s"}`));
@@ -2799,6 +2800,10 @@ body { margin: 0; }
   requestAnimationFrame(loop);
   window.addEventListener('wing-learning-stage', event => {
     if (event.detail === 'metal' || running) return;
+    if(event.detail==='wing'&&wingStudyOpened){
+      $('#foundations').hidden=true;$('#app').hidden=false;$('#wingNavigation').hidden=false;
+      resize();renderInputs(true);renderViewReadout(true);return;
+    }
     partSelection=null;partUndo=null;partPick=false;
     const stage=event.detail, project=stage==='project';
     importGate=null; renderImportGate();
@@ -2807,7 +2812,7 @@ body { margin: 0; }
     S.load=noLoad(); S.plaKey='pla_upright';S.rodKey='rod_hobby';S.plaOver={};S.rodOver={};
     if (!project) {
       S.geometry.modules=1; S.geometry.customInteriorRibs=stage==='ribs'?[112.5,146,154,225,296,304,337.5]:[];
-      if(stage==='shell')S.geometry.rodFractions=[];
+      if(stage==='shell'||stage==='wing')S.geometry.rodFractions=[];
       S.assembly.seamsBonded=true;
     }
     S.stressComponent='skin'; S.anatomy='inside';S.xray=true;S.deformed=false;

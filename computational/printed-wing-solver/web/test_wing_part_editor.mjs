@@ -16,7 +16,10 @@ async function choose(value){$('#wpChoice').value=value;$('#wpChoice').dispatchE
 async function settle(){await tick();await tick();}
 const del=target=>target.dispatchEvent(new w.KeyboardEvent('keydown',{key:'Delete',bubbles:true,cancelable:true}));
 try{
- w.dispatchEvent(new w.CustomEvent('wing-learning-stage',{detail:'shell'}));await wait(()=>ui().result()&&!ui().isRunning()&&!ui().isStale());
+ assert.equal(w.document.querySelectorAll('#beamNav [data-stage="wing"]').length,1);
+ assert.equal(w.document.querySelectorAll('#beamNav [data-stage="shell"],#beamNav [data-stage="rods"],#beamNav [data-stage="ribs"],#beamNav [data-stage="project"]').length,0);
+ w.dispatchEvent(new w.CustomEvent('wing-learning-stage',{detail:'wing'}));await wait(()=>ui().result()&&!ui().isRunning()&&!ui().isStale());
+ assert.equal(ui().state().geometry.rodFractions.length,0);assert.equal(ui().state().geometry.spars.length,0);assert.equal(ui().view().members.ribs,0);
  const originalLoads=JSON.stringify(ui().state().load);
  $('#wpNewRib').value='200';$('#wpAddRib').click();await settle();assert.deepEqual([...ui().state().geometry.customInteriorRibs],[200]);assert.equal(ui().view().members.ribs,1);assert.ok(ui().isStale());
  await choose('rib:200');assert.equal($('#wpDelete').disabled,false);
@@ -39,6 +42,7 @@ try{
  $('#wpDelete').click();await settle();assert.equal(ui().state().geometry.spars.length,1);
  hitKind='rib';pointer('pointerdown',10);pointer('pointerup',10);assert.match($('#wpChoice').value,/^rib:/);$('#wpDelete').click();await settle();assert.equal(ui().view().members.ribs,1);
  assert.equal(JSON.stringify(ui().state().load),originalLoads,'all part operations preserve load case');
+ const saved=JSON.stringify(ui().state());w.document.querySelector('#backFoundations').click();w.document.querySelector('#beamNav [data-stage="wing"]').click();assert.equal(JSON.stringify(ui().state()),saved,'returning to Wing preserves the custom design');
  w.dispatchEvent(new w.CustomEvent('wing-learning-stage',{detail:'project'}));await wait(()=>!ui().isRunning()&&!ui().isStale());
  assert.equal($('#wpChoice').value,'','switching model clears selection');
  const locked=[...$('#wpChoice').options].find(o=>o.textContent.includes('locked'));assert.ok(locked);await choose(locked.value);const count=ui().view().members.ribs;assert.equal($('#wpDelete').disabled,true);del(w.document.body);await settle();assert.equal(ui().view().members.ribs,count,'seam rib protected');

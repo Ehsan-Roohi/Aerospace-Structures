@@ -62,6 +62,12 @@
 .bl-editor-close { position:absolute; right:8px; top:8px; font-size:24px; min-width:40px; }
 .bl-load-editor h3 { padding-right:48px; }
 .bl-load-editor > .bl-help { padding-right:44px; }
+.bl-strength { margin-top:16px; padding:16px; border:1px solid var(--line); border-radius:12px; }
+.bl-strength-material { margin:12px 0; padding:12px; border:1px solid var(--line); border-radius:8px; min-width:0; }
+.bl-strength-material legend { font-weight:650; padding:0 6px; }
+.bl-strength-status { padding:12px; margin:12px 0; background:var(--bl-card); color:var(--fg); border:1px solid var(--line); border-radius:8px; }
+.bl-strength-status p { margin:6px 0; }
+#beamStrengthResult svg { display:block; width:100%; height:auto; }
 .bl-load-editor h3 { margin:0 0 8px; }
 .bl-load-editor .bl-grid2 { grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr)); }
 .bl-load-editor .bl-box { margin-bottom:0; }

@@ -24,7 +24,7 @@ page = template.replace("/*__ENGINE__*/", engine)
 # Beam Lab modules share one inline script (sections -> engine -> study/diagrams/solution -> companion
 # tools); its controller (foundations_ui.js) and stylesheet (beam_lab.css) have their own tokens.
 for token, filename in [("/*__LOAD_PROFILES__*/", "load_profiles.js"), ("/*__WING_SPARS__*/", "wing_spars.js"), ("/*__BEAM_STYLES__*/", "beam_lab.css"), ("/*__BEAM_SECTIONS__*/", "beam_sections.js"), ("/*__BEAM_ENGINE__*/", "beam_learning_engine.js"),
-                        ("/*__BEAM_STUDY__*/", "beam_study.js"), ("/*__BEAM_DIAGRAMS__*/", "beam_diagrams.js"), ("/*__BEAM_SOLUTION__*/", "beam_solution.js"),
+                        ("/*__BEAM_STRENGTH__*/", "beam_strength.js"), ("/*__BEAM_STRENGTH_UI__*/", "beam_strength_ui.js"), ("/*__BEAM_STUDY__*/", "beam_study.js"), ("/*__BEAM_DIAGRAMS__*/", "beam_diagrams.js"), ("/*__BEAM_SOLUTION__*/", "beam_solution.js"),
                         ("/*__COMPANION_TOOLS__*/", "companion_tools.js"), ("/*__FOUNDATIONS__*/", "foundations_ui.js"), ("/*__TEACHING_MODELS__*/", "teaching_models.js"), ("/*__WING_LOADS_UI__*/", "wing_loads_ui.js"), ("/*__WING_STUDY_IO__*/", "wing_study_io.js"), ("/*__TEACHING_PANELS__*/", "teaching_panels.js"),
                         ("/*__METAL_ENGINE__*/", "metal_wing_engine.js"), ("/*__METAL_REFERENCE__*/", "metal_wing_reference.json"), ("/*__METAL_UI__*/", "metal_wing_ui.js")]:
     assert token in page

@@ -449,6 +449,12 @@ body { margin: 0; }
 .bl-editor-close { position:absolute; right:8px; top:8px; font-size:24px; min-width:40px; }
 .bl-load-editor h3 { padding-right:48px; }
 .bl-load-editor > .bl-help { padding-right:44px; }
+.bl-strength { margin-top:16px; padding:16px; border:1px solid var(--line); border-radius:12px; }
+.bl-strength-material { margin:12px 0; padding:12px; border:1px solid var(--line); border-radius:8px; min-width:0; }
+.bl-strength-material legend { font-weight:650; padding:0 6px; }
+.bl-strength-status { padding:12px; margin:12px 0; background:var(--bl-card); color:var(--fg); border:1px solid var(--line); border-radius:8px; }
+.bl-strength-status p { margin:6px 0; }
+#beamStrengthResult svg { display:block; width:100%; height:auto; }
 .bl-load-editor h3 { margin:0 0 8px; }
 .bl-load-editor .bl-grid2 { grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr)); }
 .bl-load-editor .bl-box { margin-bottom:0; }
@@ -2482,6 +2488,88 @@ const BeamLearningEngine = (() => {
 })();
 if(typeof module!=='undefined'&&module.exports)module.exports=BeamLearningEngine;
 if(typeof window!=='undefined')window.BeamLearningEngine=BeamLearningEngine;
+
+/* Nominal elastic strength screening. No fracture, plasticity, buckling or certification. */
+const BeamStrength=(()=>{
+ 'use strict';
+ const B=typeof BeamLearningEngine!=='undefined'?BeamLearningEngine:require('./beam_learning_engine.js');
+ const S=typeof BeamSections!=='undefined'?BeamSections:require('./beam_sections.js');
+ const limit=(v,label,min=0)=>{if(v==null||v==='')return null;if(typeof v!=='number'||!Number.isFinite(v)||v<=min)throw Error(label+' must be a finite positive number.');return v;};
+ function normalize(raw={}){
+  if(!raw||typeof raw!=='object'||Array.isArray(raw))throw Error('Strength settings must be an object.');
+  if(raw.version!==undefined&&raw.version!==1)throw Error('Unsupported strength-settings version.');
+  const criterion=raw.criterion??'vonMises';if(!['vonMises','separate'].includes(criterion))throw Error('Unknown strength criterion.');
+  const requiredFos=limit(raw.requiredFos,'Required factor of safety');if(requiredFos!==null&&requiredFos<1)throw Error('Required factor of safety must be at least 1.');
+  if(raw.layers!==undefined&&(!Array.isArray(raw.layers)||raw.layers.length>2))throw Error('At most two material strength records are allowed.');
+  const layers=Array.from({length:2},(_,i)=>{const p=raw.layers?.[i]??{};return Object.fromEntries(['yield','tension','compression','shear'].map(k=>[k,limit(p[k],`Material ${i+1} ${k} strength`)]));});
+  return {version:1,criterion,requiredFos,layers,deflectionLimit:limit(raw.deflectionLimit,'Deflection limit')};
+ }
+ function evaluate(r,raw){
+  const config=normalize(raw),p=S.properties(r.section),L=r.input.length,nLayers=p.shape==='layered'?2:1;
+  const missing=[];if(config.requiredFos===null)missing.push('required factor of safety');
+  for(let i=0;i<nLayers;i++)for(const k of config.criterion==='vonMises'?['yield']:['tension','compression','shear'])if(config.layers[i][k]===null)missing.push(`material ${i+1}: ${k} strength`);
+  const points=[];
+  for(let i=0;i<=80;i++){const z=-p.c+2*p.c*i/80;if(!p.junctions.some(j=>Math.abs(j-z)<1e-12*p.depth))points.push({z,side:0});}
+  points.push({z:p.zNA??0,side:0});for(const z of p.junctions)points.push({z,side:-1},{z,side:1});
+  const coefficients=points.map(({z,side})=>{const layer=p.shape==='layered'&&(z>p.interfaceZ||(z===p.interfaceZ&&side>0))?1:0,b=p.widthAt(z,side);return {z,side,layer,sigma:S.normalStress(p,1,z,side),tau:b>0?p.firstMoment(z)/(p.I*b):0};});
+  const sigmaBounds=Array.from({length:nLayers},(_,i)=>Math.max(...coefficients.filter(c=>c.layer===i).map(c=>Math.abs(c.sigma))));
+  // A rigorously conservative shear envelope for these supported section models. It is a bound,
+  // not a claim that maximum bending and maximum shear occur at the same material point.
+  const tauBound=p.shearFactor/p.A;
+  function utilization(sigma,tau,layer){
+   const m=config.layers[layer],a=[];
+   if(config.criterion==='vonMises'){if(m.yield!==null)a.push({ratio:Math.hypot(sigma,Math.sqrt(3)*tau)/m.yield,criterion:'von Mises / yield'});}
+   else {if(m.tension!==null)a.push({ratio:Math.max(0,sigma)/m.tension,criterion:'tensile stress / tensile strength'});if(m.compression!==null)a.push({ratio:Math.max(0,-sigma)/m.compression,criterion:'compressive stress / compressive strength'});if(m.shear!==null)a.push({ratio:Math.abs(tau)/m.shear,criterion:'shear stress / shear strength'});}
+   return a.reduce((best,v)=>v.ratio>best.ratio?v:best,{ratio:0,criterion:'zero demand or unchecked'});
+  }
+  const anchors=[...new Set([0,L,...r.nodes])].sort((a,b)=>a-b),qBound=r.loadsApplied.filter(B.loads.isDist).reduce((s,v)=>s+B.loads.peak(v),0);
+  let critical=null,maxRatio=0,maxBound=0;const cells=[];
+  function point(x,side){const f=B.internalForces(r,x,side);let best={ratio:0,x,side,z:0,layer:0,sigma:0,tau:0,criterion:'zero demand or unchecked'};
+   for(const c of coefficients){const sigma=f.M*c.sigma,tau=f.V*c.tau,u=utilization(sigma,tau,c.layer);if(u.ratio>best.ratio)best={...u,x,side,z:c.z,layer:c.layer,sigma,tau};}
+   return {f,best};
+  }
+  for(let j=1;j<anchors.length;j++){
+   const subdivisions=Math.max(1,Math.ceil((anchors[j]-anchors[j-1])/(L/240)));
+   for(let k=0;k<subdivisions;k++){
+    const a=anchors[j-1]+(anchors[j]-anchors[j-1])*k/subdivisions,b=anchors[j-1]+(anchors[j]-anchors[j-1])*(k+1)/subdivisions,h=b-a;
+    const A=point(a,'right'),C=point((a+b)/2,'right'),D=point(b,'left');
+    const best=[A.best,C.best,D.best].reduce((s,v)=>v.ratio>s.ratio?v:s);if(critical===null||best.ratio>maxRatio){maxRatio=best.ratio;critical=best;}
+    // dV/dx=-q, dM/dx=V. No concentrated action lies inside these anchor intervals.
+    // Lipschitz envelopes bound unsampled extrema; they are intentionally distinct from a sampled point.
+    const vMax=Math.max(Math.abs(A.f.V),Math.abs(D.f.V))+qBound*h/2;
+    const monotone=Math.min(A.f.V,D.f.V)-qBound*h/2>=0||Math.max(A.f.V,D.f.V)+qBound*h/2<=0;
+    const mMax=Math.max(Math.abs(A.f.M),Math.abs(D.f.M))+(monotone?0:vMax*h/2);
+    let bound=best.ratio;
+    for(let i=0;i<nLayers;i++){
+     const m=config.layers[i],sig=mMax*sigmaBounds[i],tau=vMax*tauBound;
+     if(config.criterion==='vonMises'&&m.yield!==null)bound=Math.max(bound,Math.hypot(sig,Math.sqrt(3)*tau)/m.yield);
+     if(config.criterion==='separate'){if(m.tension!==null)bound=Math.max(bound,sig/m.tension);if(m.compression!==null)bound=Math.max(bound,sig/m.compression);if(m.shear!==null)bound=Math.max(bound,tau/m.shear);}
+    }
+    maxBound=Math.max(maxBound,bound);cells.push({a,b,ratio:best.ratio,bound});
+   }
+  }
+  const classify=(ratio,bound)=>ratio>=1?'exceeded':missing.length?'unchecked':bound*config.requiredFos>1?'margin':'within';
+  cells.forEach(c=>c.status=classify(c.ratio,c.bound));
+  let status=classify(maxRatio,maxBound);const fosLower=maxBound>0?1/maxBound:null,pointFos=maxRatio>0?1/maxRatio:null;
+  const values=[maxRatio,maxBound,...cells.flatMap(c=>[c.ratio,c.bound])];if(values.some(v=>!Number.isFinite(v)))throw Error('Non-finite strength evaluation; check model and limits.');
+  // Exact maximum of the cubic FE displacement interpolation, not just the plot samples.
+  let maxDeflection=0;
+  for(let i=1;i<r.nodes.length;i++){
+   const x0=r.nodes[i-1],x1=r.nodes[i],h=x1-x0,u=B.fieldAt(r,x0,'right'),v=B.fieldAt(r,x1,'left');
+   const a=2*u.v-2*v.v+h*(u.theta+v.theta),b=-3*u.v+3*v.v-h*(2*u.theta+v.theta),c=h*u.theta,d=u.v,ts=[0,1];
+   const scale=Math.max(Math.abs(3*a),Math.abs(2*b),Math.abs(c));
+   if(scale>0){const A=3*a/scale,H=2*b/scale,C=c/scale;if(Math.abs(A)<1e-13){if(Math.abs(H)>1e-13)ts.push(-C/H);}else{const disc=H*H-4*A*C;if(disc>=0){ts.push((-H+Math.sqrt(disc))/(2*A));ts.push((-H-Math.sqrt(disc))/(2*A));}}}
+   for(const t of ts)if(t>=0&&t<=1)maxDeflection=Math.max(maxDeflection,Math.abs(((a*t+b)*t+c)*t+d));
+  }
+  const modelWarning=maxDeflection>L*.05?'Maximum FE displacement exceeds 5% of span: small-displacement assumptions may be inappropriate. Nominal stresses are provisional, not a validated large-deformation assessment.':null;
+  if(modelWarning&&missing.length===0&&status!=='exceeded'){status='model';for(const c of cells)if(c.status!=='exceeded')c.status='model';}
+  return {config,status,missing,modelWarning,complete:missing.length===0,critical,maxRatio,maxBound,fosLower,pointFos,zeroDemand:maxRatio===0,cells,
+   deflection:{limit:config.deflectionLimit,value:maxDeflection,status:config.deflectionLimit===null?'unchecked':maxDeflection>config.deflectionLimit?'exceeded':'within'},
+   method:'Pointwise σ and τ evaluated together at section-depth samples and three stations per interval; conservative span/depth envelopes govern a within-limits result. The critical marker is the most highly utilized evaluated material point, not an exact fracture location.'};
+ }
+ return {normalize,evaluate};
+})();
+if(typeof module!=='undefined')module.exports=BeamStrength;
 
 /*
  * Beam Study — MIE 446 Beam Lab study files, share links, A/B comparison and CSV export.
@@ -4649,6 +4737,7 @@ const Lecture03BeamCases = Object.freeze({
     for(const id of ['#beamDownload','#beamShare','#beamCsv','#beamCsvReactions','#beamPrintBtn','#beamSaveA','#beamSaveB','#beamEqualMassBtn','#beamRefine']) {const b=$(id);if(b)b.disabled=stale||!st.solved;}
     $$('[data-export], [data-png]',host).forEach(b=>{b.disabled=stale||!st.solved;});
     for(const id of ['#beamExportStatus','#beamDiagExportStatus']) $(id).textContent=stale&&st.solved?'Exports are disabled until the current inputs are solved.':$(id).dataset.msg||'';
+    if(window.BeamStrengthUI)window.BeamStrengthUI.refresh();
   }
 
   function message(text){st.message=text;$('#beamStatus').textContent=text;}
@@ -5249,7 +5338,7 @@ const Lecture03BeamCases = Object.freeze({
     if(p.shape==='layered')$('#beamCutSectionNote').textContent='Perfectly bonded layers: axial strain is continuous; σᵢ=−(Eᵢ/E₁)M(z−zNA)/Itrans is piecewise linear and can jump at the interface. The figure checks both sides of the bond. Interface qₛ=VQtrans/Itrans and τ=qₛ/b are elastic transfer demands, not adhesive failure predictions.';
   }
   /** Move the single cut station; every view that shows it (readout, plot markers, picture, Cut & section) follows. */
-  function setCut(x,note='') {if(!st.solved)return;st.cut.x=Math.min(Math.max(0,x),st.solved.model.length);st.cut.note=note;refreshCut();}
+  function setCut(x,note='',limit) {if(!st.solved)return;st.cut.x=Math.min(Math.max(0,x),st.solved.model.length);st.cut.note=note;if(limit==='left'||limit==='right')st.cut.limit=limit;refreshCut();}
   function refreshCut() {if(st.tab==='cut')renderCut();if(st.tab==='diagrams'){renderStation();renderCharts();}renderPicture();}
   function applyStationInput() {
     if(!st.solved) return;
@@ -5368,7 +5457,7 @@ const Lecture03BeamCases = Object.freeze({
     setTimeout(()=>URL.revokeObjectURL(a.href),1000);
   }
   function compareForExport(){const c={};for(const k of ['A','B'])if(st.compare[k])c[k]={label:k,model:st.compare[k].model};return Object.keys(c).length?c:null;}
-  function exportText(){return Study.exportStudy({result:st.solved.result,notes:$('#beamExplain').value,compare:compareForExport()});}
+  function exportText(){const text=Study.exportStudy({result:st.solved.result,notes:$('#beamExplain').value,compare:compareForExport()});if(!window.BeamStrengthUI)return text;const doc=JSON.parse(text);doc.strength=window.BeamStrengthUI.exportConfig();return JSON.stringify(doc,null,2);}
   function importText(text) {
     let doc;
     try {doc=Study.parseStudy(text);} catch(e) {exportStatus(`Import refused: ${e.message}`);return false;}
@@ -5384,6 +5473,7 @@ const Lecture03BeamCases = Object.freeze({
     const solved=solve(`Study imported (file version ${doc.version}${doc.legacy?', converted from the earlier study record':''}) and solved again on this page.`);
     renderCompare();
     if(!solved) {exportStatus(`The imported study could not be solved here: ${st.error}`);return false;}
+    if(window.BeamStrengthUI)window.BeamStrengthUI.importConfig(JSON.parse(text).strength);
     exportStatus(`Imported study (version ${doc.version}). Results were recomputed, not read from the file.`);
     return true;
   }
@@ -5406,6 +5496,7 @@ const Lecture03BeamCases = Object.freeze({
       <section><h2>Values at the listed stations</h2><table class="bl-table"><tr><th class="num">x (mm)</th><th>Side</th><th class="num">V (N)</th><th class="num">M (N·mm)</th><th class="num">v (mm)</th><th class="num">θ (rad)</th><th class="num">σ top (MPa)</th></tr>${Study.stationRows(r,stationList()).map(q=>`<tr><td class="num">${fmt(q.x,6)}</td><td>${q.side==='left'?'x⁻':q.side==='right'?'x⁺':''}</td><td class="num">${fmt(q.V,6)}</td><td class="num">${fmt(q.M,6)}</td><td class="num">${fmt(q.v,6)}</td><td class="num">${fmt(q.theta,6)}</td><td class="num">${fmt(q.stressTop,6)}</td></tr>`).join('')}</table>
         <p>V and M are exact (equilibrium at each x); v and θ come from the Euler–Bernoulli finite element. Signs: forces, q and v ↓ +; couples, reaction couples C and θ ↻ +; V &gt; 0 acts ↓ on the left part's cut face and ↑ on the right part's; M &gt; 0 is sagging. Reactions are external: V(0⁺) = −R and M(0⁺) = +C at a left end, V(L⁻) = +R and M(L⁻) = −C at a right end.</p></section>
       <section><h2>Assumptions and limitations</h2><ul>${r.assumptions.map(a=>`<li>${esc(a)}</li>`).join('')}${r.warnings.map(a=>`<li>${esc(a)}</li>`).join('')}<li>Nominal beam stresses only: local buckling, clamp/contact concentrations, holes and printing defects are not modelled. Not an airworthiness or failure certification.</li></ul></section>
+      ${window.BeamStrengthUI?window.BeamStrengthUI.reportHTML():''}
       ${$('#beamExplain').value.trim()?`<section><h2>Notes</h2><div class="bl-notes-print">${esc(Study.cleanText($('#beamExplain').value,4000))}</div></section>`:''}</div>`;
     // The class only changes @media print rules; it is removed after the dialog closes.
     document.body.classList.add('beam-printing');
@@ -5866,6 +5957,56 @@ const Lecture03BeamCases = Object.freeze({
   // readStation(): the exact values at the current cut station (both limits at a jump), as the readout shows them.
   const readStation=()=>{if(!st.solved)return null;const c=cutInfo();return {x:c.x,limit:c.limit,jump:!!c.jump,left:c.left,right:c.right,at:c.at};};
   window.BeamLab={version:B.VERSION,state:()=>st,solve,importText,exportText:()=>exportText(),openTab,setCut,readStation,plotImage,snapshot,revert};
+})();
+</script>
+<script>/* Strength controls are separate from the elastic beam model. Only current solved inputs are assessed. */
+(()=>{
+ 'use strict';const host=document.querySelector('#foundations');if(!host||!window.BeamLab)return;
+ const $=s=>host.querySelector(s),esc=BeamStudy.escapeHtml,fmt=v=>v===null?'—':v===Infinity?'∞':Number(v).toPrecision(5),colors={within:'#19815c',margin:'#bc7900',model:'#bc7900',exceeded:'#be3041',unchecked:'#748395'};
+ const panel=document.createElement('section');panel.className='bl-box bl-strength';panel.id='beamStrength';panel.setAttribute('aria-labelledby','beamStrengthTitle');
+ panel.innerHTML=`<h3 id="beamStrengthTitle">Strength &amp; factor of safety</h3><p class="bl-help">E describes stiffness, not strength. Enter measured or justified strength magnitudes as positive values in MPa. No strength is assumed. This is nominal elastic screening, not a prediction that the beam will or will not break.</p>
+ <details id="beamStrengthInputs" open><summary>Material limits and assessment settings</summary><div class="bl-grid2"><label class="bl-field"><span>Criterion</span><select class="bl-select" id="strengthCriterion"><option value="vonMises">Ductile isotropic · von Mises / yield</option><option value="separate">Separate tensile / compressive / shear limits</option></select></label><label class="bl-field"><span>Required factor of safety (≥ 1)</span><input id="strengthRequired" type="number" min="1" step="any" placeholder="Enter requirement"></label><label class="bl-field"><span>Optional deflection limit (mm)</span><input id="strengthDeflection" type="number" min="0" step="any" placeholder="No serviceability check if blank"></label></div>
+ ${[0,1].map(i=>`<fieldset id="strengthMaterial${i}" class="bl-strength-material"><legend>Material ${i+1}${i===0?' · whole section, or lower layer':' · upper layer (bonded two-material section only)'}</legend><div class="bl-grid2">${[['yield','Yield strength Sy'],['tension','Tensile strength St'],['compression','Compressive strength Sc'],['shear','Shear strength Ss']].map(([key,label])=>`<label class="bl-field" data-strength-kind="${key}"><span>${label} (MPa)</span><input type="number" min="0" step="any" id="strength${i}_${key}" placeholder="Not specified"></label>`).join('')}</div></fieldset>`).join('')}
+ <p class="bl-help" id="strengthCriterionHelp"></p><p class="bl-help">Normal stress σ is positive in tension and negative in compression; shear limits use |τ|. Use strengths appropriate to print direction, process, temperature and material condition. Separate limits are independent stress screens, not a laminate, fracture or interaction failure theory.</p></details>
+ <div id="beamStrengthResult" role="status" aria-live="polite"></div><div class="bl-row"><button type="button" class="bl-btn bl-btn-sm" id="beamStrengthCsv" disabled>Download Strength Data (CSV)</button><button type="button" class="bl-btn bl-btn-sm" id="beamStrengthCut" disabled>Inspect critical station</button></div><p class="bl-help">Limits are saved with the beam study JSON and included in the printed report. Share links and A/B snapshots do not include these material limits. Recheck applicability after changing material or section.</p>
+ <p class="bl-help"><b>Always outside this check:</b> global/local buckling, support/contact stress concentrations, holes, joints, adhesive or interface failure, cracks, fatigue and manufacturing defects. Large deflection or yielding invalidates a linear-elastic post-failure interpretation. Green means only “within the entered nominal criteria”, not “safe against every failure”.</p>`;
+ $('#beamKpis').after(panel);let latest=null,lastResult=null,lastKey='',timer=0;
+ for(const input of panel.querySelectorAll('input[type="number"]')){const wrap=document.createElement('span');wrap.className='bl-input';input.before(wrap);wrap.append(input);const unit=document.createElement('span');unit.className='bl-unit';unit.textContent=input.id==='strengthRequired'?'ratio':input.id==='strengthDeflection'?'mm':'MPa';wrap.append(unit);}
+ const read=id=>{const s=$(id).value.trim();if(!s)return null;const n=Number(s);if(!Number.isFinite(n))throw Error('Strength entries must be finite numbers.');return n;};
+ function config(){const layered=window.BeamLab.state().model.section.shape==='layered';return BeamStrength.normalize({criterion:$('#strengthCriterion').value,requiredFos:read('#strengthRequired'),deflectionLimit:read('#strengthDeflection'),layers:[0,1].map(i=>Object.fromEntries(['yield','tension','compression','shear'].map(k=>[k,i===1&&!layered?null:read(`#strength${i}_${k}`)])))});}
+ function controls(){const layered=window.BeamLab.state().model.section.shape==='layered',vm=$('#strengthCriterion').value==='vonMises';$('#strengthMaterial1').hidden=!layered;panel.querySelectorAll('[data-strength-kind]').forEach(e=>e.hidden=vm?e.dataset.strengthKind!=='yield':e.dataset.strengthKind==='yield');$('#strengthCriterionHelp').textContent=vm?'von Mises compares √(σ² + 3τ²), using σ and τ at the same evaluated material point, with Sy. It screens onset of yield in an isotropic ductile material; it is not a general PLA, wood, brittle-fracture or composite failure criterion.':'Each tensile, compressive and shear stress is compared separately with its entered strength. All three limits are required for a complete assessment; combined-action or anisotropic interaction is NOT checked.';}
+ const labels={within:'WITHIN ENTERED LIMITS · nominal screening only',margin:'REQUIRED MARGIN NOT DEMONSTRATED',model:'MODEL VALIDITY WARNING · nominal result is provisional',exceeded:'MATERIAL LIMIT REACHED / EXCEEDED',unchecked:'NOT CHECKED · incomplete material data'};
+ function map(a,L){const W=760,H=100,X=x=>35+690*x/L;let svg=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="Nominal strength utilization along the beam; grey means not checked"><g font-family="system-ui" font-size="12" fill="currentColor">`;
+  for(const c of a.cells)svg+=`<rect x="${X(c.a)}" y="38" width="${Math.max(.5,X(c.b)-X(c.a)+.2)}" height="24" fill="${colors[c.status]}"><title>x=${fmt(c.a)}…${fmt(c.b)} mm; sampled utilization=${fmt(c.ratio)}; conservative bound=${fmt(c.bound)}; ${c.status}</title></rect>`;
+  svg+=`<text style="font-size:12px" x="35" y="88">0</text><text style="font-size:12px" x="725" y="88" text-anchor="end">${fmt(L)} mm</text>`;
+  if(a.critical&&a.maxRatio>0){const x=X(a.critical.x);svg+=`<path d="M${x} 24V72" stroke="currentColor" stroke-width="2"/><text style="font-size:12px" x="380" y="18" text-anchor="middle">Critical evaluated x=${fmt(a.critical.x)} mm · material ${a.critical.layer+1}</text>`;}
+  svg+='</g></svg><p class="bl-help">Green: within entered criteria · Amber: margin unproven or model-validity warning · Red: limit reached/exceeded · Grey: not checked</p>';return svg;
+ }
+ function reportBody(a,r){const c=a.critical,hasPoint=c&&a.maxRatio>0;
+  const fos=a.complete?(a.maxBound===0?'∞ (zero stress demand)':`${fmt(a.fosLower)} · conservative lower bound (rounded)`):'Not determined for the complete assessment';
+  return `<div class="bl-strength-status" data-strength-status="${a.status}" style="border-left:6px solid ${colors[a.status]}"><b>${labels[a.status]}</b>${a.missing.length?`<p>Not checked / missing: ${esc(a.missing.join('; '))}.</p>`:''}${a.modelWarning?`<p><b>${esc(a.modelWarning)}</b></p>`:''}<p>Required FoS: ${a.config.requiredFos===null?'not specified':fmt(a.config.requiredFos)} · Minimum FoS: <b>${fos}</b>.</p>${a.maxRatio>0?`<p>FoS at the most utilized evaluated point: ${fmt(a.pointFos)}. The conservative bound can be smaller; it is not a fictitious stress assembled from maxima at unrelated points.</p>`:''}</div>
+  ${map(a,r.input.length)}${hasPoint?`<p><b>Critical evaluated point:</b> x=${fmt(c.x)} mm (${c.side} limit), z=${fmt(c.z)} mm from section mid-depth, material ${c.layer+1}. σ=${fmt(c.sigma)} MPa; τ=${fmt(c.tau)} MPa; criterion: ${esc(c.criterion)}; utilization=${fmt(c.ratio)}.</p>`:'<p>No stressed critical point is identified from the available limits and loading.</p>'}
+  <p style="border-left:5px solid ${colors[a.deflection.status==='exceeded'?'exceeded':a.deflection.status==='within'?'within':'unchecked']};padding-left:10px"><b>Deflection limit:</b> ${a.deflection.status==='unchecked'?'NOT CHECKED — no displacement limit supplied':`${a.deflection.status==='exceeded'?'EXCEEDED':'WITHIN ENTERED LIMIT'}: max |v|=${fmt(a.deflection.value)} mm, limit=${fmt(a.deflection.limit)} mm. Separate serviceability check, using the maximum of the cubic FE interpolation; mesh/model accuracy still matters.`}</p>
+  <details><summary>Numerical meaning and limitations</summary><p>${esc(a.method)}</p><p>The coloured intervals use conservative envelopes. Amber may mean either a genuinely insufficient required FoS or an unresolved conservative gap; it is not a claim of physical fracture. Red denotes a computed material limit, not a solved crack, plastic hinge or post-buckling shape. z is measured from geometric mid-depth, not the shifted neutral axis in a layered section. Hollow-section shear is the beam-theory width-averaged model, not a local shell/contact stress field.</p></details>`;
+ }
+ function refresh(){
+  controls();const st=window.BeamLab.state();$('#beamStrengthCsv').disabled=true;$('#beamStrengthCut').disabled=true;
+  let current=false;try{current=!!st.solved&&$('#beamChip').textContent.toLowerCase()==='solved';}catch(e){}
+  if(!current){latest=null;$('#beamStrengthResult').innerHTML='<p class="bl-help"><b>NOT CHECKED.</b> Solve the current beam first. No strength result or coloured assessment is shown for changed or invalid inputs.</p>';return;}
+  try{const cfg=config(),key=JSON.stringify(cfg);if(lastResult!==st.solved.result||lastKey!==key){latest=BeamStrength.evaluate(st.solved.result,cfg);lastResult=st.solved.result;lastKey=key;}else if(latest===null)latest=BeamStrength.evaluate(st.solved.result,cfg);
+   $('#beamStrengthResult').innerHTML=reportBody(latest,st.solved.result);$('#beamStrengthCsv').disabled=false;$('#beamStrengthCut').disabled=latest.maxRatio<=0;
+  }catch(e){latest=null;$('#beamStrengthResult').innerHTML=`<p class="bl-err"><b>NOT CHECKED.</b> ${esc(e.message)}</p>`;}
+ }
+ panel.addEventListener('input',()=>{latest=null;lastKey='';$('#beamStrengthCsv').disabled=true;$('#beamStrengthCut').disabled=true;$('#beamStrengthResult').innerHTML='<p>NOT CHECKED — updating assessment…</p>';clearTimeout(timer);timer=setTimeout(refresh,180);});panel.addEventListener('change',refresh);
+ function exportConfig(){try{return config();}catch(e){return null;}}
+ function importConfig(raw){let c;try{c=BeamStrength.normalize(raw??{});}catch(e){c=BeamStrength.normalize({});}
+  $('#strengthCriterion').value=c.criterion;$('#strengthRequired').value=c.requiredFos??'';$('#strengthDeflection').value=c.deflectionLimit??'';c.layers.forEach((m,i)=>Object.entries(m).forEach(([k,v])=>$(`#strength${i}_${k}`).value=v??''));latest=null;lastKey='';refresh();
+ }
+ $('#beamStrengthCut').onclick=()=>{refresh();if(!latest||latest.maxRatio<=0)return;const c=latest.critical;window.BeamLab.setCut(c.x,'Critical evaluated material point; inspect the indicated side of any jump.',c.side);window.BeamLab.openTab('cut');};
+ $('#beamStrengthCsv').onclick=()=>{refresh();if(!latest)return;const a=latest,c=a.maxRatio>0?a.critical:null,rows=[['nominal_strength_screening_not_certification'],['criterion',a.config.criterion],['required_FoS',a.config.requiredFos??'not specified'],['assessment',a.status],['missing',a.missing.join('; ')],['conservative_minimum_FoS_lower_bound',a.complete?(a.maxBound===0?'infinite zero demand':a.fosLower):'not checked'],['point_FoS',a.pointFos??''],['critical_evaluated_x_mm',c?.x??'not identified'],['critical_x_limit',c?.side??''],['critical_z_mm_from_middepth',c?.z??''],['critical_material',c?c.layer+1:''],['critical_sigma_MPa',c?.sigma??''],['critical_tau_MPa',c?.tau??''],['deflection_limit_mm',a.deflection.limit??'not specified'],['deflection_FE_max_mm',a.deflection.value],['deflection_status',a.deflection.status],...a.config.layers.flatMap((m,i)=>Object.entries(m).map(([k,v])=>[`material_${i+1}_${k}_MPa`,v??'not specified'])),[],['interval_start_mm','interval_end_mm','evaluated_utilization','conservative_bound','status'],...a.cells.map(c=>[c.a,c.b,c.ratio,c.bound,c.status])];
+  const text=rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n'),url=URL.createObjectURL(new Blob([text],{type:'text/csv'})),link=document.createElement('a');link.href=url;link.download='beam-strength-screening.csv';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+ };
+ window.BeamStrengthUI={refresh,exportConfig,importConfig,assessment:()=>latest,reportHTML:()=>{refresh();return latest?`<section><h2>Nominal strength screening</h2>${reportBody(latest,window.BeamLab.state().solved.result)}<pre style="white-space:pre-wrap;overflow-wrap:anywhere">Inputs: ${esc(JSON.stringify(latest.config,null,2))}</pre><p>Not a fracture prediction. Buckling, joints, adhesive/interface failure, cracks and manufacturing defects are not checked.</p></section>`:'<section><h2>Strength: NOT CHECKED</h2><p>Current model/strength inputs are not assessable.</p></section>';}};refresh();
 })();
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>

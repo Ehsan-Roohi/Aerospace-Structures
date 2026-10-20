@@ -523,6 +523,7 @@ const Lecture03BeamCases = Object.freeze({
     for(const id of ['#beamDownload','#beamShare','#beamCsv','#beamCsvReactions','#beamPrintBtn','#beamSaveA','#beamSaveB','#beamEqualMassBtn','#beamRefine']) {const b=$(id);if(b)b.disabled=stale||!st.solved;}
     $$('[data-export], [data-png]',host).forEach(b=>{b.disabled=stale||!st.solved;});
     for(const id of ['#beamExportStatus','#beamDiagExportStatus']) $(id).textContent=stale&&st.solved?'Exports are disabled until the current inputs are solved.':$(id).dataset.msg||'';
+    if(window.BeamStrengthUI)window.BeamStrengthUI.refresh();
   }
 
   function message(text){st.message=text;$('#beamStatus').textContent=text;}
@@ -1123,7 +1124,7 @@ const Lecture03BeamCases = Object.freeze({
     if(p.shape==='layered')$('#beamCutSectionNote').textContent='Perfectly bonded layers: axial strain is continuous; σᵢ=−(Eᵢ/E₁)M(z−zNA)/Itrans is piecewise linear and can jump at the interface. The figure checks both sides of the bond. Interface qₛ=VQtrans/Itrans and τ=qₛ/b are elastic transfer demands, not adhesive failure predictions.';
   }
   /** Move the single cut station; every view that shows it (readout, plot markers, picture, Cut & section) follows. */
-  function setCut(x,note='') {if(!st.solved)return;st.cut.x=Math.min(Math.max(0,x),st.solved.model.length);st.cut.note=note;refreshCut();}
+  function setCut(x,note='',limit) {if(!st.solved)return;st.cut.x=Math.min(Math.max(0,x),st.solved.model.length);st.cut.note=note;if(limit==='left'||limit==='right')st.cut.limit=limit;refreshCut();}
   function refreshCut() {if(st.tab==='cut')renderCut();if(st.tab==='diagrams'){renderStation();renderCharts();}renderPicture();}
   function applyStationInput() {
     if(!st.solved) return;
@@ -1242,7 +1243,7 @@ const Lecture03BeamCases = Object.freeze({
     setTimeout(()=>URL.revokeObjectURL(a.href),1000);
   }
   function compareForExport(){const c={};for(const k of ['A','B'])if(st.compare[k])c[k]={label:k,model:st.compare[k].model};return Object.keys(c).length?c:null;}
-  function exportText(){return Study.exportStudy({result:st.solved.result,notes:$('#beamExplain').value,compare:compareForExport()});}
+  function exportText(){const text=Study.exportStudy({result:st.solved.result,notes:$('#beamExplain').value,compare:compareForExport()});if(!window.BeamStrengthUI)return text;const doc=JSON.parse(text);doc.strength=window.BeamStrengthUI.exportConfig();return JSON.stringify(doc,null,2);}
   function importText(text) {
     let doc;
     try {doc=Study.parseStudy(text);} catch(e) {exportStatus(`Import refused: ${e.message}`);return false;}
@@ -1258,6 +1259,7 @@ const Lecture03BeamCases = Object.freeze({
     const solved=solve(`Study imported (file version ${doc.version}${doc.legacy?', converted from the earlier study record':''}) and solved again on this page.`);
     renderCompare();
     if(!solved) {exportStatus(`The imported study could not be solved here: ${st.error}`);return false;}
+    if(window.BeamStrengthUI)window.BeamStrengthUI.importConfig(JSON.parse(text).strength);
     exportStatus(`Imported study (version ${doc.version}). Results were recomputed, not read from the file.`);
     return true;
   }
@@ -1280,6 +1282,7 @@ const Lecture03BeamCases = Object.freeze({
       <section><h2>Values at the listed stations</h2><table class="bl-table"><tr><th class="num">x (mm)</th><th>Side</th><th class="num">V (N)</th><th class="num">M (N·mm)</th><th class="num">v (mm)</th><th class="num">θ (rad)</th><th class="num">σ top (MPa)</th></tr>${Study.stationRows(r,stationList()).map(q=>`<tr><td class="num">${fmt(q.x,6)}</td><td>${q.side==='left'?'x⁻':q.side==='right'?'x⁺':''}</td><td class="num">${fmt(q.V,6)}</td><td class="num">${fmt(q.M,6)}</td><td class="num">${fmt(q.v,6)}</td><td class="num">${fmt(q.theta,6)}</td><td class="num">${fmt(q.stressTop,6)}</td></tr>`).join('')}</table>
         <p>V and M are exact (equilibrium at each x); v and θ come from the Euler–Bernoulli finite element. Signs: forces, q and v ↓ +; couples, reaction couples C and θ ↻ +; V &gt; 0 acts ↓ on the left part's cut face and ↑ on the right part's; M &gt; 0 is sagging. Reactions are external: V(0⁺) = −R and M(0⁺) = +C at a left end, V(L⁻) = +R and M(L⁻) = −C at a right end.</p></section>
       <section><h2>Assumptions and limitations</h2><ul>${r.assumptions.map(a=>`<li>${esc(a)}</li>`).join('')}${r.warnings.map(a=>`<li>${esc(a)}</li>`).join('')}<li>Nominal beam stresses only: local buckling, clamp/contact concentrations, holes and printing defects are not modelled. Not an airworthiness or failure certification.</li></ul></section>
+      ${window.BeamStrengthUI?window.BeamStrengthUI.reportHTML():''}
       ${$('#beamExplain').value.trim()?`<section><h2>Notes</h2><div class="bl-notes-print">${esc(Study.cleanText($('#beamExplain').value,4000))}</div></section>`:''}</div>`;
     // The class only changes @media print rules; it is removed after the dialog closes.
     document.body.classList.add('beam-printing');

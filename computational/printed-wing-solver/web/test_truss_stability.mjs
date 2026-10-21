@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import vm from 'node:vm';
+const ctx=vm.createContext({});vm.runInContext(readFileSync(new URL('./truss_engine.js',import.meta.url),'utf8'),ctx);const T=ctx.TrussEngine;
+const node=(id,x,y,support='free',fx=0,fy=0)=>({id,x,y,support,fx,fy});
+const bar=(a,b)=>({a,b,E:70000,A:100});
+const screenshot={nodes:[node(1,175,625,'free',0,-1000),node(2,1000,625,'free',0,-2000),node(3,1000,100,'free',0,1000),node(4,175,100,'free',1000,0)],members:[[1,2],[2,3],[3,4],[4,1],[1,3],[2,4]].map(([a,b])=>bar(a,b))};
+let d=T.stability(screenshot);assert.equal(d.nullity,3);assert.equal(d.externalMotions,3);assert.match(d.issues.join(' '),/No supports.*Choose Pin/);assert.throws(()=>T.solve(screenshot));
+const stable=structuredClone(screenshot);stable.nodes[3].support='pin';stable.nodes[2].support='rollerY';assert.equal(T.stability(stable).nullity,0);assert.ok(T.solve(stable).maxDisplacement>0);
+const unbraced=structuredClone(stable);unbraced.members=unbraced.members.slice(0,4);d=T.stability(unbraced);assert.equal(d.externalMotions,0);assert.equal(d.nullity,1);assert.match(d.issues.join(' '),/internal infinitesimal/);assert.throws(()=>T.solve(unbraced));
+const parallel=structuredClone(stable);parallel.nodes.forEach(n=>n.support='rollerY');assert.ok(T.stability(parallel).externalMotions>0);
+const inclined=structuredClone(stable);inclined.nodes[2].support='roller';inclined.nodes[2].supportAngle=30;assert.equal(T.stability(inclined).nullity,0);T.solve(inclined);inclined.nodes[2].supportAngle=90;assert.equal(T.stability(inclined).externalMotions,1);
+const disconnected=structuredClone(stable);disconnected.nodes.push(node(9,1400,100),node(10,1500,100));disconnected.members.push(bar(9,10));d=T.stability(disconnected);assert.equal(d.components.length,2);assert.match(d.issues.join(' '),/N9, N10/);assert.equal(d.externalMotions,3);assert.throws(()=>T.solve(disconnected));
+const isolated=structuredClone(stable);isolated.nodes.push(node(11,1500,400));d=T.stability(isolated);assert.match(d.issues.join(' '),/Isolated node N11/);assert.equal(d.externalMotions,2);
+const wire=structuredClone(unbraced);wire.members.push({...bar(4,2),type:'cable'});wire.nodes.forEach(n=>{n.fx=0;n.fy=0;});wire.nodes[0].fx=-100;assert.equal(T.stability(wire).nullity,0);assert.throws(()=>T.solve(wire),/Slack wires|mechanism|singular/i);
+console.log('Truss stability diagnostics passed: external restraints, internal mechanisms, inclined rollers, disconnected/isolated joints, slack cable.');

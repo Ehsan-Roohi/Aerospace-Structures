@@ -44,6 +44,23 @@
   const z=Array(n).fill(0);for(let i=n-1;i>=0;i--){let b=a[i][n];for(let j=i+1;j<n;j++)b-=a[i][j]*z[j];z[i]=b/a[i][i];}
   return z.map((v,i)=>v/d[i]);
  }
+ // Geometry-only rank checks: these do not depend on loads or pretend that slack cables brace a bay.
+ function stability(raw){
+  const {nodes,members}=normalize(raw),N=2*nodes.length,ix=new Map(nodes.map((n,i)=>[n.id,i]));
+  function rank(rows,width){const a=rows.map(r=>r.slice());let k=0;for(let j=0;j<width&&k<a.length;j++){let p=k;for(let i=k+1;i<a.length;i++)if(Math.abs(a[i][j])>Math.abs(a[p][j]))p=i;if(Math.abs(a[p][j])<1e-9)continue;[a[k],a[p]]=[a[p],a[k]];const d=a[k][j];for(let q=j;q<width;q++)a[k][q]/=d;for(let i=k+1;i<a.length;i++){const f=a[i][j];for(let q=j;q<width;q++)a[i][q]-=f*a[k][q];}k++;}return k;}
+  const restraints=[];for(const n of nodes){const i=ix.get(n.id),add=(x,y)=>{const r=Array(N).fill(0);r[2*i]=x;r[2*i+1]=y;restraints.push(r);};if(n.support==='pin'){add(1,0);add(0,1);}else if(n.support==='rollerX')add(1,0);else if(n.support==='rollerY')add(0,1);else if(n.support==='roller'){const a=n.supportAngle*Math.PI/180;add(-Math.sin(a),Math.cos(a));}}
+  const rows=members.map(m=>{const i=ix.get(m.a),j=ix.get(m.b),dx=nodes[j].x-nodes[i].x,dy=nodes[j].y-nodes[i].y,L=Math.hypot(dx,dy),r=Array(N).fill(0);if(L>1e-8){r[2*i]=-dx/L;r[2*i+1]=-dy/L;r[2*j]=dx/L;r[2*j+1]=dy/L;}return r;});
+  const adj=new Map(nodes.map(n=>[n.id,[]]));members.forEach(m=>{adj.get(m.a).push(m.b);adj.get(m.b).push(m.a);});const seen=new Set(),components=[];
+  for(const start of nodes){if(seen.has(start.id))continue;const ids=[],todo=[start.id];while(todo.length){const id=todo.pop();if(seen.has(id))continue;seen.add(id);ids.push(id);todo.push(...adj.get(id));}components.push(ids.sort((a,b)=>a-b));}
+  const issues=[];if(components.length>1)issues.push(`${components.length} disconnected components: ${components.map(ids=>ids.map(id=>'N'+id).join(', ')).join(' / ')}. Each separate component needs its own physical restraints and bracing, or an intended connecting member.`);
+  for(const ids of components){const ns=ids.map(id=>nodes[ix.get(id)]),cx=ns.reduce((s,n)=>s+n.x,0)/ns.length,cy=ns.reduce((s,n)=>s+n.y,0)/ns.length,scale=Math.max(1,...ns.map(n=>Math.hypot(n.x-cx,n.y-cy))),rigid=restraints.map(r=>ns.reduce((v,n)=>{const i=ix.get(n.id),x=r[2*i],y=r[2*i+1];return [v[0]+x,v[1]+y,v[2]+(-x*(n.y-cy)+y*(n.x-cx))/scale];},[0,0,0])).filter(r=>r.some(v=>v!==0)),required=ns.length===1?2:3,rr=rank(rigid,required);
+   if(!adj.get(ids[0]).length&&ids.length===1)issues.push(`Isolated node N${ids[0]}: connect it to the intended structure or remove it if unintended.`);
+   if(rr<required)issues.push(`${ids.map(id=>'N'+id).join(', ')}: external restraint rank ${rr}/${required}; ${required-rr} rigid-body motion(s) remain. ${rigid.length===0?'No supports are assigned. Choose Pin and click an appropriate boundary node, then place a separate roller with a physically appropriate tangent angle.':'Check support locations and roller tangent angles: insufficient, parallel, or concurrent restraint directions can leave translation or rotation free.'}`);
+  }
+  const nullity=N-rank([...rows,...restraints],N),external=components.reduce((sum,ids)=>{const ns=ids.map(id=>nodes[ix.get(id)]),cx=ns.reduce((s,n)=>s+n.x,0)/ns.length,cy=ns.reduce((s,n)=>s+n.y,0)/ns.length,scale=Math.max(1,...ns.map(n=>Math.hypot(n.x-cx,n.y-cy)));const r=restraints.map(row=>ns.reduce((v,n)=>{const i=ix.get(n.id),x=row[2*i],y=row[2*i+1];return [v[0]+x,v[1]+y,v[2]+(-x*(n.y-cy)+y*(n.x-cx))/scale];},[0,0,0]));return sum+(ns.length===1?2:3)-rank(r,ns.length===1?2:3);},0);
+  if(nullity>external)issues.push(`${nullity-external} internal infinitesimal mechanism(s) remain even with every cable assumed engaged. Check unbraced bays, collinear joints and member connections; add physically intended triangulation. Relevant nodes: ${nodes.map(n=>'N'+n.id).join(', ')}.`);
+  return {nullity,externalMotions:external,components,issues,cables:members.filter(m=>m.type==='cable').length,restraints:restraints.length};
+ }
  function solve(raw){
   const model=normalize(raw),{nodes,members}=model,n=nodes.length,N=2*n;
   if(n<2||!members.length)throw Error('Add nodes, members, supports and nodal loads, then Solve.');
@@ -94,5 +111,5 @@
   if([...u,...R,...resultMembers.flatMap(v=>[v.force,v.stress])].some(v=>!Number.isFinite(v)))throw Error('Non-finite result: check geometry and stiffness.');
   return {model,nodes:resultNodes,members:resultMembers,distributed,equilibrium,maxDisplacement,iterations,slackCables:resultMembers.filter(m=>m.cableState==='slack').length};
  }
- root.TrussEngine={normalize,solve,equivalentLoads};
+ root.TrussEngine={normalize,solve,equivalentLoads,stability};
 })(typeof globalThis!=='undefined'?globalThis:this);

@@ -35,7 +35,7 @@
  $('#lineLoadList').onclick=e=>{const b=e.target.closest('[data-edit-line],[data-remove-line]');if(!b)return;if(b.dataset.editLine!==undefined)openLine(+b.dataset.editLine);else{selected={type:'line',index:+b.dataset.removeLine};remove();}};
  const num=v=>Number(v.toPrecision(6)),fmt=v=>Number(v).toPrecision(5),escape=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const status=(s,error=false)=>{$('#status').textContent=s;$('#status').dataset.error=error;};
- function dirty(record=true){model.lineLoads??=[];if(record){const s=JSON.stringify(model);if(s!==history[historyIndex]){history=history.slice(0,historyIndex+1);history.push(s);if(history.length>100)history.shift();historyIndex=history.length-1;}}syncHistory();renderLineList();result=null;$('#csv').disabled=true;$('#results').innerHTML='';$('#resultSummary').textContent='Inputs changed. Solve to obtain current results.';draw();}
+ function dirty(record=true){model.lineLoads??=[];if(record){const s=JSON.stringify(model);if(s!==history[historyIndex]){history=history.slice(0,historyIndex+1);history.push(s);if(history.length>100)history.shift();historyIndex=history.length-1;}}syncHistory();renderLineList();result=null;$('#csv').disabled=true;$('#results').innerHTML='';$('#resultSummary').textContent='Inputs changed. Solve to obtain current results.';stabilityPanel();draw();}
  function projection(){const s=Math.min(880/view.width,420/view.height);return {s,x:60+(880-view.width*s)/2,y:470-(420-view.height*s)/2};}
  function coords(n){const p=projection();return [p.x+(n.x-view.xmin)*p.s,p.y-(n.y-view.ymin)*p.s];}
  function snapped(x,y,excludeId=null){const p=projection(),step=+$('#gridStep').value;let nx=step?Math.round(x/step)*step:x,ny=step?Math.round(y/step)*step:y;
@@ -101,7 +101,27 @@
   dirty();selection();status(`Force applied to N${n.id}. Press Solve; close × to hide parameters.`);
  });};
  $('#clearLoads').textContent='Clear all loads';$('#clearLoads').onclick=()=>{model.lineLoads=[];model.nodes.forEach(n=>{n.fx=0;n.fy=0;});dirty();selection();status('All point and joint-transfer loads cleared. Geometry and supports are unchanged.');};
- function attempt(fn){try{fn();}catch(e){status(e.message,true);}}
+ function stabilityPanel(failure=''){
+  let panel=$('#stabilityPanel');if(!panel){panel=document.createElement('section');panel.id='stabilityPanel';panel.className='card';$('#trussCanvas').after(panel);}
+  panel.replaceChildren();const heading=document.createElement('h3');heading.textContent=failure?'Model / solve failure · stability guidance':'Before Solve · stability check';panel.append(heading);
+  const add=s=>{const p=document.createElement('p');p.textContent=s;panel.append(p);};if(failure)add(failure);
+  try{const d=T.stability(model);if(!model.nodes.length)add('Add nodes and members, then assign the physical supports.');else{add(`Geometry check: ${d.nullity} unconstrained infinitesimal motion(s), with every member (including wires) assumed engaged.`);d.issues.forEach(add);if(!d.nullity)add('No geometric mechanism detected with all members engaged. Solve still checks stiffness conditioning and tension-only wire engagement.');if(d.cables)add('Wires resist tension only. A wire that goes slack can remove bracing and create a mechanism under this load. Review the load direction and physical bracing; do not replace wires with bars unless that matches the structure.');}
+   add('A member/restraint count is only a necessary screen, not proof of stability. This geometry rank check uses a numerical tolerance; Solve independently checks the actual stiffness.');
+   if(failure&&!d.issues.length)add('Review very small/large stiffness ratios, nearly collinear geometry and slack-wire bracing. The solver has added no artificial stiffness or restraints.');
+  }catch(e){add(e.message);}
+ }
+ function failureSummary(message){
+  if(!/singular|mechanism|tension-only|stiffness|Cable equilibrium/i.test(message))return message;
+  try{const d=T.stability(model),more=' Details below drawing.';
+   if(d.externalMotions&&d.restraints===0)return `No supports assigned: ${d.externalMotions} rigid-body motion(s) remain. Place a physically appropriate pin and separate roller for each component.${more}`;
+   if(d.components.length>1)return `Disconnected model: ${d.components.length} separate components. Check intended connections and each component’s supports/bracing.${more}`;
+   if(d.externalMotions)return `Insufficient external restraints: ${d.externalMotions} rigid-body motion(s) remain. Check support positions and roller tangent angles.${more}`;
+   if(d.nullity)return `Mechanism: ${d.nullity} internal motion(s) remain. Check unbraced bays, collinear joints and member connections.${more}`;
+   if(d.cables)return `No accepted stable wire solution: slack wires may remove bracing. Check load direction and physical bracing.${more}`;
+   return `Stiffness solve failed: check nearly singular geometry and stiffness ratios.${more}`;
+  }catch(e){return message;}
+ }
+ function attempt(fn){try{fn();}catch(e){status(failureSummary(e.message),true);stabilityPanel(e.message);}}
  $('#nodeForm').onsubmit=e=>{e.preventDefault();attempt(()=>addNode(read('#nodeX'),read('#nodeY')));};
  $('#editForm').onsubmit=e=>{e.preventDefault();attempt(()=>{const copy=JSON.parse(JSON.stringify(model)),form=$('#editForm'),get=k=>{const q=form.elements.namedItem(k);if(q.value.trim()===''||!Number.isFinite(+q.value))throw Error('Enter complete numeric values.');return +q.value;};
   if(['node','force','support'].includes(selected.type)){const n=copy.nodes.find(n=>n.id===selected.id);Object.assign(n,{x:get('x'),y:get('y'),fx:get('fx'),fy:get('fy'),support:form.elements.namedItem('support').value,supportAngle:get('supportAngle')});if(['rollerX','rollerY'].includes(n.support)&&Math.abs(n.supportAngle-(n.support==='rollerX'?90:0))>1e-9)n.support='roller';if(copy.nodes.some(v=>v.id!==n.id&&Math.hypot(v.x-n.x,v.y-n.y)<1e-7))throw Error('Coincident nodes are not allowed.');}
@@ -136,5 +156,5 @@
   model={nodes:[{id:1,x:0,y:0,support:'pin',fx:0,fy:0},{id:2,x:1000,y:0,support:'rollerY',fx:0,fy:0},{id:3,x:0,y:400,support:'free',fx:0,fy:0},{id:4,x:1000,y:400,support:'free',fx:20,fy:0}],members:[[1,2],[1,3],[2,4],[3,4]].map(([a,b])=>({a,b,type:'bar',E:70000,A:100,Imin:10000/12,Kfactor:1})).concat([[1,4],[2,3]].map(([a,b])=>({a,b,type:'cable',E:200000,A:2,Imin:null,Kfactor:1})))};
   selected=null;first=null;dirty();selection();fit();status('Illustrative crossed-wire bay: 20 N right at N4. Bars: E=70000 MPa, 10×10 mm square; wires: E=200000 MPa, A=2 mm². Invented teaching data, not Wright aircraft measurements. Reverse N4 Fx to see the other wire engage. Press Solve.');
  };
- window.TrussLab={state:()=>JSON.parse(JSON.stringify({model,result,selected,tool,historyIndex,historyLength:history.length})),undo:()=>travel(-1),redo:()=>travel(1),snapPoint:snapped,setModel:m=>{model=T.normalize(m);selected=null;dirty();selection();fit();}};draw();
+ window.TrussLab={state:()=>JSON.parse(JSON.stringify({model,result,selected,tool,historyIndex,historyLength:history.length})),undo:()=>travel(-1),redo:()=>travel(1),snapPoint:snapped,setModel:m=>{model=T.normalize(m);selected=null;dirty();selection();fit();}};stabilityPanel();draw();
 })();

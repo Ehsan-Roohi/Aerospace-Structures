@@ -20,7 +20,8 @@
    const type=m.type??'bar';if(!['bar','cable'].includes(type))throw Error('Member type must be bar or cable.');
    const Imin=m.Imin==null?null:finite(m.Imin,'Imin'),Kfactor=m.Kfactor??1;
    finite(Kfactor,'Effective length factor');if(Kfactor<=0||(Imin!==null&&Imin<=0))throw Error('Imin and effective length factor must be positive.');
-   return {a:m.a,b:m.b,E,A,type,Imin,Kfactor};
+   const material=m.material??'custom';if(!['custom','aluminium','steel'].includes(material))throw Error('Unknown member material preset.');
+   return {a:m.a,b:m.b,E,A,type,Imin,Kfactor,material};
   });
   const lineLoads=raw.lineLoads??[];if(!Array.isArray(lineLoads)||lineLoads.length>30)throw Error('At most 30 nodal-transfer line loads.');
   const loads=lineLoads.map(v=>{if(!Array.isArray(v.nodes)||v.nodes.length<2||v.nodes.length>60||new Set(v.nodes).size!==v.nodes.length||v.nodes.some(id=>!ids.has(id)))throw Error('A line load needs an ordered path of at least two distinct existing nodes.');return {nodes:[...v.nodes],qStart:finite(v.qStart,'Start intensity'),qEnd:finite(v.qEnd,'End intensity'),angle:finite(v.angle,'Load angle')};});

@@ -204,5 +204,30 @@
   selected=null;first=null;dirty();selection();fit();status('Illustrative crossed-wire bay: 20 N right at N4. Bars: E=70000 MPa, 10×10 mm square; wires: E=200000 MPa, A=2 mm². Invented teaching data, not Wright aircraft measurements. Reverse N4 Fx to see the other wire engage. Press Solve.');
  };
  for(const kind of ['pin','roller']){const button=$('[data-tool="'+kind+'"]'),activate=button.onclick;button.onclick=()=>{const wasOpen=!$('#'+kind+'Menu').hidden;activate();closeSupportMenus();$('#'+kind+'Menu').hidden=wasOpen;button.setAttribute('aria-expanded',String(!wasOpen));};}
+ // Original, inline engineering icons: no font or external icon-library dependency.
+ const toolArtwork={
+  select:'<path d="m5 3 13 8-6 2-3 6Z"/><path d="m13 14 4 5"/>',
+  node:'<circle cx="12" cy="12" r="4"/><path d="M12 2v4m0 12v4M2 12h4m12 0h4"/>',
+  member:'<path d="m6 17 12-10M7 19 20 8"/><circle cx="5" cy="19" r="3"/><circle cx="19" cy="5" r="3"/>',
+  pin:'<path d="m12 4-7 11h14Z"/><circle cx="12" cy="4" r="1.5" fill="currentColor"/><path d="M3 19h18M6 19l-2 3m7-3-2 3m7-3-2 3m7-3-2 3"/>',
+  roller:'<path d="m12 3-6 10h12Z"/><circle cx="8" cy="16" r="2"/><circle cx="16" cy="16" r="2"/><path d="M3 21h18"/>',
+  force:'<path d="M12 3v14m-5-5 5 5 5-5M3 21h18"/><circle cx="12" cy="3" r="1.5" fill="currentColor"/>',
+  line:'<path d="M3 4h18M5 4v11m-3-3 3 3 3-3m4-8v11m-3-3 3 3 3-3m4-8v11m-3-3 3 3 3-3M3 21h18"/>',
+  undo:'<path d="M9 5 4 10l5 5M4 10h10a6 6 0 0 1 0 12"/>',
+  redo:'<path d="m15 5 5 5-5 5m5-5H10a6 6 0 0 0 0 12"/>',
+  solve:'<path d="m8 4 12 8-12 8Z" fill="currentColor" stroke="none"/>',
+  clear:'<path d="M4 7h16M9 3h6l1 4M6 7l1 14h10l1-14M10 11v6m4-6v6"/>',
+  plus:'<path d="M12 5v14M5 12h14"/>',minus:'<path d="M5 12h14"/>',
+  fit:'<path d="M9 3H3v6m12-6h6v6M3 15v6h6m6 0h6v-6"/><rect x="8" y="8" width="8" height="8" rx="1"/>'
+ };
+ function decorateTool(button,kind,label,tone='geometry',menu=false){if(!button)return;button.classList.add('visual-tool');button.dataset.tone=tone;button.setAttribute('aria-label',label);button.innerHTML=`<span class="tool-art" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${toolArtwork[kind]}</svg></span><span class="tool-caption">${label}</span>${menu?'<span class="tool-chevron" aria-hidden="true">⌄</span>':''}`;}
+ for(const [kind,label,tone]of [['select','Select / move','geometry'],['node','Node','geometry'],['member','Member · two nodes','geometry'],['pin','Pin','support'],['roller','Roller','support'],['force','Point force · pick node','load'],['line','Distributed → joints','load']])document.querySelectorAll(`[data-tool="${kind}"]`).forEach(b=>decorateTool(b,kind,label,tone,['pin','roller'].includes(kind)));
+ for(const [id,kind,label,tone]of [['undo','undo','Undo','neutral'],['redo','redo','Redo','neutral'],['solve','solve','Solve','solve'],['clear','clear','Clear all','danger'],['clearLoads','clear','Clear all loads','load'],['clearSupports','clear','Clear all supports','support'],['zoomIn','plus','Zoom in','neutral'],['zoomOut','minus','Zoom out','neutral'],['fitCanvas','fit','Fit drawing','neutral']])decorateTool($('#'+id),kind,label,tone);
+ for(const id of ['zoomIn','zoomOut']){$('#'+id).classList.add('icon-only');$('#'+id).title=id==='zoomIn'?'Zoom drawing in':'Zoom drawing out';}
+ const toolStyle=document.createElement('style');toolStyle.textContent=`
+ .visual-tool{--tool-ink:#155aab;--tool-tint:#eef5ff;--tool-edge:#b6d0ee;display:inline-flex;align-items:center;justify-content:center;gap:7px!important;border-color:var(--tool-edge)!important;background:linear-gradient(#fff,var(--tool-tint));color:var(--tool-ink)!important;border-radius:11px;font-weight:600;box-shadow:0 1px 2px #173b6009;transition:background .15s,box-shadow .15s,border-color .15s}
+ .visual-tool[data-tone=support]{--tool-ink:#08704f;--tool-tint:#ecf9f3;--tool-edge:#a4d6c3}.visual-tool[data-tone=load]{--tool-ink:#922398;--tool-tint:#fbf0fc;--tool-edge:#dcb4e0}.visual-tool[data-tone=neutral]{--tool-ink:#405b75;--tool-tint:#f3f6fa;--tool-edge:#cbd7e3}.visual-tool[data-tone=danger]{--tool-ink:#a23445;--tool-tint:#fff3f4;--tool-edge:#e6bdc5}
+ .visual-tool .tool-art{width:27px;height:27px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;background:var(--tool-tint);flex-shrink:0}.visual-tool svg{width:21px;height:21px;display:block;pointer-events:none}.visual-tool .tool-caption{white-space:nowrap}.visual-tool .tool-chevron{font-size:17px;margin-left:1px}.visual-tool:not(:disabled):hover{border-color:var(--tool-ink)!important;box-shadow:0 3px 9px #173b601a}.visual-tool[aria-pressed=true],.visual-tool[aria-expanded=true],.visual-tool[data-tone=solve]{background:var(--tool-ink)!important;border-color:var(--tool-ink)!important;color:#fff!important;box-shadow:0 3px 8px #173b6024}.visual-tool[aria-pressed=true] .tool-art,.visual-tool[aria-expanded=true] .tool-art,.visual-tool[data-tone=solve] .tool-art{background:#ffffff22}.visual-tool:disabled{opacity:.45;box-shadow:none}.visual-tool.icon-only{padding:5px!important;min-width:38px}.visual-tool.icon-only .tool-caption{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}.snap-controls .visual-tool{font-size:13px}.workspace-toolbar{gap:7px}.workspace-toolbar>.visual-tool,.workspace-toolbar>.support-picker>.visual-tool{min-height:42px;padding:6px 10px}.snap-controls .tool-art{width:23px;height:23px}.snap-controls svg{width:18px;height:18px}@media(prefers-reduced-motion:reduce){.visual-tool{transition:none}}
+ `;document.head.append(toolStyle);
  window.TrussLab={state:()=>JSON.parse(JSON.stringify({model,result,selected,tool,historyIndex,historyLength:history.length})),undo:()=>travel(-1),redo:()=>travel(1),snapPoint:snapped,setModel:m=>{model=T.normalize(m);selected=null;dirty();selection();fit();}};stabilityPanel();draw();
 })();

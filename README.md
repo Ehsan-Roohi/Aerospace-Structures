@@ -128,6 +128,8 @@ The G-code is provided for inspection only. Do not send it directly to a printer
 
 ## Engineering readings and case studies
 
+**[Speed Tape and Aircraft Repairs](SPEED_TAPE_AND_AIRCRAFT_REPAIRS.md)** — [complete illustrated reading](https://ehsan-roohi.github.io/Aerospace-Structures/case-studies/speed-tape/): foil/adhesive construction, peel versus shear, aerodynamic loads, thermal mismatch, a documented rejected repair proposal, claim checks and classroom calculations. Explains why a surface cover is not a structural joint and catalogue data are not aircraft repair authorization.
+
 ### Wright flight controls and structural flexibility
 
 [Open the illustrated Wright and Langley reading](WRIGHT_FLIGHT_CONTROLS.md): homes and bicycle shops, Chanute's biography and gliders, Langley's successful 1896 unpiloted flights, controls and structural failures, clearly qualified funding charts, later Flyers, and four real historical factory-interior photographs. Includes the free 286-page NPS factory report with a reading guide, classroom calculations and the NPS replica demonstration video.

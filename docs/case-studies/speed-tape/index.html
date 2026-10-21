@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Speed Tape and Aircraft Repairs · MIE 446</title>
+<style>
+:root{color-scheme:light;--ink:#153047;--blue:#145d88;--line:#c9d9e3}*{box-sizing:border-box}body{margin:0;background:#edf3f7;color:var(--ink);font:18px/1.65 system-ui,sans-serif}main{max-width:1060px;margin:auto;background:white;padding:clamp(20px,5vw,64px)}a{color:#065b93;text-underline-offset:3px}h1{font-size:clamp(2rem,5vw,3.3rem);line-height:1.15}h2{margin-top:2.5em;line-height:1.3;color:#124e72}h3{line-height:1.4}nav{display:flex;gap:18px;flex-wrap:wrap;font-size:.9rem}.eyebrow{letter-spacing:.08em;text-transform:uppercase;font-size:.8rem}.lead{font-size:1.2rem}.callout{border-left:5px solid #c17d13;background:#fff7e7;padding:18px 24px;margin:24px 0}.note{border-left:5px solid var(--blue);background:#edf6fb;padding:18px 24px}.table-wrap{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:.93rem}th,td{text-align:left;border:1px solid var(--line);padding:12px;vertical-align:top}th{background:#e8f1f7}figure{margin:30px 0}figure img{width:100%;height:auto;border:1px solid var(--line);border-radius:8px}figcaption,.small{font-size:.87rem;color:#415e72}code{background:#edf3f7;padding:2px 5px}li{margin:.5em 0}.equation{padding:16px;background:#f0f5f8;overflow-wrap:anywhere}footer{border-top:1px solid var(--line);margin-top:40px;padding-top:20px}@media print{body{background:white;font-size:11pt}main{padding:0;max-width:none}nav{display:none}h2,h3{break-after:avoid}figure,tr,.callout,.note{break-inside:avoid}a{color:inherit}figure img{max-height:80mm}}
+</style></head><body><main>
+<nav><a href="https://github.com/Ehsan-Roohi/Aerospace-Structures#engineering-readings-and-case-studies">Course readings</a><a href="../../wing-lab.html">Beam and Wing Virtual Labs</a><a href="#sources">Sources</a></nav>
+<p class="eyebrow">MIE 446 · Aerospace Structures · University of Massachusetts Amherst</p>
+<h1>Speed Tape and Aircraft Repairs</h1>
+<p class="lead">A silver patch can protect a surface without restoring a damaged structural load path. The distinction explains both the legitimate use of high-speed tape and why it is not a universal repair for an aircraft.</p>
+<div class="callout"><strong>Educational scope.</strong> These diagrams and calculations explain mechanics; they are not aircraft maintenance instructions, repair sizing, or authorization to fly. Actual repair decisions require the applicable aircraft data, damage assessment and authorized maintenance process.</div>
+<details lang="fa" dir="rtl"><summary>خلاصهٔ فارسی</summary><p>اسپید تیپ می‌تواند برای پوشاندن و حفاظت موقت بعضی آسیب‌های غیرسازه‌ای به کار رود، اما جایگزین عمومی اتصال سازه‌ای نیست. مقاومت فویل، چسبندگی در آزمون کَندن، و مقاومت یک تعمیر واقعی سه مفهوم متفاوت‌اند. دیدن نوار روی هواپیما نه به‌تنهایی نشانهٔ ناایمنی است و نه اثبات مجازبودن تعمیر. نوع آسیب، دستورالعمل معتبر، محدودیت زمانی و بازرسی تعیین‌کننده‌اند.</p></details>
+<p><strong>Learning goals:</strong> distinguish peel, shear and foil tension; interpret force-per-width data; relate aerodynamic pressure to edge lifting; and separate material performance from repair authorization.</p>
+<nav aria-label="Contents"><a href="#construction">Construction</a><a href="#mechanics">Mechanics</a><a href="#loads">Loads</a><a href="#repairs">Repair decisions</a><a href="#claims">Claim check</a><a href="#classroom">Classroom work</a></nav>
+
+<h2 id="construction">What the tape is made of</h2>
+<p>“Speed tape” is a practical description, not a complete material specification. An identified product and revision matter. For example, <a href="https://multimedia.3m.com/mws/media/2366321O/3m-aluminum-foil-tape-425.pdf">3M 425, English-US technical data sheet, September 2024</a>, describes soft aluminium foil with acrylic pressure-sensitive adhesive (PSA). Its published uses also include industrial sealing and heat reflection: it is not exclusively an aviation product.</p>
+<figure><img src="layers.svg" alt="Cross-section of foil, pressure-sensitive adhesive, paint and substrate; a lifted paint layer can detach even while adhesive remains attached to paint."><figcaption>Figure 1. Original teaching schematic, not to scale. The entire stack matters: a strong adhesive cannot make a weak underlying coating sound.</figcaption></figure>
+<p>Related foil tapes need not have the same chemistry. <a href="https://www.nitto.com/us/en/products/maskingtape/paint025/">Nitto P-12L</a> combines foil, cotton cloth and a rubber/resin adhesive. That comparison illustrates material variety; it does not establish interchangeability or approval for an external flight repair.</p>
+<div class="table-wrap"><table><caption>One product and one revision: representative 3M 425 data, not design allowables</caption><thead><tr><th>Quantity</th><th>Reported value</th><th>What it measures</th></tr></thead><tbody>
+<tr><td>Foil / total thickness</td><td>0.07 / 0.12 mm</td><td>Backing versus assembled tape; ASTM D3652</td></tr>
+<tr><td>180° peel adhesion</td><td>5.1 N/cm</td><td>Force per width at 23°C and 304 mm/min; ASTM D3330</td></tr>
+<tr><td>Strip tensile strength</td><td>49 N/cm</td><td>Rupture force per width; ASTM D3759</td></tr>
+<tr><td>Long-term temperature range</td><td>−54 to 149°C</td><td>Manufacturer's “days, weeks” category; not a universal installation envelope</td></tr>
+</tbody></table></div>
+<p class="small">The manufacturer labels these properties typical, not specification values. Application conditions differ from service temperatures. Flammability compliance, including the cited FAR 25.853(a), is not approval of a particular repair. Regional editions and revisions must not be mixed.</p>
+
+<h2 id="mechanics">Why peel is different from tension and shear</h2>
+<p>Foil tension loads the backing along its length. Bond shear transfers force roughly parallel to the surface. Peel opens a moving separation front and concentrates deformation near that front. A patch can therefore survive substantial in-plane force yet detach after an edge lifts. Failure may occur at an interface, within adhesive, in paint or in the underlying material.</p>
+<figure><img src="load-modes.svg" alt="Three separate diagrams show foil tension, overlap shear transfer and peel at an opening edge."><figcaption>Figure 2. Three loading modes, three different questions. A catalogue tensile value cannot replace peel or creep qualification.</figcaption></figure>
+<p>PSAs deform to make contact and dissipate energy during separation. Experiments by <a href="https://doi.org/10.1039/C5SM00260E">Villey and colleagues (2015)</a> show that peel response depends on angle, rate and large-strain adhesive behaviour. These are general PSA mechanics lessons, not numerical qualification of an aircraft tape. Long-duration shear also requires attention to creep; a short test does not settle sustained-load performance.</p>
+<h3>A force-per-width conversion</h3>
+<p>For a 25 mm strip, width is 2.5 cm. Multiplying the two catalogue values by width gives different test forces:</p>
+<div class="equation">Typical strip tensile test: 49 × 2.5 = <strong>122.5 N</strong><br>Typical 180° peel test: 5.1 × 2.5 = <strong>12.75 N</strong></div>
+<p>Neither number is an aircraft load allowable or a working-load limit. N/cm is not MPa. Dividing an aircraft force by either number does not produce a justified safety factor; specimen, substrate, conditioning, direction, temperature, duration and failure mode must match.</p>
+<h3>Structural bonding is a different design problem</h3>
+<p>A cured structural adhesive is not merely “stronger tape.” For example, <a href="https://next.henkel-adhesives.com/us/en/products/industrial-adhesives/central-pdp.html/loctite-ea-9394-aero/SAP_IB-69644.html">Henkel EA 9394 AERO</a> is a two-part epoxy structural paste. Structural joints require a designed load-transfer geometry, controlled surfaces and processing, and an appropriate durability and damage-tolerance assessment.</p>
+<p>For an <em>assumed classroom joint</em>, P = 100 N, width b = 25 mm and overlap L = 50 mm give:</p>
+<div class="equation">τ<sub>average</sub> = P/(bL) = 100/(25 × 50) = <strong>0.08 MPa</strong></div>
+<p>This average hides end concentrations and eccentric-load peel. It cannot qualify either a structural bond or a taped patch.</p>
+
+<h2 id="loads">What high speed actually changes</h2>
+<p>Speed is not a complete loading specification. Density, local pressure distribution, temperature, edge geometry and exposure time matter. Dynamic pressure is a flow scale, not automatically the pressure difference across a patch or its wall shear stress.</p>
+<figure><img src="air-loads.svg" alt="Air flows over a surface patch; a raised edge produces local lifting, while normal pressure difference and wall shear act in different directions."><figcaption>Figure 3. Original conceptual schematic. Local flow and a lifted edge require more information than a single speed.</figcaption></figure>
+<p>Use deliberately assumed values: density ρ = 0.40 kg/m³, speed V = 250 m/s, pressure-coefficient difference ΔC<sub>p</sub> = 0.20, patch area A = 0.010 m² and skin-friction coefficient C<sub>f</sub> = 0.003.</p>
+<div class="equation">q<sub>∞</sub> = ½ρV² = <strong>12,500 Pa</strong><br>Δp = ΔC<sub>p</sub>q<sub>∞</sub> = <strong>2,500 Pa</strong><br>F<sub>normal</sub> = ΔpA = <strong>25 N</strong><br>τ<sub>wall</sub> = C<sub>f</sub>q<sub>∞</sub> = <strong>37.5 Pa</strong></div>
+<p>The assumed coefficients are not aircraft test data. Do not compare the 25 N resultant directly with the strip peel value and declare a pass. Pressure distribution, edge opening, attachment geometry and an appropriate failure model are missing. Compressible or shock-affected flow requires an appropriate aerodynamic model.</p>
+<h3>Thermal mismatch</h3>
+<p>Different layers expand differently. With <em>assumed</em> expansion coefficients 23 × 10<sup>−6</sup>/K and 2 × 10<sup>−6</sup>/K over ΔT = 100 K:</p>
+<div class="equation">Δε = (α₁ − α₂)ΔT = <strong>0.0021 = 0.21%</strong><br>Over 50 mm, free differential expansion = <strong>0.105 mm</strong></div>
+<p>A bonded stack cannot freely achieve both expansions; shear, peel, relaxation or damage can result. Real composite expansion is direction-dependent. These illustrative constants are not a measured foil/composite repair system.</p>
+
+<h2 id="repairs">A temporary repair still needs an engineering basis</h2>
+<p><a href="https://www.aircraft.airbus.com/en/newsroom/news/2021-11-keeping-in-shape">Airbus distinguishes cosmetic, standard structural and major structural repairs</a>. Its A350 explanation gives high-speed tape as a temporary option for assessed non-structural damage. It separately illustrates a bolted aluminium repair for a temporary structural solution. “Temporary” describes duration, not permission to ignore structural damage.</p>
+<figure><img src="repair-boundary.svg" alt="Assess damage and consult aircraft-specific repair data before choosing an authorized cosmetic treatment or designed structural repair; appearance or tape specifications alone do not authorize flight."><figcaption>Figure 4. An engineering distinction, not a maintenance procedure. The material is only one part of an authorized repair system.</figcaption></figure>
+<h3>An actual manufacturer rejection</h3>
+<p><a href="https://www.aircraft.airbus.com/sites/g/files/jlcbta126/files/2022-04/FAST50.pdf#page=20">Airbus FAST 50, printed page 18 (PDF page 20)</a>, describes an A320 flap with a disbonded previous permanent repair. An airline proposed a tape cover for 1,000 flight cycles with detailed visual inspection every 100 cycles. Airbus rejected the proposal because of the damage extent and directed repair under the Structural Repair Manual. This is an engineering-support example, not an accident report or a permitted tape-repair lifetime.</p>
+<p>In the United States, <a href="https://www.ecfr.gov/current/title-14/chapter-I/subchapter-C/part-43/section-43.13">14 CFR 43.13</a> requires applicable manufacturer maintenance/continued-airworthiness methods or other methods acceptable to the Administrator, and work preserving relevant airworthiness qualities. A product's catalogue description does not supply aircraft-specific repair authority. “Acceptable” and “approved” data are not interchangeable legal labels.</p>
+<p>Questions for a repair assessment include component and damage identity, remaining load path, applicable data and revision, permitted material and process, environmental limits, inspection requirements and any removal or permanent-repair deadline. A public magazine example is not a current maintenance instruction.</p>
+
+<h2 id="claims">Checking common claims about speed tape</h2>
+<p>The following distinctions address claims in the Persian Fars Science and Progress article titled “این چسب قطعات هواپیما را به هم می‌چسباند!” They are an engineering assessment, not a reproduction of that article.</p>
+<div class="table-wrap"><table><thead><tr><th>Claim</th><th>Engineering assessment</th></tr></thead><tbody>
+<tr><td>It holds aircraft parts together.</td><td>Too broad. A surface cover and a primary structural joint have different functions. Identify the actual repair and load path.</td></tr>
+<tr><td>Every speed tape is a special aluminium alloy with acrylic adhesive.</td><td>No universal construction follows from the name; identified foil tapes have different reinforcements and adhesives.</td></tr>
+<tr><td>It withstands supersonic flight.</td><td>No universal Mach qualification is supplied by the cited 425 data. A specific product, installation and qualified envelope are needed; this does not mean such use is impossible.</td></tr>
+<tr><td>It is completely immune to fuel, hydraulic fluid and chemicals.</td><td>“Resistant” must name the fluid, concentration, temperature, exposure time and retained property. No blanket immunity follows.</td></tr>
+<tr><td>Ordinary tape instantly loses polymerization in cold or heat.</td><td>Misleading mechanism. Softening, stiffening, degradation and debonding depend on polymer, environment and time; “depolymerization” is not a generic instant explanation.</td></tr>
+<tr><td>A roll universally costs hundreds to a thousand dollars.</td><td>Price requires a dated SKU, dimensions, quantity and procurement context. It is not a material property or a universal market price.</td></tr>
+<tr><td>A patch proves maintenance quality, or proves the aircraft unsafe.</td><td>Neither follows from appearance alone. Authorization and damage assessment are decisive.</td></tr>
+<tr><td>Standard foil tape restores stealth coatings.</td><td>Radar performance requires a separately specified and qualified repair system; no such performance follows from these foil-tape data.</td></tr>
+</tbody></table></div>
+
+<h2 id="classroom">Using the case in aerospace structures</h2>
+<p>Begin with a free-body diagram and ask what must carry the load if the coating or adhesive separates. Then distinguish stiffness, strength, fracture and durability: a high tensile strength does not guarantee that an edge remains attached.</p>
+<div class="note"><strong>Virtual Lab boundary.</strong> Beam and Wing Virtual Labs can explain section stiffness and structural load paths. A perfectly bonded composite-beam model does not predict PSA peel, creep or delamination. Do not enter N/cm peel or strip-strength values as material strengths in MPa. A green beam strength result is not a tape-repair approval.</div>
+<ol>
+<li>Draw separate free-body diagrams for the foil and the substrate. Where do normal and tangential tractions act?</li>
+<li>Double speed while holding the illustrative coefficients and density constant. Dynamic pressure and the assumed normal force rise fourfold; why does that still not determine patch survival?</li>
+<li>Double strip width. The reported test forces double under comparable test conditions. Why does this not establish a universal allowable?</li>
+<li>Double overlap in the average-shear example. The average halves; explain why the peak edge stress need not halve.</li>
+<li>Compare a cosmetic surface cover, a bolted doubler and a bonded structural joint. Mark the load path and the evidence needed for each.</li>
+<li>Evaluate an AI-generated “safe repair” calculation. Reject conclusions that combine unrelated test modes, omit time/environment or confuse catalogue data with aircraft authorization.</li>
+</ol>
+<h3>A small classroom demonstration</h3>
+<p>Using non-aircraft sample materials and ordinary laboratory safety procedures, compare peeling a fresh strip at different angles and rates. Record width, substrate, conditioning and failure location. The purpose is to observe mode and rate dependence, not to qualify aviation tape. A weak paint layer can be a useful explanation on a diagram without deliberately damaging equipment or coatings.</p>
+
+<h2 id="sources">Primary sources and further reading</h2>
+<ol>
+<li><a href="https://multimedia.3m.com/mws/media/2366321O/3m-aluminum-foil-tape-425.pdf">3M Aluminum Foil Tape 425 technical data sheet</a>, English-US, September 2024, pp. 1–2. Exact product data and their typical-value limitation.</li>
+<li><a href="https://www.nitto.com/us/en/products/maskingtape/paint025/">Nitto P-12L product description</a>. A related foil/cloth and rubber/resin construction, not an interchangeability authorization.</li>
+<li><a href="https://www.aircraft.airbus.com/en/newsroom/news/2021-11-keeping-in-shape">Airbus, Keeping in shape</a>, November 2021. Cosmetic versus structural repair examples.</li>
+<li><a href="https://www.aircraft.airbus.com/sites/g/files/jlcbta126/files/2022-04/FAST50.pdf#page=20">Airbus FAST 50, 24 hours with AIRTAC</a>, printed p. 18. Rejected A320 flap tape proposal; archive upload date is not the event date.</li>
+<li><a href="https://www.ecfr.gov/current/title-14/chapter-I/subchapter-C/part-43/section-43.13">14 CFR 43.13, Performance rules</a>. US regulatory context; applicable jurisdiction and current maintenance data remain essential.</li>
+<li><a href="https://doi.org/10.1039/C5SM00260E">Villey et al., Rate-dependent elastic hysteresis during the peeling of Pressure Sensitive Adhesives</a>, <em>Soft Matter</em>, 2015. <a href="https://arxiv.org/abs/1505.05399">Open author manuscript</a>.</li>
+<li><a href="https://next.henkel-adhesives.com/us/en/products/industrial-adhesives/central-pdp.html/loctite-ea-9394-aero/SAP_IB-69644.html">Henkel, LOCTITE EA 9394 AERO</a>. Example of a two-part structural epoxy paste, distinct from PSA foil tape.</li>
+</ol>
+<footer><p>Source links checked 20 October 2026. All four figures are original course schematics; no manufacturer figure or full source PDF is republished. Classroom inputs are explicitly assumed and do not represent an approved repair.</p><p><a href="#">Back to top</a> · <a href="https://github.com/Ehsan-Roohi/Aerospace-Structures">Course repository</a></p></footer>
+</main></body></html>

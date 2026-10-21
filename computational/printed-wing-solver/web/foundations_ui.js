@@ -79,12 +79,12 @@ const Lecture03BeamCases = Object.freeze({
     <div class="bl-brand"><svg viewBox="0 0 40 28" aria-hidden="true"><path d="M3 12h34" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><path d="M6 15l-4 7h8z M34 15l-4 7h8z" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M20 2v8" stroke="currentColor" stroke-width="2"/><path d="M17 7l3 3 3-3" fill="none" stroke="currentColor" stroke-width="2"/></svg>
       <div><b>Beam Virtual Lab</b><small>MIE 446 · Aerospace Structures</small></div></div>
     <button type="button" class="bl-navtoggle" id="beamNavToggle" aria-expanded="false" aria-controls="beamNav">Workspaces</button>
-    <nav class="bl-nav" id="beamNav" aria-label="Workspaces">
-      <button type="button" data-stage="beam" aria-pressed="true">Beam</button>
-      <button type="button" data-stage="wing" aria-pressed="false">Wing</button>
-      <a class="bl-btn" href="truss-lab.html">Truss Lab</a>
-      <button type="button" data-stage="metal" aria-pressed="false">D.520 full-scale wing</button>
-      <details class="bl-companion"><summary>Wing geometry tool</summary><div class="bl-companion-pop" data-companion="vinco"></div></details>
+    <nav class="bl-nav workspace-nav" id="beamNav" aria-label="Workspaces">
+      <button class="workspace-link" type="button" data-stage="beam" aria-pressed="true">Beam</button>
+      <a class="workspace-link" href="truss-lab.html">Truss</a>
+      <button class="workspace-link" type="button" data-stage="wing" aria-pressed="false">Wing</button>
+      <button class="workspace-link" type="button" data-stage="metal" aria-pressed="false">Full-scale wing</button>
+      <details class="bl-companion"><summary class="workspace-link">Wing geometry tool</summary><div class="bl-companion-pop" data-companion="vinco"></div></details>
     </nav>
     <div class="bl-start-guide"><button type="button" class="bl-btn bl-btn-primary" id="beamGuideOpen">User manual · Start here</button><span>1 · Length, material &amp; mesh → 2 · Section shape &amp; dimensions → 3 · Supports → 4 · Loads &amp; values → 5 · Solve</span></div>
     <p class="bl-intro">Results belong to the last <b>solved</b> model. Changes remain pending until you press <b>Solve</b>.</p>

@@ -383,11 +383,12 @@ body { margin: 0; }
 </style>
 
 <div id="foundations"></div>
-<nav id="wingNavigation" aria-label="Return from wing to beam lessons" hidden>
-  <button class="btn primary" type="button" id="backFoundations">← Back to beam lessons</button>
-  <strong>Or open a beam:</strong>
-  <button class="btn" type="button" data-return-beam="beam">Beam · choose supports and loads</button>
-  <button class="btn" type="button" id="toMetalWing">Full-scale metal wing: D.520 →</button>
+<nav id="wingNavigation" class="workspace-nav" aria-label="Workspaces" hidden>
+  <button class="workspace-link" type="button" id="backFoundations">Beam</button>
+  <a class="workspace-link" href="truss-lab.html">Truss</a>
+  <button class="workspace-link" type="button" aria-current="page" id="currentPrintedWing">Wing</button>
+  <button class="workspace-link" type="button" id="toMetalWing">Full-scale wing</button>
+  <a class="workspace-link" href="https://vinco-rc.com/?generator=wing" target="_blank" rel="noopener noreferrer">Wing geometry tool</a>
 </nav>
 <div id="app" hidden>
   <header class="bar panel" aria-label="Commands">
@@ -694,6 +695,7 @@ body { margin: 0; }
 /*__ENGINE__*/
 /*__TEACHING_MODELS__*/
 /*__WING_LOADS_UI__*/
+/*__WING_WORKSPACE_UI__*/
 /*__WING_STUDY_IO__*/
 </script>
 <script>
@@ -1162,8 +1164,8 @@ body { margin: 0; }
     const configure=(patch)=>{const previous=S.assembly;S.assembly={...previous,seamsBonded:true};const result=applyGeometry(patch,'spars','bonded structural layout');if(!result.ok)S.assembly=previous;renderTree();return result;};
     $('#wsShell').onclick=()=>{if(!confirm('Remove rods and spars, retain ribs, geometry and loads, and use a continuous/bonded shell?'))return;configure({rodFractions:[],spars:[]});};
     $('#wsRods').onclick=()=>{if(!confirm('Use rods instead of spars? Spars will be removed and module seams set to bonded for this comparison; loads are retained.'))return;configure({spars:[],rodFractions:[.3,.6]});};
-    $('#wsAdd').onclick=()=>{if(g.spars.length>=2){flash('At most two bonded spars.');return;}if(!confirm('Add a bonded spar? Existing rods will be removed and module seams set to bonded. Loads are retained.'))return;
-      configure({rodFractions:[],spars:[...g.spars,{fraction:g.spars.length?.6:.35,length:g.semiSpan,topWidth:8,topThickness:.8,bottomWidth:8,bottomThickness:.8,webThickness:.6,material:{...WingSpars.MAT}}]});};
+    $('#wsAdd').onclick=(fraction)=>{if(g.spars.length>=2){flash('At most two bonded spars.');return;}if(!confirm('Add a bonded spar? Existing rods will be removed and module seams set to bonded. Loads are retained.'))return;
+      configure({rodFractions:[],spars:[...g.spars,{fraction:typeof fraction==='number'?fraction:g.spars.length?.6:.35,length:g.semiSpan,topWidth:8,topThickness:.8,bottomWidth:8,bottomThickness:.8,webThickness:.6,material:{...WingSpars.MAT}}]});};
     g.spars.forEach((s,i)=>{
       const p=E.sparParts(g,0).find(v=>v.index===i),diagram=el('div',{},`<svg viewBox="0 0 290 215" role="img" aria-label="Spar ${i+1} root dimensions, schematic not to scale" style="width:100%;max-width:360px;background:var(--raise);color:var(--fg)"><rect x="84" y="43" width="100" height="14" fill="#9871dd"/><rect x="128" y="57" width="12" height="106" fill="#39a3b7"/><rect x="74" y="163" width="120" height="14" fill="#9871dd"/><g stroke="currentColor" fill="none"><path d="M84 35v-9h100v9 M74 185v9h120v-9 M214 57h8v106h-8 M120 112h-18m38 0h18"/></g><g fill="currentColor" font-size="11" font-family="system-ui"><text x="134" y="19" text-anchor="middle">Upper cap bᵤ = ${nf(s.topWidth,2)} mm</text><text x="134" y="210" text-anchor="middle">Lower cap bₗ = ${nf(s.bottomWidth,2)} mm</text><text x="8" y="53">tᵤ = ${nf(s.topThickness,2)}</text><text x="8" y="174">tₗ = ${nf(s.bottomThickness,2)}</text><text x="150" y="140">t_w = ${nf(s.webThickness,2)} mm</text><text x="228" y="105">h_web</text><text x="228" y="121">${nf(p.h,2)} mm</text><text x="6" y="147">Web</text></g></svg><p class="note">Root schematic, not to scale. Actual caps follow the inner skin contours. b = cap width, t = thickness; h_web is the clear height between caps. Upper/lower cap dimensions are independent.</p>`);
       $('#ws'+i+'_apply').closest('fieldset').querySelector('legend').after(diagram);
@@ -1885,20 +1887,18 @@ body { margin: 0; }
     if(ev.key==='Escape'){partSelection=null;partPick=false;renderPartEditor();}
     if(ev.key==='Delete'){ev.preventDefault();deleteWingPart();}
   });
+  function samplePrintedSurface(ev){
+    if(!model||running||gateOpen())return null;
+    const r=canvas.getBoundingClientRect();ndc.set((ev.clientX-r.left)/r.width*2-1,-(ev.clientY-r.top)/r.height*2+1);raycaster.setFromCamera(ndc,camera);
+    const visible=o=>{for(let p=o;p;p=p.parent)if(!p.visible)return false;return true;};
+    const h=raycaster.intersectObjects(model.skins.filter(visible),false).find(h=>!S.clip||h.point.x<=S.clipY);if(!h||!h.face)return null;
+    const p=h.object.geometry.attributes.position,tri=new THREE.Triangle(),bc=new THREE.Vector3(),local=h.object.worldToLocal(h.point.clone());
+    tri.set(...[h.face.a,h.face.b,h.face.c].map(i=>new THREE.Vector3().fromBufferAttribute(p,i)));tri.getBarycoord(local,bc);const u=h.object.userData;
+    return WingLoadsUI.surfaceSample([h.face.a,h.face.b,h.face.c].map(i=>({station:u.by[i],fraction:u.bx[i]/E.chordAt(model.g,u.by[i])})),[bc.x,bc.y,bc.z]);
+  }
   function beginPrintedSurfacePick(accept) {
     partPick=false;renderPartEditor();
-    return WingLoadsUI.surfacePicker(canvas,ev=>{
-      if(!model||!R||stale||running)return null;
-      const r=canvas.getBoundingClientRect();
-      ndc.set((ev.clientX-r.left)/r.width*2-1,-(ev.clientY-r.top)/r.height*2+1);raycaster.setFromCamera(ndc,camera);
-      const visible=o=>{for(let p=o;p;p=p.parent)if(!p.visible)return false;return true;};
-      const h=raycaster.intersectObjects(model.skins.filter(visible),false).find(h=>!S.clip||h.point.x<=S.clipY);
-      if(!h||!h.face)return null;
-      const p=h.object.geometry.attributes.position,tri=new THREE.Triangle(),bc=new THREE.Vector3(),local=h.object.worldToLocal(h.point.clone());
-      tri.set(...[h.face.a,h.face.b,h.face.c].map(i=>new THREE.Vector3().fromBufferAttribute(p,i)));tri.getBarycoord(local,bc);
-      const u=h.object.userData;
-      return WingLoadsUI.surfaceSample([h.face.a,h.face.b,h.face.c].map(i=>({station:u.by[i],fraction:u.bx[i]/E.chordAt(R.geometry,u.by[i])})),[bc.x,bc.y,bc.z]);
-    },()=>{
+    return WingLoadsUI.surfacePicker(canvas,ev=>!R||stale?null:samplePrintedSurface(ev),()=>{
       if(!model||!R||stale||running||gateOpen())throw new Error('Solve valid structural inputs before picking on the 3-D model.');
       S.deformed=false;$('#defBtn').setAttribute('aria-pressed','false');setPlot('model');applyResult();
       const enabled=controls.enabled;controls.enabled=false;
@@ -2659,11 +2659,11 @@ body { margin: 0; }
   const stickBelowNav = () => { const nav = $("#wingNavigation"), h = nav && !nav.hidden ? nav.getBoundingClientRect().height : 0; $("#app").style.setProperty("--wl-top", `${Math.round(h) + 10}px`); };
   window.addEventListener("resize", stickBelowNav);
   if (window.ResizeObserver) new ResizeObserver(stickBelowNav).observe($("#wingNavigation"));
-  $('#wingLoadBtn').addEventListener('click',()=>{openTab('loads');$('#tab-loads').scrollIntoView({behavior:'smooth',block:'start'});});
+  $('#wingLoadBtn').addEventListener('click',e=>openWingLoadPopup(null,e.currentTarget));
   document.querySelectorAll('[data-wing-load-shape]').forEach(b=>b.addEventListener('click',()=>{
-    openTab('loads');const select=$('#wingKind');
+    openWingLoadPopup(null,b);const select=$('#wingKind');
     if(select){select.value=b.dataset.wingLoadShape;select.dispatchEvent(new Event('change'));}
-    $('#tab-loads').scrollIntoView({behavior:'smooth',block:'start'});
+    printedWorkspace?.position();
   }));
   document.querySelectorAll("[role=tab]").forEach((b) => b.addEventListener("click", () => {
     document.querySelectorAll("[role=tab]").forEach((x) => x.setAttribute("aria-selected", String(x === b)));
@@ -2799,6 +2799,36 @@ body { margin: 0; }
     studyFiles: () => studyFiles,
     view: () => (model ? { distance: camera.position.distanceTo(controls.target), resetDistance, solved: { semiSpan: model.g.semiSpan, rootChord: model.g.rootChord, tipChord: model.g.tipChord },preview:geometryPreview,members:{ribs:model.ribs.length,rods:model.rods.length,sparParts:(model.spars||[]).length} } : null),
   };
+  let printedWorkspace=null;
+  function openWingLoadPopup(p,anchor){
+    if(!printedWorkspace)return;let editor=loadKeeperOf().editor;if(!editor){renderWingLoads();editor=loadKeeperOf().editor;}if(!editor){flash('Complete valid structural inputs and Solve once before adding loads.');return;}
+    printedWorkspace.open('Wing load · upward positive',editor.container,anchor);
+    if(p){$('#wingKind').value='point';$('#wingKind').dispatchEvent(new Event('change'));editor.acceptPick(p);}else $('#wingKind').focus({preventScroll:true});
+  }
+  function openWingStructurePopup(anchor,focusId){printedWorkspace.open('Structure · dimensions & material',$('#wingStructureForm'),anchor);const target=focusId&&$('#'+focusId);target?.scrollIntoView({block:'nearest'});target?.focus({preventScroll:true});}
+  function openWingMaterialsPopup(anchor){select('mat-pla');printedWorkspace.open('Shell / rib and rod materials',$('#pm'),anchor);const tabs=el('div',{class:'lesson-actions'},'<button class="btn" type="button" data-quick-material="mat-pla">Shell / ribs</button><button class="btn" type="button" data-quick-material="mat-rod">Rods</button>');$('#pm').before(tabs);tabs.querySelectorAll('button').forEach(b=>b.onclick=()=>select(b.dataset.quickMaterial));printedWorkspace.position();}
+  function openWingPartPopup(kind,p,anchor){
+    if(running||gateOpen()){flash('Wait for the current solve or confirm the imported structural inputs first.');return;}
+    const isRib=kind==='rib',isSpar=kind==='spar',g=E.makeGeometry(S.geometry),value=isRib?(p?.station??suggestRib(g,E.ribStations(g))):(p?.fraction??(isSpar?(g.spars.length?.6:.35):.45));
+    const form=el('form',{class:'wing-quick-form'},`<label>${isRib?'Span station y (mm)':'Chord position x/c'}<input name="position" type="number" step="any" value="${value}" required></label><p class="note">${isRib?'Adds an interior rib; root/tip caps and seam ribs are not moved.':isSpar?'Upper/lower caps and web are bonded to skin and ribs. You will be asked before rods are replaced. Edit dimensions and material after adding.':'A rod is distinct from a cap/web spar. Position and sleeve clearance are validated before addition.'}</p><p class="wl-err" role="alert"></p><button class="btn primary" type="submit">Add ${kind}</button> <button class="btn" type="button" data-edit-structure>Edit dimensions & material</button>`);
+    printedWorkspace.open('Add '+kind,form,anchor);form.querySelector('input').focus({preventScroll:true});
+    form.querySelector('[data-edit-structure]').onclick=()=>openWingStructurePopup(anchor,isSpar?'wsAdd':isRib?'wgRibNew':'wgRodAdd');
+    form.onsubmit=e=>{e.preventDefault();const input=form.elements.namedItem('position'),v=input.value.trim()===''?NaN:Number(input.value);if(!Number.isFinite(v)){form.querySelector('[role="alert"]').textContent='Enter a finite position.';return;}
+      let out;if(isSpar){const before=partStamp(),previous=partSnapshot();$('#wsAdd').onclick(v);out={ok:before!==partStamp()};if(out.ok)partUndo={...previous,after:partStamp()};}
+      else out=isRib?partChange({customInteriorRibs:[...interiorStations(g),v]},'ribs'):partChange({rodFractions:[...g.rodFractions,v]},'rods');
+      if(out.ok){printedWorkspace.close();setAnatomy('inside');if(isSpar)openWingStructurePopup(anchor,'ws'+(S.geometry.spars.length-1)+'_fraction');}
+      else form.querySelector('[role="alert"]').textContent=Object.values(fieldErrors).join(' ')||inputError||'No part added. Check the position, available space, or the confirmation choice.';
+    };
+  }
+  if(typeof WingWorkspaceUI!=='undefined'){
+    printedWorkspace=WingWorkspaceUI.create({app:$('#app'),canvas,viewPanel:$('#wingViewPanel'),sample:samplePrintedSurface,actions:[
+      {id:'load',label:'+ Load',run:openWingLoadPopup},{id:'rib',label:'+ Rib',run:(p,a)=>openWingPartPopup('rib',p,a)},
+      {id:'rod',label:'+ Rod',run:(p,a)=>openWingPartPopup('rod',p,a)},{id:'spar',label:'+ Spar',run:(p,a)=>openWingPartPopup('spar',p,a)},
+      {id:'parts',label:'Select / edit parts',run:(p,a)=>{printedWorkspace.open('Ribs & spars',$('#wingPartEditor'),a);if(!partPick)$('#wpPick').click();}},
+      {id:'structure',label:'Structure dimensions',run:(p,a)=>openWingStructurePopup(a)},{id:'materials',label:'Materials',run:(p,a)=>openWingMaterialsPopup(a)}]});
+    const sparResults=$('#wingSparResults');$('#tab-checks').prepend(sparResults);
+    document.addEventListener('wing-load-applied',e=>{if(e.detail==='printed')printedWorkspace.close();});
+  }
   requestAnimationFrame(loop);
   window.addEventListener('wing-learning-stage', event => {
     if (event.detail === 'metal' || running) return;
@@ -2827,11 +2857,15 @@ body { margin: 0; }
   // visit opens the course wing (without loads).
   let wingStudyOpened=false;
   window.addEventListener('wing-show', () => {
-    if (!wingStudyOpened) { window.dispatchEvent(new CustomEvent('wing-learning-stage', { detail: 'project' })); return; }
+    if (!wingStudyOpened) { window.dispatchEvent(new CustomEvent('wing-learning-stage', { detail: 'wing' })); return; }
     $('#foundations').hidden=true;$('#app').hidden=false;$('#wingNavigation').hidden=false;
     resize(); $('#wingNavigation').scrollIntoView({block:'start'});
   });
   function returnToBeams(support) {
+    printedWorkspace?.close();
+    if(window.MetalWingUI&&document.getElementById('metalLab')&&!document.getElementById('metalLab').hidden)window.MetalWingUI.close('beams');
+    window.dispatchEvent(new CustomEvent('beam-show'));
+    if(location.hash==='#wing')history.replaceState(null,'',location.pathname+location.search+'#beam');
     if(wingLoadKeeper&&wingLoadKeeper.editor)wingLoadKeeper.editor.cancelPick();
     $('#app').hidden=true;$('#wingNavigation').hidden=true;$('#foundations').hidden=false;
     if(support) $('#foundations').querySelector(`[data-stage="${support}"]`).click();
@@ -2839,11 +2873,14 @@ body { margin: 0; }
     $('#foundations').querySelector(support?`[data-stage="${support}"]`:'[data-stage][aria-pressed="true"]').focus({preventScroll:true});
   }
   $('#backFoundations').addEventListener('click',()=>returnToBeams());
+  $('#currentPrintedWing').addEventListener('click',()=>window.dispatchEvent(new CustomEvent('wing-show')));
   document.querySelectorAll('[data-return-beam]').forEach(b=>b.addEventListener('click',()=>returnToBeams(b.dataset.returnBeam)));
   document.documentElement.dataset.wingReady='true';
   // A printed-wing study link opens straight into its workspace (also when pasted into an open page).
   openStudyLink();
   window.addEventListener('hashchange',openStudyLink);
+  function openWorkspaceHash(){if(location.hash==='#wing')window.dispatchEvent(new CustomEvent('wing-show'));else if(location.hash==='#beam')returnToBeams();}
+  window.addEventListener('hashchange',openWorkspaceHash);openWorkspaceHash();
 })();
 </script>
 <script>

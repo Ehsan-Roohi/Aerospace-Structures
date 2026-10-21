@@ -294,7 +294,7 @@ async function until(test,what,ms=60000){const end=Date.now()+ms;while(!test()){
     ok($('#mSide #mRun')&&$('#mSide #mChip')&&$('#mSide #mTree')&&$('#mSide #mPm')&&$('#mSide #mInventory'),'D.520 input column holds Solve, status, parameters and inventory');
     ok($('#mSide #mLoadEditor .wle[data-workspace="d520"]')&&$('#mSide #mStudyFiles .wio-root.wio-d520'),'the shared load editor and the study-file panel sit in the D.520 input column (merged v5 modules)');
     ok($('#mViewPanel #mHud')&&$('#mViewPanel #mZoomIn')&&$('#mViewPanel #mZoomFit')&&$('#mViewPanel #mZoomReset'),'view panel holds zoom and display controls');
-    ok(/deformation shown ×0/.test($('#mPlotinfo').textContent),'no load: no deformation magnification is claimed');
+    ok(/visual deformation ×0(?:\.0)?\b/.test($('#mPlotinfo').textContent),'no load: no deformation magnification is claimed');
     // Toggles exist only for the parts buildModel draws; first view is see-through with the trailing edge off.
     const parts=['skin','mainSpar','falseSpar','ribs','stringers','trailing','equipment','fittings'];
     eq($$('[data-mpart]').map(b=>b.dataset.mpart),parts,'one toggle per modelled part');

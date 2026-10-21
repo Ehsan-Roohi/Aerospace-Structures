@@ -500,3 +500,12 @@
 .bl-csv-preview > p { margin: 0; }
 .bl-svg .bl-dot { fill: var(--bl-load); }
 .bl-tablepreview { max-width: 100%; height: auto; }
+
+/* One navigation language across Beam, Truss, both wings and the geometry companion. */
+.workspace-nav { gap: 6px; }
+.workspace-nav:not(.bl-nav) { display: flex; flex-wrap: wrap; align-items: center; }
+nav.workspace-nav .workspace-link { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 42px; padding: 10px 14px; border: 1px solid var(--line, #b8c9dc); border-radius: 10px; background: var(--panel-2, #edf3f8); color: var(--fg, #172c40); font: 600 14px/1.2 var(--font-ui, system-ui, sans-serif); letter-spacing: 0; text-decoration: none; white-space: nowrap; cursor: pointer; box-shadow: none; }
+nav.workspace-nav .workspace-link:hover { border-color: var(--accent, #086bd5); background: var(--panel, #e4edf6); color: var(--fg, #172c40); }
+nav.workspace-nav .workspace-link[aria-pressed="true"], nav.workspace-nav .workspace-link[aria-current="page"], nav.workspace-nav .bl-companion[open] > .workspace-link { background: var(--panel-2, #edf3f8); color: var(--fg, #172c40); border-color: var(--accent, #086bd5); box-shadow: inset 0 -3px 0 var(--accent, #086bd5); }
+nav.workspace-nav .workspace-link:focus-visible { outline: 3px solid var(--accent, #086bd5); outline-offset: 3px; }
+@media (max-width: 640px) { nav.workspace-nav .workspace-link { min-height: 44px; } }

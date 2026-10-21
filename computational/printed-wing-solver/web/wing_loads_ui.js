@@ -430,7 +430,7 @@ const WingLoadsUI = (() => {
       let p;
       try { p = itemFromForm(); } catch (x) { status(`<span class="wle-err">${esc(x.message)}</span> Nothing was changed.`); return; }
       const base = ad.mode() === 'custom' ? ad.items() : [];
-      tryApply([...base, p], 'Load added.');
+      if(tryApply([...base, p], 'Load added.'))container.dispatchEvent(new doc.defaultView.CustomEvent('wing-load-applied',{bubbles:true,detail:ad.workspace}));
     };
     byId(id.kind).onchange = ()=>{cancelPick();visible();}; byId(id.shape).onchange = visible;
     let lastBasis='total';

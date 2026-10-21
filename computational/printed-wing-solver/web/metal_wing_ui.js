@@ -87,12 +87,14 @@
   // ------------------------------------------------------------------ markup
   const host = el("div", { id: "metalLab", hidden: "" });
   host.innerHTML = `
-  <nav id="metalNav" aria-label="Wing Lab navigation">
-    <button class="btn" type="button" id="mBackBeams">← Beam lessons</button>
-    <button class="btn" type="button" id="mBackWing">Printed PLA wing</button>
-    <span class="title">Full-scale metal wing · Dewoitine D.520 S (1940)</span>
-    <a class="btn" href="${MODEL3D}" target="_blank" rel="noopener">3-D model of the whole aircraft ↗</a>
-    <a class="btn" href="${REPO}" target="_blank" rel="noopener">CAD, ANSYS and Python files ↗</a>
+  <nav id="metalNav" class="workspace-nav" aria-label="Workspaces">
+    <button class="workspace-link" type="button" id="mBackBeams">Beam</button>
+    <a class="workspace-link" href="truss-lab.html">Truss</a>
+    <button class="workspace-link" type="button" id="mBackWing">Wing</button>
+    <button class="workspace-link" type="button" aria-current="page" id="mCurrentWing">Full-scale wing</button>
+    <a class="workspace-link" href="https://vinco-rc.com/?generator=wing" target="_blank" rel="noopener noreferrer">Wing geometry tool</a>
+    <a class="workspace-link" href="${MODEL3D}" target="_blank" rel="noopener">Aircraft 3-D ↗</a>
+    <a class="workspace-link" href="${REPO}" target="_blank" rel="noopener">CAD &amp; reference files ↗</a>
   </nav>
   <div id="metalApp">
     <header class="bar panel" aria-label="Commands">
@@ -839,8 +841,7 @@
     camera: () => (camera ? { distance: camera.position.distanceTo(controls.target), resetDistance: resetDist } : null),
   };
   const ray = typeof THREE !== "undefined" ? new THREE.Raycaster() : null;
-  function beginMetalSurfacePick(accept) {
-    return WingLoadsUI.surfacePicker($('#mgl'),e=>{
+  function sampleMetalSurface(e){
       if(!R||!model||!ray||stale||running)return null;
       const r=$('#mgl').getBoundingClientRect(),v=new THREE.Vector2((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);
       ray.setFromCamera(v,camera);
@@ -850,7 +851,9 @@
       const pos=h.object.geometry.attributes.position,u=h.object.userData,tri=new THREE.Triangle(),bc=new THREE.Vector3(),local=h.object.worldToLocal(h.point.clone());
       tri.set(...[h.face.a,h.face.b,h.face.c].map(i=>new THREE.Vector3().fromBufferAttribute(pos,i)));tri.getBarycoord(local,bc);
       return WingLoadsUI.surfaceSample([h.face.a,h.face.b,h.face.c].map(i=>({station:u.base[3*i],fraction:R.sections[u.vj[i]].x[u.vk[i]]})),[bc.x,bc.y,bc.z]);
-    },()=>{
+  }
+  function beginMetalSurfacePick(accept) {
+    return WingLoadsUI.surfacePicker($('#mgl'),sampleMetalSurface,()=>{
       if(!R||!model||stale||running||lastError)throw new Error('Solve valid D.520 inputs before picking on its skin.');
       MS.deformed=false;$('#mDef').setAttribute('aria-pressed','false');setPlot('model');updateModel();
       const enabled=controls.enabled;controls.enabled=false;$('#mgl').scrollIntoView({block:'center'});
@@ -1345,6 +1348,7 @@
     if (location.hash !== "#d520") history.replaceState(null, "", "#d520");
   }
   function closeMetal(to) {
+    metalWorkspace?.close();
     if(loadKeeper&&loadKeeper.editor)loadKeeper.editor.cancelPick();
     host.hidden = true;
     if (location.hash === "#d520") history.replaceState(null, "", location.pathname + location.search);
@@ -1354,6 +1358,7 @@
   $("#mBackBeams").addEventListener("click", () => closeMetal("beams"));
   const toMetal = document.getElementById("toMetalWing"); if (toMetal) toMetal.addEventListener("click", openMetal);
   $("#mBackWing").addEventListener("click", () => closeMetal("wing"));
+  $('#mCurrentWing').addEventListener('click',()=>$('#metalNav').scrollIntoView({block:'start'}));
   window.addEventListener("wing-learning-stage", (e) => { if (e.detail === "metal") openMetal(); else host.hidden = true; });
   window.addEventListener("wing-show", () => { host.hidden = true; });   // the printed wing is shown (also by a damaged printed-wing link)
   window.addEventListener("metal-wing-open", openMetal);
@@ -1406,5 +1411,12 @@
   };
   window.addEventListener("hashchange", fromHash);
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", fromHash); else setTimeout(fromHash, 0);
+  let metalWorkspace=null;
+  if(typeof WingWorkspaceUI!=='undefined'){
+    const loadPopup=(p,a)=>{if(!loadKeeper?.editor)renderLoadEditor();const editor=loadKeeper?.editor;if(!editor)return;metalWorkspace.open('D.520 load · N, m; upward positive',editor.container,a);if(p){$('#mLoadShape').value='point';$('#mLoadShape').dispatchEvent(new Event('change'));editor.acceptPick(p);}else $('#mLoadShape').focus({preventScroll:true});};
+    const properties=(id,a)=>{MS.selected=id;renderTree();renderPM();metalWorkspace.open(id==='material'?'D.520 material':'D.520 existing structure & gauges',$('#mPm'),a);};
+    metalWorkspace=WingWorkspaceUI.create({app:$('#metalApp'),canvas:$('#mgl'),viewPanel:$('#mViewPanel'),sample:sampleMetalSurface,unit:'m',actions:[{id:'load',label:'+ Load',run:loadPopup},{id:'structure',label:'Structure & gauges',run:(p,a)=>properties('structure',a)},{id:'material',label:'Material',run:(p,a)=>properties('material',a)}]});
+    document.addEventListener('wing-load-applied',e=>{if(e.detail==='d520')metalWorkspace.close();});
+  }
   window.MetalWingUI = { open: openMetal, close: closeMetal, state: MS, result: () => R, studyFiles: () => studyFiles };
 })();

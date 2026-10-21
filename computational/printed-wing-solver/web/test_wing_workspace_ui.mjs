@@ -1,0 +1,47 @@
+// Shared toolbar/popover DOM behaviour. This does not emulate WebGL intersection physics.
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {createRequire} from 'node:module';
+import vm from 'node:vm';
+const require=createRequire(import.meta.url),{JSDOM}=require(process.env.MIE446_JSDOM_MODULE||'jsdom');
+const source=readFileSync(new URL('./wing_workspace_ui.js',import.meta.url),'utf8');
+let checks=0;const eq=(a,b,n)=>{assert.equal(a,b,n);checks++;},ok=(a,n)=>{assert.ok(a,n);checks++;};
+const dom=new JSDOM('<!doctype html><head></head><body><div id="app"><aside id="home"><i id="before"></i><form id="realEditor"><input id="force" value="2"><button id="confirm">Apply force</button></form><i id="after"></i></aside><main class="view"><canvas id="gl"></canvas></main><aside class="wl-vpanel" id="viewPanel"><button id="zoomFit">Fit</button><input id="viewScale" value="1"></aside></div></body>',{runScripts:'outside-only'}),w=dom.window,doc=w.document,$=s=>doc.querySelector(s);
+w.HTMLElement.prototype.scrollIntoView=function(){};
+Object.defineProperties(w,{innerWidth:{value:800,configurable:true},innerHeight:{value:600,configurable:true}});
+vm.runInContext(source,dom.getInternalVMContext());
+const create=vm.runInContext('WingWorkspaceUI.create',dom.getInternalVMContext());
+const canvas=$('#gl'),app=$('#app'),editor=$('#realEditor'),home=$('#home'),viewPanel=$('#viewPanel'),zoom=$('#zoomFit');
+let accepted=0,listenerHits=0,actionRuns=[],sampleCalls=0;
+editor.addEventListener('submit',e=>{e.preventDefault();accepted++;});$('#force').addEventListener('input',()=>listenerHits++);
+const click=s=>$(s).dispatchEvent(new w.MouseEvent('click',{bubbles:true,cancelable:true}));
+const rect=(x,y,width,height)=>({left:x,top:y,right:x+width,bottom:y+height,width,height,x,y});
+canvas.getBoundingClientRect=()=>rect(50,100,700,400);
+let workspace;
+const actions=['load','rib','rod','spar'].map(id=>({id,label:'Add '+id,run:(p,at)=>{actionRuns.push({id,p,at});workspace.open('Edit '+id,editor,at);}}));
+workspace=create({app,canvas,viewPanel,actions,sample:e=>{sampleCalls++;return e.clientX>=100&&e.clientX<=700&&e.clientY>=100&&e.clientY<=400?{station:225,fraction:.35}:null;}});
+workspace.popup.getBoundingClientRect=()=>rect(0,0,420,350);workspace.menu.getBoundingClientRect=()=>rect(0,0,230,170);
+const context=(x=200,y=180)=>{const e=new w.MouseEvent('contextmenu',{bubbles:true,cancelable:true,button:2,clientX:x,clientY:y});canvas.dispatchEvent(e);return e;};
+const pointer=(type,x,y)=>canvas.dispatchEvent(new w.MouseEvent(type,{bubbles:true,cancelable:true,button:2,clientX:x,clientY:y}));
+const escape=target=>target.dispatchEvent(new w.KeyboardEvent('keydown',{key:'Escape',bubbles:true,cancelable:true}));
+const restored=()=>{eq(editor.parentNode,home,'restore the actual form to its home');eq($('#before').nextElementSibling,editor,'preserve original DOM order');eq(editor.nextElementSibling,$('#after'));eq(doc.querySelectorAll('#realEditor').length,1,'never duplicate an editor or its IDs');};
+try{
+ ok(app.classList.contains('wing-workspace'));eq(workspace.tools.nextElementSibling,canvas.closest('.view'),'quick controls precede the model');
+ eq(workspace.tools.querySelectorAll('[data-wing-action]').length,4);eq(workspace.popup.hidden,true);eq(workspace.menu.hidden,true);
+ eq(workspace.display.tagName,'DETAILS');eq(workspace.display.open,false,'view/display is collapsed initially');eq(viewPanel.parentNode,workspace.display);eq($('#zoomFit'),zoom,'keep the original camera controls and IDs');
+ const viewToggle=[...workspace.tools.querySelectorAll('button')].find(b=>b.textContent.includes('View & display'));viewToggle.click();eq(workspace.display.open,true);workspace.display.dispatchEvent(new w.Event('toggle'));eq(viewToggle.getAttribute('aria-expanded'),'true');viewToggle.click();eq(workspace.display.open,false);
+ const button=workspace.tools.querySelector('[data-wing-action="load"]');button.focus();button.click();eq(actionRuns.at(-1).id,'load');eq(actionRuns.at(-1).p,null,'toolbar add starts without inventing a picked coordinate');eq(editor.parentNode,workspace.popup.lastElementChild);eq(accepted,0,'opening an editor is not an applied load');
+ $('#force').value='123.456';$('#force').dispatchEvent(new w.Event('input',{bubbles:true}));eq(listenerHits,1);click('.wing-editor-close');eq(workspace.popup.hidden,true);restored();eq($('#force').value,'123.456','uncommitted values survive closing');eq(doc.activeElement,button,'restore focus to the launch control');
+ button.click();escape($('#force'));eq(workspace.popup.hidden,true);restored();$('#force').dispatchEvent(new w.Event('input',{bubbles:true}));eq(listenerHits,2,'original field listener survives repeated move/return');
+ workspace.open('Precise editor',editor,{x:790,y:590,right:790,top:590});eq(+workspace.popup.style.left.replace('px',''),372,'clamp right edge with 8 px gutter');eq(+workspace.popup.style.top.replace('px',''),242,'clamp lower edge with 8 px gutter');workspace.close();restored();
+ let ev=context(25,20);eq(ev.defaultPrevented,false,'do not swallow browser context menu on empty space');eq(workspace.menu.hidden,true);eq(actionRuns.length,2,'empty-space right-click never invokes add');
+ ev=context();eq(ev.defaultPrevented,true);eq(workspace.menu.hidden,false);eq(workspace.menu.querySelectorAll('[role="menuitem"]').length,4);eq(actionRuns.length,2,'a genuine hit opens a menu only');eq(accepted,0);ok(workspace.menu.textContent.includes('225'));ok(workspace.menu.textContent.includes('0.35'));
+ workspace.menu.querySelector('[role="menuitem"]').click();eq(workspace.menu.hidden,true);eq(actionRuns.at(-1).p.station,225);eq(actionRuns.at(-1).p.fraction,.35);eq(accepted,0,'menu action opens form; Apply still required');editor.dispatchEvent(new w.Event('submit',{bubbles:true,cancelable:true}));eq(accepted,1);workspace.close();restored();
+ context(700,400);eq(+workspace.menu.style.left.replace('px',''),562);eq(+workspace.menu.style.top.replace('px',''),400);escape(doc.body);eq(workspace.menu.hidden,true);
+ const beforeDrag=sampleCalls;pointer('pointerdown',150,150);context(200,200);eq(workspace.menu.hidden,true,'right-drag is panning, not add');eq(sampleCalls,beforeDrag,'ignore right-drag before sampling');
+ context();doc.body.dispatchEvent(new w.MouseEvent('pointerdown',{bubbles:true}));eq(workspace.menu.hidden,true,'outside pointer closes menu');
+ for(const name of ['wing-learning-stage','wing-show','metal-wing-open','beam-show']){workspace.open('Switch test',editor,button);context();w.dispatchEvent(new w.CustomEvent(name));eq(workspace.popup.hidden,true,name+' closes popup');eq(workspace.menu.hidden,true,name+' closes context menu');restored();}
+ context();w.dispatchEvent(new w.Event('resize'));eq(workspace.menu.hidden,true,'resize dismisses context menu');
+ eq(accepted,1,'display/close/navigation never changes model data');
+ console.log(`Wing workspace UI PASS: ${checks} checks (ordered quick actions, real-editor preservation/restoration and keyboard, original collapsed display controls, genuine-hit menu, confirm-before-add, viewport clamp, right-drag rejection, outside/resize/workspace closure).`);
+}finally{dom.window.close();}

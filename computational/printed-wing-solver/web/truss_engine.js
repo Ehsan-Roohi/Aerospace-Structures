@@ -10,7 +10,8 @@
    if(!Number.isInteger(n.id)||n.id<1||ids.has(n.id))throw Error('Node IDs must be unique positive integers.');ids.add(n.id);
    if(!['free','pin','rollerY','rollerX','roller'].includes(n.support))throw Error('Unknown support.');
    if(n.supportSide!==undefined&&!['below','above','right','left'].includes(n.supportSide))throw Error('Support symbol side must be above, below, right or left.');
-   return {id:n.id,x:finite(n.x,'x'),y:finite(n.y,'y'),fx:finite(n.fx,'Fx'),fy:finite(n.fy,'Fy'),support:n.support,supportSide:n.supportSide??'below',supportAngle:finite(n.supportAngle??(n.support==='rollerX'?90:0),'Support surface angle')};
+   const name=String(n.name??'').trim();if(name.length>40)throw Error('Node name must be at most 40 characters.');
+   return {id:n.id,...(name?{name}:{}),x:finite(n.x,'x'),y:finite(n.y,'y'),fx:finite(n.fx,'Fx'),fy:finite(n.fy,'Fy'),support:n.support,supportSide:n.supportSide??'below',supportAngle:finite(n.supportAngle??(n.support==='rollerX'?90:0),'Support surface angle')};
   });
   const pairs=new Set();
   const members=raw.members.map(m=>{

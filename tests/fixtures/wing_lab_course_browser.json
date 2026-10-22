@@ -1,0 +1,68 @@
+{
+  "format": "mie446-wing-study",
+  "version": 1,
+  "workspace": "printed",
+  "savedAt": "2026-10-22T15:20:20.802Z",
+  "app": {
+    "name": "MIE 446 Wing Lab",
+    "engine": "1.1.0",
+    "io": "1.0.0"
+  },
+  "study": {
+    "geometry": {
+      "naca": "2412",
+      "semiSpan": 450,
+      "rootChord": 160,
+      "tipChord": 100,
+      "skin": 1.2,
+      "ribThickness": 1.6,
+      "modules": 3,
+      "te": 1.2,
+      "interiorRibs": 3,
+      "customInteriorRibs": null,
+      "interfaceOffset": 4,
+      "cap": 2,
+      "cavityStart": 0.06,
+      "cavityEnd": 0.9,
+      "rodFractions": [
+        0.3,
+        0.6
+      ],
+      "rodDiameter": 4,
+      "clearance": 0.25,
+      "sleeveWall": 1.2,
+      "spars": []
+    },
+    "materials": {
+      "plaKey": "pla_upright",
+      "plaOver": {
+        "E": null,
+        "ft": null,
+        "fc": null,
+        "fs": null,
+        "rho": null,
+        "nu": null
+      },
+      "rodKey": "rod_hobby",
+      "rodOver": {
+        "E": null
+      }
+    },
+    "assembly": {
+      "rodsBonded": false,
+      "seamsBonded": false,
+      "seamFreeLength": 8,
+      "adhesiveTensile": 5
+    },
+    "load": {
+      "kind": "custom",
+      "items": [],
+      "fos": 1.5,
+      "tipMass": 0
+    },
+    "criteria": {
+      "maxTipDeflection": 45,
+      "maxTipTwist": 2
+    }
+  }
+}

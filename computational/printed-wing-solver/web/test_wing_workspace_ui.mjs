@@ -27,6 +27,13 @@ const escape=target=>target.dispatchEvent(new w.KeyboardEvent('keydown',{key:'Es
 const restored=()=>{eq(editor.parentNode,home,'restore the actual form to its home');eq($('#before').nextElementSibling,editor,'preserve original DOM order');eq(editor.nextElementSibling,$('#after'));eq(doc.querySelectorAll('#realEditor').length,1,'never duplicate an editor or its IDs');};
 try{
  ok(app.classList.contains('wing-workspace'));eq(workspace.tools.nextElementSibling,canvas.closest('.view'),'quick controls precede the model');
+ const responsive=[...doc.styleSheets].flatMap(s=>[...s.cssRules]).find(r=>r.conditionText?.includes('max-width:1100px'));
+ ok(responsive,'shared workspace has a tablet drawer breakpoint');
+ const drawer=[...responsive.cssRules].find(r=>r.selectorText==='#app.wing-workspace>.wl-side');
+ eq(drawer.style.getPropertyValue('overflow'),'auto','fixed tablet drawer overrides the base small-screen overflow:visible');
+ eq(drawer.style.getPropertyValue('overscroll-behavior'),'contain','drawer scroll stays within the input panel');
+ const children=[...responsive.cssRules].find(r=>r.selectorText==='#app.wing-workspace>.wl-side>*');
+ eq(children.style.getPropertyValue('flex-shrink'),'0','expanded input sections cannot shrink below their contents instead of scrolling');
  eq(workspace.tools.querySelectorAll('[data-wing-action]').length,4);eq(workspace.popup.hidden,true);eq(workspace.menu.hidden,true);
  eq(workspace.display.tagName,'DETAILS');eq(workspace.display.open,false,'view/display is collapsed initially');eq(viewPanel.parentNode,workspace.display);eq($('#zoomFit'),zoom,'keep the original camera controls and IDs');
  const viewToggle=[...workspace.tools.querySelectorAll('button')].find(b=>b.textContent.includes('View & display'));eq(workspace.display.hidden,true);viewToggle.click();eq(workspace.popup.hidden,false);eq(viewPanel.parentNode,workspace.popup.lastElementChild);eq(viewToggle.getAttribute('aria-expanded'),'true');viewToggle.click();eq(workspace.popup.hidden,true);eq(viewPanel.parentNode,workspace.display);eq(viewToggle.getAttribute('aria-expanded'),'false');

@@ -90,18 +90,19 @@ for(const [width,height] of [[390,844],[768,1024],[1440,900]]) for(const scheme 
     if(width===1440)check(await inViewport(page,'#stateChip')&&await inViewport(page,'#runBtn'),`${tag}: Solve and status are visible above the model`);
     // Edit a structure field: the chip says Out of date (visible next to Solve), the results say they are stale.
     await wingInputs(page);await page.uncheck('#wingAutoSolve');
-    if(width<=1100)check(await page.$eval('#wingSide',el=>getComputedStyle(el).position==='fixed')&&await inViewport(page,'#wingSide'),`${tag}: tablet/phone inputs open as a bounded drawer`);
+    if(width<=1100)check(await page.$eval('#wingSide',el=>getComputedStyle(el).position==='fixed'&&getComputedStyle(el).overflowY==='auto'&&el.scrollHeight>el.clientHeight)&&await inViewport(page,'#wingSide'),`${tag}: tablet/phone inputs open as a bounded, internally scrollable drawer`);
     await page.$eval('#wgSkin',el=>el.scrollIntoView({block:'center'}));
     await page.fill('#wgSkin','1.1');await page.press('#wgSkin','Enter');await page.waitForTimeout(150);
     check(await page.textContent('#stateChip')==='Out of date',`${tag}: edit marks the study Out of date (${await page.textContent('#stateChip')})`);
-    check(await inViewport(page,'#stateChip')&&await inViewport(page,'#runBtn'),`${tag}: status chip and Solve stay visible while editing inputs`);
     check(await page.isVisible('#wingStale'),`${tag}: results area says it shows the last solved model`);
     await page.screenshot({path:path.join(shots,`wing_${width}_${scheme}_inputs_out_of_date.png`)});
+    if(width<=1100)await page.click('#wingSide > button[aria-label="Close wing inputs"]');
+    await page.$eval('#app > .bar',el=>el.scrollIntoView({block:'center'}));
+    check(await inViewport(page,'#stateChip')&&await inViewport(page,'#runBtn'),`${tag}: status chip and Solve are reachable above the model after closing the input drawer`);
     await page.click('#runBtn');
     await page.waitForFunction(()=>!window.WingLabUI.isRunning()&&document.querySelector('#stateChip').textContent==='Solved'&&window.WingLabUI.result().geometry.skin===1.1,null,{timeout:120000});
     check(!(await page.isVisible('#wingStale')),`${tag}: stale banner gone after Solve`);
     // Zoom changes the camera, never the reported dimensions.
-    if(width<=1100)await page.click('#wingSide > button[aria-label="Close wing inputs"]');
     await viewPopup(page,'#app','#wingViewPanel');
     await page.$eval('#viewReadout',el=>el.scrollIntoView({block:'center'}));
     const dims=await page.textContent('#viewDims'), d0=await distance(page,'#viewReadout'), img0=await canvasShot(page,'#gl');

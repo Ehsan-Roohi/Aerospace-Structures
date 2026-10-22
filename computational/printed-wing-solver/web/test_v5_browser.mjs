@@ -164,7 +164,7 @@ async function openWing(width,height,scheme,extra={}) {
   if(ready) {await page.addScriptTag({content:AUDIT});await page.$eval('[data-stage="wing"]',b=>b.click());await wingReady(page);await page.check('#wingAutoSolve');}
   return {ctx,page,errors,ready};
 }
-const wingSolve=async page=>{await page.click('#runBtn');await wingReady(page);};
+const wingSolve=async page=>{if(page.viewportSize().width<=1100&&await page.isVisible('#wingSide'))await page.click('#wingSide > button[aria-label="Close wing inputs"]');await page.$eval('#app > .bar',el=>el.scrollIntoView({block:'center'}));await page.click('#runBtn');await wingReady(page);};
 const closeWingPopup=async page=>{const popup=page.locator('.wing-editor-pop:visible');if(await popup.count())await popup.locator('.wing-editor-close').click();};
 async function wingInputs(page){if(!await page.isVisible('#wingSide'))await page.click('#inputsBtn');check(await page.isVisible('#wingSide'),'Wing inputs open from the actual toolbar/drawer control');}
 async function wingLoadPopup(page){await closeWingPopup(page);await page.click('#app [data-wing-action="load"]');check(await page.isVisible('.wing-editor-pop #wingLoadForm'),'Wing load values appear in the visible compact popup');}
@@ -209,7 +209,9 @@ for(const [width,height,scheme] of [[1440,900,'light'],[390,844,'dark']]) {
   const m1=await page.evaluate(()=>{const r=window.WingLabUI.result();return [r.V[0],r.M[0],r.T[0],r.deflection.at(-1),r.twist.at(-1),r.mass.printed];});
   check(m1.every((v,i)=>Math.abs(v-m0[i])<=1e-12*Math.abs(m0[i])+1e-15),`${tag}: reopened study gives the same V, M, T, deflection, twist and mass (${m0} vs ${m1})`);
   // link → new page
-  await wingInputs(page);await page.$eval('#wlFiles',d=>{d.open=true;});await page.click('#wingShareBtn');await page.waitForTimeout(80);const link=await page.inputValue('#wingShareBox');
+  await wingInputs(page);await page.$eval('#wlFiles',d=>{d.open=true;});await page.locator('#wingShareBtn').scrollIntoViewIfNeeded();
+  if(width<=1100)check(await page.$eval('#wingShareBtn',b=>{const r=b.getBoundingClientRect(),p=document.querySelector('#wingSide').getBoundingClientRect();return r.top>=p.top&&r.bottom<=p.bottom&&r.top>=0&&r.bottom<=innerHeight;}),`${tag}: lower Share control scrolls into the bounded input drawer`);
+  await page.click('#wingShareBtn');await page.waitForTimeout(80);const link=await page.inputValue('#wingShareBox');
   check(/#wingstudy=[A-Za-z0-9_-]+$/.test(link),`${tag}: link built`);
   // (the first page leaves its 3-D view while the second one loads: two software-rendered WebGL views starve each other)
   if(await page.isVisible('#wingSide > button[aria-label="Close wing inputs"]'))await page.click('#wingSide > button[aria-label="Close wing inputs"]');await page.click('#backFoundations');

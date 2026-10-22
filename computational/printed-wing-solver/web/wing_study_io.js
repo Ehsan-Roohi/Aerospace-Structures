@@ -1257,7 +1257,7 @@
   /** Manufacturing preflight only. No model edits, no CAD generation and no safety approval. */
   function fabricationIssues(S, E) {
     const n=printedEngineInput(S,E),g=n.geometry,m=n.pla,errors=[];
-    if(g.semiSpan/g.modules>300||g.rootChord>300)errors.push('Each nominal module span and chord must be ≤300 mm. Change the design and Solve again.');
+    // One-piece and larger designs may be exported; the notebook validates actual CAD against its configured printer.
     if(g.skin<.8||g.ribThickness<.8||g.te<.8)errors.push('Printed skin, ribs and trailing edge must be ≥0.8 mm.');
     if(!['pla_upright','pla_flat'].includes(S.plaKey))errors.push('The notebook currently fabricates PLA, not custom/metal shell materials.');
     if(g.rodFractions.some(f=>f<.1||f>.8)||g.rodFractions.length&&(g.clearance<.05||g.sleeveWall<.8))errors.push('CAD rod positions must be 0.10–0.80c; radial clearance ≥0.05 mm and sleeve wall ≥0.8 mm.');

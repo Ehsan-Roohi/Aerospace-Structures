@@ -287,6 +287,7 @@ def export_build(
         "estimated_fully_dense_mass_g": round(
             build.complete.Volume() / 1000.0 * build.parameters.pla_density_g_cm3, 3
         ),
+        "configured_printer_build_volume_mm": list(build.parameters.printer_build_volume_mm),
         "spar_lengths_mm": [
             round(spar_length_mm(build.parameters, spar), 3) for spar in build.parameters.spars
         ],

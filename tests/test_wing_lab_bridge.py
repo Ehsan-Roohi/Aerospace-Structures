@@ -62,7 +62,6 @@ def test_eight_rods_and_empty_custom_ribs_are_retained():
     lambda d:d.update(extra=1),lambda d:d['study']['geometry'].update(extra=1),
     lambda d:d['study']['geometry'].update(semiSpan=float('inf')),
     lambda d:d['study']['geometry'].update(modules=True),
-    lambda d:d['study']['geometry'].update(semiSpan=1000),
     lambda d:d['study']['geometry'].update(customInteriorRibs=[120]),
     lambda d:d['study']['geometry'].update(customInteriorRibs=[180,60]),
     lambda d:d['study']['geometry'].update(rodFractions=[.3]),
@@ -83,6 +82,29 @@ def test_hostile_json_is_refused(doc):
     for bad in ['{"format":1,"format":2}',text.replace('240','1e9999',1),'['*30+'0'+']'*30,' '*262145,text.replace('240','true',1)]:
         with pytest.raises(WingLabImportError):
             import_wing_lab_study(bad)
+
+
+def test_large_single_piece_import_preserves_geometry_and_defers_fit(doc):
+    d=deepcopy(doc);g=d['study']['geometry']
+    g.update(semiSpan=450,modules=1,customInteriorRibs=[112.5,225,337.5])
+    p=load(d).parameters
+    assert p.module_count==1 and p.semi_span_mm==450
+    assert p.custom_rib_stations_mm==(112.5,225,337.5)
+    assert p.printer_build_volume_mm==(300,300,300)
+
+
+def test_notebook_upload_cell_applies_printer_envelope_without_changing_wing(doc,tmp_path):
+    from mie446_wing import load_wing_lab_study, WingProjectError
+    notebook=json.loads((ROOT/'notebooks/MIE446_Code_to_Print_Wing.ipynb').read_text(encoding='utf-8'))
+    source=next(''.join(c['source']) for c in notebook['cells'] if c['cell_type']=='code' and '#@title Import the Wing Lab design' in ''.join(c['source']))
+    path=tmp_path/'wing.json';path.write_text(json.dumps(doc),encoding='utf-8')
+    env=dict(DESIGN_SOURCE='Wing Lab JSON',WING_LAB_JSON_FILE=str(path),TEAM_ID='Team01',REVISION='R03',PRINTER_X_MM=300,PRINTER_Y_MM=500,PRINTER_Z_MM=300,
+             load_wing_lab_study=load_wing_lab_study,WingLabImportError=WingLabImportError,WingProject=WingProject,WingDesign=WingDesign,WingProjectError=WingProjectError,
+             display=lambda *args:None,Markdown=lambda s:s)
+    exec(compile(source,'Wing Lab upload','exec'),env)
+    p=env['project'].parameters
+    assert p.printer_build_volume_mm==(300,500,300)
+    assert p.semi_span_mm==240 and p.module_count==2 and len(p.bonded_spars)==1
 
 
 def test_spar_polygons_match_browser_sections(doc):

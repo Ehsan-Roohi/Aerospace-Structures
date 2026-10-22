@@ -1161,7 +1161,7 @@ nav.workspace-nav .workspace-link:focus-visible { outline: 3px solid var(--accen
         </div>
         <div class="callout">
           <h3>Design challenge: lightest wing that passes</h3>
-          <p>Keep every check at U ≤ 1 for the current load case and stay inside the course limits (chord ≤ 300 mm, module ≤ 300 mm, skin and ribs ≥ 0.8 mm, printed mass ≤ 300 g). Adjust the wing in the Part properties.</p>
+          <p>Keep every check at U ≤ 1 for the current load case, skin and ribs ≥ 0.8 mm, and printed mass ≤ 300 g. One-piece wings are allowed. Actual CAD must fit the usable printer envelope configured in the notebook; this browser challenge does not certify printer fit. Adjust the wing in the Part properties.</p>
           <div style="display:flex;gap:24px;flex-wrap:wrap;align-items:end">
             <div><span class="note">This design</span><div class="big" id="chMass">–</div></div>
             <div><span class="note">Your best passing design</span><div class="big" id="chBest">–</div></div>
@@ -9411,7 +9411,7 @@ if(typeof module!=='undefined')module.exports=WingWorkspaceUI;
   /** Manufacturing preflight only. No model edits, no CAD generation and no safety approval. */
   function fabricationIssues(S, E) {
     const n=printedEngineInput(S,E),g=n.geometry,m=n.pla,errors=[];
-    if(g.semiSpan/g.modules>300||g.rootChord>300)errors.push('Each nominal module span and chord must be ≤300 mm. Change the design and Solve again.');
+    // One-piece and larger designs may be exported; the notebook validates actual CAD against its configured printer.
     if(g.skin<.8||g.ribThickness<.8||g.te<.8)errors.push('Printed skin, ribs and trailing edge must be ≥0.8 mm.');
     if(!['pla_upright','pla_flat'].includes(S.plaKey))errors.push('The notebook currently fabricates PLA, not custom/metal shell materials.');
     if(g.rodFractions.some(f=>f<.1||f>.8)||g.rodFractions.length&&(g.clearance<.05||g.sleeveWall<.8))errors.push('CAD rod positions must be 0.10–0.80c; radial clearance ≥0.05 mm and sleeve wall ≥0.8 mm.');
@@ -11743,13 +11743,13 @@ if(typeof module!=='undefined')module.exports=WingWorkspaceUI;
     }
     if (R) {
       const g = R.geometry, m = R.mass.printed;
-      const ok = R.checks.every((c) => c.U <= 1) && m <= 300 && g.rootChord <= 300 && g.semiSpan / g.modules <= 300 && g.skin >= 0.8 && g.ribThickness >= 0.8;
+      const ok = R.checks.every((c) => c.U <= 1) && m <= 300 && g.skin >= 0.8 && g.ribThickness >= 0.8;
       $("#chMass").textContent = `${nf(m, 1)} g`;
       let best = store.get("best", null);
       const caseKey = JSON.stringify([S.load, S.plaKey, S.rodKey, S.assembly]);
       if (ok && (!best || best.key !== caseKey || m < best.m)) { best = { m, key: caseKey, g: { ...g } }; store.set("best", best); }
       $("#chBest").textContent = best && best.key === caseKey ? `${nf(best.m, 1)} g` : "–";
-      $("#chState").innerHTML = ok ? '<span class="chip warn">Other checks within limits; buckling unresolved</span>' : `<span class="chip bad">Not yet: ${R.checks.filter((c) => c.U > 1).map((c) => c.name.replace(/ \(.*\)/, "")).join(", ") || "course limits"}</span>`;
+      $("#chState").innerHTML = ok ? '<span class="chip warn">Other checks within limits; buckling unresolved; printer fit not checked</span>' : `<span class="chip bad">Not yet: ${R.checks.filter((c) => c.U > 1).map((c) => c.name.replace(/ \(.*\)/, "")).join(", ") || "course limits"}</span>`;
     }
   }
   $("#pLock").addEventListener("click", () => {
@@ -12399,7 +12399,7 @@ function renderObservations() {
       const issues=WingStudyIO.fabricationIssues(S,E);if(issues.length){note('Notebook export blocked: '+issues.join(' '));return;}
       const text=WingStudyIO.exportPrintedStudy(S,E);
       downloadText('MIE446_WingLab_to_Notebook.json',text,'application/json');
-      note('Design JSON downloaded. In the same Code-to-Print notebook choose Wing Lab JSON in Step 2 and run the upload cell. No geometry is changed; inspect the imported inventory and CAD validation.');
+      note('Design JSON downloaded. In the Code-to-Print notebook choose Wing Lab JSON in Step 2, enter the actual usable printer dimensions and run the upload cell. One-piece geometry is preserved. Printer fit is not yet checked; inspect the inventory and final CAD validation.');
     }catch(e){note('Notebook export blocked: '+e.message);}
   }
   renderShare();

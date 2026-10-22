@@ -12,8 +12,8 @@ def test_more_than_three_modules_is_rejected() -> None:
         WingParameters(module_count=4)
 
 
-def test_one_module_is_rejected_by_printer_envelope_rule() -> None:
-    assert not validate_wing(parameters=WingParameters(module_count=1)).passed
+def test_one_module_is_allowed_before_actual_cad_fit_check() -> None:
+    assert validate_wing(parameters=WingParameters(module_count=1)).passed
     assert validate_wing(parameters=WingParameters(module_count=1, semi_span_mm=250)).passed
 
 
@@ -31,9 +31,22 @@ def test_sub_nozzle_features_are_rejected(field: str, value: float) -> None:
     assert not validate_wing(parameters=parameters).passed
 
 
-def test_oversized_nominal_module_is_rejected_by_analysis() -> None:
+def test_nominal_dimensions_are_not_a_printer_fit_gate() -> None:
     parameters = WingParameters(semi_span_mm=650.0, module_count=2)
-    assert not validate_wing(parameters=parameters).passed
+    assert validate_wing(parameters=parameters).passed
+    assert not any(c.name == "printer build envelope" for c in validate_wing(parameters=parameters).checks)
+
+
+@pytest.mark.parametrize("envelope", [(0,300,300),(-1,300,300),(float('nan'),300,300),(True,300,300),(300,300),'300'])
+def test_invalid_printer_envelopes_are_rejected(envelope) -> None:
+    with pytest.raises(ValueError, match="printer_build_volume_mm"):
+        WingParameters(printer_build_volume_mm=envelope)
+
+
+def test_printer_envelope_survives_json_round_trip() -> None:
+    p = WingParameters(module_count=1, printer_build_volume_mm=[500,300,300])
+    assert p.printer_build_volume_mm == (500.,300.,300.)
+    assert WingParameters.from_dict(p.to_dict()) == p
 
 
 def test_oversized_spar_is_rejected_by_validation() -> None:

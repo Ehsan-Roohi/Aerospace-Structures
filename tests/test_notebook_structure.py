@@ -61,7 +61,7 @@ def test_notebook_supports_safe_coupon_and_final_run_all_modes() -> None:
 
     assert 'WORKFLOW_STAGE = "Coupon Only"' in notebook_text
     assert '["Coupon Only", "Final Wing"]' in notebook_text
-    assert 'COURSE_RELEASE = "v1.2.0"' in notebook_text
+    assert 'COURSE_RELEASE = "v1.2.1"' in notebook_text
     assert 'if not (3, 11) <= python_version < (3, 14):' in notebook_text
     assert '"-q"' not in notebook_text
     assert 'if install_result.returncode != 0:' in notebook_text
@@ -79,3 +79,22 @@ def test_layout_is_explained_before_inputs_and_reported_from_actual_parameters()
     assert "stations = p.rib_stations_mm()" in "\n".join(sources)
     assert "### Actual rib layout: {len(stations)} ribs" in "\n".join(sources)
     assert "October 13" in "\n".join(sources)
+
+
+def test_notebook_allows_one_piece_and_records_real_printer_dimensions() -> None:
+    text="\n".join("".join(c["source"]) for c in _notebook()["cells"])
+    assert 'MODULE_COUNT = 3  #@param {type:"slider", min:1, max:3' in text
+    for axis in 'XYZ':
+        assert f'PRINTER_{axis}_MM = 300.0' in text
+    assert text.count('printer_build_volume_mm=(PRINTER_X_MM, PRINTER_Y_MM, PRINTER_Z_MM)') == 2
+    assert 'arbitrary-angle packing' in text and 'not a printer-fit approval' in text
+
+
+def test_notebook_student_form_executes_with_one_piece_and_larger_printer() -> None:
+    from mie446_wing import WingDesign, WingProject, WingProjectError
+    source=next("".join(c['source']) for c in _notebook()['cells'] if '#@title STUDENT INPUT FORM' in ''.join(c['source']))
+    source=source.replace('MODULE_COUNT = 3','MODULE_COUNT = 1').replace('PRINTER_Y_MM = 300.0','PRINTER_Y_MM = 500.0')
+    env=dict(WingDesign=WingDesign,WingProject=WingProject,WingProjectError=WingProjectError,display=lambda *args:None,Markdown=lambda s:s)
+    exec(compile(source,'student form','exec'),env)
+    assert env['project'].parameters.module_count==1
+    assert env['project'].parameters.printer_build_volume_mm==(300,500,300)

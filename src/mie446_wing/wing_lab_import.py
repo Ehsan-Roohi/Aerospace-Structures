@@ -105,8 +105,7 @@ def import_wing_lab_study(data: bytes | str) -> WingLabImport:
         _fail("Use 0–16 interior ribs")
     if g['skin']<.8 or g['ribThickness']<.8 or g['te']<.8:
         _fail("Skin, ribs and trailing edge must be at least 0.8 mm")
-    if g['semiSpan']/g['modules']>300 or g['rootChord']>300:
-        _fail("Each nominal module span and maximum chord must be no more than 300 mm; change the design in Wing Lab and re-export")
+    # Printer fit belongs to the actual CAD check in the notebook, not nominal JSON dimensions.
     rods = g['rodFractions']
     if not isinstance(rods,list) or len(rods)>8:
         _fail("Use zero to eight rod positions")

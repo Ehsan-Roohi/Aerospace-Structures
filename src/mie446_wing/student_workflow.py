@@ -8,7 +8,7 @@ import re
 from typing import Any
 
 from .airfoil import naca4_parameters
-from .config import SparSpec, WingParameters
+from .config import K2_PRO_BUILD_VOLUME_MM, SparSpec, WingParameters
 from .export import export_build, export_fit_coupon, make_verified_archive
 from .geometry import WingBuild, build_wing
 from .metrics import PlanformMetrics, calculate_planform_metrics
@@ -75,7 +75,7 @@ def _record_table(values: dict[str, Any]) -> str:
 
 @dataclass(frozen=True)
 class WingDesign:
-    """The eight engineering inputs a student may change."""
+    """Student geometry and the actual usable printer envelope."""
 
     naca: str = "2412"
     semi_span_mm: float = 450.0
@@ -85,6 +85,7 @@ class WingDesign:
     rib_thickness_mm: float = 1.60
     module_count: int = 3
     rod_clearance_mm: float = 0.25
+    printer_build_volume_mm: tuple[float, float, float] = K2_PRO_BUILD_VOLUME_MM
 
     def __post_init__(self) -> None:
         try:
@@ -94,6 +95,7 @@ class WingDesign:
                 f"One or more design entries are not valid: {exc}"
             ) from exc
         object.__setattr__(self, "naca", parameters.naca)
+        object.__setattr__(self, "printer_build_volume_mm", parameters.printer_build_volume_mm)
 
     def to_parameters(self) -> WingParameters:
         """Apply instructor-locked fabrication settings."""
@@ -131,6 +133,7 @@ class WingDesign:
             interior_rib_count=3,
             module_count=self.module_count,
             maximum_printed_mass_g=300.0,
+            printer_build_volume_mm=self.printer_build_volume_mm,
             spars=course_spars,
         )
 
@@ -288,6 +291,7 @@ class BuiltWingProject:
                 "",
                 f"Estimated fully dense PLA mass: **{self.estimated_fully_dense_mass_g:.2f} g**  ",
                 f"Connected printable modules: **{len(self.build.modules)}**",
+                "Configured usable printer envelope: **" + " × ".join(f"{v:g}" for v in self.build.parameters.printer_build_volume_mm) + " mm**. Final orientation, supports and brim still need slicer review.",
                 f"Integral printed I-spars: **{len(self.build.bonded_spars)}**; external rods: **{len(self.build.parameters.spars)}** (not printed).",
                 "",
                 "| Module | Bounding box X × Y × Z (mm) | CAD material volume (mm³) |",

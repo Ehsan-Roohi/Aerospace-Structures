@@ -41,14 +41,14 @@ def test_invalid_student_design_has_friendly_error() -> None:
         WingDesign(skin_mm=0.4)
 
 
-def test_analytically_oversized_design_stops_before_cad() -> None:
+def test_nominal_size_is_deferred_to_actual_cad_fit() -> None:
     project = WingProject(
         WingDesign(semi_span_mm=650.0, module_count=2),
         team_id="Team07",
         revision="R01",
     )
-    with pytest.raises(DesignInputError, match="nominal module span"):
-        project.analyze()
+    assert project.analyze().parameters.semi_span_mm == 650
+    assert WingDesign(module_count=1, printer_build_volume_mm=(300,300,500)).to_parameters().printer_build_volume_mm == (300,300,500)
 
 
 def test_analysis_explains_airfoil_and_controlled_change() -> None:

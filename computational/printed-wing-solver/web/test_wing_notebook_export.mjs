@@ -11,12 +11,13 @@ const tick=()=>new Promise(r=>setTimeout(r,10));async function until(f){const en
 const ui=()=>w.WingLabUI,solved=()=>ui()?.result()&&!ui().isRunning()&&!ui().isStale(),change=(id,value)=>{$(id).value=String(value);$(id).dispatchEvent(new w.Event('change',{bubbles:true}));};
 const exportNow=()=>$('#app [data-wing-action="notebook"]').click();
 try{
- await until(solved);exportNow();assert.equal(downloads.length,0);assert.match($('#wingFilesNote').textContent,/300 mm/);
- change('#wgModules',3);exportNow();assert.equal(downloads.length,0);assert.match($('#wingFilesNote').textContent,/Solve/);$('#runBtn').click();await until(solved);
+ await until(solved);exportNow();assert.equal(downloads.length,1,'one-piece 450 mm analysis can transfer to CAD for printer-fit checking');
+ const onePiece=JSON.parse(await blobs.at(-1).text());assert.equal(onePiece.study.geometry.modules,1);assert.equal(onePiece.study.geometry.semiSpan,450);
+ change('#wgModules',3);exportNow();assert.equal(downloads.length,1);assert.match($('#wingFilesNote').textContent,/Solve/);$('#runBtn').click();await until(solved);
  const before=JSON.stringify(ui().state());exportNow();assert.equal(downloads.at(-1),'MIE446_WingLab_to_Notebook.json');assert.equal(JSON.stringify(ui().state()),before,'export never mutates the study');assert.equal(ui().inputError(),null,'a successful download must never become a solver error');assert.equal($('#stateChip').textContent,'Solved');
  const shell=JSON.parse(await blobs.at(-1).text());assert.equal(shell.workspace,'printed');assert.deepEqual(shell.study.geometry.rodFractions,[]);assert.equal(shell.study.geometry.modules,3);
- $('#wsAdd').click();$('#runBtn').click();await until(solved);exportNow();assert.equal(downloads.length,2);
+ $('#wsAdd').click();$('#runBtn').click();await until(solved);exportNow();assert.equal(downloads.length,3);
  const spar=JSON.parse(await blobs.at(-1).text());assert.equal(spar.study.geometry.spars.length,1);assert.equal(spar.study.geometry.spars[0].webThickness,.6);assert.equal(spar.study.geometry.rodFractions.length,0);
  const oldCount=downloads.length;change('#ws0_mE',131000);$('#ws0_apply').click();$('#runBtn').click();await until(solved);exportNow();assert.equal(downloads.length,oldCount);assert.match($('#wingFilesNote').textContent,/same effective PLA/);
- console.log('Wing notebook export PASS: current solved JSON, no state mutation, shell and actual cap/web spar, size/stale/material rejection, downloadable source document.');
+ console.log('Wing notebook export PASS: 450 mm one-piece JSON transfer, no state mutation, shell and actual cap/web spar, stale/material rejection; actual printer fit is deferred to CAD.');
 }finally{dom.window.close();}

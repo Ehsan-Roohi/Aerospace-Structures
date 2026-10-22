@@ -108,6 +108,8 @@ class WingParameters:
     loft_station_count: int = 3
     pla_density_g_cm3: float = 1.24
     maximum_printed_mass_g: float = 300.0
+    # Actual usable machine envelope, not an artificial nominal span/chord limit.
+    printer_build_volume_mm: tuple[float, float, float] = K2_PRO_BUILD_VOLUME_MM
     spars: tuple[SparSpec, ...] = field(default_factory=_default_spars)
     # None retains the original course rule; an empty tuple deliberately means no editable ribs.
     custom_rib_stations_mm: tuple[float, ...] | None = None
@@ -117,6 +119,13 @@ class WingParameters:
         object.__setattr__(self, "naca", normalize_naca4(self.naca))
         object.__setattr__(self, "spars", tuple(self.spars))
         object.__setattr__(self, "bonded_spars", tuple(self.bonded_spars))
+        envelope = self.printer_build_volume_mm
+        if not isinstance(envelope, (tuple, list)) or len(envelope) != 3 or any(
+            isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(v) or v <= 0
+            for v in envelope
+        ):
+            raise ValueError("printer_build_volume_mm must contain three finite positive usable dimensions in mm")
+        object.__setattr__(self, "printer_build_volume_mm", tuple(float(v) for v in envelope))
         if self.custom_rib_stations_mm is not None:
             object.__setattr__(self, "custom_rib_stations_mm", tuple(self.custom_rib_stations_mm))
 
@@ -138,7 +147,7 @@ class WingParameters:
         if self.tip_chord_mm > self.root_chord_mm:
             raise ValueError("tip_chord_mm cannot exceed root_chord_mm in this starter project")
         if isinstance(self.module_count, bool) or self.module_count not in (1, 2, 3):
-            raise ValueError("module_count must be 1, 2 or 3 for the 300 mm K2 Pro build envelope")
+            raise ValueError("module_count must be 1, 2 or 3; choose 1 for a continuous one-piece wing")
         if self.interior_rib_count < 0:
             raise ValueError("interior_rib_count cannot be negative")
         if self.interface_rib_offset_mm <= self.rib_thickness_mm:

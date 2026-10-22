@@ -10,7 +10,7 @@ from typing import Any
 import numpy as np
 
 from .airfoil import surface_ordinates_at
-from .config import K2_PRO_BUILD_VOLUME_MM, WingParameters
+from .config import WingParameters
 from .geometry import WingBuild
 from .bonded_spar import validate_spar_layout
 from .metrics import calculate_planform_metrics
@@ -90,27 +90,13 @@ def validate_wing(
             "module count",
             parameters.module_count in (1, 2, 3),
             parameters.module_count,
-            "1, 2 or 3; every module must fit the 300 mm K2 Pro build envelope",
+            "1 (one piece), 2 or 3; actual CAD must fit the configured printer",
         ),
         ValidationCheck(
             "semi-wing area",
             metrics.semi_wing_area_mm2 > 0,
             round(metrics.semi_wing_area_mm2, 6),
             "positive analytical trapezoid area",
-        ),
-        ValidationCheck(
-            "nominal module span",
-            parameters.semi_span_mm / parameters.module_count
-            <= K2_PRO_BUILD_VOLUME_MM[1],
-            round(parameters.semi_span_mm / parameters.module_count, 3),
-            f"<= {K2_PRO_BUILD_VOLUME_MM[1]:.0f} mm before slicer orientation",
-        ),
-        ValidationCheck(
-            "maximum chord",
-            max(parameters.root_chord_mm, parameters.tip_chord_mm)
-            <= K2_PRO_BUILD_VOLUME_MM[0],
-            round(max(parameters.root_chord_mm, parameters.tip_chord_mm), 3),
-            f"<= {K2_PRO_BUILD_VOLUME_MM[0]:.0f} mm before slicer orientation",
         ),
         ValidationCheck(
             "skin thickness",
@@ -153,7 +139,7 @@ def validate_wing(
             )
             for module in build.modules
         ]
-        sorted_envelope = sorted(K2_PRO_BUILD_VOLUME_MM)
+        sorted_envelope = sorted(parameters.printer_build_volume_mm)
         modules_fit_envelope = all(
             all(
                 dimension <= limit + 0.05
@@ -209,7 +195,9 @@ def validate_wing(
                     "printer build envelope",
                     modules_fit_envelope,
                     [tuple(round(value, 3) for value in item) for item in module_dimensions],
-                    "each module can be oriented inside 300 x 300 x 300 mm; slicer check required",
+                    "each actual CAD bounding box fits the configured usable envelope "
+                    + " x ".join(f"{v:g}" for v in parameters.printer_build_volume_mm)
+                    + " mm after axis permutations; arbitrary-angle packing, brim/support room and slicer checks are not certified",
                 ),
             ]
         )

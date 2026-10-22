@@ -161,7 +161,9 @@ async function openWing(width,height,scheme,extra={}) {
   page.on('dialog',d=>{errors.push(`dialog: ${d.message()}`);d.dismiss();});
   await page.goto(pageUrl,{waitUntil:'load'});
   const ready=await page.waitForFunction(()=>document.documentElement.dataset.wingReady==='true',null,{timeout:30000}).then(()=>true,()=>false);
-  if(ready) {await page.addScriptTag({content:AUDIT});await page.$eval('[data-stage="wing"]',b=>b.click());await wingReady(page);await page.check('#wingAutoSolve');}
+  // This suite exercises manual JSON Apply → review → Solve. Deliberate load
+  // additions solve independently; enabling automatic field solving would race that contract.
+  if(ready) {await page.addScriptTag({content:AUDIT});await page.$eval('[data-stage="wing"]',b=>b.click());await wingReady(page);await page.uncheck('#wingAutoSolve');}
   return {ctx,page,errors,ready};
 }
 const wingSolve=async page=>{if(page.viewportSize().width<=1100&&await page.isVisible('#wingSide'))await page.click('#wingSide > button[aria-label="Close wing inputs"]');await page.$eval('#app > .bar',el=>el.scrollIntoView({block:'center'}));await page.click('#runBtn');await wingReady(page);};

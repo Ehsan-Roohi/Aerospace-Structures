@@ -25,7 +25,9 @@ for(const canAbort of [true,false]){
   // Moving the same real file panel from Reading to successful preview must
   // not fire the close hook and accidentally cancel its own Apply button.
   const success=files.openFile({name:'current.json',size:raw.length});readers.at(-1).finish();await success;ok(!popup().hidden);ok($('#wingStudyFiles .wio-apply'));
+  eq($('#wingAutoSolve').checked,false,'manual import regression has automatic field solving off');
   $('#wingStudyFiles .wio-apply').click();ok(popup().hidden);eq(w.WingLabUI.state().geometry.sweepDeg,JSON.parse(raw).study.geometry.sweepDeg);ok($('#wingSessionStatus').textContent.includes('Opened current.json'),'successful Apply keeps success, not cancellation status');
+  eq($('#stateChip').textContent,'Out of date','manual JSON Apply leaves analysis pending until Solve');
   eq(errors.length,0,errors.join('; '));
  }finally{dom.window.close();}
 }

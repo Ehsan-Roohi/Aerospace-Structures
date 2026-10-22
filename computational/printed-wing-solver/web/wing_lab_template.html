@@ -117,8 +117,15 @@ button, input, select { font: inherit; color: inherit; }
 /* ---------- viewport ---------- */
 .view { grid-area: view; position: relative; overflow: hidden; background: linear-gradient(180deg, var(--vp-top), var(--vp-bottom)); }
 #gl { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+.viewport-views { position:absolute; right:12px; top:12px; z-index:2; display:flex; flex-wrap:wrap; gap:4px; max-width:calc(100% - 24px); padding:4px; border:1px solid var(--line); border-radius:9px; background:color-mix(in srgb,var(--panel) 90%,transparent); }
+.viewport-views button { font:600 12px var(--font-label); border:1px solid transparent; border-radius:6px; padding:7px 9px; color:var(--vp-ink); background:transparent; cursor:pointer; min-height:34px; }
+.viewport-views button:hover,.viewport-views button[aria-pressed="true"] { color:var(--accent); border-color:var(--accent); background:var(--accent-soft); }
+.aircraft-axes { position:absolute; right:12px; bottom:42px; width:124px; height:120px; pointer-events:none; color:var(--vp-ink); background:color-mix(in srgb,var(--panel) 85%,transparent); border:1px solid var(--line); border-radius:10px; }
+.aircraft-axes svg { width:100%; height:96px; overflow:visible; }
+.aircraft-axes text { font:700 11px var(--font-label); paint-order:stroke; stroke:var(--panel); stroke-width:3px; stroke-linejoin:round; }
+.aircraft-axes small { display:block; text-align:center; font:10px var(--font-label); }
 .overlay { position: absolute; pointer-events: none; color: var(--vp-ink); }
-.infocol { left: 14px; top: 12px; display: flex; flex-direction: column; gap: 10px; max-width: calc(100% - 28px); }
+.infocol { left: 14px; top: 12px; display: flex; flex-direction: column; gap: 10px; max-width: calc(100% - 240px); }
 .plotinfo { font: 12px/1.5 var(--font-data); text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25); }
 .plotinfo b { font-weight: 500; color: var(--vp-ink); opacity: 0.65; }
 .legend { display: flex; gap: 8px; font: 11px/1 var(--font-data); margin-top: -4px; }
@@ -228,7 +235,7 @@ td.num { font-family: var(--font-data); font-variant-numeric: tabular-nums; text
 .lesson-actions { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0; }
 .lesson-check { margin-top: 12px; border: 1px solid var(--line); border-radius: 8px; padding: 12px; }
 .lesson-check summary { font-weight: 600; cursor: pointer; }
-.anatomy-key { position: absolute; left: 12px; bottom: 42px; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; font-size: 12px; max-width: calc(100% - 24px); }
+.anatomy-key { position: absolute; left: 12px; bottom: 42px; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; font-size: 12px; max-width: calc(100% - 164px); }
 .anatomy-key span { display: inline-block; margin-right: 12px; }
 .anatomy-key i { display: inline-block; width: 11px; height: 11px; border-radius: 2px; margin-right: 4px; }
 .anatomy-key b { display: block; margin-bottom: 4px; }
@@ -394,7 +401,7 @@ body { margin: 0; }
   <header class="bar panel" aria-label="Commands">
     <div class="brand">
       <svg viewBox="0 0 76 44" aria-hidden="true"><path d="M3 24 C 12 8, 40 6, 73 21 L 73 23 C 40 30, 14 32, 3 24 Z" fill="none" stroke="currentColor" stroke-width="3"/><circle cx="24" cy="21" r="3.2" fill="currentColor"/><circle cx="46" cy="21" r="3.2" fill="currentColor"/></svg>
-      <div><b>Wing Virtual Lab</b><small>MIE 446 · Aerospace Structures</small></div>
+      <div><b id="wingProjectTitle">Wing Virtual Lab</b><small>MIE 446 · Aerospace Structures · v1.3</small><label class="wing-project-name" for="wingProjectName">Project name<input id="wingProjectName" type="text" maxlength="80" placeholder="Name your wing project" autocomplete="off"></label></div>
     </div>
     <div class="group"><span>Study</span>
       <div class="row">
@@ -440,7 +447,7 @@ body { margin: 0; }
       <p class="note">Open the material card to edit the shell/rib elastic modulus and strengths, or the rod modulus. These are engineering inputs; use measured coupon data for printed parts.</p>
     </div>
     <details class="wl-acc" id="wlTreeSection" open>
-      <summary>Materials, joints, support &amp; results</summary>
+      <summary>Materials, joints &amp; support</summary>
       <div class="wl-acc-body wl-treepm">
         <aside class="tree panel" aria-label="Study tree">
           <div class="panel-head">Study tree</div>
@@ -464,6 +471,13 @@ body { margin: 0; }
 
   <main class="view panel" aria-label="3-D viewport">
     <canvas id="gl"></canvas>
+    <div class="viewport-views" role="group" aria-label="Perspective camera views">
+      <button type="button" data-view="plan" title="Top / planform: look down from aircraft +z; leading edge up">Top</button>
+      <button type="button" data-view="front" title="Front: look aft from aircraft −x; +z up">Front</button>
+      <button type="button" data-view="section" title="Side / root: look outward from aircraft −y; +z up">Side</button>
+      <button type="button" data-view="iso" title="Three-quarter perspective view">3D</button>
+    </div>
+    <div class="aircraft-axes" id="aircraftAxes" role="img" aria-label="Aircraft axes: positive x aft, positive y outboard along the semi-wing, positive z up. Axes rotate with the camera."><svg viewBox="0 0 124 96" aria-hidden="true"></svg><small>x aft · y span · z up</small></div>
     <div class="anatomy-labels" id="ribLabels" aria-hidden="true"></div>
     <div class="overlay infocol">
       <div class="plotinfo" id="plotinfo"></div>
@@ -500,7 +514,7 @@ body { margin: 0; }
           <button class="btn" type="button" id="zoomOut" aria-label="Zoom out" title="Zoom out">−</button>
           <button class="btn" type="button" id="zoomIn" aria-label="Zoom in" title="Zoom in">+</button>
           <button class="btn" type="button" id="zoomFit" title="Fit the whole wing in the view">Fit</button>
-          <button class="btn" type="button" id="zoomReset" title="Isometric view at the starting distance">Reset view</button>
+          <button class="btn" type="button" id="zoomReset" title="Three-quarter perspective view at the starting distance">Reset view</button>
         </div>
       </div>
       <div class="wl-readout" id="viewReadout">
@@ -526,10 +540,10 @@ body { margin: 0; }
         <summary>View &amp; display controls</summary>
         <span class="wl-vlabel">Standard views</span>
         <div class="hud-row" role="group" aria-label="Standard views">
-          <button type="button" data-view="iso">Isometric</button>
-          <button type="button" data-view="plan">Planform</button>
-          <button type="button" data-view="section">Section</button>
-          <button type="button" data-view="front">Leading edge</button>
+          <button type="button" data-view="iso">3D · perspective</button>
+          <button type="button" data-view="plan">Top / planform (+z)</button>
+          <button type="button" data-view="section">Side / root (−y)</button>
+          <button type="button" data-view="front">Front (−x)</button>
         </div>
         <span class="wl-vlabel">Show</span>
         <div class="hud-row" role="group" aria-label="Wing anatomy">
@@ -680,6 +694,7 @@ body { margin: 0; }
 /*__WING_GEOMETRY__*/
 /*__WING_FRAME3D__*/
 /*__WING_GEOMETRY_UI__*/
+/*__WING_SELECTION_UI__*/
 /*__ENGINE__*/
 /*__TEACHING_MODELS__*/
 /*__WING_LOADS_UI__*/
@@ -702,6 +717,7 @@ body { margin: 0; }
   const noLoad = () => ({ kind: "custom", items: [], fos: E.DEFAULT_LOAD.fos, tipMass: 0 });
   const S = {
     geometry: { ...E.DEFAULT_GEOMETRY },
+    projectName: '', emptyStudy: false,
     plaKey: "pla_upright", rodKey: "rod_hobby",
     plaOver: { E: null, ft: null, fc: null, fs: null }, rodOver: { E: null },
     assembly: { ...E.DEFAULT_ASSEMBLY, seamFreeLength: 8 },
@@ -715,13 +731,14 @@ body { margin: 0; }
     secY: 0, secField: "sigma",
   };
   let R = null, lastGeoKey = "", stale = true, running = false, pending = false;
+  let printedWorkspace=null,wingSelection=null;
   const lessonAnswers = new Map();
   let savedLessonLoad = null;
   let designBaseline = null, saveDesignAfterRun = false;
   // Explicit Solve, as in the Beam Lab: field edits stay pending until Solve (or "Solve automatically");
   // a rejected edit leaves the previous valid inputs and the last solved result in place.
   let autoSolve = false, inputError = null, fieldErrors = {};
-  const historyFields=['geometry','plaKey','plaOver','rodKey','rodOver','assembly','load','criteria','analysis'];
+  const historyFields=['geometry','plaKey','plaOver','rodKey','rodOver','assembly','load','criteria','analysis','projectName','emptyStudy'];
   let wingHistory=[],wingHistoryIndex=-1,historySuspended=0;
   const wingSessionKey='winglab:printed-study:v1';
   let wingSessionReady=false,wingSessionInputs='',wingSessionMessage='Changes are saved in this browser. Use Save JSON for a portable backup.';
@@ -738,7 +755,7 @@ body { margin: 0; }
     }catch(e){sessionNote('Autosave unavailable or inputs incomplete. The previous backup is kept; use Save JSON for a valid study.');}
   }
   function wingHistorySnapshot(){return JSON.stringify({inputs:Object.fromEntries(historyFields.map(k=>[k,S[k]])),gate:importGate?{...importGate,confirmed:[...importGate.confirmed]}:null});}
-  function syncWingHistory(){const undo=$('#wingUndo'),redo=$('#wingRedo'),clear=$('[data-wing-action="clear"]');if(undo)undo.disabled=running||wingHistoryIndex<=0;if(redo)redo.disabled=running||wingHistoryIndex>=wingHistory.length-1;if(clear)clear.disabled=running;}
+  function syncWingHistory(){const undo=$('#wingUndo'),redo=$('#wingRedo'),clear=$('[data-wing-action="clear"]');if(undo)undo.disabled=running||wingHistoryIndex<=0;if(redo)redo.disabled=running||wingHistoryIndex>=wingHistory.length-1;for(const b of document.querySelectorAll('#app [data-wing-action="clear"]'))b.disabled=running;for(const b of document.querySelectorAll('#app [data-wing-action]'))if(['load','rib','rod','spar','parts','inside','notebook','select-wing'].includes(b.dataset.wingAction))b.disabled=!!S.emptyStudy||running;}
   function recordWingHistory(){
     if(!historySuspended){const snapshot=wingHistorySnapshot();if(snapshot!==wingHistory[wingHistoryIndex]){wingHistory=wingHistory.slice(0,wingHistoryIndex+1);wingHistory.push(snapshot);if(wingHistory.length>100)wingHistory.shift();wingHistoryIndex=wingHistory.length-1;}}
     syncWingHistory();
@@ -782,6 +799,7 @@ body { margin: 0; }
     res: '<svg class="glyph" viewBox="0 0 16 16"><rect x="2" y="2" width="3" height="12" fill="#2b5cff"/><rect x="5" y="2" width="3" height="12" fill="#22c39a"/><rect x="8" y="2" width="3" height="12" fill="#f1d43a"/><rect x="11" y="2" width="3" height="12" fill="#ef4a3b"/></svg>',
   };
   function treeModel() {
+    if(S.emptyStudy)return [];
     const g = S.geometry, { pla, rod } = materials(), L = S.load;
     const loadLbl = L.kind === "flight" ? `Lift n = ${L.loadFactor}, m = ${L.aircraftMass} kg` : L.kind === "custom" ? (L.items.length ? `${L.items.length} custom loads` : "No load defined") : `Tip force ${L.tipForce} N`;
     return [
@@ -792,7 +810,7 @@ body { margin: 0; }
       { id: "loads", g: "load", b: "External loads", kids: [{ id: "load", g: "load", b: L.kind === "flight" ? "Lift distribution" : L.kind === "custom" ? "Custom loads" : "Tip force", i: loadLbl }] },
       { id: "mesh", g: "mesh", b: "Mesh", i: `${S.analysis?.nElements||'Default'} requested · ${R?.mesh?.actualElements??'–'} actual elements` },
       { id: "results", g: "res", b: "Results", kids: [{ id: "res-stress", g: "res", b: "Stress", i: "Spanwise σ" }, { id: "res-disp", g: "res", b: "Displacement", i: "Resultant" }, { id: "res-fos", g: "res", b: "Factor of safety", i: "Strength" }, { id: "res-mode", g: "res", b: "Frequency modes", i: R ? `f₁ = ${nf(R.fem.fBending[0], 1)} Hz` : "–" }] },
-    ];
+    ].filter(n=>n.id!=='results');
   }
   function renderTree() {
     const ul = $("#tree");
@@ -855,6 +873,7 @@ body { margin: 0; }
   function renderPM() {
     const pm = $("#pm");
     pm.innerHTML = "";
+    if(S.emptyStudy){$('#pmHead').textContent='New wing';pm.append(el('p',{class:'note'},'No wing exists yet. Choose Airfoil & planform, set dimensions and Apply geometry.'));return;}
     const g = S.geometry, { pla, rod } = materials();
     const id = S.selected;
     if(R?.analysis3D&&(id==='results'||id.startsWith('res-')||id==='mesh')){
@@ -1074,6 +1093,8 @@ body { margin: 0; }
       return { ok: false, error: err.message };
     }
     S.geometry = { ...g, rodFractions: [...g.rodFractions], customInteriorRibs: g.customInteriorRibs == null ? null : [...g.customInteriorRibs] };
+    S.emptyStudy=false;
+    wingSelection?.clear();
     fieldErrors = {};
     edited();
     setTimeout(() => renderInputs(true), 0);
@@ -1099,8 +1120,12 @@ body { margin: 0; }
   let inputsKey = "";
   // Rebuild the Geometry and Structure forms when the inputs (or their messages) change; keep keyboard focus.
   function renderInputs(force) {
+    const projectName=$('#wingProjectName');if(projectName&&document.activeElement!==projectName)projectName.value=S.projectName||'';
+    const create=$('#wingEmptyStart');if(create)create.hidden=!S.emptyStudy;
+    const title=$('#wingProjectTitle');if(title)title.textContent=S.projectName||'Wing Virtual Lab';
+    if(typeof printedWorkspace!=='undefined'&&printedWorkspace)for(const b of printedWorkspace.tools.querySelectorAll('[data-wing-action]'))if(['load','rib','rod','spar','parts','inside','notebook','select-wing'].includes(b.dataset.wingAction))b.disabled=!!S.emptyStudy||running;
     const mesh=$('#wingMeshElements');if(mesh&&document.activeElement!==mesh)mesh.value=S.analysis?.nElements??'';
-    const key = JSON.stringify([S.geometry, fieldErrors, S.assembly.seamsBonded]);
+    const key = JSON.stringify([S.geometry, fieldErrors, S.assembly.seamsBonded,S.emptyStudy]);
     if (!force && key === inputsKey) return;
     inputsKey = key;
     const active = document.activeElement, focusId = active && active.id && $("#wingSide").contains(active) ? active.id : null;
@@ -1112,15 +1137,18 @@ body { margin: 0; }
   }
   function renderGeometryForm() {
     const g = S.geometry, area = 0.5 * (g.rootChord + g.tipChord) * g.semiSpan;
-    $("#wingGeometryForm").innerHTML = `<h3>Build your wing</h3><p class="note">Set reference span/chords here. Use Airfoils & planform above the model for the airfoil library, DAT coordinates, spanwise sections, incidence, sweep and dihedral. Loads are prescribed separately. A structural beam approximation is not CFD, shell buckling, flutter or a complete aircraft certification.</p><button class="btn" type="button" id="wgCourseExample">Optional course wing example</button>${g.airfoil||g.stations?`<p class="note"><b>Active airfoil:</b> ${esc(airfoilLabel(g))}. Edit it in Airfoils & planform.</p>`:geoField("naca", "wgNaca", "NACA airfoil", "4-digit shortcut; other families in Airfoils & planform", g.naca, null, "text")}
+    $("#wingGeometryForm").innerHTML = `<h3>Build your wing</h3><button class="btn wing-airfoil-launch" type="button" id="wgAirfoilPicker"><b>Airfoil &amp; planform ▾</b><span>${esc(airfoilLabel(g))} · library, DAT, taper, twist, sweep &amp; dihedral</span></button>
       ${geoField("semiSpan", "wgSpan", "Semi-span", "mm, root to tip", g.semiSpan, 1)}
       ${geoField("rootChord", "wgRoot", "Root chord", "mm", g.rootChord, 1)}
       ${geoField("tipChord", "wgTip", "Tip chord", "mm, straight taper, ≤ root chord", g.tipChord, 1)}
+      ${geoField("taper", "wgTaper", "Taper ratio λ", "tip chord / root chord · 1 = rectangular", +(g.tipChord/g.rootChord).toPrecision(8), "any")}
+      <p class="note">λ = ${nf(g.tipChord,1)} / ${nf(g.rootChord,1)} = ${nf(g.tipChord/g.rootChord,3)}. Use Top / planform to inspect taper.</p>
       <div class="field"><label for="wgModules">Printed modules<small>equal lengths; seams between them</small></label><select id="wgModules" aria-invalid="${!!fieldErrors.modules}" aria-describedby="wgErr-modules">${[1, 2, 3].map((m) => `<option value="${m}" ${m === +g.modules ? "selected" : ""}>${m === 1 ? "1 · one piece" : m}</option>`).join("")}</select></div>${errLine("modules")}
       <dl class="kv wl-kv"><dt>Semi-wing area</dt><dd>${nf(area / 100, 1)} cm²</dd><dt>Taper ratio</dt><dd>${nf(g.tipChord / g.rootChord, 3)}</dd><dt>Aspect ratio (full wing)</dt><dd>${nf((4 * g.semiSpan ** 2) / (2 * area), 2)}</dd><dt>Module length</dt><dd>${mm(g.semiSpan / g.modules)}</dd></dl>`;
-    $("#wlGeometryBadge").textContent = `${airfoilLabel(g)} · ${nf(g.semiSpan, 0)} × ${nf(g.rootChord, 0)}/${nf(g.tipChord, 0)} mm`;
-    $("#wgNaca")?.addEventListener("change", (e) => applyGeometry({ naca: e.target.value.trim() }, "naca", `NACA “${e.target.value.trim()}”`));
-    $("#wgCourseExample").onclick=()=>{if(confirm('Replace the current wing with the course example? Geometry, materials and connections will reset, and applied loads will be cleared.'))window.dispatchEvent(new CustomEvent('wing-learning-stage',{detail:'project'}));};
+    $("#wlGeometryBadge").textContent = S.emptyStudy?'New wing · not created':`${airfoilLabel(g)} · ${nf(g.semiSpan, 0)} × ${nf(g.rootChord, 0)}/${nf(g.tipChord, 0)} mm`;
+    $("#wgAirfoilPicker").onclick=e=>openAdvancedGeometryPopup(e.currentTarget);
+    $("#wgTaper").onchange=e=>{const ratio=numberFrom(e.target);if(!Number.isFinite(ratio)||ratio<=0||ratio>1){e.target.setCustomValidity('Taper ratio must be greater than 0 and no greater than 1.');e.target.reportValidity();return;}e.target.setCustomValidity('');applyGeometry({tipChord:S.geometry.rootChord*ratio},'tipChord','taper ratio '+ratio);};
+    $("#wgTaper").onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();e.target.onchange(e);}};
     for (const [id, k] of [["wgSpan", "semiSpan"], ["wgRoot", "rootChord"], ["wgTip", "tipChord"]])
       $("#" + id).addEventListener("change", (e) => applyGeometry({ [k]: numberFrom(e.target) }, k, e.target.value.trim() === "" ? "an empty value" : mm(numberFrom(e.target))));
     $("#wgModules").addEventListener("change", (e) => applyGeometry({ modules: +e.target.value }, "modules", `${e.target.value} module${e.target.value === "1" ? "" : "s"}`));
@@ -1259,6 +1287,7 @@ body { margin: 0; }
     ];
   }
   function renderInventory() {
+    if(S.emptyStudy){$('#wingInventory').textContent='No wing created yet.';$('#wlInventoryBadge').textContent='Empty';return;}
     const v = inventoryData(S.geometry), list = (a, d = 1) => a.map((x) => nf(x, d)).join(", ");
     $("#wingInventory").innerHTML = `<div class="wl-inv">
       <p class="note">${stale && R ? "<b>Inputs on screen</b> — not solved yet; press Solve." : "<b>Inputs on screen</b>, counted with the solver's own geometry functions."} A generic browser study model: it does not update the printable CAD/STL or the approved fabrication layout.</p>
@@ -1285,6 +1314,7 @@ body { margin: 0; }
   // Geometry only: no section analysis, stress or deformation is calculated here.
   function previewGeometry() {
     if (running) return;
+    if(S.emptyStudy){showEmptyWing();return;}
     geometryPreview = true;
     lastGeoKey = null;
     try {
@@ -1328,6 +1358,7 @@ body { margin: 0; }
   function setStatus(text) {
     syncWingHistory();
     const chip = $("#stateChip"), t = $("#stateText"), btn = $("#runBtn");
+    btn.disabled=!!S.emptyStudy;
     const out = stale && !!R;
     btn.classList.toggle("stale", stale && !running);
     btn.dataset.pending = String(stale && !running);
@@ -1339,6 +1370,7 @@ body { margin: 0; }
     if (out !== reportBlocked) { reportBlocked = out; $("#copyState").textContent = out ? "Copying is disabled until the inputs on screen are solved." : "Plain-text study summary for your engineering record."; }
     if (stale && $("#wingShareBox") && !$("#wingShareBox").hidden) { $("#wingShareBox").hidden = true; $("#wingShareBox").value = ""; $("#wingShareMsg").textContent = ""; }
     if (running) { chip.className = "chip idle"; chip.textContent = "Solving"; t.textContent = text || "Solving the inputs on screen"; return; }
+    if(S.emptyStudy){chip.className='chip idle';chip.textContent='Empty study';t.textContent='Choose an airfoil and dimensions, then Apply geometry to create your wing.';return;}
     if (gateOpen()) { chip.className = "chip warn"; chip.textContent = "Analysis blocked"; t.textContent = "Imported outer geometry: confirm its structural inputs (list at the top of this column) before solving."; return; }
     if (inputError) { chip.className = "chip bad"; chip.textContent = "Input error"; t.textContent = inputError + (!R ? "" : stale ? " Results shown are for the last solved model." : " The results shown still match the inputs on screen."); return; }
     if (stale) { chip.className = "chip warn"; chip.textContent = "Out of date"; t.textContent = R ? "Inputs changed — press Solve. Results shown are for the last solved model." : "Press Solve to compute the first result."; return; }
@@ -1357,6 +1389,7 @@ body { margin: 0; }
   // Do not stall a study when the browser suspends animation in a background tab.
   const frame = () => new Promise((r) => setTimeout(r, 0));
   async function runStudy() {
+    if(S.emptyStudy){clearTimeout(runTimer);showEmptyWing();setStatus();return;}
     if (running) { pending = true; return; }
     recordWingHistory();
     // Outer geometry imported from a design-parameter file: no analysis until its structure is confirmed here.
@@ -1423,7 +1456,7 @@ body { margin: 0; }
   renderer.localClippingEnabled = true;
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(32, 1, 1, 20000);
-  const controls = new THREE.OrbitControls(camera, canvas);
+  let controls = new THREE.OrbitControls(camera, canvas);
   controls.enableDamping = true;
   controls.dampingFactor = 0.12;
   scene.add(new THREE.HemisphereLight(0xdfe9f5, 0x2a3440, 0.85));
@@ -1435,6 +1468,34 @@ body { margin: 0; }
 
   // three.js axes: X = span (y), Y = up (z), Z = chord (x, from the leading edge)
   const COLORS = { pla: 0xc9d3dd, rib: 0xffcc4d, sleeve: 0xe39a4b, rod: 0x329bdd, fixture: 0x33c587, load: 0xd25ad6, relief: 0x7aa7d9, seam: 0x4ea6ff };
+
+  function clearRenderedWing() {
+    if (model) {
+      world.remove(model.root);
+      model.root.traverse(o => { o.geometry?.dispose(); for (const m of (Array.isArray(o.material) ? o.material : [o.material])) m?.dispose(); });
+    }
+    model = null; lastViewSet = false; readoutKey = "";
+    for (const id of ['probe','anatomyKey']) $("#"+id).hidden = true;
+    for (const id of ['ribLabels','legend','legendTitle','footline','plotinfo']) $("#"+id).innerHTML = "";
+    $("#viewDims").textContent = 'No wing loaded. Create a wing or open a project JSON.';
+    $("#viewScaleBar").style.width = '0px'; $("#viewScaleText").textContent = '–';
+    $("#viewZoomText").textContent = 'View controls never change the physical dimensions of a wing.';
+    renderAircraftAxes();
+  }
+
+  let aircraftAxesKey = '';
+  function renderAircraftAxes() {
+    camera.updateMatrixWorld();
+    const axes = [['x',0,0,1,'#d74646'],['y',1,0,0,'#168a62'],['z',0,1,0,'#287ddd']].map(([name,x,y,z,color]) => ({name,color,v:new THREE.Vector3(x,y,z).transformDirection(camera.matrixWorldInverse)}));
+    const key = axes.map(a=>[a.v.x,a.v.y,a.v.z].map(n=>Number(n).toFixed(4)).join(',')).join(';');
+    if(key===aircraftAxesKey)return; aircraftAxesKey=key;
+    $('#aircraftAxes svg').innerHTML = '<circle cx="62" cy="49" r="3" fill="currentColor"/>'+axes.map(({name,color,v})=>{
+      const x=62+32*v.x,y=49-32*v.y,r=Math.hypot(v.x,v.y),lx=62+45*v.x,ly=49-45*v.y;
+      if(r<.12)return `<text x="62" y="${v.z>0?30:73}" fill="${color}" text-anchor="middle">${v.z>0?'⊙':'⊗'} +${name}</text>`;
+      const ux=v.x/r,uy=-v.y/r;
+      return `<path d="M62 49 L${x} ${y} M${x-6*ux-3*uy} ${y-6*uy+3*ux} L${x} ${y} L${x-6*ux+3*uy} ${y-6*uy-3*ux}" fill="none" stroke="${color}" stroke-width="2.4"/><text x="${lx}" y="${ly+4}" fill="${color}" text-anchor="middle">+${name}</text>`;
+    }).join('');
+  }
 
   function swept(stations, loopAt, matOpts) {
     const nS = stations.length, loops = stations.map(loopAt), nP = loops[0].length;
@@ -1550,6 +1611,8 @@ body { margin: 0; }
     }
     fix.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(hatchPoints), new THREE.LineBasicMaterial({ color: COLORS.fixture })));
     fix.name = "Clamped root (support only; no applied force)";
+    const rs=WingGeometry.stationAt(g,0),ra=rs.incidenceDeg*Math.PI/180,rp=rs.twistReferenceFraction*g.rootChord;
+    fix.rotation.x=ra;fix.position.y=rp*Math.sin(ra);fix.position.z=rp*(1-Math.cos(ra));
     root.add(fix);
     const loads = new THREE.Group(); root.add(loads);
     const marker = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ color: COLORS.seam, transparent: true, opacity: 0.18, side: THREE.DoubleSide, depthWrite: false }));
@@ -1573,23 +1636,42 @@ body { margin: 0; }
   function setView(v) {
     if (!model) return;
     const g = model.g, L = g.semiSpan, c = g.rootChord;
-    const dir = { iso: [0.55, 0.42, 0.72], plan: [0, 1, 1e-4], section: [1, 1e-6, 0], front: [0, 1e-6, -1] }[v] || [0.55, 0.42, 0.72];
-    controls.target.set(L / 2, 0, c / 2);
-    camera.up.set(0, 1, 0);
+    const dir = { iso: [0.55, 0.42, 0.72], plan: [0, 1, 0], section: [-1, 0, 0], front: [0, 0, -1] }[v] || [0.55, 0.42, 0.72];
+    const up = new THREE.Vector3(...(v === 'plan' ? [0,0,-1] : [0,1,0]));
+    // OrbitControls caches the up-axis quaternion when constructed. Recreate it when switching
+    // between top and upright views, rather than leaving a pole-singular top camera.
+    if(camera.up.distanceTo(up)>1e-8){
+      const enabled=controls.enabled; controls.dispose?.(); camera.up.copy(up);
+      controls=new THREE.OrbitControls(camera,canvas); controls.enableDamping=true; controls.dampingFactor=.12; controls.enabled=enabled;
+    }
+    controls.target.copy(new THREE.Box3().setFromPoints(fitPoints()).getCenter(new THREE.Vector3()));
+    camera.up.copy(up);
     camera.position.copy(controls.target).add(new THREE.Vector3(...dir).normalize().multiplyScalar(2 * Math.max(L, c)));
     controls.minDistance = 0.04 * Math.max(L, c);
     controls.maxDistance = 12 * Math.max(L, c);
     controls.update();
     placeAtFit(false);
     if (v === "iso") resetDistance = camera.position.distanceTo(controls.target);
+    document.querySelectorAll('[data-view]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.view===v)));
+    renderAircraftAxes();
     renderViewReadout(true);
   }
   // Move the camera along its line of sight until the wing (root and tip outlines, clamp plate) fills about 86 %
   // of the view. Points, not a bounding box: a box of a tapered wing seen obliquely is much larger than the wing.
   function fitPoints() {
-    const g = model.g, pts = [];
-    for (const y of [...new Set([0,...(g.stations||[]).map(s=>s.eta*g.semiSpan),g.semiSpan])]) for (const [x, z] of E.outerContour(g, y, 25)) {const p=WingGeometry.transformPoint(g,y,[x,z]);pts.push(new THREE.Vector3(p[1],p[2],p[0]));}
-    for (const z of [-0.075 * g.rootChord, 1.075 * g.rootChord]) for (const yy of [-15, 19]) pts.push(new THREE.Vector3(-3, yy, z));
+    if(!model)return [];
+    const g = model.g, pts = [], exploded=Number(S.explode)||0;
+    if(model.fitCache?.explode===exploded)return model.fitCache.points;
+    const add=(y,x,z,module=0)=>{const p=WingGeometry.transformPoint(g,y,[x,z]);pts.push(new THREE.Vector3(p[1]+module*exploded,p[2],p[0]));};
+    // Use the actual rendered station/contour vertices, including interior profile/twist extrema,
+    // without changing their millimetre coordinates or stretching a taper to fill the screen.
+    for(const mesh of [...model.skins,...model.sleeves,...model.rods,...model.spars]){
+      const u=mesh.userData;for(let i=0;i<u.by.length;i++)add(u.by[i],u.bx[i],u.bz[i],u.module||0);
+    }
+    for(const mesh of model.rigid){const u=mesh.userData,p=u.rawPositions;for(let i=0;i<p.length;i+=3)add(p[i],p[i+2],p[i+1],u.module||0);}
+    model.fix.updateMatrixWorld(true);
+    model.fix.traverse(o=>{const a=o.geometry?.attributes?.position;if(a)for(let i=0;i<a.count;i++)pts.push(new THREE.Vector3().fromBufferAttribute(a,i).applyMatrix4(o.matrixWorld));});
+    model.fitCache={explode:exploded,points:pts};
     return pts;
   }
   function placeAtFit(retarget) {
@@ -1606,6 +1688,26 @@ body { margin: 0; }
     const dir = camera.position.clone().sub(controls.target).normalize();
     camera.position.copy(controls.target).add(dir.multiplyScalar(d));
     controls.update();
+  }
+  // Client/CSS-pixel bounds for explicit whole-wing marquee selection. Only the rendered
+  // skin participates: supports, load arrows, axes and selection helpers cannot enlarge it.
+  // Project the eight physical AABB corners conservatively; do not clamp an offscreen wing
+  // into a smaller rectangle that could incorrectly count as fully enclosed.
+  function renderedWingScreenBounds() {
+    if(!model||!model.skins.length)return null;
+    const rect=canvas.getBoundingClientRect();if(!(rect.width>0&&rect.height>0))return null;
+    model.root.updateMatrixWorld(true);camera.updateMatrixWorld();
+    const box=new THREE.Box3(),p=new THREE.Vector3();
+    for(const mesh of model.skins){const a=mesh.geometry.attributes.position;for(let i=0;i<a.count;i++)box.expandByPoint(p.fromBufferAttribute(a,i).applyMatrix4(mesh.matrixWorld));}
+    if(box.isEmpty())return null;
+    let left=Infinity,top=Infinity,right=-Infinity,bottom=-Infinity;
+    for(const x of [box.min.x,box.max.x])for(const y of [box.min.y,box.max.y])for(const z of [box.min.z,box.max.z]){
+      p.set(x,y,z);if(p.clone().applyMatrix4(camera.matrixWorldInverse).z>=-camera.near)return null;
+      p.project(camera);const sx=rect.left+(p.x+1)*rect.width/2,sy=rect.top+(1-p.y)*rect.height/2;
+      if(!Number.isFinite(sx)||!Number.isFinite(sy))return null;
+      left=Math.min(left,sx);right=Math.max(right,sx);top=Math.min(top,sy);bottom=Math.max(bottom,sy);
+    }
+    return right>left&&bottom>top?{left,top,right,bottom,width:right-left,height:bottom-top}:null;
   }
   // Zoom moves the camera (perspective dolly) toward or away from the orbit target. It never scales the model:
   // the readout below the view always states the solved model's actual dimensions.
@@ -1633,7 +1735,7 @@ body { margin: 0; }
     if (!force && key === readoutKey) return;
     readoutKey = key;
     $("#viewReadout").dataset.distance = dist.toFixed(3);
-    $("#viewDims").innerHTML = `<b>View zoom only.</b> Actual size of the ${geometryPreview ? 'unsolved geometry preview' : 'solved model'}: semi-span <b>${nf(g.semiSpan, 1)} mm</b>, root chord <b>${nf(g.rootChord, 1)} mm</b>, tip chord <b>${nf(g.tipChord, 1)} mm</b> (${esc(airfoilLabel(g))}).`;
+    $("#viewDims").innerHTML = `<b>View zoom only.</b> Actual size of the ${geometryPreview ? 'unsolved geometry preview' : 'solved model'}: semi-span <b>${nf(g.semiSpan, 1)} mm</b>, root chord <b>${nf(g.rootChord, 1)} mm</b>, tip chord <b>${nf(g.tipChord, 1)} mm</b> (${esc(airfoilLabel(g))}). Taper ratio ${nf(g.tipChord/g.rootChord,3)}; use Top to compare the chords without oblique foreshortening.`;
     const nice = [1, 2, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000, 2000].find((mm) => mm * pxPerMm >= 48) || 2000;
     const px = isFinite(pxPerMm) && pxPerMm > 0 ? Math.min(150, nice * pxPerMm) : 0;
     $("#viewScaleBar").style.width = `${Math.round(px)}px`;
@@ -1852,12 +1954,13 @@ body { margin: 0; }
     void unit;
   }
   function renderPlotInfo() {
-    if (!R) return;
-    if (geometryPreview) {
+    if (geometryPreview&&model) {
       const g = model.g;
       $('#plotinfo').textContent = `UNSOLVED GEOMETRY PREVIEW · ${airfoilLabel(g)} · semi-span ${g.semiSpan} mm · ${model.ribs.length} ribs · ${model.rods.length} rods. Stress and deformation hidden; press Solve for analysis.`;
+      $('#footline').textContent='Geometry preview only · no structural result yet. Press Solve to analyse.';
       return;
     }
+    if (!R) return;
     if(R.analysis3D){$('#plotinfo').textContent=`3-D SPATIAL BEAM · ${airfoilLabel(R.geometry)} · sweep ${R.geometry.sweepDeg||0}° · dihedral ${R.geometry.dihedralDeg||0}° · ${R.analysis3D.elements.length} elements · prescribed global +z loads · ${S.deformed?'displacement magnification ×'+nf(deformAmount().scale,1):'undeformed geometry'} · nominal normal stress only; grey = unresolved; no overall FoS`;return;}
     const g = R.geometry;
     const kind = { stress: "Spanwise normal stress σ, beam theory, limit load", disp: "Resultant displacement, limit load", fos: `Factor of safety on PLA strength (red: below ${R.load.fos})`, mode: "Natural frequency mode", model: "Model" }[S.plot];
@@ -2067,6 +2170,7 @@ body { margin: 0; }
     if ($("#app").hidden) { lastT=t; requestAnimationFrame(loop); return; }
     resize();
     controls.update();
+    renderAircraftAxes();
     renderViewReadout();
     positionRibLabels();
     if (S.plot === "mode" && R && model && !geometryPreview) {
@@ -2887,7 +2991,7 @@ body { margin: 0; }
       importGate = { required: info.required.map((r) => ({ id: r.id, label: r.label })), confirmed: new Set(), provenance: info.provenance, conflicts: info.conflicts || [], previous };
     } else {
       S.geometry = { ...state.geometry, rodFractions: [...state.geometry.rodFractions], customInteriorRibs: state.geometry.customInteriorRibs == null ? null : [...state.geometry.customInteriorRibs] };
-      Object.assign(S, { plaKey: state.plaKey, plaOver: { ...state.plaOver }, rodKey: state.rodKey, rodOver: { ...state.rodOver }, assembly: { ...state.assembly }, criteria: { ...state.criteria }, analysis:state.analysis?{...state.analysis}:null });
+      Object.assign(S, { plaKey: state.plaKey, plaOver: { ...state.plaOver }, rodKey: state.rodKey, rodOver: { ...state.rodOver }, assembly: { ...state.assembly }, criteria: { ...state.criteria }, analysis:state.analysis?{...state.analysis}:null,projectName:state.projectName||'',emptyStudy:!!state.emptyStudy });
       S.load = { ...E.DEFAULT_LOAD, ...JSON.parse(JSON.stringify(state.load)) };   // the page expects every load field; the file stores the active case
       importGate = null; fieldErrors = {}; edited();
     }
@@ -2911,7 +3015,7 @@ body { margin: 0; }
     onApplied: (info) => {
       if (printedWorkspace?.popup.classList.contains('wing-file-pop')) printedWorkspace.close(false);
       setAnatomy('inside');
-      sessionNote(`Opened ${info.provenance?.filename || 'wing JSON'}. The imported wing is shown; press Solve to update its results.`);
+      sessionNote(`Opened ${info.provenance?.filename || 'wing JSON'}. ${S.emptyStudy?'Empty canvas restored; choose Airfoil & planform to create a wing.':'The imported wing is shown; press Solve to update its results.'}`);
     },
   }) : null;
   if(studyFiles)$('#wlFiles .wl-fallback').hidden=true;
@@ -2937,12 +3041,13 @@ body { margin: 0; }
   function exportToNotebook(){
     // Download/manufacturing messages must not become solver input errors.
     const note=message=>{filesNote(message);$('#stateText').textContent=message;};
+    if(S.emptyStudy){note('Create a wing first: choose Airfoil & planform and Apply geometry.');return;}
     if(gateOpen()){note(blockedText);return;}
     if(!R||stale||running||inputError){note('Solve the current valid design before exporting to the notebook.');return;}
     try{
       const issues=WingStudyIO.fabricationIssues(S,E);if(issues.length){note('Notebook export blocked: '+issues.join(' '));return;}
       const text=WingStudyIO.exportPrintedStudy(S,E);
-      downloadText('MIE446_WingLab_to_Notebook.json',text,'application/json');
+      downloadText(S.projectName?WingStudyIO.safeFilenameStem(S.projectName)+'.json':'MIE446_WingLab_to_Notebook.json',text,'application/json');
       note('Design JSON downloaded. In the Code-to-Print notebook choose Wing Lab JSON in Step 2, enter the actual usable printer dimensions and run the upload cell. One-piece geometry is preserved. Printer fit is not yet checked; inspect the inventory and final CAD validation.');
     }catch(e){note('Notebook export blocked: '+e.message);}
   }
@@ -2981,13 +3086,19 @@ body { margin: 0; }
     studyFiles: () => studyFiles,
     view: () => (model ? { distance: camera.position.distanceTo(controls.target), resetDistance, solved: { semiSpan: model.g.semiSpan, rootChord: model.g.rootChord, tipChord: model.g.tipChord },preview:geometryPreview,members:{ribs:model.ribs.length,rods:model.rods.length,sparParts:(model.spars||[]).length} } : null),
   };
-  let printedWorkspace=null;
   const advancedGeometryHome=el('div',{hidden:true}),advancedGeometryPanel=el('div',{id:'wingAdvancedGeometry'});
   advancedGeometryHome.append(advancedGeometryPanel);$('#wingSide').append(advancedGeometryHome);
   const advancedGeometryEditor=WingGeometryUI.mount(advancedGeometryPanel,{getGeometry:()=>S.geometry,applyGeometry,onApplied:()=>{printedWorkspace?.close();setAnatomy('inside');}});
+  function openAdvancedGeometryPopup(anchor){if(!printedWorkspace)return;advancedGeometryEditor.refresh();printedWorkspace.open('Airfoils & planform · dimensions, taper, twist, sweep, dihedral',advancedGeometryPanel,anchor);printedWorkspace.popup.style.width='min(680px,calc(100vw - 16px))';printedWorkspace.position();}
+  function showEmptyWing(){
+    clearRenderedWing();wingSelection?.clear();R=null;stale=true;geometryPreview=true;lastGeoKey=null;
+    $('#app > .dock').hidden=true;$('#probe').hidden=true;$('#legend').hidden=true;$('#wingEmptyStart')?.removeAttribute('hidden');
+    $('#plotinfo').textContent='Empty study · no wing or loads. Create a wing with Airfoil & planform.';
+    $('#footline').textContent='No analysis or printable geometry exists until you create a wing.';
+  }
   function requestClearWingStudy(_picked,anchor){
     if(running)return;
-    const form=el('form',{class:'wing-clear-confirm'},'<p>Start a new default shell? This clears the current geometry, material changes, ribs, rods, spars, loads, imported data and old results.</p><p class="note">Undo can restore the previous inputs. Downloaded JSON files are not deleted.</p><div class="lesson-actions"><button class="btn" type="submit" id="wingClearConfirm">Clear study</button><button class="btn" type="button" data-wing-clear-cancel>Cancel</button></div>');
+    const form=el('form',{class:'wing-clear-confirm'},'<p>Clear the entire wing and start with an empty canvas? Geometry, materials, ribs, rods, spars, loads, project name and old results will be cleared.</p><p class="note">Undo can restore the previous inputs. Downloaded JSON files are not deleted.</p><div class="lesson-actions"><button class="btn" type="submit" id="wingClearConfirm">Clear study</button><button class="btn" type="button" data-wing-clear-cancel>Cancel</button></div>');
     const submit=form.querySelector('[type="submit"]');submit.style.cssText='color:var(--bad);border-color:var(--bad)';
     form.onsubmit=e=>{e.preventDefault();clearWingStudy();};
     form.querySelector('[data-wing-clear-cancel]').onclick=()=>printedWorkspace.close();
@@ -3003,6 +3114,7 @@ body { margin: 0; }
     historySuspended++;
     try{
       Object.assign(S,{
+        projectName:'',emptyStudy:true,
         geometry:{...E.DEFAULT_GEOMETRY,modules:1,rodFractions:[],customInteriorRibs:[],spars:[]},
         plaKey:'pla_upright',rodKey:'rod_hobby',plaOver:{},rodOver:{},
         assembly:{...E.DEFAULT_ASSEMBLY,seamFreeLength:8},load:noLoad(),criteria:{...E.DEFAULT_CRITERIA},analysis:null,
@@ -3011,22 +3123,19 @@ body { margin: 0; }
       importGate=null;inputError=null;fieldErrors={};partSelection=null;partUndo=null;partPick=false;
       R=null;lastGeoKey=null;stale=true;designBaseline=null;saveDesignAfterRun=false;
       savedLessonLoad=null;lessonAnswers.clear();wingStudyOpened=true;
-      $('#report').value='';$('#copyState').textContent='No previous results are kept. A fresh unloaded shell is being prepared.';
+      $('#report').value='';$('#copyState').textContent='No previous results are kept. Create a new wing to begin.';
       $('#wingShareBox').hidden=true;$('#wingShareBox').value='';$('#wingShareMsg').textContent='';
       $('#app > .dock').hidden=true;$('#probe').hidden=true;$('#legend').hidden=true;
       $('#secY').value=0;$('#clipIn').value=S.clipY;
       renderImportGate();renderInputs(true);renderTree();renderInventory();renderPM();
-      geometryPreview=true;buildModel({geometry:E.makeGeometry(S.geometry)});setAnatomy('inside');frameView(true);
-      $('#plotinfo').textContent='New empty shell · no ribs, rods, spars or loads. Previous results cleared.';
-      $('#footline').textContent='Preparing the new unloaded shell.';
+      showEmptyWing();setStatus();
       // Do not let refreshing a previously shared URL reopen the cleared study.
       if(/(^#|&)wingstudy=/.test(location.hash))history.replaceState(null,'',location.pathname+location.search+'#wing');
       // Clear only this workspace's old draft; keep downloaded files and other workspaces untouched.
       try{localStorage.removeItem(wingSessionKey);wingSessionInputs='';}catch{}
     }finally{historySuspended--;recordWingHistory();}
     const persisted=wingSessionInputs===JSON.stringify(Object.fromEntries(historyFields.map(k=>[k,S[k]])));
-    sessionNote('Study cleared. Starting from a default shell with no ribs, rods, spars or loads. Undo restores the previous inputs; downloaded JSON files are unchanged.'+(persisted?'':' Browser storage could not be updated; use Save JSON before leaving.'));
-    runStudy();
+    sessionNote('Study cleared. Empty canvas: choose Airfoil & planform to create a new wing. Undo restores the previous inputs; downloaded JSON files are unchanged.'+(persisted?'':' Browser storage could not be updated; use Save JSON before leaving.'));
   }
   function openWingLoadPopup(p,anchor){
     if(!printedWorkspace)return;let editor=loadKeeperOf().editor;if(!editor){renderWingLoads();editor=loadKeeperOf().editor;}if(!editor){flash('Complete valid structural inputs and Solve once before adding loads.');return;}
@@ -3061,11 +3170,12 @@ body { margin: 0; }
   }
   if(typeof WingWorkspaceUI!=='undefined'){
     printedWorkspace=WingWorkspaceUI.create({app:$('#app'),canvas,viewPanel:$('#wingViewPanel'),sample:samplePrintedSurface,onClose:node=>{if(node.id==='wingStudyFiles')studyFiles?.cancel();},actions:[
+      {id:'select-wing',label:'Select wing',run:()=>{}},
       {id:'load',label:'+ Load',run:openWingLoadPopup},{id:'rib',label:'+ Rib',run:(p,a)=>openWingPartPopup('rib',p,a)},
       {id:'rod',label:'+ Rod',run:(p,a)=>openWingPartPopup('rod',p,a)},{id:'spar',label:'+ Spar',run:(p,a)=>openWingPartPopup('spar',p,a)},
       {id:'parts',label:'Select / edit parts',run:(p,a)=>{printedWorkspace.open('Ribs & spars',$('#wingPartEditor'),a);if(!partPick)$('#wpPick').click();}},
       {id:'structure',label:'Structure dimensions',run:(p,a)=>openWingStructurePopup(a)},{id:'materials',label:'Materials',run:(p,a)=>openWingMaterialsPopup(a)},
-      {id:'geometry',label:'Airfoils & planform',run:(p,a)=>{advancedGeometryEditor.refresh();printedWorkspace.open('Airfoils · twist · sweep · dihedral',advancedGeometryPanel,a);printedWorkspace.popup.style.width='min(680px,calc(100vw - 16px))';printedWorkspace.position();}},
+      {id:'geometry',label:'Airfoils & planform',run:(p,a)=>openAdvancedGeometryPopup(a)},
       {id:'inside',label:'Inside wing',run:()=>setAnatomy('inside')},
       {id:'open-json',label:'Open JSON',run:()=>{$('#wingStudyFiles .wio-open input').click();}},
       {id:'save-json',label:'Save JSON',run:()=>studyFiles?.save()},
@@ -3077,10 +3187,21 @@ body { margin: 0; }
     printedWorkspace.tools.insertBefore(meshControl,printedWorkspace.tools.querySelector('.wing-quick-hint'));
     meshInput.onchange=()=>{const text=meshInput.value.trim(),n=Number(text);if(text&&(!Number.isInteger(n)||n<4||n>100)){meshInput.setCustomValidity('Enter a whole number from 4 to 100, or leave blank for the solver default.');meshInput.reportValidity();return;}meshInput.setCustomValidity('');S.analysis=text?{nElements:n}:null;edited();renderTree();};
     meshInput.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();meshInput.onchange();}};
-    const clearButton=printedWorkspace.tools.querySelector('[data-wing-action="clear"]');clearButton.title='Clear this study and start a new empty shell · Undo available';clearButton.style.cssText='color:var(--bad);border-color:var(--bad)';
+    const clearButton=printedWorkspace.tools.querySelector('[data-wing-action="clear"]');clearButton.textContent='New / Clear';clearButton.title='Clear the whole study and start on an empty canvas · Undo available';clearButton.style.cssText='color:var(--bad);border-color:var(--bad)';
+    wingSelection=WingSelectionUI.mount({canvas,viewport:canvas.parentElement,button:printedWorkspace.tools.querySelector('[data-wing-action="select-wing"]'),getBounds:()=>renderedWingScreenBounds(),onDelete:()=>{if(printedWorkspace.popup.hidden)requestClearWingStudy(null,clearButton);},setOrbitEnabled:enabled=>{controls.enabled=enabled;},isActive:()=>!$('#app').hidden&&!S.emptyStudy&&!running&&!gateOpen()&&printedWorkspace.popup.hidden});
+    document.querySelectorAll('#app [data-view]').forEach(b=>b.addEventListener('click',()=>wingSelection?.clear()));
     const sparResults=$('#wingSparResults');$('#tab-checks').prepend(sparResults);
     // Inputs and lessons live above/beside the model, never in its results dock.
     $('#app > .bar').append($('#wingSide .wl-run'));
+    $('#app .wl-run-actions').append(clearButton);
+    const quickClear=clearButton.cloneNode(true);quickClear.id='wingQuickClear';quickClear.onclick=e=>requestClearWingStudy(null,e.currentTarget);printedWorkspace.tools.prepend(quickClear);
+    const projectInput=$('#wingProjectName');
+    projectInput.oninput=()=>projectInput.setCustomValidity('');
+    projectInput.onchange=()=>{try{S.projectName=WingStudyIO.normalizeProjectName(projectInput.value);projectInput.value=S.projectName;projectInput.setCustomValidity('');renderInputs();recordWingHistory();}catch(e){projectInput.setCustomValidity(e.message);projectInput.reportValidity();}};
+    projectInput.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();projectInput.onchange();}else if(e.key==='Escape'){projectInput.value=S.projectName||'';projectInput.setCustomValidity('');}};
+    const emptyStart=el('div',{id:'wingEmptyStart',hidden:true,role:'status'},'<b>Start a new wing</b><p>Choose your airfoil, dimensions and taper. No previous wing or loads are retained.</p><button class="btn primary" type="button">Create wing · Airfoil &amp; planform</button>');
+    emptyStart.style.cssText='position:absolute;left:50%;top:48%;transform:translate(-50%,-50%);max-width:420px;width:calc(100% - 32px);padding:20px;border:1px solid var(--line);border-radius:14px;background:var(--panel);text-align:center;z-index:5';
+    emptyStart.querySelector('button').onclick=e=>openAdvancedGeometryPopup(e.currentTarget);canvas.parentElement.append(emptyStart);
     const library=el('div',{class:'wing-input-library',hidden:true});$('#wingSide').append(library);library.append($('#wingLoadBtn').closest('.group'));
     const lessons=[['learn','Guided lesson'],['design','Design lab · add / compare ribs'],['members','Skin, rods, ribs & modes'],['loads','Load theory & Schrenk'],['joints','Compare connections'],['predict','Predict & challenge']];
     const experiments=el('details',{class:'wing-experiments'},'<summary class="btn">Experiments & theory ▾</summary><div></div>');
@@ -3091,7 +3212,14 @@ body { margin: 0; }
     const historyTools=el('span',{class:'wing-history-tools',role:'group','aria-label':'Wing edit history'},'<button class="btn" type="button" id="wingUndo" title="Undo wing edit (Ctrl/Cmd+Z)" disabled>↶ Undo</button><button class="btn" type="button" id="wingRedo" title="Redo wing edit (Ctrl/Cmd+Shift+Z or Ctrl+Y)" disabled>↷ Redo</button>');
     printedWorkspace.tools.insertBefore(historyTools,printedWorkspace.tools.querySelector('.wing-quick-hint'));historyTools.style.cssText='display:inline-flex;gap:6px;margin-left:auto';
     $('#wingUndo').onclick=()=>travelWingHistory(-1);$('#wingRedo').onclick=()=>travelWingHistory(1);syncWingHistory();
-    const historyHelp=el('details',{class:'wing-history-help'},'<summary>Undo / Redo help</summary><p class="note">Undo/Redo restores up to 100 saved wing input states: geometry, ribs, rods, spars, material properties, connections, loads and assessment settings. A new edit clears Redo. Camera and display changes are not model edits. Outside text fields use Ctrl/Cmd+Z, Ctrl/Cmd+Shift+Z or Ctrl+Y; text fields keep native text undo. Restored inputs need Solve unless automatic solving is enabled. Imported structural confirmations are restored too; Undo never bypasses them. History is kept for this page session, not saved in exported study files.</p>');$('#wingModelNote').append(historyHelp);
+    const help=el('details',{class:'wing-input-help',id:'wingInputHelp'},'<summary class="btn">Help ▾</summary><div class="wing-help-content"></div>'),helpBody=help.querySelector('div');
+    const modelHelp=el('details',{},'<summary>Model &amp; manufacturing limits</summary>');modelHelp.append($('#wingModelNote'));helpBody.append(modelHelp);
+    const historyHelp=el('details',{class:'wing-history-help'},'<summary>Undo / Redo</summary><p class="note">Undo/Redo restores up to 100 saved input states, including geometry, project name, materials, loads and the cleared canvas. A new edit clears Redo. Outside text fields use Ctrl/Cmd+Z, Ctrl/Cmd+Shift+Z or Ctrl+Y. Restored inputs need Solve unless automatic solving is enabled. History is kept for this page session, not saved in JSON.</p>');helpBody.append(historyHelp);
+    helpBody.append(el('details',{},'<summary>Selection &amp; clearing</summary><p class="note">Click visible parts to edit them. To select the entire wing, choose Select wing and drag a rectangle around it, or use Ctrl/Cmd+A outside text fields. Delete opens Clear confirmation. Esc cancels selection. New / Clear is beside Solve; Undo restores your previous inputs. Normal dragging rotates the view.</p>'));
+    const example=el('button',{class:'btn',type:'button',id:'wgCourseExample'},'Optional course wing example');example.onclick=()=>{if(confirm('Replace the current wing with the course example? Geometry, materials and connections will reset, and applied loads will be cleared.'))window.dispatchEvent(new CustomEvent('wing-learning-stage',{detail:'project'}));};helpBody.append(example);
+    printedWorkspace.tools.insertBefore(help,printedWorkspace.tools.querySelector('.wing-quick-hint'));
+    const uiStyle=el('style',{},'.wing-project-name{display:grid;gap:3px;font-size:11px;color:var(--muted);margin-top:6px}.wing-project-name input{min-height:36px;width:min(230px,100%);font-size:15px;padding:5px 8px;background:var(--panel-2);color:var(--fg);border:1px solid var(--line);border-radius:7px}#wingProjectTitle{display:block;max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.wing-airfoil-launch{display:grid;gap:5px;text-align:left;width:100%;margin:8px 0 12px}.wing-airfoil-launch span{font-size:12px;font-weight:400;white-space:normal}.wing-input-help{position:relative;margin-left:8px}.wing-help-content{position:absolute;right:0;top:100%;z-index:110;background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:12px;padding:14px;width:min(390px,calc(100vw - 24px));max-height:65dvh;overflow:auto;box-shadow:0 12px 32px #102d4f30}.wing-help-content details{padding:9px 0}.wing-help-content summary{cursor:pointer;font-weight:700}.wing-help-content .wl-modelnote{padding:8px 0;border:0}@media(max-width:600px){.wing-help-content{position:fixed;right:10px;top:100px}.wing-project-name input{min-height:44px}}');document.head.append(uiStyle);
+    renderInputs(true);
     document.addEventListener('keydown',e=>{if($('#app').hidden||!(e.ctrlKey||e.metaKey)||e.altKey||e.target.closest('input,textarea,select,[contenteditable],[role="textbox"]'))return;const key=e.key.toLowerCase();if(key==='z'||key==='y'){e.preventDefault();travelWingHistory(key==='y'||e.shiftKey?1:-1);}});
     document.addEventListener('wing-load-applied',e=>{if(e.detail==='printed')printedWorkspace.close();});
   }
@@ -3104,6 +3232,7 @@ body { margin: 0; }
     }
     partSelection=null;partUndo=null;partPick=false;
     const stage=event.detail, project=stage==='project';
+    S.emptyStudy=false;
     importGate=null; renderImportGate();
     S.geometry={...E.DEFAULT_GEOMETRY, rodFractions:[...E.DEFAULT_GEOMETRY.rodFractions]};
     S.assembly={...E.DEFAULT_ASSEMBLY,seamFreeLength:8};

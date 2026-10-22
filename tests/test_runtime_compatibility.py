@@ -7,7 +7,7 @@ ROOT = Path(__file__).parents[1]
 
 def test_project_metadata_accepts_current_colab_python() -> None:
     metadata = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
-    assert metadata["project"]["version"] == "1.3.0"
+    assert metadata["project"]["version"] == "1.3.1"
     assert metadata["project"]["requires-python"] == ">=3.11,<3.14"
 
 

@@ -16,6 +16,7 @@ from .metrics import PlanformMetrics, calculate_planform_metrics
 from .validation import ValidationReport, validate_wing
 from .visualization import plot_design_overview
 from .wing_sections import airfoil_label
+from .project_metadata import normalize_project_name, safe_project_stem, project_markdown
 
 
 _TOKEN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]*$")
@@ -328,7 +329,7 @@ class BuiltWingProject:
         root = Path(output_root)
         destination = (
             root
-            / f"MIE446_{self.project.team_id}_{self.project.revision}"
+            / (f"MIE446_{self.project.team_id}" + (f"_{safe_project_stem(self.project.project_name)}" if self.project.project_name else "") + f"_{self.project.revision}")
         )
         try:
             manifest = export_build(
@@ -338,6 +339,7 @@ class BuiltWingProject:
                 revision=self.project.revision,
                 ai_log=ai_log,
                 student_record=student_record,
+                project_name=self.project.project_name,
                 design_summary_markdown=self.design_summary(student_record),
                 design_overview_html=plot_design_overview(
                     self.analysis.parameters
@@ -354,6 +356,7 @@ class BuiltWingProject:
         sections = [
             f"# MIE 446 Design Summary — {self.project.team_id} {self.project.revision}",
             "",
+            *([f"Project: **{project_markdown(self.project.project_name)}**", ""] if self.project.project_name else []),
             self.analysis.to_markdown(),
             "",
             self.to_markdown(),
@@ -423,6 +426,11 @@ class WingProject:
     @property
     def parameters(self) -> WingParameters:
         return self.imported_parameters if self.imported_parameters is not None else self.design.to_parameters()
+
+    @property
+    def project_name(self) -> str:
+        """Imported display metadata, deliberately excluded from geometry parameters."""
+        return normalize_project_name((self.source_record or {}).get("project_name", ""))
 
     def with_clearance(
         self,

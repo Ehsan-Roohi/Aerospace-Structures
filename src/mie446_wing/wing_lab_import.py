@@ -12,6 +12,7 @@ from pathlib import Path
 
 from .config import BondedSparSpec, SparSpec, WingParameters
 from .wing_sections import airfoil_label
+from .project_metadata import normalize_project_name, project_markdown
 
 
 class WingLabImportError(ValueError):
@@ -71,8 +72,10 @@ class WingLabImport:
 
     def to_markdown(self):
         p = self.parameters
+        name = self.source_record.get('project_name', '')
         return ("### Wing Lab → CAD import accepted\n\n"
-                f"- Airfoil **{airfoil_label(p)}**, semi-span **{p.semi_span_mm:g} mm**, chords **{p.root_chord_mm:g}/{p.tip_chord_mm:g} mm**.\n"
+                + (f"- Project: **{project_markdown(name)}**.\n" if name else "")
+                + f"- Airfoil **{airfoil_label(p)}**, semi-span **{p.semi_span_mm:g} mm**, chords **{p.root_chord_mm:g}/{p.tip_chord_mm:g} mm**.\n"
                 f"- Sweep **{p.sweep_deg:g}°** at x/c={p.sweep_reference_fraction:g}; dihedral **{p.dihedral_deg:g}°**; incidence twist **{'enabled' if p.twist_enabled else 'off'}**.\n"
                 f"- **{p.module_count} module(s), {len(p.rib_stations_mm())} physical ribs, {len(p.spars)} external rods, {len(p.bonded_spars)} integral printed spars**.\n"
                 f"- Source SHA-256: `{self.source_record['sha256']}`.\n\n"
@@ -92,7 +95,16 @@ def import_wing_lab_study(data: bytes | str) -> WingLabImport:
     except (UnicodeError, json.JSONDecodeError, RecursionError) as exc:
         raise WingLabImportError(f"Cannot read Wing Lab JSON: {exc}") from exc
     _tree(doc)
-    _object(doc, ['format','version','workspace','savedAt','app','study'], 'Study document')
+    _object(doc, ['format','version','workspace','savedAt','app','study'] + ([k for k in ['projectName','emptyStudy'] if k in doc] if isinstance(doc,dict) else []), 'Study document')
+    try:
+        project_name = normalize_project_name(doc.get('projectName', ''))
+    except ValueError as exc:
+        raise WingLabImportError(str(exc)) from exc
+    if 'emptyStudy' in doc:
+        if type(doc['emptyStudy']) is not bool:
+            _fail("emptyStudy must be true or false")
+        if doc['emptyStudy']:
+            _fail("Create a wing first in Wing Lab, then Export to notebook. This JSON is an empty study, not a printable wing")
     if doc['format']!='mie446-wing-study' or type(doc['version']) is not int or doc['version'] not in (1,2) or doc['workspace']!='printed':
         _fail("Use Export to notebook from the general Wing workspace, not D.520, a share link, or a geometry-only file")
     st = doc['study']
@@ -175,6 +187,7 @@ def import_wing_lab_study(data: bytes | str) -> WingLabImport:
     except (TypeError,ValueError) as exc:
         raise WingLabImportError(f"Wing Lab design cannot be fabricated: {exc}") from exc
     return WingLabImport(p, dict(format='mie446-wing-lab-cad-transfer',version=1,sha256=sha256(raw).hexdigest(),
+        **({'project_name':project_name} if project_name else {}),
         source_document=doc, geometry_parameters=p.to_dict(),
         limitations=['Nominal geometry transfer, not a re-solve or certification.',
                      'Station sections stay parallel to aircraft x-z planes; y is projected span, positive incidence raises the leading edge. Interior profiles interpolate pointwise; no aerodynamic polar or lifting-surface analysis is implied.',

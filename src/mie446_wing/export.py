@@ -15,6 +15,7 @@ from .config import WingParameters
 from .cad_metrics import adaptive_volume
 from .geometry import WingBuild, make_fit_coupon, spar_length_mm
 from .validation import validate_wing
+from .project_metadata import normalize_project_name, safe_project_stem
 
 
 def _safe_token(value: str, label: str) -> str:
@@ -195,6 +196,7 @@ def export_build(
     student_record: dict[str, Any] | None = None,
     design_summary_markdown: str | None = None,
     design_overview_html: str | None = None,
+    project_name: str | None = None,
 ) -> dict[str, Any]:
     """Export a validated build and return its machine-readable manifest."""
 
@@ -203,6 +205,11 @@ def export_build(
     validated_ai_log = _validated_ai_log(ai_log)
     if student_record is not None and not isinstance(student_record, dict):
         raise ValueError("student_record must be a dictionary")
+    if project_name is None:
+        transfer = (student_record or {}).get("wing_lab_import", {})
+        project_name = transfer.get("project_name", "") if isinstance(transfer, dict) else ""
+    project_name = normalize_project_name(project_name)
+    file_prefix = f"MIE446_{team}" + (f"_{safe_project_stem(project_name)}" if project_name else "")
     try:
         serialized_student_record = (
             json.dumps(student_record, indent=2) if student_record is not None else None
@@ -233,12 +240,12 @@ def export_build(
     report.to_json(validation_path)
 
     exported: list[Path] = [parameters_path, metrics_path, validation_path]
-    complete_step = destination / f"MIE446_{team}_Wing_Complete_{revision}.step"
+    complete_step = destination / f"{file_prefix}_Wing_Complete_{revision}.step"
     _export_shape(build.complete, complete_step)
     exported.append(complete_step)
 
     for index, module in enumerate(build.modules, start=1):
-        stem = f"MIE446_{team}_Wing_Module_{index:02d}_{revision}"
+        stem = f"{file_prefix}_Wing_Module_{index:02d}_{revision}"
         for suffix in (".stl", ".3mf"):
             path = destination / f"{stem}{suffix}"
             _export_shape(module, path)
@@ -246,7 +253,7 @@ def export_build(
 
     if build.parameters.spars:
         coupon, coupon_mapping = make_fit_coupon(build.parameters)
-        coupon_path = destination / f"MIE446_{team}_Rod_Fit_Coupon_{revision}.stl"
+        coupon_path = destination / f"{file_prefix}_Rod_Fit_Coupon_{revision}.stl"
         _export_shape(coupon, coupon_path)
         exported.append(coupon_path)
         coupon_mapping_path = destination / "fit_coupon_mapping.json"
@@ -281,6 +288,7 @@ def export_build(
     manifest: dict[str, Any] = {
         "course": "MIE 446 Aerospace Structures",
         "project": "Code-to-Print Wing",
+        **({"project_name": project_name} if project_name else {}),
         "units": "millimetres",
         "team": team,
         "revision": revision,

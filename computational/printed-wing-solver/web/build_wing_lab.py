@@ -21,6 +21,7 @@ template = (HERE / "wing_lab_template.html").read_text(encoding="utf-8")
 engine = (HERE / "engine.js").read_text(encoding="utf-8")
 assert "/*__ENGINE__*/" in template
 page = template.replace("/*__ENGINE__*/", engine)
+page = page.replace("/*__WING_SELECTION_UI__*/", (HERE / "wing_selection_ui.js").read_text(encoding="utf-8"))
 # Beam Lab modules share one inline script (sections -> engine -> study/diagrams/solution -> companion
 # tools); its controller (foundations_ui.js) and stylesheet (beam_lab.css) have their own tokens.
 for token, filename in [("/*__LOAD_PROFILES__*/", "load_profiles.js"), ("/*__WING_SPARS__*/", "wing_spars.js"), ("/*__WING_AIRFOILS__*/","wing_airfoils.js"),("/*__WING_GEOMETRY__*/","wing_geometry.js"),("/*__WING_FRAME3D__*/","wing_frame3d.js"),("/*__WING_GEOMETRY_UI__*/","wing_geometry_ui.js"),("/*__BEAM_STYLES__*/", "beam_lab.css"), ("/*__BEAM_SECTIONS__*/", "beam_sections.js"), ("/*__BEAM_ENGINE__*/", "beam_learning_engine.js"),

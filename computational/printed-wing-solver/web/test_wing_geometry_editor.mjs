@@ -18,7 +18,7 @@ try{
  const u=open();eq(u.$('wgtTwist').value,'no');eq(u.$('wgtSections').checked,false);eq(u.state().stations,undefined);
  u.change('wgtDefaultKind','naca5');eq(u.$('wgtDefaultCode').value,'23012');eq(u.state().airfoil,undefined,'family selection stays a draft');u.submit();eq(u.state().airfoil.kind,'naca5');eq(u.state().airfoil.code,'23012');
  u.change('wgtDefaultCode','24015');u.submit();eq(u.state().airfoil.code,'24015');
- u.change('wgtDefaultKind','naca4');u.change('wgtDefaultCode','4415');u.submit();eq(u.state().airfoil.code,'4415');eq(u.state().airfoil.kind,'naca4');
+ u.change('wgtDefaultKind','naca4');u.change('wgtDefaultCode','4415');u.submit();eq(u.state().naca,'4415');ok(!u.state().airfoil,'uniform untwisted NACA4 keeps the legacy construction');
  u.change('wgtDefaultKind','sc20412');ok(u.$('wgtDefaultCode').disabled);ok(u.d.querySelector('[data-profile-source]').textContent.includes('/sc20412.dat'));u.submit();
  assert.deepEqual(u.state().airfoil,JSON.parse(JSON.stringify(A.preset('sc20412'))));checks++;eq(u.state().airfoil.upper.length,161);eq(u.state().airfoil.source.normalization,'unit-chord');
  // The student's intended on/off decision precedes station entry. Enabling
@@ -50,5 +50,9 @@ try{
  // Enter requests form submission. Values in the actual DOM at submission,
  // even before a blur/change event, are the user's authoritative input.
  const enter=open();enter.$('wgtSweep').value='13.5';enter.$('wgtSweep').dispatchEvent(new enter.w.Event('input',{bubbles:true}));enter.$('wgtSweep').dispatchEvent(new enter.w.KeyboardEvent('keydown',{key:'Enter',bubbles:true}));enter.ui.form.requestSubmit();eq(enter.state().sweepDeg,13.5,'Enter applies the value that is visibly typed');eq(enter.count(),1);
+ const dims=open({rootChord:160,tipChord:100,rodFractions:[.3],modules:3});
+ const input=(id,value)=>{dims.$(id).value=String(value);dims.$(id).dispatchEvent(new dims.w.Event('input',{bubbles:true}));};
+ input('wgtRootChord',120);eq(dims.$('wgtTaper').value,'0.83333333');input('wgtTaper',.5);eq(dims.$('wgtTipChord').value,'60');dims.submit();eq(dims.state().rootChord,120);eq(dims.state().tipChord,60);ok(!E.analysisCapability(dims.state(),E.DEFAULT_ASSEMBLY).requires3D,'uniform NACA4 picker does not upgrade a legacy rod geometry');ok(dims.d.querySelector('#wgtPlanformPreview svg').getAttribute('aria-label').includes('tip chord 60'));
+ const dimBefore=dims.raw();input('wgtTaper',1.2);dims.submit();eq(dims.raw(),dimBefore,'invalid taper is atomic');dims.ui.refresh();input('wgtTipChord',90);eq(dims.$('wgtTaper').value,'0.75');dims.submit();eq(dims.state().tipChord,90);
  console.log(`Wing geometry editor: ${checks} family/library, twist/stations, atomic validation, real DAT upload, provenance and Enter checks passed.`);
 }finally{for(const v of opened)v.dom.window.close();}

@@ -83,7 +83,14 @@ async function until(test,what,ms=60000){const end=Date.now()+ms;while(!test()){
   const ui=()=>w.WingLabUI;
   const solved=async()=>{await until(()=>ui().result()&&!ui().isRunning()&&!ui().isStale()&&$('#stateChip').textContent==='Solved','a solved study');await tick(5);};
   const solve=async()=>{const before=ui().result();$('#runBtn').click();await until(()=>ui().result()!==before&&!ui().isRunning(),'Solve');await solved();return ui().result();};
-  const change=async(sel,value)=>{const el=$(sel);ok(el,`${sel} exists`);el.value=String(value);el.dispatchEvent(new w.Event('change',{bubbles:true}));await tick(5);};
+  const editAirfoil=async value=>{
+    $('#wgAirfoilPicker').click();await tick(5);
+    const field=$('#wgtDefaultCode');ok(field,'full airfoil picker exposes its NACA code input');
+    field.value=String(value);field.dispatchEvent(new w.Event('input',{bubbles:true}));
+    // Submit the visible draft (also exercises validation before blur/change).
+    $('#wgtApply').click();await tick(5);
+  };
+  const change=async(sel,value)=>{if(sel==='#wgAirfoilPicker'){await editAirfoil(value);return;}const el=$(sel);ok(el,`${sel} exists`);el.value=String(value);el.dispatchEvent(new w.Event('change',{bubbles:true}));await tick(5);};
   const click=async sel=>{$(sel).click();await tick(5);};
   const metrics=r=>({mass:r.mass.printed,EI:r.sections[0].EIf,EItip:r.sections.at(-1).EIf,GJ:r.sections[0].GJ,stress:Math.max(...r.stress.sigTop.map(Math.abs),...r.stress.sigBot.map(Math.abs)),defl:Math.abs(r.deflection.at(-1)),ribs:r.ribs.length,M0:Math.abs(r.M[0])});
   try {
@@ -96,7 +103,7 @@ async function until(test,what,ms=60000){const end=Date.now()+ms;while(!test()){
     ok($('#wingLoadEditor .wle[data-workspace="printed"]')&&$('#wingLoadEditor #wingLoadForm'),'the shared custom-load editor sits in the Loads container (merged v5 load module)');
     ok($('#wingStudyFiles .wio-root.wio-printed')&&$('#wingShare #wingShareBtn'),'the study-file panel and the link button sit in Study files (merged v5 import module)');
     ok($('#wingSide #wingLoadEditor')&&$('#wingSide #wingStudyFiles'),'both containers are in the input column');
-    for(const id of ['wgNaca','wgSpan','wgRoot','wgTip','wgModules','wgSkin','wgRibT','wgRibNew','wgRibAdd','wgRibCount','wgRibEqual','wgRibReset','wgRod0','wgRod1','wgRodAdd','wgRodD','wgClear','wgWall'])
+    for(const id of ['wgAirfoilPicker','wgSpan','wgRoot','wgTip','wgModules','wgSkin','wgRibT','wgRibNew','wgRibAdd','wgRibCount','wgRibEqual','wgRibReset','wgRod0','wgRod1','wgRodAdd','wgRodD','wgClear','wgWall'])
       ok($('#'+id),`${id} control present`);
     ok(/Generic browser study model/.test($('#wingModelNote').textContent)&&/CAD\/STL/.test($('#wingModelNote').textContent)&&/fabrication layout/.test($('#wingModelNote').textContent)&&/historical \/ course/.test($('#wingModelNote').textContent),'the model is labelled as a generic browser study model');
     // A load for nonzero stress: the Design-lab 2 N tip experiment (a deliberate action solves at once and saves the baseline).
@@ -128,7 +135,7 @@ async function until(test,what,ms=60000){const end=Date.now()+ms;while(!test()){
     await step('#wgSpan',420,'semiSpan',(a,b,r)=>{down(a,b,'mass');same(a,b,'EI');down(a,b,'defl');down(a,b,'M0');assert.ok(Math.abs(r.M[0]-2*420)<1e-6);},'semi-span');
     await step('#wgRoot',170,'rootChord',(a,b)=>{up(a,b,'mass');up(a,b,'EI');up(a,b,'GJ');down(a,b,'defl');},'root chord');
     await step('#wgTip',110,'tipChord',(a,b)=>{up(a,b,'mass');up(a,b,'EItip');same(a,b,'EI');down(a,b,'defl');},'tip chord');
-    await step('#wgNaca','2415','naca',(a,b)=>{up(a,b,'EI');up(a,b,'GJ');down(a,b,'stress');down(a,b,'defl');},'NACA airfoil');
+    await step('#wgAirfoilPicker','2415','naca',(a,b)=>{up(a,b,'EI');up(a,b,'GJ');down(a,b,'stress');down(a,b,'defl');},'NACA airfoil through the full airfoil/planform picker');
     await step('#wgRibT',2,'ribThickness',(a,b)=>{up(a,b,'mass');same(a,b,'EI');same(a,b,'GJ');same(a,b,'defl',1e-6);},'rib thickness (no rib EI/GJ in this beam model)');
     await step('#wgModules',2,'modules',(a,b,r)=>{eq(r.seams,[210]);down(a,b,'defl');down(a,b,'ribs');same(a,b,'EI');},'modules');
     // rib editor: add, move, remove, equal spacing (custom stations reach the engine; mass and rib count respond)
@@ -181,8 +188,19 @@ async function until(test,what,ms=60000){const end=Date.now()+ms;while(!test()){
     await reject('#wgSpan',-5,/positive number/,'semiSpan','negative span');
     await reject('#wgSpan','',/positive number/,'semiSpan','empty span');
     await reject('#wgTip',200,/exceeds root chord/,'tipChord','tip chord above root chord');
-    await reject('#wgNaca','24x2',/four-digit NACA/,'naca','bad NACA code');
-    await reject('#wgNaca','2400',/thickness must be greater than zero/,'naca','zero-thickness airfoil');
+    const rejectAirfoil=async(value,pattern,label)=>{
+      const before=ui().result(),state=JSON.stringify(ui().state()),wasStale=ui().isStale(),chip=$('#stateChip').textContent;
+      await editAirfoil(value);
+      const message=$('#wingGeometryEditorStatus');
+      ok(message&&message.getAttribute('role')==='alert'&&pattern.test(message.textContent),`${label}: visible draft validation explains rejection (${message?.textContent})`);
+      ok(JSON.stringify(ui().state())===state,`${label}: previous complete study inputs kept atomically`);
+      ok(ui().result()===before&&ui().isStale()===wasStale&&!ui().isRunning(),`${label}: last solved result kept, no solve started`);
+      ok($('#stateChip').textContent===chip,`${label}: invalid uncommitted draft does not change the study status`);
+      ok($('#wgtDefaultCode').value===value,`${label}: invalid draft remains visible, never silently clipped or replaced`);
+      $('.wing-editor-pop:not([hidden]) .wing-editor-close').click();await tick(5);
+    };
+    await rejectAirfoil('24x2',/four-digit NACA/,'bad NACA code');
+    await rejectAirfoil('2400',/thickness must be positive/,'zero-thickness airfoil');
     await reject('#wgSkin',4,/cavity collapses/,'skin','skin too thick for the airfoil');
     await reject('#wgRibT',4.5,/Interface rib offset must exceed rib thickness/,'ribThickness','rib thicker than the interface offset');
     await reject('#wgClear',1,/between 0 and 0\.8 mm/,'clearance','clearance out of range');

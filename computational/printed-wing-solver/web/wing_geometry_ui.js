@@ -5,7 +5,7 @@ const WingGeometryUI=(()=>{
   const doc=documentRef,win=doc.defaultView,A=typeof WingAirfoils!=='undefined'?WingAirfoils:require('./wing_airfoils.js');
   const clone=x=>JSON.parse(JSON.stringify(x)),esc=x=>String(x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const node=(tag,attrs={},html)=>{const n=doc.createElement(tag);for(const[k,v]of Object.entries(attrs))n.setAttribute(k,v);if(html!=null)n.innerHTML=html;return n;};
-  let draft,generation=0;
+  let draft,generation=0,dimensionSource='tip';
   const activeReads=new Map();
   function cancelPickerRead(id){
    const pending=activeReads.get(id);if(!pending)return;
@@ -56,10 +56,33 @@ const WingGeometryUI=(()=>{
    const p=clone(baseProfile());
    if(!draft.stations)draft.stations=[{eta:0,airfoil:clone(p),incidenceDeg:0},{eta:.5,airfoil:clone(p),incidenceDeg:0},{eta:1,airfoil:clone(p),incidenceDeg:0}];
   }
+  function renderDimensions(){
+   const box=node('fieldset',{class:'wing-planform-dimensions'});
+   box.innerHTML='<legend>Wing dimensions & taper</legend><div class="wing-geometry-grid">'+numeric('Semi-span (mm)','wgtSpan',draft.semiSpan,'Root to tip, projected aircraft y','min="1"')+numeric('Root chord (mm)','wgtRootChord',draft.rootChord,'Reference chord at root','min="1"')+numeric('Tip chord (mm)','wgtTipChord',draft.tipChord,'Reference chord at tip','min="1"')+numeric('Taper ratio λ = tip / root','wgtTaper',draft.tipChord/draft.rootChord,'1 = rectangular; below 1 = narrower tip','min="0.001" max="1"')+'</div><div id="wgtPlanformPreview"></div>';
+   form.prepend(box);dimensionSource='tip';
+   const value=id=>{const s=form.querySelector('#'+id).value;return s.trim()===''?NaN:Number(s);};
+   function preview(){
+    const L=draft.semiSpan,cr=draft.rootChord,ct=draft.tipChord,sw=Number(form.querySelector('#wgtSweep')?.value||0),ref=Number(form.querySelector('#wgtSweepRef')?.value||0);
+    const target=box.querySelector('#wgtPlanformPreview');
+    if(![L,cr,ct,sw,ref].every(Number.isFinite)||Math.min(L,cr,ct)<=0){target.textContent='Enter positive dimensions to preview the reference-chord planform.';return;}
+    const dx=L*Math.tan(sw*Math.PI/180)+ref*(cr-ct),lo=Math.min(0,dx),hi=Math.max(cr,dx+ct),scale=Math.min(360/L,118/(hi-lo)),x=y=>30+y*scale,z=v=>16+(v-lo)*scale;
+    target.innerHTML='<svg viewBox="0 0 420 155" role="img" aria-label="Top reference-chord planform; root chord '+cr+' mm, tip chord '+ct+' mm"><polygon points="'+[[0,0],[L,dx],[L,dx+ct],[0,cr]].map(([y,v])=>x(y)+','+z(v)).join(' ')+'" fill="var(--raise,#e4f0fb)" stroke="var(--accent,#176ac0)" stroke-width="2"/><text x="18" y="149" fill="currentColor" font-size="12">Root → tip · λ = '+(ct/cr).toFixed(3)+' = '+ct.toFixed(1)+' / '+cr.toFixed(1)+'</text></svg><p class="note">Reference-chord planform, equal x/y scale. A ratio near 1 has mild taper; perspective can make it look rectangular. Incidence and dihedral are shown in the 3-D view.</p>';
+   }
+   for(const[id,key]of [['wgtSpan','semiSpan'],['wgtRootChord','rootChord'],['wgtTipChord','tipChord']])box.querySelector('#'+id).oninput=()=>{
+    draft[key]=value(id);dimensionSource='tip';box.querySelector('#wgtTaper').value=Number.isFinite(draft.tipChord/draft.rootChord)?+(draft.tipChord/draft.rootChord).toPrecision(8):'';preview();
+   };
+   box.querySelector('#wgtTaper').oninput=()=>{
+    dimensionSource='ratio';const ratio=value('wgtTaper');draft.rootChord=value('wgtRootChord');draft.tipChord=draft.rootChord*ratio;
+    box.querySelector('#wgtTipChord').value=Number.isFinite(draft.tipChord)?+draft.tipChord.toPrecision(12):'';preview();
+   };
+   for(const id of ['wgtSweep','wgtSweepRef'])form.querySelector('#'+id).addEventListener('input',preview);
+   preview();
+  }
   function render(){
    cancelReads();
    profileValidators.clear();
    form.innerHTML=`<p class="note">Aircraft coordinates: x aft, y projected semi-span, z up. Positive incidence is leading-edge up; negative tip incidence relative to root is washout. These are geometry inputs, not a computed lift distribution.</p><h4>Default airfoil</h4><div id="wgtDefaultProfile"></div><div class="field"><label for="wgtTwist">Geometric twist / incidence?</label><select id="wgtTwist"><option value="no" ${!draft.twistEnabled?'selected':''}>No · zero incidence</option><option value="yes" ${draft.twistEnabled?'selected':''}>Yes · set section incidences</option></select></div><label><input type="checkbox" id="wgtSections" ${draft.stations?'checked':''}> Spanwise airfoil sections (aerodynamic twist / section variation)</label><p class="note">Root and tip are required. Intermediate stations are optional—not necessarily ribs. Airfoil shape and absolute incidence interpolate linearly between stations.</p><div id="wgtStations"></div><h4>Planform & orientation</h4><div class="wing-geometry-grid">${numeric('Sweep (degrees)','wgtSweep',draft.sweepDeg??0,'Positive aft; reference below','min="-60" max="60"')}${numeric('Dihedral (degrees)','wgtDihedral',draft.dihedralDeg??0,'Positive tip-up; negative anhedral','min="-45" max="45"')}${numeric('Sweep reference x/c','wgtSweepRef',draft.sweepReferenceFraction??0,'0 = leading edge; 0.25 = quarter chord','min="0" max="1"')}${numeric('Incidence pivot x/c','wgtTwistRef',draft.twistReferenceFraction??.25,'0.25 = common quarter-chord pivot','min="0" max="1"')}</div><p class="note">Sections remain in flight-parallel x–z planes (OpenVSP default), not rotated to follow dihedral. Reference-chord taper remains linear. Control surfaces, winglets and arbitrary multi-element airfoils are not inferred from these inputs.</p><details><summary>Airfoil file format & print geometry</summary><p class="note">Selig: optional title, then normalized x/c and z/c coordinate pairs from trailing edge around the leading edge to the other trailing edge. Lednicer: title, upper/lower point counts, then the two coordinate blocks. No polar or force data. Single-element monotone upper/lower surfaces only. Source coordinates are embedded in JSON. The printable trailing-edge thickness and skin/cavity settings still apply and can make a thin profile unprintable; no dimension is changed automatically.</p></details><div class="lesson-actions" style="position:sticky;bottom:0;background:var(--panel);padding:8px 0"><button class="btn primary" type="submit" id="wgtApply">Apply geometry</button><button class="btn" type="button" id="wgtZeroAngles">Set incidences to 0°</button></div>`;
+   renderDimensions();
    profilePicker(form.querySelector('#wgtDefaultProfile'),baseProfile,p=>draft.airfoil=p,'wgtDefault');
    const stationBox=form.querySelector('#wgtStations');
    if(draft.stations){
@@ -85,15 +108,29 @@ const WingGeometryUI=(()=>{
    try{
     // Enter can submit before change/blur: validate visible fields, never a stale draft.
     for(const validate of profileValidators.values())validate();
+    for(const[id,key]of [['wgtSpan','semiSpan'],['wgtRootChord','rootChord'],['wgtTipChord','tipChord']]){
+     const value=form.querySelector('#'+id).value;draft[key]=value.trim()===''?NaN:Number(value);
+    }
+    if(dimensionSource==='ratio'){
+     const text=form.querySelector('#wgtTaper').value,ratio=text.trim()===''?NaN:Number(text);
+     if(!Number.isFinite(ratio)||ratio<=0||ratio>1)throw Error('Taper ratio must be greater than 0 and no greater than 1.');
+     draft.tipChord=draft.rootChord*ratio;
+    }
     for(const[id,key]of [['wgtSweep','sweepDeg'],['wgtDihedral','dihedralDeg'],['wgtSweepRef','sweepReferenceFraction'],['wgtTwistRef','twistReferenceFraction']]){
       const value=form.querySelector('#'+id).value;draft[key]=value.trim()===''?NaN:Number(value);
     }
     for(const[s,i]of (draft.stations||[]).map((s,i)=>[s,i])){
       for(const[prefix,key]of [['wgtEta','eta'],['wgtInc','incidenceDeg']]){const value=form.querySelector('#'+prefix+i).value;s[key]=value.trim()===''?NaN:Number(value);}
     }
-    const patch={airfoil:clone(A.normalizeProfile(baseProfile())),twistEnabled:!!draft.twistEnabled,sweepDeg:draft.sweepDeg??0,dihedralDeg:draft.dihedralDeg??0,sweepReferenceFraction:draft.sweepReferenceFraction??0,twistReferenceFraction:draft.twistReferenceFraction??.25};
+    const patch={semiSpan:draft.semiSpan,rootChord:draft.rootChord,tipChord:draft.tipChord,airfoil:clone(A.normalizeProfile(baseProfile())),twistEnabled:!!draft.twistEnabled,sweepDeg:draft.sweepDeg??0,dihedralDeg:draft.dihedralDeg??0,sweepReferenceFraction:draft.sweepReferenceFraction??0,twistReferenceFraction:draft.twistReferenceFraction??.25};
     // Explicitly removing section variation uses the same global profile at root and tip.
     patch.stations=draft.stations?clone(draft.stations):undefined;
+    // A uniform, unrotated four-digit section with leading-edge alignment is
+    // exactly the legacy construction. Keep its rod/joint-compatible analysis
+    // route rather than silently upgrading it merely because a picker was used.
+    if(patch.airfoil.kind==='naca4'&&!draft.stations&&!patch.twistEnabled&&patch.sweepDeg===0&&patch.dihedralDeg===0&&(patch.sweepReferenceFraction===0||draft.rootChord===draft.tipChord)){
+     patch.naca=patch.airfoil.code;patch.airfoil=null;patch.stations=null;
+    }
     const result=applyGeometry(patch,'advanced','airfoil / sweep / dihedral / incidence');
     if(!result.ok){message(result.error||'Geometry was not applied. Check the wing dimensions and cavity clearance.',true);return;}
     message('Geometry applied. Solve to update structural results.');onApplied();

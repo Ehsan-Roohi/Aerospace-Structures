@@ -107,6 +107,8 @@ upload or run anything from a file.
 | `format` | Always `"mie446-wing-study"`. A design-parameter file or a Beam Lab study is refused with a pointer to the right button. |
 | `version` | `1` for legacy studies; `2` for expanded printed-wing geometry or saved analysis-mesh settings. D.520 remains version 1. Unsupported versions are refused; nothing changes. |
 | `workspace` | `"printed"` or `"d520"`. A study opens only in its own workspace. |
+| `projectName` | Optional printed-wing project name (up to 80 UTF-16 units; no control or directional-override characters). Display text is escaped. The notebook preserves it in provenance and uses a path-safe name for its ZIP/STL/STEP/3MF files; unnamed legacy files retain their existing filenames. |
+| `emptyStudy` | Optional printed-wing boolean, absent means false. True records the cleared canvas, not a printable wing. It can be saved/reopened or undone, but structural Solve and notebook fabrication are blocked until geometry is created. Baseline dimensions in that file are only the next design's editable draft. |
 | `savedAt` | ISO 8601 date and time (optional; an invalid date gives a warning). |
 | `app` | `name`, `engine` (engine version that saved the file), `io` (version of this module). If `engine` differs from the page's engine, a warning says so; the results are recomputed by the page's engine. Other `app` fields give a warning and are ignored. |
 | `study` | The inputs (below). |

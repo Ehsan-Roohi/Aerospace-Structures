@@ -30,7 +30,7 @@ def cells():
 
 def environment():
     messages, downloads = [], []
-    env = dict(date=date, Path=Path, tempfile=tempfile, COURSE_RELEASE='v1.3.0',
+    env = dict(date=date, Path=Path, tempfile=tempfile, COURSE_RELEASE='v1.3.1',
         WingDesign=WingDesign, WingProject=WingProject, WingProjectError=WingProjectError,
         WingLabImportError=WingLabImportError, load_wing_lab_study=load_wing_lab_study,
         make_ai_log=make_ai_log, plot_design_overview=plot_design_overview,

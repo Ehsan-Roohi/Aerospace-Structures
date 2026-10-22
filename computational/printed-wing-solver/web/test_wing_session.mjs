@@ -65,7 +65,11 @@ try{
  const c=open(null,'https://example.org/wing-lab.html#wing',true);opened.push(c);await wait(()=>c.ui.result()&&!c.ui.isRunning(),'storage-disabled solve');assert.match(c.$('#wingSessionStatus').textContent,/unavailable/i);
  const d=open('{bad json','https://example.org/wing-lab.html#beam');opened.push(d);assert.equal(d.ui.result(),null);assert.match(d.$('#wingSessionStatus').textContent,/could not be validated/);assert.equal(d.w.localStorage.getItem(key),'{bad json','bad backup retained for recovery');
  // Clear removes the complete old study, keeps an Undo checkpoint, and persists the new empty shell.
- const clearButton=b.$('[data-wing-action="clear"]');assert.equal(clearButton.textContent,'Clear');
+ const clearButton=b.$('[data-wing-action="clear"]');assert.equal(clearButton.textContent,'New / Clear');assert.ok(b.$('#app .wl-run-actions').contains(clearButton),'Clear remains beside Solve');
+ assert.ok(b.$('#wgAirfoilPicker'));assert.equal(b.$('#wgNaca'),null);assert.ok(b.$('#wingInputHelp').contains(b.$('#wingModelNote')),'long help lives in the Help menu');assert.equal(b.$('#tree [data-id="results"]'),null);
+ const name=b.$('#wingProjectName');name.value='گروه یک · Wing';name.dispatchEvent(new b.w.KeyboardEvent('keydown',{key:'Enter',bubbles:true}));
+ assert.equal(b.ui.state().projectName,'گروه یک · Wing');assert.equal(JSON.parse(b.w.localStorage.getItem(key)).projectName,'گروه یک · Wing');
+ assert.equal(b.$('#wingProjectTitle').textContent,'گروه یک · Wing');
  const oldInputs=JSON.stringify(b.ui.engineInput()),oldBackup=b.w.localStorage.getItem(key),oldResult=b.ui.result();
  clearButton.click();assert.ok(!b.$('.wing-editor-pop').hidden);assert.ok(b.$('#wingClearConfirm'));
  b.$('[data-wing-clear-cancel]').click();
@@ -77,22 +81,29 @@ try{
  assert.equal(b.w.localStorage.getItem('winglab:other-workspace-draft'),'keep','other workspace drafts are untouched');
  assert.equal(b.ui.result(),null,'old solved results are discarded immediately');
  assert.ok(b.$('#app > .dock').hidden,'old result tables are hidden during the fresh solve');
- assert.ok(clearButton.disabled,'Clear is disabled while solving');
+ assert.ok(!clearButton.disabled,'Clear leaves an empty canvas without launching another solve');assert.ok(b.$('#runBtn').disabled);
  const blank=JSON.stringify(b.ui.engineInput());
  assert.equal(b.ui.state().geometry.modules,1);assert.deepEqual([...b.ui.state().geometry.rodFractions],[]);
  assert.deepEqual([...b.ui.state().geometry.customInteriorRibs],[]);assert.deepEqual([...b.ui.state().geometry.spars],[]);
  assert.equal(b.ui.state().load.items.length,0);assert.equal(b.ui.importGate(),null);
  assert.equal(b.$('#report').value,'');assert.ok(b.$('#wingShareBox').hidden);assert.match(b.$('#wingSessionStatus').textContent,/Study cleared/);
- await wait(()=>b.ui.result()&&!b.ui.isRunning(),'fresh unloaded shell solved');
- assert.equal(b.ui.inventory().ribs.length,0);assert.equal(b.ui.view().members.sparParts,0);
- assert.ok(b.ui.result().V.every(x=>x===0));assert.ok(!b.$('#app > .dock').hidden);
+ assert.equal(b.ui.state().emptyStudy,true);assert.equal(b.ui.view(),null);assert.equal(b.ui.state().projectName,'');assert.ok(!b.$('#wingEmptyStart').hidden);
+ assert.equal(b.ui.inventory().ribs.length,0);assert.ok(b.$('#app > .dock').hidden);
+ assert.equal(JSON.parse(b.w.localStorage.getItem(key)).emptyStudy,true);
  assert.equal(JSON.parse(b.w.localStorage.getItem(key)).study.geometry.spars.length,0);
  b.$('#wingUndo').click();assert.equal(JSON.stringify(b.ui.engineInput()),oldInputs,'Undo recovers all original numerical inputs');
  b.$('#wingRedo').click();assert.equal(JSON.stringify(b.ui.engineInput()),blank,'Redo restores the cleared shell');
  const blankStudy=JSON.parse(b.w.localStorage.getItem(key)).study;
- const e=open(b.w.localStorage.getItem(key));opened.push(e);await wait(()=>e.ui.result()&&!e.ui.isRunning(),'refresh after Clear');
+ const e=open(b.w.localStorage.getItem(key));opened.push(e);await wait(()=>e.ui.state().emptyStudy&&!e.ui.isRunning(),'empty refresh after Clear');
  assert.deepEqual(JSON.parse(e.w.WingStudyIO.exportPrintedStudy(e.ui.state(),e.w.WingEngine)).study,blankStudy,'refresh preserves the complete cleared study (inactive load defaults may be expanded)');
- assert.ok(e.ui.result().V.every(x=>x===0),'refresh never restores old loading');
+ assert.equal(e.ui.result(),null,'refresh never restores a wing or old results');assert.equal(e.ui.view(),null);
+ e.$('#wgAirfoilPicker').click();assert.ok(!e.$('.wing-editor-pop').hidden);
+ const input=(id,value)=>{const n=e.$(id);n.value=String(value);n.dispatchEvent(new e.w.Event('input',{bubbles:true}));};
+ input('#wgtRootChord',200);input('#wgtTaper',.5);input('#wgtSpan',180);
+ e.$('.wing-geometry-form').dispatchEvent(new e.w.Event('submit',{bubbles:true,cancelable:true}));await tick();
+ assert.equal(e.ui.state().geometry.rootChord,200);assert.equal(e.ui.state().geometry.tipChord,100);assert.equal(e.ui.state().geometry.semiSpan,180);assert.equal(e.ui.state().emptyStudy,false);assert.ok(e.$('#wingEmptyStart').hidden);
+ assert.equal(e.$('#wgTaper').value,'0.5');assert.ok(!e.$('#runBtn').disabled);assert.equal(e.ui.result(),null,'Apply geometry previews without claiming a solve');
+ await e.ui.solve();assert.ok(e.ui.result());assert.ok(!e.$('[data-wing-action="load"]').disabled,'tools re-enable after Solve');
  assert.deepEqual(opened.flatMap(x=>x.errors),[]);
  console.log('Wing session PASS: exact user JSON, visible preview/apply, editable values, persistence, Undo/Redo, Clear/Cancel/busy guard, discarded old results, empty-shell fresh solve and refresh, atomic import gates, storage failure and corrupt-backup handling.');
 }finally{for(const p of opened)p.dom.window.close();}

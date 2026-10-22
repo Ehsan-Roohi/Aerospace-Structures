@@ -80,6 +80,26 @@
     if (typeof v !== 'string') return null;
     return v.replace(/[\u0000-\u001f\u007f]/g, '').slice(0, LIMITS.filenameChars) || null;
   }
+  /** Display metadata only: never interpreted as markup, a path or engine input. */
+  function normalizeProjectName(value) {
+    if (typeof value !== 'string') throw new Error('projectName must be plain text.');
+    if (value.length > LIMITS.nameChars) throw new Error(`projectName must be at most ${LIMITS.nameChars} characters.`);
+    if (/[\u0000-\u001f\u007f-\u009f\u202a-\u202e\u2066-\u2069]/.test(value) || /[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?:^|[^\uD800-\uDBFF])[\uDC00-\uDFFF]/.test(value))
+      throw new Error('projectName contains control characters, line breaks or directional overrides; use plain text.');
+    return value.trim();
+  }
+  /** Safe portable filename component; display names are preserved separately. */
+  function safeFilenameStem(value, fallback = 'wing') {
+    const token = v => Array.from(String(v ?? '').normalize('NFC').replace(/[^\p{L}\p{N}_-]+/gu, '-').replace(/-+/g, '-').replace(/^-+|-+$/g, '')).slice(0, 64).join('');
+    let stem = token(value) || token(fallback) || 'wing';
+    if (/^(con|prn|aux|nul|com[1-9]|lpt[1-9])$/i.test(stem)) stem = `wing-${stem}`;
+    return stem;
+  }
+  function readProjectName(issues, obj) {
+    if (!own(obj, 'projectName')) return '';
+    try { return normalizeProjectName(obj.projectName); }
+    catch (e) { issues.err('projectName', e.message); return ''; }
+  }
 
   // Error and warning collector; messages are "path: message".
   function makeIssues() {
@@ -962,6 +982,7 @@
   }
   // State handed to applyState: the UI's own field names.
   const printedState = (s) => ({
+    projectName: '', emptyStudy: false,
     geometry: clone(s.geometry), plaKey: s.materials.plaKey, plaOver: clone(s.materials.plaOver), rodKey: s.materials.rodKey,
     rodOver: clone(s.materials.rodOver), assembly: clone(s.assembly), load: clone(s.load), criteria: clone(s.criteria), analysis:s.analysis?clone(s.analysis):null,
   });
@@ -1225,7 +1246,11 @@
     if(doc.version===1&&(hasAdvancedGeometry(doc.study?.geometry)||own(doc.study||{},'analysis'))){issues.err('version','station geometry and analysis settings require file version 2; nothing was imported');return null;}
     if (ws !== 'printed' && ws !== 'd520') { issues.err('workspace', `must be "printed" or "d520", not ${describe(ws)}`); return null; }
     if (expected && ws !== expected) { issues.err('workspace', `this is a ${WORKSPACE_LABEL[ws]} study: open it in the ${WORKSPACE_LABEL[ws]} workspace (this is the ${WORKSPACE_LABEL[expected]} workspace)`); return null; }
-    checkKeys(issues, doc, '', ['format', 'version', 'workspace', 'savedAt', 'app', 'study']);
+    checkKeys(issues, doc, '', ['format', 'version', 'workspace', 'savedAt', 'app', 'study', ...(ws === 'printed' ? ['projectName', 'emptyStudy'] : [])]);
+    if (ws === 'printed') {
+      res.provenance.projectName = readProjectName(issues, doc);
+      res.provenance.emptyStudy = own(doc, 'emptyStudy') ? bool(issues, doc, 'emptyStudy', '') : false;
+    }
     if (own(doc, 'savedAt')) {
       const v = text(issues, doc, 'savedAt', '', { max: 40 });
       if (v !== undefined) { if (Number.isNaN(Date.parse(v))) issues.warn('savedAt', 'is not a valid date and time; ignored'); else res.provenance.savedAt = v; }
@@ -1278,7 +1303,7 @@
     if (ws === 'printed') {
       const study = checkPrintedStudy(issues, doc.study, 'study', engine);
       if (study && !issues.count) {
-        const state = printedState(study);
+        const state = { ...printedState(study), projectName: res.provenance.projectName, emptyStudy: res.provenance.emptyStudy };
         if (printedEngineChecks(issues, state, 'study', engine) && !issues.count) { res.ok = true; res.state = state; res.preview.rows = printedRows(state, engine); }
       }
     } else {
@@ -1300,15 +1325,18 @@
     const E = engine || globalWing();
     if (!E) throw new Error('WingEngine is not loaded.');
     const raw = canonicalPrintedFromUi(S, E), issues = makeIssues();
+    const projectName = readProjectName(issues, { projectName: own(opts, 'projectName') ? opts.projectName : (S.projectName === undefined ? '' : S.projectName) });
+    const emptyStudy = S.emptyStudy === undefined ? false : bool(issues, S, 'emptyStudy', '');
     const study = checkPrintedStudy(issues, raw, 'study', E);
     if (study && !issues.count) printedEngineChecks(issues, printedState(study), 'study', E);
     issues.finish();
     if (issues.errors.length) throw savedError('The current study cannot be saved', issues.errors);
-    return { format: STUDY_FORMAT, version: hasAdvancedGeometry(study.geometry)||study.analysis?2:FILE_VERSION, workspace: 'printed', savedAt: opts.savedAt || new Date().toISOString(), app: { name: 'MIE 446 Wing Lab', engine: E.VERSION, io: IO_VERSION }, study };
+    return { format: STUDY_FORMAT, version: hasAdvancedGeometry(study.geometry)||study.analysis?2:FILE_VERSION, workspace: 'printed', ...(projectName ? { projectName } : {}), ...(emptyStudy ? { emptyStudy: true } : {}), savedAt: opts.savedAt || new Date().toISOString(), app: { name: 'MIE 446 Wing Lab', engine: E.VERSION, io: IO_VERSION }, study };
   }
   const exportPrintedStudy = (S, engine, opts) => `${JSON.stringify(printedStudyDocument(S, engine, opts), null, 2)}\n`;
   /** Manufacturing preflight only. No model edits, no CAD generation and no safety approval. */
   function fabricationIssues(S, E) {
+    if (S.emptyStudy) return ['Create a wing first. This is an empty study, not a printable wing.'];
     const n=printedEngineInput(S,E),g=n.geometry,m=n.pla,errors=[];
     // One-piece and larger designs may be exported; the notebook validates actual CAD against its configured printer.
     if(g.skin<.8||g.ribThickness<.8||g.te<.8)errors.push('Printed skin, ribs and trailing edge must be ≥0.8 mm.');
@@ -1866,6 +1894,7 @@
   function provenanceRows(p, kind) {
     const rows = [];
     if (!p) return rows;
+    if (p.projectName) rows.push(['Project', p.projectName]);
     rows.push(['File', p.filename || (p.source === 'share link' ? 'share link' : '—')]);
     if (p.bytes !== null && p.bytes !== undefined) rows.push(['Size', `${p.bytes} bytes`]);
     if (p.sha256) rows.push(['SHA-256', p.sha256]);
@@ -2031,7 +2060,8 @@
       let textValue;
       try { textValue = workspace === 'printed' ? exportPrintedStudy(getState(), engine) : exportD520Study(getState(), engine); }
       catch (e) { showFailure('The study could not be saved', e.errors || [e.message || String(e)]); return null; }
-      const filename = `mie446-${workspace === 'printed' ? 'printed-wing' : 'd520'}-study-${stamp()}.json`;
+      const name = JSON.parse(textValue).projectName;
+      const filename = name ? `${safeFilenameStem(name)}.json` : `mie446-${workspace === 'printed' ? 'printed-wing' : 'd520'}-study-${stamp()}.json`;
       return downloadText(filename, textValue, `Saved ${filename}.`) ? textValue : null;
     }
     function readFile(file) {
@@ -2166,7 +2196,7 @@
 
   return Object.freeze({
     VERSION: IO_VERSION, STUDY_FORMAT, PARAMS_FORMAT, FILE_VERSION, SHARE_KEY, LIMITS, PARAMETER_TEMPLATE, REQUIRED_ITEMS,
-    escapeHtml, sha256, utf8Encode, utf8Decode, base64urlEncode, base64urlDecode, parseJson, countSegments,
+    escapeHtml, normalizeProjectName, safeFilenameStem, sha256, utf8Encode, utf8Decode, base64urlEncode, base64urlDecode, parseJson, countSegments,
     printedStudyDocument, exportPrintedStudy, importPrintedStudy, printedEngineInput, fabricationIssues,
     d520StudyDocument, exportD520Study, importD520Study, importStudy,
     importParameters, parameterTemplateText, checkOuterGeometry,

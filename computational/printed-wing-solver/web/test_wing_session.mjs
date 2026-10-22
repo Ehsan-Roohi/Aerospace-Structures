@@ -1,0 +1,48 @@
+// Exact user JSON -> preview/apply -> edit -> browser restart, with real engines.
+import assert from 'node:assert/strict';import {readFileSync} from 'node:fs';import {createRequire} from 'node:module';import vm from 'node:vm';
+const require=createRequire(import.meta.url),{JSDOM,VirtualConsole}=require(process.env.MIE446_JSDOM_MODULE||'jsdom');
+const page=readFileSync(new URL('../../../docs/wing-lab.html',import.meta.url),'utf8'),fixture=readFileSync(new URL('./test_wing_layout_controls.mjs',import.meta.url),'utf8');
+const makeThree=new Function(fixture.slice(fixture.indexOf('function makeThree()'),fixture.indexOf('function openPage('))+'\nreturn makeThree;')();
+const raw=readFileSync(new URL('../../../tests/fixtures/wing_lab_editable_browser.json',import.meta.url),'utf8'),key='winglab:printed-study:v1';
+const tick=()=>new Promise(r=>setTimeout(r,10));
+async function wait(f,label){const end=Date.now()+60000;while(!f()){assert.ok(Date.now()<end,label);await tick();}}
+function open(saved,url='https://example.org/wing-lab.html#wing',storageBlocked=false){
+ const errors=[],vc=new VirtualConsole();vc.on('jsdomError',e=>errors.push(e.message));
+ const dom=new JSDOM(page,{url,runScripts:'outside-only',virtualConsole:vc}),w=dom.window,$=s=>w.document.querySelector(s);
+ w.matchMedia=()=>({matches:true,addEventListener(){},removeEventListener(){}});w.requestAnimationFrame=()=>0;w.cancelAnimationFrame=()=>{};w.setInterval=()=>0;w.confirm=()=>true;w.HTMLElement.prototype.scrollIntoView=function(){};w.HTMLCanvasElement.prototype.getContext=()=>null;w.ResizeObserver=class{observe(){}disconnect(){}};
+ if(saved)w.localStorage.setItem(key,saved);
+ if(storageBlocked)Object.defineProperty(w,'localStorage',{get(){throw Error('Storage unavailable');}});
+ for(const[,attrs,code]of page.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)){if(/\bsrc=/.test(attrs)){if(/OrbitControls/.test(attrs))w.THREE=makeThree();continue;}vm.runInContext(code,dom.getInternalVMContext());}
+ return {dom,w,$,errors,ui:w.WingLabUI};
+}
+const opened=[];
+try{
+ const a=open();opened.push(a);await wait(()=>a.ui.result()&&!a.ui.isRunning(),'initial solve');
+ assert.ok(a.$('[data-wing-action="open-json"]'));assert.ok(a.$('[data-wing-action="save-json"]'));
+ let chooser=0;a.$('#wingStudyFiles .wio-open input').click=()=>chooser++;
+ a.$('[data-wing-action="open-json"]').click();assert.equal(chooser,1);assert.ok(a.$('#wlFiles').open);
+ const before=JSON.stringify(a.ui.engineInput()),preview=a.ui.studyFiles().openText(raw,'MIE446_WingLab_to_Notebook(3).json');assert.ok(preview.ok,preview.errors?.join('; '));
+ assert.equal(JSON.stringify(a.ui.engineInput()),before,'preview cannot replace inputs');
+ a.$('#wingStudyFiles .wio-apply').click();assert.ok(a.ui.isStale(),'import does not claim solved results');
+ const canonical=()=>JSON.parse(a.w.WingStudyIO.exportPrintedStudy(a.ui.state(),a.w.WingEngine)).study;
+ assert.deepEqual(canonical(),JSON.parse(raw).study,'all geometry/material/load decimals survive import');
+ assert.equal(a.ui.inventory().ribs.length,7);assert.equal(a.ui.state().geometry.spars.length,2);
+ assert.equal(a.ui.state().geometry.spars[1].fraction,.7);assert.equal(a.ui.state().load.items[0].fraction,JSON.parse(raw).study.load.items[0].fraction);
+ assert.equal(a.$('#wgSpan').value,'450');assert.equal(a.$('#wgModules').value,'1');assert.equal(a.$('#ws1_length').value,'450');
+ const saved=a.w.localStorage.getItem(key);assert.equal(JSON.parse(saved).study.geometry.modules,1);
+ assert.equal(a.ui.applyGeometry({semiSpan:250}).ok,false);assert.equal(a.w.localStorage.getItem(key),saved,'rejected edits cannot replace backup');
+ assert.ok(a.ui.applyGeometry({modules:2}).ok);await tick();assert.equal(a.$('#wgModules').value,'2');
+ const edited=a.w.localStorage.getItem(key);assert.equal(JSON.parse(edited).study.geometry.modules,2,'unsolved valid edits are saved');
+ a.$('#wingUndo').click();assert.equal(JSON.parse(a.w.localStorage.getItem(key)).study.geometry.modules,1,'Undo updates persisted inputs');a.$('#wingRedo').click();
+ const b=open(a.w.localStorage.getItem(key));opened.push(b);await wait(()=>b.ui.result()&&!b.ui.isRunning(),'restore and fresh solve');
+ assert.equal(b.ui.result().geometry.modules,2);assert.equal(b.ui.result().geometry.spars.length,2);assert.equal(b.$('#wgSpan').value,'450');
+ assert.deepEqual(JSON.parse(JSON.stringify(b.ui.engineInput())),JSON.parse(JSON.stringify(a.ui.engineInput())),'restart restores all numerical inputs, not old results');
+ // Incomplete outer-geometry imports must never become confirmed complete autosaves.
+ const prior=a.w.localStorage.getItem(key),params=JSON.parse(readFileSync(new URL('./wing_parameters_template.json',import.meta.url),'utf8'));
+ params.span={value:1200,kind:'full'};params.rootChord=160;params.tipChord=100;
+ a.ui.studyFiles().previewParameters(JSON.stringify(params),'outer.json');a.$('#wingStudyFiles .wio-apply-geometry').click();assert.ok(a.ui.importGate()?.open);assert.equal(a.w.localStorage.getItem(key),prior);
+ const c=open(null,'https://example.org/wing-lab.html#wing',true);opened.push(c);await wait(()=>c.ui.result()&&!c.ui.isRunning(),'storage-disabled solve');assert.match(c.$('#wingSessionStatus').textContent,/unavailable/i);
+ const d=open('{bad json','https://example.org/wing-lab.html#beam');opened.push(d);assert.equal(d.ui.result(),null);assert.match(d.$('#wingSessionStatus').textContent,/could not be validated/);assert.equal(d.w.localStorage.getItem(key),'{bad json','bad backup retained for recovery');
+ assert.deepEqual(opened.flatMap(x=>x.errors),[]);
+ console.log('Wing session PASS: exact user JSON, preview/apply, editable values, valid unsolved edit persistence, rejected-edit protection, Undo/Redo, refresh/fresh solve, atomic import-gate protection, storage failure and corrupt-backup handling.');
+}finally{for(const p of opened)p.dom.window.close();}

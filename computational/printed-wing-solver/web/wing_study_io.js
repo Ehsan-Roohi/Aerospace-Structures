@@ -2000,8 +2000,9 @@
     }
     function show(result, buttons) {
       clear(preview);
-      preview.append(renderModel(previewModel(result)));
+      // Keep confirmation beside the file controls, not below a long inventory.
       preview.append(el('div', { class: 'wio-actions wio-preview-actions' }, ...buttons));
+      preview.append(renderModel(previewModel(result)));
       preview.hidden = false;
     }
     function applyOnce(stateValue, info, doneText) {

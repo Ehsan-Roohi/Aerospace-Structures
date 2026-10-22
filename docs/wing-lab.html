@@ -10154,8 +10154,9 @@ if(typeof module!=='undefined')module.exports=WingWorkspaceUI;
     }
     function show(result, buttons) {
       clear(preview);
-      preview.append(renderModel(previewModel(result)));
+      // Keep confirmation beside the file controls, not below a long inventory.
       preview.append(el('div', { class: 'wio-actions wio-preview-actions' }, ...buttons));
+      preview.append(renderModel(previewModel(result)));
       preview.hidden = false;
     }
     function applyOnce(stateValue, info, doneText) {
@@ -10238,8 +10239,7 @@ if(typeof module!=='undefined')module.exports=WingWorkspaceUI;
   const css = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 
   // ------------------------------------------------------------ study state
-  // Every opening starts without an applied load: an empty custom load case (no lift, no weight or
-  // inertia relief). Flight, tip and lesson loads are applied only when the student asks for them.
+  // A new study starts without loads; a validated saved study restores its own explicit loads.
   const noLoad = () => ({ kind: "custom", items: [], fos: E.DEFAULT_LOAD.fos, tipMass: 0 });
   const S = {
     geometry: { ...E.DEFAULT_GEOMETRY },
@@ -10263,11 +10263,26 @@ if(typeof module!=='undefined')module.exports=WingWorkspaceUI;
   let autoSolve = false, inputError = null, fieldErrors = {};
   const historyFields=['geometry','plaKey','plaOver','rodKey','rodOver','assembly','load','criteria'];
   let wingHistory=[],wingHistoryIndex=-1,historySuspended=0;
+  const wingSessionKey='winglab:printed-study:v1';
+  let wingSessionReady=false,wingSessionInputs='',wingSessionMessage='Changes are saved in this browser. Use Save JSON for a portable backup.';
+  function sessionNote(message){wingSessionMessage=message;const note=$('#wingSessionStatus');if(note)note.textContent=message;}
+  function saveWingSession(){
+    if(!wingSessionReady||historySuspended||!wingStudyOpened)return;
+    if(gateOpen()){sessionNote('Imported shape not yet confirmed: the last complete autosave is kept. Confirm its structural inputs before saving.');return;}
+    try{
+      const inputs=JSON.stringify(Object.fromEntries(historyFields.map(k=>[k,S[k]])));
+      if(inputs===wingSessionInputs)return;
+      const text=WingStudyIO.exportPrintedStudy(S,E);
+      localStorage.setItem(wingSessionKey,text);wingSessionInputs=inputs;
+      sessionNote('Autosaved in this browser · inputs only; results are recalculated. Save JSON for a portable backup.');
+    }catch(e){sessionNote('Autosave unavailable or inputs incomplete. The previous backup is kept; use Save JSON for a valid study.');}
+  }
   function wingHistorySnapshot(){return JSON.stringify({inputs:Object.fromEntries(historyFields.map(k=>[k,S[k]])),gate:importGate?{...importGate,confirmed:[...importGate.confirmed]}:null});}
   function syncWingHistory(){const undo=$('#wingUndo'),redo=$('#wingRedo');if(undo)undo.disabled=running||wingHistoryIndex<=0;if(redo)redo.disabled=running||wingHistoryIndex>=wingHistory.length-1;}
   function recordWingHistory(){
     if(!historySuspended){const snapshot=wingHistorySnapshot();if(snapshot!==wingHistory[wingHistoryIndex]){wingHistory=wingHistory.slice(0,wingHistoryIndex+1);wingHistory.push(snapshot);if(wingHistory.length>100)wingHistory.shift();wingHistoryIndex=wingHistory.length-1;}}
     syncWingHistory();
+    saveWingSession();
   }
   function travelWingHistory(delta){
     const next=wingHistoryIndex+delta;if(running||next<0||next>=wingHistory.length)return;
@@ -10280,7 +10295,7 @@ if(typeof module!=='undefined')module.exports=WingWorkspaceUI;
       S.secY=Math.min(S.secY,S.geometry.semiSpan);S.clipY=Math.min(S.clipY,S.geometry.semiSpan);$('#secY').value=S.secY;$('#clipIn').value=S.clipY;
       edited();renderImportGate();renderInputs(true);renderPM();editor?.refresh();
       $('#stateText').textContent=(delta<0?'Undo':'Redo')+' restored the wing inputs. '+(gateOpen()?'Confirm the imported structural inputs before solving.':autoSolve?'Automatic solving will update the results.':'Press Solve to update results.');
-    }finally{historySuspended--;syncWingHistory();}
+    }finally{historySuspended--;syncWingHistory();saveWingSession();}
   }
 
   function materials() {
@@ -12476,7 +12491,10 @@ function renderObservations() {
       {id:'parts',label:'Select / edit parts',run:(p,a)=>{printedWorkspace.open('Ribs & spars',$('#wingPartEditor'),a);if(!partPick)$('#wpPick').click();}},
       {id:'structure',label:'Structure dimensions',run:(p,a)=>openWingStructurePopup(a)},{id:'materials',label:'Materials',run:(p,a)=>openWingMaterialsPopup(a)},
       {id:'inside',label:'Inside wing',run:()=>setAnatomy('inside')},
+      {id:'open-json',label:'Open JSON',run:()=>{showInputs(true);$('#wlFiles').open=true;$('#wingStudyFiles .wio-open input').click();}},
+      {id:'save-json',label:'Save JSON',run:()=>studyFiles?.save()},
       {id:'notebook',label:'Export to notebook',run:()=>exportToNotebook()}]});
+    const sessionStatus=el('p',{id:'wingSessionStatus',class:'note',role:'status'},wingSessionMessage);sessionStatus.style.cssText='flex-basis:100%;margin:0;font-size:12px';printedWorkspace.tools.append(sessionStatus);
     const sparResults=$('#wingSparResults');$('#tab-checks').prepend(sparResults);
     // Inputs and lessons live above/beside the model, never in its results dock.
     $('#app > .bar').append($('#wingSide .wl-run'));
@@ -12524,7 +12542,7 @@ function renderObservations() {
   window.addEventListener('wing-show', () => {
     if (!wingStudyOpened) { window.dispatchEvent(new CustomEvent('wing-learning-stage', { detail: 'wing' })); return; }
     $('#foundations').hidden=true;$('#app').hidden=false;$('#wingNavigation').hidden=false;
-    resize(); $('#wingNavigation').scrollIntoView({block:'start'});
+    resize();if(!R&&!running)runStudy(); $('#wingNavigation').scrollIntoView({block:'start'});
   });
   function returnToBeams(support) {
     printedWorkspace?.close();
@@ -12542,7 +12560,21 @@ function renderObservations() {
   document.querySelectorAll('[data-return-beam]').forEach(b=>b.addEventListener('click',()=>returnToBeams(b.dataset.returnBeam)));
   document.documentElement.dataset.wingReady='true';
   // A printed-wing study link opens straight into its workspace (also when pasted into an open page).
-  openStudyLink();
+  const openedStudyLink=openStudyLink();
+  if(!openedStudyLink){
+    try{
+      const saved=localStorage.getItem(wingSessionKey);
+      if(saved){
+        const restored=WingStudyIO.importPrintedStudy(saved,E);
+        if(restored.ok){
+          applyStudyState(restored.state,{kind:'study'});wingStudyOpened=true;
+          S.anatomy='inside';S.xray=true;
+          sessionNote('Previous wing restored from this browser, including loads, materials, ribs and spars. Results need a fresh Solve.');
+        }else sessionNote('The browser backup could not be validated and was not applied. Open a saved JSON to recover your wing.');
+      }
+    }catch(e){sessionNote('Browser storage is unavailable. Open JSON / Save JSON still works.');}
+  }
+  wingSessionReady=true;
   window.addEventListener('hashchange',openStudyLink);
   function openWorkspaceHash(){if(location.hash==='#wing')window.dispatchEvent(new CustomEvent('wing-show'));else if(location.hash==='#beam')returnToBeams();}
   window.addEventListener('hashchange',openWorkspaceHash);openWorkspaceHash();

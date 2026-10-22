@@ -1,0 +1,119 @@
+{
+  "format": "mie446-wing-study",
+  "version": 1,
+  "workspace": "printed",
+  "savedAt": "2026-10-22T15:57:38.083Z",
+  "app": {
+    "name": "MIE 446 Wing Lab",
+    "engine": "1.1.0",
+    "io": "1.0.0"
+  },
+  "study": {
+    "geometry": {
+      "naca": "2412",
+      "semiSpan": 450,
+      "rootChord": 160,
+      "tipChord": 100,
+      "skin": 1.2,
+      "ribThickness": 1.6,
+      "modules": 1,
+      "te": 1.2,
+      "interiorRibs": 3,
+      "customInteriorRibs": [
+        106.52544528701793,
+        161.26203279077805,
+        210.0281775324587,
+        247.3765270026641,
+        292.23261679133674,
+        343.26041248440737,
+        409.5578998139432
+      ],
+      "interfaceOffset": 4,
+      "cap": 2,
+      "cavityStart": 0.06,
+      "cavityEnd": 0.9,
+      "rodFractions": [],
+      "rodDiameter": 4,
+      "clearance": 0.25,
+      "sleeveWall": 1.2,
+      "spars": [
+        {
+          "fraction": 0.3,
+          "length": 450,
+          "topWidth": 8,
+          "topThickness": 0.8,
+          "bottomWidth": 8,
+          "bottomThickness": 0.8,
+          "webThickness": 0.6,
+          "material": {
+            "name": "Printed PLA · teaching input",
+            "E": 2000,
+            "nu": 0.35,
+            "rho": 1.24,
+            "ft": 15,
+            "fc": 50,
+            "fs": 10
+          }
+        },
+        {
+          "fraction": 0.7,
+          "length": 450,
+          "topWidth": 8,
+          "topThickness": 0.8,
+          "bottomWidth": 8,
+          "bottomThickness": 0.8,
+          "webThickness": 0.6,
+          "material": {
+            "name": "Printed PLA · teaching input",
+            "E": 2000,
+            "nu": 0.35,
+            "rho": 1.24,
+            "ft": 15,
+            "fc": 50,
+            "fs": 10
+          }
+        }
+      ]
+    },
+    "materials": {
+      "plaKey": "pla_upright",
+      "plaOver": {
+        "E": null,
+        "ft": null,
+        "fc": null,
+        "fs": null,
+        "rho": null,
+        "nu": null
+      },
+      "rodKey": "rod_hobby",
+      "rodOver": {
+        "E": null
+      }
+    },
+    "assembly": {
+      "rodsBonded": false,
+      "seamsBonded": true,
+      "seamFreeLength": 8,
+      "adhesiveTensile": 5
+    },
+    "load": {
+      "kind": "custom",
+      "items": [
+        {
+          "kind": "elliptic",
+          "start": 0,
+          "end": 450,
+          "shape": "start",
+          "peak": 10,
+          "fraction": 0.47719181110885706
+        }
+      ],
+      "fos": 1.5,
+      "tipMass": 0
+    },
+    "criteria": {
+      "maxTipDeflection": 45,
+      "maxTipTwist": 2
+    }
+  }
+}

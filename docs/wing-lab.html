@@ -982,16 +982,6 @@ nav.workspace-nav .workspace-link:focus-visible { outline: 3px solid var(--accen
     </details>
   </aside>
 
-  <section class="panel" style="grid-area:loads;padding:12px 18px" aria-label="Wing load shortcuts">
-    <div class="lesson-actions"><b>Apply loads to this wing:</b>
-      <button class="btn" type="button" data-wing-load-shape="point">Point force</button>
-      <button class="btn" type="button" data-wing-load-shape="rectangle">Uniform</button>
-      <button class="btn" type="button" data-wing-load-shape="triangle">Triangle ↑</button>
-      <button class="btn" type="button" data-wing-load-shape="triangleDown">Triangle ↓</button>
-      <button class="btn" type="button" data-wing-load-shape="trapezoid">Trapezoid / combined loads</button>
-    </div>
-    <p class="note" style="margin:6px 0 0">Available for skin-only, reinforced, ribbed and course printed wings. Choose a shape, enter its position and magnitude, then add it. ↑ / ↓ means increasing / decreasing intensity along the span, not force direction; use signed values for upward / downward forces.</p>
-  </section>
   <main class="view panel" aria-label="3-D viewport">
     <canvas id="gl"></canvas>
     <div class="anatomy-labels" id="ribLabels" aria-hidden="true"></div>
@@ -4334,7 +4324,7 @@ const Lecture03BeamCases = Object.freeze({
           ${named('length','Length L','mm')}${named('E','Elastic modulus E','MPa')}${named('density','Density ρ','g/cm³')}${named('elements','Requested elements','',"step='1' min='4' max='100'")}
         </div><button type="submit" class="sr-only">Solve</button></form>
         <p class="bl-help">Elements are numerical subdivisions, not physical parts. Their number controls the mesh resolution, not the physical beam. Support, point-load, load-boundary and hinge stations are always mesh nodes.</p>
-        <details class="bl-box"><summary>Why choose 10, 30 or 40 elements?</summary>
+        <details class="bl-box" id="beamMeshHelp"><summary>Why choose 10, 30 or 40 elements?</summary>
           <p class="bl-help">Each Euler–Bernoulli element joins two nodes. The solver finds nodal displacement and rotation, then interpolates the shape between nodes. For a 450 mm beam, nominal lengths are 45 mm with 10 elements, 15 mm with 30, and 11.25 mm with 40. Extra required stations can change the actual count and spacing.</p>
           <svg role="img" aria-label="The same beam divided into 10, 30 and 40 numerical elements" viewBox="0 0 430 120" style="width:100%">${[10,30,40].map((n,j)=>`<text x="4" y="${24+j*36}" fill="currentColor" font-size="13">${n}</text><path d="M42 ${20+j*36}H420" stroke="#166bbb" stroke-width="3"/>${Array.from({length:n+1},(_,k)=>`<path d="M${42+378*k/n} ${15+j*36}v10" stroke="currentColor"/>`).join('')}`).join('')}</svg>
           <p class="bl-help">More elements usually improve interpolation and vibration estimates but cost more calculation; they do not strengthen the beam or repair wrong inputs. In these constant-EI teaching beams, exact load integration and equilibrium recovery can already give almost unchanged reactions and V/M, even on a coarse mesh. Between-node displacement/rotation and frequencies can still change. Similar numbers do not make a mesh study pointless or prove the physical model correct.</p>
@@ -4410,6 +4400,8 @@ const Lecture03BeamCases = Object.freeze({
         ${[['point','↓ Point force'],['moment','↻ Couple'],['rectangle','↓↓ Uniform'],['triangle','◿ Triangle →'],['triangle-root','◺ Triangle ←'],['trapezoid','▱ Trapezoid'],['elliptic','◠ Elliptic'],['parabolic','⌒ Parabolic']].map(([k,label])=>`<button type="button" class="bl-tool" data-place="load:${k}" aria-pressed="false">${label}</button>`).join('')}
         <button type="button" class="bl-tool" id="beamStopPlacing">Cancel / select</button>
         <button type="button" class="bl-tool bl-clear" id="beamClearPicture">Clear All Loads</button>
+        <button type="button" class="bl-tool" id="beamUndo" title="Undo model edit (Ctrl/Cmd+Z)" disabled>↶ Undo</button>
+        <button type="button" class="bl-tool" id="beamRedo" title="Redo model edit (Ctrl/Cmd+Shift+Z or Ctrl+Y)" disabled>↷ Redo</button>
       </div>
       <p class="bl-help" id="beamGraphicHelp" role="status">Choose a force/couple and click its station; for a line load, drag over its interval. Enter values in the compact box beside your selection and confirm with Enter or Apply. Purple numbered handles: click to edit, drag to move. Select an item and press Delete outside a text field to remove it. No load is added by selecting a tool.</p>
       <div class="bl-row"><button type="button" class="bl-btn bl-btn-sm" id="beamDeleteSelected" disabled>Delete selected item</button><span id="beamSelection" class="bl-help" role="status">Select a load, support or hinge; press Delete to remove it.</span></div>
@@ -4531,6 +4523,7 @@ const Lecture03BeamCases = Object.freeze({
             <li><b>Place a distributed load.</b> Select Uniform, Triangle, Trapezoid, Elliptic or Parabolic; drag its start-to-end interval on the beam. In the compact Load parameters box beside that interval, verify start/end x, enter intensity q in N/mm or explicitly labelled total force F in N for a curved profile, choose its shape and confirm with Enter or Apply. Inspect the live profile before adding. You can also enter positions numerically in the form on the left; CSV loads are validated and previewed before application. Drawing scale changes the picture only, never the force.</li>
             <li><b>Select, edit, move or remove.</b> Click a purple numbered load handle to open its compact editor; drag the handle to move the load. Enter or double-click also opens the editor. Select a support, hinge or load and press <b>Delete</b> outside a text field, or use <b>Delete selected item</b> or the editor’s Delete load button. Delete while typing only edits the input, not the model. Removing an end support makes that end free.</li>
             <li><b>Clear independently.</b> <b>Clear All Loads</b> beside the Loads tools removes applied loads and self-weight after confirmation, retaining supports and geometry. <b>Clear All Supports</b> beside the support tools removes end and interior restraints after confirmation, retaining loads, geometry and internal hinges. The beam is then unrestrained until you add supports again.</li>
+            <li><b>Undo and redo.</b> Use Undo/Redo beside the Loads tools to restore model edits (geometry, material stiffness, section, supports, hinges and loads), up to 100 saved states. Outside text fields, Ctrl/Cmd+Z undoes; Ctrl/Cmd+Shift+Z or Ctrl+Y redoes. A new edit discards the redo branch. Inside an input, the keyboard shortcut retains normal text editing. Restoring inputs does not replace the last solved evidence: solve again, or enable automatic solving, when results are out of date.</li>
             <li><b>Solve and verify.</b> Press <b>Solve</b> after the model is stable. Load confirmation may solve the model immediately; subsequent support or geometry edits stay pending unless auto-solve is enabled. Results always belong to the last successful solve. A pending or unstable model cannot export current results; add/fix supports and solve again, or revert to the previous solved model.</li>
             <li><b>Diagrams.</b> Read the support reactions first, then V, M, v, θ and the stresses. Reactions are external forces on the beam; V and M are internal forces on a cut. The table and thin slices under the reactions show how they are linked.</li>
             <li><b>Station values.</b> Type x or press <b>L/2</b> to read exact V and M (equilibrium) and v, θ (Euler–Bernoulli finite element) at that x. At a point force, couple, support or hinge choose x⁻ or x⁺. <b>Cut &amp; section</b> shows the same cut with both parts and V and M on their faces.</li>
@@ -4637,6 +4630,25 @@ const Lecture03BeamCases = Object.freeze({
   }
   const canonical=m=>JSON.stringify({length:m.length,E:m.E,density:m.density,elements:m.elements,section:m.section,
     supports:[...m.supports].map(s=>({x:s.x,kind:s.kind})).sort((a,b)=>a.x-b.x),hinges:[...m.hinges].sort((a,b)=>a-b),loads:m.loads,selfWeight:!!m.selfWeight});
+  let modelHistory=[clone(st.model)],historyIndex=0,restoringHistory=false;
+  function recordHistory(){
+    if(!restoringHistory&&!st.drag&&!st.draftError&&canonical(st.model)!==canonical(modelHistory[historyIndex])){
+      modelHistory=modelHistory.slice(0,historyIndex+1);modelHistory.push(clone(st.model));
+      if(modelHistory.length>100)modelHistory.shift();historyIndex=modelHistory.length-1;
+    }
+    $('#beamUndo').disabled=historyIndex===0;$('#beamRedo').disabled=historyIndex===modelHistory.length-1;
+  }
+  function travelHistory(delta){
+    const next=historyIndex+delta;if(next<0||next>=modelHistory.length)return;
+    clearTimeout(autoTimer);restoringHistory=true;historyIndex=next;st.model=clone(modelHistory[next]);
+    st.error='';st.draftError='';st.mechanism=null;st.placing=null;st.drag=null;st.graphicPreview=null;st.editLoad=null;st.editorLoad=null;selection=null;
+    showGraphicEditor(false);renderInputs(st.model);renderPicture();renderStatus();renderNotice();restoringHistory=false;
+    $$('[data-place]').forEach(b=>b.setAttribute('aria-pressed','false'));
+    message((delta<0?'Undo':'Redo')+' restored model inputs. Solve to update results, or enable automatic solving.');
+    if(st.autoSolve)autoTimer=setTimeout(()=>{if(!isCurrent())solve();},250);
+  }
+  $('#beamUndo').onclick=()=>travelHistory(-1);$('#beamRedo').onclick=()=>travelHistory(1);
+  $('#beamGuide').append($('#beamMeshHelp'));
   function isCurrent() {
     if(!st.solved) return false;
     try {return canonical(readDraft())===canonical(st.solved.model);} catch(e) {return false;}
@@ -4759,6 +4771,7 @@ const Lecture03BeamCases = Object.freeze({
     return st.error?'error':'pending';
   }
   function renderStatus() {
+    recordHistory();
     const state=statusState(), chip=$('#beamChip'), text=$('#beamRunText');
     chip.className=`bl-chip ${state==='solved'?'ok':state==='error'?'bad':'warn'}`;
     chip.textContent=state==='solved'?'Solved':state==='error'?'Not solved':'Pending';
@@ -5853,6 +5866,9 @@ const Lecture03BeamCases = Object.freeze({
   $('#beamStopPlacing').onclick=cancelPlacement;
   $('#beamShowDefl').onclick=e=>{st.showDeflection=!st.showDeflection;e.currentTarget.setAttribute('aria-pressed',String(st.showDeflection));renderPicture();};
   document.addEventListener('keydown',e=>{
+    if(!host.hidden&&(e.ctrlKey||e.metaKey)&&!e.altKey&&!e.target.closest('input,textarea,select,[contenteditable],[role="textbox"]')&&['z','y'].includes(e.key.toLowerCase())){
+      e.preventDefault();travelHistory(e.key.toLowerCase()==='y'||e.shiftKey?1:-1);return;
+    }
     if(e.key==='Escape'&&(st.placing||st.drag||st.graphicPreview))cancelPlacement();
     if(e.key!=='Delete'||e.ctrlKey||e.altKey||e.metaKey||host.hidden)return;
     if(!host.contains(e.target)&&e.target!==document.body&&e.target!==document.documentElement)return;
@@ -7839,9 +7855,24 @@ const WingLoadsUI = (() => {
       container.querySelector(`label[for="${id.value}"]`).textContent = total ? `Total force F (${u.force}, upward +)` : `Peak intensity w₀ (${u.line}, upward +)`;
       law(); chord();livePreview();
     }
+    let editingIndex=null;
+    function candidateItems(p){const base=ad.mode()==='custom'?[...ad.items()]:[];if(editingIndex===null)return [...base,p];if(!base[editingIndex])throw new Error('This load no longer exists. Close and select it again.');base[editingIndex]=p;return base;}
+    function newLoad(){editingIndex=null;byId(id.form).querySelector('h3').textContent='Add a load to the current wing';container.querySelectorAll('button[type="submit"]').forEach(b=>b.textContent='Add load');}
+    function edit(i){
+      const p=ad.items()[i];if(!p)return false;cancelPick();newLoad();
+      if(p.kind==='table'){openCsv(i);return true;}
+      editingIndex=i;byId(id.kind).value=val(p.kind==='distributed'?'trapezoid':p.kind);
+      byId(id.xc).value=p.fraction;
+      if(p.kind==='point'){byId(id.a).value=p.position;byId(id.P).value=p.force;}
+      else if(p.kind==='schrenk')byId(id.value).value=p.total;
+      else {byId(id.a).value=p.start;byId(id.b).value=p.end;if(p.kind==='distributed'){byId(id.q0).value=p.qStart;byId(id.q1).value=p.qEnd;}else{byId(id.shape).value=p.shape;byId(id.basis).value=p.total!==undefined?'total':'peak';lastBasis=byId(id.basis).value;byId(id.value).value=p[lastBasis];}}
+      visible();byId(id.kind).dispatchEvent(new doc.defaultView.Event('change'));
+      byId(id.form).querySelector('h3').textContent=`Edit load ${i+1}`;container.querySelectorAll('button[type="submit"]').forEach(b=>b.textContent='Apply changes');
+      byId(p.kind==='point'?id.P:p.kind==='distributed'?id.q0:id.value).focus({preventScroll:true});return true;
+    }
     function itemFromForm() {
-      const p=parseItemFromForm(),base=ad.mode()==='custom'?ad.items():[];
-      ad.validate([...base,p]);
+      const p=parseItemFromForm();
+      ad.validate(candidateItems(p));
       return p;
     }
     function parseItemFromForm() {
@@ -7903,10 +7934,10 @@ const WingLoadsUI = (() => {
     function renderList() {
       const items = ad.items(), mode = ad.mode();
       byId(id.list).innerHTML = items.length
-        ? items.map((p, i) => `<p>${i + 1}. ${esc(describe(p, u))} <button class="btn" type="button" ${ad.deleteAttr}="${i}">Remove</button>${p.kind === 'table' ? ` <button class="btn" type="button" data-wle-edit-table="${i}">Edit table</button>` : ''}</p><details><summary>Load ${i+1}: profile &amp; resultant</summary>${profile(p,items)}</details>`).join('')
+        ? items.map((p, i) => `<p>${i + 1}. ${esc(describe(p, u))} <button class="btn" type="button" ${ad.deleteAttr}="${i}">Remove</button> <button class="btn" type="button" data-wle-edit-load="${i}">${p.kind==='table'?'Edit table':'Edit load'}</button></p><details><summary>Load ${i+1}: profile &amp; resultant</summary>${profile(p,items)}</details>`).join('')
         : `<p class="wle-empty">${mode === 'flight' ? 'Flight-like loading is active; no custom loads.' : mode === 'tip' ? 'A tip-force case is active; no custom loads.' : 'No load defined. Add your own load.'}</p>`;
-      container.querySelectorAll(`[${ad.deleteAttr}]`).forEach((b) => { b.onclick = () => { const i = +b.getAttribute(ad.deleteAttr); tryApply(ad.items().filter((_, k) => k !== i), `Load ${i + 1} removed.`); }; });
-      container.querySelectorAll('[data-wle-edit-table]').forEach((b) => { b.onclick = () => openCsv(+b.dataset.wleEditTable); });
+      container.querySelectorAll(`[${ad.deleteAttr}]`).forEach((b) => { b.onclick = () => { const i = +b.getAttribute(ad.deleteAttr); newLoad();tryApply(ad.items().filter((_, k) => k !== i), `Load ${i + 1} removed.`); }; });
+      container.querySelectorAll('[data-wle-edit-load]').forEach((b) => { b.onclick = () => edit(+b.dataset.wleEditLoad); });
       if (ad.statusText) status(ad.statusText());
     }
     function profile(p,items=[]) {
@@ -7937,15 +7968,15 @@ const WingLoadsUI = (() => {
       e.preventDefault();
       let p;
       try { p = itemFromForm(); } catch (x) { status(`<span class="wle-err">${esc(x.message)}</span> Nothing was changed.`); return; }
-      const base = ad.mode() === 'custom' ? ad.items() : [];
-      if(tryApply([...base, p], 'Load added.'))container.dispatchEvent(new doc.defaultView.CustomEvent('wing-load-applied',{bubbles:true,detail:ad.workspace}));
+      const note=editingIndex===null?'Load added.':`Load ${editingIndex+1} updated.`;
+      if(tryApply(candidateItems(p),note)){newLoad();container.dispatchEvent(new doc.defaultView.CustomEvent('wing-load-applied',{bubbles:true,detail:ad.workspace}));}
     };
     byId(id.kind).onchange = ()=>{cancelPick();visible();}; byId(id.shape).onchange = visible;
     let lastBasis='total';
     byId(id.basis).onchange=()=>{const next=byId(id.basis).value,k=canon(byId(id.kind).value);try{if(['elliptic','parabolic'].includes(k)&&byId(id.value).value.trim()!==''){const p=P.normalizeCurve({kind:k,start:readNum(id.a,'Start'),end:readNum(id.b,'End'),shape:byId(id.shape).value,[lastBasis]:readNum(id.value,'Magnitude')},{min:-Infinity,max:Infinity,lengthUnit:u.length});byId(id.value).value=p[next];}}catch(e){}lastBasis=next;visible();};
     byId(id.form).addEventListener('input', () => { law(); chord();livePreview(); });
-    byId(id.clear).onclick = () => tryApply([], 'All custom loads cleared: no load defined.');
-    if (ad.flight) byId(id.flight).onclick = () => { cancelPick();ad.flight.apply(); renderList(); };
+    byId(id.clear).onclick = () => {newLoad();tryApply([], 'All custom loads cleared: no load defined.');};
+    if (ad.flight) byId(id.flight).onclick = () => { newLoad();cancelPick();ad.flight.apply(); renderList(); };
     // ---------------------------------------------------------- CSV
     const csv = { filename: '', sha256: '', fromFile: null, candidate: null, text: null, edit: null };
     const csvMode = () => (csv.edit !== null ? 'edit' : (container.querySelector(`input[name="${id.csv}Mode"]:checked`) || { value: 'add' }).value);
@@ -8016,7 +8047,7 @@ const WingLoadsUI = (() => {
     byId(id.csv + 'Template').onclick = () => { if (ad.download) ad.download(`${ad.workspace}_line_load_template.csv`, P.csvTemplate(ad.workspace), 'text/csv'); };
     byId(id.csv+'PowerPreview').onclick=()=>{try{const n=k=>readNum(id.csv+'Power'+k,k);const p=P.powerTable({start:n('A'),end:n('B'),total:n('F'),exponent:n('N'),shape:byId(id.csv+'PowerShape').value});byId(id.csv+'Text').value=P.CSV_SPECS[ad.workspace].columns.join(',')+'\n'+p.points.map(r=>r.join(',')).join('\n');preview();}catch(e){byId(id.csv+'Out').textContent=e.message;}};
     visible(); renderList();if(ad.onScale)ad.onScale($('.wle-scale').value);
-    return { refresh() { renderList(); chord();livePreview(); }, preview, openCsv, container, acceptPick, cancelPick };
+    return { refresh() { renderList(); chord();livePreview(); }, preview, openCsv, edit, newLoad, container, acceptPick, cancelPick };
   }
 
   /**
@@ -8053,13 +8084,13 @@ const WingWorkspaceUI=(()=>{
  function create({app,canvas,viewPanel,actions,sample,contextActions=actions,unit='mm'}){
   const doc=app.ownerDocument,win=doc.defaultView;
   if(!styled){styled=true;const style=doc.createElement('style');style.textContent=`
-   #app.wing-workspace,#metalApp.wing-workspace{grid-template-columns:320px minmax(0,1fr);grid-template-rows:none;grid-template-areas:"bar bar" "side quick" "side view" "side vpanel" "side loads" "side dock"}
-   #app.wing-workspace.learning-view{grid-template-columns:minmax(0,1fr);grid-template-areas:"bar" "quick" "view" "vpanel" "loads" "dock"}
+   #app.wing-workspace,#metalApp.wing-workspace{grid-template-columns:320px minmax(0,1fr);grid-template-rows:none;grid-template-areas:"bar bar" "side quick" "side view" "side dock"}
+   #app.wing-workspace.learning-view{grid-template-columns:minmax(0,1fr);grid-template-areas:"bar" "quick" "view" "dock"}
    .wing-quick-tools{grid-area:quick;padding:12px;display:flex;flex-wrap:wrap;align-items:center;gap:8px}.wing-quick-tools .btn{min-height:40px;padding:7px 12px;white-space:nowrap}.wing-quick-tools .wing-quick-hint{flex-basis:100%;font-size:12px;color:var(--muted);margin:0}
    .wing-display-drawer{grid-area:vpanel;min-width:0}.wing-display-drawer>summary{padding:12px 16px;cursor:pointer;font:700 14px var(--font-label);color:var(--fg)}.wing-display-drawer .wl-vpanel{height:auto;max-height:none;overflow:visible;display:block;border:0;box-shadow:none}.wing-display-drawer .wl-vbody{grid-template-columns:repeat(auto-fit,minmax(240px,1fr));align-items:start}.wing-display-drawer .panel-head{display:none}
    .wing-editor-pop,.wing-context-menu{position:fixed;z-index:180;background:var(--panel,#fff);color:var(--fg,#172c40);border:2px solid var(--accent,#176ac0);border-radius:14px;box-shadow:0 14px 40px #102d4f40;max-height:calc(100vh - 16px);overflow:auto}
    .wing-editor-pop{width:min(420px,calc(100vw - 16px));padding:14px}.wing-editor-pop[hidden],.wing-context-menu[hidden]{display:none}.wing-editor-pop>h3{font:700 17px var(--font-label);padding-right:46px;margin:0 0 12px}.wing-editor-close{position:absolute;right:7px;top:7px;width:40px;height:40px;font-size:28px;line-height:1;border:1px solid var(--line);border-radius:9px;background:var(--panel-2,#eff5fc);color:var(--fg);cursor:pointer}.wing-editor-pop .field{grid-template-columns:minmax(0,1fr) 120px}.wing-editor-pop .field input{min-width:0}.wing-editor-pop .callout{padding:10px}.wing-editor-pop .wle-form>h3{display:none}.wing-editor-pop .wle-form>.note{font-size:12px}.wing-editor-pop .wle-live-preview svg{max-height:150px}.wing-editor-pop .wle-pick{margin:5px 0}.wing-editor-pop .wl-row{margin:8px 0}.wing-editor-pop .btn{min-height:36px}.wing-editor-help{display:none}.wing-editor-pop .wing-editor-help{display:inline-flex;margin-bottom:6px}.wing-editor-pop .wle-form:not(.wing-help-open)>.note:not(.wle-range),.wing-editor-pop .wle-form:not(.wing-help-open) .wle-submitbar>.note,.wing-editor-pop .wle-form:not(.wing-help-open)>.wle-show-deformation{display:none}.wing-editor-pop .wle-form[data-compact-kind="point"] .wle-live-preview{display:none}.wing-quick-form label{display:grid;gap:6px;font-size:14px}.wing-quick-form input{width:100%;padding:8px;border:1px solid var(--line);border-radius:7px;background:var(--panel-2);color:var(--fg);font:16px var(--font-data)}.wing-context-menu{padding:8px;width:230px;display:grid;gap:5px}.wing-context-menu button{text-align:left;padding:10px;border:0;border-radius:7px;background:var(--panel-2,#eff5fc);color:var(--fg);cursor:pointer;font:14px var(--font-label)}.wing-context-menu button:hover,.wing-context-menu button:focus-visible{outline:2px solid var(--accent)}.wing-context-menu p{font-size:12px;margin:4px;color:var(--muted)}
-   @media(max-width:1100px){#app.wing-workspace,#app.wing-workspace.learning-view,#metalApp.wing-workspace{grid-template-columns:minmax(0,1fr);grid-template-areas:"bar" "quick" "view" "vpanel" "side" "loads" "dock"}.wing-quick-tools{gap:6px}.wing-quick-tools .btn{padding:6px 9px}}
+   @media(max-width:1100px){#app.wing-workspace,#app.wing-workspace.learning-view,#metalApp.wing-workspace{grid-template-columns:minmax(0,1fr);grid-template-areas:"bar" "quick" "view" "side" "dock"}.wing-quick-tools{gap:6px}.wing-quick-tools .btn{padding:6px 9px}}
   `;doc.head.append(style);}
   const scrollStyle=doc.createElement('style');scrollStyle.textContent='.wing-editor-pop{overflow:visible}.wing-editor-pop>div{max-height:calc(100vh - 100px);overflow:auto;overscroll-behavior:contain}';doc.head.append(scrollStyle);
   app.classList.add('wing-workspace');
@@ -8068,13 +8099,20 @@ const WingWorkspaceUI=(()=>{
   const viewButton=doc.createElement('button');viewButton.type='button';viewButton.className='btn';viewButton.textContent='View & display ▾';viewButton.setAttribute('aria-expanded','false');tools.append(viewButton);
   const hint=doc.createElement('p');hint.className='wing-quick-hint';hint.textContent='Right-click the wing to work at that location. Drag to rotate; right-drag to pan. No load is added until confirmed.';tools.append(hint);canvas.closest('.view').before(tools);
   const display=doc.createElement('details');display.className='wing-display-drawer panel';const summary=doc.createElement('summary');summary.textContent='View & display · zoom, camera and appearance';display.append(summary);viewPanel.before(display);display.append(viewPanel);
-  viewButton.onclick=()=>{display.open=!display.open;if(display.open)display.scrollIntoView?.({block:'nearest',behavior:'smooth'});};display.addEventListener('toggle',()=>viewButton.setAttribute('aria-expanded',String(display.open)));
+  // Keep the real controls (and their listeners) in a hidden home, not below the model.
+  display.hidden=true;
+  viewButton.onclick=()=>{if(moved===viewPanel)close();else open('View & display',viewPanel,viewButton);};
   const popup=doc.createElement('section');popup.className='wing-editor-pop';popup.hidden=true;popup.setAttribute('role','dialog');const title=doc.createElement('h3');title.id=app.id+'EditorTitle';popup.setAttribute('aria-labelledby',title.id);const closeButton=doc.createElement('button');closeButton.className='wing-editor-close';closeButton.type='button';closeButton.textContent='×';closeButton.setAttribute('aria-label','Close wing editor');const body=doc.createElement('div');popup.append(title,closeButton,body);doc.body.append(popup);
-  let moved=null,placeholder=null,anchor=null,returnFocus=null;
+  let moved=null,placeholder=null,anchor=null,returnFocus=null,drag=null,manualPosition=false;
+  title.title='Drag this heading to move the panel';title.style.cssText='cursor:move;touch-action:none;user-select:none';
+  const viewStyle=doc.createElement('style');viewStyle.textContent='.wing-display-drawer[hidden]{display:none}.wing-editor-pop .wl-vpanel{display:block;height:auto;max-height:none;overflow:visible;border:0;box-shadow:none}.wing-editor-pop .wl-vbody{display:grid;grid-template-columns:minmax(0,1fr)}.wing-editor-pop .wl-vpanel>.panel-head{display:none}.wing-editor-pop.wing-view-pop{width:min(570px,calc(100vw - 16px))}.wing-view-pop #wingPartEditor{display:none}.wing-view-pop .wl-vbody{grid-template-columns:repeat(auto-fit,minmax(210px,1fr))}.wing-view-pop .hud{grid-column:1/-1}';doc.head.append(viewStyle);
   function clampBox(node,x,y){const r=node.getBoundingClientRect(),vw=doc.documentElement.clientWidth||win.innerWidth,vh=win.innerHeight;node.style.left=Math.max(8,Math.min(x,vw-r.width-8))+'px';node.style.top=Math.max(8,Math.min(y,vh-r.height-8))+'px';}
-  function position(){if(popup.hidden)return;const r=anchor?.getBoundingClientRect?.()||anchor||canvas.getBoundingClientRect();clampBox(popup,r.right!=null?r.right+10:r.x,r.top!=null?r.top:r.y);}
-  function close(){if(moved){if(placeholder?.parentNode)placeholder.replaceWith(moved);else moved.remove();}moved=null;placeholder=null;popup.hidden=true;body.replaceChildren();returnFocus?.focus?.({preventScroll:true});returnFocus=null;}
-  function open(heading,node,at){close();returnFocus=doc.activeElement;anchor=at||canvas;title.textContent=heading;placeholder=doc.createComment('wing editor home');if(node.parentNode)node.before(placeholder);moved=node;body.append(node);
+  function position(){if(popup.hidden)return;if(manualPosition){clampBox(popup,parseFloat(popup.style.left),parseFloat(popup.style.top));return;}const r=anchor?.getBoundingClientRect?.()||anchor||canvas.getBoundingClientRect();clampBox(popup,r.right!=null?r.right+10:r.x,r.top!=null?r.top:r.y);}
+  title.addEventListener('pointerdown',e=>{if(e.button!==0)return;const r=popup.getBoundingClientRect();drag={id:e.pointerId,x:e.clientX,y:e.clientY,left:r.left,top:r.top};title.setPointerCapture?.(e.pointerId);e.preventDefault();});
+  title.addEventListener('pointermove',e=>{if(!drag||e.pointerId!==drag.id)return;manualPosition=true;clampBox(popup,drag.left+e.clientX-drag.x,drag.top+e.clientY-drag.y);});
+  for(const name of ['pointerup','pointercancel'])title.addEventListener(name,()=>{drag=null;});
+  function close(){if(moved){if(placeholder?.parentNode)placeholder.replaceWith(moved);else moved.remove();}moved=null;placeholder=null;drag=null;popup.hidden=true;viewButton.setAttribute('aria-expanded','false');body.replaceChildren();returnFocus?.focus?.({preventScroll:true});returnFocus=null;}
+  function open(heading,node,at){close();manualPosition=false;returnFocus=doc.activeElement;anchor=at||canvas;title.textContent=heading;placeholder=doc.createComment('wing editor home');if(node.parentNode)node.before(placeholder);moved=node;body.append(node);popup.classList.toggle('wing-view-pop',node===viewPanel);viewButton.setAttribute('aria-expanded',String(node===viewPanel));
    const form=node.querySelector('.wle-form');if(form){const kind=form.querySelector('select');form.dataset.compactKind=kind?.value||'';if(!form.querySelector('.wing-editor-help')){const help=doc.createElement('button');help.type='button';help.className='btn wing-editor-help';help.textContent='Load help';help.setAttribute('aria-expanded','false');help.onclick=()=>{const on=form.classList.toggle('wing-help-open');help.setAttribute('aria-expanded',String(on));position();};form.prepend(help);kind?.addEventListener('change',()=>{form.dataset.compactKind=kind.value;position();});}}
    popup.hidden=false;position();closeButton.focus({preventScroll:true});return popup;}
   closeButton.onclick=close;popup.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();e.stopPropagation();close();}});
@@ -8088,7 +8126,21 @@ const WingWorkspaceUI=(()=>{
   for(const name of ['wing-learning-stage','wing-show','metal-wing-open','beam-show'])win.addEventListener(name,()=>{close();menu.hidden=true;});
   return{open,close,position,popup,tools,display,menu};
  }
- return{create};
+ // A screen-space hit margin stays usable at every zoom level, including very thin arrow shafts.
+ function pickLoadArrow(arrows,camera,canvas,event,THREE,tolerance=12){
+  const r=canvas.getBoundingClientRect();let best=null;
+  for(const arrow of arrows){
+   const {wingLoadIndex:index,wingLoadLength:length}=arrow.userData;if(!Number.isInteger(index)||!Number.isFinite(length)||typeof arrow.getWorldPosition!=='function'||typeof arrow.localToWorld!=='function')continue;
+   let visible=true;for(let p=arrow;p;p=p.parent)if(!p.visible)visible=false;if(!visible)continue;
+   arrow.updateWorldMatrix(true,true);const a=arrow.getWorldPosition(new THREE.Vector3()).project(camera),b=arrow.localToWorld(new THREE.Vector3(0,length,0)).project(camera);
+   if(![a.x,a.y,a.z,b.x,b.y,b.z].every(Number.isFinite)||a.z < -1||a.z>1||b.z < -1||b.z>1)continue;
+   const ax=r.left+(a.x+1)*r.width/2,ay=r.top+(1-a.y)*r.height/2,bx=r.left+(b.x+1)*r.width/2,by=r.top+(1-b.y)*r.height/2,dx=bx-ax,dy=by-ay;
+   const t=Math.max(0,Math.min(1,((event.clientX-ax)*dx+(event.clientY-ay)*dy)/(dx*dx+dy*dy||1))),distance=Math.hypot(event.clientX-ax-t*dx,event.clientY-ay-t*dy);
+   if(distance<=tolerance&&(!best||distance<best.distance))best={index,distance};
+  }
+  return best?.index??null;
+ }
+ return{create,pickLoadArrow};
 })();
 if(typeof module!=='undefined')module.exports=WingWorkspaceUI;
 
@@ -11182,13 +11234,13 @@ if(typeof module!=='undefined')module.exports=WingWorkspaceUI;
     const g = R.geometry, L = g.semiSpan;
     const lift = R.load.kind === "flight";
     const scaleLen = 60;
-    const add = (y, x, F, color) => {
+    const add = (y, x, F, color, loadIndex=null) => {
       if (Math.abs(F) < 1e-9) return;
       const w = sectionMotion(y)[0];
       const len = Math.min(90, scaleLen * Math.abs(F));if(len<0.01)return;
       const zLow = at(R.props.zBot, y) - 4, zHigh = at(R.props.zTop, y) + 4;
-      if (F > 0) grp.add(new THREE.ArrowHelper(new THREE.Vector3(0, 1, 0), new THREE.Vector3(y, zLow - len + w, x), len, color, Math.min(10, len * 0.35), 5));
-      else grp.add(new THREE.ArrowHelper(new THREE.Vector3(0, -1, 0), new THREE.Vector3(y, zHigh + len + w, x), len, color, Math.min(10, len * 0.35), 5));
+      const arrow=new THREE.ArrowHelper(new THREE.Vector3(0,F>0?1:-1,0),new THREE.Vector3(y,F>0?zLow-len+w:zHigh+len+w,x),len,color,Math.min(10,len*.35),5);
+      if(loadIndex!==null){arrow.traverse(o=>{o.userData.wingLoadIndex=loadIndex;});arrow.userData.wingLoadLength=len;}grp.add(arrow);
     };
     if (R.load.kind === "custom") {
       // Line loads of every shape (linear, elliptic, parabolic, table, Schrenk): 13 arrows each on its own span,
@@ -11200,7 +11252,7 @@ if(typeof module!=='undefined')module.exports=WingWorkspaceUI;
       const qmax=Math.max(...lines.flatMap(p=>samples(p).map(s=>Math.abs(s[1]))),1e-12);
       for(const p of lines) for(const [y,q] of samples(p)) {
         const denom=S.lineArrowScale==='independent'?Math.max(...samples(p).map(s=>Math.abs(s[1])),1e-12):qmax;
-        add(y,(p.kind==='table'?P.fractionAt(p,y):p.fraction)*E.chordAt(g,y),1.2*q/denom,q>=0?COLORS.load:COLORS.relief);
+        add(y,(p.kind==='table'?P.fractionAt(p,y):p.fraction)*E.chordAt(g,y),1.2*q/denom,q>=0?COLORS.load:COLORS.relief,R.load.items.indexOf(p));
       }
     } else if (lift && R.load.distribution !== "tip") {
       const wmax = Math.max(...R.w.map((v) => Math.abs(v))) || 1;
@@ -11210,7 +11262,8 @@ if(typeof module!=='undefined')module.exports=WingWorkspaceUI;
         add(y, R.load.liftFraction * E.chordAt(g, y), wl * 1.2, COLORS.load);
       }
     }
-    for (const p of R.point) add(p[0],p[2],Math.sign(p[1])*1.4,p[1]>=0?COLORS.load:COLORS.relief);
+    if(R.load.kind==='custom')R.load.items.forEach((p,i)=>{if(p.kind==='point')add(p.position,p.fraction*E.chordAt(g,p.position),Math.sign(p.force)*1.4,p.force>=0?COLORS.load:COLORS.relief,i);});
+    else for (const p of R.point) add(p[0],p[2],Math.sign(p[1])*1.4,p[1]>=0?COLORS.load:COLORS.relief);
   }
   function renderLegend(kind) {
     const lg = $("#legend"), lt = $("#legendTitle");
@@ -12187,11 +12240,6 @@ function renderObservations() {
   window.addEventListener("resize", stickBelowNav);
   if (window.ResizeObserver) new ResizeObserver(stickBelowNav).observe($("#wingNavigation"));
   $('#wingLoadBtn').addEventListener('click',e=>openWingLoadPopup(null,e.currentTarget));
-  document.querySelectorAll('[data-wing-load-shape]').forEach(b=>b.addEventListener('click',()=>{
-    openWingLoadPopup(null,b);const select=$('#wingKind');
-    if(select){select.value=b.dataset.wingLoadShape;select.dispatchEvent(new Event('change'));}
-    printedWorkspace?.position();
-  }));
   document.querySelectorAll("[role=tab]").forEach((b) => b.addEventListener("click", () => {
     document.querySelectorAll("[role=tab]").forEach((x) => x.setAttribute("aria-selected", String(x === b)));
     document.querySelectorAll(".tabpanel").forEach((p) => (p.hidden = p.id !== "tab-" + b.dataset.tab));
@@ -12342,10 +12390,21 @@ function renderObservations() {
   let printedWorkspace=null;
   function openWingLoadPopup(p,anchor){
     if(!printedWorkspace)return;let editor=loadKeeperOf().editor;if(!editor){renderWingLoads();editor=loadKeeperOf().editor;}if(!editor){flash('Complete valid structural inputs and Solve once before adding loads.');return;}
-    printedWorkspace.open('Wing load · upward positive',editor.container,anchor);
+    editor.newLoad();printedWorkspace.open('Wing load · upward positive',editor.container,anchor);
     if(p){$('#wingKind').value='point';$('#wingKind').dispatchEvent(new Event('change'));editor.acceptPick(p);}else $('#wingKind').focus({preventScroll:true});
   }
   function openWingStructurePopup(anchor,focusId){printedWorkspace.open('Structure · dimensions & material',$('#wingStructureForm'),anchor);const target=focusId&&$('#'+focusId);target?.scrollIntoView({block:'nearest'});target?.focus({preventScroll:true});}
+  // A load click selects its real editor; an orbit/pan drag never changes the selection.
+  let loadPointer=null,loadMoved=false;
+  canvas.addEventListener('pointerdown',e=>{loadPointer=e.button===0?{x:e.clientX,y:e.clientY,id:e.pointerId}:null;loadMoved=false;});
+  canvas.addEventListener('pointermove',e=>{if(loadPointer&&Math.hypot(e.clientX-loadPointer.x,e.clientY-loadPointer.y)>5)loadMoved=true;});
+  canvas.addEventListener('pointercancel',()=>{loadPointer=null;});
+  canvas.addEventListener('pointerup',e=>{
+    const start=loadPointer;loadPointer=null;if(!start||start.id!==e.pointerId||loadMoved||Math.hypot(e.clientX-start.x,e.clientY-start.y)>5||stale||running||gateOpen()||geometryPreview||!printedWorkspace||!model?.loads||R?.load.kind!=='custom'||S.load.kind!=='custom'||loadKeeperOf().editor?.container.querySelector('.wle-pick[aria-pressed="true"]'))return;
+    const rect=canvas.getBoundingClientRect();ndc.set((e.clientX-rect.left)/rect.width*2-1,-(e.clientY-rect.top)/rect.height*2+1);raycaster.setFromCamera(ndc,camera);const threshold=raycaster.params.Line.threshold;raycaster.params.Line.threshold=3;let hits;try{hits=raycaster.intersectObjects(model.loads.children,true);}finally{raycaster.params.Line.threshold=threshold;}
+    const hit=hits.find(h=>Number.isInteger(h.object.userData.wingLoadIndex)),index=hit?.object.userData.wingLoadIndex??WingWorkspaceUI.pickLoadArrow(model.loads.children,camera,canvas,e,THREE);if(index===null)return;if(partPick)$('#wpPick').click();
+    const editor=loadKeeperOf().editor;if(!editor)return;printedWorkspace.open('Edit wing load · upward positive',editor.container,{right:e.clientX,top:e.clientY});editor.edit(index);
+  });
   function openWingMaterialsPopup(anchor){select('mat-pla');printedWorkspace.open('Shell / rib and rod materials',$('#pm'),anchor);const tabs=el('div',{class:'lesson-actions'},'<button class="btn" type="button" data-quick-material="mat-pla">Shell / ribs</button><button class="btn" type="button" data-quick-material="mat-rod">Rods</button>');$('#pm').before(tabs);tabs.querySelectorAll('button').forEach(b=>b.onclick=()=>select(b.dataset.quickMaterial));printedWorkspace.position();}
   function openWingPartPopup(kind,p,anchor){
     if(running||gateOpen()){flash('Wait for the current solve or confirm the imported structural inputs first.');return;}
@@ -16046,7 +16105,7 @@ const METAL_REFERENCE = {
           const force=p.kind==='point'?R.n*p.force:qAt(p,y);if(!force)continue;
           const len=p.kind==='point'?.35:.45*Math.abs(force)/denom;if(len<1e-6)continue;
           const sc=R.wing.section(y,[p.kind==='table'?LoadProfiles.fractionAt(p,y):p.fraction]),base=V3(y,sc.up[0][0],force>0?sc.up[0][1]:sc.lo[0][1]);
-          const arrow=new THREE.ArrowHelper(new THREE.Vector3(0,Math.sign(force),0),new THREE.Vector3(...base),len,0xd25ad6,Math.min(.06,len*.3),Math.min(.035,len*.2));arrow.userData={kind:'arrow',y,base};g.add(arrow);
+          const arrow=new THREE.ArrowHelper(new THREE.Vector3(0,Math.sign(force),0),new THREE.Vector3(...base),len,0xd25ad6,Math.min(.06,len*.3),Math.min(.035,len*.2));arrow.userData={kind:'arrow',y,base};arrow.traverse(o=>{o.userData.wingLoadIndex=R.input.customLoads.indexOf(p);});arrow.userData.wingLoadLength=len;g.add(arrow);
         }
       }
       return;
@@ -16955,10 +17014,17 @@ const METAL_REFERENCE = {
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", fromHash); else setTimeout(fromHash, 0);
   let metalWorkspace=null;
   if(typeof WingWorkspaceUI!=='undefined'){
-    const loadPopup=(p,a)=>{if(!loadKeeper?.editor)renderLoadEditor();const editor=loadKeeper?.editor;if(!editor)return;metalWorkspace.open('D.520 load · N, m; upward positive',editor.container,a);if(p){$('#mLoadShape').value='point';$('#mLoadShape').dispatchEvent(new Event('change'));editor.acceptPick(p);}else $('#mLoadShape').focus({preventScroll:true});};
+    const loadPopup=(p,a)=>{if(!loadKeeper?.editor)renderLoadEditor();const editor=loadKeeper?.editor;if(!editor)return;editor.newLoad();metalWorkspace.open('D.520 load · N, m; upward positive',editor.container,a);if(p){$('#mLoadShape').value='point';$('#mLoadShape').dispatchEvent(new Event('change'));editor.acceptPick(p);}else $('#mLoadShape').focus({preventScroll:true});};
     const properties=(id,a)=>{MS.selected=id;renderTree();renderPM();metalWorkspace.open(id==='material'?'D.520 material':'D.520 existing structure & gauges',$('#mPm'),a);};
     metalWorkspace=WingWorkspaceUI.create({app:$('#metalApp'),canvas:$('#mgl'),viewPanel:$('#mViewPanel'),sample:sampleMetalSurface,unit:'m',actions:[{id:'load',label:'+ Load',run:loadPopup},{id:'structure',label:'Structure & gauges',run:(p,a)=>properties('structure',a)},{id:'material',label:'Material',run:(p,a)=>properties('material',a)}]});
     document.addEventListener('wing-load-applied',e=>{if(e.detail==='d520')metalWorkspace.close();});
+    let loadStart=null,loadDragged=false;const cv=$('#mgl');
+    cv.addEventListener('pointerdown',e=>{loadStart=e.button===0?{x:e.clientX,y:e.clientY,id:e.pointerId}:null;loadDragged=false;});
+    cv.addEventListener('pointermove',e=>{if(loadStart&&Math.hypot(e.clientX-loadStart.x,e.clientY-loadStart.y)>5)loadDragged=true;});
+    cv.addEventListener('pointercancel',()=>{loadStart=null;});
+    cv.addEventListener('pointerup',e=>{const start=loadStart;loadStart=null;if(!start||start.id!==e.pointerId||loadDragged||Math.hypot(e.clientX-start.x,e.clientY-start.y)>5||stale||running||!R||!model||!ray||!MS.arrows||loadKeeper?.editor?.container.querySelector('.wle-pick[aria-pressed="true"]'))return;
+      const g=model.getObjectByName('arrows');if(!g)return;const r=cv.getBoundingClientRect();ray.setFromCamera(new THREE.Vector2((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1),camera);const threshold=ray.params.Line.threshold;ray.params.Line.threshold=.025;let hits;try{hits=ray.intersectObjects(g.children,true);}finally{ray.params.Line.threshold=threshold;}const hit=hits.find(h=>Number.isInteger(h.object.userData.wingLoadIndex)),index=hit?.object.userData.wingLoadIndex??WingWorkspaceUI.pickLoadArrow(g.children,camera,cv,e,THREE);if(index===null||!loadKeeper?.editor)return;const editor=loadKeeper.editor;metalWorkspace.open('Edit D.520 load · N, m',editor.container,{right:e.clientX,top:e.clientY});editor.edit(index);
+    });
   }
   window.MetalWingUI = { open: openMetal, close: closeMetal, state: MS, result: () => R, studyFiles: () => studyFiles };
 })();

@@ -123,6 +123,11 @@ const ad520=(state)=>({
   ok($('#wlist').textContent.includes('elliptic (max at start) 0–450 mm: F = 2 N, w₀ = 0.005659 N/mm; x/c = 0.25'),'list describes the curve with F and w₀');
   ok($('#wlist').textContent.includes('Schrenk over the whole semi-span (this planform): F = 5 N; x/c = 0.25'),'list describes Schrenk');
   const r=E.solve({load:{kind:'custom',items:state.load.items}});ok(Number.isFinite(r.deflection.at(-1))&&r.verification.rootShearError<1e-12,'the engine solves the eight loads');
+  // Every ordinary shape can be selected and replaced without appending or changing its neighbours.
+  for(let i=0;i<8;i++){
+    const original=JSON.stringify(state.load.items);ed.edit(i);submit();eq(state.load.items.length,8,'edit keeps load count');eq(JSON.stringify(state.load.items),original,'unchanged edit preserves point/line/curve/Schrenk exactly');
+  }
+  ed.edit(0);set('wp',3);submit();eq(state.load.items[0].force,3);eq(state.load.items.length,8);ed.edit(0);set('wp',2);submit();
   // the 12-item limit and refusals: the load case is unchanged and the reason is shown
   const before=JSON.stringify(state.load);
   for(const [k,vals,msg] of [['point',{wa:500,wp:1,wxc:0.3},/span|station|load/i],['elliptic',{wa:300,wb:300,wv:1,wxc:0.3},/start|end|length|span/i],['point',{wa:100,wp:1,wxc:1.5},/between 0 \(leading edge\) and 1/],
@@ -169,7 +174,7 @@ const ad520=(state)=>({
   const tr=E.solve({load:{kind:'custom',items:state.load.items}}), Xref=P.weighted({kind:'table',points:[[0,0.004,0.2],[450,0,0.6]]},0,450,y=>P.fractionAt({kind:'table',points:[[0,0.004,0.2],[450,0,0.6]]},y)*E.chordAt(E.makeGeometry(),y));
   near(tr.T[0],tr.props.xsc[0]*tr.V[0]-Xref,1e-12,'root torque from the row x/c, T = x_sc V − ∫ x_F w dy',1e-12);
   // edit the table in place
-  $('[data-wle-edit-table="0"]').click();eq($('#wcsv').open,true,'Edit table opens the importer');ok($('#wcsvText').value.startsWith('y_mm,w_N_per_mm,x_over_c\n0,0.004,0.2\n450,0,0.6'),'table text refilled');
+  $('[data-wle-edit-load="0"]').click();eq($('#wcsv').open,true,'Edit table opens the importer');ok($('#wcsvText').value.startsWith('y_mm,w_N_per_mm,x_over_c\n0,0.004,0.2\n450,0,0.6'),'table text refilled');
   csv('y_mm,w_N_per_mm,x_over_c\n0,0.005,0.2\n450,0,0.6\n');ok(/replaces table load 1 only/.test($('#wcsvOut').textContent));$('#wcsvApply').click();eq(state.load.items[0].points[0][1],0.005,'edited');
   // file with a hostile name: text only, SHA-256 of the bytes
   const name='<svg onload="window.pwned=1">.csv', text='y_mm,w_N_per_mm\r\n0,0.003\r\n450,0\r\n';

@@ -462,16 +462,6 @@ body { margin: 0; }
     </details>
   </aside>
 
-  <section class="panel" style="grid-area:loads;padding:12px 18px" aria-label="Wing load shortcuts">
-    <div class="lesson-actions"><b>Apply loads to this wing:</b>
-      <button class="btn" type="button" data-wing-load-shape="point">Point force</button>
-      <button class="btn" type="button" data-wing-load-shape="rectangle">Uniform</button>
-      <button class="btn" type="button" data-wing-load-shape="triangle">Triangle ↑</button>
-      <button class="btn" type="button" data-wing-load-shape="triangleDown">Triangle ↓</button>
-      <button class="btn" type="button" data-wing-load-shape="trapezoid">Trapezoid / combined loads</button>
-    </div>
-    <p class="note" style="margin:6px 0 0">Available for skin-only, reinforced, ribbed and course printed wings. Choose a shape, enter its position and magnitude, then add it. ↑ / ↓ means increasing / decreasing intensity along the span, not force direction; use signed values for upward / downward forces.</p>
-  </section>
   <main class="view panel" aria-label="3-D viewport">
     <canvas id="gl"></canvas>
     <div class="anatomy-labels" id="ribLabels" aria-hidden="true"></div>
@@ -1714,13 +1704,13 @@ body { margin: 0; }
     const g = R.geometry, L = g.semiSpan;
     const lift = R.load.kind === "flight";
     const scaleLen = 60;
-    const add = (y, x, F, color) => {
+    const add = (y, x, F, color, loadIndex=null) => {
       if (Math.abs(F) < 1e-9) return;
       const w = sectionMotion(y)[0];
       const len = Math.min(90, scaleLen * Math.abs(F));if(len<0.01)return;
       const zLow = at(R.props.zBot, y) - 4, zHigh = at(R.props.zTop, y) + 4;
-      if (F > 0) grp.add(new THREE.ArrowHelper(new THREE.Vector3(0, 1, 0), new THREE.Vector3(y, zLow - len + w, x), len, color, Math.min(10, len * 0.35), 5));
-      else grp.add(new THREE.ArrowHelper(new THREE.Vector3(0, -1, 0), new THREE.Vector3(y, zHigh + len + w, x), len, color, Math.min(10, len * 0.35), 5));
+      const arrow=new THREE.ArrowHelper(new THREE.Vector3(0,F>0?1:-1,0),new THREE.Vector3(y,F>0?zLow-len+w:zHigh+len+w,x),len,color,Math.min(10,len*.35),5);
+      if(loadIndex!==null){arrow.traverse(o=>{o.userData.wingLoadIndex=loadIndex;});arrow.userData.wingLoadLength=len;}grp.add(arrow);
     };
     if (R.load.kind === "custom") {
       // Line loads of every shape (linear, elliptic, parabolic, table, Schrenk): 13 arrows each on its own span,
@@ -1732,7 +1722,7 @@ body { margin: 0; }
       const qmax=Math.max(...lines.flatMap(p=>samples(p).map(s=>Math.abs(s[1]))),1e-12);
       for(const p of lines) for(const [y,q] of samples(p)) {
         const denom=S.lineArrowScale==='independent'?Math.max(...samples(p).map(s=>Math.abs(s[1])),1e-12):qmax;
-        add(y,(p.kind==='table'?P.fractionAt(p,y):p.fraction)*E.chordAt(g,y),1.2*q/denom,q>=0?COLORS.load:COLORS.relief);
+        add(y,(p.kind==='table'?P.fractionAt(p,y):p.fraction)*E.chordAt(g,y),1.2*q/denom,q>=0?COLORS.load:COLORS.relief,R.load.items.indexOf(p));
       }
     } else if (lift && R.load.distribution !== "tip") {
       const wmax = Math.max(...R.w.map((v) => Math.abs(v))) || 1;
@@ -1742,7 +1732,8 @@ body { margin: 0; }
         add(y, R.load.liftFraction * E.chordAt(g, y), wl * 1.2, COLORS.load);
       }
     }
-    for (const p of R.point) add(p[0],p[2],Math.sign(p[1])*1.4,p[1]>=0?COLORS.load:COLORS.relief);
+    if(R.load.kind==='custom')R.load.items.forEach((p,i)=>{if(p.kind==='point')add(p.position,p.fraction*E.chordAt(g,p.position),Math.sign(p.force)*1.4,p.force>=0?COLORS.load:COLORS.relief,i);});
+    else for (const p of R.point) add(p[0],p[2],Math.sign(p[1])*1.4,p[1]>=0?COLORS.load:COLORS.relief);
   }
   function renderLegend(kind) {
     const lg = $("#legend"), lt = $("#legendTitle");
@@ -2660,11 +2651,6 @@ body { margin: 0; }
   window.addEventListener("resize", stickBelowNav);
   if (window.ResizeObserver) new ResizeObserver(stickBelowNav).observe($("#wingNavigation"));
   $('#wingLoadBtn').addEventListener('click',e=>openWingLoadPopup(null,e.currentTarget));
-  document.querySelectorAll('[data-wing-load-shape]').forEach(b=>b.addEventListener('click',()=>{
-    openWingLoadPopup(null,b);const select=$('#wingKind');
-    if(select){select.value=b.dataset.wingLoadShape;select.dispatchEvent(new Event('change'));}
-    printedWorkspace?.position();
-  }));
   document.querySelectorAll("[role=tab]").forEach((b) => b.addEventListener("click", () => {
     document.querySelectorAll("[role=tab]").forEach((x) => x.setAttribute("aria-selected", String(x === b)));
     document.querySelectorAll(".tabpanel").forEach((p) => (p.hidden = p.id !== "tab-" + b.dataset.tab));
@@ -2815,10 +2801,21 @@ body { margin: 0; }
   let printedWorkspace=null;
   function openWingLoadPopup(p,anchor){
     if(!printedWorkspace)return;let editor=loadKeeperOf().editor;if(!editor){renderWingLoads();editor=loadKeeperOf().editor;}if(!editor){flash('Complete valid structural inputs and Solve once before adding loads.');return;}
-    printedWorkspace.open('Wing load · upward positive',editor.container,anchor);
+    editor.newLoad();printedWorkspace.open('Wing load · upward positive',editor.container,anchor);
     if(p){$('#wingKind').value='point';$('#wingKind').dispatchEvent(new Event('change'));editor.acceptPick(p);}else $('#wingKind').focus({preventScroll:true});
   }
   function openWingStructurePopup(anchor,focusId){printedWorkspace.open('Structure · dimensions & material',$('#wingStructureForm'),anchor);const target=focusId&&$('#'+focusId);target?.scrollIntoView({block:'nearest'});target?.focus({preventScroll:true});}
+  // A load click selects its real editor; an orbit/pan drag never changes the selection.
+  let loadPointer=null,loadMoved=false;
+  canvas.addEventListener('pointerdown',e=>{loadPointer=e.button===0?{x:e.clientX,y:e.clientY,id:e.pointerId}:null;loadMoved=false;});
+  canvas.addEventListener('pointermove',e=>{if(loadPointer&&Math.hypot(e.clientX-loadPointer.x,e.clientY-loadPointer.y)>5)loadMoved=true;});
+  canvas.addEventListener('pointercancel',()=>{loadPointer=null;});
+  canvas.addEventListener('pointerup',e=>{
+    const start=loadPointer;loadPointer=null;if(!start||start.id!==e.pointerId||loadMoved||Math.hypot(e.clientX-start.x,e.clientY-start.y)>5||stale||running||gateOpen()||geometryPreview||!printedWorkspace||!model?.loads||R?.load.kind!=='custom'||S.load.kind!=='custom'||loadKeeperOf().editor?.container.querySelector('.wle-pick[aria-pressed="true"]'))return;
+    const rect=canvas.getBoundingClientRect();ndc.set((e.clientX-rect.left)/rect.width*2-1,-(e.clientY-rect.top)/rect.height*2+1);raycaster.setFromCamera(ndc,camera);const threshold=raycaster.params.Line.threshold;raycaster.params.Line.threshold=3;let hits;try{hits=raycaster.intersectObjects(model.loads.children,true);}finally{raycaster.params.Line.threshold=threshold;}
+    const hit=hits.find(h=>Number.isInteger(h.object.userData.wingLoadIndex)),index=hit?.object.userData.wingLoadIndex??WingWorkspaceUI.pickLoadArrow(model.loads.children,camera,canvas,e,THREE);if(index===null)return;if(partPick)$('#wpPick').click();
+    const editor=loadKeeperOf().editor;if(!editor)return;printedWorkspace.open('Edit wing load · upward positive',editor.container,{right:e.clientX,top:e.clientY});editor.edit(index);
+  });
   function openWingMaterialsPopup(anchor){select('mat-pla');printedWorkspace.open('Shell / rib and rod materials',$('#pm'),anchor);const tabs=el('div',{class:'lesson-actions'},'<button class="btn" type="button" data-quick-material="mat-pla">Shell / ribs</button><button class="btn" type="button" data-quick-material="mat-rod">Rods</button>');$('#pm').before(tabs);tabs.querySelectorAll('button').forEach(b=>b.onclick=()=>select(b.dataset.quickMaterial));printedWorkspace.position();}
   function openWingPartPopup(kind,p,anchor){
     if(running||gateOpen()){flash('Wait for the current solve or confirm the imported structural inputs first.');return;}

@@ -4,13 +4,13 @@ const WingWorkspaceUI=(()=>{
  function create({app,canvas,viewPanel,actions,sample,contextActions=actions,unit='mm'}){
   const doc=app.ownerDocument,win=doc.defaultView;
   if(!styled){styled=true;const style=doc.createElement('style');style.textContent=`
-   #app.wing-workspace,#metalApp.wing-workspace{grid-template-columns:320px minmax(0,1fr);grid-template-rows:none;grid-template-areas:"bar bar" "side quick" "side view" "side vpanel" "side loads" "side dock"}
-   #app.wing-workspace.learning-view{grid-template-columns:minmax(0,1fr);grid-template-areas:"bar" "quick" "view" "vpanel" "loads" "dock"}
+   #app.wing-workspace,#metalApp.wing-workspace{grid-template-columns:320px minmax(0,1fr);grid-template-rows:none;grid-template-areas:"bar bar" "side quick" "side view" "side dock"}
+   #app.wing-workspace.learning-view{grid-template-columns:minmax(0,1fr);grid-template-areas:"bar" "quick" "view" "dock"}
    .wing-quick-tools{grid-area:quick;padding:12px;display:flex;flex-wrap:wrap;align-items:center;gap:8px}.wing-quick-tools .btn{min-height:40px;padding:7px 12px;white-space:nowrap}.wing-quick-tools .wing-quick-hint{flex-basis:100%;font-size:12px;color:var(--muted);margin:0}
    .wing-display-drawer{grid-area:vpanel;min-width:0}.wing-display-drawer>summary{padding:12px 16px;cursor:pointer;font:700 14px var(--font-label);color:var(--fg)}.wing-display-drawer .wl-vpanel{height:auto;max-height:none;overflow:visible;display:block;border:0;box-shadow:none}.wing-display-drawer .wl-vbody{grid-template-columns:repeat(auto-fit,minmax(240px,1fr));align-items:start}.wing-display-drawer .panel-head{display:none}
    .wing-editor-pop,.wing-context-menu{position:fixed;z-index:180;background:var(--panel,#fff);color:var(--fg,#172c40);border:2px solid var(--accent,#176ac0);border-radius:14px;box-shadow:0 14px 40px #102d4f40;max-height:calc(100vh - 16px);overflow:auto}
    .wing-editor-pop{width:min(420px,calc(100vw - 16px));padding:14px}.wing-editor-pop[hidden],.wing-context-menu[hidden]{display:none}.wing-editor-pop>h3{font:700 17px var(--font-label);padding-right:46px;margin:0 0 12px}.wing-editor-close{position:absolute;right:7px;top:7px;width:40px;height:40px;font-size:28px;line-height:1;border:1px solid var(--line);border-radius:9px;background:var(--panel-2,#eff5fc);color:var(--fg);cursor:pointer}.wing-editor-pop .field{grid-template-columns:minmax(0,1fr) 120px}.wing-editor-pop .field input{min-width:0}.wing-editor-pop .callout{padding:10px}.wing-editor-pop .wle-form>h3{display:none}.wing-editor-pop .wle-form>.note{font-size:12px}.wing-editor-pop .wle-live-preview svg{max-height:150px}.wing-editor-pop .wle-pick{margin:5px 0}.wing-editor-pop .wl-row{margin:8px 0}.wing-editor-pop .btn{min-height:36px}.wing-editor-help{display:none}.wing-editor-pop .wing-editor-help{display:inline-flex;margin-bottom:6px}.wing-editor-pop .wle-form:not(.wing-help-open)>.note:not(.wle-range),.wing-editor-pop .wle-form:not(.wing-help-open) .wle-submitbar>.note,.wing-editor-pop .wle-form:not(.wing-help-open)>.wle-show-deformation{display:none}.wing-editor-pop .wle-form[data-compact-kind="point"] .wle-live-preview{display:none}.wing-quick-form label{display:grid;gap:6px;font-size:14px}.wing-quick-form input{width:100%;padding:8px;border:1px solid var(--line);border-radius:7px;background:var(--panel-2);color:var(--fg);font:16px var(--font-data)}.wing-context-menu{padding:8px;width:230px;display:grid;gap:5px}.wing-context-menu button{text-align:left;padding:10px;border:0;border-radius:7px;background:var(--panel-2,#eff5fc);color:var(--fg);cursor:pointer;font:14px var(--font-label)}.wing-context-menu button:hover,.wing-context-menu button:focus-visible{outline:2px solid var(--accent)}.wing-context-menu p{font-size:12px;margin:4px;color:var(--muted)}
-   @media(max-width:1100px){#app.wing-workspace,#app.wing-workspace.learning-view,#metalApp.wing-workspace{grid-template-columns:minmax(0,1fr);grid-template-areas:"bar" "quick" "view" "vpanel" "side" "loads" "dock"}.wing-quick-tools{gap:6px}.wing-quick-tools .btn{padding:6px 9px}}
+   @media(max-width:1100px){#app.wing-workspace,#app.wing-workspace.learning-view,#metalApp.wing-workspace{grid-template-columns:minmax(0,1fr);grid-template-areas:"bar" "quick" "view" "side" "dock"}.wing-quick-tools{gap:6px}.wing-quick-tools .btn{padding:6px 9px}}
   `;doc.head.append(style);}
   const scrollStyle=doc.createElement('style');scrollStyle.textContent='.wing-editor-pop{overflow:visible}.wing-editor-pop>div{max-height:calc(100vh - 100px);overflow:auto;overscroll-behavior:contain}';doc.head.append(scrollStyle);
   app.classList.add('wing-workspace');
@@ -19,13 +19,20 @@ const WingWorkspaceUI=(()=>{
   const viewButton=doc.createElement('button');viewButton.type='button';viewButton.className='btn';viewButton.textContent='View & display ▾';viewButton.setAttribute('aria-expanded','false');tools.append(viewButton);
   const hint=doc.createElement('p');hint.className='wing-quick-hint';hint.textContent='Right-click the wing to work at that location. Drag to rotate; right-drag to pan. No load is added until confirmed.';tools.append(hint);canvas.closest('.view').before(tools);
   const display=doc.createElement('details');display.className='wing-display-drawer panel';const summary=doc.createElement('summary');summary.textContent='View & display · zoom, camera and appearance';display.append(summary);viewPanel.before(display);display.append(viewPanel);
-  viewButton.onclick=()=>{display.open=!display.open;if(display.open)display.scrollIntoView?.({block:'nearest',behavior:'smooth'});};display.addEventListener('toggle',()=>viewButton.setAttribute('aria-expanded',String(display.open)));
+  // Keep the real controls (and their listeners) in a hidden home, not below the model.
+  display.hidden=true;
+  viewButton.onclick=()=>{if(moved===viewPanel)close();else open('View & display',viewPanel,viewButton);};
   const popup=doc.createElement('section');popup.className='wing-editor-pop';popup.hidden=true;popup.setAttribute('role','dialog');const title=doc.createElement('h3');title.id=app.id+'EditorTitle';popup.setAttribute('aria-labelledby',title.id);const closeButton=doc.createElement('button');closeButton.className='wing-editor-close';closeButton.type='button';closeButton.textContent='×';closeButton.setAttribute('aria-label','Close wing editor');const body=doc.createElement('div');popup.append(title,closeButton,body);doc.body.append(popup);
-  let moved=null,placeholder=null,anchor=null,returnFocus=null;
+  let moved=null,placeholder=null,anchor=null,returnFocus=null,drag=null,manualPosition=false;
+  title.title='Drag this heading to move the panel';title.style.cssText='cursor:move;touch-action:none;user-select:none';
+  const viewStyle=doc.createElement('style');viewStyle.textContent='.wing-display-drawer[hidden]{display:none}.wing-editor-pop .wl-vpanel{display:block;height:auto;max-height:none;overflow:visible;border:0;box-shadow:none}.wing-editor-pop .wl-vbody{display:grid;grid-template-columns:minmax(0,1fr)}.wing-editor-pop .wl-vpanel>.panel-head{display:none}.wing-editor-pop.wing-view-pop{width:min(570px,calc(100vw - 16px))}.wing-view-pop #wingPartEditor{display:none}.wing-view-pop .wl-vbody{grid-template-columns:repeat(auto-fit,minmax(210px,1fr))}.wing-view-pop .hud{grid-column:1/-1}';doc.head.append(viewStyle);
   function clampBox(node,x,y){const r=node.getBoundingClientRect(),vw=doc.documentElement.clientWidth||win.innerWidth,vh=win.innerHeight;node.style.left=Math.max(8,Math.min(x,vw-r.width-8))+'px';node.style.top=Math.max(8,Math.min(y,vh-r.height-8))+'px';}
-  function position(){if(popup.hidden)return;const r=anchor?.getBoundingClientRect?.()||anchor||canvas.getBoundingClientRect();clampBox(popup,r.right!=null?r.right+10:r.x,r.top!=null?r.top:r.y);}
-  function close(){if(moved){if(placeholder?.parentNode)placeholder.replaceWith(moved);else moved.remove();}moved=null;placeholder=null;popup.hidden=true;body.replaceChildren();returnFocus?.focus?.({preventScroll:true});returnFocus=null;}
-  function open(heading,node,at){close();returnFocus=doc.activeElement;anchor=at||canvas;title.textContent=heading;placeholder=doc.createComment('wing editor home');if(node.parentNode)node.before(placeholder);moved=node;body.append(node);
+  function position(){if(popup.hidden)return;if(manualPosition){clampBox(popup,parseFloat(popup.style.left),parseFloat(popup.style.top));return;}const r=anchor?.getBoundingClientRect?.()||anchor||canvas.getBoundingClientRect();clampBox(popup,r.right!=null?r.right+10:r.x,r.top!=null?r.top:r.y);}
+  title.addEventListener('pointerdown',e=>{if(e.button!==0)return;const r=popup.getBoundingClientRect();drag={id:e.pointerId,x:e.clientX,y:e.clientY,left:r.left,top:r.top};title.setPointerCapture?.(e.pointerId);e.preventDefault();});
+  title.addEventListener('pointermove',e=>{if(!drag||e.pointerId!==drag.id)return;manualPosition=true;clampBox(popup,drag.left+e.clientX-drag.x,drag.top+e.clientY-drag.y);});
+  for(const name of ['pointerup','pointercancel'])title.addEventListener(name,()=>{drag=null;});
+  function close(){if(moved){if(placeholder?.parentNode)placeholder.replaceWith(moved);else moved.remove();}moved=null;placeholder=null;drag=null;popup.hidden=true;viewButton.setAttribute('aria-expanded','false');body.replaceChildren();returnFocus?.focus?.({preventScroll:true});returnFocus=null;}
+  function open(heading,node,at){close();manualPosition=false;returnFocus=doc.activeElement;anchor=at||canvas;title.textContent=heading;placeholder=doc.createComment('wing editor home');if(node.parentNode)node.before(placeholder);moved=node;body.append(node);popup.classList.toggle('wing-view-pop',node===viewPanel);viewButton.setAttribute('aria-expanded',String(node===viewPanel));
    const form=node.querySelector('.wle-form');if(form){const kind=form.querySelector('select');form.dataset.compactKind=kind?.value||'';if(!form.querySelector('.wing-editor-help')){const help=doc.createElement('button');help.type='button';help.className='btn wing-editor-help';help.textContent='Load help';help.setAttribute('aria-expanded','false');help.onclick=()=>{const on=form.classList.toggle('wing-help-open');help.setAttribute('aria-expanded',String(on));position();};form.prepend(help);kind?.addEventListener('change',()=>{form.dataset.compactKind=kind.value;position();});}}
    popup.hidden=false;position();closeButton.focus({preventScroll:true});return popup;}
   closeButton.onclick=close;popup.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();e.stopPropagation();close();}});
@@ -39,6 +46,20 @@ const WingWorkspaceUI=(()=>{
   for(const name of ['wing-learning-stage','wing-show','metal-wing-open','beam-show'])win.addEventListener(name,()=>{close();menu.hidden=true;});
   return{open,close,position,popup,tools,display,menu};
  }
- return{create};
+ // A screen-space hit margin stays usable at every zoom level, including very thin arrow shafts.
+ function pickLoadArrow(arrows,camera,canvas,event,THREE,tolerance=12){
+  const r=canvas.getBoundingClientRect();let best=null;
+  for(const arrow of arrows){
+   const {wingLoadIndex:index,wingLoadLength:length}=arrow.userData;if(!Number.isInteger(index)||!Number.isFinite(length)||typeof arrow.getWorldPosition!=='function'||typeof arrow.localToWorld!=='function')continue;
+   let visible=true;for(let p=arrow;p;p=p.parent)if(!p.visible)visible=false;if(!visible)continue;
+   arrow.updateWorldMatrix(true,true);const a=arrow.getWorldPosition(new THREE.Vector3()).project(camera),b=arrow.localToWorld(new THREE.Vector3(0,length,0)).project(camera);
+   if(![a.x,a.y,a.z,b.x,b.y,b.z].every(Number.isFinite)||a.z < -1||a.z>1||b.z < -1||b.z>1)continue;
+   const ax=r.left+(a.x+1)*r.width/2,ay=r.top+(1-a.y)*r.height/2,bx=r.left+(b.x+1)*r.width/2,by=r.top+(1-b.y)*r.height/2,dx=bx-ax,dy=by-ay;
+   const t=Math.max(0,Math.min(1,((event.clientX-ax)*dx+(event.clientY-ay)*dy)/(dx*dx+dy*dy||1))),distance=Math.hypot(event.clientX-ax-t*dx,event.clientY-ay-t*dy);
+   if(distance<=tolerance&&(!best||distance<best.distance))best={index,distance};
+  }
+  return best?.index??null;
+ }
+ return{create,pickLoadArrow};
 })();
 if(typeof module!=='undefined')module.exports=WingWorkspaceUI;

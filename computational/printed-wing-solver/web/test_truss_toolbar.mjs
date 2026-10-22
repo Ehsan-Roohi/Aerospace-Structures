@@ -10,8 +10,11 @@ try{
  assert.ok($('.manual-bar').contains(manual));assert.ok(actions.contains($('#solve')));assert.ok(actions.contains($('#clear')));assert.equal(manual.contains(actions),false,'analysis buttons must not toggle the manual');
  assert.equal(toolbar.contains($('#solve')),false);assert.equal(toolbar.contains($('#clear')),false);
  const rows=[...toolbar.children].filter(e=>!e.matches('input[type="hidden"]'));assert.equal(rows.length,2);assert.equal(rows[0],$('.geometry-row'));assert.equal(rows[1],$('.load-row'));
- assert.deepEqual([...$('.geometry-row').children].map(e=>e.dataset.tool||e.className),['tools history-tools','select','node','member','tools support-tools']);
- assert.deepEqual([...$('.support-tools').children].map(e=>e.querySelector('button')?.dataset.tool||e.textContent.trim()),['SUPPORTS','pin','roller']);
+ assert.deepEqual([...$('.geometry-row').children].map(e=>e.dataset.tool||e.className),['node','member','select','tools support-tools']);
+ assert.deepEqual([...$('.support-tools').children].map(e=>e.querySelector('button')?.dataset.tool||e.textContent.trim()),['SUPPORTS','pin','roller','Clear all supports']);
+ assert.deepEqual([...$('.load-row').children].map(e=>e.id||e.dataset.tool||e.className),['tools load-start','line','clearLoads','tools history-tools','selectionHelp']);
+ assert.equal($('#drawingHelp'),null);assert.match($('#selectionHelp').textContent,/bilateral/);assert.match($('#selectionHelp').textContent,/Grid Off/);
+ assert.equal($('#clearSupports').closest('aside'),null,'clear supports belongs above the drawing, not in the sidebar');
  assert.ok($('.load-row').contains($('#clearLoads')));assert.ok($('.load-row').contains($('#selectionHelp')));assert.ok($('.load-start').querySelector('[data-tool="force"]'));assert.ok($('.load-row').querySelector('[data-tool="line"]'));
  w.confirm=()=>true;$('#example').click();$('#solve').click();assert.ok(w.TrussLab.state().result);assert.equal(manual.open,false);
  $('#clear').click();assert.equal(w.TrussLab.state().model.nodes.length,0);assert.equal(manual.open,false);$('#undo').click();assert.equal(w.TrussLab.state().model.nodes.length,4);

@@ -331,9 +331,24 @@ const WingLoadsUI = (() => {
       container.querySelector(`label[for="${id.value}"]`).textContent = total ? `Total force F (${u.force}, upward +)` : `Peak intensity w₀ (${u.line}, upward +)`;
       law(); chord();livePreview();
     }
+    let editingIndex=null;
+    function candidateItems(p){const base=ad.mode()==='custom'?[...ad.items()]:[];if(editingIndex===null)return [...base,p];if(!base[editingIndex])throw new Error('This load no longer exists. Close and select it again.');base[editingIndex]=p;return base;}
+    function newLoad(){editingIndex=null;byId(id.form).querySelector('h3').textContent='Add a load to the current wing';container.querySelectorAll('button[type="submit"]').forEach(b=>b.textContent='Add load');}
+    function edit(i){
+      const p=ad.items()[i];if(!p)return false;cancelPick();newLoad();
+      if(p.kind==='table'){openCsv(i);return true;}
+      editingIndex=i;byId(id.kind).value=val(p.kind==='distributed'?'trapezoid':p.kind);
+      byId(id.xc).value=p.fraction;
+      if(p.kind==='point'){byId(id.a).value=p.position;byId(id.P).value=p.force;}
+      else if(p.kind==='schrenk')byId(id.value).value=p.total;
+      else {byId(id.a).value=p.start;byId(id.b).value=p.end;if(p.kind==='distributed'){byId(id.q0).value=p.qStart;byId(id.q1).value=p.qEnd;}else{byId(id.shape).value=p.shape;byId(id.basis).value=p.total!==undefined?'total':'peak';lastBasis=byId(id.basis).value;byId(id.value).value=p[lastBasis];}}
+      visible();byId(id.kind).dispatchEvent(new doc.defaultView.Event('change'));
+      byId(id.form).querySelector('h3').textContent=`Edit load ${i+1}`;container.querySelectorAll('button[type="submit"]').forEach(b=>b.textContent='Apply changes');
+      byId(p.kind==='point'?id.P:p.kind==='distributed'?id.q0:id.value).focus({preventScroll:true});return true;
+    }
     function itemFromForm() {
-      const p=parseItemFromForm(),base=ad.mode()==='custom'?ad.items():[];
-      ad.validate([...base,p]);
+      const p=parseItemFromForm();
+      ad.validate(candidateItems(p));
       return p;
     }
     function parseItemFromForm() {
@@ -395,10 +410,10 @@ const WingLoadsUI = (() => {
     function renderList() {
       const items = ad.items(), mode = ad.mode();
       byId(id.list).innerHTML = items.length
-        ? items.map((p, i) => `<p>${i + 1}. ${esc(describe(p, u))} <button class="btn" type="button" ${ad.deleteAttr}="${i}">Remove</button>${p.kind === 'table' ? ` <button class="btn" type="button" data-wle-edit-table="${i}">Edit table</button>` : ''}</p><details><summary>Load ${i+1}: profile &amp; resultant</summary>${profile(p,items)}</details>`).join('')
+        ? items.map((p, i) => `<p>${i + 1}. ${esc(describe(p, u))} <button class="btn" type="button" ${ad.deleteAttr}="${i}">Remove</button> <button class="btn" type="button" data-wle-edit-load="${i}">${p.kind==='table'?'Edit table':'Edit load'}</button></p><details><summary>Load ${i+1}: profile &amp; resultant</summary>${profile(p,items)}</details>`).join('')
         : `<p class="wle-empty">${mode === 'flight' ? 'Flight-like loading is active; no custom loads.' : mode === 'tip' ? 'A tip-force case is active; no custom loads.' : 'No load defined. Add your own load.'}</p>`;
-      container.querySelectorAll(`[${ad.deleteAttr}]`).forEach((b) => { b.onclick = () => { const i = +b.getAttribute(ad.deleteAttr); tryApply(ad.items().filter((_, k) => k !== i), `Load ${i + 1} removed.`); }; });
-      container.querySelectorAll('[data-wle-edit-table]').forEach((b) => { b.onclick = () => openCsv(+b.dataset.wleEditTable); });
+      container.querySelectorAll(`[${ad.deleteAttr}]`).forEach((b) => { b.onclick = () => { const i = +b.getAttribute(ad.deleteAttr); newLoad();tryApply(ad.items().filter((_, k) => k !== i), `Load ${i + 1} removed.`); }; });
+      container.querySelectorAll('[data-wle-edit-load]').forEach((b) => { b.onclick = () => edit(+b.dataset.wleEditLoad); });
       if (ad.statusText) status(ad.statusText());
     }
     function profile(p,items=[]) {
@@ -429,15 +444,15 @@ const WingLoadsUI = (() => {
       e.preventDefault();
       let p;
       try { p = itemFromForm(); } catch (x) { status(`<span class="wle-err">${esc(x.message)}</span> Nothing was changed.`); return; }
-      const base = ad.mode() === 'custom' ? ad.items() : [];
-      if(tryApply([...base, p], 'Load added.'))container.dispatchEvent(new doc.defaultView.CustomEvent('wing-load-applied',{bubbles:true,detail:ad.workspace}));
+      const note=editingIndex===null?'Load added.':`Load ${editingIndex+1} updated.`;
+      if(tryApply(candidateItems(p),note)){newLoad();container.dispatchEvent(new doc.defaultView.CustomEvent('wing-load-applied',{bubbles:true,detail:ad.workspace}));}
     };
     byId(id.kind).onchange = ()=>{cancelPick();visible();}; byId(id.shape).onchange = visible;
     let lastBasis='total';
     byId(id.basis).onchange=()=>{const next=byId(id.basis).value,k=canon(byId(id.kind).value);try{if(['elliptic','parabolic'].includes(k)&&byId(id.value).value.trim()!==''){const p=P.normalizeCurve({kind:k,start:readNum(id.a,'Start'),end:readNum(id.b,'End'),shape:byId(id.shape).value,[lastBasis]:readNum(id.value,'Magnitude')},{min:-Infinity,max:Infinity,lengthUnit:u.length});byId(id.value).value=p[next];}}catch(e){}lastBasis=next;visible();};
     byId(id.form).addEventListener('input', () => { law(); chord();livePreview(); });
-    byId(id.clear).onclick = () => tryApply([], 'All custom loads cleared: no load defined.');
-    if (ad.flight) byId(id.flight).onclick = () => { cancelPick();ad.flight.apply(); renderList(); };
+    byId(id.clear).onclick = () => {newLoad();tryApply([], 'All custom loads cleared: no load defined.');};
+    if (ad.flight) byId(id.flight).onclick = () => { newLoad();cancelPick();ad.flight.apply(); renderList(); };
     // ---------------------------------------------------------- CSV
     const csv = { filename: '', sha256: '', fromFile: null, candidate: null, text: null, edit: null };
     const csvMode = () => (csv.edit !== null ? 'edit' : (container.querySelector(`input[name="${id.csv}Mode"]:checked`) || { value: 'add' }).value);
@@ -508,7 +523,7 @@ const WingLoadsUI = (() => {
     byId(id.csv + 'Template').onclick = () => { if (ad.download) ad.download(`${ad.workspace}_line_load_template.csv`, P.csvTemplate(ad.workspace), 'text/csv'); };
     byId(id.csv+'PowerPreview').onclick=()=>{try{const n=k=>readNum(id.csv+'Power'+k,k);const p=P.powerTable({start:n('A'),end:n('B'),total:n('F'),exponent:n('N'),shape:byId(id.csv+'PowerShape').value});byId(id.csv+'Text').value=P.CSV_SPECS[ad.workspace].columns.join(',')+'\n'+p.points.map(r=>r.join(',')).join('\n');preview();}catch(e){byId(id.csv+'Out').textContent=e.message;}};
     visible(); renderList();if(ad.onScale)ad.onScale($('.wle-scale').value);
-    return { refresh() { renderList(); chord();livePreview(); }, preview, openCsv, container, acceptPick, cancelPick };
+    return { refresh() { renderList(); chord();livePreview(); }, preview, openCsv, edit, newLoad, container, acceptPick, cancelPick };
   }
 
   /**

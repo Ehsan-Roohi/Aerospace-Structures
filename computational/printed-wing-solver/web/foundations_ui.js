@@ -102,7 +102,7 @@ const Lecture03BeamCases = Object.freeze({
           ${named('length','Length L','mm')}${named('E','Elastic modulus E','MPa')}${named('density','Density ρ','g/cm³')}${named('elements','Requested elements','',"step='1' min='4' max='100'")}
         </div><button type="submit" class="sr-only">Solve</button></form>
         <p class="bl-help">Elements are numerical subdivisions, not physical parts. Their number controls the mesh resolution, not the physical beam. Support, point-load, load-boundary and hinge stations are always mesh nodes.</p>
-        <details class="bl-box"><summary>Why choose 10, 30 or 40 elements?</summary>
+        <details class="bl-box" id="beamMeshHelp"><summary>Why choose 10, 30 or 40 elements?</summary>
           <p class="bl-help">Each Euler–Bernoulli element joins two nodes. The solver finds nodal displacement and rotation, then interpolates the shape between nodes. For a 450 mm beam, nominal lengths are 45 mm with 10 elements, 15 mm with 30, and 11.25 mm with 40. Extra required stations can change the actual count and spacing.</p>
           <svg role="img" aria-label="The same beam divided into 10, 30 and 40 numerical elements" viewBox="0 0 430 120" style="width:100%">${[10,30,40].map((n,j)=>`<text x="4" y="${24+j*36}" fill="currentColor" font-size="13">${n}</text><path d="M42 ${20+j*36}H420" stroke="#166bbb" stroke-width="3"/>${Array.from({length:n+1},(_,k)=>`<path d="M${42+378*k/n} ${15+j*36}v10" stroke="currentColor"/>`).join('')}`).join('')}</svg>
           <p class="bl-help">More elements usually improve interpolation and vibration estimates but cost more calculation; they do not strengthen the beam or repair wrong inputs. In these constant-EI teaching beams, exact load integration and equilibrium recovery can already give almost unchanged reactions and V/M, even on a coarse mesh. Between-node displacement/rotation and frequencies can still change. Similar numbers do not make a mesh study pointless or prove the physical model correct.</p>
@@ -178,6 +178,8 @@ const Lecture03BeamCases = Object.freeze({
         ${[['point','↓ Point force'],['moment','↻ Couple'],['rectangle','↓↓ Uniform'],['triangle','◿ Triangle →'],['triangle-root','◺ Triangle ←'],['trapezoid','▱ Trapezoid'],['elliptic','◠ Elliptic'],['parabolic','⌒ Parabolic']].map(([k,label])=>`<button type="button" class="bl-tool" data-place="load:${k}" aria-pressed="false">${label}</button>`).join('')}
         <button type="button" class="bl-tool" id="beamStopPlacing">Cancel / select</button>
         <button type="button" class="bl-tool bl-clear" id="beamClearPicture">Clear All Loads</button>
+        <button type="button" class="bl-tool" id="beamUndo" title="Undo model edit (Ctrl/Cmd+Z)" disabled>↶ Undo</button>
+        <button type="button" class="bl-tool" id="beamRedo" title="Redo model edit (Ctrl/Cmd+Shift+Z or Ctrl+Y)" disabled>↷ Redo</button>
       </div>
       <p class="bl-help" id="beamGraphicHelp" role="status">Choose a force/couple and click its station; for a line load, drag over its interval. Enter values in the compact box beside your selection and confirm with Enter or Apply. Purple numbered handles: click to edit, drag to move. Select an item and press Delete outside a text field to remove it. No load is added by selecting a tool.</p>
       <div class="bl-row"><button type="button" class="bl-btn bl-btn-sm" id="beamDeleteSelected" disabled>Delete selected item</button><span id="beamSelection" class="bl-help" role="status">Select a load, support or hinge; press Delete to remove it.</span></div>
@@ -299,6 +301,7 @@ const Lecture03BeamCases = Object.freeze({
             <li><b>Place a distributed load.</b> Select Uniform, Triangle, Trapezoid, Elliptic or Parabolic; drag its start-to-end interval on the beam. In the compact Load parameters box beside that interval, verify start/end x, enter intensity q in N/mm or explicitly labelled total force F in N for a curved profile, choose its shape and confirm with Enter or Apply. Inspect the live profile before adding. You can also enter positions numerically in the form on the left; CSV loads are validated and previewed before application. Drawing scale changes the picture only, never the force.</li>
             <li><b>Select, edit, move or remove.</b> Click a purple numbered load handle to open its compact editor; drag the handle to move the load. Enter or double-click also opens the editor. Select a support, hinge or load and press <b>Delete</b> outside a text field, or use <b>Delete selected item</b> or the editor’s Delete load button. Delete while typing only edits the input, not the model. Removing an end support makes that end free.</li>
             <li><b>Clear independently.</b> <b>Clear All Loads</b> beside the Loads tools removes applied loads and self-weight after confirmation, retaining supports and geometry. <b>Clear All Supports</b> beside the support tools removes end and interior restraints after confirmation, retaining loads, geometry and internal hinges. The beam is then unrestrained until you add supports again.</li>
+            <li><b>Undo and redo.</b> Use Undo/Redo beside the Loads tools to restore model edits (geometry, material stiffness, section, supports, hinges and loads), up to 100 saved states. Outside text fields, Ctrl/Cmd+Z undoes; Ctrl/Cmd+Shift+Z or Ctrl+Y redoes. A new edit discards the redo branch. Inside an input, the keyboard shortcut retains normal text editing. Restoring inputs does not replace the last solved evidence: solve again, or enable automatic solving, when results are out of date.</li>
             <li><b>Solve and verify.</b> Press <b>Solve</b> after the model is stable. Load confirmation may solve the model immediately; subsequent support or geometry edits stay pending unless auto-solve is enabled. Results always belong to the last successful solve. A pending or unstable model cannot export current results; add/fix supports and solve again, or revert to the previous solved model.</li>
             <li><b>Diagrams.</b> Read the support reactions first, then V, M, v, θ and the stresses. Reactions are external forces on the beam; V and M are internal forces on a cut. The table and thin slices under the reactions show how they are linked.</li>
             <li><b>Station values.</b> Type x or press <b>L/2</b> to read exact V and M (equilibrium) and v, θ (Euler–Bernoulli finite element) at that x. At a point force, couple, support or hinge choose x⁻ or x⁺. <b>Cut &amp; section</b> shows the same cut with both parts and V and M on their faces.</li>
@@ -405,6 +408,25 @@ const Lecture03BeamCases = Object.freeze({
   }
   const canonical=m=>JSON.stringify({length:m.length,E:m.E,density:m.density,elements:m.elements,section:m.section,
     supports:[...m.supports].map(s=>({x:s.x,kind:s.kind})).sort((a,b)=>a.x-b.x),hinges:[...m.hinges].sort((a,b)=>a-b),loads:m.loads,selfWeight:!!m.selfWeight});
+  let modelHistory=[clone(st.model)],historyIndex=0,restoringHistory=false;
+  function recordHistory(){
+    if(!restoringHistory&&!st.drag&&!st.draftError&&canonical(st.model)!==canonical(modelHistory[historyIndex])){
+      modelHistory=modelHistory.slice(0,historyIndex+1);modelHistory.push(clone(st.model));
+      if(modelHistory.length>100)modelHistory.shift();historyIndex=modelHistory.length-1;
+    }
+    $('#beamUndo').disabled=historyIndex===0;$('#beamRedo').disabled=historyIndex===modelHistory.length-1;
+  }
+  function travelHistory(delta){
+    const next=historyIndex+delta;if(next<0||next>=modelHistory.length)return;
+    clearTimeout(autoTimer);restoringHistory=true;historyIndex=next;st.model=clone(modelHistory[next]);
+    st.error='';st.draftError='';st.mechanism=null;st.placing=null;st.drag=null;st.graphicPreview=null;st.editLoad=null;st.editorLoad=null;selection=null;
+    showGraphicEditor(false);renderInputs(st.model);renderPicture();renderStatus();renderNotice();restoringHistory=false;
+    $$('[data-place]').forEach(b=>b.setAttribute('aria-pressed','false'));
+    message((delta<0?'Undo':'Redo')+' restored model inputs. Solve to update results, or enable automatic solving.');
+    if(st.autoSolve)autoTimer=setTimeout(()=>{if(!isCurrent())solve();},250);
+  }
+  $('#beamUndo').onclick=()=>travelHistory(-1);$('#beamRedo').onclick=()=>travelHistory(1);
+  $('#beamGuide').append($('#beamMeshHelp'));
   function isCurrent() {
     if(!st.solved) return false;
     try {return canonical(readDraft())===canonical(st.solved.model);} catch(e) {return false;}
@@ -527,6 +549,7 @@ const Lecture03BeamCases = Object.freeze({
     return st.error?'error':'pending';
   }
   function renderStatus() {
+    recordHistory();
     const state=statusState(), chip=$('#beamChip'), text=$('#beamRunText');
     chip.className=`bl-chip ${state==='solved'?'ok':state==='error'?'bad':'warn'}`;
     chip.textContent=state==='solved'?'Solved':state==='error'?'Not solved':'Pending';
@@ -1621,6 +1644,9 @@ const Lecture03BeamCases = Object.freeze({
   $('#beamStopPlacing').onclick=cancelPlacement;
   $('#beamShowDefl').onclick=e=>{st.showDeflection=!st.showDeflection;e.currentTarget.setAttribute('aria-pressed',String(st.showDeflection));renderPicture();};
   document.addEventListener('keydown',e=>{
+    if(!host.hidden&&(e.ctrlKey||e.metaKey)&&!e.altKey&&!e.target.closest('input,textarea,select,[contenteditable],[role="textbox"]')&&['z','y'].includes(e.key.toLowerCase())){
+      e.preventDefault();travelHistory(e.key.toLowerCase()==='y'||e.shiftKey?1:-1);return;
+    }
     if(e.key==='Escape'&&(st.placing||st.drag||st.graphicPreview))cancelPlacement();
     if(e.key!=='Delete'||e.ctrlKey||e.altKey||e.metaKey||host.hidden)return;
     if(!host.contains(e.target)&&e.target!==document.body&&e.target!==document.documentElement)return;

@@ -504,7 +504,7 @@
           const force=p.kind==='point'?R.n*p.force:qAt(p,y);if(!force)continue;
           const len=p.kind==='point'?.35:.45*Math.abs(force)/denom;if(len<1e-6)continue;
           const sc=R.wing.section(y,[p.kind==='table'?LoadProfiles.fractionAt(p,y):p.fraction]),base=V3(y,sc.up[0][0],force>0?sc.up[0][1]:sc.lo[0][1]);
-          const arrow=new THREE.ArrowHelper(new THREE.Vector3(0,Math.sign(force),0),new THREE.Vector3(...base),len,0xd25ad6,Math.min(.06,len*.3),Math.min(.035,len*.2));arrow.userData={kind:'arrow',y,base};g.add(arrow);
+          const arrow=new THREE.ArrowHelper(new THREE.Vector3(0,Math.sign(force),0),new THREE.Vector3(...base),len,0xd25ad6,Math.min(.06,len*.3),Math.min(.035,len*.2));arrow.userData={kind:'arrow',y,base};arrow.traverse(o=>{o.userData.wingLoadIndex=R.input.customLoads.indexOf(p);});arrow.userData.wingLoadLength=len;g.add(arrow);
         }
       }
       return;
@@ -1413,10 +1413,17 @@
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", fromHash); else setTimeout(fromHash, 0);
   let metalWorkspace=null;
   if(typeof WingWorkspaceUI!=='undefined'){
-    const loadPopup=(p,a)=>{if(!loadKeeper?.editor)renderLoadEditor();const editor=loadKeeper?.editor;if(!editor)return;metalWorkspace.open('D.520 load · N, m; upward positive',editor.container,a);if(p){$('#mLoadShape').value='point';$('#mLoadShape').dispatchEvent(new Event('change'));editor.acceptPick(p);}else $('#mLoadShape').focus({preventScroll:true});};
+    const loadPopup=(p,a)=>{if(!loadKeeper?.editor)renderLoadEditor();const editor=loadKeeper?.editor;if(!editor)return;editor.newLoad();metalWorkspace.open('D.520 load · N, m; upward positive',editor.container,a);if(p){$('#mLoadShape').value='point';$('#mLoadShape').dispatchEvent(new Event('change'));editor.acceptPick(p);}else $('#mLoadShape').focus({preventScroll:true});};
     const properties=(id,a)=>{MS.selected=id;renderTree();renderPM();metalWorkspace.open(id==='material'?'D.520 material':'D.520 existing structure & gauges',$('#mPm'),a);};
     metalWorkspace=WingWorkspaceUI.create({app:$('#metalApp'),canvas:$('#mgl'),viewPanel:$('#mViewPanel'),sample:sampleMetalSurface,unit:'m',actions:[{id:'load',label:'+ Load',run:loadPopup},{id:'structure',label:'Structure & gauges',run:(p,a)=>properties('structure',a)},{id:'material',label:'Material',run:(p,a)=>properties('material',a)}]});
     document.addEventListener('wing-load-applied',e=>{if(e.detail==='d520')metalWorkspace.close();});
+    let loadStart=null,loadDragged=false;const cv=$('#mgl');
+    cv.addEventListener('pointerdown',e=>{loadStart=e.button===0?{x:e.clientX,y:e.clientY,id:e.pointerId}:null;loadDragged=false;});
+    cv.addEventListener('pointermove',e=>{if(loadStart&&Math.hypot(e.clientX-loadStart.x,e.clientY-loadStart.y)>5)loadDragged=true;});
+    cv.addEventListener('pointercancel',()=>{loadStart=null;});
+    cv.addEventListener('pointerup',e=>{const start=loadStart;loadStart=null;if(!start||start.id!==e.pointerId||loadDragged||Math.hypot(e.clientX-start.x,e.clientY-start.y)>5||stale||running||!R||!model||!ray||!MS.arrows||loadKeeper?.editor?.container.querySelector('.wle-pick[aria-pressed="true"]'))return;
+      const g=model.getObjectByName('arrows');if(!g)return;const r=cv.getBoundingClientRect();ray.setFromCamera(new THREE.Vector2((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1),camera);const threshold=ray.params.Line.threshold;ray.params.Line.threshold=.025;let hits;try{hits=ray.intersectObjects(g.children,true);}finally{ray.params.Line.threshold=threshold;}const hit=hits.find(h=>Number.isInteger(h.object.userData.wingLoadIndex)),index=hit?.object.userData.wingLoadIndex??WingWorkspaceUI.pickLoadArrow(g.children,camera,cv,e,THREE);if(index===null||!loadKeeper?.editor)return;const editor=loadKeeper.editor;metalWorkspace.open('Edit D.520 load · N, m',editor.container,{right:e.clientX,top:e.clientY});editor.edit(index);
+    });
   }
   window.MetalWingUI = { open: openMetal, close: closeMetal, state: MS, result: () => R, studyFiles: () => studyFiles };
 })();

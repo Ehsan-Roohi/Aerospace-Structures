@@ -78,7 +78,16 @@ def test_layout_is_explained_before_inputs_and_reported_from_actual_parameters()
     assert theory < form
     assert "stations = p.rib_stations_mm()" in "\n".join(sources)
     assert "### Actual rib layout: {len(stations)} ribs" in "\n".join(sources)
-    assert "October 13" in "\n".join(sources)
+    assert "October 13" not in "\n".join(sources)
+
+
+def test_notebook_has_no_fixed_calendar_schedule_or_term_dates() -> None:
+    notebook=_notebook()
+    markdown="\n".join("".join(c['source']) for c in notebook['cells'] if c['cell_type']=='markdown')
+    assert not any(c.get('id')=='oct13-class-route' for c in notebook['cells'])
+    assert 'Three meetings' not in markdown
+    assert not re.search(r'\b(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d',markdown)
+    assert not re.search(r'\b(?:Fall|Spring|Summer|Winter)\s+20\d{2}\b',markdown)
 
 
 def test_notebook_allows_one_piece_and_records_real_printer_dimensions() -> None:

@@ -14,6 +14,7 @@ const WingWorkspaceUI=(()=>{
   `;doc.head.append(style);}
   const scrollStyle=doc.createElement('style');scrollStyle.textContent='.wing-editor-pop{overflow:visible}.wing-editor-pop>div{max-height:calc(100vh - 100px);overflow:auto;overscroll-behavior:contain}';doc.head.append(scrollStyle);
   app.classList.add('wing-workspace');
+  const historyStyle=doc.createElement('style');historyStyle.textContent='.wing-history-tools .btn:disabled{opacity:.45;cursor:not-allowed}';doc.head.append(historyStyle);
   const tools=doc.createElement('section');tools.className='panel wing-quick-tools';tools.setAttribute('aria-label','Wing model tools');
   for(const action of actions){const b=doc.createElement('button');b.type='button';b.className='btn';b.textContent=action.label;b.dataset.wingAction=action.id;b.onclick=()=>action.run(null,b);tools.append(b);}
   const viewButton=doc.createElement('button');viewButton.type='button';viewButton.className='btn';viewButton.textContent='View & display ▾';viewButton.setAttribute('aria-expanded','false');tools.append(viewButton);

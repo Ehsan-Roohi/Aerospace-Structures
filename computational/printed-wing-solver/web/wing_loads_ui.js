@@ -523,7 +523,7 @@ const WingLoadsUI = (() => {
     byId(id.csv + 'Template').onclick = () => { if (ad.download) ad.download(`${ad.workspace}_line_load_template.csv`, P.csvTemplate(ad.workspace), 'text/csv'); };
     byId(id.csv+'PowerPreview').onclick=()=>{try{const n=k=>readNum(id.csv+'Power'+k,k);const p=P.powerTable({start:n('A'),end:n('B'),total:n('F'),exponent:n('N'),shape:byId(id.csv+'PowerShape').value});byId(id.csv+'Text').value=P.CSV_SPECS[ad.workspace].columns.join(',')+'\n'+p.points.map(r=>r.join(',')).join('\n');preview();}catch(e){byId(id.csv+'Out').textContent=e.message;}};
     visible(); renderList();if(ad.onScale)ad.onScale($('.wle-scale').value);
-    return { refresh() { renderList(); chord();livePreview(); }, preview, openCsv, edit, newLoad, container, acceptPick, cancelPick };
+    return { refresh() { renderList(); chord();livePreview(); }, cancelDraft(){newLoad();cancelPick();closeCsv();}, preview, openCsv, edit, newLoad, container, acceptPick, cancelPick };
   }
 
   /**

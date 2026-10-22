@@ -8047,7 +8047,7 @@ const WingLoadsUI = (() => {
     byId(id.csv + 'Template').onclick = () => { if (ad.download) ad.download(`${ad.workspace}_line_load_template.csv`, P.csvTemplate(ad.workspace), 'text/csv'); };
     byId(id.csv+'PowerPreview').onclick=()=>{try{const n=k=>readNum(id.csv+'Power'+k,k);const p=P.powerTable({start:n('A'),end:n('B'),total:n('F'),exponent:n('N'),shape:byId(id.csv+'PowerShape').value});byId(id.csv+'Text').value=P.CSV_SPECS[ad.workspace].columns.join(',')+'\n'+p.points.map(r=>r.join(',')).join('\n');preview();}catch(e){byId(id.csv+'Out').textContent=e.message;}};
     visible(); renderList();if(ad.onScale)ad.onScale($('.wle-scale').value);
-    return { refresh() { renderList(); chord();livePreview(); }, preview, openCsv, edit, newLoad, container, acceptPick, cancelPick };
+    return { refresh() { renderList(); chord();livePreview(); }, cancelDraft(){newLoad();cancelPick();closeCsv();}, preview, openCsv, edit, newLoad, container, acceptPick, cancelPick };
   }
 
   /**
@@ -8094,6 +8094,7 @@ const WingWorkspaceUI=(()=>{
   `;doc.head.append(style);}
   const scrollStyle=doc.createElement('style');scrollStyle.textContent='.wing-editor-pop{overflow:visible}.wing-editor-pop>div{max-height:calc(100vh - 100px);overflow:auto;overscroll-behavior:contain}';doc.head.append(scrollStyle);
   app.classList.add('wing-workspace');
+  const historyStyle=doc.createElement('style');historyStyle.textContent='.wing-history-tools .btn:disabled{opacity:.45;cursor:not-allowed}';doc.head.append(historyStyle);
   const tools=doc.createElement('section');tools.className='panel wing-quick-tools';tools.setAttribute('aria-label','Wing model tools');
   for(const action of actions){const b=doc.createElement('button');b.type='button';b.className='btn';b.textContent=action.label;b.dataset.wingAction=action.id;b.onclick=()=>action.run(null,b);tools.append(b);}
   const viewButton=doc.createElement('button');viewButton.type='button';viewButton.className='btn';viewButton.textContent='View & display ▾';viewButton.setAttribute('aria-expanded','false');tools.append(viewButton);
@@ -10253,6 +10254,27 @@ if(typeof module!=='undefined')module.exports=WingWorkspaceUI;
   // Explicit Solve, as in the Beam Lab: field edits stay pending until Solve (or "Solve automatically");
   // a rejected edit leaves the previous valid inputs and the last solved result in place.
   let autoSolve = false, inputError = null, fieldErrors = {};
+  const historyFields=['geometry','plaKey','plaOver','rodKey','rodOver','assembly','load','criteria'];
+  let wingHistory=[],wingHistoryIndex=-1,historySuspended=0;
+  function wingHistorySnapshot(){return JSON.stringify({inputs:Object.fromEntries(historyFields.map(k=>[k,S[k]])),gate:importGate?{...importGate,confirmed:[...importGate.confirmed]}:null});}
+  function syncWingHistory(){const undo=$('#wingUndo'),redo=$('#wingRedo');if(undo)undo.disabled=running||wingHistoryIndex<=0;if(redo)redo.disabled=running||wingHistoryIndex>=wingHistory.length-1;}
+  function recordWingHistory(){
+    if(!historySuspended){const snapshot=wingHistorySnapshot();if(snapshot!==wingHistory[wingHistoryIndex]){wingHistory=wingHistory.slice(0,wingHistoryIndex+1);wingHistory.push(snapshot);if(wingHistory.length>100)wingHistory.shift();wingHistoryIndex=wingHistory.length-1;}}
+    syncWingHistory();
+  }
+  function travelWingHistory(delta){
+    const next=wingHistoryIndex+delta;if(running||next<0||next>=wingHistory.length)return;
+    clearTimeout(runTimer);pending=false;printedWorkspace?.close();
+    const editor=wingLoadKeeper?.editor;editor?.cancelDraft();
+    const snapshot=JSON.parse(wingHistory[next]);wingHistoryIndex=next;historySuspended++;
+    try{
+      Object.assign(S,snapshot.inputs);importGate=snapshot.gate?{...snapshot.gate,confirmed:new Set(snapshot.gate.confirmed)}:null;
+      fieldErrors={};inputError=null;partSelection=null;partUndo=null;partPick=false;
+      S.secY=Math.min(S.secY,S.geometry.semiSpan);S.clipY=Math.min(S.clipY,S.geometry.semiSpan);$('#secY').value=S.secY;$('#clipIn').value=S.clipY;
+      edited();renderImportGate();renderInputs(true);renderPM();editor?.refresh();
+      $('#stateText').textContent=(delta<0?'Undo':'Redo')+' restored the wing inputs. '+(gateOpen()?'Confirm the imported structural inputs before solving.':autoSolve?'Automatic solving will update the results.':'Press Solve to update results.');
+    }finally{historySuspended--;syncWingHistory();}
+  }
 
   function materials() {
     const pla = { ...E.MATERIALS[S.plaKey] };
@@ -10791,6 +10813,7 @@ if(typeof module!=='undefined')module.exports=WingWorkspaceUI;
   }
   // Deliberate study actions (lesson experiments, presets, Design-lab buttons, adding or removing a load) solve at once.
   function changed() {
+    recordWingHistory();
     stale = true; inputError = null;
     setStatus();
     renderTree();
@@ -10801,6 +10824,7 @@ if(typeof module!=='undefined')module.exports=WingWorkspaceUI;
   }
   // Field edits stay pending until Solve, unless "Solve automatically after each valid change" is ticked.
   function edited() {
+    recordWingHistory();
     stale = true; inputError = null;
     setStatus();
     renderTree();
@@ -10811,6 +10835,7 @@ if(typeof module!=='undefined')module.exports=WingWorkspaceUI;
   }
   let reportBlocked = false;
   function setStatus(text) {
+    syncWingHistory();
     const chip = $("#stateChip"), t = $("#stateText"), btn = $("#runBtn");
     const out = stale && !!R;
     btn.classList.toggle("stale", stale && !running);
@@ -10837,6 +10862,7 @@ if(typeof module!=='undefined')module.exports=WingWorkspaceUI;
   const frame = () => new Promise((r) => setTimeout(r, 0));
   async function runStudy() {
     if (running) { pending = true; return; }
+    recordWingHistory();
     // Outer geometry imported from a design-parameter file: no analysis until its structure is confirmed here.
     if (gateOpen()) { clearTimeout(runTimer); stale = true; setStatus(); renderImportGate(); return; }
     if (importGate) { importGate = null; renderImportGate(); }   // every item confirmed: analyse the imported wing
@@ -12295,13 +12321,15 @@ function renderObservations() {
       ${importGate.conflicts && importGate.conflicts.length ? `<p class="wle-err">Fix first: ${importGate.conflicts.map(esc).join(" · ")}</p>` : ""}
       <div class="lesson-actions"><button class="btn" type="button" id="wingGateRestore">Discard the imported shape (restore the previous geometry)</button></div>`;
     // Ticking updates the state in place (the list is not rebuilt, so keyboard focus stays on the box just ticked).
-    box.querySelectorAll("[data-gate]").forEach((c) => { c.onchange = () => { c.checked ? importGate.confirmed.add(c.dataset.gate) : importGate.confirmed.delete(c.dataset.gate); $("#wingGateHead").textContent = gateOpen() ? "Analysis blocked." : "Structure confirmed: press Solve."; setStatus(); }; });
+    box.querySelectorAll("[data-gate]").forEach((c) => { c.onchange = () => { c.checked ? importGate.confirmed.add(c.dataset.gate) : importGate.confirmed.delete(c.dataset.gate); $("#wingGateHead").textContent = gateOpen() ? "Analysis blocked." : "Structure confirmed: press Solve.";recordWingHistory();setStatus(); }; });
     $("#wingGateRestore").onclick = () => { S.geometry = importGate.previous; importGate = null; fieldErrors = {}; renderImportGate(); edited(); renderInputs(true); filesNote("The imported outer shape was discarded; the previous geometry is back."); };
   }
   const blockedText = "Confirm the structural inputs of the imported outer geometry first (list at the top of the input column).";
   // Messages about files and links (not input errors): shown in Study files, which is opened.
   function filesNote(msg) { const n = $("#wingFilesNote"); if (n) n.textContent = msg; const d = $("#wlFiles"); if (d) d.open = true; }
   function applyStudyState(state, info) {
+    historySuspended++;
+    try{
     if (info.kind === "outer-geometry") {
       const previous = { ...S.geometry, rodFractions: [...S.geometry.rodFractions], customInteriorRibs: S.geometry.customInteriorRibs == null ? null : [...S.geometry.customInteriorRibs] };
       const res = applyGeometry(state.geometry);   // the same all-or-nothing rules as the geometry fields
@@ -12315,6 +12343,7 @@ function renderObservations() {
     }
     renderImportGate(); renderInputs(true); renderTree(); renderPM(); setStatus();
     $("#wlFiles").open = true;
+    }finally{historySuspended--;recordWingHistory();}
   }
   const studyFiles = typeof WingStudyIO !== "undefined" && $("#wingStudyFiles") ? WingStudyIO.mount($("#wingStudyFiles"), {
     workspace: "printed", engine: E, download: downloadText,
@@ -12427,6 +12456,11 @@ function renderObservations() {
       {id:'structure',label:'Structure dimensions',run:(p,a)=>openWingStructurePopup(a)},{id:'materials',label:'Materials',run:(p,a)=>openWingMaterialsPopup(a)},
       {id:'notebook',label:'Export to notebook',run:()=>exportToNotebook()}]});
     const sparResults=$('#wingSparResults');$('#tab-checks').prepend(sparResults);
+    const historyTools=el('span',{class:'wing-history-tools',role:'group','aria-label':'Wing edit history'},'<button class="btn" type="button" id="wingUndo" title="Undo wing edit (Ctrl/Cmd+Z)" disabled>↶ Undo</button><button class="btn" type="button" id="wingRedo" title="Redo wing edit (Ctrl/Cmd+Shift+Z or Ctrl+Y)" disabled>↷ Redo</button>');
+    printedWorkspace.tools.insertBefore(historyTools,printedWorkspace.tools.querySelector('.wing-quick-hint'));historyTools.style.cssText='display:inline-flex;gap:6px;margin-left:auto';
+    $('#wingUndo').onclick=()=>travelWingHistory(-1);$('#wingRedo').onclick=()=>travelWingHistory(1);syncWingHistory();
+    const historyHelp=el('details',{class:'wing-history-help'},'<summary>Undo / Redo help</summary><p class="note">Undo/Redo restores up to 100 saved wing input states: geometry, ribs, rods, spars, material properties, connections, loads and assessment settings. A new edit clears Redo. Camera and display changes are not model edits. Outside text fields use Ctrl/Cmd+Z, Ctrl/Cmd+Shift+Z or Ctrl+Y; text fields keep native text undo. Restored inputs need Solve unless automatic solving is enabled. Imported structural confirmations are restored too; Undo never bypasses them. History is kept for this page session, not saved in exported study files.</p>');$('#wingModelNote').append(historyHelp);
+    document.addEventListener('keydown',e=>{if($('#app').hidden||!(e.ctrlKey||e.metaKey)||e.altKey||e.target.closest('input,textarea,select,[contenteditable],[role="textbox"]'))return;const key=e.key.toLowerCase();if(key==='z'||key==='y'){e.preventDefault();travelWingHistory(key==='y'||e.shiftKey?1:-1);}});
     document.addEventListener('wing-load-applied',e=>{if(e.detail==='printed')printedWorkspace.close();});
   }
   requestAnimationFrame(loop);

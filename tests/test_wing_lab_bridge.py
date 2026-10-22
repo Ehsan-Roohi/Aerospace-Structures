@@ -58,7 +58,7 @@ def test_eight_rods_and_empty_custom_ribs_are_retained():
 
 
 @pytest.mark.parametrize('mutation',[
-    lambda d:d.update(workspace='d520'), lambda d:d.update(version=2),
+    lambda d:d.update(workspace='d520'), lambda d:d.update(version=3),
     lambda d:d.update(extra=1),lambda d:d['study']['geometry'].update(extra=1),
     lambda d:d['study']['geometry'].update(semiSpan=float('inf')),
     lambda d:d['study']['geometry'].update(modules=True),

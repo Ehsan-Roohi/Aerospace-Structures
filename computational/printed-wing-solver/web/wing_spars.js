@@ -132,6 +132,54 @@ const WingSpars=(()=>{
     return {nodes,edges,qV:qVs,qT,GJ:1/fTT,xsc:xc+offset,zsc:zc,referenceX:xc,unitV:resultants(qVs),unitT:resultants(qT),coupling,energyVT:dot(qVs,qT),residualV:residual(qVs,loadV),residualT:residual(qT,bT),method:'bonded thin-wall shear-flow network; cap-local Saint-Venant torsion neglected'};
   }
   function field(net,V,T){return net.edges.map((e,i)=>e.tie?0:Math.abs(-V*net.qV[i]+T*net.qT[i])/e.t);}
-  return {MAT,specs,parts,polygon,network,field,G};
+  /* General two-transverse-direction network on an affine normal-plane cut.
+   * Original network() is deliberately unchanged. Call projectedNetwork(net,A)
+   * with an existing skin/spar graph, or (inner,outer,pla,parts,A,resolution).
+   * A maps original [x,z] to the new transverse coordinates [q2,q3]. Projected
+   * material area is abs(det(A))*t*l; the thickness on the mapped edge is that
+   * area divided by its new length. This is the projected beam-section model,
+   * not an exact oblique cut through finite-thickness CAD or a shell FE model.
+   * Torque convention: T=sum q*(x_a*dz-z_a*dx), about the reported centroid.
+   * qV2 and qV3 are positive unit transverse resultants acting at the SC.
+   */
+  function projectedNetwork(first,second,pla,ps,affine,resolution=90){
+    let raw,A;if(first&&Array.isArray(first.nodes)&&Array.isArray(first.edges)){raw=first;A=second;}else{raw=network(first,second,pla,ps,resolution);A=affine;}
+    if(!Array.isArray(A)||A.length!==2||A.some(r=>!Array.isArray(r)||r.length!==2||r.some(v=>!Number.isFinite(v))))throw Error('The section projection must be a finite 2 by 2 matrix.');
+    const determinant=A[0][0]*A[1][1]-A[0][1]*A[1][0],areaFactor=Math.abs(determinant);
+    if(areaFactor<1e-8)throw Error('The projected section is singular or nearly parallel to the beam axis.');
+    const nodes=raw.nodes.map(([x,z])=>[A[0][0]*x+A[0][1]*z,A[1][0]*x+A[1][1]*z]),N=nodes.length,EAi=new Float64Array(N);
+    const edges=raw.edges.map(e=>{const a=nodes[e.a],b=nodes[e.b],l=Math.hypot(b[0]-a[0],b[1]-a[1]);if(!(l>1e-12))throw Error('Projected section has a collapsed network edge.');const area=e.tie?0:areaFactor*e.t*e.l,t=e.tie?e.t:area/l;
+      if(!e.tie){EAi[e.a]+=e.m.E*area/2;EAi[e.b]+=e.m.E*area/2;}return {...e,l,t,area};});
+    const EA=EAi.reduce((a,b)=>a+b,0);if(!(EA>0))throw Error('Projected section has no axial stiffness.');
+    let xc=0,zc=0;EAi.forEach((a,i)=>{xc+=a*nodes[i][0]/EA;zc+=a*nodes[i][1]/EA;});
+    let Dxx=0,Dzz=0,Dxz=0;EAi.forEach((a,i)=>{const x=nodes[i][0]-xc,z=nodes[i][1]-zc;Dxx+=a*x*x;Dzz+=a*z*z;Dxz+=a*x*z;});
+    const detD=Dxx*Dzz-Dxz*Dxz;if(!(detD>Number.EPSILON*Dxx*Dzz))throw Error('Projected section bending tensor is singular.');
+    let exactXX=0,exactZZ=0,exactXZ=0;
+    for(const e of edges)if(!e.tie){const a=nodes[e.a],b=nodes[e.b],x=a[0]-xc,u=b[0]-xc,z=a[1]-zc,v=b[1]-zc,w=e.m.E*e.area;
+      exactXX+=w*(x*x+x*u+u*u)/3;exactZZ+=w*(z*z+z*v+v*v)/3;exactXZ+=w*(2*x*z+x*v+u*z+2*u*v)/6;}
+    const K=Array.from({length:N},()=>new Float64Array(N)),maxC=Math.max(...edges.filter(e=>!e.tie).map(e=>G(e.m)*e.t/e.l));
+    edges.forEach(e=>{e.c=e.tie?maxC*1e4:G(e.m)*e.t/e.l;const a=nodes[e.a],b=nodes[e.b];e.torque=(a[0]-xc)*(b[1]-a[1])-(a[1]-zc)*(b[0]-a[0]);e.row=[];if(e.a<N-1)e.row.push([e.a,1]);if(e.b<N-1)e.row.push([e.b,-1]);e.row.push([N-1,e.torque]);for(const [i,v]of e.row)for(const [j,w]of e.row)K[i][j]+=e.c*v*w;});
+    // Diagonal equilibration changes neither constraints nor material energies;
+    // it avoids mixing mm-scale torque rows with dimensionless incidence rows.
+    const scale=K.map((r,i)=>{if(!(r[i]>0))throw Error('Disconnected projected section.');return 1/Math.sqrt(r[i]);});
+    const scaledK=K.map((r,i)=>Float64Array.from(r,(v,j)=>v*scale[i]*scale[j]));
+    const flow=b=>{const scaledB=Float64Array.from(b,(v,i)=>v*scale[i]),s=linearSolve(scaledK,scaledB),u=Float64Array.from(s,(v,i)=>v*scale[i]);return edges.map(e=>e.c*e.row.reduce((v,[j,w])=>v+w*u[j],0));};
+    const bx=new Float64Array(N),bz=new Float64Array(N),bt=new Float64Array(N),sourceX=new Float64Array(N),sourceZ=new Float64Array(N);bt[N-1]=1;
+    EAi.forEach((a,i)=>{const x=nodes[i][0]-xc,z=nodes[i][1]-zc;sourceX[i]=-a*(Dzz*x-Dxz*z)/detD;sourceZ[i]=-a*(Dxx*z-Dxz*x)/detD;if(i<N-1){bx[i]=sourceX[i];bz[i]=sourceZ[i];}});
+    const qX0=flow(bx),qZ0=flow(bz),qT=flow(bt),dot=(a,b)=>edges.reduce((s,e,i)=>s+a[i]*b[i]/e.c,0),fTT=dot(qT,qT);
+    if(!(fTT>0))throw Error('Projected section torsional compliance is not positive.');
+    const torqueX=-dot(qX0,qT)/fTT,torqueZ=-dot(qZ0,qT)/fTT,qV2=qX0.map((v,i)=>v+torqueX*qT[i]),qV3=qZ0.map((v,i)=>v+torqueZ*qT[i]);
+    const resultants=q=>edges.reduce((s,e,i)=>{const a=nodes[e.a],b=nodes[e.b];s[0]+=q[i]*(b[0]-a[0]);s[1]+=q[i]*(b[1]-a[1]);s[2]+=q[i]*e.torque;return s;},[0,0,0]);
+    const residual=(q,source,T)=>{const r=new Float64Array(N);let torque=0;edges.forEach((e,i)=>{r[e.a]+=q[i];r[e.b]-=q[i];torque+=e.torque*q[i];});return Math.max(Math.abs(torque-T),...r.map((v,i)=>Math.abs(v-(source?source[i]:0))));};
+    const shearCompliance=[[dot(qV2,qV2),dot(qV2,qV3)],[dot(qV2,qV3),dot(qV3,qV3)]];
+    const unitV2=resultants(qV2),unitV3=resultants(qV3),unitT=resultants(qT),residualV2=residual(qV2,sourceX,torqueX),residualV3=residual(qV3,sourceZ,torqueZ),residualT=residual(qT,null,1);
+    return {nodes,edges,EA,EAi,xc,zc,referenceX:xc,referenceZ:zc,xsc:xc+torqueZ,zsc:zc-torqueX,GJ:1/fTT,
+      qV2,qV3,qVx:qV2,qVz:qV3,qV:qV3,qT,unitV2,unitV3,unitVx:unitV2,unitVz:unitV3,unitV:unitV3,unitT,
+      residualV2,residualV3,residualV:residualV3,residualT,energyV2T:dot(qV2,qT),energyV3T:dot(qV3,qT),energyVT:dot(qV3,qT),shearCompliance,
+      nodalD:[[Dxx,Dxz],[Dxz,Dzz]],Dnormal:[[exactXX,exactXZ],[exactXZ,exactZZ]],EIxx:exactZZ,EIzz:exactXX,EIxz:exactXZ,
+      projection:A.map(r=>r.slice()),areaFactor,sourceX,sourceZ,
+      method:'affine-projected bonded thin-wall network; two transverse shears; cap-local Saint-Venant torsion neglected'};
+  }
+  return {MAT,specs,parts,polygon,network,projectedNetwork,field,G};
 })();
 if(typeof module!=='undefined'&&module.exports)module.exports=WingSpars;

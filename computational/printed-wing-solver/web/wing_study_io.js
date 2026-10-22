@@ -22,10 +22,11 @@
 }(typeof globalThis !== 'undefined' ? globalThis : (typeof window !== 'undefined' ? window : undefined), function () {
   'use strict';
 
-  const IO_VERSION = '1.0.0';
+  const IO_VERSION = '2.0.0';
   const STUDY_FORMAT = 'mie446-wing-study';
   const PARAMS_FORMAT = 'mie446-wing-parameters';
   const FILE_VERSION = 1;
+  const MAX_FILE_VERSION = 2;
   const SHARE_KEY = 'wingstudy';
   const LIMITS = Object.freeze({
     fileBytes: 262144,                  // study and design-parameter files, UTF-8 bytes (256 KiB)
@@ -724,6 +725,28 @@
   // ------------------------------------------------------------------ printed wing: schema
   const GEOMETRY_V1 = Object.freeze(['naca', 'semiSpan', 'rootChord', 'tipChord', 'skin', 'ribThickness', 'modules', 'te', 'interiorRibs',
     'customInteriorRibs', 'interfaceOffset', 'cap', 'cavityStart', 'cavityEnd', 'rodFractions', 'rodDiameter', 'clearance', 'sleeveWall']);
+  const GEOMETRY_V2 = Object.freeze(['airfoil','sweepDeg','dihedralDeg','sweepReferenceFraction','twistReferenceFraction','twistEnabled','stations']);
+  const hasAdvancedGeometry = (g) => GEOMETRY_V2.some(k => own(g,k) && g[k] != null);
+  function checkAirfoil(issues,p,path){
+    if(!isObj(p)){issues.err(path,'must be an airfoil profile object');return;}
+    const analytic=p.kind==='naca4'||p.kind==='naca5';
+    checkKeys(issues,p,path,analytic?['kind','code']:['kind','version','name','upper','lower','source']);
+    if(!analytic&&p.kind!=='coordinates'){issues.err(join(path,'kind'),'use naca4, naca5 or coordinates');return;}
+    if(analytic){if(typeof p.code!=='string')issues.err(join(path,'code'),'must be an airfoil code as text');return;}
+    if(p.version!=null&&p.version!==1)issues.err(join(path,'version'),'coordinate profile version must be 1');
+    if(p.name!=null)text(issues,p,'name',path,{max:80});
+    for(const key of ['upper','lower']){
+      const rows=p[key],rp=join(path,key);
+      if(!Array.isArray(rows)||rows.length<3||rows.length>256){issues.err(rp,'must contain 3–256 normalized [x/c,z/c] points');continue;}
+      rows.forEach((row,i)=>{if(!Array.isArray(row)||row.length!==2||row.some(x=>!isNum(x)))issues.err(join(rp,i),'must be exactly two finite coordinates');});
+    }
+    if(p.source!=null){
+      if(!isObj(p.source)){issues.err(join(path,'source'),'must be provenance metadata');return;}
+      checkKeys(issues,p.source,join(path,'source'),['format','filename','normalization','url','family']);
+      for(const k of Object.keys(p.source))text(issues,p.source,k,join(path,'source'),{max:k==='url'?1024:180});
+      if(p.source.normalization!=null&&p.source.normalization!=='unit-chord')issues.err(join(path,'source.normalization'),'only unit-chord coordinates are supported');
+    }
+  }
   const POSITIVE_MM = Object.freeze({
     semiSpan: 'semi-span', rootChord: 'root chord', tipChord: 'tip chord', skin: 'skin thickness, measured vertically',
     ribThickness: 'rib thickness', te: 'trailing-edge thickness', cap: 'root and tip cap thickness',
@@ -754,7 +777,7 @@
   function checkPrintedGeometry(issues, raw, path, E) {
     if (!isObj(raw)) { issues.err(path, `must be an object with the wing geometry, not ${describe(raw)}`); return undefined; }
     const extras = Object.keys(E.DEFAULT_GEOMETRY).filter((k) => !GEOMETRY_V1.includes(k));
-    checkKeys(issues, raw, path, [...GEOMETRY_V1, ...extras]);
+    checkKeys(issues, raw, path, [...GEOMETRY_V1, ...extras,...GEOMETRY_V2]);
     const n0 = issues.count, g = {};
     if (!own(raw, 'naca')) issues.err(join(path, 'naca'), 'is missing (four digits of a NACA 4-digit section, such as "2412")');
     else if (typeof raw.naca !== 'string' || !/^\d{4}$/.test(raw.naca)) issues.err(join(path, 'naca'), `must be the four digits of a NACA 4-digit section as text, such as "2412", not ${describe(raw.naca)}`);
@@ -795,10 +818,20 @@
     g.clearance = num(issues, raw, 'clearance', path, { ge: 0, le: 0.8, unit: 'mm', label: 'radial rod clearance' });
     if (isNum(g.tipChord) && isNum(g.rootChord) && g.tipChord > g.rootChord) issues.err(join(path, 'tipChord'), `cannot exceed the root chord (${fmt(g.tipChord)} mm > ${fmt(g.rootChord)} mm): only linear taper with tip ≤ root is analysed`);
     for (const k of extras) g[k] = extraField(issues, raw, k, path, E.DEFAULT_GEOMETRY[k]);
+    for(const k of GEOMETRY_V2)if(own(raw,k)){
+      if(raw[k]===null){issues.err(join(path,k),'omit optional geometry fields instead of null');continue;}
+      g[k]=clone(raw[k]);
+    }
+    if(g.airfoil)checkAirfoil(issues,g.airfoil,join(path,'airfoil'));
+    if(own(g,'stations')){
+      if(!Array.isArray(g.stations)||g.stations.length<2||g.stations.length>9)issues.err(join(path,'stations'),'use 2–9 root-to-tip airfoil stations');
+      else g.stations.forEach((s,i)=>{const sp=join(join(path,'stations'),i);if(!isObj(s)){issues.err(sp,'must be a station object');return;}checkKeys(issues,s,sp,['eta','airfoil','incidenceDeg']);checkAirfoil(issues,s.airfoil,join(sp,'airfoil'));});
+    }
     if (issues.count > n0) return undefined;
     const out = {};
     for (const k of Object.keys(E.DEFAULT_GEOMETRY)) out[k] = g[k];
     for (const k of GEOMETRY_V1) if (!own(out, k)) out[k] = g[k];
+    for(const k of GEOMETRY_V2)if(own(g,k))out[k]=g[k];
     return out;
   }
   function checkMaterials(issues, raw, path, E) {
@@ -907,7 +940,17 @@
   }
   function checkPrintedStudy(issues, raw, path, E) {
     if (!isObj(raw)) { issues.err(path, `must be an object {geometry, materials, assembly, load, criteria}, not ${describe(raw)}`); return undefined; }
-    checkKeys(issues, raw, path, ['geometry', 'materials', 'assembly', 'load', 'criteria']);
+    checkKeys(issues, raw, path, ['geometry', 'materials', 'assembly', 'load', 'criteria', 'analysis']);
+    let analysis;
+    if(own(raw,'analysis')){
+      if(!isObj(raw.analysis))issues.err(join(path,'analysis'),'must be an object {nElements}');
+      else{
+        checkKeys(issues,raw.analysis,join(path,'analysis'),['nElements']);
+        const n=raw.analysis.nElements;
+        if(!Number.isInteger(n)||n<4||n>100)issues.err(join(path,'analysis.nElements'),'must be an integer from 4 to 100');
+        else analysis={nElements:n};
+      }
+    }
     const need = (k) => { if (!own(raw, k)) issues.err(join(path, k), 'is missing'); return own(raw, k); };
     const geometry = need('geometry') ? checkPrintedGeometry(issues, raw.geometry, join(path, 'geometry'), E) : undefined;
     const materials = need('materials') ? checkMaterials(issues, raw.materials, join(path, 'materials'), E) : undefined;
@@ -915,16 +958,16 @@
     const load = need('load') ? checkPrintedLoad(issues, raw.load, join(path, 'load'), geometry ? geometry.semiSpan : undefined, E) : undefined;
     const criteria = need('criteria') ? checkCriteria(issues, raw.criteria, join(path, 'criteria'), E) : undefined;
     if ([geometry, materials, assembly, load, criteria].includes(undefined)) return undefined;
-    return { geometry, materials, assembly, load, criteria };
+    return { geometry, materials, assembly, load, criteria, ...(analysis?{analysis}:{}) };
   }
   // State handed to applyState: the UI's own field names.
   const printedState = (s) => ({
     geometry: clone(s.geometry), plaKey: s.materials.plaKey, plaOver: clone(s.materials.plaOver), rodKey: s.materials.rodKey,
-    rodOver: clone(s.materials.rodOver), assembly: clone(s.assembly), load: clone(s.load), criteria: clone(s.criteria),
+    rodOver: clone(s.materials.rodOver), assembly: clone(s.assembly), load: clone(s.load), criteria: clone(s.criteria), analysis:s.analysis?clone(s.analysis):null,
   });
   const printedStudyOf = (st) => ({
     geometry: clone(st.geometry), materials: { plaKey: st.plaKey, plaOver: clone(st.plaOver), rodKey: st.rodKey, rodOver: clone(st.rodOver) },
-    assembly: clone(st.assembly), load: clone(st.load), criteria: clone(st.criteria),
+    assembly: clone(st.assembly), load: clone(st.load), criteria: clone(st.criteria), ...(st.analysis?{analysis:clone(st.analysis)}:{}),
   });
   /** Engine input for a printed state, exactly as the Wing Lab page builds it (card values unless an override is > 0). */
   function printedEngineInput(state, engine) {
@@ -934,14 +977,14 @@
     if(state.plaOver&&state.plaOver.nu!=null)pla.nu=state.plaOver.nu;
     const rod = { ...E.MATERIALS[state.rodKey] };
     if (state.rodOver && state.rodOver.E > 0) rod.E = state.rodOver.E;
-    return { geometry: clone(state.geometry), pla, rod, assembly: clone(state.assembly), load: clone(state.load), criteria: clone(state.criteria) };
+    return { geometry: clone(state.geometry), pla, rod, assembly: clone(state.assembly), load: clone(state.load), criteria: clone(state.criteria), ...(state.analysis?{nElements:state.analysis.nElements}:{}) };
   }
   /** Rod holes must fit inside the airfoil and printed sleeves must not overlap (checked at the tip, the smallest chord). */
   function rodLayoutIssues(g, E) {
     const out = [], c = g.tipChord, rh = E.holeRadius(g), Rs = E.sleeveRadius(g);
-    const centres = g.rodFractions.map((f) => [f * c, E.camber(g.naca, f).yc * c]);
+    const centres = E.rodCentres(g,g.semiSpan),profile=E.airfoilAt?E.airfoilAt(g,g.semiSpan):g.naca;
     g.rodFractions.forEach((f, i) => {
-      const v = E.verticalOrdinates(g.naca, f, c, g.te), depth = v.upper - v.lower;
+      const v = E.verticalOrdinates(profile, f, c, g.te), depth = v.upper - v.lower;
       if (depth < 2 * rh) out.push({ index: i, message: `the rod hole (⌀${fmt(+(2 * rh).toFixed(4))} mm with clearance) does not fit inside the airfoil at x/c = ${fmt(f)}: the tip section is only ${fmt(+depth.toFixed(3))} mm deep there (tip chord ${fmt(c)} mm)` });
     });
     for (let i = 0; i < centres.length; i++)
@@ -996,6 +1039,7 @@
       return out;
     };
     const geometry = pick(S.geometry, E.DEFAULT_GEOMETRY);
+    for(const k of GEOMETRY_V2)if(own(S.geometry,k)&&S.geometry[k]!=null)geometry[k]=clone(S.geometry[k]);
     // The engine sorts custom rib stations; the file stores them in that (canonical) order.
     if (Array.isArray(geometry.customInteriorRibs) && geometry.customInteriorRibs.every(isNum)) geometry.customInteriorRibs.sort((a, b) => a - b);
     const over = (o, keys) => Object.fromEntries(keys.map((k) => [k, isObj(o) && isNum(o[k]) && (k==='nu'?o[k]>=0:o[k]>0) ? o[k] : null]));
@@ -1005,14 +1049,20 @@
     return {
       geometry,
       materials: { plaKey: S.plaKey, plaOver: over(S.plaOver, ['E', 'ft', 'fc', 'fs','rho','nu']), rodKey: S.rodKey, rodOver: over(S.rodOver, ['E']) },
-      assembly: pick(S.assembly, E.DEFAULT_ASSEMBLY), load, criteria: pick(S.criteria, E.DEFAULT_CRITERIA),
+      assembly: pick(S.assembly, E.DEFAULT_ASSEMBLY), load, criteria: pick(S.criteria, E.DEFAULT_CRITERIA), ...(S.analysis?{analysis:clone(S.analysis)}:{}),
     };
   }
   function printedRows(state, E) {
     const g = state.geometry, rows = [], add = (group, label, value) => rows.push({ group, label, value });
-    add('Geometry', 'Airfoil', `NACA ${g.naca}`);
+    const profileName=p=>p?(p.name||`NACA ${p.code}`):`NACA ${g.naca}`;
+    add('Geometry', 'Airfoil', g.stations?'Spanwise airfoil stations (listed below)':profileName(g.airfoil));
     add('Geometry', 'Semi-span', `${fmt(g.semiSpan)} mm`);
-    add('Geometry', 'Root / tip chord', `${fmt(g.rootChord)} / ${fmt(g.tipChord)} mm (linear taper, straight, untwisted)`);
+    add('Geometry', 'Root / tip chord', `${fmt(g.rootChord)} / ${fmt(g.tipChord)} mm (linear reference-chord taper)`);
+    if(hasAdvancedGeometry(g)){
+      add('Geometry','Sweep / dihedral',`${fmt(g.sweepDeg||0)}° at ${fmt(g.sweepReferenceFraction??0)}c / ${fmt(g.dihedralDeg||0)}°; projected span y, x aft, z up`);
+      add('Geometry','Geometric twist',`${g.twistEnabled?'enabled':'off'}; absolute incidence, positive LE-up, pivot ${fmt(g.twistReferenceFraction??.25)}c`);
+      for(const [i,s]of (g.stations||[]).entries())add('Geometry',`Station ${i+1}`,`eta ${fmt(s.eta)}, y ${fmt(s.eta*g.semiSpan)} mm · ${profileName(s.airfoil)} · incidence ${fmt(s.incidenceDeg)}°`);
+    }
     add('Structure', 'Modules', g.modules === 1 ? '1 (one piece, no seams)' : `${g.modules} (seams at ${E.seams(E.makeGeometry(clone(g))).map((v) => fmt(+v.toFixed(3))).join(', ')} mm)`);
     add('Structure', 'Skin / rib thickness', `${fmt(g.skin)} / ${fmt(g.ribThickness)} mm`);
     add('Structure', 'Interior ribs', g.customInteriorRibs ? (g.customInteriorRibs.length ? `custom stations ${g.customInteriorRibs.map(fmt).join(', ')} mm` : 'none (empty custom list)') : `${g.interiorRibs} requested, evenly spaced (interface ribs are added at seams)`);
@@ -1039,6 +1089,7 @@
     }
     add('Checks', 'Factor of safety / tip mass', `${fmt(L.fos)} / ${fmt(L.tipMass)} g`);
     add('Checks', 'Stiffness criteria', `tip deflection ≤ ${fmt(state.criteria.maxTipDeflection)} mm; tip twist ≤ ${fmt(state.criteria.maxTipTwist)}°`);
+    add('Analysis','Requested beam elements',state.analysis?`${state.analysis.nElements}; required stations may add elements. CAD/STL geometry is unchanged.`:'Solver default; required stations may add elements.');
     return rows;
   }
 
@@ -1166,10 +1217,12 @@
     if (doc.format !== STUDY_FORMAT) { issues.err('format', `must be "${STUDY_FORMAT}", not ${describe(doc.format)}`); return null; }
     if (!own(doc, 'version')) { issues.err('version', 'is missing'); return null; }
     if (!Number.isInteger(doc.version)) { issues.err('version', `must be the whole number ${FILE_VERSION}, not ${describe(doc.version)}`); return null; }
-    if (doc.version > FILE_VERSION) { issues.err('version', `this study was saved by a newer Wing Lab (file version ${doc.version}; this page reads version ${FILE_VERSION}). Nothing was imported; your current study is unchanged`); return null; }
+    if (doc.version > MAX_FILE_VERSION) { issues.err('version', `this study was saved by a newer Wing Lab (file version ${doc.version}; this page reads versions 1–${MAX_FILE_VERSION}). Nothing was imported; your current study is unchanged`); return null; }
     if (doc.version < 1) { issues.err('version', `${doc.version} is not a valid file version`); return null; }
     res.version = doc.version;
     const ws = doc.workspace;
+    if(doc.version===2&&ws!=='printed'){issues.err('version','version 2 is the printed-wing station geometry format');return null;}
+    if(doc.version===1&&(hasAdvancedGeometry(doc.study?.geometry)||own(doc.study||{},'analysis'))){issues.err('version','station geometry and analysis settings require file version 2; nothing was imported');return null;}
     if (ws !== 'printed' && ws !== 'd520') { issues.err('workspace', `must be "printed" or "d520", not ${describe(ws)}`); return null; }
     if (expected && ws !== expected) { issues.err('workspace', `this is a ${WORKSPACE_LABEL[ws]} study: open it in the ${WORKSPACE_LABEL[ws]} workspace (this is the ${WORKSPACE_LABEL[expected]} workspace)`); return null; }
     checkKeys(issues, doc, '', ['format', 'version', 'workspace', 'savedAt', 'app', 'study']);
@@ -1251,7 +1304,7 @@
     if (study && !issues.count) printedEngineChecks(issues, printedState(study), 'study', E);
     issues.finish();
     if (issues.errors.length) throw savedError('The current study cannot be saved', issues.errors);
-    return { format: STUDY_FORMAT, version: FILE_VERSION, workspace: 'printed', savedAt: opts.savedAt || new Date().toISOString(), app: { name: 'MIE 446 Wing Lab', engine: E.VERSION, io: IO_VERSION }, study };
+    return { format: STUDY_FORMAT, version: hasAdvancedGeometry(study.geometry)||study.analysis?2:FILE_VERSION, workspace: 'printed', savedAt: opts.savedAt || new Date().toISOString(), app: { name: 'MIE 446 Wing Lab', engine: E.VERSION, io: IO_VERSION }, study };
   }
   const exportPrintedStudy = (S, engine, opts) => `${JSON.stringify(printedStudyDocument(S, engine, opts), null, 2)}\n`;
   /** Manufacturing preflight only. No model edits, no CAD generation and no safety approval. */
@@ -1796,6 +1849,9 @@
     const E = engine || globalWing();
     try {
       const raw = canonicalPrintedFromUi(uiState, E);
+      // A neutral-v1 file declares a single, straight NACA4 outer shape.
+      // Never retain hidden station profiles or angles from the current study.
+      for(const k of GEOMETRY_V2)delete raw.geometry[k];
       raw.geometry = { ...raw.geometry, naca: outer.naca, semiSpan: outer.semiSpan, rootChord: outer.rootChord, tipChord: outer.tipChord };
       const issues = makeIssues();
       const study = checkPrintedStudy(issues, raw, 'current study', E);
@@ -1907,6 +1963,17 @@
       return { label: lab, input };
     };
     let pending = Promise.resolve();
+    let previewGeneration = 0, destroyed = false;
+    const activeReaders = new Set();
+    function invalidatePreview() {
+      previewGeneration++;
+      for (const reader of activeReaders) {
+        try { reader.abort(); } catch (_) { /* Some embedded readers cannot abort; the generation guard still applies. */ }
+      }
+      activeReaders.clear();
+      return previewGeneration;
+    }
+    const currentPreview = (generation) => !destroyed && generation === previewGeneration;
     const track = (p) => { pending = Promise.resolve(p).catch((e) => showFailure('Unexpected problem', [e && e.message ? e.message : String(e)])); return pending; };
 
     const root = el('div', { class: `wio-root wio-${workspace}`, role: 'group', 'aria-labelledby': `${uid}-title` });
@@ -1971,10 +2038,15 @@
       return new Promise((resolve) => {
         if (typeof file.size === 'number' && file.size > LIMITS.fileBytes) { resolve({ error: `The file is too large (${file.size} bytes; the limit is ${LIMITS.fileBytes} bytes = ${LIMITS.fileBytes / 1024} KiB).` }); return; }
         if (!win.FileReader) { resolve({ error: 'This browser cannot read local files.' }); return; }
-        const reader = new win.FileReader();
-        reader.onload = () => resolve({ bytes: new Uint8Array(reader.result) });
-        reader.onerror = () => resolve({ error: 'The file could not be read.' });
-        reader.readAsArrayBuffer(file);
+        let reader;
+        const finish = (result) => { activeReaders.delete(reader); resolve(result); };
+        try {
+          reader = new win.FileReader(); activeReaders.add(reader);
+          reader.onload = () => finish({ bytes: new Uint8Array(reader.result) });
+          reader.onerror = () => finish({ error: 'The file could not be read.' });
+          reader.onabort = () => finish({ aborted: true });
+          reader.readAsArrayBuffer(file);
+        } catch (e) { finish({ error: e.message || 'The file could not be read.' }); }
       });
     }
     function showFailure(heading, errors) {
@@ -1985,7 +2057,7 @@
       say(heading);
       presentPreview();
     }
-    function cancel() { clear(preview); preview.hidden = true; say('Nothing was changed.'); options.onDismiss?.(); }
+    function cancel() { invalidatePreview(); clear(preview); preview.hidden = true; say('Nothing was changed.'); options.onDismiss?.(); }
     function presentPreview() {
       // The host may present this real node in a visible dialog instead of a scrolled sidebar.
       options.onPreview?.(preview);
@@ -2016,8 +2088,9 @@
     }
     function applyOnce(stateValue, info, doneText) {
       let used = false;
+      const generation = previewGeneration;
       return () => {
-        if (used) return;
+        if (used || !currentPreview(generation)) return;
         const blocked = options.canApply?.();
         if (blocked) {
           let note = preview.querySelector('.wio-apply-error');
@@ -2027,6 +2100,7 @@
           return;
         }
         used = true;
+        invalidatePreview();
         try { applyState(clone(stateValue), info); }
         catch (e) { showFailure('The app could not apply the data', [e.message || String(e)]); return; }
         clear(preview); preview.hidden = true; say(doneText);
@@ -2041,17 +2115,20 @@
       return result;
     }
     async function openFile(file) {
+      const generation = invalidatePreview();
+      if (destroyed) return null;
       clear(preview);
       preview.append(el('p', { role: 'status' }, `Reading ${cleanName(file && file.name)}… Your current wing has not changed.`));
       preview.hidden = false;
       say('Reading the selected study file…');
       presentPreview();
       const got = await readFile(file);
+      if (!currentPreview(generation) || got.aborted) return null;
       const name = cleanName(file && file.name);
       if (got.error) { showFailure('The study was not imported', [got.error]); return null; }
       return showStudy(importStudy(got.bytes, { workspace, engine, metalEngine: workspace === 'd520' ? engine : undefined, filename: name }));
     }
-    function openText(textValue, filename) { return showStudy(importStudy(textValue, { workspace, engine, metalEngine: workspace === 'd520' ? engine : undefined, filename })); }
+    function openText(textValue, filename) { invalidatePreview(); if (destroyed) return null; return showStudy(importStudy(textValue, { workspace, engine, metalEngine: workspace === 'd520' ? engine : undefined, filename })); }
     function showParameters(result) {
       const buttons = [];
       if (result.ok && result.geometry) {
@@ -2072,15 +2149,18 @@
       say(result.ok ? 'Check the preview: values in the file, converted values and origins.' : 'The design parameters were rejected.');
       return result;
     }
-    function previewParameters(textValue, filename) { return showParameters(importParameters(textValue, { engine, filename: filename || 'pasted text' })); }
+    function previewParameters(textValue, filename) { invalidatePreview(); if (destroyed) return null; return showParameters(importParameters(textValue, { engine, filename: filename || 'pasted text' })); }
     async function importParametersFile(file) {
+      const generation = invalidatePreview();
+      if (destroyed) return null;
       const got = await readFile(file);
+      if (!currentPreview(generation) || got.aborted) return null;
       if (got.error) { showFailure('The design parameters were not imported', [got.error]); return null; }
       return showParameters(importParameters(got.bytes, { engine, filename: cleanName(file && file.name) }));
     }
     return {
       root, save, openFile: (f) => track(openFile(f)), openText, previewParameters, cancel,
-      idle: () => pending, destroy() { root.remove(); },
+      idle: () => pending, destroy() { destroyed = true; invalidatePreview(); root.remove(); },
     };
   }
 

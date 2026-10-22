@@ -11,6 +11,7 @@ import math
 from pathlib import Path
 
 from .config import BondedSparSpec, SparSpec, WingParameters
+from .wing_sections import airfoil_label
 
 
 class WingLabImportError(ValueError):
@@ -71,7 +72,8 @@ class WingLabImport:
     def to_markdown(self):
         p = self.parameters
         return ("### Wing Lab → CAD import accepted\n\n"
-                f"- NACA **{p.naca}**, semi-span **{p.semi_span_mm:g} mm**, chords **{p.root_chord_mm:g}/{p.tip_chord_mm:g} mm**.\n"
+                f"- Airfoil **{airfoil_label(p)}**, semi-span **{p.semi_span_mm:g} mm**, chords **{p.root_chord_mm:g}/{p.tip_chord_mm:g} mm**.\n"
+                f"- Sweep **{p.sweep_deg:g}°** at x/c={p.sweep_reference_fraction:g}; dihedral **{p.dihedral_deg:g}°**; incidence twist **{'enabled' if p.twist_enabled else 'off'}**.\n"
                 f"- **{p.module_count} module(s), {len(p.rib_stations_mm())} physical ribs, {len(p.spars)} external rods, {len(p.bonded_spars)} integral printed spars**.\n"
                 f"- Source SHA-256: `{self.source_record['sha256']}`.\n\n"
                 "Imported geometry overrides the geometry entries in Step 2. Team/workflow, coupon and submission fields still apply. "
@@ -91,11 +93,23 @@ def import_wing_lab_study(data: bytes | str) -> WingLabImport:
         raise WingLabImportError(f"Cannot read Wing Lab JSON: {exc}") from exc
     _tree(doc)
     _object(doc, ['format','version','workspace','savedAt','app','study'], 'Study document')
-    if doc['format']!='mie446-wing-study' or type(doc['version']) is not int or doc['version']!=1 or doc['workspace']!='printed':
+    if doc['format']!='mie446-wing-study' or type(doc['version']) is not int or doc['version'] not in (1,2) or doc['workspace']!='printed':
         _fail("Use Export to notebook from the general Wing workspace, not D.520, a share link, or a geometry-only file")
-    st = _object(doc['study'], ['geometry','materials','assembly','load','criteria'], 'Study')
+    st = doc['study']
+    required_study = {'geometry','materials','assembly','load','criteria'}
+    if not isinstance(st,dict) or required_study-set(st) or set(st)-required_study-({'analysis'} if doc['version']==2 else set()):
+        _fail("Study: missing or unsupported fields")
+    if 'analysis' in st:
+        a = _object(st['analysis'],['nElements'],'Analysis mesh')
+        if type(a['nElements']) is not int or not 4 <= a['nElements'] <= 100:
+            _fail("Analysis nElements must be an integer from 4 to 100; this is the structural numerical mesh, not printable parts")
     fields = ['naca','semiSpan','rootChord','tipChord','skin','ribThickness','modules','te','interiorRibs','customInteriorRibs','interfaceOffset','cap','cavityStart','cavityEnd','rodFractions','rodDiameter','clearance','sleeveWall','spars']
-    g = _object(st['geometry'], fields, 'Geometry')
+    g = st['geometry']
+    extra_fields = ['airfoil','stations','twistEnabled','sweepDeg','dihedralDeg','sweepReferenceFraction','twistReferenceFraction']
+    if not isinstance(g, dict) or set(fields)-set(g) or set(g)-set(fields+ (extra_fields if doc['version']==2 else [])):
+        _fail("Geometry: missing or unsupported fields; use the current Wing Lab JSON export without manual schema edits")
+    if any(g[key] is None for key in extra_fields if key in g):
+        _fail("Station geometry fields cannot be null; omit unused optional fields or supply explicit valid values")
     for key in fields:
         if key not in ['naca','customInteriorRibs','rodFractions','spars','interiorRibs','modules']:
             _number(g[key], key, inclusive=key=='clearance')
@@ -150,7 +164,10 @@ def import_wing_lab_study(data: bytes | str) -> WingLabImport:
             module_count=g['modules'],interface_rib_offset_mm=g['interfaceOffset'],root_tip_cap_mm=g['cap'],cavity_x_start=g['cavityStart'],
             cavity_x_end=g['cavityEnd'],pla_density_g_cm3=base['rho'],
             spars=tuple(SparSpec(f,g['rodDiameter'],g['clearance'],g['sleeveWall']) for f in rods),
-            custom_rib_stations_mm=None if ribs is None else tuple(ribs),bonded_spars=tuple(spars))
+            custom_rib_stations_mm=None if ribs is None else tuple(ribs),bonded_spars=tuple(spars),
+            airfoil_profile=g.get('airfoil'),airfoil_stations=tuple(g.get('stations') or ()),
+            twist_enabled=g.get('twistEnabled',False),sweep_deg=g.get('sweepDeg',0),dihedral_deg=g.get('dihedralDeg',0),
+            sweep_reference_fraction=g.get('sweepReferenceFraction',0),twist_reference_fraction=g.get('twistReferenceFraction',.25))
         from .validation import validate_wing
         report = validate_wing(parameters=p)
         if not report.passed:
@@ -160,6 +177,9 @@ def import_wing_lab_study(data: bytes | str) -> WingLabImport:
     return WingLabImport(p, dict(format='mie446-wing-lab-cad-transfer',version=1,sha256=sha256(raw).hexdigest(),
         source_document=doc, geometry_parameters=p.to_dict(),
         limitations=['Nominal geometry transfer, not a re-solve or certification.',
+                     'Station sections stay parallel to aircraft x-z planes; y is projected span, positive incidence raises the leading edge. Interior profiles interpolate pointwise; no aerodynamic polar or lifting-surface analysis is implied.',
+                     'Expanded geometry uses ruled CAD lofts through at least nine transformed span stations plus every explicit airfoil station; browser rendering and CAD discretisations are different approximations of the same station definition.',
+                     'Saved analysis.nElements is retained in source provenance; numerical beam/frame mesh resolution does not alter CAD geometry or create physical ribs.',
                      'Integral spars share shell filament; 0.05 mm skin-internal Boolean bond overlap is clipped to outer wing.',
                      'Carbon rods and module bonding are external assembly operations; load cases are not printer settings.',
                      'CAD and browser mass/discretisation can differ; inspect validation and every slicer layer.']))

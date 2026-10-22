@@ -1,0 +1,22 @@
+// Unresolved physical fields must produce actual gaps, never fabricated stress lines.
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {createRequire} from 'node:module';
+import vm from 'node:vm';
+const require=createRequire(import.meta.url),{JSDOM}=require(process.env.MIE446_JSDOM_MODULE||'jsdom');
+const source=readFileSync(new URL('./wing_lab_template.html',import.meta.url),'utf8');
+const dom=new JSDOM('<div id="host"></div>'),doc=dom.window.document;
+const context=vm.createContext({console,Math,Number,Infinity,NaN,sig:x=>Number.isFinite(x)?String(x):'–',showMarker:()=>{},E:{interp:()=>NaN},el:(tag,attrs,html)=>{const n=doc.createElement(tag);for(const[k,v]of Object.entries(attrs))n.setAttribute(k,v);n.innerHTML=html;return n;}});
+vm.runInContext(source.slice(source.indexOf('  function niceTicks('),source.indexOf('  function showMarker(')),context);
+const host=doc.querySelector('#host');
+context.chart(host,'Unresolved stress','MPa',[0,1,2,3,4],[{y:[NaN,1,NaN,-2,NaN],color:'blue',fill:true}]);
+let svg=host.querySelector('svg'),paths=[...svg.querySelectorAll('path')];
+assert.equal(paths.length,1,'No filled region across unresolved samples');
+assert.equal((paths[0].getAttribute('d').match(/M/g)||[]).length,2,'Restart each disconnected resolved segment');
+assert.ok(!paths[0].getAttribute('d').includes('L'),'Do not bridge isolated resolved points');
+assert.doesNotMatch(svg.outerHTML,/NaN|Infinity/);
+host.replaceChildren();context.chart(host,'Entirely unresolved','MPa',[0,1],[{y:[NaN,NaN],color:'blue'}]);
+assert.equal(host.querySelector('path').getAttribute('d'),'');assert.doesNotMatch(host.innerHTML,/NaN|Infinity/);
+host.replaceChildren();context.chart(host,'Resolved','MPa',[0,1,2],[{y:[0,1,-1],color:'blue',fill:true}]);
+assert.equal(host.querySelectorAll('path').length,2);assert.match(host.querySelectorAll('path')[1].getAttribute('d'),/^M.*L.*L/);
+dom.window.close();console.log('Wing chart gaps PASS: finite axes, missing-field gaps, no gap-spanning fill and unchanged resolved curves.');

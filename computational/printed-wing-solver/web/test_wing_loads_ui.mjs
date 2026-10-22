@@ -178,7 +178,12 @@ const ad520=(state)=>({
   csv('y_mm,w_N_per_mm,x_over_c\n0,0.005,0.2\n450,0,0.6\n');ok(/replaces table load 1 only/.test($('#wcsvOut').textContent));$('#wcsvApply').click();eq(state.load.items[0].points[0][1],0.005,'edited');
   // file with a hostile name: text only, SHA-256 of the bytes
   const name='<svg onload="window.pwned=1">.csv', text='y_mm,w_N_per_mm\r\n0,0.003\r\n450,0\r\n';
-  Object.defineProperty($('#wcsvFile'),'files',{value:[{name,size:text.length,text:async()=>text}],configurable:true});$('#wcsvFile').dispatchEvent(new w.Event('change'));await tick();
+  const fileControl=$('#wcsvFile'),onFileChange=fileControl.onchange;let upload;
+  Object.defineProperty(fileControl,'files',{value:[{name,size:text.length,text:async()=>text}],configurable:true});
+  // Keep the real DOM change dispatch, but await the handler's actual file-read
+  // and SHA-256 promise rather than assuming crypto finishes within 40 ms.
+  fileControl.onchange=event=>{upload=onFileChange.call(fileControl,event);};
+  try{fileControl.dispatchEvent(new w.Event('change'));await upload;}finally{fileControl.onchange=onFileChange;}
   ok($('#wcsvOut').textContent.includes(name)&&$('#wcsvOut').querySelectorAll('svg[onload]').length===0,'file name shown as text');
   ok($('#wcsvOut').textContent.includes(createHash('sha256').update(text).digest('hex').slice(0,12)),'SHA-256 of the file bytes');
   $('#wcsvApply').click();eq(state.load.items.at(-1).source.sha256,createHash('sha256').update(text).digest('hex'));eq($('#wlist').querySelectorAll('svg[onload]').length,0,'list escapes the name');eq(w.pwned,undefined);

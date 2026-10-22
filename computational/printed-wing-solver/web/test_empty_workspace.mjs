@@ -18,7 +18,7 @@ assert.ok($('#beamClearPicture').closest('.bl-load-tools'));
 assert.ok($('#beamClearSupports').closest('[aria-label="Place on the beam"]'));
 $('#beamGuideOpen').click();assert.equal($('#beamTab-learn').hidden,false);
 assert.equal(d.activeElement,$('#beamGuideTitle'));
-for(const word of ['First visit','press and drag','Delete','Clear All Supports','Clear All Loads','not a support to ground'])assert.ok($('#beamGuide').textContent.includes(word),word);
+for(const word of ['First visit','drag its start-to-end interval','compact Load parameters box','Delete','Clear All Supports','Clear All Loads','not a support to ground'])assert.ok($('#beamGuide').textContent.includes(word),word);
 // User deliberately selects a worked example, then tests independent clearing.
 $('[data-beam-preset="l03-tip"]').click();assert.ok(w.BeamLab.state().solved);
 $('#beamAddSupport').click();$('#beamAddHinge').click();

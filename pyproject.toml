@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "mie446-code-to-print-wing"
-version = "1.2.1"
+version = "1.3.0"
 description = "Colab-ready parametric wing generator for the MIE 446 Code-to-Print Wing Project"
 readme = "README.md"
 requires-python = ">=3.11,<3.14"

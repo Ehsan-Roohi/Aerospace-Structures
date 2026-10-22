@@ -12,6 +12,7 @@ from zipfile import ZIP_DEFLATED, ZipFile
 import cadquery as cq
 
 from .config import WingParameters
+from .cad_metrics import adaptive_volume
 from .geometry import WingBuild, make_fit_coupon, spar_length_mm
 from .validation import validate_wing
 
@@ -285,7 +286,7 @@ def export_build(
         "revision": revision,
         "naca": build.parameters.naca,
         "estimated_fully_dense_mass_g": round(
-            build.complete.Volume() / 1000.0 * build.parameters.pla_density_g_cm3, 3
+            adaptive_volume(build.complete) / 1000.0 * build.parameters.pla_density_g_cm3, 3
         ),
         "configured_printer_build_volume_mm": list(build.parameters.printer_build_volume_mm),
         "spar_lengths_mm": [

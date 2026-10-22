@@ -9,23 +9,21 @@ from plotly.subplots import make_subplots
 
 from .airfoil import naca4_section
 from .config import WingParameters
+from .wing_sections import section_at, transform_point, airfoil_label
 
 
 def plot_design_overview(parameters: WingParameters) -> go.Figure:
     """Show the root airfoil and semi-wing planform before building CAD."""
 
-    section = naca4_section(
-        parameters.naca,
-        chord_mm=parameters.root_chord_mm,
-        trailing_edge_mm=parameters.trailing_edge_mm,
-        point_count=161,
-    )
+    section = section_at(parameters, 0, 161)
     span = np.linspace(0.0, parameters.semi_span_mm, 101)
     chords = np.asarray([parameters.chord_at(float(y)) for y in span])
+    leading = np.asarray([transform_point(parameters,float(y),0,0)[0] for y in span])
+    trailing = np.asarray([transform_point(parameters,float(y),float(c),0)[0] for y,c in zip(span,chords)])
     figure = make_subplots(
         rows=1,
         cols=2,
-        subplot_titles=(f"Root airfoil: NACA {parameters.naca}", "Semi-wing planform"),
+        subplot_titles=(f"Root profile: {airfoil_label(parameters).split(' → ')[0]}", "Semi-wing projected planform"),
         horizontal_spacing=0.12,
     )
     figure.add_trace(
@@ -52,7 +50,7 @@ def plot_design_overview(parameters: WingParameters) -> go.Figure:
     )
     figure.add_trace(
         go.Scatter(
-            x=np.concatenate((np.zeros_like(span), chords[::-1])),
+            x=np.concatenate((leading, trailing[::-1])),
             y=np.concatenate((span, span[::-1])),
             fill="toself",
             fillcolor="rgba(80, 80, 80, 0.12)",
@@ -65,7 +63,7 @@ def plot_design_overview(parameters: WingParameters) -> go.Figure:
     for index, spar in enumerate(parameters.spars, start=1):
         figure.add_trace(
             go.Scatter(
-                x=spar.chord_fraction * chords,
+                x=[transform_point(parameters,float(y),spar.chord_fraction*float(c),0)[0] for y,c in zip(span,chords)],
                 y=span,
                 line={"width": 2, "dash": "dot"},
                 name=f"Rod path {index} (x/c={spar.chord_fraction:.2f})",
@@ -75,13 +73,13 @@ def plot_design_overview(parameters: WingParameters) -> go.Figure:
         )
     for index, spar in enumerate(parameters.bonded_spars, start=1):
         sy = np.linspace(0, spar.length, 31)
-        figure.add_trace(go.Scatter(x=[spar.fraction*parameters.chord_at(float(y)) for y in sy], y=sy,
+        figure.add_trace(go.Scatter(x=[transform_point(parameters,float(y),spar.fraction*parameters.chord_at(float(y)),0)[0] for y in sy], y=sy,
                                    line={"width":3,"color":"#b45f06"}, name=f"Printed I-spar {index}"), row=1,col=2)
     for boundary in parameters.module_bounds_mm()[1:-1]:
         figure.add_shape(
             type="line",
-            x0=0.0,
-            x1=parameters.chord_at(boundary),
+            x0=transform_point(parameters,boundary,0,0)[0],
+            x1=transform_point(parameters,boundary,parameters.chord_at(boundary),0)[0],
             y0=boundary,
             y1=boundary,
             line={"color": "#b45f06", "dash": "dash", "width": 2},
@@ -91,8 +89,8 @@ def plot_design_overview(parameters: WingParameters) -> go.Figure:
     for station in parameters.rib_stations_mm():
         figure.add_shape(
             type="line",
-            x0=0.0,
-            x1=parameters.chord_at(station),
+            x0=transform_point(parameters,station,0,0)[0],
+            x1=transform_point(parameters,station,parameters.chord_at(station),0)[0],
             y0=station,
             y1=station,
             line={"color": "#777777", "dash": "dot", "width": 1},

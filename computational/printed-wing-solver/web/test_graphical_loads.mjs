@@ -20,7 +20,7 @@ $('#beamP').value='-2';$('#beamLoadForm').dispatchEvent(new w.Event('submit',{bu
 assert.equal(state().model.loads[0].force,-2);
 assert.equal(state().solved.result.resultant,-2);
 assert.ok($('[data-load-handle="0"]'));
-event('pointerdown',$('[data-load-handle="0"]'),225);event('pointermove',pic,300);event('pointerup',pic,300);
+event('pointerdown',$('[data-load-handle="0"]'),225);event('pointermove',pic,300);event('pointerup',pic,300);event('click',pic,300); // browser-synthesized post-release click is deliberately suppressed
 assert.equal(state().model.loads[0].position,300);assert.equal(state().solved.model.loads[0].position,225,'manual solve preserves old results');
 $('#beamSolve').click();assert.equal(state().solved.model.loads[0].position,300);
 pick('moment');event('click',pic,0);assert.equal($('#beamLoadA').value,'0');assert.equal($('#beamC').value,'');
@@ -39,7 +39,7 @@ $('[data-load-handle="1"]').dispatchEvent(new w.KeyboardEvent('keydown',{key:'En
 pick('rectangle');event('pointerdown',pic,100);event('pointermove',pic,200);event('pointerup',pic,200);event('click',pic,200);
 $('#beamQ0').value='.01';$('#beamLoadForm').dispatchEvent(new w.Event('submit',{bubbles:true,cancelable:true}));
 assert.equal(state().model.loads.length,3);assert.equal(state().solved.result.resultant,-1,'signed forces superpose: -2 + 1 N');
-event('pointerdown',$('[data-load-handle="2"]'),150);event('pointermove',pic,450);event('pointerup',pic,450);
+event('pointerdown',$('[data-load-handle="2"]'),150);event('pointermove',pic,450);event('pointerup',pic,450);event('click',pic,450);
 assert.equal(state().model.loads[2].start,350);assert.equal(state().model.loads[2].end,450,'moving interval is bounded, not silently shortened');
 assert.equal(state().model.loads[2].qStart,.01);assert.equal(state().model.loads[2].qEnd,.01);
 $('#beamSolve').click();assert.equal(state().solved.result.resultant,-1,'moving a load preserves magnitude and length');

@@ -55,10 +55,11 @@ w.document.body.insertAdjacentHTML('beforeend',navigationSource.slice(navigation
 ctx.$=$;
 // The extracted navigation closure also references the real lazy load-editor keeper.
 ctx.wingLoadKeeper=require('./wing_loads_ui.js').keeper({});
+let closedEditors=0;ctx.printedWorkspace={close(){closedEditors++;}};
 vm.runInContext(navigationSource.slice(navigationSource.indexOf('  function returnToBeams('),navigationSource.indexOf("  document.documentElement.dataset.wingReady='true'")),ctx);
 for(const support of ['beam']) {
   $('#foundations').hidden=true;$('#app').hidden=false;$('#wingNavigation').hidden=false;
-  click(`[data-return-beam="${support}"]`);
+  click('#backFoundations');assert.equal(closedEditors,1,'returning to Beam closes the Wing editor');
   assert.equal($('#foundations').hidden,false);assert.equal($('#app').hidden,true);assert.equal($('#wingNavigation').hidden,true);
   assert.equal($(`[data-stage="${support}"]`).getAttribute('aria-pressed'),'true');
   assert.equal(w.document.activeElement,$(`[data-stage="${support}"]`));
@@ -138,7 +139,7 @@ c.S.plot='model';
 c.R={geometry:E.makeGeometry(),load:{kind:'custom',items:[{kind:'distributed',start:0,end:450,qStart:.01,qEnd:.01,fraction:.2},{kind:'distributed',start:0,end:450,qStart:-.01,qEnd:-.01,fraction:.7}]},props:{zBot:[0],zTop:[10]},point:[]};
 c.model={loads:{children:[],add(a){this.children.push(a);}}};
 c.sectionMotion=()=>[0];c.at=a=>a[0];c.COLORS={load:1,relief:2};
-c.THREE={Vector3:class{constructor(x,y,z){Object.assign(this,{x,y,z});}},ArrowHelper:class{constructor(direction,origin,length,color){Object.assign(this,{direction,origin,length,color});}}};
+c.THREE={Vector3:class{constructor(x,y,z){Object.assign(this,{x,y,z});}},ArrowHelper:class{constructor(direction,origin,length,color){Object.assign(this,{direction,origin,length,color});this.userData={};}traverse(fn){fn(this);}}};
 vm.runInContext(source.slice(source.indexOf('  function drawLoads()'),source.indexOf('  function renderLegend(')),c);
 c.drawLoads();
 assert.equal(c.model.loads.children.length,26,'Opposite loads must not disappear when net transverse force cancels');
@@ -146,5 +147,7 @@ assert.equal(c.model.loads.children[0].origin.z,32);
 assert.equal(c.model.loads.children[13].origin.z,112);
 assert.equal(c.model.loads.children[0].direction.y,1);
 assert.equal(c.model.loads.children[13].direction.y,-1);
+assert.equal(c.model.loads.children[0].userData.wingLoadIndex,0,'the first editable load keeps its picking identity');
+assert.equal(c.model.loads.children[13].userData.wingLoadIndex,1,'opposite loads remain independently editable');
 wingDOM.window.close();
 console.log('PASS: beam controls, supports, load forms, convergence table, graphics fallback, wing member lessons, separate stress controls, local strip scaling, custom wing load submission and force-couple arrow placement (DOM component tests; no WebGL rendering).');

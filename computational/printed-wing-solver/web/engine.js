@@ -23,9 +23,19 @@ const WingEngine = (() => {
   "use strict";
   const Profiles = typeof LoadProfiles !== "undefined" ? LoadProfiles : (typeof require === "function" ? require("./load_profiles.js") : null);
   const Spars = typeof WingSpars !== 'undefined' ? WingSpars : (typeof require === 'function' ? require('./wing_spars.js') : null);
+  const Airfoils = typeof WingAirfoils !== 'undefined' ? WingAirfoils : (typeof require === 'function' ? require('./wing_airfoils.js') : null);
+  const Geometry = typeof WingGeometry !== 'undefined' ? WingGeometry : (typeof require === 'function' ? require('./wing_geometry.js') : null);
+  const Frame = typeof WingFrame3D !== 'undefined' ? WingFrame3D : (typeof require === 'function' ? require('./wing_frame3d.js') : null);
   if (!Profiles) throw new Error("Load load_profiles.js before engine.js.");
   const GRAV = 9.81;
-  const VERSION = "1.1.0";
+  const VERSION = "1.3.0";
+  const MESH_LIMITS=Object.freeze({min:4,max:100,legacyDefault:60,spatialDefault:40});
+  function requestedElementCount(input,fallback=MESH_LIMITS.legacyDefault){
+    if(input.nElements===undefined)return fallback;
+    if(!Number.isInteger(input.nElements)||input.nElements<MESH_LIMITS.min||input.nElements>MESH_LIMITS.max)
+      throw Error('Wing requested beam elements (nElements) must be an integer from 4 to 100.');
+    return input.nElements;
+  }
 
   // ------------------------------------------------------------------ materials
   const MATERIALS = {
@@ -110,6 +120,7 @@ const WingEngine = (() => {
   function makeGeometry(opts = {}) {
     const g = { ...DEFAULT_GEOMETRY, ...opts };
     g.naca = normalizeNaca(g.naca);
+    Object.assign(g, Geometry.normalizeGeometryFields(g));
     g.rodFractions = [...g.rodFractions];
     g.spars = Spars.specs(g.spars,g.semiSpan);
     if(g.spars.length&&g.rodFractions.length)throw new Error('Compare shell + rods and shell + bonded spars separately: mixed rod/spar connections are not validated in this model. Remove rods before adding a spar.');
@@ -139,7 +150,7 @@ const WingEngine = (() => {
       }
       g.customInteriorRibs = Object.freeze(ribs);
     }
-    if(g.spars.length)for(let i=0;i<=32;i++)Spars.parts(g,g.semiSpan*i/32,verticalOrdinates);
+    if(g.spars.length)for(let i=0;i<=32;i++)sparParts(g,g.semiSpan*i/32);
     return Object.freeze(g);
   }
 
@@ -147,6 +158,23 @@ const WingEngine = (() => {
     const eta = Math.min(1, Math.max(0, y / g.semiSpan));
     return g.rootChord + eta * (g.tipChord - g.rootChord);
   };
+  const airfoilAt = (g,y) => Geometry.airfoilAt(g,y);
+  // Cross-section mechanics use unrotated local x/z. Apply station transforms
+  // only at geometry/CAD/display boundaries, never to the old scalar solver.
+  const localGeometry = (g,y) => g.airfoil || g.stations ? {...g,naca:airfoilAt(g,y)} : g;
+  const sparParts = (g,y) => Spars.parts(localGeometry(g,y),y,verticalOrdinates);
+  function analysisCapability(g,input={}) {
+    const c=Geometry.analysisCapability(g);
+    if(c.supported&&!g.airfoil&&!g.stations)return c;
+    if(c.supported)c.reasons.push('explicit airfoil profiles / station sections require the full biaxial spatial beam');
+    const restrictions=[];
+    if(g.rodFractions?.length)restrictions.push('Remove external rods: 3-D rod/sleeve slip and curved rod paths are not validated.');
+    if((g.spars||[]).some(s=>s.length<g.semiSpan-1e-8))restrictions.push('Use full-span bonded spars for the spatial beam: abrupt partial-span spar runouts need a validated reference-axis/joint transition model. Geometry and CAD export remain available.');
+    if(g.modules>1&&input.assembly?.seamsBonded!==true)restrictions.push('Use one piece or explicitly fully bonded module seams; 3-D dry-joint compliance is not validated.');
+    if(input.load&& !['custom','tip'].includes(input.load.kind))restrictions.push('Choose prescribed custom loads or a tip force; flight lift/weight/inertia relief has not been generalized to the 3-D beam.');
+    return {supported:!restrictions.length,mode:'spatial-beam',requires3D:true,reasons:c.reasons,restrictions,loadFrame:c.loadFrame,
+      message:restrictions.length?restrictions.join(' '):'Small-displacement 6-DOF spatial beam with projected normal sections, biaxial bending and axial/torsional response. Prescribed loads are global +z, not lift predicted from airfoil or twist. No 3-D solid, joint, buckling or flutter certification.'};
+  }
   const moduleBounds = (g) => linspace(0, g.semiSpan, g.modules + 1);
   const seams = (g) => moduleBounds(g).slice(1, -1);
   function ribStations(g) {
@@ -178,6 +206,7 @@ const WingEngine = (() => {
     return [+d[0] / 100, +d[1] / 10, +d.slice(2) / 100];
   }
   function camber(code, x) {
+    if(typeof code==='object') return Airfoils.camber(code,x);
     const [m, p] = nacaParams(code);
     if (m === 0) return { yc: 0, slope: 0 };
     if (x < p) return { yc: (m / (p * p)) * (2 * p * x - x * x), slope: ((2 * m) / (p * p)) * (p - x) };
@@ -191,6 +220,7 @@ const WingEngine = (() => {
     return yt + (te / (2 * chord) - natural) * x ** 4;
   }
   function airfoilSurfaces(code, chord, te, count = 241) {
+    if(typeof code==='object')return Airfoils.surfaces(code,chord,te,count);
     const xs = cosineSpacing(count);
     const xu = [], zu = [], xl = [], zl = [];
     for (const x of xs) {
@@ -205,13 +235,15 @@ const WingEngine = (() => {
     return { xu, zu, xl, zl };
   }
   function verticalOrdinates(code, x, chord, te) {
+    if(typeof code==='object')return Airfoils.verticalOrdinates(code,x,chord,te);
     const { yc, slope } = camber(code, x);
     const vh = halfThickness(code, x, chord, te) * Math.cos(Math.atan(slope));
     return { lower: (yc - vh) * chord, camber: yc * chord, upper: (yc + vh) * chord };
   }
   function rodCentres(g, y) {
     const c = chordAt(g, y);
-    return g.rodFractions.map((f) => [f * c, camber(g.naca, f).yc * c]);
+    const profile=airfoilAt(g,y);
+    return g.rodFractions.map((f) => [f * c, camber(profile, f).yc * c]);
   }
 
   // ------------------------------------------------------------------ section geometry
@@ -241,7 +273,7 @@ const WingEngine = (() => {
 
   function outerContour(g, y, count = 241) {
     const c = chordAt(g, y);
-    const { xu, zu, xl, zl } = airfoilSurfaces(g.naca, c, g.te, count);
+    const { xu, zu, xl, zl } = airfoilSurfaces(airfoilAt(g,y), c, g.te, count);
     const pts = xu.map((x, i) => [x, zu[i]]);
     for (let i = xl.length - 1; i >= 1; i--) pts.push([xl[i], zl[i]]);
     return pts;
@@ -252,13 +284,14 @@ const WingEngine = (() => {
     const c = chordAt(g, y);
     const t = g.skin;
     const x0 = g.cavityStart, x1 = g.cavityEnd;
-    const { xu, zu, xl, zl } = airfoilSurfaces(g.naca, c, g.te, 401);
+    const profile=airfoilAt(g,y);
+    const { xu, zu, xl, zl } = airfoilSurfaces(profile, c, g.te, 401);
     const outUp = (x) => interp(x, xu, zu);
     const outLo = (x) => interp(x, xl, zl);
     const xs = cosineSpacing(Ks, x0, x1).map((v) => v * c);
     const upIn = [], loIn = [], upOut = [], loOut = [];
     for (const x of xs) {
-      const v = verticalOrdinates(g.naca, x / c, c, g.te);
+      const v = verticalOrdinates(profile, x / c, c, g.te);
       upIn.push(v.upper - t);
       loIn.push(v.lower + t);
       upOut.push(outUp(x));
@@ -456,11 +489,12 @@ const WingEngine = (() => {
 
   function bredtBatho(g, y) {
     const c = chordAt(g, y), t = g.skin, x0 = g.cavityStart, x1 = g.cavityEnd;
+    const profile=airfoilAt(g,y);
     const xq = cosineSpacing(161, x0, x1);
     const xs = xq.map((v) => v * c);
     const up = [], lo = [];
     for (const x of xq) {
-      const v = verticalOrdinates(g.naca, x, c, g.te);
+      const v = verticalOrdinates(profile, x, c, g.te);
       up.push(v.upper - t / 2);
       lo.push(v.lower + t / 2);
     }
@@ -490,7 +524,7 @@ const WingEngine = (() => {
   function geometricSection(g, y, layers = 4) {
     // Warping mesh depends only on this shell outline, not on spar materials,
     // rods, rib layout or module labels. Reuse exactly the same immutable FE data.
-    const key = JSON.stringify([g.naca,chordAt(g,y),g.skin,g.te,g.cavityStart,g.cavityEnd,layers]);
+    const key = JSON.stringify([airfoilAt(g,y),chordAt(g,y),g.skin,g.te,g.cavityStart,g.cavityEnd,layers]);
     if (!geoCache.has(key)) {
       if (geoCache.size > 120) geoCache.clear();
       const loops = ringLoops(g, y);
@@ -508,7 +542,7 @@ const WingEngine = (() => {
     const shellInt = [fe.A, fe.A * fe.zc, fe.A * fe.xc, fe.Ixx + fe.A * fe.zc ** 2, fe.Iyy + fe.A * fe.xc ** 2, fe.Ixy + fe.A * fe.xc * fe.zc];
     const sleeveInts = centres.map((cc) => annulusIntegrals(cc, Rs, rh));
     const rodInts = centres.map((cc) => diskIntegrals(cc, rr));
-    const sparParts=Spars.parts(g,y,verticalOrdinates),sparInts=sparParts.flatMap(p=>p.polygons.map((polygon,k)=>({index:p.index,kind:['top cap','bottom cap','web'][k],m:p.s.material,polygon,int:polyIntegrals(polygon)})));
+    const sectionSparParts=sparParts(g,y),sparInts=sectionSparParts.flatMap(p=>p.polygons.map((polygon,k)=>({index:p.index,kind:['top cap','bottom cap','web'][k],m:p.s.material,polygon,int:polyIntegrals(polygon)})));
     const sums = [0, 0, 0, 0, 0, 0];
     const add = (arr, E) => arr.forEach((v, i) => (sums[i] += E * v));
     add(shellInt, Ep);
@@ -525,7 +559,7 @@ const WingEngine = (() => {
     const Jfloat = centres.length * (Math.PI / 2) * (Rs ** 4 - rh ** 4);
     let GJ = shearModulus(pla) * (fe.J + Jfloat);
     if (asm.rodsBonded) GJ += centres.length * shearModulus(rod) * (Math.PI * g.rodDiameter ** 4) / 32;
-    const sparNetwork=sparParts.length?Spars.network(loops.inner,loops.outer,pla,sparParts):null;
+    const sparNetwork=sectionSparParts.length?Spars.network(loops.inner,loops.outer,pla,sectionSparParts):null;
     const bendCoupling=sparNetwork?EIxz/EIc:0;
     if(sparNetwork){EIf-=EIxz*EIxz/EIc;GJ=sparNetwork.GJ;}
     const xsc=sparNetwork?sparNetwork.xsc:fe.xsc,zsc=sparNetwork?sparNetwork.zsc:fe.zsc;
@@ -545,7 +579,7 @@ const WingEngine = (() => {
     let zTop = -Infinity, zBot = Infinity;
     for (const p of outer) { zTop = Math.max(zTop, p[1]); zBot = Math.min(zBot, p[1]); }
     // upper-skin panel: same point set as the Python solver (241-point surface, x0..x1)
-    const surf = airfoilSurfaces(g.naca, loops.chord, g.te, 241);
+    const surf = airfoilSurfaces(airfoilAt(g,y), loops.chord, g.te, 241);
     const us = [];
     surf.xu.forEach((x, i) => { if (x >= g.cavityStart * loops.chord && x <= g.cavityEnd * loops.chord) us.push([x, surf.zu[i]]); });
     let width = 0;
@@ -554,7 +588,7 @@ const WingEngine = (() => {
     return {
       y, chord: loops.chord, EA, xc, zc, EIf, EIc, EIxz, principal, EIrods, GJ, Jfe: fe.J, Jbredt: bredt.J,
       bredtArea: bredt.Am, xsc, zsc, mass, cgx, polarInertia, zTop, zBot,
-      sparParts,sparInts,sparMass,sparNetwork,bendCoupling,
+      sparParts:sectionSparParts,sparInts,sparMass,sparNetwork,bendCoupling,
       plaArea: plaInt[0], shellArea: fe.A, rodArea: rodInt[0], ribExtra, ribCgx: ribInt[2] / ribInt[0],
       ribPolar: polar(ribInt), skinWidth: width, skinRadius: radius, mesh, fe, corners: loops.corners,
       outer, centres, Rs, rh, rr,
@@ -787,6 +821,7 @@ const WingEngine = (() => {
   }
 
   function normalize(input = {}) {
+    requestedElementCount(input);
     const g = makeGeometry(input.geometry || {});
     const pla = { ...MATERIALS.pla_upright, ...(input.pla || {}) };
     for(const k of ['E','rho','ft','fc','fs'])if(!Number.isFinite(pla[k])||pla[k]<=0)throw new Error(`Shell material ${k} must be finite and positive.`);
@@ -800,7 +835,7 @@ const WingEngine = (() => {
     if (!["flight", "tip", "custom"].includes(load.kind)) throw new Error("Choose flight, tip or custom loading.");
     if (load.kind === "custom") {
       load.items = validateLoads(load.items, g.semiSpan);
-      const essential=[...new Set([0,g.semiSpan,...seams(g),...ribStations(g),...load.items.flatMap(p=>loadStations(p,g.semiSpan))])].sort((a,b)=>a-b);
+      const essential=[...new Set([0,g.semiSpan,...seams(g),...ribStations(g),...(g.stations||[]).map(s=>s.eta*g.semiSpan),...load.items.flatMap(p=>loadStations(p,g.semiSpan))])].sort((a,b)=>a-b);
       for(let i=1;i<essential.length;i++) if(essential[i]-essential[i-1]<.1-1e-8) throw new Error("Keep distinct wing load boundaries at least 0.1 mm from each other, ribs, seams and ends, or use exactly the same station. This avoids degenerate beam elements.");
     }
     const crit = { ...DEFAULT_CRITERIA, ...(input.criteria || {}) };
@@ -810,7 +845,7 @@ const WingEngine = (() => {
     }
     const nSections = input.nSections || 7;
     const ends=g.spars.filter(s=>s.length<g.semiSpan).flatMap(s=>[s.length,Math.min(g.semiSpan,s.length+.001)]);
-    const ySec = [...new Set([...linspace(0, 0.95 * g.semiSpan, nSections),...ends,...(g.spars.length?[g.semiSpan]:[])])].sort((a,b)=>a-b);
+    const ySec = [...new Set([...linspace(0, 0.95 * g.semiSpan, nSections),...ends,...(g.spars.length?[g.semiSpan]:[]),...(g.stations||[]).map(s=>s.eta*g.semiSpan)])].sort((a,b)=>a-b);
     return { g, pla, rod, asm, load, crit, nSections, ySec };
   }
   function validateLoads(items, L) {
@@ -884,6 +919,7 @@ const WingEngine = (() => {
   const stations = (input) => normalize(input).ySec;
   function warmStation(input, k) {
     const n = normalize(input);
+    const cap=analysisCapability(n.g,input);if(!cap.supported)throw Error(cap.message);
     return cachedSection(n.g, n.pla, n.rod, n.asm, n.ySec[k]);
   }
   function sectionAt(input, y) {
@@ -892,16 +928,20 @@ const WingEngine = (() => {
   }
 
   function solve(input = {}) {
-    const { g, pla, rod, asm, load, crit, ySec } = normalize(input);
-    const nGrid = input.nGrid || 901, nElem = input.nElements || 60;
+    const normalized=normalize(input),{ g, pla, rod, asm, load, crit, ySec } = normalized;
+    const capability=analysisCapability(g,input);
+    if(!capability.supported)throw Error(capability.message);
+    if(capability.requires3D)return solveSpatial(input,normalized);
+    const nGrid = input.nGrid || 901, nElem = requestedElementCount(input);
     const L = g.semiSpan;
     const seamsActive = asm.seamsBonded ? [] : seams(g);
     const ribs = ribStations(g);
     const sections = ySec.map((y) => cachedSection(g, pla, rod, asm, y));
     const col = (k) => sections.map((s) => s[k]);
     const loadNodes = load.kind === "custom" ? load.items.flatMap(p => loadStations(p, L)) : [];
+    const profileNodes=(g.stations||[]).map(s=>s.eta*L);
     const sparEnds=g.spars.map(s=>s.length);
-    const yset = new Set([...linspace(0, L, nGrid), ...seams(g), ...ribs, ...loadNodes,...sparEnds].map((v) => +v.toFixed(9)));
+    const yset = new Set([...linspace(0, L, nGrid), ...seams(g), ...ribs, ...loadNodes,...sparEnds,...profileNodes].map((v) => +v.toFixed(9)));
     const y = Float64Array.from([...yset].sort((a, b) => a - b));
     // Never smear a spar runout into the next bay: interpolate only within the
     // same active-spar segment. End values are inboard limits.
@@ -1019,10 +1059,11 @@ const WingEngine = (() => {
       });
 
     // 1-D FEM: static and modal
-    const mandatory=[0,L,...seams(g),...ribs,...loadNodes,...sparEnds];
+    const mandatory=[0,L,...seams(g),...ribs,...loadNodes,...sparEnds,...profileNodes];
     const regular=linspace(0,L,nElem+1).filter(v=>load.kind!=='custom'||!mandatory.some(p=>Math.abs(v-p)<.1));
     const nodeSet = new Set([...regular,...mandatory].map((v) => +v.toFixed(9)));
     const nodes = [...nodeSet].sort((a, b) => a - b);
+    const mesh={requestedElements:nElem,actualElements:nodes.length-1,nodeCount:nodes.length,mandatorySpanStations:[...new Set(mandatory)].sort((a,b)=>a-b)};
     const EIf = (q) => sectionValue('EIf',q,true);
     const GJf = (q) => sectionValue('GJ',q,true);
     const mf = (q) => interp(q, y, P.mass), Ipf = (q) => interp(q, y, P.polarInertia);
@@ -1167,13 +1208,227 @@ const WingEngine = (() => {
 
     return {
       version: VERSION, geometry: g, pla, rod, assembly: asm, load, criteria: crit, sections, ySec,
-      y, props: P, w, point, V, M, T, kappa, slope, deflection,chordwiseDeflection, twist, fem, seamsActive, seamRot,
+      y, props: P, w, point, V, M, T, kappa, slope, deflection,chordwiseDeflection, twist, fem, mesh, seamsActive, seamRot,
       seam: { kBend, freeLength: Lf, freePlay: asm.seamsBonded ? 0 : freePlay },
       ribs, seams: seams(g), mass, stiffness, liftN, appliedForce, appliedMoment,
       stress: { sigTop, sigBot, skinComp, sigCr, sigFlat, sigCyl, sigRod, tau, tauPeak, tauBredt,spars:sparStress },
       sparModel:g.spars.length?{method:'Bonded thin-wall beam: transformed section bending + energy-compatible shear-flow network',limitations:['Perfect continuous bond; adhesive stress and debonding not calculated','Sectionwise locally prismatic shear flow; no 3-D taper/runout stress','Cap/web local buckling, crippling and spar runout stresses unresolved','Independent normal/shear allowable checks; combined material failure interaction not resolved','Open-cap local Saint-Venant torsion neglected','Modes are uncoupled beam modes, not a coupled 3-D flutter spectrum','Mixed rod/spar joint model not validated; compare them separately'],rootNetwork:sections[0].sparNetwork.method}:null,
       checks, governing, verification, ribBearing,
     };
+  }
+
+  // Spatial extension. The legacy straight-wing route above is deliberately
+  // unchanged. Normal cuts are affine projections of aircraft x-z sections;
+  // dA_normal = |t_y| dA_xz and ds = dy/|t_y| preserve physical volume.
+  function solveSpatial(input,n=normalize(input)) {
+    const {g,pla,rod,asm,load,crit}=n,L=g.semiSpan,F=Frame;
+    const count=requestedElementCount(input,MESH_LIMITS.spatialDefault);
+    const cap=analysisCapability(g,input);if(!cap.supported)throw Error(cap.message);
+    if(input.nSections!=null&&(!Number.isInteger(input.nSections)||input.nSections<3||input.nSections>31))throw Error('The spatial beam supports 3–31 numerical section samples.');
+    const ys=[...new Set([...n.ySec,L])].sort((a,b)=>a-b),local=ys.map(y=>cachedSection(g,pla,rod,asm,y));
+    const frac=g.twistReferenceFraction??.25;
+    let reference=ys.map(y=>Geometry.transformPoint(g,y,[frac*chordAt(g,y),0])),samples=[],axisChange=0;
+    const projectedCache=new Map();
+    function projectSection(sec,y,tangent){
+      const angle=Geometry.stationAt(g,y).incidenceDeg*Math.PI/180,ex=[Math.cos(angle),0,-Math.sin(angle)],ez=[Math.sin(angle),0,Math.cos(angle)];
+      const R=F.basis([0,0,0],tangent,ex),B=[[F.dot(R[1],ex),F.dot(R[1],ez)],[F.dot(R[2],ex),F.dot(R[2],ez)]],det=B[0][0]*B[1][1]-B[0][1]*B[1][0],area=Math.abs(det);
+      if(area<.35)throw Error('The 3-D beam section projection is too oblique (|t_y| < 0.35). Reduce sweep/dihedral; this beam approximation is not admitted for nearly span-normal section planes.');
+      const map=p=>[B[0][0]*p[0]+B[0][1]*p[1],B[1][0]*p[0]+B[1][1]*p[1]];
+      const nodes=new Float64Array(sec.mesh.nodes.length);for(let i=0;i<nodes.length;i+=2){const q=map([sec.mesh.nodes[i],sec.mesh.nodes[i+1]]);nodes[i]=q[0];nodes[i+1]=q[1];}
+      const mesh={...sec.mesh,nodes},network=sec.sparNetwork?Spars.projectedNetwork(sec.sparNetwork,B):null;
+      let fe=null;
+      if(!network){
+        if(Math.abs(area-1)<1e-12){const sc=map([sec.fe.xsc,sec.fe.zsc]);fe={J:sec.fe.J,xsc:sc[0],zsc:sc[1]};}
+        else{
+          const key=JSON.stringify([airfoilAt(g,y),sec.chord,g.skin,g.te,g.cavityStart,g.cavityEnd,B.flat().map(v=>+v.toFixed(10))]);
+          if(!projectedCache.has(key))projectedCache.set(key,shellFE(mesh));
+          fe=projectedCache.get(key);
+        }
+      }
+      const sc=[network?.xsc??fe.xsc,network?.zsc??fe.zsc],centre=map([sec.xc,sec.zc]),d=F.sub(centre,sc);
+      const C=[[sec.EIc,sec.EIxz],[sec.EIxz,sec.EIf+(sec.sparNetwork?sec.EIxz**2/sec.EIc:0)]];
+      const Q=Array.from({length:2},(_,i)=>Array.from({length:2},(_,j)=>area*B[i].reduce((v,a,k)=>v+a*B[j].reduce((w,b,h)=>w+b*C[k][h],0),0)));
+      const EA=area*sec.EA,props={EA,first2:EA*d[0],first3:EA*d[1],EI22:Q[1][1]+EA*d[1]**2,EI33:Q[0][0]+EA*d[0]**2,EI23:Q[0][1]+EA*d[0]*d[1],GJ:network?.GJ??shearModulus(pla)*fe.J};
+      const scLocal=[(B[1][1]*sc[0]-B[0][1]*sc[1])/det,(-B[1][0]*sc[0]+B[0][0]*sc[1])/det];
+      return {y,R,B,area,scLocal,reference:Geometry.transformPoint(g,y,scLocal),...props,D:Frame.constitutive(props),local:sec,mesh,fe,network};
+    }
+    // Iterate the normal-cut orientation onto the elastic shear-centre path,
+    // rather than using the silhouette's slope as a fictitious beam direction.
+    for(let iteration=0;iteration<6;iteration++){
+      const previous=reference;
+      samples=ys.map((y,i)=>{
+        const a=previous[Math.max(0,i-1)],b=previous[Math.min(ys.length-1,i+1)];
+        return projectSection(local[i],y,F.unit(F.sub(b,a)));
+      });
+      reference=samples.map(s=>s.reference);axisChange=Math.max(...reference.map((p,i)=>F.norm(F.sub(p,previous[i]))));
+      if(axisChange<1e-5)break;
+    }
+    if(axisChange>=1e-5)throw Error('The 3-D beam normal-cut/shear-centre iteration did not converge to 0.00001 mm. Reduce geometric gradients or increase section resolution; no unconverged structural result is returned.');
+    const column=k=>samples.map(s=>s[k]),at=(k,y)=>interp(y,ys,column(k)),scAt=y=>[interp(y,ys,samples.map(s=>s.scLocal[0])),interp(y,ys,samples.map(s=>s.scLocal[1]))];
+    const referenceAt=y=>Geometry.transformPoint(g,y,scAt(y));
+    const normalIntegralCache=new Map();
+    function sectionData(y,tangent,axisPoint=referenceAt(y)){
+      const p={GJ:at('GJ',y)};
+      const a=Geometry.stationAt(g,y).incidenceDeg*Math.PI/180,ex=[Math.cos(a),0,-Math.sin(a)],ez=[Math.sin(a),0,Math.cos(a)],R=F.basis([0,0,0],tangent,ex);
+      p.R=R;p.B=[[F.dot(R[1],ex),F.dot(R[1],ez)],[F.dot(R[2],ex),F.dot(R[2],ez)]];p.reference=axisPoint;p.scLocal=Geometry.inversePoint(g,axisPoint);
+      // Never interpolate tensor entries written in different moving bases.
+      // Integrate the local material polygon and project it into THIS element's
+      // normal plane about its actual straight-axis piercing point.
+      p.D=normalRecoveryD(y,p);Object.assign(p,{EA:p.D[0][0],first2:-p.D[0][2],first3:p.D[0][1],EI22:p.D[1][1],EI33:p.D[2][2],EI23:-p.D[1][2]});return p;
+    }
+    const items=load.kind==='tip'?[{kind:'point',position:L,force:load.tipForce,fraction:load.tipFraction}]:load.items;
+    const physical=[0,L,...(g.stations||[]).map(s=>s.eta*L),...ribStations(g),...seams(g),...g.spars.map(s=>s.length),...items.flatMap(p=>loadStations(p,L))];
+    const mandatory=[...physical,...ys.filter(y=>!physical.some(p=>Math.abs(p-y)<.1))];
+    const regular=linspace(0,L,count+1).filter(y=>!mandatory.some(v=>Math.abs(v-y)<.1));
+    let nodeY=[...new Set([...mandatory,...regular].map(y=>+y.toFixed(9)))].sort((a,b)=>a-b),nodes=nodeY.map(referenceAt);
+    const loadPoint=(p,y)=>Geometry.transformPoint(g,y,[customFraction(p,y)*chordAt(g,y),0]);
+    // Conservative, outward-padded analytic intervals, not point sampling.
+    // They certify load-path monotonicity before any normal-foot bisection.
+    const interval=(a,b=a)=>{const e=32*Number.EPSILON*Math.max(1,Math.abs(a),Math.abs(b));return [Math.min(a,b)-e,Math.max(a,b)+e];};
+    const addI=(a,b)=>interval(a[0]+b[0],a[1]+b[1]),subI=(a,b)=>interval(a[0]-b[1],a[1]-b[0]),mulI=(a,b)=>{const q=[a[0]*b[0],a[0]*b[1],a[1]*b[0],a[1]*b[1]];return interval(Math.min(...q),Math.max(...q));},scaleI=(a,b)=>mulI(a,[b,b]),dotI=(a,b)=>a.reduce((q,v,i)=>addI(q,mulI(v,b[i])),[0,0]);
+    const squareMin=a=>a[0]<=0&&a[1]>=0?0:Math.min(a[0]**2,a[1]**2),absMax=a=>Math.max(Math.abs(a[0]),Math.abs(a[1]));
+    function polynomialBounds(c,a,b){const value=t=>c.reduceRight((s,v)=>s*t+v,0),points=[a,b],A=3*(c[3]||0),B=2*(c[2]||0),C=c[1]||0;if(A!==0){const d=B*B-4*A*C;if(d>=0){const s=Math.sqrt(d),q=-.5*(B+(B>=0?s:-s)),roots=q===0?[-B/(2*A)]:[q/A,C/q];for(const t of roots)if(t>a&&t<b)points.push(t);}}else if(B!==0){const t=-C/B;if(t>a&&t<b)points.push(t);}const v=points.map(value);return interval(Math.min(...v),Math.max(...v));}
+    function trigBounds(a,b,cosine){const fn=cosine?Math.cos:Math.sin,v=[fn(a),fn(b)];for(let k=Math.ceil(a/(Math.PI/2));k*Math.PI/2<b;k++)v.push(fn(k*Math.PI/2));return interval(Math.min(...v),Math.max(...v));}
+    function sourcePathBounds(p,a,b){
+      // Every source interval is split at table rows and incidence stations:
+      // c(s), f(s), alpha(s) are each linear, so the following are enclosures
+      // of the exact physical position AND derivative over the whole interval.
+      const c=interval(chordAt(g,a),chordAt(g,b)),f=interval(customFraction(p,a),customFraction(p,b)),cp=(g.tipChord-g.rootChord)/L,fp=(customFraction(p,b)-customFraction(p,a))/(b-a),pivot=g.twistReferenceFraction??.25,sweepRef=g.sweepReferenceFraction??0,alpha0=Geometry.stationAt(g,a).incidenceDeg*Math.PI/180,alpha1=Geometry.stationAt(g,b).incidenceDeg*Math.PI/180,ap=(alpha1-alpha0)/(b-a),angles=[Math.min(alpha0,alpha1),Math.max(alpha0,alpha1)],co=trigBounds(...angles,true),si=trigBounds(...angles,false),arm=mulI(subI(f,[pivot,pivot]),c),armPrime=addI(scaleI(subI(f,[pivot,pivot]),cp),scaleI(c,fp)),sx=Math.tan((g.sweepDeg||0)*Math.PI/180),sz=Math.tan((g.dihedralDeg||0)*Math.PI/180),baseX=addI(addI(scaleI([a,b],sx),scaleI(c,pivot-sweepRef)),[sweepRef*g.rootChord,sweepRef*g.rootChord]);
+      return {position:[addI(baseX,mulI(arm,co)),[a,b],subI(scaleI([a,b],sz),mulI(arm,si))],velocity:[subI(addI([sx+(pivot-sweepRef)*cp,sx+(pivot-sweepRef)*cp],mulI(armPrime,co)),scaleI(mulI(arm,si),ap)),[1,1],subI(subI([sz,sz],mulI(armPrime,si)),scaleI(mulI(arm,co),ap))]};
+    }
+    function makeAxis(stations,coordinates){
+      let length=0;const segments=coordinates.slice(1).map((b,i)=>{const a=coordinates[i],d=F.sub(b,a),L=F.norm(d),s0=length;length+=L;return {a,b,L,tangent:F.scale(d,1/L),s0,y0:stations[i],y1:stations[i+1]};});
+      return {segments,length};
+    }
+    // A continuous normal family avoids gaps/fans at polygonal FE-axis kinks.
+    // The Hermite curve is a geometric reference; the frame still approximates
+    // it with straight elements. Reject ambiguous normal-foot assignments.
+    function normalFamily(stations,coordinates){
+      const slope=coordinates.map((p,i)=>{const a=Math.max(0,i-1),b=Math.min(coordinates.length-1,i+1);return F.scale(F.sub(coordinates[b],coordinates[a]),1/(stations[b]-stations[a]));});
+      const polynomials=coordinates.slice(1).map((b,i)=>{const a=coordinates[i],h=stations[i+1]-stations[i],m=F.scale(slope[i],h),n=F.scale(slope[i+1],h),o=[a,m,F.sub(F.sub(F.scale(F.sub(b,a),3),F.scale(m,2)),n),F.add(F.scale(F.sub(a,b),2),F.add(m,n))],d=[o[1],F.scale(o[2],2),F.scale(o[3],3)],base=new Array(6).fill(0);o.forEach((v,k)=>d.forEach((w,j)=>base[k+j]-=F.dot(v,w)));return {h,o,d,base};});
+      const evaluate=(p,t)=>{let v=0;for(let i=p.length-1;i>=0;i--)v=v*t+p[i];return v;};
+      function polynomialRoots(coeff){const p=[...coeff],scale=Math.max(...p.map(Math.abs),1),tolerance=2e-13*scale;while(p.length>1&&Math.abs(p.at(-1))<1e-15*scale)p.pop();if(p.length===1){if(Math.abs(p[0])<=tolerance)throw Error('A whole normal-reference interval maps to the same physical point; the normal mapping is ambiguous.');return [];}if(p.length===2){const t=-p[0]/p[1];return t>=-1e-12&&t<=1+1e-12?[Math.max(0,Math.min(1,t))]:[];}const critical=polynomialRoots(p.slice(1).map((v,i)=>v*(i+1))),bounds=[0,...critical.filter(t=>t>1e-12&&t<1-1e-12),1],roots=[];for(const t of bounds)if(Math.abs(evaluate(p,t))<=tolerance)roots.push(t);for(let i=1;i<bounds.length;i++){let a=bounds[i-1],b=bounds[i],fa=evaluate(p,a),fb=evaluate(p,b);if(fa*fb>=0)continue;for(let k=0;k<40;k++){const t=(a+b)/2,f=evaluate(p,t);if(fa*f<=0)b=t;else{a=t;fa=f;}}roots.push((a+b)/2);}return roots.sort((a,b)=>a-b).filter((t,i,a)=>i===0||t-a[i-1]>1e-9);}
+      function at(y){let i=0;while(i<stations.length-2&&y>stations[i+1])i++;const h=stations[i+1]-stations[i],t=(y-stations[i])/h,a=coordinates[i],b=coordinates[i+1],m=slope[i],n=slope[i+1],o=[],d=[],dd=[];for(let k=0;k<3;k++){o[k]=(2*t**3-3*t*t+1)*a[k]+(t**3-2*t*t+t)*h*m[k]+(-2*t**3+3*t*t)*b[k]+(t**3-t*t)*h*n[k];d[k]=((6*t*t-6*t)*a[k]+(3*t*t-4*t+1)*h*m[k]+(-6*t*t+6*t)*b[k]+(3*t*t-2*t)*h*n[k])/h;dd[k]=((12*t-6)*a[k]+(6*t-4)*h*m[k]+(-12*t+6)*b[k]+(6*t-2)*h*n[k])/(h*h);}const speed=F.norm(d),normal=F.scale(d,1/speed),dn=F.scale(F.sub(dd,F.scale(normal,F.dot(normal,dd))),1/speed);return {reference:o,normal,dn,speed};}
+      const locationCache=new Map();
+      function locate(P){const key=P.join(',');if(locationCache.has(key))return locationCache.get(key);const f=y=>{const a=at(y);return F.dot(F.sub(P,a.reference),a.normal);},roots=[];polynomials.forEach((p,i)=>{const h=p.base.map((v,k)=>v+(k<3?F.dot(P,p.d[k]):0));for(const t of polynomialRoots(h))roots.push(stations[i]+t*p.h);});const unique=roots.filter((v,i)=>!roots.slice(0,i).some(w=>Math.abs(v-w)<1e-6));if(unique.length>1)throw Error('Ambiguous physical-point normal mapping: multiple normal planes intersect this point. Reduce geometric gradients; no nearest-plane assignment is fabricated.');let out;if(unique.length===1){const station=unique[0],a=at(station),margin=a.speed-F.norm(F.sub(P,a.reference))*F.norm(a.dn);if(!(margin>1e-7))throw Error('Ill-conditioned normal-plane mapping: section radius times normal gradient reaches the reference-axis speed. Reduce curvature/twist.');out={...a,station,boundedStation:station,outside:null,resolved:true};}else{const a=at(0),b=at(L),root=f(0)<0;if((root&&f(L)<0)||(!root&&f(0)>0&&f(L)>0)){const end=root?a:b,station=(root?0:L)+F.dot(F.sub(P,end.reference),end.normal)/end.speed;out={...end,station,boundedStation:root?0:L,outside:root?'root':'tip',resolved:false};}else throw Error('Physical-point normal mapping could not be resolved; no coordinate clamping is silently applied.');}locationCache.set(key,out);return out;}
+      function certifyPath(pathBounds,a,b){
+        let boxes=0;
+        function check(p,sa,sb,ta,tb,depth){
+          if(++boxes>20000)throw Error('Normal load path monotonicity could not be certified within the bounded interval budget. Reduce incidence/profile/chordwise-load gradients or split the load.');
+          const path=pathBounds(sa,sb),origin=[0,1,2].map(k=>polynomialBounds(p.o.map(v=>v[k]),ta,tb)),d=[0,1,2].map(k=>scaleI(polynomialBounds(p.d.map(v=>v[k]),ta,tb),1/p.h)),dd=[0,1,2].map(k=>scaleI(polynomialBounds([2*p.o[2][k],6*p.o[3][k]],ta,tb),1/(p.h*p.h))),arm=path.position.map((v,k)=>subI(v,origin[k])),h=dotI(arm,d),numerator=dotI(path.velocity,d),radius=Math.hypot(...arm.map(absMax)),curvature=Math.hypot(...dd.map(absMax)),speedSquared=d.reduce((s,v)=>s+squareMin(v),0);
+          // If a normal root is possible, this stronger radius bound implies
+          // both the existing point-conditioning screen and dH/dY<0. Together
+          // with P'(s).o'(Y)>0 it proves a unique increasing normal-foot path:
+          // dY/ds = P'.o' / (|o'|^2-(P-o).o''). Off-root boxes need no radius
+          // screen, but still bound the endpoint-extension path direction.
+          if(numerator[0]>1e-8*Math.max(1,absMax(numerator))&&(h[0]>1e-8||h[1]<-1e-8||speedSquared-radius*curvature>1e-8*Math.max(1,speedSquared,radius*curvature)))return;
+          if(depth>=14)throw Error('Normal load path monotonicity is folded or cannot be certified by conservative analytic interval bounds. Reduce incidence/profile/chordwise-load gradients or split the load; no monotone fit or force relocation is applied.');
+          if(depth%2===0){const mid=(sa+sb)/2;check(p,sa,mid,ta,tb,depth+1);check(p,mid,sb,ta,tb,depth+1);}else{const mid=(ta+tb)/2;check(p,sa,sb,ta,mid,depth+1);check(p,sa,sb,mid,tb,depth+1);}
+        }
+        for(const p of polynomials)check(p,a,b,0,1,0);
+        return boxes;
+      }
+      return {at,locate,atY:y=>at(y).reference,certifyPath};
+    }
+    // The geometric normal family is defined by the converged numerical
+    // section stations, NOT by arbitrary FE/load/rib node spacing. Refining the
+    // longitudinal mesh must not introduce artificial reference curvature at
+    // corners of a linear interpolation of shear-centre sample coordinates.
+    const normals=normalFamily(ys,reference),pointFeet=items.flatMap((p,i)=>{if(p.kind!=='point')return [];try{const foot=normals.locate(loadPoint(p,p.position));return foot.outside?[]:[foot.station];}catch(error){throw Error(`Wing load ${i+1} (point), aircraft y=${p.position} mm, x/c=${p.fraction}: ${error.message} Reduce profile/incidence gradients or move this load; no nearest-plane clamp is applied.`);}});
+    nodeY=[...nodeY];for(const y of pointFeet)if(!nodeY.some(q=>Math.abs(q-y)<.1-1e-9))nodeY.push(y);nodeY.sort((a,b)=>a-b);nodes=nodeY.map(normals.atY);
+    if(nodeY.length>161)throw Error('The 3-D frame is limited to 161 nodes. Reduce load-table rows or geometry stations.');
+    const axis=makeAxis(nodeY,nodes),loadMapping={method:'Physical loads projected to normal-axis feet; consistent work integrated per original aircraft-y coordinate',endWrenches:[],monotonicity:{method:'Conservative analytic interval bounds of physical-path and C1-normal-family derivatives; no endpoint-sampling certificate',certifiedSourcePanels:0,intervalBoxes:0}};
+    const lineForce=(p,y)=>p.kind==='point'?0:p.kind==='distributed'?(y>=p.start&&y<=p.end?p.qStart+(p.qEnd-p.qStart)*(y-p.start)/(p.end-p.start):0):customLine(p,g,y);
+    const elements=nodeY.slice(1).map((b,i)=>{
+      const a=nodeY[i],mid=(a+b)/2,tangent=F.unit(F.sub(nodes[i+1],nodes[i])),p=sectionData(mid,tangent,F.scale(F.add(nodes[i],nodes[i+1]),.5)),angle=Geometry.stationAt(g,mid).incidenceDeg*Math.PI/180;
+      return {a:i,b:i+1,...p,orientation:[Math.cos(angle),0,-Math.sin(angle)],spanStart:a,spanEnd:b,consistentLoad:new Float64Array(13)};
+    });
+    const sourceIntervals=p=>{const bounds=p.kind==='table'?p.points.map(q=>q[0]):p.kind==='schrenk'?[0,L]:[p.start,p.end],base=[...new Set([...bounds,...ys.filter(y=>y>bounds[0]&&y<bounds.at(-1))])].sort((a,b)=>a-b);return base.slice(1).flatMap((b,i)=>Array.from({length:8},(_,k)=>[base[i]+(b-base[i])*k/8,base[i]+(b-base[i])*(k+1)/8]));};
+    function footAt(P){const p=normals.locate(P);let index=0;while(index<elements.length-1&&p.boundedStation>nodeY[index+1])index++;return {...p,index,arc:p.boundedStation};}
+    function loadVector(index,P,force,foot=footAt(P)){const e=elements[index],seg=axis.segments[index],t=Math.max(0,Math.min(1,(foot.boundedStation-nodeY[index])/(nodeY[index+1]-nodeY[index]))),A=F.add(seg.a,F.scale(seg.tangent,t*seg.L)),moment=F.cross(F.sub(P,A),force),R=F.basis(seg.a,seg.b,e.orientation);return F.pointLoadVector(R,seg.L,t,force,moment);}
+    items.forEach((p,loadIndex)=>{
+      if(p.kind==='point'){const P=loadPoint(p,p.position),foot=footAt(P),v=loadVector(foot.index,P,[0,0,p.force],foot);v.forEach((x,i)=>elements[foot.index].consistentLoad[i]+=x);if(foot.outside)loadMapping.endWrenches.push({load:loadIndex+1,end:foot.outside,sourceStation:p.position,normalFootStation:foot.station,reason:'Normal foot lies outside the finite beam; an equivalent end wrench preserves the full global force and moment, but local end-zone response is nominal.'});return;}
+      for(const[a,b]of sourceIntervals(p)){
+        try{loadMapping.monotonicity.intervalBoxes+=normals.certifyPath((lo,hi)=>sourcePathBounds(p,lo,hi),a,b);loadMapping.monotonicity.certifiedSourcePanels++;}catch(error){throw Error(`Wing load ${loadIndex+1} (${p.kind}), aircraft y=${a}…${b} mm: ${error.message}`);}
+        const sa=normals.locate(loadPoint(p,a)).station,sb=normals.locate(loadPoint(p,b)).station;
+        if(sb<sa-1e-7)throw Error('A prescribed load path reverses along the normal beam coordinate. Split/redefine this folded chordwise load path; no monotone-load approximation is silently applied.');
+        const split=[a,b];for(const target of nodeY)if(target>sa+1e-9&&target<sb-1e-9){let lo=a,hi=b;for(let k=0;k<32;k++){const mid=(lo+hi)/2;if(normals.locate(loadPoint(p,mid)).station<target)lo=mid;else hi=mid;}split.push((lo+hi)/2);}split.sort((x,y)=>x-y);
+        for(let j=1;j<split.length;j++){const lo=split[j-1],hi=split[j],foot=footAt(loadPoint(p,(lo+hi)/2)),v=F.integrate(y=>loadVector(foot.index,loadPoint(p,y),[0,0,lineForce(p,y)]),lo,hi);v.forEach((x,i)=>elements[foot.index].consistentLoad[i]+=x);if(foot.outside)loadMapping.endWrenches.push({load:loadIndex+1,end:foot.outside,sourceStart:lo,sourceEnd:hi,reason:'Outside-axis part of this line load is retained as an equivalent end wrench; end-zone stresses are unresolved.'});}
+      }
+    });
+    const frame=F.solve({nodes,elements});
+    const mesh={requestedElements:count,actualElements:frame.elements.length,nodeCount:nodes.length,mandatorySpanStations:[...new Set(mandatory)].sort((a,b)=>a-b)};
+    function frameAt(y){let i=0;while(i<nodeY.length-2&&y>nodeY[i+1])i++;const e=frame.elements[i],t=Math.max(0,Math.min(1,(y-nodeY[i])/(nodeY[i+1]-nodeY[i])));return {...F.sampleElement(e,t),reference:F.add(nodes[i],F.scale(F.sub(nodes[i+1],nodes[i]),t)),element:e,t};}
+    function normalRecoveryD(y,cut){
+      // Stress recovery must balance the actual local material section, not
+      // an interpolation of tensors expressed in neighbouring moving frames.
+      // Polygon integrals require no additional torsion/warping FE solves.
+      if(!normalIntegralCache.has(y)){const loops=ringLoops(g,y),outer=polyIntegrals(loops.outer),inner=polyIntegrals(loops.inner),sum=outer.map((v,i)=>pla.E*(v-inner[i]));for(const part of sparParts(g,y))for(const polygon of part.polygons){const p=polyIntegrals(polygon);p.forEach((v,i)=>sum[i]+=part.s.material.E*v);}normalIntegralCache.set(y,sum);}
+      const sum=normalIntegralCache.get(y);
+      const EA=sum[0],x=cut.scLocal[0],z=cut.scLocal[1],X=sum[2]-EA*x,Z=sum[1]-EA*z,XX=sum[4]-2*x*sum[2]+EA*x*x,ZZ=sum[3]-2*z*sum[1]+EA*z*z,XZ=sum[5]-x*sum[1]-z*sum[2]+EA*x*z,B=cut.B,area=Math.abs(B[0][0]*B[1][1]-B[0][1]*B[1][0]),C=[[XX,XZ],[XZ,ZZ]],Q=(a,b)=>a.reduce((v,c,i)=>v+c*b.reduce((w,d,j)=>w+d*C[i][j],0),0);
+      return F.constitutive({EA:area*EA,first2:area*(B[0][0]*X+B[0][1]*Z),first3:area*(B[1][0]*X+B[1][1]*Z),EI22:area*Q(B[1],B[1]),EI33:area*Q(B[0],B[0]),EI23:area*Q(B[0],B[1]),GJ:cut.GJ});
+    }
+    const cutCache=new Map();
+    const rootFace=outerContour(g,0,81).map(p=>Geometry.transformPoint(g,0,p)),tipFace=outerContour(g,L,81).map(p=>Geometry.transformPoint(g,L,p));
+    function endZone(reference,normal,y){const root=Math.max(...rootFace.map(p=>F.dot(F.sub(p,reference),normal))),tip=Math.min(...tipFace.map(p=>F.dot(F.sub(p,reference),normal)));return root>1e-7||y<1e-8?'root':tip< -1e-7||y>L-1e-8?'tip':null;}
+    function cutAt(y){
+      if(cutCache.has(y))return cutCache.get(y);
+      const out=frameAt(y),plane=normals.at(y),s=sectionData(y,plane.normal,plane.reference),reference=s.reference;let force=[0,0,0],moment=[0,0,0];
+      const signed=P=>F.dot(F.sub(P,reference),plane.normal);
+      for(const p of items){
+        if(p.kind==='point'){const P=loadPoint(p,p.position);if(signed(P)>=-1e-9){const v=[0,0,p.force];force=F.add(force,v);moment=F.add(moment,F.cross(F.sub(P,reference),v));}continue;}
+        for(const[a,b]of sourceIntervals(p)){const fa=signed(loadPoint(p,a)),fb=signed(loadPoint(p,b)),split=[a,b];if(fa*fb<0){let lo=a,hi=b;for(let k=0;k<38;k++){const mid=(lo+hi)/2;if(signed(loadPoint(p,mid))*fa>0)lo=mid;else hi=mid;}split.push((lo+hi)/2);}split.sort((u,v)=>u-v);for(let j=1;j<split.length;j++){const lo=split[j-1],hi=split[j];if(signed(loadPoint(p,(lo+hi)/2))<0)continue;const r=F.integrate(qy=>{const v=[0,0,lineForce(p,qy)],m=F.cross(F.sub(loadPoint(p,qy),reference),v);return [...v,...m];},lo,hi);force=F.add(force,Array.from(r.slice(0,3)));moment=F.add(moment,Array.from(r.slice(3,6)));}}
+      }
+      const fl=F.toLocal(s.R,force),ml=F.toLocal(s.R,moment),recoveryD=normalRecoveryD(y,s),strain=F.solveSPD(recoveryD,[fl[0],ml[1],ml[2],ml[0]]);
+      const cut={...s,y,recoveryD,force,moment,localForce:fl,localMoment:ml,strain:Array.from(strain),displacement:out.displacement,rotation:out.rotation,endZone:endZone(reference,plane.normal,y),nominal:true};
+      if(cutCache.size>60000)cutCache.clear();cutCache.set(y,cut);return cut;
+    }
+    const y=Float64Array.from([...new Set([...linspace(0,L,Math.min(1001,input.nGrid||201)),...nodeY])].sort((a,b)=>a-b)),cuts=Array.from(y,cutAt),response=Array.from(y,frameAt);
+    const normalStress=(cut,point,E=pla.E)=>{const dx=point[0]-cut.scLocal[0],dz=point[1]-cut.scLocal[1],q2=cut.B[0][0]*dx+cut.B[0][1]*dz,q3=cut.B[1][0]*dx+cut.B[1][1]*dz;return E*(cut.strain[0]+cut.strain[1]*q3-cut.strain[2]*q2);};
+    const tension=[],compression=[],sparStress=[];
+    cuts.forEach((c,i)=>{
+      if(c.endZone){tension.push(NaN);compression.push(NaN);return;}
+      const stresses=outerContour(g,y[i],81).map(p=>normalStress(c,p));tension.push(Math.max(0,...stresses));compression.push(Math.max(0,...stresses.map(v=>-v)));
+      sparParts(g,y[i]).forEach(p=>{let entry=sparStress.find(s=>s.index===p.index);if(!entry){entry={index:p.index,material:p.s.material,tension:0,compression:0,shear:null};sparStress.push(entry);}const stress=p.polygons.flat().map(q=>normalStress(c,q,p.s.material.E));entry.tension=Math.max(entry.tension,...stress);entry.compression=Math.max(entry.compression,...stress.map(v=>-v));});
+    });
+    const lineMass=y.map(q=>interp(q,ys,local.map(s=>s.mass))),rho=pla.rho*1e-3,ribs=ribStations(g),ribMass=ribs.map(q=>rho*g.ribThickness*interp(q,ys,local.map(s=>s.ribExtra))),capMass=[0,L].map(q=>rho*g.cap*interp(q,ys,local.map(s=>s.ribExtra))),sparMass=trapz(y.map(q=>interp(q,ys,local.map(s=>s.sparMass))),y),bodyMass=trapz(lineMass,y);
+    const mass={shell:bodyMass-sparMass,ribs:ribMass.reduce((a,b)=>a+b,0),caps:capMass[0]+capMass[1],spars:sparMass,rods:0,tip:load.tipMass};mass.printed=mass.shell+mass.ribs+mass.caps;mass.total=mass.printed+sparMass+load.tipMass;
+    const deflection=Float64Array.from(response,r=>r.displacement[2]),chordwiseDeflection=Float64Array.from(response,r=>r.displacement[0]),twist=Float64Array.from(response,r=>F.dot(r.rotation,r.element.R[0])),elasticIncidenceDeg=frame.rotations.map(r=>r[1]*180/Math.PI);
+    const root=cuts[0],sigTop=Float64Array.from(tension),sigBot=Float64Array.from(compression,v=>-v),V=Float64Array.from(cuts,c=>c.force[2]),M=Float64Array.from(cuts,c=>F.norm(c.moment)),T=Float64Array.from(cuts,c=>c.localMoment[0]);
+    // A normal root cut may exclude physical loads on its inboard side. The
+    // total applied wrench and support equilibrium must still include ALL loads.
+    let appliedWrench=[0,0,0,0,0,0];for(const p of items){const add=(qy,v)=>{const force=[0,0,v],moment=F.cross(F.sub(loadPoint(p,qy),nodes[0]),force);return [...force,...moment];};if(p.kind==='point')appliedWrench=F.add(appliedWrench,add(p.position,p.force));else for(const[a,b]of sourceIntervals(p))appliedWrench=F.add(appliedWrench,F.integrate(q=>add(q,lineForce(p,q)),a,b));}
+    const limitations=['Linear small-displacement Euler–Bernoulli beam; no shear deformation, geometric nonlinearity or section distortion','Locally prismatic projected normal sections; taper, twist and curved reference axis are beam approximations, not a 3-D solid mesh','A continuous C1 reference normal family maps physical loads and surface points; straight frame elements approximate that reference curve','The six-DOF equivalent axis clamp is not a resolved physical oblique root face. Geometrically truncated end cuts are masked; this is only a minimum exclusion, not a validated Saint-Venant decay length','Prescribed aircraft-global +z loads per projected y; no aerodynamic lift, zero-lift angle, stall or aeroelastic redistribution prediction','Perfectly bonded skin/ribs/spars and module seams; external rods and dry/slipping joints not modeled','Reported skin/spar stresses are nominal axial + biaxial normal beam stresses; shear failure, local buckling, bond stress and stress concentrations are unresolved','Natural frequencies, flutter and an overall certified factor of safety are unavailable'];
+    limitations.push('Non-affine torsional warping normal stress is not recovered; nominal affine stress is not a validated local strength field.');
+    const maxTranslation=Math.max(...frame.displacements.map(F.norm)),maxRotation=Math.max(...frame.rotations.map(F.norm)),smallDisplacement=maxTranslation/L<=.05&&maxRotation<=.1;
+    const validity={smallDisplacement,maxTranslation,maxRotation,translationRatio:maxTranslation/L,message:smallDisplacement?'Small-displacement screening passed (translation/span ≤ 5%, rotation ≤ 0.1 rad); this is not a nonlinear validation.':'Outside the admitted small-displacement screening (translation/span > 5% or rotation > 0.1 rad). Linear results are illustrative only; reduce loads or use a geometrically nonlinear model.'};
+    const analysis3D={method:frame.method,limitations,validity,spanStations:nodeY,referenceCoordinates:nodes,nodes,displacements:frame.displacements,rotations:frame.rotations,elasticIncidenceDeg,reactions:frame.reactions,energy:frame.energy,work:frame.work,verification:frame.verification,elements:frame.elements,sectionSamples:samples,resultants:cuts.map((c,i)=>({y:y[i],force:c.force,moment:c.moment,localForce:c.localForce,localMoment:c.localMoment,endZone:c.endZone})),localM2:Float64Array.from(cuts,c=>c.localMoment[1]),localM3:Float64Array.from(cuts,c=>c.localMoment[2]),localT:T,normalStress:{skinTension:tension,skinCompression:compression,spars:sparStress},loadMapping,frameAt,cutAt,evaluateNormalStress:normalStress,locatePhysicalPoint:normals.locate,referenceAt:y=>frameAt(y).reference,sectionReferenceAt:referenceAt,normalSectionAxisIterationChangeMm:axisChange};
+    analysis3D.units={length:'mm',force:'N',moment:'N mm',stress:'MPa',rotation:'rad',energy:'N mm',lineLoad:'N/mm of projected y'};
+    analysis3D.mesh=mesh;analysis3D.appliedWrench={force:appliedWrench.slice(0,3),momentAboutRoot:appliedWrench.slice(3)};
+    // Public referenceAt is the actual straight FE interpolation; the section
+    // reference is its continuous target curve. Keep the older raw section-
+    // sample interpolation explicitly diagnostic, never an assembly reference.
+    analysis3D.rawSectionSampleInterpolationAt=referenceAt;
+    analysis3D.normalReferenceAt=normals.atY;analysis3D.sectionReferenceAt=normals.atY;
+    analysis3D.endZoneAt=y=>{const p=normals.at(y);return endZone(p.reference,p.normal,y);};
+    analysis3D.pointMotionCache=new Map();analysis3D.pointStressCache=new Map();
+    analysis3D.referenceAxis='Straight frame elements approximate a continuous C1 projected-section shear-centre normal family; all six equivalent axis-root DOFs are clamped, not a resolved oblique root face. Local axes are right-handed: e1 span tangent, e2 projected chord direction, e3 = e1 cross e2.';
+    return {version:VERSION,analysis3D,mesh,geometry:g,pla,rod,assembly:asm,load,criteria:crit,sections:local,ySec:ys,y,deflection,chordwiseDeflection,twist,V,M,T,mass,ribs,seams:seams(g),seamsActive:[],appliedForce:appliedWrench[2],appliedMoment:appliedWrench[3],stress:{sigTop,sigBot,spars:sparStress},checks:[],governing:null,verification:frame.verification,fem:{fBending:[],fTorsion:[],w:deflection,phi:twist},sparModel:g.spars.length?{method:'Projected bonded thin-wall shear-flow network + full spatial beam',limitations}:null};
+  }
+  function spatialPointMotion(result,y,localPoint){
+    if(!result.analysis3D)throw Error('A spatial beam result is required.');
+    const a=result.analysis3D,key=[y,...localPoint].join(',');if(a.pointMotionCache.has(key))return a.pointMotionCache.get(key);const point=Geometry.transformPoint(result.geometry,y,localPoint);let foot;try{foot=a.locatePhysicalPoint(point);}catch(error){const out={point,reference:null,resolved:false,nominal:true,station:null,endZone:'mapping',reason:error.message,displacement:null,rotation:null,movedPoint:null};a.pointMotionCache.set(key,out);return out;}
+    if(foot.outside)return {point,reference:foot.reference,resolved:false,nominal:true,station:foot.station,endZone:foot.outside,reason:'Physical point normal foot lies outside the finite beam; motion is not extrapolated or silently clamped.',displacement:null,rotation:null,movedPoint:null};
+    const r=a.frameAt(foot.station),reference=r.reference,displacement=Frame.add(r.displacement,Frame.cross(r.rotation,Frame.sub(point,reference))),endZone=a.endZoneAt(foot.station),out={point,reference,station:foot.station,resolved:true,nominal:true,endZone,displacement,rotation:r.rotation,movedPoint:Frame.add(point,displacement)};a.pointMotionCache.set(key,out);return out;
+  }
+  function normalStressLocationAt3D(result,y,localPoint,material=result.pla){
+    if(!result.analysis3D)throw Error('A spatial beam result is required.');const a=result.analysis3D,E=typeof material==='number'?material:material.E,key=[y,...localPoint,E].join(',');if(a.pointStressCache.has(key))return a.pointStressCache.get(key);const point=Geometry.transformPoint(result.geometry,y,localPoint);let foot;try{foot=a.locatePhysicalPoint(point);}catch(error){const out={value:NaN,resolved:false,nominal:true,station:null,endZone:'mapping',reason:error.message};a.pointStressCache.set(key,out);return out;}
+    if(foot.outside)return {value:NaN,resolved:false,nominal:true,station:foot.station,endZone:foot.outside,reason:'Physical point normal foot lies outside the finite beam.'};
+    const cut=a.cutAt(foot.station);if(cut.endZone)return {value:NaN,resolved:false,nominal:true,station:foot.station,endZone:cut.endZone,reason:'Normal cut intersects an oblique end face; local end stresses are unresolved. This geometric mask is not a validated Saint-Venant decay distance.'};
+    const q=Frame.toLocal(cut.R,Frame.sub(point,cut.reference)),value=E*(cut.strain[0]+cut.strain[1]*q[2]-cut.strain[2]*q[1]),out={value,resolved:true,nominal:true,station:foot.station,endZone:null,reason:'Locally prismatic nominal normal-beam stress, not a resolved 3-D solid stress.'};a.pointStressCache.set(key,out);return out;
+  }
+  function normalStressAt3D(result,y,localPoint,material=result.pla){
+    return normalStressLocationAt3D(result,y,localPoint,material).value;
   }
 
   function argmaxArr(a) {
@@ -1232,11 +1487,12 @@ const WingEngine = (() => {
   }
 
   return {
-    VERSION, MATERIALS, DEFAULT_GEOMETRY, DEFAULT_LOAD, DEFAULT_CRITERIA, DEFAULT_ASSEMBLY,
+    VERSION, MATERIALS, DEFAULT_GEOMETRY, DEFAULT_LOAD, DEFAULT_CRITERIA, DEFAULT_ASSEMBLY,MESH_LIMITS,
     makeGeometry, chordAt, seams, ribStations, moduleBounds, rodCentres, rodRadius, holeRadius, sleeveRadius,
     airfoilSurfaces, verticalOrdinates, outerContour, ringLoops, ringMesh, shellFE, analyseSection, solve,
     shearField, compareAssemblies, interp, camber, normalizeNaca, normalize, stations, warmStation, sectionAt,
-    sparParts:(g,y)=>Spars.parts(g,y,verticalOrdinates),
+    sparParts,airfoilAt,analysisCapability,solveSpatial,spatialPointMotion,normalStressAt3D,normalStressLocationAt3D,
+    stationAt:Geometry.stationAt,transformPoint:Geometry.transformPoint,inversePoint:Geometry.inversePoint,
   };
 })();
 

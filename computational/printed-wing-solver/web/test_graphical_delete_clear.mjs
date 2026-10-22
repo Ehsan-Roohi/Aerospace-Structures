@@ -9,11 +9,14 @@ assert.equal(handle.getAttribute('aria-pressed'),'true');
 assert.equal($('#beamDeleteSelected').disabled,false);
 // Delete while typing must never delete a selected graphical item.
 key($('#beamGeometry input'));assert.equal(d.querySelectorAll('[data-delete-load]').length,1);
-// A real pointerdown/up click selects without sending focus to an edit input.
+// A no-drag click now opens the compact editor and focuses its magnitude field.
 const svg=$('#beamPicture svg');svg.getBoundingClientRect=()=>({left:0,width:760});
 handle.dispatchEvent(new w.MouseEvent('pointerdown',{bubbles:true,clientX:730,button:0}));
 handle.dispatchEvent(new w.MouseEvent('pointerup',{bubbles:true,clientX:730,button:0}));
-assert.equal(d.activeElement.getAttribute('data-load-handle'),'0');
+assert.equal($('#beamLoadEditor').hidden,false);assert.equal(d.activeElement,$('#beamP'));
+key(d.activeElement);assert.equal(d.querySelectorAll('[data-delete-load]').length,1,'Delete in the popover edits text, not the applied load');
+$('#beamLoadEditorClose').click();assert.equal(d.querySelectorAll('[data-delete-load]').length,1,'closing does not delete');
+$('[data-load-handle="0"]').focus();assert.equal(d.activeElement.getAttribute('data-load-handle'),'0');
 key(d.activeElement);assert.equal(d.querySelectorAll('[data-delete-load]').length,0);
 assert.equal($('#beamChip').textContent,'Pending');assert.equal($('#beamCsv').disabled,true);
 $('#beamSolve').click();assert.equal($('#beamChip').textContent,'Solved');

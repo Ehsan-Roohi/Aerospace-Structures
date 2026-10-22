@@ -20,7 +20,7 @@ law. Generating or previewing a table does not apply it; confirm the validated C
 
 ## Selecting load coordinates on the 3-D model
 
-Both wing workspaces open without applied loads. In **Loads**, select a shape and press
+New wing studies start without applied loads; reopening or restoring a saved study retains its recorded loads. In **Loads**, select a shape and press
 **Pick on 3-D wing**. The view switches to undeformed geometry and pauses orbit controls.
 Click visible skin to select a point force's span station and chord fraction; for a line load,
 click its two end stations. Its chord fraction is fixed by the first click throughout the interval.
@@ -36,7 +36,7 @@ Picking fills coordinates and clears magnitude; it does not apply a force. Enter
 (upward positive) and confirm **Add load**. **Esc** or the picking button cancels selection.
 **Show bending & twist** displays the solved, exaggerated deflected/twisted model. The existing
 stress plot remains available. Changing x/c changes the force's lever arm about the shear centre;
-it does not change the prescribed spanwise force or its bending moment. The beam/section
+it does not change the prescribed spanwise force or, in the legacy straight-beam route, its spanwise bending moment. The spatial route uses the full global load-position/moment vector. The beam/section
 idealization still does not resolve local contact stress at the picked point, or turn the load
 into an airfoil pressure distribution. No new load type or direct applied torque is implied.
 
@@ -46,7 +46,7 @@ and how the outer shape of a wing designed in another program can be brought int
 workspace. The code is `wing_study_io.js`; its tests are `test_wing_study_io.mjs`.
 
 > **Compatibility with any external design tool's export is pending: no exported file has been tested.**
-> The Wing Lab reads only its own two formats described here. A file written by another program is
+> The Wing Lab reads only its own two JSON formats described here. DAT airfoil coordinates use the separate profile-upload control, not the JSON study control. A JSON file written by another program is
 > not read directly. To use a design from another program, copy its numbers into the parameter
 > template by hand (see the [manual-transfer worksheet](#manual-transfer-worksheet)).
 
@@ -89,7 +89,7 @@ Every file, pasted text and link is treated as untrusted:
 Text from a file (names, labels, file names) is shown only as plain text. The page does not fetch,
 upload or run anything from a file.
 
-## Native study files: `mie446-wing-study`, version 1
+## Native study files: `mie446-wing-study`, versions 1 and 2
 
 ```json
 {
@@ -105,7 +105,7 @@ upload or run anything from a file.
 | Field | Meaning |
 |---|---|
 | `format` | Always `"mie446-wing-study"`. A design-parameter file or a Beam Lab study is refused with a pointer to the right button. |
-| `version` | The whole number `1`. A newer version is refused ("saved by a newer Wing Lab"); nothing changes. |
+| `version` | `1` for legacy studies; `2` for expanded printed-wing geometry or saved analysis-mesh settings. D.520 remains version 1. Unsupported versions are refused; nothing changes. |
 | `workspace` | `"printed"` or `"d520"`. A study opens only in its own workspace. |
 | `savedAt` | ISO 8601 date and time (optional; an invalid date gives a warning). |
 | `app` | `name`, `engine` (engine version that saved the file), `io` (version of this module). If `engine` differs from the page's engine, a warning says so; the results are recomputed by the page's engine. Other `app` fields give a warning and are ignored. |
@@ -135,6 +135,88 @@ Units: mm, N, N/mm, MPa, g, kg, degrees.
 | `cavityStart`, `cavityEnd` | x/c | 0 < start < end < 1. |
 | `rodFractions` | x/c | List of at most 8 rod positions (the page's maximum), each strictly between 0 and 1; `[]` means no rods (allowed only for one module or bonded seams). Each rod hole (rod plus clearance) must fit inside the airfoil depth at the tip chord, and the printed sleeves of two rods must not overlap there. |
 | `clearance` | mm | Radial rod clearance, 0–0.8. |
+
+### Expanded printed-wing studies: version 2
+
+Use **Airfoils & planform** in Wing Lab to choose profiles and stations; use **Open JSON** for a saved
+native study and confirm **Apply** in its visible preview. **Save JSON** retains editable inputs;
+**Export to notebook** also checks manufacturing compatibility. Neither button produces an STL.
+The Code-to-Print notebook's setup is pinned to **v1.3.0**: open the updated notebook, rerun setup,
+choose **Wing Lab JSON** in Step 2, then run its upload cell. Leave the filename blank to select a
+file, or supply its actual uploaded path. The notebook keeps the source document and SHA-256.
+
+**Airfoils.** The catalogue includes NACA four-digit sections, the non-reflex five-digit generator
+(for example 23012), and coordinate examples from the NACA 6-series, NASA supercritical, Clark,
+Eppler, Drela and Selig families. It is a selection, not every airfoil or a generator for every family.
+Reflex five-digit and other named profiles need validated coordinate data rather than an unsupported
+analytic code. The non-reflex mean-line implementation follows [PDAS's NACA definitions](https://www.pdas.com/naca456mean3.html).
+
+For **Upload DAT**, choose a plain-text file with an optional first-line name and two coordinate
+columns. Selig ordering wraps from trailing edge around the leading edge back to trailing edge;
+Lednicer ordering supplies upper/lower point counts, then each surface from leading to trailing edge.
+See the [UIUC format descriptions and source data](https://m-selig.ae.illinois.edu/ads.html).
+The importer normalizes the chord to 1, resamples the surfaces to a shared cosine grid and retains
+source metadata. Inspect the preview before applying it: crossed, folded, open-leading-edge or
+malformed contours are refused, not repaired by sorting. Uploading coordinates does not supply
+lift/drag polars, Reynolds-number performance or a zero-lift angle.
+
+The following optional fields extend `study.geometry`; create them through the editor rather than
+uploading an incomplete JSON fragment. Omitted fields preserve legacy geometry. Explicit `null`
+does not mean a valid angle, station table or profile.
+
+| Field | Meaning and limits |
+|---|---|
+| `airfoil` | Global profile: `{kind:"naca4",code:"2412"}`, `{kind:"naca5",code:"23012"}`, or `{kind:"coordinates",name,upper,lower,source}`. Each coordinate surface is ordered LE→TE as normalized `[x/c,z/c]` pairs. The legacy `naca` field remains a four-digit compatibility value; it does not replace an explicit profile. |
+| `stations` | 2–9 strictly increasing `{eta,airfoil,incidenceDeg}` entries, root `eta=0` and tip `eta=1` required. `y=eta×semiSpan`; distinct stations must be ≥0.1 mm apart. Root/intermediate/tip profiles and incidence interpolate between the saved stations; section chord still follows the global linear taper. |
+| `twistEnabled` | Boolean, initially false. Enable it before entering nonzero incidence; otherwise every incidence must be zero. Airfoil variation is independent of this switch. |
+| `sweepDeg`, `dihedralDeg` | Degrees; permitted input ranges ±60° and ±45°. Positive sweep moves the reference line aft toward the tip; positive dihedral raises it. These are input limits, not a guarantee that every shape passes structural or fabrication checks. |
+| `sweepReferenceFraction` | Sweep-line chord fraction, 0–1; omitted means 0 (leading edge), preserving old tapered models. Choose 0.25 explicitly for quarter-chord sweep. |
+| `twistReferenceFraction` | Incidence pivot, 0–1; omitted means 0.25. `incidenceDeg` is absolute in the aircraft frame, positive leading-edge-up, within ±30°. Tip incidence below root incidence gives washout. |
+
+Lengths are **mm**, angles **degrees**, aircraft **x is aft, y is projected semi-span, z is up**.
+For local chord `c(y)` and sweep reference `f`, the leading-edge reference offsets are
+`xLE=y tan(sweep)+f(rootChord−c(y))` and `zLE=y tan(dihedral)`. Incidence rotates the section about
+its saved chord pivot. Airfoil sections remain in aircraft x-z planes; they are not automatically
+rotated normal to the dihedral line. Chord-reference sweep and explicit section orientation follow
+the conventions discussed in [NASA's OpenVSP wing guide](https://www.nasa.gov/reference/openvsp-wings/).
+Changing airfoil along span represents aerodynamic twist geometrically; it does not calculate the
+resulting aerodynamic loading. Multi-panel chord breaks, winglets and articulated control surfaces
+are not implied by this station feature.
+
+**Structural model and mesh.** Expanded profiles or nonzero geometric angles use a six-DOF-per-node,
+linear, small-displacement **3-D Euler–Bernoulli spatial beam** with projected normal sections,
+axial response, biaxial bending and torsion. It is not a 3-D solid/shell finite-element model.
+Prescribed point forces are in **N** and line loads in **N/mm per projected y**, acting in aircraft
+global **+z**; negative values act downward. Eccentric application points supply their global
+moment arms. No lift distribution is inferred from incidence or airfoil choice.
+
+This route requires no external rods, full-span perfectly bonded spars, and one piece or explicitly
+fully bonded module seams. Use prescribed custom loads or a tip force, not the legacy flight
+lift/weight/inertia-relief case. Dry/slipping joints and abrupt partial-span spar runouts are refused.
+Nearly span-normal section projections (`|t_y|<0.35`) or unconverged reference-axis iterations are
+also refused. Modes, flutter, shear failure, local buckling, bond/contact stresses and an overall
+certified factor of safety are unavailable in this route; displayed normal stresses are beam stresses,
+not local solid-FEA stresses. The unchanged legacy straight-wing route retains its own assumptions
+and outputs.
+
+Optional `study.analysis={"nElements":40}` records **4–100 requested numerical beam elements**.
+Mandatory ends, profile stations, rib/seam locations, load boundaries and numerical section samples
+can increase the actual count; compare the displayed requested and actual counts. The spatial route
+has a 161-node cap. Refine and compare displacement/stress results rather than assuming a larger
+count certifies the model. Elements are not physical ribs or printable pieces. The notebook archives
+this analysis setting but does not use it to change CAD or rerun the structural solve.
+
+**Fabrication remains a separate check.** The notebook lofts transformed sections, including every
+specified airfoil station, and creates real skin, ribs and same-material integral spars. Ruled CAD
+lofts use at least nine span samples, with additional samples for large incidence changes; browser,
+beam and CAD discretisations are not identical. Thin profiles can fail the inner-cavity check; a
+curved rod path cannot silently become a bent carbon rod. Inspect the imported inventory, validated
+CAD and every OrcaSlicer layer. One-piece printing is optional, not mandatory. Actual connected-solid,
+300 g mass and configured printer-envelope checks remain enforced; the default usable envelope is
+**300 × 300 × 300 mm**. Increasing a setting does not enlarge the printer. Axis permutations are
+checked, not arbitrary-angle packing, support/brim space or physical print quality. Material volume,
+segmentation conservation and estimated fully dense mass use adaptive B-rep surface integration,
+not the display mesh; the slicer still determines the final extrusion paths and print mass.
 
 `study.materials`: `plaKey` (`"pla_upright"` or `"pla_flat"`), `plaOver` (`E`, `ft`, `fc`, `fs` in MPa;
 each `null` for the card value or a positive number), `rodKey` (`"rod_hobby"` or `"rod_t700"`),
@@ -250,7 +332,8 @@ Any other field is refused.
 ### Supported geometry
 
 A straight, unswept, untwisted, zero-dihedral semi-wing with one NACA 4-digit profile and linear
-taper (tip chord ≤ root chord): exactly what the printed-wing solver analyses.
+taper (tip chord ≤ root chord). These are the restrictions of this **neutral version-1 parameter
+importer**, not the broader native version-2 study/editor described above.
 
 ### Rejected features
 
@@ -351,7 +434,8 @@ them.
 Use this worksheet to copy a design from another program into `wing_parameters_template.json`.
 Write the number and its unit exactly as the other program shows them, then enter them in the
 template with the matching `units.length`. If a quantity is not 0 where the worksheet requires 0,
-the Wing Lab cannot analyse that design.
+this neutral version-1 import path cannot accept the design; use the native version-2 editor/profile
+upload and its separate analysis/manufacturing checks instead.
 
 | Quantity (generic name) | Value from the other program | Unit | Template field | Requirement |
 |---|---|---|---|---|

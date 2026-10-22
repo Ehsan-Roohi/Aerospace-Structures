@@ -21,6 +21,11 @@ class PlanformMetrics:
 
 
 def calculate_planform_metrics(parameters: WingParameters) -> PlanformMetrics:
+    """Reference trapezoid metrics: projected y-span and unrotated section chords.
+
+    This conventional nominal reference area is not the 3-D wetted area or the
+    silhouette area of an incidence-rotated/dihedral CAD model.
+    """
     semi_area = 0.5 * (
         parameters.root_chord_mm + parameters.tip_chord_mm
     ) * parameters.semi_span_mm

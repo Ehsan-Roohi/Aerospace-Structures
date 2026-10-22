@@ -9,6 +9,8 @@ import numpy as np
 
 from .airfoil import surface_ordinates_at
 from .config import BondedSparSpec, WingParameters
+from .cad_metrics import adaptive_volume
+from .wing_sections import surface_at, transform_point, loft_stations
 
 
 def spar_polygons(p: WingParameters, s: BondedSparSpec, y: float):
@@ -18,8 +20,8 @@ def spar_polygons(p: WingParameters, s: BondedSparSpec, y: float):
     bx = x + s.bottom_width * (np.arange(9) / 8 - .5)
     if min(tx[0], bx[0]) <= p.cavity_x_start*c or max(tx[-1], bx[-1]) >= p.cavity_x_end*c:
         raise ValueError(f"bonded spar caps leave the cavity at y={y:g} mm")
-    tz = surface_ordinates_at(p.naca, tx/c, chord_mm=c, trailing_edge_mm=p.trailing_edge_mm)[2] - p.skin_mm
-    bz = surface_ordinates_at(p.naca, bx/c, chord_mm=c, trailing_edge_mm=p.trailing_edge_mm)[0] + p.skin_mm
+    tz = surface_at(p, y, tx/c)[2] - p.skin_mm
+    bz = surface_at(p, y, bx/c)[0] + p.skin_mm
     xl, xr = x-s.web_thickness/2, x+s.web_thickness/2
     tu = lambda q: float(np.interp(q, tx, tz)) - s.top_thickness
     bl = lambda q: float(np.interp(q, bx, bz)) + s.bottom_thickness
@@ -51,13 +53,13 @@ def make_bonded_spar(p: WingParameters, s: BondedSparSpec, outer: cq.Shape):
     pieces = []
     for part in range(3):
         wires = []
-        for y in np.linspace(0, s.length, 9):
+        for y in sorted(set(np.linspace(0, s.length, 9)) | set(loft_stations(p, 0, s.length))):
             poly = spar_polygons(p, s, float(y))[part]
             if part in (0,1):
                 poly = [(x, z + (.05 if part==0 else -.05) if j<9 else z) for j,(x,z) in enumerate(poly)]
-            wires.append(cq.Wire.makePolygon([cq.Vector(float(x),float(y),float(z)) for x,z in poly], close=True))
-        pieces.append(cq.Solid.makeLoft(wires, ruled=False))
+            wires.append(cq.Wire.makePolygon([cq.Vector(*transform_point(p,float(y),float(x),float(z))) for x,z in poly], close=True))
+        pieces.append(cq.Solid.makeLoft(wires, ruled=bool(p.airfoil_stations or p.airfoil_profile is not None or p.sweep_deg or p.dihedral_deg or p.sweep_reference_fraction)))
     shape = pieces[0].fuse(*pieces[1:]).intersect(outer).clean()
-    if not shape.isValid() or shape.Volume() <= 0:
+    if not shape.isValid() or adaptive_volume(shape) <= 0:
         raise ValueError("bonded spar CAD is invalid")
     return shape

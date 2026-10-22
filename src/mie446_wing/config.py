@@ -114,11 +114,22 @@ class WingParameters:
     # None retains the original course rule; an empty tuple deliberately means no editable ribs.
     custom_rib_stations_mm: tuple[float, ...] | None = None
     bonded_spars: tuple[BondedSparSpec, ...] = ()
+    # Optional station-defined geometry; absent fields preserve the original v1 CAD exactly.
+    airfoil_stations: tuple[dict[str, Any], ...] = ()
+    airfoil_profile: dict[str, Any] | None = None
+    twist_enabled: bool = False
+    sweep_deg: float = 0.0
+    dihedral_deg: float = 0.0
+    sweep_reference_fraction: float = 0.0
+    twist_reference_fraction: float = 0.25
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "naca", normalize_naca4(self.naca))
         object.__setattr__(self, "spars", tuple(self.spars))
         object.__setattr__(self, "bonded_spars", tuple(self.bonded_spars))
+        object.__setattr__(self, "airfoil_stations", tuple(self.airfoil_stations))
+        from .wing_sections import validate_station_geometry
+        validate_station_geometry(self)
         envelope = self.printer_build_volume_mm
         if not isinstance(envelope, (tuple, list)) or len(envelope) != 3 or any(
             isinstance(v, bool) or not isinstance(v, (int, float)) or not math.isfinite(v) or v <= 0

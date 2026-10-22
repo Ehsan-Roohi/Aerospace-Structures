@@ -397,7 +397,7 @@ await group('native study rejections', () => {
   // envelope: format, version, workspace, unknown fields, size, encoding
   const env = [
     [{ ...doc, format: 'mie446-beam-study' }, /Beam Lab study/], [{ ...doc, format: 'mie446-wing-parameters' }, /use "Import design parameters"/], [{ ...doc, format: 'x' }, /format: must be "mie446-wing-study"/],
-    [{ ...doc, version: 2 }, /newer Wing Lab \(file version 2; this page reads version 1\).*unchanged/], [{ ...doc, version: '1' }, /version: must be the whole number 1/], [{ ...doc, version: 0 }, /not a valid file version/],
+    [{ ...doc, version: 3 }, /newer Wing Lab \(file version 3; this page reads versions 1–2\).*unchanged/], [{ ...doc, version: '1' }, /version: must be the whole number 1/], [{ ...doc, version: 0 }, /not a valid file version/],
     [{ ...doc, workspace: 'd520' }, /this is a D.520 metal wing study: open it in the D.520 metal wing workspace/], [{ ...doc, workspace: 'beam' }, /workspace: must be "printed" or "d520"/],
     [{ ...doc, results: {} }, /results: unknown field/], [{ ...doc, study: undefined }, /study: is missing/], [{ ...doc, study: [] }, /study: must be an object/],
   ];
@@ -625,6 +625,7 @@ await group('module source, template file and browser global', () => {
   const ctx = dom.getInternalVMContext();
   vm.runInContext(read('./load_profiles.js'), ctx, { filename: 'load_profiles.js' });   // the engines need the shared load profiles (v5)
   vm.runInContext(read('./wing_spars.js'),ctx,{filename:'wing_spars.js'});
+  for(const name of ['wing_airfoils.js','wing_geometry.js','wing_frame3d.js'])vm.runInContext(read('./'+name),ctx,{filename:name});
   vm.runInContext(read('./engine.js'), ctx, { filename: 'engine.js' });
   vm.runInContext(read('./metal_wing_engine.js'), ctx, { filename: 'metal_wing_engine.js' });
   vm.runInContext(src, ctx, { filename: 'wing_study_io.js' });

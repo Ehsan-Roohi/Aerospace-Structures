@@ -17,6 +17,7 @@ const TeachingModels = (() => {
     return {D,plate:{w,sigmaA:6*ma/t**2,sigmaB:6*mb/t**2,ratio:w/t,status:status(w)},strip:{w:stripW,sigmaA:stripSigma,ratio:stripW/t,status:status(stripW)},thin:Math.min(a,b)/t>=20};
   }
   function studentResult(r) {
+    if(r.analysis3D)return {...r,bucklingUnresolved:true};
     // Preserve the numerical engine/reference API, but never promote max(plate,
     // cylinder) to a validated wing buckling capacity in the teaching interface.
     const checks=r.checks.filter(c=>c.name!=='Skin compression buckling (screening)');

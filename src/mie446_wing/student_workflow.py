@@ -9,11 +9,13 @@ from typing import Any
 
 from .airfoil import naca4_parameters
 from .config import K2_PRO_BUILD_VOLUME_MM, SparSpec, WingParameters
+from .cad_metrics import adaptive_volume
 from .export import export_build, export_fit_coupon, make_verified_archive
-from .geometry import WingBuild, build_wing
+from .geometry import WingBuild, build_wing, exact_bounding_box
 from .metrics import PlanformMetrics, calculate_planform_metrics
 from .validation import ValidationReport, validate_wing
 from .visualization import plot_design_overview
+from .wing_sections import airfoil_label
 
 
 _TOKEN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]*$")
@@ -221,6 +223,11 @@ class DesignAnalysis:
                 f"{100 * maximum_camber:.0f}% maximum camber at "
                 f"{100 * camber_position:.0f}% chord"
             )
+        if self.parameters.airfoil_profile is not None or self.parameters.airfoil_stations:
+            camber_description = "Station-defined profile coordinates; see the imported root/tip profiles"
+            airfoil_meaning = camber_description
+        else:
+            airfoil_meaning = f"{camber_description}; {100 * thickness:.0f}% thickness"
         check_rows = [
             f"| {'PASS' if check.passed else 'FAIL'} | {check.name} | "
             f"{_markdown_value(check.value)} | {_markdown_value(check.requirement)} |"
@@ -232,9 +239,10 @@ class DesignAnalysis:
                 "",
                 "| Design quantity | Value |",
                 "|---|---:|",
-                f"| Airfoil | NACA {self.parameters.naca} |",
-                f"| Airfoil meaning | {camber_description}; {100 * thickness:.0f}% thickness |",
-                f"| Physical semi-span | {self.parameters.semi_span_mm:.2f} mm |",
+                f"| Airfoil | {_markdown_value(airfoil_label(self.parameters))} |",
+                f"| Airfoil meaning | {airfoil_meaning} |",
+                f"| Sweep / dihedral | {self.parameters.sweep_deg:g}° / {self.parameters.dihedral_deg:g}° |",
+                f"| Projected semi-span (aircraft y) | {self.parameters.semi_span_mm:.2f} mm |",
                 f"| Equivalent full span | {self.metrics.equivalent_full_span_mm:.2f} mm |",
                 f"| Root / tip chord | {self.parameters.root_chord_mm:.2f} / {self.parameters.tip_chord_mm:.2f} mm |",
                 f"| Taper ratio | {self.metrics.taper_ratio:.4f} |",
@@ -249,7 +257,7 @@ class DesignAnalysis:
                 "|---|---|---:|---|",
                 *check_rows,
                 "",
-                "These calculations check the inputs; they do not certify flight or load capacity.",
+                "Reference area/AR/MAC use projected y-span and unrotated section chords, not wetted area or the incidence-rotated CAD silhouette. These geometric checks do not solve the 3-D structure, predict aerodynamic loads, or certify flight/load capacity. Sweep, dihedral and incidence are preserved by CAD, not flattened for manufacturing.",
             ]
         )
 
@@ -266,7 +274,7 @@ class BuiltWingProject:
     @property
     def estimated_fully_dense_mass_g(self) -> float:
         return (
-            self.build.complete.Volume()
+            adaptive_volume(self.build.complete)
             / 1000.0
             * self.build.parameters.pla_density_g_cm3
         )
@@ -274,9 +282,9 @@ class BuiltWingProject:
     def to_markdown(self) -> str:
         module_rows = []
         for index, module in enumerate(self.build.modules, start=1):
-            bounds = module.BoundingBox()
+            bounds = exact_bounding_box(module)
             module_rows.append(
-                f"| {index} | {bounds.xlen:.2f} × {bounds.ylen:.2f} × {bounds.zlen:.2f} | {module.Volume():,.1f} |"
+                f"| {index} | {bounds.xlen:.2f} × {bounds.ylen:.2f} × {bounds.zlen:.2f} | {adaptive_volume(module):,.1f} |"
             )
         validation_rows = [
             f"| {'PASS' if check.passed else 'FAIL'} | {check.name} | "

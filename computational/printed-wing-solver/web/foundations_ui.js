@@ -168,6 +168,7 @@ const Lecture03BeamCases = Object.freeze({
     </aside>
 
     <section class="bl-card bl-model" aria-labelledby="beamModelTitle">
+      <div class="bl-toolbar bl-file-tools" role="group" aria-label="Beam study files"><button type="button" class="bl-btn" id="beamOpenJson">Open JSON</button><button type="button" class="bl-btn" id="beamSaveJson">Save JSON</button><span class="bl-help" id="beamFileStatus" role="status" aria-live="polite">Save current inputs, including unfinished restraints. Open restores an editable study; results are never trusted from a file.</span></div>
       <div class="bl-card-head"><div><h2 id="beamModelTitle">Beam</h2><p class="bl-sub" id="beamModelSub"></p></div>
         <div class="bl-toolbar" role="toolbar" aria-label="Place on the beam"><span>Place</span>
           ${['pin','roller','fixed','hinge'].map(k=>`<button type="button" class="bl-tool" data-place="${k}" aria-pressed="false" title="Click the beam to place a ${k}">${icon[k]}${k[0].toUpperCase()+k.slice(1)}</button>`).join('')}
@@ -1278,7 +1279,7 @@ const Lecture03BeamCases = Object.freeze({
 
   /* -------------------------------------------------- report and export */
 
-  function exportStatus(text){for(const id of ['#beamExportStatus','#beamDiagExportStatus']){const s=$(id);s.dataset.msg=text;s.textContent=text;}}
+  function exportStatus(text){for(const id of ['#beamExportStatus','#beamDiagExportStatus','#beamFileStatus']){const s=$(id);s.dataset.msg=text;s.textContent=text;}}
   function guard() {
     if(!st.solved||!isCurrent()) {exportStatus('Solve the current inputs before exporting; nothing was exported.');return false;}
     return true;
@@ -1290,9 +1291,29 @@ const Lecture03BeamCases = Object.freeze({
   }
   function compareForExport(){const c={};for(const k of ['A','B'])if(st.compare[k])c[k]={label:k,model:st.compare[k].model};return Object.keys(c).length?c:null;}
   function exportText(){const text=Study.exportStudy({result:st.solved.result,notes:$('#beamExplain').value,compare:compareForExport()});if(!window.BeamStrengthUI)return text;const doc=JSON.parse(text);doc.strength=window.BeamStrengthUI.exportConfig();return JSON.stringify(doc,null,2);}
+  function portableText(){
+    if(isCurrent())return exportText();
+    const text=Study.exportDraft({model:stripRows(readDraft()),notes:$('#beamExplain').value,compare:compareForExport()});
+    if(!window.BeamStrengthUI)return text;const doc=JSON.parse(text);doc.strength=window.BeamStrengthUI.exportConfig();return JSON.stringify(doc,null,2);
+  }
+  let beamFileReadTicket=0,beamActiveRead=null;
+  function cancelBeamFileRead(){
+    beamFileReadTicket++;const active=beamActiveRead;beamActiveRead=null;active?.cancel?.();
+    try{active?.reader?.abort();}catch{}
+    $('#beamOpenJson').disabled=false;$('#beamImport').disabled=false;
+  }
+  function beamInputStamp(){const fields=root=>[...root.querySelectorAll('input,select,textarea')].filter(e=>e.type!=='file').map(e=>[e.id||e.name,e.value,e.checked]);try{return canonical(readDraft())+'|'+$('#beamExplain').value+'|'+JSON.stringify(window.BeamStrengthUI?.exportConfig())+'|'+JSON.stringify([fields($('#beamLoadForm')),fields($('#beamLoadEditor'))]);}catch{return JSON.stringify(fields(host));}}
   function importText(text) {
-    let doc;
-    try {doc=Study.parseStudy(text);} catch(e) {exportStatus(`Import refused: ${e.message}`);return false;}
+    cancelBeamFileRead();
+    let doc,strength;
+    try {doc=Study.parseStudy(text);if(window.BeamStrengthUI&&typeof BeamStrength!=='undefined')strength=BeamStrength.normalize(JSON.parse(text).strength??{});} catch(e) {exportStatus(`Import refused: ${e.message} Your current study is unchanged.`);return false;}
+    if(doc.draft){
+      clearTimeout(autoTimer);st.model=clone(doc.model);st.error='';st.draftError='';st.mechanism=null;st.placing=null;st.drag=null;st.editLoad=null;st.editorLoad=null;st.graphicPreview=null;selection=null;st.cache={};
+      showGraphicEditor(false);renderInputs(st.model);$('#beamExplain').value=doc.notes;st.compare={A:null,B:null};
+      if(doc.compare)for(const k of ['A','B'])if(doc.compare[k])try{st.compare[k]={label:k,model:doc.compare[k].model,result:B.solve({...doc.compare[k].model,modes:true}),savedAt:''};}catch(e){}
+      if(window.BeamStrengthUI)window.BeamStrengthUI.importConfig(strength);
+      renderAll();renderCompare();renderNotice();message('Working draft opened. Check supports and loads, then Solve. Any previous results remain marked out of date.');exportStatus('Draft JSON opened. Inputs are editable; no stored results were accepted. Undo restores the previous model.');return true;
+    }
     // All or nothing: the model must solve here before anything on the page is replaced.
     try {B.solve({...doc.model,modes:false});} catch(e) {exportStatus(`Import refused: ${e.message} Your current study is unchanged.`);return false;}
     const snapshots={};
@@ -1305,7 +1326,7 @@ const Lecture03BeamCases = Object.freeze({
     const solved=solve(`Study imported (file version ${doc.version}${doc.legacy?', converted from the earlier study record':''}) and solved again on this page.`);
     renderCompare();
     if(!solved) {exportStatus(`The imported study could not be solved here: ${st.error}`);return false;}
-    if(window.BeamStrengthUI)window.BeamStrengthUI.importConfig(JSON.parse(text).strength);
+    if(window.BeamStrengthUI)window.BeamStrengthUI.importConfig(strength);
     exportStatus(`Imported study (version ${doc.version}). Results were recomputed, not read from the file.`);
     return true;
   }
@@ -1739,6 +1760,7 @@ const Lecture03BeamCases = Object.freeze({
   $('#beamClearAB').onclick=()=>{st.compare={A:null,B:null};renderCompare();};
   $('#beamEqualMassBtn').onclick=equalMass;
   $('#beamDownload').onclick=()=>{if(!guard())return;download('MIE446-beam-study.json',exportText(),'application/json');exportStatus('Study saved as MIE446-beam-study.json (versioned JSON).');};
+  $('#beamSaveJson').onclick=()=>{try{const text=portableText();download('MIE446-beam-study.json',text,'application/json');exportStatus(JSON.parse(text).state==='draft'?'Current inputs saved as JSON (working draft, not a solved result).':'Current study saved as JSON. Inputs will be validated and results recomputed when opened.');}catch(e){exportStatus('JSON not saved: '+e.message+' Correct the invalid input first.');}};
   $('#beamCsv').onclick=()=>exportAction('samples');
   $('#beamCsvReactions').onclick=()=>exportAction('reactions');
   // Downloads offered on the Diagrams tab (and the station table) use the same guarded actions.
@@ -1750,11 +1772,15 @@ const Lecture03BeamCases = Object.freeze({
   $('#beamStationReset').onclick=()=>{st.stationList=null;$('#beamStationListError').hidden=true;renderStationTable();};
   $('#beamGuideOpen').onclick=()=>{openTab('learn');const h=$('#beamGuideTitle');if(h.scrollIntoView)h.scrollIntoView({block:'start'});h.focus();};
   $('#beamImport').onclick=()=>$('#beamImportFile').click();
+  $('#beamOpenJson').onclick=()=>$('#beamImportFile').click();
+  $('#beamImportFile').addEventListener('cancel',()=>{cancelBeamFileRead();exportStatus('Open cancelled. Your current beam study is unchanged.');});
   $('#beamImportFile').onchange=async e=>{
     const file=e.target.files&&e.target.files[0];e.target.value='';
     if(!file) return;
-    if(file.size>Study.LIMITS.fileBytes){exportStatus('Import refused: the file is too large to be a beam study.');return;}
-    try {importText(await file.text());} catch(x) {exportStatus(`Import refused: ${x.message}`);}
+    cancelBeamFileRead();const ticket=beamFileReadTicket,stamp=beamInputStamp();
+    if(file.size>Study.LIMITS.fileBytes){$('#beamOpenJson').disabled=false;$('#beamImport').disabled=false;exportStatus('Import refused: the file is too large to be a beam study.');return;}
+    $('#beamOpenJson').disabled=true;$('#beamImport').disabled=true;exportStatus('Reading '+file.name+'…');
+    try {const text=typeof file.text==='function'?await file.text():await new Promise((resolve,reject)=>{const active=beamActiveRead={cancel:()=>resolve(null)},reader=active.reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=()=>reject(Error('The file could not be read.'));reader.onabort=()=>resolve(null);reader.readAsText(file);});if(ticket===beamFileReadTicket&&text!==null){beamActiveRead=null;if(stamp!==beamInputStamp())exportStatus('Open cancelled: beam inputs changed while the file was being read. Your new edits are kept; select the file again to replace them.');else importText(text);}} catch(x) {if(ticket===beamFileReadTicket)exportStatus(`Import refused: ${x.message} Your current study is unchanged.`);}finally{if(ticket===beamFileReadTicket){beamActiveRead=null;$('#beamOpenJson').disabled=false;$('#beamImport').disabled=false;}}
   };
   $('#beamShare').onclick=async()=>{
     if(!guard()) return;
@@ -1797,5 +1823,5 @@ const Lecture03BeamCases = Object.freeze({
   host.querySelectorAll('[data-stage]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.stage==='beam')));
   // readStation(): the exact values at the current cut station (both limits at a jump), as the readout shows them.
   const readStation=()=>{if(!st.solved)return null;const c=cutInfo();return {x:c.x,limit:c.limit,jump:!!c.jump,left:c.left,right:c.right,at:c.at};};
-  window.BeamLab={version:B.VERSION,state:()=>st,solve,importText,exportText:()=>exportText(),openTab,setCut,readStation,plotImage,snapshot,revert};
+  window.BeamLab={version:B.VERSION,state:()=>st,solve,importText,exportText:()=>exportText(),portableText,openTab,setCut,readStation,plotImage,snapshot,revert};
 })();

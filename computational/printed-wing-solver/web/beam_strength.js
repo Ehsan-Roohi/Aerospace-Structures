@@ -10,6 +10,7 @@ const BeamStrength=(()=>{
   const criterion=raw.criterion??'vonMises';if(!['vonMises','separate'].includes(criterion))throw Error('Unknown strength criterion.');
   const requiredFos=limit(raw.requiredFos,'Required factor of safety');if(requiredFos!==null&&requiredFos<1)throw Error('Required factor of safety must be at least 1.');
   if(raw.layers!==undefined&&(!Array.isArray(raw.layers)||raw.layers.length>2))throw Error('At most two material strength records are allowed.');
+  if(raw.layers?.some(p=>p!==null&&(typeof p!=='object'||Array.isArray(p))))throw Error('Each material strength record must be an object.');
   const layers=Array.from({length:2},(_,i)=>{const p=raw.layers?.[i]??{};return Object.fromEntries(['yield','tension','compression','shear'].map(k=>[k,limit(p[k],`Material ${i+1} ${k} strength`)]));});
   return {version:1,criterion,requiredFos,layers,deflectionLimit:limit(raw.deflectionLimit,'Deflection limit')};
  }

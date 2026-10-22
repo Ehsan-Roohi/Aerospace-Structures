@@ -8,8 +8,10 @@ from math import sqrt
 import cadquery as cq
 import numpy as np
 
-from .airfoil import camber_line, cavity_airfoil_wire, outer_airfoil_wire
+from .airfoil import camber_line, cavity_airfoil_wire, outer_airfoil_wire, _closed_wire, cosine_spacing
+from .wing_sections import section_at, surface_at, transform_point, loft_stations
 from .config import SparSpec, WingParameters
+from .cad_metrics import adaptive_volume
 from .bonded_spar import make_bonded_spar, validate_spar_layout
 from .metrics import PlanformMetrics, calculate_planform_metrics
 
@@ -28,22 +30,30 @@ class WingBuild:
     bonded_spars: tuple[cq.Shape, ...] = ()
 
 
+def exact_bounding_box(shape: cq.Shape) -> cq.BoundBox:
+    """Analytical B-rep bounds, independent of any attached preview/STL mesh.
+
+    OCC's default bounding helper may expand an existing triangulation by its
+    deflection. Turning triangulation off prevents export/preview from changing
+    the nominal printer-fit decision for the same unchanged CAD shape.
+    """
+    from OCP.Bnd import Bnd_Box
+    from OCP.BRepBndLib import BRepBndLib
+    box=Bnd_Box()
+    BRepBndLib.AddOptimal_s(shape.wrapped,box,False,False)
+    return cq.BoundBox(box)
+
+
 def _loft_stations(start: float, end: float, count: int) -> np.ndarray:
     return np.linspace(start, end, count)
 
 
 def _make_outer(parameters: WingParameters) -> cq.Shape:
     wires = [
-        outer_airfoil_wire(
-            parameters.naca,
-            chord_mm=parameters.chord_at(float(y)),
-            y_mm=float(y),
-            trailing_edge_mm=parameters.trailing_edge_mm,
-            point_count=parameters.airfoil_point_count,
-        )
-        for y in _loft_stations(0.0, parameters.semi_span_mm, parameters.loft_station_count)
+        _section_wire(parameters, float(y))
+        for y in loft_stations(parameters, 0.0, parameters.semi_span_mm)
     ]
-    outer = cq.Solid.makeLoft(wires, ruled=False)
+    outer = cq.Solid.makeLoft(wires, ruled=_generalized(parameters))
     if not outer.isValid():
         raise RuntimeError("outer wing loft is invalid")
     return outer
@@ -53,22 +63,37 @@ def _make_cavity(parameters: WingParameters) -> cq.Shape:
     start = parameters.root_tip_cap_mm
     end = parameters.semi_span_mm - parameters.root_tip_cap_mm
     wires = [
-        cavity_airfoil_wire(
-            parameters.naca,
-            chord_mm=parameters.chord_at(float(y)),
-            y_mm=float(y),
-            trailing_edge_mm=parameters.trailing_edge_mm,
-            skin_mm=parameters.skin_mm,
-            x_start=parameters.cavity_x_start,
-            x_end=parameters.cavity_x_end,
-            point_count=parameters.airfoil_point_count,
-        )
-        for y in _loft_stations(start, end, parameters.loft_station_count)
+        _section_wire(parameters, float(y), cavity=True)
+        for y in loft_stations(parameters, start, end)
     ]
-    cavity = cq.Solid.makeLoft(wires, ruled=False)
+    cavity = cq.Solid.makeLoft(wires, ruled=_generalized(parameters))
     if not cavity.isValid():
         raise RuntimeError("inner cavity loft is invalid")
     return cavity
+
+
+def _generalized(p):
+    return bool(p.airfoil_stations or p.airfoil_profile is not None or p.sweep_deg or p.dihedral_deg or p.sweep_reference_fraction)
+
+
+def _section_wire(p, y, *, cavity=False):
+    if not _generalized(p):
+        args = dict(chord_mm=p.chord_at(y), y_mm=y, trailing_edge_mm=p.trailing_edge_mm, point_count=p.airfoil_point_count)
+        if cavity:
+            return cavity_airfoil_wire(p.naca, skin_mm=p.skin_mm, x_start=p.cavity_x_start, x_end=p.cavity_x_end, **args)
+        return outer_airfoil_wire(p.naca, **args)
+    if cavity:
+        x = cosine_spacing(max(31, p.airfoil_point_count//2), p.cavity_x_start, p.cavity_x_end)
+        lo, _, up = surface_at(p, y, x)
+        up, lo = up-p.skin_mm, lo+p.skin_mm
+        if np.min(up-lo) < .8:
+            raise ValueError(f"inner cavity collapses at station {y:g} mm; choose a thicker profile/chord or thinner permissible skin")
+        xu = xl = x*p.chord_at(y)
+    else:
+        s = section_at(p, y)
+        xu, xl, up, lo = s.x_upper, s.x_lower, s.z_upper, s.z_lower
+    return _closed_wire([cq.Vector(*transform_point(p, y, float(x), float(z))) for x,z in zip(xu,up)],
+                        [cq.Vector(*transform_point(p, y, float(x), float(z))) for x,z in zip(xl,lo)])
 
 
 def _box_for_y_interval(shape: cq.Shape, y0: float, y1: float, margin: float = 2.0) -> cq.Solid:
@@ -81,9 +106,13 @@ def _box_for_y_interval(shape: cq.Shape, y0: float, y1: float, margin: float = 2
     )
 
 
-def _make_rib(parameters: WingParameters, center_y: float) -> cq.Shape:
+def _make_rib(parameters: WingParameters, center_y: float, outer=None) -> cq.Shape:
     y0 = center_y - parameters.rib_thickness_mm / 2.0
     y1 = center_y + parameters.rib_thickness_mm / 2.0
+    if _generalized(parameters) and outer is not None:
+        # Use the actual loft exterior rather than an independently lofted rib
+        # whose boundary could stray outside a twisted/morphing wing.
+        return outer.intersect(_box_for_y_interval(outer, y0, y1)).clean()
     wires = [
         outer_airfoil_wire(
             parameters.naca,
@@ -95,12 +124,22 @@ def _make_rib(parameters: WingParameters, center_y: float) -> cq.Shape:
         for y in (y0, y1)
     ]
     rib = cq.Solid.makeLoft(wires, ruled=True)
-    if not rib.isValid() or rib.Volume() <= 0:
+    if not rib.isValid() or adaptive_volume(rib) <= 0:
         raise RuntimeError(f"rib at y={center_y:.3f} mm is invalid")
     return rib
 
 
 def _spar_endpoints(parameters: WingParameters, spar: SparSpec) -> tuple[cq.Vector, cq.Vector]:
+    if _generalized(parameters):
+        def point(y):
+            c = float(surface_at(parameters, y, np.asarray([spar.chord_fraction]))[1][0])
+            return cq.Vector(*transform_point(parameters, y, spar.chord_fraction*parameters.chord_at(y), c))
+        root, tip = point(0), point(parameters.semi_span_mm)
+        for y in loft_stations(parameters, 0, parameters.semi_span_mm):
+            expected = root.add(tip.sub(root).multiply(float(y)/parameters.semi_span_mm))
+            if point(float(y)).sub(expected).Length > .01:
+                raise ValueError("External straight rods cannot follow this twisted/morphing curved path. Remove rods or design a straight rod path explicitly; no bent carbon rod is substituted.")
+        return root, tip
     fraction = np.asarray(spar.chord_fraction)
     yc, _ = camber_line(parameters.naca, fraction)
     camber_fraction = float(yc)
@@ -134,7 +173,7 @@ def _cylinder_between(
 def _make_sleeve(parameters: WingParameters, spar: SparSpec) -> cq.Shape:
     start, end = _spar_endpoints(parameters, spar)
     sleeve = _cylinder_between(start, end, spar.sleeve_radius_mm)
-    if not sleeve.isValid() or sleeve.Volume() <= 0:
+    if not sleeve.isValid() or adaptive_volume(sleeve) <= 0:
         raise RuntimeError(f"sleeve at x/c={spar.chord_fraction:.3f} is invalid")
     return sleeve
 
@@ -142,10 +181,10 @@ def _make_sleeve(parameters: WingParameters, spar: SparSpec) -> cq.Shape:
 def _fuse_all(base: cq.Shape, additions: tuple[cq.Shape, ...]) -> cq.Shape:
     if not additions:
         return base
-    result = base.fuse(*additions, glue=True).clean()
-    if not result.isValid() or len(result.Solids()) != 1:
-        result = base.fuse(*additions).clean()
-    return result
+    # Ribs, sleeves and spars overlap the skin: this is a full Boolean union,
+    # not a coincident-face glue operation. GlueShift can return a valid-looking
+    # single solid while omitting the internal additions altogether.
+    return base.fuse(*additions).clean()
 
 
 def _cut_spar_holes(body: cq.Shape, parameters: WingParameters) -> cq.Shape:
@@ -162,7 +201,7 @@ def _segment(body: cq.Shape, parameters: WingParameters) -> tuple[cq.Shape, ...]
     for y0, y1 in zip(bounds[:-1], bounds[1:], strict=True):
         clip = _box_for_y_interval(body, y0, y1)
         module = body.intersect(clip).clean()
-        if not module.isValid() or module.Volume() <= 0:
+        if not module.isValid() or adaptive_volume(module) <= 0:
             raise RuntimeError(f"module from y={y0:.3f} to {y1:.3f} mm is invalid")
         modules.append(module)
     return tuple(modules)
@@ -177,15 +216,15 @@ def build_wing(parameters: WingParameters | None = None) -> WingBuild:
     outer = _make_outer(parameters)
     cavity = _make_cavity(parameters)
     skin = outer.cut(cavity).clean()
-    if not skin.isValid() or skin.Volume() <= 0:
+    if not skin.isValid() or adaptive_volume(skin) <= 0:
         raise RuntimeError("outer minus cavity did not create a valid printable skin")
 
-    ribs = tuple(_make_rib(parameters, station) for station in parameters.rib_stations_mm())
+    ribs = tuple(_make_rib(parameters, station, outer) for station in parameters.rib_stations_mm())
     sleeves = tuple(_make_sleeve(parameters, spar) for spar in parameters.spars)
     bonded_spars = tuple(make_bonded_spar(parameters, spar, outer) for spar in parameters.bonded_spars)
     body = _fuse_all(skin, sleeves + ribs + bonded_spars)
     complete = _cut_spar_holes(body, parameters)
-    if not complete.isValid() or complete.Volume() <= 0:
+    if not complete.isValid() or adaptive_volume(complete) <= 0:
         raise RuntimeError("final wing geometry is invalid")
     modules = _segment(complete, parameters)
     return WingBuild(

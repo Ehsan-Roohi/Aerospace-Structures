@@ -1,0 +1,11 @@
+// Numerical section/GJ refinement is separate from the FE longitudinal mesh.
+// This checks convergence, not certification against an independent solid FE.
+import assert from 'node:assert/strict';import{createRequire}from'node:module';
+const require=createRequire(import.meta.url),E=require('./engine.js');let checks=0;
+const g={naca:'0012',airfoil:{kind:'naca4',code:'0012'},semiSpan:600,rootChord:120,tipChord:90,modules:1,rodFractions:[],interiorRibs:0,sweepDeg:12,dihedralDeg:6,twistEnabled:true,stations:[{eta:0,airfoil:{kind:'naca4',code:'0012'},incidenceDeg:2},{eta:1,airfoil:{kind:'naca4',code:'0012'},incidenceDeg:-2}]},input={geometry:g,load:{kind:'tip',tipForce:2,tipFraction:.7},nElements:40,nGrid:11},r=[3,7,15].map(nSections=>E.solve({...input,nSections}));
+const twist=r.map(q=>q.twist.at(-1)),energy=r.map(q=>q.analysis3D.energy),u=r.map(q=>q.analysis3D.displacements.at(-1));
+assert.ok(Math.abs(twist[2]-twist[1])<.2*Math.abs(twist[1]-twist[0]),'section/GJ torsion refinement must reduce change');checks++;
+assert.ok(Math.abs(energy[2]-energy[1])<.2*Math.abs(energy[1]-energy[0]),'coupled energy refinement must reduce change');checks++;
+assert.ok(Math.hypot(...u[2].map((v,i)=>v-u[1][i]))/Math.hypot(...u[2])<5e-5,'medium/fine translation difference');checks++;
+for(const q of r){const v=q.analysis3D.verification;assert.ok(v.forceError<1e-6*Math.hypot(...v.totalForce),'relative all-load force balance');assert.ok(v.momentError<1e-6*Math.hypot(...v.totalMoment),'relative all-load moment balance');assert.ok(v.energyError<1e-6,'consistent condensed work');assert.equal(q.analysis3D.elasticIncidenceDeg.length,q.analysis3D.rotations.length);checks+=4;for(let i=0;i<q.analysis3D.rotations.length;i++){assert.equal(q.analysis3D.elasticIncidenceDeg[i],q.analysis3D.rotations[i][1]*180/Math.PI);checks++;}for(let i=0;i<q.y.length;i++){assert.equal(q.analysis3D.localM2[i],q.analysis3D.resultants[i].localMoment[1]);assert.equal(q.analysis3D.localM3[i],q.analysis3D.resultants[i].localMoment[2]);assert.equal(q.analysis3D.localT[i],q.analysis3D.resultants[i].localMoment[0]);checks+=3;}}
+console.log(`Spatial section refinement PASS: ${checks} section/GJ convergence, signed moments, streamwise incidence, all-load equilibrium and work checks; twists=${twist.join(',')}.`);

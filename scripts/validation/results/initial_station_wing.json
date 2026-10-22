@@ -1,0 +1,971 @@
+{
+  "format": "mie446-case-specific-solid-beam-verification",
+  "version": 1,
+  "scope": "Numerical comparison on this construction and these two load channels, not experimental printed-material validation or an arbitrary parameter-box bound.",
+  "geometry": {
+    "naca": "2412",
+    "semiSpan": 240,
+    "rootChord": 60,
+    "tipChord": 48,
+    "skin": 1.2,
+    "ribThickness": 1.6,
+    "modules": 1,
+    "te": 1.2,
+    "interiorRibs": 3,
+    "customInteriorRibs": [
+      80,
+      160
+    ],
+    "interfaceOffset": 4,
+    "cap": 2,
+    "cavityStart": 0.1,
+    "cavityEnd": 0.78,
+    "rodFractions": [],
+    "rodDiameter": 4,
+    "clearance": 0.25,
+    "sleeveWall": 1.2,
+    "spars": [
+      {
+        "fraction": 0.35,
+        "length": 240,
+        "topWidth": 4,
+        "topThickness": 0.8,
+        "bottomWidth": 4,
+        "bottomThickness": 0.8,
+        "webThickness": 0.6,
+        "material": {
+          "name": "Printed PLA \u00b7 teaching input",
+          "E": 2000,
+          "nu": 0.35,
+          "rho": 1.24,
+          "ft": 15,
+          "fc": 50,
+          "fs": 10
+        }
+      }
+    ],
+    "airfoil": {
+      "kind": "naca5",
+      "code": "23018"
+    },
+    "sweepDeg": 12,
+    "dihedralDeg": 6,
+    "sweepReferenceFraction": 0.25,
+    "twistReferenceFraction": 0.25,
+    "twistEnabled": true,
+    "stations": [
+      {
+        "eta": 0,
+        "airfoil": {
+          "kind": "naca5",
+          "code": "23018"
+        },
+        "incidenceDeg": 2
+      },
+      {
+        "eta": 1,
+        "airfoil": {
+          "kind": "naca4",
+          "code": "0018"
+        },
+        "incidenceDeg": -2
+      }
+    ]
+  },
+  "material": {
+    "key": "pla_upright",
+    "kind": "pla",
+    "name": "Printed PLA Pro \u2014 span along printer Z",
+    "short": "PLA upright",
+    "E": 2000,
+    "nu": 0.35,
+    "rho": 1.24,
+    "ft": 15,
+    "fc": 50,
+    "fs": 10,
+    "G": null,
+    "source": "Illustrative PLA Pro upright card, not a measured material or validated allowable. The 15 MPa tensile entry is a teaching assumption, not a result from your class filament. Gonabadi, Yadav & Bull (2020) is background on print anisotropy, not validation of these numbers. Replace E and strengths with mechanical coupon data; a rod-clearance coupon tests fit only."
+  },
+  "root_chord_slenderness": 4.0,
+  "units": {
+    "length": "mm",
+    "force": "N",
+    "stress": "MPa",
+    "moment": "N mm",
+    "rotation": "rad",
+    "energy": "N mm"
+  },
+  "software": {
+    "python": "3.12.14",
+    "packages": {
+      "gmsh": "4.15.2",
+      "scikit-fem": "12.0.2",
+      "pyamg": "5.3.0",
+      "numpy": "2.5.4",
+      "scipy": "1.18.1",
+      "cadquery": "2.8.0",
+      "cadquery-ocp": "7.9.3.1.1",
+      "vtk": "9.6.2"
+    }
+  },
+  "criteria": {
+    "mesh_volume_relative": 0.005,
+    "force_moment_relative": 1e-05,
+    "residual_relative": 1e-07,
+    "symmetry_relative": 1e-12,
+    "energy_relative": 1e-07,
+    "compliance_convergence": 0.02,
+    "nominal_stress_convergence": 0.05,
+    "beam_compliance": 0.1,
+    "beam_nominal_stress": 0.15,
+    "rotation_mesh_relative": 0.02,
+    "rotation_beam_relative": 0.1,
+    "near_zero_rotation_absolute_rad": 1e-07,
+    "near_zero_translation_absolute_mm": 1e-05
+  },
+  "adaptive_cad_volume_mm3": 41003.97467006534,
+  "raw_nonadaptive_cad_volume_mm3": 41215.73818108608,
+  "adaptive_volume_convergence": [
+    {
+      "eps": 1e-05,
+      "reported_error": 4.1863114908617884e-15,
+      "volume_mm3": 41003.97467006534
+    },
+    {
+      "eps": 1e-07,
+      "reported_error": 2.5595023901425127e-15,
+      "volume_mm3": 41003.974670065334
+    },
+    {
+      "eps": 1e-09,
+      "reported_error": 2.5636561040399932e-15,
+      "volume_mm3": 41003.97467006534
+    }
+  ],
+  "meshes": [
+    {
+      "h_mm": 8,
+      "tetrahedra": 16529,
+      "displacement_dofs": 94431,
+      "mesh_volume_mm3": 41003.42753897395,
+      "volume_relative_error": 1.334336721736662e-05,
+      "geometry_admitted": true,
+      "uniform": {
+        "load_channel": "uniform_tip_2N",
+        "load_definition": {
+          "kind": "uniform_vertical_tip_traction",
+          "traction_N_per_mm2": 0.006865600321370003
+        },
+        "mesh_size_max_mm": 8.0,
+        "dofs": 94431,
+        "free_dofs": 93999,
+        "tip_area_mm2": 291.3073739196208,
+        "tip_centroid_mm": [
+          74.8725509410358,
+          239.99999999999994,
+          25.534378730950024
+        ],
+        "force_N": [
+          0.0,
+          0.0,
+          1.9999999999999998
+        ],
+        "applied_moment_Nmm": [
+          479.99999999999983,
+          -149.74510188207145,
+          0.0
+        ],
+        "requested_force_N": [
+          0.0,
+          0.0,
+          2.0
+        ],
+        "requested_moment_Nmm": [
+          479.9999999999999,
+          -149.7451018820716,
+          0.0
+        ],
+        "load_force_error_relative": 1.1102230246251565e-16,
+        "load_moment_error_relative": 3.043970171570045e-16,
+        "reaction_N": [
+          2.6417012240903537e-11,
+          -1.6710538959519017e-09,
+          -2.000000001758259
+        ],
+        "reaction_moment_Nmm": [
+          -480.0000005377574,
+          149.74510201461305,
+          -6.745978265001586e-08
+        ],
+        "force_balance_relative": 1.2129091086009742e-09,
+        "moment_balance_relative": 1.1096388607084901e-09,
+        "free_residual_relative": 1.9074173778422694e-08,
+        "symmetry_relative": 8.677758223536065e-17,
+        "energy_Nmm": 3.1696647574913857,
+        "work_Nmm": 6.339329529719837,
+        "energy_relative": 2.324704169553914e-09,
+        "theta_work_rad": null,
+        "compliance_mm_per_N": 1.5848323824299593,
+        "tip_mean_displacement_mm": [
+          0.09052469171092518,
+          -0.35153386879460813,
+          3.1696647648599177
+        ],
+        "tip_rigid_fit": {
+          "centre_mm": [
+            74.87255094103573,
+            239.99999999999994,
+            25.534378730950024
+          ],
+          "translation_mm": [
+            0.09052469171092516,
+            -0.35153386879460785,
+            3.169664764859914
+          ],
+          "rotation_rad": [
+            0.020107806553940843,
+            -0.004582027192161598,
+            -0.0009122563406274709
+          ],
+          "area_mm2": 291.3073739196208,
+          "weighted_warping_residual_mm": 0.00041920711373186805,
+          "interpretation": "Least-squares kinematics; rotation is not assumed equal to traction work-conjugate rotation"
+        },
+        "ring_rigid_fit": {
+          "centre_mm": [
+            69.03727454270617,
+            203.99999999999997,
+            21.791676884285277
+          ],
+          "translation_mm": [
+            0.07475992749601446,
+            -0.2712680887073453,
+            2.421896754791864
+          ],
+          "rotation_rad": [
+            0.01939615487473967,
+            -0.004294585634913112,
+            -0.0008979259296972297
+          ],
+          "area_mm2": 147.6035173590153,
+          "weighted_warping_residual_mm": 0.0009805744337602947,
+          "interpretation": "Least-squares kinematics; rotation is not assumed equal to traction work-conjugate rotation",
+          "aircraft_y_mm": 204
+        },
+        "solver": "CG + six-rigid-body-mode smoothed aggregation; matrix/AMG reused across RHS",
+        "iterations": 690,
+        "independently_recomputed_refinement_residuals": [
+          8.156183910734935e-08,
+          1.9074173778422694e-08
+        ],
+        "elapsed_seconds": 78.28019230003702,
+        "total_elapsed_seconds": 101.19849500001874,
+        "criteria": {
+          "mesh_volume_relative": 0.005,
+          "force_moment_relative": 1e-05,
+          "residual_relative": 1e-07,
+          "symmetry_relative": 1e-12,
+          "energy_relative": 1e-07,
+          "compliance_convergence": 0.02,
+          "nominal_stress_convergence": 0.05,
+          "beam_compliance": 0.1,
+          "beam_nominal_stress": 0.15,
+          "rotation_mesh_relative": 0.02,
+          "rotation_beam_relative": 0.1,
+          "near_zero_rotation_absolute_rad": 1e-07,
+          "near_zero_translation_absolute_mm": 1e-05
+        },
+        "volume_rule": "exact polynomial degree two on affine P2 solid stiffness",
+        "mesh_sha256": "84886e1f54e130189cb7860392006a72a1902be447cbfc6ae88400bd1adb51fa",
+        "clamp": "Complete physical root face, all three solid translations fixed",
+        "limitations": [
+          "No root/load-edge peak stress certification",
+          "Interior normal stress is nominal; no validated Saint-Venant decay length",
+          "LS rotations are kinematic diagnostics, not assumed energy-conjugate rotations"
+        ],
+        "algebra_admitted": true,
+        "uniform_quadrature_crosscheck": {
+          "original_degree4_compliance_mm_per_N": 1.584832383981931,
+          "current_exact_degree2_compliance_mm_per_N": 1.5848323824299593,
+          "relative_difference": 9.792654465101691e-10,
+          "numerical_equivalence_threshold": 1e-06,
+          "passed": true
+        }
+      },
+      "torque": {
+        "load_channel": "pure_tip_My_50Nmm",
+        "load_definition": {
+          "kind": "linear_x_vertical_tip_traction",
+          "slope_N_per_mm3": -0.0012551600396611287,
+          "centre_x_mm": 74.8725509410358,
+          "second_area_moment_mm4": 39835.55755447658
+        },
+        "mesh_size_max_mm": 8.0,
+        "dofs": 94431,
+        "free_dofs": 93999,
+        "tip_area_mm2": 291.3073739196208,
+        "tip_centroid_mm": [
+          74.8725509410358,
+          239.99999999999994,
+          25.534378730950024
+        ],
+        "force_N": [
+          0.0,
+          0.0,
+          1.585902455074822e-14
+        ],
+        "applied_moment_Nmm": [
+          3.8732708133550925e-12,
+          49.99999999999879,
+          0.0
+        ],
+        "requested_force_N": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "requested_moment_Nmm": [
+          0.0,
+          50.0,
+          0.0
+        ],
+        "load_force_error_relative": 7.92951227537411e-15,
+        "load_moment_error_relative": 8.114506497350336e-14,
+        "reaction_N": [
+          -2.294082527838203e-11,
+          4.876345420528781e-11,
+          1.1494932219621723e-10
+        ],
+        "reaction_moment_Nmm": [
+          2.360631501557755e-08,
+          -50.000000009208264,
+          9.470100781052752e-09
+        ],
+        "force_balance_relative": 6.348454304712384e-11,
+        "moment_balance_relative": 5.410871204124862e-10,
+        "free_residual_relative": 1.564922626137329e-09,
+        "symmetry_relative": 8.677758223536065e-17,
+        "energy_Nmm": 0.09275460707077565,
+        "work_Nmm": 0.18550921415298427,
+        "energy_relative": 6.163017690247425e-11,
+        "theta_work_rad": 0.0037101842830596856,
+        "compliance_mm_per_N": null,
+        "tip_mean_displacement_mm": [
+          -0.0017042566264762115,
+          0.012693706977234763,
+          -0.11455005252794113
+        ],
+        "tip_rigid_fit": {
+          "centre_mm": [
+            74.87255094103573,
+            239.99999999999994,
+            25.534378730950024
+          ],
+          "translation_mm": [
+            -0.0017042566264762107,
+            0.012693706977234742,
+            -0.11455005252794087
+          ],
+          "rotation_rad": [
+            -0.00020411920290176744,
+            0.0037051827327337487,
+            0.0003905736368052942
+          ],
+          "area_mm2": 291.3073739196208,
+          "weighted_warping_residual_mm": 0.0012937316214599957,
+          "interpretation": "Least-squares kinematics; rotation is not assumed equal to traction work-conjugate rotation"
+        },
+        "ring_rigid_fit": {
+          "centre_mm": [
+            69.03727454270617,
+            203.99999999999997,
+            21.791676884285277
+          ],
+          "translation_mm": [
+            -0.001538994082791447,
+            0.009585542752932075,
+            -0.08535544003709507
+          ],
+          "rotation_rad": [
+            -0.00017713546109862643,
+            0.0028699853503265614,
+            0.00030775798486525584
+          ],
+          "area_mm2": 147.6035173590153,
+          "weighted_warping_residual_mm": 0.0006878937427913774,
+          "interpretation": "Least-squares kinematics; rotation is not assumed equal to traction work-conjugate rotation",
+          "aircraft_y_mm": 204
+        },
+        "solver": "CG + six-rigid-body-mode smoothed aggregation; matrix/AMG reused across RHS",
+        "iterations": 642,
+        "independently_recomputed_refinement_residuals": [
+          1.564922626137329e-09
+        ],
+        "elapsed_seconds": 70.67339830001583,
+        "total_elapsed_seconds": 172.34136650001165,
+        "criteria": {
+          "mesh_volume_relative": 0.005,
+          "force_moment_relative": 1e-05,
+          "residual_relative": 1e-07,
+          "symmetry_relative": 1e-12,
+          "energy_relative": 1e-07,
+          "compliance_convergence": 0.02,
+          "nominal_stress_convergence": 0.05,
+          "beam_compliance": 0.1,
+          "beam_nominal_stress": 0.15,
+          "rotation_mesh_relative": 0.02,
+          "rotation_beam_relative": 0.1,
+          "near_zero_rotation_absolute_rad": 1e-07,
+          "near_zero_translation_absolute_mm": 1e-05
+        },
+        "volume_rule": "exact polynomial degree two on affine P2 solid stiffness",
+        "mesh_sha256": "84886e1f54e130189cb7860392006a72a1902be447cbfc6ae88400bd1adb51fa",
+        "clamp": "Complete physical root face, all three solid translations fixed",
+        "limitations": [
+          "No root/load-edge peak stress certification",
+          "Interior normal stress is nominal; no validated Saint-Venant decay length",
+          "LS rotations are kinematic diagnostics, not assumed energy-conjugate rotations"
+        ],
+        "algebra_admitted": true
+      }
+    },
+    {
+      "h_mm": 5,
+      "tetrahedra": 24089,
+      "displacement_dofs": 137268,
+      "mesh_volume_mm3": 40918.97455740289,
+      "volume_relative_error": 0.0020729725190398174,
+      "geometry_admitted": true,
+      "uniform": {
+        "load_channel": "uniform_tip_2N",
+        "load_definition": {
+          "kind": "uniform_vertical_tip_traction",
+          "traction_N_per_mm2": 0.006848383307324311
+        },
+        "mesh_size_max_mm": 5.0,
+        "dofs": 137268,
+        "free_dofs": 136713,
+        "tip_area_mm2": 292.03972824666664,
+        "tip_centroid_mm": [
+          74.89379374538267,
+          239.99999999999994,
+          25.535120545649615
+        ],
+        "force_N": [
+          0.0,
+          0.0,
+          2.0
+        ],
+        "applied_moment_Nmm": [
+          480.00000000000006,
+          -149.78758749076536,
+          0.0
+        ],
+        "requested_force_N": [
+          0.0,
+          0.0,
+          2.0
+        ],
+        "requested_moment_Nmm": [
+          479.9999999999999,
+          -149.78758749076533,
+          0.0
+        ],
+        "load_force_error_relative": 0.0,
+        "load_moment_error_relative": 3.438201501776775e-16,
+        "reaction_N": [
+          3.7083867195428565e-10,
+          -1.3539865172716607e-10,
+          -2.000000002115736
+        ],
+        "reaction_moment_Nmm": [
+          -480.0000002659883,
+          149.78758760747488,
+          -3.7763439561824814e-08
+        ],
+        "force_balance_relative": 1.0761265106391952e-09,
+        "moment_balance_relative": 5.825271589782691e-10,
+        "free_residual_relative": 1.8834976716789864e-08,
+        "symmetry_relative": 7.993800661876415e-17,
+        "energy_Nmm": 3.173843400831318,
+        "work_Nmm": 6.347686802867258,
+        "energy_relative": 1.897734115111721e-10,
+        "theta_work_rad": null,
+        "compliance_mm_per_N": 1.5869217007168146,
+        "tip_mean_displacement_mm": [
+          0.09017010340788521,
+          -0.3519865760835252,
+          3.173843401433629
+        ],
+        "tip_rigid_fit": {
+          "centre_mm": [
+            74.89379374538262,
+            240.00000000000014,
+            25.535120545649622
+          ],
+          "translation_mm": [
+            0.09017010340788541,
+            -0.35198657608352507,
+            3.173843401433634
+          ],
+          "rotation_rad": [
+            0.020119717332065523,
+            -0.004591488178563655,
+            -0.0009112368524806236
+          ],
+          "area_mm2": 292.03972824666664,
+          "weighted_warping_residual_mm": 0.00044004909707623505,
+          "interpretation": "Least-squares kinematics; rotation is not assumed equal to traction work-conjugate rotation"
+        },
+        "ring_rigid_fit": {
+          "centre_mm": [
+            69.07675783914004,
+            204.00000000000048,
+            21.785403020944756
+          ],
+          "translation_mm": [
+            0.07451817662556744,
+            -0.27153795642358314,
+            2.425407100378042
+          ],
+          "rotation_rad": [
+            0.019406801279099106,
+            -0.004302824098603606,
+            -0.0008966971188049677
+          ],
+          "area_mm2": 147.32938406279442,
+          "weighted_warping_residual_mm": 0.0009467444993680277,
+          "interpretation": "Least-squares kinematics; rotation is not assumed equal to traction work-conjugate rotation",
+          "aircraft_y_mm": 204
+        },
+        "solver": "CG + six-rigid-body-mode smoothed aggregation; matrix/AMG reused across RHS",
+        "iterations": 539,
+        "independently_recomputed_refinement_residuals": [
+          7.042671625908313e-08,
+          1.8834976716789864e-08
+        ],
+        "elapsed_seconds": 100.05960429995321,
+        "total_elapsed_seconds": 143.4462787999655,
+        "criteria": {
+          "mesh_volume_relative": 0.005,
+          "force_moment_relative": 1e-05,
+          "residual_relative": 1e-07,
+          "symmetry_relative": 1e-12,
+          "energy_relative": 1e-07,
+          "compliance_convergence": 0.02,
+          "nominal_stress_convergence": 0.05,
+          "beam_compliance": 0.1,
+          "beam_nominal_stress": 0.15,
+          "rotation_mesh_relative": 0.02,
+          "rotation_beam_relative": 0.1,
+          "near_zero_rotation_absolute_rad": 1e-07,
+          "near_zero_translation_absolute_mm": 1e-05
+        },
+        "volume_rule": "exact polynomial degree two on affine P2 solid stiffness",
+        "mesh_sha256": "c9ab26bb84a20ed3a0db29b5d08c68ca9f8aa72dc5059c0fc51b1e8a1214e4d0",
+        "clamp": "Complete physical root face, all three solid translations fixed",
+        "limitations": [
+          "No root/load-edge peak stress certification",
+          "Interior normal stress is nominal; no validated Saint-Venant decay length",
+          "LS rotations are kinematic diagnostics, not assumed energy-conjugate rotations"
+        ],
+        "algebra_admitted": true,
+        "uniform_quadrature_crosscheck": {
+          "original_degree4_compliance_mm_per_N": 1.586921702070516,
+          "current_exact_degree2_compliance_mm_per_N": 1.5869217007168146,
+          "relative_difference": 8.530359751901528e-10,
+          "numerical_equivalence_threshold": 1e-06,
+          "passed": true
+        }
+      },
+      "torque": {
+        "load_channel": "pure_tip_My_50Nmm",
+        "load_definition": {
+          "kind": "linear_x_vertical_tip_traction",
+          "slope_N_per_mm3": -0.0012527501429462913,
+          "centre_x_mm": 74.89379374538267,
+          "second_area_moment_mm4": 39912.18862079478
+        },
+        "mesh_size_max_mm": 5.0,
+        "dofs": 137268,
+        "free_dofs": 136713,
+        "tip_area_mm2": 292.03972824666664,
+        "tip_centroid_mm": [
+          74.89379374538267,
+          239.99999999999994,
+          25.535120545649615
+        ],
+        "force_N": [
+          0.0,
+          0.0,
+          3.735388198727235e-15
+        ],
+        "applied_moment_Nmm": [
+          9.557343656530161e-13,
+          49.99999999999969,
+          0.0
+        ],
+        "requested_force_N": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "requested_moment_Nmm": [
+          0.0,
+          50.0,
+          0.0
+        ],
+        "load_force_error_relative": 1.8676940993636175e-15,
+        "load_moment_error_relative": 2.0111401734246944e-14,
+        "reaction_N": [
+          5.353153614548073e-11,
+          -1.9409444638512405e-11,
+          -5.953512988114283e-11
+        ],
+        "reaction_moment_Nmm": [
+          -9.891531791073017e-09,
+          -49.99999999622012,
+          -1.2570249812523053e-08
+        ],
+        "force_balance_relative": 4.118961893956087e-11,
+        "moment_balance_relative": 3.287064430908754e-10,
+        "free_residual_relative": 1.6732931679722227e-09,
+        "symmetry_relative": 7.993800661876415e-17,
+        "energy_Nmm": 0.09315567599636437,
+        "work_Nmm": 0.1863113519904328,
+        "energy_relative": 1.2323141828967683e-11,
+        "theta_work_rad": 0.0037262270398086563,
+        "compliance_mm_per_N": null,
+        "tip_mean_displacement_mm": [
+          -0.001691491356223395,
+          0.012720046833194488,
+          -0.11478620374796786
+        ],
+        "tip_rigid_fit": {
+          "centre_mm": [
+            74.89379374538262,
+            240.00000000000014,
+            25.535120545649622
+          ],
+          "translation_mm": [
+            -0.0016914913562234804,
+            0.012720046833194474,
+            -0.11478620374796791
+          ],
+          "rotation_rad": [
+            -0.0002027893904934519,
+            0.0037210994235478446,
+            0.00039229080488413157
+          ],
+          "area_mm2": 292.03972824666664,
+          "weighted_warping_residual_mm": 0.0013139353376844286,
+          "interpretation": "Least-squares kinematics; rotation is not assumed equal to traction work-conjugate rotation"
+        },
+        "ring_rigid_fit": {
+          "centre_mm": [
+            69.07675783914004,
+            204.00000000000048,
+            21.785403020944756
+          ],
+          "translation_mm": [
+            -0.0015479688818592116,
+            0.009611893230499397,
+            -0.08560267503911133
+          ],
+          "rotation_rad": [
+            -0.00017469566191996577,
+            0.0028811512813239635,
+            0.0003089223914269461
+          ],
+          "area_mm2": 147.32938406279442,
+          "weighted_warping_residual_mm": 0.000695251021219686,
+          "interpretation": "Least-squares kinematics; rotation is not assumed equal to traction work-conjugate rotation",
+          "aircraft_y_mm": 204
+        },
+        "solver": "CG + six-rigid-body-mode smoothed aggregation; matrix/AMG reused across RHS",
+        "iterations": 499,
+        "independently_recomputed_refinement_residuals": [
+          1.673293167972223e-09
+        ],
+        "elapsed_seconds": 69.86746499995934,
+        "total_elapsed_seconds": 214.03181069996208,
+        "criteria": {
+          "mesh_volume_relative": 0.005,
+          "force_moment_relative": 1e-05,
+          "residual_relative": 1e-07,
+          "symmetry_relative": 1e-12,
+          "energy_relative": 1e-07,
+          "compliance_convergence": 0.02,
+          "nominal_stress_convergence": 0.05,
+          "beam_compliance": 0.1,
+          "beam_nominal_stress": 0.15,
+          "rotation_mesh_relative": 0.02,
+          "rotation_beam_relative": 0.1,
+          "near_zero_rotation_absolute_rad": 1e-07,
+          "near_zero_translation_absolute_mm": 1e-05
+        },
+        "volume_rule": "exact polynomial degree two on affine P2 solid stiffness",
+        "mesh_sha256": "c9ab26bb84a20ed3a0db29b5d08c68ca9f8aa72dc5059c0fc51b1e8a1214e4d0",
+        "clamp": "Complete physical root face, all three solid translations fixed",
+        "limitations": [
+          "No root/load-edge peak stress certification",
+          "Interior normal stress is nominal; no validated Saint-Venant decay length",
+          "LS rotations are kinematic diagnostics, not assumed energy-conjugate rotations"
+        ],
+        "algebra_admitted": true
+      }
+    }
+  ],
+  "solid_mesh_convergence": {
+    "uniform_compliance_relative": 0.0013165856172434823,
+    "torque_theta_work_relative": 0.004305362120337828,
+    "torque_tip_ls_theta_y_relative": 0.004277416161839707,
+    "torque_ring_ls_theta_y_relative": 0.003875510137139003
+  },
+  "beam_mesh_convergence": {
+    "verticalGeneralizedDisplacementRelative": 6.035010036881714e-05,
+    "torqueThetaWorkRelative": 1.7266483609711488e-05,
+    "criteria": {
+      "meshRelative": 0.02,
+      "rotationFloorRad": 1e-07,
+      "displacementFloorMm": 1e-05
+    },
+    "passed": true
+  },
+  "beam_solid_agreement": {
+    "uniform_compliance_relative": 0.012733277763513795,
+    "torque_theta_work_relative": 0.015113596993400692,
+    "beam_uniform_compliance_mm_per_N": 1.6071284155209895,
+    "beam_torque_theta_work_rad": 0.0037825437335942368
+  },
+  "nominal_normal_stress": {
+    "vertical": [
+      {
+        "y_mm": 110,
+        "solid_fine_nominal_rms_MPa": 0.5715948390001121,
+        "solid_coarse_nominal_rms_MPa": 0.5691921728537476,
+        "beam_nominal_rms_MPa": 0.56963407799091,
+        "mesh_rms_change_relative": 0.0042034426877742646,
+        "mesh_affine_weighted_l2_relative": 0.003047937984418276,
+        "beam_rms_difference_relative": 0.0034303336479244812,
+        "beam_affine_weighted_l2_relative": 0.011462994847164485,
+        "raw_solid_beam_weighted_l2_relative_diagnostic": 0.013167755533354572,
+        "raw_solid_beam_rms_error_MPa": 0.007526779149484897,
+        "raw_solid_normal_stress_rms_MPa": 0.5716068414559485,
+        "raw_local_15_percent_target_passed": true,
+        "solid_affine_fit_residual_relative_diagnostic": 0.006480359024049573,
+        "diagnostic_scope": "Raw local stress differences are NOT covered by the fitted nominal-stress agreement gate",
+        "mesh_pass": true,
+        "beam_pass": true
+      },
+      {
+        "y_mm": 130,
+        "solid_fine_nominal_rms_MPa": 0.5057129772967776,
+        "solid_coarse_nominal_rms_MPa": 0.5035855724313966,
+        "beam_nominal_rms_MPa": 0.5040501137545375,
+        "mesh_rms_change_relative": 0.004206743668617626,
+        "mesh_affine_weighted_l2_relative": 0.004348653215513862,
+        "beam_rms_difference_relative": 0.0032881567547044565,
+        "beam_affine_weighted_l2_relative": 0.010843108921809156,
+        "raw_solid_beam_weighted_l2_relative_diagnostic": 0.013954399039117937,
+        "raw_solid_beam_rms_error_MPa": 0.007057192960851406,
+        "raw_solid_normal_stress_rms_MPa": 0.5057324891647569,
+        "raw_local_15_percent_target_passed": true,
+        "solid_affine_fit_residual_relative_diagnostic": 0.008784151270366644,
+        "diagnostic_scope": "Raw local stress differences are NOT covered by the fitted nominal-stress agreement gate",
+        "mesh_pass": true,
+        "beam_pass": true
+      },
+      {
+        "y_mm": 190,
+        "solid_fine_nominal_rms_MPa": 0.2629252559871969,
+        "solid_coarse_nominal_rms_MPa": 0.26583805360072177,
+        "beam_nominal_rms_MPa": 0.26482650752687836,
+        "mesh_rms_change_relative": 0.011078424560578169,
+        "mesh_affine_weighted_l2_relative": 0.013452661657173513,
+        "beam_rms_difference_relative": 0.007231148382999159,
+        "beam_affine_weighted_l2_relative": 0.011123237674681223,
+        "raw_solid_beam_weighted_l2_relative_diagnostic": 0.02181903726802106,
+        "raw_solid_beam_rms_error_MPa": 0.0057377870105795765,
+        "raw_solid_normal_stress_rms_MPa": 0.26297159403037135,
+        "raw_local_15_percent_target_passed": true,
+        "solid_affine_fit_residual_relative_diagnostic": 0.018771988988573532,
+        "diagnostic_scope": "Raw local stress differences are NOT covered by the fitted nominal-stress agreement gate",
+        "mesh_pass": true,
+        "beam_pass": true
+      }
+    ],
+    "torque": [
+      {
+        "y_mm": 110,
+        "solid_fine_nominal_rms_MPa": 0.02153291860033637,
+        "solid_coarse_nominal_rms_MPa": 0.021493870183015507,
+        "beam_nominal_rms_MPa": 0.021491587632098227,
+        "mesh_rms_change_relative": 0.0018134289199538318,
+        "mesh_affine_weighted_l2_relative": 0.011955101665625125,
+        "beam_rms_difference_relative": 0.0019194317781657312,
+        "beam_affine_weighted_l2_relative": 0.012763416392165524,
+        "raw_solid_beam_weighted_l2_relative_diagnostic": 0.17464550473072377,
+        "raw_solid_beam_rms_error_MPa": 0.003819014102386927,
+        "raw_solid_normal_stress_rms_MPa": 0.021867233904904988,
+        "raw_local_15_percent_target_passed": false,
+        "solid_affine_fit_residual_relative_diagnostic": 0.1741926822793879,
+        "diagnostic_scope": "Raw local stress differences are NOT covered by the fitted nominal-stress agreement gate",
+        "mesh_pass": true,
+        "beam_pass": true
+      },
+      {
+        "y_mm": 130,
+        "solid_fine_nominal_rms_MPa": 0.022384413966175697,
+        "solid_coarse_nominal_rms_MPa": 0.02239124452075481,
+        "beam_nominal_rms_MPa": 0.022520668758497488,
+        "mesh_rms_change_relative": 0.0003051477956685642,
+        "mesh_affine_weighted_l2_relative": 0.004011923710043525,
+        "beam_rms_difference_relative": 0.006087038621054819,
+        "beam_affine_weighted_l2_relative": 0.015603085456671712,
+        "raw_solid_beam_weighted_l2_relative_diagnostic": 0.22329894828267693,
+        "raw_solid_beam_rms_error_MPa": 0.00512727116329759,
+        "raw_solid_normal_stress_rms_MPa": 0.02296146579609911,
+        "raw_local_15_percent_target_passed": false,
+        "solid_affine_fit_residual_relative_diagnostic": 0.22278026622268626,
+        "diagnostic_scope": "Raw local stress differences are NOT covered by the fitted nominal-stress agreement gate",
+        "mesh_pass": true,
+        "beam_pass": true
+      },
+      {
+        "y_mm": 190,
+        "solid_fine_nominal_rms_MPa": 0.026228331582636304,
+        "solid_coarse_nominal_rms_MPa": 0.02617096034748426,
+        "beam_nominal_rms_MPa": 0.026023475634853983,
+        "mesh_rms_change_relative": 0.002187376462406214,
+        "mesh_affine_weighted_l2_relative": 0.014224486215171198,
+        "beam_rms_difference_relative": 0.007810483375082102,
+        "beam_affine_weighted_l2_relative": 0.008717780977146667,
+        "raw_solid_beam_weighted_l2_relative_diagnostic": 0.15222054664214513,
+        "raw_solid_beam_rms_error_MPa": 0.004039412339127253,
+        "raw_solid_normal_stress_rms_MPa": 0.026536577539847474,
+        "raw_local_15_percent_target_passed": false,
+        "solid_affine_fit_residual_relative_diagnostic": 0.15197647998520641,
+        "diagnostic_scope": "Raw local stress differences are NOT covered by the fitted nominal-stress agreement gate",
+        "mesh_pass": true,
+        "beam_pass": true
+      }
+    ]
+  },
+  "beam_requested_elements": [
+    40,
+    80
+  ],
+  "beam_actual_elements": [
+    54,
+    94
+  ],
+  "beam_kinematic_diagnostics": {
+    "vertical": {
+      "tip_global_rotation_rad": [
+        0.020351506816926608,
+        -0.004878335456550593,
+        -0.0009080567522793761
+      ],
+      "ring_axis_only": {
+        "stationY": 204,
+        "reference": [
+          62.59260381614442,
+          204,
+          21.647340207033768
+        ],
+        "globalAxisDisplacementMm": [
+          0.0721212070562161,
+          -0.2657790883414382,
+          2.4311523989472525
+        ],
+        "globalRotationRad": [
+          0.01965145127576265,
+          -0.004585434569365833,
+          -0.0008970749586984911
+        ],
+        "globalThetaYRad": -0.004585434569365833,
+        "scope": "Equivalent beam reference-axis motion at aircraft y=0.85L. This is not an area-weighted rigid fit to the physical oblique ring and does not include a resolved section-warping field."
+      }
+    },
+    "torque": {
+      "tip_global_rotation_rad": [
+        -0.0002043698753466829,
+        0.0037876097053443146,
+        0.0003758832147082956
+      ],
+      "ring_axis_only": {
+        "stationY": 204,
+        "reference": [
+          62.59260381614442,
+          204,
+          21.647340207033768
+        ],
+        "globalAxisDisplacementMm": [
+          -0.0005004881323929854,
+          0.0075945626009358705,
+          -0.07171910740844446
+        ],
+        "globalRotationRad": [
+          -0.00016008883568147396,
+          0.0030203223809285983,
+          0.000305734113006911
+        ],
+        "globalThetaYRad": 0.0030203223809285983,
+        "scope": "Equivalent beam reference-axis motion at aircraft y=0.85L. This is not an area-weighted rigid fit to the physical oblique ring and does not include a resolved section-warping field."
+      }
+    }
+  },
+  "passed": {
+    "algebra": true,
+    "mesh_convergence": true,
+    "global_response_agreement": true,
+    "fitted_nominal_stress_agreement": true,
+    "all_nominal_scope_checks": true,
+    "raw_local_stress_15_percent_target": false,
+    "full_local_stress_validation": false
+  },
+  "implementation_hash_normalization": "UTF-8 source bytes with CRLF normalized to LF (Git text normalization)",
+  "implementation_sha256": {
+    "src/mie446_wing/cad_metrics.py": "814210f0318c8f2deaa53e4d1cebf816723cec58ccc1b3723f3bf2ebbe02496b",
+    "src/mie446_wing/geometry.py": "cc31ce53d2769e9f94404b3f1872fe0a3fe843305134dd7bbcc39be881af7a9e",
+    "src/mie446_wing/wing_sections.py": "f5c632525e06eaf20c5273680b601dbdf5bdcc0e849bdd96228792a8de261a51",
+    "scripts/validation/wing_solid_benchmark.py": "6400b4b2864d720d37ef7cfb46a89c20fe8828b49f2034a3138d594b5af901dc",
+    "scripts/validation/wing_solid_two_rhs.py": "dd9b4dd00b913bfb86ea53bbf5d39ef7b0de203d16c5461985a8a74a68c112b9",
+    "scripts/validation/wing_solid_summary.py": "a4050cda7ce086f9a1e15f5905d5adb56b81fce341fe71b1964cd8b203a4bcd2",
+    "scripts/validation/wing_solid_beam_reference.mjs": "1524b040f479c9435ad511185744ad8c8d25fbb2391d187078a095c2e2bc169d",
+    "computational/printed-wing-solver/web/engine.js": "93b234f644d03d7cddcfde28c3de8063875d6c95448cbc9ac37a66afc25f66a3",
+    "computational/printed-wing-solver/web/wing_frame3d.js": "823b27ea0d8a41fcb5cf71d7935a7ae65bc9ef6c8426840930d14222c15e656f",
+    "computational/printed-wing-solver/web/wing_geometry.js": "3ea1a24888a0ff65e4720878acc8d70c5ba18a0bf67b555cafecfab87615e3d8",
+    "computational/printed-wing-solver/web/wing_airfoils.js": "473e66e1335ee08349d6ada6863c32673b88cc05459bbe6301ca99e27f33ddee"
+  },
+  "source_sha256": {
+    "study": "8296125d92e99f46544b96ab78792d9093526db2b25c593113b54ebf7796f13e",
+    "step": "c229c6df84133322041e01cbdf0368f84a5a2b579ef07c0d8b7d990b2f02e0cc",
+    "adaptive_volume_reference": "84a563a4bbe10a3f9f4a616f059b302b52e9efc21f41df0bef2187de4df0d31d",
+    "beam_reference": "0e2b2794df9855ae410d67ecf9691f2c2c4e9a30d26b42138d66a5125be360dc",
+    "h8-solve-report.json": "680fabe3ed65cd61537469128b7c7db2941e1992e7ffb7a653811fe8d4d25a06",
+    "h8-solution.npz": "9c5971129cb6697009ae6937dde9cee898329187898c18205567bcbd4b5e469c",
+    "h8-torque-solve-report.json": "849676501d50d6f6dee6f6a4f99f81365f72f67158d7419d6fa4d4523d6c12e6",
+    "h8-torque-solution.npz": "5523825d46515194614ec5de154a282dd7e5ec1be210d22f4cd5b46ffcf1e841",
+    "h8-mesh.npz": "84886e1f54e130189cb7860392006a72a1902be447cbfc6ae88400bd1adb51fa",
+    "h5-solve-report.json": "4a6426bf1f98424ebc8f3a13d421a8595dfa091da66b6dc034e48fbbba3c3a89",
+    "h5-solution.npz": "1e4c8d3cb568694f7aee27252c46261399aca1df3ae50363648d414aa7fda4a9",
+    "h5-torque-solve-report.json": "40f857f96b7508d580aa6a193fd9e22a5951695df4751fd130c77b492bb2de0e",
+    "h5-torque-solution.npz": "da3238903e4b239f9bdf66900d5de443b99a66e3d94b408486b090bacf8e3d9d",
+    "h5-mesh.npz": "c9ab26bb84a20ed3a0db29b5d08c68ca9f8aa72dc5059c0fc51b1e8a1214e4d0",
+    "h8-cut-stresses.json": "2c00d2b3a6ab442577e8006b43446da2b367b44c2de9c3d5a51ae27bd23f0243",
+    "h5-cut-stresses.json": "8d4aaa9611dd77400aa882b2521e7b714125d16bc83172552ccd42bfadc9bf5d",
+    "h8-torque-cut-stresses.json": "c86b53449370235023fa1e9c08472f264d0f2d87f69973e3614c26d39b090d7e",
+    "h5-torque-cut-stresses.json": "b3d09b4fcd7200dbc271ed37e1e0b495a86a1adcb4dc26153536bb96f710bd58"
+  },
+  "limitations": [
+    "Equivalent beam-axis clamp differs from actual solid root face",
+    "Nominal-scope checks pass, but the 15% raw local torque-stress comparison target fails at all three cuts; fitting an affine stress does not validate local warping stress",
+    "Same-wrench beam endpoint force/couple does not resolve detailed solid tip traction",
+    "No root/load-edge peak stress, buckling, bond or printed anisotropic failure certification",
+    "Fixed interior normal cuts are comparison stations, not a validated Saint-Venant decay length",
+    "LS physical-ring rotations and beam reference-axis rotations are not identical observables",
+    "No universal error bound for arbitrary DAT airfoils, twist laws or parameter-box interior"
+  ]
+}

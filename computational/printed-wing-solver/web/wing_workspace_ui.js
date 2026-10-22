@@ -1,7 +1,7 @@
 /* Shared wing-workspace tools. Moves real editor nodes; never copies model data or solves. */
 const WingWorkspaceUI=(()=>{
  let styled=false;
- function create({app,canvas,viewPanel,actions,sample,contextActions=actions,unit='mm'}){
+ function create({app,canvas,viewPanel,actions,sample,contextActions=actions,unit='mm',onClose=null}){
   const doc=app.ownerDocument,win=doc.defaultView;
   if(!styled){styled=true;const style=doc.createElement('style');style.textContent=`
    #app.wing-workspace,#metalApp.wing-workspace{grid-template-columns:320px minmax(0,1fr);grid-template-rows:none;grid-template-areas:"bar bar" "side quick" "side view" "side dock"}
@@ -48,12 +48,13 @@ const WingWorkspaceUI=(()=>{
   title.addEventListener('pointerdown',e=>{if(e.button!==0)return;const r=popup.getBoundingClientRect();drag={id:e.pointerId,x:e.clientX,y:e.clientY,left:r.left,top:r.top};title.setPointerCapture?.(e.pointerId);e.preventDefault();});
   title.addEventListener('pointermove',e=>{if(!drag||e.pointerId!==drag.id)return;manualPosition=true;clampBox(popup,drag.left+e.clientX-drag.x,drag.top+e.clientY-drag.y);});
   for(const name of ['pointerup','pointercancel'])title.addEventListener(name,()=>{drag=null;});
-  function close(){if(moved){if(placeholder?.parentNode)placeholder.replaceWith(moved);else moved.remove();}moved=null;placeholder=null;drag=null;popup.hidden=true;viewButton.setAttribute('aria-expanded','false');body.replaceChildren();returnFocus?.focus?.({preventScroll:true});returnFocus=null;}
-  function open(heading,node,at){close();manualPosition=false;returnFocus=doc.activeElement;anchor=at||canvas;title.textContent=heading;placeholder=doc.createComment('wing editor home');if(node.parentNode)node.before(placeholder);moved=node;body.append(node);popup.classList.toggle('wing-view-pop',node===viewPanel);popup.classList.toggle('wing-lesson-pop',node.classList.contains('wing-lesson-panel'));popup.classList.toggle('wing-part-pop',node.id==='wingPartEditor'&&!!node.querySelector('#wpChoice')?.value);viewButton.setAttribute('aria-expanded',String(node===viewPanel));
+  function close(notify=true){const closed=moved;if(moved){if(placeholder?.parentNode)placeholder.replaceWith(moved);else moved.remove();}moved=null;placeholder=null;drag=null;popup.hidden=true;viewButton.setAttribute('aria-expanded','false');body.replaceChildren();returnFocus?.focus?.({preventScroll:true});returnFocus=null;if(notify&&closed)onClose?.(closed);}
+  function open(heading,node,at){close(moved!==node);manualPosition=false;returnFocus=doc.activeElement;anchor=at||canvas;title.textContent=heading;placeholder=doc.createComment('wing editor home');if(node.parentNode)node.before(placeholder);moved=node;body.append(node);popup.classList.toggle('wing-view-pop',node===viewPanel);popup.classList.toggle('wing-lesson-pop',node.classList.contains('wing-lesson-panel'));popup.classList.toggle('wing-part-pop',node.id==='wingPartEditor'&&!!node.querySelector('#wpChoice')?.value);viewButton.setAttribute('aria-expanded',String(node===viewPanel));
    const form=node.querySelector('.wle-form');if(form){const kind=form.querySelector('select');form.dataset.compactKind=kind?.value||'';if(!form.querySelector('.wing-editor-help')){const help=doc.createElement('button');help.type='button';help.className='btn wing-editor-help';help.textContent='Load help';help.setAttribute('aria-expanded','false');help.onclick=()=>{const on=form.classList.toggle('wing-help-open');help.setAttribute('aria-expanded',String(on));position();};form.prepend(help);kind?.addEventListener('change',()=>{form.dataset.compactKind=kind.value;position();});}}
+   popup.style.width=node.id==='wingAdvancedGeometry'?'min(680px,calc(100vw - 16px))':'';
    popup.classList.toggle('wing-file-pop',node.id==='wingStudyFiles');
    body.scrollTop=0;popup.hidden=false;position();closeButton.focus({preventScroll:true});return popup;}
-  closeButton.onclick=close;popup.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();e.stopPropagation();close();}});
+  closeButton.onclick=()=>close();popup.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();e.stopPropagation();close();}});
   const menu=doc.createElement('section');menu.className='wing-context-menu';menu.hidden=true;menu.setAttribute('role','menu');menu.setAttribute('aria-label','Actions at wing location');doc.body.append(menu);
   let start=null;
   canvas.addEventListener('pointerdown',e=>{if(e.button===2)start={x:e.clientX,y:e.clientY};});

@@ -30,7 +30,7 @@ def cells():
 
 def environment():
     messages, downloads = [], []
-    env = dict(date=date, Path=Path, tempfile=tempfile, COURSE_RELEASE='v1.2.1',
+    env = dict(date=date, Path=Path, tempfile=tempfile, COURSE_RELEASE='v1.3.0',
         WingDesign=WingDesign, WingProject=WingProject, WingProjectError=WingProjectError,
         WingLabImportError=WingLabImportError, load_wing_lab_study=load_wing_lab_study,
         make_ai_log=make_ai_log, plot_design_overview=plot_design_overview,
@@ -116,11 +116,15 @@ def mesh_summary(path):
 
 
 @pytest.mark.slow
-def test_notebook_upload_through_final_zip_one_connected_piece(tmp_path, monkeypatch):
+@pytest.mark.parametrize('fixture_name,expected_span,expected_ribs,expected_spars',[
+    ('wing_lab_one_piece_browser.json',250,3,1),
+    ('wing_lab_station_browser.json',180,2,2),
+],ids=['legacy-v1','station-v2'])
+def test_notebook_upload_through_final_zip_one_connected_piece(tmp_path, monkeypatch,fixture_name,expected_span,expected_ribs,expected_spars):
     from plotly.basedatatypes import BaseFigure
     monkeypatch.setattr(BaseFigure,'show',lambda self,*a,**kw:None)
-    # Actual live-site download, made through Export to notebook in the browser.
-    doc=json.loads((ROOT/'tests/fixtures/wing_lab_one_piece_browser.json').read_text(encoding='utf-8'))
+    # Legacy live-site download and v2 real browser-serializer interoperability fixture.
+    doc=json.loads((ROOT/'tests/fixtures'/fixture_name).read_text(encoding='utf-8'))
     source=tmp_path/'WingLab.json'
     source.write_text(json.dumps(doc),encoding='utf-8')
     # Exercise the blank-field upload branch, not just a prefilled filename.
@@ -164,7 +168,7 @@ def test_notebook_upload_through_final_zip_one_connected_piece(tmp_path, monkeyp
             assert sha256(data).hexdigest()==record['sha256']
     build=env['built_project'].build
     assert len(build.modules)==1 and len(build.complete.Solids())==1
-    assert len(build.ribs)==3 and len(build.bonded_spars)==1
+    assert len(build.ribs)==expected_ribs and len(build.bonded_spars)==expected_spars
     stl=next(package.output_dir.glob('*.stl'))
     summary=mesh_summary(stl)
     # NACA normal-offset/camber geometry can extend slightly ahead of x=0;
@@ -178,7 +182,7 @@ def test_notebook_upload_through_final_zip_one_connected_piece(tmp_path, monkeyp
     box=bounds.Get()
     exact_extents=[box[i+3]-box[i] for i in range(3)]
     assert summary['extents_mm']==pytest.approx(exact_extents,abs=.08)
-    assert summary['extents_mm'][1]==pytest.approx(250,abs=.01)
+    assert summary['extents_mm'][1]==pytest.approx(expected_span,abs=.01)
     assert summary['volume_mm3']==pytest.approx(build.modules[0].Volume(),rel=.01)
     for mf in package.output_dir.glob('*.3mf'):
         with ZipFile(mf) as archive:

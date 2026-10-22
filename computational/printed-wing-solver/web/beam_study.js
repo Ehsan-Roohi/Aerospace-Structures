@@ -79,7 +79,7 @@ const BeamStudy = (() => {
   const versionFor=model=>model.loads.some(v=>v.kind==='elliptic'||v.kind==='parabolic'||v.kind==='table')?3:2;
 
   /** Whitelist copy of an untrusted model, then full engine validation. Throws on any problem. */
-  function sanitizeModel(raw) {
+  function sanitizeModel(raw, {allowMechanism=false}={}) {
     if(!isObject(raw)) throw new Error('The study has no beam model.');
     const model={length:number(raw,'length','Length L'),E:number(raw,'E','Elastic modulus E'),
       density:number(raw,'density','Density'),elements:number(raw,'elements','Mesh size')};
@@ -131,7 +131,14 @@ const BeamStudy = (() => {
     });
     if(own(raw,'selfWeight')&&typeof raw.selfWeight!=='boolean') throw new Error('Self-weight must be true or false.');
     model.selfWeight=raw.selfWeight===true;
-    return modelFromInput(B.normalize(model));   // physics validation, including mechanisms
+    try {return modelFromInput(B.normalize(model));}
+    catch(e) {
+      // normalize() reaches its mechanism gate only AFTER validating all
+      // dimensions, section, supports, hinges, mesh and loads. A working draft
+      // may intentionally lack restraints; it is not a structural solution.
+      if(allowMechanism&&e.code==='mechanism')return modelFromInput(model);
+      throw e;
+    }
   }
 
   // Version 1: the earlier study record {input:{length,width,height,E,density,support|leftSupport,...}}.
@@ -171,6 +178,16 @@ const BeamStudy = (() => {
     }
     return JSON.stringify(doc,null,2);
   }
+  /** Portable current inputs, including valid but incompletely restrained work.
+   * Existing format/version is retained; state distinguishes it from solved
+   * records. Earlier pages refuse unstable drafts through their old gate.
+   */
+  function exportDraft({model,notes='',compare=null,savedAt=new Date().toISOString()}) {
+    const clean=sanitizeModel(model,{allowMechanism:true});
+    const doc={format:FORMAT,version:versionFor(clean),app:'MIE 446 Beam Lab',engine:B.VERSION,savedAt,state:'draft',model:clean,notes:cleanText(notes,LIMITS.notes),results:null};
+    if(compare){doc.compare={};for(const key of ['A','B'])if(compare[key]){const m=sanitizeModel(compare[key].model);doc.compare[key]={label:cleanText(compare[key].label||key,LIMITS.label),model:m};doc.version=Math.max(doc.version,versionFor(m));}}
+    return JSON.stringify(doc,null,2);
+  }
 
   /** Parse untrusted study text. Returns {model, notes, compare, version, legacy}. Throws on any problem. */
   function parseStudy(text) {
@@ -186,7 +203,8 @@ const BeamStudy = (() => {
     if(!Number.isInteger(doc.version)||doc.version<1) throw new Error('The study file has no valid version number.');
     if(doc.version>VERSION) throw new Error(`This study was saved by a newer Beam Lab (file version ${doc.version}; this page reads up to version ${VERSION}). Nothing was imported; your current study is unchanged.`);
     if(doc.version===1) return {model:legacyModel(doc.input),notes:cleanText(doc.notes,LIMITS.notes),compare:null,version:1,legacy:true};
-    const model=sanitizeModel(doc.model);
+    if(doc.state!==undefined&&!['draft','solved'].includes(doc.state))throw new Error('Unknown beam study state.');
+    const model=sanitizeModel(doc.model,{allowMechanism:doc.state==='draft'});
     let compare=null;
     if(isObject(doc.compare)) {
       compare={};
@@ -194,7 +212,7 @@ const BeamStudy = (() => {
         compare[key]={label:cleanText(typeof doc.compare[key].label==='string'?doc.compare[key].label:key,LIMITS.label),model:sanitizeModel(doc.compare[key].model)};
       }
     }
-    return {model,notes:cleanText(doc.notes,LIMITS.notes),compare,version:doc.version,legacy:false};
+    return {model,notes:cleanText(doc.notes,LIMITS.notes),compare,version:doc.version,legacy:false,...(doc.state==='draft'?{draft:true}:{})};
   }
 
   /* --------------------------------------------------------- share links */
@@ -332,7 +350,7 @@ const BeamStudy = (() => {
     return rows.map(r=>r.join(',')).join('\r\n')+'\r\n';
   }
 
-  return {FORMAT,VERSION,LIMITS,escapeHtml,cleanText,modelFromInput,canonicalLoad,versionFor,sanitizeModel,exportStudy,parseStudy,
+  return {FORMAT,VERSION,LIMITS,escapeHtml,cleanText,modelFromInput,canonicalLoad,versionFor,sanitizeModel,exportStudy,exportDraft,parseStudy,
     encodeShare,decodeShare,shareUrl,diffModels,describeLoad,resultsCsv,reactionsCsv,stationRows,stationsCsv};
 })();
 if(typeof module!=='undefined'&&module.exports)module.exports=BeamStudy;

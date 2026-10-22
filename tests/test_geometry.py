@@ -2,6 +2,7 @@ from pathlib import Path
 from zipfile import ZipFile
 
 import pytest
+from mie446_wing.cad_metrics import adaptive_volume
 
 from mie446_wing import (
     BuiltWingProject,
@@ -35,8 +36,8 @@ def test_baseline_geometry_builds_and_validates(baseline_build) -> None:
 
 @pytest.mark.slow
 def test_segmented_volume_is_conserved(baseline_build) -> None:
-    module_volume = sum(module.Volume() for module in baseline_build.modules)
-    assert module_volume == pytest.approx(baseline_build.complete.Volume(), rel=5.0e-4)
+    module_volume = sum(adaptive_volume(module) for module in baseline_build.modules)
+    assert module_volume == pytest.approx(adaptive_volume(baseline_build.complete), rel=5.0e-4)
 
 
 def test_fit_coupon_is_valid() -> None:
@@ -45,6 +46,27 @@ def test_fit_coupon_is_valid() -> None:
     assert len(coupon.Solids()) == 1
     assert mapping["hole_2_radial_clearance_mm"] == pytest.approx(0.25)
     assert mapping["hole_3_physical_marker"] == "3 top-face dimple(s)"
+
+
+def test_overlapping_internal_rib_is_not_lost_by_boolean_glue_optimization() -> None:
+    import cadquery as cq
+    from mie446_wing.geometry import _fuse_all
+    shell=cq.Solid.makeBox(20,20,20).cut(cq.Solid.makeBox(16,16,16,cq.Vector(2,2,2)))
+    rib=cq.Solid.makeBox(20,2,20,cq.Vector(0,9,0))
+    united=_fuse_all(shell,(rib,))
+    assert united.isValid() and len(united.Solids())==1
+    assert united.Volume()==pytest.approx(4416,abs=1e-6)
+    assert rib.cut(united).Volume()<1e-6
+
+
+def test_actual_printer_bounds_do_not_change_after_preview_meshing() -> None:
+    import cadquery as cq
+    from mie446_wing.geometry import exact_bounding_box
+    shape=cq.Solid.makeSphere(20)
+    before=exact_bounding_box(shape)
+    shape.tessellate(1,.5)
+    after=exact_bounding_box(shape)
+    assert (after.xlen,after.ylen,after.zlen)==pytest.approx((before.xlen,before.ylen,before.zlen),abs=1e-8)
 
 
 def test_coupon_can_be_exported_before_build(tmp_path: Path) -> None:

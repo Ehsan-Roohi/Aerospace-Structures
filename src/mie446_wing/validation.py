@@ -11,9 +11,12 @@ import numpy as np
 
 from .airfoil import surface_ordinates_at
 from .config import WingParameters
-from .geometry import WingBuild
+from .cad_metrics import adaptive_volume
+from .geometry import WingBuild, exact_bounding_box
 from .bonded_spar import validate_spar_layout
 from .metrics import calculate_planform_metrics
+from .wing_sections import surface_at, loft_stations
+from .airfoil import cosine_spacing
 
 
 @dataclass(frozen=True)
@@ -63,12 +66,7 @@ def _minimum_spar_surface_clearance(parameters: WingParameters) -> float:
     for y in np.linspace(0.0, parameters.semi_span_mm, 11):
         chord = parameters.chord_at(float(y))
         for spar in parameters.spars:
-            lower, camber, upper = surface_ordinates_at(
-                parameters.naca,
-                np.asarray([spar.chord_fraction]),
-                chord_mm=chord,
-                trailing_edge_mm=parameters.trailing_edge_mm,
-            )
+            lower, camber, upper = surface_at(parameters, float(y), np.asarray([spar.chord_fraction]))
             vertical_room = min(float(upper[0] - camber[0]), float(camber[0] - lower[0]))
             minimum = min(minimum, vertical_room - spar.sleeve_radius_mm)
     return minimum
@@ -84,6 +82,10 @@ def validate_wing(
         parameters = build.parameters
     parameters = parameters or WingParameters()
     validate_spar_layout(parameters)
+    if parameters.spars:
+        from .geometry import _spar_endpoints
+        for spar in parameters.spars:
+            _spar_endpoints(parameters, spar)
     metrics = calculate_planform_metrics(parameters)
     checks: list[ValidationCheck] = [
         ValidationCheck(
@@ -96,7 +98,7 @@ def validate_wing(
             "semi-wing area",
             metrics.semi_wing_area_mm2 > 0,
             round(metrics.semi_wing_area_mm2, 6),
-            "positive analytical trapezoid area",
+            "positive nominal reference trapezoid area (projected y-span, unrotated section chord)",
         ),
         ValidationCheck(
             "skin thickness",
@@ -123,22 +125,23 @@ def validate_wing(
             "at least 0.6 mm at 11 spanwise stations, when rods are present",
         ),
     ]
+    if parameters.airfoil_stations or parameters.airfoil_profile is not None or parameters.sweep_deg or parameters.dihedral_deg:
+        minimum_depth = float('inf')
+        for y in loft_stations(parameters, parameters.root_tip_cap_mm, parameters.semi_span_mm-parameters.root_tip_cap_mm):
+            lo, _, up = surface_at(parameters,float(y),cosine_spacing(max(31,parameters.airfoil_point_count//2),parameters.cavity_x_start,parameters.cavity_x_end))
+            minimum_depth = min(minimum_depth,float(np.min(up-lo))-2*parameters.skin_mm)
+        checks.append(ValidationCheck('station cavity depth',minimum_depth >= .8,round(minimum_depth,6),
+            'at least 0.8 mm after both skin walls at every CAD loft station; revise profile/chord or instructor-approved cavity bounds if it collapses'))
 
     if build is not None:
         complete_solids = len(build.complete.Solids())
         module_solids = [len(module.Solids()) for module in build.modules]
-        complete_volume = build.complete.Volume()
-        module_volume = sum(module.Volume() for module in build.modules)
+        complete_volume = adaptive_volume(build.complete)
+        module_volume = sum(adaptive_volume(module) for module in build.modules)
         volume_error = abs(module_volume - complete_volume) / complete_volume
         mass_g = complete_volume / 1000.0 * parameters.pla_density_g_cm3
-        module_dimensions = [
-            (
-                module.BoundingBox().xlen,
-                module.BoundingBox().ylen,
-                module.BoundingBox().zlen,
-            )
-            for module in build.modules
-        ]
+        module_bounds = [exact_bounding_box(module) for module in build.modules]
+        module_dimensions = [(box.xlen,box.ylen,box.zlen) for box in module_bounds]
         sorted_envelope = sorted(parameters.printer_build_volume_mm)
         modules_fit_envelope = all(
             all(

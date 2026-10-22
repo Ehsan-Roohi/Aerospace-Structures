@@ -1,6 +1,6 @@
 // REAL-BROWSER check of the printed-wing and D.520 workspaces (Chromium via Playwright; WebGL by SwiftShader).
 // At 390, 768 and 1440 px in light and dark: no horizontal page scroll and nothing sticking out of the viewport,
-// the 3-D view about half the desktop width, Solve and the status chip visible (Out of date → Solved for the
+// input tools above the 3-D view and results beneath it, Solve and the status chip visible (Out of date → Solved for the
 // printed wing), zoom / Fit / Reset change the camera but never the reported dimensions, and the D.520 part
 // toggles hide parts (and spar labels) without changing the inputs or any result, in model, stress and mode views.
 //   PLAYWRIGHT_MODULE=/path/to/node_modules/playwright/index.mjs BEAM_THREE_DIR=/path/to/three@0.128.0 \
@@ -57,6 +57,21 @@ const overflowProbe=root=>{
 const inViewport=(page,sel)=>page.$eval(sel,el=>{const r=el.getBoundingClientRect();return r.width>0&&r.height>0&&r.top>=0&&r.bottom<=window.innerHeight&&r.left>=0&&r.right<=document.documentElement.clientWidth;});
 const canvasShot=async(page,sel)=>(await (await page.$(sel)).screenshot()).toString('base64');
 const distance=(page,sel)=>page.$eval(sel,el=>+el.dataset.distance);
+async function closePopup(page){const p=page.locator('.wing-editor-pop:visible');if(await p.count())await p.locator('.wing-editor-close').click();}
+async function viewPopup(page,app,panel){
+  await closePopup(page);
+  await page.locator(`${app} > .wing-quick-tools`).getByRole('button',{name:'View & display ▾',exact:true}).click();
+  check(await page.isVisible(`.wing-editor-pop ${panel}`),`${app}: View & display opens the real camera and appearance controls`);
+  check(await inViewport(page,'.wing-editor-pop:visible'),`${app}: view popup fits the viewport`);
+}
+async function wingInputs(page){if(!await page.isVisible('#wingSide'))await page.click('#inputsBtn');check(await page.isVisible('#wingSide'),'Wing Inputs control exposes the editable inputs');}
+async function workspaceLayout(page,app,side,width,tag){
+  const layout=await page.evaluate(({app,side})=>{const root=document.querySelector(app),r=s=>{const b=root.querySelector(s).getBoundingClientRect();return {left:b.left,right:b.right,top:b.top,bottom:b.bottom,width:b.width};};return {tools:r(':scope > .wing-quick-tools'),view:r(':scope > .view'),dock:r(':scope > .dock'),side:r(side),sidePosition:getComputedStyle(root.querySelector(side)).position};},{app,side});
+  check(layout.tools.bottom<=layout.view.top+1,`${tag}: model tools are above the drawing`);
+  check(layout.dock.top>=layout.view.bottom-1,`${tag}: results start beneath the drawing`);
+  if(width>1100){check(Math.abs(layout.side.width-320)<=2&&layout.side.right<=layout.view.left,`${tag}: 320 px input column is beside, not over, the drawing`);check(Math.abs(layout.tools.left-layout.view.left)<=1&&Math.abs(layout.dock.left-layout.view.left)<=1,`${tag}: model tools, drawing and results share their main-column alignment`);}
+  else check(layout.view.width>=width-48,`${tag}: one-column drawing spans the page`);
+}
 
 for(const [width,height] of [[390,844],[768,1024],[1440,900]]) for(const scheme of ['light','dark']) {
   // ---------------------------------------------------------------- printed wing
@@ -70,11 +85,12 @@ for(const [width,height] of [[390,844],[768,1024],[1440,900]]) for(const scheme 
     check(!o.bad.length,`${tag}: elements outside the viewport: ${o.bad.join('; ')}`);
     const gl=await page.$eval('#gl',c=>{const r=c.getBoundingClientRect();const g=c.getContext('webgl2')||c.getContext('webgl');return {w:r.width,h:r.height,live:!!g&&c.width>0};});
     check(gl.live&&gl.h>=300,`${tag}: live WebGL view, at least 300 px tall (${JSON.stringify(gl)})`);
-    if(width===1440) {
-      check(gl.w/width>=0.42&&gl.w/width<=0.62,`${tag}: 3-D view should take about half the width (${Math.round(gl.w)} px = ${(gl.w/width).toFixed(2)})`);
-      check(await inViewport(page,'#stateChip')&&await inViewport(page,'#runBtn'),`${tag}: Solve and the status chip are visible at the top of the input column`);
-    } else check(gl.w>=width-48,`${tag}: one-column view spans the page (${Math.round(gl.w)} px)`);
+    await workspaceLayout(page,'#app','#wingSide',width,tag);
+    check(await page.$eval('#runBtn',b=>!!b.closest('#app > .bar'))&&await page.$eval('#stateChip',b=>!!b.closest('#app > .bar')),`${tag}: Solve and status belong to the command bar above the model`);
+    if(width===1440)check(await inViewport(page,'#stateChip')&&await inViewport(page,'#runBtn'),`${tag}: Solve and status are visible above the model`);
     // Edit a structure field: the chip says Out of date (visible next to Solve), the results say they are stale.
+    await wingInputs(page);await page.uncheck('#wingAutoSolve');
+    if(width<=1100)check(await page.$eval('#wingSide',el=>getComputedStyle(el).position==='fixed')&&await inViewport(page,'#wingSide'),`${tag}: tablet/phone inputs open as a bounded drawer`);
     await page.$eval('#wgSkin',el=>el.scrollIntoView({block:'center'}));
     await page.fill('#wgSkin','1.1');await page.press('#wgSkin','Enter');await page.waitForTimeout(150);
     check(await page.textContent('#stateChip')==='Out of date',`${tag}: edit marks the study Out of date (${await page.textContent('#stateChip')})`);
@@ -85,6 +101,8 @@ for(const [width,height] of [[390,844],[768,1024],[1440,900]]) for(const scheme 
     await page.waitForFunction(()=>!window.WingLabUI.isRunning()&&document.querySelector('#stateChip').textContent==='Solved'&&window.WingLabUI.result().geometry.skin===1.1,null,{timeout:120000});
     check(!(await page.isVisible('#wingStale')),`${tag}: stale banner gone after Solve`);
     // Zoom changes the camera, never the reported dimensions.
+    if(width<=1100)await page.click('#wingSide > button[aria-label="Close wing inputs"]');
+    await viewPopup(page,'#app','#wingViewPanel');
     await page.$eval('#viewReadout',el=>el.scrollIntoView({block:'center'}));
     const dims=await page.textContent('#viewDims'), d0=await distance(page,'#viewReadout'), img0=await canvasShot(page,'#gl');
     check(/semi-span 450\.0 mm, root chord 160\.0 mm, tip chord 100\.0 mm/.test(dims)&&/View zoom only/.test(dims),`${tag}: readout states the solved dimensions (${dims})`);
@@ -104,6 +122,7 @@ for(const [width,height] of [[390,844],[768,1024],[1440,900]]) for(const scheme 
     check(Math.abs(v.distance-v.resetDistance)<1e-6*v.resetDistance&&Math.abs(await distance(page,'#viewReadout')-v.resetDistance)<1e-2,`${tag}: Reset view returns to the starting distance`);
     check(await page.textContent('#viewDims')===dims&&v.solved.semiSpan===450&&v.solved.rootChord===160&&v.solved.tipChord===100,`${tag}: dimensions unchanged after zoom, Fit and Reset`);
     if(width===1440) await (await page.$('#wingViewPanel')).screenshot({path:path.join(shots,`wing_viewpanel_${scheme}.png`)});
+    await closePopup(page);
     o=await page.evaluate(overflowProbe,'#app');
     check(o.doc<=o.vw&&!o.bad.length,`${tag}: overflow after editing: ${o.bad.join('; ')}`);
     check(!errors.length,`${tag}: console errors: ${errors.join(' | ')}`);
@@ -120,8 +139,8 @@ for(const [width,height] of [[390,844],[768,1024],[1440,900]]) for(const scheme 
     check(!o.bad.length,`${tag}: elements outside the viewport: ${o.bad.join('; ')}`);
     const gl=await page.$eval('#mgl',c=>{const r=c.getBoundingClientRect();const g=c.getContext('webgl2')||c.getContext('webgl');return {w:r.width,h:r.height,live:!!g&&c.width>0};});
     check(gl.live&&gl.h>=300,`${tag}: live WebGL view (${JSON.stringify(gl)})`);
+    await workspaceLayout(page,'#metalApp','#mSide',width,tag);
     if(width===1440) {
-      check(gl.w/width>=0.42&&gl.w/width<=0.62,`${tag}: 3-D view about half the width (${(gl.w/width).toFixed(2)})`);
       check(await inViewport(page,'#mChip')&&await inViewport(page,'#mRun'),`${tag}: Solve and status chip visible at the top of the input column`);
     } else {
       await page.$eval('#mSecParams',el=>el.scrollIntoView({block:'start'}));await page.waitForTimeout(100);
@@ -134,6 +153,7 @@ for(const [width,height] of [[390,844],[768,1024],[1440,900]]) for(const scheme 
     const labels=await page.$$eval('#mPartLabels .mw-label',ls=>ls.map(l=>({t:l.textContent,shown:!l.hidden&&l.getBoundingClientRect().width>0})));
     check(labels.length===2&&labels.every(l=>l.shown)&&/Main \(front\) spar · 0\.37c/.test(labels[0].t)&&/False \(rear\) spar · 0\.73c/.test(labels[1].t),`${tag}: spar labels shown in the view (${JSON.stringify(labels)})`);
     // Zoom: camera only.
+    await viewPopup(page,'#metalApp','#mViewPanel');
     await page.$eval('#mViewReadout',el=>el.scrollIntoView({block:'center'}));
     const dims=await page.textContent('#mViewDims'), m0=await distance(page,'#mViewReadout');
     await page.click('#mZoomIn');await page.waitForTimeout(150);
@@ -141,7 +161,7 @@ for(const [width,height] of [[390,844],[768,1024],[1440,900]]) for(const scheme 
     await page.click('#mZoomReset');await page.waitForTimeout(150);
     check(Math.abs(await distance(page,'#mViewReadout')-m0)<1e-3*m0,`${tag}: Reset view returns to the starting distance`);
     // Part toggles: visual only.
-    if(width<=560) await page.evaluate(()=>{document.querySelector('#mHud').open=true;});
+    if(width<=560)await page.click('#mHud > summary');
     const state=()=>page.evaluate(()=>({input:JSON.stringify(window.MetalWingUI.state.input),tip:window.MetalWingUI.result().tip.wMax,info:document.querySelector('#mPlotinfo').textContent,chip:document.querySelector('#mChip').textContent,same:window.MetalWingUI.result()===window.__r0}));
     await page.evaluate(()=>{window.__r0=window.MetalWingUI.result();});
     const s0=await state();
@@ -173,21 +193,25 @@ for(const [width,height] of [[390,844],[768,1024],[1440,900]]) for(const scheme 
     const s1=await state();check(s1.same&&s1.input===s0.input&&s1.tip===s0.tip,`${tag}: quick views and skin modes change no result`);
     // With a load: stress, deformed and mode views keep working with parts hidden, and results do not change.
     if(width===1440&&scheme==='light') {
-      await page.click('[data-mtab="loads"]');await page.click('#mRestoreFlight');
+      await closePopup(page);await page.click('#metalApp [data-wing-action="load"]');await page.click('#mRestoreFlight');
       await page.waitForFunction(()=>window.MetalWingUI.state.input.customLoads==null&&document.querySelector('#mLoading').hidden&&document.querySelector('#mChip').textContent!=='Solving'&&window.MetalWingUI.result().input.customLoads==null&&Math.abs(window.MetalWingUI.result().tip.wMax)>0.01,null,{timeout:120000});
       await page.waitForTimeout(400);
+      await closePopup(page);
       for(const plot of ['sigma','disp','buckle','mode']) {
         await page.click(`[data-mplot="${plot}"]`);await page.waitForTimeout(150);
         await page.evaluate(()=>{window.__r0=window.MetalWingUI.result();});
         const a=await state(), legend=await page.textContent('#mLegendTitle');
+        await viewPopup(page,'#metalApp','#mViewPanel');
         await page.click('[data-mpart="skin"]');await page.click('[data-mpart="ribs"]');await page.waitForTimeout(150);
         const b=await state();
         check(b.same&&b.input===a.input&&b.tip===a.tip&&await page.textContent('#mLegendTitle')===legend,`${tag}: ${plot} view unchanged in substance with skin and ribs hidden`);
         if(plot==='sigma') await (await page.$('#mView')).screenshot({path:path.join(shots,'d520_stress_structure_only.png')});
         await page.click('[data-mpart="skin"]');await page.click('[data-mpart="ribs"]');
+        await closePopup(page);
       }
       await page.click('[data-mplot="model"]');
     }
+    await closePopup(page);
     if(width===1440||width===390) {
       await page.$eval('#mSecInventory',el=>{el.open=true;el.scrollIntoView({block:'start'});});await page.waitForTimeout(100);
       await page.screenshot({path:path.join(shots,`d520_${width}_${scheme}_inventory.png`)});
@@ -202,6 +226,7 @@ for(const [width,height] of [[390,844],[768,1024],[1440,900]]) for(const scheme 
 {
   const {ctx,page,errors,ready}=await open(1440,900,'light','wing');
   if(ready) {
+    await wingInputs(page);
     await page.fill('#wgSpan','430');await page.press('#wgSpan','Enter');await page.click('#runBtn');
     await page.waitForFunction(()=>!window.WingLabUI.isRunning()&&window.WingLabUI.result().geometry.semiSpan===430,null,{timeout:120000});
     await page.click('#toMetalWing');await metalSettled(page);
@@ -214,4 +239,4 @@ for(const [width,height] of [[390,844],[768,1024],[1440,900]]) for(const scheme 
 await browser.close();
 for(const n of notes) console.log('NOTE',n);
 if(failures.length){console.log(failures.map(f=>'FAIL '+f).join('\n'));process.exit(1);}
-console.log(`Wing workspaces in Chromium: ${checks} checks passed — printed wing and D.520 at 390/768/1440 px in light and dark (no horizontal scroll, view about half the desktop width, Solve/status chip visible, Out of date → Solved, zoom/Fit/Reset camera-only with unchanged dimensions, D.520 part toggles, quick views and skin modes visual-only in model, stress, displacement, buckling and mode views, spar labels, round trip). Screenshots: ${shots}`);
+console.log(`Wing workspaces in Chromium: ${checks} checks passed — printed wing and D.520 at 390/768/1440 px in light and dark (no horizontal scroll, inputs beside the desktop model/tablet drawer, tools above and results below the drawing, Solve/status chip visible, Out of date → Solved, View & display popup, zoom/Fit/Reset camera-only with unchanged dimensions, D.520 part toggles, quick views and skin modes visual-only in model, stress, displacement, buckling and mode views, spar labels, round trip). Screenshots: ${shots}`);

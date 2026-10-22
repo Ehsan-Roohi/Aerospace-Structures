@@ -161,42 +161,46 @@ async function openWing(width,height,scheme,extra={}) {
   page.on('dialog',d=>{errors.push(`dialog: ${d.message()}`);d.dismiss();});
   await page.goto(pageUrl,{waitUntil:'load'});
   const ready=await page.waitForFunction(()=>document.documentElement.dataset.wingReady==='true',null,{timeout:30000}).then(()=>true,()=>false);
-  if(ready) {await page.addScriptTag({content:AUDIT});await page.$eval('[data-stage="project"]',b=>b.click());await wingReady(page);}
+  if(ready) {await page.addScriptTag({content:AUDIT});await page.$eval('[data-stage="project"]',b=>b.click());await wingReady(page);await page.check('#wingAutoSolve');}
   return {ctx,page,errors,ready};
 }
 const wingSolve=async page=>{await page.click('#runBtn');await wingReady(page);};
+const closeWingPopup=async page=>{const popup=page.locator('.wing-editor-pop:visible');if(await popup.count())await popup.locator('.wing-editor-close').click();};
+async function wingInputs(page){if(!await page.isVisible('#wingSide'))await page.click('#inputsBtn');check(await page.isVisible('#wingSide'),'Wing inputs open from the actual toolbar/drawer control');}
+async function wingLoadPopup(page){await closeWingPopup(page);await page.click('#app [data-wing-action="load"]');check(await page.isVisible('.wing-editor-pop #wingLoadForm'),'Wing load values appear in the visible compact popup');}
+async function clearWingLoads(page){await wingLoadPopup(page);await page.click('#wingClearLoad');await wingReady(page);await closeWingPopup(page);}
 for(const [width,height,scheme] of [[1440,900,'light'],[390,844,'dark']]) {
   const tag=`printed wing ${width} ${scheme}`, {ctx,page,errors,ready}=await openWing(width,height,scheme,{acceptDownloads:true});
   if(!ready){notes.push(`${tag}: not tested (three.js did not load; set BEAM_THREE_DIR)`);await ctx.close();continue;}
   check(/Solved with no load/.test(await page.textContent('#stateText')),`${tag}: opens solved with no load`);
   // an elliptic load at x/c = 0.6 through the form
-  await page.$eval('#wingLoadForm',f=>f.scrollIntoView({block:'center'}));
+  await wingLoadPopup(page);
   await page.selectOption('#wingKind','elliptic');
   await page.fill('#wingA','0');await page.fill('#wingB','450');await page.fill('#wingCurveValue','2');await page.fill('#wingFraction','0.6');await page.dispatchEvent('#wingCurveValue','input');
   check(/w₀ = 0\.005659 N\/mm/.test(await page.textContent('#wingCurveLaw')),`${tag}: live law`);
-  await page.click('#wingLoadForm button[type="submit"]');await wingReady(page);
-  check(await page.evaluate(()=>window.WingLabUI.result().load.items.length===1&&Math.abs(window.WingLabUI.result().V[0]-2)<1e-9),`${tag}: elliptic F = 2 N applied`);
   await page.dispatchEvent('#wingCurveValue','input');await page.waitForTimeout(50);
   check(await page.$eval('#wingChordFigure',el=>!!el.querySelector('svg')&&/SC/.test(el.textContent)&&/nose-down/.test(el.textContent)),`${tag}: chord figure with the shear centre and a nose-down torque (force aft of the SC)`);
-  if(width===1440) await (await page.$('#wingLoadEditor')).screenshot({path:path.join(shots,`v5_wing_load_editor_${scheme}.png`)});
+  if(width===1440) await (await page.$('.wing-editor-pop:visible')).screenshot({path:path.join(shots,`v5_wing_load_editor_${scheme}.png`)});
+  await page.click('#wingLoadForm button[type="submit"]');await wingReady(page);
+  check(await page.evaluate(()=>window.WingLabUI.result().load.items.length===1&&Math.abs(window.WingLabUI.result().V[0]-2)<1e-9),`${tag}: elliptic F = 2 N applied`);
   // CSV table with an x/c column through the real file chooser
-  await page.$eval('#wingCsv',d=>{d.open=true;d.scrollIntoView({block:'center'});});
+  await wingLoadPopup(page);await page.click('#wingCsv > summary');
   await page.setInputFiles('#wingCsvFile',{name:'root_heavy.csv',mimeType:'text/csv',buffer:Buffer.from('y_mm,w_N_per_mm,x_over_c\n0,0.004,0.25\n200,0.002,0.3\n450,0,0.4\n')});
   await page.waitForFunction(()=>/Preview: 3 rows/.test(document.querySelector('#wingCsvOut').textContent));
   check(/x\/c from the table/.test(await page.textContent('#wingCsvOut'))&&/SHA-256/.test(await page.textContent('#wingCsvOut')),`${tag}: CSV preview with x/c and SHA-256`);
   await page.click('#wingCsvApply');await wingReady(page);
   check(await page.evaluate(()=>window.WingLabUI.result().load.items.length===2&&window.WingLabUI.result().load.items[1].kind==='table'),`${tag}: table added`);
   // the Schrenk teaching figure on the load lesson
-  await page.$eval('[data-tab="loads"]',b=>b.click());await page.waitForTimeout(150);
+  await closeWingPopup(page);await page.click('#app .wing-experiments > summary');await page.click('[data-wing-lesson="loads"]');await page.waitForTimeout(150);
   const sf=await page.$('#wingLoadLesson svg.wlefig');check(!!sf,`${tag}: Schrenk figure on the load lesson`);
   if(sf&&width===1440) await sf.screenshot({path:path.join(shots,`v5_wing_schrenk_${scheme}.png`)});
   // save the study (real download), change it, open the saved file (real file chooser), Apply, Solve: same numbers
-  await page.$eval('#wlFiles',d=>{d.open=true;d.scrollIntoView({block:'center'});});
+  await closeWingPopup(page);
   const m0=await page.evaluate(()=>{const r=window.WingLabUI.result();return [r.V[0],r.M[0],r.T[0],r.deflection.at(-1),r.twist.at(-1),r.mass.printed];});
-  const [sdl]=await Promise.all([page.waitForEvent('download'),page.click('#wingStudyFiles .wio-save')]);
+  const [sdl]=await Promise.all([page.waitForEvent('download'),page.click('#app [data-wing-action="save-json"]')]);
   const studyPath=await sdl.path(), study=JSON.parse(readFileSync(studyPath,'utf8'));
   check(study.format==='mie446-wing-study'&&study.study.load.items.length===2&&study.study.load.items[1].source.filename==='root_heavy.csv',`${tag}: saved study keeps both loads and the table's file name`);
-  await page.click('#wingClearLoad');await wingReady(page);
+  await clearWingLoads(page);
   await page.setInputFiles('#wingStudyFiles .wio-open input[type="file"]',studyPath);
   await page.waitForFunction(()=>{const p=document.querySelector('#wingStudyFiles .wio-preview');return p&&!p.hidden&&/Apply/.test(p.textContent);});
   await page.click('#wingStudyFiles .wio-apply');await page.waitForTimeout(50);
@@ -205,21 +209,22 @@ for(const [width,height,scheme] of [[1440,900,'light'],[390,844,'dark']]) {
   const m1=await page.evaluate(()=>{const r=window.WingLabUI.result();return [r.V[0],r.M[0],r.T[0],r.deflection.at(-1),r.twist.at(-1),r.mass.printed];});
   check(m1.every((v,i)=>Math.abs(v-m0[i])<=1e-12*Math.abs(m0[i])+1e-15),`${tag}: reopened study gives the same V, M, T, deflection, twist and mass (${m0} vs ${m1})`);
   // link → new page
-  await page.click('#wingShareBtn');await page.waitForTimeout(80);const link=await page.inputValue('#wingShareBox');
+  await wingInputs(page);await page.$eval('#wlFiles',d=>{d.open=true;});await page.click('#wingShareBtn');await page.waitForTimeout(80);const link=await page.inputValue('#wingShareBox');
   check(/#wingstudy=[A-Za-z0-9_-]+$/.test(link),`${tag}: link built`);
   // (the first page leaves its 3-D view while the second one loads: two software-rendered WebGL views starve each other)
-  await page.click('#backFoundations');
+  if(await page.isVisible('#wingSide > button[aria-label="Close wing inputs"]'))await page.click('#wingSide > button[aria-label="Close wing inputs"]');await page.click('#backFoundations');
   const p2=await ctx.newPage();await p2.goto(link,{waitUntil:'load',timeout:120000});await wingReady(p2);
   const m2=await p2.evaluate(()=>{const r=window.WingLabUI.result();return [r.V[0],r.M[0],r.T[0],r.deflection.at(-1),r.twist.at(-1),r.mass.printed];});
   check(m2.every((v,i)=>Math.abs(v-m0[i])<=1e-12*Math.abs(m0[i])+1e-15),`${tag}: the link reopens and solves the same study`);
   check(/Shared study opened from the link/.test(await p2.textContent('#wingFilesNote')),`${tag}: the linked page says what it opened`);await p2.close();
   await page.evaluate(()=>window.dispatchEvent(new CustomEvent('wing-show')));await page.waitForTimeout(200);
   // geometry-only design parameters: gate
-  await page.click('#wingClearLoad');await wingReady(page);
+  await clearWingLoads(page);
   const params=JSON.stringify({...JSON.parse(readFileSync(path.join(here,'wing_parameters_template.json'),'utf8')),units:{length:'cm'},span:{value:84,kind:'full'},rootChord:15,tipChord:9.5,airfoil:{type:'naca4',code:'2415'}});
   await page.setInputFiles('#wingStudyFiles .wio-params input[type="file"]',{name:'my_design.json',mimeType:'application/json',buffer:Buffer.from(params)});
   await page.waitForFunction(()=>/Apply outer geometry/.test(document.querySelector('#wingStudyFiles .wio-preview').textContent));
   await page.click('#wingStudyFiles .wio-apply-geometry');await page.waitForTimeout(80);
+  await wingInputs(page);
   check(await page.textContent('#stateChip')==='Analysis blocked'&&await page.isVisible('#wingImportGate'),`${tag}: analysis blocked after a shape-only import`);
   const badGate=(await audit(page,'#wingImportGate',{text:true})).filter(r=>!r.ok);check(!badGate.length,`${tag}: gate contrast: ${badGate.slice(0,3).map(fmtFail).join('; ')}`);
   await (await page.$('#wingImportGate')).screenshot({path:path.join(shots,`v5_wing_import_gate_${width}_${scheme}.png`)});
@@ -236,7 +241,7 @@ for(const [width,height,scheme] of [[1440,900,'light'],[390,844,'dark']]) {
 }
 passed.push('printed wing in Chromium at 1440 light and 390 dark (elliptic load and chord figure, CSV with x/c via the file chooser, Schrenk figure, study save/open via real download and file chooser with identical results, link, shape-only import gate, contrast, no overflow)');
 
-/* ---------- 5. D.520: load editor in the input column, figures, study file, link ---------- */
+/* ---------- 5. D.520: toolbar load popup, figures, study file, link ---------- */
 {
   const tag='D.520 1440 dark', ctx=await browser.newContext({viewport:{width:1440,height:900},colorScheme:'dark',acceptDownloads:true}), page=await ctx.newPage(), errors=[];
   page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error'&&!/ERR_|Failed to load resource/.test(m.text()))errors.push(m.text());});
@@ -248,15 +253,14 @@ passed.push('printed wing in Chromium at 1440 light and 390 dark (elliptic load 
     await page.$eval('[data-stage="metal"]',b=>b.click());
     const settled=()=>page.waitForFunction(()=>window.MetalWingUI.result()&&document.querySelector('#mLoading').hidden&&!/Solving|Out of date|Ready/.test(document.querySelector('#mChip').textContent),null,{timeout:180000});
     await settled();check(await page.textContent('#mChip')==='No load',`${tag}: opens with no load`);
-    check(await page.isVisible('#mLoadEditor #mLoadForm'),`${tag}: load editor visible in the input column on the first view`);
-    await page.$eval('#mLoadForm',f=>f.scrollIntoView({block:'center'}));
+    await page.click('#metalApp [data-wing-action="load"]');check(await page.isVisible('.wing-editor-pop #mLoadForm'),`${tag}: toolbar opens a visible compact D.520 load editor`);
     await page.selectOption('#mLoadShape','elliptic');await page.fill('#mLa','0.46');await page.fill('#mLb','4.93');await page.fill('#mLvalue','10000');await page.fill('#mLxc','0.6');
+    await page.dispatchEvent('#mLvalue','input');await page.waitForTimeout(80);
+    check(await page.$eval('#mChordFigure',el=>!!el.querySelector('svg')&&/nose-down/.test(el.textContent)),`${tag}: chord figure (x/c = 0.6 aft of the shear centre: nose-down)`);
+    await (await page.$('.wing-editor-pop:visible')).screenshot({path:path.join(shots,'v5_d520_load_editor_dark.png')});
     await page.click('#mLoadForm button[type="submit"]');await page.waitForTimeout(700);await settled();
     const M0=await page.evaluate(()=>window.MetalWingUI.result().perG.M(0.4600001));
     check(Math.abs(M0-10000*4*(4.93-0.46)/(3*Math.PI))<1e-3,`${tag}: M at the fittings = 4ℓF/(3π) (${M0})`);
-    await page.dispatchEvent('#mLvalue','input');await page.waitForTimeout(80);
-    check(await page.$eval('#mChordFigure',el=>!!el.querySelector('svg')&&/nose-down/.test(el.textContent)),`${tag}: chord figure (x/c = 0.6 aft of the shear centre: nose-down)`);
-    await (await page.$('#mLoadEditor')).screenshot({path:path.join(shots,'v5_d520_load_editor_dark.png')});
     await page.$eval('#mSecFiles',d=>{d.open=true;d.scrollIntoView({block:'center'});});
     const [dl]=await Promise.all([page.waitForEvent('download'),page.click('#mStudyFiles .wio-save')]);
     const doc=JSON.parse(readFileSync(await dl.path(),'utf8'));check(doc.workspace==='d520'&&doc.study.customLoads[0].kind==='elliptic',`${tag}: D.520 study saved`);
@@ -270,7 +274,7 @@ passed.push('printed wing in Chromium at 1440 light and 390 dark (elliptic load 
     const bad=(await audit(page,'#mSide',{text:true})).filter(r=>!r.ok);check(!bad.length,`${tag}: input column contrast: ${bad.slice(0,4).map(fmtFail).join('; ')}`);
     const o=await page.evaluate(overflowProbe,'#metalLab');check(o.doc<=o.vw&&!o.bad.length,`${tag}: overflow ${o.doc}>${o.vw} ${o.bad.join('; ')}`);
     await page.screenshot({path:path.join(shots,'v5_d520_1440_dark.png')});
-    passed.push('D.520 in Chromium at 1440 dark (no-load opening, load editor in the input column, elliptic 4ℓF/(3π), chord figure, study file download, link reopened in a new page, contrast, no overflow)');
+    passed.push('D.520 in Chromium at 1440 dark (no-load opening, toolbar load popup, elliptic 4ℓF/(3π), chord figure, study file download, link reopened in a new page, contrast, no overflow)');
   }
   check(!errors.length,`${tag}: console errors: ${errors.join(' | ')}`);
   await ctx.close();
@@ -290,7 +294,7 @@ passed.push('printed wing in Chromium at 1440 light and 390 dark (elliptic load 
     await settled();check(await page.textContent('#mChip')==='No load',`${tag}: opens with no load`);
     await page.click('[data-mtab="report"]');await page.click('#mSaveA');
     check(await page.textContent('#mABState')==='Saved the solved study as A.',`${tag}: A saved`);
-    await page.click('[data-mtab="loads"]');await page.click('#mRestoreFlight');await page.waitForTimeout(700);await settled();
+    await page.click('#metalApp [data-wing-action="load"]');await page.click('#mRestoreFlight');await page.waitForTimeout(700);await settled();await closeWingPopup(page);
     await page.click('[data-mtab="report"]');await page.click('#mSaveB');
     const t=await page.evaluate(()=>{const R=window.MetalWingUI.result(), rows=[...document.querySelectorAll('#mABTable tbody tr')].map(tr=>[...tr.children].map(c=>c.textContent.trim()));
       return {rows,M:(R.fitting.M_per_g*R.n/1e3).toFixed(3),w:(R.tip.wMax*1e3).toFixed(2),diff:document.querySelectorAll('#mAB p.note')[1].textContent,

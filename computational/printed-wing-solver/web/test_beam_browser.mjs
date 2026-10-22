@@ -36,9 +36,22 @@ async function openPage(width,height,scheme,extra={},query='') {
   page.on('pageerror',e=>errors.push(e.message));
   page.on('console',m=>{if(m.type()==='error'&&!/ERR_|Failed to load resource/.test(m.text()))errors.push(m.text());});
   await page.goto(pageUrl+query,{waitUntil:'load'});
-  await page.waitForFunction(()=>window.BeamLab&&document.querySelector('#beamChip').textContent==='Solved');
+  await page.waitForFunction(()=>window.BeamLab&&document.querySelector('#beamChip'));
+  if(query) await page.waitForFunction(()=>window.BeamLab.state().solved&&document.querySelector('#beamChip').textContent==='Solved');
+  else await page.waitForFunction(()=>window.BeamLab.state().solved===null&&document.querySelector('#beamChip').textContent==='Pending');
   await page.addScriptTag({content:AUDIT});
   return {ctx,page,errors};
+}
+// Assigned HW links intentionally no longer load a model. Configure the exact
+// numerical browser fixtures through student-facing controls instead.
+async function assignedBeam(page,{left='fixed',right='free',qStart=0,qEnd=.002}={}) {
+  for(const [name,value]of Object.entries({length:450,E:2200,density:1.24,elements:30}))await page.fill(`#beamGeometry [name="${name}"]`,String(value));
+  await page.selectOption('#beamShape','rectangle');
+  await page.fill('#beamSectionFields [data-sec="width"]','16');await page.fill('#beamSectionFields [data-sec="height"]','8');
+  await page.selectOption('#beamleftSupport',left);await page.selectOption('#beamrightSupport',right);await page.uncheck('#beamSelfWeight');
+  await page.selectOption('#beamLoadKind','trapezoid');await page.fill('#beamLoadA','0');await page.fill('#beamLoadB','450');await page.fill('#beamQ0',String(qStart));await page.fill('#beamQ1',String(qEnd));
+  await page.click('#beamLoadSubmit');await page.waitForFunction(()=>window.BeamLab.state().solved&&document.querySelector('#beamChip').textContent==='Solved');
+  check(await page.evaluate(({left,right,qStart,qEnd})=>{const m=window.BeamLab.state().solved.model;return m.length===450&&m.E===2200&&m.section.width===16&&m.section.height===8&&m.supports[0].kind===left&&(right==='free'?m.supports.length===1:m.supports[1].kind===right)&&m.loads.length===1&&m.loads[0].qStart===qStart&&m.loads[0].qEnd===qEnd&&!m.selfWeight;},{left,right,qStart,qEnd}),'explicit assigned-case browser fixture matches its authored dimensions, restraints and load');
 }
 // Elements that stick out of the viewport, ignoring content inside horizontal scrollers.
 const overflowProbe=()=>{
@@ -74,22 +87,25 @@ for(const [width,height] of [[390,844],[768,1024],[1440,900]]) for(const scheme 
   check(!errors.length,`${width} ${scheme}: console errors: ${errors.join(' | ')}`);
   await ctx.close();
 }
-// Normal opening: no applied load. Nothing is drawn as a load, results read zero, the empty state is visible,
-// the layout holds and every piece of text keeps its contrast.
+// Normal opening: an unrestrained, unloaded editable draft, NOT a solved zero-
+// response cantilever. No computed results or result exports may appear.
 for(const width of [390,1440]) for(const scheme of ['light','dark']) {
   const tag=`no load ${width} ${scheme}`;
   const {ctx,page,errors}=await openPage(width,900,scheme);
-  const s=await page.evaluate(()=>{const st=window.BeamLab.state().solved, pic=document.querySelector('#beamPicture');
-    return {loads:st.model.loads.length,selfWeight:st.model.selfWeight,maxV:st.result.maxima.deflection,
+  const s=await page.evaluate(()=>{const st=window.BeamLab.state(), pic=document.querySelector('#beamPicture');
+    return {loads:st.model.loads.length,supports:st.model.supports.length,selfWeight:st.model.selfWeight,solved:st.solved,
       loadMarks:pic.querySelectorAll('.bl-load, .bl-point, .bl-couple, .bl-sw, .bl-load-fill, .bl-sw-fill').length,
-      list:document.querySelector('#beamLoads').innerText.trim(),notice:!!document.querySelector('#beamNoLoad'),
-      noticeVisible:(()=>{const n=document.querySelector('#beamNoLoad');if(!n)return false;const r=n.getBoundingClientRect();return r.width>0&&r.height>0;})(),
+      supportMarks:pic.querySelectorAll('[data-support-index]').length,chip:document.querySelector('#beamChip').textContent,
+      list:document.querySelector('#beamLoads').innerText.trim(),notice:!!document.querySelector('#beamSetup'),
+      noticeVisible:(()=>{const n=document.querySelector('#beamSetup');if(!n)return false;const r=n.getBoundingClientRect();return r.width>0&&r.height>0;})(),
+      resultExports:[...document.querySelectorAll('#beamDownload,#beamCsv,#beamShare,#beamPrintBtn,[data-png]')].every(b=>b.disabled),
       shortcuts:document.querySelectorAll('#beamCentre, [data-shape]').length,kpi:document.querySelector('#beamKpis').innerText};});
-  check(s.loads===0&&s.selfWeight===false&&s.maxV===0,`${tag}: opens with no load, self-weight off and zero deflection`);
+  check(s.loads===0&&s.supports===0&&s.selfWeight===false&&s.solved===null&&s.chip==='Pending',`${tag}: opens with no supports, no load and no structural solution`);
   check(s.loadMarks===0,`${tag}: no load arrows drawn (${s.loadMarks})`);
+  check(s.supportMarks===0,`${tag}: no implicit supports drawn`);
   check(s.list==='No load defined. Add your own load.'&&s.notice&&s.noticeVisible,`${tag}: empty-state message shown`);
   check(s.shortcuts===0,`${tag}: no automatic-load shortcuts`);
-  check(/0\.0000 mm/.test(s.kpi)&&/0\.000 N/.test(s.kpi),`${tag}: zero results in the key figures`);
+  check(s.kpi.trim()===''&&s.resultExports,`${tag}: no invented zero results; result exports stay disabled`);
   const o=await page.evaluate(overflowProbe);check(o.doc<=o.vw&&!o.bad.length,`${tag}: overflow ${o.bad.join('; ')}`);
   const bad=(await audit(page,'#foundations',{text:true})).filter(r=>!r.ok);check(!bad.length,`${tag}: low-contrast text: ${bad.slice(0,4).map(fmtFail).join('; ')}`);
   if(scheme==='light') await (await page.$('.bl-model')).screenshot({path:path.join(shots,`no_load_${width}.png`)});
@@ -98,7 +114,7 @@ for(const width of [390,1440]) for(const scheme of ['light','dark']) {
 }
 // Interactions with real pointer events and layout.
 {
-  const {ctx,page,errors}=await openPage(1440,900,'light');
+  const {ctx,page,errors}=await openPage(1440,900,'light',{},'?beamCase=l03-tip');
   const box=await (await page.$('#beamPicture svg')).boundingBox();
   const geo=await page.evaluate(()=>{const s=document.querySelector('#beamPicture svg');return {x0:+s.dataset.x0,x1:+s.dataset.x1,W:+s.dataset.w,L:+s.dataset.length};});
   const px=x=>box.x+(geo.x0+(geo.x1-geo.x0)*x/geo.L)*box.width/geo.W;
@@ -109,7 +125,7 @@ for(const width of [390,1440]) for(const scheme of ['light','dark']) {
   check(await page.$eval('#beamInteriorList [data-field="x"]',el=>+el.value)===225,'click on the beam places a roller at x = 225 mm');
   await page.keyboard.press('Escape');
   await page.click('#beamSolve');
-  // The default cantilever plus the placed roller: both supports are FE constraints of the solved model.
+  // The explicitly selected Lecture 03 cantilever plus the placed roller.
   check(await page.evaluate(()=>{const r=window.BeamLab.state().solved.result;return r.reactions.length===2&&r.reactions[1].x===225&&Math.abs(r.equilibrium.force)<1e-6;}),'placed support assembled into the solved model');
   await page.click('[data-tab="cut"]');
   const handle=await (await page.$('#beamPicture svg')).boundingBox();
@@ -138,7 +154,7 @@ for(const width of [390,1440]) for(const scheme of ['light','dark']) {
 // beam picture and hover, all on the Diagrams tab; the x⁻ / x⁺ choice at a jump; layout and contrast at 390/1440.
 for(const [width,scheme] of [[1440,'light'],[390,'dark']]) {
   const tag=`station ${width} ${scheme}`;
-  const {ctx,page,errors}=await openPage(width,900,scheme,{},'?beamCase=hw2b-cantilever');
+  const {ctx,page,errors}=await openPage(width,900,scheme);await assignedBeam(page);
   const card=k=>page.$eval(`#beamStationCards [data-q="${k}"] .bl-stat-v`,el=>el.innerText.replace(/\s+/g,' ').trim());
   await page.click('[data-station-frac="0"]');await page.click('[data-station-frac="0.5"]');
   check(await page.evaluate(()=>window.BeamLab.state().cut.x)===225,`${tag}: one click to x = L/2`);
@@ -187,7 +203,7 @@ for(const [width,scheme] of [[1440,'light'],[390,'dark']]) {
   const pngSize=buf=>({png:buf.subarray(0,8).toString('hex')==='89504e470d0a1a0a',w:buf.readUInt32BE(16),h:buf.readUInt32BE(20)});
   for(const scheme of ['light','dark']) {
     const tag=`png ${scheme}`;
-    const {ctx,page,errors}=await openPage(1440,900,scheme,{acceptDownloads:true},'?beamCase=hw2b-fixed');
+    const {ctx,page,errors}=await openPage(1440,900,scheme,{acceptDownloads:true});await assignedBeam(page,{right:'fixed',qStart:.002,qEnd:0});
     for(const key of ['shear','moment','deflection']) {
       const dims=await page.evaluate(k=>{const i=window.BeamLab.plotImage(k);return {w:i.width,h:i.height};},key);
       const [dl]=await Promise.all([page.waitForEvent('download'),page.click(`[data-png="${key}"]`)]);
@@ -220,7 +236,7 @@ for(const [width,scheme] of [[1440,'light'],[390,'dark']]) {
 // tab and in the printed report (screen and print media): computed text-transform 'none' and rendered text equal to
 // the authored text. Every other Beam Lab element whose own text carries a unit or a lower-case symbol is checked too.
 {
-  const {ctx,page,errors}=await openPage(1440,900,'light',{},'?beamCase=hw2b-fixed');
+  const {ctx,page,errors}=await openPage(1440,900,'light');await assignedBeam(page,{right:'fixed',qStart:.002,qEnd:0});
   const caseAudit=scope=>page.evaluate(scope=>{
     const SCI=/(\bmm\b|mm[²³⁴⁻]|MPa|N·mm|N\/mm|\brad\b|g\/cm|\bHz\b|[θσταβκρεγφωμ]|(^|[\s(,=·:])[vqxzhbtc](?=$|[\s)=,·:⁻⁺(/])|dv\/dx|[x0L][⁻⁺])/u;
     const own=el=>[...el.childNodes].filter(n=>n.nodeType===3).map(n=>n.textContent).join('').replace(/\s+/g,' ').trim();
@@ -274,7 +290,7 @@ for(const [width,scheme] of [[1440,'light'],[390,'dark']]) {
 // measured from the rendered SVG text boxes. The PNG source is measured in a shadow root, so only its own styles apply,
 // as when it is drawn on the canvas. Every station value stays visible and inside the plot area.
 {
-  const {ctx,page,errors}=await openPage(1440,900,'light',{},'?beamCase=hw2b-fixed');
+  const {ctx,page,errors}=await openPage(1440,900,'light');await assignedBeam(page,{right:'fixed',qStart:.002,qEnd:0});
   const labelAudit=()=>page.evaluate(()=>{
     const problems=[], cut={};
     const audit=(svg,where)=>{
@@ -338,7 +354,7 @@ for(const [width,scheme] of [[1440,'light'],[390,'dark']]) {
   const LINK='.bl-companion a.companion-link';
   for(const width of [390,1440]) for(const [scheme,forced] of [['light',null],['dark',null],['dark','light'],['light','dark']]) {
     const tag=`${width} ${scheme}${forced?` + data-theme=${forced}`:''}`;
-    const {ctx,page,errors}=await openPage(width,900,scheme,{},'?beamCase=hw2b-roller-pin');
+    const {ctx,page,errors}=await openPage(width,900,scheme);await assignedBeam(page,{left:'roller',right:'pin',qStart:.001,qEnd:.002});
     if(forced) await page.evaluate(t=>{document.documentElement.dataset.theme=t;},forced);
     if(width<700) await page.click('#beamNavToggle');
     await page.click('.bl-companion > summary');
@@ -389,12 +405,16 @@ for(const [width,scheme] of [[1440,'light'],[390,'dark']]) {
 }
 // Reduced motion disables the mode animation.
 {
-  const {ctx,page}=await openPage(1024,800,'light',{reducedMotion:'reduce'});
+  const {ctx,page}=await openPage(1024,800,'light',{reducedMotion:'reduce'},'?beamCase=l03-tip');
   await page.click('[data-tab="modes"]');
   check(await page.$eval('#beamAnimate',b=>b.disabled),'mode animation disabled for reduced motion');
   await ctx.close();
 }
 // The Design lab copy of the VINCO card (outside the Beam Lab): text, button, hover and keyboard focus.
+async function openDesignLesson(page){
+  await page.click('#app .wing-experiments > summary');await page.click('[data-wing-lesson="design"]');
+  check(await page.isVisible('.wing-editor-pop #tab-design'),'Design lab opens in its actual Experiments & theory editor');
+}
 async function designTabContrast(page,tag) {
   const LINK='#tab-design .companion-card a.companion-link';
   const bad=(await audit(page,'#tab-design .companion-card',{text:true})).filter(r=>!r.ok);
@@ -415,19 +435,20 @@ function preexisting(rows,where) {
 }
 // Wing and D.520 workspaces (WebGL) and return-to-beam state.
 {
-  const {ctx,page,errors}=await openPage(1440,900,'light');
+  const {ctx,page,errors}=await openPage(1440,900,'light',{},'?beamCase=l03-tip');
   const ready=await page.evaluate(()=>document.documentElement.dataset.wingReady==='true');
   if(!ready) notes.push('WebGL wing workspace not tested: three.js did not load (set BEAM_THREE_DIR or allow the CDN).');
   else {
     const before=await page.textContent('#beamKpis');
     await page.click('[data-stage="wing"]');
-    await page.waitForFunction(()=>!document.querySelector('#app').hidden&&document.querySelector('#stateChip').textContent!=='Starting',null,{timeout:60000});
+    await page.waitForFunction(()=>!document.querySelector('#app').hidden&&window.WingLabUI.result()&&!window.WingLabUI.isRunning()&&document.querySelector('#stateChip').textContent==='Solved',null,{timeout:120000});
     check(await page.evaluate(()=>{const c=document.querySelector('#gl');const gl=c.getContext('webgl2')||c.getContext('webgl');return !!gl&&c.width>0;}),'wing WebGL canvas is live');
-    await page.click('[data-tab="design"]');
+    await openDesignLesson(page);
     const link=await page.$eval('#tab-design .companion-card a',a=>({href:a.getAttribute('href'),target:a.target,rel:a.rel}));
     check(link.href==='https://vinco-rc.com/?generator=wing'&&link.target==='_blank'&&link.rel==='noopener noreferrer','VINCO card in the Design lab tab');
     await designTabContrast(page,'1440 light');
     await page.screenshot({path:path.join(shots,'wing_design_tab.png')});
+    await page.click('.wing-editor-pop .wing-editor-close');
     await page.click('#backFoundations');
     check(await page.evaluate(()=>!document.querySelector('#foundations').hidden&&document.querySelector('#app').hidden),'back to the Beam Lab');
     check((await page.textContent('#beamKpis'))===before,'beam study preserved after visiting the wing');
@@ -445,13 +466,14 @@ function preexisting(rows,where) {
 }
 // Dark theme: the Design lab card and the D.520 controls.
 {
-  const {ctx,page,errors}=await openPage(1440,900,'dark');
+  const {ctx,page,errors}=await openPage(1440,900,'dark',{},'?beamCase=l03-tip');
   if(await page.evaluate(()=>document.documentElement.dataset.wingReady==='true')) {
     await page.click('[data-stage="wing"]');
-    await page.waitForFunction(()=>!document.querySelector('#app').hidden&&document.querySelector('#stateChip').textContent!=='Starting',null,{timeout:60000});
-    await page.click('[data-tab="design"]');
+    await page.waitForFunction(()=>!document.querySelector('#app').hidden&&window.WingLabUI.result()&&!window.WingLabUI.isRunning()&&document.querySelector('#stateChip').textContent==='Solved',null,{timeout:120000});
+    await openDesignLesson(page);
     await designTabContrast(page,'1440 dark');
     await page.screenshot({path:path.join(shots,'wing_design_tab_dark.png')});
+    await page.click('.wing-editor-pop .wing-editor-close');
     await page.click('#backFoundations');
     await page.click('[data-stage="metal"]');
     await page.waitForFunction(()=>{const m=document.querySelector('#metalLab');return m&&!m.hidden;},null,{timeout:60000});

@@ -34,7 +34,9 @@ async function openPage(width,height,scheme,extra={},query='') {
   page.on('console',m=>{if(m.type()==='error'&&!/ERR_|Failed to load resource/.test(m.text()))errors.push(m.text());});
   page.on('dialog',d=>{errors.push(`dialog: ${d.message()}`);d.dismiss();});
   await page.goto(pageUrl+query,{waitUntil:'load'});
-  await page.waitForFunction(()=>window.BeamLab&&document.querySelector('#beamChip').textContent==='Solved');
+  await page.waitForFunction(()=>window.BeamLab&&document.querySelector('#beamChip'));
+  if(query) await page.waitForFunction(()=>window.BeamLab.state().solved&&document.querySelector('#beamChip').textContent==='Solved');
+  else await page.waitForFunction(()=>window.BeamLab.state().solved===null&&document.querySelector('#beamChip').textContent==='Pending');
   await page.addScriptTag({content:AUDIT});
   return {ctx,page,errors};
 }
@@ -51,6 +53,11 @@ const overflowProbe=root=>{
 };
 const beamLoads=page=>page.evaluate(()=>JSON.stringify(window.BeamLab.state().solved.model.loads));
 const solved=page=>page.waitForFunction(()=>document.querySelector('#beamChip').textContent==='Solved');
+async function unloadedCantilever(page){
+  check(await page.evaluate(()=>{const s=window.BeamLab.state();return s.solved===null&&!s.model.supports.length&&!s.model.loads.length&&!s.model.selfWeight;}),'normal Beam startup has no restraints, loads or claimed solution');
+  await page.selectOption('#beamleftSupport','fixed');await page.selectOption('#beamrightSupport','free');await page.click('#beamSolve');await solved(page);
+  check(await page.evaluate(()=>{const s=window.BeamLab.state().solved;return s.model.supports.length===1&&s.model.supports[0].kind==='fixed'&&!s.model.loads.length&&!s.model.selfWeight&&s.result.maxima.deflection===0;}),'student explicitly creates and solves an unloaded cantilever before entering test loads');
+}
 async function addCurve(page,kind,a,b,shape,basis,value) {
   await page.selectOption('#beamLoadKind',kind);
   await page.fill('#beamLoadA',String(a));await page.fill('#beamLoadB',String(b));
@@ -61,6 +68,7 @@ async function addCurve(page,kind,a,b,shape,basis,value) {
 /* ---------- 1. Beam: curved loads through the form, layout and contrast at three widths, light and dark ---------- */
 for(const [width,height] of [[390,844],[768,1024],[1440,900]]) for(const scheme of ['light','dark']) {
   const tag=`beam curves ${width} ${scheme}`, {ctx,page,errors}=await openPage(width,height,scheme);
+  await unloadedCantilever(page);
   await addCurve(page,'elliptic',0,450,'start','total',2);
   await addCurve(page,'parabolic',100,400,'middle','peak',0.004);
   const loads=JSON.parse(await beamLoads(page));
@@ -83,6 +91,7 @@ passed.push('Beam curved loads through the form at 390/768/1440 px, light and da
 /* ---------- 2. Beam: CSV table with a real file chooser, downloads, share link ---------- */
 for(const scheme of ['light','dark']) {
   const tag=`beam csv ${scheme}`, {ctx,page,errors}=await openPage(1440,900,scheme,{acceptDownloads:true});
+  await unloadedCantilever(page);
   await page.click('#beamCsvBox > summary');
   const [tdl]=await Promise.all([page.waitForEvent('download'),page.click('#beamCsvTemplate')]);
   const tpl=readFileSync(await tdl.path(),'utf8');
@@ -130,6 +139,7 @@ passed.push('Beam CSV table with a real file chooser (malformed file refused, ho
 /* ---------- 3. Beam: CSV editor on a phone, dark ---------- */
 {
   const {ctx,page,errors}=await openPage(390,844,'dark');
+  await unloadedCantilever(page);
   await page.click('#beamCsvBox > summary');
   await page.fill('#beamCsvText','x_mm,w_N_per_mm\n0,0.004\n150,0.002\n450,0\n');await page.click('#beamCsvPreview');
   await page.waitForFunction(()=>/Preview: 3 rows/.test(document.querySelector('#beamCsvResult').textContent));

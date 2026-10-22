@@ -35,6 +35,13 @@ jobs:
         run: |
           python computational/printed-wing-solver/web/build_wing_lab.py
           git diff --exit-code -- docs/wing-lab.html docs/truss-lab.html
+          failed=0
           for suite in computational/printed-wing-solver/web/test_*.mjs computational/printed-wing-solver/web/verify_engine.mjs; do
-            node "$suite"
+            echo "::group::$suite"
+            if ! node "$suite"; then
+              echo "::error file=$suite::Regression suite failed"
+              failed=1
+            fi
+            echo "::endgroup::"
           done
+          exit "$failed"

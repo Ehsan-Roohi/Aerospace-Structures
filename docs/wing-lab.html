@@ -8099,7 +8099,10 @@ const WingWorkspaceUI=(()=>{
    @media(min-width:1101px){#app .bar>.wl-run{margin-left:auto;max-width:430px;border:0;position:static}}#app .wing-input-library[hidden]{display:none}.wing-editor-pop.wing-lesson-pop{width:min(840px,calc(100vw - 16px))}.wing-lesson-pop .tabpanel{padding:0;overflow:visible}.wing-lesson-pop .learn-layout{grid-template-columns:minmax(0,1fr)}
    .wing-part-pop #wingPartEditor{margin:0!important;padding:0!important;border:0!important}.wing-part-pop #wingPartEditor>b,.wing-part-pop #wpPick,.wing-part-pop #wpDeselect,.wing-part-pop #wingPartEditor>.wl-row:last-of-type,.wing-part-pop #wingPartEditor>p:last-child{display:none}.wing-part-pop #wpChoice{max-width:100%;min-height:40px}.wing-part-pop #wpPosition{font-size:16px;min-height:40px}
   `;doc.head.append(style);}
-  const scrollStyle=doc.createElement('style');scrollStyle.textContent='.wing-editor-pop{overflow:visible}.wing-editor-pop>div{max-height:calc(100vh - 100px);overflow:auto;overscroll-behavior:contain}';doc.head.append(scrollStyle);
+  const scrollStyle=doc.createElement('style');scrollStyle.textContent='.wing-editor-pop{overflow:visible}.wing-editor-pop>div{max-height:calc(100vh - 100px);overflow:auto;overscroll-behavior:contain}.wing-editor-pop.wing-file-pop{width:min(600px,calc(100vw - 16px))}.wing-file-pop .wio-preview{margin:0;padding:0;border:0}.wing-file-pop .wio-preview-actions{position:sticky;top:0;z-index:1;background:var(--panel,#fff);padding:8px 0;border-bottom:1px solid var(--line)}.wing-file-pop .wio-apply{background:var(--accent,#176ac0);color:#fff;font-weight:700;min-width:110px}.wing-file-pop .wio-apply-help,.wing-file-pop .wio-apply-error{flex-basis:100%;margin:0;font-size:13px}.wing-file-pop .wio-apply-error{color:var(--bad,#b42318)}.wing-file-pop .wio-table{font-size:12px}';doc.head.append(scrollStyle);
+  const fileStyle=doc.createElement('style');fileStyle.textContent='.wing-file-pop #wingStudyFiles .wio-root>.wio-title,.wing-file-pop #wingStudyFiles .wio-root>.wio-actions,.wing-file-pop #wingStudyFiles .wio-root>.wio-paste,.wing-file-pop #wingStudyFiles .wio-root>.wio-status{display:none}';doc.head.append(fileStyle);
+  fileStyle.textContent+='.wing-file-pop .wio-preview{overflow:visible}.wing-file-pop .wio-preview-body{min-width:0}.wing-file-pop .wio-table{width:100%;table-layout:fixed}.wing-file-pop .wio-table th:first-child{width:16%}.wing-file-pop .wio-table th:nth-child(2){width:26%}';
+  fileStyle.textContent+='.wing-file-pop .wio-table td,.wing-file-pop .wio-table th{white-space:normal;overflow-wrap:anywhere}.wing-file-pop .wio-provenance{min-width:0}';
   app.classList.add('wing-workspace');
   const historyStyle=doc.createElement('style');historyStyle.textContent='.wing-history-tools .btn:disabled{opacity:.45;cursor:not-allowed}';doc.head.append(historyStyle);
   const tools=doc.createElement('section');tools.className='panel wing-quick-tools';tools.setAttribute('aria-label','Wing model tools');
@@ -8122,7 +8125,8 @@ const WingWorkspaceUI=(()=>{
   function close(){if(moved){if(placeholder?.parentNode)placeholder.replaceWith(moved);else moved.remove();}moved=null;placeholder=null;drag=null;popup.hidden=true;viewButton.setAttribute('aria-expanded','false');body.replaceChildren();returnFocus?.focus?.({preventScroll:true});returnFocus=null;}
   function open(heading,node,at){close();manualPosition=false;returnFocus=doc.activeElement;anchor=at||canvas;title.textContent=heading;placeholder=doc.createComment('wing editor home');if(node.parentNode)node.before(placeholder);moved=node;body.append(node);popup.classList.toggle('wing-view-pop',node===viewPanel);popup.classList.toggle('wing-lesson-pop',node.classList.contains('wing-lesson-panel'));popup.classList.toggle('wing-part-pop',node.id==='wingPartEditor'&&!!node.querySelector('#wpChoice')?.value);viewButton.setAttribute('aria-expanded',String(node===viewPanel));
    const form=node.querySelector('.wle-form');if(form){const kind=form.querySelector('select');form.dataset.compactKind=kind?.value||'';if(!form.querySelector('.wing-editor-help')){const help=doc.createElement('button');help.type='button';help.className='btn wing-editor-help';help.textContent='Load help';help.setAttribute('aria-expanded','false');help.onclick=()=>{const on=form.classList.toggle('wing-help-open');help.setAttribute('aria-expanded',String(on));position();};form.prepend(help);kind?.addEventListener('change',()=>{form.dataset.compactKind=kind.value;position();});}}
-   popup.hidden=false;position();closeButton.focus({preventScroll:true});return popup;}
+   popup.classList.toggle('wing-file-pop',node.id==='wingStudyFiles');
+   body.scrollTop=0;popup.hidden=false;position();closeButton.focus({preventScroll:true});return popup;}
   closeButton.onclick=close;popup.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();e.stopPropagation();close();}});
   const menu=doc.createElement('section');menu.className='wing-context-menu';menu.hidden=true;menu.setAttribute('role','menu');menu.setAttribute('aria-label','Actions at wing location');doc.body.append(menu);
   let start=null;
@@ -10023,7 +10027,8 @@ if(typeof module!=='undefined')module.exports=WingWorkspaceUI;
   /**
    * Build the study-file panel inside container with DOM APIs. options: {workspace:'printed'|'d520',
    * getState() → current UI state (S or MS.input), applyState(state, info), engine, documentRef,
-   * download(filename, text, mime) (optional override of the browser download)}.
+   * download(filename, text, mime) (optional override of the browser download),
+   * onPreview(node), onApplied(info, message), onDismiss(), canApply() → blocking reason (optional)}.
    * applyState is called only after validation, at most once per preview, and never starts a solve.
    */
   function mount(container, options = {}) {
@@ -10132,12 +10137,19 @@ if(typeof module!=='undefined')module.exports=WingWorkspaceUI;
     }
     function showFailure(heading, errors) {
       clear(preview);
-      preview.append(renderModel({ title: heading, state: { kind: 'error', text: 'Nothing was changed.' }, errors, warnings: [], lists: [], tables: [], provenance: [] }));
       preview.append(el('div', { class: 'wio-actions wio-preview-actions' }, button('Dismiss', 'wio-dismiss', cancel)));
+      preview.append(renderModel({ title: heading, state: { kind: 'error', text: 'Nothing was changed.' }, errors, warnings: [], lists: [], tables: [], provenance: [] }));
       preview.hidden = false;
       say(heading);
+      presentPreview();
     }
-    function cancel() { clear(preview); preview.hidden = true; say('Nothing was changed.'); }
+    function cancel() { clear(preview); preview.hidden = true; say('Nothing was changed.'); options.onDismiss?.(); }
+    function presentPreview() {
+      // The host may present this real node in a visible dialog instead of a scrolled sidebar.
+      options.onPreview?.(preview);
+      const action = preview.querySelector('button');
+      action?.focus({ preventScroll: true });
+    }
     function renderModel(m) {
       const box = el('section', { class: 'wio-preview-body' }, el('h4', { class: 'wio-preview-title' }, m.title));
       if (m.state.text) box.append(el('p', { class: `wio-state wio-state-${m.state.kind}` }, m.state.text));
@@ -10158,25 +10170,40 @@ if(typeof module!=='undefined')module.exports=WingWorkspaceUI;
       preview.append(el('div', { class: 'wio-actions wio-preview-actions' }, ...buttons));
       preview.append(renderModel(previewModel(result)));
       preview.hidden = false;
+      presentPreview();
     }
     function applyOnce(stateValue, info, doneText) {
       let used = false;
       return () => {
         if (used) return;
+        const blocked = options.canApply?.();
+        if (blocked) {
+          let note = preview.querySelector('.wio-apply-error');
+          if (!note) { note = el('p', { class: 'wio-apply-error', role: 'alert' }); preview.querySelector('.wio-preview-actions').append(note); }
+          note.textContent = blocked;
+          say(blocked);
+          return;
+        }
         used = true;
         try { applyState(clone(stateValue), info); }
         catch (e) { showFailure('The app could not apply the data', [e.message || String(e)]); return; }
         clear(preview); preview.hidden = true; say(doneText);
+        options.onApplied?.(info, doneText);
       };
     }
     function showStudy(result) {
       if (!result.ok) { show(result, [button('Dismiss', 'wio-dismiss', cancel)]); say('The study was not imported.'); return result; }
       const info = { kind: 'study', workspace, provenance: clone(result.provenance), warnings: result.warnings.slice() };
-      show(result, [button('Apply', 'wio-apply', applyOnce(result.state, info, `Study applied${result.provenance.filename ? ` from ${result.provenance.filename}` : ''}. Run the study to see results.`)), button('Cancel', 'wio-cancel', cancel)]);
+      show(result, [button('Apply', 'wio-apply', applyOnce(result.state, info, `Study applied${result.provenance.filename ? ` from ${result.provenance.filename}` : ''}. Run the study to see results.`)), button('Cancel', 'wio-cancel', cancel), el('p', { class: 'wio-apply-help' }, 'File read successfully. Click Apply to replace the current wing with this design, or Cancel to keep it.')]);
       say('Check the preview, then Apply or Cancel.');
       return result;
     }
     async function openFile(file) {
+      clear(preview);
+      preview.append(el('p', { role: 'status' }, `Reading ${cleanName(file && file.name)}… Your current wing has not changed.`));
+      preview.hidden = false;
+      say('Reading the selected study file…');
+      presentPreview();
       const got = await readFile(file);
       const name = cleanName(file && file.name);
       if (got.error) { showFailure('The study was not imported', [got.error]); return null; }
@@ -12385,6 +12412,20 @@ function renderObservations() {
     workspace: "printed", engine: E, download: downloadText,
     getState: () => { if (gateOpen()) throw new Error(blockedText); return S; },
     applyState: applyStudyState,
+    canApply: () => running ? 'The solver is still running. Wait for it to finish, then click Apply here; your file preview is kept.' : '',
+    onPreview: (node) => {
+      if (!printedWorkspace) return;
+      const files = $('#wingStudyFiles');
+      if (!printedWorkspace.popup.contains(files)) printedWorkspace.open('Open wing JSON · review and apply', files, $('[data-wing-action="open-json"]'));
+      const body = files.parentElement; body.scrollTop = 0;
+      printedWorkspace.position();
+    },
+    onDismiss: () => { if (printedWorkspace?.popup.classList.contains('wing-file-pop')) printedWorkspace.close(); },
+    onApplied: (info) => {
+      if (printedWorkspace?.popup.classList.contains('wing-file-pop')) printedWorkspace.close();
+      setAnatomy('inside');
+      sessionNote(`Opened ${info.provenance?.filename || 'wing JSON'}. The imported wing is shown; press Solve to update its results.`);
+    },
   }) : null;
   function renderShare() {
     const box = $("#wingShare");
@@ -12491,7 +12532,7 @@ function renderObservations() {
       {id:'parts',label:'Select / edit parts',run:(p,a)=>{printedWorkspace.open('Ribs & spars',$('#wingPartEditor'),a);if(!partPick)$('#wpPick').click();}},
       {id:'structure',label:'Structure dimensions',run:(p,a)=>openWingStructurePopup(a)},{id:'materials',label:'Materials',run:(p,a)=>openWingMaterialsPopup(a)},
       {id:'inside',label:'Inside wing',run:()=>setAnatomy('inside')},
-      {id:'open-json',label:'Open JSON',run:()=>{showInputs(true);$('#wlFiles').open=true;$('#wingStudyFiles .wio-open input').click();}},
+      {id:'open-json',label:'Open JSON',run:()=>{$('#wingStudyFiles .wio-open input').click();}},
       {id:'save-json',label:'Save JSON',run:()=>studyFiles?.save()},
       {id:'notebook',label:'Export to notebook',run:()=>exportToNotebook()}]});
     const sessionStatus=el('p',{id:'wingSessionStatus',class:'note',role:'status'},wingSessionMessage);sessionStatus.style.cssText='flex-basis:100%;margin:0;font-size:12px';printedWorkspace.tools.append(sessionStatus);

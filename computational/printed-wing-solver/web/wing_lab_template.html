@@ -2781,6 +2781,20 @@ body { margin: 0; }
     workspace: "printed", engine: E, download: downloadText,
     getState: () => { if (gateOpen()) throw new Error(blockedText); return S; },
     applyState: applyStudyState,
+    canApply: () => running ? 'The solver is still running. Wait for it to finish, then click Apply here; your file preview is kept.' : '',
+    onPreview: (node) => {
+      if (!printedWorkspace) return;
+      const files = $('#wingStudyFiles');
+      if (!printedWorkspace.popup.contains(files)) printedWorkspace.open('Open wing JSON · review and apply', files, $('[data-wing-action="open-json"]'));
+      const body = files.parentElement; body.scrollTop = 0;
+      printedWorkspace.position();
+    },
+    onDismiss: () => { if (printedWorkspace?.popup.classList.contains('wing-file-pop')) printedWorkspace.close(); },
+    onApplied: (info) => {
+      if (printedWorkspace?.popup.classList.contains('wing-file-pop')) printedWorkspace.close();
+      setAnatomy('inside');
+      sessionNote(`Opened ${info.provenance?.filename || 'wing JSON'}. The imported wing is shown; press Solve to update its results.`);
+    },
   }) : null;
   function renderShare() {
     const box = $("#wingShare");
@@ -2887,7 +2901,7 @@ body { margin: 0; }
       {id:'parts',label:'Select / edit parts',run:(p,a)=>{printedWorkspace.open('Ribs & spars',$('#wingPartEditor'),a);if(!partPick)$('#wpPick').click();}},
       {id:'structure',label:'Structure dimensions',run:(p,a)=>openWingStructurePopup(a)},{id:'materials',label:'Materials',run:(p,a)=>openWingMaterialsPopup(a)},
       {id:'inside',label:'Inside wing',run:()=>setAnatomy('inside')},
-      {id:'open-json',label:'Open JSON',run:()=>{showInputs(true);$('#wlFiles').open=true;$('#wingStudyFiles .wio-open input').click();}},
+      {id:'open-json',label:'Open JSON',run:()=>{$('#wingStudyFiles .wio-open input').click();}},
       {id:'save-json',label:'Save JSON',run:()=>studyFiles?.save()},
       {id:'notebook',label:'Export to notebook',run:()=>exportToNotebook()}]});
     const sessionStatus=el('p',{id:'wingSessionStatus',class:'note',role:'status'},wingSessionMessage);sessionStatus.style.cssText='flex-basis:100%;margin:0;font-size:12px';printedWorkspace.tools.append(sessionStatus);

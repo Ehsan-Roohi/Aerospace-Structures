@@ -498,7 +498,9 @@ await group('mount(): save, open, apply, cancel, parameters, template', async ()
   const spyE = { ...E, solve: (...a) => { solveCalls++; return E.solve(...a); } };
   const S = baseS();
   const applied = [];
-  const ctl = IO.mount(document.getElementById('wingStudyFiles'), { workspace: 'printed', getState: () => S, applyState: (s, info) => applied.push({ s, info }), engine: spyE, documentRef: document });
+  let busy = false, shown = 0, completed = 0, dismissed = 0;
+  const ctl = IO.mount(document.getElementById('wingStudyFiles'), { workspace: 'printed', getState: () => S, applyState: (s, info) => applied.push({ s, info }), engine: spyE, documentRef: document,
+    canApply: () => busy ? 'Wait for the current solve, then Apply.' : '', onPreview: () => shown++, onApplied: () => completed++, onDismiss: () => dismissed++ });
   const root = document.querySelector('#wingStudyFiles .wio-root');
   ok(root && root.getAttribute('role') === 'group', 'panel mounted');
   const btn = (text) => [...root.querySelectorAll('button')].find((b) => b.textContent === text);
@@ -524,12 +526,19 @@ await group('mount(): save, open, apply, cancel, parameters, template', async ()
   ok(preview.textContent.includes(IO.sha256(otherText)), 'SHA-256 in the preview');
   eq(applied.length, 0, 'nothing applied before Apply');
   const apply = btn('Apply');
+  ok(shown >= 2, 'host is notified during reading and after preview validation');
+  eq(document.activeElement, apply, 'Apply is keyboard-ready after choosing a valid file');
+  busy = true; apply.click(); eq(applied.length, 0, 'busy solver cannot be overwritten');
+  ok(!preview.hidden && /Wait for the current solve/.test(preview.querySelector('[role=alert]').textContent), 'busy feedback stays in the same visible preview');
+  busy = false;
   apply.click(); apply.click();
   eq(applied.length, 1, 'applyState called once'); deq(applied[0].s, expected, 'validated state'); eq(applied[0].info.kind, 'study'); eq(applied[0].info.provenance.filename, 'tip-study.json');
   eq(preview.hidden, true, 'preview closed after Apply');
+  eq(completed, 1, 'host is notified once after successful application');
   // Cancel
   await choose(inputs[0], new w.File([otherText], 'again.json'));
   btn('Cancel').click();
+  eq(dismissed, 1, 'host can close the visible import dialog on Cancel');
   eq(applied.length, 1, 'Cancel applies nothing'); ok(/Nothing was changed/.test(root.querySelector('.wio-status').textContent));
   // Invalid file: errors shown, applyState not called
   await choose(inputs[0], new w.File([otherText.replace('"tipChord": 90', '"tipChord": NaN')], 'broken.json'));

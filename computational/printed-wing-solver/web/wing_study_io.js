@@ -1869,7 +1869,8 @@
   /**
    * Build the study-file panel inside container with DOM APIs. options: {workspace:'printed'|'d520',
    * getState() → current UI state (S or MS.input), applyState(state, info), engine, documentRef,
-   * download(filename, text, mime) (optional override of the browser download)}.
+   * download(filename, text, mime) (optional override of the browser download),
+   * onPreview(node), onApplied(info, message), onDismiss(), canApply() → blocking reason (optional)}.
    * applyState is called only after validation, at most once per preview, and never starts a solve.
    */
   function mount(container, options = {}) {
@@ -1978,12 +1979,19 @@
     }
     function showFailure(heading, errors) {
       clear(preview);
-      preview.append(renderModel({ title: heading, state: { kind: 'error', text: 'Nothing was changed.' }, errors, warnings: [], lists: [], tables: [], provenance: [] }));
       preview.append(el('div', { class: 'wio-actions wio-preview-actions' }, button('Dismiss', 'wio-dismiss', cancel)));
+      preview.append(renderModel({ title: heading, state: { kind: 'error', text: 'Nothing was changed.' }, errors, warnings: [], lists: [], tables: [], provenance: [] }));
       preview.hidden = false;
       say(heading);
+      presentPreview();
     }
-    function cancel() { clear(preview); preview.hidden = true; say('Nothing was changed.'); }
+    function cancel() { clear(preview); preview.hidden = true; say('Nothing was changed.'); options.onDismiss?.(); }
+    function presentPreview() {
+      // The host may present this real node in a visible dialog instead of a scrolled sidebar.
+      options.onPreview?.(preview);
+      const action = preview.querySelector('button');
+      action?.focus({ preventScroll: true });
+    }
     function renderModel(m) {
       const box = el('section', { class: 'wio-preview-body' }, el('h4', { class: 'wio-preview-title' }, m.title));
       if (m.state.text) box.append(el('p', { class: `wio-state wio-state-${m.state.kind}` }, m.state.text));
@@ -2004,25 +2012,40 @@
       preview.append(el('div', { class: 'wio-actions wio-preview-actions' }, ...buttons));
       preview.append(renderModel(previewModel(result)));
       preview.hidden = false;
+      presentPreview();
     }
     function applyOnce(stateValue, info, doneText) {
       let used = false;
       return () => {
         if (used) return;
+        const blocked = options.canApply?.();
+        if (blocked) {
+          let note = preview.querySelector('.wio-apply-error');
+          if (!note) { note = el('p', { class: 'wio-apply-error', role: 'alert' }); preview.querySelector('.wio-preview-actions').append(note); }
+          note.textContent = blocked;
+          say(blocked);
+          return;
+        }
         used = true;
         try { applyState(clone(stateValue), info); }
         catch (e) { showFailure('The app could not apply the data', [e.message || String(e)]); return; }
         clear(preview); preview.hidden = true; say(doneText);
+        options.onApplied?.(info, doneText);
       };
     }
     function showStudy(result) {
       if (!result.ok) { show(result, [button('Dismiss', 'wio-dismiss', cancel)]); say('The study was not imported.'); return result; }
       const info = { kind: 'study', workspace, provenance: clone(result.provenance), warnings: result.warnings.slice() };
-      show(result, [button('Apply', 'wio-apply', applyOnce(result.state, info, `Study applied${result.provenance.filename ? ` from ${result.provenance.filename}` : ''}. Run the study to see results.`)), button('Cancel', 'wio-cancel', cancel)]);
+      show(result, [button('Apply', 'wio-apply', applyOnce(result.state, info, `Study applied${result.provenance.filename ? ` from ${result.provenance.filename}` : ''}. Run the study to see results.`)), button('Cancel', 'wio-cancel', cancel), el('p', { class: 'wio-apply-help' }, 'File read successfully. Click Apply to replace the current wing with this design, or Cancel to keep it.')]);
       say('Check the preview, then Apply or Cancel.');
       return result;
     }
     async function openFile(file) {
+      clear(preview);
+      preview.append(el('p', { role: 'status' }, `Reading ${cleanName(file && file.name)}… Your current wing has not changed.`));
+      preview.hidden = false;
+      say('Reading the selected study file…');
+      presentPreview();
       const got = await readFile(file);
       const name = cleanName(file && file.name);
       if (got.error) { showFailure('The study was not imported', [got.error]); return null; }

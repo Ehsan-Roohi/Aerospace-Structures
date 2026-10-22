@@ -7,7 +7,7 @@
 //   MIE446_JSDOM_MODULE=/path/to/jsdom node computational/printed-wing-solver/web/test_beam_sign_convention.mjs
 import assert from 'node:assert/strict';
 import {createRequire} from 'node:module';
-import {JSDOM,loadBeamLab} from './beam_test_dom.mjs';
+import {JSDOM,loadBeamLab,configureBeamFixture} from './beam_test_dom.mjs';
 const require=createRequire(import.meta.url);
 const B=require('./beam_learning_engine.js'), S=require('./beam_study.js'), D=require('./beam_diagrams.js'), Sol=require('./beam_solution.js');
 let checks=0;
@@ -129,9 +129,10 @@ for(const [name,m] of [
 
 /* ---------- 5. the whole Beam workspace: no second convention anywhere a reaction appears ---------- */
 {
-  const dom=new JSDOM('<div id="foundations"></div>',{url:'https://example.org/wing-lab.html?beamCase=hw2b-fixed',runScripts:'outside-only'});
+  const dom=new JSDOM('<div id="foundations"></div>',{url:'https://example.org/wing-lab.html',runScripts:'outside-only'});
   const w=dom.window, downloads=[];w.Blob=Blob;w.URL.createObjectURL=b=>{downloads.push(b);return 'blob:x';};w.URL.revokeObjectURL=()=>{};w.HTMLAnchorElement.prototype.click=function(){};w.print=()=>{};
   const {$}=loadBeamLab(dom);
+  configureBeamFixture(dom,'hw2b-fixed');
   for(const tab of ['diagrams','cut','solution','modes','compare','report','learn']) {$(`[data-tab="${tab}"]`).click();clean($('#foundations').innerHTML.replace(/<script[\s\S]*?<\/script>/g,''),`${tab} tab`);}
   ok(/Ry \(N, ↓ \+\)/.test($('#beamReactions').textContent)&&/C \(N·mm, ↻ \+\)/.test($('#beamReactions').textContent),'Diagrams tab reactions table: R_y ↓ +, C ↻ +');
   ok(/also for hand equations/.test($('#beamReactions').textContent),'the table says the hand equations use the same signs');

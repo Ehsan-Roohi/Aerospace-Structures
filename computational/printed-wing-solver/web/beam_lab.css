@@ -172,7 +172,7 @@
 .bl-picture [data-draggable] { cursor: grab; }
 .bl-picture [data-cut-handle] { cursor: ew-resize; }
 .bl-load-tools { margin: 6px 0; }
-.bl-load-tools .bl-tool { color: #9140a3; }
+.bl-load-tools .bl-tool { color: var(--bl-load); }
 .bl-load-handle { cursor: grab; touch-action: none; }
 .bl-load-handle circle { fill: #9140a3; stroke: white; stroke-width: 2; }
 .bl-load-handle text { fill: white; stroke: none; pointer-events: none; }
@@ -509,3 +509,11 @@ nav.workspace-nav .workspace-link:hover { border-color: var(--accent, #086bd5); 
 nav.workspace-nav .workspace-link[aria-pressed="true"], nav.workspace-nav .workspace-link[aria-current="page"], nav.workspace-nav .bl-companion[open] > .workspace-link { background: var(--panel-2, #edf3f8); color: var(--fg, #172c40); border-color: var(--accent, #086bd5); box-shadow: inset 0 -3px 0 var(--accent, #086bd5); }
 nav.workspace-nav .workspace-link:focus-visible { outline: 3px solid var(--accent, #086bd5); outline-offset: 3px; }
 @media (max-width: 640px) { nav.workspace-nav .workspace-link { min-height: 44px; } }
+
+/* Include plain controls created by the power-law/strength editors, not only .bl-* controls.
+   The workspace scope also keeps later compact-button rules from shrinking tablet/phone targets. */
+@media screen and (max-width: 1100px) {
+  #foundations :is(button, select, summary, input[type="number"], input[type="text"], input[type="file"], input:not([type])) { min-height: 44px; }
+  #foundations :is(select, input[type="number"], input[type="text"], input:not([type])) { font-size: 16px; }
+  #foundations summary { cursor: pointer; }
+}

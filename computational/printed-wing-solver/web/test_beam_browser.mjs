@@ -128,8 +128,11 @@ for(const width of [390,1440]) for(const scheme of ['light','dark']) {
   // The explicitly selected Lecture 03 cantilever plus the placed roller.
   check(await page.evaluate(()=>{const r=window.BeamLab.state().solved.result;return r.reactions.length===2&&r.reactions[1].x===225&&Math.abs(r.equilibrium.force)<1e-6;}),'placed support assembled into the solved model');
   await page.click('[data-tab="cut"]');
+  await page.locator('#beamPicture svg').scrollIntoViewIfNeeded();
   const handle=await (await page.$('#beamPicture svg')).boundingBox();
-  await page.mouse.move(px(100),handle.y+20);await page.mouse.down();await page.mouse.move(px(320),handle.y+20,{steps:6});await page.mouse.up();
+  const cutGeo=await page.$eval('#beamPicture svg',s=>({x0:+s.dataset.x0,x1:+s.dataset.x1,W:+s.dataset.w,L:+s.dataset.length}));
+  const cutPx=x=>handle.x+(cutGeo.x0+(cutGeo.x1-cutGeo.x0)*x/cutGeo.L)*handle.width/cutGeo.W;
+  await page.mouse.move(cutPx(100),handle.y+20);await page.mouse.down();await page.mouse.move(cutPx(320),handle.y+20,{steps:6});await page.mouse.up();
   await page.waitForTimeout(80);
   const cx=await page.evaluate(()=>window.BeamLab.state().cut.x);check(Math.abs(cx-320)<3,`dragging the cut line moves the cut (x = ${cx})`);
   await page.focus('[data-tab="diagrams"]');await page.keyboard.press('ArrowRight');

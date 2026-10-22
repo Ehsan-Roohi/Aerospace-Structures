@@ -1726,12 +1726,13 @@ const Lecture03BeamCases = Object.freeze({
     if(st.placing) {const x=svgX(e);if(x!==null)frame(()=>renderPicture({x:snap(x,st.model.length),kind:st.placing}));return;}
     if(!st.drag) return;
     const x=svgX(e);if(x===null)return;
-    if(st.drag.type==='cut') {frame(()=>setCut(x));return;}
+    if(st.drag.type==='cut') {const drag=st.drag;frame(()=>{if(st.drag===drag)setCut(x);});return;}
     const L=st.model.length, sx=Math.min(L*0.995,Math.max(L*0.005,snap(x,L)));
     const rows=st.drag.type==='hinge'?hingeRows():interiorRows(), input=rows[st.drag.index]&&rows[st.drag.index].querySelector('[data-field="x"]');
     if(input){input.value=sx;frame(()=>{renderPicture();renderStatus();});}
   });
   const endDrag=e=>{if(!st.drag)return;const d=st.drag;st.drag=null;
+    if(d.type==='cut'){const x=svgX(e);if(x!==null)setCut(x);return;}
     if(d.type==='load-range'){const x=svgX(e);st.suppressPlaceClick=true;if(x!==null&&Math.abs(snap(x,st.drawn.length)-d.start)>st.drawn.length*1e-9)prepareGraphicLoad(d.kind,d.start,snap(x,st.drawn.length));else {st.graphicPreview=null;renderPicture();message('Choose a non-zero interval by dragging along the beam.');}return;}
     if(d.type==='load'){st.suppressPlaceClick=true;if(d.moved){draftChanged();message('Load moved. Press Solve to update results (or enable auto-solve).');const selected=pic.querySelector(`[data-load-handle="${d.index}"]`);if(selected)selected.focus();}else editLoad(d.index);return;}
     if(d.type!=='cut'){draftChanged();const selected=selection&&pic.querySelector(selection.type==='hinge'?`[data-hinge-index="${selection.index}"]`:`[data-support-index="${selection.index}"]`);if(selected)selected.focus();}};

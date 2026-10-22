@@ -161,7 +161,7 @@ async function openWing(width,height,scheme,extra={}) {
   page.on('dialog',d=>{errors.push(`dialog: ${d.message()}`);d.dismiss();});
   await page.goto(pageUrl,{waitUntil:'load'});
   const ready=await page.waitForFunction(()=>document.documentElement.dataset.wingReady==='true',null,{timeout:30000}).then(()=>true,()=>false);
-  if(ready) {await page.addScriptTag({content:AUDIT});await page.$eval('[data-stage="project"]',b=>b.click());await wingReady(page);await page.check('#wingAutoSolve');}
+  if(ready) {await page.addScriptTag({content:AUDIT});await page.$eval('[data-stage="wing"]',b=>b.click());await wingReady(page);await page.check('#wingAutoSolve');}
   return {ctx,page,errors,ready};
 }
 const wingSolve=async page=>{await page.click('#runBtn');await wingReady(page);};

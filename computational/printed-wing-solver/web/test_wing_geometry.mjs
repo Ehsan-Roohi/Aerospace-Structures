@@ -14,7 +14,8 @@ for(const patch of [{sweepDeg:NaN},{sweepDeg:null},{dihedralDeg:46},{twistRefere
 const stationary=E.makeGeometry({...geometry,sweepDeg:0,dihedralDeg:0,sweepReferenceFraction:0,stations:geometry.stations.map(s=>({...s,incidenceDeg:0})),twistEnabled:false});
 assert.deepEqual(E.ringLoops(geometry,210),E.ringLoops(stationary,210));checks++;
 const n=E.normalize({geometry,assembly:{seamsBonded:true},load:{kind:'custom',items:[]}});assert.ok(n.ySec.includes(120)&&n.ySec.includes(300),'all airfoil stations are section samples');checks++;
-// Bitwise old solver baseline, independently recorded before this extension.
+// Old solver baseline, independently recorded before this extension. Platform
+// transcendental implementations may differ by a few IEEE-754 ULPs.
 const r=E.solve({geometry:{modules:1,rodFractions:[]},load:{kind:'tip',tipForce:2},nGrid:101,nElements:10,nSections:3});
-assert.equal(r.mass.total,210.7485706232253);assert.equal(r.deflection.at(-1),2.5019557037623787);assert.equal(r.twist.at(-1),.00020002899564432894);assert.equal(r.sections[0].EIf,35401743.441010736);assert.equal(r.sections[0].GJ,45885355.6496136);assert.equal(r.V[0],2);assert.equal(r.M[0],900);checks+=7;
-console.log(`Wing geometry PASS: ${checks} station interpolation, incidence/sweep/dihedral references, inverse transforms, local-section invariance, validation and bitwise legacy checks.`);
+for(const[actual,expected]of[[r.mass.total,210.7485706232253],[r.deflection.at(-1),2.5019557037623787],[r.twist.at(-1),.00020002899564432894],[r.sections[0].EIf,35401743.441010736],[r.sections[0].GJ,45885355.6496136]])near(actual,expected,4*Number.EPSILON*Math.abs(expected));assert.equal(r.V[0],2);assert.equal(r.M[0],900);checks+=2;
+console.log(`Wing geometry PASS: ${checks} station interpolation, incidence/sweep/dihedral references, inverse transforms, local-section invariance, validation and machine-precision legacy checks.`);

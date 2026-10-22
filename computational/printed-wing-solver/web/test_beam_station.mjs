@@ -5,17 +5,17 @@
 // 2. The readout: one click to x = L/2, exact V and M, Euler–Bernoulli v and θ with units, x⁻/x⁺ at jumps,
 //    the same station as the plot markers, the beam picture and Cut & section.
 // 3. The sign key and the reaction/internal table, the two-part cut free body, the no-load opening and the
-//    Lecture 03 / HW 2B deep links.
+//    Lecture 03 deep links and explicitly entered HW 2B regression fixtures.
 import assert from 'node:assert/strict';
 import {createRequire} from 'node:module';
-import {JSDOM,loadBeamLab} from './beam_test_dom.mjs';
+import {JSDOM,loadBeamLab,configureBeamFixture} from './beam_test_dom.mjs';
 const require=createRequire(import.meta.url), B=require('./beam_learning_engine.js'), Study=require('./beam_study.js'), D=require('./beam_diagrams.js');
 let checks=0;
 const ok=(v,m)=>{assert.ok(v,m);checks++;};
 const eq=(a,b,m)=>{assert.equal(a,b,m);checks++;};
 const near=(a,b,tol,m)=>{assert.ok(Math.abs(a-b)<=tol,`${m}: ${a} vs ${b}`);checks++;};
 
-function open(query='') {
+function open(query='',fixture=query?null:'unloaded-cantilever') {
   const dom=new JSDOM('<div id="foundations"></div>',{url:`https://example.org/wing-lab.html${query}`,runScripts:'outside-only'});
   const w=dom.window;
   // SVGs get a layout box equal to their viewBox, so pointer coordinates map 1 : 1 (as in test_beam_ui.mjs).
@@ -25,6 +25,7 @@ function open(query='') {
     return rect.call(this);
   };
   const env=loadBeamLab(dom), $=env.$;
+  if(fixture)configureBeamFixture(dom,fixture);
   const Ctor=w.PointerEvent||w.MouseEvent;
   return {...env,dom,
     pointer:(type,target,clientX)=>target.dispatchEvent(new Ctor(type,{bubbles:true,cancelable:true,clientX,clientY:20,pointerId:1})),
@@ -66,9 +67,9 @@ for(const [name,section,E] of [['20 × 10 mm, E = 2000',{shape:'rectangle',width
   }
 }
 
-/* ---------- 2. HW 2B Case 1 deep link: the readout at L/2 and at the root ---------- */
+/* ---------- 2. explicitly entered HW 2B Case 1: readout at L/2 and at the root ---------- */
 {
-  const t=open('?beamCase=hw2b-cantilever'), {$,$$,w}=t, EI=2200*16*8**3/12;
+  const t=open('','hw2b-cantilever'), {$,$$,w}=t, EI=2200*16*8**3/12;
   const vExact=x=>q1/(120*L*EI)*(20*L**3*x*x-10*L*L*x**3+x**5), tExact=x=>q1/(24*L*EI)*(8*L**3*x-6*L*L*x*x+x**4);
   ok(/-0\.450000 N/.test($('#beamReactions').textContent)&&/-135\.000000 N·mm/.test($('#beamReactions').textContent),'reaction table: −0.45 N and −135 N·mm (app signs)');
   eq($('#beamTab-diagrams').hidden,false,'the readout is on the Diagrams tab, open by default');
@@ -196,7 +197,7 @@ for(const [name,section,E] of [['20 × 10 mm, E = 2000',{shape:'rectangle',width
   t.dom.window.close();
   // Every Lecture 03 and HW 2B example: all slice checks pass.
   for(const name of ['l03-tip','l03-centre','l03-uniform','l03-simple','l03-fixed','l03-lift','hw2b-cantilever','hw2b-roller-pin','hw2b-fixed']) {
-    const e=open(`?beamCase=${name}`), rows=e.$$('#beamReactionShear tr[data-support]');
+    const e=name.startsWith('hw2b-')?open('',name):open(`?beamCase=${name}`), rows=e.$$('#beamReactionShear tr[data-support]');
     ok(rows.length===e.w.BeamLab.state().solved.result.reactions.length&&rows.every(x=>/✓/.test(x.textContent)&&!/✗/.test(x.textContent)),`${name}: reaction/internal checks pass`);
     e.dom.window.close();
   }
@@ -204,7 +205,7 @@ for(const [name,section,E] of [['20 × 10 mm, E = 2000',{shape:'rectangle',width
 
 /* ---------- 6. Cut & section: both parts by default, opposite arrows on the two faces ---------- */
 {
-  const t=open('?beamCase=hw2b-cantilever'), {$,$$}=t;
+  const t=open('','hw2b-cantilever'), {$,$$}=t;
   $('[data-tab="cut"]').click();
   eq($('[data-cut-side="both"]').getAttribute('aria-pressed'),'true','both parts shown by default');
   const parts=$$('#beamCutFbd svg.bl-segment');eq(parts.length,2,'two free bodies');
@@ -227,7 +228,7 @@ for(const [name,section,E] of [['20 × 10 mm, E = 2000',{shape:'rectangle',width
   t.dom.window.close();
 }
 
-/* ---------- 7. normal opening: no load, zero readout, no arrows ---------- */
+/* ---------- 7. explicitly entered unloaded cantilever: zero readout, no arrows ---------- */
 {
   const t=open(), {$,$$,w}=t, s=w.BeamLab.state().solved;
   eq(s.model.loads.length,0,'opens with no load');eq(s.model.selfWeight,false);
@@ -241,7 +242,7 @@ for(const [name,section,E] of [['20 × 10 mm, E = 2000',{shape:'rectangle',width
   t.dom.window.close();
 }
 
-/* ---------- 8. Lecture 03 / HW 2B deep links keep their loads and their published values ---------- */
+/* ---------- 8. Lecture 03 links and explicitly entered HW 2B numerical values ---------- */
 {
   const t=open('?beamCase=l03-tip');
   eq(t.w.BeamLab.state().solved.model.loads[0].force,2,'l03-tip keeps its 2 N tip force');
@@ -251,13 +252,13 @@ for(const [name,section,E] of [['20 × 10 mm, E = 2000',{shape:'rectangle',width
   const f=open('?beamCase=l03-fixed'), key=txt(f.$('#beamSignKey'));
   ok(/V\(0⁺\) = −RA = \+1 N/.test(key)&&/M\(0⁺\) = \+CA = −112\.5 N·mm/.test(key)&&/V\(L⁻\) = \+RB = −1 N/.test(key)&&/M\(L⁻\) = −CB = −112\.5 N·mm/.test(key),'Lecture 03 C2: both internal end moments −112.5 N·mm');
   f.dom.window.close();
-  const p=open('?beamCase=hw2b-roller-pin'), r=p.w.BeamLab.state().solved.result;
+  const p=open('','hw2b-roller-pin'), r=p.w.BeamLab.state().solved.result;
   ok(r.input.supports[0].kind==='roller'&&r.input.supports[1].kind==='pin','HW 2B Case 2: roller left, pin right');
   ok(/V\(0⁺\) = −RA = \+0\.3 N/.test(txt(p.$('#beamSignKey')))&&/V\(L⁻\) = \+RB = −0\.375 N/.test(txt(p.$('#beamSignKey'))),'HW 2B Case 2: V(0⁺) = +0.3 N, V(L⁻) = −0.375 N');
   p.dom.window.close();
-  const u=open('?beamCase=unknown');eq(u.w.BeamLab.state().solved.model.loads.length,0,'unknown case: no load');eq(txt(u.card('V').querySelector('.bl-stat-v')),'0 N');u.dom.window.close();
+  const u=open('?beamCase=unknown');eq(u.w.BeamLab.state().model.loads.length,0,'unknown case: no load');eq(u.w.BeamLab.state().solved,null,'unknown case remains an unconfigured, unsolved workspace');u.dom.window.close();
   // Explanations in the Solution and Learn tabs use the same relation.
-  const s=open('?beamCase=hw2b-cantilever');
+  const s=open('','hw2b-cantilever');
   s.$('[data-tab="solution"]').click();ok(/V\(x⁺\) − V\(x⁻\) = −R, so V\(0⁺\) = −R at a left-end support/.test(s.$('#beamSolution').textContent),'Solution tab states V(0⁺) = −R');
   s.$('[data-tab="learn"]').click();ok(/V\(0⁺\) = −R and M\(0⁺\) = \+C\./.test(txt(s.$('#beamSigns'))),'Learn tab states the same relation');
   ok(clean(s.$('#foundations').innerHTML));
@@ -265,7 +266,7 @@ for(const [name,section,E] of [['20 × 10 mm, E = 2000',{shape:'rectangle',width
 }
 /* ---------- 9. fixed–fixed, triangle toward the root (HW 2B Case 3): reactions versus internal V and M ---------- */
 {
-  const t=open('?beamCase=hw2b-fixed'), {$,$$,w}=t, r=w.BeamLab.state().solved.result, q0=0.002, EI=2200*16*8**3/12;
+  const t=open('','hw2b-fixed'), {$,$$,w}=t, r=w.BeamLab.state().solved.result, q0=0.002, EI=2200*16*8**3/12;
   // Closed forms for q(x) = q0 (1 − x/L) on a clamped–clamped beam (magnitudes: R up, C_A counter-clockwise, C_B clockwise).
   const RA=7*q0*L/20, RB=3*q0*L/20, CA=q0*L*L/20, CB=q0*L*L/30;
   near(r.reactions[0].force,-RA,1e-9,'R_A = −0.315 N in app signs');near(r.reactions[1].force,-RB,1e-9,'R_B = −0.135 N');
@@ -318,4 +319,4 @@ for(const [name,section,E] of [['20 × 10 mm, E = 2000',{shape:'rectangle',width
   eq(($('#beamCutCheck').textContent.match(/✓/g)||[]).length,4,'both parts balance at L⁻');
   t.dom.window.close();
 }
-console.log(`Beam station and shear sign: ${checks} checks passed (sign convention against closed forms and right-part equilibrium, readout at L/2, 0⁺, L⁻ and between nodes, x⁻/x⁺ at a force, a couple and a hinge, one station for readout, plots, picture and Cut & section, reaction/internal table, thin slices at supports, both-part free bodies, fixed–fixed benchmark, no-load opening, Lecture 03 / HW 2B links).`);
+console.log(`Beam station and shear sign: ${checks} checks passed (sign convention against closed forms and right-part equilibrium, readout at L/2, 0⁺, L⁻ and between nodes, x⁻/x⁺ at a force, a couple and a hinge, one station for readout, plots, picture and Cut & section, reaction/internal table, thin slices at supports, both-part free bodies, fixed–fixed benchmark, explicit unloaded/HW 2B fixtures and Lecture 03 links).`);

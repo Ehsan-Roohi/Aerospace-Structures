@@ -12,6 +12,8 @@ from mie446_wing import (
     WingProject,
     WingProjectError,
     make_ai_log,
+    WingLabImportError,
+    load_wing_lab_study,
 )
 
 
@@ -67,10 +69,45 @@ def _execution_namespace(tmp_path: Path) -> tuple[dict, list[Path], list[str]]:
         "WingProject": WingProject,
         "WingProjectError": WingProjectError,
         "make_ai_log": make_ai_log,
+        "WingLabImportError": WingLabImportError,
+        "load_wing_lab_study": load_wing_lab_study,
         "plot_design_overview": lambda parameters: _FigureStub(),
         "plot_modules": lambda modules, **kwargs: _FigureStub(),
     }
     return namespace, downloads, messages
+
+
+@pytest.mark.slow
+def test_wing_lab_route_builds_the_uploaded_spar_not_the_form_defaults(tmp_path: Path) -> None:
+    from test_wing_lab_bridge import browser_document
+    path=tmp_path/'wing.json'
+    path.write_text(json.dumps(browser_document()),encoding='utf-8')
+    ns, downloads, messages=_execution_namespace(tmp_path)
+    _run_student_cells(ns, {
+        'DESIGN_SOURCE':'Wing Lab JSON','WING_LAB_JSON_FILE':str(path),
+        'WORKFLOW_STAGE':'Final Wing','TEAM_ID':'Bridge07','TEAM_MEMBERS':'Student A',
+        'REVISION':'R02','AIRFOIL_CHOICE_REASON':'Reference section for the beam comparison.',
+        'PREDICTED_AREA_CHANGE':'decrease','PREDICTED_ASPECT_RATIO_CHANGE':'increase',
+        'PREDICTION_EXPLANATION':'The span is fixed while tip chord decreases.',
+        'RESULT_INTERPRETATION':'CAD geometry is compared with the imported component inventory.',
+        'PRINT_DEFECT_CODE_CANNOT_DETECT':'Layer separation.','AI_USE_DECLARATION':'No material AI use'})
+    assert len(downloads)==1
+    assert ns['built_project'].build.parameters.semi_span_mm==240
+    assert len(ns['built_project'].build.bonded_spars)==1
+    assert len(ns['built_project'].build.ribs)==4
+    assert ns['coupon_record']['required'] is False
+    with ZipFile(downloads[0]) as z:
+        assert 'wing_lab_transfer.json' in z.namelist()
+        assert len([n for n in z.namelist() if n.endswith('.stl')])==2
+    assert any('Wing Lab → CAD import accepted' in m for m in messages)
+
+
+def test_bad_wing_lab_upload_never_falls_back_to_a_course_wing(tmp_path: Path) -> None:
+    path=tmp_path/'bad.json';path.write_text('{}',encoding='utf-8')
+    ns,downloads,messages=_execution_namespace(tmp_path)
+    _run_student_cells(ns,{'DESIGN_SOURCE':'Wing Lab JSON','WING_LAB_JSON_FILE':str(path),'WORKFLOW_STAGE':'Final Wing'})
+    assert ns['project'] is None and ns['built_project'] is None and not downloads
+    assert any('No default wing will be built' in m for m in messages)
 
 
 def _run_student_cells(namespace: dict, replacements: dict[str, object]) -> None:
@@ -115,7 +152,7 @@ def test_final_export_requires_an_explicit_ai_declaration(tmp_path: Path) -> Non
     )
     exec(compile(form, "notebook step 2", "exec"), namespace)
     namespace["built_project"] = SimpleNamespace(project=namespace["project"])
-    exec(compile(sources[5], "notebook step 6", "exec"), namespace)
+    exec(compile(sources[-1], "notebook step 6", "exec"), namespace)
 
     assert downloads == []
     assert any("AI_USE_DECLARATION" in message for message in messages)

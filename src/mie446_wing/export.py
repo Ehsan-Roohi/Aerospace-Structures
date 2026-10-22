@@ -243,15 +243,16 @@ def export_build(
             _export_shape(module, path)
             exported.append(path)
 
-    coupon, coupon_mapping = make_fit_coupon(build.parameters)
-    coupon_path = destination / f"MIE446_{team}_Rod_Fit_Coupon_{revision}.stl"
-    _export_shape(coupon, coupon_path)
-    exported.append(coupon_path)
-    coupon_mapping_path = destination / "fit_coupon_mapping.json"
-    coupon_mapping_path.write_text(
-        json.dumps(coupon_mapping, indent=2), encoding="utf-8"
-    )
-    exported.append(coupon_mapping_path)
+    if build.parameters.spars:
+        coupon, coupon_mapping = make_fit_coupon(build.parameters)
+        coupon_path = destination / f"MIE446_{team}_Rod_Fit_Coupon_{revision}.stl"
+        _export_shape(coupon, coupon_path)
+        exported.append(coupon_path)
+        coupon_mapping_path = destination / "fit_coupon_mapping.json"
+        coupon_mapping_path.write_text(
+            json.dumps(coupon_mapping, indent=2), encoding="utf-8"
+        )
+        exported.append(coupon_mapping_path)
 
     ai_log_path = destination / "ai_use_log.json"
     ai_log_path.write_text(json.dumps(validated_ai_log, indent=2), encoding="utf-8")
@@ -261,6 +262,10 @@ def export_build(
         student_record_path = destination / "student_design_record.json"
         student_record_path.write_text(serialized_student_record, encoding="utf-8")
         exported.append(student_record_path)
+        if student_record.get("wing_lab_import"):
+            transfer_path = destination / "wing_lab_transfer.json"
+            transfer_path.write_text(json.dumps(student_record["wing_lab_import"], indent=2, allow_nan=False), encoding="utf-8")
+            exported.append(transfer_path)
 
     if design_summary_markdown is not None:
         summary_path = destination / "Design_Summary.md"
@@ -285,6 +290,8 @@ def export_build(
         "spar_lengths_mm": [
             round(spar_length_mm(build.parameters, spar), 3) for spar in build.parameters.spars
         ],
+        "geometry_inventory": {"modules":len(build.modules), "rib_stations_mm":list(build.parameters.rib_stations_mm()),
+                               "external_rods":len(build.parameters.spars), "integral_printed_spars":len(build.bonded_spars)},
         "files": [],
     }
     for path in exported:

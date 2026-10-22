@@ -1254,6 +1254,19 @@
     return { format: STUDY_FORMAT, version: FILE_VERSION, workspace: 'printed', savedAt: opts.savedAt || new Date().toISOString(), app: { name: 'MIE 446 Wing Lab', engine: E.VERSION, io: IO_VERSION }, study };
   }
   const exportPrintedStudy = (S, engine, opts) => `${JSON.stringify(printedStudyDocument(S, engine, opts), null, 2)}\n`;
+  /** Manufacturing preflight only. No model edits, no CAD generation and no safety approval. */
+  function fabricationIssues(S, E) {
+    const n=printedEngineInput(S,E),g=n.geometry,m=n.pla,errors=[];
+    if(g.semiSpan/g.modules>300||g.rootChord>300)errors.push('Each nominal module span and chord must be ≤300 mm. Change the design and Solve again.');
+    if(g.skin<.8||g.ribThickness<.8||g.te<.8)errors.push('Printed skin, ribs and trailing edge must be ≥0.8 mm.');
+    if(!['pla_upright','pla_flat'].includes(S.plaKey))errors.push('The notebook currently fabricates PLA, not custom/metal shell materials.');
+    if(g.rodFractions.some(f=>f<.1||f>.8)||g.rodFractions.length&&(g.clearance<.05||g.sleeveWall<.8))errors.push('CAD rod positions must be 0.10–0.80c; radial clearance ≥0.05 mm and sleeve wall ≥0.8 mm.');
+    for(const [i,s]of (g.spars||[]).entries()){
+      if(['E','nu','rho','ft','fc','fs'].some(k=>Math.abs(s.material[k]-m[k])>1e-9*Math.max(1,Math.abs(m[k]))))errors.push(`Spar ${i+1}: integral single-filament printing requires the same effective PLA properties as the shell. Match its material card and Solve; a carbon/metal spar cannot silently become printed PLA.`);
+      if(Math.min(s.topThickness,s.bottomThickness,s.webThickness)<.4)errors.push(`Spar ${i+1}: cap/web thickness must be ≥0.4 mm; slicer extrusion-path inspection remains required.`);
+    }
+    return errors;
+  }
   /** Versioned study document for the D.520 UI input MS.input. Throws when it is not valid. */
   function d520StudyDocument(input, metalEngine, opts = {}) {
     const M = metalEngine || globalMetal();
@@ -2050,7 +2063,7 @@
   return Object.freeze({
     VERSION: IO_VERSION, STUDY_FORMAT, PARAMS_FORMAT, FILE_VERSION, SHARE_KEY, LIMITS, PARAMETER_TEMPLATE, REQUIRED_ITEMS,
     escapeHtml, sha256, utf8Encode, utf8Decode, base64urlEncode, base64urlDecode, parseJson, countSegments,
-    printedStudyDocument, exportPrintedStudy, importPrintedStudy, printedEngineInput,
+    printedStudyDocument, exportPrintedStudy, importPrintedStudy, printedEngineInput, fabricationIssues,
     d520StudyDocument, exportD520Study, importD520Study, importStudy,
     importParameters, parameterTemplateText, checkOuterGeometry,
     encodeShare, decodeShare, shareFragment,

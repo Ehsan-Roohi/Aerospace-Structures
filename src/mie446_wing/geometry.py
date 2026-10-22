@@ -10,6 +10,7 @@ import numpy as np
 
 from .airfoil import camber_line, cavity_airfoil_wire, outer_airfoil_wire
 from .config import SparSpec, WingParameters
+from .bonded_spar import make_bonded_spar, validate_spar_layout
 from .metrics import PlanformMetrics, calculate_planform_metrics
 
 
@@ -24,6 +25,7 @@ class WingBuild:
     sleeves: tuple[cq.Shape, ...]
     complete: cq.Shape
     modules: tuple[cq.Shape, ...]
+    bonded_spars: tuple[cq.Shape, ...] = ()
 
 
 def _loft_stations(start: float, end: float, count: int) -> np.ndarray:
@@ -151,7 +153,7 @@ def _cut_spar_holes(body: cq.Shape, parameters: WingParameters) -> cq.Shape:
     for spar in parameters.spars:
         start, end = _spar_endpoints(parameters, spar)
         holes.append(_cylinder_between(start, end, spar.hole_radius_mm, extension=2.0))
-    return body.cut(*holes).clean()
+    return body.cut(*holes).clean() if holes else body.clean()
 
 
 def _segment(body: cq.Shape, parameters: WingParameters) -> tuple[cq.Shape, ...]:
@@ -170,6 +172,7 @@ def build_wing(parameters: WingParameters | None = None) -> WingBuild:
     """Build the complete wing and its printable modules."""
 
     parameters = parameters or WingParameters()
+    validate_spar_layout(parameters)
     metrics = calculate_planform_metrics(parameters)
     outer = _make_outer(parameters)
     cavity = _make_cavity(parameters)
@@ -179,7 +182,8 @@ def build_wing(parameters: WingParameters | None = None) -> WingBuild:
 
     ribs = tuple(_make_rib(parameters, station) for station in parameters.rib_stations_mm())
     sleeves = tuple(_make_sleeve(parameters, spar) for spar in parameters.spars)
-    body = _fuse_all(skin, sleeves + ribs)
+    bonded_spars = tuple(make_bonded_spar(parameters, spar, outer) for spar in parameters.bonded_spars)
+    body = _fuse_all(skin, sleeves + ribs + bonded_spars)
     complete = _cut_spar_holes(body, parameters)
     if not complete.isValid() or complete.Volume() <= 0:
         raise RuntimeError("final wing geometry is invalid")
@@ -194,6 +198,7 @@ def build_wing(parameters: WingParameters | None = None) -> WingBuild:
         sleeves=sleeves,
         complete=complete,
         modules=modules,
+        bonded_spars=bonded_spars,
     )
 
 

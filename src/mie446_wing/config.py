@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import asdict, dataclass, field
 import json
+import math
 from pathlib import Path
 import re
 from typing import Any
@@ -63,6 +64,30 @@ def _default_spars() -> tuple[SparSpec, ...]:
 
 
 @dataclass(frozen=True)
+class BondedSparSpec:
+    """Root-starting printed I-spar; dimensions match Wing Lab's vertical cap convention."""
+
+    fraction: float
+    length: float
+    top_width: float
+    top_thickness: float
+    bottom_width: float
+    bottom_thickness: float
+    web_thickness: float
+
+    def __post_init__(self) -> None:
+        for name, value in asdict(self).items():
+            if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value) or value <= 0:
+                raise ValueError(f"bonded spar {name} must be finite and positive")
+        if self.fraction >= 1:
+            raise ValueError("bonded spar fraction must lie inside the chord")
+        if self.top_thickness > self.top_width / 5 or self.bottom_thickness > self.bottom_width / 5:
+            raise ValueError("bonded spar cap thickness must not exceed width/5")
+        if self.web_thickness >= min(self.top_width, self.bottom_width):
+            raise ValueError("bonded spar web must be narrower than its caps")
+
+
+@dataclass(frozen=True)
 class WingParameters:
     """All dimensions are in millimetres unless otherwise stated."""
 
@@ -84,10 +109,16 @@ class WingParameters:
     pla_density_g_cm3: float = 1.24
     maximum_printed_mass_g: float = 300.0
     spars: tuple[SparSpec, ...] = field(default_factory=_default_spars)
+    # None retains the original course rule; an empty tuple deliberately means no editable ribs.
+    custom_rib_stations_mm: tuple[float, ...] | None = None
+    bonded_spars: tuple[BondedSparSpec, ...] = ()
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "naca", normalize_naca4(self.naca))
         object.__setattr__(self, "spars", tuple(self.spars))
+        object.__setattr__(self, "bonded_spars", tuple(self.bonded_spars))
+        if self.custom_rib_stations_mm is not None:
+            object.__setattr__(self, "custom_rib_stations_mm", tuple(self.custom_rib_stations_mm))
 
         positive = {
             "semi_span_mm": self.semi_span_mm,
@@ -101,13 +132,13 @@ class WingParameters:
             "maximum_printed_mass_g": self.maximum_printed_mass_g,
         }
         for name, value in positive.items():
-            if value <= 0:
-                raise ValueError(f"{name} must be positive")
+            if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value) or value <= 0:
+                raise ValueError(f"{name} must be finite and positive")
 
         if self.tip_chord_mm > self.root_chord_mm:
             raise ValueError("tip_chord_mm cannot exceed root_chord_mm in this starter project")
-        if self.module_count not in (2, 3):
-            raise ValueError("module_count must be 2 or 3 for the 300 mm K2 Pro build envelope")
+        if isinstance(self.module_count, bool) or self.module_count not in (1, 2, 3):
+            raise ValueError("module_count must be 1, 2 or 3 for the 300 mm K2 Pro build envelope")
         if self.interior_rib_count < 0:
             raise ValueError("interior_rib_count cannot be negative")
         if self.interface_rib_offset_mm <= self.rib_thickness_mm:
@@ -120,8 +151,25 @@ class WingParameters:
             raise ValueError("airfoil_point_count must be an odd integer of at least 41")
         if self.loft_station_count < 2:
             raise ValueError("loft_station_count must be at least 2")
-        if len(self.spars) not in (1, 2):
-            raise ValueError("use one or two spar paths in this starter project")
+        if len(self.spars) > 8:
+            raise ValueError("use zero to eight rod paths")
+        if len(self.bonded_spars) > 2 or (self.bonded_spars and self.spars):
+            raise ValueError("use at most two bonded spars; mixed rod/spar designs are not supported")
+        if any(s.length > self.semi_span_mm for s in self.bonded_spars):
+            raise ValueError("bonded spar length cannot exceed the semi-span")
+        if self.custom_rib_stations_mm is not None:
+            ribs = self.custom_rib_stations_mm
+            if len(ribs) > 16:
+                raise ValueError("use at most 16 custom interior ribs")
+            for i, station in enumerate(ribs):
+                if isinstance(station, bool) or not isinstance(station, (int, float)) or not math.isfinite(station):
+                    raise ValueError("custom rib stations must be finite numbers")
+                if not self.root_tip_cap_mm + self.rib_thickness_mm / 2 < station < self.semi_span_mm - self.root_tip_cap_mm - self.rib_thickness_mm / 2:
+                    raise ValueError("custom ribs must clear the root/tip caps")
+                if i and station - ribs[i-1] <= self.rib_thickness_mm:
+                    raise ValueError("custom ribs must be sorted, distinct and non-overlapping")
+                if any(abs(station - b) <= self.interface_rib_offset_mm + self.rib_thickness_mm for b in self.module_bounds_mm()[1:-1]):
+                    raise ValueError("custom ribs must clear locked module-interface ribs")
         fractions = [spar.chord_fraction for spar in self.spars]
         if len(set(fractions)) != len(fractions):
             raise ValueError("spar chord fractions must be unique")
@@ -138,7 +186,9 @@ class WingParameters:
 
         stations: list[float] = []
         boundaries = self.module_bounds_mm()[1:-1]
-        if self.interior_rib_count:
+        if self.custom_rib_stations_mm is not None:
+            stations.extend(self.custom_rib_stations_mm)
+        elif self.interior_rib_count:
             step = self.semi_span_mm / (self.interior_rib_count + 1)
             candidates = (step * i for i in range(1, self.interior_rib_count + 1))
             stations.extend(
@@ -174,6 +224,8 @@ class WingParameters:
             data["spars"] = tuple(
                 item if isinstance(item, SparSpec) else SparSpec(**item) for item in data["spars"]
             )
+        if "bonded_spars" in data:
+            data["bonded_spars"] = tuple(item if isinstance(item, BondedSparSpec) else BondedSparSpec(**item) for item in data["bonded_spars"])
         return cls(**data)
 
     @classmethod

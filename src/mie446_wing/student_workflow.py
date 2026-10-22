@@ -288,6 +288,7 @@ class BuiltWingProject:
                 "",
                 f"Estimated fully dense PLA mass: **{self.estimated_fully_dense_mass_g:.2f} g**  ",
                 f"Connected printable modules: **{len(self.build.modules)}**",
+                f"Integral printed I-spars: **{len(self.build.bonded_spars)}**; external rods: **{len(self.build.parameters.spars)}** (not printed).",
                 "",
                 "| Module | Bounding box X × Y × Z (mm) | CAD material volume (mm³) |",
                 "|---:|---:|---:|",
@@ -310,6 +311,8 @@ class BuiltWingProject:
         ai_log: list[dict[str, Any]],
         student_record: dict[str, Any] | None = None,
     ) -> ProjectPackage:
+        if self.project.source_record is not None:
+            student_record = {**(student_record or {}), "wing_lab_import": self.project.source_record}
         root = Path(output_root)
         destination = (
             root
@@ -398,6 +401,8 @@ class WingProject:
     design: WingDesign
     team_id: str = "Team00"
     revision: str = "R01"
+    imported_parameters: WingParameters | None = None
+    source_record: dict[str, Any] | None = None
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "team_id", _project_token(self.team_id, "team_id"))
@@ -405,7 +410,7 @@ class WingProject:
 
     @property
     def parameters(self) -> WingParameters:
-        return self.design.to_parameters()
+        return self.imported_parameters if self.imported_parameters is not None else self.design.to_parameters()
 
     def with_clearance(
         self,
@@ -413,6 +418,8 @@ class WingProject:
         *,
         revision: str,
     ) -> WingProject:
+        if self.imported_parameters is not None:
+            raise DesignInputError("An imported design is immutable here. Change clearance in Wing Lab, reanalyse and export again; do not silently change the analysed design.")
         return replace(
             self,
             design=replace(
@@ -457,7 +464,7 @@ class WingProject:
         return ProjectPackage(destination, archive, manifest)
 
     def build(self, *, coupon_confirmed: bool) -> BuiltWingProject:
-        if not coupon_confirmed:
+        if self.parameters.spars and not coupon_confirmed:
             raise CouponNotConfirmedError(
                 "Final CAD is locked. Print the rod-fit coupon, test the course rod, "
                 "select the measured clearance, and check COUPON_CONFIRMED."

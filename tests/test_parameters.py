@@ -13,8 +13,8 @@ def test_more_than_three_modules_is_rejected() -> None:
 
 
 def test_one_module_is_rejected_by_printer_envelope_rule() -> None:
-    with pytest.raises(ValueError, match="module_count"):
-        WingParameters(module_count=1)
+    assert not validate_wing(parameters=WingParameters(module_count=1)).passed
+    assert validate_wing(parameters=WingParameters(module_count=1, semi_span_mm=250)).passed
 
 
 def test_invalid_tip_chord_is_rejected() -> None:

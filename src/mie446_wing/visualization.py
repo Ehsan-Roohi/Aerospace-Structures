@@ -73,6 +73,10 @@ def plot_design_overview(parameters: WingParameters) -> go.Figure:
             row=1,
             col=2,
         )
+    for index, spar in enumerate(parameters.bonded_spars, start=1):
+        sy = np.linspace(0, spar.length, 31)
+        figure.add_trace(go.Scatter(x=[spar.fraction*parameters.chord_at(float(y)) for y in sy], y=sy,
+                                   line={"width":3,"color":"#b45f06"}, name=f"Printed I-spar {index}"), row=1,col=2)
     for boundary in parameters.module_bounds_mm()[1:-1]:
         figure.add_shape(
             type="line",

@@ -12,6 +12,7 @@ import numpy as np
 from .airfoil import surface_ordinates_at
 from .config import K2_PRO_BUILD_VOLUME_MM, WingParameters
 from .geometry import WingBuild
+from .bonded_spar import validate_spar_layout
 from .metrics import calculate_planform_metrics
 
 
@@ -82,13 +83,14 @@ def validate_wing(
     if build is not None:
         parameters = build.parameters
     parameters = parameters or WingParameters()
+    validate_spar_layout(parameters)
     metrics = calculate_planform_metrics(parameters)
     checks: list[ValidationCheck] = [
         ValidationCheck(
             "module count",
-            parameters.module_count in (2, 3),
+            parameters.module_count in (1, 2, 3),
             parameters.module_count,
-            "2 or 3 for the 300 mm K2 Pro build envelope",
+            "1, 2 or 3; every module must fit the 300 mm K2 Pro build envelope",
         ),
         ValidationCheck(
             "semi-wing area",
@@ -130,9 +132,9 @@ def validate_wing(
         ),
         ValidationCheck(
             "spar sleeve surface clearance",
-            _minimum_spar_surface_clearance(parameters) >= 0.6,
-            round(_minimum_spar_surface_clearance(parameters), 3),
-            "at least 0.6 mm at 11 spanwise stations",
+            not parameters.spars or _minimum_spar_surface_clearance(parameters) >= 0.6,
+            round(_minimum_spar_surface_clearance(parameters), 3) if parameters.spars else "No rod sleeves",
+            "at least 0.6 mm at 11 spanwise stations, when rods are present",
         ),
     ]
 

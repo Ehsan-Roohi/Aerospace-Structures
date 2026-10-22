@@ -420,7 +420,7 @@ body { margin: 0; }
       <label class="wl-auto"><input type="checkbox" id="wingAutoSolve"> Solve automatically after each valid change</label>
     </div>
     <div id="wingImportGate" class="wl-gate" role="region" aria-label="Imported outer geometry: structural inputs to confirm" hidden></div>
-    <p class="wl-modelnote" id="wingModelNote"><b>Generic browser study model.</b> Edits change this app's analysis and 3-D view only. They do not update the printable CAD/STL or the approved fabrication layout. Presets are historical / course starting points.</p>
+    <p class="wl-modelnote" id="wingModelNote"><b>Generic browser study model.</b> Edits change this app's analysis and 3-D view. They do not update existing printable CAD/STL or the approved fabrication layout automatically. Use Export to notebook to generate and validate new CAD. Presets are historical / course starting points.</p>
     <details class="wl-acc" id="wlGeometry" open>
       <summary>Geometry <span class="wl-badge" id="wlGeometryBadge"></span></summary>
       <div class="wl-acc-body" id="wingGeometryForm"></div>
@@ -616,7 +616,7 @@ body { margin: 0; }
           <div class="callout" style="margin-top:16px"><h3>Explain the evidence</h3><p>1. What changed, by how much?<br>2. Which quantities stayed the same, and why?<br>3. Did mass increase without a useful change in the longest bay?<br>4. Is the conclusion a result of physics, or a limitation of this model?</p><p>The flat-panel comparison is only an educational indicator. The engine's combined plate/cylinder buckling screen may remain unchanged even when bay spacing changes. Neither is a validated printed-wing allowable.</p></div>
         </div>
       </div>
-      <p class="guide-note"><b>Numerical what-if, not a print-ready CAD update.</b> Custom rib positions change this app's model and 3-D view only. They do not update the Code-to-Print notebook, STL, G-code or the Python solver automatically. Record approved positions and reproduce them in CAD before manufacturing. Interface ribs stay locked to preserve the module-joint layout.</p>
+      <p class="guide-note"><b>Numerical what-if, not a print-ready CAD update.</b> Custom rib positions change this app's model and 3-D view. They do not update the Code-to-Print notebook, STL, G-code or the Python solver automatically. Use Export to notebook, upload the JSON in the notebook's Wing Lab mode, and validate the generated CAD before manufacturing. Interface ribs stay locked to preserve the module-joint layout.</p>
       <div class="companion-slot" data-companion="vinco" aria-label="External wing geometry tool"></div>
     </div>
     <div class="tabpanel" id="tab-members" role="tabpanel" hidden><div id="memberLesson"></div></div>
@@ -2749,8 +2749,9 @@ body { margin: 0; }
   function renderShare() {
     const box = $("#wingShare");
     if (!box || typeof WingStudyIO === "undefined") return;
-    box.innerHTML = `<p class="note" id="wingFilesNote" role="status"></p><div class="lesson-actions"><button class="btn" type="button" id="wingShareBtn">Copy a link to this solved study</button></div>
-      <input type="text" id="wingShareBox" class="wl-share" readonly hidden aria-label="Link to this study"><p class="note" id="wingShareMsg" role="status"></p>`;
+    box.innerHTML = `<p class="note" id="wingFilesNote" role="status"></p><div class="lesson-actions"><button class="btn" type="button" id="wingNotebookExport">Export to notebook (.json)</button><button class="btn" type="button" id="wingShareBtn">Copy a link to this solved study</button></div><p class="note">Analyse → Export to notebook → upload in the Code-to-Print notebook. Transfers ribs, rods and same-material printed spar caps/webs; does not generate STL here or certify strength. CAD validation, coupon (for rods) and slicer inspection still apply.</p>
+      <p class="note"><a href="https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/main/notebooks/MIE446_Code_to_Print_Wing.ipynb" target="_blank" rel="noopener">Open the Code-to-Print notebook ↗</a> · Step 2: Wing Lab JSON → upload → inspect → build → export.</p><input type="text" id="wingShareBox" class="wl-share" readonly hidden aria-label="Link to this study"><p class="note" id="wingShareMsg" role="status"></p>`;
+    $('#wingNotebookExport').onclick=exportToNotebook;
     $("#wingShareBtn").onclick = async () => {
       const out = $("#wingShareBox"), msg = $("#wingShareMsg");
       out.hidden = true; out.value = "";
@@ -2763,6 +2764,18 @@ body { margin: 0; }
         catch (e) { msg.textContent = "Select the link and copy it. It opens these inputs and solves them on the page (nothing is uploaded)."; }
       } catch (e) { msg.textContent = e.message; }
     };
+  }
+  function exportToNotebook(){
+    // Download/manufacturing messages must not become solver input errors.
+    const note=message=>{filesNote(message);$('#stateText').textContent=message;};
+    if(gateOpen()){note(blockedText);return;}
+    if(!R||stale||running||inputError){note('Solve the current valid design before exporting to the notebook.');return;}
+    try{
+      const issues=WingStudyIO.fabricationIssues(S,E);if(issues.length){note('Notebook export blocked: '+issues.join(' '));return;}
+      const text=WingStudyIO.exportPrintedStudy(S,E);
+      downloadText('MIE446_WingLab_to_Notebook.json',text,'application/json');
+      note('Design JSON downloaded. In the same Code-to-Print notebook choose Wing Lab JSON in Step 2 and run the upload cell. No geometry is changed; inspect the imported inventory and CAD validation.');
+    }catch(e){note('Notebook export blocked: '+e.message);}
   }
   renderShare();
   // A "#wingstudy=…" link opens the printed workspace with that study and solves it; a damaged link opens the course
@@ -2825,7 +2838,8 @@ body { margin: 0; }
       {id:'load',label:'+ Load',run:openWingLoadPopup},{id:'rib',label:'+ Rib',run:(p,a)=>openWingPartPopup('rib',p,a)},
       {id:'rod',label:'+ Rod',run:(p,a)=>openWingPartPopup('rod',p,a)},{id:'spar',label:'+ Spar',run:(p,a)=>openWingPartPopup('spar',p,a)},
       {id:'parts',label:'Select / edit parts',run:(p,a)=>{printedWorkspace.open('Ribs & spars',$('#wingPartEditor'),a);if(!partPick)$('#wpPick').click();}},
-      {id:'structure',label:'Structure dimensions',run:(p,a)=>openWingStructurePopup(a)},{id:'materials',label:'Materials',run:(p,a)=>openWingMaterialsPopup(a)}]});
+      {id:'structure',label:'Structure dimensions',run:(p,a)=>openWingStructurePopup(a)},{id:'materials',label:'Materials',run:(p,a)=>openWingMaterialsPopup(a)},
+      {id:'notebook',label:'Export to notebook',run:()=>exportToNotebook()}]});
     const sparResults=$('#wingSparResults');$('#tab-checks').prepend(sparResults);
     document.addEventListener('wing-load-applied',e=>{if(e.detail==='printed')printedWorkspace.close();});
   }

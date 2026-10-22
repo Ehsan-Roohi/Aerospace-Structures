@@ -1,6 +1,7 @@
 """Public interface for the MIE 446 parametric wing starter."""
 
-from .config import K2_PRO_BUILD_VOLUME_MM, SparSpec, WingParameters
+from .config import K2_PRO_BUILD_VOLUME_MM, BondedSparSpec, SparSpec, WingParameters
+from .wing_lab_import import WingLabImport, WingLabImportError, import_wing_lab_study, load_wing_lab_study
 from .export import export_build, export_fit_coupon, make_verified_archive
 from .geometry import WingBuild, build_wing, make_fit_coupon
 from .metrics import PlanformMetrics, calculate_planform_metrics
@@ -23,6 +24,7 @@ from .visualization import plot_design_overview, plot_modules, plot_shape
 
 __all__ = [
     "K2_PRO_BUILD_VOLUME_MM",
+    "BondedSparSpec", "WingLabImport", "WingLabImportError", "import_wing_lab_study", "load_wing_lab_study",
     "BuiltWingProject",
     "CouponNotConfirmedError",
     "DesignAnalysis",

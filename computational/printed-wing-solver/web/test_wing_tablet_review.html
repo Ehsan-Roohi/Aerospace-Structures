@@ -1,0 +1,12 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Wing tablet layout review</title>
+<style>body{margin:0;background:#dce5ef;font:14px system-ui}header{padding:8px;display:flex;gap:12px;align-items:center}a{color:#0756a7}iframe{display:block;border:1px solid #8aa4be;margin:0 8px;background:white}small{color:#41576f}</style>
+<header><b>Wing tablet review</b><a href="?portrait">Portrait 768 × 1024</a><a href="?landscape">Landscape 1024 × 768</a><a href="?phone">Phone 390 × 844 (secondary)</a><small>Real responsive iframe; no altered model or solver.</small><output id="layoutReport" aria-live="polite"></output></header>
+<iframe title="Tablet Wing workspace" src="../../../docs/wing-lab.html#wing"></iframe>
+<script>
+const mode=location.search,frame=document.querySelector('iframe');[frame.width,frame.height]=mode.includes('phone')?[390,844]:mode.includes('landscape')?[1024,768]:[768,1024];
+// Read-only layout evidence inside a real, independently sized browsing context.
+function measure(){const d=frame.contentDocument,w=frame.contentWindow,app=d?.querySelector('#app');if(!app||app.hidden)return;const dock=d.querySelector('#app .dock'),view=d.querySelector('#gl').getBoundingClientRect(),tabs=[...dock.querySelectorAll('[role=tab]')].map(b=>b.dataset.tab),overflow=d.documentElement.scrollWidth-d.documentElement.clientWidth,under=dock.getBoundingClientRect().top>=view.bottom;document.querySelector('#layoutReport').textContent=`${frame.width}×${frame.height} · overflow ${overflow}px · ${under&&tabs.join(',')==='diagrams,checks,section,report'?'RESULTS-ONLY PASS':'CHECK LAYOUT'} · inputs ${w.getComputedStyle(d.querySelector('#wingSide')).display} · ${d.querySelector('#stateChip').textContent}`;}
+frame.addEventListener('load',measure);setInterval(measure,1500);
+</script>

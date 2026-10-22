@@ -410,7 +410,7 @@ body { margin: 0; }
         <button class="tool" data-plot="mode" type="button">Modes</button>
       </div>
     </div>
-    <div class="group"><span>Learn first</span><div class="row"><button class="tool" type="button" id="learnBtn">Guided lesson</button><button class="tool" type="button" id="inputsBtn" aria-controls="wingSide" aria-expanded="true">Hide inputs</button></div></div>
+    <div class="group"><span>Learn first</span><div class="row"><button class="tool" type="button" id="learnBtn">Guided lesson</button><button class="tool" type="button" id="inputsBtn" aria-controls="wingSide" aria-expanded="true">Inputs</button></div></div>
   </header>
 
   <aside class="wl-side panel" id="wingSide" aria-label="Wing inputs">
@@ -431,7 +431,7 @@ body { margin: 0; }
     </details>
     <details class="wl-acc" id="wlLoads" open>
       <summary>Loads</summary>
-      <div class="wl-acc-body"><div id="wingLoadEditor"></div><p class="note wl-fallback">Load case and factor of safety: <b>Study tree → External loads</b> below. Point and line loads: the <b>Build a wing load</b> tab under the 3-D view.</p></div>
+      <div class="wl-acc-body"><div id="wingLoadEditor"></div><p class="note wl-fallback">Load case and factor of safety: <b>Study tree → External loads</b>. Use <b>+ Load</b> above the model for point and line loads.</p></div>
     </details>
     <div class="wl-acc-body" id="wingMaterialShortcuts" aria-label="Material controls">
       <b>Materials</b>
@@ -520,7 +520,7 @@ body { margin: 0; }
         <p class="note" id="wpStatus" role="status" aria-live="polite"></p>
         <div class="wl-row"><label for="wpPosition" id="wpPositionLabel">Position</label><input id="wpPosition" type="number" step="any" style="max-width:130px"><button class="btn" id="wpMove" type="button">Move selected</button><button class="btn" id="wpDuplicate" type="button">Duplicate at position</button><button class="btn" id="wpEdit" type="button">Edit dimensions / material</button></div>
         <div class="wl-row"><label for="wpNewRib">New rib y (mm)</label><input id="wpNewRib" type="number" step="0.1" style="max-width:130px"><button class="btn" id="wpAddRib" type="button">+ Rib</button><button class="btn" id="wpAddSpar" type="button">+ Spar</button><button class="btn" id="wpUndo" type="button">Undo last part edit</button></div>
-        <p class="note">Enable model selection to reveal the interior, then click a rib or any cap/web of a spar. Highlighting marks selection, not stress. Delete removes the whole selected spar. Drag rotates the view; it does not move a part. Use the position field for precise moves. Seam ribs are locked; change module layout to remove a seam. Geometry updates immediately; results need Solve.</p>
+        <p class="note">Click or tap a visible rib, rod or spar to edit it. Use Inside wing above the model to reveal internal parts. Highlighting marks selection, not stress. Delete removes only the selected part (all caps/webs for a spar). Drag rotates the view, not the part. Seam ribs are locked; change module layout to remove a seam. Geometry updates immediately; results need Solve.</p>
       </section>
       <details class="hud" id="hudControls" open aria-label="View and display">
         <summary>View &amp; display controls</summary>
@@ -556,19 +556,13 @@ body { margin: 0; }
 
   <section class="dock panel" aria-label="Results">
     <div class="tabs" role="tablist">
-      <button role="tab" type="button" data-tab="learn" aria-selected="true">Start here · learn</button>
-      <button role="tab" type="button" data-tab="design" aria-selected="false">Design lab · add ribs</button>
-      <button role="tab" type="button" data-tab="members" aria-selected="false">Skin · rods · ribs · modes</button>
-      <button role="tab" type="button" data-tab="loads" aria-selected="false">Build a wing load</button>
-      <button role="tab" type="button" data-tab="diagrams" aria-selected="false">Diagrams</button>
+      <button role="tab" type="button" data-tab="diagrams" aria-selected="true">Diagrams</button>
       <button role="tab" type="button" data-tab="checks" aria-selected="false">Checks</button>
       <button role="tab" type="button" data-tab="section" aria-selected="false">Section</button>
-      <button role="tab" type="button" data-tab="joints" aria-selected="false">Compare joints</button>
-      <button role="tab" type="button" data-tab="predict" aria-selected="false">Predict &amp; challenge</button>
       <button role="tab" type="button" data-tab="report" aria-selected="false">Report</button>
     </div>
     <div class="wl-stale" id="wingStale" role="status" hidden></div>
-    <div class="tabpanel" id="tab-learn" role="tabpanel">
+    <div class="tabpanel" id="tab-learn" role="tabpanel" hidden>
       <nav class="learn-nav" aria-label="Learning steps">
         <button class="btn" data-lesson="0" aria-pressed="true">1 · Identify the parts</button>
         <button class="btn" data-lesson="1" aria-pressed="false">2 · Follow the load</button>
@@ -611,7 +605,7 @@ body { margin: 0; }
     </div>
     <div class="tabpanel" id="tab-members" role="tabpanel" hidden><div id="memberLesson"></div></div>
     <div class="tabpanel" id="tab-loads" role="tabpanel" hidden><div id="wingLoadLesson"></div></div>
-    <div class="tabpanel" id="tab-diagrams" role="tabpanel" hidden><div class="charts" id="charts"></div></div>
+    <div class="tabpanel" id="tab-diagrams" role="tabpanel"><div class="charts" id="charts"></div></div>
     <div class="tabpanel" id="tab-checks" role="tabpanel" hidden>
       <div class="checks"><div class="checklist" id="checklist"></div><div class="callout" id="govCallout"></div></div>
     </div>
@@ -862,7 +856,7 @@ body { margin: 0; }
       pm.append(jump);
     } else if (id === "materials" || id === "mat-pla") {
       $("#pmHead").textContent = "Material";
-      head("Shell / rib material", "Select a PLA orientation card, or supply custom effective isotropic properties. Printed material is anisotropic; these scalar values describe the spanwise beam model, not a full anisotropic failure law. Replace placeholders with coupon data.");
+      head("Shell / rib material", "The class fabrication notebook specifies regular PLA Pro for skin, ribs and integral printed spars; carbon rods are separate. Match the card to the actual print: Upright = wing span along printer Z; Flat = span in the build plane. These are teaching placeholders, not measured properties of your team's filament. Brand, layers, walls and print settings matter. Enter coupon-derived effective properties before interpreting strength margins. The scalar spanwise model is not a full anisotropic failure law.");
       pm.append(fs("Card", segField([["pla_upright", "PLA upright"], ["pla_flat", "PLA flat"],['custom_shell','Custom']], S.plaKey, (v) => { S.plaKey = v; S.plaOver = { E: null, ft: null, fc: null, fs: null }; }, "Shell material card"),
         numField("pE", "Elastic modulus E", "MPa", pla.E, 50, (v) => (S.plaOver.E = v), positive),
         numField("pft", "Tensile strength", "MPa", pla.ft, 1, (v) => (S.plaOver.ft = v), positive),
@@ -1389,7 +1383,7 @@ body { margin: 0; }
 
   // ------------------------------------------------------------ 3-D scene
   const canvas = $("#gl");
-  canvas.tabIndex=0;canvas.setAttribute('aria-label','Wing model: select a rib or spar, then press Delete to remove it');
+  canvas.tabIndex=0;canvas.setAttribute('aria-label','Wing model: click or tap a visible rib, rod or spar to edit it; Delete removes the selected part');
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, preserveDrawingBuffer: false });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
   renderer.localClippingEnabled = true;
@@ -1504,6 +1498,7 @@ body { margin: 0; }
       const st = Array.from({ length: 31 }, (_, i) => (L * i) / 30);
       const r = swept(st, (y) => circleLoop(E.rodCentres(g, y)[fIdx], E.rodRadius(g), 18), { shininess: 60 });
       r.userData.kind = "rod";
+      r.userData.rodIndex = fIdx;
       root.add(r);
       return r;
     });
@@ -1815,17 +1810,20 @@ body { margin: 0; }
   const raycaster = new THREE.Raycaster();
   const ndc = new THREE.Vector2();
   let partSelection=null, partPick=false, partUndo=null, partPointer=null, partDragged=false;
+  const wingGesturePointers=new Set();let wingMultiTouch=false;
   const partStamp=()=>JSON.stringify([S.geometry,S.assembly]);
   const partSnapshot=()=>({geometry:JSON.parse(JSON.stringify(S.geometry)),assembly:JSON.parse(JSON.stringify(S.assembly))});
-  const editablePart=()=>partSelection&&(partSelection.kind==='spar'?S.geometry.spars[partSelection.index]:interiorStations(E.makeGeometry(S.geometry)).includes(partSelection.station));
+  const editablePart=()=>partSelection&&(partSelection.kind==='spar'?S.geometry.spars[partSelection.index]:partSelection.kind==='rod'?Number.isFinite(S.geometry.rodFractions[partSelection.index]):interiorStations(E.makeGeometry(S.geometry)).includes(partSelection.station));
   function partOptions(){
     const g=E.makeGeometry(S.geometry),ins=interiorStations(g);
     return [...E.ribStations(g).map((y,i)=>({key:'rib:'+y,kind:'rib',station:y,label:'Rib R'+(i+1)+' · y '+nf(y,1)+' mm'+(ins.includes(y)?'':' · seam locked')})),
-      ...g.spars.map((s,i)=>({key:'spar:'+i,kind:'spar',index:i,label:'Spar '+(i+1)+' · '+nf(s.fraction,3)+'c'}))];
+      ...g.spars.map((s,i)=>({key:'spar:'+i,kind:'spar',index:i,label:'Spar '+(i+1)+' · '+nf(s.fraction,3)+'c'})),
+      ...g.rodFractions.map((f,i)=>({key:'rod:'+i,kind:'rod',index:i,label:'Rod '+(i+1)+' · '+nf(f,3)+'c'}))];
   }
   function selectWingPart(key){
     partSelection=partOptions().find(p=>p.key===key)||null;
     renderPartEditor();
+    if(partSelection&&printedWorkspace?.popup.contains($('#wingPartEditor')))printedWorkspace.popup.querySelector('h3').textContent=partSelection.label;
   }
   function partChange(patch,key){
     if(running||gateOpen())return {ok:false};
@@ -1836,25 +1834,27 @@ body { margin: 0; }
   function deleteWingPart(){
     if(!partSelection||!editablePart()){flash('Select an editable interior rib or spar. Interface ribs belong to a module seam and remain locked.');return;}
     if(partSelection.kind==='spar')partChange({spars:S.geometry.spars.filter((_,i)=>i!==partSelection.index)},'spars');
+    else if(partSelection.kind==='rod')partChange({rodFractions:S.geometry.rodFractions.filter((_,i)=>i!==partSelection.index)},'rods');
     else partChange({customInteriorRibs:interiorStations(E.makeGeometry(S.geometry)).filter(y=>y!==partSelection.station)},'ribs');
+    if(!partSelection&&printedWorkspace?.popup.contains($('#wingPartEditor')))printedWorkspace.close();
   }
   function renderPartEditor(){
     const host=$('#wingPartEditor');if(!host)return;
     if(partUndo&&partUndo.after!==partStamp())partUndo=null;
     const options=partOptions();if(partSelection&&!options.some(p=>p.key===partSelection.key))partSelection=null;
     const choice=$('#wpChoice'),value=partSelection?.key||'';
-    choice.innerHTML='<option value="">Choose rib or spar…</option>'+options.map(p=>'<option value="'+p.key+'">'+esc(p.label)+'</option>').join('');choice.value=value;
-    const editable=!!editablePart(),spar=partSelection?.kind==='spar';
+    choice.innerHTML='<option value="">Choose rib, rod or spar…</option>'+options.map(p=>'<option value="'+p.key+'">'+esc(p.label)+'</option>').join('');choice.value=value;
+    const editable=!!editablePart(),spar=partSelection?.kind==='spar',rod=partSelection?.kind==='rod';
     $('#wpStatus').textContent=partSelection?partSelection.label+(editable?' · selected; Delete or use the controls below.':' · required seam rib; not individually removable.'):'No part selected. Use the model-selection button or the part list.';
     ['wpDelete','wpMove','wpDuplicate','wpEdit'].forEach(id=>$('#'+id).disabled=!editable||running);
     $('#wpUndo').disabled=!partUndo||running;
     ['wpAddRib','wpAddSpar'].forEach(id=>$('#'+id).disabled=running);
-    $('#wpPosition').disabled=!editable;$('#wpPositionLabel').textContent=spar?'Spar position x/c':'Rib station y (mm)';
-    $('#wpPosition').value=editable?(spar?S.geometry.spars[partSelection.index].fraction:partSelection.station):'';
+    $('#wpPosition').disabled=!editable;$('#wpPositionLabel').textContent=spar?'Spar position x/c':rod?'Rod position x/c':'Rib station y (mm)';
+    $('#wpPosition').value=editable?(spar?S.geometry.spars[partSelection.index].fraction:rod?S.geometry.rodFractions[partSelection.index]:partSelection.station):'';
     $('#wpPick').setAttribute('aria-pressed',String(partPick));
     if(!$('#wpNewRib').value)$('#wpNewRib').value=suggestRib(E.makeGeometry(S.geometry),E.ribStations(E.makeGeometry(S.geometry)));
-    if(model)for(const m of [...model.ribs,...(model.spars||[])]){
-      const selected=partSelection&&(m.userData.kind==='spar'?spar&&m.userData.sparIndex===partSelection.index:!spar&&m.userData.station===partSelection.station);
+    if(model)for(const m of [...model.ribs,...(model.spars||[]),...model.rods]){
+      const selected=partSelection&&(m.userData.kind==='spar'?spar&&m.userData.sparIndex===partSelection.index:m.userData.kind==='rod'?rod&&m.userData.rodIndex===partSelection.index:!spar&&!rod&&m.userData.station===partSelection.station);
       if(m.material.emissive?.setHex)m.material.emissive.setHex(selected?0xa64c00:0x000000);
       m.userData.editorSelected=!!selected;
     }
@@ -1866,37 +1866,45 @@ body { margin: 0; }
   $('#wpUndo').onclick=()=>{if(!partUndo||running||gateOpen())return;const previous=partSnapshot(),restore=partUndo;S.assembly=restore.assembly;const out=applyGeometry(restore.geometry,'geometry','undoing the last part edit');if(out.ok){partUndo={...previous,after:partStamp()};partSelection=null;}else S.assembly=previous.assembly;renderTree();renderPartEditor();};
   function moveOrDuplicatePart(duplicate){
     if(!editablePart())return;
-    const x=numberFrom($('#wpPosition'));
+    const x=numberFrom($('#wpPosition')),kind=partSelection.kind,index=partSelection.index;let out,nextKey;
     if(partSelection.kind==='rib'){
       const ribs=interiorStations(E.makeGeometry(S.geometry));
-      partChange({customInteriorRibs:duplicate?[...ribs,x]:ribs.map(y=>y===partSelection.station?x:y)},'ribs');
+      out=partChange({customInteriorRibs:duplicate?[...ribs,x]:ribs.map(y=>y===partSelection.station?x:y)},'ribs');nextKey='rib:'+x;
+    }else if(partSelection.kind==='rod'){
+      const list=[...S.geometry.rodFractions];if(duplicate)list.push(x);else list[partSelection.index]=x;
+      out=partChange({rodFractions:list},'rods');nextKey='rod:'+S.geometry.rodFractions.indexOf(x);
     }else{
       const list=JSON.parse(JSON.stringify(S.geometry.spars)),copy={...list[partSelection.index],fraction:x};
       if(duplicate)list.push(copy);else list[partSelection.index]=copy;
-      partChange({spars:list},'spars');
+      out=partChange({spars:list},'spars');nextKey='spar:'+(duplicate?list.length-1:index);
     }
+    if(out?.ok)selectWingPart(nextKey);
   }
   $('#wpMove').onclick=()=>moveOrDuplicatePart(false);$('#wpDuplicate').onclick=()=>moveOrDuplicatePart(true);
-  $('#wpEdit').onclick=()=>{if(!editablePart())return;openSection('wlStructure',partSelection.kind==='spar'?'ws'+partSelection.index+'_fraction':'wgRibY'+interiorStations(E.makeGeometry(S.geometry)).indexOf(partSelection.station));};
+  $('#wpPosition').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();moveOrDuplicatePart(false);}});
+  $('#wpEdit').onclick=()=>{if(!editablePart())return;openWingStructurePopup($('#wpEdit'),partSelection.kind==='spar'?'ws'+partSelection.index+'_fraction':partSelection.kind==='rod'?'wgRod'+partSelection.index:'wgRibY'+interiorStations(E.makeGeometry(S.geometry)).indexOf(partSelection.station));};
   $('#wpAddRib').onclick=()=>partChange({customInteriorRibs:[...interiorStations(E.makeGeometry(S.geometry)),numberFrom($('#wpNewRib'))]},'ribs');
   $('#wpAddSpar').onclick=()=>{if(running||gateOpen())return;const previous=partSnapshot(),stamp=partStamp();$('#wsAdd')?.click();if(partStamp()!==stamp)partUndo={...previous,after:partStamp()};renderPartEditor();};
-  canvas.addEventListener('pointerdown',ev=>{partDragged=false;partPointer=partPick?{x:ev.clientX,y:ev.clientY,id:ev.pointerId}:null;});
+  canvas.addEventListener('pointerdown',ev=>{wingGesturePointers.add(ev.pointerId);if(wingGesturePointers.size>1){wingMultiTouch=true;partPointer=null;partDragged=true;return;}partDragged=false;partPointer=ev.button===0||ev.button==null?{x:ev.clientX,y:ev.clientY,id:ev.pointerId}:null;});
   canvas.addEventListener('pointermove',ev=>{if(partPointer&&Math.hypot(ev.clientX-partPointer.x,ev.clientY-partPointer.y)>5)partDragged=true;});
-  canvas.addEventListener('pointercancel',()=>{partPointer=null;});
+  canvas.addEventListener('pointercancel',ev=>{wingGesturePointers.delete(ev.pointerId);partPointer=null;if(!wingGesturePointers.size)wingMultiTouch=false;});
   function pickWingPartAt(ev){
-    if(!partPick||partDragged||running||gateOpen()||!model)return;
-    const r=canvas.getBoundingClientRect();ndc.set((ev.clientX-r.left)/r.width*2-1,-(ev.clientY-r.top)/r.height*2+1);raycaster.setFromCamera(ndc,camera);
+    if(partDragged||running||gateOpen()||!model||(!partPick&&S.plot!=='model')||$('#wingLoadEditor .wle-pick[aria-pressed="true"]'))return;
+    if(model.loads&&WingWorkspaceUI.pickLoadArrow(model.loads.children,camera,canvas,ev,THREE)!==null)return;
+    const r=canvas.getBoundingClientRect();
     const visible=o=>{for(let p=o;p;p=p.parent)if(!p.visible)return false;return true;};
-    const hit=raycaster.intersectObjects([...model.ribs,...(model.spars||[])].filter(visible),false).find(h=>!S.clip||h.point.x<=S.clipY);
-    if(hit){const u=hit.object.userData;selectWingPart(u.kind==='spar'?'spar:'+u.sparIndex:'rib:'+u.station);}
+    const targets=[...model.ribs,...(model.spars||[]),...model.rods].filter(visible);let hit;
+    // A small screen-space margin makes thin members finger/pen-friendly at any zoom.
+    for(const [dx,dy]of [[0,0],[6,0],[-6,0],[0,6],[0,-6],[4,4],[-4,4],[4,-4],[-4,-4]]){ndc.set((ev.clientX+dx-r.left)/r.width*2-1,-(ev.clientY+dy-r.top)/r.height*2+1);raycaster.setFromCamera(ndc,camera);hit=raycaster.intersectObjects(targets,false).find(h=>!S.clip||h.point.x<=S.clipY);if(hit)break;}
+    if(hit){const u=hit.object.userData;selectWingPart(u.kind==='spar'?'spar:'+u.sparIndex:u.kind==='rod'?'rod:'+u.rodIndex:'rib:'+u.station);if(printedWorkspace)printedWorkspace.open(partSelection.label,$('#wingPartEditor'),{right:ev.clientX,top:ev.clientY});}
     else $('#wpStatus').textContent='No rib or spar at that point. Click a visible member, zoom in, or use the part list.';
   }
   canvas.addEventListener('pointerup',ev=>{
+    wingGesturePointers.delete(ev.pointerId);if(wingMultiTouch){partPointer=null;if(!wingGesturePointers.size)wingMultiTouch=false;return;}
     const start=partPointer;partPointer=null;
     if(!start||start.id!==ev.pointerId||Math.hypot(ev.clientX-start.x,ev.clientY-start.y)>5)return;
     pickWingPartAt(ev);
   });
-  canvas.addEventListener('click',pickWingPartAt);
   document.addEventListener('keydown',ev=>{
     if($('#app').hidden||gateOpen()||running||!partSelection||ev.ctrlKey||ev.metaKey||ev.altKey)return;
     const target=ev.target;if(target?.isContentEditable||target?.closest?.('input,textarea,[contenteditable="true"]'))return;
@@ -2286,8 +2294,11 @@ body { margin: 0; }
 
   // ------------------------------------------------------------ guided learning
   function openTab(name) {
-    document.querySelectorAll("[role=tab]").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.tab === name)));
-    document.querySelectorAll(".tabpanel").forEach((p) => (p.hidden = p.id !== "tab-" + name));
+    const panel=$('#tab-'+name);
+    if(panel?.classList.contains('wing-lesson-panel')&&printedWorkspace){panel.hidden=false;printedWorkspace.open(panel.dataset.title,panel,$('#learnBtn'));return;}
+    if(printedWorkspace)printedWorkspace.close();
+    document.querySelectorAll("#app .dock [role=tab]").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.tab === name)));
+    document.querySelectorAll("#app .dock > .tabpanel").forEach((p) => (p.hidden = p.id !== "tab-" + name));
     if (name === "section") renderSection();
   }
 
@@ -2625,12 +2636,13 @@ body { margin: 0; }
   // The input column is shown by default (like the Beam Lab); "Hide inputs" folds it away for a lesson.
   function showInputs(show) {
     $("#app").classList.toggle("learning-view", !show);
-    $("#inputsBtn").textContent = show ? "Hide inputs" : "Show inputs";
+    $('#app').classList.toggle('tablet-inputs-open',show);
+    $("#inputsBtn").textContent = "Inputs";
     $("#inputsBtn").setAttribute("aria-expanded", String(show));
     resize(); if (model) setView("iso");
   }
-  $("#inputsBtn").addEventListener("click", () => showInputs($("#app").classList.contains("learning-view")));
-  $("#learnBtn").addEventListener("click", () => { openTab("learn"); $("#tab-learn").scrollIntoView({ block: "nearest" }); });
+  $("#inputsBtn").addEventListener("click", () => showInputs(window.innerWidth<=1100?!$('#app').classList.contains('tablet-inputs-open'):$("#app").classList.contains("learning-view")));
+  $("#learnBtn").addEventListener("click", () => openTab("learn"));
   document.querySelectorAll("[data-anatomy]").forEach((b) => b.addEventListener("click", () => setAnatomy(b.dataset.anatomy)));
   document.querySelectorAll("[data-lesson]").forEach((b) => b.addEventListener("click", () => {
     S.lesson = +b.dataset.lesson;
@@ -2676,11 +2688,7 @@ body { margin: 0; }
   window.addEventListener("resize", stickBelowNav);
   if (window.ResizeObserver) new ResizeObserver(stickBelowNav).observe($("#wingNavigation"));
   $('#wingLoadBtn').addEventListener('click',e=>openWingLoadPopup(null,e.currentTarget));
-  document.querySelectorAll("[role=tab]").forEach((b) => b.addEventListener("click", () => {
-    document.querySelectorAll("[role=tab]").forEach((x) => x.setAttribute("aria-selected", String(x === b)));
-    document.querySelectorAll(".tabpanel").forEach((p) => (p.hidden = p.id !== "tab-" + b.dataset.tab));
-    if (b.dataset.tab === "section") renderSection();
-  }));
+  document.querySelectorAll("#app .dock [role=tab]").forEach((b) => b.addEventListener("click", () => openTab(b.dataset.tab)));
   $("#secY").addEventListener("input", (e) => { S.secY = parseFloat(e.target.value); clearTimeout(secTimer); secTimer = setTimeout(renderSection, 90); });
   $("#secField").querySelectorAll("button").forEach((b) => b.addEventListener("click", () => {
     S.secField = b.dataset.f;
@@ -2835,7 +2843,7 @@ body { margin: 0; }
   function openWingStructurePopup(anchor,focusId){printedWorkspace.open('Structure · dimensions & material',$('#wingStructureForm'),anchor);const target=focusId&&$('#'+focusId);target?.scrollIntoView({block:'nearest'});target?.focus({preventScroll:true});}
   // A load click selects its real editor; an orbit/pan drag never changes the selection.
   let loadPointer=null,loadMoved=false;
-  canvas.addEventListener('pointerdown',e=>{loadPointer=e.button===0?{x:e.clientX,y:e.clientY,id:e.pointerId}:null;loadMoved=false;});
+  canvas.addEventListener('pointerdown',e=>{loadPointer=e.button===0&&!wingMultiTouch?{x:e.clientX,y:e.clientY,id:e.pointerId}:null;loadMoved=false;});
   canvas.addEventListener('pointermove',e=>{if(loadPointer&&Math.hypot(e.clientX-loadPointer.x,e.clientY-loadPointer.y)>5)loadMoved=true;});
   canvas.addEventListener('pointercancel',()=>{loadPointer=null;});
   canvas.addEventListener('pointerup',e=>{
@@ -2864,8 +2872,18 @@ body { margin: 0; }
       {id:'rod',label:'+ Rod',run:(p,a)=>openWingPartPopup('rod',p,a)},{id:'spar',label:'+ Spar',run:(p,a)=>openWingPartPopup('spar',p,a)},
       {id:'parts',label:'Select / edit parts',run:(p,a)=>{printedWorkspace.open('Ribs & spars',$('#wingPartEditor'),a);if(!partPick)$('#wpPick').click();}},
       {id:'structure',label:'Structure dimensions',run:(p,a)=>openWingStructurePopup(a)},{id:'materials',label:'Materials',run:(p,a)=>openWingMaterialsPopup(a)},
+      {id:'inside',label:'Inside wing',run:()=>setAnatomy('inside')},
       {id:'notebook',label:'Export to notebook',run:()=>exportToNotebook()}]});
     const sparResults=$('#wingSparResults');$('#tab-checks').prepend(sparResults);
+    // Inputs and lessons live above/beside the model, never in its results dock.
+    $('#app > .bar').append($('#wingSide .wl-run'));
+    const library=el('div',{class:'wing-input-library',hidden:true});$('#wingSide').append(library);library.append($('#wingLoadBtn').closest('.group'));
+    const lessons=[['learn','Guided lesson'],['design','Design lab · add / compare ribs'],['members','Skin, rods, ribs & modes'],['loads','Load theory & Schrenk'],['joints','Compare connections'],['predict','Predict & challenge']];
+    const experiments=el('details',{class:'wing-experiments'},'<summary class="btn">Experiments & theory ▾</summary><div></div>');
+    for(const [name,title]of lessons){const panel=$('#tab-'+name);panel.classList.add('wing-lesson-panel');panel.dataset.title=title;panel.hidden=true;library.append(panel);if(name==='learn')continue;const b=el('button',{class:'btn',type:'button','data-wing-lesson':name},title);b.onclick=()=>{experiments.open=false;openTab(name);};experiments.querySelector('div').append(b);}
+    printedWorkspace.tools.insertBefore(experiments,printedWorkspace.tools.querySelector('.wing-quick-hint'));
+    $('#inputsBtn').setAttribute('aria-expanded',String(window.innerWidth>1100));
+    const inputClose=el('button',{class:'btn',type:'button','aria-label':'Close wing inputs'},'× Close inputs');inputClose.onclick=()=>showInputs(false);$('#wingSide').prepend(inputClose);
     const historyTools=el('span',{class:'wing-history-tools',role:'group','aria-label':'Wing edit history'},'<button class="btn" type="button" id="wingUndo" title="Undo wing edit (Ctrl/Cmd+Z)" disabled>↶ Undo</button><button class="btn" type="button" id="wingRedo" title="Redo wing edit (Ctrl/Cmd+Shift+Z or Ctrl+Y)" disabled>↷ Redo</button>');
     printedWorkspace.tools.insertBefore(historyTools,printedWorkspace.tools.querySelector('.wing-quick-hint'));historyTools.style.cssText='display:inline-flex;gap:6px;margin-left:auto';
     $('#wingUndo').onclick=()=>travelWingHistory(-1);$('#wingRedo').onclick=()=>travelWingHistory(1);syncWingHistory();
@@ -2894,7 +2912,7 @@ body { margin: 0; }
     S.stressComponent='skin'; S.anatomy='inside';S.xray=true;S.deformed=false;
     $('#foundations').hidden=true;$('#app').hidden=false;$('#wingNavigation').hidden=false;
     $('#app').dataset.lessonStage=stage; wingStudyOpened=true;
-    setPlot('model'); openTab('members'); resize();lastViewSet=false;runStudy();
+    setPlot('model'); openTab('diagrams'); resize();lastViewSet=false;runStudy();
     $('#wingNavigation').scrollIntoView({block:'start'});
   });
   // Returning from another workspace shows the current printed-wing study unchanged; only a first

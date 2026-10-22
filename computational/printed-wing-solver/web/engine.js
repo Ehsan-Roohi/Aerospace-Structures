@@ -33,12 +33,12 @@ const WingEngine = (() => {
     pla_upright: {
       key: "pla_upright", kind: "pla", name: "Printed PLA Pro — span along printer Z",
       short: "PLA upright", E: 2000, nu: 0.35, rho: 1.24, ft: 15, fc: 50, fs: 10, G: null,
-      source: "Teaching placeholder inside published FFF-PLA ranges (Gonabadi, Yadav & Bull 2020: ≈2 GPa / 5 MPa upright). Replace with coupon data.",
+      source: "Illustrative PLA Pro upright card, not a measured material or validated allowable. The 15 MPa tensile entry is a teaching assumption, not a result from your class filament. Gonabadi, Yadav & Bull (2020) is background on print anisotropy, not validation of these numbers. Replace E and strengths with mechanical coupon data; a rod-clearance coupon tests fit only.",
     },
     pla_flat: {
       key: "pla_flat", kind: "pla", name: "Printed PLA Pro — span in build plane",
       short: "PLA flat", E: 3000, nu: 0.35, rho: 1.24, ft: 45, fc: 55, fs: 20, G: null,
-      source: "Teaching placeholder inside published FFF-PLA ranges (≈3–3.5 GPa, 45–55 MPa along roads). Replace with coupon data.",
+      source: "Illustrative PLA Pro flat card, not a measured material or validated allowable. Match the actual filament and print direction, and replace E and strengths with mechanical coupon data; a rod-clearance coupon tests fit only.",
     },
     rod_hobby: {
       key: "rod_hobby", kind: "rod", name: "Pultruded carbon rod — hobby grade",

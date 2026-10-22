@@ -13,6 +13,9 @@ const page = source.replace("/*__ENGINE__*/", engine).replace("/*__BEAM_ENGINE__
   .replace("/*__LOAD_PROFILES__*/",()=>readFileSync(new URL("./load_profiles.js",import.meta.url),"utf8").replaceAll("\r\n","\n"))
   .replace("/*__WING_SPARS__*/",()=>readFileSync(new URL("./wing_spars.js",import.meta.url),"utf8").replaceAll("\r\n","\n"))
   .replace("/*__BEAM_SECTIONS__*/",()=>readFileSync(new URL("./beam_sections.js",import.meta.url),"utf8").replaceAll("\r\n","\n"))
+  .replace("/*__BEAM_STRENGTH__*/",()=>readFileSync(new URL("./beam_strength.js",import.meta.url),"utf8").replaceAll("\r\n","\n"))
+  .replace("/*__BEAM_STRENGTH_UI__*/",()=>readFileSync(new URL("./beam_strength_ui.js",import.meta.url),"utf8").replaceAll("\r\n","\n"))
+  .replace("/*__WING_WORKSPACE_UI__*/",()=>readFileSync(new URL("./wing_workspace_ui.js",import.meta.url),"utf8").replaceAll("\r\n","\n"))
   .replace("/*__BEAM_STUDY__*/",()=>readFileSync(new URL("./beam_study.js",import.meta.url),"utf8").replaceAll("\r\n","\n"))
   .replace("/*__BEAM_DIAGRAMS__*/",()=>readFileSync(new URL("./beam_diagrams.js",import.meta.url),"utf8").replaceAll("\r\n","\n"))
   .replace("/*__BEAM_SOLUTION__*/",()=>readFileSync(new URL("./beam_solution.js",import.meta.url),"utf8").replaceAll("\r\n","\n"))
@@ -30,7 +33,7 @@ let scripts = 0;
 for (const match of published.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/gi)) {
   if (match[1].trim()) { new vm.Script(match[1]); scripts++; }
 }
-assert.equal(scripts, 5);
+assert.equal(scripts, 6);
 assert.ok(published.includes('data-stage="metal"') && published.includes('const MetalWingEngine') && published.includes('id="toMetalWing"'), 'full-scale metal wing workspace is built in');
 assert.ok(source.includes('<div id="foundations"></div>'));
 // The input column is shown by default (Beam-like layout); "Hide inputs" folds it away at run time.
@@ -53,10 +56,10 @@ for (const modules of [2, 3]) {
 }
 assert.deepEqual(E.ribStations(E.makeGeometry()), [112.5, 146, 154, 225, 296, 304, 337.5]);
 assert.ok(source.includes('plot: "model", deformed: false'));
-assert.ok(source.includes('data-tab="learn" aria-selected="true"'));
+assert.ok(source.includes('id="learnBtn"')&&!source.includes('Start here · learn'),'single top-level Guided lesson entry, no duplicate learning tab');
 assert.equal((source.match(/data-lesson="\d"/g) || []).length, 6);
-assert.ok(source.includes('data-tab="design"'));
+assert.ok(source.includes("['design','Design lab · add / compare ribs']"),'Design lab stays available in the top experiments menu');
 const custom = E.makeGeometry({ customInteriorRibs: [56.3, 112.5, 225, 337.5] });
 assert.ok(context.ribPlanFigure(custom).includes('>R8</text>'));
 assert.deepEqual(Array.from(context.interiorStations(custom)), [56.3, 112.5, 225, 337.5]);
-console.log("PASS: generated page matches template and engines; five inline scripts parse (including the full-scale metal wing); 2/3-module and custom-rib figures are finite and labelled; beam landing screen and initially hidden wing workspace are present; wing lesson and Design lab remain available.");
+console.log("PASS: generated page matches template and engines; six inline scripts parse (including the full-scale metal wing); 2/3-module and custom-rib figures are finite and labelled; beam landing screen and initially hidden wing workspace are present; wing lesson and Design lab remain available from the top controls.");

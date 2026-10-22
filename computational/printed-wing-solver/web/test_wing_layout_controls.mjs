@@ -58,6 +58,7 @@ function openPage({hash=''}={}) {
   const virtualConsole=new VirtualConsole();
   const dom=new JSDOM(page,{url:'https://example.org/wing-lab.html'+hash,runScripts:'outside-only',virtualConsole});
   const w=dom.window, ctx=dom.getInternalVMContext();
+  Object.defineProperty(w,'innerWidth',{value:1440,configurable:true}); // Desktop input-column toggle; tablet drawer has dedicated part-editor coverage.
   w.matchMedia=()=>({matches:false,addEventListener(){},removeEventListener(){},addListener(){},removeListener(){}});
   w.requestAnimationFrame=()=>0; w.cancelAnimationFrame=()=>{};
   w.setInterval=()=>0;
@@ -90,7 +91,7 @@ async function until(test,what,ms=60000){const end=Date.now()+ms;while(!test()){
     w.dispatchEvent(new w.CustomEvent('wing-learning-stage',{detail:'project'}));
     await solved();
     ok(!$('#app').hidden&&!$('#app').classList.contains('learning-view'),'workspace opens with the input column shown');
-    ok($('#wingSide #runBtn')&&$('#wingSide #stateChip'),'Solve button and status chip sit at the top of the input column');
+    ok($('#app > .bar #runBtn')&&$('#app > .bar #stateChip'),'Solve button and status remain above the model, independent of the input drawer');
     ok($('#wingAutoSolve')&&!$('#wingAutoSolve').checked,'"Solve automatically after each valid change" is offered and off by default');
     ok($('#wingLoadEditor .wle[data-workspace="printed"]')&&$('#wingLoadEditor #wingLoadForm'),'the shared custom-load editor sits in the Loads container (merged v5 load module)');
     ok($('#wingStudyFiles .wio-root.wio-printed')&&$('#wingShare #wingShareBtn'),'the study-file panel and the link button sit in Study files (merged v5 import module)');
@@ -99,7 +100,7 @@ async function until(test,what,ms=60000){const end=Date.now()+ms;while(!test()){
       ok($('#'+id),`${id} control present`);
     ok(/Generic browser study model/.test($('#wingModelNote').textContent)&&/CAD\/STL/.test($('#wingModelNote').textContent)&&/fabrication layout/.test($('#wingModelNote').textContent)&&/historical \/ course/.test($('#wingModelNote').textContent),'the model is labelled as a generic browser study model');
     // A load for nonzero stress: the Design-lab 2 N tip experiment (a deliberate action solves at once and saves the baseline).
-    $('[data-tab="design"]').click();
+    $('[data-wing-lesson="design"]').click();
     $('#designTip').click();
     await until(()=>ui().result().load.kind==='tip'&&!ui().isRunning()&&!ui().isStale(),'2 N experiment');await solved();
     ok($('#editRibsHint')==null&&$('#designEditRibs'),'Design lab points to the single rib editor in Structure');
@@ -240,7 +241,7 @@ async function until(test,what,ms=60000){const end=Date.now()+ms;while(!test()){
     ok(/does not update|do not update/.test(report)&&/CAD\/STL/.test(report),'report states that edits do not update CAD/STL');
 
     // ---- Design lab comparison reflects geometry edits (baseline from the 2 N experiment, same load)
-    $('[data-tab="design"]').click();$('#designTip').click();
+    $('[data-wing-lesson="design"]').click();$('#designTip').click();
     await until(()=>!ui().isRunning()&&!ui().isStale()&&ui().result().load.kind==='tip','new baseline');await solved();
     await change('#wgSkin',1);await solve();
     const row=[...$$('#designComparison tr')].find(tr=>/Printed PLA mass/.test(tr.textContent));
@@ -263,11 +264,11 @@ async function until(test,what,ms=60000){const end=Date.now()+ms;while(!test()){
     ok(JSON.stringify(ui().state().geometry)===geoNow&&ui().result()===resNow&&!ui().isRunning(),'zoom buttons change neither inputs nor results');
 
     // ---- deliberate study actions still solve at once: lesson experiment, teaching panel, preset
-    $('[data-tab="learn"]').click();$('[data-lesson="2"]').click();
+    $('#learnBtn').click();$('[data-lesson="2"]').click();
     [...$$('#lessonActions button')].find(b=>/Run 4 N/.test(b.textContent)).click();
     await until(()=>!ui().isRunning()&&ui().result().load.tipForce===4,'lesson experiment');await solved();
     ok(true,'lesson "Run 4 N" solved without pressing Solve');
-    $('[data-tab="members"]').click();
+    $('[data-wing-lesson="members"]').click();
     $('#torsionLab [data-twist-f="0.25"]').click();
     await until(()=>!ui().isRunning()&&!ui().isStale()&&ui().result().load.tipFraction===.25,'torsion experiment');
     ok(true,'teaching-panel experiment solved at once');

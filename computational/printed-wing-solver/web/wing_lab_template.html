@@ -733,7 +733,7 @@ body { margin: 0; }
     }catch(e){sessionNote('Autosave unavailable or inputs incomplete. The previous backup is kept; use Save JSON for a valid study.');}
   }
   function wingHistorySnapshot(){return JSON.stringify({inputs:Object.fromEntries(historyFields.map(k=>[k,S[k]])),gate:importGate?{...importGate,confirmed:[...importGate.confirmed]}:null});}
-  function syncWingHistory(){const undo=$('#wingUndo'),redo=$('#wingRedo');if(undo)undo.disabled=running||wingHistoryIndex<=0;if(redo)redo.disabled=running||wingHistoryIndex>=wingHistory.length-1;}
+  function syncWingHistory(){const undo=$('#wingUndo'),redo=$('#wingRedo'),clear=$('[data-wing-action="clear"]');if(undo)undo.disabled=running||wingHistoryIndex<=0;if(redo)redo.disabled=running||wingHistoryIndex>=wingHistory.length-1;if(clear)clear.disabled=running;}
   function recordWingHistory(){
     if(!historySuspended){const snapshot=wingHistorySnapshot();if(snapshot!==wingHistory[wingHistoryIndex]){wingHistory=wingHistory.slice(0,wingHistoryIndex+1);wingHistory.push(snapshot);if(wingHistory.length>100)wingHistory.shift();wingHistoryIndex=wingHistory.length-1;}}
     syncWingHistory();
@@ -2296,6 +2296,7 @@ body { margin: 0; }
 
   function renderAll() {
     if (!R) return;
+    $('#app > .dock').hidden = false;
     renderTree(); renderPM(); renderCharts(); renderChecks(); renderPredict();
     if(R.sparModel)$('#govCallout').append(el('p',{class:'note'},'Bonded spar stresses use a sectionwise thin-wall beam approximation. Normal/shear checks are independent, not a combined material failure envelope. Adhesive and runout stresses, cap/web buckling, crippling and debonding are unresolved. Reported modes are uncoupled beam modes, not a coupled 3-D aeroelastic spectrum.'));
     renderLesson(); renderDesignLab(); renderMemberLesson(); renderWingLoads();
@@ -2863,6 +2864,49 @@ body { margin: 0; }
     view: () => (model ? { distance: camera.position.distanceTo(controls.target), resetDistance, solved: { semiSpan: model.g.semiSpan, rootChord: model.g.rootChord, tipChord: model.g.tipChord },preview:geometryPreview,members:{ribs:model.ribs.length,rods:model.rods.length,sparParts:(model.spars||[]).length} } : null),
   };
   let printedWorkspace=null;
+  function requestClearWingStudy(_picked,anchor){
+    if(running)return;
+    const form=el('form',{class:'wing-clear-confirm'},'<p>Start a new default shell? This clears the current geometry, material changes, ribs, rods, spars, loads, imported data and old results.</p><p class="note">Undo can restore the previous inputs. Downloaded JSON files are not deleted.</p><div class="lesson-actions"><button class="btn" type="submit" id="wingClearConfirm">Clear study</button><button class="btn" type="button" data-wing-clear-cancel>Cancel</button></div>');
+    const submit=form.querySelector('[type="submit"]');submit.style.cssText='color:var(--bad);border-color:var(--bad)';
+    form.onsubmit=e=>{e.preventDefault();clearWingStudy();};
+    form.querySelector('[data-wing-clear-cancel]').onclick=()=>printedWorkspace.close();
+    printedWorkspace.open('Clear this wing?',form,anchor);
+    form.querySelector('[data-wing-clear-cancel]').focus({preventScroll:true});
+  }
+  function clearWingStudy(){
+    if(running){flash('Wait for the current solve to finish before clearing the study.');return;}
+    recordWingHistory();
+    clearTimeout(runTimer);clearTimeout(secTimer);pending=false;
+    studyFiles?.cancel();printedWorkspace?.close();
+    wingLoadKeeper?.editor?.cancelDraft();
+    historySuspended++;
+    try{
+      Object.assign(S,{
+        geometry:{...E.DEFAULT_GEOMETRY,modules:1,rodFractions:[],customInteriorRibs:[],spars:[]},
+        plaKey:'pla_upright',rodKey:'rod_hobby',plaOver:{},rodOver:{},
+        assembly:{...E.DEFAULT_ASSEMBLY,seamFreeLength:8},load:noLoad(),criteria:{...E.DEFAULT_CRITERIA},
+        selected:'part',stressComponent:'skin',mode:{kind:'bending',index:0},secY:0,clipY:150
+      });
+      importGate=null;inputError=null;fieldErrors={};partSelection=null;partUndo=null;partPick=false;
+      R=null;lastGeoKey=null;stale=true;designBaseline=null;saveDesignAfterRun=false;
+      savedLessonLoad=null;lessonAnswers.clear();wingStudyOpened=true;
+      $('#report').value='';$('#copyState').textContent='No previous results are kept. A fresh unloaded shell is being prepared.';
+      $('#wingShareBox').hidden=true;$('#wingShareBox').value='';$('#wingShareMsg').textContent='';
+      $('#app > .dock').hidden=true;$('#probe').hidden=true;$('#legend').hidden=true;
+      $('#secY').value=0;$('#clipIn').value=S.clipY;
+      renderImportGate();renderInputs(true);renderTree();renderInventory();renderPM();
+      geometryPreview=true;buildModel({geometry:E.makeGeometry(S.geometry)});setAnatomy('inside');frameView(true);
+      $('#plotinfo').textContent='New empty shell · no ribs, rods, spars or loads. Previous results cleared.';
+      $('#footline').textContent='Preparing the new unloaded shell.';
+      // Do not let refreshing a previously shared URL reopen the cleared study.
+      if(/(^#|&)wingstudy=/.test(location.hash))history.replaceState(null,'',location.pathname+location.search+'#wing');
+      // Clear only this workspace's old draft; keep downloaded files and other workspaces untouched.
+      try{localStorage.removeItem(wingSessionKey);wingSessionInputs='';}catch{}
+    }finally{historySuspended--;recordWingHistory();}
+    const persisted=wingSessionInputs===JSON.stringify(Object.fromEntries(historyFields.map(k=>[k,S[k]])));
+    sessionNote('Study cleared. Starting from a default shell with no ribs, rods, spars or loads. Undo restores the previous inputs; downloaded JSON files are unchanged.'+(persisted?'':' Browser storage could not be updated; use Save JSON before leaving.'));
+    runStudy();
+  }
   function openWingLoadPopup(p,anchor){
     if(!printedWorkspace)return;let editor=loadKeeperOf().editor;if(!editor){renderWingLoads();editor=loadKeeperOf().editor;}if(!editor){flash('Complete valid structural inputs and Solve once before adding loads.');return;}
     editor.newLoad();printedWorkspace.open('Wing load · upward positive',editor.container,anchor);
@@ -2903,8 +2947,10 @@ body { margin: 0; }
       {id:'inside',label:'Inside wing',run:()=>setAnatomy('inside')},
       {id:'open-json',label:'Open JSON',run:()=>{$('#wingStudyFiles .wio-open input').click();}},
       {id:'save-json',label:'Save JSON',run:()=>studyFiles?.save()},
+      {id:'clear',label:'Clear',run:requestClearWingStudy},
       {id:'notebook',label:'Export to notebook',run:()=>exportToNotebook()}]});
     const sessionStatus=el('p',{id:'wingSessionStatus',class:'note',role:'status'},wingSessionMessage);sessionStatus.style.cssText='flex-basis:100%;margin:0;font-size:12px';printedWorkspace.tools.append(sessionStatus);
+    const clearButton=printedWorkspace.tools.querySelector('[data-wing-action="clear"]');clearButton.title='Clear this study and start a new empty shell · Undo available';clearButton.style.cssText='color:var(--bad);border-color:var(--bad)';
     const sparResults=$('#wingSparResults');$('#tab-checks').prepend(sparResults);
     // Inputs and lessons live above/beside the model, never in its results dock.
     $('#app > .bar').append($('#wingSide .wl-run'));

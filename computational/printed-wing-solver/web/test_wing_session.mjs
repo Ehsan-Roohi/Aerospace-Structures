@@ -64,6 +64,35 @@ try{
  a.ui.studyFiles().previewParameters(JSON.stringify(params),'outer.json');a.$('#wingStudyFiles .wio-apply-geometry').click();assert.ok(a.ui.importGate()?.open);assert.equal(a.w.localStorage.getItem(key),prior);
  const c=open(null,'https://example.org/wing-lab.html#wing',true);opened.push(c);await wait(()=>c.ui.result()&&!c.ui.isRunning(),'storage-disabled solve');assert.match(c.$('#wingSessionStatus').textContent,/unavailable/i);
  const d=open('{bad json','https://example.org/wing-lab.html#beam');opened.push(d);assert.equal(d.ui.result(),null);assert.match(d.$('#wingSessionStatus').textContent,/could not be validated/);assert.equal(d.w.localStorage.getItem(key),'{bad json','bad backup retained for recovery');
+ // Clear removes the complete old study, keeps an Undo checkpoint, and persists the new empty shell.
+ const clearButton=b.$('[data-wing-action="clear"]');assert.equal(clearButton.textContent,'Clear');
+ const oldInputs=JSON.stringify(b.ui.engineInput()),oldBackup=b.w.localStorage.getItem(key),oldResult=b.ui.result();
+ clearButton.click();assert.ok(!b.$('.wing-editor-pop').hidden);assert.ok(b.$('#wingClearConfirm'));
+ b.$('[data-wing-clear-cancel]').click();
+ assert.equal(JSON.stringify(b.ui.engineInput()),oldInputs);assert.equal(b.ui.result(),oldResult);assert.equal(b.w.localStorage.getItem(key),oldBackup,'cancelled Clear changes nothing');
+ b.w.history.replaceState(null,'','#wingstudy=previous-shared-design');
+ b.w.localStorage.setItem('winglab:other-workspace-draft','keep');
+ clearButton.click();b.$('#wingClearConfirm').click();
+ assert.equal(b.w.location.hash,'#wing','refresh cannot reopen a cleared shared URL');
+ assert.equal(b.w.localStorage.getItem('winglab:other-workspace-draft'),'keep','other workspace drafts are untouched');
+ assert.equal(b.ui.result(),null,'old solved results are discarded immediately');
+ assert.ok(b.$('#app > .dock').hidden,'old result tables are hidden during the fresh solve');
+ assert.ok(clearButton.disabled,'Clear is disabled while solving');
+ const blank=JSON.stringify(b.ui.engineInput());
+ assert.equal(b.ui.state().geometry.modules,1);assert.deepEqual([...b.ui.state().geometry.rodFractions],[]);
+ assert.deepEqual([...b.ui.state().geometry.customInteriorRibs],[]);assert.deepEqual([...b.ui.state().geometry.spars],[]);
+ assert.equal(b.ui.state().load.items.length,0);assert.equal(b.ui.importGate(),null);
+ assert.equal(b.$('#report').value,'');assert.ok(b.$('#wingShareBox').hidden);assert.match(b.$('#wingSessionStatus').textContent,/Study cleared/);
+ await wait(()=>b.ui.result()&&!b.ui.isRunning(),'fresh unloaded shell solved');
+ assert.equal(b.ui.inventory().ribs.length,0);assert.equal(b.ui.view().members.sparParts,0);
+ assert.ok(b.ui.result().V.every(x=>x===0));assert.ok(!b.$('#app > .dock').hidden);
+ assert.equal(JSON.parse(b.w.localStorage.getItem(key)).study.geometry.spars.length,0);
+ b.$('#wingUndo').click();assert.equal(JSON.stringify(b.ui.engineInput()),oldInputs,'Undo recovers all original numerical inputs');
+ b.$('#wingRedo').click();assert.equal(JSON.stringify(b.ui.engineInput()),blank,'Redo restores the cleared shell');
+ const blankStudy=JSON.parse(b.w.localStorage.getItem(key)).study;
+ const e=open(b.w.localStorage.getItem(key));opened.push(e);await wait(()=>e.ui.result()&&!e.ui.isRunning(),'refresh after Clear');
+ assert.deepEqual(JSON.parse(e.w.WingStudyIO.exportPrintedStudy(e.ui.state(),e.w.WingEngine)).study,blankStudy,'refresh preserves the complete cleared study (inactive load defaults may be expanded)');
+ assert.ok(e.ui.result().V.every(x=>x===0),'refresh never restores old loading');
  assert.deepEqual(opened.flatMap(x=>x.errors),[]);
- console.log('Wing session PASS: exact user JSON, preview/apply, editable values, valid unsolved edit persistence, rejected-edit protection, Undo/Redo, refresh/fresh solve, atomic import-gate protection, storage failure and corrupt-backup handling.');
+ console.log('Wing session PASS: exact user JSON, visible preview/apply, editable values, persistence, Undo/Redo, Clear/Cancel/busy guard, discarded old results, empty-shell fresh solve and refresh, atomic import gates, storage failure and corrupt-backup handling.');
 }finally{for(const p of opened)p.dom.window.close();}

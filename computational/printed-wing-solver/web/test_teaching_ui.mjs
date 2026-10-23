@@ -32,7 +32,7 @@ const page = source.replace("/*__ENGINE__*/", engine).replace("/*__BEAM_ENGINE__
   .replace("/*__METAL_UI__*/",()=>readFileSync(new URL("./metal_wing_ui.js",import.meta.url),"utf8").replaceAll("\r\n","\n"));
 const endTitle = page.indexOf("</title>") + 8;
 const endStyle = page.indexOf("</style>") + 8;
-const expected = '<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n'
+const expected = '<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n<meta name="color-scheme" content="light">\n'
   + page.slice(0, endTitle) + "\n" + page.slice(endTitle, endStyle)
   + "\n</head>\n<body>\n" + page.slice(endStyle) + "\n</body>\n</html>\n";
 assert.equal(published, expected, "Rebuild docs/wing-lab.html after editing the template");

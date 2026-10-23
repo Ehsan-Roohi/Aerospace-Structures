@@ -14,7 +14,7 @@
   --bl-math: "Cambria Math", "STIX Two Math", "Latin Modern Math", "Times New Roman", Georgia, serif;
   max-width: 1560px; margin: 0 auto; padding: 0 20px 48px; font: 15px/1.5 var(--font-ui); color: var(--fg);
 }
-@media (prefers-color-scheme: light) {
+/* Match the page's light default regardless of the device's system theme. */
   :root:not([data-theme="dark"]) #foundations {
     --bl-load: #a3268f; --bl-react: #0f7a4b; --bl-support: #137a4d; --bl-support-fill: #d9f0e4; --bl-int: #c2560c; --bl-b: #c2560c;
     --bl-beam-fill: #dde6ef; --bl-beam-stroke: #4f6578; --bl-grid: #e3e9ef; --bl-tension: #c4303e; --bl-compression: #265eb8;
@@ -22,7 +22,6 @@
     --bl-accent-text: #0a5bb5; --bl-hover-filter: brightness(0.92);
     --bl-ok: #0f7a4b; --bl-warn: #8a5a00;   /* status text: the page's light --good/--warn are below 4.5:1 on white */
   }
-}
 :root[data-theme="light"] #foundations {
   --bl-load: #a3268f; --bl-react: #0f7a4b; --bl-support: #137a4d; --bl-support-fill: #d9f0e4; --bl-int: #c2560c; --bl-b: #c2560c;
   --bl-beam-fill: #dde6ef; --bl-beam-stroke: #4f6578; --bl-grid: #e3e9ef; --bl-tension: #c4303e; --bl-compression: #265eb8;

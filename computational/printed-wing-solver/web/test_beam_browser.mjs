@@ -358,6 +358,7 @@ for(const [width,scheme] of [[1440,'light'],[390,'dark']]) {
   for(const width of [390,1440]) for(const [scheme,forced] of [['light',null],['dark',null],['dark','light'],['light','dark']]) {
     const tag=`${width} ${scheme}${forced?` + data-theme=${forced}`:''}`;
     const {ctx,page,errors}=await openPage(width,900,scheme);await assignedBeam(page,{left:'roller',right:'pin',qStart:.001,qEnd:.002});
+    check(await page.evaluate(()=>getComputedStyle(document.documentElement).colorScheme)==='light',`${tag}: Beam starts light regardless of system appearance`);
     if(forced) await page.evaluate(t=>{document.documentElement.dataset.theme=t;},forced);
     if(width<700) await page.click('#beamNavToggle');
     await page.click('.bl-companion > summary');

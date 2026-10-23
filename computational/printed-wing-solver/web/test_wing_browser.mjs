@@ -34,6 +34,7 @@ async function open(width,height,scheme,which) {
   await page.goto(pageUrl,{waitUntil:'load'});
   const ready=await page.waitForFunction(()=>document.documentElement.dataset.wingReady==='true',null,{timeout:30000}).then(()=>true,()=>false);
   if(!ready) return {ctx,page,errors,ready};
+  check(await page.evaluate(()=>getComputedStyle(document.documentElement).colorScheme)==='light',`${which} ${width}px, system ${scheme}: default palette stays light`);
   // The landing page's stage button (inside a collapsed menu on phones): the same click handler either way.
   await page.$eval(`[data-stage="${which==='wing'?'wing':'metal'}"]`,b=>b.click());
   if(which==='wing') await page.waitForFunction(()=>window.WingLabUI.result()&&!window.WingLabUI.isRunning()&&document.querySelector('#stateChip').textContent==='Solved',null,{timeout:120000});

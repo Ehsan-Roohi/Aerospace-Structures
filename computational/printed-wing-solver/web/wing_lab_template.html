@@ -31,7 +31,8 @@
   --font-label: "Barlow Semi Condensed", "Arial Narrow", "Segoe UI", sans-serif;
   --font-data: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
 }
-@media (prefers-color-scheme: light) {
+/* Always start light, including on phones whose system appearance is dark.
+   An explicit data-theme="dark" still opts into the existing dark palette. */
   :root:not([data-theme="dark"]) {
     color-scheme: light;
     --bg: #e3e9ef; --panel: #f7f9fb; --panel-2: #eef2f6; --raise: #ffffff; --line: #cbd6e1;
@@ -39,7 +40,6 @@
     --accent-ink: #ffffff; --good: #148a59; --warn: #b7760a; --bad: #cc2f43; --run-hover: brightness(0.9);
     --vp-top: #b4c5d6; --vp-bottom: #f1f5f9; --vp-ink: #1c2a38; --shadow: 0 10px 30px rgba(30, 50, 70, 0.15);
   }
-}
 :root[data-theme="light"] {
   color-scheme: light;
   --bg: #e3e9ef; --panel: #f7f9fb; --panel-2: #eef2f6; --raise: #ffffff; --line: #cbd6e1;
@@ -357,7 +357,7 @@ td.num { font-family: var(--font-data); font-variant-numeric: tabular-nums; text
 /* Text versions of the accent / good / warn colours with at least 4.5:1 on panels and pale accent fills, per theme
    (plain rgb values: the contrast audit reads computed rgb colours). */
 :root { --wl-accent-text: #7dbdff; --wl-good-text: #4fd79b; --wl-warn-text: #f3c05e; }
-@media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) { --wl-accent-text: #0a5bb5; --wl-good-text: #0f7a4b; --wl-warn-text: #8a5a00; } }
+:root:not([data-theme="dark"]) { --wl-accent-text: #0a5bb5; --wl-good-text: #0f7a4b; --wl-warn-text: #8a5a00; }
 :root[data-theme="light"] { --wl-accent-text: #0a5bb5; --wl-good-text: #0f7a4b; --wl-warn-text: #8a5a00; }
 .wl-viewstale { color: var(--wl-warn-text); font-weight: 600; }
 /* Pressed tools, view buttons and the selected tree node keep 4.5:1 on their pale accent background. */

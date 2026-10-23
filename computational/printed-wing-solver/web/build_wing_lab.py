@@ -45,6 +45,7 @@ title_end = page.index("</title>") + len("</title>")
 standalone = (
     "<!doctype html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n"
     "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1, viewport-fit=cover\">\n"
+    "<meta name=\"color-scheme\" content=\"light\">\n"
     + page[:title_end] + "\n" + page[title_end:page.index("</style>") + len("</style>")]
     + "\n</head>\n<body>\n" + page[page.index("</style>") + len("</style>"):] + "\n</body>\n</html>\n"
 )

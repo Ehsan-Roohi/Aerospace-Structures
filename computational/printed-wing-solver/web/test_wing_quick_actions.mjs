@@ -22,6 +22,11 @@ try{
  const display=$('#wingViewPanel').parentElement;eq(display.id,'wingInlineDisplay');eq(display.hidden,false);ok(display.classList.contains('wing-inline-display'));eq($('#wingViewPanel #zoomFit').id,'zoomFit');
  for(const id of ['zoomOut','zoomIn','zoomFit','zoomReset','defBtn','scaleIn','xrayBtn','explodeIn','clipBtn','clipIn']){ok(display.contains($('#'+id)),`${id} is directly available beside the model`);eq($$('#'+id).length,1,'display control IDs stay unique');}
  eq($('#hudControls').tagName,'DIV','display controls are not inside a closed disclosure');
+ eq($$('[data-wing-action="parts"]').length,0,'no redundant part-editor toolbar button');ok($('#wingQuickClear'),'New / Clear remains available');
+ eq($('#pm').children.length,0,'no duplicate geometry property summary');ok($('#wingSide .pm').hidden,'unused geometry property panel consumes no sidebar space');
+ eq($('#wingStructureForm [data-wing-structure-help]'),null,'long structure notes are outside the input form');
+ ok($('#wingHelpStructure').textContent.includes('mixed rod/spar joints are not validated'));ok($('#wingHelpStructure').textContent.includes('not a manufacturing approval'));
+ const beforeHelp=snapshot(),helpResult=ui().result();$('#wsHelp').click();ok($('#wingInputHelp').open&&$('#wingHelpStructure').open,'Model help opens the retained structure assumptions');eq(snapshot(),beforeHelp);eq(ui().result(),helpResult);$('#wingInputHelp').open=false;
  const rows=$$('#app .wing-quick-tools > .wing-tool-row');assert.deepEqual([...rows[0].querySelectorAll('[data-wing-action]')].map(b=>b.dataset.wingAction),['clear','open-json','geometry','structure','materials','rib','rod','spar','load']);checks++;ok(rows[0].contains($('#wingMeshElements')),'mesh follows the physical model and loads');
  const initialStudy=snapshot(),initialResult=ui().result();
  const viewJump=[...rows[1].querySelectorAll('button')].find(b=>b.textContent==='View & display');viewJump.click();eq(pop().hidden,true,'display navigation does not open an editor');eq(snapshot(),initialStudy);eq(ui().result(),initialResult,'exposing display controls does not solve');

@@ -1233,7 +1233,7 @@ nav.workspace-nav .workspace-link:focus-visible { outline: 3px solid var(--accen
         </div>
         <div class="callout">
           <h3>Design challenge: lightest wing that passes</h3>
-          <p>Keep every check at U ≤ 1 for the current load case, skin and ribs ≥ 0.8 mm, and printed mass ≤ 300 g. One-piece wings are allowed. Actual CAD must fit the usable printer envelope configured in the notebook; this browser challenge does not certify printer fit. Adjust the wing in the Part properties.</p>
+          <p>Keep every check at U ≤ 1 for the current load case, skin and ribs ≥ 0.8 mm, and printed mass ≤ 300 g. One-piece wings are allowed. Actual CAD must fit the usable printer envelope configured in the notebook; this browser challenge does not certify printer fit. Adjust the wing in Geometry and Structure.</p>
           <div style="display:flex;gap:24px;flex-wrap:wrap;align-items:end">
             <div><span class="note">This design</span><div class="big" id="chMass">–</div></div>
             <div><span class="note">Your best passing design</span><div class="big" id="chBest">–</div></div>
@@ -11634,7 +11634,8 @@ if(typeof module!=='undefined')module.exports=WingWorkspaceUI;
   function renderPM() {
     const pm = $("#pm");
     pm.innerHTML = "";
-    if(S.emptyStudy){$('#pmHead').textContent='New wing';pm.append(el('p',{class:'note'},'No wing exists yet. Choose Airfoil & planform, set dimensions and Apply geometry.'));return;}
+    const propertyHome=$('#wingSide .pm');if(propertyHome)propertyHome.hidden=S.emptyStudy||S.selected==='part';
+    if(S.emptyStudy||S.selected==='part')return;
     const g = S.geometry, { pla, rod } = materials();
     const id = S.selected;
     if(R?.analysis3D&&(id==='results'||id.startsWith('res-')||id==='mesh')){
@@ -11643,23 +11644,7 @@ if(typeof module!=='undefined')module.exports=WingWorkspaceUI;
       return;
     }
     const head = (t, lede) => { pm.append(el("h2", {}, t)); if (lede) pm.append(el("p", { class: "lede" }, lede)); };
-    if (id === "part") {
-      $("#pmHead").textContent = "Part properties";
-      head("Semi-wing geometry", "Edit the airfoil, planform, skin, ribs and rods in Geometry and Structure at the top of this column. Copy the values from your team's Code-to-Print form (R02); edits here do not change that CAD.");
-      const area = 0.5 * (g.rootChord + g.tipChord) * g.semiSpan, taper = g.tipChord / g.rootChord, ribs = E.ribStations(E.makeGeometry(g));
-      pm.append(fs("Inputs on screen", kv([
-        ["Airfoil", esc(airfoilLabel(g))], ["Semi-span · chords", `${nf(g.semiSpan, 1)} mm · ${nf(g.rootChord, 1)} / ${nf(g.tipChord, 1)} mm`],
-        ["Modules · seams", `${g.modules} · ${E.seams(g).map((v) => nf(v, 1)).join(", ") || "none"}${E.seams(g).length ? " mm" : ""}`],
-        ["Skin · rib thickness", `${nf(g.skin, 2)} · ${nf(g.ribThickness, 2)} mm`], ["Ribs", `${ribs.length}${ribs.length ? ` at ${ribs.map((v) => nf(v, 1)).join(", ")} mm` : ""}`],
-        ["Rods", g.rodFractions.length ? `${g.rodFractions.length} × ⌀${nf(g.rodDiameter, 2)} mm at x/c ${g.rodFractions.map((f) => f.toFixed(2)).join(", ")}` : "none"]])));
-      pm.append(fs("Derived", kv([
-        ["Semi-wing area", `${nf(area / 100, 1)} cm²`], ["Taper ratio", nf(taper, 3)], ["Aspect ratio (full wing)", nf((4 * g.semiSpan ** 2) / (2 * area), 2)],
-        [stale ? "Shell/ribs/sleeves mass (last solve)" : "Shell/ribs/sleeves mass", R ? `${nf(R.mass.printed, 1)} g` : "–"],
-        ["Bonded spar mass (last solve)",R?`${nf(R.mass.spars||0,1)} g`:"–"]])));
-      const jump = el("div", { class: "lesson-actions" }, '<button class="btn" type="button" data-wl-open="wlGeometry">Edit geometry</button><button class="btn" type="button" data-wl-open="wlStructure">Edit structure</button>');
-      jump.querySelectorAll("[data-wl-open]").forEach((b) => b.addEventListener("click", () => openSection(b.dataset.wlOpen)));
-      pm.append(jump);
-    } else if (id === "materials" || id === "mat-pla") {
+    if (id === "materials" || id === "mat-pla") {
       $("#pmHead").textContent = "Material";
       head("Shell / rib material", "The class fabrication notebook specifies regular PLA Pro for skin, ribs and integral printed spars; carbon rods are separate. Match the card to the actual print: Upright = wing span along printer Z; Flat = span in the build plane. These are teaching placeholders, not measured properties of your team's filament. Brand, layers, walls and print settings matter. Enter coupon-derived effective properties before interpreting strength margins. The scalar spanwise model is not a full anisotropic failure law.");
       pm.append(fs("Card", segField([["pla_upright", "PLA upright"], ["pla_flat", "PLA flat"],['custom_shell','Custom']], S.plaKey, (v) => { S.plaKey = v; S.plaOver = { E: null, ft: null, fc: null, fs: null }; }, "Shell material card"),
@@ -11938,13 +11923,14 @@ if(typeof module!=='undefined')module.exports=WingWorkspaceUI;
     $("#wingStructureForm").innerHTML = `${geoField("skin", "wgSkin", "Skin thickness", "mm, measured vertically", g.skin, 0.1)}
       ${geoField("ribThickness", "wgRibT", "Rib thickness", "mm, every rib", g.ribThickness, 0.1)}
       <h4>Ribs</h4>
-      <p class="note">${ribs.length} physical rib${ribs.length === 1 ? "" : "s"} = ${interiors.length} interior (editable) + ${ribs.length - interiors.length} interface (locked: two beside each seam at ±${mm(gg.interfaceOffset)}). Root and tip caps are separate. Ribs change mass, bay length and modes; this beam model gives them no EI or GJ of their own.</p>
+      <p class="note">${ribs.length} ribs · ${interiors.length} editable interior · ${ribs.length - interiors.length} locked interface.</p>
+      <p class="note" data-wing-structure-help="ribs">Interface ribs sit beside each seam at ±${mm(gg.interfaceOffset)}. Root and tip caps are separate. Ribs change mass, bay length and modes; this beam model gives them no EI or GJ of their own.</p>
       <div class="tablewrap"><table class="wl-list" aria-label="Rib stations"><thead><tr><th>Rib</th><th>y (mm)</th><th>Edit</th></tr></thead><tbody>${ribRows || '<tr><td colspan="3">No ribs in this layout.</td></tr>'}</tbody></table></div>
       <div class="wl-row"><label for="wgRibNew">Add a rib at y =</label><input id="wgRibNew" type="number" step="0.1" inputmode="decimal" value="${suggestRib(gg, ribs)}"><span>mm</span><button class="btn" type="button" id="wgRibAdd">Add rib</button></div>
       <div class="wl-row"><label for="wgRibCount">Evenly spaced interior ribs</label><input id="wgRibCount" type="number" min="0" max="16" step="1" value="${interiors.length}"><button class="btn" type="button" id="wgRibEqual">Apply spacing</button></div>
       <div class="wl-row"><button class="btn" type="button" id="wgRibReset">Course rib rule (3 interior)</button></div>
       ${errLine("ribs")}
-      <p class="note">Edit a station and press Enter to move that rib. Equal spacing puts N ribs at iL/(N+1) and skips stations inside a seam zone, so fewer may appear.</p>
+      <p class="note" data-wing-structure-help="rib-spacing">Edit a station and press Enter to move that rib. Equal spacing puts N ribs at iL/(N+1) and skips stations inside a seam zone, so fewer may appear.</p>
       <h4>Rods and sleeves</h4>
       <p class="note">${n ? `${n} continuous carbon rod${n === 1 ? "" : "s"} on the camber line, one diameter for all; each runs through a printed sleeve in every module.` : "No rods: a skin-only wing (one module or epoxied seams)."}</p>
       ${n ? `<div class="tablewrap"><table class="wl-list" aria-label="Rod positions"><thead><tr><th>Rod</th><th>x/c</th><th>Edit</th></tr></thead><tbody>${rodRows}</tbody></table></div>` : ""}
@@ -11954,7 +11940,7 @@ if(typeof module!=='undefined')module.exports=WingWorkspaceUI;
       ${geoField("clearance", "wgClear", "Rod clearance", "mm, radial, from coupons (0–0.8)", g.clearance, 0.05)}
       ${geoField("sleeveWall", "wgWall", "Sleeve wall", "mm", g.sleeveWall, 0.1)}
       <dl class="kv wl-kv"><dt>Hole ⌀ (rod + clearance)</dt><dd>${mm(2 * rh, 2)}</dd><dt>Sleeve outer ⌀</dt><dd>${mm(2 * Rs, 2)}</dd></dl>
-      <p class="note">Sleeves must fit inside the cavity (${nf(gg.cavityStart, 2)}c–${nf(gg.cavityEnd, 2)}c) and between the inner skins at every station, including the ${mm(gg.tipChord)} tip chord; they may touch a skin or each other by at most ${mm(CONTACT_TOL, 2)}.</p>`;
+      <p class="note" data-wing-structure-help="sleeve-fit">Sleeves must fit inside the cavity (${nf(gg.cavityStart, 2)}c–${nf(gg.cavityEnd, 2)}c) and between the inner skins at every station, including the ${mm(gg.tipChord)} tip chord; they may touch a skin or each other by at most ${mm(CONTACT_TOL, 2)}.</p>`;
     $("#wlStructureBadge").textContent = `${gg.modules} module${gg.modules === 1 ? "" : "s"} · ${ribs.length} rib${ribs.length === 1 ? "" : "s"} · ${n} rod${n === 1 ? "" : "s"}`;
     for (const [id, k] of [["wgSkin", "skin"], ["wgRibT", "ribThickness"], ["wgRodD", "rodDiameter"], ["wgClear", "clearance"], ["wgWall", "sleeveWall"]])
       $("#" + id).addEventListener("change", (e) => applyGeometry({ [k]: numberFrom(e.target) }, k, e.target.value.trim() === "" ? "an empty value" : mm(numberFrom(e.target), 2)));
@@ -11978,10 +11964,11 @@ if(typeof module!=='undefined')module.exports=WingWorkspaceUI;
     const host=el('section',{class:'wl-spars'},'');$('#wingStructureForm').append(host);
     const fields=[['fraction','Position x/c','fraction'],['length','Length from root','mm'],['topWidth','Upper cap width','mm'],['topThickness','Upper cap thickness','mm'],['bottomWidth','Lower cap width','mm'],['bottomThickness','Lower cap thickness','mm'],['webThickness','Web thickness','mm']];
     const mats=[['E','Elastic modulus E','MPa'],['nu','Poisson ratio',''],['rho','Density','g/cm³'],['ft','Tensile allowable','MPa'],['fc','Compressive allowable','MPa'],['fs','Shear allowable','MPa']];
-    host.innerHTML=`<h3>Bonded spars · separate from rods</h3><p class="note">Thin-wall beam model: upper/lower caps carry bending tension and compression; the web participates in transverse shear and closed-cell torsion. Perfect skin/rib bonds are assumed. Compare shell only, shell + rods and shell + spars separately; mixed rod/spar joints are not validated. No load is changed by these controls.</p><div class="lesson-actions"><button class="btn" type="button" id="wsShell">Shell only</button><button class="btn" type="button" id="wsRods">Shell + rods</button><button class="btn" type="button" id="wsAdd">+ Bonded spar</button></div>${errLine('spars')}${g.spars.map((s,i)=>{
+    host.innerHTML=`<h3>Bonded spars · separate from rods</h3><p class="note" data-wing-structure-help="spar-model">Thin-wall beam model: upper/lower caps carry bending tension and compression; the web participates in transverse shear and closed-cell torsion. Perfect skin/rib bonds are assumed. Compare shell only, shell + rods and shell + spars separately; mixed rod/spar joints are not validated. No load is changed by these controls.</p><div class="lesson-actions"><button class="btn" type="button" id="wsShell">Shell only</button><button class="btn" type="button" id="wsRods">Shell + rods</button><button class="btn" type="button" id="wsAdd">+ Bonded spar</button><button class="btn" type="button" id="wsHelp">Model help</button></div>${errLine('spars')}${g.spars.map((s,i)=>{
       const p=E.sparParts(g,0).find(p=>p.index===i),tip=E.sparParts(g,s.length).find(p=>p.index===i);
       return `<fieldset><legend>Spar ${i+1} · perfectly bonded</legend>${fields.map(([k,label,unit])=>`<div class="field"><label for="ws${i}_${k}">${label}<small>${unit}</small></label><input id="ws${i}_${k}" type="number" step="any" value="${s[k]}"></div>`).join('')}<p class="note">Web clear height is derived from the bonded skin surfaces and cap thicknesses: root ${nf(p.h,2)} mm; end ${nf(tip.h,2)} mm. It is not an independent gap-producing dimension. Caps follow the inner skin; width and thickness are vertical section dimensions.</p><div class="field"><label for="ws${i}_name">Material name</label><input id="ws${i}_name" type="text" maxlength="80" value="${esc(s.material.name)}"></div>${mats.map(([k,label,unit])=>`<div class="field"><label for="ws${i}_m${k}">${label}<small>${unit}</small></label><input id="ws${i}_m${k}" type="number" step="any" value="${s.material[k]}"></div>`).join('')}<button class="btn" type="button" id="ws${i}_apply">Apply spar ${i+1} inputs</button> <button class="btn" type="button" id="ws${i}_remove">Remove spar ${i+1}</button></fieldset>`;
-    }).join('')}<p class="note"><b>Model limits:</b> cap/web buckling, adhesive stresses, debonding, crippling and local runout stresses are not resolved. Thin-wall shear flow and elastic beam stresses are not a manufacturing approval or a 3-D FE result. Changing material does not change the exported CAD.</p>`;
+    }).join('')}<p class="note" data-wing-structure-help="spar-limits"><b>Model limits:</b> cap/web buckling, adhesive stresses, debonding, crippling and local runout stresses are not resolved. Thin-wall shear flow and elastic beam stresses are not a manufacturing approval or a 3-D FE result. Changing material does not change the exported CAD.</p>`;
+    $('#wsHelp').onclick=()=>{printedWorkspace?.close();const help=$('#wingInputHelp'),section=$('#wingHelpStructure');if(!help||!section)return;help.scrollIntoView({block:'nearest'});help.open=true;section.open=true;help.dispatchEvent(new Event('toggle'));section.querySelector('summary').focus({preventScroll:true});};
     const configure=(patch)=>{const previous=S.assembly;S.assembly={...previous,seamsBonded:true};const result=applyGeometry(patch,'spars','bonded structural layout');if(!result.ok)S.assembly=previous;renderTree();return result;};
     $('#wsShell').onclick=()=>{if(!confirm('Remove rods and spars, retain ribs, geometry and loads, and use a continuous/bonded shell?'))return;configure({rodFractions:[],spars:[]});};
     $('#wsRods').onclick=()=>{if(!confirm('Use rods instead of spars? Spars will be removed and module seams set to bonded for this comparison; loads are retained.'))return;configure({spars:[],rodFractions:[.3,.6]});};
@@ -11993,6 +11980,8 @@ if(typeof module!=='undefined')module.exports=WingWorkspaceUI;
       $('#ws'+i+'_remove').onclick=()=>configure({spars:g.spars.filter((_,j)=>j!==i)});
       $('#ws'+i+'_apply').onclick=()=>{const next=JSON.parse(JSON.stringify(s));fields.forEach(([k])=>next[k]=numberFrom($('#ws'+i+'_'+k)));mats.forEach(([k])=>next.material[k]=numberFrom($('#ws'+i+'_m'+k)));next.material.name=$('#ws'+i+'_name').value.trim();configure({spars:g.spars.map((v,j)=>j===i?next:v)});};
     });
+    host.querySelectorAll('fieldset').forEach((field,i)=>field.querySelectorAll('p.note').forEach((note,j)=>note.dataset.wingStructureHelp='spar-'+i+'-note-'+j));
+    const help=$('#wingHelpStructure');if(help){for(const old of help.querySelectorAll('[data-wing-structure-help]'))old.remove();for(const note of $('#wingStructureForm').querySelectorAll('[data-wing-structure-help]'))help.append(note);}
   }
   function renderSparResults(){
     const box=$('#wingSparResults');if(!box)return;
@@ -14023,7 +14012,6 @@ function renderObservations() {
       {id:'select-wing',label:'Select wing',run:()=>printedWorkspace?.close()},
       {id:'load',label:'+ Load',run:openWingLoadPopup},{id:'rib',label:'+ Rib',run:(p,a)=>openWingPartPopup('rib',p,a)},
       {id:'rod',label:'+ Rod',run:(p,a)=>openWingPartPopup('rod',p,a)},{id:'spar',label:'+ Spar',run:(p,a)=>openWingPartPopup('spar',p,a)},
-      {id:'parts',label:'Select / edit parts',run:(p,a)=>{printedWorkspace.open('Ribs & spars',$('#wingPartEditor'),a);if(!partPick)$('#wpPick').click();}},
       {id:'structure',label:'Structure dimensions',run:(p,a)=>openWingStructurePopup(a)},{id:'materials',label:'Materials',run:(p,a)=>openWingMaterialsPopup(a)},
       {id:'geometry',label:'Airfoils & planform',run:(p,a)=>openAdvancedGeometryPopup(a)},
       {id:'inside',label:'Inside wing',run:()=>setAnatomy('inside')},
@@ -14067,6 +14055,7 @@ function renderObservations() {
     $('#wingUndo').onclick=()=>travelWingHistory(-1);$('#wingRedo').onclick=()=>travelWingHistory(1);syncWingHistory();
     const help=el('details',{class:'wing-input-help',id:'wingInputHelp'},'<summary class="btn">Help ▾</summary><div class="wing-help-content"></div>'),helpBody=help.querySelector('div');
     const modelHelp=el('details',{},'<summary>Model &amp; manufacturing limits</summary>');modelHelp.append($('#wingModelNote'));helpBody.append(modelHelp);
+    helpBody.append(el('details',{id:'wingHelpStructure'},'<summary>Ribs, rods &amp; bonded spars · model and limits</summary>'));
     const historyHelp=el('details',{class:'wing-history-help'},'<summary>Undo / Redo</summary><p class="note">Undo/Redo restores up to 100 saved input states, including geometry, project name, materials, loads and the cleared canvas. A new edit clears Redo. Outside text fields use Ctrl/Cmd+Z, Ctrl/Cmd+Shift+Z or Ctrl+Y. Restored inputs need Solve unless automatic solving is enabled. History is kept for this page session, not saved in JSON.</p>');helpBody.append(historyHelp);
     helpBody.append(el('details',{},'<summary>Selection &amp; clearing</summary><p class="note">Click visible parts to edit them. To select the entire wing, click Select wing, or use Ctrl/Cmd+A outside text fields. An outline and Delete selected button confirm the selection. You can also drag a rectangle around the whole wing. Delete selected or the Delete key opens Clear confirmation. Esc cancels selection. New / Clear is beside Solve; Undo restores your previous inputs. Normal dragging rotates the view.</p>'));
     const example=el('button',{class:'btn',type:'button',id:'wgCourseExample'},'Optional course wing example');example.onclick=()=>{if(confirm('Replace the current wing with the course example? Geometry, materials and connections will reset, and applied loads will be cleared.'))window.dispatchEvent(new CustomEvent('wing-learning-stage',{detail:'project'}));};helpBody.append(example);
@@ -14074,7 +14063,7 @@ function renderObservations() {
     const usageHelp=el('details',{},'<summary>Mouse, touch &amp; browser backup</summary>'),quickHint=printedWorkspace.tools.querySelector('.wing-quick-hint');
     quickHint.classList.remove('wing-quick-hint');usageHelp.append(quickHint,sessionStatus);helpBody.append(usageHelp);
     const primaryTools=el('div',{class:'wing-tool-row','aria-label':'Create and edit wing'}),secondaryTools=el('div',{class:'wing-tool-row','aria-label':'Files, view and help'});
-    const primaryActions=new Set(['clear','select-wing','load','rib','rod','spar','parts','structure','materials','geometry']);
+    const primaryActions=new Set(['clear','select-wing','load','rib','rod','spar','structure','materials','geometry']);
     for(const node of [...printedWorkspace.tools.children]){if(node.classList.contains('wing-quick-hint'))continue;(primaryActions.has(node.dataset.wingAction)||node.classList.contains('wing-selection-feedback')?primaryTools:secondaryTools).append(node);}
     printedWorkspace.tools.prepend(primaryTools,secondaryTools);
     // Follow the modelling workflow: geometry first, then structure/materials,
@@ -14083,7 +14072,7 @@ function renderObservations() {
       const button=printedWorkspace.tools.querySelector('[data-wing-action="'+id+'"]');if(button)primaryTools.append(button);
     }
     primaryTools.append(meshControl);primaryTools.setAttribute('aria-label','Geometry, structure, loads and mesh');
-    for(const id of ['select-wing','parts','inside','save-json','notebook']){
+    for(const id of ['select-wing','inside','save-json','notebook']){
       const button=printedWorkspace.tools.querySelector('[data-wing-action="'+id+'"]');if(button)secondaryTools.append(button);
     }
     // Keep all real display controls on the page. No copies, duplicate IDs or model edits.
@@ -14102,7 +14091,7 @@ function renderObservations() {
     const viewJump=[...secondaryTools.querySelectorAll('button')].find(b=>b.textContent==='View & display ▾');
     viewJump.textContent='View & display';viewJump.removeAttribute('aria-expanded');viewJump.setAttribute('aria-controls','wingInlineDisplay');
     viewJump.onclick=()=>{printedWorkspace.close();inlineDisplay.scrollIntoView({block:'nearest'});$('#zoomOut').focus({preventScroll:true});};
-    secondaryTools.replaceChildren(...['select-wing','parts','inside'].map(id=>printedWorkspace.tools.querySelector('[data-wing-action="'+id+'"]')),viewJump,...['save-json','notebook'].map(id=>printedWorkspace.tools.querySelector('[data-wing-action="'+id+'"]')),experiments,historyTools,help,...printedWorkspace.tools.querySelectorAll('.wing-selection-feedback'));
+    secondaryTools.replaceChildren(...['select-wing','inside'].map(id=>printedWorkspace.tools.querySelector('[data-wing-action="'+id+'"]')),viewJump,...['save-json','notebook'].map(id=>printedWorkspace.tools.querySelector('[data-wing-action="'+id+'"]')),experiments,historyTools,help,...printedWorkspace.tools.querySelectorAll('.wing-selection-feedback'));
     const positionToolMenu=(menu,body,size)=>{if(!menu.open)return;const r=menu.querySelector('summary').getBoundingClientRect(),width=Math.min(size,window.innerWidth-24);body.style.left=Math.max(8,Math.min(r.right-width,window.innerWidth-width-12))+'px';body.style.right='auto';body.style.top=Math.min(r.bottom+6,Math.max(8,window.innerHeight-200))+'px';body.style.maxHeight=Math.max(120,window.innerHeight-parseFloat(body.style.top)-12)+'px';};
     for(const [menu,body,width]of [[help,helpBody,390],[experiments,experiments.querySelector('div'),240]]){const position=()=>positionToolMenu(menu,body,width);menu.addEventListener('toggle',position);window.addEventListener('resize',position);window.addEventListener('scroll',position,true);document.addEventListener('pointerdown',e=>{if(!menu.contains(e.target))menu.open=false;});menu.addEventListener('keydown',e=>{if(e.key==='Escape'){menu.open=false;menu.querySelector('summary').focus();e.stopPropagation();}});}
     const uiStyle=el('style',{},'.wing-project-name{display:grid;gap:3px;font-size:11px;color:var(--muted);margin-top:6px}.wing-project-name input{min-height:36px;width:min(230px,100%);font-size:15px;padding:5px 8px;background:var(--panel-2);color:var(--fg);border:1px solid var(--line);border-radius:7px}#wingProjectTitle{display:block;max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.wing-airfoil-launch{display:grid;gap:5px;text-align:left;width:100%;margin:8px 0 12px}.wing-airfoil-launch span{font-size:12px;font-weight:400;white-space:normal}.wing-input-help{position:relative;margin-left:8px}.wing-help-content{position:absolute;right:0;top:100%;z-index:110;background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:12px;padding:14px;width:min(390px,calc(100vw - 24px));max-height:65dvh;overflow:auto;box-shadow:0 12px 32px #102d4f30}.wing-help-content details{padding:9px 0}.wing-help-content summary{cursor:pointer;font-weight:700}.wing-help-content .wl-modelnote{padding:8px 0;border:0}@media(max-width:600px){.wing-help-content{position:fixed;right:10px;top:100px}.wing-project-name input{min-height:44px}}');document.head.append(uiStyle);

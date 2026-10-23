@@ -6791,6 +6791,21 @@ const WingGeometryUI=(()=>{
   const numeric=(label,id,value,hint='',attrs='')=>`<label class="wing-geometry-field" for="${id}">${label}<small>${hint}</small><input id="${id}" type="number" step="any" value="${value}" ${attrs} required></label>`;
   const baseProfile=()=>draft.airfoil||{kind:'naca4',code:draft.naca};
   function message(text,bad=false){notice.textContent=text;notice.setAttribute('role',bad?'alert':'status');notice.style.color=bad?'var(--bad)':'';}
+  function showGuidance(d){
+   if(!d||d.kind!=='cavity')return;
+   const box=node('section',{class:'wing-geometry-guidance',role:'alert','aria-label':'How to fix this wing geometry'});
+   box.append(node('h3',{},'Why Apply geometry stopped'));
+   box.append(node('p',{},`${d.section?'Section '+d.section+' · ':''}${esc(d.profile)} · eta ${d.eta.toFixed(3)} · y ${d.y.toFixed(1)} mm · chord ${d.chord.toFixed(1)} mm.`));
+   box.append(node('p',{},`Near <b>x/c = ${d.x.toFixed(3)}</b> (the aft part of this cavity), the outer thickness is ${d.outer.toFixed(2)} mm. Two ${d.skin.toFixed(2)} mm skins leave <b>${d.gap.toFixed(2)} mm</b>; this model requires ${d.requiredGap.toFixed(2)} mm. Different airfoil families are allowed—the local cavity clearance is the problem.`));
+   const options=node('ol');
+   for(const suggestion of d.suggestions){const item=node('li');item.textContent=suggestion.text;
+    if(suggestion.kind==='skin'||suggestion.kind==='chords'){
+     const button=node('button',{type:'button',class:'btn'},suggestion.kind==='skin'?`Put skin ${suggestion.value.toFixed(1)} mm in draft`:'Put larger chords in draft');
+     button.onclick=()=>{if(suggestion.kind==='skin'){draft.skin=suggestion.value;form.querySelector('#wgtSkin').value=draft.skin;}else{draft.rootChord=suggestion.root;draft.tipChord=suggestion.tip;dimensionSource='tip';form.querySelector('#wgtRootChord').value=draft.rootChord;form.querySelector('#wgtTipChord').value=draft.tipChord;form.querySelector('#wgtTipChord').dispatchEvent(new win.Event('input',{bubbles:true}));}box.querySelectorAll('button').forEach(b=>b.disabled=true);message('Suggestion placed in the draft only. Inspect it, then press Apply geometry to re-check all constraints. The current wing has not changed.');};item.append(doc.createElement('br'),button);
+    }options.append(item);
+   }
+   box.append(options,node('p',{class:'note'},esc(d.scope)));form.prepend(box);box.scrollIntoView?.({block:'nearest'});
+  }
   function outline(p){
    const s=A.surfaces(p,1,null,81),points=s.xu.map((x,i)=>[x,s.zu[i]]).reverse().concat(s.xl.slice(1).map((x,i)=>[x,s.zl[i+1]]));
    const zz=points.map(p=>p[1]),lo=Math.min(...zz),hi=Math.max(...zz),height=Math.max(.15,hi-lo),cy=(lo+hi)/2;
@@ -6828,9 +6843,10 @@ const WingGeometryUI=(()=>{
   }
   function renderDimensions(){
    const box=node('fieldset',{class:'wing-planform-dimensions'});
-   box.innerHTML='<legend>Wing dimensions & taper</legend><div class="wing-geometry-grid">'+numeric('Semi-span (mm)','wgtSpan',draft.semiSpan,'Root to tip, projected aircraft y','min="1"')+numeric('Root chord (mm)','wgtRootChord',draft.rootChord,'Reference chord at root','min="1"')+numeric('Tip chord (mm)','wgtTipChord',draft.tipChord,'Reference chord at tip','min="1"')+numeric('Taper ratio λ = tip / root','wgtTaper',draft.tipChord/draft.rootChord,'1 = rectangular; below 1 = narrower tip','min="0.001" max="1"')+'</div><div id="wgtPlanformPreview"></div>';
+   box.innerHTML='<legend>Wing dimensions & taper</legend><div class="wing-geometry-grid">'+numeric('Semi-span (mm)','wgtSpan',draft.semiSpan,'Root to tip, projected aircraft y','min="1"')+numeric('Root chord (mm)','wgtRootChord',draft.rootChord,'Reference chord at root','min="1"')+numeric('Tip chord (mm)','wgtTipChord',draft.tipChord,'Reference chord at tip','min="1"')+numeric('Taper ratio λ = tip / root','wgtTaper',draft.tipChord/draft.rootChord,'1 = rectangular; below 1 = narrower tip','min="0.001" max="1"')+numeric('Skin thickness (mm)','wgtSkin',draft.skin,'Measured vertically; course printing minimum 0.8 mm','min="0.001" step="0.1"')+'</div><div id="wgtPlanformPreview"></div>';
    form.prepend(box);dimensionSource='tip';
    const value=id=>{const s=form.querySelector('#'+id).value;return s.trim()===''?NaN:Number(s);};
+   box.querySelector('#wgtSkin').oninput=()=>{draft.skin=value('wgtSkin');};
    function preview(){
     const L=draft.semiSpan,cr=draft.rootChord,ct=draft.tipChord,sw=Number(form.querySelector('#wgtSweep')?.value||0),ref=Number(form.querySelector('#wgtSweepRef')?.value||0);
     const target=box.querySelector('#wgtPlanformPreview');
@@ -6858,10 +6874,11 @@ const WingGeometryUI=(()=>{
    if(draft.stations){
     draft.stations.forEach((s,i)=>{
      const box=node('details',{class:'wing-station-card'},`<summary>Section ${i+1} · ${i===0?'root':i===draft.stations.length-1?'tip':'eta '+s.eta} · ${esc(name(s.airfoil))} · ${s.incidenceDeg}°</summary><div class="wing-geometry-grid">${numeric('Span fraction eta','wgtEta'+i,s.eta,'0 = root, 1 = tip',i===0||i===draft.stations.length-1?'readonly':'min="0" max="1"')}${numeric('Absolute incidence (degrees)','wgtInc'+i,s.incidenceDeg,'Positive LE-up; not incremental twist','min="-30" max="30"')}</div><div data-station-profile></div>${i>0&&i<draft.stations.length-1?'<button type="button" class="btn" data-remove-station>Remove this station</button>':''}`);
+     const updateHeading=()=>{box.querySelector('summary').textContent=`Section ${i+1} · ${i===0?'root':i===draft.stations.length-1?'tip':'eta '+s.eta} · ${name(s.airfoil)} · ${s.incidenceDeg}°`;};
      if(i===0)box.open=true;
-     profilePicker(box.querySelector('[data-station-profile]'),()=>s.airfoil,p=>s.airfoil=p,'wgtStation'+i);
-     box.querySelector('#wgtEta'+i).onchange=e=>{s.eta=Number(e.target.value);};
-     box.querySelector('#wgtInc'+i).onchange=e=>{s.incidenceDeg=Number(e.target.value);};
+     profilePicker(box.querySelector('[data-station-profile]'),()=>s.airfoil,p=>{s.airfoil=p;updateHeading();},'wgtStation'+i);
+     box.querySelector('#wgtEta'+i).onchange=e=>{s.eta=Number(e.target.value);updateHeading();};
+     box.querySelector('#wgtInc'+i).onchange=e=>{s.incidenceDeg=Number(e.target.value);updateHeading();};
      box.querySelector('[data-remove-station]')?.addEventListener('click',()=>{draft.stations.splice(i,1);render();});
      stationBox.append(box);
     });
@@ -6875,6 +6892,7 @@ const WingGeometryUI=(()=>{
   }
   form.onsubmit=e=>{
    e.preventDefault();if(activeReads.size){message('Wait until the airfoil file has finished reading.',true);return;}
+   form.querySelector('.wing-geometry-guidance')?.remove();
    try{
     // Enter can submit before change/blur: validate visible fields, never a stale draft.
     for(const validate of profileValidators.values())validate();
@@ -6892,7 +6910,9 @@ const WingGeometryUI=(()=>{
     for(const[s,i]of (draft.stations||[]).map((s,i)=>[s,i])){
       for(const[prefix,key]of [['wgtEta','eta'],['wgtInc','incidenceDeg']]){const value=form.querySelector('#'+prefix+i).value;s[key]=value.trim()===''?NaN:Number(value);}
     }
-    const patch={semiSpan:draft.semiSpan,rootChord:draft.rootChord,tipChord:draft.tipChord,airfoil:clone(A.normalizeProfile(baseProfile())),twistEnabled:!!draft.twistEnabled,sweepDeg:draft.sweepDeg??0,dihedralDeg:draft.dihedralDeg??0,sweepReferenceFraction:draft.sweepReferenceFraction??0,twistReferenceFraction:draft.twistReferenceFraction??.25};
+    const skinText=form.querySelector('#wgtSkin').value;draft.skin=skinText.trim()===''?NaN:Number(skinText);
+    if(!Number.isFinite(draft.skin)||draft.skin<=0)throw Error('Skin thickness must be a positive number of millimetres.');
+    const patch={semiSpan:draft.semiSpan,rootChord:draft.rootChord,tipChord:draft.tipChord,skin:draft.skin,airfoil:clone(A.normalizeProfile(baseProfile())),twistEnabled:!!draft.twistEnabled,sweepDeg:draft.sweepDeg??0,dihedralDeg:draft.dihedralDeg??0,sweepReferenceFraction:draft.sweepReferenceFraction??0,twistReferenceFraction:draft.twistReferenceFraction??.25};
     // Explicitly removing section variation uses the same global profile at root and tip.
     patch.stations=draft.stations?clone(draft.stations):undefined;
     // A uniform, unrotated four-digit section with leading-edge alignment is
@@ -6902,16 +6922,49 @@ const WingGeometryUI=(()=>{
      patch.naca=patch.airfoil.code;patch.airfoil=null;patch.stations=null;
     }
     const result=applyGeometry(patch,'advanced','airfoil / sweep / dihedral / incidence');
-    if(!result.ok){message(result.error||'Geometry was not applied. Check the wing dimensions and cavity clearance.',true);return;}
+    if(!result.ok){message(result.error||'Geometry was not applied. Check the wing dimensions and cavity clearance.',true);showGuidance(result.guidance);return;}
     message('Geometry applied. Solve to update structural results.');onApplied();
    }catch(err){message(err.message,true);}
   };
-  const style=node('style',{},'.wing-geometry-form{display:grid;gap:10px}.wing-geometry-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}.wing-geometry-field{display:grid;gap:4px;font-size:13px}.wing-geometry-field small{color:var(--muted)}.wing-geometry-form input[type=number],.wing-geometry-form input[type=text],.wing-geometry-form select{width:100%;min-height:40px;padding:7px;border:1px solid var(--line);border-radius:7px;background:var(--panel-2);color:var(--fg);font-size:16px}.wing-airfoil-picker{display:grid;gap:6px}.wing-station-card{margin:7px 0;padding:8px;border:1px solid var(--line);border-radius:8px}.wing-station-card>summary{font-weight:700;cursor:pointer;padding:7px 0}.wing-station-card .note{overflow-wrap:anywhere}');doc.head.append(style);
+  const style=node('style',{},'.wing-geometry-guidance{border:1px solid var(--warn,#ad7300);border-radius:10px;padding:12px;background:var(--panel-2);font-size:13px;line-height:1.45}.wing-geometry-guidance h3{margin:0 0 6px}.wing-geometry-guidance li{margin:10px 0}.wing-geometry-guidance .btn{margin-top:5px}.wing-geometry-form{display:grid;gap:10px}.wing-geometry-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}.wing-geometry-field{display:grid;gap:4px;font-size:13px}.wing-geometry-field small{color:var(--muted)}.wing-geometry-form input[type=number],.wing-geometry-form input[type=text],.wing-geometry-form select{width:100%;min-height:40px;padding:7px;border:1px solid var(--line);border-radius:7px;background:var(--panel-2);color:var(--fg);font-size:16px}.wing-airfoil-picker{display:grid;gap:6px}.wing-station-card{margin:7px 0;padding:8px;border:1px solid var(--line);border-radius:8px}.wing-station-card>summary{font-weight:700;cursor:pointer;padding:7px 0}.wing-station-card .note{overflow-wrap:anywhere}');doc.head.append(style);
   return{refresh(){draft=clone(getGeometry());render();message('Changes remain a draft until Apply geometry.');},form,notice};
  }
  return{mount};
 })();
 if(typeof module!=='undefined'&&module.exports)module.exports=WingGeometryUI;
+
+/* Local geometry diagnostics, not AI, a solver bypass, or manufacturing approval.
+ * Reuses the engine's vertical ordinates, 120 cavity samples and 0.8 mm gap rule.
+ * Runs only after a cavity rejection; never mutates inputs or runs structural FE.
+ */
+const WingGeometryHelp=(()=>{
+ 'use strict';
+ const GAP=.8,MIN_SKIN=.8;
+ function sampleStations(g,E){return [...new Set([0,g.semiSpan,...E.seams(g),...E.ribStations(g),...(g.stations||[]).map(s=>s.eta*g.semiSpan),...Array.from({length:33},(_,i)=>g.semiSpan*i/32)])].sort((a,b)=>a-b);}
+ function scan(g,E,ys){let worst=null;for(const y of ys){const chord=E.chordAt(g,y),profile=E.airfoilAt(g,y);for(let i=0;i<120;i++){const x=g.cavityStart+(g.cavityEnd-g.cavityStart)*.5*(1-Math.cos(Math.PI*i/119)),v=E.verticalOrdinates(profile,x,chord,g.te),outer=v.upper-v.lower,gap=outer-2*g.skin;if(!Number.isFinite(gap))throw Error('Non-finite cavity diagnostic');if(!worst||gap<worst.gap)worst={y,eta:y/g.semiSpan,chord,x,outer,gap};}}return worst;}
+ function clears(g,E,ys){return scan(g,E,ys).gap>=GAP;}
+ function diagnoseCavity(candidate,E){
+  const g=E.makeGeometry(candidate),ys=sampleStations(g,E),worst=scan(g,E,ys);
+  if(worst.gap>=GAP)return null;
+  const maxSkin=(worst.outer-GAP)/2,suggestions=[];
+  const thinner=Math.floor((maxSkin-1e-6)*10)/10;
+  if(thinner>=MIN_SKIN&&thinner<g.skin&&clears({...g,skin:thinner},E,ys))suggestions.push({kind:'skin',value:thinner,text:`Try skin ${thinner.toFixed(1)} mm instead of ${g.skin.toFixed(2)} mm. This clears the sampled cavity check; re-check strength and print settings.`});
+  else suggestions.push({kind:'advice',text:'Do not reduce the skin below the course printing minimum of 0.8 mm. Keep the skin and change the profile or enlarge the chords.'});
+  let lo=1,hi=2;
+  const scaled=f=>({...g,rootChord:g.rootChord*f,tipChord:g.tipChord*f});
+  while(hi<8&&!clears(scaled(hi),E,ys))hi*=2;
+  if(clears(scaled(hi),E,ys)){for(let i=0;i<14;i++){const mid=(lo+hi)/2;if(clears(scaled(mid),E,ys))hi=mid;else lo=mid;}const factor=Math.ceil((hi+1e-6)*100)/100,root=Math.ceil(g.rootChord*factor*10-1e-9)/10,tip=Math.ceil(g.tipChord*factor*10-1e-9)/10;
+   if(clears({...g,rootChord:root,tipChord:tip},E,ys))suggestions.push({kind:'chords',root,tip,text:`Keep skin ${g.skin.toFixed(2)} mm and try root/tip chords ${root.toFixed(1)} / ${tip.toFixed(1)} mm (same nominal taper). Re-check mass and the printer envelope.`});
+  }
+  suggestions.push({kind:'profile',text:`Alternatively, choose a profile with more thickness near x/c = ${worst.x.toFixed(3)}, especially around span fraction eta = ${worst.eta.toFixed(3)}. Maximum airfoil thickness alone does not guarantee an open aft cavity. Different airfoil families are allowed.`});
+  const exact=(g.stations||[]).findIndex(s=>Math.abs(s.eta-worst.eta)<1e-8),p=E.airfoilAt(g,worst.y),profile=exact>=0?(g.stations[exact].airfoil.name||'NACA '+g.stations[exact].airfoil.code):p.name||(p.code?'NACA '+p.code:'Interpolated section');
+  return {kind:'cavity',...worst,profile,section:exact>=0?exact+1:null,skin:g.skin,requiredGap:GAP,maxSkin,minSkin:MIN_SKIN,suggestions,
+   summary:`Cavity too narrow at y = ${worst.y.toFixed(1)} mm (eta ${worst.eta.toFixed(3)}, chord ${worst.chord.toFixed(1)} mm), x/c = ${worst.x.toFixed(3)}: clear gap ${worst.gap.toFixed(2)} mm; this model requires at least ${GAP.toFixed(2)} mm. ${suggestions[0].text}`,
+   scope:'Sampled geometry check only, not CAD validation, strength approval or a guarantee of printability. Apply geometry re-checks all model constraints. No committed wing inputs have been changed.'};
+ }
+ return {diagnoseCavity};
+})();
+if(typeof module!=='undefined'&&module.exports)module.exports=WingGeometryHelp;
 
 /* Whole-wing marquee selection only. The host owns deletion confirmation and study state. */
 const WingSelectionUI=(()=>{
@@ -11690,7 +11743,7 @@ if(typeof module!=='undefined')module.exports=WingWorkspaceUI;
     const g = E.makeGeometry(c);   // the engine's own rules (NACA code, interface offset, rib count, …)
     const stations = [...new Set([0, ...E.seams(g), ...E.ribStations(g), ...(g.stations||[]).map(s=>s.eta*g.semiSpan),...Array.from({length:17},(_,i)=>g.semiSpan*i/16), g.semiSpan])].sort((a, b) => a - b);
     for (const y of stations) {
-      try { E.ringLoops(g, y); } catch (err) { throw new Error(`${err.message} Use a thinner skin, a thicker airfoil or a larger chord.`); }
+      try { E.ringLoops(g, y); } catch (err) {if(/cavity collapses/.test(err.message)&&typeof WingGeometryHelp!=='undefined'){const guidance=WingGeometryHelp.diagnoseCavity(g,E);if(guidance){const problem=new Error(guidance.summary);problem.guidance=guidance;throw problem;}}throw err;}
     }
     // Sleeves: inside the cavity chordwise, between the inner skins vertically, and clear of each other, at every
     // station (root, ribs, seams, tip: the smallest chord is the critical one).
@@ -11750,7 +11803,7 @@ if(typeof module!=='undefined')module.exports=WingWorkspaceUI;
       fieldErrors = { [key]: `Not applied${tried ? ` (${tried})` : ""}. ${err.message}` };
       flash(`${GEO_FIELDS[key] || "Geometry"}: not applied${tried ? ` (${tried})` : ""}. ${err.message} The previous valid inputs are kept.`);
       setTimeout(() => renderInputs(true), 0);
-      return { ok: false, error: err.message };
+      return { ok: false, error: err.message, guidance:err.guidance||null };
     }
     S.geometry = { ...g, rodFractions: [...g.rodFractions], customInteriorRibs: g.customInteriorRibs == null ? null : [...g.customInteriorRibs] };
     S.emptyStudy=false;

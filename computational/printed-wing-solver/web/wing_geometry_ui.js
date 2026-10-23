@@ -21,6 +21,21 @@ const WingGeometryUI=(()=>{
   const numeric=(label,id,value,hint='',attrs='')=>`<label class="wing-geometry-field" for="${id}">${label}<small>${hint}</small><input id="${id}" type="number" step="any" value="${value}" ${attrs} required></label>`;
   const baseProfile=()=>draft.airfoil||{kind:'naca4',code:draft.naca};
   function message(text,bad=false){notice.textContent=text;notice.setAttribute('role',bad?'alert':'status');notice.style.color=bad?'var(--bad)':'';}
+  function showGuidance(d){
+   if(!d||d.kind!=='cavity')return;
+   const box=node('section',{class:'wing-geometry-guidance',role:'alert','aria-label':'How to fix this wing geometry'});
+   box.append(node('h3',{},'Why Apply geometry stopped'));
+   box.append(node('p',{},`${d.section?'Section '+d.section+' · ':''}${esc(d.profile)} · eta ${d.eta.toFixed(3)} · y ${d.y.toFixed(1)} mm · chord ${d.chord.toFixed(1)} mm.`));
+   box.append(node('p',{},`Near <b>x/c = ${d.x.toFixed(3)}</b> (the aft part of this cavity), the outer thickness is ${d.outer.toFixed(2)} mm. Two ${d.skin.toFixed(2)} mm skins leave <b>${d.gap.toFixed(2)} mm</b>; this model requires ${d.requiredGap.toFixed(2)} mm. Different airfoil families are allowed—the local cavity clearance is the problem.`));
+   const options=node('ol');
+   for(const suggestion of d.suggestions){const item=node('li');item.textContent=suggestion.text;
+    if(suggestion.kind==='skin'||suggestion.kind==='chords'){
+     const button=node('button',{type:'button',class:'btn'},suggestion.kind==='skin'?`Put skin ${suggestion.value.toFixed(1)} mm in draft`:'Put larger chords in draft');
+     button.onclick=()=>{if(suggestion.kind==='skin'){draft.skin=suggestion.value;form.querySelector('#wgtSkin').value=draft.skin;}else{draft.rootChord=suggestion.root;draft.tipChord=suggestion.tip;dimensionSource='tip';form.querySelector('#wgtRootChord').value=draft.rootChord;form.querySelector('#wgtTipChord').value=draft.tipChord;form.querySelector('#wgtTipChord').dispatchEvent(new win.Event('input',{bubbles:true}));}box.querySelectorAll('button').forEach(b=>b.disabled=true);message('Suggestion placed in the draft only. Inspect it, then press Apply geometry to re-check all constraints. The current wing has not changed.');};item.append(doc.createElement('br'),button);
+    }options.append(item);
+   }
+   box.append(options,node('p',{class:'note'},esc(d.scope)));form.prepend(box);box.scrollIntoView?.({block:'nearest'});
+  }
   function outline(p){
    const s=A.surfaces(p,1,null,81),points=s.xu.map((x,i)=>[x,s.zu[i]]).reverse().concat(s.xl.slice(1).map((x,i)=>[x,s.zl[i+1]]));
    const zz=points.map(p=>p[1]),lo=Math.min(...zz),hi=Math.max(...zz),height=Math.max(.15,hi-lo),cy=(lo+hi)/2;
@@ -58,9 +73,10 @@ const WingGeometryUI=(()=>{
   }
   function renderDimensions(){
    const box=node('fieldset',{class:'wing-planform-dimensions'});
-   box.innerHTML='<legend>Wing dimensions & taper</legend><div class="wing-geometry-grid">'+numeric('Semi-span (mm)','wgtSpan',draft.semiSpan,'Root to tip, projected aircraft y','min="1"')+numeric('Root chord (mm)','wgtRootChord',draft.rootChord,'Reference chord at root','min="1"')+numeric('Tip chord (mm)','wgtTipChord',draft.tipChord,'Reference chord at tip','min="1"')+numeric('Taper ratio λ = tip / root','wgtTaper',draft.tipChord/draft.rootChord,'1 = rectangular; below 1 = narrower tip','min="0.001" max="1"')+'</div><div id="wgtPlanformPreview"></div>';
+   box.innerHTML='<legend>Wing dimensions & taper</legend><div class="wing-geometry-grid">'+numeric('Semi-span (mm)','wgtSpan',draft.semiSpan,'Root to tip, projected aircraft y','min="1"')+numeric('Root chord (mm)','wgtRootChord',draft.rootChord,'Reference chord at root','min="1"')+numeric('Tip chord (mm)','wgtTipChord',draft.tipChord,'Reference chord at tip','min="1"')+numeric('Taper ratio λ = tip / root','wgtTaper',draft.tipChord/draft.rootChord,'1 = rectangular; below 1 = narrower tip','min="0.001" max="1"')+numeric('Skin thickness (mm)','wgtSkin',draft.skin,'Measured vertically; course printing minimum 0.8 mm','min="0.001" step="0.1"')+'</div><div id="wgtPlanformPreview"></div>';
    form.prepend(box);dimensionSource='tip';
    const value=id=>{const s=form.querySelector('#'+id).value;return s.trim()===''?NaN:Number(s);};
+   box.querySelector('#wgtSkin').oninput=()=>{draft.skin=value('wgtSkin');};
    function preview(){
     const L=draft.semiSpan,cr=draft.rootChord,ct=draft.tipChord,sw=Number(form.querySelector('#wgtSweep')?.value||0),ref=Number(form.querySelector('#wgtSweepRef')?.value||0);
     const target=box.querySelector('#wgtPlanformPreview');
@@ -88,10 +104,11 @@ const WingGeometryUI=(()=>{
    if(draft.stations){
     draft.stations.forEach((s,i)=>{
      const box=node('details',{class:'wing-station-card'},`<summary>Section ${i+1} · ${i===0?'root':i===draft.stations.length-1?'tip':'eta '+s.eta} · ${esc(name(s.airfoil))} · ${s.incidenceDeg}°</summary><div class="wing-geometry-grid">${numeric('Span fraction eta','wgtEta'+i,s.eta,'0 = root, 1 = tip',i===0||i===draft.stations.length-1?'readonly':'min="0" max="1"')}${numeric('Absolute incidence (degrees)','wgtInc'+i,s.incidenceDeg,'Positive LE-up; not incremental twist','min="-30" max="30"')}</div><div data-station-profile></div>${i>0&&i<draft.stations.length-1?'<button type="button" class="btn" data-remove-station>Remove this station</button>':''}`);
+     const updateHeading=()=>{box.querySelector('summary').textContent=`Section ${i+1} · ${i===0?'root':i===draft.stations.length-1?'tip':'eta '+s.eta} · ${name(s.airfoil)} · ${s.incidenceDeg}°`;};
      if(i===0)box.open=true;
-     profilePicker(box.querySelector('[data-station-profile]'),()=>s.airfoil,p=>s.airfoil=p,'wgtStation'+i);
-     box.querySelector('#wgtEta'+i).onchange=e=>{s.eta=Number(e.target.value);};
-     box.querySelector('#wgtInc'+i).onchange=e=>{s.incidenceDeg=Number(e.target.value);};
+     profilePicker(box.querySelector('[data-station-profile]'),()=>s.airfoil,p=>{s.airfoil=p;updateHeading();},'wgtStation'+i);
+     box.querySelector('#wgtEta'+i).onchange=e=>{s.eta=Number(e.target.value);updateHeading();};
+     box.querySelector('#wgtInc'+i).onchange=e=>{s.incidenceDeg=Number(e.target.value);updateHeading();};
      box.querySelector('[data-remove-station]')?.addEventListener('click',()=>{draft.stations.splice(i,1);render();});
      stationBox.append(box);
     });
@@ -105,6 +122,7 @@ const WingGeometryUI=(()=>{
   }
   form.onsubmit=e=>{
    e.preventDefault();if(activeReads.size){message('Wait until the airfoil file has finished reading.',true);return;}
+   form.querySelector('.wing-geometry-guidance')?.remove();
    try{
     // Enter can submit before change/blur: validate visible fields, never a stale draft.
     for(const validate of profileValidators.values())validate();
@@ -122,7 +140,9 @@ const WingGeometryUI=(()=>{
     for(const[s,i]of (draft.stations||[]).map((s,i)=>[s,i])){
       for(const[prefix,key]of [['wgtEta','eta'],['wgtInc','incidenceDeg']]){const value=form.querySelector('#'+prefix+i).value;s[key]=value.trim()===''?NaN:Number(value);}
     }
-    const patch={semiSpan:draft.semiSpan,rootChord:draft.rootChord,tipChord:draft.tipChord,airfoil:clone(A.normalizeProfile(baseProfile())),twistEnabled:!!draft.twistEnabled,sweepDeg:draft.sweepDeg??0,dihedralDeg:draft.dihedralDeg??0,sweepReferenceFraction:draft.sweepReferenceFraction??0,twistReferenceFraction:draft.twistReferenceFraction??.25};
+    const skinText=form.querySelector('#wgtSkin').value;draft.skin=skinText.trim()===''?NaN:Number(skinText);
+    if(!Number.isFinite(draft.skin)||draft.skin<=0)throw Error('Skin thickness must be a positive number of millimetres.');
+    const patch={semiSpan:draft.semiSpan,rootChord:draft.rootChord,tipChord:draft.tipChord,skin:draft.skin,airfoil:clone(A.normalizeProfile(baseProfile())),twistEnabled:!!draft.twistEnabled,sweepDeg:draft.sweepDeg??0,dihedralDeg:draft.dihedralDeg??0,sweepReferenceFraction:draft.sweepReferenceFraction??0,twistReferenceFraction:draft.twistReferenceFraction??.25};
     // Explicitly removing section variation uses the same global profile at root and tip.
     patch.stations=draft.stations?clone(draft.stations):undefined;
     // A uniform, unrotated four-digit section with leading-edge alignment is
@@ -132,11 +152,11 @@ const WingGeometryUI=(()=>{
      patch.naca=patch.airfoil.code;patch.airfoil=null;patch.stations=null;
     }
     const result=applyGeometry(patch,'advanced','airfoil / sweep / dihedral / incidence');
-    if(!result.ok){message(result.error||'Geometry was not applied. Check the wing dimensions and cavity clearance.',true);return;}
+    if(!result.ok){message(result.error||'Geometry was not applied. Check the wing dimensions and cavity clearance.',true);showGuidance(result.guidance);return;}
     message('Geometry applied. Solve to update structural results.');onApplied();
    }catch(err){message(err.message,true);}
   };
-  const style=node('style',{},'.wing-geometry-form{display:grid;gap:10px}.wing-geometry-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}.wing-geometry-field{display:grid;gap:4px;font-size:13px}.wing-geometry-field small{color:var(--muted)}.wing-geometry-form input[type=number],.wing-geometry-form input[type=text],.wing-geometry-form select{width:100%;min-height:40px;padding:7px;border:1px solid var(--line);border-radius:7px;background:var(--panel-2);color:var(--fg);font-size:16px}.wing-airfoil-picker{display:grid;gap:6px}.wing-station-card{margin:7px 0;padding:8px;border:1px solid var(--line);border-radius:8px}.wing-station-card>summary{font-weight:700;cursor:pointer;padding:7px 0}.wing-station-card .note{overflow-wrap:anywhere}');doc.head.append(style);
+  const style=node('style',{},'.wing-geometry-guidance{border:1px solid var(--warn,#ad7300);border-radius:10px;padding:12px;background:var(--panel-2);font-size:13px;line-height:1.45}.wing-geometry-guidance h3{margin:0 0 6px}.wing-geometry-guidance li{margin:10px 0}.wing-geometry-guidance .btn{margin-top:5px}.wing-geometry-form{display:grid;gap:10px}.wing-geometry-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}.wing-geometry-field{display:grid;gap:4px;font-size:13px}.wing-geometry-field small{color:var(--muted)}.wing-geometry-form input[type=number],.wing-geometry-form input[type=text],.wing-geometry-form select{width:100%;min-height:40px;padding:7px;border:1px solid var(--line);border-radius:7px;background:var(--panel-2);color:var(--fg);font-size:16px}.wing-airfoil-picker{display:grid;gap:6px}.wing-station-card{margin:7px 0;padding:8px;border:1px solid var(--line);border-radius:8px}.wing-station-card>summary{font-weight:700;cursor:pointer;padding:7px 0}.wing-station-card .note{overflow-wrap:anywhere}');doc.head.append(style);
   return{refresh(){draft=clone(getGeometry());render();message('Changes remain a draft until Apply geometry.');},form,notice};
  }
  return{mount};

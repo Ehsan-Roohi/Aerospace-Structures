@@ -721,6 +721,7 @@ body { margin: 0; }
 /*__WING_GEOMETRY__*/
 /*__WING_FRAME3D__*/
 /*__WING_GEOMETRY_UI__*/
+/*__WING_GEOMETRY_HELP__*/
 /*__WING_SELECTION_UI__*/
 /*__ENGINE__*/
 /*__TEACHING_MODELS__*/
@@ -1058,7 +1059,7 @@ body { margin: 0; }
     const g = E.makeGeometry(c);   // the engine's own rules (NACA code, interface offset, rib count, …)
     const stations = [...new Set([0, ...E.seams(g), ...E.ribStations(g), ...(g.stations||[]).map(s=>s.eta*g.semiSpan),...Array.from({length:17},(_,i)=>g.semiSpan*i/16), g.semiSpan])].sort((a, b) => a - b);
     for (const y of stations) {
-      try { E.ringLoops(g, y); } catch (err) { throw new Error(`${err.message} Use a thinner skin, a thicker airfoil or a larger chord.`); }
+      try { E.ringLoops(g, y); } catch (err) {if(/cavity collapses/.test(err.message)&&typeof WingGeometryHelp!=='undefined'){const guidance=WingGeometryHelp.diagnoseCavity(g,E);if(guidance){const problem=new Error(guidance.summary);problem.guidance=guidance;throw problem;}}throw err;}
     }
     // Sleeves: inside the cavity chordwise, between the inner skins vertically, and clear of each other, at every
     // station (root, ribs, seams, tip: the smallest chord is the critical one).
@@ -1118,7 +1119,7 @@ body { margin: 0; }
       fieldErrors = { [key]: `Not applied${tried ? ` (${tried})` : ""}. ${err.message}` };
       flash(`${GEO_FIELDS[key] || "Geometry"}: not applied${tried ? ` (${tried})` : ""}. ${err.message} The previous valid inputs are kept.`);
       setTimeout(() => renderInputs(true), 0);
-      return { ok: false, error: err.message };
+      return { ok: false, error: err.message, guidance:err.guidance||null };
     }
     S.geometry = { ...g, rodFractions: [...g.rodFractions], customInteriorRibs: g.customInteriorRibs == null ? null : [...g.customInteriorRibs] };
     S.emptyStudy=false;

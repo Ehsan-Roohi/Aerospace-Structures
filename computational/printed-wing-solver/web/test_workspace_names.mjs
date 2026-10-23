@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {JSDOM,loadBeamLab} from './beam_test_dom.mjs';
 const src=readFileSync(new URL('./wing_lab_template.html',import.meta.url),'utf8');
-assert.ok(src.includes('<b>Wing Virtual Lab</b>'));
+assert.match(src,/<b\b[^>]*id="wingProjectTitle"[^>]*>Wing Virtual Lab<\/b>/,'the initial title remains Wing Virtual Lab, in its editable-project title element');
 assert.ok(src.includes('id="wingShellMaterial"'));assert.ok(src.includes('id="wingRodMaterial"'));
 assert.ok(src.includes("select('mat-pla')"));assert.ok(src.includes("select('mat-rod')"));
 const dom=new JSDOM('<div id="foundations"></div>',{runScripts:'outside-only',url:'https://example.org/?beamCase=l03-tip'});

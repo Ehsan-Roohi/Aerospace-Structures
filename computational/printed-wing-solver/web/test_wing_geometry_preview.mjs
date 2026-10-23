@@ -7,7 +7,7 @@ const require=createRequire(import.meta.url),E=require('./engine.js');
 const src=readFileSync(new URL('./wing_lab_template.html',import.meta.url),'utf8');
 const start=src.indexOf('  function previewGeometry()'),end=src.indexOf('\n  // Deliberate study actions',start);
 assert.ok(start>0&&end>start);
-const nodes=new Map(),ctx={E,model:{},running:false,geometryPreview:false,lastGeoKey:'old',calls:[],
+const nodes=new Map(),ctx={E,S:{emptyStudy:false},showEmptyWing:()=>ctx.calls.push('empty'),model:{},running:false,geometryPreview:false,lastGeoKey:'old',calls:[],
  engineInput:()=>({geometry:{interiorRibs:5,rodFractions:[.25,.65],semiSpan:480}}),
  $:s=>{if(!nodes.has(s))nodes.set(s,{});return nodes.get(s);},
  buildModel:r=>{ctx.g=r.geometry;ctx.calls.push('build');},updateModel:()=>ctx.calls.push('update'),
@@ -24,4 +24,5 @@ assert.ok(src.includes('if (geometryPreview) return [0, 0]'));
 assert.ok(src.includes('if (!R || geometryPreview || S.plot === "mode") return;'));
 assert.ok(src.includes('geometryPreview = false;\n      if (heavy)'));
 assert.ok(!src.slice(start,end).includes('E.solve'));
+ctx.calls=[];ctx.S.emptyStudy=true;vm.runInContext('previewGeometry()',ctx);assert.deepEqual(ctx.calls,['empty'],'an empty study never reconstructs the old geometry or starts the solver');
 console.log('PASS: current ribs/rods/span preview without solve; invalid geometry retained honestly; stale motion/load fields suppressed.');

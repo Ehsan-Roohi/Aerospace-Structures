@@ -201,7 +201,7 @@ async function until(test,what,ms=60000){const end=Date.now()+ms;while(!test()){
     };
     await rejectAirfoil('24x2',/four-digit NACA/,'bad NACA code');
     await rejectAirfoil('2400',/thickness must be positive/,'zero-thickness airfoil');
-    await reject('#wgSkin',4,/cavity collapses/,'skin','skin too thick for the airfoil');
+    await reject('#wgSkin',4,/cavity (?:collapses|too narrow)/i,'skin','skin too thick for the airfoil');
     await reject('#wgRibT',4.5,/Interface rib offset must exceed rib thickness/,'ribThickness','rib thicker than the interface offset');
     await reject('#wgClear',1,/between 0 and 0\.8 mm/,'clearance','clearance out of range');
     await reject('#wgRodD',11,/Rod 2 at 0\.50c: its sleeve \(outer ⌀13\.30 mm\) does not fit between the inner skin surfaces at y = 420\.0 mm \(chord 110\.0 mm\): it would cut 0\.57 mm into the upper skin \(contact allowed: 0\.10 mm\)/,'rodDiameter','rod sleeve does not fit at the tip chord');

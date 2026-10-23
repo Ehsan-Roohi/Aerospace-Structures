@@ -69,7 +69,7 @@ async function workspaceLayout(page,app,side,width,tag){
   const layout=await page.evaluate(({app,side})=>{const root=document.querySelector(app),r=s=>{const b=root.querySelector(s).getBoundingClientRect();return {left:b.left,right:b.right,top:b.top,bottom:b.bottom,width:b.width};};return {tools:r(':scope > .wing-quick-tools'),view:r(':scope > .view'),dock:r(':scope > .dock'),side:r(side),sidePosition:getComputedStyle(root.querySelector(side)).position};},{app,side});
   check(layout.tools.bottom<=layout.view.top+1,`${tag}: model tools are above the drawing`);
   check(layout.dock.top>=layout.view.bottom-1,`${tag}: results start beneath the drawing`);
-  if(width>1100){check(Math.abs(layout.side.width-320)<=2&&layout.side.right<=layout.view.left,`${tag}: 320 px input column is beside, not over, the drawing`);check(Math.abs(layout.tools.left-layout.view.left)<=1&&Math.abs(layout.dock.left-layout.view.left)<=1,`${tag}: model tools, drawing and results share their main-column alignment`);}
+  if(width>1100){check(Math.abs(layout.side.width-320)<=2&&layout.side.right<=layout.view.left,`${tag}: 320 px input column is beside, not over, the drawing`);check(Math.abs(layout.dock.left-layout.view.left)<=1,`${tag}: drawing and results share their main-column alignment`);if(app==='#app')check(Math.abs(layout.tools.left-layout.side.left)<=1&&Math.abs(layout.tools.right-layout.view.right)<=1,`${tag}: two-row printed-wing tools span both input and drawing columns`);else check(Math.abs(layout.tools.left-layout.view.left)<=1,`${tag}: metal-wing tools align with the drawing`);}
   else check(layout.view.width>=width-48,`${tag}: one-column drawing spans the page`);
 }
 

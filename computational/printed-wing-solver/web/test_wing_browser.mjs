@@ -61,6 +61,12 @@ const distance=(page,sel)=>page.$eval(sel,el=>+el.dataset.distance);
 async function closePopup(page){const p=page.locator('.wing-editor-pop:visible');if(await p.count())await p.locator('.wing-editor-close').click();}
 async function viewPopup(page,app,panel){
   await closePopup(page);
+  if(app==='#app'){
+    await page.locator(`${app} > .wing-quick-tools`).getByRole('button',{name:'View & display',exact:true}).click();
+    check(await page.isVisible('#wingInlineDisplay '+panel),`${app}: real display controls are inline, not a popup`);
+    check(await page.isVisible('#wingInlineDisplay #clipIn')&&await page.isVisible('#wingInlineDisplay #scaleIn'),`${app}: clip and deformation controls are directly available`);
+    return;
+  }
   await page.locator(`${app} > .wing-quick-tools`).getByRole('button',{name:'View & display ▾',exact:true}).click();
   check(await page.isVisible(`.wing-editor-pop ${panel}`),`${app}: View & display opens the real camera and appearance controls`);
   check(await inViewport(page,'.wing-editor-pop:visible'),`${app}: view popup fits the viewport`);

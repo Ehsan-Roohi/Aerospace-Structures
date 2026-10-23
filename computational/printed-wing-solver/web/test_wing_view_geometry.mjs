@@ -57,6 +57,11 @@ for(const advanced of [false,true]){
       const q=p.clone().project(camera);ok(Number.isFinite(q.x)&&Number.isFinite(q.y)&&Math.abs(q.x)<=.861&&Math.abs(q.y)<=.861,'entire actual geometry fits the perspective viewport');
     }
     ok(buttons.find(b=>b.dataset.view===view)['aria-pressed']==='true','active view is exposed accessibly');
+    const axes=$('#wingModelAxes');ok(!axes.hidden&&['+x','+y','+z'].every(label=>axes.innerHTML.includes(label)),'on-wing axes are visible in every standard view');
+    ok(!/NaN|Infinity/.test(axes.innerHTML),'projected model axes have finite coordinates');
+    const anchor=WingGeometry.transformPoint(g,0,[g.rootChord*.25,0]),q0=new THREE.Vector3(anchor[1],anchor[2],anchor[0]).project(camera);
+    const circle=axes.innerHTML.match(/<circle cx="([^"]+)" cy="([^"]+)"/);ok(!!circle,'on-wing axes have a common root origin');
+    near(Number(circle[1]),(q0.x+1)*450,1e-8,'axis origin follows the physical root quarter-chord in screen x');near(Number(circle[2]),(1-q0.y)*300,1e-8,'axis origin follows the physical root quarter-chord in screen y');
     const bounds=ctx.api.renderedWingScreenBounds();
     ok(bounds&&bounds.width>0&&bounds.height>0&&Object.values(bounds).every(Number.isFinite),'whole-wing screen bounds are positive client CSS pixels');
     model.fix.position.addScalar(100000);model.loads.position.addScalar(100000);
@@ -70,6 +75,7 @@ for(const advanced of [false,true]){
   ctx.api.clearRenderedWing();ok(disposed&&ctx.api.model===null&&world.children.length===0,'Clear disposes and removes previous wing geometry');
   ok(ctx.api.renderedWingScreenBounds()===null,'empty canvas has no selection bounds');
   ok($('#probe').hidden&&$('#anatomyKey').hidden&&!$('#aircraftAxes').hidden,'Clear hides model overlays while retaining triad');
+  ok($('#wingModelAxes').hidden&&!$('#wingModelAxes').innerHTML,'Clear removes the on-wing axes with the wing');
 }
 ok(/class="viewport-views"[\s\S]*?data-view="plan"[\s\S]*?data-view="front"[\s\S]*?data-view="section"/.test(source),'Top/Front/Side are directly available on the viewport');
 console.log(`Wing view geometry: ${checks} physical taper/transform, camera-up, fit, axes and clear checks passed (actual THREE; not pixel QA).`);

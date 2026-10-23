@@ -131,6 +131,8 @@ button, input, select { font: inherit; color: inherit; }
 .aircraft-axes svg { width:100%; height:96px; overflow:visible; }
 .aircraft-axes text { font:700 11px var(--font-label); paint-order:stroke; stroke:var(--panel); stroke-width:3px; stroke-linejoin:round; }
 .aircraft-axes small { display:block; text-align:center; font:10px var(--font-label); }
+.wing-model-axes { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; overflow:hidden; z-index:1; }
+.wing-model-axes text { font:700 13px var(--font-label); paint-order:stroke; stroke:var(--panel); stroke-width:3px; stroke-linejoin:round; }
 .overlay { position: absolute; pointer-events: none; color: var(--vp-ink); }
 .infocol { left: 14px; top: 12px; display: flex; flex-direction: column; gap: 10px; max-width: calc(100% - 240px); }
 .plotinfo { font: 12px/1.5 var(--font-data); text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25); }
@@ -281,8 +283,27 @@ td.num { font-family: var(--font-data); font-variant-numeric: tabular-nums; text
 #app .wing-status-details > summary { cursor: pointer; font-size: 12px; color: var(--accent); border-radius: 4px; padding: 3px 0; }
 #app .wing-status-details > .wing-status-popover { position: absolute; right: 0; top: calc(100% + 7px); z-index: 120; width: min(390px, calc(100vw - 32px)); max-height: 45dvh; overflow: auto; padding: 12px 14px; border: 1px solid var(--line); border-radius: 9px; background: var(--panel); color: var(--fg); box-shadow: var(--shadow); font-size: 13px; line-height: 1.45; }
 #app > .bar .wl-auto { font-size: 12px; gap: 6px; }
-#app.wing-workspace:not(.learning-view) { grid-template-areas: "bar bar" "quick quick" "side view" "side dock"; }
-#app.wing-workspace.learning-view { grid-template-areas: "bar" "quick" "view" "dock"; }
+#app.wing-workspace:not(.learning-view) { grid-template-areas: "bar bar" "quick quick" "side display" "side view" "side dock"; }
+#app.wing-workspace.learning-view.wing-inline-controls { grid-template-areas: "bar" "quick" "display" "view" "dock"; }
+#app .wing-inline-display { grid-area:display; min-width:0; scroll-margin-top:85px; }
+#app .wing-inline-display .wl-vpanel { display:block; border:0; box-shadow:none; height:auto; max-height:none; overflow:visible; }
+#app .wing-inline-display .panel-head { padding:7px 10px; font-size:12px; }
+#app .wing-inline-display .wl-vbody { display:flex; flex-wrap:wrap; align-items:center; gap:6px 12px; padding:8px 10px; }
+#app .wing-inline-display .wl-vbody > div:first-of-type { display:flex; align-items:center; gap:8px; }
+#app .wing-inline-display #zoomLabel { margin:0; }
+#app .wing-inline-display #wingPartEditor { display:none; }
+#app .wing-inline-display .hud { display:contents; }
+#app .wing-inline-display .hud > summary,#app .wing-inline-display .hud > .wl-vlabel { display:none; }
+#app .wing-inline-display .hud-row { margin:0; flex-wrap:wrap; gap:5px; }
+#app .wing-inline-display .hud-row button,#app .wing-inline-display .wl-zoom button { min-height:36px; }
+#app .wing-inline-display .hud-row button { background:transparent; color:var(--fg); border:1px solid transparent; border-radius:6px; padding:5px 8px; font:600 12px/1 var(--font-label); cursor:pointer; }
+#app .wing-inline-display .hud-row button:hover { border-color:var(--line); }
+#app .wing-inline-display .hud-row button[aria-pressed="true"] { color:var(--wl-accent-text); background:var(--accent-soft); border-color:var(--accent); }
+#app .wing-inline-display .hud-row label { display:inline-flex; align-items:center; gap:6px; font:600 12px var(--font-label); color:var(--muted); }
+#app .wing-inline-display .hud-row input[type="range"] { width:75px; }
+#app .wing-view-dimensions { font-size:12px; color:var(--muted); }
+#app .wing-view-dimensions > summary { cursor:pointer; }
+#app .wing-view-dimensions .wl-readout { margin-top:5px; }
 #app .wing-quick-tools { display: grid; gap: 5px; padding: 8px 10px; }
 #app .wing-tool-row { display: flex; align-items: center; gap: 6px; min-width: 0; overflow-x: auto; padding: 2px 0; }
 #app .wing-tool-row > * { flex-shrink: 0; }
@@ -293,7 +314,7 @@ td.num { font-family: var(--font-data); font-variant-numeric: tabular-nums; text
 #app .wing-help-content { position: fixed; }
 #app .wing-experiments[open] > div { position: fixed; overflow: auto; }
 #app #wingInputHelp { position: sticky; right: 0; background: var(--panel); z-index: 2; }
-@media (max-width: 1100px) { #app.wing-workspace > .bar > .wl-run { max-width: none; } #app.wing-workspace:not(.learning-view) { grid-template-areas: "bar" "quick" "view" "dock"; } #app .wing-tool-row .btn { min-height: 44px; } }
+@media (max-width: 1100px) { #app.wing-workspace > .bar > .wl-run { max-width: none; } #app.wing-workspace:not(.learning-view) { grid-template-areas: "bar" "quick" "display" "view" "dock"; } #app .wing-tool-row .btn,#app .wing-inline-display .hud-row button,#app .wing-inline-display .wl-zoom button { min-height: 44px; } }
 .wl-modelnote { margin: 0; padding: 10px 14px; font-size: 12px; line-height: 1.45; color: var(--muted); border-bottom: 1px solid var(--line); }
 .wl-gate { margin: 0; padding: 10px 14px; border-bottom: 1px solid var(--line); background: color-mix(in srgb, var(--warn) 12%, var(--panel)); font-size: 13px; line-height: 1.45; }
 .wl-gate p { margin: 0 0 6px; } .wl-gate-list { margin: 4px 0 8px; padding: 0; list-style: none; display: grid; gap: 4px; }
@@ -1027,6 +1048,7 @@ nav.workspace-nav .workspace-link:focus-visible { outline: 3px solid var(--accen
 
   <main class="view panel" aria-label="3-D viewport">
     <canvas id="gl"></canvas>
+    <svg id="wingModelAxes" class="wing-model-axes" role="img" aria-label="Aircraft axes on the wing: origin at the undeformed root quarter-chord; x aft, y outboard, z up" hidden></svg>
     <div class="viewport-views" role="group" aria-label="Perspective camera views">
       <button type="button" data-view="plan" title="Top / planform: look down from aircraft +z; leading edge up">Top</button>
       <button type="button" data-view="front" title="Front: look aft from aircraft −x; +z up">Front</button>
@@ -12230,8 +12252,28 @@ if(typeof module!=='undefined')module.exports=WingWorkspaceUI;
   }
 
   let aircraftAxesKey = '';
+  let wingModelAxesKey = '';
+  function renderWingModelAxes() {
+    const svg=$('#wingModelAxes');if(!svg)return;
+    svg.hidden=!model;svg.toggleAttribute?.('hidden',!model);if(!model){svg.innerHTML='';wingModelAxesKey='';return;}
+    const rect=canvas.getBoundingClientRect(),w=rect.width,h=rect.height;if(!(w>0&&h>0))return;
+    const g=model.g,p=WingGeometry.transformPoint(g,0,[g.rootChord*.25,0]),origin=new THREE.Vector3(p[1],p[2],p[0]);
+    const length=Math.min(g.rootChord,g.semiSpan*.4),ends=[['x',0,0,length,'#bf3030'],['y',Math.min(g.semiSpan*.5,length*2),0,0,'#08764e'],['z',0,length*.8,0,'#1265c2']];
+    const project=v=>{const q=v.project(camera);return{x:(q.x+1)*w/2,y:(1-q.y)*h/2,z:q.z};},a=project(origin.clone());
+    const axes=ends.map(([name,x,y,z,color])=>({name,color,b:project(origin.clone().add(new THREE.Vector3(x,y,z)))}));
+    if(![a,...axes.map(v=>v.b)].every(v=>Object.values(v).every(Number.isFinite)&&v.z>=-1&&v.z<=1)){svg.hidden=true;svg.toggleAttribute?.('hidden',true);return;}
+    const key=JSON.stringify([w,h,a,axes]);if(key===wingModelAxesKey)return;wingModelAxesKey=key;
+    svg.setAttribute?.('viewBox',`0 0 ${w} ${h}`);
+    svg.innerHTML=`<circle cx="${a.x}" cy="${a.y}" r="3" fill="var(--vp-ink)"/>`+axes.map(({name,color,b})=>{
+      const dx=b.x-a.x,dy=b.y-a.y,r=Math.hypot(dx,dy);
+      if(r<3)return `<text x="${a.x+8}" y="${a.y-10}" fill="${color}">${b.z<a.z?'⊙':'⊗'} +${name}</text>`;
+      const ux=dx/r,uy=dy/r;
+      return `<path d="M${a.x} ${a.y} L${b.x} ${b.y} M${b.x-7*ux-3*uy} ${b.y-7*uy+3*ux} L${b.x} ${b.y} L${b.x-7*ux+3*uy} ${b.y-7*uy-3*ux}" fill="none" stroke="${color}" stroke-width="2"/><text x="${b.x+10*ux}" y="${b.y+10*uy+4}" text-anchor="middle" fill="${color}">+${name}</text>`;
+    }).join('');
+  }
   function renderAircraftAxes() {
     camera.updateMatrixWorld();
+    renderWingModelAxes();
     const axes = [['x',0,0,1,'#d74646'],['y',1,0,0,'#168a62'],['z',0,1,0,'#287ddd']].map(([name,x,y,z,color]) => ({name,color,v:new THREE.Vector3(x,y,z).transformDirection(camera.matrixWorldInverse)}));
     const key = axes.map(a=>[a.v.x,a.v.y,a.v.z].map(n=>Number(n).toFixed(4)).join(',')).join(';');
     if(key===aircraftAxesKey)return; aircraftAxesKey=key;
@@ -14030,6 +14072,32 @@ function renderObservations() {
     const primaryActions=new Set(['clear','select-wing','load','rib','rod','spar','parts','structure','materials','geometry']);
     for(const node of [...printedWorkspace.tools.children]){if(node.classList.contains('wing-quick-hint'))continue;(primaryActions.has(node.dataset.wingAction)||node.classList.contains('wing-selection-feedback')?primaryTools:secondaryTools).append(node);}
     printedWorkspace.tools.prepend(primaryTools,secondaryTools);
+    // Follow the modelling workflow: geometry first, then structure/materials,
+    // physical members, loads and the numerical mesh. Files/selection stay separate.
+    for(const id of ['clear','open-json','geometry','structure','materials','rib','rod','spar','load']){
+      const button=printedWorkspace.tools.querySelector('[data-wing-action="'+id+'"]');if(button)primaryTools.append(button);
+    }
+    primaryTools.append(meshControl);primaryTools.setAttribute('aria-label','Geometry, structure, loads and mesh');
+    for(const id of ['select-wing','parts','inside','save-json','notebook']){
+      const button=printedWorkspace.tools.querySelector('[data-wing-action="'+id+'"]');if(button)secondaryTools.append(button);
+    }
+    // Keep all real display controls on the page. No copies, duplicate IDs or model edits.
+    const inlineDisplay=el('section',{id:'wingInlineDisplay',class:'wing-inline-display panel','aria-label':'View and display controls'});
+    $('#app').classList.add('wing-inline-controls');
+    printedWorkspace.display.before(inlineDisplay);inlineDisplay.append($('#wingViewPanel'));
+    const hud=$('#hudControls'),inlineHud=el('div',{id:'hudControls',class:'hud','aria-label':'Wing display controls'});
+    for(const node of [...hud.children])if(node.tagName!=='SUMMARY')inlineHud.append(node);
+    hud.replaceWith(inlineHud);
+    const dimensions=el('details',{class:'wing-view-dimensions'},'<summary>Zoom &amp; dimensions</summary>');
+    helpBody.append(dimensions);dimensions.append($('#viewReadout'));
+    $('#zoomLabel').textContent='Zoom';
+    const viewBody=$('#wingViewPanel .wl-vbody'),standardViews=inlineHud.querySelector('[aria-label="Standard views"]'),explodeControls=$('#explodeIn').closest('.hud-row');
+    for(const b of standardViews.querySelectorAll('button')){b.title=b.textContent;b.setAttribute('aria-label',b.textContent);b.textContent={iso:'3D',plan:'Top',section:'Side',front:'Front'}[b.dataset.view];}
+    viewBody.insertBefore(standardViews,inlineHud);viewBody.insertBefore(explodeControls,inlineHud);
+    const viewJump=[...secondaryTools.querySelectorAll('button')].find(b=>b.textContent==='View & display ▾');
+    viewJump.textContent='View & display';viewJump.removeAttribute('aria-expanded');viewJump.setAttribute('aria-controls','wingInlineDisplay');
+    viewJump.onclick=()=>{printedWorkspace.close();inlineDisplay.scrollIntoView({block:'nearest'});$('#zoomOut').focus({preventScroll:true});};
+    secondaryTools.replaceChildren(...['select-wing','parts','inside'].map(id=>printedWorkspace.tools.querySelector('[data-wing-action="'+id+'"]')),viewJump,...['save-json','notebook'].map(id=>printedWorkspace.tools.querySelector('[data-wing-action="'+id+'"]')),experiments,historyTools,help,...printedWorkspace.tools.querySelectorAll('.wing-selection-feedback'));
     const positionToolMenu=(menu,body,size)=>{if(!menu.open)return;const r=menu.querySelector('summary').getBoundingClientRect(),width=Math.min(size,window.innerWidth-24);body.style.left=Math.max(8,Math.min(r.right-width,window.innerWidth-width-12))+'px';body.style.right='auto';body.style.top=Math.min(r.bottom+6,Math.max(8,window.innerHeight-200))+'px';body.style.maxHeight=Math.max(120,window.innerHeight-parseFloat(body.style.top)-12)+'px';};
     for(const [menu,body,width]of [[help,helpBody,390],[experiments,experiments.querySelector('div'),240]]){const position=()=>positionToolMenu(menu,body,width);menu.addEventListener('toggle',position);window.addEventListener('resize',position);window.addEventListener('scroll',position,true);document.addEventListener('pointerdown',e=>{if(!menu.contains(e.target))menu.open=false;});menu.addEventListener('keydown',e=>{if(e.key==='Escape'){menu.open=false;menu.querySelector('summary').focus();e.stopPropagation();}});}
     const uiStyle=el('style',{},'.wing-project-name{display:grid;gap:3px;font-size:11px;color:var(--muted);margin-top:6px}.wing-project-name input{min-height:36px;width:min(230px,100%);font-size:15px;padding:5px 8px;background:var(--panel-2);color:var(--fg);border:1px solid var(--line);border-radius:7px}#wingProjectTitle{display:block;max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.wing-airfoil-launch{display:grid;gap:5px;text-align:left;width:100%;margin:8px 0 12px}.wing-airfoil-launch span{font-size:12px;font-weight:400;white-space:normal}.wing-input-help{position:relative;margin-left:8px}.wing-help-content{position:absolute;right:0;top:100%;z-index:110;background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:12px;padding:14px;width:min(390px,calc(100vw - 24px));max-height:65dvh;overflow:auto;box-shadow:0 12px 32px #102d4f30}.wing-help-content details{padding:9px 0}.wing-help-content summary{cursor:pointer;font-weight:700}.wing-help-content .wl-modelnote{padding:8px 0;border:0}@media(max-width:600px){.wing-help-content{position:fixed;right:10px;top:100px}.wing-project-name input{min-height:44px}}');document.head.append(uiStyle);

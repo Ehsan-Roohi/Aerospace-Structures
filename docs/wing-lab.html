@@ -12262,6 +12262,11 @@ if(typeof module!=='undefined')module.exports=WingWorkspaceUI;
     const project=v=>{const q=v.project(camera);return{x:(q.x+1)*w/2,y:(1-q.y)*h/2,z:q.z};},a=project(origin.clone());
     const axes=ends.map(([name,x,y,z,color])=>({name,color,b:project(origin.clone().add(new THREE.Vector3(x,y,z)))}));
     if(![a,...axes.map(v=>v.b)].every(v=>Object.values(v).every(Number.isFinite)&&v.z>=-1&&v.z<=1)){svg.hidden=true;svg.toggleAttribute?.('hidden',true);return;}
+    // Reference arrows have no physical length scale: shorten them together in
+    // screen space so a fitted wing never loses an axis label at the viewport edge.
+    let arrowScale=1;const pad=18;
+    for(const {b}of axes){const dx=b.x-a.x,dy=b.y-a.y;if(dx>0)arrowScale=Math.min(arrowScale,(w-pad-a.x)/dx);else if(dx<0)arrowScale=Math.min(arrowScale,(a.x-pad)/-dx);if(dy>0)arrowScale=Math.min(arrowScale,(h-pad-a.y)/dy);else if(dy<0)arrowScale=Math.min(arrowScale,(a.y-pad)/-dy);}
+    arrowScale=Math.max(0,arrowScale);for(const {b}of axes){b.x=a.x+(b.x-a.x)*arrowScale;b.y=a.y+(b.y-a.y)*arrowScale;}
     const key=JSON.stringify([w,h,a,axes]);if(key===wingModelAxesKey)return;wingModelAxesKey=key;
     svg.setAttribute?.('viewBox',`0 0 ${w} ${h}`);
     svg.innerHTML=`<circle cx="${a.x}" cy="${a.y}" r="3" fill="var(--vp-ink)"/>`+axes.map(({name,color,b})=>{

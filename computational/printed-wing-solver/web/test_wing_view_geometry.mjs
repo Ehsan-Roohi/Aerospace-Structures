@@ -59,6 +59,7 @@ for(const advanced of [false,true]){
     ok(buttons.find(b=>b.dataset.view===view)['aria-pressed']==='true','active view is exposed accessibly');
     const axes=$('#wingModelAxes');ok(!axes.hidden&&['+x','+y','+z'].every(label=>axes.innerHTML.includes(label)),'on-wing axes are visible in every standard view');
     ok(!/NaN|Infinity/.test(axes.innerHTML),'projected model axes have finite coordinates');
+    for(const label of axes.innerHTML.matchAll(/<text x="([^"]+)" y="([^"]+)"/g))ok(Number(label[1])>=0&&Number(label[1])<=900&&Number(label[2])>=0&&Number(label[2])<=600,'all on-wing axis labels fit the canvas after Fit');
     const anchor=WingGeometry.transformPoint(g,0,[g.rootChord*.25,0]),q0=new THREE.Vector3(anchor[1],anchor[2],anchor[0]).project(camera);
     const circle=axes.innerHTML.match(/<circle cx="([^"]+)" cy="([^"]+)"/);ok(!!circle,'on-wing axes have a common root origin');
     near(Number(circle[1]),(q0.x+1)*450,1e-8,'axis origin follows the physical root quarter-chord in screen x');near(Number(circle[2]),(1-q0.y)*300,1e-8,'axis origin follows the physical root quarter-chord in screen y');

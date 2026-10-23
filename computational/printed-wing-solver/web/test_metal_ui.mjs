@@ -24,7 +24,7 @@ w.MetalWingEngine={...M,solve:input=>{
 }};
 w.METAL_REFERENCE=JSON.parse(readFileSync(new URL('./metal_wing_reference.json',import.meta.url),'utf8'));
 // Same order as the built page: shared load profiles and the custom-load editor, then the workspace.
-for(const f of ['./load_profiles.js','./wing_loads_ui.js','./metal_wing_ui.js']) vm.runInContext(readFileSync(new URL(f,import.meta.url),'utf8'),ctx);
+for(const f of ['./wing_chart_math.js','./load_profiles.js','./wing_loads_ui.js','./metal_wing_ui.js']) vm.runInContext(readFileSync(new URL(f,import.meta.url),'utf8'),ctx);
 const q=s=>w.document.querySelector(s);
 const wait=async test=>{const deadline=Date.now()+10000;while(!test()){assert.ok(Date.now()<deadline,'UI did not settle');await new Promise(r=>setTimeout(r,25));}};
 try {

@@ -574,8 +574,8 @@ const BeamDiagrams = (() => {
     const W=clampWidth(opts.width), H=opts.height||200, m={l:66,r:16,t:30,b:34};
     const series=opts.series||[{result,key,cls:'bl-curve',label:null}];
     const L=opts.xMax||Math.max(...series.map(q=>q.result.input.length));
-    let lo=opts.yDomain?opts.yDomain[0]:Math.min(0,...series.flatMap(s=>s.result[s.key]));
-    let hi=opts.yDomain?opts.yDomain[1]:Math.max(0,...series.flatMap(s=>s.result[s.key]));
+    let lo=opts.yDomain?opts.yDomain[0]:Math.min(0,...series.flatMap(s=>Array.from(s.result[s.key])));
+    let hi=opts.yDomain?opts.yDomain[1]:Math.max(0,...series.flatMap(s=>Array.from(s.result[s.key])));
     if(hi-lo<1e-12*Math.max(1,Math.abs(hi),Math.abs(lo))) {hi+=1;lo-=1;}
     const t=niceTicks(lo,hi,4);lo=t.min;hi=t.max;
     const X=x=>m.l+(W-m.l-m.r)*x/L;
@@ -590,7 +590,7 @@ const BeamDiagrams = (() => {
     svg+=text(W-m.r,H-4,'x (mm)','bl-tx-xs bl-tx-m','end');
     series.forEach((s,k)=>{
       const xs=s.result.x, ys=s.result[s.key];
-      const pts=xs.map((x,i)=>`${r1(X(x))},${r1(Y(ys[i]))}`).join(' ');
+      const pts=Array.from(xs,(x,i)=>`${r1(X(x))},${r1(Y(ys[i]))}`).join(' ');
       if(k===0&&!opts.noFill) svg+=`<polygon points="${r1(X(xs[0]))},${r1(Y(0))} ${pts} ${r1(X(xs[xs.length-1]))},${r1(Y(0))}" class="bl-area"/>`;
       svg+=`<polyline points="${pts}" class="${s.cls||'bl-curve'}"/>`;
     });

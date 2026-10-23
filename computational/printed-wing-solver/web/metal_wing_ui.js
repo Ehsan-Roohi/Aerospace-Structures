@@ -877,27 +877,31 @@
   }
 
   // ------------------------------------------------------------------ charts
-  function niceTicks(min, max, n = 4) { if (min === max) { min -= 1; max += 1; } const span = max - min, step0 = span / n, mag = 10 ** Math.floor(Math.log10(step0)), step = [1, 2, 2.5, 5, 10].map((m) => m * mag).find((s) => span / s <= n + 0.5) || mag * 10; const a = Math.floor(min / step) * step, out = []; for (let v = a; v <= max + step * 0.5; v += step) out.push(+v.toFixed(10)); return out; }
+  function niceTicks(min,max,n=4){return WingChartMath.ticks(min,max,n);}
   const COLS = ["#4ea6ff", "#f08a4b", "#33c587", "#c37cf2", "#efb03b", "#f05b6c"];
   function chart(title, unit, series, opts = {}) {
     const W = 360, H = 190, L = 48, Rr = 10, T = 10, B = 30;
-    const xs = series.flatMap((s) => s.x), ys = series.flatMap((s) => s.y).filter((v) => Number.isFinite(v));
-    let x0 = opts.xmin ?? Math.min(...xs), x1 = opts.xmax ?? Math.max(...xs), y0 = opts.ymin ?? Math.min(0, ...ys), y1 = opts.ymax ?? Math.max(0, ...ys);
-    (opts.hlines || []).forEach((h) => { y0 = Math.min(y0, h.y); y1 = Math.max(y1, h.y); });
+    const runs=series.map(s=>WingChartMath.segments(s.x,s.y)),points=runs.flatMap(parts=>parts.flat()),xs=points.map(p=>p[0]),ys=points.map(p=>p[1]),xr=WingChartMath.range(xs),yr=WingChartMath.range(ys,true);
+    let x0 = opts.xmin ?? xr[0], x1 = opts.xmax ?? xr[1], y0 = opts.ymin ?? yr[0], y1 = opts.ymax ?? yr[1];
+    (opts.hlines || []).forEach((h) => { if(Number.isFinite(h.y)){y0 = Math.min(y0, h.y); y1 = Math.max(y1, h.y);} });
     const yt = niceTicks(y0, y1), xt = niceTicks(x0, x1, 5);
     y0 = Math.min(y0, yt[0]); y1 = Math.max(y1, yt[yt.length - 1]);
-    const X = (v) => L + ((v - x0) / (x1 - x0 || 1)) * (W - L - Rr), Y = (v) => H - B - ((v - y0) / (y1 - y0 || 1)) * (H - T - B);
-    let svg = yt.map((v) => `<line x1="${L}" x2="${W - Rr}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)"/><text x="${L - 5}" y="${Y(v) + 3}" text-anchor="end">${+v.toPrecision(4)}</text>`).join("");
-    svg += xt.filter((v) => v >= x0 - 1e-9 && v <= x1 + 1e-9).map((v) => `<text x="${X(v)}" y="${H - B + 13}" text-anchor="middle">${+v.toPrecision(3)}</text>`).join("");
+    if(x0===x1){x0=xt[0];x1=xt.at(-1);}
+    const X = (v) => L + WingChartMath.fraction(v,x0,x1)*(W-L-Rr), Y = (v) => H-B-WingChartMath.fraction(v,y0,y1)*(H-T-B),clip=WingChartMath.clipId();
+    let svg = `<defs><clipPath id="${clip}"><rect x="${L}" y="${T}" width="${W-L-Rr}" height="${H-T-B}"/></clipPath></defs>`+yt.map((v) => `<line x1="${L}" x2="${W - Rr}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)"/><text x="${L - 5}" y="${Y(v) + 3}" text-anchor="end">${WingChartMath.format(v,4)}</text>`).join("");
+    svg += xt.filter((v) => v >= x0 - 1e-9 && v <= x1 + 1e-9).map((v) => `<text x="${X(v)}" y="${H - B + 13}" text-anchor="middle">${WingChartMath.format(v,3)}</text>`).join("");
     svg += `<text x="${(L + W - Rr) / 2}" y="${H - 3}" text-anchor="middle">${opts.xlabel || "span station y (m)"}</text>`;
-    (opts.hlines || []).forEach((h) => (svg += `<line x1="${L}" x2="${W - Rr}" y1="${Y(h.y)}" y2="${Y(h.y)}" stroke="${h.color || "var(--muted)"}" stroke-dasharray="4 3"/><text x="${W - Rr - 2}" y="${Y(h.y) - 3}" text-anchor="end">${h.label || ""}</text>`));
+    (opts.hlines || []).filter(h=>Number.isFinite(h.y)).forEach((h) => (svg += `<line x1="${L}" x2="${W - Rr}" y1="${Y(h.y)}" y2="${Y(h.y)}" stroke="${h.color || "var(--muted)"}" stroke-dasharray="4 3"/><text x="${W - Rr - 2}" y="${Y(h.y) - 3}" text-anchor="end">${h.label || ""}</text>`));
+    svg+=`<g class="chart-curves" clip-path="url(#${clip})">`;
     series.forEach((s, k) => {
       const c = s.color || COLS[k % COLS.length];
-      if (s.markers) svg += s.x.map((x, i) => (Number.isFinite(s.y[i]) ? `<circle cx="${X(x)}" cy="${Y(s.y[i])}" r="3.6" fill="var(--panel)" stroke="${c}" stroke-width="2"/>` : "")).join("");
-      else { const pts = s.x.map((x, i) => (Number.isFinite(s.y[i]) && s.y[i] <= (opts.ymax ?? Infinity) * 1.02 ? `${X(x).toFixed(1)},${Y(s.y[i]).toFixed(1)}` : null)).filter(Boolean).join(" "); svg += `<polyline points="${pts}" fill="none" stroke="${c}" stroke-width="${s.width || 2}" ${s.dash ? `stroke-dasharray="${s.dash}"` : ""}/>`; }
+      if (s.markers) svg += runs[k].flat().map(([x,y])=>`<circle cx="${X(x)}" cy="${Y(y)}" r="3.6" fill="var(--panel)" stroke="${c}" stroke-width="2"/>`).join('');
+      else svg+=`<path d="${WingChartMath.path(runs[k],X,Y)}" fill="none" stroke="${c}" stroke-width="${s.width||2}" ${s.dash?`stroke-dasharray="${s.dash}"`:''}/>`;
+      if(!s.markers)for(const part of runs[k])if(part.length===1)svg+=`<circle cx="${X(part[0][0])}" cy="${Y(part[0][1])}" r="2" fill="${c}"/>`;
     });
+    svg+='</g>';if(!points.length)svg+=`<text x="${W/2}" y="${H/2}" text-anchor="middle">No resolved data</text>`;
     const legend = series.filter((s) => s.name).map((s, k) => `<span style="color:${s.color || COLS[series.indexOf(s) % COLS.length]}">${s.markers ? "○" : "—"} ${s.name}</span>`).join(" &nbsp;");
-    return `<div class="chart"><h4>${title}<span>${unit}</span></h4><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${title}">${svg}</svg><p class="note">${legend}</p></div>`;
+    return `<div class="chart"><h4>${title}<span>${unit}</span></h4><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${title}" style="overflow:hidden" data-ymin="${y0}" data-ymax="${y1}">${svg}</svg><p class="note">${legend}</p></div>`;
   }
 
   // ------------------------------------------------------------------ tabs

@@ -194,7 +194,8 @@ legend { font: 700 11px/1 var(--font-label); letter-spacing: 0.1em; text-transfo
 .chart { min-width: 0; }
 .chart h4 { margin: 0 0 2px; font: 700 12px/1.2 var(--font-label); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); display: flex; justify-content: space-between; gap: 8px; }
 .chart h4 span { font: 500 11.5px var(--font-data); text-transform: none; letter-spacing: 0; color: var(--fg); }
-.chart svg { width: 100%; height: auto; display: block; overflow: visible; }
+.chart h4 span { flex-shrink: 0; white-space: nowrap; max-width: 60%; overflow: hidden; text-overflow: ellipsis; }
+.chart svg { width: 100%; height: auto; display: block; overflow: hidden; }
 .chart text { fill: var(--muted); font: 10px var(--font-data); }
 .checks { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 14px 20px; }
 .checklist { display: grid; gap: 6px; align-content: start; }
@@ -3557,8 +3558,8 @@ const BeamDiagrams = (() => {
     const W=clampWidth(opts.width), H=opts.height||200, m={l:66,r:16,t:30,b:34};
     const series=opts.series||[{result,key,cls:'bl-curve',label:null}];
     const L=opts.xMax||Math.max(...series.map(q=>q.result.input.length));
-    let lo=opts.yDomain?opts.yDomain[0]:Math.min(0,...series.flatMap(s=>s.result[s.key]));
-    let hi=opts.yDomain?opts.yDomain[1]:Math.max(0,...series.flatMap(s=>s.result[s.key]));
+    let lo=opts.yDomain?opts.yDomain[0]:Math.min(0,...series.flatMap(s=>Array.from(s.result[s.key])));
+    let hi=opts.yDomain?opts.yDomain[1]:Math.max(0,...series.flatMap(s=>Array.from(s.result[s.key])));
     if(hi-lo<1e-12*Math.max(1,Math.abs(hi),Math.abs(lo))) {hi+=1;lo-=1;}
     const t=niceTicks(lo,hi,4);lo=t.min;hi=t.max;
     const X=x=>m.l+(W-m.l-m.r)*x/L;
@@ -3573,7 +3574,7 @@ const BeamDiagrams = (() => {
     svg+=text(W-m.r,H-4,'x (mm)','bl-tx-xs bl-tx-m','end');
     series.forEach((s,k)=>{
       const xs=s.result.x, ys=s.result[s.key];
-      const pts=xs.map((x,i)=>`${r1(X(x))},${r1(Y(ys[i]))}`).join(' ');
+      const pts=Array.from(xs,(x,i)=>`${r1(X(x))},${r1(Y(ys[i]))}`).join(' ');
       if(k===0&&!opts.noFill) svg+=`<polygon points="${r1(X(xs[0]))},${r1(Y(0))} ${pts} ${r1(X(xs[xs.length-1]))},${r1(Y(0))}" class="bl-area"/>`;
       svg+=`<polyline points="${pts}" class="${s.cls||'bl-curve'}"/>`;
     });
@@ -6361,6 +6362,31 @@ const WingSpars=(()=>{
   return {MAT,specs,parts,polygon,network,projectedNetwork,field,G};
 })();
 if(typeof module!=='undefined'&&module.exports)module.exports=WingSpars;
+
+/* Rendering-only helpers: accept ordinary/typed arrays without changing solver data. */
+const WingChartMath=(()=>{
+ 'use strict';let serial=0;
+ function range(values,includeZero=false){let min=includeZero?0:Infinity,max=includeZero?0:-Infinity;for(const v of values||[])if(Number.isFinite(v)){min=Math.min(min,v);max=Math.max(max,v);}return Number.isFinite(min)&&Number.isFinite(max)?[min,max]:[0,1];}
+ function ticks(min,max,count=4){
+  if(!Number.isFinite(min)||!Number.isFinite(max))return [0,1];if(min>max)[min,max]=[max,min];
+  if(min===0&&max===0)return [-1,0,1];
+  const scale=Math.max(Math.abs(min),Math.abs(max)),a=min/scale,b=max/scale,n=Math.max(1,Math.min(20,count));
+  const low=a===b?a-.1:a,high=a===b?b+.1:b,span=high-low,realMag=10**Math.floor(Math.log10(scale)+Math.log10(span/n))||Number.MIN_VALUE,mag=realMag/scale;
+  const step=[1,2,2.5,5,10].map(v=>v*mag).find(v=>span/v<=n+.5)||10*mag;
+  const first=Math.floor(low/step),last=Math.ceil(high/step),out=[];
+  for(let i=first;i<=last&&out.length<100;i++){const v=i===0?0:i*step*scale;if(Number.isFinite(v)&&(!out.length||v>out.at(-1)))out.push(v);}
+  if(!out.length)return min===max?[0,min]:[min,max];
+  if(out[0]>min)out.unshift(min);if(out.at(-1)<max)out.push(max);
+  if(out.length===1){if(out[0]>0)out.unshift(0);else out.push(0);}return out;
+ }
+ function fraction(v,lo,hi){const scale=Math.max(Math.abs(lo),Math.abs(hi))||1,span=hi/scale-lo/scale;return span?(v/scale-lo/scale)/span:.5;}
+ function format(v,digits=3){if(!Number.isFinite(v))return 'unresolved';if(v===0)return '0';return Math.abs(v)>=1e5||Math.abs(v)<1e-3?v.toExponential(digits-1).replace('e+','e'):String(+v.toPrecision(digits));}
+ function segments(xs,ys){const out=[];let run=[];for(let i=0;i<(xs?.length||0);i++){if(Number.isFinite(xs[i])&&Number.isFinite(ys?.[i]))run.push([xs[i],ys[i]]);else if(run.length){out.push(run);run=[];}}if(run.length)out.push(run);return out;}
+ function path(runs,X,Y){return runs.map(run=>run.map(([x,y],i)=>(i?'L':'M')+X(x).toFixed(2)+','+Y(y).toFixed(2)).join('')).join('');}
+ function at(xs,ys,x){let previous=null;for(let i=0;i<(xs?.length||0);i++){const a=xs[i],b=ys?.[i];if(!Number.isFinite(a)||!Number.isFinite(b)){previous=null;continue;}if(a===x)return b;if(previous&&previous[0]<x&&a>x){const f=fraction(x,previous[0],a);return (1-f)*previous[1]+f*b;}previous=[a,b];}return NaN;}
+ return {range,ticks,fraction,format,segments,path,at,clipId:()=>`wing-chart-clip-${++serial}`};
+})();
+if(typeof module!=='undefined'&&module.exports)module.exports=WingChartMath;
 
 /* Wing airfoil geometry, v1. Coordinates are x/c,z/c; no aerodynamic polars.
  * Sources: NACA TR 537; PDAS naca456mean3.html / naca456thick4.html;
@@ -12907,46 +12933,44 @@ if(typeof module!=='undefined')module.exports=WingWorkspaceUI;
 
   // ------------------------------------------------------------ charts
   function niceTicks(min, max, n = 4) {
-    if (min === max) { min -= 1; max += 1; }
-    const span = max - min, step0 = span / n, mag = Math.pow(10, Math.floor(Math.log10(step0)));
-    const step = [1, 2, 2.5, 5, 10].map((m) => m * mag).find((s) => span / s <= n + 0.5) || 10 * mag;
-    const lo = Math.floor(min / step) * step, hi = Math.ceil(max / step) * step;
-    const out = []; for (let v = lo; v <= hi + step * 1e-6; v += step) out.push(+v.toFixed(10));
-    return out;
+    return WingChartMath.ticks(min,max,n);
   }
   function chart(host, title, unit, xs, series, opts = {}) {
     const W = 420, H = 112, m = { l: 40, r: 8, t: 6, b: 18 };
-    const ys = series.flatMap((s) => s.y).filter(Number.isFinite);
-    let ymin = Math.min(0, ...ys), ymax = Math.max(0, ...ys);
+    const runs=series.map(s=>WingChartMath.segments(xs,s.y)),ys=runs.flatMap(parts=>parts.flatMap(run=>run.map(p=>p[1])));
+    let [ymin,ymax]=WingChartMath.range(ys,true);
     const ticks = niceTicks(ymin, ymax, 3);
     ymin = ticks[0]; ymax = ticks[ticks.length - 1];
-    const xmax = xs[xs.length - 1];
-    const X = (v) => m.l + ((W - m.l - m.r) * v) / xmax, Y = (v) => m.t + ((H - m.t - m.b) * (ymax - v)) / (ymax - ymin || 1);
-    const step = Math.max(1, Math.floor(xs.length / 300));
-    let svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${title}">`;
-    for (const tv of ticks) svg += `<line x1="${m.l}" x2="${W - m.r}" y1="${Y(tv)}" y2="${Y(tv)}" stroke="var(--line)" stroke-width="${tv === 0 ? 1.2 : 0.6}"/><text x="${m.l - 5}" y="${Y(tv) + 3}" text-anchor="end">${sig(tv, 3)}</text>`;
-    for (const s of opts.seams || []) svg += `<line x1="${X(s)}" x2="${X(s)}" y1="${m.t}" y2="${H - m.b}" stroke="var(--faint)" stroke-dasharray="3 3" stroke-width="0.8"/>`;
-    for (const xv of niceTicks(0, xmax, 4)) if (xv <= xmax + 1e-9) svg += `<text x="${X(xv)}" y="${H - 4}" text-anchor="middle">${xv}</text>`;
-    for (const s of series) {
-      let d = "",connected=false;
-      const indices=[...new Set([...Array.from({length:Math.ceil(xs.length/step)},(_,i)=>i*step),xs.length-1])];
-      for(const i of indices){if(!Number.isFinite(s.y[i])){connected=false;continue;}d+=`${connected?'L':'M'}${X(xs[i]).toFixed(1)},${Y(s.y[i]).toFixed(1)}`;connected=true;}
-      if (s.fill&&s.y.every(Number.isFinite)) svg += `<path d="${d}L${X(xs[xs.length - 1])},${Y(0)}L${X(xs[0])},${Y(0)}Z" fill="${s.color}" opacity="0.12"/>`;
+    let [xmin,xmax]=WingChartMath.range(xs,true);if(xmin===xmax)xmax=xmin+1;
+    const X = (v) => m.l + (W-m.l-m.r)*WingChartMath.fraction(v,xmin,xmax), Y = (v) => H-m.b-(H-m.t-m.b)*WingChartMath.fraction(v,ymin,ymax);
+    const clip=WingChartMath.clipId();
+    let svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${title}" style="overflow:hidden" data-ymin="${ymin}" data-ymax="${ymax}"><defs><clipPath id="${clip}"><rect x="${m.l}" y="${m.t}" width="${W-m.l-m.r}" height="${H-m.t-m.b}"/></clipPath></defs>`;
+    for (const tv of ticks) svg += `<line x1="${m.l}" x2="${W - m.r}" y1="${Y(tv)}" y2="${Y(tv)}" stroke="var(--line)" stroke-width="${tv === 0 ? 1.2 : 0.6}"/><text x="${m.l - 5}" y="${Y(tv) + 3}" text-anchor="end">${WingChartMath.format(tv)}</text>`;
+    for (const s of opts.seams || []) if(Number.isFinite(s))svg += `<line clip-path="url(#${clip})" x1="${X(s)}" x2="${X(s)}" y1="${m.t}" y2="${H - m.b}" stroke="var(--faint)" stroke-dasharray="3 3" stroke-width="0.8"/>`;
+    for (const xv of niceTicks(xmin, xmax, 4)) if (xv >= xmin&&xv <= xmax) svg += `<text x="${X(xv)}" y="${H - 4}" text-anchor="middle">${WingChartMath.format(xv)}</text>`;
+    svg+=`<g clip-path="url(#${clip})" class="chart-curves">`;
+    for (const [index,s] of series.entries()) {
+      const parts=runs[index],d=WingChartMath.path(parts,X,Y);
+      if (s.fill&&parts.length===1&&parts[0].length===xs.length&&xs.length>1) svg += `<path d="${d}L${X(xs[xs.length - 1])},${Y(0)}L${X(xs[0])},${Y(0)}Z" fill="${s.color}" opacity="0.12"/>`;
       svg += `<path d="${d}" fill="none" stroke="${s.color}" stroke-width="${s.width || 1.6}" ${s.dash ? `stroke-dasharray="${s.dash}"` : ""} vector-effect="non-scaling-stroke"/>`;
+      for(const part of parts)if(part.length===1)svg+=`<circle cx="${X(part[0][0])}" cy="${Y(part[0][1])}" r="2" fill="${s.color}"/>`;
     }
-    svg += `<line class="hover" x1="0" x2="0" y1="${m.t}" y2="${H - m.b}" stroke="var(--accent)" stroke-width="1" visibility="hidden"/></svg>`;
+    svg += `</g>${ys.length?'':`<text x="${W/2}" y="${H/2}" text-anchor="middle">No resolved data</text>`}<line class="hover" x1="0" x2="0" y1="${m.t}" y2="${H - m.b}" stroke="var(--accent)" stroke-width="1" visibility="hidden"/></svg>`;
     const div = el("div", { class: "chart" }, `<h4>${title}<span>${opts.badge || unit}</span></h4>${svg}`);
     const sv = div.querySelector("svg"), hl = sv.querySelector(".hover");
+    const readout=div.querySelector('h4 span');readout.title=readout.textContent;
     sv.addEventListener("pointermove", (ev) => {
       const r = sv.getBoundingClientRect();
+      if(!(r.width>0))return;
       const fx = ((ev.clientX - r.left) / r.width) * W;
-      const xv = Math.min(xmax, Math.max(0, ((fx - m.l) / (W - m.l - m.r)) * xmax));
+      const f=Math.min(1,Math.max(0,(fx-m.l)/(W-m.l-m.r))),xv=(1-f)*xmin+f*xmax;
       hl.setAttribute("x1", X(xv)); hl.setAttribute("x2", X(xv)); hl.setAttribute("visibility", "visible");
-      const vals = series.map((s) => `${s.label ? s.label + " " : ""}${sig(E.interp(xv, xs, s.y), 3)}`).join(" · ");
+      const vals = series.map((s) => {const v=WingChartMath.at(xs,s.y,xv);return `${s.label ? s.label + " " : ""}${Number.isFinite(v)?WingChartMath.format(v):'unresolved'}`;}).join(" · ");
       div.querySelector("h4 span").textContent = `y ${xv.toFixed(0)} mm: ${vals} ${unit}`;
+      readout.title=readout.textContent;
       showMarker(xv);
     });
-    sv.addEventListener("pointerleave", () => { hl.setAttribute("visibility", "hidden"); div.querySelector("h4 span").textContent = opts.badge || unit; showMarker(null); });
+    sv.addEventListener("pointerleave", () => { hl.setAttribute("visibility", "hidden"); readout.textContent = opts.badge || unit;readout.title=readout.textContent; showMarker(null); });
     host.append(div);
   }
   function showMarker(y) {
@@ -18077,27 +18101,31 @@ const METAL_REFERENCE = {
   }
 
   // ------------------------------------------------------------------ charts
-  function niceTicks(min, max, n = 4) { if (min === max) { min -= 1; max += 1; } const span = max - min, step0 = span / n, mag = 10 ** Math.floor(Math.log10(step0)), step = [1, 2, 2.5, 5, 10].map((m) => m * mag).find((s) => span / s <= n + 0.5) || mag * 10; const a = Math.floor(min / step) * step, out = []; for (let v = a; v <= max + step * 0.5; v += step) out.push(+v.toFixed(10)); return out; }
+  function niceTicks(min,max,n=4){return WingChartMath.ticks(min,max,n);}
   const COLS = ["#4ea6ff", "#f08a4b", "#33c587", "#c37cf2", "#efb03b", "#f05b6c"];
   function chart(title, unit, series, opts = {}) {
     const W = 360, H = 190, L = 48, Rr = 10, T = 10, B = 30;
-    const xs = series.flatMap((s) => s.x), ys = series.flatMap((s) => s.y).filter((v) => Number.isFinite(v));
-    let x0 = opts.xmin ?? Math.min(...xs), x1 = opts.xmax ?? Math.max(...xs), y0 = opts.ymin ?? Math.min(0, ...ys), y1 = opts.ymax ?? Math.max(0, ...ys);
-    (opts.hlines || []).forEach((h) => { y0 = Math.min(y0, h.y); y1 = Math.max(y1, h.y); });
+    const runs=series.map(s=>WingChartMath.segments(s.x,s.y)),points=runs.flatMap(parts=>parts.flat()),xs=points.map(p=>p[0]),ys=points.map(p=>p[1]),xr=WingChartMath.range(xs),yr=WingChartMath.range(ys,true);
+    let x0 = opts.xmin ?? xr[0], x1 = opts.xmax ?? xr[1], y0 = opts.ymin ?? yr[0], y1 = opts.ymax ?? yr[1];
+    (opts.hlines || []).forEach((h) => { if(Number.isFinite(h.y)){y0 = Math.min(y0, h.y); y1 = Math.max(y1, h.y);} });
     const yt = niceTicks(y0, y1), xt = niceTicks(x0, x1, 5);
     y0 = Math.min(y0, yt[0]); y1 = Math.max(y1, yt[yt.length - 1]);
-    const X = (v) => L + ((v - x0) / (x1 - x0 || 1)) * (W - L - Rr), Y = (v) => H - B - ((v - y0) / (y1 - y0 || 1)) * (H - T - B);
-    let svg = yt.map((v) => `<line x1="${L}" x2="${W - Rr}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)"/><text x="${L - 5}" y="${Y(v) + 3}" text-anchor="end">${+v.toPrecision(4)}</text>`).join("");
-    svg += xt.filter((v) => v >= x0 - 1e-9 && v <= x1 + 1e-9).map((v) => `<text x="${X(v)}" y="${H - B + 13}" text-anchor="middle">${+v.toPrecision(3)}</text>`).join("");
+    if(x0===x1){x0=xt[0];x1=xt.at(-1);}
+    const X = (v) => L + WingChartMath.fraction(v,x0,x1)*(W-L-Rr), Y = (v) => H-B-WingChartMath.fraction(v,y0,y1)*(H-T-B),clip=WingChartMath.clipId();
+    let svg = `<defs><clipPath id="${clip}"><rect x="${L}" y="${T}" width="${W-L-Rr}" height="${H-T-B}"/></clipPath></defs>`+yt.map((v) => `<line x1="${L}" x2="${W - Rr}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)"/><text x="${L - 5}" y="${Y(v) + 3}" text-anchor="end">${WingChartMath.format(v,4)}</text>`).join("");
+    svg += xt.filter((v) => v >= x0 - 1e-9 && v <= x1 + 1e-9).map((v) => `<text x="${X(v)}" y="${H - B + 13}" text-anchor="middle">${WingChartMath.format(v,3)}</text>`).join("");
     svg += `<text x="${(L + W - Rr) / 2}" y="${H - 3}" text-anchor="middle">${opts.xlabel || "span station y (m)"}</text>`;
-    (opts.hlines || []).forEach((h) => (svg += `<line x1="${L}" x2="${W - Rr}" y1="${Y(h.y)}" y2="${Y(h.y)}" stroke="${h.color || "var(--muted)"}" stroke-dasharray="4 3"/><text x="${W - Rr - 2}" y="${Y(h.y) - 3}" text-anchor="end">${h.label || ""}</text>`));
+    (opts.hlines || []).filter(h=>Number.isFinite(h.y)).forEach((h) => (svg += `<line x1="${L}" x2="${W - Rr}" y1="${Y(h.y)}" y2="${Y(h.y)}" stroke="${h.color || "var(--muted)"}" stroke-dasharray="4 3"/><text x="${W - Rr - 2}" y="${Y(h.y) - 3}" text-anchor="end">${h.label || ""}</text>`));
+    svg+=`<g class="chart-curves" clip-path="url(#${clip})">`;
     series.forEach((s, k) => {
       const c = s.color || COLS[k % COLS.length];
-      if (s.markers) svg += s.x.map((x, i) => (Number.isFinite(s.y[i]) ? `<circle cx="${X(x)}" cy="${Y(s.y[i])}" r="3.6" fill="var(--panel)" stroke="${c}" stroke-width="2"/>` : "")).join("");
-      else { const pts = s.x.map((x, i) => (Number.isFinite(s.y[i]) && s.y[i] <= (opts.ymax ?? Infinity) * 1.02 ? `${X(x).toFixed(1)},${Y(s.y[i]).toFixed(1)}` : null)).filter(Boolean).join(" "); svg += `<polyline points="${pts}" fill="none" stroke="${c}" stroke-width="${s.width || 2}" ${s.dash ? `stroke-dasharray="${s.dash}"` : ""}/>`; }
+      if (s.markers) svg += runs[k].flat().map(([x,y])=>`<circle cx="${X(x)}" cy="${Y(y)}" r="3.6" fill="var(--panel)" stroke="${c}" stroke-width="2"/>`).join('');
+      else svg+=`<path d="${WingChartMath.path(runs[k],X,Y)}" fill="none" stroke="${c}" stroke-width="${s.width||2}" ${s.dash?`stroke-dasharray="${s.dash}"`:''}/>`;
+      if(!s.markers)for(const part of runs[k])if(part.length===1)svg+=`<circle cx="${X(part[0][0])}" cy="${Y(part[0][1])}" r="2" fill="${c}"/>`;
     });
+    svg+='</g>';if(!points.length)svg+=`<text x="${W/2}" y="${H/2}" text-anchor="middle">No resolved data</text>`;
     const legend = series.filter((s) => s.name).map((s, k) => `<span style="color:${s.color || COLS[series.indexOf(s) % COLS.length]}">${s.markers ? "○" : "—"} ${s.name}</span>`).join(" &nbsp;");
-    return `<div class="chart"><h4>${title}<span>${unit}</span></h4><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${title}">${svg}</svg><p class="note">${legend}</p></div>`;
+    return `<div class="chart"><h4>${title}<span>${unit}</span></h4><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${title}" style="overflow:hidden" data-ymin="${y0}" data-ymax="${y1}">${svg}</svg><p class="note">${legend}</p></div>`;
   }
 
   // ------------------------------------------------------------------ tabs

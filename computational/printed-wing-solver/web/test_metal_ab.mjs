@@ -21,7 +21,7 @@ const errors=[];w.console.error=(...a)=>errors.push(a.map(String).join(' '));
 let exported=null;w.Blob=Blob;w.URL.createObjectURL=b=>{exported=b;return 'blob:test';};w.URL.revokeObjectURL=()=>{};w.HTMLAnchorElement.prototype.click=()=>{};
 Object.defineProperty(w,'crypto',{value:webcrypto,configurable:true});w.TextEncoder=TextEncoder;
 w.MetalWingEngine=M;w.METAL_REFERENCE=JSON.parse(readFileSync(new URL('./metal_wing_reference.json',import.meta.url),'utf8'));
-for(const f of ['./load_profiles.js','./wing_loads_ui.js','./metal_wing_ui.js']) vm.runInContext(readFileSync(new URL(f,import.meta.url),'utf8'),ctx);
+for(const f of ['./wing_chart_math.js','./load_profiles.js','./wing_loads_ui.js','./metal_wing_ui.js']) vm.runInContext(readFileSync(new URL(f,import.meta.url),'utf8'),ctx);
 const q=s=>w.document.querySelector(s), qa=s=>[...w.document.querySelectorAll(s)];
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const wait=async(test,what)=>{const deadline=Date.now()+120000;while(!test()){assert.ok(Date.now()<deadline,`UI did not settle: ${what}`);await sleep(40);}};

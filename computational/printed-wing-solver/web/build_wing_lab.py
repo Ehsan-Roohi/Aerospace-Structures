@@ -21,6 +21,8 @@ template = (HERE / "wing_lab_template.html").read_text(encoding="utf-8")
 engine = (HERE / "engine.js").read_text(encoding="utf-8")
 assert "/*__ENGINE__*/" in template
 page = template.replace("/*__ENGINE__*/", engine)
+assert "/*__WING_CHART_MATH__*/" in page
+page = page.replace("/*__WING_CHART_MATH__*/", (HERE / "wing_chart_math.js").read_text(encoding="utf-8"))
 assert "/*__WING_GEOMETRY_HELP__*/" in page
 page = page.replace("/*__WING_GEOMETRY_HELP__*/", (HERE / "wing_geometry_help.js").read_text(encoding="utf-8"))
 page = page.replace("/*__WING_SELECTION_UI__*/", (HERE / "wing_selection_ui.js").read_text(encoding="utf-8"))

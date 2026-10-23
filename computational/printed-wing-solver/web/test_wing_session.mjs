@@ -18,6 +18,7 @@ function open(saved,url='https://example.org/wing-lab.html#wing',storageBlocked=
 const opened=[];
 try{
  const a=open();opened.push(a);await wait(()=>a.ui.result()&&!a.ui.isRunning(),'initial solve');
+ const toolRows=a.w.document.querySelectorAll('#app .wing-quick-tools > .wing-tool-row');assert.equal(toolRows.length,2,'tools occupy exactly two rows');assert.ok(toolRows[1].contains(a.$('#wingInputHelp')),'Help is in the second row');assert.equal(a.w.document.querySelectorAll('#app .wing-quick-tools > p').length,0,'no explanatory paragraphs remain below the two tool rows');assert.ok(a.$('#wingInputHelp').contains(a.$('#wingSessionStatus')),'browser backup information stays available in Help');
  assert.ok(a.$('[data-wing-action="open-json"]'));assert.ok(a.$('[data-wing-action="save-json"]'));
  let chooser=0;a.$('#wingStudyFiles .wio-open input').click=()=>chooser++;
  a.$('#inputsBtn').click();const inputMode=a.$('#app').className;

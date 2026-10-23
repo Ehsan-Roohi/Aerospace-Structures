@@ -51,6 +51,7 @@ try{
  // even before a blur/change event, are the user's authoritative input.
  const enter=open();enter.$('wgtSweep').value='13.5';enter.$('wgtSweep').dispatchEvent(new enter.w.Event('input',{bubbles:true}));enter.$('wgtSweep').dispatchEvent(new enter.w.KeyboardEvent('keydown',{key:'Enter',bubbles:true}));enter.ui.form.requestSubmit();eq(enter.state().sweepDeg,13.5,'Enter applies the value that is visibly typed');eq(enter.count(),1);
  const dims=open({rootChord:160,tipChord:100,rodFractions:[.3],modules:3});
+ const concise=open({rootChord:120,tipChord:72});eq(concise.$('wgtPlanformPreview').querySelector('svg text').textContent,'Root → tip · λ = 0.600','planform caption omits the redundant chord calculation');
  const input=(id,value)=>{dims.$(id).value=String(value);dims.$(id).dispatchEvent(new dims.w.Event('input',{bubbles:true}));};
  input('wgtRootChord',120);eq(dims.$('wgtTaper').value,'0.83333333');input('wgtTaper',.5);eq(dims.$('wgtTipChord').value,'60');dims.submit();eq(dims.state().rootChord,120);eq(dims.state().tipChord,60);ok(!E.analysisCapability(dims.state(),E.DEFAULT_ASSEMBLY).requires3D,'uniform NACA4 picker does not upgrade a legacy rod geometry');ok(dims.d.querySelector('#wgtPlanformPreview svg').getAttribute('aria-label').includes('tip chord 60'));
  const dimBefore=dims.raw();input('wgtTaper',1.2);dims.submit();eq(dims.raw(),dimBefore,'invalid taper is atomic');dims.ui.refresh();input('wgtTipChord',90);eq(dims.$('wgtTaper').value,'0.75');dims.submit();eq(dims.state().tipChord,90);

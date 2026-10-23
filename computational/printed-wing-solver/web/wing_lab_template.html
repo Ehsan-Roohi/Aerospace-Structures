@@ -259,6 +259,33 @@ td.num { font-family: var(--font-data); font-variant-numeric: tabular-nums; text
 .run[data-pending="true"] { box-shadow: 0 0 0 4px var(--accent-soft); }
 .wl-auto { grid-column: 1 / -1; display: flex; align-items: center; gap: 8px; margin: 0; font-size: 13px; color: var(--muted); }
 .wl-auto input { width: 18px; height: 18px; accent-color: var(--accent); flex: none; }
+/* Compact printed-wing command bar: full diagnostic text is available on demand. */
+#app > .bar { align-items: center; gap: 8px 12px; }
+#app.wing-workspace > .bar > .wl-run { position: relative; padding: 0; gap: 5px 10px; flex: 1 1 330px; max-width: 390px; }
+#app .wing-project-name { display: flex; align-items: center; gap: 6px; margin-top: 4px; }
+#app .wing-project-name input { min-height: 30px; height: 30px; width: 170px; padding: 3px 7px; font-size: 13px; }
+#app > .bar .wl-run-actions { flex-wrap: nowrap; }
+#app > .bar .wl-run .run { height: 40px; min-height: 40px; }
+#app > .bar .wl-run .btn { min-height: 40px; }
+#app .wing-status-line { display: flex; align-items: baseline; gap: 6px; min-width: 0; }
+#app #statePreview { font-size: 12px; line-height: 1.3; }
+#app .wing-status-details { flex: none; }
+#app .wing-status-details > summary { cursor: pointer; font-size: 12px; color: var(--accent); border-radius: 4px; padding: 3px 0; }
+#app .wing-status-details > .wing-status-popover { position: absolute; right: 0; top: calc(100% + 7px); z-index: 120; width: min(390px, calc(100vw - 32px)); max-height: 45dvh; overflow: auto; padding: 12px 14px; border: 1px solid var(--line); border-radius: 9px; background: var(--panel); color: var(--fg); box-shadow: var(--shadow); font-size: 13px; line-height: 1.45; }
+#app > .bar .wl-auto { font-size: 12px; gap: 6px; }
+#app.wing-workspace:not(.learning-view) { grid-template-areas: "bar bar" "quick quick" "side view" "side dock"; }
+#app.wing-workspace.learning-view { grid-template-areas: "bar" "quick" "view" "dock"; }
+#app .wing-quick-tools { display: grid; gap: 5px; padding: 8px 10px; }
+#app .wing-tool-row { display: flex; align-items: center; gap: 6px; min-width: 0; overflow-x: auto; padding: 2px 0; }
+#app .wing-tool-row > * { flex-shrink: 0; }
+#app .wing-tool-row .btn { padding: 6px 10px; font-size: 13px; min-height: 38px; }
+#app .wing-tool-row .wing-history-tools { margin-left: auto !important; }
+#app .wing-selection-feedback { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--accent); }
+#app .wing-quick-tools .wing-quick-hint { display: none; }
+#app .wing-help-content { position: fixed; }
+#app .wing-experiments[open] > div { position: fixed; overflow: auto; }
+#app #wingInputHelp { position: sticky; right: 0; background: var(--panel); z-index: 2; }
+@media (max-width: 1100px) { #app.wing-workspace > .bar > .wl-run { max-width: none; } #app.wing-workspace:not(.learning-view) { grid-template-areas: "bar" "quick" "view" "dock"; } #app .wing-tool-row .btn { min-height: 44px; } }
 .wl-modelnote { margin: 0; padding: 10px 14px; font-size: 12px; line-height: 1.45; color: var(--muted); border-bottom: 1px solid var(--line); }
 .wl-gate { margin: 0; padding: 10px 14px; border-bottom: 1px solid var(--line); background: color-mix(in srgb, var(--warn) 12%, var(--panel)); font-size: 13px; line-height: 1.45; }
 .wl-gate p { margin: 0 0 6px; } .wl-gate-list { margin: 4px 0 8px; padding: 0; list-style: none; display: grid; gap: 4px; }
@@ -401,7 +428,7 @@ body { margin: 0; }
   <header class="bar panel" aria-label="Commands">
     <div class="brand">
       <svg viewBox="0 0 76 44" aria-hidden="true"><path d="M3 24 C 12 8, 40 6, 73 21 L 73 23 C 40 30, 14 32, 3 24 Z" fill="none" stroke="currentColor" stroke-width="3"/><circle cx="24" cy="21" r="3.2" fill="currentColor"/><circle cx="46" cy="21" r="3.2" fill="currentColor"/></svg>
-      <div><b id="wingProjectTitle">Wing Virtual Lab</b><small>MIE 446 · Aerospace Structures · v1.3</small><label class="wing-project-name" for="wingProjectName">Project name<input id="wingProjectName" type="text" maxlength="80" placeholder="Name your wing project" autocomplete="off"></label></div>
+      <div><b id="wingProjectTitle">Wing Virtual Lab</b><small>MIE 446 · Aerospace Structures · v1.3</small><label class="wing-project-name" for="wingProjectName"><span>Project</span><input id="wingProjectName" type="text" maxlength="80" placeholder="Project name" autocomplete="off"></label></div>
     </div>
     <div class="group"><span>Study</span>
       <div class="row">
@@ -422,9 +449,9 @@ body { margin: 0; }
 
   <aside class="wl-side panel" id="wingSide" aria-label="Wing inputs">
     <div class="wl-run">
-      <div class="wl-status" role="status" aria-live="polite"><span class="chip idle" id="stateChip">Starting</span><span id="stateText">Loading the solver</span></div>
+      <div class="wl-status"><div role="status" aria-live="polite"><span class="chip idle" id="stateChip">Starting</span><div class="wing-status-line"><span id="statePreview">Loading solver…</span><details class="wing-status-details" id="wingStatusDetails"><summary aria-label="Full solver status and warning details">Details</summary><div class="wing-status-popover"><span id="stateText">Loading the solver</span></div></details></div></div></div>
       <div class="wl-run-actions"><button class="run" id="runBtn" type="button"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M4 2 L14 8 L4 14 Z" fill="currentColor"/></svg>Solve</button></div>
-      <label class="wl-auto"><input type="checkbox" id="wingAutoSolve"> Solve automatically after each valid change</label>
+      <label class="wl-auto" title="Solve automatically after each valid change"><input type="checkbox" id="wingAutoSolve"> Auto-solve</label>
     </div>
     <div id="wingImportGate" class="wl-gate" role="region" aria-label="Imported outer geometry: structural inputs to confirm" hidden></div>
     <p class="wl-modelnote" id="wingModelNote"><b>Generic browser study model.</b> Edits change this app's analysis and 3-D view. They do not update existing printable CAD/STL or the approved fabrication layout automatically. Use Export to notebook to generate and validate new CAD. Presets are historical / course starting points.</p>
@@ -772,6 +799,7 @@ body { margin: 0; }
       S.secY=Math.min(S.secY,S.geometry.semiSpan);S.clipY=Math.min(S.clipY,S.geometry.semiSpan);$('#secY').value=S.secY;$('#clipIn').value=S.clipY;
       edited();renderImportGate();renderInputs(true);renderPM();editor?.refresh();
       $('#stateText').textContent=(delta<0?'Undo':'Redo')+' restored the wing inputs. '+(gateOpen()?'Confirm the imported structural inputs before solving.':autoSolve?'Automatic solving will update the results.':'Press Solve to update results.');
+      syncCompactStatus();
     }finally{historySuspended--;syncWingHistory();saveWingSession();}
   }
 
@@ -1355,7 +1383,14 @@ body { margin: 0; }
     if (autoSolve) runTimer = setTimeout(runStudy, 300);
   }
   let reportBlocked = false;
-  function setStatus(text) {
+  function syncCompactStatus(customText) {
+    const chip=$('#stateChip'),preview=$('#statePreview');if(!preview)return;
+    const label=chip.textContent,full=$('#stateText').textContent;
+    preview.textContent=customText?'See status details.':label==='Linear range exceeded'?'Illustrative only · reduce loads.':label==='Input error'?'Check input details.':label==='Analysis blocked'?'Confirm imported structure.':label==='Empty study'?'Choose Airfoil & planform.':label==='Out of date'?'Press Solve to update.':label==='Solving'?'Computing…':/no load/i.test(full)?'No loads applied.':label==='Solved · 3-D beam'?'Nominal beam results.':/, exceeded/.test(full)?'Strength check exceeded.':'Results match inputs.';
+    chip.title=full;
+  }
+  function setStatus(text) { renderStatus(text);syncCompactStatus(text); }
+  function renderStatus(text) {
     syncWingHistory();
     const chip = $("#stateChip"), t = $("#stateText"), btn = $("#runBtn");
     btn.disabled=!!S.emptyStudy;
@@ -3040,7 +3075,7 @@ body { margin: 0; }
   }
   function exportToNotebook(){
     // Download/manufacturing messages must not become solver input errors.
-    const note=message=>{filesNote(message);$('#stateText').textContent=message;};
+    const note=message=>{filesNote(message);$('#stateText').textContent=message;syncCompactStatus(message);};
     if(S.emptyStudy){note('Create a wing first: choose Airfoil & planform and Apply geometry.');return;}
     if(gateOpen()){note(blockedText);return;}
     if(!R||stale||running||inputError){note('Solve the current valid design before exporting to the notebook.');return;}
@@ -3170,7 +3205,7 @@ body { margin: 0; }
   }
   if(typeof WingWorkspaceUI!=='undefined'){
     printedWorkspace=WingWorkspaceUI.create({app:$('#app'),canvas,viewPanel:$('#wingViewPanel'),sample:samplePrintedSurface,onClose:node=>{if(node.id==='wingStudyFiles')studyFiles?.cancel();},actions:[
-      {id:'select-wing',label:'Select wing',run:()=>{}},
+      {id:'select-wing',label:'Select wing',run:()=>printedWorkspace?.close()},
       {id:'load',label:'+ Load',run:openWingLoadPopup},{id:'rib',label:'+ Rib',run:(p,a)=>openWingPartPopup('rib',p,a)},
       {id:'rod',label:'+ Rod',run:(p,a)=>openWingPartPopup('rod',p,a)},{id:'spar',label:'+ Spar',run:(p,a)=>openWingPartPopup('spar',p,a)},
       {id:'parts',label:'Select / edit parts',run:(p,a)=>{printedWorkspace.open('Ribs & spars',$('#wingPartEditor'),a);if(!partPick)$('#wpPick').click();}},
@@ -3193,6 +3228,9 @@ body { margin: 0; }
     const sparResults=$('#wingSparResults');$('#tab-checks').prepend(sparResults);
     // Inputs and lessons live above/beside the model, never in its results dock.
     $('#app > .bar').append($('#wingSide .wl-run'));
+    const statusDetails=$('#wingStatusDetails');
+    document.addEventListener('pointerdown',e=>{if(!statusDetails.contains(e.target))statusDetails.open=false;});
+    statusDetails.addEventListener('keydown',e=>{if(e.key==='Escape'){statusDetails.open=false;statusDetails.querySelector('summary').focus();e.stopPropagation();}});
     $('#app .wl-run-actions').append(clearButton);
     const quickClear=clearButton.cloneNode(true);quickClear.id='wingQuickClear';quickClear.onclick=e=>requestClearWingStudy(null,e.currentTarget);printedWorkspace.tools.prepend(quickClear);
     const projectInput=$('#wingProjectName');
@@ -3215,9 +3253,17 @@ body { margin: 0; }
     const help=el('details',{class:'wing-input-help',id:'wingInputHelp'},'<summary class="btn">Help ▾</summary><div class="wing-help-content"></div>'),helpBody=help.querySelector('div');
     const modelHelp=el('details',{},'<summary>Model &amp; manufacturing limits</summary>');modelHelp.append($('#wingModelNote'));helpBody.append(modelHelp);
     const historyHelp=el('details',{class:'wing-history-help'},'<summary>Undo / Redo</summary><p class="note">Undo/Redo restores up to 100 saved input states, including geometry, project name, materials, loads and the cleared canvas. A new edit clears Redo. Outside text fields use Ctrl/Cmd+Z, Ctrl/Cmd+Shift+Z or Ctrl+Y. Restored inputs need Solve unless automatic solving is enabled. History is kept for this page session, not saved in JSON.</p>');helpBody.append(historyHelp);
-    helpBody.append(el('details',{},'<summary>Selection &amp; clearing</summary><p class="note">Click visible parts to edit them. To select the entire wing, choose Select wing and drag a rectangle around it, or use Ctrl/Cmd+A outside text fields. Delete opens Clear confirmation. Esc cancels selection. New / Clear is beside Solve; Undo restores your previous inputs. Normal dragging rotates the view.</p>'));
+    helpBody.append(el('details',{},'<summary>Selection &amp; clearing</summary><p class="note">Click visible parts to edit them. To select the entire wing, click Select wing, or use Ctrl/Cmd+A outside text fields. An outline and Delete selected button confirm the selection. You can also drag a rectangle around the whole wing. Delete selected or the Delete key opens Clear confirmation. Esc cancels selection. New / Clear is beside Solve; Undo restores your previous inputs. Normal dragging rotates the view.</p>'));
     const example=el('button',{class:'btn',type:'button',id:'wgCourseExample'},'Optional course wing example');example.onclick=()=>{if(confirm('Replace the current wing with the course example? Geometry, materials and connections will reset, and applied loads will be cleared.'))window.dispatchEvent(new CustomEvent('wing-learning-stage',{detail:'project'}));};helpBody.append(example);
     printedWorkspace.tools.insertBefore(help,printedWorkspace.tools.querySelector('.wing-quick-hint'));
+    const usageHelp=el('details',{},'<summary>Mouse, touch &amp; browser backup</summary>'),quickHint=printedWorkspace.tools.querySelector('.wing-quick-hint');
+    quickHint.classList.remove('wing-quick-hint');usageHelp.append(quickHint,sessionStatus);helpBody.append(usageHelp);
+    const primaryTools=el('div',{class:'wing-tool-row','aria-label':'Create and edit wing'}),secondaryTools=el('div',{class:'wing-tool-row','aria-label':'Files, view and help'});
+    const primaryActions=new Set(['clear','select-wing','load','rib','rod','spar','parts','structure','materials','geometry']);
+    for(const node of [...printedWorkspace.tools.children]){if(node.classList.contains('wing-quick-hint'))continue;(primaryActions.has(node.dataset.wingAction)||node.classList.contains('wing-selection-feedback')?primaryTools:secondaryTools).append(node);}
+    printedWorkspace.tools.prepend(primaryTools,secondaryTools);
+    const positionToolMenu=(menu,body,size)=>{if(!menu.open)return;const r=menu.querySelector('summary').getBoundingClientRect(),width=Math.min(size,window.innerWidth-24);body.style.left=Math.max(8,Math.min(r.right-width,window.innerWidth-width-12))+'px';body.style.right='auto';body.style.top=Math.min(r.bottom+6,Math.max(8,window.innerHeight-200))+'px';body.style.maxHeight=Math.max(120,window.innerHeight-parseFloat(body.style.top)-12)+'px';};
+    for(const [menu,body,width]of [[help,helpBody,390],[experiments,experiments.querySelector('div'),240]]){const position=()=>positionToolMenu(menu,body,width);menu.addEventListener('toggle',position);window.addEventListener('resize',position);window.addEventListener('scroll',position,true);document.addEventListener('pointerdown',e=>{if(!menu.contains(e.target))menu.open=false;});menu.addEventListener('keydown',e=>{if(e.key==='Escape'){menu.open=false;menu.querySelector('summary').focus();e.stopPropagation();}});}
     const uiStyle=el('style',{},'.wing-project-name{display:grid;gap:3px;font-size:11px;color:var(--muted);margin-top:6px}.wing-project-name input{min-height:36px;width:min(230px,100%);font-size:15px;padding:5px 8px;background:var(--panel-2);color:var(--fg);border:1px solid var(--line);border-radius:7px}#wingProjectTitle{display:block;max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.wing-airfoil-launch{display:grid;gap:5px;text-align:left;width:100%;margin:8px 0 12px}.wing-airfoil-launch span{font-size:12px;font-weight:400;white-space:normal}.wing-input-help{position:relative;margin-left:8px}.wing-help-content{position:absolute;right:0;top:100%;z-index:110;background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:12px;padding:14px;width:min(390px,calc(100vw - 24px));max-height:65dvh;overflow:auto;box-shadow:0 12px 32px #102d4f30}.wing-help-content details{padding:9px 0}.wing-help-content summary{cursor:pointer;font-weight:700}.wing-help-content .wl-modelnote{padding:8px 0;border:0}@media(max-width:600px){.wing-help-content{position:fixed;right:10px;top:100px}.wing-project-name input{min-height:44px}}');document.head.append(uiStyle);
     renderInputs(true);
     document.addEventListener('keydown',e=>{if($('#app').hidden||!(e.ctrlKey||e.metaKey)||e.altKey||e.target.closest('input,textarea,select,[contenteditable],[role="textbox"]'))return;const key=e.key.toLowerCase();if(key==='z'||key==='y'){e.preventDefault();travelWingHistory(key==='y'||e.shiftKey?1:-1);}});

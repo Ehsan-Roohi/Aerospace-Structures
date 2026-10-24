@@ -13,7 +13,11 @@ Assume your wing belongs to an aircraft with a total mass of 200 g in steady, le
 
 For a simple starting geometry, use NACA 2412 at the root and NACA 0012 at the tip (root eta = 0, tip eta = 1), taper ratio 0.7 (tip chord = 0.7 × root chord), zero sweep, zero dihedral and zero incidence. These are suggested starting choices; the airfoils do not automatically determine the applied lift in Wing Lab.
 
-Compare three layouts under the same upward distributed load totalling 1 N: no spar, one full-span bonded spar at 25% chord, and the same spar at 40% chord, keeping all other inputs unchanged. Record mass, tip displacement, tip twist and maximum nominal stress for each, then briefly justify your choice and build only the selected design after the CAD and print checks.
+Compare three layouts under the same upward distributed load totalling 1 N: 
+no spar, 
+one full-span bonded spar at 25% chord, 
+and the same spar at 40% chord, keeping all other inputs unchanged. 
+Record mass, tip displacement, tip twist and maximum nominal stress for each, then briefly justify your choice and build only the selected design after the CAD and print checks.
 
 In your saved Colab notebook, click **+ Text** and title the cell **Design basis**. Write a few sentences answering: Why did you choose this wing? What force did you apply, where, in which direction, and why? Give the value and unit (N for a point force; N/mm for a line load). What result are you aiming for, such as a maximum tip displacement? Does your result meet that target? Add one screenshot of the load and result. Ask the instructor if you need help choosing a reasonable load or target.
 

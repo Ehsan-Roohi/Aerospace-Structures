@@ -26,6 +26,8 @@ Open the [current Code-to-Print notebook](https://colab.research.google.com/gith
 
 Follow the [notebook steps PDF](docs/MIE446_Wing_Notebook_Steps.pdf). Select **Wing Lab JSON** and **Final Wing**, enter your team/revision, and upload the JSON from **Export to notebook**. The uploaded file supplies the geometry; do not rebuild the design in the notebook's manual geometry fields.
 
+For a complete example with screenshots, open the [simple wing walkthrough PDF](docs/MIE446_Simple_Wing_Walkthrough.pdf). It follows a small one-piece wing from Wing Lab through JSON import, notebook CAD checks and STL export. Use it to learn the workflow, then apply your own design basis and load case.
+
 If your wing uses external rods, enter your **completed coupon test record**. Keep its revision, rod diameter, clearance and fit result; the final-wing revision must be different. Ask staff to review any changed rod or print process. A wing without external rods does not need that record. Do not start another Coupon Only run for an unchanged, already tested interface.
 
 Run the preview, build and export cells. Save the final verified ZIP containing the STL files and design records. **JSON transfers the design; STL is the geometry you open in OrcaSlicer.**

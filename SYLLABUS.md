@@ -1,436 +1,138 @@
 # MIE 446 Aerospace Structures
 
-**Fall 2026 · Student syllabus · Revised September 26, 2026**
+University of Massachusetts Amherst | Fall 2026 | Updated October 23, 2026
 
-[Course home](README.md) · [Download Word syllabus](docs/MIE_446_Aerospace_Structures_Fall_2026_Syllabus_Updated.docx) · [Lecture notebooks](notebooks/README.md) · [Project guide](PROJECT.md) · [Homework checklist](ASSIGNMENTS.md)
+## Course information
 
-> Web edition of the current course syllabus, revised September 26, 2026. Canvas carries authoritative announcements, deadline changes, submissions and private access details. The dated schedule below is the syllabus schedule; confirm event logistics in Canvas.
-
-## Contents
-
-- [Purpose and learning outcomes](#1-purpose-scope-and-learning-outcomes)
-- [People, communication and resources](#2-people-communication-and-resources)
-- [Assessment and evidence of learning](#3-assessment-and-evidence-of-learning)
-- [Project brief and grading](#4-project-brief--code-to-print-wing--fabrication-machine-vision-inspection-and-damage-diagnostics)
-- [Project workflow and deliverables](#5-project-workflow-and-deliverables)
-- [Fabrication requirements](#6-elab-fabrication-requirements)
-- [Weekly schedule and homework map](#7-weekly-schedule--fall-2026)
-- [Course policies](#8-course-policies)
-- [AI statement](#ai-statement-learning-and-engineering-judgment-in-the-age-of-ai)
-- [University support and required statements](#9-university-support-and-required-statements)
-
-| Course information | Fall 2026 |
+| Item | Details |
 | --- | --- |
-| Credits / mode | 3 credits • In person • 2.5 scheduled contact hours per week |
-| Meetings | Tuesday & Thursday, 11:30 a.m.–12:45 p.m. |
-| Classroom | Engineering Laboratory (ELAB), Room 323 |
-| Instructor | Dr. Ehsan Roohi Golkhatmi • roohie@umass.edu |
-| Office | Gunness Laboratory, Room 1 • appointment hours posted in Canvas; additional times by appointment |
-| Prerequisite | MIE 313 — Design of Mechanical Components |
-| Course site | Canvas is the authoritative source for announcements and submissions |
+| Credits and format | 3 credits, in person |
+| Class | Tuesday and Thursday, 11:30 a.m. to 12:45 p.m., ELAB 323 |
+| Instructor | Dr. Ehsan Roohi Golkhatmi, roohie@umass.edu |
+| Office | Gunness Laboratory, Room 1; if unavailable there, check Room 5 |
+| Office hours | Friday, 10:00 a.m. to noon; other times by appointment |
+| Teaching assistants | Ava Towfigh (atowfigh@umass.edu) and Lev Kudriavtsev (lkudriavtsev@umass.edu); hours in Canvas |
+| Prerequisite | MIE 313, Design of Mechanical Components |
 
-## Course at a glance
+Start in [Canvas Modules](https://umamherst.instructure.com/courses/37837/modules). Each lecture links to its notebook and relevant software. Canvas provides assignment instructions, submission links, deadlines, announcements and grades. GitHub hosts the course files and browser tools. Use the deadline shown on the Canvas assignment, rather than a date in an older downloaded file.
 
-Aerospace structures are light because they must fly, yet they must safely carry bending, shear, torsion, landing, and maneuver loads. This course connects those loads to mechanics models and to a buildable wing. The opening bridge introduces airfoils and finite wings for students who have not taken an aerospace course; the remainder develops the structural tools needed to analyze a wing and the design-for-manufacture skills needed to code, print, inspect, and communicate a physical build.
+## What you will learn
 
-### Signature experience
+This course connects aircraft loads to structural mechanics and the design of a small printed wing. By the end of the course, you should be able to:
 
-Teams of three will use instructor-provided code to generate a small parametric wing, verify its geometry, export printable components, and produce a documented physical build. After assembly, every team will complete an unloaded, non-contact inspection with the shared Jetson-camera station and analyze a supervised structural-health-monitoring demonstration performed on a separate sacrificial specimen. Teams will be evaluated through reproducible configuration and verification, calibrated manual/vision measurements, annotated images and data logs, print and assembly quality, interpretation of before/after damage evidence, uncertainty, revision history, and technical defense.
+- Draw free-body diagrams and trace loads through skins, ribs, spars and supports.
+- Calculate reactions, internal forces, stress, strain and beam deflection.
+- Use stress transformation, virtual work and energy methods to solve structural problems.
+- Explain maneuver loads and the behavior of thin-walled wing sections in bending, shear and torsion.
+- Compare hand calculations with software, checking units, equilibrium, boundary conditions and model limits.
+- Design and manufacture a wing, document the results, and explain your own contribution.
 
-### Central question: What makes an engineering answer trustworthy?
+## Materials and software
 
-Course commitment. AI can generate equations, code, plots, and polished explanations, but a correct-looking answer is not enough. Students will learn to frame the physical problem, trace the load path, predict behavior, select and justify a model, audit human/computational/AI results, interpret evidence, and defend a safe decision. Analytical work builds the internal physical model needed to supervise tools. Students - not tools - own the judgment, teamwork, physical evidence, and consequences.
+No textbook purchase is required. Readings and worked examples are linked in Canvas. Megson's *Aircraft Structures for Engineering Students* and a mechanics-of-materials text are useful references.
 
-## 1. Purpose, scope, and learning outcomes
+| Resource | Use |
+| --- | --- |
+| [Lecture notebooks](https://github.com/Ehsan-Roohi/Aerospace-Structures/blob/main/notebooks/README.md) | Read explanations, follow examples and run the assigned cells in Google Colab |
+| [Beam Lab](https://ehsan-roohi.github.io/Aerospace-Structures/wing-lab.html#beam) | Compare support reactions, stress and deflection with hand solutions |
+| [Truss Lab](https://ehsan-roohi.github.io/Aerospace-Structures/truss-lab.html) | Study nodes, members, supports and forces |
+| [Wing Lab](https://ehsan-roohi.github.io/Aerospace-Structures/wing-lab.html#wing) | Design and analyse your project wing; save and export JSON |
+| [Code-to-Print notebook](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/v1.3.1/notebooks/MIE446_Code_to_Print_Wing.ipynb) | Import Wing Lab JSON and generate CAD/STL files |
+| OrcaSlicer | Review the STL and prepare the print with the staff-approved printer profile |
 
-### Course description
+Save your own Colab copy in Drive. Course consumables are supplied; obtain approval before buying or substituting materials.
 
-The course surveys classical structural mechanics in an aerospace setting. Topics include aircraft forces and airfoil/wing geometry; internal loads and load paths; stress and strain in two and three dimensions; elasticity assumptions; beam bending and deflection; energy methods and virtual work; aircraft maneuver and landing loads; V-n diagrams; structural idealization; and shear flow, torsion, and shear center in thin-walled wing structures. The course follows a physics-centered approach: computational or AI output is treated as a claim to be validated against governing physics, transparent analytical baselines, known cases, and physical evidence.
+## Assessment
 
-### Learning outcomes
+| Component | Course weight |
+| --- | --- |
+| Homework 1-6 | 6 x 8.75% = 52.5% |
+| Numerical project, equivalent to two homework units | 17.5% |
+| Team wing project | 30% |
+| Total | 100% |
 
-- Trace aerodynamic, inertial, and support loads through an aerospace structure and construct defensible free-body diagrams and load paths.
+There is no midterm or final examination. The homework and numerical project together account for 70% of the course grade.
 
-- Predict signs, trends, deformation shapes, relative magnitudes, critical locations, and likely failure modes before detailed calculation.
+Follow the submission requirements in each released assignment. Show readable calculations, units, assumptions and checks. Include the short slide and AI/process note when the assignment requests them. **HW 3 requires one PDF containing the three analytical beam solutions and software comparisons; no additional slide or supporting files are required.** Collaboration and individual/team submission rules are stated in each assignment.
 
-- Select and justify analytical idealizations; state assumptions, governing relationships, boundary conditions, and limits of validity.
+The course includes six homework sets. Instructions and deadlines for each set are posted in Canvas.
 
-- Compute stress transformations, principal stresses, beam stresses and deflections, strain energy, and selected redundant reactions.
+### Wing project
 
-- Construct and interpret shear-force, bending-moment, torque, and V-n diagrams; analyze idealized and thin-walled wing sections.
+Your team has already made the fit coupon. Now design your own semi-wing in Wing Lab, analyse a stated load, generate the print files in the notebook, and build it. You do not need to write the CAD code from scratch.
 
-- Use and explain instructor-provided parametric and measurement code, apply additive-manufacturing constraints, fabricate a wing, and document dimensional compliance, interface fit, machine-vision inspection, print quality, and assembly readiness.
+1. Choose your airfoil, dimensions, ribs and reinforcement. State why you chose the design, the applied force with units, location and direction, and your target result. Include the analysis and a screenshot in a short **Design basis** text cell in your saved notebook.
+2. Save an editable JSON and use **Export to notebook** for the transfer file. Import it into Code-to-Print and check the generated geometry and STL package.
+3. Review every layer in OrcaSlicer, obtain staff approval, then print and assemble. Our printer envelope is **300 x 300 x 300 mm**. Use one piece only if the actual CAD fits; otherwise use two or three modules. Final plastic mass must be at or below **300 g**.
+4. Submit one team ZIP with the transfer JSON, completed notebook, original final notebook ZIP, OrcaSlicer project, photographs, dimensions, mass and applicable fit record. Each student separately completes the teammate evaluation form.
 
-- Audit human-, computational-, and AI-generated results using dimensions, equilibrium, boundary and limiting cases, independent estimates, sensitivity, and physical evidence; diagnose plausible errors and their consequences.
+| Project component | Points out of 100 |
+| --- | --- |
+| Design and analysis | 40 |
+| Manufacturing and completed wing | 50 |
+| Individual teammate evaluation | 10 |
 
-- Translate results, uncertainty, and model limitations into a defensible engineering decision and transfer the reasoning to an unfamiliar case.
+The design-and-build submission is due **Monday, November 2, 2026, at 11:59 p.m.** See the [Canvas project assignment](https://umamherst.instructure.com/courses/37837/assignments/898213) for the submission and individual evaluation links. The [project guide](https://github.com/Ehsan-Roohi/Aerospace-Structures/blob/main/PROJECT.md) and [illustrated walkthrough](https://github.com/Ehsan-Roohi/Aerospace-Structures/blob/main/docs/MIE446_Simple_Wing_Walkthrough.pdf) explain the workflow. Additional activities and their deliverables will be assigned in Canvas.
 
-- Communicate and defend reasoning clearly; collaborate with empathy and professional responsibility; seek feedback, revise, and identify what must be learned next.
-
-### Learning sequence
-
-| Phase | What students learn | Evidence |
-| --- | --- | --- |
-| Aero bridge | NACA exercise; prediction-before-calculation; checked load map | NACA coding exercise; load map |
-| Mechanics core | HW 1-5 judgment records; worked/AI-solution audit; midterm | HW 1–5; midterm |
-| Wing structures | HW 6; analytical baseline; validated code; design reviews | HW 6; design reviews |
-| Build–inspect–learn | Parametric geometry, slicing, fabrication, calibrated manual/machine-vision inspection, and shared damage diagnostics | Configured code, wing, print log, annotated inspection image/CSV, diagnostic analysis, report, presentation |
-
-### The engineering reasoning cycle
-
-1. Frame: define the system, loads, constraints, boundary conditions, quantities of interest, and question  2. Predict: state signs, trends, shapes, order of magnitude, critical locations, and possible failure before calculating  3. Model: choose the idealization, governing equations, assumptions, and domain of validity
-
-4. Solve: show a transparent analytical path and use computation or AI only when permitted  5. Audit: test units, equilibrium, boundary/limiting cases, sensitivity, and an independent estimate or physical benchmark  6. Explain and decide: interpret the result, state confidence and limitations, defend a recommendation, and transfer the reasoning
-
-Shared evidence language: Claim - Evidence - Check - Confidence - Limitation. A correct numerical answer without a defensible model, physical interpretation, and independent verification earns limited credit.
-
-A typical class begins with a short no-calculation prediction, develops a focused concept or derivation, asks students to critique a worked or AI-generated candidate solution, and then moves into guided analysis or design. The closing question is: What could make this result wrong?
-
-### Human capabilities in an AI-rich world
-
-Class time is intentionally organized around doing, explaining, questioning, building, and reflecting. The following capabilities are explicit course outcomes, not incidental benefits:
-
-Teamwork: Three-person teams rotate roles, review work, resolve interfaces, and share accountability.
-
-Hands-on experience: Students fabricate, inspect, and document a physical wing instead of stopping at a digital answer.
-
-Creativity: Teams generate and compare design alternatives within real load, mass, material, and printer constraints.
-
-Empathy: Students listen, share work fairly, account for access and safety needs, and recognize how engineering choices affect people.
-
-Human communication: Briefs, oral checks, peer critique, guest interaction, and the final defense require clear, respectful dialogue.
-
-Critical thinking: Students challenge assumptions, verify code and AI output, compare methods, and reconcile analytical expectations with geometry, slicer evidence, and the completed build.
-
-Lifelong learning: Students document debugging, seek feedback, revise after failure, and identify what they need to learn next.
-
-## 2. People, communication, and resources
-
-| Role | Name | Email | Availability |
-| --- | --- | --- | --- |
-| Instructor | Dr. Ehsan Roohi Golkhatmi | roohie@umass.edu | Gunness 1; hours in Canvas |
-| Undergraduate teaching assistant | Ava Towfigh | atowfigh@umass.edu | Hours in Canvas |
-| Undergraduate teaching assistant | Lev Kudriavtsev | lkudriavtsev@umass.edu | Hours in Canvas |
-
-Technical questions are best handled in class or office hours. Send grading and accommodation questions to the instructor, not to the full class. Allow two business days for email responses.
-
-### Required and optional resources
-
-- Canvas: announcements, due dates, starter code, submission links, printer sign-ups, and grades.
-
-- Python 3 with the instructor starter environment (Jupyter + CadQuery). OpenSCAD may be used only with prior approval because the supported workflow is Python/CadQuery.
-
-- OrcaSlicer with the validated Creality K2 Pro / 0.4 mm course profile supplied by the instructional team; a laptop capable of running the course environment.
-
-- No required textbook. Selected readings and examples will be posted in Canvas. Useful references include T. H. G. Megson, Aircraft Structures for Engineering Students, and a standard mechanics-of-materials text.
-
-- Project consumables are supplied by the course. Students should not buy structural or printer materials unless the instructor gives written approval.
-
-### Guest learning events
-
-| Date | Speaker | Plan |
-| --- | --- | --- |
-| Fri., Sept. 25 (outside class) | Dr. Avshalom Manela, Technion — Associate Professor and Vice Dean for Teaching; research in rarefied-gas dynamics, small-scale flows, heat/mass transfer, aeroacoustics, and fluid–structure interaction. | Optional research seminar; final time, title, and room will be announced in Canvas. Pizza lunch afterward. Attendance/reflection may earn the published extra credit. |
-| Thu., Oct. 29 11:30–12:45 ELAB 323 | Dr. Michael Tsay, Vice President of Technology, Busek Co. Inc. | Intro to Electric Propulsion: Hall-effect thrusters and gridded ion engines; industry practice and pathways to internships/careers at Busek. This meeting replaces the regular lecture. |
-
-Speaker background: [Dr. Manela's Technion profile](https://aerospace.technion.ac.il/person/manela-avshalom/). Dr. Tsay will also discuss industry practice and pathways to internships and careers at Busek.
-
-#### Optional seminar extra credit
-
-The Sept. 25 event is outside class and optional. Attendance plus a 150-word technical reflection submitted within 48 hours earns up to 1.0 course percentage point. Students unable to attend may complete the same reflection using an instructor-provided recording or another pre-approved aerospace/industry seminar; this equal-access alternative earns identical credit.
-
-## 3. Assessment and evidence of learning
-
-| Component | Basis | Course weight |
-| --- | --- | --- |
-| Homework 1–6 | 6 × 8.75% | 52.5% |
-| Midterm examination | Equivalent to two homework units | 17.5% |
-| Team wing fabrication, inspection, diagnostics, report, and presentation | Milestones, instructor-provided code verification, fabrication, calibrated inspection, shared damage-data analysis, report, and presentation | 30.0% |
-| Total |  | 100% |
-
-There is one in-class midterm (Tuesday, Oct. 27) and no final examination. The university final-exam period may be used only if a formally approved make-up is required.
-
-### Homework portfolio: six substantial assignments
-
-Unless the assignment handout specifies otherwise, each homework submission is individual and contains four connected artifacts organized around the engineering reasoning cycle. **HW 3 requires only one PDF with the three analytical solutions and software comparisons; no additional artifacts are required.**
-
-1. Analytical solution plus an Engineering Judgment Record for one instructor-designated problem: frame the system and load path; record predictions made before calculation; justify the model, assumptions, boundary conditions, and validity; show readable derivations; and interpret the result.
-
-2. Verification and reproducibility package for that designated problem: provide at least two independent checks selected from dimensions, equilibrium, boundary or limiting cases, order of magnitude, sensitivity, an alternate method, or physical evidence. When code is assigned, include source/notebook and a short README.
-
-3. One-slide Claim-Evidence-Check brief (.pptx and exported .pdf): state the engineering claim, the model and most informative evidence, an independent check, confidence, and the most important limitation. The slide is a synthesis, not a screenshot collage.
-
-4. Process and AI note: identify tools used, what each contributed, material prompts or task descriptions, student changes, errors discovered, and how high-impact claims or code were verified. 'No generative AI used' is a valid statement.
-
-#### Judgment progression across the six homework assignments
-
-HW 1: read the structure and predict  HW 2: choose and justify the model  HW 3: verify independently  HW 4: audit and correct a polished but flawed AI-generated solution  HW 5: analyze sensitivity and design trade-offs  HW 6: reconcile hand analysis, code/AI-assisted analysis, project evidence, calibrated vision inspection, and shared damage-diagnostic data
-
-#### Why the one-slide brief is feasible in a class of about 65
-
-All students make the slide for every homework, but they do not all present every time. After each deadline, a preassigned rotation of about 10-11 students completes a 90-second explanation plus one short question during a 20-25 minute workshop block. Across six homeworks, every student completes one live oral check. Questions may ask for a key assumption, a prediction under a controlled change, or what would invalidate the result. The rotation will be published by Week 3. A short narrated recording is reserved for an approved absence or accessibility alternative; six required videos per student would create unnecessary workload.
-
-Homework rubric: engineering judgment record and transparent reasoning 40%; mechanics and numerical correctness 25%; independent verification or assigned AI audit 20%; one-slide communication 10%; reproducibility, attribution, and AI disclosure 5%. A correct final number with an unjustified model or failed independent checks earns limited credit. The oral check is a pass/revise authenticity gate.
-
-### Midterm
-
-The October 27 midterm is individual and closed to generative AI and unauthorized online assistance, but open to other permitted resources. It covers material taught through October 22; the detailed scope and practice problems will be posted in Canvas. It measures the internal understanding needed to supervise any analytical or AI tool, not algebraic speed alone. The intended balance is approximately 20% qualitative prediction/ranking/sketches; 25% framing, free-body diagrams, model choice, and assumptions; 25% concise analytical solution; 20% audit of a plausible but incorrect worked solution; and 10% interpretation, transfer, or design consequence. A formula sheet policy and sample format will be posted at least one week in advance.
+Keep the printed wing unloaded. The applied forces are computer-analysis cases; the model is not approved for flight. Use your completed physical coupon record when external rods are present; an unchanged tested interface does not need a new coupon run.
 
 ### Letter grades
 
-| Grade | % | Grade | % | Grade | % |
+| Grade | Percent | Grade | Percent | Grade | Percent |
 | --- | --- | --- | --- | --- | --- |
-| A | 93–100 | B− | 80–82.9 | D+ | 67–69.9 |
-| A− | 90–92.9 | C+ | 77–79.9 | D | 63–66.9 |
-| B+ | 87–89.9 | C | 73–76.9 | F | <63 |
-| B | 83–86.9 | C− | 70–72.9 |  |  |
+| A | 93-100 | B- | 80-82.9 | D+ | 67-69.9 |
+| A- | 90-92.9 | C+ | 77-79.9 | D | 63-66.9 |
+| B+ | 87-89.9 | C | 73-76.9 | F | Below 63 |
+| B | 83-86.9 | C- | 70-72.9 | | |
 
-UMass undergraduate grading does not use A+ or D−. Any end-of-term adjustment will be uniform and will never lower a student’s earned letter grade.
+UMass undergraduate grading does not use A+ or D-. Any end-of-term adjustment will be uniform and will not lower an earned letter grade.
 
-## 4. Project brief — Code-to-Print Wing — Fabrication, Machine-Vision Inspection, and Damage Diagnostics
+## Lecture topics
 
-**Design intent** — Build and verify one code-generated, non-flying wing; inspect the completed team wing without contact and without load using calibrated machine vision; and interpret a shared before/after-damage demonstration on a separate sacrificial wing-box specimen. Success requires traceable geometry, manufacturing evidence, measurement agreement and uncertainty, physically plausible diagnostic trends, and a defensible engineering decision.
+Each lecture includes worked examples and may span several class meetings.
 
-### Assigned project teams
-
-Three-person teams have already been assigned. The wing project begins in class on September 29. Roles rotate among geometry and verification, CAD and design for additive manufacturing, fabrication and documentation, and measurement and data interpretation. Every member must understand the complete workflow and answer individual technical questions. A confidential contribution record and peer check protect individual accountability.
-
-### Common design envelope
-
-| Constraint | Baseline requirement |
+| Unit | Topics |
 | --- | --- |
-| Artifact | One code-generated, non-flying wing demonstrator. Each team wing remains unloaded and undamaged; no propulsion, onboard electronics, controls, fuselage, flight activity, or force-to-failure test |
-| Geometry | One 450 mm semi-wing; 160 mm root chord; 100 mm tip chord; an instructor-approved NACA four-digit section. Full-wing quantities are mirrored-wing analytical equivalents. |
-| Construction | Two or three printed modules; shell and ribs; two course-issued 4 mm rods at x/c = 0.30 and 0.60. Any departure requires instructor approval before print release. |
-| Material budget | Up to 300 g regular PLA Pro per final wing, plus course-issued rods and supervised 5-minute epoxy when assigned |
-| Code | Instructor-provided Python/CadQuery wing-generation code plus supervised Python/OpenCV and data-acquisition workflows; teams configure inputs, run cleanly, verify outputs, explain the logic, and preserve a reproducible record |
-| Engineering checks | Units; planform metrics; bounding boxes; watertight solids; printable thickness; build-envelope/mass checks; camera calibration; manual-to-vision agreement; load-cell zero/sanity check; accelerometer sampling and frequency sanity check |
-| Build acceptance | Complete labeled modules; approved dimensions; dry-fit interfaces; aligned assembly; no major cracks, warping, separation, or missing features; manual and Jetson-camera evidence; complete archive |
-| Inspection and diagnostics | Required unloaded Jetson-camera inspection for every team wing. Shared instructor-led demonstration uses force, camera tip-deflection, acceleration, and microscope evidence on a sacrificial specimen before and after controlled damage. |
-| Evaluation | Understanding, reproducibility, traceability, print quality, fit, calibrated inspection, interpretation of diagnostic evidence, uncertainty, revision, communication, and individual defense—not a beauty contest |
+| Lecture 01 | Aircraft forces, airfoils and structural load paths |
+| Lecture 02 | Finite-wing geometry, distributed loads and root reactions |
+| Lecture 03 | Beam reactions, section properties, stress, strain, deflection and irregular beams |
+| Energy methods | Work, strain energy, axial loading, bending and torsion; worked examples |
+| Castigliano | Displacements, rotations, dummy loads and redundant reactions; worked examples |
+| Unit-load method | Real and unit-load systems, displacement and rotation, and compatibility for indeterminate structures |
+| Virtual work | Virtual work principles and applications to beams and trusses; indeterminate examples and comparison of methods |
+| Aircraft loads and wing structures | Maneuver and landing loads; V-n diagrams; structural idealization; thin-walled shear flow, torsion and shear center; wing structures and numerical design |
 
-Fabrication starts on **Tuesday, October 13**, in assigned, supervised ELab slots. A team may release its first wing module only after a physical rod-fit coupon, documented calculation check, clean notebook run, slicer review and staff print approval. October 13 is a production start, not a promise that all teams finish printing that day.
+HW 3 (three beams) is due **November 5 at 11:59 p.m.** Open its existing Canvas assignment and handout. Future assignment dates and the numerical project requirements will be posted in Canvas. The October 29 guest class with Dr. Michael Tsay covers electric propulsion and industry practice. Use Canvas announcements for event details.
 
-### Minimum code behavior
+## Course policies
 
-- Accept named inputs for NACA digits, span, root/tip chord, rib spacing, shell thickness, spar positions, and material properties.
+### Attendance and communication
 
-- Generate airfoil coordinates and tapered wing/rib/spar-socket geometry without hand-editing every section.
+Regular attendance is expected, although attendance is not checked every class. Notify the instructor early about an illness, emergency, religious observance, accommodation or other University-recognized absence. Approved absences receive a reasonable equivalent activity or make-up without penalty. Keep up with Canvas announcements and team responsibilities. Bring technical questions to class or office hours; send private grading and accommodation questions to the instructor. Allow two business days for email replies.
 
-- Export valid STL/3MF components within the assigned printer envelope and report estimated mass/print time.
+### Deadlines, extensions and regrades
 
-- Compute and report planform area, aspect ratio, taper ratio, component bounding boxes, estimated material use, and other instructor-assigned geometry checks.
+Each student has two 24-hour homework extensions without giving a reason. These do not apply to printer reservations, safety approvals, fabrication appointments or presentations. Beyond those passes, late individual work loses 10% of the earned score per 24 hours unless an approved circumstance or accommodation applies. Contact the instructor about a project delay; printer availability may require another arrangement.
 
-- Run automated unit/sanity tests; compare at least one code case with a hand calculation or known limiting case; and independently verify any AI-assisted technical claim or code segment.
+Submit a written regrade request within **two calendar days** of grade posting. Identify the rubric item and supporting evidence. The complete submission may be reviewed, and a score may increase, stay the same or decrease if another grading error is found.
 
-- Produce a Design, Fabrication, and Inspection Memo using Claim - Evidence - Check - Confidence - Limitation; reconcile hand geometry checks, coded output, slicer evidence, printed components, manual/machine-vision measurements, shared damage indicators, uncertainty, and revision history.
+### Academic integrity, collaboration and AI
 
-### Required post-build inspection and diagnostic activities
+You may discuss approaches with classmates when the assignment allows it. Individual work must show your own reasoning, and every project member must understand the team work. Do not copy solutions, invent results or citations, or submit another person's work as your own.
 
-**Team-wing inspection (required).** Place the unloaded assembled wing in the alignment jig with ruler and ArUco/checkerboard references. Use the shared Seeed Studio reComputer Super J3011 (Jetson Orin Nano 8GB), Logitech webcam, camera stand, and instructor-provided Python/OpenCV workflow to estimate semi-span, root/tip chord, seams, and gross alignment. Compare against ruler and digital-caliper measurements and submit calibration evidence, one annotated image, a CSV/log, differences, uncertainty, and at least one identified failure mode.
+AI may help with learning, debugging and writing unless an assignment restricts it. Disclose the tool and its purpose, check the technical output, and explain the reasoning yourself. You are responsible for every submitted result. Do not upload private teammate information or restricted course material. AI detectors are not proof of misconduct. The [University Academic Integrity Policy](https://www.umass.edu/senate/book/academic-integrity-policy) applies.
 
-**Shared structural-health-monitoring demonstration (required analysis).** Using a separate sacrificial 3D-printed wing-box specimen, the instructor/TA will acquire force with the 10 kg load cell and HX711, camera-based tip deflection, ADXL343 acceleration, and USB-microscope crack images before and after controlled damage. Teams will compute or interpret stiffness from the force-deflection slope, dominant natural frequency from the acceleration record, and qualitative crack change; then decide which indicators provide credible evidence of damage and which do not.
+### Seminar extra credit
 
-**Safety and specimen boundary.** No submitted team wing will be loaded, cracked, or tested to failure. Controlled damage is introduced only by the instructor on designated sacrificial specimens; loading is slow, clamped, shielded with clear polycarbonate, and performed with required eye protection. Students do not alter the fixture, damage a specimen, or enter the protected loading area without explicit authorization.
+For the optional September 25 seminar, attendance and a 150-word technical reflection submitted within 48 hours earn up to **2.5 course percentage points**. Students unable to attend may use another aerospace/industry seminar for the same reflection and credit.
 
-### Project grading (30% of course)
+### Lab safety and materials
 
-| Element | Evidence | Weight |
-| --- | --- | --- |
-| Milestones and design reviews | Requirements, concept, role evidence, inspection plan, calibration plan, and risk controls | 5% |
-| Reproducible workflow and design rationale | Correct parameters, geometry, instructor-provided code configuration, verification checks, files, and README | 8% |
-| Fabrication, inspection, and build acceptance | Safe process, print/assembly quality, manual and calibrated machine-vision evidence, annotated image/CSV, and evidence archive | 8% |
-| Final technical report | Concise technical argument integrating geometry, manufacturing, inspection uncertainty, and before/after force-deflection, vibration, and crack evidence | 5% |
-| Presentation and individual defense | Team story, clear visuals, diagnostic interpretation, questions, and peer evidence | 4% |
+Complete the required orientation and use ELab only in authorized supervised slots. Use the assigned printer, nozzle and material profile; inspect every slicer layer and remain for the first layers. Do not bypass alarms, modify another team's job or use tools and adhesives without approval. Keep a print log and photographs. Report failures and obtain approval before reprinting. Anyone may stop unsafe work and notify staff without losing credit for reporting the concern.
 
-## 5. Project workflow and deliverables
+### Recording and privacy
 
-| Target date | Deliverable or gate |
-| --- | --- |
-| Sept. 22 | Three-person teams already assigned; project roles and shared folders confirmed. |
-| Sept. 29–Oct. 1 | Project launch and manual geometry, planform and load-path calculations. |
-| Oct. 6–8 | Supervised coupon-only run, physical fit test, rod measurement and R01 record. Staff schedules the short coupon appointments. |
-| Oct. 8–9 | Pre-print review: calculation sheet, coupon evidence, R02 clean run, module dimensions, CAD mass, all-layer slicer review, safety training and assigned printer slot. |
-| Oct. 13 | Supervised wing-module fabrication begins for released teams. Teams without a passed coupon or release complete the missing gate first. |
-| Oct. 22 | Reproducibility and as-built checkpoint: parameter trace, file/revision consistency, print log, independent check and current risks. |
-| Oct. 26; Nov. 2 | Follow-up ELab slots for remaining modules, authorized corrections or reprints and dimensional checks; reservations are posted in Canvas. |
-| Nov. 12; Nov. 16 | Design and assembly review, dry fit, alignment plan, supervised assembly or authorized correction and early manual inspection. |
-| Dec. 1–3 | Build acceptance and calibrated manual/Jetson inspection; shared damage-diagnostics demonstration and data analysis. |
-| Dec. 8, 10, 15 | Team presentations and individual technical questions; final package due Dec. 15 at 5:00 p.m. |
-
-**Printer reservations** — Team-specific machine and supervision slots will be posted in Canvas after coordination with ELab and the other course using the printers. Only assigned slots are authorized; Canvas is the authoritative schedule.
-
-### Submission package
-
-- Instructor-provided source code/notebooks plus the team's configuration, environment file, README, and clean runs that reproduce geometry, plots, inspection output, and assigned diagnostic analysis.
-
-- STL/3MF files, slicer project, G-code only when requested, every-layer screenshots, print log, calibration target image, manual measurements, one annotated vision image, and concise CSV/log.
-
-- Design, Fabrication, and Inspection Memo with requirements, parameters, code checks, dimensional and slicer evidence, manual-to-vision comparison, uncertainty, limitations, build-acceptance results, diagnostic interpretation, and justified revisions.
-
-- Completed unloaded wing, signed build-acceptance checklist, print log, first-layer and completed-part photographs, actual mass, dry-fit and alignment evidence, and revision record for any failed attempt.
-
-- Final report and concise team presentation that connect mechanics predictions, manufacturing evidence, calibrated inspection, and shared before/after damage evidence; every member answers an individual technical question.
-
-### Recommended team operating rhythm
-
-| Every week | Evidence |
-| --- | --- |
-| Plan | One measurable team goal; owner and due date for each action |
-| Integrate | Code and geometry reviewed by a teammate who did not create them |
-| Verify and reflect | One independent physics/manual check; one calibration or sensor sanity check when applicable; one risk updated in the design log; brief contribution record and decision rationale |
-
-### Failure is data; avoid preventable failure
-
-A failed first print or an unsuccessful interface can support learning if the team documents the evidence, identifies a plausible cause, revises one controlled feature, and uses the approved schedule. Unsupervised printing, bypassing a design gate, hiding a failed print, or consuming unapproved material is a safety/process violation rather than productive iteration.
-
-## 6. ELab fabrication requirements
-
-### Location and access
-
-Printer room: Engineering Laboratory (ELab), Room 104 / 104A. The numeric door code is intentionally not printed in a public syllabus. It is issued privately only after the signed agreement, orientation, and machine-specific training are complete.
-
-### Approved equipment and material
-
-Use the Creality K2 Pro + CFS or an Ender Pro only as assigned by ELab staff, with the exact printer and 0.4 mm nozzle profile. The baseline course material is regular 1.75 mm PLA Pro. Do not substitute Overture Air PLA, Aero PLA, or another lightweight/foaming filament: last year’s course experienced brittleness, poor bed adhesion, and failed parts. If a lightweight filament is separately approved, feed it from the external spool rather than the CFS.
-
-### Before the slot
-
-- Complete the agreement/orientation; work only during the assigned team slot and with required supervision.
-
-- Bring frozen watertight STL/3MF files, the project’s print-readiness approval, and a named team operator.
-
-- Confirm printer, nozzle, filament profile, part dimensions, orientation, supports, wall/rib thickness, spar sockets, estimated mass, and estimated time.
-
-- Slice and inspect every layer—not only the outside preview. Save the slicer project (.3mf) before exporting G-code.
-
-### At the printer
-
-- Check that the bed is clean, the correct filament is dry/loaded, and the build plate is seated. Use adhesive only as trained.
-
-- Start the job under supervision and remain for the first layers. Confirm adhesion, extrusion, walls, and supports before leaving the machine in the approved monitored state.
-
-- Never operate alone; never bypass alarms or guards; no food or drink in the room; do not remove another team’s job or change machine settings without permission.
-
-- Record printer, material, slicer settings, start/end times, mass, failures, and corrective actions in the print log.
-
-### After printing and assembly
-
-- Let parts cool, remove them as trained, clean the station, label all parts, and weigh the final printed set.
-
-- Dry-fit rods and modules before epoxy. Sand only as authorized; use gloves, mixing tools, ventilation, and the instructor’s fixture/jig.
-
-- Use 5-minute epoxy only when assigned and under supervision; clamp the assembly in alignment and follow the full handling and cure guidance before moving it.
-
-- Report a failure promptly. Do not start an unscheduled reprint; the instructor/TA will approve the smallest useful revision after reviewing the print log and photographs.
-
-### Course-provided project materials
-
-| Course-provided item | Student responsibility |
-| --- | --- |
-| Regular 1.75 mm PLA Pro | Use the assigned material/profile and remain within the approved project mass budget |
-| Course-issued carbon-fiber rods/interfaces | Use the dimensions posted in Canvas and verify dry fit before any adhesive |
-| 5-minute epoxy and shared consumables | Use only when assigned, under supervision, and with required lab controls |
-| Shared inspection and diagnostic station | Use only during assigned supervised sessions: Seeed Studio reComputer Super J3011 (Jetson Orin Nano 8GB), webcam/stand, ruler/calibration target, digital caliper, load cell/HX711, ADXL343 accelerometer, breadboard/jumpers, USB microscope, clamps, clear shield, and safety glasses |
-| Personal purchases or substitutions | Not required; obtain written approval before bringing another material, chemical, or tool |
-
-The course supplies approved PLA Pro, course-issued rods/interfaces, supervised adhesive, shared fabrication consumables, and one shared inspection/diagnostic station. The instructor provides the baseline wing-generation, machine-vision, and data-acquisition code. Students should not purchase or substitute structural materials, electronics, chemicals, or tools unless the instructor gives written approval. The complete machine workflow, inspection instructions, and acceptance checklist are provided on Canvas.
-
-## 7. Weekly schedule — Fall 2026
-
-The three remaining 75-minute meetings before October 13 fabrication are October 1, 6 and 8, as confirmed September 30. October 12 is a University holiday; there is no regular class that day. Coupon appointments outside class require ELab authorization and supervision. Canvas provides submission links and team-specific printer reservations. No team may bypass a safety or print-release condition because of the accelerated calendar.
-
-### Class plan before October fabrication
-
-Meetings run from 11:30 a.m. to 12:45 p.m. Finish the remaining Lecture 1 wing material on October 1. Extra galleries and fuselage/monocoque extensions remain reading; detailed FEM, optimization, buckling calculations and uncertainty studies are not pre-print requirements. The R01 worksheet can be reused: label the seven baseline ribs using the updated notebook; its original September 29 timing is superseded by this plan.
-
-| Meeting | In-class sequence and time | Evidence at end of meeting |
-| --- | --- | --- |
-| Thu. Oct. 1 | 11:30–12:00 finish Lecture 1 wing components and load paths; 12:00–12:10 connect shear/bending/torsion and the seven-rib rule to the printed model; 12:10–12:30 annotate R01 and its dimension checks; 12:30–12:42 save a team Colab copy and run Coupon Only/R01; 12:42–12:45 record the file or blocker. | R01 layout with seven rib stations, coupon ZIP or specific blocker, and requested supervised coupon appointment. HW 1 due remains unchanged. |
-| Tue. Oct. 6 | 11:30–11:50 Lecture 2 geometry with hand area/AR check; 11:50–12:10 one virtual cantilever load and strip-force/lever-arm moment; 12:10–12:35 compare hand and notebook results and inspect actual coupon evidence; 12:35–12:45 resolve blockers and prepare R02 for qualified teams. | Checked geometry and root shear/moment; actual fit record when available. Unfinished physical tests must occur under supervision before release, not be simulated in the form. |
-| Thu. Oct. 8 | 11:30–11:45 review physical coupon evidence; 11:45–12:05 clean Final Wing/R02 build and dimension/CAD-mass checks; 12:05–12:30 OrcaSlicer profile, scale, all-layer preview and time/mass review; 12:30–12:45 staff release or written correction list. | R02 ZIP, slicer project, reviewed machine-specific G-code and release/hold record for October 13. |
-
-**Scheduling dependency:** the physical rod-fit coupon must be printed and tested at a staff-supervised appointment before the October 8 Final Wing run. If a team's first authorized printer access is October 13, that session starts with the coupon, not final wing modules. Staff should pre-run the baseline, qualify the actual print profile, and allocate production slots from slicer-estimated times; 21 complete wings are not assumed to finish within a single class period.
-
-**Required before the first wing module:** semi-wing and full-wing geometry with units; rod and module locations; a one-half-wing free-body diagram and independently checked shear/root-moment demand for the assigned virtual load; measured rod diameter and physical coupon fit; a clean final-wing R02 run; CAD mass at or below 300 g; checked module bounds and every slicer layer; safety authorization and a team-specific printer reservation. A missing coupon or failed check keeps the team in the coupon/prototype workflow.
-
-| Week / dates | Topics and learning activities | Due / event |
-| --- | --- | --- |
-| 1 Sept. 8/10 | Central question: trustworthy answers; aircraft forces; airfoil geometry; pressure, lift, drag and moment; NACA four-digit studio. | Starter environment check. |
-| 2 Sept. 15/17 | Finite-wing geometry, skin-rib-spar load paths and cantilever idealization; existing three-person teams prepare for project launch. | Teams already assigned; no new team-formation task. |
-| 3 Sept. 22/24 | External and internal loads, equilibrium, stress and strain, and wing free-body diagrams. | Existing teams active; Sept. 25 optional Manela seminar. |
-| 4 Sept. 29/Oct. 1 | Continue Lecture 1; finish wing anatomy/load paths on Oct. 1, map the seven-rib baseline to R01 and start Coupon Only. | HW 1 due Oct. 1; R01 layout and coupon file/blocker. |
-| 5 Oct. 6/8 | Oct. 6: geometry, virtual-load shear/root-moment hand check and coupon evidence. Oct. 8: Final Wing/R02, slicer preview and print-release review. | Physical fit before R02; pre-print package reviewed Oct. 8–9. |
-| 6 Oct. 13/15 | Oct. 13: supervised wing-module fabrication launch in assigned slots, with beam-equilibrium studio for waiting teams. Oct. 15: beam shear/moment, bending stress, slope and deflection; inspect first-print evidence. | Wing construction starts Oct. 13 only for released teams; HW 2A (Parts 1 and 3) due Oct. 20. |
-| 7 Oct. 20/22 | Two- and three-dimensional stress transformation; Mohr's circle, principal stresses and directions; constitutive and plane-stress assumptions; audit a flawed solution. | As-built and reproducibility checkpoint Oct. 22. |
-| 8 Oct. 27/29 | Midterm Oct. 27; guest class Oct. 29 on electric propulsion, industry practice and internship/career pathways. | Midterm Oct. 27; Dr. Tsay Oct. 29. |
-| 9 Nov. 3/5 | Nov. 3: no class. Nov. 5: strain energy, virtual work and a beam-model validity check. | HW 3 (three beam cases) due Nov. 5. |
-| 10 Nov. 10/12 | Nov. 10: Castigliano and determinate/indeterminate structures. Nov. 12: maneuver and landing loads, V–n diagrams, wing structural idealization and assembly review. | Design and assembly review. |
-| 11 Nov. 17/19 | Thin-walled wing-box idealization, shear flow, torsion and shear center; compare model with printed geometry and inspection evidence. | HW 4 due Nov. 19; Nov. 16 supervised assembly/inspection slot. |
-| 12 Nov. 24/26 | No regular MIE 446 meetings: Nov. 24 follows a Wednesday schedule; Thanksgiving recess. | Approved inspection or correction slots only if shared schedule permits. |
-| 13 Dec. 1/3 | Manual and calibrated Jetson machine-vision inspection, uncertainty, build acceptance and shared force-deflection, vibration and crack demonstration. | HW 5 due Dec. 3; inspection and diagnostic evidence. |
-| 14 Dec. 8/10 | Build acceptance, diagnostic synthesis, team presentations and individual technical questions. | HW 6 due Dec. 10; presentation groups assigned in Canvas. |
-| 15 Dec. 15 | Team presentations, individual questions, lessons from inspection/damage indicators and course synthesis. | Final project package due 5:00 p.m. |
-
-### Homework map
-
-| Assignment | Primary focus | Due |
-| --- | --- | --- |
-| HW 1 | Read the structure: airfoil/wing load path, FBD, pre-calculation predictions, equilibrium, code plot | Oct. 1 |
-| HW 2A | Lilienthal evidence and lateral-force geometry (35 points) | Oct. 20, 2026 |
-| HW 3 | Three distributed-load beams: reactions, compatibility and selected displacement/rotation, analytically and with software (65 points) | Nov. 5, 2026 |
-| HW 4 | Audit AI reasoning: virtual work/Castigliano plus correction of a plausible but flawed generated solution | Nov. 19 |
-| HW 5 | Sensitivity and trade-offs: maneuver/landing loads, V-n diagram, computational exercise | Dec. 3 |
-| HW 6 | Integrated trust case: wing-box shear/torsion/shear center; hand-code/AI validation; design/manufacturing evidence; calibrated vision inspection; and interpretation of shared damage-diagnostic data | Dec. 10 |
-
-The [released Homework 2 guide and starter files](assignments/homework-02/README.md)
-give the current assignment specification and the exact Lecture 1 reading route.
-Canvas carries the authoritative submission deadline and any announced changes.
-
-**Released deadlines:** HW 2A covers Parts 1 and 3, due October 20. [HW 3](assignments/homework-03/README.md) covers the three beam cases, due November 5. Use the individual handouts and exact Canvas submission times.
-
-## 8. Course policies
-
-### Attendance, participation, and make-up work
-
-Regular attendance is expected because studios, oral checks, design reviews, speaker events, and safety training cannot be reconstructed fully from slides. Notify the instructor as early as practicable for illness, emergency, military duty, religious observance, disability-related needs, or another University-recognized absence. Approved absences receive a reasonable equivalent activity or make-up without penalty. Students remain responsible for announcements and for coordinating team handoffs.
-
-### Deadlines and extensions
-
-Each student may use two 24-hour homework extensions during the semester without giving a reason; activate the extension in writing before the deadline. The passes do not apply to the midterm, oral rotation, project safety gates, printer reservations, fabrication/assembly appointments, or the final presentation. Beyond the passes, late individual work loses 10% of the earned score per 24 hours unless an approved circumstance or accommodation applies. Contact the instructor before a project deadline whenever possible; team safety and printer capacity may require an alternate deliverable rather than a shifted machine slot.
-
-### Religious observance
-
-Students are entitled to reasonable accommodation for religious observances. Review the schedule early and notify the instructor so an alternative can be arranged without penalty. See the [UMass Academic Regulations](https://www.umass.edu/registrar/academic-regulations).
-
-### Academic integrity and collaboration
-
-Engineering depends on trustworthy evidence. Discussion of concepts and comparison of approaches are encouraged unless an assignment says otherwise, but every individual homework and midterm submission must represent the student's own reasoning. Project teammates may share team artifacts; individual contribution records and oral questions remain individual. Copying prior solutions, submitting another person's code or text, fabricating analysis, process records, or citations, or using unauthorized assistance is prohibited.
-
-The University Academic Integrity Policy applies to all work: [UMass Academic Integrity Policy](https://www.umass.edu/senate/book/academic-integrity-policy). Suspected violations follow University procedures.
-
-### AI Statement: Learning and Engineering Judgment in the Age of AI
-
-Generative AI can produce equations, code, plots, and polished explanations in seconds. This changes what counts as evidence of learning, but it does not transfer the engineer's responsibility. The course is organized around a central question: When AI can produce a solution, what must an aerospace engineer still understand and be able to do? Students must frame the problem, predict behavior, choose and justify the model, test the result against mechanics and evidence, recognize uncertainty and limitations, and defend the decision.
-
-This course uses a default-permitted, evidence-required approach unless an assignment restricts a component. AI may support learning, brainstorming, alternative approaches, debugging, communication, or adversarial review. AI output is material to inspect; it is not evidence that a claim is true. Treat it as an unverified assistant: potentially useful, never self-validating. Students remain responsible for safety, evidence, attribution, empathy, professional judgment, teamwork, and the ability to reproduce and defend the essential reasoning.
-
-| Rule | Meaning in this course |
-| --- | --- |
-| Permitted with disclosure | Learning, brainstorming, examples, alternative approaches, code debugging, language revision, and adversarial critique - when the assignment does not restrict the tool |
-| Required evidence | Tool and purpose; material prompt/output excerpts when requested; high-impact claims used; student verdict on technical AI output—Accept, Accept with limitations, or Reject; changes and errors found; verification by mechanics, authoritative sources, independent calculation, code tests, slicer evidence, dimensional checks, or documented fabrication evidence; known limitations |
-| Not permitted | Midterm or a restricted component; undisclosed generated work; fabrication of citations/data; hiding lack of understanding; replacing a teammate's responsibility; uploading restricted course or teammate material |
-| Accountability | The student owns every equation, number, sentence, citation, code line, and decision, and must be able to explain the model, reproduce essential reasoning, identify limitations, predict a controlled change, and defend the work |
-
-AI detectors will not be used as proof of misconduct. Evidence of learning comes from transparent reasoning, prediction records, independent checks, reproducible code, process history when requested, physical fabrication evidence, revision after error, one-slide synthesis, and the student's ability to explain and defend the work. When uncertain, ask before submitting.
-
-### Regrades
-
-Submit a concise written regrade request within seven calendar days of the grade posting. Identify the specific rubric item and evidence; do not ask only for additional points. The complete submission may be reviewed, and the score may increase, remain unchanged, or decrease if another material grading error is found.
-
-### Recording, privacy, and course materials
-
-Do not record classmates, guest speakers, oral checks, fabrication sessions, or project reviews without permission. Course files may be used for enrolled students' learning but may not be publicly posted, sold, or uploaded to answer-sharing or AI-training services. Students should remove private identifiers from shared project data.
+Obtain permission before recording classmates, guests, reviews or fabrication sessions. Course files are for enrolled students' learning; do not sell them or upload restricted materials to public answer-sharing or AI-training services. Remove private identifiers from shared project data.
 
 ## 9. University support and required statements
 

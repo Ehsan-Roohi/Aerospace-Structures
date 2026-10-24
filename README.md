@@ -17,8 +17,8 @@ This is the classroom home for released MIE 446 learning materials. Start with t
 ## Course information
 
 - **[Syllabus](SYLLABUS.md)** — course requirements and assessment.
-- **Download the syllabus:** [Word](docs/MIE_446_Aerospace_Structures_Fall_2026_Syllabus_Updated.docx) · [PDF](docs/MIE_446_Aerospace_Structures_Fall_2026_Syllabus_Updated.pdf)
-- **[Weekly schedule](SYLLABUS.md#7-weekly-schedule--fall-2026)**
+- Use the current [online syllabus](SYLLABUS.md); Canvas carries authoritative deadlines and announcements.
+- **[Lecture topics](SYLLABUS.md#lecture-topics)**
 
 ## Lecture notebooks
 
@@ -42,7 +42,7 @@ The expanded Wing workspace uses a six-DOF spatial beam for nonzero sweep, dihed
 
 The browser study is an analysis input record, not an STL or a printing approval. Printer-envelope, mass, connected-solid, coupon (when rods exist), and slicer checks still apply. Loads, material cards, joint assumptions and a source SHA-256 are retained in `wing_lab_transfer.json` inside the final package; they do not become printer settings. CAD and beam discretisations differ, so compare the CAD mass and inventory and inspect every slicer layer. Module joints must be assembled consistently with the analysed assumptions.
 
-Lectures 01, 02, 03 and 04 and the independent wing-structure lecture are released. Later lecture notebooks will appear here when ready; the [syllabus schedule](SYLLABUS.md#7-weekly-schedule--fall-2026) describes the full semester, not a list of already-published notebooks.
+Lectures 01, 02, 03 and 04 and the independent wing-structure lecture are released. Later lecture notebooks will appear here when ready; the [syllabus schedule](SYLLABUS.md#lecture-topics) describes the full semester, not a list of already-published notebooks.
 
 ### Your classroom workflow
 

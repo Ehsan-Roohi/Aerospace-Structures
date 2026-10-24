@@ -7281,7 +7281,7 @@ const WingEngine = (() => {
     if(g.rodFractions?.length)restrictions.push('Remove external rods: 3-D rod/sleeve slip and curved rod paths are not validated.');
     if((g.spars||[]).some(s=>s.length<g.semiSpan-1e-8))restrictions.push('Use full-span bonded spars for the spatial beam: abrupt partial-span spar runouts need a validated reference-axis/joint transition model. Geometry and CAD export remain available.');
     if(g.modules>1&&input.assembly?.seamsBonded!==true)restrictions.push('Use one piece or explicitly fully bonded module seams; 3-D dry-joint compliance is not validated.');
-    if(input.load&& !['custom','tip'].includes(input.load.kind))restrictions.push('Choose prescribed custom loads or a tip force; flight lift/weight/inertia relief has not been generalized to the 3-D beam.');
+    if(input.load?.kind==='flight'&&input.load.inertiaRelief!==false)restrictions.push('For the spatial beam, set Wing inertia relief to Ignored. Distributed aircraft lift is supported; spatial inertia relief is not validated.');
     return {supported:!restrictions.length,mode:'spatial-beam',requires3D:true,reasons:c.reasons,restrictions,loadFrame:c.loadFrame,
       message:restrictions.length?restrictions.join(' '):'Small-displacement 6-DOF spatial beam with projected normal sections, biaxial bending and axial/torsional response. Prescribed loads are global +z, not lift predicted from airfoil or twist. No 3-D solid, joint, buckling or flutter certification.'};
   }
@@ -7958,6 +7958,20 @@ const WingEngine = (() => {
     const ySec = [...new Set([...linspace(0, 0.95 * g.semiSpan, nSections),...ends,...(g.spars.length?[g.semiSpan]:[]),...(g.stations||[]).map(s=>s.eta*g.semiSpan)])].sort((a,b)=>a-b);
     return { g, pla, rod, asm, load, crit, nSections, ySec };
   }
+  // Prescribed global-z lift uses exactly the existing distributed-load integration.
+  // This is not an aerodynamic prediction and does not include inertia relief.
+  function prescribedFlightLoads(load,g) {
+    const L=g.semiSpan,total=load.aircraftMass*load.loadFactor*GRAV/2,fraction=load.liftFraction;
+    if(load.inertiaRelief)throw Error('Spatial inertia relief is not validated; choose Ignored.');
+    let item;
+    if(load.distribution==='tip')item={kind:'point',position:L,force:total,fraction};
+    else if(load.distribution==='elliptic')item={kind:'elliptic',start:0,end:L,shape:'start',total,fraction};
+    else if(load.distribution==='schrenk')item={kind:'schrenk',total,fraction};
+    else if(load.distribution==='uniform')item={kind:'distributed',start:0,end:L,qStart:total/L,qEnd:total/L,fraction};
+    else if(load.distribution==='planform'){const area=(g.rootChord+g.tipChord)*L/2;item={kind:'distributed',start:0,end:L,qStart:total*g.rootChord/area,qEnd:total*g.tipChord/area,fraction};}
+    else throw Error('Choose elliptic, Schrenk, uniform, planform or tip lift.');
+    return validateLoads([item],L);
+  }
   function validateLoads(items, L) {
     if (!Array.isArray(items) || items.length > 12) throw new Error("Use a list of at most 12 loads.");
     const out = items.map((p, i) => {
@@ -8386,7 +8400,7 @@ const WingEngine = (() => {
       // normal plane about its actual straight-axis piercing point.
       p.D=normalRecoveryD(y,p);Object.assign(p,{EA:p.D[0][0],first2:-p.D[0][2],first3:p.D[0][1],EI22:p.D[1][1],EI33:p.D[2][2],EI23:-p.D[1][2]});return p;
     }
-    const items=load.kind==='tip'?[{kind:'point',position:L,force:load.tipForce,fraction:load.tipFraction}]:load.items;
+    const items=load.kind==='flight'?prescribedFlightLoads(load,g):load.kind==='tip'?[{kind:'point',position:L,force:load.tipForce,fraction:load.tipFraction}]:load.items;
     const physical=[0,L,...(g.stations||[]).map(s=>s.eta*L),...ribStations(g),...seams(g),...g.spars.map(s=>s.length),...items.flatMap(p=>loadStations(p,L))];
     const mandatory=[...physical,...ys.filter(y=>!physical.some(p=>Math.abs(p-y)<.1))];
     const regular=linspace(0,L,count+1).filter(y=>!mandatory.some(v=>Math.abs(v-y)<.1));
@@ -8523,7 +8537,7 @@ const WingEngine = (() => {
     analysis3D.endZoneAt=y=>{const p=normals.at(y);return endZone(p.reference,p.normal,y);};
     analysis3D.pointMotionCache=new Map();analysis3D.pointStressCache=new Map();
     analysis3D.referenceAxis='Straight frame elements approximate a continuous C1 projected-section shear-centre normal family; all six equivalent axis-root DOFs are clamped, not a resolved oblique root face. Local axes are right-handed: e1 span tangent, e2 projected chord direction, e3 = e1 cross e2.';
-    return {version:VERSION,analysis3D,mesh,geometry:g,pla,rod,assembly:asm,load,criteria:crit,sections:local,ySec:ys,y,deflection,chordwiseDeflection,twist,V,M,T,mass,ribs,seams:seams(g),seamsActive:[],appliedForce:appliedWrench[2],appliedMoment:appliedWrench[3],stress:{sigTop,sigBot,spars:sparStress},checks:[],governing:null,verification:frame.verification,fem:{fBending:[],fTorsion:[],w:deflection,phi:twist},sparModel:g.spars.length?{method:'Projected bonded thin-wall shear-flow network + full spatial beam',limitations}:null};
+    return {version:VERSION,analysis3D,mesh,geometry:g,pla,rod,assembly:asm,load,criteria:crit,liftN:load.kind==='flight'?load.aircraftMass*load.loadFactor*GRAV/2:undefined,w:Float64Array.from(y,q=>items.filter(p=>p.kind!=='point').reduce((sum,p)=>sum+lineForce(p,q),0)),point:items.filter(p=>p.kind==='point').map(p=>[p.position,p.force,p.fraction*chordAt(g,p.position)]),sections:local,ySec:ys,y,deflection,chordwiseDeflection,twist,V,M,T,mass,ribs,seams:seams(g),seamsActive:[],appliedForce:appliedWrench[2],appliedMoment:appliedWrench[3],stress:{sigTop,sigBot,spars:sparStress},checks:[],governing:null,verification:frame.verification,fem:{fBending:[],fTorsion:[],w:deflection,phi:twist},sparModel:g.spars.length?{method:'Projected bonded thin-wall shear-flow network + full spatial beam',limitations}:null};
   }
   function spatialPointMotion(result,y,localPoint){
     if(!result.analysis3D)throw Error('A spatial beam result is required.');
@@ -13649,7 +13663,7 @@ if(typeof module!=='undefined')module.exports=WingWorkspaceUI;
     mode:()=>S.load.kind==='custom'?(S.load.items.length?'custom':'none'):S.load.kind,
     validate:items=>E.normalize({...engineInput(),load:{...S.load,kind:'custom',items}}),
     apply:items=>{S.load={...S.load,kind:'custom',items};changed();},
-    flight:{configure:true,values:()=>S.load.kind==='flight'?S.load:{aircraftMass:.2,loadFactor:1,distribution:'elliptic',liftFraction:.25,inertiaRelief:false},validate:v=>E.normalize({...engineInput(),load:{...E.DEFAULT_LOAD,...v,fos:S.load.fos,tipMass:S.load.tipMass}}),apply:v=>{E.normalize({...engineInput(),load:{...E.DEFAULT_LOAD,...v,fos:S.load.fos,tipMass:S.load.tipMass}});S.load={...E.DEFAULT_LOAD,...v,fos:S.load.fos,tipMass:S.load.tipMass};changed();}},
+    flight:{configure:true,values:()=>S.load.kind==='flight'?S.load:{aircraftMass:.2,loadFactor:1,distribution:'elliptic',liftFraction:.25,inertiaRelief:false},validate:v=>validateFlightCase(v),apply:v=>{validateFlightCase(v);S.load={...E.DEFAULT_LOAD,...v,fos:S.load.fos,tipMass:S.load.tipMass};changed();}},
     allowSchrenk:true,refStation:0,refLabel:'the root y = 0',
     section:y=>R&&!stale&&!R.analysis3D?{outline:E.outerContour(R.geometry,y),chord:E.chordAt(R.geometry,y),xsc:E.interp(y,R.y,R.props.xsc)}:null,
     schrenkCentroid:()=>WingLoadsUI.schrenkData(S.geometry.semiSpan,y=>E.chordAt(R?R.geometry:E.makeGeometry(S.geometry),y),1,[S.geometry.rootChord,S.geometry.tipChord]).stats.schrenk.ybar,
@@ -13671,6 +13685,7 @@ if(typeof module!=='undefined')module.exports=WingWorkspaceUI;
       <div class="tablewrap">${WingLoadsUI.schrenkTable(panels.map(p=>({...p,data:{...p.data,stats:p.data.stats}})),{force:'N',length:'mm',moment:'N·mm'})}</div>
       <p class="note">Per newton of total semi-wing lift. Assumptions: an unswept wing without twist, flaps or ailerons deflected, below stall, at a moderate aspect ratio. Sweep, twist and stall change the lift distribution and need a correction or a lifting-surface/CFD analysis; Schrenk is a teaching approximation of the lift per unit span, not a chordwise pressure (Cp) distribution and not a CFD result. Background: <a href="https://ntrs.nasa.gov/citations/19930093823" target="_blank" rel="noopener">NACA/NASA NTRS 19930093823, “A simple approximate method for obtaining spanwise lift distributions over swept wings”</a> (adapting simple methods of this kind to swept wings) and <a href="https://ntrs.nasa.gov/citations/19780008062" target="_blank" rel="noopener">NASA CR-132403 (NTRS 19780008062)</a>.</p></section>`;
   }
+  function validateFlightCase(v){const input={...engineInput(),load:{...E.DEFAULT_LOAD,...v,fos:S.load.fos,tipMass:S.load.tipMass}},n=E.normalize(input),cap=E.analysisCapability(n.g,input);if(!cap.supported)throw Error(cap.message);return n;}
   function renderWingLoads() {
     if(!R){const home=document.getElementById('wingLoadEditor');if(home)loadKeeperOf().place(home);return;}
     if(!R)return;

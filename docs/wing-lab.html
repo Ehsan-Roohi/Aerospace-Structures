@@ -1058,9 +1058,11 @@ nav.workspace-nav .workspace-link:focus-visible { outline: 3px solid var(--accen
     <div class="aircraft-axes" id="aircraftAxes" role="img" aria-label="Aircraft axes: positive x aft, positive y outboard along the semi-wing, positive z up. Axes rotate with the camera."><svg viewBox="0 0 124 96" aria-hidden="true"></svg><small>x aft · y span · z up</small></div>
     <div class="anatomy-labels" id="ribLabels" aria-hidden="true"></div>
     <div class="overlay infocol">
+      <div id="wingMassReadout" role="status" style="font-weight:700;font-size:15px;background:var(--panel,#fff);padding:7px 10px;border-radius:6px" hidden></div>
       <div class="plotinfo" id="plotinfo"></div>
       <div class="legend-title" id="legendTitle"></div>
       <div class="legend" id="legend"></div>
+      <div id="stressPeaks" style="max-width:310px;font-size:12px;line-height:1.5;pointer-events:auto" hidden></div>
     </div>
     <div class="probe" id="probe" hidden></div>
     <div class="anatomy-key" id="anatomyKey">
@@ -12233,7 +12235,7 @@ if(typeof module!=='undefined')module.exports=WingWorkspaceUI;
     }
     model = null; lastViewSet = false; readoutKey = "";
     for (const id of ['probe','anatomyKey']) $("#"+id).hidden = true;
-    for (const id of ['ribLabels','legend','legendTitle','footline','plotinfo']) $("#"+id).innerHTML = "";
+    for (const id of ['ribLabels','legend','legendTitle','footline','plotinfo','wingMassReadout','stressPeaks']) $("#"+id).innerHTML = "";
     $("#viewDims").textContent = 'No wing loaded. Create a wing or open a project JSON.';
     $("#viewScaleBar").style.width = '0px'; $("#viewScaleText").textContent = '–';
     $("#viewZoomText").textContent = 'View controls never change the physical dimensions of a wing.';
@@ -12559,10 +12561,34 @@ if(typeof module!=='undefined')module.exports=WingWorkspaceUI;
     return 0;
   }
   let range = { min: 0, max: 1 };
+  let stressExtrema = {min:null,max:null};
+  // Result colours encode numbers. Keep them independent of face lighting,
+  // especially when the user rotates to the underside of the wing.
+  function resultMaterial(mesh, enabled) {
+    const u=mesh.userData;
+    if(!u.litMaterial)u.litMaterial=mesh.material;
+    if(enabled&&!u.fieldMaterial)u.fieldMaterial=new THREE.MeshBasicMaterial({vertexColors:true,side:THREE.DoubleSide});
+    const next=enabled?u.fieldMaterial:u.litMaterial;
+    if(mesh.material!==next){next.clippingPlanes=mesh.material.clippingPlanes;next.transparent=mesh.material.transparent;next.opacity=mesh.material.opacity;next.depthWrite=mesh.material.depthWrite;mesh.material=next;next.needsUpdate=true;}
+  }
+  function renderStressPeaks(kind) {
+    const box=$('#stressPeaks');box.hidden=kind!=='sigma'||geometryPreview;
+    if(box.hidden){box.innerHTML='';return;}
+    const entry=(key,label,color)=>{const p=stressExtrema[key];return p?`<div><b style="color:${color}">${label}: ${sig(p.value,4)} MPa</b><br>y ${nf(p.y,1)} mm · x/c ${nf(p.x/E.chordAt(R.geometry,p.y),3)} <button type="button" class="btn" data-peak="${key}" style="padding:2px 6px">Locate</button></div>`:'';};
+    box.innerHTML=entry('max','Red · maximum signed stress','#b00000')+entry('min','Blue · minimum signed stress','#0039a6')+'<div>Positive = tension; negative = compression. Colours rescale per run; red does not mean failure. Grey = unresolved.</div>';
+    box.querySelectorAll('[data-peak]').forEach(b=>b.onclick=()=>{const p=stressExtrema[b.dataset.peak];if(!p)return;const v=new THREE.Vector3().fromBufferAttribute(p.mesh.geometry.attributes.position,p.index);p.mesh.localToWorld(v);const center=new THREE.Box3().setFromPoints(fitPoints()).getCenter(new THREE.Vector3());controls.target.copy(center);camera.position.copy(center).add(new THREE.Vector3(.25,p.z>=0?1:-1,.35).normalize().multiplyScalar(2*Math.max(model.g.semiSpan,model.g.rootChord)));controls.update();placeAtFit(false);});
+  }
+  function updatePeakMarkers(kind) {
+    if(!model.peakMarkers){model.peakMarkers=new THREE.Group();model.root.add(model.peakMarkers);for(const color of [0xff0000,0x003cff]){const dot=new THREE.Mesh(new THREE.SphereGeometry(Math.max(1.5,model.g.semiSpan*.006),12,8),new THREE.MeshBasicMaterial({color,depthTest:false,depthWrite:false}));dot.renderOrder=1000;model.peakMarkers.add(dot);}}
+    model.peakMarkers.visible=kind==='sigma'&&!geometryPreview;
+    ['max','min'].forEach((key,i)=>{const p=stressExtrema[key],dot=model.peakMarkers.children[i];dot.visible=!!p;if(p)dot.position.fromBufferAttribute(p.mesh.geometry.attributes.position,p.index);});
+    renderStressPeaks(kind);
+  }
   function computeRange(kind) {
     let mn = Infinity, mx = -Infinity;
+    stressExtrema={min:null,max:null};
     const meshes = kind==='sigma'&&S.stressComponent==='rods'?model.rods:kind==='sigma'&&S.stressComponent==='spars'?(model.spars||[]):kind==='sigma'?model.skins.concat(model.sleeves):model.skins.concat(model.sleeves,model.spars||[]);
-    for (const m of meshes) { const u = m.userData; for (let i = 0; i < u.by.length; i += 3) { const v = fieldValue(u.by[i], u.bx[i], u.bz[i], kind,u); if (v < mn) mn = v; if (v > mx) mx = v; } }
+    for (const m of meshes) { const u = m.userData; for (let i = 0; i < u.by.length; i++) { const v = fieldValue(u.by[i], u.bx[i], u.bz[i], kind,u); const point={value:v,y:u.by[i],x:u.bx[i],z:u.bz[i],mesh:m,index:i}; if (v < mn){mn = v;stressExtrema.min=point;} if (v > mx){mx = v;stressExtrema.max=point;} } }
     if (kind === "fos") { mn = 0; mx = Math.min(Math.max(mx, 1), 10); }
     if (!isFinite(mx)||!isFinite(mn)) return {min:0,max:1};
     if (mx - mn < 1e-12) mx = mn + 1;
@@ -12597,6 +12623,7 @@ if(typeof module!=='undefined')module.exports=WingWorkspaceUI;
     };
     const base={skin:COLORS.pla,sleeve:COLORS.sleeve,rod:COLORS.rod,spar:0x9871dd};
     for(const m of model.skins.concat(model.sleeves,model.rods,model.spars||[])){
+      resultMaterial(m,!!kind);
       const u=m.userData,pos=m.geometry.attributes.position.array,col=m.geometry.attributes.color.array;
       for(let i=0;i<u.by.length;i++){
         const p=place(u.by[i],u.bx[i],u.bz[i],u.module||0);pos.set(p,3*i);
@@ -12615,7 +12642,7 @@ if(typeof module!=='undefined')module.exports=WingWorkspaceUI;
     }
     const rootStation=WingGeometry.stationAt(g,0),a=rootStation.incidenceDeg*Math.PI/180,pivot=rootStation.twistReferenceFraction*g.rootChord;
     model.fix.rotation.x=a;model.fix.position.y=pivot*Math.sin(a);model.fix.position.z=pivot*(1-Math.cos(a));
-    drawLoads();renderLegend(kind||null);
+    updatePeakMarkers(kind);drawLoads();renderLegend(kind||null);
     if(!kind)$('#legend').hidden=true;
   }
   function updateModel() {
@@ -12647,6 +12674,7 @@ if(typeof module!=='undefined')module.exports=WingWorkspaceUI;
     const tmp = [0, 0, 0];
     const base = { skin: new THREE.Color(COLORS.pla), sleeve: new THREE.Color(COLORS.sleeve), rod: new THREE.Color(COLORS.rod),spar:new THREE.Color(0x9871dd) };
     for (const m of model.skins.concat(model.sleeves, model.rods,model.spars||[])) {
+      resultMaterial(m,useField);
       const u = m.userData, pos = m.geometry.attributes.position.array, col = m.geometry.attributes.color.array;
       const isRod = u.kind === "rod";
       for (let i = 0; i < u.by.length; i++) {
@@ -12671,7 +12699,7 @@ if(typeof module!=='undefined')module.exports=WingWorkspaceUI;
       p.position.z = xs - (zs * sa + xs * ca)+(!geometryPreview&&S.plot!=='mode'&&R.chordwiseDeflection?deformAmount().scale*at(R.chordwiseDeflection,y):0);
       p.position.x = (p.userData.module || 0) * explode;
     }
-    drawLoads();
+    updatePeakMarkers(kind);drawLoads();
     renderLegend(geometryPreview ? null : kind);
     if (geometryPreview) { $('#legend').hidden = true; $('#legendTitle').textContent = 'Geometry preview · not solved'; }
   }
@@ -12736,6 +12764,9 @@ if(typeof module!=='undefined')module.exports=WingWorkspaceUI;
     void unit;
   }
   function renderPlotInfo() {
+    const massBox=$('#wingMassReadout');
+    massBox.hidden=!R||S.emptyStudy;
+    if(!massBox.hidden){massBox.textContent=geometryPreview?'Wing mass — solve to update':`Total wing mass ${nf(R.mass.total,1)} g · includes spars ${nf(R.mass.spars||0,1)} g${stale?' · previous solve':''}`;massBox.title='Estimated model mass including skin, ribs, end caps, spars, rods and any tip mass. Verify manufacturing mass in CAD and the slicer.';}
     if (geometryPreview&&model) {
       const g = model.g;
       $('#plotinfo').textContent = `UNSOLVED GEOMETRY PREVIEW · ${airfoilLabel(g)} · semi-span ${g.semiSpan} mm · ${model.ribs.length} ribs · ${model.rods.length} rods. Stress and deformation hidden; press Solve for analysis.`;

@@ -17,4 +17,13 @@ const pstart=src.indexOf('  function renderPlotInfo()'),pend=src.indexOf('    if
 vm.runInContext(src.slice(pstart,pend)+'}\nrenderPlotInfo()',ctx);assert.match(nodes['#wingMassReadout'].textContent,/285.0 g.*22.4 g/);
 ctx.geometryPreview=true;vm.runInContext('renderPlotInfo()',ctx);assert.match(nodes['#wingMassReadout'].textContent,/solve to update/);
 ctx.R=null;vm.runInContext('renderPlotInfo()',ctx);assert.equal(nodes['#wingMassReadout'].hidden,true);
+ctx.THREE.Color=class{setHSL(h,s,l){Object.assign(this,{h,s,l});}};
+vm.runInContext(src.slice(src.indexOf('  function rainbow(t)'),src.indexOf('  const at =',src.indexOf('  function rainbow(t)'))),ctx);
+assert.notEqual(vm.runInContext('rainbow(.2).h',ctx),vm.runInContext('rainbow(.201).h',ctx));
+const rib={userData:{kind:'rib'}},spar={},skin={};
+Object.assign(ctx,{model:{skins:[skin],sleeves:[],rods:[],spars:[spar],rigid:[rib],ribs:[rib],loads:{}},S:{anatomy:'assembled',plot:'stress',stressComponent:'skin',xray:false,clip:false,explode:0},document:{querySelectorAll:()=>[]}});
+vm.runInContext(src.slice(src.indexOf('  function applyAnatomy()'),src.indexOf('  function positionRibLabels()',src.indexOf('  function applyAnatomy()')))+'\napplyAnatomy()',ctx);
+assert.equal(skin.visible,true);assert.equal(rib.visible,false);assert.equal(spar.visible,false);
+ctx.S.anatomy='inside';vm.runInContext('applyAnatomy()',ctx);assert.equal(rib.visible,true);assert.equal(spar.visible,true);
 console.log('PASS: unlit two-sided fields, retained clipping/transparency, model material restoration, all-vertex extrema, unresolved exclusion, total mass including spars, unsolved/empty mass states.');
+console.log('PASS: continuous colour gradient and opaque skin contours without coplanar internal-part speckles; internal parts restored in Inside view.');

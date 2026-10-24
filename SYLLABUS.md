@@ -14,7 +14,7 @@ University of Massachusetts Amherst | Fall 2026 | Updated October 23, 2026
 | Teaching assistants | Ava Towfigh (atowfigh@umass.edu) and Lev Kudriavtsev (lkudriavtsev@umass.edu); hours in Canvas |
 | Prerequisite | MIE 313, Design of Mechanical Components |
 
-Start in [Canvas Modules](https://umamherst.instructure.com/courses/37837/modules). Each lecture links to its notebook and relevant software. Canvas provides assignment instructions, submission links, deadlines, announcements and grades. GitHub hosts the course files and browser tools. Use the deadline shown on the Canvas assignment, rather than a date in an older downloaded file.
+[Canvas Modules](https://umamherst.instructure.com/courses/37837/modules)
 
 ## What you will learn
 

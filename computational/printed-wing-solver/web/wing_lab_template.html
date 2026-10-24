@@ -529,6 +529,8 @@ body { margin: 0; }
     </div>
     <div class="aircraft-axes" id="aircraftAxes" role="img" aria-label="Aircraft axes: positive x aft, positive y outboard along the semi-wing, positive z up. Axes rotate with the camera."><svg viewBox="0 0 124 96" aria-hidden="true"></svg><small>x aft · y span · z up</small></div>
     <div class="anatomy-labels" id="ribLabels" aria-hidden="true"></div>
+    <svg id="wingResultLeaders" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none" aria-hidden="true"></svg>
+    <div id="wingResultLabels" aria-label="Stress probes" style="position:absolute;inset:0;pointer-events:none;overflow:hidden"></div>
     <div class="overlay infocol">
       <div id="wingMassReadout" role="status" style="width:fit-content;max-width:100%;font-weight:700;font-size:15px;background:var(--panel,#fff);padding:7px 10px;border-radius:6px" hidden></div>
       <div class="plotinfo" id="plotinfo"></div>
@@ -1715,8 +1717,8 @@ body { margin: 0; }
   function setView(v) {
     if (!model) return;
     const g = model.g, L = g.semiSpan, c = g.rootChord;
-    const dir = { iso: [0.55, 0.42, 0.72], plan: [0, 1, 0], section: [-1, 0, 0], front: [0, 0, -1] }[v] || [0.55, 0.42, 0.72];
-    const up = new THREE.Vector3(...(v === 'plan' ? [0,0,-1] : [0,1,0]));
+    const dir = { iso: [0.55, 0.42, 0.72], plan: [0, 1, 0], bottom:[0,-1,0], section: [-1, 0, 0], front: [0, 0, -1] }[v] || [0.55, 0.42, 0.72];
+    const up = new THREE.Vector3(...(v === 'plan'||v==='bottom' ? [0,0,-1] : [0,1,0]));
     // OrbitControls caches the up-axis quaternion when constructed. Recreate it when switching
     // between top and upright views, rather than leaving a pole-singular top camera.
     if(camera.up.distanceTo(up)>1e-8){
@@ -1823,8 +1825,82 @@ body { margin: 0; }
   }
 
   // ------------------------------------------------------------ results on the model
+  // Display preferences never change the solver inputs or transfer JSON.
+  const resultDisplay={bands:false,scaleMode:'auto',scales:{},reference:true,pinning:false,pins:[],pinResult:null};
+  const resultScaleKey=kind=>kind+':'+(kind==='sigma'?S.stressComponent:'all');
+  function displayRange(kind,actual){
+    if(resultDisplay.scaleMode==='auto')return actual;
+    const key=resultScaleKey(kind);
+    if(!resultDisplay.scales[key])resultDisplay.scales[key]={...actual};
+    return {...resultDisplay.scales[key]};
+  }
+  function resultWorldPoint(p){
+    const a=p.mesh.geometry.attributes.position,v=new THREE.Vector3();
+    if(p.indices){p.indices.forEach((index,i)=>v.addScaledVector(new THREE.Vector3().fromBufferAttribute(a,index),p.weights[i]));}
+    else v.fromBufferAttribute(a,p.index);
+    return p.mesh.localToWorld(v);
+  }
+  function resultLabels(){
+    if(!R||!model||geometryPreview||stale||S.plot!=='stress')return [];
+    return [...['max','min'].map(key=>stressExtrema[key]?{...stressExtrema[key],label:key==='max'?'Max':'Min',color:key==='max'?'#b00000':'#0039a6'}:null).filter(Boolean),...resultDisplay.pins.map((p,i)=>({...p,label:'P'+(i+1),color:'#111111'}))];
+  }
+  function positionResultLabels(){
+    const host=$('#wingResultLabels');if(!host)return;
+    const labels=resultLabels(),w=canvas.clientWidth,h=canvas.clientHeight;
+    while(host.children.length>labels.length)host.lastChild.remove();
+    while(host.children.length<labels.length){const tag=document.createElement('div');tag.style.cssText='position:absolute;background:#fffffff0;border:1px solid;padding:3px 5px;border-radius:4px;font:12px/1.3 Arial,sans-serif;white-space:nowrap;box-shadow:0 1px 3px #0002';host.append(tag);}
+    const placed=[],leaders=[];
+    labels.forEach((p,i)=>{const tag=host.children[i],v=resultWorldPoint(p);tag.hidden=!p.mesh.visible||(S.clip&&v.x>S.clipY);if(tag.hidden)return;v.project(camera);tag.hidden=v.z< -1||v.z>1;if(tag.hidden)return;
+      const x=(v.x+1)*w/2,y=(1-v.y)*h/2;let left=Math.max(4,Math.min(w-160,x+12)),top=Math.max(4,Math.min(h-48,y-35));
+      for(let j=0;j<10&&placed.some(q=>Math.abs(q[0]-left)<155&&Math.abs(q[1]-top)<44);j++)top=Math.max(4,Math.min(h-48,top+(i%2?-44:44)));
+      tag.textContent=`${p.label} ${sig(p.value,4)} MPa · y ${nf(p.y,1)}`;tag.style.color=p.color;tag.style.borderColor=p.color;tag.style.left=left+'px';tag.style.top=top+'px';tag.title=`x/c ${nf(p.x/E.chordAt(R.geometry,p.y),3)}; nominal normal beam stress`;
+      tag.style.transform=`translate(0,0)`;placed.push([left,top]);
+      leaders.push(`<path d="M${x} ${y} L${left} ${top+14}" stroke="${p.color}" fill="none"/><circle cx="${x}" cy="${y}" r="3" fill="${p.color}"/>`);
+    });
+    $('#wingResultLeaders').innerHTML=leaders.join('');
+  }
+  function updateOriginalOutline(){
+    if(!model)return;
+    if(S.explode){if(model.originalOutline)model.originalOutline.visible=false;return;}
+    if(!model.originalOutline){
+      const points=[];for(const mesh of model.skins){const u=mesh.userData,add=(a,b)=>{for(const i of [a,b]){const p=WingGeometry.transformPoint(model.g,u.by[i],[u.bx[i],u.bz[i]]);points.push(p[1]+(u.module||0)*S.explode,p[2],p[0]);}};
+        for(const row of [0,u.nS-1])for(let k=0;k<u.nP;k++)add(row*u.nP+k,row*u.nP+(k+1)%u.nP);
+        for(const k of [0,Math.floor(u.nP/2)])for(let j=0;j<u.nS-1;j++)add(j*u.nP+k,(j+1)*u.nP+k);
+      }
+      const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(points,3));
+      const outline=new THREE.LineSegments(geo,new THREE.LineDashedMaterial({color:0x444444,dashSize:4,gapSize:3,depthTest:false,transparent:true,opacity:.7}));outline.computeLineDistances();outline.renderOrder=900;model.root.add(outline);model.originalOutline=outline;
+    }
+    // Exploded parts are intentionally excluded: their offsets are a display operation.
+    model.originalOutline.visible=resultDisplay.reference&&S.deformed&&S.plot!=='mode'&&!S.explode&&!geometryPreview;
+  }
+  function installResultDisplayTools(host){
+    const tools=el('details',{id:'wingContourOptions'},`<summary style="cursor:pointer;font-weight:700;padding:8px">Contours, probes &amp; image export</summary><div class="hud-row" style="display:flex;flex-wrap:wrap;gap:8px;padding:8px"><label>Contours <select id="wrContour"><option value="smooth">Continuous</option><option value="bands">12 bands</option></select></label><label>Scale <select id="wrScale"><option value="auto">Auto per result</option><option value="fixed">Lock scale across designs</option><option value="manual">Manual limits</option></select></label><label>Min <input id="wrMin" type="number" step="any" style="width:90px"></label><label>Max <input id="wrMax" type="number" step="any" style="width:90px"></label><button class="btn" id="wrApply">Apply limits</button><button class="btn" id="wrTop">Top surface</button><button class="btn" id="wrBottom">Bottom surface</button><button class="btn" id="wrPin" aria-pressed="false">Pin stress</button><button class="btn" id="wrClearPins">Clear pins</button><label><input type="checkbox" id="wrOriginal" checked> Dashed original outline</label><button class="btn" id="wrImage">Save high resolution PNG</button></div><p style="font-size:12px;margin:0 8px 8px" id="wrStatus">Nominal normal beam stress; grey regions are unresolved. These controls change the display only.</p>`);host.append(tools);
+    $('#wrContour').onchange=e=>{resultDisplay.bands=e.target.value==='bands';applyResult();};
+    $('#wrScale').onchange=e=>{resultDisplay.scaleMode=e.target.value;if(resultDisplay.scaleMode==='fixed'){const kind={stress:'sigma',disp:'disp',fos:'fos'}[S.plot];if(kind)resultDisplay.scales[resultScaleKey(kind)]={...range};}applyResult();};
+    $('#wrApply').onclick=()=>{const lo=Number($('#wrMin').value),hi=Number($('#wrMax').value),kind={stress:'sigma',disp:'disp',fos:'fos'}[S.plot];if(!kind||!$('#wrMin').value.trim()||!$('#wrMax').value.trim()||!Number.isFinite(lo)||!Number.isFinite(hi)||hi<=lo){flash('Enter finite minimum and maximum values with maximum greater than minimum, in a result view.');return;}resultDisplay.scales[resultScaleKey(kind)]={min:lo,max:hi};resultDisplay.scaleMode='manual';$('#wrScale').value='manual';applyResult();};
+    $('#wrTop').onclick=()=>setView('plan');$('#wrBottom').onclick=()=>setView('bottom');
+    $('#wrPin').onclick=()=>{resultDisplay.pinning=!resultDisplay.pinning;partPick=false;$('#wrPin').setAttribute('aria-pressed',String(resultDisplay.pinning));flash(resultDisplay.pinning?'In Stress view, click a visible selected surface to pin its nominal stress. Drag still rotates; maximum 8 pins.':'Stress pinning off.');};
+    $('#wrClearPins').onclick=()=>{resultDisplay.pins=[];positionResultLabels();};
+    $('#wrOriginal').onchange=e=>{resultDisplay.reference=e.target.checked;updateOriginalOutline();};
+    $('#wrImage').onclick=()=>exportResultImage();
+  }
+  function exportResultImage(){
+    if(!R||!model||geometryPreview||stale||running){flash('Solve the current design before exporting its result image.');return;}
+    const w=1800,h=Math.round(w*Math.max(.35,Math.min(1.1,canvas.clientHeight/Math.max(1,canvas.clientWidth)))),left=240,top=100;
+    const poster=document.createElement('canvas');poster.width=w+left;poster.height=h+top+85;const ctx=poster.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,poster.width,poster.height);
+    const oldRatio=renderer.getPixelRatio(),oldSize=renderer.getSize(new THREE.Vector2()),oldAspect=camera.aspect;
+    try{renderer.setPixelRatio(1);renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();renderer.render(scene,camera);ctx.drawImage(canvas,left,top,w,h);
+      ctx.fillStyle='#111';ctx.font='bold 24px Arial';ctx.fillText(S.projectName||'Wing design',22,32,poster.width-44);ctx.font='16px Arial';const kind={stress:'Nominal normal beam stress (MPa)',disp:'Resultant displacement (mm)',model:'Model geometry',fos:'Normal strength ratio',mode:'Normalised mode shape'}[S.plot];ctx.fillText(kind+' · estimated total mass '+nf(R.mass.total,1)+' g',22,59,poster.width-44);
+      ctx.font='14px Arial';ctx.fillText('Deformation scale '+(S.deformed?nf(deformAmount().scale,2):'0 (undeformed)')+' · '+resultDisplay.scaleMode+' colour scale · '+(resultDisplay.bands?'12 bands':'continuous'),22,82,poster.width-44);
+      if(['stress','disp','fos'].includes(S.plot)){const x=22,y=top+12,bh=Math.min(350,h-30);for(let j=0;j<bh;j++){const c=rainbow(1-j/(bh-1));ctx.fillStyle='#'+c.getHexString();ctx.fillRect(x,y+j,28,1);}ctx.fillStyle='#111';ctx.font='14px Arial';for(let i=0;i<=6;i++)ctx.fillText(sig(range.max-(range.max-range.min)*i/6,5),60,y+12+i*bh/6);}
+      for(const p of resultLabels()){if(!p.mesh.visible)continue;const v=resultWorldPoint(p);if(S.clip&&v.x>S.clipY)continue;v.project(camera);if(Math.abs(v.x)>1||Math.abs(v.y)>1||Math.abs(v.z)>1)continue;const x=left+(v.x+1)*w/2,y=top+(1-v.y)*h/2;ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(x,y,5,0,2*Math.PI);ctx.fill();ctx.font='bold 14px Arial';const txt=p.label+' '+sig(p.value,4)+' MPa';const tw=ctx.measureText(txt).width;const tx=Math.min(poster.width-tw-15,Math.max(left+5,x+10)),ty=Math.max(top+20,y-10);ctx.fillStyle='#fff';ctx.fillRect(tx-3,ty-16,tw+6,22);ctx.fillStyle=p.color;ctx.fillText(txt,tx,ty);}
+      ctx.fillStyle='#111';ctx.font='14px Arial';ctx.fillText('Prescribed load · x aft, y spanwise, z up · grey = unresolved · nominal beam result, not local solid stress',22,top+h+30,poster.width-44);ctx.fillText(new Date().toISOString()+' · '+(stale?'stale':'solved')+' · original outline dashed when enabled',22,top+h+54,poster.width-44);
+    }catch(error){flash('Image export failed: '+error.message);return;}finally{renderer.setPixelRatio(oldRatio);renderer.setSize(oldSize.x,oldSize.y,false);camera.aspect=oldAspect;camera.updateProjectionMatrix();renderer.render(scene,camera);}
+    poster.toBlob(blob=>{if(!blob){flash('Image export failed.');return;}const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=(S.projectName?WingStudyIO.safeFilenameStem(S.projectName):'Wing')+'-'+S.plot+'.png';a.click();setTimeout(()=>URL.revokeObjectURL(url),30000);},'image/png');
+  }
   function rainbow(t) {
     t = Math.min(1, Math.max(0, t));
+    if(resultDisplay.bands)t=Math.min(11,Math.floor(t*12))/11;
     const h = (1 - t) * (240 / 360); // continuous vertex colours, no quantised contour staircase
     const c = new THREE.Color(); c.setHSL(h, 1, 0.5);
     return c;
@@ -1861,9 +1937,28 @@ body { margin: 0; }
   function resultMaterial(mesh, enabled) {
     const u=mesh.userData;
     if(!u.litMaterial)u.litMaterial=mesh.material;
-    if(enabled&&!u.fieldMaterial)u.fieldMaterial=new THREE.MeshBasicMaterial({vertexColors:true,side:THREE.DoubleSide,polygonOffset:u.kind==='skin',polygonOffsetFactor:-1,polygonOffsetUnits:-1});
+    if(enabled&&!u.fieldMaterial){
+      u.fieldMaterial=new THREE.MeshBasicMaterial({vertexColors:true,side:THREE.DoubleSide,polygonOffset:u.kind==='skin',polygonOffsetFactor:-1,polygonOffsetUnits:-1});
+      u.fieldMaterial.onBeforeCompile=shader=>{
+        shader.uniforms.wingBanded={value:resultDisplay.bands?1:0};u.fieldShader=shader;
+        shader.vertexShader='attribute float wingFraction; attribute float wingValid; varying float vWingFraction; varying float vWingValid;\n'+shader.vertexShader;
+        shader.vertexShader=shader.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nvWingFraction=wingFraction; vWingValid=wingValid;');
+        shader.fragmentShader='uniform float wingBanded; varying float vWingFraction; varying float vWingValid;\n'+shader.fragmentShader;
+        shader.fragmentShader=shader.fragmentShader.replace('#include <color_fragment>',`#include <color_fragment>
+          if(vWingValid>0.999){float t=clamp(vWingFraction,0.0,1.0);if(wingBanded>0.5)t=min(11.0,floor(t*12.0))/11.0;
+          float h=(1.0-t)*0.6666666667;vec3 rgb=clamp(abs(fract(vec3(h)+vec3(0.0,0.6666666667,0.3333333333))*6.0-3.0)-1.0,0.0,1.0);diffuseColor.rgb=rgb;}
+          else if(vWingValid>=0.0){diffuseColor.rgb=vec3(0.608,0.655,0.706);}`);
+      };
+    }
+    if(u.fieldShader)u.fieldShader.uniforms.wingBanded.value=resultDisplay.bands?1:0;
+    if(enabled&&mesh.geometry&&!mesh.geometry.getAttribute('wingFraction')){const count=mesh.geometry.attributes.position.count;mesh.geometry.setAttribute('wingFraction',new THREE.BufferAttribute(new Float32Array(count),1));mesh.geometry.setAttribute('wingValid',new THREE.BufferAttribute(new Float32Array(count),1));}
     const next=enabled?u.fieldMaterial:u.litMaterial;
     if(mesh.material!==next){next.clippingPlanes=mesh.material.clippingPlanes;next.transparent=mesh.material.transparent;next.opacity=mesh.material.opacity;next.depthWrite=mesh.material.depthWrite;mesh.material=next;next.needsUpdate=true;}
+  }
+  function contourSample(mesh,i,value,selected){
+    const a=mesh.geometry.attributes,f=a.wingFraction,valid=a.wingValid;if(!f)return;
+    f.array[i]=selected&&Number.isFinite(value)?(value-range.min)/(range.max-range.min):0;
+    valid.array[i]=selected?(Number.isFinite(value)?1:0):-1;f.needsUpdate=true;valid.needsUpdate=true;
   }
   function renderStressPeaks(kind) {
     const box=$('#stressPeaks');box.hidden=kind!=='sigma'||geometryPreview;
@@ -1874,9 +1969,11 @@ body { margin: 0; }
   }
   function updatePeakMarkers(kind) {
     if(!model.peakMarkers){model.peakMarkers=new THREE.Group();model.root.add(model.peakMarkers);for(const color of [0xff0000,0x003cff]){const dot=new THREE.Mesh(new THREE.SphereGeometry(Math.max(1.5,model.g.semiSpan*.006),12,8),new THREE.MeshBasicMaterial({color,depthTest:false,depthWrite:false}));dot.renderOrder=1000;model.peakMarkers.add(dot);}}
-    model.peakMarkers.visible=kind==='sigma'&&!geometryPreview;
+    model.peakMarkers.visible=kind==='sigma'&&!geometryPreview&&!stale;
     ['max','min'].forEach((key,i)=>{const p=stressExtrema[key],dot=model.peakMarkers.children[i];dot.visible=!!p;if(p)dot.position.fromBufferAttribute(p.mesh.geometry.attributes.position,p.index);});
     renderStressPeaks(kind);
+    if(resultDisplay.pinResult!==R){resultDisplay.pins=[];resultDisplay.pinResult=R;}
+    updateOriginalOutline();positionResultLabels();
   }
   function computeRange(kind) {
     let mn = Infinity, mx = -Infinity;
@@ -1908,7 +2005,7 @@ body { margin: 0; }
   }
   function updateSpatialModel(){
     const g=model.g,spatial=!!R?.analysis3D&&!geometryPreview,kind=spatial?{stress:'sigma',disp:'disp'}[S.plot]:null;
-    if(kind)range=computeRange(kind);
+    if(kind)range=displayRange(kind,computeRange(kind));
     const scale=spatial?deformAmount().scale:0;
     const place=(y,x,z,mod=0)=>{
       const p=WingGeometry.transformPoint(g,y,[x,z]);
@@ -1923,6 +2020,7 @@ body { margin: 0; }
         const p=place(u.by[i],u.bx[i],u.bz[i],u.module||0);pos.set(p,3*i);
         const selected=kind==='disp'||kind==='sigma'&&(S.stressComponent==='spars'?u.kind==='spar':u.kind!=='spar'&&u.kind!=='rod');
         const value=selected?fieldValue(u.by[i],u.bx[i],u.bz[i],kind,u):null;
+        contourSample(m,i,value,selected);
         const c=selected?(Number.isFinite(value)?rainbow((value-range.min)/(range.max-range.min)):new THREE.Color(0x9ba7b4)):new THREE.Color(base[u.kind]);
         col[3*i]=c.r;col[3*i+1]=c.g;col[3*i+2]=c.b;
       }
@@ -1945,7 +2043,7 @@ body { margin: 0; }
     if (!R) return;
     const kind = { stress: "sigma", disp: "disp", fos: "fos" }[S.plot];
     const useField = !!kind && !geometryPreview;
-    if (useField) range = computeRange(kind);
+    if (useField) range = displayRange(kind,computeRange(kind));
     const reqFos = R.load.fos;
     const colorOf = (y, x, z, base,member) => {
       if (!useField) return base;
@@ -1975,6 +2073,7 @@ body { margin: 0; }
         place(u.by[i], u.bx[i], u.bz[i], tmp, isRod ? 0 : u.module);
         pos[3 * i] = tmp[0]; pos[3 * i + 1] = tmp[1]; pos[3 * i + 2] = tmp[2];
         const selectedStress = !geometryPreview && S.plot==='stress' && (S.stressComponent==='rods'?isRod:S.stressComponent==='spars'?u.kind==='spar':!isRod&&u.kind!=='spar');
+        contourSample(m,i,useField?fieldValue(u.by[i],u.bx[i],u.bz[i],kind,u):0,useField&&kind!=='fos'&&(S.plot!=='stress'||selectedStress));
         const c = geometryPreview ? base[u.kind] : selectedStress ? colorOf(u.by[i],u.bx[i],u.bz[i],base[u.kind],u) : S.plot==='stress'?new THREE.Color(0x7f8c98):isRod?base.rod:colorOf(u.by[i],u.bx[i],u.bz[i],base[u.kind],u);
         col[3 * i] = c.r; col[3 * i + 1] = c.g; col[3 * i + 2] = c.b;
       }
@@ -2043,6 +2142,7 @@ body { margin: 0; }
   function renderLegend(kind) {
     const lg = $("#legend"), lt = $("#legendTitle");
     lg.hidden = false;
+    if($('#wrMin')&&kind){if(document.activeElement!==$('#wrMin'))$('#wrMin').value=range.min;if(document.activeElement!==$('#wrMax'))$('#wrMax').value=range.max;$('#wrStatus').textContent=`${resultDisplay.scaleMode==='auto'?'Auto scale':'Fixed scale for '+resultScaleKey(kind)} · values outside limits use end colours; extrema and probes retain actual values. Grey = unresolved.`;}
     if (!kind) { lg.innerHTML = ""; lt.textContent = ""; return; }
     const unit = { sigma: "MPa", disp: "mm", fos: "" }[kind];
     lt.textContent = { sigma: "Stress σ, span (MPa)", disp: "Displacement (mm)", fos: "Factor of safety" }[kind];
@@ -2262,6 +2362,21 @@ body { margin: 0; }
     pr.style.left = `${left}px`; pr.style.top = `${top}px`;
   });
   canvas.addEventListener("pointerleave", () => ($("#probe").hidden = true));
+  let probePointer=null;
+  canvas.addEventListener('pointerdown',ev=>{probePointer={x:ev.clientX,y:ev.clientY,id:ev.pointerId};});
+  canvas.addEventListener('pointerup',ev=>{
+    const down=probePointer;probePointer=null;
+    if(!down||down.id!==ev.pointerId||Math.hypot(ev.clientX-down.x,ev.clientY-down.y)>5||!resultDisplay.pinning||S.plot!=='stress'||!R||!model||stale||geometryPreview||running||wingMultiTouch)return;
+    if(resultDisplay.pins.length>=8){flash('Maximum 8 stress pins. Clear pins to start again.');return;}
+    const rect=canvas.getBoundingClientRect();ndc.set((ev.clientX-rect.left)/rect.width*2-1,-(ev.clientY-rect.top)/rect.height*2+1);raycaster.setFromCamera(ndc,camera);
+    const meshes=S.stressComponent==='spars'?model.spars||[]:S.stressComponent==='rods'?model.rods:model.skins.concat(model.sleeves);
+    const visible=m=>{for(let n=m;n;n=n.parent)if(!n.visible)return false;return true;};
+    const hit=raycaster.intersectObjects(meshes.filter(visible),false).find(h=>!S.clip||h.point.x<=S.clipY);if(!hit?.face)return;
+    const mesh=hit.object,u=mesh.userData,a=mesh.geometry.attributes.position,indices=[hit.face.a,hit.face.b,hit.face.c],triangle=new THREE.Triangle(...indices.map(i=>new THREE.Vector3().fromBufferAttribute(a,i))),local=mesh.worldToLocal(hit.point.clone()),bc=new THREE.Vector3();triangle.getBarycoord(local,bc);
+    const weights=[bc.x,bc.y,bc.z],mix=arr=>indices.reduce((v,i,k)=>v+arr[i]*weights[k],0),y=mix(u.by),x=mix(u.bx),z=mix(u.bz),value=fieldValue(y,x,z,'sigma',u);
+    if(!Number.isFinite(value)){flash('Stress is unresolved at this point; no numeric pin was created.');return;}
+    resultDisplay.pins.push({mesh,indices,weights,y,x,z,value});positionResultLabels();
+  });
 
   // ------------------------------------------------------------ render loop
   function resize() {
@@ -2281,6 +2396,7 @@ body { margin: 0; }
     renderAircraftAxes();
     renderViewReadout();
     positionRibLabels();
+    positionResultLabels();
     if (S.plot === "mode" && R && model && !geometryPreview) {
       const f = (S.mode.kind === "bending" ? R.fem.fBending : R.fem.fTorsion)[S.mode.index];
       const visualHz = Math.min(1.2, 0.35 + f / 120);
@@ -3359,6 +3475,7 @@ body { margin: 0; }
     const viewBody=$('#wingViewPanel .wl-vbody'),standardViews=inlineHud.querySelector('[aria-label="Standard views"]'),explodeControls=$('#explodeIn').closest('.hud-row');
     for(const b of standardViews.querySelectorAll('button')){b.title=b.textContent;b.setAttribute('aria-label',b.textContent);b.textContent={iso:'3D',plan:'Top',section:'Side',front:'Front'}[b.dataset.view];}
     viewBody.insertBefore(standardViews,inlineHud);viewBody.insertBefore(explodeControls,inlineHud);
+    installResultDisplayTools(viewBody);
     const viewJump=[...secondaryTools.querySelectorAll('button')].find(b=>b.textContent==='View & display ▾');
     viewJump.textContent='View & display';viewJump.removeAttribute('aria-expanded');viewJump.setAttribute('aria-controls','wingInlineDisplay');
     viewJump.onclick=()=>{printedWorkspace.close();inlineDisplay.scrollIntoView({block:'nearest'});$('#zoomOut').focus({preventScroll:true});};

@@ -5,7 +5,7 @@ const src=readFileSync(new URL('./wing_lab_template.html',import.meta.url),'utf8
 const start=src.indexOf('  let range = { min: 0, max: 1 };'),end=src.indexOf('  function deformAmount()',start);
 const material={clippingPlanes:['clip'],transparent:true,opacity:.22,depthWrite:false};
 const mesh={material,userData:{by:[0,1,2,3],bx:[2,3,4,5],bz:[1,1,1,1],values:[-8,12,NaN,4]}};
-const ctx={THREE:{DoubleSide:2,MeshBasicMaterial:class{constructor(o){Object.assign(this,o);}}},S:{stressComponent:'skin'},model:{skins:[mesh],sleeves:[],spars:[],rods:[]},fieldValue:(y,x,z,k,u)=>u.values[y]};
+const ctx={resultDisplay:{bands:false,scales:{},scaleMode:'auto'},THREE:{DoubleSide:2,MeshBasicMaterial:class{constructor(o){Object.assign(this,o);}}},S:{stressComponent:'skin'},model:{skins:[mesh],sleeves:[],spars:[],rods:[]},fieldValue:(y,x,z,k,u)=>u.values[y]};
 vm.createContext(ctx);vm.runInContext(src.slice(start,end)+'\nresultMaterial(model.skins[0],true); range=computeRange("sigma");',ctx);
 assert.equal(mesh.material.vertexColors,true);assert.equal(mesh.material.side,2);assert.deepEqual(mesh.material.clippingPlanes,['clip']);assert.equal(mesh.material.opacity,.22);
 assert.equal(vm.runInContext('range.max',ctx),12);assert.equal(vm.runInContext('range.min',ctx),-8);

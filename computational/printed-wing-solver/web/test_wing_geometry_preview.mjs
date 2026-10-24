@@ -4,7 +4,7 @@ import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
 import {createRequire} from 'node:module';
 const require=createRequire(import.meta.url),E=require('./engine.js');
-const src=readFileSync(new URL('./wing_lab_template.html',import.meta.url),'utf8');
+const src=readFileSync(new URL('./wing_lab_template.html',import.meta.url),'utf8').replaceAll('\r\n','\n');
 const start=src.indexOf('  function previewGeometry()'),end=src.indexOf('\n  // Deliberate study actions',start);
 assert.ok(start>0&&end>start);
 const nodes=new Map(),ctx={E,S:{emptyStudy:false},showEmptyWing:()=>ctx.calls.push('empty'),model:{},running:false,geometryPreview:false,lastGeoKey:'old',calls:[],

@@ -14,11 +14,11 @@ class OrbitControls {
 THREE.OrbitControls=OrbitControls;
 const source=readFileSync(new URL('./wing_lab_template.html',import.meta.url),'utf8');
 const elements=new Map(),$=selector=>{if(!elements.has(selector))elements.set(selector,{innerHTML:'',textContent:'',hidden:false,style:{},dataset:{}});return elements.get(selector);};
-const buttons=['iso','plan','section','front'].map(view=>({dataset:{view},setAttribute(k,v){this[k]=v;}}));
+const buttons=['iso','plan','bottom','section','front'].map(view=>({dataset:{view},setAttribute(k,v){this[k]=v;}}));
 const canvas={clientHeight:600,getBoundingClientRect:()=>({left:73,top:41,width:900,height:600})},camera=new THREE.PerspectiveCamera(32,1.5,1,20000),world=new THREE.Group();
 const ctx={THREE,E,WingGeometry,$,document:{querySelectorAll:()=>buttons},canvas,camera,world,
   S:{explode:0,plot:'model'},R:{},geometryPreview:true,nf:(v,n)=>v.toFixed(n),esc:String,airfoilLabel:()=> 'NACA 0012',
-  applyClip(){},applyXray(){},applyAnatomy(){},drawLoads(){},renderLegend(){}};
+  applyClip(){},applyXray(){},applyAnatomy(){},drawLoads(){},renderLegend(){},resultMaterial(){},contourSample(){},updatePeakMarkers(){}};
 vm.createContext(ctx);
 vm.runInContext('let model=null,lastViewSet=false;let controls=new THREE.OrbitControls(camera,canvas);'+
  source.slice(source.indexOf('  const COLORS ='),source.indexOf('  // ------------------------------------------------------------ results on the model'))+
@@ -45,11 +45,12 @@ for(const advanced of [false,true]){
     expected.forEach((p,k)=>near(pos[3*i+k],p,8e-5,`physical geometry coordinate ${advanced}/${i}/${k}`));
   }
   const before=pos.slice();
-  for(const view of ['iso','plan','front','section','plan','iso']){
+  for(const view of ['iso','plan','bottom','front','section','plan','iso']){
     const old=ctx.api.controls;ctx.api.setView(view);
     const direction=camera.position.clone().sub(ctx.api.controls.target).normalize();
     near(direction.dot(camera.up),0,view==='iso'?.5:1e-12,'upright standard-view axes are not singular');
     if(view==='plan'){near(direction.y,1,1e-12,'Top looks from aircraft +z');near(camera.up.z,-1,1e-12,'Top leading edge is up');}
+    if(view==='bottom')near(direction.y,-1,1e-12,'Bottom looks from aircraft minus z');
     if(view==='front')near(direction.z,-1,1e-12,'Front looks from aircraft −x');
     if(view==='section')near(direction.x,-1,1e-12,'Side looks from aircraft −y/root');
     if(old!==ctx.api.controls)ok(old.disposed,'up-axis switch disposes old OrbitControls');

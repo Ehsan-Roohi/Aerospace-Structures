@@ -8908,6 +8908,8 @@ const WingLoadsUI = (() => {
     injectStyles(doc);
     const id = ad.ids, u = ad.units;
     const kinds = FORM_KINDS.filter(([k]) => k !== 'schrenk' || ad.allowSchrenk);
+    const configurableFlight=!!ad.flight?.configure,flightPrefix=id.flight+'Input';
+    if(configurableFlight)kinds.push(['flight','Lift from aircraft mass · n m g / 2']);
     const val = (k) => ad.kindValue[k] || k, canon = (v) => (Object.entries(ad.kindValue).find(([, x]) => x === v) || [v])[0];
     const d = typeof ad.defaults === 'function' ? ad.defaults() : ad.defaults || {};
     const field = (fid, label, value, extra = '') => `<div class="field"><label for="${fid}">${label}</label><input id="${fid}" type="number" step="any" value="${value}" aria-describedby="${fid}Error" ${extra}><small id="${fid}Error" class="wle-err"></small></div>`;
@@ -8917,7 +8919,8 @@ const WingLoadsUI = (() => {
         <div class="wle-submitbar" style="position:sticky;top:0;z-index:3;background:var(--panel,#fff);padding:8px 0"><button class="btn primary" type="submit">Add load</button><p class="wle-draft-error wle-err" role="alert"></p><p class="note" style="margin:4px 0">Draft only until confirmed. Add load registers the force and updates the analysis; Solve alone does not register this form.</p></div>
         ${ad.pickOnModel ? '<button class="btn wle-pick" type="button" aria-pressed="false">⌖ Pick on 3-D wing</button><p class="note">Select the shape below, then pick on the undeformed skin. A point force needs one click; a line load needs start and end clicks. The first click fixes x/c for the whole interval. Schrenk uses the whole span. Picking only fills coordinates: enter magnitude and confirm Add load. No automatic force. Cancel with Esc.</p>' : ''}
         ${ad.showDeformation ? '<button class="btn wle-show-deformation" type="button">Show bending &amp; twist</button>' : ''}
-        ${select(id.kind, 'Shape', kinds.map(([k, t]) => [val(k), t]), val('point'))}
+        ${select(id.kind, 'Load type', kinds.map(([k, t]) => [val(k), t]), val('point'))}
+        ${configurableFlight?`<fieldset class="wle-flight" hidden><legend>Flight-like lift</legend>${field(flightPrefix+'Mass','Total aircraft mass (kg)',ad.flight.values().aircraftMass)}${field(flightPrefix+'N','Load factor n (1 = steady level cruise)',ad.flight.values().loadFactor)}${select(flightPrefix+'Shape','Spanwise lift distribution',[['elliptic','Elliptic'],['schrenk','Schrenk'],['uniform','Uniform'],['planform','Proportional to chord'],['tip','Tip-force approximation · not distributed']],ad.flight.values().distribution)}${field(flightPrefix+'Xc','Lift chord position x/c',ad.flight.values().liftFraction)}${select(flightPrefix+'Relief','Wing inertia relief',[['false','Ignored · prescribed lift only'],['true','Included · subtract wing inertia loading']],String(ad.flight.values().inertiaRelief))}<p class="note">Each semi-wing receives n × aircraft mass × 9.81 / 2 N of gross lift. This replaces the current load case. The distribution is prescribed, not calculated from the airfoil. With inertia relief the net structural force differs from gross lift.</p></fieldset>`:''}
         <p class="note wle-range"></p>${field(id.a, 'Point station or start', d.a)}${field(id.b, 'Distributed end', d.b)}${field(id.P, `Point force (${u.force}, upward +)`, d.P)}
         ${field(id.q0, `Start intensity (${u.line})`, d.q0)}${field(id.q1, `End intensity (${u.line})`, d.q1)}
         ${select(id.shape, 'Where is the maximum?', [['start', 'At the start (root side), zero at the end'], ['end', 'At the end (tip side), zero at the start'], ['middle', 'Symmetric: zero at both ends, maximum in the middle']], 'start')}
@@ -8932,7 +8935,7 @@ const WingLoadsUI = (() => {
         <p class="note">The first custom load replaces any flight or tip case; further loads are superposed (signed). Curved loads are integrated exactly, not split into straight segments.</p>
       </form>
       <div id="${id.list}" class="wle-list"></div>
-      <div class="lesson-actions"><button class="btn" type="button" id="${id.clear}">Clear custom loads</button>${ad.flight ? `<button class="btn" type="button" id="${id.flight}">${esc(ad.flight.label)}</button>` : ''}</div>
+      <div class="lesson-actions"><button class="btn" type="button" id="${id.clear}">${configurableFlight?'Clear applied loads':'Clear custom loads'}</button>${ad.flight&&!configurableFlight ? `<button class="btn" type="button" id="${id.flight}">${esc(ad.flight.label)}</button>` : ''}</div>
       <p id="${id.status}" class="wle-status" role="status"></p>
       <figure class="wle-chordfig"><div id="${id.chord}"></div><figcaption id="${id.chord}Cap"></figcaption></figure>
       <details class="wle-csv" id="${id.csv}"><summary>Import a spanwise line-load table (CSV)</summary>
@@ -8979,11 +8982,21 @@ const WingLoadsUI = (() => {
       if (!Number.isFinite(v)) throw new Error(`${label}: enter a finite number.`);
       return v;
     };
+    function flightCase(){
+      const v={kind:'flight',aircraftMass:readNum(flightPrefix+'Mass','Aircraft mass'),loadFactor:readNum(flightPrefix+'N','Load factor'),distribution:byId(flightPrefix+'Shape').value,liftFraction:readNum(flightPrefix+'Xc','Lift position'),inertiaRelief:byId(flightPrefix+'Relief').value==='true'};
+      if(v.aircraftMass<=0)throw Error('Aircraft mass must be greater than zero.');
+      if(v.liftFraction<0||v.liftFraction>1)throw Error('Lift position x/c must be between 0 and 1.');
+      ad.flight.validate?.(v);return v;
+    }
     function visible() {
       const k = canon(byId(id.kind).value), point = k === 'point', curve = k === 'elliptic' || k === 'parabolic', schrenk = k === 'schrenk';
+      const flight=k==='flight';if(configurableFlight)$('.wle-flight').hidden=!flight;
       const show = { [id.a]: !schrenk, [id.b]: !point && !schrenk, [id.P]: point, [id.q0]: ['uniform', 'rampDown', 'trapezoid'].includes(k), [id.q1]: ['rampUp', 'trapezoid'].includes(k),
         [id.shape]: curve, [id.basis]: curve, [id.value]: curve || schrenk, [id.xc]: true };
-      for (const [fid, on] of Object.entries(show)) { const e = byId(fid); e.closest('.field').hidden = !on; e.disabled = !on; if (e.tagName === 'INPUT') e.required = on; }
+      for (const [fid, requested] of Object.entries(show)) { const on=requested&&!flight,e = byId(fid); e.closest('.field').hidden = !on; e.disabled = !on; if (e.tagName === 'INPUT') e.required = on; }
+      if(pickButton)pickButton.hidden=flight;$('.wle-range').hidden=flight;$('.wle-scale').closest('label').hidden=flight;
+      byId(id.form).querySelector('h3').textContent=flight?'Apply aircraft lift to the semi-wing':'Add a load to the current wing';
+      container.querySelectorAll('button[type="submit"]').forEach(b=>b.textContent=flight?'Apply lift case':'Add load');
       container.querySelector(`label[for="${id.a}"]`).textContent = point ? `Point station y (${u.length} from root)` : `Start station a (${u.length})`;
       container.querySelector(`label[for="${id.b}"]`).textContent = `End station b (${u.length})`;
       container.querySelector(`label[for="${id.q0}"]`).textContent = k === 'uniform' ? `Uniform intensity q (${u.line}, upward +)` : `Start intensity q(a) (${u.line}, upward +)`;
@@ -8997,7 +9010,7 @@ const WingLoadsUI = (() => {
     }
     let editingIndex=null;
     function candidateItems(p){const base=ad.mode()==='custom'?[...ad.items()]:[];if(editingIndex===null)return [...base,p];if(!base[editingIndex])throw new Error('This load no longer exists. Close and select it again.');base[editingIndex]=p;return base;}
-    function newLoad(){editingIndex=null;byId(id.form).querySelector('h3').textContent='Add a load to the current wing';container.querySelectorAll('button[type="submit"]').forEach(b=>b.textContent='Add load');}
+    function newLoad(){editingIndex=null;const flight=configurableFlight&&canon(byId(id.kind).value)==='flight';byId(id.form).querySelector('h3').textContent=flight?'Apply aircraft lift to the semi-wing':'Add a load to the current wing';container.querySelectorAll('button[type="submit"]').forEach(b=>b.textContent=flight?'Apply lift case':'Add load');}
     function edit(i){
       const p=ad.items()[i];if(!p)return false;cancelPick();newLoad();
       if(p.kind==='table'){openCsv(i);return true;}
@@ -9058,6 +9071,8 @@ const WingLoadsUI = (() => {
       return { y, F };
     }
     function chord() {
+      if(canon(byId(id.kind).value)==='flight'){byId(id.chord).closest('figure').hidden=true;return;}
+      byId(id.chord).closest('figure').hidden=false;
       const fig = byId(id.chord), cap = byId(id.chord + 'Cap');
       let p;
       try { p = itemFromForm(); } catch (e) { fig.innerHTML = ''; cap.textContent = 'Enter a load to see its chord position, lever arm and torque.'; return; }
@@ -9089,6 +9104,9 @@ const WingLoadsUI = (() => {
       }catch(e){return `<p class="note">${esc(e.message)}</p>`;}
     }
     function livePreview() {
+      if(configurableFlight&&canon(byId(id.kind).value)==='flight'){
+        try{const v=flightCase(),lift=v.loadFactor*v.aircraftMass*9.81/2;$('.wle-draft-error').textContent='';$('.wle-live-preview').innerHTML=`<b>Preview only · gross lift per semi-wing ${fmt(lift,5)} N</b><p>${fmt(v.aircraftMass)} kg × ${fmt(v.loadFactor)} × 9.81 / 2. ${v.inertiaRelief?'Inertia relief included; net force is reported after solving.':'No wing inertia relief.'} Apply lift case to register this load.</p>`;container.querySelectorAll('button[type="submit"]').forEach(b=>b.disabled=false);}catch(e){$('.wle-draft-error').textContent='Not applied: '+e.message;container.querySelectorAll('button[type="submit"]').forEach(b=>b.disabled=true);}return;
+      }
       const out=$('.wle-live-preview'),range=ad.range(),a=byId(id.a),b=byId(id.b);
       for(const field of [a,b]){const v=field.value.trim()===''?NaN:Number(field.value);field.setAttribute('aria-invalid',String(!field.disabled&&Number.isFinite(v)&&(v<range.min||v>range.max)));}
       const invalidOrder=!a.disabled&&!b.disabled&&a.value!==''&&b.value!==''&&+b.value<=+a.value;
@@ -9106,6 +9124,7 @@ const WingLoadsUI = (() => {
     byId(id.form).onsubmit = (e) => {
       cancelPick();
       e.preventDefault();
+      if(configurableFlight&&canon(byId(id.kind).value)==='flight'){try{const v=flightCase();ad.flight.apply(v);newLoad();renderList();container.dispatchEvent(new doc.defaultView.CustomEvent('wing-load-applied',{bubbles:true,detail:ad.workspace}));}catch(error){status(`<span class="wle-err">${esc(error.message)}</span> Nothing was changed.`);}return;}
       let p;
       try { p = itemFromForm(); } catch (x) { status(`<span class="wle-err">${esc(x.message)}</span> Nothing was changed.`); return; }
       const note=editingIndex===null?'Load added.':`Load ${editingIndex+1} updated.`;
@@ -9116,7 +9135,7 @@ const WingLoadsUI = (() => {
     byId(id.basis).onchange=()=>{const next=byId(id.basis).value,k=canon(byId(id.kind).value);try{if(['elliptic','parabolic'].includes(k)&&byId(id.value).value.trim()!==''){const p=P.normalizeCurve({kind:k,start:readNum(id.a,'Start'),end:readNum(id.b,'End'),shape:byId(id.shape).value,[lastBasis]:readNum(id.value,'Magnitude')},{min:-Infinity,max:Infinity,lengthUnit:u.length});byId(id.value).value=p[next];}}catch(e){}lastBasis=next;visible();};
     byId(id.form).addEventListener('input', () => { law(); chord();livePreview(); });
     byId(id.clear).onclick = () => {newLoad();tryApply([], 'All custom loads cleared: no load defined.');};
-    if (ad.flight) byId(id.flight).onclick = () => { newLoad();cancelPick();ad.flight.apply(); renderList(); };
+    if (ad.flight&&!configurableFlight) byId(id.flight).onclick = () => { newLoad();cancelPick();ad.flight.apply(); renderList(); };
     // ---------------------------------------------------------- CSV
     const csv = { filename: '', sha256: '', fromFile: null, candidate: null, text: null, edit: null };
     const csvMode = () => (csv.edit !== null ? 'edit' : (container.querySelector(`input[name="${id.csv}Mode"]:checked`) || { value: 'add' }).value);
@@ -9187,7 +9206,7 @@ const WingLoadsUI = (() => {
     byId(id.csv + 'Template').onclick = () => { if (ad.download) ad.download(`${ad.workspace}_line_load_template.csv`, P.csvTemplate(ad.workspace), 'text/csv'); };
     byId(id.csv+'PowerPreview').onclick=()=>{try{const n=k=>readNum(id.csv+'Power'+k,k);const p=P.powerTable({start:n('A'),end:n('B'),total:n('F'),exponent:n('N'),shape:byId(id.csv+'PowerShape').value});byId(id.csv+'Text').value=P.CSV_SPECS[ad.workspace].columns.join(',')+'\n'+p.points.map(r=>r.join(',')).join('\n');preview();}catch(e){byId(id.csv+'Out').textContent=e.message;}};
     visible(); renderList();if(ad.onScale)ad.onScale($('.wle-scale').value);
-    return { refresh() { renderList(); chord();livePreview(); }, cancelDraft(){newLoad();cancelPick();closeCsv();}, preview, openCsv, edit, newLoad, container, acceptPick, cancelPick };
+    return { refresh() { renderList(); chord();livePreview(); }, openFlight(){if(!configurableFlight)return;const v=ad.flight.values();for(const [key,suffix]of [['aircraftMass','Mass'],['loadFactor','N'],['distribution','Shape'],['liftFraction','Xc'],['inertiaRelief','Relief']])byId(flightPrefix+suffix).value=String(v[key]);byId(id.kind).value=val('flight');newLoad();cancelPick();visible();}, cancelDraft(){newLoad();cancelPick();closeCsv();}, preview, openCsv, edit, newLoad, container, acceptPick, cancelPick };
   }
 
   /**
@@ -11740,23 +11759,10 @@ if(typeof module!=='undefined')module.exports=WingWorkspaceUI;
       pm.append(el("p", { class: "note" }, "A real clamp is never perfectly rigid. If a measured slope is softer than predicted, the fixture is one of the first suspects."));
     } else if (id === "loads" || id === "load") {
       $("#pmHead").textContent = "External load";
-      const noLoadCase = S.load.kind === "custom" && !S.load.items.length;
-      head("Load case", noLoadCase ? "No load defined. The wing opens without loads: add your own in Build a wing load, or choose a flight-like or tip case below (a deliberate choice)." : S.load.kind === "flight" ? "Each semi-wing lifts L = n m g / 2. Inertia relief subtracts wing mass loading when enabled (n is applied once to the lift and once to the relief)." : S.load.kind === "custom" ? "Custom loads only (point, linear, elliptic, parabolic, table or Schrenk; no automatic lift, weight or inertia relief). Edit them in Build a wing load." : "A signed upward-positive force at the tip. Self-weight is excluded in this idealized case.");
-      // Switching the case is a deliberate request: start from the documented defaults of that case.
-      pm.append(segField([["flight", "Flight-like lift"], ["tip", "Tip force"]], S.load.kind, (v) => { if (S.load.kind !== v) S.load = { ...E.DEFAULT_LOAD, kind: v, fos: S.load.fos, tipMass: S.load.tipMass }; }, "Load case"));
-      pm.append(el("p",{class:"note"},"For point, rectangular, triangular, trapezoidal, elliptic, parabolic, Schrenk or CSV-table loads at any chord position x/c, open the Build a wing load tab."));
-      if (S.load.kind === "flight") {
-        pm.append(fs("Lift",
-          numField("am", "Aircraft mass", "kg", S.load.aircraftMass, 0.1, (v) => (S.load.aircraftMass = v), (v) => (v > 0 ? null : "must be greater than 0 kg")),
-          numField("nf", "Load factor n", "", S.load.loadFactor, 0.5, (v) => (S.load.loadFactor = v)),
-          selField("dist", "Spanwise shape", [["schrenk", "Schrenk"], ["elliptic", "Elliptic"], ["planform", "Planform"], ["uniform", "Uniform"], ["tip", "Point load at tip"]], S.load.distribution, (v) => (S.load.distribution = v)),
-          numField("lcf", "Lift acts at", "fraction of chord", S.load.liftFraction, 0.01, (v) => (S.load.liftFraction = v), chordFraction),
-          selField("ir", "Inertia relief", [["true", "Included"], ["false", "Ignored"]], String(S.load.inertiaRelief), (v) => (S.load.inertiaRelief = v === "true"))));
-      } else if (S.load.kind === "tip") {
-        pm.append(fs("Tip force",
-          numField("tf", "Force", "N, upward", S.load.tipForce, 1, (v) => (S.load.tipForce = v)),
-          numField("tfc", "Applied at", "fraction of tip chord", S.load.tipFraction, 0.01, (v) => (S.load.tipFraction = v), chordFraction)));
-      }
+      head("Load setup", "Choose a point force, a line load or lift from aircraft mass in the same load editor. Selecting a shape does not apply a force; confirm it before Solve.");
+      const loadButton=el("button",{type:"button",class:"btn"},"Open load editor");
+      loadButton.onclick=()=>{openWingLoadPopup(null,loadButton);if(S.load.kind==='flight')loadKeeperOf().editor?.openFlight();};pm.append(loadButton);
+      if(S.load.kind==='flight')pm.append(kv([["Aircraft mass",nf(S.load.aircraftMass,3)+" kg"],["Load factor n",nf(S.load.loadFactor,2)],["Gross semi-wing lift",nf(S.load.aircraftMass*S.load.loadFactor*9.81/2,3)+" N"]]));
       pm.append(fs("Checks",
         numField("fos", "Factor of safety", "on strength and buckling", S.load.fos, 0.1, (v) => (S.load.fos = v), (v) => (v > 0 ? null : "must be greater than 0 (a factor of 0 or less would make every factored check pass)")),
         numField("tm", "Tip sensor mass", "g (lowers the frequency)", S.load.tipMass, 1, (v) => (S.load.tipMass = v), (v) => (v >= 0 ? null : "cannot be negative")),
@@ -13643,7 +13649,7 @@ if(typeof module!=='undefined')module.exports=WingWorkspaceUI;
     mode:()=>S.load.kind==='custom'?(S.load.items.length?'custom':'none'):S.load.kind,
     validate:items=>E.normalize({...engineInput(),load:{...S.load,kind:'custom',items}}),
     apply:items=>{S.load={...S.load,kind:'custom',items};changed();},
-    flight:{label:'Apply flight-like lift (n = 4, m = 1 kg, Schrenk, inertia relief)',apply:()=>{S.load={...E.DEFAULT_LOAD,fos:S.load.fos,tipMass:S.load.tipMass};changed();}},
+    flight:{configure:true,values:()=>S.load.kind==='flight'?S.load:{aircraftMass:.2,loadFactor:1,distribution:'elliptic',liftFraction:.25,inertiaRelief:false},validate:v=>E.normalize({...engineInput(),load:{...E.DEFAULT_LOAD,...v,fos:S.load.fos,tipMass:S.load.tipMass}}),apply:v=>{E.normalize({...engineInput(),load:{...E.DEFAULT_LOAD,...v,fos:S.load.fos,tipMass:S.load.tipMass}});S.load={...E.DEFAULT_LOAD,...v,fos:S.load.fos,tipMass:S.load.tipMass};changed();}},
     allowSchrenk:true,refStation:0,refLabel:'the root y = 0',
     section:y=>R&&!stale&&!R.analysis3D?{outline:E.outerContour(R.geometry,y),chord:E.chordAt(R.geometry,y),xsc:E.interp(y,R.y,R.props.xsc)}:null,
     schrenkCentroid:()=>WingLoadsUI.schrenkData(S.geometry.semiSpan,y=>E.chordAt(R?R.geometry:E.makeGeometry(S.geometry),y),1,[S.geometry.rootChord,S.geometry.tipChord]).stats.schrenk.ybar,
@@ -13666,10 +13672,11 @@ if(typeof module!=='undefined')module.exports=WingWorkspaceUI;
       <p class="note">Per newton of total semi-wing lift. Assumptions: an unswept wing without twist, flaps or ailerons deflected, below stall, at a moderate aspect ratio. Sweep, twist and stall change the lift distribution and need a correction or a lifting-surface/CFD analysis; Schrenk is a teaching approximation of the lift per unit span, not a chordwise pressure (Cp) distribution and not a CFD result. Background: <a href="https://ntrs.nasa.gov/citations/19930093823" target="_blank" rel="noopener">NACA/NASA NTRS 19930093823, “A simple approximate method for obtaining spanwise lift distributions over swept wings”</a> (adapting simple methods of this kind to swept wings) and <a href="https://ntrs.nasa.gov/citations/19780008062" target="_blank" rel="noopener">NASA CR-132403 (NTRS 19780008062)</a>.</p></section>`;
   }
   function renderWingLoads() {
+    if(!R){const home=document.getElementById('wingLoadEditor');if(home)loadKeeperOf().place(home);return;}
     if(!R)return;
     const g=R.geometry;
     loadKeeperOf().detach();
-    $('#wingLoadLesson').innerHTML=`<h2>Build a wing load: force, position and distribution</h2><div class="learn-layout"><article class="learn-copy"><p><b>Wing convention: positive is upward.</b> This is opposite to the downward-positive introductory beam exercise. The root is clamped; the tip is free. The beam pathway is where you compare different support conditions.</p><p>A point force P is measured in N. A line load q(y) is N/mm. Pressure p is N/mm² and must first be integrated over the local chord to obtain q. Load arrows show location/direction, not a calibrated force scale.</p><div class="equation">F = ∫ q(y) dy + ΣP<br>M<sub>root</sub> = ∫ y q(y) dy + Σy<sub>P</sub>P</div><p>Two loads with the same total force can have different bending effects. A 2 N uniform load over length L has root moment FL/2; a root-heavy triangle gives FL/3 and a tip-heavy triangle gives 2FL/3. A root-heavy elliptic load w = w₀√(1 − (y/L)²) has w₀ = 4F/(πL) and acts at 4L/(3π), so its root moment is 4FL/(3π) ≈ 0.424FL; a root-heavy parabola w₀(1 − (y/L)²) acts at 3L/8.</p><h3>Bending and torsion from the same force</h3><p>x/c is measured from the local leading edge (0) to the trailing edge (1). V and M depend only on the force and its span station. The same force also twists the wing about the shear centre: T = F(x<sub>sc</sub> − x<sub>F</sub>), nose-up positive. The figure next to the form shows the force line, the shear centre and the lever arm for the load you are entering.</p><h3>What does load factor mean?</h3><div class="equation">n = aerodynamic lift / aircraft weight<br>L<sub>semi-wing</sub> = nmg/2</div><p>Here both wings are assigned all aerodynamic lift symmetrically; tail/body lift is not separately allocated. n=2 prescribes twice the 1-g lift at the same aircraft mass. <b>Load factor is not factor of safety.</b> With inertia relief, wing mass contributes downward inertial loading; gross lift and net structural load differ. The flight-like case applies n once to the lift and once to the inertia relief; the lift acts at the “Lift acts at” chord fraction (a quarter-chord teaching value), and this model has no separate airfoil pitching-moment term.</p><p><b>Every wing opens with no load.</b> Flight-like lift (n=4, m=1 kg, Schrenk) is applied only when you press its button. Custom cases contain only the loads you enter, with no automatic weight/inertia relief. A force exactly at the support is handled in the beam exercise, not as a flexible-span wing load here. Keep distinct load boundaries at least 0.1 mm apart from ribs/seams/ends, or use exactly the same station.</p><p><a href="https://www.faa.gov/sites/faa.gov/files/regulations_policies/handbooks_manuals/aviation/airplane_handbook/20_afh_glossary.pdf" target="_blank" rel="noopener">FAA terminology</a> · <a href="https://help.solidworks.com/2025/english/SolidWorks/cworks/c_Summary_of_Force_and_Torque_Load.htm" target="_blank" rel="noopener">SOLIDWORKS force/torque loading</a></p></article>
+    $('#wingLoadLesson').innerHTML=`<h2>Build a wing load: force, position and distribution</h2><div class="learn-layout"><article class="learn-copy"><p><b>Wing convention: positive is upward.</b> This is opposite to the downward-positive introductory beam exercise. The root is clamped; the tip is free. The beam pathway is where you compare different support conditions.</p><p>A point force P is measured in N. A line load q(y) is N/mm. Pressure p is N/mm² and must first be integrated over the local chord to obtain q. Load arrows show location/direction, not a calibrated force scale.</p><div class="equation">F = ∫ q(y) dy + ΣP<br>M<sub>root</sub> = ∫ y q(y) dy + Σy<sub>P</sub>P</div><p>Two loads with the same total force can have different bending effects. A 2 N uniform load over length L has root moment FL/2; a root-heavy triangle gives FL/3 and a tip-heavy triangle gives 2FL/3. A root-heavy elliptic load w = w₀√(1 − (y/L)²) has w₀ = 4F/(πL) and acts at 4L/(3π), so its root moment is 4FL/(3π) ≈ 0.424FL; a root-heavy parabola w₀(1 − (y/L)²) acts at 3L/8.</p><h3>Bending and torsion from the same force</h3><p>x/c is measured from the local leading edge (0) to the trailing edge (1). V and M depend only on the force and its span station. The same force also twists the wing about the shear centre: T = F(x<sub>sc</sub> − x<sub>F</sub>), nose-up positive. The figure next to the form shows the force line, the shear centre and the lever arm for the load you are entering.</p><h3>What does load factor mean?</h3><div class="equation">n = aerodynamic lift / aircraft weight<br>L<sub>semi-wing</sub> = nmg/2</div><p>Here both wings are assigned all aerodynamic lift symmetrically; tail/body lift is not separately allocated. n=2 prescribes twice the 1-g lift at the same aircraft mass. <b>Load factor is not factor of safety.</b> With inertia relief, wing mass contributes downward inertial loading; gross lift and net structural load differ. The flight-like case applies n once to the lift and once to the inertia relief; the lift acts at the “Lift acts at” chord fraction (a quarter-chord teaching value), and this model has no separate airfoil pitching-moment term.</p><p><b>Every wing opens with no load.</b> Lift from aircraft mass is applied only after you select it in the load editor and confirm Apply lift case. Custom cases contain only the loads you enter, with no automatic weight/inertia relief. A force exactly at the support is handled in the beam exercise, not as a flexible-span wing load here. Keep distinct load boundaries at least 0.1 mm apart from ribs/seams/ends, or use exactly the same station.</p><p><a href="https://www.faa.gov/sites/faa.gov/files/regulations_policies/handbooks_manuals/aviation/airplane_handbook/20_afh_glossary.pdf" target="_blank" rel="noopener">FAA terminology</a> · <a href="https://help.solidworks.com/2025/english/SolidWorks/cworks/c_Summary_of_Force_and_Torque_Load.htm" target="_blank" rel="noopener">SOLIDWORKS force/torque loading</a></p></article>
       <div id="wingLoadEditorHome"></div></div>${schrenkLesson(g)}`;
     // The left-panel container (#wingLoadEditor) when the layout has one, otherwise beside the lesson text.
     loadKeeperOf().place(document.getElementById('wingLoadEditor'),$('#wingLoadEditorHome'));
@@ -14184,7 +14191,7 @@ function renderObservations() {
     sessionNote('Study cleared. Empty canvas: choose Airfoil & planform to create a new wing. Undo restores the previous inputs; downloaded JSON files are unchanged.'+(persisted?'':' Browser storage could not be updated; use Save JSON before leaving.'));
   }
   function openWingLoadPopup(p,anchor){
-    if(!printedWorkspace)return;let editor=loadKeeperOf().editor;if(!editor){renderWingLoads();editor=loadKeeperOf().editor;}if(!editor){flash('Complete valid structural inputs and Solve once before adding loads.');return;}
+    if(!printedWorkspace)return;let editor=loadKeeperOf().editor;if(!editor){renderWingLoads();editor=loadKeeperOf().editor;}if(!editor){flash('Create a wing before adding loads.');return;}
     editor.newLoad();printedWorkspace.open('Wing load · upward positive',editor.container,anchor);
     if(p){$('#wingKind').value='point';$('#wingKind').dispatchEvent(new Event('change'));editor.acceptPick(p);}else $('#wingKind').focus({preventScroll:true});
   }

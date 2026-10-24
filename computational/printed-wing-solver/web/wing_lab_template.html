@@ -1167,7 +1167,7 @@ body { margin: 0; }
     const title=$('#wingProjectTitle');if(title)title.textContent=S.projectName||'Wing Virtual Lab';
     if(typeof printedWorkspace!=='undefined'&&printedWorkspace)for(const b of printedWorkspace.tools.querySelectorAll('[data-wing-action]'))if(['load','rib','rod','spar','parts','inside','notebook','select-wing'].includes(b.dataset.wingAction))b.disabled=!!S.emptyStudy||running;
     const mesh=$('#wingMeshElements');if(mesh&&document.activeElement!==mesh)mesh.value=S.analysis?.nElements??'';
-    const key = JSON.stringify([S.geometry, fieldErrors, S.assembly.seamsBonded,S.emptyStudy]);
+    const key = JSON.stringify([S.geometry, fieldErrors, S.assembly.seamsBonded,S.emptyStudy,window.wingChordInputMode||'tip']);
     if (!force && key === inputsKey) return;
     inputsKey = key;
     const active = document.activeElement, focusId = active && active.id && $("#wingSide").contains(active) ? active.id : null;
@@ -1181,18 +1181,24 @@ body { margin: 0; }
     const g = S.geometry, area = 0.5 * (g.rootChord + g.tipChord) * g.semiSpan;
     $("#wingGeometryForm").innerHTML = `<h3>Build your wing</h3><button class="btn wing-airfoil-launch" type="button" id="wgAirfoilPicker"><b>Airfoil &amp; planform ▾</b><span>${esc(airfoilLabel(g))} · library, DAT, taper, twist, sweep &amp; dihedral</span></button>
       ${geoField("semiSpan", "wgSpan", "Semi-span", "mm, root to tip", g.semiSpan, 1)}
+      <div class="field"><label for="wgChordMode">Chord input method</label><select id="wgChordMode"><option value="tip">Root + Tip → calculate λ</option><option value="ratio">Root + λ → calculate Tip</option></select></div>
       ${geoField("rootChord", "wgRoot", "Root chord", "mm", g.rootChord, 1)}
       ${geoField("tipChord", "wgTip", "Tip chord", "mm, straight taper, ≤ root chord", g.tipChord, 1)}
       ${geoField("taper", "wgTaper", "Taper ratio λ", "tip chord / root chord · 1 = rectangular", +(g.tipChord/g.rootChord).toPrecision(8), "any")}
-      <p class="note">λ = ${nf(g.tipChord,1)} / ${nf(g.rootChord,1)} = ${nf(g.tipChord/g.rootChord,3)}. Use Top / planform to inspect taper.</p>
+      <p class="note" id="wgChordHint"></p>
       <div class="field"><label for="wgModules">Printed modules<small>equal lengths; seams between them</small></label><select id="wgModules" aria-invalid="${!!fieldErrors.modules}" aria-describedby="wgErr-modules">${[1, 2, 3].map((m) => `<option value="${m}" ${m === +g.modules ? "selected" : ""}>${m === 1 ? "1 · one piece" : m}</option>`).join("")}</select></div>${errLine("modules")}
       <dl class="kv wl-kv"><dt>Semi-wing area</dt><dd>${nf(area / 100, 1)} cm²</dd><dt>Taper ratio</dt><dd>${nf(g.tipChord / g.rootChord, 3)}</dd><dt>Aspect ratio (full wing)</dt><dd>${nf((4 * g.semiSpan ** 2) / (2 * area), 2)}</dd><dt>Module length</dt><dd>${mm(g.semiSpan / g.modules)}</dd></dl>`;
     $("#wlGeometryBadge").textContent = S.emptyStudy?'New wing · not created':`${airfoilLabel(g)} · ${nf(g.semiSpan, 0)} × ${nf(g.rootChord, 0)}/${nf(g.tipChord, 0)} mm`;
     $("#wgAirfoilPicker").onclick=e=>openAdvancedGeometryPopup(e.currentTarget);
-    $("#wgTaper").onchange=e=>{const ratio=numberFrom(e.target);if(!Number.isFinite(ratio)||ratio<=0||ratio>1){e.target.setCustomValidity('Taper ratio must be greater than 0 and no greater than 1.');e.target.reportValidity();return;}e.target.setCustomValidity('');applyGeometry({tipChord:S.geometry.rootChord*ratio},'tipChord','taper ratio '+ratio);};
+    const ratioMode=window.wingChordInputMode==='ratio';
+    $('#wgChordMode').value=ratioMode?'ratio':'tip';$('#wgTip').readOnly=ratioMode;$('#wgTaper').readOnly=!ratioMode;
+    $('#wgTip').setAttribute('aria-readonly',String(ratioMode));$('#wgTaper').setAttribute('aria-readonly',String(!ratioMode));
+    $('#wgChordHint').textContent=ratioMode?'Tip is calculated from Root × λ. Changing Root preserves λ.':'λ is calculated from Tip / Root. Enter both chord lengths.';
+    $('#wgChordMode').onchange=e=>{window.wingChordInputMode=e.target.value;renderInputs(true);};
+    $("#wgTaper").onchange=e=>{if(window.wingChordInputMode!=='ratio')return;const ratio=numberFrom(e.target);if(!Number.isFinite(ratio)||ratio<=0||ratio>1){e.target.setCustomValidity('Taper ratio must be greater than 0 and no greater than 1.');e.target.reportValidity();return;}e.target.setCustomValidity('');applyGeometry({tipChord:S.geometry.rootChord*ratio},'tipChord','taper ratio '+ratio);};
     $("#wgTaper").onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();e.target.onchange(e);}};
     for (const [id, k] of [["wgSpan", "semiSpan"], ["wgRoot", "rootChord"], ["wgTip", "tipChord"]])
-      $("#" + id).addEventListener("change", (e) => applyGeometry({ [k]: numberFrom(e.target) }, k, e.target.value.trim() === "" ? "an empty value" : mm(numberFrom(e.target))));
+      $("#" + id).addEventListener("change", (e) => {if(k==='tipChord'&&window.wingChordInputMode==='ratio')return;const value=numberFrom(e.target),patch={ [k]:value };if(k==='rootChord'&&window.wingChordInputMode==='ratio')patch.tipChord=value*(S.geometry.tipChord/S.geometry.rootChord);applyGeometry(patch,k,e.target.value.trim()===''?'an empty value':mm(value));});
     $("#wgModules").addEventListener("change", (e) => applyGeometry({ modules: +e.target.value }, "modules", `${e.target.value} module${e.target.value === "1" ? "" : "s"}`));
   }
   function suggestRib(g, ribs) {

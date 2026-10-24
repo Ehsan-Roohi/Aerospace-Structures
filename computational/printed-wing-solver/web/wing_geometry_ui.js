@@ -73,25 +73,28 @@ const WingGeometryUI=(()=>{
   }
   function renderDimensions(){
    const box=node('fieldset',{class:'wing-planform-dimensions'});
-   box.innerHTML='<legend>Wing dimensions & taper</legend><div class="wing-geometry-grid">'+numeric('Semi-span (mm)','wgtSpan',draft.semiSpan,'Root to tip, projected aircraft y','min="1"')+numeric('Root chord (mm)','wgtRootChord',draft.rootChord,'Reference chord at root','min="1"')+numeric('Tip chord (mm)','wgtTipChord',draft.tipChord,'Reference chord at tip','min="1"')+numeric('Taper ratio λ = tip / root','wgtTaper',draft.tipChord/draft.rootChord,'1 = rectangular; below 1 = narrower tip','min="0.001" max="1"')+numeric('Skin thickness (mm)','wgtSkin',draft.skin,'Measured vertically; course printing minimum 0.8 mm','min="0.001" step="0.1"')+'</div><div id="wgtPlanformPreview"></div>';
-   form.prepend(box);dimensionSource='tip';
+   box.innerHTML='<legend>Wing dimensions & taper</legend><label for="wgtChordMode">Chord input method<select id="wgtChordMode"><option value="tip">Root + Tip → calculate λ</option><option value="ratio">Root + λ → calculate Tip</option></select></label><div class="wing-geometry-grid">'+numeric('Semi-span (mm)','wgtSpan',draft.semiSpan,'Root to tip, projected aircraft y','min="1"')+numeric('Root chord (mm)','wgtRootChord',draft.rootChord,'Reference chord at root','min="1"')+numeric('Tip chord (mm)','wgtTipChord',draft.tipChord,'Reference chord at tip','min="1"')+numeric('Taper ratio λ = tip / root','wgtTaper',draft.tipChord/draft.rootChord,'1 = rectangular; below 1 = narrower tip','min="0.001" max="1"')+numeric('Skin thickness (mm)','wgtSkin',draft.skin,'Measured vertically; course printing minimum 0.8 mm','min="0.001" step="0.1"')+'</div><p class="note" id="wgtChordHint"></p>';
+   form.prepend(box);dimensionSource=win.wingChordInputMode==='ratio'?'ratio':'tip';
    const value=id=>{const s=form.querySelector('#'+id).value;return s.trim()===''?NaN:Number(s);};
    box.querySelector('#wgtSkin').oninput=()=>{draft.skin=value('wgtSkin');};
    function preview(){
-    const L=draft.semiSpan,cr=draft.rootChord,ct=draft.tipChord,sw=Number(form.querySelector('#wgtSweep')?.value||0),ref=Number(form.querySelector('#wgtSweepRef')?.value||0);
-    const target=box.querySelector('#wgtPlanformPreview');
-    if(![L,cr,ct,sw,ref].every(Number.isFinite)||Math.min(L,cr,ct)<=0){target.textContent='Enter positive dimensions to preview the reference-chord planform.';return;}
-    const dx=L*Math.tan(sw*Math.PI/180)+ref*(cr-ct),lo=Math.min(0,dx),hi=Math.max(cr,dx+ct),scale=Math.min(360/L,118/(hi-lo)),x=y=>30+y*scale,z=v=>16+(v-lo)*scale;
-    target.innerHTML='<svg viewBox="0 0 420 155" role="img" aria-label="Top reference-chord planform; root chord '+cr+' mm, tip chord '+ct+' mm"><polygon points="'+[[0,0],[L,dx],[L,dx+ct],[0,cr]].map(([y,v])=>x(y)+','+z(v)).join(' ')+'" fill="var(--raise,#e4f0fb)" stroke="var(--accent,#176ac0)" stroke-width="2"/><text x="18" y="149" fill="currentColor" font-size="12">Root → tip · λ = '+(ct/cr).toFixed(3)+'</text></svg><p class="note">Reference-chord planform, equal x/y scale. A ratio near 1 has mild taper; perspective can make it look rectangular. Incidence and dihedral are shown in the 3-D view.</p>';
+    const ratio=dimensionSource==='ratio';box.querySelector('#wgtChordMode').value=dimensionSource;
+    box.querySelector('#wgtTipChord').readOnly=ratio;box.querySelector('#wgtTaper').readOnly=!ratio;
+    box.querySelector('#wgtTipChord').setAttribute('aria-readonly',String(ratio));box.querySelector('#wgtTaper').setAttribute('aria-readonly',String(!ratio));
+    box.querySelector('#wgtChordHint').textContent=ratio?'Tip is calculated from Root × λ. Changing Root preserves λ.':'λ is calculated from Tip / Root. Enter both chord lengths.';
    }
+   box.querySelector('#wgtChordMode').onchange=e=>{dimensionSource=e.target.value;win.wingChordInputMode=dimensionSource;preview();};
    for(const[id,key]of [['wgtSpan','semiSpan'],['wgtRootChord','rootChord'],['wgtTipChord','tipChord']])box.querySelector('#'+id).oninput=()=>{
-    draft[key]=value(id);dimensionSource='tip';box.querySelector('#wgtTaper').value=Number.isFinite(draft.tipChord/draft.rootChord)?+(draft.tipChord/draft.rootChord).toPrecision(8):'';preview();
+    if(key==='tipChord'&&dimensionSource==='ratio')return;
+    draft[key]=value(id);
+    if(dimensionSource==='ratio'){draft.tipChord=draft.rootChord*value('wgtTaper');box.querySelector('#wgtTipChord').value=Number.isFinite(draft.tipChord)?+draft.tipChord.toPrecision(12):'';}
+    else box.querySelector('#wgtTaper').value=Number.isFinite(draft.tipChord/draft.rootChord)?+(draft.tipChord/draft.rootChord).toPrecision(8):'';
+    preview();
    };
    box.querySelector('#wgtTaper').oninput=()=>{
-    dimensionSource='ratio';const ratio=value('wgtTaper');draft.rootChord=value('wgtRootChord');draft.tipChord=draft.rootChord*ratio;
+    if(dimensionSource!=='ratio')return;const ratio=value('wgtTaper');draft.rootChord=value('wgtRootChord');draft.tipChord=draft.rootChord*ratio;
     box.querySelector('#wgtTipChord').value=Number.isFinite(draft.tipChord)?+draft.tipChord.toPrecision(12):'';preview();
    };
-   for(const id of ['wgtSweep','wgtSweepRef'])form.querySelector('#'+id).addEventListener('input',preview);
    preview();
   }
   function render(){

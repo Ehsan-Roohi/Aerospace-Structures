@@ -6893,6 +6893,45 @@ const WingGeometryUI=(()=>{
    const p=clone(baseProfile());
    if(!draft.stations)draft.stations=[{eta:0,airfoil:clone(p),incidenceDeg:0},{eta:.5,airfoil:clone(p),incidenceDeg:0},{eta:1,airfoil:clone(p),incidenceDeg:0}];
   }
+  function nonlinearIncidence(){
+   const ss=draft.stations||[];if(ss.length<2)return false;
+   const a=ss[0].incidenceDeg,b=ss.at(-1).incidenceDeg;
+   return ss.some(s=>Math.abs(s.incidenceDeg-(a+(b-a)*s.eta))>1e-8);
+  }
+  function syncTwistSummary(){
+   const root=form.querySelector('#wgtRootInc'),tip=form.querySelector('#wgtTipInc');if(!root)return;
+   const ss=draft.stations||[],a=ss[0]?.incidenceDeg||0,b=ss.at(-1)?.incidenceDeg||0,custom=nonlinearIncidence();
+   form.querySelector('#wgtSimpleAngles').hidden=!draft.twistEnabled;
+   for(const [input,value]of [[root,a],[tip,b]]){input.readOnly=custom;input.setAttribute('aria-readonly',String(custom));if(doc.activeElement!==input)input.value=value;}
+   const delta=b-a,summary=custom?'Custom intermediate angles are retained. Edit Advanced sections, or explicitly replace them with a linear root-to-tip variation.':Math.abs(delta)<1e-8?`Same incidence ${a}° at root and tip; no spanwise geometric twist.`:`Tip − root = ${+delta.toFixed(3)}°: ${Math.abs(+delta.toFixed(3))}° ${delta<0?'washout (tip angle lower)':'wash-in (tip angle higher)'}.`;
+   form.querySelector('#wgtTwistSummary').textContent=summary;
+   form.querySelector('#wgtLinearAngles').hidden=!custom;
+   for(const [s,i]of ss.map((s,i)=>[s,i])){const input=form.querySelector('#wgtInc'+i);if(input)input.readOnly=!draft.twistEnabled;}
+  }
+  function readSimpleAngles(){
+   if(!draft.twistEnabled||nonlinearIncidence())return;
+   const inputs=['wgtRootInc','wgtTipInc'].map(id=>form.querySelector('#'+id));
+   if(!inputs.every(Boolean))return;
+   const values=inputs.map(input=>input.value.trim()===''?NaN:Number(input.value));
+   if(values.some(v=>!Number.isFinite(v)||Math.abs(v)>30))throw Error('Enter root and tip incidence between −30° and +30°.');
+   for(const [s,i]of (draft.stations||[]).map((s,i)=>[s,i])){s.incidenceDeg=values[0]+(values[1]-values[0])*s.eta;const input=form.querySelector('#wgtInc'+i);if(input)input.value=+s.incidenceDeg.toFixed(10);const heading=form.querySelectorAll('.wing-station-card > summary')[i];if(heading)heading.textContent=`Section ${i+1} · ${i===0?'root':i===draft.stations.length-1?'tip':'eta '+s.eta} · ${name(s.airfoil)} · ${+s.incidenceDeg.toFixed(3)}°`;}
+  }
+  function organiseTwistControls(){
+   const field=form.querySelector('#wgtTwist').closest('.field'),section=node('fieldset',{class:'wing-twist-simple'},'<legend>Wing incidence and twist</legend>');field.before(section);section.append(field);
+   field.querySelector('label').firstChild.textContent='Set wing angles';
+   form.querySelector('#wgtTwist option[value="no"]').textContent='None · all incidences 0°';
+   form.querySelector('#wgtTwist option[value="yes"]').textContent='Set root and tip incidence';
+   const a=draft.stations?.[0]?.incidenceDeg||0,b=draft.stations?.at(-1)?.incidenceDeg||0;
+   const quick=node('div',{id:'wgtSimpleAngles'},'<p class="note">Incidence is the section angle. Positive raises the leading edge. Enter the actual angle at each end, not an extra rotation.</p><div class="wing-geometry-grid">'+numeric('Root incidence (°)','wgtRootInc',a,'Angle at the wing root','min="-30" max="30"')+numeric('Tip incidence (°)','wgtTipInc',b,'Angle at the wing tip','min="-30" max="30"')+'</div><p class="note" id="wgtTwistSummary"></p><p class="note">Example: root +2°, tip 0° gives 2° washout. Intermediate angles are interpolated linearly; airfoil choices stay unchanged.</p><button type="button" class="btn" id="wgtLinearAngles">Replace custom angles with linear root to tip</button>');section.append(quick);
+   const advanced=node('details',{id:'wgtAdvancedSections'},'<summary>Advanced sections · intermediate angles and airfoils</summary>');section.after(advanced);
+   const check=form.querySelector('#wgtSections').closest('label'),note=check.nextElementSibling,stationBox=form.querySelector('#wgtStations');
+   advanced.append(check,note,stationBox);
+   const pivot=form.querySelector('#wgtTwistRef').closest('label');advanced.append(pivot);
+   if(nonlinearIncidence())advanced.open=true;
+   for(const id of ['wgtRootInc','wgtTipInc'])form.querySelector('#'+id).oninput=()=>{try{readSimpleAngles();syncTwistSummary();message('Angles are a draft until Apply geometry.');}catch(err){message(err.message,true);}};
+   form.querySelector('#wgtLinearAngles').onclick=()=>{const ss=draft.stations||[],a=ss[0]?.incidenceDeg||0,b=ss.at(-1)?.incidenceDeg||0;for(const s of ss)s.incidenceDeg=a+(b-a)*s.eta;render();message('Intermediate angles replaced with a linear variation. Airfoil profiles retained; Apply geometry to commit.');};
+   syncTwistSummary();
+  }
   function renderDimensions(){
    const box=node('fieldset',{class:'wing-planform-dimensions'});
    box.innerHTML='<legend>Wing dimensions & taper</legend><label for="wgtChordMode">Chord input method<select id="wgtChordMode"><option value="tip">Root + Tip → calculate λ</option><option value="ratio">Root + λ → calculate Tip</option></select></label><div class="wing-geometry-grid">'+numeric('Semi-span (mm)','wgtSpan',draft.semiSpan,'Root to tip, projected aircraft y','min="1"')+numeric('Root chord (mm)','wgtRootChord',draft.rootChord,'Reference chord at root','min="1"')+numeric('Tip chord (mm)','wgtTipChord',draft.tipChord,'Reference chord at tip','min="1"')+numeric('Taper ratio λ = tip / root','wgtTaper',draft.tipChord/draft.rootChord,'1 = rectangular; below 1 = narrower tip','min="0.001" max="1"')+numeric('Skin thickness (mm)','wgtSkin',draft.skin,'Measured vertically; course printing minimum 0.8 mm','min="0.001" step="0.1"')+'</div><p class="note" id="wgtChordHint"></p>';
@@ -6932,14 +6971,15 @@ const WingGeometryUI=(()=>{
      const updateHeading=()=>{box.querySelector('summary').textContent=`Section ${i+1} · ${i===0?'root':i===draft.stations.length-1?'tip':'eta '+s.eta} · ${name(s.airfoil)} · ${s.incidenceDeg}°`;};
      if(i===0)box.open=true;
      profilePicker(box.querySelector('[data-station-profile]'),()=>s.airfoil,p=>{s.airfoil=p;updateHeading();},'wgtStation'+i);
-     box.querySelector('#wgtEta'+i).onchange=e=>{s.eta=Number(e.target.value);updateHeading();};
-     box.querySelector('#wgtInc'+i).onchange=e=>{s.incidenceDeg=Number(e.target.value);updateHeading();};
+     box.querySelector('#wgtEta'+i).onchange=e=>{s.eta=Number(e.target.value);updateHeading();syncTwistSummary();};
+     box.querySelector('#wgtInc'+i).onchange=e=>{s.incidenceDeg=e.target.value.trim()===''?NaN:Number(e.target.value);updateHeading();syncTwistSummary();};
      box.querySelector('[data-remove-station]')?.addEventListener('click',()=>{draft.stations.splice(i,1);render();});
      stationBox.append(box);
     });
     const add=node('button',{type:'button',class:'btn',id:'wgtAddStation'},'Add intermediate station');add.disabled=draft.stations.length>=9;
     add.onclick=()=>{let k=1;for(let j=2;j<draft.stations.length;j++)if(draft.stations[j].eta-draft.stations[j-1].eta>draft.stations[k].eta-draft.stations[k-1].eta)k=j;const a=draft.stations[k-1],b=draft.stations[k];draft.stations.splice(k,0,{eta:(a.eta+b.eta)/2,airfoil:clone(a.airfoil),incidenceDeg:(a.incidenceDeg+b.incidenceDeg)/2});render();};stationBox.append(add);
    }
+   organiseTwistControls();
    form.querySelector('#wgtTwist').onchange=e=>{if(e.target.value==='no'&&draft.stations?.some(s=>s.incidenceDeg!==0)){e.target.value='yes';message('First use “Set incidences to 0°” to turn geometric twist off without silently discarding angles.',true);return;}draft.twistEnabled=e.target.value==='yes';if(draft.twistEnabled)stations();render();};
    form.querySelector('#wgtSections').onchange=e=>{if(e.target.checked)stations();else{if(draft.twistEnabled){e.target.checked=true;message('Twist needs root/tip incidence stations. Turn twist off first.',true);return;}delete draft.stations;}render();};
    for(const[id,key]of [['wgtSweep','sweepDeg'],['wgtDihedral','dihedralDeg'],['wgtSweepRef','sweepReferenceFraction'],['wgtTwistRef','twistReferenceFraction']])form.querySelector('#'+id).onchange=e=>{draft[key]=e.target.value.trim()===''?NaN:Number(e.target.value);};
@@ -6951,6 +6991,10 @@ const WingGeometryUI=(()=>{
    try{
     // Enter can submit before change/blur: validate visible fields, never a stale draft.
     for(const validate of profileValidators.values())validate();
+    // A typed end angle may be submitted with Enter before input/change fires.
+    // Advanced per-station edits are authoritative when their visible values differ.
+    const advancedChanged=(draft.stations||[]).some((s,i)=>{const n=form.querySelector('#wgtInc'+i);return n&&(n.value.trim()===''||!Number.isFinite(Number(n.value))||Math.abs(Number(n.value)-s.incidenceDeg)>1e-8);});
+    if(!advancedChanged)readSimpleAngles();
     for(const[id,key]of [['wgtSpan','semiSpan'],['wgtRootChord','rootChord'],['wgtTipChord','tipChord']]){
      const value=form.querySelector('#'+id).value;draft[key]=value.trim()===''?NaN:Number(value);
     }

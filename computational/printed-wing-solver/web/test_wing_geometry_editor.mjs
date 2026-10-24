@@ -58,5 +58,15 @@ try{
  input('wgtTaper',.5);eq(dims.$('wgtTipChord').value,'60');input('wgtRootChord',200);eq(dims.$('wgtTipChord').value,'100','ratio mode preserves lambda when root changes');eq(dims.$('wgtTaper').value,'0.5');input('wgtRootChord',120);
  dims.submit();eq(dims.state().rootChord,120);eq(dims.state().tipChord,60);ok(!E.analysisCapability(dims.state(),E.DEFAULT_ASSEMBLY).requires3D,'uniform NACA4 picker does not upgrade a legacy rod geometry');eq(dims.d.querySelector('#wgtPlanformPreview'),null);
  const dimBefore=dims.raw();input('wgtTaper',1.2);dims.submit();eq(dims.raw(),dimBefore,'invalid taper is atomic');dims.ui.refresh();eq(dims.$('wgtChordMode').value,'ratio');dims.change('wgtChordMode','tip');input('wgtTipChord',90);eq(dims.$('wgtTaper').value,'0.75');dims.submit();eq(dims.state().tipChord,90);
- console.log(`Wing geometry editor: ${checks} family/library, twist/stations, atomic validation, real DAT upload, provenance and Enter checks passed.`);
+ // Beginner root/tip controls interpolate angles without altering section profiles.
+ const simple=open();simple.change('wgtTwist','yes');ok(!simple.$('wgtAdvancedSections').open);ok(!simple.$('wgtSimpleAngles').hidden);
+ const editAngle=(id,value)=>{simple.$(id).value=String(value);simple.$(id).dispatchEvent(new simple.w.Event('input',{bubbles:true}));};
+ editAngle('wgtRootInc',2);editAngle('wgtTipInc',0);eq(simple.$('wgtInc1').value,'1');ok(/2° washout/.test(simple.$('wgtTwistSummary').textContent));eq(simple.count(),0,'quick editing stays draft');
+ simple.$('wgtRootInc').value='4';simple.submit();eq(simple.state().stations[0].incidenceDeg,4,'Enter without blur uses the typed root angle');eq(simple.state().stations[1].incidenceDeg,2);eq(simple.state().stations[2].incidenceDeg,0);
+ editAngle('wgtTipInc',4);ok(/no spanwise geometric twist/.test(simple.$('wgtTwistSummary').textContent));
+ const validSimple=simple.raw();simple.$('wgtRootInc').value='';simple.submit();eq(simple.raw(),validSimple,'blank quick angle cannot be applied');
+ const custom=open({twistEnabled:true,stations:[{eta:0,airfoil:{kind:'naca4',code:'4415'},incidenceDeg:3},{eta:.5,airfoil:{kind:'naca5',code:'23012'},incidenceDeg:2},{eta:1,airfoil:{kind:'naca4',code:'2412'},incidenceDeg:0}]});
+ ok(custom.$('wgtAdvancedSections').open);ok(custom.$('wgtRootInc').readOnly);custom.submit();eq(custom.state().stations[1].incidenceDeg,2,'imported nonlinear incidence is preserved');
+ const oldProfiles=JSON.stringify(custom.state().stations.map(s=>s.airfoil));const appliedBeforeLinear=custom.count();custom.$('wgtLinearAngles').click();eq(custom.count(),appliedBeforeLinear,'linear conversion requires Apply');custom.submit();eq(custom.state().stations[1].incidenceDeg,1.5);eq(JSON.stringify(custom.state().stations.map(s=>s.airfoil)),oldProfiles,'linear conversion retains root middle and tip airfoils');
+ console.log(`Wing geometry editor: ${checks} family/library, simple root/tip angles, custom-station preservation, atomic validation, real DAT upload, provenance and Enter checks passed.`);
 }finally{for(const v of opened)v.dom.window.close();}

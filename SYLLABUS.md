@@ -103,8 +103,6 @@ Each lecture includes worked examples and may span several class meetings.
 | Virtual work | Virtual work principles and applications to beams and trusses; indeterminate examples and comparison of methods |
 | Aircraft loads and wing structures | Maneuver and landing loads; V-n diagrams; structural idealization; thin-walled shear flow, torsion and shear center; wing structures and numerical design |
 
-HW 3 (three beams) is due **November 5 at 11:59 p.m.** Open its existing Canvas assignment and handout. Future assignment dates and the numerical project requirements will be posted in Canvas. The October 29 guest class with Dr. Michael Tsay covers electric propulsion and industry practice. Use Canvas announcements for event details.
-
 ## Course policies
 
 ### Attendance and communication

@@ -59,12 +59,13 @@ The course includes six homework sets. Instructions and deadlines for each set a
 
 ### Wing project
 
-Your team has already made the fit coupon. Now design your own semi-wing in Wing Lab, analyse a stated load, generate the print files in the notebook, and build it. You do not need to write the CAD code from scratch.
+Design, analyse and manufacture a semi-wing using Wing Lab and the Code-to-Print notebook.
 
 1. Choose your airfoil, dimensions, ribs and reinforcement. State why you chose the design, the applied force with units, location and direction, and your target result. Include the analysis and a screenshot in a short **Design basis** text cell in your saved notebook.
-2. Save an editable JSON and use **Export to notebook** for the transfer file. Import it into Code-to-Print and check the generated geometry and STL package.
-3. Review every layer in OrcaSlicer, obtain staff approval, then print and assemble. Our printer envelope is **300 x 300 x 300 mm**. Use one piece only if the actual CAD fits; otherwise use two or three modules. Final plastic mass must be at or below **300 g**.
-4. Submit one team ZIP with the transfer JSON, completed notebook, original final notebook ZIP, OrcaSlicer project, photographs, dimensions, mass and applicable fit record. Each student separately completes the teammate evaluation form.
+2. If using external rods, generate and print a fit coupon. Test the actual rod, measure its diameter, select the clearance and record the fit before generating the final wing.
+3. Save an editable JSON and use **Export to notebook** for the transfer file. Import it into Code-to-Print and check the generated geometry and STL package.
+4. Review every layer in OrcaSlicer, obtain staff approval, then print and assemble. Our printer envelope is **300 x 300 x 300 mm**. Use one piece only if the actual CAD fits; otherwise use two or three modules. Final plastic mass must be at or below **300 g**.
+5. Submit one team ZIP with the transfer JSON, completed notebook, original final notebook ZIP, OrcaSlicer project, photographs, dimensions, mass and applicable fit record. Each student separately completes the teammate evaluation form.
 
 | Project component | Points out of 100 |
 | --- | --- |
@@ -74,7 +75,7 @@ Your team has already made the fit coupon. Now design your own semi-wing in Wing
 
 The design-and-build submission is due **Monday, November 2, 2026, at 11:59 p.m.** See the [Canvas project assignment](https://umamherst.instructure.com/courses/37837/assignments/898213) for the submission and individual evaluation links. The [project guide](https://github.com/Ehsan-Roohi/Aerospace-Structures/blob/main/PROJECT.md) and [illustrated walkthrough](https://github.com/Ehsan-Roohi/Aerospace-Structures/blob/main/docs/MIE446_Simple_Wing_Walkthrough.pdf) explain the workflow. Additional activities and their deliverables will be assigned in Canvas.
 
-Keep the printed wing unloaded. The applied forces are computer-analysis cases; the model is not approved for flight. Use your completed physical coupon record when external rods are present; an unchanged tested interface does not need a new coupon run.
+Keep the printed wing unloaded; forces are for computer analysis. Retest the coupon if the rod or printing process changes.
 
 ### Letter grades
 

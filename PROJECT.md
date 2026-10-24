@@ -8,6 +8,8 @@ MIE 446 Aerospace Structures | Project guide
 
 ## 1. Design and analyse your wing
 
+Assume your wing belongs to an aircraft with a total mass of 200 g in steady, level cruise. Each semi-wing carries half the total lift, so apply an upward load of approximately 1 N to your semi-wing.
+
 Open [Wing Lab](https://ehsan-roohi.github.io/Aerospace-Structures/wing-lab.html#wing). Name your project and choose the airfoil, dimensions, skin, ribs and reinforcement. Add your load, check the root support and press **Solve**. Look at the displacement and stress results; read any warnings.
 
 In your saved Colab notebook, click **+ Text** and title the cell **Design basis**. Write a few sentences answering: Why did you choose this wing? What force did you apply, where, in which direction, and why? Give the value and unit (N for a point force; N/mm for a line load). What result are you aiming for, such as a maximum tip displacement? Does your result meet that target? Add one screenshot of the load and result. Ask the instructor if you need help choosing a reasonable load or target.

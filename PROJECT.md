@@ -2,7 +2,7 @@
 
 MIE 446 Aerospace Structures | Project guide
 
-**You have already made the fit coupon. Now design your own semi-wing in Wing Lab, transfer it to the notebook, and manufacture it.** You do not need to write CAD code.
+**You have already made the fit coupon. Now design your own semi-wing in Wing Lab, transfer it to the notebook, and manufacture it.** 
 
 ![Design in Wing Lab, transfer JSON to the notebook, review STL in OrcaSlicer, then print and assemble](docs/project_workflow.svg)
 

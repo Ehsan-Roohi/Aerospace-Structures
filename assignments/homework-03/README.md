@@ -2,7 +2,7 @@
 
 MIE 446 Aerospace Structures, Fall 2026. **65 points.**
 
-**Due Thursday, November 5, 2026.** Submit through Canvas at the time shown there.
+**Due Thursday, November 5, 2026.** Submit through Canvas at the time shown there. Team submission.
 
 [PDF handout](MIE446_HW3_Three_Beams.pdf) · [Word handout](MIE446_HW3_Three_Beams.docx) · [Student notebook](../../notebooks/MIE446_HW3_Three_Beams.ipynb) · [Open notebook in Colab](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/main/notebooks/MIE446_HW3_Three_Beams.ipynb) · [Student ZIP](MIE446_HW3_Student_Pack.zip)
 

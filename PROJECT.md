@@ -9,7 +9,7 @@ MIE 446 Aerospace Structures | Project guide
 ## 1. Design and analyse your wing
 Open [Wing Lab](https://ehsan-roohi.github.io/Aerospace-Structures/wing-lab.html#wing). Name your project and choose the airfoil, dimensions, skin, ribs and reinforcement as described below. Add your load, check the root support and press **Solve**. Review the displacement and stress results, and note any warnings.
 
-Assume your wing belongs to an aircraft with a total mass of 200 g in steady, level cruise. Each semi-wing carries half the total lift, so apply an upward load of approximately 1 N to your semi-wing at x/c = 0.25. Please note: do not put 1 N as a point force. Follow class lectures!
+Assume your wing belongs to an aircraft with a total mass of 200 g in steady, level cruise. Each semi-wing carries half the total lift, so apply an upward load of approximately 1 N to your semi-wing at x/c = 0.25. Please note: do not put 1 N as a point force. Remember from the class lectures how does an actual lift looks like!
 
 For a simple starting geometry, use NACA 2412 at the root and NACA 0012 at the tip (root eta = 0, tip eta = 1), taper ratio 0.7 (tip chord = 0.7 × root chord), zero sweep, zero dihedral and zero incidence. These are suggested starting choices; the airfoils do not automatically determine the applied lift in Wing Lab.
 

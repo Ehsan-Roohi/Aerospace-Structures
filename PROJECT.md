@@ -25,8 +25,6 @@ Our printer is **300 x 300 x 300 mm**. Choose 1 piece only if the actual CAD fit
 
 **Solve and compare.** Check the fixed root support, then press **Solve** for each layout. Review warnings and record mass, tip displacement, tip twist and maximum nominal stress. Briefly justify your choice and build only the selected design after the CAD and print checks. These loads are for computer analysis only; keep the printed wing unloaded.
 
-In your report, include a short **Design basis**: why you chose this wing, the load magnitude/direction/distribution and chord position, your displacement target, and whether the result meets it. Include a screenshot of the load and result. Give force in N and line-load intensity in N/mm.
-
 ![Illustrative semi-wing with root chord, tip chord, semi-span, ribs and spanwise reinforcement](docs/wing_overview.svg)
 
 *Illustration only. Choose your own dimensions and internal layout in Wing Lab.*
@@ -38,8 +36,6 @@ In your report, include a short **Design basis**: why you chose this wing, the l
 
 If a check fails, correct the stated dimensions, thickness or interface; no automatic scaling is applied.
 
-For external rods, enter the reference of your **completed physical fit-coupon test** and confirm that the rod diameter, clearance and print process match. Keep the coupon record and photographs. A wing without external rods does not need this record.
-
 ## 2. OrcaSlicer: prepare the print
 
 If you downloaded a ZIP, extract a working copy. In **OrcaSlicer**, import the STL for every module. Use the assigned **Creality K2 Pro, 0.4 mm nozzle and staff-approved PLA Pro profile**. Check millimetres, **100% scale**, orientation, actual dimensions, space for supports/brim, every layer, mass and print time.
@@ -50,4 +46,5 @@ Obtain staff approval before printing. Use the assigned printer procedure and su
 
 Save the STL file(s), short design/comparison report, slicer project and photographs of the finished parts/assembly. Label them with the same team and revision. Measure semi-span, root/tip chord and actual mass; record the fit of any rods/module joints.
 
-**Your result: your own designed and printed semi-wing, with the files needed to reproduce it.** Use Canvas for submission instructions. This page covers the build stage only.
+**Your result: your own designed and printed semi-wing, with the files needed to reproduce it.** Please submit a short PDF report with images from Wing-Lab and photos of the fabricated wing.
+In your report, include a short **Design basis**: why you chose this wing, the load magnitude/direction/distribution and chord position, your displacement target, and whether the result meets it. Include a screenshot of the load and result. Give force in N and line-load intensity in N/mm.

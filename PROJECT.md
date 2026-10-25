@@ -18,6 +18,7 @@ no spar,
 one full-span bonded spar at 25% chord, 
 and the same spar at 40% chord, keeping all other inputs unchanged. 
 Use as many ribs as you find useful.
+The material of the spar should be the similar other parts of the wing.
 Record mass, tip displacement, tip twist, and maximum nominal stress for each, then briefly justify your choice and build only the selected design after the CAD and print checks.
 
 In your saved Colab notebook, click **+ Text** and title the cell **Design basis**. Write a few sentences answering: Why did you choose this wing? What force did you apply, where, in which direction, and why? Give the value and unit (N for a point force; N/mm for a line load). What result are you aiming for (e.g., maximum tip displacement)? Does your result meet that target? Add one screenshot of the load and result. Ask the instructor if you need help choosing a reasonable load or target.

@@ -98,7 +98,7 @@ def validate_wing(
             "semi-wing area",
             metrics.semi_wing_area_mm2 > 0,
             round(metrics.semi_wing_area_mm2, 6),
-            "positive nominal reference trapezoid area (projected y-span, unrotated section chord)",
+            "positive nominal reference planform area (projected y-span, unrotated section chord)",
         ),
         ValidationCheck(
             "skin thickness",

@@ -154,14 +154,11 @@ const WingEngine = (() => {
     return Object.freeze(g);
   }
 
-  const chordAt = (g, y) => {
-    const eta = Math.min(1, Math.max(0, y / g.semiSpan));
-    return g.rootChord + eta * (g.tipChord - g.rootChord);
-  };
+  const chordAt = Geometry.chordAt;
   const airfoilAt = (g,y) => Geometry.airfoilAt(g,y);
   // Cross-section mechanics use unrotated local x/z. Apply station transforms
   // only at geometry/CAD/display boundaries, never to the old scalar solver.
-  const localGeometry = (g,y) => g.airfoil || g.stations ? {...g,naca:airfoilAt(g,y)} : g;
+  const localGeometry = (g,y) => g.airfoil || g.stations || g.planform==='elliptic' ? {...g,naca:airfoilAt(g,y),sectionChord:chordAt(g,y)} : g;
   const sparParts = (g,y) => Spars.parts(localGeometry(g,y),y,verticalOrdinates);
   function analysisCapability(g,input={}) {
     const c=Geometry.analysisCapability(g);
@@ -854,6 +851,10 @@ const WingEngine = (() => {
   }
   // Prescribed global-z lift uses exactly the existing distributed-load integration.
   // This is not an aerodynamic prediction and does not include inertia relief.
+  function chordLoadTable(g,total,fraction){
+    const points=linspace(0,g.semiSpan,31).map(y=>[y,chordAt(g,y)]),area=points.slice(1).reduce((sum,p,i)=>sum+(p[0]-points[i][0])*(p[1]+points[i][1])/2,0);
+    return {...Profiles.normalizeTable({points:points.map(p=>[p[0],p[1]*total/area])},{min:0,max:g.semiSpan,lengthUnit:'mm'}),fraction};
+  }
   function prescribedFlightLoads(load,g) {
     const L=g.semiSpan,total=load.aircraftMass*load.loadFactor*GRAV/2,fraction=load.liftFraction;
     if(load.inertiaRelief)throw Error('Spatial inertia relief is not validated; choose Ignored.');
@@ -862,6 +863,7 @@ const WingEngine = (() => {
     else if(load.distribution==='elliptic')item={kind:'elliptic',start:0,end:L,shape:'start',total,fraction};
     else if(load.distribution==='schrenk')item={kind:'schrenk',total,fraction};
     else if(load.distribution==='uniform')item={kind:'distributed',start:0,end:L,qStart:total/L,qEnd:total/L,fraction};
+    else if(load.distribution==='planform'&&g.planform==='elliptic')item=chordLoadTable(g,total,fraction);
     else if(load.distribution==='planform'){const area=(g.rootChord+g.tipChord)*L/2;item={kind:'distributed',start:0,end:L,qStart:total*g.rootChord/area,qEnd:total*g.tipChord/area,fraction};}
     else throw Error('Choose elliptic, Schrenk, uniform, planform or tip lift.');
     return validateLoads([item],L);
@@ -909,11 +911,11 @@ const WingEngine = (() => {
   }
   // Load stations that must be beam-element boundaries (exact consistent loads, no element straddles a kink).
   const loadStations = (p, L) => p.kind === "point" ? [p.position] : p.kind === "table" ? p.points.map((r) => r[0]) : p.kind === "schrenk" ? [0, L] : [p.start, p.end];
-  // The two halves of a Schrenk load as engine primitives: chord-proportional (linear for this taper) and elliptic.
+  // The two halves of a Schrenk load as engine primitives: chord-proportional (sampled for a curved planform) and elliptic.
   function schrenkParts(p, g) {
-    const L = g.semiSpan, S = 0.5 * (g.rootChord + g.tipChord) * L, F = p.total;
+    const L = g.semiSpan, S = Geometry.area(g), F = p.total;
     return [
-      { kind: "distributed", start: 0, end: L, qStart: (0.5 * F * g.rootChord) / S, qEnd: (0.5 * F * g.tipChord) / S },
+      g.planform==='elliptic'?chordLoadTable(g,.5*F,p.fraction):{ kind: "distributed", start: 0, end: L, qStart: (0.5 * F * g.rootChord) / S, qEnd: (0.5 * F * g.tipChord) / S },
       Profiles.normalizeCurve({ kind: "elliptic", start: 0, end: L, shape: "start", total: 0.5 * F }, { min: 0, max: L, lengthUnit: "mm" }),
     ];
   }
@@ -1315,7 +1317,8 @@ const WingEngine = (() => {
       // normal plane about its actual straight-axis piercing point.
       p.D=normalRecoveryD(y,p);Object.assign(p,{EA:p.D[0][0],first2:-p.D[0][2],first3:p.D[0][1],EI22:p.D[1][1],EI33:p.D[2][2],EI23:-p.D[1][2]});return p;
     }
-    const items=load.kind==='flight'?prescribedFlightLoads(load,g):load.kind==='tip'?[{kind:'point',position:L,force:load.tipForce,fraction:load.tipFraction}]:load.items;
+    const sourceItems=load.kind==='flight'?prescribedFlightLoads(load,g):load.kind==='tip'?[{kind:'point',position:L,force:load.tipForce,fraction:load.tipFraction}]:load.items;
+    const items=sourceItems.flatMap(p=>g.planform==='elliptic'&&p.kind==='schrenk'?schrenkParts(p,g).map(part=>({...part,fraction:p.fraction})):[p]);
     const physical=[0,L,...(g.stations||[]).map(s=>s.eta*L),...ribStations(g),...seams(g),...g.spars.map(s=>s.length),...items.filter(p=>!p.gravity).flatMap(p=>loadStations(p,L))];
     const mandatory=[...physical,...ys.filter(y=>!physical.some(p=>Math.abs(p-y)<.1))];
     const regular=linspace(0,L,count+1).filter(y=>!mandatory.some(v=>Math.abs(v-y)<.1));
@@ -1330,10 +1333,11 @@ const WingEngine = (() => {
     function trigBounds(a,b,cosine){const fn=cosine?Math.cos:Math.sin,v=[fn(a),fn(b)];for(let k=Math.ceil(a/(Math.PI/2));k*Math.PI/2<b;k++)v.push(fn(k*Math.PI/2));return interval(Math.min(...v),Math.max(...v));}
     function sourcePathBounds(p,a,b){
       // Every source interval is split at table rows and incidence stations:
-      // c(s), f(s), alpha(s) are each linear, so the following are enclosures
+      // f(s) and alpha(s) are linear. c(s) is linear or a trimmed ellipse;
+      // its derivative is monotone, so endpoint derivative bounds enclose it.
       // of the exact physical position AND derivative over the whole interval.
-      const c=interval(chordAt(g,a),chordAt(g,b)),f=interval(customFraction(p,a),customFraction(p,b)),cp=(g.tipChord-g.rootChord)/L,fp=(customFraction(p,b)-customFraction(p,a))/(b-a),pivot=g.twistReferenceFraction??.25,sweepRef=g.sweepReferenceFraction??0,alpha0=Geometry.stationAt(g,a).incidenceDeg*Math.PI/180,alpha1=Geometry.stationAt(g,b).incidenceDeg*Math.PI/180,ap=(alpha1-alpha0)/(b-a),angles=[Math.min(alpha0,alpha1),Math.max(alpha0,alpha1)],co=trigBounds(...angles,true),si=trigBounds(...angles,false),arm=mulI(subI(f,[pivot,pivot]),c),armPrime=addI(scaleI(subI(f,[pivot,pivot]),cp),scaleI(c,fp)),sx=Math.tan((g.sweepDeg||0)*Math.PI/180),sz=Math.tan((g.dihedralDeg||0)*Math.PI/180),baseX=addI(addI(scaleI([a,b],sx),scaleI(c,pivot-sweepRef)),[sweepRef*g.rootChord,sweepRef*g.rootChord]);
-      return {position:[addI(baseX,mulI(arm,co)),[a,b],subI(scaleI([a,b],sz),mulI(arm,si))],velocity:[subI(addI([sx+(pivot-sweepRef)*cp,sx+(pivot-sweepRef)*cp],mulI(armPrime,co)),scaleI(mulI(arm,si),ap)),[1,1],subI(subI([sz,sz],mulI(armPrime,si)),scaleI(mulI(arm,co),ap))]};
+      const c=interval(chordAt(g,a),chordAt(g,b)),f=interval(customFraction(p,a),customFraction(p,b)),cp=interval(Geometry.chordDerivative(g,a),Geometry.chordDerivative(g,b)),fp=(customFraction(p,b)-customFraction(p,a))/(b-a),pivot=g.twistReferenceFraction??.25,sweepRef=g.planform==='delta'?1:(g.sweepReferenceFraction??(g.planform==='elliptic'?.5:0)),alpha0=Geometry.stationAt(g,a).incidenceDeg*Math.PI/180,alpha1=Geometry.stationAt(g,b).incidenceDeg*Math.PI/180,ap=(alpha1-alpha0)/(b-a),angles=[Math.min(alpha0,alpha1),Math.max(alpha0,alpha1)],co=trigBounds(...angles,true),si=trigBounds(...angles,false),arm=mulI(subI(f,[pivot,pivot]),c),armPrime=addI(mulI(subI(f,[pivot,pivot]),cp),scaleI(c,fp)),sx=Math.tan((g.sweepDeg||0)*Math.PI/180),sz=Math.tan((g.dihedralDeg||0)*Math.PI/180),baseX=addI(addI(scaleI([a,b],sx),scaleI(c,pivot-sweepRef)),[sweepRef*g.rootChord,sweepRef*g.rootChord]);
+      return {position:[addI(baseX,mulI(arm,co)),[a,b],subI(scaleI([a,b],sz),mulI(arm,si))],velocity:[subI(addI(addI([sx,sx],scaleI(cp,pivot-sweepRef)),mulI(armPrime,co)),scaleI(mulI(arm,si),ap)),[1,1],subI(subI([sz,sz],mulI(armPrime,si)),scaleI(mulI(arm,co),ap))]};
     }
     function makeAxis(stations,coordinates){
       let length=0;const segments=coordinates.slice(1).map((b,i)=>{const a=coordinates[i],d=F.sub(b,a),L=F.norm(d),s0=length;length+=L;return {a,b,L,tangent:F.scale(d,1/L),s0,y0:stations[i],y1:stations[i+1]};});

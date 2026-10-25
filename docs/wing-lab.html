@@ -6297,7 +6297,7 @@ const WingSpars=(()=>{
     });
   }
   function parts(g,y,ordinates){
-    const c=g.rootChord+(g.tipChord-g.rootChord)*y/g.semiSpan,out=[];
+    const c=g.sectionChord??(g.rootChord+(g.tipChord-g.rootChord)*y/g.semiSpan),out=[];
     (g.spars||[]).forEach((s,index)=>{
       if(y>s.length+1e-8)return;
       const x=s.fraction*c,top=[],bottom=[];
@@ -6668,12 +6668,15 @@ const WingGeometry = (() => {
   };
   function normalizeGeometryFields(g) {
     const out = {};
+    if(g.planform!=null){if(!['linear','elliptic','delta'].includes(g.planform))throw Error('Choose linear, elliptic or delta planform.');out.planform=g.planform;}
     for (const [name, limit] of [['sweepDeg',LIMITS.sweepDeg],['dihedralDeg',LIMITS.dihedralDeg]]) {
       if (Object.hasOwn(g,name)) out[name] = finite(g[name], name, -limit, limit);
     }
     for (const name of ['sweepReferenceFraction','twistReferenceFraction']) {
       if (Object.hasOwn(g,name)) out[name] = finite(g[name], name, 0, 1);
     }
+    if(g.planform==='elliptic'&&!Object.hasOwn(g,'sweepReferenceFraction'))out.sweepReferenceFraction=.5;
+    if(g.planform==='delta')out.sweepReferenceFraction=1;
     if (Object.hasOwn(g,'twistEnabled')) {
       if (typeof g.twistEnabled !== 'boolean') throw Error('twistEnabled must be true or false.');
       out.twistEnabled = g.twistEnabled;
@@ -6695,7 +6698,9 @@ const WingGeometry = (() => {
     }
     return out;
   }
-  const chordAt = (g,y) => g.rootChord + Math.max(0,Math.min(1,y/g.semiSpan))*(g.tipChord-g.rootChord);
+  const chordAt = (g,y) => {const e=Math.max(0,Math.min(1,y/g.semiSpan));return g.planform==='elliptic'?Math.sqrt(g.rootChord**2*(1-e*e)+g.tipChord**2*e*e):g.rootChord+e*(g.tipChord-g.rootChord);};
+  const chordDerivative=(g,y)=>g.planform==='elliptic'?(g.tipChord**2-g.rootChord**2)*(y/g.semiSpan)/(g.semiSpan*chordAt(g,y)):(g.tipChord-g.rootChord)/g.semiSpan;
+  const area = g => {if(g.planform!=='elliptic')return (g.rootChord+g.tipChord)*g.semiSpan/2;const k=Math.sqrt(Math.max(0,1-(g.tipChord/g.rootChord)**2));return g.semiSpan*(g.tipChord+g.rootChord*(k?Math.asin(k)/k:1))/2;};
   function stationAt(g,y) {
     finite(y,'Span station y',0,g.semiSpan);
     const eta=y/g.semiSpan, ss=g.stations;
@@ -6707,7 +6712,7 @@ const WingGeometry = (() => {
     }
     // Omitted sweep reference means legacy leading-edge alignment, not an
     // implicit quarter-chord shift of every existing tapered study.
-    const chord=chordAt(g,y), sweepReferenceFraction=g.sweepReferenceFraction ?? 0;
+    const chord=chordAt(g,y), sweepReferenceFraction=g.planform==='delta'?1:(g.sweepReferenceFraction ?? (g.planform==='elliptic'?.5:0));
     return {eta,y,chord,incidenceDeg,inboard,blend,
       xLE:y*Math.tan((g.sweepDeg ?? 0)*deg)+sweepReferenceFraction*(g.rootChord-chord),
       zLE:y*Math.tan((g.dihedralDeg ?? 0)*deg),
@@ -6733,6 +6738,7 @@ const WingGeometry = (() => {
   }
   function analysisCapability(g) {
     const reasons=[];
+    if(g.planform&&g.planform!=='linear')reasons.push('non-legacy planform');
     if (Math.abs(g.sweepDeg ?? 0)>1e-12) reasons.push('sweep');
     if (Math.abs(g.dihedralDeg ?? 0)>1e-12) reasons.push('dihedral');
     if ((g.stations ?? []).some(s => Math.abs(s.incidenceDeg)>1e-12)) reasons.push('section incidence / geometric twist');
@@ -6744,7 +6750,7 @@ const WingGeometry = (() => {
       loadFrame:'Aircraft +z (up); N for point loads, N/mm per projected y for line loads.',
       message:reasons.length?`Geometry and CAD export are available, but structural Solve is not supported for ${reasons.join(', ')}. The current solver is a straight, untwisted spanwise beam, not a validated 3-D swept/dihedral frame. Set these angles to zero and align the leading edge to use this solver; no straight-wing stress or safety result will be substituted.`:'Straight, untwisted spanwise beam approximation; local sections may vary. Loads are prescribed, not computed from aerodynamic twist.'};
   }
-  return {LIMITS,normalizeGeometryFields,chordAt,stationAt,airfoilAt,transformPoint,inversePoint,analysisCapability};
+  return {LIMITS,normalizeGeometryFields,chordAt,chordDerivative,area,stationAt,airfoilAt,transformPoint,inversePoint,analysisCapability};
 })();
 if(typeof module!=='undefined'&&module.exports)module.exports=WingGeometry;
 
@@ -6987,8 +6993,8 @@ const WingGeometryUI=(()=>{
   }
   function renderDimensions(){
    const box=node('fieldset',{class:'wing-planform-dimensions'});
-   box.innerHTML='<legend>Wing dimensions & taper</legend><label for="wgtChordMode">Chord input method<select id="wgtChordMode"><option value="tip">Root + Tip → calculate λ</option><option value="ratio">Root + λ → calculate Tip</option></select></label><div class="wing-geometry-grid">'+numeric('Semi-span (mm)','wgtSpan',draft.semiSpan,'Root to tip, projected aircraft y','min="1"')+numeric('Root chord (mm)','wgtRootChord',draft.rootChord,'Reference chord at root','min="1"')+numeric('Tip chord (mm)','wgtTipChord',draft.tipChord,'Reference chord at tip','min="1"')+numeric('Taper ratio λ = tip / root','wgtTaper',draft.tipChord/draft.rootChord,'1 = rectangular; below 1 = narrower tip','min="0.001" max="1"')+numeric('Skin thickness (mm)','wgtSkin',draft.skin,'Measured vertically; course printing minimum 0.8 mm','min="0.001" step="0.1"')+'<label class="wing-geometry-field">Printed modules<small>Equal lengths; seams between modules</small><select id="wgtModules"><option value="1">1 · one piece</option><option value="2">2</option><option value="3">3</option></select></label></div><p class="note" id="wgtChordHint"></p>';
-   form.prepend(box);box.querySelector('#wgtModules').value=String(draft.modules??1);dimensionSource=win.wingChordInputMode==='ratio'?'ratio':'tip';
+   box.innerHTML='<legend>Wing dimensions & taper</legend><label>Planform<select id="wgtPlanform"><option value="linear">Rectangular / trapezoidal</option><option value="elliptic">Elliptical · trimmed tip</option><option value="delta">Delta · trimmed tip</option></select></label><p class="note">Tip chord stays positive for printable skin and a finite beam section. Delta uses a straight trailing edge; sweep is additional. Elliptical uses an ellipse cut at the chosen tip chord. Reduce tip chord for a more triangular delta; cavity clearance still applies. Analysis remains a beam approximation: broad delta wings need plate/shell analysis for local stresses.</p><label for="wgtChordMode">Chord input method<select id="wgtChordMode"><option value="tip">Root + Tip → calculate λ</option><option value="ratio">Root + λ → calculate Tip</option></select></label><div class="wing-geometry-grid">'+numeric('Semi-span (mm)','wgtSpan',draft.semiSpan,'Root to tip, projected aircraft y','min="1"')+numeric('Root chord (mm)','wgtRootChord',draft.rootChord,'Reference chord at root','min="1"')+numeric('Tip chord (mm)','wgtTipChord',draft.tipChord,'Reference chord at tip','min="1"')+numeric('Taper ratio λ = tip / root','wgtTaper',draft.tipChord/draft.rootChord,'1 = rectangular; below 1 = narrower tip','min="0.001" max="1"')+numeric('Skin thickness (mm)','wgtSkin',draft.skin,'Measured vertically; course printing minimum 0.8 mm','min="0.001" step="0.1"')+'<label class="wing-geometry-field">Printed modules<small>Equal lengths; seams between modules</small><select id="wgtModules"><option value="1">1 · one piece</option><option value="2">2</option><option value="3">3</option></select></label></div><p class="note" id="wgtChordHint"></p>';
+   form.prepend(box);box.querySelector('#wgtModules').value=String(draft.modules??1);box.querySelector('#wgtPlanform').value=draft.planform||'linear';box.querySelector('#wgtPlanform').onchange=e=>{draft.planform=e.target.value;draft.sweepReferenceFraction=draft.planform==='delta'?1:draft.planform==='elliptic'?.5:0;render();};dimensionSource=win.wingChordInputMode==='ratio'?'ratio':'tip';
    const value=id=>{const s=form.querySelector('#'+id).value;return s.trim()===''?NaN:Number(s);};
    box.querySelector('#wgtSkin').oninput=()=>{draft.skin=value('wgtSkin');};
    function preview(){
@@ -7014,7 +7020,7 @@ const WingGeometryUI=(()=>{
   function render(){
    cancelReads();
    profileValidators.clear();
-   form.innerHTML=`<p class="note">Aircraft coordinates: x aft, y projected semi-span, z up. Positive incidence is leading-edge up; negative tip incidence relative to root is washout. These are geometry inputs, not a computed lift distribution.</p><h4>Default airfoil</h4><div id="wgtDefaultProfile"></div><div class="field"><label for="wgtTwist">Geometric twist / incidence?</label><select id="wgtTwist"><option value="no" ${!draft.twistEnabled?'selected':''}>No · zero incidence</option><option value="yes" ${draft.twistEnabled?'selected':''}>Yes · set section incidences</option></select></div><label><input type="checkbox" id="wgtSections" ${draft.stations?'checked':''}> Choose airfoils at root, intermediate stations and tip</label><p class="note">Root and tip are required. Intermediate stations are optional—not necessarily ribs. Airfoil shape and absolute incidence interpolate linearly between stations.</p><div id="wgtStations"></div><h4>Planform & orientation</h4><div class="wing-geometry-grid">${numeric('Sweep (degrees)','wgtSweep',draft.sweepDeg??0,'Positive aft; reference below','min="-60" max="60"')}${numeric('Dihedral (degrees)','wgtDihedral',draft.dihedralDeg??0,'Positive tip-up; negative anhedral','min="-45" max="45"')}${numeric('Sweep reference x/c','wgtSweepRef',draft.sweepReferenceFraction??0,'0 = leading edge; 0.25 = quarter chord','min="0" max="1"')}${numeric('Incidence pivot x/c','wgtTwistRef',draft.twistReferenceFraction??.25,'0.25 = common quarter-chord pivot','min="0" max="1"')}</div><p class="note">Sections remain in flight-parallel x–z planes (OpenVSP default), not rotated to follow dihedral. Reference-chord taper remains linear. Control surfaces, winglets and arbitrary multi-element airfoils are not inferred from these inputs.</p><details><summary>Airfoil file format & print geometry</summary><p class="note">Selig: optional title, then normalized x/c and z/c coordinate pairs from trailing edge around the leading edge to the other trailing edge. Lednicer: title, upper/lower point counts, then the two coordinate blocks. No polar or force data. Single-element monotone upper/lower surfaces only. Source coordinates are embedded in JSON. The printable trailing-edge thickness and skin/cavity settings still apply and can make a thin profile unprintable; no dimension is changed automatically.</p></details><div class="lesson-actions" style="position:sticky;bottom:0;background:var(--panel);padding:8px 0"><button class="btn primary" type="submit" id="wgtApply">Apply geometry</button></div>`;
+   form.innerHTML=`<p class="note">Aircraft coordinates: x aft, y projected semi-span, z up. Positive incidence is leading-edge up; negative tip incidence relative to root is washout. These are geometry inputs, not a computed lift distribution.</p><h4>Default airfoil</h4><div id="wgtDefaultProfile"></div><div class="field"><label for="wgtTwist">Geometric twist / incidence?</label><select id="wgtTwist"><option value="no" ${!draft.twistEnabled?'selected':''}>No · zero incidence</option><option value="yes" ${draft.twistEnabled?'selected':''}>Yes · set section incidences</option></select></div><label><input type="checkbox" id="wgtSections" ${draft.stations?'checked':''}> Choose airfoils at root, intermediate stations and tip</label><p class="note">Root and tip are required. Intermediate stations are optional—not necessarily ribs. Airfoil shape and absolute incidence interpolate linearly between stations.</p><div id="wgtStations"></div><h4>Planform & orientation</h4><div class="wing-geometry-grid">${numeric('Sweep (degrees)','wgtSweep',draft.sweepDeg??0,'Positive aft; reference below','min="-60" max="60"')}${numeric('Dihedral (degrees)','wgtDihedral',draft.dihedralDeg??0,'Positive tip-up; negative anhedral','min="-45" max="45"')}${numeric('Sweep reference x/c','wgtSweepRef',draft.sweepReferenceFraction??0,'0 = leading edge; 0.25 = quarter chord','min="0" max="1"')}${numeric('Incidence pivot x/c','wgtTwistRef',draft.twistReferenceFraction??.25,'0.25 = common quarter-chord pivot','min="0" max="1"')}</div><p class="note">Sections remain in flight-parallel x–z planes (OpenVSP default), not rotated to follow dihedral. Chord follows the selected planform. Control surfaces, winglets and arbitrary multi-element airfoils are not inferred from these inputs.</p><details><summary>Airfoil file format & print geometry</summary><p class="note">Selig: optional title, then normalized x/c and z/c coordinate pairs from trailing edge around the leading edge to the other trailing edge. Lednicer: title, upper/lower point counts, then the two coordinate blocks. No polar or force data. Single-element monotone upper/lower surfaces only. Source coordinates are embedded in JSON. The printable trailing-edge thickness and skin/cavity settings still apply and can make a thin profile unprintable; no dimension is changed automatically.</p></details><div class="lesson-actions" style="position:sticky;bottom:0;background:var(--panel);padding:8px 0"><button class="btn primary" type="submit" id="wgtApply">Apply geometry</button></div>`;
    renderDimensions();
    profilePicker(form.querySelector('#wgtDefaultProfile'),baseProfile,p=>draft.airfoil=p,'wgtDefault');
    const stationBox=form.querySelector('#wgtStations');
@@ -7033,6 +7039,8 @@ const WingGeometryUI=(()=>{
     add.onclick=()=>{let k=1;for(let j=2;j<draft.stations.length;j++)if(draft.stations[j].eta-draft.stations[j-1].eta>draft.stations[k].eta-draft.stations[k-1].eta)k=j;const a=draft.stations[k-1],b=draft.stations[k];draft.stations.splice(k,0,{eta:(a.eta+b.eta)/2,airfoil:clone(a.airfoil),incidenceDeg:(a.incidenceDeg+b.incidenceDeg)/2});render();};stationBox.append(add);
    }
    organiseTwistControls();
+   form.querySelector('#wgtSweepRef').readOnly=draft.planform==='delta';
+   if(draft.planform==='delta')form.querySelector('#wgtSweepRef').title='Delta keeps a straight trailing edge (x/c = 1). Sweep adds to this reference line.';
    form.querySelector('#wgtTwist').onchange=e=>{draft.twistEnabled=e.target.value==='yes';if(draft.twistEnabled)stations();else for(const s of draft.stations||[])s.incidenceDeg=0;render();if(!draft.twistEnabled)message('All draft incidences set to zero; airfoil profiles retained. Apply geometry to commit.');};
    form.querySelector('#wgtSections').onchange=e=>{if(e.target.checked)stations();else{if(draft.twistEnabled){e.target.checked=true;message('Twist needs root/tip incidence stations. Turn twist off first.',true);return;}delete draft.stations;}render();};
    for(const[id,key]of [['wgtSweep','sweepDeg'],['wgtDihedral','dihedralDeg'],['wgtSweepRef','sweepReferenceFraction'],['wgtTwistRef','twistReferenceFraction']])form.querySelector('#'+id).onchange=e=>{draft[key]=e.target.value.trim()===''?NaN:Number(e.target.value);};
@@ -7063,13 +7071,13 @@ const WingGeometryUI=(()=>{
     }
     const skinText=form.querySelector('#wgtSkin').value;draft.skin=skinText.trim()===''?NaN:Number(skinText);
     if(!Number.isFinite(draft.skin)||draft.skin<=0)throw Error('Skin thickness must be a positive number of millimetres.');
-    const patch={modules:Number(form.querySelector('#wgtModules').value),semiSpan:draft.semiSpan,rootChord:draft.rootChord,tipChord:draft.tipChord,skin:draft.skin,airfoil:clone(A.normalizeProfile(baseProfile())),twistEnabled:!!draft.twistEnabled,sweepDeg:draft.sweepDeg??0,dihedralDeg:draft.dihedralDeg??0,sweepReferenceFraction:draft.sweepReferenceFraction??0,twistReferenceFraction:draft.twistReferenceFraction??.25};
+    const patch={planform:draft.planform||'linear',modules:Number(form.querySelector('#wgtModules').value),semiSpan:draft.semiSpan,rootChord:draft.rootChord,tipChord:draft.tipChord,skin:draft.skin,airfoil:clone(A.normalizeProfile(baseProfile())),twistEnabled:!!draft.twistEnabled,sweepDeg:draft.sweepDeg??0,dihedralDeg:draft.dihedralDeg??0,sweepReferenceFraction:draft.sweepReferenceFraction??0,twistReferenceFraction:draft.twistReferenceFraction??.25};
     // Explicitly removing section variation uses the same global profile at root and tip.
     patch.stations=draft.stations?clone(draft.stations):undefined;
     // A uniform, unrotated four-digit section with leading-edge alignment is
     // exactly the legacy construction. Keep its rod/joint-compatible analysis
     // route rather than silently upgrading it merely because a picker was used.
-    if(patch.airfoil.kind==='naca4'&&!draft.stations&&!patch.twistEnabled&&patch.sweepDeg===0&&patch.dihedralDeg===0&&(patch.sweepReferenceFraction===0||draft.rootChord===draft.tipChord)){
+    if(patch.planform==='linear'&&patch.airfoil.kind==='naca4'&&!draft.stations&&!patch.twistEnabled&&patch.sweepDeg===0&&patch.dihedralDeg===0&&(patch.sweepReferenceFraction===0||draft.rootChord===draft.tipChord)){
      patch.naca=patch.airfoil.code;patch.airfoil=null;patch.stations=null;
     }
     const result=applyGeometry(patch,'advanced','airfoil / sweep / dihedral / incidence');
@@ -7316,14 +7324,11 @@ const WingEngine = (() => {
     return Object.freeze(g);
   }
 
-  const chordAt = (g, y) => {
-    const eta = Math.min(1, Math.max(0, y / g.semiSpan));
-    return g.rootChord + eta * (g.tipChord - g.rootChord);
-  };
+  const chordAt = Geometry.chordAt;
   const airfoilAt = (g,y) => Geometry.airfoilAt(g,y);
   // Cross-section mechanics use unrotated local x/z. Apply station transforms
   // only at geometry/CAD/display boundaries, never to the old scalar solver.
-  const localGeometry = (g,y) => g.airfoil || g.stations ? {...g,naca:airfoilAt(g,y)} : g;
+  const localGeometry = (g,y) => g.airfoil || g.stations || g.planform==='elliptic' ? {...g,naca:airfoilAt(g,y),sectionChord:chordAt(g,y)} : g;
   const sparParts = (g,y) => Spars.parts(localGeometry(g,y),y,verticalOrdinates);
   function analysisCapability(g,input={}) {
     const c=Geometry.analysisCapability(g);
@@ -8016,6 +8021,10 @@ const WingEngine = (() => {
   }
   // Prescribed global-z lift uses exactly the existing distributed-load integration.
   // This is not an aerodynamic prediction and does not include inertia relief.
+  function chordLoadTable(g,total,fraction){
+    const points=linspace(0,g.semiSpan,31).map(y=>[y,chordAt(g,y)]),area=points.slice(1).reduce((sum,p,i)=>sum+(p[0]-points[i][0])*(p[1]+points[i][1])/2,0);
+    return {...Profiles.normalizeTable({points:points.map(p=>[p[0],p[1]*total/area])},{min:0,max:g.semiSpan,lengthUnit:'mm'}),fraction};
+  }
   function prescribedFlightLoads(load,g) {
     const L=g.semiSpan,total=load.aircraftMass*load.loadFactor*GRAV/2,fraction=load.liftFraction;
     if(load.inertiaRelief)throw Error('Spatial inertia relief is not validated; choose Ignored.');
@@ -8024,6 +8033,7 @@ const WingEngine = (() => {
     else if(load.distribution==='elliptic')item={kind:'elliptic',start:0,end:L,shape:'start',total,fraction};
     else if(load.distribution==='schrenk')item={kind:'schrenk',total,fraction};
     else if(load.distribution==='uniform')item={kind:'distributed',start:0,end:L,qStart:total/L,qEnd:total/L,fraction};
+    else if(load.distribution==='planform'&&g.planform==='elliptic')item=chordLoadTable(g,total,fraction);
     else if(load.distribution==='planform'){const area=(g.rootChord+g.tipChord)*L/2;item={kind:'distributed',start:0,end:L,qStart:total*g.rootChord/area,qEnd:total*g.tipChord/area,fraction};}
     else throw Error('Choose elliptic, Schrenk, uniform, planform or tip lift.');
     return validateLoads([item],L);
@@ -8071,11 +8081,11 @@ const WingEngine = (() => {
   }
   // Load stations that must be beam-element boundaries (exact consistent loads, no element straddles a kink).
   const loadStations = (p, L) => p.kind === "point" ? [p.position] : p.kind === "table" ? p.points.map((r) => r[0]) : p.kind === "schrenk" ? [0, L] : [p.start, p.end];
-  // The two halves of a Schrenk load as engine primitives: chord-proportional (linear for this taper) and elliptic.
+  // The two halves of a Schrenk load as engine primitives: chord-proportional (sampled for a curved planform) and elliptic.
   function schrenkParts(p, g) {
-    const L = g.semiSpan, S = 0.5 * (g.rootChord + g.tipChord) * L, F = p.total;
+    const L = g.semiSpan, S = Geometry.area(g), F = p.total;
     return [
-      { kind: "distributed", start: 0, end: L, qStart: (0.5 * F * g.rootChord) / S, qEnd: (0.5 * F * g.tipChord) / S },
+      g.planform==='elliptic'?chordLoadTable(g,.5*F,p.fraction):{ kind: "distributed", start: 0, end: L, qStart: (0.5 * F * g.rootChord) / S, qEnd: (0.5 * F * g.tipChord) / S },
       Profiles.normalizeCurve({ kind: "elliptic", start: 0, end: L, shape: "start", total: 0.5 * F }, { min: 0, max: L, lengthUnit: "mm" }),
     ];
   }
@@ -8477,7 +8487,8 @@ const WingEngine = (() => {
       // normal plane about its actual straight-axis piercing point.
       p.D=normalRecoveryD(y,p);Object.assign(p,{EA:p.D[0][0],first2:-p.D[0][2],first3:p.D[0][1],EI22:p.D[1][1],EI33:p.D[2][2],EI23:-p.D[1][2]});return p;
     }
-    const items=load.kind==='flight'?prescribedFlightLoads(load,g):load.kind==='tip'?[{kind:'point',position:L,force:load.tipForce,fraction:load.tipFraction}]:load.items;
+    const sourceItems=load.kind==='flight'?prescribedFlightLoads(load,g):load.kind==='tip'?[{kind:'point',position:L,force:load.tipForce,fraction:load.tipFraction}]:load.items;
+    const items=sourceItems.flatMap(p=>g.planform==='elliptic'&&p.kind==='schrenk'?schrenkParts(p,g).map(part=>({...part,fraction:p.fraction})):[p]);
     const physical=[0,L,...(g.stations||[]).map(s=>s.eta*L),...ribStations(g),...seams(g),...g.spars.map(s=>s.length),...items.filter(p=>!p.gravity).flatMap(p=>loadStations(p,L))];
     const mandatory=[...physical,...ys.filter(y=>!physical.some(p=>Math.abs(p-y)<.1))];
     const regular=linspace(0,L,count+1).filter(y=>!mandatory.some(v=>Math.abs(v-y)<.1));
@@ -8492,10 +8503,11 @@ const WingEngine = (() => {
     function trigBounds(a,b,cosine){const fn=cosine?Math.cos:Math.sin,v=[fn(a),fn(b)];for(let k=Math.ceil(a/(Math.PI/2));k*Math.PI/2<b;k++)v.push(fn(k*Math.PI/2));return interval(Math.min(...v),Math.max(...v));}
     function sourcePathBounds(p,a,b){
       // Every source interval is split at table rows and incidence stations:
-      // c(s), f(s), alpha(s) are each linear, so the following are enclosures
+      // f(s) and alpha(s) are linear. c(s) is linear or a trimmed ellipse;
+      // its derivative is monotone, so endpoint derivative bounds enclose it.
       // of the exact physical position AND derivative over the whole interval.
-      const c=interval(chordAt(g,a),chordAt(g,b)),f=interval(customFraction(p,a),customFraction(p,b)),cp=(g.tipChord-g.rootChord)/L,fp=(customFraction(p,b)-customFraction(p,a))/(b-a),pivot=g.twistReferenceFraction??.25,sweepRef=g.sweepReferenceFraction??0,alpha0=Geometry.stationAt(g,a).incidenceDeg*Math.PI/180,alpha1=Geometry.stationAt(g,b).incidenceDeg*Math.PI/180,ap=(alpha1-alpha0)/(b-a),angles=[Math.min(alpha0,alpha1),Math.max(alpha0,alpha1)],co=trigBounds(...angles,true),si=trigBounds(...angles,false),arm=mulI(subI(f,[pivot,pivot]),c),armPrime=addI(scaleI(subI(f,[pivot,pivot]),cp),scaleI(c,fp)),sx=Math.tan((g.sweepDeg||0)*Math.PI/180),sz=Math.tan((g.dihedralDeg||0)*Math.PI/180),baseX=addI(addI(scaleI([a,b],sx),scaleI(c,pivot-sweepRef)),[sweepRef*g.rootChord,sweepRef*g.rootChord]);
-      return {position:[addI(baseX,mulI(arm,co)),[a,b],subI(scaleI([a,b],sz),mulI(arm,si))],velocity:[subI(addI([sx+(pivot-sweepRef)*cp,sx+(pivot-sweepRef)*cp],mulI(armPrime,co)),scaleI(mulI(arm,si),ap)),[1,1],subI(subI([sz,sz],mulI(armPrime,si)),scaleI(mulI(arm,co),ap))]};
+      const c=interval(chordAt(g,a),chordAt(g,b)),f=interval(customFraction(p,a),customFraction(p,b)),cp=interval(Geometry.chordDerivative(g,a),Geometry.chordDerivative(g,b)),fp=(customFraction(p,b)-customFraction(p,a))/(b-a),pivot=g.twistReferenceFraction??.25,sweepRef=g.planform==='delta'?1:(g.sweepReferenceFraction??(g.planform==='elliptic'?.5:0)),alpha0=Geometry.stationAt(g,a).incidenceDeg*Math.PI/180,alpha1=Geometry.stationAt(g,b).incidenceDeg*Math.PI/180,ap=(alpha1-alpha0)/(b-a),angles=[Math.min(alpha0,alpha1),Math.max(alpha0,alpha1)],co=trigBounds(...angles,true),si=trigBounds(...angles,false),arm=mulI(subI(f,[pivot,pivot]),c),armPrime=addI(mulI(subI(f,[pivot,pivot]),cp),scaleI(c,fp)),sx=Math.tan((g.sweepDeg||0)*Math.PI/180),sz=Math.tan((g.dihedralDeg||0)*Math.PI/180),baseX=addI(addI(scaleI([a,b],sx),scaleI(c,pivot-sweepRef)),[sweepRef*g.rootChord,sweepRef*g.rootChord]);
+      return {position:[addI(baseX,mulI(arm,co)),[a,b],subI(scaleI([a,b],sz),mulI(arm,si))],velocity:[subI(addI(addI([sx,sx],scaleI(cp,pivot-sweepRef)),mulI(armPrime,co)),scaleI(mulI(arm,si),ap)),[1,1],subI(subI([sz,sz],mulI(armPrime,si)),scaleI(mulI(arm,co),ap))]};
     }
     function makeAxis(stations,coordinates){
       let length=0;const segments=coordinates.slice(1).map((b,i)=>{const a=coordinates[i],d=F.sub(b,a),L=F.norm(d),s0=length;length+=L;return {a,b,L,tangent:F.scale(d,1/L),s0,y0:stations[i],y1:stations[i+1]};});
@@ -10173,7 +10185,7 @@ if(typeof module!=='undefined')module.exports=WingWorkspaceUI;
   // ------------------------------------------------------------------ printed wing: schema
   const GEOMETRY_V1 = Object.freeze(['naca', 'semiSpan', 'rootChord', 'tipChord', 'skin', 'ribThickness', 'modules', 'te', 'interiorRibs',
     'customInteriorRibs', 'interfaceOffset', 'cap', 'cavityStart', 'cavityEnd', 'rodFractions', 'rodDiameter', 'clearance', 'sleeveWall']);
-  const GEOMETRY_V2 = Object.freeze(['airfoil','sweepDeg','dihedralDeg','sweepReferenceFraction','twistReferenceFraction','twistEnabled','stations']);
+  const GEOMETRY_V2 = Object.freeze(['planform','airfoil','sweepDeg','dihedralDeg','sweepReferenceFraction','twistReferenceFraction','twistEnabled','stations']);
   const hasAdvancedGeometry = (g) => GEOMETRY_V2.some(k => own(g,k) && g[k] != null);
   function checkAirfoil(issues,p,path){
     if(!isObj(p)){issues.err(path,'must be an airfoil profile object');return;}
@@ -10507,7 +10519,7 @@ if(typeof module!=='undefined')module.exports=WingWorkspaceUI;
     const profileName=p=>p?(p.name||`NACA ${p.code}`):`NACA ${g.naca}`;
     add('Geometry', 'Airfoil', g.stations?'Spanwise airfoil stations (listed below)':profileName(g.airfoil));
     add('Geometry', 'Semi-span', `${fmt(g.semiSpan)} mm`);
-    add('Geometry', 'Root / tip chord', `${fmt(g.rootChord)} / ${fmt(g.tipChord)} mm (linear reference-chord taper)`);
+    add('Geometry', 'Root / tip chord', `${fmt(g.rootChord)} / ${fmt(g.tipChord)} mm (${g.planform||'linear'} reference-chord planform)`);
     if(hasAdvancedGeometry(g)){
       add('Geometry','Sweep / dihedral',`${fmt(g.sweepDeg||0)}° at ${fmt(g.sweepReferenceFraction??0)}c / ${fmt(g.dihedralDeg||0)}°; projected span y, x aft, z up`);
       add('Geometry','Geometric twist',`${g.twistEnabled?'enabled':'off'}; absolute incidence, positive LE-up, pivot ${fmt(g.twistReferenceFraction??.25)}c`);
@@ -12057,7 +12069,7 @@ if(typeof module!=='undefined')module.exports=WingWorkspaceUI;
     if (focusId && document.getElementById(focusId)) document.getElementById(focusId).focus({ preventScroll: true });
   }
   function renderGeometryForm() {
-    const g = S.geometry, area = 0.5 * (g.rootChord + g.tipChord) * g.semiSpan;
+    const g = S.geometry, area = WingGeometry.area(g);
     $("#wingGeometryForm").innerHTML = `<h3>Build your wing</h3><button class="btn wing-airfoil-launch" type="button" id="wgAirfoilPicker"><b>Airfoil &amp; planform ▾</b><span>${esc(airfoilLabel(g))} · library, DAT, taper, twist, sweep &amp; dihedral</span></button>
       ${geoField("semiSpan", "wgSpan", "Semi-span", "mm, root to tip", g.semiSpan, 1)}
       <div class="field"><label for="wgChordMode">Chord input method</label><select id="wgChordMode"><option value="tip">Root + Tip → calculate λ</option><option value="ratio">Root + λ → calculate Tip</option></select></div>
@@ -13038,7 +13050,7 @@ if(typeof module!=='undefined')module.exports=WingWorkspaceUI;
       // at its chord position; heights relative to the largest intensity drawn.
       const P=LoadProfiles, lines=R.load.items.filter(p=>p.kind!=='point');
       const span=p=>p.kind==='table'?[p.points[0][0],p.points.at(-1)[0]]:p.kind==='schrenk'?[0,L]:[p.start,p.end];
-      const qAt=(p,y)=>p.kind==='distributed'?p.qStart+(p.qEnd-p.qStart)*(y-p.start)/(p.end-p.start):p.kind==='schrenk'?0.5*p.total*(E.chordAt(g,y)/(0.5*(g.rootChord+g.tipChord)*L)+4/(Math.PI*L)*Math.sqrt(Math.max(0,1-(y/L)**2))):P.valueAt(p,y);
+      const qAt=(p,y)=>p.kind==='distributed'?p.qStart+(p.qEnd-p.qStart)*(y-p.start)/(p.end-p.start):p.kind==='schrenk'?0.5*p.total*(E.chordAt(g,y)/(WingGeometry.area(g))+4/(Math.PI*L)*Math.sqrt(Math.max(0,1-(y/L)**2))):P.valueAt(p,y);
       const samples=p=>{const [a,b]=span(p);return Array.from({length:13},(_,i)=>{const y=a+(b-a)*i/12;return [Math.min(y,b),qAt(p,Math.min(y,b))];});};
       const qmax=Math.max(...lines.flatMap(p=>samples(p).map(s=>Math.abs(s[1]))),1e-12);
       for(const p of lines) for(const [y,q] of samples(p)) {
@@ -13087,7 +13099,7 @@ if(typeof module!=='undefined')module.exports=WingWorkspaceUI;
       return;
     }
     if (!R) return;
-    if(R.analysis3D){$('#plotinfo').textContent=`3-D SPATIAL BEAM · ${airfoilLabel(R.geometry)} · sweep ${R.geometry.sweepDeg||0}° · dihedral ${R.geometry.dihedralDeg||0}° · ${R.analysis3D.elements.length} elements · prescribed global +z loads · ${S.deformed?'displacement magnification ×'+nf(deformAmount().scale,1):'undeformed geometry'} · nominal normal stress only; grey = unresolved; no overall FoS`;return;}
+    if(R.analysis3D){$('#plotinfo').textContent=`3-D SPATIAL BEAM · ${R.geometry.planform||'linear'} planform · ${airfoilLabel(R.geometry)} · sweep ${R.geometry.sweepDeg||0}° · dihedral ${R.geometry.dihedralDeg||0}° · ${R.analysis3D.elements.length} elements · prescribed global +z loads · ${S.deformed?'displacement magnification ×'+nf(deformAmount().scale,1):'undeformed geometry'} · nominal normal stress only; grey = unresolved; no overall FoS`;return;}
     const g = R.geometry;
     const kind = { stress: "Spanwise normal stress σ, beam theory, limit load", disp: "Resultant displacement, limit load", fos: `Factor of safety on PLA strength (red: below ${R.load.fos})`, twist:"Elastic axis twist (degrees) · section result", bending:"Resultant bending moment (N·m) · section result", torque:"Signed local torque (N·m) · section result", mode: "Natural frequency mode", model: "Model" }[S.plot];
     const d = deformAmount();
@@ -13671,10 +13683,29 @@ if(typeof module!=='undefined')module.exports=WingWorkspaceUI;
   }
 
   // ------------------------------------------------------------ guided learning
+  let spatialLessonBaseline=null;
+  const spatialLessonPanels=new Map();
+  function prepareSpatialLesson(name,panel){
+    const g=R.geometry,tip=R.deflection.at(-1),twist=R.twist.at(-1)*180/Math.PI;
+    const current=`<p>Current solved semi-wing: ${nf(R.mass.total,1)} g; tip displacement ${nf(tip,3)} mm; tip twist ${nf(twist,3)}°. ${stale?'Inputs changed: Solve before comparing results.':''}</p>`;
+    if(name==='design'){
+      panel.innerHTML='<h2>Compare one design change</h2>'+current+'<p>Save a baseline, change one rib, skin thickness or spar dimension, then Solve. Keep the loads and material cards unchanged. Ribs affect mass and bay spacing; this beam model does not predict local skin buckling.</p><button class="btn" data-spatial-baseline>Save solved baseline</button><button class="btn" data-spatial-structure>Edit structure</button><p data-spatial-comparison></p>';
+      const summary=()=>{panel.querySelector('[data-spatial-comparison]').textContent=spatialLessonBaseline?`Baseline → current: mass ${nf(spatialLessonBaseline.mass,1)} → ${nf(R.mass.total,1)} g; tip displacement ${nf(spatialLessonBaseline.tip,3)} → ${nf(tip,3)} mm; tip twist ${nf(spatialLessonBaseline.twist,3)} → ${nf(twist,3)}°. ${spatialLessonBaseline.context===JSON.stringify([S.load,materials(),S.assembly])?'Loads, materials and joints unchanged.':'Loads, materials or joints also changed; this is not an isolated geometry comparison.'}`:'No baseline saved.';};summary();panel.querySelector('[data-spatial-baseline]').onclick=()=>{if(stale){flash('Solve the current inputs first.');return;}spatialLessonBaseline={mass:R.mass.total,tip,twist,context:JSON.stringify([S.load,materials(),S.assembly])};summary();};
+    }else if(name==='members'){
+      panel.innerHTML='<h2>Skin, ribs and spars</h2>'+current+`<p>${R.ribs.length} ribs and ${g.spars.length} bonded spars are included. Skin and spar caps resist bending; closed skin and bonded webs provide torsional stiffness. Ribs add mass and preserve the intended section, but their local plate stiffness and buckling are not resolved.</p><p>Change one member at a time, Solve, and compare mass, displacement, twist and numerical stress values. Coupled vibration modes are not available for this spatial model.</p><button class="btn" data-spatial-structure>Edit structure</button><button class="btn" data-spatial-shape>Show bending & twist</button>`;
+    }else if(name==='joints'){
+      panel.innerHTML='<h2>Connections in the spatial beam</h2><p>This analysis assumes continuous or fully bonded module seams and perfectly bonded spars. It does not solve dry-joint opening, adhesive stress or rod slip. The eight-assembly comparison belongs to the straight-wing model and cannot be transferred to swept or varying-section wings.</p><p>For this model use one printed piece, or document and confirm bonded seams. Assess actual bonding and attachment details separately.</p><button class="btn" data-spatial-structure>Edit structure</button>';
+    }else if(name==='predict'){
+      panel.innerHTML='<h2>Predict, then compare</h2><p>Estimate the signed vertical tip displacement before viewing the result. Upward is positive. Keep the same load when comparing designs; overall safety and buckling are not calculated by this spatial beam.</p><label>Your estimate (mm)<input type="number" step="any" data-spatial-estimate></label><button class="btn" data-spatial-check>Compare with solved result</button><p data-spatial-answer></p>';
+      panel.querySelector('[data-spatial-check]').onclick=()=>{const v=panel.querySelector('[data-spatial-estimate]').value,n=Number(v);panel.querySelector('[data-spatial-answer]').textContent=stale?'Solve the current inputs first.':v.trim()===''||!Number.isFinite(n)?'Enter a finite estimate.':`Estimate ${nf(n,3)} mm; solved ${nf(tip,3)} mm; difference ${nf(n-tip,3)} mm.`;};
+    }else if(name==='learn')renderLesson();
+    panel.querySelectorAll('[data-spatial-structure]').forEach(b=>b.onclick=()=>openWingStructurePopup(b));
+    panel.querySelectorAll('[data-spatial-shape]').forEach(b=>b.onclick=()=>{try{printedWorkspace.close();showWingDeformation();}catch(e){flash(e.message);}});
+  }
   function openTab(name) {
+    let panel=$('#tab-'+name);
+    if(panel?.classList.contains('wing-lesson-panel')&&printedWorkspace){if(R?.analysis3D&&!['loads','learn'].includes(name)){if(!spatialLessonPanels.has(name)){const replacement=el('section',{class:'wing-lesson-panel',hidden:true},'');replacement.dataset.title=panel.dataset.title;panel.parentElement.append(replacement);spatialLessonPanels.set(name,replacement);}panel=spatialLessonPanels.get(name);prepareSpatialLesson(name,panel);}else if(R?.analysis3D&&name==='learn')renderLesson();panel.hidden=false;printedWorkspace.open(panel.dataset.title,panel,$('#learnBtn'));return;}
     if(R?.analysis3D&&name!=='loads'){renderSpatialResults();return;}
-    const panel=$('#tab-'+name);
-    if(panel?.classList.contains('wing-lesson-panel')&&printedWorkspace){panel.hidden=false;printedWorkspace.open(panel.dataset.title,panel,$('#learnBtn'));return;}
     if(printedWorkspace)printedWorkspace.close();
     document.querySelectorAll("#app .dock [role=tab]").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.tab === name)));
     document.querySelectorAll("#app .dock > .tabpanel").forEach((p) => (p.hidden = p.id !== "tab-" + name));
@@ -14202,8 +14233,8 @@ function renderObservations() {
     try{
     if (info.kind === "outer-geometry") {
       const previous = { ...S.geometry, rodFractions: [...S.geometry.rodFractions], customInteriorRibs: S.geometry.customInteriorRibs == null ? null : [...S.geometry.customInteriorRibs] };
-      const resetAdvanced=['airfoil','stations','sweepDeg','dihedralDeg','twistEnabled','sweepReferenceFraction','twistReferenceFraction'].some(k=>S.geometry[k]!=null);
-      const res = applyGeometry({...state.geometry,...(resetAdvanced?{airfoil:null,stations:null,sweepDeg:0,dihedralDeg:0,twistEnabled:false,sweepReferenceFraction:0,twistReferenceFraction:.25}:{})});   // the same all-or-nothing rules as the geometry fields
+      const resetAdvanced=['planform','airfoil','stations','sweepDeg','dihedralDeg','twistEnabled','sweepReferenceFraction','twistReferenceFraction'].some(k=>S.geometry[k]!=null);
+      const res = applyGeometry({...state.geometry,...(resetAdvanced?{planform:'linear',airfoil:null,stations:null,sweepDeg:0,dihedralDeg:0,twistEnabled:false,sweepReferenceFraction:0,twistReferenceFraction:.25}:{})});   // the same all-or-nothing rules as the geometry fields
       if (!res.ok) throw new Error(`The imported outer geometry does not fit the current structure: ${res.error}`);
       importGate = { required: info.required.map((r) => ({ id: r.id, label: r.label })), confirmed: new Set(), provenance: info.provenance, conflicts: info.conflicts || [], previous };
     } else {

@@ -122,8 +122,11 @@ class WingParameters:
     dihedral_deg: float = 0.0
     sweep_reference_fraction: float = 0.0
     twist_reference_fraction: float = 0.25
+    planform: str = "linear"
 
     def __post_init__(self) -> None:
+        if self.planform not in ("linear", "elliptic", "delta"):
+            raise ValueError("unsupported planform")
         object.__setattr__(self, "naca", normalize_naca4(self.naca))
         object.__setattr__(self, "spars", tuple(self.spars))
         object.__setattr__(self, "bonded_spars", tuple(self.bonded_spars))
@@ -196,6 +199,8 @@ class WingParameters:
 
     def chord_at(self, y_mm: float) -> float:
         eta = min(1.0, max(0.0, y_mm / self.semi_span_mm))
+        if self.planform == "elliptic":
+            return math.sqrt(self.root_chord_mm**2*(1-eta**2)+self.tip_chord_mm**2*eta**2)
         return self.root_chord_mm + eta * (self.tip_chord_mm - self.root_chord_mm)
 
     def module_bounds_mm(self) -> tuple[float, ...]:

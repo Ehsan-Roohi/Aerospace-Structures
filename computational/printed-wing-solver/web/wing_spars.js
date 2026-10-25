@@ -38,7 +38,7 @@ const WingSpars=(()=>{
     });
   }
   function parts(g,y,ordinates){
-    const c=g.rootChord+(g.tipChord-g.rootChord)*y/g.semiSpan,out=[];
+    const c=g.sectionChord??(g.rootChord+(g.tipChord-g.rootChord)*y/g.semiSpan),out=[];
     (g.spars||[]).forEach((s,index)=>{
       if(y>s.length+1e-8)return;
       const x=s.fraction*c,top=[],bottom=[];

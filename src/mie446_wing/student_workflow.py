@@ -245,6 +245,7 @@ class DesignAnalysis:
                 f"| Sweep / dihedral | {self.parameters.sweep_deg:g}° / {self.parameters.dihedral_deg:g}° |",
                 f"| Projected semi-span (aircraft y) | {self.parameters.semi_span_mm:.2f} mm |",
                 f"| Equivalent full span | {self.metrics.equivalent_full_span_mm:.2f} mm |",
+                f"| Planform | {self.parameters.planform} (finite tip chord) |",
                 f"| Root / tip chord | {self.parameters.root_chord_mm:.2f} / {self.parameters.tip_chord_mm:.2f} mm |",
                 f"| Taper ratio | {self.metrics.taper_ratio:.4f} |",
                 f"| Equivalent full-wing area | {self.metrics.equivalent_full_area_mm2:,.2f} mm² |",

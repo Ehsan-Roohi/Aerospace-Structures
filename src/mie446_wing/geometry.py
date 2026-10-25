@@ -73,7 +73,7 @@ def _make_cavity(parameters: WingParameters) -> cq.Shape:
 
 
 def _generalized(p):
-    return bool(p.airfoil_stations or p.airfoil_profile is not None or p.sweep_deg or p.dihedral_deg or p.sweep_reference_fraction)
+    return bool(p.planform != "linear" or p.airfoil_stations or p.airfoil_profile is not None or p.sweep_deg or p.dihedral_deg or p.sweep_reference_fraction)
 
 
 def _section_wire(p, y, *, cavity=False):

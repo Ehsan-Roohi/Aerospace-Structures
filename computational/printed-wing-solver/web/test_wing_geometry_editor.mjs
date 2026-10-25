@@ -50,6 +50,7 @@ try{
  // Enter requests form submission. Values in the actual DOM at submission,
  // even before a blur/change event, are the user's authoritative input.
  const enter=open();enter.$('wgtSweep').value='13.5';enter.$('wgtSweep').dispatchEvent(new enter.w.Event('input',{bubbles:true}));enter.$('wgtSweep').dispatchEvent(new enter.w.KeyboardEvent('keydown',{key:'Enter',bubbles:true}));enter.ui.form.requestSubmit();eq(enter.state().sweepDeg,13.5,'Enter applies the value that is visibly typed');eq(enter.count(),1);
+ const shapeEditor=open();shapeEditor.change('wgtPlanform','elliptic');eq(shapeEditor.state().planform,undefined,'planform choice stays draft');shapeEditor.submit();eq(shapeEditor.state().planform,'elliptic');eq(shapeEditor.state().sweepReferenceFraction,.5);shapeEditor.change('wgtPlanform','delta');shapeEditor.submit();eq(shapeEditor.state().planform,'delta');eq(shapeEditor.state().sweepReferenceFraction,1);
  const segmentation=open();segmentation.change('wgtModules',3);eq(segmentation.state().modules,1,'module choice remains draft');segmentation.submit();eq(segmentation.state().modules,3,'popup module count applies through geometry validation');
  const dims=open({rootChord:160,tipChord:100,rodFractions:[.3],modules:3});
  const concise=open({rootChord:120,tipChord:72});eq(concise.$('wgtPlanformPreview'),null,'redundant planform schematic is removed');ok(concise.$('wgtTaper').readOnly);ok(!concise.$('wgtTipChord').readOnly);

@@ -193,15 +193,15 @@ def incidence_at(p, y):
 def transform_point(p, y, x, z):
     angle = math.radians(incidence_at(p, y))
     pivot = p.twist_reference_fraction*p.chord_at(y)
-    offset = y*math.tan(math.radians(p.sweep_deg))+p.sweep_reference_fraction*(p.root_chord_mm-p.chord_at(y))
+    offset = y*math.tan(math.radians(p.sweep_deg))+(1 if p.planform == "delta" else p.sweep_reference_fraction)*(p.root_chord_mm-p.chord_at(y))
     return (offset+pivot+math.cos(angle)*(x-pivot)+math.sin(angle)*z, y,
             y*math.tan(math.radians(p.dihedral_deg))-math.sin(angle)*(x-pivot)+math.cos(angle)*z)
 
 
 def loft_stations(p, start, end):
-    if not p.airfoil_stations and p.airfoil_profile is None and p.sweep_deg == 0 and p.dihedral_deg == 0 and p.sweep_reference_fraction == 0:
+    if p.planform == "linear" and not p.airfoil_stations and p.airfoil_profile is None and p.sweep_deg == 0 and p.dihedral_deg == 0 and p.sweep_reference_fraction == 0:
         return np.linspace(start, end, p.loft_station_count)
-    points = list(np.linspace(start, end, max(9, p.loft_station_count)))
+    points = list(np.linspace(start, end, max(33 if p.planform == "elliptic" else 9, p.loft_station_count)))
     points += [s['eta']*p.semi_span_mm for s in p.airfoil_stations if start < s['eta']*p.semi_span_mm < end]
     # Resolve large incidence changes without rounding or moving user stations.
     # The usual small teaching-wing twists retain the nine-station baseline.

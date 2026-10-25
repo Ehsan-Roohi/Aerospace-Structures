@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
+import math
 
 from .config import WingParameters
 
@@ -21,7 +22,7 @@ class PlanformMetrics:
 
 
 def calculate_planform_metrics(parameters: WingParameters) -> PlanformMetrics:
-    """Reference trapezoid metrics: projected y-span and unrotated section chords.
+    """Reference linear-taper or trimmed-ellipse metrics: projected y-span and unrotated section chords.
 
     This conventional nominal reference area is not the 3-D wetted area or the
     silhouette area of an incidence-rotated/dihedral CAD model.
@@ -29,6 +30,10 @@ def calculate_planform_metrics(parameters: WingParameters) -> PlanformMetrics:
     semi_area = 0.5 * (
         parameters.root_chord_mm + parameters.tip_chord_mm
     ) * parameters.semi_span_mm
+    if parameters.planform == "elliptic":
+        cr, ct = parameters.root_chord_mm, parameters.tip_chord_mm
+        k = math.sqrt(max(0,1-(ct/cr)**2))
+        semi_area = parameters.semi_span_mm*(ct+cr*(math.asin(k)/k if k else 1))/2
     full_span = 2.0 * parameters.semi_span_mm
     full_area = 2.0 * semi_area
     taper = parameters.tip_chord_mm / parameters.root_chord_mm
@@ -40,6 +45,8 @@ def calculate_planform_metrics(parameters: WingParameters) -> PlanformMetrics:
         * (1.0 + taper + taper**2)
         / (1.0 + taper)
     )
+    if parameters.planform == "elliptic":
+        mean_aerodynamic_chord = parameters.semi_span_mm*(2*parameters.root_chord_mm**2+parameters.tip_chord_mm**2)/(3*semi_area)
     return PlanformMetrics(
         semi_wing_area_mm2=semi_area,
         equivalent_full_span_mm=full_span,

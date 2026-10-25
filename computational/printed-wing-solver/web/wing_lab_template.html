@@ -1233,7 +1233,7 @@ body { margin: 0; }
     if (focusId && document.getElementById(focusId)) document.getElementById(focusId).focus({ preventScroll: true });
   }
   function renderGeometryForm() {
-    const g = S.geometry, area = 0.5 * (g.rootChord + g.tipChord) * g.semiSpan;
+    const g = S.geometry, area = WingGeometry.area(g);
     $("#wingGeometryForm").innerHTML = `<h3>Build your wing</h3><button class="btn wing-airfoil-launch" type="button" id="wgAirfoilPicker"><b>Airfoil &amp; planform ▾</b><span>${esc(airfoilLabel(g))} · library, DAT, taper, twist, sweep &amp; dihedral</span></button>
       ${geoField("semiSpan", "wgSpan", "Semi-span", "mm, root to tip", g.semiSpan, 1)}
       <div class="field"><label for="wgChordMode">Chord input method</label><select id="wgChordMode"><option value="tip">Root + Tip → calculate λ</option><option value="ratio">Root + λ → calculate Tip</option></select></div>
@@ -2214,7 +2214,7 @@ body { margin: 0; }
       // at its chord position; heights relative to the largest intensity drawn.
       const P=LoadProfiles, lines=R.load.items.filter(p=>p.kind!=='point');
       const span=p=>p.kind==='table'?[p.points[0][0],p.points.at(-1)[0]]:p.kind==='schrenk'?[0,L]:[p.start,p.end];
-      const qAt=(p,y)=>p.kind==='distributed'?p.qStart+(p.qEnd-p.qStart)*(y-p.start)/(p.end-p.start):p.kind==='schrenk'?0.5*p.total*(E.chordAt(g,y)/(0.5*(g.rootChord+g.tipChord)*L)+4/(Math.PI*L)*Math.sqrt(Math.max(0,1-(y/L)**2))):P.valueAt(p,y);
+      const qAt=(p,y)=>p.kind==='distributed'?p.qStart+(p.qEnd-p.qStart)*(y-p.start)/(p.end-p.start):p.kind==='schrenk'?0.5*p.total*(E.chordAt(g,y)/(WingGeometry.area(g))+4/(Math.PI*L)*Math.sqrt(Math.max(0,1-(y/L)**2))):P.valueAt(p,y);
       const samples=p=>{const [a,b]=span(p);return Array.from({length:13},(_,i)=>{const y=a+(b-a)*i/12;return [Math.min(y,b),qAt(p,Math.min(y,b))];});};
       const qmax=Math.max(...lines.flatMap(p=>samples(p).map(s=>Math.abs(s[1]))),1e-12);
       for(const p of lines) for(const [y,q] of samples(p)) {
@@ -2263,7 +2263,7 @@ body { margin: 0; }
       return;
     }
     if (!R) return;
-    if(R.analysis3D){$('#plotinfo').textContent=`3-D SPATIAL BEAM · ${airfoilLabel(R.geometry)} · sweep ${R.geometry.sweepDeg||0}° · dihedral ${R.geometry.dihedralDeg||0}° · ${R.analysis3D.elements.length} elements · prescribed global +z loads · ${S.deformed?'displacement magnification ×'+nf(deformAmount().scale,1):'undeformed geometry'} · nominal normal stress only; grey = unresolved; no overall FoS`;return;}
+    if(R.analysis3D){$('#plotinfo').textContent=`3-D SPATIAL BEAM · ${R.geometry.planform||'linear'} planform · ${airfoilLabel(R.geometry)} · sweep ${R.geometry.sweepDeg||0}° · dihedral ${R.geometry.dihedralDeg||0}° · ${R.analysis3D.elements.length} elements · prescribed global +z loads · ${S.deformed?'displacement magnification ×'+nf(deformAmount().scale,1):'undeformed geometry'} · nominal normal stress only; grey = unresolved; no overall FoS`;return;}
     const g = R.geometry;
     const kind = { stress: "Spanwise normal stress σ, beam theory, limit load", disp: "Resultant displacement, limit load", fos: `Factor of safety on PLA strength (red: below ${R.load.fos})`, twist:"Elastic axis twist (degrees) · section result", bending:"Resultant bending moment (N·m) · section result", torque:"Signed local torque (N·m) · section result", mode: "Natural frequency mode", model: "Model" }[S.plot];
     const d = deformAmount();
@@ -2847,10 +2847,29 @@ body { margin: 0; }
   }
 
   // ------------------------------------------------------------ guided learning
+  let spatialLessonBaseline=null;
+  const spatialLessonPanels=new Map();
+  function prepareSpatialLesson(name,panel){
+    const g=R.geometry,tip=R.deflection.at(-1),twist=R.twist.at(-1)*180/Math.PI;
+    const current=`<p>Current solved semi-wing: ${nf(R.mass.total,1)} g; tip displacement ${nf(tip,3)} mm; tip twist ${nf(twist,3)}°. ${stale?'Inputs changed: Solve before comparing results.':''}</p>`;
+    if(name==='design'){
+      panel.innerHTML='<h2>Compare one design change</h2>'+current+'<p>Save a baseline, change one rib, skin thickness or spar dimension, then Solve. Keep the loads and material cards unchanged. Ribs affect mass and bay spacing; this beam model does not predict local skin buckling.</p><button class="btn" data-spatial-baseline>Save solved baseline</button><button class="btn" data-spatial-structure>Edit structure</button><p data-spatial-comparison></p>';
+      const summary=()=>{panel.querySelector('[data-spatial-comparison]').textContent=spatialLessonBaseline?`Baseline → current: mass ${nf(spatialLessonBaseline.mass,1)} → ${nf(R.mass.total,1)} g; tip displacement ${nf(spatialLessonBaseline.tip,3)} → ${nf(tip,3)} mm; tip twist ${nf(spatialLessonBaseline.twist,3)} → ${nf(twist,3)}°. ${spatialLessonBaseline.context===JSON.stringify([S.load,materials(),S.assembly])?'Loads, materials and joints unchanged.':'Loads, materials or joints also changed; this is not an isolated geometry comparison.'}`:'No baseline saved.';};summary();panel.querySelector('[data-spatial-baseline]').onclick=()=>{if(stale){flash('Solve the current inputs first.');return;}spatialLessonBaseline={mass:R.mass.total,tip,twist,context:JSON.stringify([S.load,materials(),S.assembly])};summary();};
+    }else if(name==='members'){
+      panel.innerHTML='<h2>Skin, ribs and spars</h2>'+current+`<p>${R.ribs.length} ribs and ${g.spars.length} bonded spars are included. Skin and spar caps resist bending; closed skin and bonded webs provide torsional stiffness. Ribs add mass and preserve the intended section, but their local plate stiffness and buckling are not resolved.</p><p>Change one member at a time, Solve, and compare mass, displacement, twist and numerical stress values. Coupled vibration modes are not available for this spatial model.</p><button class="btn" data-spatial-structure>Edit structure</button><button class="btn" data-spatial-shape>Show bending & twist</button>`;
+    }else if(name==='joints'){
+      panel.innerHTML='<h2>Connections in the spatial beam</h2><p>This analysis assumes continuous or fully bonded module seams and perfectly bonded spars. It does not solve dry-joint opening, adhesive stress or rod slip. The eight-assembly comparison belongs to the straight-wing model and cannot be transferred to swept or varying-section wings.</p><p>For this model use one printed piece, or document and confirm bonded seams. Assess actual bonding and attachment details separately.</p><button class="btn" data-spatial-structure>Edit structure</button>';
+    }else if(name==='predict'){
+      panel.innerHTML='<h2>Predict, then compare</h2><p>Estimate the signed vertical tip displacement before viewing the result. Upward is positive. Keep the same load when comparing designs; overall safety and buckling are not calculated by this spatial beam.</p><label>Your estimate (mm)<input type="number" step="any" data-spatial-estimate></label><button class="btn" data-spatial-check>Compare with solved result</button><p data-spatial-answer></p>';
+      panel.querySelector('[data-spatial-check]').onclick=()=>{const v=panel.querySelector('[data-spatial-estimate]').value,n=Number(v);panel.querySelector('[data-spatial-answer]').textContent=stale?'Solve the current inputs first.':v.trim()===''||!Number.isFinite(n)?'Enter a finite estimate.':`Estimate ${nf(n,3)} mm; solved ${nf(tip,3)} mm; difference ${nf(n-tip,3)} mm.`;};
+    }else if(name==='learn')renderLesson();
+    panel.querySelectorAll('[data-spatial-structure]').forEach(b=>b.onclick=()=>openWingStructurePopup(b));
+    panel.querySelectorAll('[data-spatial-shape]').forEach(b=>b.onclick=()=>{try{printedWorkspace.close();showWingDeformation();}catch(e){flash(e.message);}});
+  }
   function openTab(name) {
+    let panel=$('#tab-'+name);
+    if(panel?.classList.contains('wing-lesson-panel')&&printedWorkspace){if(R?.analysis3D&&!['loads','learn'].includes(name)){if(!spatialLessonPanels.has(name)){const replacement=el('section',{class:'wing-lesson-panel',hidden:true},'');replacement.dataset.title=panel.dataset.title;panel.parentElement.append(replacement);spatialLessonPanels.set(name,replacement);}panel=spatialLessonPanels.get(name);prepareSpatialLesson(name,panel);}else if(R?.analysis3D&&name==='learn')renderLesson();panel.hidden=false;printedWorkspace.open(panel.dataset.title,panel,$('#learnBtn'));return;}
     if(R?.analysis3D&&name!=='loads'){renderSpatialResults();return;}
-    const panel=$('#tab-'+name);
-    if(panel?.classList.contains('wing-lesson-panel')&&printedWorkspace){panel.hidden=false;printedWorkspace.open(panel.dataset.title,panel,$('#learnBtn'));return;}
     if(printedWorkspace)printedWorkspace.close();
     document.querySelectorAll("#app .dock [role=tab]").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.tab === name)));
     document.querySelectorAll("#app .dock > .tabpanel").forEach((p) => (p.hidden = p.id !== "tab-" + name));
@@ -3319,8 +3338,8 @@ body { margin: 0; }
     try{
     if (info.kind === "outer-geometry") {
       const previous = { ...S.geometry, rodFractions: [...S.geometry.rodFractions], customInteriorRibs: S.geometry.customInteriorRibs == null ? null : [...S.geometry.customInteriorRibs] };
-      const resetAdvanced=['airfoil','stations','sweepDeg','dihedralDeg','twistEnabled','sweepReferenceFraction','twistReferenceFraction'].some(k=>S.geometry[k]!=null);
-      const res = applyGeometry({...state.geometry,...(resetAdvanced?{airfoil:null,stations:null,sweepDeg:0,dihedralDeg:0,twistEnabled:false,sweepReferenceFraction:0,twistReferenceFraction:.25}:{})});   // the same all-or-nothing rules as the geometry fields
+      const resetAdvanced=['planform','airfoil','stations','sweepDeg','dihedralDeg','twistEnabled','sweepReferenceFraction','twistReferenceFraction'].some(k=>S.geometry[k]!=null);
+      const res = applyGeometry({...state.geometry,...(resetAdvanced?{planform:'linear',airfoil:null,stations:null,sweepDeg:0,dihedralDeg:0,twistEnabled:false,sweepReferenceFraction:0,twistReferenceFraction:.25}:{})});   // the same all-or-nothing rules as the geometry fields
       if (!res.ok) throw new Error(`The imported outer geometry does not fit the current structure: ${res.error}`);
       importGate = { required: info.required.map((r) => ({ id: r.id, label: r.label })), confirmed: new Set(), provenance: info.provenance, conflicts: info.conflicts || [], previous };
     } else {

@@ -745,7 +745,7 @@
   // ------------------------------------------------------------------ printed wing: schema
   const GEOMETRY_V1 = Object.freeze(['naca', 'semiSpan', 'rootChord', 'tipChord', 'skin', 'ribThickness', 'modules', 'te', 'interiorRibs',
     'customInteriorRibs', 'interfaceOffset', 'cap', 'cavityStart', 'cavityEnd', 'rodFractions', 'rodDiameter', 'clearance', 'sleeveWall']);
-  const GEOMETRY_V2 = Object.freeze(['airfoil','sweepDeg','dihedralDeg','sweepReferenceFraction','twistReferenceFraction','twistEnabled','stations']);
+  const GEOMETRY_V2 = Object.freeze(['planform','airfoil','sweepDeg','dihedralDeg','sweepReferenceFraction','twistReferenceFraction','twistEnabled','stations']);
   const hasAdvancedGeometry = (g) => GEOMETRY_V2.some(k => own(g,k) && g[k] != null);
   function checkAirfoil(issues,p,path){
     if(!isObj(p)){issues.err(path,'must be an airfoil profile object');return;}
@@ -1079,7 +1079,7 @@
     const profileName=p=>p?(p.name||`NACA ${p.code}`):`NACA ${g.naca}`;
     add('Geometry', 'Airfoil', g.stations?'Spanwise airfoil stations (listed below)':profileName(g.airfoil));
     add('Geometry', 'Semi-span', `${fmt(g.semiSpan)} mm`);
-    add('Geometry', 'Root / tip chord', `${fmt(g.rootChord)} / ${fmt(g.tipChord)} mm (linear reference-chord taper)`);
+    add('Geometry', 'Root / tip chord', `${fmt(g.rootChord)} / ${fmt(g.tipChord)} mm (${g.planform||'linear'} reference-chord planform)`);
     if(hasAdvancedGeometry(g)){
       add('Geometry','Sweep / dihedral',`${fmt(g.sweepDeg||0)}° at ${fmt(g.sweepReferenceFraction??0)}c / ${fmt(g.dihedralDeg||0)}°; projected span y, x aft, z up`);
       add('Geometry','Geometric twist',`${g.twistEnabled?'enabled':'off'}; absolute incidence, positive LE-up, pivot ${fmt(g.twistReferenceFraction??.25)}c`);

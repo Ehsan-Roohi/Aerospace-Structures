@@ -117,7 +117,7 @@ def import_wing_lab_study(data: bytes | str) -> WingLabImport:
             _fail("Analysis nElements must be an integer from 4 to 100; this is the structural numerical mesh, not printable parts")
     fields = ['naca','semiSpan','rootChord','tipChord','skin','ribThickness','modules','te','interiorRibs','customInteriorRibs','interfaceOffset','cap','cavityStart','cavityEnd','rodFractions','rodDiameter','clearance','sleeveWall','spars']
     g = st['geometry']
-    extra_fields = ['airfoil','stations','twistEnabled','sweepDeg','dihedralDeg','sweepReferenceFraction','twistReferenceFraction']
+    extra_fields = ['planform','airfoil','stations','twistEnabled','sweepDeg','dihedralDeg','sweepReferenceFraction','twistReferenceFraction']
     if not isinstance(g, dict) or set(fields)-set(g) or set(g)-set(fields+ (extra_fields if doc['version']==2 else [])):
         _fail("Geometry: missing or unsupported fields; use the current Wing Lab JSON export without manual schema edits")
     if any(g[key] is None for key in extra_fields if key in g):
@@ -178,8 +178,8 @@ def import_wing_lab_study(data: bytes | str) -> WingLabImport:
             spars=tuple(SparSpec(f,g['rodDiameter'],g['clearance'],g['sleeveWall']) for f in rods),
             custom_rib_stations_mm=None if ribs is None else tuple(ribs),bonded_spars=tuple(spars),
             airfoil_profile=g.get('airfoil'),airfoil_stations=tuple(g.get('stations') or ()),
-            twist_enabled=g.get('twistEnabled',False),sweep_deg=g.get('sweepDeg',0),dihedral_deg=g.get('dihedralDeg',0),
-            sweep_reference_fraction=g.get('sweepReferenceFraction',0),twist_reference_fraction=g.get('twistReferenceFraction',.25))
+            planform=g.get('planform','linear'),twist_enabled=g.get('twistEnabled',False),sweep_deg=g.get('sweepDeg',0),dihedral_deg=g.get('dihedralDeg',0),
+            sweep_reference_fraction=g.get('sweepReferenceFraction',.5 if g.get('planform')=='elliptic' else 0),twist_reference_fraction=g.get('twistReferenceFraction',.25))
         from .validation import validate_wing
         report = validate_wing(parameters=p)
         if not report.passed:
@@ -190,6 +190,7 @@ def import_wing_lab_study(data: bytes | str) -> WingLabImport:
         **({'project_name':project_name} if project_name else {}),
         source_document=doc, geometry_parameters=p.to_dict(),
         limitations=['Nominal geometry transfer, not a re-solve or certification.',
+                     'Elliptical and delta planforms use a finite positive tip chord; sharp zero-thickness tips are not fabricated. Elliptical CAD is a 33-station ruled approximation; inspect slicer layers.',
                      'Station sections stay parallel to aircraft x-z planes; y is projected span, positive incidence raises the leading edge. Interior profiles interpolate pointwise; no aerodynamic polar or lifting-surface analysis is implied.',
                      'Expanded geometry uses ruled CAD lofts through at least nine transformed span stations plus every explicit airfoil station; browser rendering and CAD discretisations are different approximations of the same station definition.',
                      'Saved analysis.nElements is retained in source provenance; numerical beam/frame mesh resolution does not alter CAD geometry or create physical ribs.',

@@ -139,6 +139,8 @@ button, input, select { font: inherit; color: inherit; }
 #wrImage { background:#086bdc; color:#fff; border:2px solid #0755ae; font-weight:700; box-shadow:0 2px 5px rgba(0,65,145,.22); }
 #wrImage:hover { background:#0755ae; border-color:#03438f; }
 #wrImage:focus-visible { outline:3px solid #ffbf47; outline-offset:3px; }
+[aria-label="Plot"] { flex-wrap:nowrap; }
+#wingMoreResults { max-width:155px; padding:7px 5px; }
 .plotinfo b { font-weight: 500; color: var(--vp-ink); opacity: 0.65; }
 .legend { display: flex; gap: 8px; font: 11px/1 var(--font-data); margin-top: -4px; }
 .legend .bar-c { width: 16px; border: 1px solid rgba(0, 0, 0, 0.35); display: flex; flex-direction: column; }
@@ -993,11 +995,9 @@ nav.workspace-nav .workspace-link:focus-visible { outline: 3px solid var(--accen
         <button class="tool" data-plot="model" type="button">Model</button>
         <button class="tool" data-plot="stress" type="button">Stress</button>
         <button class="tool" data-plot="disp" type="button">Displacement</button>
-        <button class="tool" data-plot="twist" type="button">Twist</button>
-        <button class="tool" data-plot="bending" type="button">Bending moment</button>
-        <button class="tool" data-plot="torque" type="button">Torque</button>
-        <button class="tool" data-plot="fos" type="button">Factor of safety</button>
-        <button class="tool" data-plot="mode" type="button">Modes</button>
+        <select id="wingMoreResults" class="tool" aria-label="More results" title="Twist, bending, torque, factor of safety and modes">
+          <option value="">More results…</option><option value="twist">Twist</option><option value="bending">Bending moment</option><option value="torque">Torque</option><option value="fos">Factor of safety</option><option value="mode">Modes</option>
+        </select>
       </div>
     </div>
     <div class="group"><span>Learn first</span><div class="row"><button class="tool" type="button" id="learnBtn">Guided lesson</button><button class="tool" type="button" id="inputsBtn" aria-controls="wingSide" aria-expanded="true">Inputs</button></div></div>
@@ -13526,6 +13526,7 @@ if(typeof module!=='undefined')module.exports=WingWorkspaceUI;
     $('#app > .dock').hidden = false;
     const spatial=!!R.analysis3D;
     $('#app > .dock > .tabs').hidden=spatial;
+    $('#wingMoreResults').querySelectorAll('option[value="mode"],option[value="fos"]').forEach(b=>b.disabled=spatial);
     document.querySelectorAll('#app > .bar [data-plot="mode"],#app > .bar [data-plot="fos"]').forEach(b=>{b.disabled=spatial;b.title=spatial?'Unavailable for the spatial beam model':'';});
     if(spatial){
       renderTree();renderPM();renderWingLoads();renderInputs();renderInventory();renderViewReadout(true);
@@ -14006,6 +14007,7 @@ function renderObservations() {
     if(sectionResultMeta[p]){S.stressComponent='skin';S.anatomy='assembled';S.xray=false;$('#xrayBtn').setAttribute('aria-pressed','false');applyXray();}
     if(p==='fos')S.stressComponent='skin';
     S.plot = p;
+    $("#wingMoreResults").value=["twist","bending","torque","fos","mode"].includes(p)?p:"";
     if (p !== "model" && (S.anatomy === "ribs" || S.anatomy === "rods")) {
       S.anatomy = "assembled"; S.xray = false;
       $("#xrayBtn").setAttribute("aria-pressed", "false");
@@ -14015,6 +14017,7 @@ function renderObservations() {
     if (R) applyResult();
     if (S.selected.startsWith("res") || S.selected === "results") renderPM();
   }
+  $("#wingMoreResults").addEventListener("change",e=>{if(e.target.value)setPlot(e.target.value);});
   document.querySelectorAll("[data-plot]").forEach((b) => b.addEventListener("click", () => {
     setPlot(b.dataset.plot);
     const map = { stress: "res-stress", disp: "res-disp", fos: "res-fos", mode: "res-mode" };

@@ -6,6 +6,8 @@ MIE 446 Aerospace Structures | Project guide
 
 ![Three steps: Wing Lab design and STL, OrcaSlicer preparation, then printing and assembly](docs/project_workflow.svg)
 
+[Step-by-step project guide (PDF)](docs/MIE446_Simple_Wing_Walkthrough.pdf)
+
 ## 1. Wing Lab: design, analyze and download STL
 Open [Wing Lab](https://ehsan-roohi.github.io/Aerospace-Structures/wing-lab.html#wing) and name your project with your team and revision. Follow the controls in this order.
 

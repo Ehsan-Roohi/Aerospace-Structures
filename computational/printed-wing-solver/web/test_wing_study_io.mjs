@@ -113,6 +113,12 @@ await group('strict JSON reader', () => {
   eq({}.polluted, undefined, 'Object.prototype not polluted');
 });
 
+await group('self-weight survives JSON and legacy studies default to off',()=>{
+ const native=baseS();native.geometry={...native.geometry,modules:1,rodFractions:[]};native.load={...E.DEFAULT_LOAD,kind:'tip',tipForce:1,selfWeight:true};
+ const doc=JSON.parse(IO.exportPrintedStudy(native,E));eq(doc.study.load.selfWeight,true,'saved weight flag');const parsed=IO.importPrintedStudy(JSON.stringify(doc),E);ok(parsed.ok,JSON.stringify(parsed.errors));eq(parsed.state.load.selfWeight,true,'restored flag');
+ delete doc.study.load.selfWeight;const old=IO.importPrintedStudy(JSON.stringify(doc),E);ok(old.ok,JSON.stringify(old.errors));eq(old.state.load.selfWeight,false,'old file off');
+});
+
 // ---------------------------------------------------------------- printed wing: native round trips
 await group('printed round trips reproduce WingEngine results exactly', () => {
   const cases = [];
@@ -160,7 +166,7 @@ await group('printed round trips reproduce WingEngine results exactly', () => {
   const sorted = JSON.parse(IO.exportPrintedStudy(three, E)).study;
   deq(sorted.geometry.customInteriorRibs, [112.5, 146, 154, 225, 296, 304, 337.5], 'rib stations stored in engine order');
   deq(JSON.parse(IO.exportPrintedStudy(other, E)).study.materials.plaOver, { E: 3200, ft: 40, fc: null, fs: null,rho:null,nu:null }, 'non-positive override stored as card value (as the page uses it)');
-  deq(Object.keys(JSON.parse(IO.exportPrintedStudy(cases[3][1], E)).study.load), ['kind', 'tipForce', 'tipFraction', 'fos', 'tipMass'], 'only the active load case is stored');
+  deq(Object.keys(JSON.parse(IO.exportPrintedStudy(cases[3][1], E)).study.load), ['kind', 'selfWeight', 'tipForce', 'tipFraction', 'fos', 'tipMass'], 'only the active load case is stored');
   deq(JSON.parse(IO.exportPrintedStudy(shell, E)).study.materials, { plaKey: 'pla_upright', plaOver: { E: null, ft: null, fc: null, fs: null,rho:null,nu:null }, rodKey: 'rod_hobby', rodOver: { E: null } }, 'empty override objects');
   // exporting an invalid UI state is refused with the reasons
   const broken = baseS(); broken.geometry.skin = 8;

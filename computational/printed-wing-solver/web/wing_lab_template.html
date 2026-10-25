@@ -959,6 +959,18 @@ body { margin: 0; }
         numField('pnu','Poisson ratio','0 ≤ ν < 0.5',pla.nu,.01,v=>S.plaOver.nu=v,v=>Number.isFinite(v)&&v>=0&&v<.5?null:'must lie between 0 inclusive and 0.5 exclusive')));
       pm.append(fs("Derived value", kv([["Shear modulus G", `${nf(pla.E / (2 * (1 + pla.nu)), 0)} MPa`]])));
       pm.append(el("p", { class: "note" }, pla.source));
+    } else if(id==='mat-spar'){
+      $('#pmHead').textContent='Spar materials';head('Spar materials');
+      if(!g.spars?.length)pm.append(el('p',{},'Add a spar to choose its material.'));
+      (g.spars||[]).forEach((spar,i)=>{
+        const card=el('fieldset',{},`<legend>Spar ${i+1}</legend><label>Material <select id="sparMaterial${i}"><option value="current">${esc(spar.material.name)} · current</option><option value="shell">Same properties as shell</option><option value="custom">Custom properties</option></select></label>`);
+        const fields=[['E','Elastic modulus E','MPa'],['nu','Poisson ratio',''],['rho','Density','g/cm³'],['ft','Tensile allowable','MPa'],['fc','Compressive allowable','MPa'],['fs','Shear allowable','MPa']];
+        card.append(el('div',{class:'field'},`<label>Material name <input id="sparName${i}" value="${esc(spar.material.name)}" maxlength="80"></label>`));
+        fields.forEach(([k,label,unit])=>card.append(el('div',{class:'field'},`<label>${label} (${unit}) <input id="sparProp${i}_${k}" type="number" step="any" value="${spar.material[k]}"></label>`)));
+        const apply=el('button',{type:'button',class:'btn'},'Apply material');
+        apply.onclick=()=>{const material={name:$('#sparName'+i).value.trim()};fields.forEach(([k])=>material[k]=numberFrom($('#sparProp'+i+'_'+k)));const result=applyGeometry({spars:g.spars.map((v,j)=>j===i?{...v,material}:v)},'spars','spar material');if(result.ok)renderPM();};card.append(apply);pm.append(card);
+        $('#sparMaterial'+i).onchange=e=>{if(e.target.value==='shell'){const m=materials().pla;$('#sparName'+i).value=m.name;fields.forEach(([k])=>$('#sparProp'+i+'_'+k).value=m[k]);}$('#sparName'+i).focus();};
+      });
     } else if (id === "mat-rod") {
       $("#pmHead").textContent = "Material";
       head("Carbon rod card", "Hobby-grade and aerospace-grade pultruded rods differ by about five times in stiffness. Measure your rod with a hanging weight if you can.");
@@ -1262,7 +1274,7 @@ body { margin: 0; }
     const mats=[['E','Elastic modulus E','MPa'],['nu','Poisson ratio',''],['rho','Density','g/cm³'],['ft','Tensile allowable','MPa'],['fc','Compressive allowable','MPa'],['fs','Shear allowable','MPa']];
     host.innerHTML=`<h3>Bonded spars · separate from rods</h3><p class="note" data-wing-structure-help="spar-model">Thin-wall beam model: upper/lower caps carry bending tension and compression; the web participates in transverse shear and closed-cell torsion. Perfect skin/rib bonds are assumed. Compare shell only, shell + rods and shell + spars separately; mixed rod/spar joints are not validated. No load is changed by these controls.</p><div class="lesson-actions"><button class="btn" type="button" id="wsShell">Shell only</button><button class="btn" type="button" id="wsRods">Shell + rods</button><button class="btn" type="button" id="wsAdd">+ Bonded spar</button><button class="btn" type="button" id="wsHelp">Model help</button></div>${errLine('spars')}${g.spars.map((s,i)=>{
       const p=E.sparParts(g,0).find(p=>p.index===i),tip=E.sparParts(g,s.length).find(p=>p.index===i);
-      return `<fieldset><legend>Spar ${i+1} · perfectly bonded</legend>${fields.map(([k,label,unit])=>`<div class="field"><label for="ws${i}_${k}">${label}<small>${unit}</small></label><input id="ws${i}_${k}" type="number" step="any" value="${s[k]}"></div>`).join('')}<p class="note">Web clear height is derived from the bonded skin surfaces and cap thicknesses: root ${nf(p.h,2)} mm; end ${nf(tip.h,2)} mm. It is not an independent gap-producing dimension. Caps follow the inner skin; width and thickness are vertical section dimensions.</p><div class="field"><label for="ws${i}_name">Material name</label><input id="ws${i}_name" type="text" maxlength="80" value="${esc(s.material.name)}"></div>${mats.map(([k,label,unit])=>`<div class="field"><label for="ws${i}_m${k}">${label}<small>${unit}</small></label><input id="ws${i}_m${k}" type="number" step="any" value="${s.material[k]}"></div>`).join('')}<button class="btn" type="button" id="ws${i}_apply">Apply spar ${i+1} inputs</button> <button class="btn" type="button" id="ws${i}_remove">Remove spar ${i+1}</button></fieldset>`;
+      return `<fieldset><legend>Spar ${i+1} · perfectly bonded</legend>${fields.map(([k,label,unit])=>`<div class="field"><label for="ws${i}_${k}">${label}<small>${unit}</small></label><input id="ws${i}_${k}" type="number" step="any" value="${s[k]}"></div>`).join('')}<p class="note">Web clear height is derived from the bonded skin surfaces and cap thicknesses: root ${nf(p.h,2)} mm; end ${nf(tip.h,2)} mm. It is not an independent gap-producing dimension. Caps follow the inner skin; width and thickness are vertical section dimensions.</p><p class="note">Material: ${esc(s.material.name)} · edit in Materials → Spars.</p><button class="btn" type="button" id="ws${i}_apply">Apply spar ${i+1} inputs</button> <button class="btn" type="button" id="ws${i}_remove">Remove spar ${i+1}</button></fieldset>`;
     }).join('')}<p class="note" data-wing-structure-help="spar-limits"><b>Model limits:</b> cap/web buckling, adhesive stresses, debonding, crippling and local runout stresses are not resolved. Thin-wall shear flow and elastic beam stresses are not a manufacturing approval or a 3-D FE result. Changing material does not change the exported CAD.</p>`;
     $('#wsHelp').onclick=()=>{printedWorkspace?.close();const help=$('#wingInputHelp'),section=$('#wingHelpStructure');if(!help||!section)return;help.scrollIntoView({block:'nearest'});help.open=true;section.open=true;help.dispatchEvent(new Event('toggle'));section.querySelector('summary').focus({preventScroll:true});};
     const configure=(patch)=>{const previous=S.assembly;S.assembly={...previous,seamsBonded:true};const result=applyGeometry(patch,'spars','bonded structural layout');if(!result.ok)S.assembly=previous;renderTree();return result;};
@@ -1274,7 +1286,7 @@ body { margin: 0; }
       const p=E.sparParts(g,0).find(v=>v.index===i),diagram=el('div',{},`<svg viewBox="0 0 290 215" role="img" aria-label="Spar ${i+1} root dimensions, schematic not to scale" style="width:100%;max-width:360px;background:var(--raise);color:var(--fg)"><rect x="84" y="43" width="100" height="14" fill="#9871dd"/><rect x="128" y="57" width="12" height="106" fill="#39a3b7"/><rect x="74" y="163" width="120" height="14" fill="#9871dd"/><g stroke="currentColor" fill="none"><path d="M84 35v-9h100v9 M74 185v9h120v-9 M214 57h8v106h-8 M120 112h-18m38 0h18"/></g><g fill="currentColor" font-size="11" font-family="system-ui"><text x="134" y="19" text-anchor="middle">Upper cap bᵤ = ${nf(s.topWidth,2)} mm</text><text x="134" y="210" text-anchor="middle">Lower cap bₗ = ${nf(s.bottomWidth,2)} mm</text><text x="8" y="53">tᵤ = ${nf(s.topThickness,2)}</text><text x="8" y="174">tₗ = ${nf(s.bottomThickness,2)}</text><text x="150" y="140">t_w = ${nf(s.webThickness,2)} mm</text><text x="228" y="105">h_web</text><text x="228" y="121">${nf(p.h,2)} mm</text><text x="6" y="147">Web</text></g></svg><p class="note">Root schematic, not to scale. Actual caps follow the inner skin contours. b = cap width, t = thickness; h_web is the clear height between caps. Upper/lower cap dimensions are independent.</p>`);
       $('#ws'+i+'_apply').closest('fieldset').querySelector('legend').after(diagram);
       $('#ws'+i+'_remove').onclick=()=>configure({spars:g.spars.filter((_,j)=>j!==i)});
-      $('#ws'+i+'_apply').onclick=()=>{const next=JSON.parse(JSON.stringify(s));fields.forEach(([k])=>next[k]=numberFrom($('#ws'+i+'_'+k)));mats.forEach(([k])=>next.material[k]=numberFrom($('#ws'+i+'_m'+k)));next.material.name=$('#ws'+i+'_name').value.trim();configure({spars:g.spars.map((v,j)=>j===i?next:v)});};
+      $('#ws'+i+'_apply').onclick=()=>{const next=JSON.parse(JSON.stringify(s));fields.forEach(([k])=>next[k]=numberFrom($('#ws'+i+'_'+k)));configure({spars:g.spars.map((v,j)=>j===i?next:v)});};
     });
     host.querySelectorAll('fieldset').forEach((field,i)=>field.querySelectorAll('p.note').forEach((note,j)=>note.dataset.wingStructureHelp='spar-'+i+'-note-'+j));
     const help=$('#wingHelpStructure');if(help){for(const old of help.querySelectorAll('[data-wing-structure-help]'))old.remove();for(const note of $('#wingStructureForm').querySelectorAll('[data-wing-structure-help]'))help.append(note);}
@@ -2149,6 +2161,7 @@ body { margin: 0; }
       const arrow=new THREE.ArrowHelper(new THREE.Vector3(0,F>0?1:-1,0),origin,len,color,Math.min(10,len*.35),5);
       if(loadIndex!==null){arrow.traverse(o=>{o.userData.wingLoadIndex=loadIndex;});arrow.userData.wingLoadLength=len;}grp.add(arrow);
     };
+    if(R.load.gravitySummary){const gravity=R.load.items.filter(p=>p.gravity),max=Math.max(...gravity.map(p=>-p.force),1e-12);for(const p of gravity.filter((_,i)=>i%Math.max(1,Math.ceil(gravity.length/9))===0))add(p.position,p.fraction*E.chordAt(g,p.position),-.6*Math.max(.2,-p.force/max),0x626b73);}
     if (R.load.kind === "custom") {
       // Line loads of every shape (linear, elliptic, parabolic, table, Schrenk): 13 arrows each on its own span,
       // at its chord position; heights relative to the largest intensity drawn.
@@ -2169,7 +2182,7 @@ body { margin: 0; }
         add(y, R.load.liftFraction * E.chordAt(g, y), wl * 1.2, COLORS.load);
       }
     }
-    if(R.load.kind==='custom')R.load.items.forEach((p,i)=>{if(p.kind==='point')add(p.position,p.fraction*E.chordAt(g,p.position),Math.sign(p.force)*1.4,p.force>=0?COLORS.load:COLORS.relief,i);});
+    if(R.load.kind==='custom')R.load.items.forEach((p,i)=>{if(p.kind==='point'&&!p.gravity)add(p.position,p.fraction*E.chordAt(g,p.position),Math.sign(p.force)*1.4,p.force>=0?COLORS.load:COLORS.relief,i);});
     else if(R.analysis3D&&R.load.kind==='tip')add(L,R.load.tipFraction*E.chordAt(g,L),Math.sign(R.load.tipForce)*1.4,R.load.tipForce>=0?COLORS.load:COLORS.relief);
     else for (const p of R.point) add(p[0],p[2],Math.sign(p[1])*1.4,p[1]>=0?COLORS.load:COLORS.relief);
   }
@@ -2195,7 +2208,7 @@ body { margin: 0; }
   function renderPlotInfo() {
     const massBox=$('#wingMassReadout');
     massBox.hidden=!R||S.emptyStudy;
-    if(!massBox.hidden){massBox.textContent=geometryPreview?'Wing mass — solve to update':`Total wing mass ${nf(R.mass.total,1)} g · includes spars ${nf(R.mass.spars||0,1)} g${stale?' · previous solve':''}`;massBox.title='Estimated model mass including skin, ribs, end caps, spars, rods and any tip mass. Verify manufacturing mass in CAD and the slicer.';}
+    if(!massBox.hidden){massBox.textContent=geometryPreview?'Wing mass — solve to update':`Total wing mass ${nf(R.mass.total,1)} g · includes spars ${nf(R.mass.spars||0,1)} g${R.load.gravitySummary?' · Applied '+nf(R.load.gravitySummary.appliedN,3)+' N · Weight ↓ '+nf(R.load.gravitySummary.weightN,3)+' N · Net '+nf(R.appliedForce,3)+' N':''}${stale?' · previous solve':''}`;massBox.title='Estimated model mass including skin, ribs, end caps, spars, rods and any tip mass. Verify manufacturing mass in CAD and the slicer.';}
     if (geometryPreview&&model) {
       const g = model.g;
       $('#plotinfo').textContent = `UNSOLVED GEOMETRY PREVIEW · ${airfoilLabel(g)} · semi-span ${g.semiSpan} mm · ${model.ribs.length} ribs · ${model.rods.length} rods. Stress and deformation hidden; press Solve for analysis.`;
@@ -2902,6 +2915,7 @@ body { margin: 0; }
   }
 
   function wingLoadName(r) {
+    if(r.load.sourceLoad)return wingLoadName({...r,load:r.load.sourceLoad})+' + 1-g wing self-weight';
     if(r.load.kind==='custom') return r.load.items.length?`${r.load.items.length} custom load${r.load.items.length>1?'s':''} (upward +; no automatic lift, weight or inertia relief)`:'No load defined';
     return r.load.kind==='tip'?`Tip force ${nf(r.load.tipForce,2)} N at ${nf(r.load.tipFraction,2)}c`:`Flight-like lift: n=${r.load.loadFactor}, mass=${r.load.aircraftMass} kg, ${r.load.distribution}${r.load.inertiaRelief?', inertia relief':''}`;
   }
@@ -2912,7 +2926,8 @@ body { margin: 0; }
     schrenkProfile:total=>{const g=E.makeGeometry(S.geometry);return WingLoadsUI.schrenkData(g.semiSpan,y=>E.chordAt(g,y),total,[g.rootChord,g.tipChord]);},
     pickOnModel:accept=>beginPrintedSurfacePick(accept),
     showDeformation:()=>{if(!R||stale||running||gateOpen())throw new Error('Solve the applied loads first.');S.deformed=true;$('#defBtn').setAttribute('aria-pressed','true');setPlot('disp');applyResult();canvas.scrollIntoView({block:'center'});},
-    workspace:'printed',units:{length:'mm',line:'N/mm',force:'N',moment:'N·mm'},
+    workspace:'printed',
+    selfWeight:{value:()=>!!S.load.selfWeight,set:value=>{const load={...S.load,selfWeight:value};E.normalize({...engineInput(),load});S.load=load;changed();}},units:{length:'mm',line:'N/mm',force:'N',moment:'N·mm'},
     ids:{form:'wingLoadForm',kind:'wingKind',a:'wingA',b:'wingB',P:'wingP',q0:'wingQ0',q1:'wingQ1',shape:'wingCurveShape',basis:'wingCurveBasis',value:'wingCurveValue',xc:'wingFraction',law:'wingCurveLaw',
       list:'wingCustomList',clear:'wingClearLoad',flight:'wingFlightLoad',status:'wingLoadStatus',chord:'wingChordFigure',csv:'wingCsv'},
     kindValue:{point:'point',uniform:'rectangle',rampUp:'triangle',rampDown:'triangleDown',trapezoid:'trapezoid',elliptic:'elliptic',parabolic:'parabolic',schrenk:'schrenk'},
@@ -2922,7 +2937,7 @@ body { margin: 0; }
     mode:()=>S.load.kind==='custom'?(S.load.items.length?'custom':'none'):S.load.kind,
     validate:items=>E.normalize({...engineInput(),load:{...S.load,kind:'custom',items}}),
     apply:items=>{S.load={...S.load,kind:'custom',items};changed();},
-    flight:{configure:true,values:()=>S.load.kind==='flight'?S.load:{aircraftMass:.2,loadFactor:1,distribution:'elliptic',liftFraction:.25,inertiaRelief:false},validate:v=>validateFlightCase(v),apply:v=>{validateFlightCase(v);S.load={...E.DEFAULT_LOAD,...v,fos:S.load.fos,tipMass:S.load.tipMass};changed();}},
+    flight:{configure:true,values:()=>S.load.kind==='flight'?S.load:{aircraftMass:.2,loadFactor:1,distribution:'elliptic',liftFraction:.25,inertiaRelief:false},validate:v=>validateFlightCase(v),apply:v=>{validateFlightCase(v);S.load={...E.DEFAULT_LOAD,...v,fos:S.load.fos,tipMass:S.load.tipMass,selfWeight:!!S.load.selfWeight};changed();}},
     allowSchrenk:true,refStation:0,refLabel:'the root y = 0',
     section:y=>R&&!stale&&!R.analysis3D?{outline:E.outerContour(R.geometry,y),chord:E.chordAt(R.geometry,y),xsc:E.interp(y,R.y,R.props.xsc)}:null,
     schrenkCentroid:()=>WingLoadsUI.schrenkData(S.geometry.semiSpan,y=>E.chordAt(R?R.geometry:E.makeGeometry(S.geometry),y),1,[S.geometry.rootChord,S.geometry.tipChord]).stats.schrenk.ybar,
@@ -2944,7 +2959,7 @@ body { margin: 0; }
       <div class="tablewrap">${WingLoadsUI.schrenkTable(panels.map(p=>({...p,data:{...p.data,stats:p.data.stats}})),{force:'N',length:'mm',moment:'N·mm'})}</div>
       <p class="note">Per newton of total semi-wing lift. Assumptions: an unswept wing without twist, flaps or ailerons deflected, below stall, at a moderate aspect ratio. Sweep, twist and stall change the lift distribution and need a correction or a lifting-surface/CFD analysis; Schrenk is a teaching approximation of the lift per unit span, not a chordwise pressure (Cp) distribution and not a CFD result. Background: <a href="https://ntrs.nasa.gov/citations/19930093823" target="_blank" rel="noopener">NACA/NASA NTRS 19930093823, “A simple approximate method for obtaining spanwise lift distributions over swept wings”</a> (adapting simple methods of this kind to swept wings) and <a href="https://ntrs.nasa.gov/citations/19780008062" target="_blank" rel="noopener">NASA CR-132403 (NTRS 19780008062)</a>.</p></section>`;
   }
-  function validateFlightCase(v){const input={...engineInput(),load:{...E.DEFAULT_LOAD,...v,fos:S.load.fos,tipMass:S.load.tipMass}},n=E.normalize(input),cap=E.analysisCapability(n.g,input);if(!cap.supported)throw Error(cap.message);return n;}
+  function validateFlightCase(v){const input={...engineInput(),load:{...E.DEFAULT_LOAD,...v,fos:S.load.fos,tipMass:S.load.tipMass,selfWeight:!!S.load.selfWeight}},n=E.normalize(input),cap=E.analysisCapability(n.g,input);if(!cap.supported)throw Error(cap.message);return n;}
   function renderWingLoads() {
     if(!R){const home=document.getElementById('wingLoadEditor');if(home)loadKeeperOf().place(home);return;}
     if(!R)return;
@@ -2967,8 +2982,8 @@ body { margin: 0; }
       <div class="callout" style="margin-top:14px"><h3>Read the animated modes</h3><div class="lesson-actions"><button class="btn" data-teach-mode="bending,0">First bending mode</button><button class="btn" data-teach-mode="bending,1">Second bending mode</button><button class="btn" data-teach-mode="torsion,0">First torsional mode</button></div><div class="equation">K φ = ω² M φ &nbsp; · &nbsp; f = ω/(2π)</div><p>Bending moves the centreline; torsion rotates sections around the span. These are normalized, undamped free-vibration patterns. The animation is magnified and slowed; its amplitude is <b>not</b> the response to your static force. Higher bending modes have more shape reversals. This model separates bending and torsion; it does not predict flutter, damping or forced vibration amplitudes.</p><p><a href="https://help.solidworks.com/2025/english/SolidWorks/cworks/HIDD_Mode_Shape_Amplitude.htm" target="_blank" rel="noopener">SOLIDWORKS explanation of mode amplitudes</a></p></div></div></div>
     <section id="localModels"></section><section id="bucklingModels"></section><section id="torsionLab"></section><section id="ribChange"></section><section id="observations"></section>`;
     // Deliberate lesson loads (the presets themselves open without a load).
-    $('#lessonTipLoad').onclick=()=>{S.load={...E.DEFAULT_LOAD,kind:'tip',tipForce:2,tipFraction:.3,fos:S.load.fos,tipMass:S.load.tipMass};changed();};
-    $('#lessonFlightLoad').onclick=()=>{S.load={...E.DEFAULT_LOAD,fos:S.load.fos,tipMass:S.load.tipMass};changed();};
+    $('#lessonTipLoad').onclick=()=>{S.load={...E.DEFAULT_LOAD,kind:'tip',tipForce:2,tipFraction:.3,fos:S.load.fos,tipMass:S.load.tipMass,selfWeight:!!S.load.selfWeight};changed();};
+    $('#lessonFlightLoad').onclick=()=>{S.load={...E.DEFAULT_LOAD,fos:S.load.fos,tipMass:S.load.tipMass,selfWeight:!!S.load.selfWeight};changed();};
     $('#skinStress').onclick=()=>{S.stressComponent='skin';S.anatomy='assembled';setPlot('stress');renderMemberLesson();};
     $('#rodStress').onclick=()=>{S.stressComponent='rods';S.anatomy='inside';S.xray=true;setPlot('stress');applyXray();renderMemberLesson();};
     $('#ribBearingView').onclick=()=>setAnatomy('ribs');
@@ -3426,7 +3441,7 @@ body { margin: 0; }
     const hit=hits.find(h=>Number.isInteger(h.object.userData.wingLoadIndex)),index=hit?.object.userData.wingLoadIndex??WingWorkspaceUI.pickLoadArrow(model.loads.children,camera,canvas,e,THREE);if(index===null)return;if(partPick)$('#wpPick').click();
     const editor=loadKeeperOf().editor;if(!editor)return;printedWorkspace.open('Edit wing load · upward positive',editor.container,{right:e.clientX,top:e.clientY});editor.edit(index);
   });
-  function openWingMaterialsPopup(anchor){select('mat-pla');printedWorkspace.open('Shell / rib and rod materials',$('#pm'),anchor);const tabs=el('div',{class:'lesson-actions'},'<button class="btn" type="button" data-quick-material="mat-pla">Shell / ribs</button><button class="btn" type="button" data-quick-material="mat-rod">Rods</button>');$('#pm').before(tabs);tabs.querySelectorAll('button').forEach(b=>b.onclick=()=>select(b.dataset.quickMaterial));printedWorkspace.position();}
+  function openWingMaterialsPopup(anchor){select('mat-pla');printedWorkspace.open('Materials',$('#pm'),anchor);const tabs=el('div',{class:'lesson-actions'},'<button class="btn" type="button" data-quick-material="mat-pla">Shell / ribs</button><button class="btn" type="button" data-quick-material="mat-rod">Rods</button><button class="btn" type="button" data-quick-material="mat-spar">Spars</button>');$('#pm').before(tabs);tabs.querySelectorAll('button').forEach(b=>b.onclick=()=>select(b.dataset.quickMaterial));printedWorkspace.position();}
   function openWingPartPopup(kind,p,anchor){
     if(running||gateOpen()){flash('Wait for the current solve or confirm the imported structural inputs first.');return;}
     const isRib=kind==='rib',isSpar=kind==='spar',g=E.makeGeometry(S.geometry),value=isRib?(p?.station??suggestRib(g,E.ribStations(g))):(p?.fraction??(isSpar?(g.spars.length?.6:.35):.45));

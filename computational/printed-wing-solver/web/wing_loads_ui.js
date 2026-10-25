@@ -251,6 +251,7 @@ const WingLoadsUI = (() => {
     const field = (fid, label, value, extra = '') => `<div class="field"><label for="${fid}">${label}</label><input id="${fid}" type="number" step="any" value="${value}" aria-describedby="${fid}Error" ${extra}><small id="${fid}Error" class="wle-err"></small></div>`;
     const select = (fid, label, options, value) => `<div class="field"><label for="${fid}">${label}</label><select id="${fid}">${options.map(([v, t]) => `<option value="${v}"${v === value ? ' selected' : ''}>${t}</option>`).join('')}</select></div>`;
     container.innerHTML = `<div class="wle" data-workspace="${ad.workspace}">
+      ${ad.selfWeight?`<label><input type="checkbox" class="wle-self-weight"> Include wing self-weight</label><small>Gravity: 1 g downward, from the mass of this semi-wing. Separate from flight inertia relief.</small>`:''}
       <form id="${id.form}" class="callout wle-form" novalidate><h3>Add a load to the current wing</h3>
         <div class="wle-submitbar" style="position:sticky;top:0;z-index:3;background:var(--panel,#fff);padding:8px 0"><button class="btn primary" type="submit">Add load</button><p class="wle-draft-error wle-err" role="alert"></p><p class="note" style="margin:4px 0">Draft only until confirmed. Add load registers the force and updates the analysis; Solve alone does not register this form.</p></div>
         ${ad.pickOnModel ? '<button class="btn wle-pick" type="button" aria-pressed="false">⌖ Pick on 3-D wing</button><p class="note">Select the shape below, then pick on the undeformed skin. A point force needs one click; a line load needs start and end clicks. The first click fixes x/c for the whole interval. Schrenk uses the whole span. Picking only fills coordinates: enter magnitude and confirm Add load. No automatic force. Cancel with Esc.</p>' : ''}
@@ -423,6 +424,7 @@ const WingLoadsUI = (() => {
       cap.innerHTML = chordCaption(o) + (p.kind !== 'point' ? ` For a distributed load the figure uses its resultant F at its resultant station; the solver integrates the torque along the load.` : '');
     }
     function renderList() {
+      if(ad.selfWeight){const box=container.querySelector('.wle-self-weight');box.checked=ad.selfWeight.value();box.onchange=()=>{try{ad.selfWeight.set(box.checked);}catch(error){box.checked=ad.selfWeight.value();status(error.message,true);}};}
       const items = ad.items(), mode = ad.mode();
       byId(id.list).innerHTML = items.length
         ? items.map((p, i) => `<p>${i + 1}. ${esc(describe(p, u))} <button class="btn" type="button" ${ad.deleteAttr}="${i}">Remove</button> <button class="btn" type="button" data-wle-edit-load="${i}">${p.kind==='table'?'Edit table':'Edit load'}</button></p><details><summary>Load ${i+1}: profile &amp; resultant</summary>${profile(p,items)}</details>`).join('')

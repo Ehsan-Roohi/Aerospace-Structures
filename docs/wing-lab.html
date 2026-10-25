@@ -7687,6 +7687,7 @@ const WingEngine = (() => {
     const sparMass=sparInts.reduce((a,s)=>a+s.m.rho*1e-3*s.int[0],0);
     const mass = rp * plaInt[0] + rr_ * rodInt[0]+sparMass;
     const cgx = (rp * plaInt[2] + rr_ * rodInt[2]+sparInts.reduce((a,s)=>a+s.m.rho*1e-3*s.int[2],0)) / mass;
+    const cgz = (rp*plaInt[1]+rr_*rodInt[1]+sparInts.reduce((a,s)=>a+s.m.rho*1e-3*s.int[1],0))/mass;
     const polar = (I) => I[4] - 2 * xsc * I[2] + xsc ** 2 * I[0] + (I[3] - 2 * zsc * I[1] + zsc ** 2 * I[0]);
     const polarInertia = rp * polar(plaInt) + rr_ * polar(rodInt)+sparInts.reduce((a,s)=>a+s.m.rho*1e-3*polar(s.int),0);
     const outerInt = polyIntegrals(outer);
@@ -7704,9 +7705,9 @@ const WingEngine = (() => {
     const radius = circleRadius(us[0], us[us.length >> 1], us[us.length - 1]);
     return {
       y, chord: loops.chord, EA, xc, zc, EIf, EIc, EIxz, principal, EIrods, GJ, Jfe: fe.J, Jbredt: bredt.J,
-      bredtArea: bredt.Am, xsc, zsc, mass, cgx, polarInertia, zTop, zBot,
+      bredtArea: bredt.Am, xsc, zsc, mass, cgx, cgz, polarInertia, zTop, zBot,
       sparParts:sectionSparParts,sparInts,sparMass,sparNetwork,bendCoupling,
-      plaArea: plaInt[0], shellArea: fe.A, rodArea: rodInt[0], ribExtra, ribCgx: ribInt[2] / ribInt[0],
+      plaArea: plaInt[0], shellArea: fe.A, rodArea: rodInt[0], ribExtra, ribCgx: ribInt[2] / ribInt[0],ribExtraCgx:(ribInt[2]-plaInt[2])/ribExtra,ribExtraCgz:(ribInt[1]-plaInt[1])/ribExtra,
       ribPolar: polar(ribInt), skinWidth: width, skinRadius: radius, mesh, fe, corners: loops.corners,
       outer, centres, Rs, rh, rr,
     };
@@ -7716,7 +7717,7 @@ const WingEngine = (() => {
   const DEFAULT_LOAD = {
     name: "Limit manoeuvre (analytical)", kind: "flight", aircraftMass: 1.0, loadFactor: 4.0,
     distribution: "schrenk", liftFraction: 0.25, inertiaRelief: true, tipForce: 10, tipFraction: 0.3,
-    fos: 1.5, tipMass: 0,
+    fos: 1.5, tipMass: 0, selfWeight:false,
   };
   const DEFAULT_CRITERIA = { maxTipDeflection: 45, maxTipTwist: 2 };
 
@@ -7874,8 +7875,8 @@ const WingEngine = (() => {
         Kt[p * nt + p] += k; Kt[q * nt + q] += k; Kt[p * nt + q] -= k; Kt[q * nt + p] -= k;
       }
     }
-    for (const [y, F] of o.pointForces || []) fb[wDof[argmin(nodes, y)]] += F;
-    for (const [y, T] of o.pointTorques || []) ft[(o.pointTorquesOutboard?phR:phL)[argmin(nodes, y)]] += T;
+    for(const [y,F] of o.pointForces||[]){const k=argmin(nodes,y);if(Math.abs(nodes[k]-y)<1e-8){fb[wDof[k]]+=F;continue;}let e=0;while(e<n-2&&y>nodes[e+1])e++;const h=nodes[e+1]-nodes[e],t=(y-nodes[e])/h,N=[1-3*t*t+2*t*t*t,h*(t-2*t*t+t*t*t),3*t*t-2*t*t*t,h*(-t*t+t*t*t)],d=[wDof[e],thR[e],wDof[e+1],thL[e+1]];N.forEach((v,i)=>fb[d[i]]+=F*v);}
+    for(const [y,T] of o.pointTorques||[]){const k=argmin(nodes,y);if(Math.abs(nodes[k]-y)<1e-8){ft[(o.pointTorquesOutboard?phR:phL)[k]]+=T;continue;}let e=0;while(e<n-2&&y>nodes[e+1])e++;const t=(y-nodes[e])/(nodes[e+1]-nodes[e]);ft[phR[e]]+=(1-t)*T;ft[phL[e+1]]+=t*T;}
     for (const [y, m] of o.pointMasses || []) { const k = wDof[argmin(nodes, y)]; Mb[k * nb + k] += m * 1e-6; }
     for (const [y, Ip] of o.pointInertias || []) { const k = phL[argmin(nodes, y)]; Mt[k * nt + k] += Ip * 1e-6; }
     const fixB = new Set([wDof[0], thL[0], thR[0]]), fixT = new Set([phL[0], phR[0]]);
@@ -7946,7 +7947,10 @@ const WingEngine = (() => {
     const rod = { ...MATERIALS.rod_hobby, ...(input.rod || {}) };
     const asm = { ...DEFAULT_ASSEMBLY, ...(input.assembly || {}) };
     if(g.spars.length&&!asm.seamsBonded&&seams(g).length)throw new Error('Bonded spars require bonded module seams (or a one-piece shell). Dry-seam joint mechanics with spars are not validated.');
-    const load = { ...DEFAULT_LOAD, ...(input.load || {}) };
+    const load = { ...DEFAULT_LOAD, selfWeight:false, ...(input.load || {}) };
+    if(load.selfWeight&&g.spars.some(s=>s.length<g.semiSpan-1e-8))throw Error('Self-weight currently requires full-span spars. Partial-span spar runout gravity needs a segmented mass integration model.');
+    if(typeof load.selfWeight!=='boolean')throw Error('Include wing self-weight must be true or false.');
+    if(load.selfWeight&&load.kind==='flight'&&load.inertiaRelief)throw Error('Choose self-weight or flight inertia relief, not both. Self-weight uses 1 g; inertia relief already includes wing mass at n g.');
     if (!g.rodFractions.length && !asm.seamsBonded && seams(g).length)
       throw new Error("Removing every rod from a dry multi-module joint disconnects the wing. Use the one-piece teaching wing or explicitly model bonded seams.");
     if (!["flight", "tip", "custom"].includes(load.kind)) throw new Error("Choose flight, tip or custom loading.");
@@ -7978,6 +7982,23 @@ const WingEngine = (() => {
     else if(load.distribution==='planform'){const area=(g.rootChord+g.tipChord)*L/2;item={kind:'distributed',start:0,end:L,qStart:total*g.rootChord/area,qEnd:total*g.tipChord/area,fraction};}
     else throw Error('Choose elliptic, Schrenk, uniform, planform or tip lift.');
     return validateLoads([item],L);
+  }
+  // Integrate the section mass model with four-point Gauss quadrature per
+  // section interval. Each quadrature force is applied at the true local mass
+  // centroid and transferred consistently to the beam; no artificial FE nodes.
+  function loadWithSelfWeight(source,g,pla,sections,ys,extrapolate=false){
+    if(!source.selfWeight)return source;
+    const L=g.semiSpan,lookup=extrapolate?interpLin:interp,stations=[...new Set([0,...ys,L])].sort((a,b)=>a-b),at=(k,y)=>lookup(y,ys,sections.map(s=>s[k]));
+    const gravity=[],add=(y,mass,x,z)=>{if(mass>0)gravity.push({kind:'point',position:y,force:-mass*GRAV/1000,fraction:x/chordAt(g,y),localPoint:[x,z],gravity:true});};
+    const gx=[-.8611363115940526,-.3399810435848563,.3399810435848563,.8611363115940526],gw=[.3478548451374538,.6521451548625461,.6521451548625461,.3478548451374538];
+    for(let i=1;i<stations.length;i++){const a=stations[i-1],b=stations[i];for(let j=0;j<4;j++){const y=(a+b)/2+(b-a)*gx[j]/2,m=at('mass',y),first=k=>lookup(y,ys,sections.map(s=>s.mass*s[k]));add(y,m*(b-a)*gw[j]/2,first('cgx')/m,first('cgz')/m);}}
+    const rho=pla.rho/1000;
+    for(const y of ribStations(g))add(y,rho*g.ribThickness*at('ribExtra',y),at('ribExtraCgx',y),at('ribExtraCgz',y));
+    for(const y of [0,L])add(y,rho*g.cap*at('ribExtra',y),at('ribExtraCgx',y),at('ribExtraCgz',y));
+    if(source.tipMass)add(L,source.tipMass,source.tipFraction*g.tipChord,0);
+    const base=source.kind==='custom'?source.items:source.kind==='flight'?prescribedFlightLoads(source,g):[{kind:'point',position:L,force:source.tipForce,fraction:source.tipFraction}];
+    const weightN=-gravity.reduce((sum,p)=>sum+p.force,0),appliedN=customResultants(base,g,0).V;
+    return {...source,kind:'custom',items:[...base,...gravity],sourceLoad:source,gravitySummary:{weightN,appliedN,netN:appliedN-weightN,quadrature:'4-point Gauss per section interval; rib/cap and sensor masses concentrated at their section centroids'}};
   }
   function validateLoads(items, L) {
     if (!Array.isArray(items) || items.length > 12) throw new Error("Use a list of at most 12 loads.");
@@ -8059,7 +8080,8 @@ const WingEngine = (() => {
   }
 
   function solve(input = {}) {
-    const normalized=normalize(input),{ g, pla, rod, asm, load, crit, ySec } = normalized;
+    const normalized=normalize(input),{ g, pla, rod, asm, load:sourceLoad, crit, ySec } = normalized;
+    let load=sourceLoad;
     const capability=analysisCapability(g,input);
     if(!capability.supported)throw Error(capability.message);
     if(capability.requires3D)return solveSpatial(input,normalized);
@@ -8068,11 +8090,12 @@ const WingEngine = (() => {
     const seamsActive = asm.seamsBonded ? [] : seams(g);
     const ribs = ribStations(g);
     const sections = ySec.map((y) => cachedSection(g, pla, rod, asm, y));
+    load=loadWithSelfWeight(sourceLoad,g,pla,sections,ySec,true);
     const col = (k) => sections.map((s) => s[k]);
-    const loadNodes = load.kind === "custom" ? load.items.flatMap(p => loadStations(p, L)) : [];
+    const loadNodes = load.kind === "custom" ? load.items.filter(p=>!p.gravity).flatMap(p => loadStations(p, L)) : [];
     const profileNodes=(g.stations||[]).map(s=>s.eta*L);
     const sparEnds=g.spars.map(s=>s.length);
-    const yset = new Set([...linspace(0, L, nGrid), ...seams(g), ...ribs, ...loadNodes,...sparEnds,...profileNodes].map((v) => +v.toFixed(9)));
+    const yset = new Set([...linspace(0, L, nGrid), ...seams(g), ...ribs, ...loadNodes,...sparEnds,...profileNodes,...(sourceLoad.selfWeight?ySec:[])].map((v) => +v.toFixed(9)));
     const y = Float64Array.from([...yset].sort((a, b) => a - b));
     // Never smear a spar runout into the next bay: interpolate only within the
     // same active-spar segment. End values are inboard limits.
@@ -8352,11 +8375,13 @@ const WingEngine = (() => {
   // unchanged. Normal cuts are affine projections of aircraft x-z sections;
   // dA_normal = |t_y| dA_xz and ds = dy/|t_y| preserve physical volume.
   function solveSpatial(input,n=normalize(input)) {
-    const {g,pla,rod,asm,load,crit}=n,L=g.semiSpan,F=Frame;
+    const {g,pla,rod,asm,load:sourceLoad,crit}=n,L=g.semiSpan,F=Frame;
+    let load=sourceLoad;
     const count=requestedElementCount(input,MESH_LIMITS.spatialDefault);
     const cap=analysisCapability(g,input);if(!cap.supported)throw Error(cap.message);
     if(input.nSections!=null&&(!Number.isInteger(input.nSections)||input.nSections<3||input.nSections>31))throw Error('The spatial beam supports 3–31 numerical section samples.');
     const ys=[...new Set([...n.ySec,L])].sort((a,b)=>a-b),local=ys.map(y=>cachedSection(g,pla,rod,asm,y));
+    load=loadWithSelfWeight(sourceLoad,g,pla,local,ys);
     const frac=g.twistReferenceFraction??.25;
     let reference=ys.map(y=>Geometry.transformPoint(g,y,[frac*chordAt(g,y),0])),samples=[],axisChange=0;
     const projectedCache=new Map();
@@ -8408,11 +8433,11 @@ const WingEngine = (() => {
       p.D=normalRecoveryD(y,p);Object.assign(p,{EA:p.D[0][0],first2:-p.D[0][2],first3:p.D[0][1],EI22:p.D[1][1],EI33:p.D[2][2],EI23:-p.D[1][2]});return p;
     }
     const items=load.kind==='flight'?prescribedFlightLoads(load,g):load.kind==='tip'?[{kind:'point',position:L,force:load.tipForce,fraction:load.tipFraction}]:load.items;
-    const physical=[0,L,...(g.stations||[]).map(s=>s.eta*L),...ribStations(g),...seams(g),...g.spars.map(s=>s.length),...items.flatMap(p=>loadStations(p,L))];
+    const physical=[0,L,...(g.stations||[]).map(s=>s.eta*L),...ribStations(g),...seams(g),...g.spars.map(s=>s.length),...items.filter(p=>!p.gravity).flatMap(p=>loadStations(p,L))];
     const mandatory=[...physical,...ys.filter(y=>!physical.some(p=>Math.abs(p-y)<.1))];
     const regular=linspace(0,L,count+1).filter(y=>!mandatory.some(v=>Math.abs(v-y)<.1));
     let nodeY=[...new Set([...mandatory,...regular].map(y=>+y.toFixed(9)))].sort((a,b)=>a-b),nodes=nodeY.map(referenceAt);
-    const loadPoint=(p,y)=>Geometry.transformPoint(g,y,[customFraction(p,y)*chordAt(g,y),0]);
+    const loadPoint=(p,y)=>Geometry.transformPoint(g,y,p.localPoint||[customFraction(p,y)*chordAt(g,y),0]);
     // Conservative, outward-padded analytic intervals, not point sampling.
     // They certify load-path monotonicity before any normal-foot bisection.
     const interval=(a,b=a)=>{const e=32*Number.EPSILON*Math.max(1,Math.abs(a),Math.abs(b));return [Math.min(a,b)-e,Math.max(a,b)+e];};
@@ -8465,7 +8490,7 @@ const WingEngine = (() => {
     // section stations, NOT by arbitrary FE/load/rib node spacing. Refining the
     // longitudinal mesh must not introduce artificial reference curvature at
     // corners of a linear interpolation of shear-centre sample coordinates.
-    const normals=normalFamily(ys,reference),pointFeet=items.flatMap((p,i)=>{if(p.kind!=='point')return [];try{const foot=normals.locate(loadPoint(p,p.position));return foot.outside?[]:[foot.station];}catch(error){throw Error(`Wing load ${i+1} (point), aircraft y=${p.position} mm, x/c=${p.fraction}: ${error.message} Reduce profile/incidence gradients or move this load; no nearest-plane clamp is applied.`);}});
+    const normals=normalFamily(ys,reference),pointFeet=items.flatMap((p,i)=>{if(p.kind!=='point'||p.gravity)return [];try{const foot=normals.locate(loadPoint(p,p.position));return foot.outside?[]:[foot.station];}catch(error){throw Error(`Wing load ${i+1} (point), aircraft y=${p.position} mm, x/c=${p.fraction}: ${error.message} Reduce profile/incidence gradients or move this load; no nearest-plane clamp is applied.`);}});
     nodeY=[...nodeY];for(const y of pointFeet)if(!nodeY.some(q=>Math.abs(q-y)<.1-1e-9))nodeY.push(y);nodeY.sort((a,b)=>a-b);nodes=nodeY.map(normals.atY);
     if(nodeY.length>161)throw Error('The 3-D frame is limited to 161 nodes. Reduce load-table rows or geometry stations.');
     const axis=makeAxis(nodeY,nodes),loadMapping={method:'Physical loads projected to normal-axis feet; consistent work integrated per original aircraft-y coordinate',endWrenches:[],monotonicity:{method:'Conservative analytic interval bounds of physical-path and C1-normal-family derivatives; no endpoint-sampling certificate',certifiedSourcePanels:0,intervalBoxes:0}};
@@ -8936,6 +8961,7 @@ const WingLoadsUI = (() => {
     const field = (fid, label, value, extra = '') => `<div class="field"><label for="${fid}">${label}</label><input id="${fid}" type="number" step="any" value="${value}" aria-describedby="${fid}Error" ${extra}><small id="${fid}Error" class="wle-err"></small></div>`;
     const select = (fid, label, options, value) => `<div class="field"><label for="${fid}">${label}</label><select id="${fid}">${options.map(([v, t]) => `<option value="${v}"${v === value ? ' selected' : ''}>${t}</option>`).join('')}</select></div>`;
     container.innerHTML = `<div class="wle" data-workspace="${ad.workspace}">
+      ${ad.selfWeight?`<label><input type="checkbox" class="wle-self-weight"> Include wing self-weight</label><small>Gravity: 1 g downward, from the mass of this semi-wing. Separate from flight inertia relief.</small>`:''}
       <form id="${id.form}" class="callout wle-form" novalidate><h3>Add a load to the current wing</h3>
         <div class="wle-submitbar" style="position:sticky;top:0;z-index:3;background:var(--panel,#fff);padding:8px 0"><button class="btn primary" type="submit">Add load</button><p class="wle-draft-error wle-err" role="alert"></p><p class="note" style="margin:4px 0">Draft only until confirmed. Add load registers the force and updates the analysis; Solve alone does not register this form.</p></div>
         ${ad.pickOnModel ? '<button class="btn wle-pick" type="button" aria-pressed="false">⌖ Pick on 3-D wing</button><p class="note">Select the shape below, then pick on the undeformed skin. A point force needs one click; a line load needs start and end clicks. The first click fixes x/c for the whole interval. Schrenk uses the whole span. Picking only fills coordinates: enter magnitude and confirm Add load. No automatic force. Cancel with Esc.</p>' : ''}
@@ -9108,6 +9134,7 @@ const WingLoadsUI = (() => {
       cap.innerHTML = chordCaption(o) + (p.kind !== 'point' ? ` For a distributed load the figure uses its resultant F at its resultant station; the solver integrates the torque along the load.` : '');
     }
     function renderList() {
+      if(ad.selfWeight){const box=container.querySelector('.wle-self-weight');box.checked=ad.selfWeight.value();box.onchange=()=>{try{ad.selfWeight.set(box.checked);}catch(error){box.checked=ad.selfWeight.value();status(error.message,true);}};}
       const items = ad.items(), mode = ad.mode();
       byId(id.list).innerHTML = items.length
         ? items.map((p, i) => `<p>${i + 1}. ${esc(describe(p, u))} <button class="btn" type="button" ${ad.deleteAttr}="${i}">Remove</button> <button class="btn" type="button" data-wle-edit-load="${i}">${p.kind==='table'?'Edit table':'Edit load'}</button></p><details><summary>Load ${i+1}: profile &amp; resultant</summary>${profile(p,items)}</details>`).join('')
@@ -10121,9 +10148,9 @@ if(typeof module!=='undefined')module.exports=WingWorkspaceUI;
   const ASSEMBLY_V1 = Object.freeze(['rodsBonded', 'seamsBonded', 'seamFreeLength', 'adhesiveTensile']);
   const CRITERIA_V1 = Object.freeze(['maxTipDeflection', 'maxTipTwist']);
   const PRINTED_LOAD_KEYS = Object.freeze({
-    flight: ['aircraftMass', 'loadFactor', 'distribution', 'liftFraction', 'inertiaRelief', 'tipFraction', 'fos', 'tipMass'],
-    tip: ['tipForce', 'tipFraction', 'fos', 'tipMass'],
-    custom: ['items', 'fos', 'tipMass'],
+    flight: ['aircraftMass', 'loadFactor', 'distribution', 'liftFraction', 'inertiaRelief', 'tipFraction', 'fos', 'tipMass', 'selfWeight'],
+    tip: ['tipForce', 'tipFraction', 'fos', 'tipMass', 'selfWeight'],
+    custom: ['items', 'fos', 'tipMass', 'selfWeight'],
   });
   const FLIGHT_DISTRIBUTIONS = Object.freeze(['schrenk', 'elliptic', 'planform', 'uniform', 'tip']);
 
@@ -10264,6 +10291,7 @@ if(typeof module!=='undefined')module.exports=WingWorkspaceUI;
       else issues.err(join(path, k), `unknown field: it is not part of version ${FILE_VERSION} of this format (see WING_IMPORT.md); remove it`);
     }
     const L = { kind };
+    L.selfWeight=own(raw,'selfWeight')?bool(issues,raw,'selfWeight',path,{label:'include 1-g wing self-weight'}):false;
     const fos = () => {
       const v = num(issues, raw, 'fos', path, { gt: 0, label: 'factor of safety on strength and buckling' });
       if (v !== undefined && v < 1) issues.warn(join(path, 'fos'), `a factor of safety of ${fmt(v)} is below 1`);
@@ -10412,7 +10440,7 @@ if(typeof module!=='undefined')module.exports=WingWorkspaceUI;
     const over = (o, keys) => Object.fromEntries(keys.map((k) => [k, isObj(o) && isNum(o[k]) && (k==='nu'?o[k]>=0:o[k]>0) ? o[k] : null]));
     const l = { ...E.DEFAULT_LOAD, ...(isObj(S.load) ? S.load : {}) };
     const load = { kind: l.kind };
-    if (own(PRINTED_LOAD_KEYS, l.kind)) for (const k of PRINTED_LOAD_KEYS[l.kind]) load[k] = k === 'items' ? (Array.isArray(l.items) ? l.items.map((it) => canonicalItemFromUi(it, true)) : clone(l.items)) : clone(l[k]);
+    if (own(PRINTED_LOAD_KEYS, l.kind)) for (const k of PRINTED_LOAD_KEYS[l.kind]) {if(k==='selfWeight'&&!l.selfWeight)continue;load[k] = k === 'items' ? (Array.isArray(l.items) ? l.items.map((it) => canonicalItemFromUi(it, true)) : clone(l.items)) : clone(l[k]);}
     return {
       geometry,
       materials: { plaKey: S.plaKey, plaOver: over(S.plaOver, ['E', 'ft', 'fc', 'fs','rho','nu']), rodKey: S.rodKey, rodOver: over(S.rodOver, ['E']) },
@@ -11747,6 +11775,18 @@ if(typeof module!=='undefined')module.exports=WingWorkspaceUI;
         numField('pnu','Poisson ratio','0 ≤ ν < 0.5',pla.nu,.01,v=>S.plaOver.nu=v,v=>Number.isFinite(v)&&v>=0&&v<.5?null:'must lie between 0 inclusive and 0.5 exclusive')));
       pm.append(fs("Derived value", kv([["Shear modulus G", `${nf(pla.E / (2 * (1 + pla.nu)), 0)} MPa`]])));
       pm.append(el("p", { class: "note" }, pla.source));
+    } else if(id==='mat-spar'){
+      $('#pmHead').textContent='Spar materials';head('Spar materials');
+      if(!g.spars?.length)pm.append(el('p',{},'Add a spar to choose its material.'));
+      (g.spars||[]).forEach((spar,i)=>{
+        const card=el('fieldset',{},`<legend>Spar ${i+1}</legend><label>Material <select id="sparMaterial${i}"><option value="current">${esc(spar.material.name)} · current</option><option value="shell">Same properties as shell</option><option value="custom">Custom properties</option></select></label>`);
+        const fields=[['E','Elastic modulus E','MPa'],['nu','Poisson ratio',''],['rho','Density','g/cm³'],['ft','Tensile allowable','MPa'],['fc','Compressive allowable','MPa'],['fs','Shear allowable','MPa']];
+        card.append(el('div',{class:'field'},`<label>Material name <input id="sparName${i}" value="${esc(spar.material.name)}" maxlength="80"></label>`));
+        fields.forEach(([k,label,unit])=>card.append(el('div',{class:'field'},`<label>${label} (${unit}) <input id="sparProp${i}_${k}" type="number" step="any" value="${spar.material[k]}"></label>`)));
+        const apply=el('button',{type:'button',class:'btn'},'Apply material');
+        apply.onclick=()=>{const material={name:$('#sparName'+i).value.trim()};fields.forEach(([k])=>material[k]=numberFrom($('#sparProp'+i+'_'+k)));const result=applyGeometry({spars:g.spars.map((v,j)=>j===i?{...v,material}:v)},'spars','spar material');if(result.ok)renderPM();};card.append(apply);pm.append(card);
+        $('#sparMaterial'+i).onchange=e=>{if(e.target.value==='shell'){const m=materials().pla;$('#sparName'+i).value=m.name;fields.forEach(([k])=>$('#sparProp'+i+'_'+k).value=m[k]);}$('#sparName'+i).focus();};
+      });
     } else if (id === "mat-rod") {
       $("#pmHead").textContent = "Material";
       head("Carbon rod card", "Hobby-grade and aerospace-grade pultruded rods differ by about five times in stiffness. Measure your rod with a hanging weight if you can.");
@@ -12050,7 +12090,7 @@ if(typeof module!=='undefined')module.exports=WingWorkspaceUI;
     const mats=[['E','Elastic modulus E','MPa'],['nu','Poisson ratio',''],['rho','Density','g/cm³'],['ft','Tensile allowable','MPa'],['fc','Compressive allowable','MPa'],['fs','Shear allowable','MPa']];
     host.innerHTML=`<h3>Bonded spars · separate from rods</h3><p class="note" data-wing-structure-help="spar-model">Thin-wall beam model: upper/lower caps carry bending tension and compression; the web participates in transverse shear and closed-cell torsion. Perfect skin/rib bonds are assumed. Compare shell only, shell + rods and shell + spars separately; mixed rod/spar joints are not validated. No load is changed by these controls.</p><div class="lesson-actions"><button class="btn" type="button" id="wsShell">Shell only</button><button class="btn" type="button" id="wsRods">Shell + rods</button><button class="btn" type="button" id="wsAdd">+ Bonded spar</button><button class="btn" type="button" id="wsHelp">Model help</button></div>${errLine('spars')}${g.spars.map((s,i)=>{
       const p=E.sparParts(g,0).find(p=>p.index===i),tip=E.sparParts(g,s.length).find(p=>p.index===i);
-      return `<fieldset><legend>Spar ${i+1} · perfectly bonded</legend>${fields.map(([k,label,unit])=>`<div class="field"><label for="ws${i}_${k}">${label}<small>${unit}</small></label><input id="ws${i}_${k}" type="number" step="any" value="${s[k]}"></div>`).join('')}<p class="note">Web clear height is derived from the bonded skin surfaces and cap thicknesses: root ${nf(p.h,2)} mm; end ${nf(tip.h,2)} mm. It is not an independent gap-producing dimension. Caps follow the inner skin; width and thickness are vertical section dimensions.</p><div class="field"><label for="ws${i}_name">Material name</label><input id="ws${i}_name" type="text" maxlength="80" value="${esc(s.material.name)}"></div>${mats.map(([k,label,unit])=>`<div class="field"><label for="ws${i}_m${k}">${label}<small>${unit}</small></label><input id="ws${i}_m${k}" type="number" step="any" value="${s.material[k]}"></div>`).join('')}<button class="btn" type="button" id="ws${i}_apply">Apply spar ${i+1} inputs</button> <button class="btn" type="button" id="ws${i}_remove">Remove spar ${i+1}</button></fieldset>`;
+      return `<fieldset><legend>Spar ${i+1} · perfectly bonded</legend>${fields.map(([k,label,unit])=>`<div class="field"><label for="ws${i}_${k}">${label}<small>${unit}</small></label><input id="ws${i}_${k}" type="number" step="any" value="${s[k]}"></div>`).join('')}<p class="note">Web clear height is derived from the bonded skin surfaces and cap thicknesses: root ${nf(p.h,2)} mm; end ${nf(tip.h,2)} mm. It is not an independent gap-producing dimension. Caps follow the inner skin; width and thickness are vertical section dimensions.</p><p class="note">Material: ${esc(s.material.name)} · edit in Materials → Spars.</p><button class="btn" type="button" id="ws${i}_apply">Apply spar ${i+1} inputs</button> <button class="btn" type="button" id="ws${i}_remove">Remove spar ${i+1}</button></fieldset>`;
     }).join('')}<p class="note" data-wing-structure-help="spar-limits"><b>Model limits:</b> cap/web buckling, adhesive stresses, debonding, crippling and local runout stresses are not resolved. Thin-wall shear flow and elastic beam stresses are not a manufacturing approval or a 3-D FE result. Changing material does not change the exported CAD.</p>`;
     $('#wsHelp').onclick=()=>{printedWorkspace?.close();const help=$('#wingInputHelp'),section=$('#wingHelpStructure');if(!help||!section)return;help.scrollIntoView({block:'nearest'});help.open=true;section.open=true;help.dispatchEvent(new Event('toggle'));section.querySelector('summary').focus({preventScroll:true});};
     const configure=(patch)=>{const previous=S.assembly;S.assembly={...previous,seamsBonded:true};const result=applyGeometry(patch,'spars','bonded structural layout');if(!result.ok)S.assembly=previous;renderTree();return result;};
@@ -12062,7 +12102,7 @@ if(typeof module!=='undefined')module.exports=WingWorkspaceUI;
       const p=E.sparParts(g,0).find(v=>v.index===i),diagram=el('div',{},`<svg viewBox="0 0 290 215" role="img" aria-label="Spar ${i+1} root dimensions, schematic not to scale" style="width:100%;max-width:360px;background:var(--raise);color:var(--fg)"><rect x="84" y="43" width="100" height="14" fill="#9871dd"/><rect x="128" y="57" width="12" height="106" fill="#39a3b7"/><rect x="74" y="163" width="120" height="14" fill="#9871dd"/><g stroke="currentColor" fill="none"><path d="M84 35v-9h100v9 M74 185v9h120v-9 M214 57h8v106h-8 M120 112h-18m38 0h18"/></g><g fill="currentColor" font-size="11" font-family="system-ui"><text x="134" y="19" text-anchor="middle">Upper cap bᵤ = ${nf(s.topWidth,2)} mm</text><text x="134" y="210" text-anchor="middle">Lower cap bₗ = ${nf(s.bottomWidth,2)} mm</text><text x="8" y="53">tᵤ = ${nf(s.topThickness,2)}</text><text x="8" y="174">tₗ = ${nf(s.bottomThickness,2)}</text><text x="150" y="140">t_w = ${nf(s.webThickness,2)} mm</text><text x="228" y="105">h_web</text><text x="228" y="121">${nf(p.h,2)} mm</text><text x="6" y="147">Web</text></g></svg><p class="note">Root schematic, not to scale. Actual caps follow the inner skin contours. b = cap width, t = thickness; h_web is the clear height between caps. Upper/lower cap dimensions are independent.</p>`);
       $('#ws'+i+'_apply').closest('fieldset').querySelector('legend').after(diagram);
       $('#ws'+i+'_remove').onclick=()=>configure({spars:g.spars.filter((_,j)=>j!==i)});
-      $('#ws'+i+'_apply').onclick=()=>{const next=JSON.parse(JSON.stringify(s));fields.forEach(([k])=>next[k]=numberFrom($('#ws'+i+'_'+k)));mats.forEach(([k])=>next.material[k]=numberFrom($('#ws'+i+'_m'+k)));next.material.name=$('#ws'+i+'_name').value.trim();configure({spars:g.spars.map((v,j)=>j===i?next:v)});};
+      $('#ws'+i+'_apply').onclick=()=>{const next=JSON.parse(JSON.stringify(s));fields.forEach(([k])=>next[k]=numberFrom($('#ws'+i+'_'+k)));configure({spars:g.spars.map((v,j)=>j===i?next:v)});};
     });
     host.querySelectorAll('fieldset').forEach((field,i)=>field.querySelectorAll('p.note').forEach((note,j)=>note.dataset.wingStructureHelp='spar-'+i+'-note-'+j));
     const help=$('#wingHelpStructure');if(help){for(const old of help.querySelectorAll('[data-wing-structure-help]'))old.remove();for(const note of $('#wingStructureForm').querySelectorAll('[data-wing-structure-help]'))help.append(note);}
@@ -12937,6 +12977,7 @@ if(typeof module!=='undefined')module.exports=WingWorkspaceUI;
       const arrow=new THREE.ArrowHelper(new THREE.Vector3(0,F>0?1:-1,0),origin,len,color,Math.min(10,len*.35),5);
       if(loadIndex!==null){arrow.traverse(o=>{o.userData.wingLoadIndex=loadIndex;});arrow.userData.wingLoadLength=len;}grp.add(arrow);
     };
+    if(R.load.gravitySummary){const gravity=R.load.items.filter(p=>p.gravity),max=Math.max(...gravity.map(p=>-p.force),1e-12);for(const p of gravity.filter((_,i)=>i%Math.max(1,Math.ceil(gravity.length/9))===0))add(p.position,p.fraction*E.chordAt(g,p.position),-.6*Math.max(.2,-p.force/max),0x626b73);}
     if (R.load.kind === "custom") {
       // Line loads of every shape (linear, elliptic, parabolic, table, Schrenk): 13 arrows each on its own span,
       // at its chord position; heights relative to the largest intensity drawn.
@@ -12957,7 +12998,7 @@ if(typeof module!=='undefined')module.exports=WingWorkspaceUI;
         add(y, R.load.liftFraction * E.chordAt(g, y), wl * 1.2, COLORS.load);
       }
     }
-    if(R.load.kind==='custom')R.load.items.forEach((p,i)=>{if(p.kind==='point')add(p.position,p.fraction*E.chordAt(g,p.position),Math.sign(p.force)*1.4,p.force>=0?COLORS.load:COLORS.relief,i);});
+    if(R.load.kind==='custom')R.load.items.forEach((p,i)=>{if(p.kind==='point'&&!p.gravity)add(p.position,p.fraction*E.chordAt(g,p.position),Math.sign(p.force)*1.4,p.force>=0?COLORS.load:COLORS.relief,i);});
     else if(R.analysis3D&&R.load.kind==='tip')add(L,R.load.tipFraction*E.chordAt(g,L),Math.sign(R.load.tipForce)*1.4,R.load.tipForce>=0?COLORS.load:COLORS.relief);
     else for (const p of R.point) add(p[0],p[2],Math.sign(p[1])*1.4,p[1]>=0?COLORS.load:COLORS.relief);
   }
@@ -12983,7 +13024,7 @@ if(typeof module!=='undefined')module.exports=WingWorkspaceUI;
   function renderPlotInfo() {
     const massBox=$('#wingMassReadout');
     massBox.hidden=!R||S.emptyStudy;
-    if(!massBox.hidden){massBox.textContent=geometryPreview?'Wing mass — solve to update':`Total wing mass ${nf(R.mass.total,1)} g · includes spars ${nf(R.mass.spars||0,1)} g${stale?' · previous solve':''}`;massBox.title='Estimated model mass including skin, ribs, end caps, spars, rods and any tip mass. Verify manufacturing mass in CAD and the slicer.';}
+    if(!massBox.hidden){massBox.textContent=geometryPreview?'Wing mass — solve to update':`Total wing mass ${nf(R.mass.total,1)} g · includes spars ${nf(R.mass.spars||0,1)} g${R.load.gravitySummary?' · Applied '+nf(R.load.gravitySummary.appliedN,3)+' N · Weight ↓ '+nf(R.load.gravitySummary.weightN,3)+' N · Net '+nf(R.appliedForce,3)+' N':''}${stale?' · previous solve':''}`;massBox.title='Estimated model mass including skin, ribs, end caps, spars, rods and any tip mass. Verify manufacturing mass in CAD and the slicer.';}
     if (geometryPreview&&model) {
       const g = model.g;
       $('#plotinfo').textContent = `UNSOLVED GEOMETRY PREVIEW · ${airfoilLabel(g)} · semi-span ${g.semiSpan} mm · ${model.ribs.length} ribs · ${model.rods.length} rods. Stress and deformation hidden; press Solve for analysis.`;
@@ -13690,6 +13731,7 @@ if(typeof module!=='undefined')module.exports=WingWorkspaceUI;
   }
 
   function wingLoadName(r) {
+    if(r.load.sourceLoad)return wingLoadName({...r,load:r.load.sourceLoad})+' + 1-g wing self-weight';
     if(r.load.kind==='custom') return r.load.items.length?`${r.load.items.length} custom load${r.load.items.length>1?'s':''} (upward +; no automatic lift, weight or inertia relief)`:'No load defined';
     return r.load.kind==='tip'?`Tip force ${nf(r.load.tipForce,2)} N at ${nf(r.load.tipFraction,2)}c`:`Flight-like lift: n=${r.load.loadFactor}, mass=${r.load.aircraftMass} kg, ${r.load.distribution}${r.load.inertiaRelief?', inertia relief':''}`;
   }
@@ -13700,7 +13742,8 @@ if(typeof module!=='undefined')module.exports=WingWorkspaceUI;
     schrenkProfile:total=>{const g=E.makeGeometry(S.geometry);return WingLoadsUI.schrenkData(g.semiSpan,y=>E.chordAt(g,y),total,[g.rootChord,g.tipChord]);},
     pickOnModel:accept=>beginPrintedSurfacePick(accept),
     showDeformation:()=>{if(!R||stale||running||gateOpen())throw new Error('Solve the applied loads first.');S.deformed=true;$('#defBtn').setAttribute('aria-pressed','true');setPlot('disp');applyResult();canvas.scrollIntoView({block:'center'});},
-    workspace:'printed',units:{length:'mm',line:'N/mm',force:'N',moment:'N·mm'},
+    workspace:'printed',
+    selfWeight:{value:()=>!!S.load.selfWeight,set:value=>{const load={...S.load,selfWeight:value};E.normalize({...engineInput(),load});S.load=load;changed();}},units:{length:'mm',line:'N/mm',force:'N',moment:'N·mm'},
     ids:{form:'wingLoadForm',kind:'wingKind',a:'wingA',b:'wingB',P:'wingP',q0:'wingQ0',q1:'wingQ1',shape:'wingCurveShape',basis:'wingCurveBasis',value:'wingCurveValue',xc:'wingFraction',law:'wingCurveLaw',
       list:'wingCustomList',clear:'wingClearLoad',flight:'wingFlightLoad',status:'wingLoadStatus',chord:'wingChordFigure',csv:'wingCsv'},
     kindValue:{point:'point',uniform:'rectangle',rampUp:'triangle',rampDown:'triangleDown',trapezoid:'trapezoid',elliptic:'elliptic',parabolic:'parabolic',schrenk:'schrenk'},
@@ -13710,7 +13753,7 @@ if(typeof module!=='undefined')module.exports=WingWorkspaceUI;
     mode:()=>S.load.kind==='custom'?(S.load.items.length?'custom':'none'):S.load.kind,
     validate:items=>E.normalize({...engineInput(),load:{...S.load,kind:'custom',items}}),
     apply:items=>{S.load={...S.load,kind:'custom',items};changed();},
-    flight:{configure:true,values:()=>S.load.kind==='flight'?S.load:{aircraftMass:.2,loadFactor:1,distribution:'elliptic',liftFraction:.25,inertiaRelief:false},validate:v=>validateFlightCase(v),apply:v=>{validateFlightCase(v);S.load={...E.DEFAULT_LOAD,...v,fos:S.load.fos,tipMass:S.load.tipMass};changed();}},
+    flight:{configure:true,values:()=>S.load.kind==='flight'?S.load:{aircraftMass:.2,loadFactor:1,distribution:'elliptic',liftFraction:.25,inertiaRelief:false},validate:v=>validateFlightCase(v),apply:v=>{validateFlightCase(v);S.load={...E.DEFAULT_LOAD,...v,fos:S.load.fos,tipMass:S.load.tipMass,selfWeight:!!S.load.selfWeight};changed();}},
     allowSchrenk:true,refStation:0,refLabel:'the root y = 0',
     section:y=>R&&!stale&&!R.analysis3D?{outline:E.outerContour(R.geometry,y),chord:E.chordAt(R.geometry,y),xsc:E.interp(y,R.y,R.props.xsc)}:null,
     schrenkCentroid:()=>WingLoadsUI.schrenkData(S.geometry.semiSpan,y=>E.chordAt(R?R.geometry:E.makeGeometry(S.geometry),y),1,[S.geometry.rootChord,S.geometry.tipChord]).stats.schrenk.ybar,
@@ -13732,7 +13775,7 @@ if(typeof module!=='undefined')module.exports=WingWorkspaceUI;
       <div class="tablewrap">${WingLoadsUI.schrenkTable(panels.map(p=>({...p,data:{...p.data,stats:p.data.stats}})),{force:'N',length:'mm',moment:'N·mm'})}</div>
       <p class="note">Per newton of total semi-wing lift. Assumptions: an unswept wing without twist, flaps or ailerons deflected, below stall, at a moderate aspect ratio. Sweep, twist and stall change the lift distribution and need a correction or a lifting-surface/CFD analysis; Schrenk is a teaching approximation of the lift per unit span, not a chordwise pressure (Cp) distribution and not a CFD result. Background: <a href="https://ntrs.nasa.gov/citations/19930093823" target="_blank" rel="noopener">NACA/NASA NTRS 19930093823, “A simple approximate method for obtaining spanwise lift distributions over swept wings”</a> (adapting simple methods of this kind to swept wings) and <a href="https://ntrs.nasa.gov/citations/19780008062" target="_blank" rel="noopener">NASA CR-132403 (NTRS 19780008062)</a>.</p></section>`;
   }
-  function validateFlightCase(v){const input={...engineInput(),load:{...E.DEFAULT_LOAD,...v,fos:S.load.fos,tipMass:S.load.tipMass}},n=E.normalize(input),cap=E.analysisCapability(n.g,input);if(!cap.supported)throw Error(cap.message);return n;}
+  function validateFlightCase(v){const input={...engineInput(),load:{...E.DEFAULT_LOAD,...v,fos:S.load.fos,tipMass:S.load.tipMass,selfWeight:!!S.load.selfWeight}},n=E.normalize(input),cap=E.analysisCapability(n.g,input);if(!cap.supported)throw Error(cap.message);return n;}
   function renderWingLoads() {
     if(!R){const home=document.getElementById('wingLoadEditor');if(home)loadKeeperOf().place(home);return;}
     if(!R)return;
@@ -13755,8 +13798,8 @@ if(typeof module!=='undefined')module.exports=WingWorkspaceUI;
       <div class="callout" style="margin-top:14px"><h3>Read the animated modes</h3><div class="lesson-actions"><button class="btn" data-teach-mode="bending,0">First bending mode</button><button class="btn" data-teach-mode="bending,1">Second bending mode</button><button class="btn" data-teach-mode="torsion,0">First torsional mode</button></div><div class="equation">K φ = ω² M φ &nbsp; · &nbsp; f = ω/(2π)</div><p>Bending moves the centreline; torsion rotates sections around the span. These are normalized, undamped free-vibration patterns. The animation is magnified and slowed; its amplitude is <b>not</b> the response to your static force. Higher bending modes have more shape reversals. This model separates bending and torsion; it does not predict flutter, damping or forced vibration amplitudes.</p><p><a href="https://help.solidworks.com/2025/english/SolidWorks/cworks/HIDD_Mode_Shape_Amplitude.htm" target="_blank" rel="noopener">SOLIDWORKS explanation of mode amplitudes</a></p></div></div></div>
     <section id="localModels"></section><section id="bucklingModels"></section><section id="torsionLab"></section><section id="ribChange"></section><section id="observations"></section>`;
     // Deliberate lesson loads (the presets themselves open without a load).
-    $('#lessonTipLoad').onclick=()=>{S.load={...E.DEFAULT_LOAD,kind:'tip',tipForce:2,tipFraction:.3,fos:S.load.fos,tipMass:S.load.tipMass};changed();};
-    $('#lessonFlightLoad').onclick=()=>{S.load={...E.DEFAULT_LOAD,fos:S.load.fos,tipMass:S.load.tipMass};changed();};
+    $('#lessonTipLoad').onclick=()=>{S.load={...E.DEFAULT_LOAD,kind:'tip',tipForce:2,tipFraction:.3,fos:S.load.fos,tipMass:S.load.tipMass,selfWeight:!!S.load.selfWeight};changed();};
+    $('#lessonFlightLoad').onclick=()=>{S.load={...E.DEFAULT_LOAD,fos:S.load.fos,tipMass:S.load.tipMass,selfWeight:!!S.load.selfWeight};changed();};
     $('#skinStress').onclick=()=>{S.stressComponent='skin';S.anatomy='assembled';setPlot('stress');renderMemberLesson();};
     $('#rodStress').onclick=()=>{S.stressComponent='rods';S.anatomy='inside';S.xray=true;setPlot('stress');applyXray();renderMemberLesson();};
     $('#ribBearingView').onclick=()=>setAnatomy('ribs');
@@ -14273,7 +14316,7 @@ function renderObservations() {
     const hit=hits.find(h=>Number.isInteger(h.object.userData.wingLoadIndex)),index=hit?.object.userData.wingLoadIndex??WingWorkspaceUI.pickLoadArrow(model.loads.children,camera,canvas,e,THREE);if(index===null)return;if(partPick)$('#wpPick').click();
     const editor=loadKeeperOf().editor;if(!editor)return;printedWorkspace.open('Edit wing load · upward positive',editor.container,{right:e.clientX,top:e.clientY});editor.edit(index);
   });
-  function openWingMaterialsPopup(anchor){select('mat-pla');printedWorkspace.open('Shell / rib and rod materials',$('#pm'),anchor);const tabs=el('div',{class:'lesson-actions'},'<button class="btn" type="button" data-quick-material="mat-pla">Shell / ribs</button><button class="btn" type="button" data-quick-material="mat-rod">Rods</button>');$('#pm').before(tabs);tabs.querySelectorAll('button').forEach(b=>b.onclick=()=>select(b.dataset.quickMaterial));printedWorkspace.position();}
+  function openWingMaterialsPopup(anchor){select('mat-pla');printedWorkspace.open('Materials',$('#pm'),anchor);const tabs=el('div',{class:'lesson-actions'},'<button class="btn" type="button" data-quick-material="mat-pla">Shell / ribs</button><button class="btn" type="button" data-quick-material="mat-rod">Rods</button><button class="btn" type="button" data-quick-material="mat-spar">Spars</button>');$('#pm').before(tabs);tabs.querySelectorAll('button').forEach(b=>b.onclick=()=>select(b.dataset.quickMaterial));printedWorkspace.position();}
   function openWingPartPopup(kind,p,anchor){
     if(running||gateOpen()){flash('Wait for the current solve or confirm the imported structural inputs first.');return;}
     const isRib=kind==='rib',isSpar=kind==='spar',g=E.makeGeometry(S.geometry),value=isRib?(p?.station??suggestRib(g,E.ribStations(g))):(p?.fraction??(isSpar?(g.spars.length?.6:.35):.45));

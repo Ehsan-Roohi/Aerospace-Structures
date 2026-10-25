@@ -457,3 +457,15 @@ upload and its separate analysis/manufacturing checks instead.
 Then supply in the file, or enter in the app before running: skin thickness, ribs, rods, modules and
 seams, material cards, the clamped root and the load case. Open the result with **Import design
 parameters**, compare every row of the preview with your worksheet, and check the converted values.
+
+## Wing self-weight
+
+The printed study load accepts optional `selfWeight: true` for an independent
+1-g downward gravity load. Missing or false keeps the original no-self-weight
+behavior. It is independent of prescribed lift and cannot be combined with
+flight inertia relief, which already includes wing mass at n g. The structural
+solver integrates the section mass using four-point Gauss quadrature per
+section interval, at mass-centroid coordinates; rib, end-cap and sensor masses
+are concentrated at their section stations. Full-span spars are supported.
+The same reduced beam mass model is used; slicer infill, adhesive and fixture
+masses are not inferred. Gravity does not alter printable geometry.

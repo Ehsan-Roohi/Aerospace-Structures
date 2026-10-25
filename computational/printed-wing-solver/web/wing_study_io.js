@@ -775,9 +775,9 @@
   const ASSEMBLY_V1 = Object.freeze(['rodsBonded', 'seamsBonded', 'seamFreeLength', 'adhesiveTensile']);
   const CRITERIA_V1 = Object.freeze(['maxTipDeflection', 'maxTipTwist']);
   const PRINTED_LOAD_KEYS = Object.freeze({
-    flight: ['aircraftMass', 'loadFactor', 'distribution', 'liftFraction', 'inertiaRelief', 'tipFraction', 'fos', 'tipMass'],
-    tip: ['tipForce', 'tipFraction', 'fos', 'tipMass'],
-    custom: ['items', 'fos', 'tipMass'],
+    flight: ['aircraftMass', 'loadFactor', 'distribution', 'liftFraction', 'inertiaRelief', 'tipFraction', 'fos', 'tipMass', 'selfWeight'],
+    tip: ['tipForce', 'tipFraction', 'fos', 'tipMass', 'selfWeight'],
+    custom: ['items', 'fos', 'tipMass', 'selfWeight'],
   });
   const FLIGHT_DISTRIBUTIONS = Object.freeze(['schrenk', 'elliptic', 'planform', 'uniform', 'tip']);
 
@@ -918,6 +918,7 @@
       else issues.err(join(path, k), `unknown field: it is not part of version ${FILE_VERSION} of this format (see WING_IMPORT.md); remove it`);
     }
     const L = { kind };
+    L.selfWeight=own(raw,'selfWeight')?bool(issues,raw,'selfWeight',path,{label:'include 1-g wing self-weight'}):false;
     const fos = () => {
       const v = num(issues, raw, 'fos', path, { gt: 0, label: 'factor of safety on strength and buckling' });
       if (v !== undefined && v < 1) issues.warn(join(path, 'fos'), `a factor of safety of ${fmt(v)} is below 1`);
@@ -1066,7 +1067,7 @@
     const over = (o, keys) => Object.fromEntries(keys.map((k) => [k, isObj(o) && isNum(o[k]) && (k==='nu'?o[k]>=0:o[k]>0) ? o[k] : null]));
     const l = { ...E.DEFAULT_LOAD, ...(isObj(S.load) ? S.load : {}) };
     const load = { kind: l.kind };
-    if (own(PRINTED_LOAD_KEYS, l.kind)) for (const k of PRINTED_LOAD_KEYS[l.kind]) load[k] = k === 'items' ? (Array.isArray(l.items) ? l.items.map((it) => canonicalItemFromUi(it, true)) : clone(l.items)) : clone(l[k]);
+    if (own(PRINTED_LOAD_KEYS, l.kind)) for (const k of PRINTED_LOAD_KEYS[l.kind]) {if(k==='selfWeight'&&!l.selfWeight)continue;load[k] = k === 'items' ? (Array.isArray(l.items) ? l.items.map((it) => canonicalItemFromUi(it, true)) : clone(l.items)) : clone(l[k]);}
     return {
       geometry,
       materials: { plaKey: S.plaKey, plaOver: over(S.plaOver, ['E', 'ft', 'fc', 'fs','rho','nu']), rodKey: S.rodKey, rodOver: over(S.rodOver, ['E']) },

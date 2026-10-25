@@ -570,6 +570,7 @@ const WingEngine = (() => {
     const sparMass=sparInts.reduce((a,s)=>a+s.m.rho*1e-3*s.int[0],0);
     const mass = rp * plaInt[0] + rr_ * rodInt[0]+sparMass;
     const cgx = (rp * plaInt[2] + rr_ * rodInt[2]+sparInts.reduce((a,s)=>a+s.m.rho*1e-3*s.int[2],0)) / mass;
+    const cgz = (rp*plaInt[1]+rr_*rodInt[1]+sparInts.reduce((a,s)=>a+s.m.rho*1e-3*s.int[1],0))/mass;
     const polar = (I) => I[4] - 2 * xsc * I[2] + xsc ** 2 * I[0] + (I[3] - 2 * zsc * I[1] + zsc ** 2 * I[0]);
     const polarInertia = rp * polar(plaInt) + rr_ * polar(rodInt)+sparInts.reduce((a,s)=>a+s.m.rho*1e-3*polar(s.int),0);
     const outerInt = polyIntegrals(outer);
@@ -587,9 +588,9 @@ const WingEngine = (() => {
     const radius = circleRadius(us[0], us[us.length >> 1], us[us.length - 1]);
     return {
       y, chord: loops.chord, EA, xc, zc, EIf, EIc, EIxz, principal, EIrods, GJ, Jfe: fe.J, Jbredt: bredt.J,
-      bredtArea: bredt.Am, xsc, zsc, mass, cgx, polarInertia, zTop, zBot,
+      bredtArea: bredt.Am, xsc, zsc, mass, cgx, cgz, polarInertia, zTop, zBot,
       sparParts:sectionSparParts,sparInts,sparMass,sparNetwork,bendCoupling,
-      plaArea: plaInt[0], shellArea: fe.A, rodArea: rodInt[0], ribExtra, ribCgx: ribInt[2] / ribInt[0],
+      plaArea: plaInt[0], shellArea: fe.A, rodArea: rodInt[0], ribExtra, ribCgx: ribInt[2] / ribInt[0],ribExtraCgx:(ribInt[2]-plaInt[2])/ribExtra,ribExtraCgz:(ribInt[1]-plaInt[1])/ribExtra,
       ribPolar: polar(ribInt), skinWidth: width, skinRadius: radius, mesh, fe, corners: loops.corners,
       outer, centres, Rs, rh, rr,
     };
@@ -599,7 +600,7 @@ const WingEngine = (() => {
   const DEFAULT_LOAD = {
     name: "Limit manoeuvre (analytical)", kind: "flight", aircraftMass: 1.0, loadFactor: 4.0,
     distribution: "schrenk", liftFraction: 0.25, inertiaRelief: true, tipForce: 10, tipFraction: 0.3,
-    fos: 1.5, tipMass: 0,
+    fos: 1.5, tipMass: 0, selfWeight:false,
   };
   const DEFAULT_CRITERIA = { maxTipDeflection: 45, maxTipTwist: 2 };
 
@@ -757,8 +758,8 @@ const WingEngine = (() => {
         Kt[p * nt + p] += k; Kt[q * nt + q] += k; Kt[p * nt + q] -= k; Kt[q * nt + p] -= k;
       }
     }
-    for (const [y, F] of o.pointForces || []) fb[wDof[argmin(nodes, y)]] += F;
-    for (const [y, T] of o.pointTorques || []) ft[(o.pointTorquesOutboard?phR:phL)[argmin(nodes, y)]] += T;
+    for(const [y,F] of o.pointForces||[]){const k=argmin(nodes,y);if(Math.abs(nodes[k]-y)<1e-8){fb[wDof[k]]+=F;continue;}let e=0;while(e<n-2&&y>nodes[e+1])e++;const h=nodes[e+1]-nodes[e],t=(y-nodes[e])/h,N=[1-3*t*t+2*t*t*t,h*(t-2*t*t+t*t*t),3*t*t-2*t*t*t,h*(-t*t+t*t*t)],d=[wDof[e],thR[e],wDof[e+1],thL[e+1]];N.forEach((v,i)=>fb[d[i]]+=F*v);}
+    for(const [y,T] of o.pointTorques||[]){const k=argmin(nodes,y);if(Math.abs(nodes[k]-y)<1e-8){ft[(o.pointTorquesOutboard?phR:phL)[k]]+=T;continue;}let e=0;while(e<n-2&&y>nodes[e+1])e++;const t=(y-nodes[e])/(nodes[e+1]-nodes[e]);ft[phR[e]]+=(1-t)*T;ft[phL[e+1]]+=t*T;}
     for (const [y, m] of o.pointMasses || []) { const k = wDof[argmin(nodes, y)]; Mb[k * nb + k] += m * 1e-6; }
     for (const [y, Ip] of o.pointInertias || []) { const k = phL[argmin(nodes, y)]; Mt[k * nt + k] += Ip * 1e-6; }
     const fixB = new Set([wDof[0], thL[0], thR[0]]), fixT = new Set([phL[0], phR[0]]);
@@ -829,7 +830,10 @@ const WingEngine = (() => {
     const rod = { ...MATERIALS.rod_hobby, ...(input.rod || {}) };
     const asm = { ...DEFAULT_ASSEMBLY, ...(input.assembly || {}) };
     if(g.spars.length&&!asm.seamsBonded&&seams(g).length)throw new Error('Bonded spars require bonded module seams (or a one-piece shell). Dry-seam joint mechanics with spars are not validated.');
-    const load = { ...DEFAULT_LOAD, ...(input.load || {}) };
+    const load = { ...DEFAULT_LOAD, selfWeight:false, ...(input.load || {}) };
+    if(load.selfWeight&&g.spars.some(s=>s.length<g.semiSpan-1e-8))throw Error('Self-weight currently requires full-span spars. Partial-span spar runout gravity needs a segmented mass integration model.');
+    if(typeof load.selfWeight!=='boolean')throw Error('Include wing self-weight must be true or false.');
+    if(load.selfWeight&&load.kind==='flight'&&load.inertiaRelief)throw Error('Choose self-weight or flight inertia relief, not both. Self-weight uses 1 g; inertia relief already includes wing mass at n g.');
     if (!g.rodFractions.length && !asm.seamsBonded && seams(g).length)
       throw new Error("Removing every rod from a dry multi-module joint disconnects the wing. Use the one-piece teaching wing or explicitly model bonded seams.");
     if (!["flight", "tip", "custom"].includes(load.kind)) throw new Error("Choose flight, tip or custom loading.");
@@ -861,6 +865,23 @@ const WingEngine = (() => {
     else if(load.distribution==='planform'){const area=(g.rootChord+g.tipChord)*L/2;item={kind:'distributed',start:0,end:L,qStart:total*g.rootChord/area,qEnd:total*g.tipChord/area,fraction};}
     else throw Error('Choose elliptic, Schrenk, uniform, planform or tip lift.');
     return validateLoads([item],L);
+  }
+  // Integrate the section mass model with four-point Gauss quadrature per
+  // section interval. Each quadrature force is applied at the true local mass
+  // centroid and transferred consistently to the beam; no artificial FE nodes.
+  function loadWithSelfWeight(source,g,pla,sections,ys,extrapolate=false){
+    if(!source.selfWeight)return source;
+    const L=g.semiSpan,lookup=extrapolate?interpLin:interp,stations=[...new Set([0,...ys,L])].sort((a,b)=>a-b),at=(k,y)=>lookup(y,ys,sections.map(s=>s[k]));
+    const gravity=[],add=(y,mass,x,z)=>{if(mass>0)gravity.push({kind:'point',position:y,force:-mass*GRAV/1000,fraction:x/chordAt(g,y),localPoint:[x,z],gravity:true});};
+    const gx=[-.8611363115940526,-.3399810435848563,.3399810435848563,.8611363115940526],gw=[.3478548451374538,.6521451548625461,.6521451548625461,.3478548451374538];
+    for(let i=1;i<stations.length;i++){const a=stations[i-1],b=stations[i];for(let j=0;j<4;j++){const y=(a+b)/2+(b-a)*gx[j]/2,m=at('mass',y),first=k=>lookup(y,ys,sections.map(s=>s.mass*s[k]));add(y,m*(b-a)*gw[j]/2,first('cgx')/m,first('cgz')/m);}}
+    const rho=pla.rho/1000;
+    for(const y of ribStations(g))add(y,rho*g.ribThickness*at('ribExtra',y),at('ribExtraCgx',y),at('ribExtraCgz',y));
+    for(const y of [0,L])add(y,rho*g.cap*at('ribExtra',y),at('ribExtraCgx',y),at('ribExtraCgz',y));
+    if(source.tipMass)add(L,source.tipMass,source.tipFraction*g.tipChord,0);
+    const base=source.kind==='custom'?source.items:source.kind==='flight'?prescribedFlightLoads(source,g):[{kind:'point',position:L,force:source.tipForce,fraction:source.tipFraction}];
+    const weightN=-gravity.reduce((sum,p)=>sum+p.force,0),appliedN=customResultants(base,g,0).V;
+    return {...source,kind:'custom',items:[...base,...gravity],sourceLoad:source,gravitySummary:{weightN,appliedN,netN:appliedN-weightN,quadrature:'4-point Gauss per section interval; rib/cap and sensor masses concentrated at their section centroids'}};
   }
   function validateLoads(items, L) {
     if (!Array.isArray(items) || items.length > 12) throw new Error("Use a list of at most 12 loads.");
@@ -942,7 +963,8 @@ const WingEngine = (() => {
   }
 
   function solve(input = {}) {
-    const normalized=normalize(input),{ g, pla, rod, asm, load, crit, ySec } = normalized;
+    const normalized=normalize(input),{ g, pla, rod, asm, load:sourceLoad, crit, ySec } = normalized;
+    let load=sourceLoad;
     const capability=analysisCapability(g,input);
     if(!capability.supported)throw Error(capability.message);
     if(capability.requires3D)return solveSpatial(input,normalized);
@@ -951,11 +973,12 @@ const WingEngine = (() => {
     const seamsActive = asm.seamsBonded ? [] : seams(g);
     const ribs = ribStations(g);
     const sections = ySec.map((y) => cachedSection(g, pla, rod, asm, y));
+    load=loadWithSelfWeight(sourceLoad,g,pla,sections,ySec,true);
     const col = (k) => sections.map((s) => s[k]);
-    const loadNodes = load.kind === "custom" ? load.items.flatMap(p => loadStations(p, L)) : [];
+    const loadNodes = load.kind === "custom" ? load.items.filter(p=>!p.gravity).flatMap(p => loadStations(p, L)) : [];
     const profileNodes=(g.stations||[]).map(s=>s.eta*L);
     const sparEnds=g.spars.map(s=>s.length);
-    const yset = new Set([...linspace(0, L, nGrid), ...seams(g), ...ribs, ...loadNodes,...sparEnds,...profileNodes].map((v) => +v.toFixed(9)));
+    const yset = new Set([...linspace(0, L, nGrid), ...seams(g), ...ribs, ...loadNodes,...sparEnds,...profileNodes,...(sourceLoad.selfWeight?ySec:[])].map((v) => +v.toFixed(9)));
     const y = Float64Array.from([...yset].sort((a, b) => a - b));
     // Never smear a spar runout into the next bay: interpolate only within the
     // same active-spar segment. End values are inboard limits.
@@ -1235,11 +1258,13 @@ const WingEngine = (() => {
   // unchanged. Normal cuts are affine projections of aircraft x-z sections;
   // dA_normal = |t_y| dA_xz and ds = dy/|t_y| preserve physical volume.
   function solveSpatial(input,n=normalize(input)) {
-    const {g,pla,rod,asm,load,crit}=n,L=g.semiSpan,F=Frame;
+    const {g,pla,rod,asm,load:sourceLoad,crit}=n,L=g.semiSpan,F=Frame;
+    let load=sourceLoad;
     const count=requestedElementCount(input,MESH_LIMITS.spatialDefault);
     const cap=analysisCapability(g,input);if(!cap.supported)throw Error(cap.message);
     if(input.nSections!=null&&(!Number.isInteger(input.nSections)||input.nSections<3||input.nSections>31))throw Error('The spatial beam supports 3–31 numerical section samples.');
     const ys=[...new Set([...n.ySec,L])].sort((a,b)=>a-b),local=ys.map(y=>cachedSection(g,pla,rod,asm,y));
+    load=loadWithSelfWeight(sourceLoad,g,pla,local,ys);
     const frac=g.twistReferenceFraction??.25;
     let reference=ys.map(y=>Geometry.transformPoint(g,y,[frac*chordAt(g,y),0])),samples=[],axisChange=0;
     const projectedCache=new Map();
@@ -1291,11 +1316,11 @@ const WingEngine = (() => {
       p.D=normalRecoveryD(y,p);Object.assign(p,{EA:p.D[0][0],first2:-p.D[0][2],first3:p.D[0][1],EI22:p.D[1][1],EI33:p.D[2][2],EI23:-p.D[1][2]});return p;
     }
     const items=load.kind==='flight'?prescribedFlightLoads(load,g):load.kind==='tip'?[{kind:'point',position:L,force:load.tipForce,fraction:load.tipFraction}]:load.items;
-    const physical=[0,L,...(g.stations||[]).map(s=>s.eta*L),...ribStations(g),...seams(g),...g.spars.map(s=>s.length),...items.flatMap(p=>loadStations(p,L))];
+    const physical=[0,L,...(g.stations||[]).map(s=>s.eta*L),...ribStations(g),...seams(g),...g.spars.map(s=>s.length),...items.filter(p=>!p.gravity).flatMap(p=>loadStations(p,L))];
     const mandatory=[...physical,...ys.filter(y=>!physical.some(p=>Math.abs(p-y)<.1))];
     const regular=linspace(0,L,count+1).filter(y=>!mandatory.some(v=>Math.abs(v-y)<.1));
     let nodeY=[...new Set([...mandatory,...regular].map(y=>+y.toFixed(9)))].sort((a,b)=>a-b),nodes=nodeY.map(referenceAt);
-    const loadPoint=(p,y)=>Geometry.transformPoint(g,y,[customFraction(p,y)*chordAt(g,y),0]);
+    const loadPoint=(p,y)=>Geometry.transformPoint(g,y,p.localPoint||[customFraction(p,y)*chordAt(g,y),0]);
     // Conservative, outward-padded analytic intervals, not point sampling.
     // They certify load-path monotonicity before any normal-foot bisection.
     const interval=(a,b=a)=>{const e=32*Number.EPSILON*Math.max(1,Math.abs(a),Math.abs(b));return [Math.min(a,b)-e,Math.max(a,b)+e];};
@@ -1348,7 +1373,7 @@ const WingEngine = (() => {
     // section stations, NOT by arbitrary FE/load/rib node spacing. Refining the
     // longitudinal mesh must not introduce artificial reference curvature at
     // corners of a linear interpolation of shear-centre sample coordinates.
-    const normals=normalFamily(ys,reference),pointFeet=items.flatMap((p,i)=>{if(p.kind!=='point')return [];try{const foot=normals.locate(loadPoint(p,p.position));return foot.outside?[]:[foot.station];}catch(error){throw Error(`Wing load ${i+1} (point), aircraft y=${p.position} mm, x/c=${p.fraction}: ${error.message} Reduce profile/incidence gradients or move this load; no nearest-plane clamp is applied.`);}});
+    const normals=normalFamily(ys,reference),pointFeet=items.flatMap((p,i)=>{if(p.kind!=='point'||p.gravity)return [];try{const foot=normals.locate(loadPoint(p,p.position));return foot.outside?[]:[foot.station];}catch(error){throw Error(`Wing load ${i+1} (point), aircraft y=${p.position} mm, x/c=${p.fraction}: ${error.message} Reduce profile/incidence gradients or move this load; no nearest-plane clamp is applied.`);}});
     nodeY=[...nodeY];for(const y of pointFeet)if(!nodeY.some(q=>Math.abs(q-y)<.1-1e-9))nodeY.push(y);nodeY.sort((a,b)=>a-b);nodes=nodeY.map(normals.atY);
     if(nodeY.length>161)throw Error('The 3-D frame is limited to 161 nodes. Reduce load-table rows or geometry stations.');
     const axis=makeAxis(nodeY,nodes),loadMapping={method:'Physical loads projected to normal-axis feet; consistent work integrated per original aircraft-y coordinate',endWrenches:[],monotonicity:{method:'Conservative analytic interval bounds of physical-path and C1-normal-family derivatives; no endpoint-sampling certificate',certifiedSourcePanels:0,intervalBoxes:0}};

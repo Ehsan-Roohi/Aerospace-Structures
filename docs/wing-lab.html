@@ -1140,6 +1140,7 @@ nav.workspace-nav .workspace-link:focus-visible { outline: 3px solid var(--accen
           <button type="button" id="defBtn" aria-pressed="false">Deformed</button>
           <label for="scaleIn">Scale <input id="scaleIn" type="range" min="0" max="2" step="0.05" value="1"></label>
           <button type="button" id="xrayBtn" aria-pressed="false">See-through</button>
+          <button type="button" id="shearCentreBtn" style="color:#8e44ad" aria-pressed="true" title="Purple dashed line: calculated section shear centres. A force offset from this path can cause twist; it is not the quarter-chord or an aerodynamic centre.">Shear centre · ┄</button>
         </div>
         <div class="hud-row">
           <label for="explodeIn">Explode <input id="explodeIn" type="range" min="0" max="60" step="1" value="0"></label>
@@ -12477,10 +12478,11 @@ if(typeof module!=='undefined')module.exports=WingWorkspaceUI;
     fix.rotation.x=ra;fix.position.y=rp*Math.sin(ra);fix.position.z=rp*(1-Math.cos(ra));
     root.add(fix);
     const loads = new THREE.Group(); root.add(loads);
+    const shearCentre = new THREE.Group();root.add(shearCentre);
     const marker = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ color: COLORS.seam, transparent: true, opacity: 0.18, side: THREE.DoubleSide, depthWrite: false }));
     marker.visible = false; root.add(marker);
     world.add(root);
-    model = { g, root, modules, skins, sleeves, rods, ribs, rigid, loads, marker, fix,spars:sparMeshes };
+    model = { g, root, modules, skins, sleeves, rods, ribs, rigid, loads, shearCentre, marker, fix,spars:sparMeshes };
     applyClip();
     applyXray();
     $("#ribLabels").innerHTML = ribs.map((_, i) => `<span class="rib-label">R${i + 1}</span>`).join("");
@@ -12877,7 +12879,32 @@ if(typeof module!=='undefined')module.exports=WingWorkspaceUI;
     renderLegend(geometryPreview ? null : kind);
     if (geometryPreview) { $('#legend').hidden = true; $('#legendTitle').textContent = 'Geometry preview · not solved'; }
   }
+  let showShearCentre=true;
+  function drawShearCentre(){
+    const group=model?.shearCentre;if(!group)return;
+    while(group.children.length){const o=group.children.pop();o.geometry?.dispose();o.material?.dispose();}
+    // Do not overlay a single continuous reference path on exploded modules or modes.
+    if(!showShearCentre||!R||stale||geometryPreview||S.plot==='mode'||S.explode>0)return;
+    const g=R.geometry,points=[];
+    for(let i=0;i<=64;i++){
+      const y=g.semiSpan*i/64;if(S.clip&&y>S.clipY)continue;
+      let p;
+      if(R.analysis3D){
+        p=R.analysis3D.sectionReferenceAt(y);
+        const local=WingGeometry.inversePoint(g,p),m=E.spatialPointMotion(R,y,local),scale=deformAmount().scale;
+        if(scale&&m.displacement)p=p.map((v,k)=>v+scale*m.displacement[k]);
+      }else{
+        const x=at(R.props.xsc,y),z=E.interp(y,R.ySec,R.sections.map(sec=>sec.zsc)),motion=sectionMotion(y);
+        p=WingGeometry.transformPoint(g,y,[x,z]);p[2]+=motion[0];
+      }
+      if(p.every(Number.isFinite))points.push(new THREE.Vector3(p[1],p[2],p[0]));
+    }
+    if(points.length<2)return;
+    const line=new THREE.Line(new THREE.BufferGeometry().setFromPoints(points),new THREE.LineDashedMaterial({color:0x8e44ad,dashSize:6,gapSize:4,depthTest:false,depthWrite:false,transparent:true,opacity:.85}));
+    line.computeLineDistances();line.renderOrder=30;line.name='Calculated shear-centre path (purple dashed)';group.add(line);
+  }
   function drawLoads() {
+    drawShearCentre();
     const grp = model.loads;
     while (grp.children.length) { const c = grp.children.pop(); c.traverse((o) => { if (o.geometry) o.geometry.dispose(); if (o.material) o.material.dispose(); }); }
     if (!R || geometryPreview || S.plot === "mode") return;
@@ -13975,10 +14002,11 @@ function renderObservations() {
   }));
   $("#defBtn").addEventListener("click", (e) => { S.deformed = !S.deformed; e.currentTarget.setAttribute("aria-pressed", String(S.deformed)); applyResult(); });
   $("#scaleIn").addEventListener("input", (e) => { S.scale = parseFloat(e.target.value); if (!S.deformed) { S.deformed = true; $("#defBtn").setAttribute("aria-pressed", "true"); } applyResult(); });
+  $("#shearCentreBtn").addEventListener("click",e=>{showShearCentre=!showShearCentre;e.currentTarget.setAttribute("aria-pressed",String(showShearCentre));drawShearCentre();});
   $("#xrayBtn").addEventListener("click", (e) => { S.xray = !S.xray; e.currentTarget.setAttribute("aria-pressed", String(S.xray)); applyXray(); });
   $("#explodeIn").addEventListener("input", (e) => { S.explode = parseFloat(e.target.value); applyResult(); });
-  $("#clipBtn").addEventListener("click", (e) => { S.clip = !S.clip; e.currentTarget.setAttribute("aria-pressed", String(S.clip)); applyClip(); });
-  $("#clipIn").addEventListener("input", (e) => { S.clipY = parseFloat(e.target.value); if (!S.clip) { S.clip = true; $("#clipBtn").setAttribute("aria-pressed", "true"); } applyClip(); S.secY = S.clipY; $("#secY").value = S.clipY; if (!$("#tab-section").hidden) { clearTimeout(secTimer); secTimer = setTimeout(renderSection, 120); } });
+  $("#clipBtn").addEventListener("click", (e) => { S.clip = !S.clip; e.currentTarget.setAttribute("aria-pressed", String(S.clip)); applyClip(); drawShearCentre(); });
+  $("#clipIn").addEventListener("input", (e) => { S.clipY = parseFloat(e.target.value); if (!S.clip) { S.clip = true; $("#clipBtn").setAttribute("aria-pressed", "true"); } applyClip(); drawShearCentre(); S.secY = S.clipY; $("#secY").value = S.clipY; if (!$("#tab-section").hidden) { clearTimeout(secTimer); secTimer = setTimeout(renderSection, 120); } });
   document.querySelectorAll("[data-view]").forEach((b) => b.addEventListener("click", () => setView(b.dataset.view)));
   $("#runBtn").addEventListener("click", () => { clearTimeout(runTimer); runStudy(); });
   $("#wingAutoSolve").addEventListener("change", (e) => { autoSolve = e.target.checked; if (autoSolve && stale && !inputError) { clearTimeout(runTimer); runStudy(); } });

@@ -1760,10 +1760,11 @@ body { margin: 0; }
     applyAnatomy();
   }
 
-  // Mirror physical members only. The original clamped semi-wing retains its analysis.
+  // Symmetric result extension: reflect the solved semi-wing geometry and vector motion.
+  // Scalar section results are shared; this is not a new full-aircraft boundary-value solve.
   function syncFullWingPreview(){
     if(!model)return;
-    const show=fullWingPrint&&S.plot==='model'&&!S.deformed;
+    const show=fullWingPrint;
     if(show&&!model.symmetry){
       const group=new THREE.Group(),pairs=[];
       for(const original of [...model.modules,...model.rods,...model.spars]){
@@ -1771,9 +1772,32 @@ body { margin: 0; }
         const a=[],b=[];original.traverse(o=>a.push(o));copy.traverse(o=>b.push(o));
         a.forEach((o,i)=>pairs.push([o,b[i]]));
       }
-      group.scale.x=-1;model.root.add(group);model.symmetry={group,pairs};
+      group.name='Mirrored full-wing solution';group.scale.x=-1;model.root.add(group);model.symmetry={group,pairs,overlays:new Map(),sourceOf:new Map(pairs.map(([a,b])=>[b,a])),copyOf:new Map(pairs)};
     }
-    if(model.symmetry){model.symmetry.group.visible=show;for(const[a,b]of model.symmetry.pairs){b.visible=a.visible;b.position.copy(a.position);b.quaternion.copy(a.quaternion);b.scale.copy(a.scale);}}
+    if(model.symmetry){
+      const symmetry=model.symmetry;symmetry.group.visible=show;
+      for(const[a,b]of symmetry.pairs){b.visible=a.visible;b.position.copy(a.position);b.quaternion.copy(a.quaternion);b.scale.copy(a.scale);}
+      if(show)for(const source of [model.loads,model.shearCentre]){
+        const signature=source.children.map(o=>o.uuid).join(','),previous=symmetry.overlays.get(source);
+        if(!previous||previous.signature!==signature){
+          if(previous){symmetry.group.remove(previous.copy);previous.copy.traverse(o=>{const a=symmetry.sourceOf.get(o);if(a)symmetry.copyOf.delete(a);symmetry.sourceOf.delete(o);});}
+          // Shared geometry/materials track source values; source owns disposal.
+          const copy=source.clone(true);copy.name=source===model.loads?'Mirrored applied loads':'Mirrored shear centres';
+          const a=[],b=[];source.traverse(o=>a.push(o));copy.traverse(o=>b.push(o));a.forEach((o,i)=>{symmetry.sourceOf.set(b[i],o);symmetry.copyOf.set(o,b[i]);});
+          symmetry.group.add(copy);symmetry.overlays.set(source,{signature,copy});
+        }
+        const copy=symmetry.overlays.get(source).copy;copy.visible=source.visible;copy.position.copy(source.position);copy.quaternion.copy(source.quaternion);copy.scale.copy(source.scale);
+      }
+    }
+  }
+  function intersectWingObjects(targets,recursive=false){
+    const symmetry=fullWingPrint?model?.symmetry:null;
+    const copies=symmetry?.group.visible?targets.map(o=>symmetry.copyOf.get(o)).filter(Boolean):[];
+    return raycaster.intersectObjects([...targets,...copies],recursive).map(hit=>{
+      const source=symmetry?.sourceOf.get(hit.object);if(!source)return hit;
+      const point=hit.point.clone();point.x=-point.x;
+      return {...hit,object:source,point,mirrored:true};
+    });
   }
   function frameView(force) {
     if (!model) return;
@@ -1811,7 +1835,7 @@ body { margin: 0; }
   function fitPoints() {
     if(!model)return [];
     const g = model.g, pts = [], exploded=Number(S.explode)||0;
-    const mirror=fullWingPrint&&S.plot==='model'&&!S.deformed;
+    const mirror=fullWingPrint;
     if(model.fitCache?.explode===exploded&&model.fitCache.mirror===mirror)return model.fitCache.points;
     const add=(y,x,z,module=0)=>{const p=WingGeometry.transformPoint(g,y,[x,z]);pts.push(new THREE.Vector3(p[1]+module*exploded,p[2],p[0]));};
     // Use the actual rendered station/contour vertices, including interior profile/twist extrema,
@@ -1961,7 +1985,7 @@ body { margin: 0; }
     const poster=document.createElement('canvas');poster.width=w+left;poster.height=h+top+85;const ctx=poster.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,poster.width,poster.height);
     const oldRatio=renderer.getPixelRatio(),oldSize=renderer.getSize(new THREE.Vector2()),oldAspect=camera.aspect;
     try{renderer.setPixelRatio(1);renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();renderer.render(scene,camera);ctx.drawImage(canvas,left,top,w,h);
-      ctx.fillStyle='#111';ctx.font='bold 24px Arial';ctx.fillText(S.projectName||'Wing design',22,32,poster.width-44);ctx.font='16px Arial';const kind={stress:'Nominal normal beam stress (MPa)',disp:'Resultant displacement (mm)',model:'Model geometry',fos:'Normal strength ratio',twist:'Elastic axis twist (degrees)',bending:'Resultant bending moment (N·m)',torque:'Signed local torque (N·m)',mode:'Normalised mode shape'}[S.plot];ctx.fillText(kind+' · estimated total mass '+nf(R.mass.total,1)+' g',22,59,poster.width-44);
+      ctx.fillStyle='#111';ctx.font='bold 24px Arial';ctx.fillText(S.projectName||'Wing design',22,32,poster.width-44);ctx.font='16px Arial';const kind={stress:'Nominal normal beam stress (MPa)',disp:'Resultant displacement (mm)',model:'Model geometry',fos:'Normal strength ratio',twist:'Elastic axis twist (degrees)',bending:'Resultant bending moment (N·m)',torque:'Signed local torque (N·m)',mode:'Normalised mode shape'}[S.plot];ctx.fillText(kind+' · estimated '+(fullWingPrint?'full-wing':'semi-wing')+' mass '+nf(R.mass.total*(fullWingPrint?2:1),1)+' g',22,59,poster.width-44);
       ctx.font='14px Arial';ctx.fillText('Deformation scale '+(S.deformed?nf(deformAmount().scale,2):'0 (undeformed)')+' · '+resultDisplay.scaleMode+' colour scale · '+(resultDisplay.bands?'12 bands':'continuous'),22,82,poster.width-44);
       if(['stress','disp','fos','twist','bending','torque'].includes(S.plot)){const x=22,y=top+12,bh=Math.min(350,h-30);for(let j=0;j<bh;j++){const c=rainbow(1-j/(bh-1));ctx.fillStyle='#'+c.getHexString();ctx.fillRect(x,y+j,28,1);}ctx.fillStyle='#111';ctx.font='14px Arial';for(let i=0;i<=6;i++)ctx.fillText(sig(range.max-(range.max-range.min)*i/6,5),60,y+12+i*bh/6);}
       for(const p of resultLabels()){if(!p.mesh.visible)continue;const v=resultWorldPoint(p);if(S.clip&&v.x>S.clipY)continue;v.project(camera);if(Math.abs(v.x)>1||Math.abs(v.y)>1||Math.abs(v.z)>1)continue;const x=left+(v.x+1)*w/2,y=top+(1-v.y)*h/2;ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(x,y,5,0,2*Math.PI);ctx.fill();ctx.font='bold 14px Arial';const txt=p.label+' '+sig(p.value,4)+' MPa';const tw=ctx.measureText(txt).width;const tx=Math.min(poster.width-tw-15,Math.max(left+5,x+10)),ty=Math.max(top+20,y-10);ctx.fillStyle='#fff';ctx.fillRect(tx-3,ty-16,tw+6,22);ctx.fillStyle=p.color;ctx.fillText(txt,tx,ty);}
@@ -2266,7 +2290,7 @@ body { margin: 0; }
   function renderPlotInfo() {
     const massBox=$('#wingMassReadout');
     massBox.hidden=!R||S.emptyStudy;
-    if(!massBox.hidden){massBox.textContent=geometryPreview?'Wing mass — solve to update':`Estimated semi-wing mass ${nf(R.mass.total,1)} g · includes spars ${nf(R.mass.spars||0,1)} g${R.load.gravitySummary?' · Applied '+nf(R.load.gravitySummary.appliedN,3)+' N · Weight ↓ '+nf(R.load.gravitySummary.weightN,3)+' N · Net '+nf(R.appliedForce,3)+' N':''}${stale?' · previous solve':''}`;massBox.title='Estimated model mass including skin, ribs, end caps, spars, rods and any tip mass. Verify manufacturing mass in CAD and the slicer.';}
+    if(!massBox.hidden){massBox.textContent=geometryPreview?'Wing mass — solve to update':`${fullWingPrint?'Estimated full-wing mass '+nf(2*R.mass.total,1)+' g (2 × semi-wing)':'Estimated semi-wing mass '+nf(R.mass.total,1)+' g'} · includes spars ${nf((R.mass.spars||0)*(fullWingPrint?2:1),1)} g${R.load.gravitySummary?' · Applied '+nf(R.load.gravitySummary.appliedN*(fullWingPrint?2:1),3)+' N · Weight ↓ '+nf(R.load.gravitySummary.weightN*(fullWingPrint?2:1),3)+' N · Net '+nf(R.appliedForce*(fullWingPrint?2:1),3)+' N':''}${stale?' · previous solve':''}`;massBox.title='Estimated model mass including skin, ribs, end caps, spars, rods and any tip mass. Verify manufacturing mass in CAD and the slicer.';}
     if (geometryPreview&&model) {
       const g = model.g;
       $('#plotinfo').textContent = `UNSOLVED GEOMETRY PREVIEW · ${airfoilLabel(g)} · semi-span ${g.semiSpan} mm · ${model.ribs.length} ribs · ${model.rods.length} rods. Stress and deformation hidden; press Solve for analysis.`;
@@ -2392,7 +2416,7 @@ body { margin: 0; }
     const visible=o=>{for(let p=o;p;p=p.parent)if(!p.visible)return false;return true;};
     const targets=[...model.ribs,...(model.spars||[]),...model.rods].filter(visible);let hit;
     // A small screen-space margin makes thin members finger/pen-friendly at any zoom.
-    for(const [dx,dy]of [[0,0],[6,0],[-6,0],[0,6],[0,-6],[4,4],[-4,4],[4,-4],[-4,-4]]){ndc.set((ev.clientX+dx-r.left)/r.width*2-1,-(ev.clientY+dy-r.top)/r.height*2+1);raycaster.setFromCamera(ndc,camera);hit=raycaster.intersectObjects(targets,false).find(h=>!S.clip||h.point.x<=S.clipY);if(hit)break;}
+    for(const [dx,dy]of [[0,0],[6,0],[-6,0],[0,6],[0,-6],[4,4],[-4,4],[4,-4],[-4,-4]]){ndc.set((ev.clientX+dx-r.left)/r.width*2-1,-(ev.clientY+dy-r.top)/r.height*2+1);raycaster.setFromCamera(ndc,camera);hit=intersectWingObjects(targets,false).find(h=>!S.clip||h.point.x<=S.clipY);if(hit)break;}
     if(hit){const u=hit.object.userData;selectWingPart(u.kind==='spar'?'spar:'+u.sparIndex:u.kind==='rod'?'rod:'+u.rodIndex:'rib:'+u.station);if(printedWorkspace)printedWorkspace.open(partSelection.label,$('#wingPartEditor'),{right:ev.clientX,top:ev.clientY});}
     else $('#wpStatus').textContent='No rib or spar at that point. Click a visible member, zoom in, or use the part list.';
   }
@@ -2412,7 +2436,7 @@ body { margin: 0; }
     if(!model||running||gateOpen())return null;
     const r=canvas.getBoundingClientRect();ndc.set((ev.clientX-r.left)/r.width*2-1,-(ev.clientY-r.top)/r.height*2+1);raycaster.setFromCamera(ndc,camera);
     const visible=o=>{for(let p=o;p;p=p.parent)if(!p.visible)return false;return true;};
-    const h=raycaster.intersectObjects(model.skins.filter(visible),false).find(h=>!S.clip||h.point.x<=S.clipY);if(!h||!h.face)return null;
+    const h=intersectWingObjects(model.skins.filter(visible),false).find(h=>!S.clip||h.point.x<=S.clipY);if(!h||!h.face)return null;
     const p=h.object.geometry.attributes.position,tri=new THREE.Triangle(),bc=new THREE.Vector3(),local=h.object.worldToLocal(h.point.clone());
     tri.set(...[h.face.a,h.face.b,h.face.c].map(i=>new THREE.Vector3().fromBufferAttribute(p,i)));tri.getBarycoord(local,bc);const u=h.object.userData;
     return WingLoadsUI.surfaceSample([h.face.a,h.face.b,h.face.c].map(i=>({station:u.by[i],fraction:u.bx[i]/E.chordAt(model.g,u.by[i])})),[bc.x,bc.y,bc.z]);
@@ -2432,7 +2456,7 @@ body { margin: 0; }
     const r = canvas.getBoundingClientRect();
     ndc.set(((ev.clientX - r.left) / r.width) * 2 - 1, -((ev.clientY - r.top) / r.height) * 2 + 1);
     raycaster.setFromCamera(ndc, camera);
-    const hits = raycaster.intersectObjects(model.skins.concat(model.sleeves, model.rods,model.spars||[]), false).filter((h) => !S.clip || h.point.x <= S.clipY);
+    const hits = intersectWingObjects(model.skins.concat(model.sleeves, model.rods,model.spars||[]), false).filter((h) => !S.clip || h.point.x <= S.clipY);
     const pr = $("#probe");
     if (!hits.length || ev.buttons) { pr.hidden = true; return; }
     const h = hits[0], u = h.object.userData;
@@ -2481,7 +2505,7 @@ body { margin: 0; }
     const rect=canvas.getBoundingClientRect();ndc.set((ev.clientX-rect.left)/rect.width*2-1,-(ev.clientY-rect.top)/rect.height*2+1);raycaster.setFromCamera(ndc,camera);
     const meshes=S.stressComponent==='spars'?model.spars||[]:S.stressComponent==='rods'?model.rods:model.skins.concat(model.sleeves);
     const visible=m=>{for(let n=m;n;n=n.parent)if(!n.visible)return false;return true;};
-    const hit=raycaster.intersectObjects(meshes.filter(visible),false).find(h=>!S.clip||h.point.x<=S.clipY);if(!hit?.face)return;
+    const hit=intersectWingObjects(meshes.filter(visible),false).find(h=>!S.clip||h.point.x<=S.clipY);if(!hit?.face)return;
     const mesh=hit.object,u=mesh.userData,a=mesh.geometry.attributes.position,indices=[hit.face.a,hit.face.b,hit.face.c],triangle=new THREE.Triangle(...indices.map(i=>new THREE.Vector3().fromBufferAttribute(a,i))),local=mesh.worldToLocal(hit.point.clone()),bc=new THREE.Vector3();triangle.getBarycoord(local,bc);
     const weights=[bc.x,bc.y,bc.z],mix=arr=>indices.reduce((v,i,k)=>v+arr[i]*weights[k],0),y=mix(u.by),x=mix(u.bx),z=mix(u.bz),value=fieldValue(y,x,z,'sigma',u);
     if(!Number.isFinite(value)){flash('Stress is unresolved at this point; no numeric pin was created.');return;}
@@ -3516,7 +3540,7 @@ body { margin: 0; }
   canvas.addEventListener('pointercancel',()=>{loadPointer=null;});
   canvas.addEventListener('pointerup',e=>{
     const start=loadPointer;loadPointer=null;if(!start||start.id!==e.pointerId||loadMoved||Math.hypot(e.clientX-start.x,e.clientY-start.y)>5||stale||running||gateOpen()||geometryPreview||!printedWorkspace||!model?.loads||R?.load.kind!=='custom'||S.load.kind!=='custom'||loadKeeperOf().editor?.container.querySelector('.wle-pick[aria-pressed="true"]'))return;
-    const rect=canvas.getBoundingClientRect();ndc.set((e.clientX-rect.left)/rect.width*2-1,-(e.clientY-rect.top)/rect.height*2+1);raycaster.setFromCamera(ndc,camera);const threshold=raycaster.params.Line.threshold;raycaster.params.Line.threshold=3;let hits;try{hits=raycaster.intersectObjects(model.loads.children,true);}finally{raycaster.params.Line.threshold=threshold;}
+    const rect=canvas.getBoundingClientRect();ndc.set((e.clientX-rect.left)/rect.width*2-1,-(e.clientY-rect.top)/rect.height*2+1);raycaster.setFromCamera(ndc,camera);const threshold=raycaster.params.Line.threshold;raycaster.params.Line.threshold=3;let hits;try{hits=intersectWingObjects(model.loads.children,true);}finally{raycaster.params.Line.threshold=threshold;}
     const hit=hits.find(h=>Number.isInteger(h.object.userData.wingLoadIndex)),index=hit?.object.userData.wingLoadIndex??WingWorkspaceUI.pickLoadArrow(model.loads.children,camera,canvas,e,THREE);if(index===null)return;if(partPick)$('#wpPick').click();
     const editor=loadKeeperOf().editor;if(!editor)return;printedWorkspace.open('Edit wing load · upward positive',editor.container,{right:e.clientX,top:e.clientY});editor.edit(index);
   });
@@ -3627,7 +3651,7 @@ body { margin: 0; }
     const studyTreeSection=$('#wlTreeSection'),studyTreeBody=studyTreeSection.querySelector('.wl-treepm');studyTreeSection.hidden=true;
     const treeButton=el('button',{class:'btn',type:'button',id:'wingStudyTreeButton','aria-haspopup':'dialog'},'Study tree');
     treeButton.onclick=()=>printedWorkspace.open('Study tree',studyTreeBody,treeButton);secondaryTools.prepend(treeButton);
-    WingPrintUI.mount({host:secondaryTools,workerURL:new URL('wing-print/wing_print_worker.js?v=1.1.0',document.baseURI).href,onSymmetryChange:enabled=>{fullWingPrint=enabled;if(enabled){S.deformed=false;$('#defBtn').setAttribute('aria-pressed','false');setPlot('model');}syncFullWingPreview();if(model){model.fitCache=null;placeAtFit(true);}},getInput:()=>{
+    WingPrintUI.mount({host:secondaryTools,workerURL:new URL('wing-print/wing_print_worker.js?v=1.1.0',document.baseURI).href,onSymmetryChange:enabled=>{fullWingPrint=enabled;syncFullWingPreview();renderPlotInfo();if(model){model.fitCache=null;placeAtFit(true);}},getInput:()=>{
       if(S.emptyStudy||!R||stale||running||gateOpen())throw Error('Solve the current wing inputs before creating STL.');
       const {pla}=materials();return {geometry:JSON.parse(JSON.stringify(S.geometry)),density:pla.rho,shellMaterial:pla,projectName:S.projectName,sourceStudy:WingStudyIO.printedStudyDocument(S,E)};
     }});

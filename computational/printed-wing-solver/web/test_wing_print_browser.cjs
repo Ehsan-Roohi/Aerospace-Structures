@@ -3,7 +3,7 @@ const assert=require('node:assert/strict'),http=require('node:http'),fs=require(
 const {chromium}=require(process.env.MIE446_PLAYWRIGHT_MODULE||'playwright');
 (async()=>{
  const root=path.resolve(__dirname,'../../../docs'),out=fs.mkdtempSync(path.join(os.tmpdir(),'mie446-browser-print-'));
- const server=http.createServer((req,res)=>{const file=path.resolve(root,'.'+new URL(req.url,'http://localhost').pathname);if(!file.startsWith(root+path.sep)){res.writeHead(403).end();return;}try{res.setHeader('Content-Type',({'.html':'text/html','.js':'application/javascript','.wasm':'application/wasm','.json':'application/json'})[path.extname(file)]||'application/octet-stream');res.end(fs.readFileSync(file));}catch{res.writeHead(404).end();}});
+ const server=http.createServer((req,res)=>{const file=path.resolve(root,'.'+new URL(req.url,'http://localhost').pathname);if(!file.startsWith(root+path.sep)){res.writeHead(403).end();return;}try{res.setHeader('Content-Type',({'.html':'text/html','.js':'application/javascript','.wasm':'application/wasm','.json':'application/json'})[path.extname(file)]||'application/octet-stream');let bytes=fs.readFileSync(file);if(path.extname(file)==='.html')bytes=Buffer.from(bytes.toString('utf8').replace('renderer.render(scene, camera);','window.__wingTestScene=scene;renderer.render(scene, camera);'));res.end(bytes);}catch{res.writeHead(404).end();}});
  await new Promise(r=>server.listen(0,'127.0.0.1',r));let browser;
  try{
   browser=await chromium.launch({channel:'chrome',headless:true});
@@ -16,7 +16,21 @@ const {chromium}=require(process.env.MIE446_PLAYWRIGHT_MODULE||'playwright');
    d.study.assembly.seamsBonded=true;d.study.load={kind:'flight',aircraftMass:1,loadFactor:1,distribution:'elliptic',liftFraction:.25,inertiaRelief:false,selfWeight:true,fos:1.5,tipMass:0,tipFraction:.3};
    await page.addInitScript(raw=>{localStorage.setItem('winglab:printed-study:v1',raw);localStorage.removeItem('winglab:print-fit-record');},JSON.stringify(d));
    await page.goto('http://127.0.0.1:'+server.address().port+'/wing-lab.html#wing');await page.locator('#runBtn').click();await page.waitForFunction(()=>document.querySelector('#stateChip').textContent.includes('Solved'),{timeout:45000});
-   if(mode==='full'){await page.locator('#wingFullSymmetric').check();await page.waitForTimeout(300);assert.equal(await page.locator('#wingSymmetryNote').isVisible(),true);assert.ok((await page.locator('#stateChip').textContent()).includes('Solved'),'symmetry is a view/export choice, not an input error');await page.screenshot({path:path.join(out,'full-wing-preview.png')});}
+   if(mode==='full'){await page.locator('#wingFullSymmetric').check();await page.waitForTimeout(300);assert.equal(await page.locator('#wingSymmetryNote').isVisible(),true);assert.ok((await page.locator('#stateChip').textContent()).includes('Solved'),'symmetry is a view/export choice, not an input error');await page.waitForFunction(()=>window.__wingTestScene?.getObjectByName('Mirrored applied loads')?.children.length>0);
+    assert.ok(await page.evaluate(()=>window.__wingTestScene.getObjectByName('Mirrored shear centres').children.length>0),'mirror shear-centre path');
+    await page.locator('#shearCentreBtn').click();await page.waitForFunction(()=>window.__wingTestScene.getObjectByName('Mirrored shear centres').children.length===0);
+    await page.locator('#shearCentreBtn').click();await page.waitForFunction(()=>window.__wingTestScene.getObjectByName('Mirrored shear centres').children.length>0);
+    await page.locator('#app [data-plot="stress"]').first().click();
+    await page.locator('#defBtn').click();await page.waitForTimeout(250);
+    const reflected=await page.evaluate(()=>{
+      const scene=window.__wingTestScene,mirror=scene.getObjectByName('Mirrored full-wing solution');scene.updateMatrixWorld(true);
+      const originals=[],copies=[];scene.traverse(o=>{if(!o.isMesh||!o.geometry?.attributes.position)return;let inside=false;for(let p=o;p;p=p.parent)if(p===mirror)inside=true;(inside?copies:originals).push(o);});
+      for(const copy of copies){const source=originals.find(o=>o.geometry===copy.geometry&&o.userData.kind==='skin');if(!source)continue;
+        const a=new THREE.Vector3().fromBufferAttribute(source.geometry.attributes.position,20).applyMatrix4(source.matrixWorld),b=new THREE.Vector3().fromBufferAttribute(copy.geometry.attributes.position,20).applyMatrix4(copy.matrixWorld);
+        return {visible:mirror.visible,sameColour:copy.geometry.attributes.color===source.geometry.attributes.color,delta:Math.max(Math.abs(a.x+b.x),Math.abs(a.y-b.y),Math.abs(a.z-b.z))};}
+      return null;
+    });assert.ok(reflected?.visible&&reflected.sameColour&&reflected.delta<1e-6,'stress colours and solved vector motion reflect exactly');
+    await page.screenshot({path:path.join(out,'full-wing-preview.png')});}
    const downloads=[];page.on('download',f=>downloads.push(f));const firstDownload=mode==='oversize'?null:page.waitForEvent('download',{timeout:45000});await page.locator('#wingDownloadSTL').click();
    if(mode==='modules'){await page.locator('#wingPrintFitReference').fill('automated synthetic coupon fixture');await page.locator('#wingPrintFitConfirmed').check();await page.getByRole('button',{name:'Confirm fit record & build STL',exact:true}).click();}
    if(mode==='oversize'){

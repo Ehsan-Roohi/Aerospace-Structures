@@ -9,7 +9,7 @@ MIE 446 Aerospace Structures | Project guide
 ## 1. Wing Lab: design, analyze and download STL
 Open [Wing Lab](https://ehsan-roohi.github.io/Aerospace-Structures/wing-lab.html#wing) and name your project with your team and revision. Follow the controls in this order.
 
-**Airfoils & planform.** For a simple starting geometry, use NACA 2412 at the root and NACA 0012 at the tip (root eta = 0, tip eta = 1), taper ratio 0.7 (tip chord = 0.7 × root chord), zero sweep, zero dihedral, and zero incidence. Wing span can vary between 350 and 600 mm. These are suggested starting choices.
+**Airfoils & planform.** For a simple starting geometry, use NACA 2412 at the root and NACA 0012 at the tip (root eta = 0, tip eta = 1), taper ratio 0.7 (tip chord = 0.7 × root chord), zero sweep, zero dihedral, and zero incidence. Wing span can vary between 350 and 600 mm. These are suggested starting choices. You can change them if you want. 
 
 **Structure dimensions and Materials.** Set the skin thickness between 1 and 2 mm, choose your ribs and use the same material for the spar and the rest of the wing. Prepare three layouts, keeping all other inputs unchanged:
 

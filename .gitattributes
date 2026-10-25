@@ -1,1 +1,5 @@
 *.gcode binary
+
+# Preserve upstream CAD-kernel bytes and provenance hashes on every platform.
+computational/printed-wing-solver/web/vendor/manifold-3.5.4/* -text
+docs/wing-print/vendor/* -text

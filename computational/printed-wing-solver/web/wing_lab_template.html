@@ -529,7 +529,7 @@ body { margin: 0; }
       <label class="wl-auto" title="Solve automatically after each valid change"><input type="checkbox" id="wingAutoSolve"> Auto-solve</label>
     </div>
     <div id="wingImportGate" class="wl-gate" role="region" aria-label="Imported outer geometry: structural inputs to confirm" hidden></div>
-    <p class="wl-modelnote" id="wingModelNote"><b>Generic browser study model.</b> Edits change this app's analysis and 3-D view. They do not update existing printable CAD/STL or the approved fabrication layout automatically. Use Export to notebook to generate and validate new CAD. Presets are historical / course starting points.</p>
+    <p class="wl-modelnote" id="wingModelNote"><b>Generic browser study model.</b> Edits change this app's analysis and 3-D view. They do not update existing printable CAD/STL or the approved fabrication layout automatically. Use Download STL to generate and check fresh print geometry. Presets are historical / course starting points.</p>
     <details class="wl-acc" id="wlGeometry" open>
       <summary>Geometry <span class="wl-badge" id="wlGeometryBadge"></span></summary>
       <div class="wl-acc-body" id="wingGeometryForm"></div>
@@ -810,6 +810,7 @@ body { margin: 0; }
 /*__WING_LOADS_UI__*/
 /*__WING_WORKSPACE_UI__*/
 /*__WING_STUDY_IO__*/
+/*__WING_PRINT_UI__*/
 </script>
 <script>
 (() => {
@@ -3375,7 +3376,7 @@ body { margin: 0; }
   function renderShare() {
     const box = $("#wingShare");
     if (!box || typeof WingStudyIO === "undefined") return;
-    box.innerHTML = `<p class="note" id="wingFilesNote" role="status"></p><div class="lesson-actions"><button class="btn" type="button" id="wingNotebookExport">Export to notebook (.json)</button><button class="btn" type="button" id="wingShareBtn">Copy a link to this solved study</button></div><p class="note">Analyse → Export to notebook → upload in the Code-to-Print notebook. Transfers ribs, rods and same-material printed spar caps/webs; does not generate STL here or certify strength. CAD validation, coupon (for rods) and slicer inspection still apply.</p>
+    box.innerHTML = `<p class="note" id="wingFilesNote" role="status"></p><div class="lesson-actions"><button class="btn" type="button" id="wingNotebookExport">Notebook JSON (optional)</button><button class="btn" type="button" id="wingShareBtn">Copy a link to this solved study</button></div><p class="note">Use Download STL for direct print geometry. Save JSON keeps the editable design. The notebook JSON route remains optional. Physical rod-fit evidence and slicer-layer inspection still apply; no strength certification is implied.</p>
       <p class="note"><a href="https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/main/notebooks/MIE446_Code_to_Print_Wing.ipynb" target="_blank" rel="noopener">Open the Code-to-Print notebook ↗</a> · Step 2: Wing Lab JSON → upload → inspect → build → export.</p><input type="text" id="wingShareBox" class="wl-share" readonly hidden aria-label="Link to this study"><p class="note" id="wingShareMsg" role="status"></p>`;
     $('#wingNotebookExport').onclick=exportToNotebook;
     $("#wingShareBtn").onclick = async () => {
@@ -3533,7 +3534,7 @@ body { margin: 0; }
       {id:'open-json',label:'Open JSON',run:()=>{$('#wingStudyFiles .wio-open input').click();}},
       {id:'save-json',label:'Save JSON',run:()=>studyFiles?.save()},
       {id:'clear',label:'Clear',run:requestClearWingStudy},
-      {id:'notebook',label:'Export to notebook',run:()=>exportToNotebook()}]});
+      {id:'notebook',label:'Notebook (optional)',run:()=>exportToNotebook()}]});
     const sessionStatus=el('p',{id:'wingSessionStatus',class:'note',role:'status'},wingSessionMessage);sessionStatus.style.cssText='flex-basis:100%;margin:0;font-size:12px';printedWorkspace.tools.append(sessionStatus);
     const meshControl=el('label',{class:'wing-mesh-control'},'Beam mesh '),meshInput=el('input',{type:'number',id:'wingMeshElements',min:4,max:100,step:1,'aria-label':'Requested wing beam elements',placeholder:'Auto'});
     meshInput.style.cssText='width:76px';meshControl.append(meshInput);meshControl.title='4–100 requested spanwise beam elements. Required load, rib, seam and section stations may add elements. This does not change CAD/STL geometry.';
@@ -3615,6 +3616,11 @@ body { margin: 0; }
     const studyTreeSection=$('#wlTreeSection'),studyTreeBody=studyTreeSection.querySelector('.wl-treepm');studyTreeSection.hidden=true;
     const treeButton=el('button',{class:'btn',type:'button',id:'wingStudyTreeButton','aria-haspopup':'dialog'},'Study tree');
     treeButton.onclick=()=>printedWorkspace.open('Study tree',studyTreeBody,treeButton);secondaryTools.prepend(treeButton);
+    WingPrintUI.mount({host:secondaryTools,workerURL:new URL('wing-print/wing_print_worker.js?v=1.0.0',document.baseURI).href,getInput:()=>{
+      if(S.emptyStudy||!R||stale||running||gateOpen())throw Error('Solve the current wing inputs before creating STL.');
+      const {pla}=materials();return {geometry:JSON.parse(JSON.stringify(S.geometry)),density:pla.rho,shellMaterial:pla,projectName:S.projectName,sourceStudy:WingStudyIO.printedStudyDocument(S,E)};
+    }});
+
     renderInputs(true);
     document.addEventListener('keydown',e=>{if($('#app').hidden||!(e.ctrlKey||e.metaKey)||e.altKey||e.target.closest('input,textarea,select,[contenteditable],[role="textbox"]'))return;const key=e.key.toLowerCase();if(key==='z'||key==='y'){e.preventDefault();travelWingHistory(key==='y'||e.shiftKey?1:-1);}});
     document.addEventListener('wing-load-applied',e=>{if(e.detail==='printed')printedWorkspace.close();});

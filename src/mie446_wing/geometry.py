@@ -109,9 +109,10 @@ def _box_for_y_interval(shape: cq.Shape, y0: float, y1: float, margin: float = 2
 def _make_rib(parameters: WingParameters, center_y: float, outer=None) -> cq.Shape:
     y0 = center_y - parameters.rib_thickness_mm / 2.0
     y1 = center_y + parameters.rib_thickness_mm / 2.0
-    if _generalized(parameters) and outer is not None:
-        # Use the actual loft exterior rather than an independently lofted rib
-        # whose boundary could stray outside a twisted/morphing wing.
+    if outer is not None:
+        # Use the actual exterior for every planform. Independently lofted ribs
+        # can stray outside even a nominal linear taper and corrupt a Boolean
+        # union with the smooth shell; exact clipping preserves the exterior.
         return outer.intersect(_box_for_y_interval(outer, y0, y1)).clean()
     wires = [
         outer_airfoil_wire(

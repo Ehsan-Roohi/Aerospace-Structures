@@ -1,22 +1,22 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="244" viewBox="0 0 1200 244" role="img" aria-labelledby="title desc">
  <title id="title">Design your wing, then build it</title>
- <desc id="desc">A completed fit coupon is the starting point. Design and solve in Wing Lab, transfer JSON to the Code-to-Print notebook, inspect STL in OrcaSlicer, obtain staff approval and print.</desc>
+ <desc id="desc">Design and solve in Wing Lab, download printable STL directly, inspect it in OrcaSlicer, obtain staff approval and print. Confirm a physical fit coupon when external rods are used.</desc>
  <rect width="1200" height="244" rx="16" fill="#f3f6fa"/>
  <g font-family="Arial, Helvetica, sans-serif">
- <text x="26" y="33" font-size="18" font-weight="700" fill="#176b54">START: Your fit coupon is already complete.</text>
+ <text x="26" y="33" font-size="18" font-weight="700" fill="#176b54">WING LAB → STL → ORCASLICER → PRINT</text>
  <g fill="white" stroke="#d2dce7" stroke-width="2">
  <rect x="26" y="57" width="263" height="130" rx="12"/><rect x="321" y="57" width="263" height="130" rx="12"/><rect x="616" y="57" width="263" height="130" rx="12"/><rect x="911" y="57" width="263" height="130" rx="12"/>
  </g>
  <g fill="#193e65" font-size="22" font-weight="700">
- <text x="44" y="91">1  Wing Lab</text><text x="339" y="91">2  Notebook</text><text x="634" y="91">3  OrcaSlicer</text><text x="929" y="91">4  Print + assemble</text>
+ <text x="44" y="91">1  Wing Lab</text><text x="339" y="91">2  Download STL</text><text x="634" y="91">3  OrcaSlicer</text><text x="929" y="91">4  Print + assemble</text>
  </g>
  <g fill="#32475c" font-size="17">
- <text x="44" y="124">Choose wing + load.</text><text x="44" y="150">Solve; export JSON.</text>
- <text x="339" y="124">Upload JSON; Final Wing.</text><text x="339" y="150">Build CAD; download ZIP.</text>
+ <text x="44" y="124">Choose wing + load.</text><text x="44" y="150">Solve; save editable JSON.</text>
+ <text x="339" y="124">Build and check in Wing Lab.</text><text x="339" y="150">1 piece: STL; 2–3: ZIP.</text>
  <text x="634" y="124">Import STL at 100% scale.</text><text x="634" y="150">Check fit and every layer.</text>
  <text x="929" y="124">Get staff approval first.</text><text x="929" y="150">Keep files + build photos.</text>
  </g>
  <g fill="#193e65"><path d="M296 116h13v-7l10 13-10 13v-7h-13z"/><path d="M591 116h13v-7l10 13-10 13v-7h-13z"/><path d="M886 116h13v-7l10 13-10 13v-7h-13z"/></g>
- <text x="26" y="219" fill="#52667a" font-size="16">JSON = design transfer  |  STL = printable geometry  |  Assigned printer: 300 x 300 x 300 mm  |  Team wing stays unloaded.</text>
+ <text x="26" y="219" fill="#52667a" font-size="16">JSON = editable design  |  STL = printable geometry  |  Assigned printer: 300 x 300 x 300 mm  |  Team wing stays unloaded.</text>
  </g>
 </svg>

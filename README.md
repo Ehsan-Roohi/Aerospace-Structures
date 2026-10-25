@@ -8,7 +8,7 @@ This is the classroom home for released MIE 446 learning materials. Start with t
 
 ## Software tools used in class
 
-**Wing versions:** [Wing v1.3 · current workspace](https://ehsan-roohi.github.io/Aerospace-Structures/wing-lab.html#wing) · [Wing v1 · preserved course interface](https://ehsan-roohi.github.io/Aerospace-Structures/wing-lab-v1.html#wing) · [Matching Code-to-Print notebook v1.3.1 in Colab](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/v1.3.1/notebooks/MIE446_Code_to_Print_Wing.ipynb). “Version 1” identifies the preserved course-interface [snapshot](https://github.com/Ehsan-Roohi/Aerospace-Structures/blob/b9049b490c27eca6d4b4abbbb7d2d6de7a67e92c/docs/wing-lab.html), not a separate package release; use v1.3 with the matching notebook for the expanded wing geometry and JSON transfer.
+**Wing versions:** [Wing v1.3 · current workspace](https://ehsan-roohi.github.io/Aerospace-Structures/wing-lab.html#wing) · [Wing v1 · preserved course interface](https://ehsan-roohi.github.io/Aerospace-Structures/wing-lab-v1.html#wing). The current workspace downloads STL directly; no notebook is required for the wing project. The [Code-to-Print notebook](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/main/notebooks/MIE446_Code_to_Print_Wing.ipynb) remains an optional CAD/coupon route and reads legacy and expanded study JSON.
 
 1. **[Software 1 · Beam, Truss and Wing v1.3](https://ehsan-roohi.github.io/Aerospace-Structures/wing-lab.html)** — start with cantilever, fixed–fixed and simply supported beams; then compare skin-only, reinforced, ribbed and modular wings. Apply point or distributed loads and explore reactions, stress, deflection and modes. No installation; internet access is required for the wing's 3-D graphics library. [Learning pathway and model limits](computational/printed-wing-solver/README.md#progressive-learning-pathway).
 
@@ -32,11 +32,9 @@ This is the classroom home for released MIE 446 learning materials. Start with t
 | **Numerical wing structural design** | Two teaching sessions + design studio: theory, schematics, signed load cases, bending/shear/torsion, cap buckling, whole-span fit, independent beam FEM, Pareto search, uncertainty and downloadable CAD/report data. No lab or Excel required. | [![Open Numerical Wing Design in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/main/notebooks/MIE446_Wing_Structural_Design_Numerical.ipynb) |
 | **Printed-wing structural solver** | Analyse your team's as-printed semi-wing: exact shell/sleeve/rod section, 2-D FE torsion and shear centre, lift or tip-force loads, V–M–T, deflection, twist, skin buckling, rod and seam checks, natural frequencies and assembly comparison. [Launch Wing Lab 3-D app](https://ehsan-roohi.github.io/Aerospace-Structures/wing-lab.html) (runs directly in your browser) · [SolidWorks cross-check guide](SOLIDWORKS_SIMULATION_GUIDE.md) | [![Open Printed-Wing Solver in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/main/notebooks/MIE446_Printed_Wing_Structural_Solver.ipynb) |
 
-**Project lesson — [Code-to-Print Wing: coupon first, final wing second](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/main/notebooks/MIE446_Code_to_Print_Wing.ipynb).** Follow the [project start-here checklist](#wing-project--start-here-lesson-coupon-then-final-wing) below; this fabrication notebook is separate from the analysis solver.
+**Wing project — [design in Wing Lab and download STL directly](PROJECT.md).** Save the editable JSON, Solve, then click **Download STL**. One module gives an STL; multiple modules give a ZIP with the STLs and print record. Import the geometry in OrcaSlicer in millimetres at 100% scale. The app checks watertightness, connected material, a **300 × 300 × 300 mm** envelope and **300 g** printed-plastic limit; staff approval and slicer-layer inspection remain required.
 
-**Wing Lab → the same fabrication notebook (release v1.3.1).** Analyse your design in the [general Wing workspace](https://ehsan-roohi.github.io/Aerospace-Structures/wing-lab.html#wing), Solve, then choose **Export to notebook** above the model. In the Code-to-Print notebook select **Wing Lab JSON** in Step 2 and run the upload cell immediately below; inspect the imported inventory, then run Steps 3–6. Native v2 study files add a curated airfoil catalogue, Selig/Lednicer DAT profiles, root/intermediate/tip airfoil and incidence stations, sweep and dihedral; legacy v1 studies remain readable. Geometry, exact rib locations, module count and spar dimensions travel together. Expanded structural studies use a small-displacement 3-D Euler–Bernoulli spatial beam, **not solid/shell FEA or an aerodynamic lift prediction**; unsupported joints, external rods and partial-span spars are not silently analysed by that route. Requested numerical elements (4–100) can increase at mandatory stations; this mesh is preserved in the JSON but does not add physical ribs or alter CAD. Same-material PLA spars print integrally with skin/ribs; carbon rods remain separate purchased parts, and incompatible curved rod paths or multi-material printing are refused. See the [v2 formats, conventions and model limits](computational/printed-wing-solver/web/WING_IMPORT.md#expanded-printed-wing-studies-version-2). The original Student form route remains available. Use the updated notebook and rerun setup to load its pinned **v1.3.1** package; an older saved Drive copy needs the updated notebook. Actual printer-envelope, mass, connected-solid and slicer checks still apply; the default printer remains **300 × 300 × 300 mm**.
-
-**One-piece printing is optional.** In Student form mode choose `MODULE_COUNT = 1`; in Wing Lab JSON mode choose one module in Wing Lab before exporting. The former 300 mm nominal span/chord restriction is removed from both transfer directions. Step 2 now records the actual usable printer envelope (default K2 Pro: 300 × 300 × 300 mm), and Step 5 checks the real CAD bounding boxes before final export. Larger dimensions require a real, staff-approved larger printer and its profile; they do not enlarge the course printer. Axis permutations are checked, not arbitrary-angle packing or brim/support clearance. A 450 mm one-piece model is not approved for the default 300 mm cube by parameter acceptance or JSON download. One module produces one module STL/3MF; the 300 g course mass limit, geometry, material, coupon and slicer checks remain in force.
+The [Code-to-Print notebook](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/main/notebooks/MIE446_Code_to_Print_Wing.ipynb) is optional. Numerical beam-mesh resolution does not change printable geometry. Expanded structural results are a spatial beam approximation, not shell/solid FEA or an aerodynamic lift prediction.
 
 The expanded Wing workspace uses a six-DOF spatial beam for nonzero sweep, dihedral and incidence, not a 3-D solid or aerodynamic solver. Read the [model scope and reproducible validation checks](computational/printed-wing-solver/web/SPATIAL_BEAM_VALIDATION.md) before interpreting a new design. Beam and Truss also provide **Open JSON / Save JSON** for editable working studies, including valid unfinished drafts.
 
@@ -71,24 +69,19 @@ Lectures 01, 02, 03 and 04 and the independent wing-structure lecture are releas
 
 <a id="design-and-build-a-wing"></a>
 
-## Wing project — start here: lesson, coupon, then final wing
+<a id="wing-project--start-here-lesson-coupon-then-final-wing"></a>
+## Wing project — design, download STL, then print
 
-**[OPEN THE PROJECT LESSON / COUPON NOTEBOOK IN COLAB](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/main/notebooks/MIE446_Code_to_Print_Wing.ipynb)**
+**[Open the project instructions](PROJECT.md)** · **[Open Wing Lab](https://ehsan-roohi.github.io/Aerospace-Structures/wing-lab.html#wing)**
 
-This is the **Code-to-Print Wing project lesson**, not Lecture 03 and not the structural-analysis solver. The coupon and the final wing are two stages of this same notebook. Start with **Coupon Only**; do not start by printing the whole wing.
-
-| Stage | Open this resource | What your team does / produces |
+| Stage | Resource | Team output |
 |---|---|---|
-| **1 · Learn and prepare** | [Project lesson in Colab](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/main/notebooks/MIE446_Code_to_Print_Wing.ipynb) · [Two-run workflow](PROJECT.md#3-the-two-run-workflow) | Save a copy in Drive. Read the instructions, run setup, enter your assigned team ID and members, choose **Coupon Only**, record your design and predictions. |
-| **2 · Generate the coupon** | Same notebook, **Step 4: Print and record the rod-fit coupon** · [Coupon instructions](PROJECT.md#step-4-print-and-record-the-rod-fit-coupon) | Run the coupon stage and download the **FitCoupon ZIP**. Extract the coupon STL. This is a small three-hole test piece, **not a wing**; no skin or ribs should appear in it. |
-| **3 · Print and test the fit** | [OrcaSlicer / printing instructions](PRINTING.md) · [Coupon fit and release record (PDF)](docs/course-packets/2026-09-29/MIE446_Coupon_Fit_and_R02_Release_Record.pdf) | Slice the coupon with the staff-approved printer/nozzle/material profile. At your supervised ELab appointment, print it and test the **actual course rod** without forcing it. Measure the rod and record the selected clearance, fit, tester, date and coupon revision; retain photos and the coupon. If the rod is unavailable, do not claim that fit has been confirmed. |
-| **4 · Generate the final wing after approval** | Same notebook, **Final Wing**, Steps 2–6 · [Full project guide](PROJECT.md) | Enter the factual coupon record, change to a later final-wing revision, rerun and inspect the generated geometry. Download the final package with printable wing-module STLs. Obtain staff release before final printing. |
+| **1 · Design and compare** | Wing Lab · [project guide](PROJECT.md#1-design-and-analyze-your-wing) | Save the editable JSON and a short design basis; compare the three layouts under the same lift and self-weight. |
+| **2 · Create print files** | Wing Lab → **Download STL** | One-piece STL, or module-STL ZIP; save the print record. Confirm the physical fit-coupon record if using external rods. |
+| **3 · Slice and obtain approval** | [OrcaSlicer guide](PRINTING.md) | Import in millimetres at 100% scale; review supports/brim, every layer, mass and time with staff. |
+| **4 · Print and document** | Assigned supervised printer slot | Print and assemble the unloaded model; retain the slicer project, measurements and photographs. |
 
-**Bring to ELab:** your laptop with OrcaSlicer, the downloaded coupon ZIP and extracted STL, your saved Colab notebook/design values, and the fit-record form. Staff confirm printer settings and rod availability. **The Colab notebook generates geometry; OrcaSlicer generates printer-specific G-code.** Never send an unrelated sample G-code directly to the printer.
-
-**Where are the ribs and skin?** They belong to the **Final Wing** geometry, not the coupon. A successful Coupon Only run intentionally skips the final wing. [Why the baseline has seven ribs](PROJECT.md#why-the-baseline-has-seven-ribs).
-
-**Appointments and release:** follow the current Canvas announcement and your assigned supervised ELab slot. Earlier September/October preparation plans below are retained as background, not new appointments or permission to print.
+Bring the STL files, slicer project and any rod-fit record to the laboratory. **Wing Lab creates geometry; OrcaSlicer creates printer-specific G-code.** The [coupon/CAD notebook](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/main/notebooks/MIE446_Code_to_Print_Wing.ipynb) remains available as an optional tool.
 
 <details>
 <summary>Earlier preparation schedule and printable planning sheets</summary>
@@ -99,7 +92,7 @@ Three-person teams are already assigned. **Three meetings remain before the Octo
 
 #### September 29 wing-design packet
 
-Use the fillable worksheet and fit/release record below, retaining a copy for your team. **Their original timing is superseded by the October 1/6/8 plan above.** On R01, mark all seven baseline ribs using the updated [project explanation](PROJECT.md#why-the-baseline-has-seven-ribs). The September 29 instructor guide is retained as a previous lesson plan, not the current timetable. Canvas remains authoritative for submissions and supervised appointments.
+Use the fillable worksheet and fit/release record below, retaining a copy for your team. **Their original timing is superseded by the October 1/6/8 plan above.** On R01, mark all seven baseline ribs using the updated [project explanation](PROJECT.md). The September 29 instructor guide is retained as a previous lesson plan, not the current timetable. Canvas remains authoritative for submissions and supervised appointments.
 
 - [Team Wing Layout — R01 (student worksheet)](docs/course-packets/2026-09-29/MIE446_Team_Wing_Layout_R01.pdf)
 - [September 29 Wing Lecture Guide (instructor)](docs/course-packets/2026-09-29/MIE446_September_29_Instructor_Guide.pdf)
@@ -109,15 +102,15 @@ Use the fillable worksheet and fit/release record below, retaining a copy for yo
 
 <img src="docs/baseline_preview.png" alt="Code-generated baseline semi-wing with printed shell, ribs and rod interfaces" width="640">
 
-![MIE 446 workflow from parametric wing design and fabrication to unloaded Jetson inspection and shared damage diagnostics](docs/project_workflow.svg)
+![Wing Lab design, direct STL download, OrcaSlicer and supervised printing](docs/project_workflow.svg)
 
-Teams of three use instructor-provided code to define a parametric semi-wing, verify its geometry, print a rod-fit coupon, build approved modules and document the assembled result. Students may use AI for code assistance, but must understand and independently verify the work.
+Teams of three design and analyze a semi-wing in Wing Lab, download printable STL directly, confirm any rod-fit coupon, build approved modules and document the assembled result. Students may use AI for code assistance, but must understand and independently verify the work.
 
 Every team then performs an **unloaded, non-contact dimensional inspection** with a shared **Seeed Studio reComputer Super J3011 (NVIDIA Jetson Orin Nano 8GB)** and USB camera station. In a separate instructor-led activity, teams analyze force–deflection, vibration and crack evidence collected before and after controlled damage to a sacrificial wing-box specimen.
 
 **Student-built wings are not loaded, cracked, flown or tested to failure.** Assessment focuses on reproducibility, geometry, calibrated inspection, diagnostic reasoning, uncertainty, fabrication evidence, revision and individual understanding.
 
-[![Open updated Wing Project in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/main/notebooks/MIE446_Code_to_Print_Wing.ipynb)
+[Optional legacy CAD/coupon notebook](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/main/notebooks/MIE446_Code_to_Print_Wing.ipynb)
 
 #### Project resources
 

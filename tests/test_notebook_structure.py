@@ -61,7 +61,7 @@ def test_notebook_supports_safe_coupon_and_final_run_all_modes() -> None:
 
     assert 'WORKFLOW_STAGE = "Coupon Only"' in notebook_text
     assert '["Coupon Only", "Final Wing"]' in notebook_text
-    assert 'COURSE_RELEASE = "v1.3.2"' in notebook_text
+    assert 'COURSE_RELEASE = "v1.3.3"' in notebook_text
     assert 'if not (3, 11) <= python_version < (3, 14):' in notebook_text
     assert '"-q"' not in notebook_text
     assert 'if install_result.returncode != 0:' in notebook_text

@@ -2,26 +2,28 @@
 
 MIE 446 Aerospace Structures | Project guide
 
-**You have already made the fit coupon. Now design your own semi-wing in Wing Lab, transfer it to the notebook, and manufacture it.** 
+**Design and analyze your semi-wing in Wing Lab, download STL directly, then slice and manufacture it. No notebook is required.**
 
-![Design in Wing Lab, transfer JSON to the notebook, review STL in OrcaSlicer, then print and assemble](docs/project_workflow.svg)
+![Design and solve in Wing Lab, download STL directly, review it in OrcaSlicer, then print and assemble](docs/project_workflow.svg)
 
 ## 1. Design and analyze your wing
 Open [Wing Lab](https://ehsan-roohi.github.io/Aerospace-Structures/wing-lab.html#wing). Name your project and choose the airfoil, dimensions, skin, ribs, and reinforcement as described below. Add your load, check the root support, and press **Solve**. Review the displacement and stress results, and note any warnings.
 
-Assume your wing belongs to an aircraft with a total mass of 200 g in steady, level cruise. Each semi-wing carries half the total lift, so apply an upward load of approximately 5 N to your semi-wing at x/c = 0.25. 
+Apply an upward distributed lift of **5 N total** at **x/c = 0.25** and enable **Include wing self-weight**. With the aircraft-mass option, use **1 kg** and **n = 1**, giving **4.905 N per semi-wing** (approximately 5 N in steady, level cruise); use the same load for all three comparisons and record the software's semi-wing mass and downward weight.
 
 For a simple starting geometry, use NACA 2412 at the root and NACA 0012 at the tip (root eta = 0, tip eta = 1), taper ratio 0.7 (tip chord = 0.7 × root chord), zero sweep, zero dihedral, and zero incidence. Wing span can vary between 350 and 600 mm, and skin thickness should be any value between 1 and 2 mm. These are suggested starting choices; Wing Lab does not automatically determine the lift applied by the airfoils.
 
-Compare three layouts under the same upward distributed load totaling 5 N: 
-a) no spar, 
-b) one full-span bonded spar at 25% chord, 
-c) the same spar at 40% chord, keeping all other inputs unchanged. 
+Compare three layouts under the same upward distributed load (5 N, or 4.905 N from the aircraft-mass option), keeping all other inputs unchanged:
+
+- No spar.
+- One full-span bonded spar at 25% chord.
+- The same spar at 40% chord.
+
 Use as many ribs as you find useful.
 The spar material should match the other parts of the wing.
 Record mass, tip displacement, tip twist, and maximum nominal stress for each, then briefly justify your choice and build only the selected design after the CAD and print checks.
 
-In your saved Colab notebook, click **+ Text** and title the cell **Design basis**. Write a few sentences answering: Why did you choose this wing? What force did you apply, where, in which direction, and why? Give the value and unit (N for a point force; N/mm for a line load). What result are you aiming for (e.g., maximum tip displacement)? Does your result meet that target? Add one screenshot of the load and result. Ask the instructor if you need help choosing a reasonable load or target.
+In your report, include a short **Design basis**: why you chose this wing, the load magnitude/direction/distribution and chord position, your displacement target, and whether the result meets it. Include a screenshot of the load and result. Give force in N and line-load intensity in N/mm.
 
 ![Illustrative semi-wing with root chord, tip chord, semi-span, ribs and spanwise reinforcement](docs/wing_overview.svg)
 
@@ -29,28 +31,28 @@ In your saved Colab notebook, click **+ Text** and title the cell **Design basis
 
 Our printer is **300 x 300 x 300 mm**. Choose 1 piece only if the actual CAD fits, or split the wing into 2 or 3 modules. Keep the final plastic mass at or below **300 g**. The loads are for computer analysis only; keep the printed wing unloaded.
 
-Keep a **Save JSON** copy so you can reopen and edit the design. After solving the final design, use **Export to notebook** to download the transfer JSON.
+Keep a **Save JSON** copy so you can reopen and edit the design. Include your team and revision in the project name. Solve the final design before creating STL.
 
-## 2. Turn your design into printable files
+## 2. Download printable files directly
 
-Open the [current Code-to-Print notebook](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/main/notebooks/MIE446_Code_to_Print_Wing.ipynb) and choose **File > Save a copy in Drive**.
+In Wing Lab, click **Download STL**. The app builds the **undeformed** skin, ribs, integral spars and any rod sleeves/holes, then checks the mesh, printed-plastic mass and printer envelope.
 
-Follow the [notebook steps PDF](docs/MIE446_Wing_Notebook_Steps.pdf). Select **Wing Lab JSON** and **Final Wing**, enter your team/revision, and upload the JSON from **Export to notebook**. The uploaded file supplies the geometry; do not rebuild the design in the notebook's manual geometry fields.
+- **1 printed module:** download one `.stl` file.
+- **2 or 3 printed modules:** download a ZIP containing the module STLs and `print_record.json`; extract it before slicing.
+- Click **Save print record** to retain the build checks and source design with your files. If a check fails, correct the stated dimensions, thickness or interface; no automatic scaling is applied.
 
-For a complete example with screenshots, open the [simple wing walkthrough PDF](docs/MIE446_Simple_Wing_Walkthrough.pdf). It follows a small one-piece wing from Wing Lab through JSON import, notebook CAD checks and STL export. Use it to learn the workflow, then apply your own design basis and load case.
+For external rods, enter the reference of your **completed physical fit-coupon test** and confirm that the rod diameter, clearance and print process match. Keep the coupon record and photographs. A wing without external rods does not need this record.
 
-If your wing uses external rods, enter your **completed coupon test record**. Keep its revision, rod diameter, clearance and fit result; the final-wing revision must be different. Ask staff to review any changed rod or print process. A wing without external rods does not need that record. Do not start another Coupon Only run for an unchanged, already tested interface.
-
-Run the preview, build and export cells. Save the final verified ZIP containing the STL files and design records. **JSON transfers the design; STL is the geometry you open in OrcaSlicer.**
+**JSON is your editable design; STL is the printable geometry.** The notebook is an optional alternative, not a required project step.
 
 ## 3. Slice, obtain approval and print
 
-Extract a working copy of the ZIP. In **OrcaSlicer**, import the STL for every module. Use the assigned **Creality K2 Pro, 0.4 mm nozzle and staff-approved PLA Pro profile**. Check millimetres, **100% scale**, orientation, actual dimensions, space for supports/brim, every layer, mass and print time.
+If you downloaded a ZIP, extract a working copy. In **OrcaSlicer**, import the STL for every module. Use the assigned **Creality K2 Pro, 0.4 mm nozzle and staff-approved PLA Pro profile**. Check millimetres, **100% scale**, orientation, actual dimensions, space for supports/brim, every layer, mass and print time.
 
 Obtain staff approval before printing. Use the assigned printer procedure and supervise the first layers. Keep the team wing unloaded: it is a non-flying fabrication model, not an airworthy structure.
 
 ## 4. Keep the build evidence
 
-Save your editable Wing Lab JSON, exported transfer JSON, completed notebook, final ZIP, slicer project and photographs of the finished parts/assembly. Label them with the same team and revision. Measure semi-span, root/tip chord and actual mass; record the fit of any rods/module joints.
+Save your editable Wing Lab JSON, STL file(s), print record, short design/comparison report, slicer project and photographs of the finished parts/assembly. Label them with the same team and revision. Measure semi-span, root/tip chord and actual mass; record the fit of any rods/module joints.
 
 **Your result: your own designed and printed semi-wing, with the files needed to reproduce it.** Use Canvas for submission instructions. This page covers the build stage only.

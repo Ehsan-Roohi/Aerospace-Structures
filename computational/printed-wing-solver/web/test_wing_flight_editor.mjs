@@ -14,5 +14,10 @@ input('flightInputMass','');submit();assert.equal(applied,0,'invalid lift leaves
 const solved=E.solve({load:state,nElements:8,nSections:3,nGrid:11});assert.ok(Math.abs(solved.liftN-.981)<1e-10);
 change('k','point');input('p',2);submit();assert.equal(state.kind,'custom');assert.equal(state.items.length,1);assert.equal(state.items[0].force,2,'custom load deliberately replaces flight case');
 state={...E.DEFAULT_LOAD,kind:'flight',aircraftMass:.4,loadFactor:3,distribution:'tip'};editor.openFlight();assert.equal($('flightInputShape').value,'tip');assert.equal($('flightInputMass').value,'0.4');assert.equal($('flightInputN').value,'3');
+// An imported legacy flight case may have inertia relief on: spatial UI must
+// show its supported value explicitly and prevent reselecting the invalid option.
+state={...E.DEFAULT_LOAD,kind:'flight',aircraftMass:1,loadFactor:1,inertiaRelief:true};
+const blocked=UI.mount(w.document.createElement('div'),{workspace:'printed',units:{length:'mm',line:'N/mm',force:'N',moment:'N·mm'},ids,kindValue:{},deleteAttr:'data-delete-load',range:()=>({min:0,max:450}),items:()=>[],mode:()=>state.kind,apply(){},flight:{configure:true,allowInertiaRelief:()=>false,values:()=>state,validate:v=>{assert.equal(v.inertiaRelief,false);},apply:v=>{state=v;}},allowSchrenk:true,refStation:0,refLabel:'root',section:()=>null,defaults:{a:100,b:450,P:1,q0:.004,q1:.004,total:1,xc:.25}});
+blocked.openFlight();const relief=blocked.container.querySelector('#flightInputRelief');assert.equal(relief.value,'false');assert.equal(relief.disabled,true);assert.equal(relief.querySelector('option[value="true"]').disabled,true);blocked.container.querySelector('form').dispatchEvent(new w.Event('submit',{bubbles:true,cancelable:true}));assert.equal(state.inertiaRelief,false);
 console.log('PASS: lift is available before solving, preview does not apply loads, 200 g at 1 g gives 0.981 N/half-wing, validation atomic, explicit case replacement, legacy flight settings reopened.');
 dom.window.close();

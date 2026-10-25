@@ -2937,7 +2937,7 @@ body { margin: 0; }
     mode:()=>S.load.kind==='custom'?(S.load.items.length?'custom':'none'):S.load.kind,
     validate:items=>E.normalize({...engineInput(),load:{...S.load,kind:'custom',items}}),
     apply:items=>{S.load={...S.load,kind:'custom',items};changed();},
-    flight:{configure:true,values:()=>S.load.kind==='flight'?S.load:{aircraftMass:.2,loadFactor:1,distribution:'elliptic',liftFraction:.25,inertiaRelief:false},validate:v=>validateFlightCase(v),apply:v=>{validateFlightCase(v);S.load={...E.DEFAULT_LOAD,...v,fos:S.load.fos,tipMass:S.load.tipMass,selfWeight:!!S.load.selfWeight};changed();}},
+    flight:{configure:true,allowInertiaRelief:()=>!S.load.selfWeight&&!E.analysisCapability(E.makeGeometry(S.geometry),{...engineInput(),load:{kind:'custom',items:[]}}).requires3D,values:()=>S.load.kind==='flight'?S.load:{aircraftMass:.2,loadFactor:1,distribution:'elliptic',liftFraction:.25,inertiaRelief:false},validate:v=>validateFlightCase(v),apply:v=>{validateFlightCase(v);S.load={...E.DEFAULT_LOAD,...v,fos:S.load.fos,tipMass:S.load.tipMass,selfWeight:!!S.load.selfWeight};changed();}},
     allowSchrenk:true,refStation:0,refLabel:'the root y = 0',
     section:y=>R&&!stale&&!R.analysis3D?{outline:E.outerContour(R.geometry,y),chord:E.chordAt(R.geometry,y),xsc:E.interp(y,R.y,R.props.xsc)}:null,
     schrenkCentroid:()=>WingLoadsUI.schrenkData(S.geometry.semiSpan,y=>E.chordAt(R?R.geometry:E.makeGeometry(S.geometry),y),1,[S.geometry.rootChord,S.geometry.tipChord]).stats.schrenk.ybar,

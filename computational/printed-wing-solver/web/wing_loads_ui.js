@@ -319,7 +319,16 @@ const WingLoadsUI = (() => {
       if (!Number.isFinite(v)) throw new Error(`${label}: enter a finite number.`);
       return v;
     };
+    function syncReliefAvailability(){
+      if(!configurableFlight)return;
+      const select=byId(flightPrefix+'Relief'),allowed=ad.flight.allowInertiaRelief?ad.flight.allowInertiaRelief():true;
+      const included=select.querySelector('option[value="true"]');included.disabled=!allowed;
+      if(!allowed)select.value='false';select.disabled=!allowed;
+      let note=select.parentElement.querySelector('.wle-relief-note');if(!note){note=doc.createElement('small');note.className='wle-relief-note';select.parentElement.append(note);}
+      note.textContent=allowed?'':'Inertia relief is unavailable for this case. Use Include wing self-weight above for 1-g gravity. Apply lift case confirms lift without inertia relief.';
+    }
     function flightCase(){
+      syncReliefAvailability();
       const v={kind:'flight',aircraftMass:readNum(flightPrefix+'Mass','Aircraft mass'),loadFactor:readNum(flightPrefix+'N','Load factor'),distribution:byId(flightPrefix+'Shape').value,liftFraction:readNum(flightPrefix+'Xc','Lift position'),inertiaRelief:byId(flightPrefix+'Relief').value==='true'};
       if(v.aircraftMass<=0)throw Error('Aircraft mass must be greater than zero.');
       if(v.liftFraction<0||v.liftFraction>1)throw Error('Lift position x/c must be between 0 and 1.');
@@ -327,7 +336,7 @@ const WingLoadsUI = (() => {
     }
     function visible() {
       const k = canon(byId(id.kind).value), point = k === 'point', curve = k === 'elliptic' || k === 'parabolic', schrenk = k === 'schrenk';
-      const flight=k==='flight';if(configurableFlight)$('.wle-flight').hidden=!flight;
+      const flight=k==='flight';syncReliefAvailability();if(configurableFlight)$('.wle-flight').hidden=!flight;
       const show = { [id.a]: !schrenk, [id.b]: !point && !schrenk, [id.P]: point, [id.q0]: ['uniform', 'rampDown', 'trapezoid'].includes(k), [id.q1]: ['rampUp', 'trapezoid'].includes(k),
         [id.shape]: curve, [id.basis]: curve, [id.value]: curve || schrenk, [id.xc]: true };
       for (const [fid, requested] of Object.entries(show)) { const on=requested&&!flight,e = byId(fid); e.closest('.field').hidden = !on; e.disabled = !on; if (e.tagName === 'INPUT') e.required = on; }

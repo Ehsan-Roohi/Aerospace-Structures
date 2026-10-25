@@ -7,21 +7,23 @@ MIE 446 Aerospace Structures | Project guide
 ![Three steps: Wing Lab design and STL, OrcaSlicer preparation, then printing and assembly](docs/project_workflow.svg)
 
 ## 1. Wing Lab: design, analyze and download STL
-Open [Wing Lab](https://ehsan-roohi.github.io/Aerospace-Structures/wing-lab.html#wing). Name your project and choose the airfoil, dimensions, skin, ribs, and reinforcement as described below. Add your load, check the root support, and press **Solve**. Review the displacement and stress results, and note any warnings.
+Open [Wing Lab](https://ehsan-roohi.github.io/Aerospace-Structures/wing-lab.html#wing) and name your project with your team and revision. Follow the controls in this order.
 
-Apply an upward distributed lift of **5 N total** at **x/c = 0.25** and enable **Include wing self-weight**. With the aircraft-mass option, use **1 kg** and **n = 1**, giving **4.905 N per semi-wing** (approximately 5 N in steady, level cruise); use the same load for all three comparisons and record the software's semi-wing mass and downward weight.
+**Airfoils & planform.** For a simple starting geometry, use NACA 2412 at the root and NACA 0012 at the tip (root eta = 0, tip eta = 1), taper ratio 0.7 (tip chord = 0.7 × root chord), zero sweep, zero dihedral, and zero incidence. Wing span can vary between 350 and 600 mm. These are suggested starting choices.
 
-For a simple starting geometry, use NACA 2412 at the root and NACA 0012 at the tip (root eta = 0, tip eta = 1), taper ratio 0.7 (tip chord = 0.7 × root chord), zero sweep, zero dihedral, and zero incidence. Wing span can vary between 350 and 600 mm, and skin thickness should be any value between 1 and 2 mm. These are suggested starting choices; Wing Lab does not automatically determine the lift applied by the airfoils.
-
-Compare three layouts under the same upward distributed load (5 N, or 4.905 N from the aircraft-mass option), keeping all other inputs unchanged:
+**Structure dimensions and Materials.** Set the skin thickness between 1 and 2 mm, choose your ribs and use the same material for the spar and the rest of the wing. Prepare three layouts, keeping all other inputs unchanged:
 
 - No spar.
 - One full-span bonded spar at 25% chord.
 - The same spar at 40% chord.
 
-Use as many ribs as you find useful.
-The spar material should match the other parts of the wing.
-Record mass, tip displacement, tip twist, and maximum nominal stress for each, then briefly justify your choice and build only the selected design after the CAD and print checks.
+Our printer is **300 x 300 x 300 mm**. Choose 1 piece only if the actual CAD fits, or split the wing into 2 or 3 modules. Keep the final plastic mass at or below **300 g**.
+
+**A semi-wing is sufficient; using Full wing · mirror is optional.**
+
+**Load.** Apply an upward distributed lift of **5 N total** at **x/c = 0.25** and enable **Include wing self-weight**. With the aircraft-mass option, use **1 kg** and **n = 1**, giving **4.905 N per semi-wing** (approximately 5 N in steady, level cruise). Use the same load for all three layouts and record the software's semi-wing mass and downward weight. Wing Lab does not automatically calculate lift from the chosen airfoils.
+
+**Solve and compare.** Check the fixed root support, then press **Solve** for each layout. Review warnings and record mass, tip displacement, tip twist and maximum nominal stress. Briefly justify your choice and build only the selected design after the CAD and print checks. These loads are for computer analysis only; keep the printed wing unloaded.
 
 In your report, include a short **Design basis**: why you chose this wing, the load magnitude/direction/distribution and chord position, your displacement target, and whether the result meets it. Include a screenshot of the load and result. Give force in N and line-load intensity in N/mm.
 
@@ -29,9 +31,7 @@ In your report, include a short **Design basis**: why you chose this wing, the l
 
 *Illustration only. Choose your own dimensions and internal layout in Wing Lab.*
 
-Our printer is **300 x 300 x 300 mm**. Choose 1 piece only if the actual CAD fits, or split the wing into 2 or 3 modules. Keep the final plastic mass at or below **300 g**. The loads are for computer analysis only; keep the printed wing unloaded.
-
-Include your team and revision in the project name. Solve the final design, then click **Download STL** in Wing Lab. The app builds the **undeformed** skin, ribs, integral spars and any rod sleeves/holes, then checks the mesh, printed-plastic mass and printer envelope.
+**Download STL.** Solve the final design, then click **Download STL** in Wing Lab. The app builds the **undeformed** skin, ribs, integral spars and any rod sleeves/holes, then checks the mesh, printed-plastic mass and printer envelope.
 
 - **1 printed module:** download one `.stl` file.
 - **2 or 3 printed modules:** download the ZIP and extract the module STL files before slicing.

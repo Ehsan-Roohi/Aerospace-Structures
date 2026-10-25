@@ -993,6 +993,9 @@ nav.workspace-nav .workspace-link:focus-visible { outline: 3px solid var(--accen
         <button class="tool" data-plot="model" type="button">Model</button>
         <button class="tool" data-plot="stress" type="button">Stress</button>
         <button class="tool" data-plot="disp" type="button">Displacement</button>
+        <button class="tool" data-plot="twist" type="button">Twist</button>
+        <button class="tool" data-plot="bending" type="button">Bending moment</button>
+        <button class="tool" data-plot="torque" type="button">Torque</button>
         <button class="tool" data-plot="fos" type="button">Factor of safety</button>
         <button class="tool" data-plot="mode" type="button">Modes</button>
       </div>
@@ -12662,8 +12665,8 @@ if(typeof module!=='undefined')module.exports=WingWorkspaceUI;
   function installResultDisplayTools(host){
     const tools=el('details',{id:'wingContourOptions'},`<summary style="cursor:pointer;font-weight:700;padding:8px">Contours, probes &amp; image export</summary><div class="hud-row" style="display:flex;flex-wrap:wrap;gap:8px;padding:8px"><label>Contours <select id="wrContour"><option value="smooth">Continuous</option><option value="bands">12 bands</option></select></label><label>Scale <select id="wrScale"><option value="auto">Auto per result</option><option value="fixed">Lock scale across designs</option><option value="manual">Manual limits</option></select></label><label>Min <input id="wrMin" type="number" step="any" style="width:90px"></label><label>Max <input id="wrMax" type="number" step="any" style="width:90px"></label><button class="btn" id="wrApply">Apply limits</button><button class="btn" id="wrTop">Top surface</button><button class="btn" id="wrBottom">Bottom surface</button><button class="btn" id="wrPin" aria-pressed="false">Pin stress</button><button class="btn" id="wrClearPins">Clear pins</button><label><input type="checkbox" id="wrOriginal" checked> Dashed original outline</label><button class="btn" id="wrImage">Save high resolution PNG</button></div><p style="font-size:12px;margin:0 8px 8px" id="wrStatus">Nominal normal beam stress; grey regions are unresolved. These controls change the display only.</p>`);host.append(tools);
     $('#wrContour').onchange=e=>{resultDisplay.bands=e.target.value==='bands';applyResult();};
-    $('#wrScale').onchange=e=>{resultDisplay.scaleMode=e.target.value;if(resultDisplay.scaleMode==='fixed'){const kind={stress:'sigma',disp:'disp',fos:'fos'}[S.plot];if(kind)resultDisplay.scales[resultScaleKey(kind)]={...range};}applyResult();};
-    $('#wrApply').onclick=()=>{const lo=Number($('#wrMin').value),hi=Number($('#wrMax').value),kind={stress:'sigma',disp:'disp',fos:'fos'}[S.plot];if(!kind||!$('#wrMin').value.trim()||!$('#wrMax').value.trim()||!Number.isFinite(lo)||!Number.isFinite(hi)||hi<=lo){flash('Enter finite minimum and maximum values with maximum greater than minimum, in a result view.');return;}resultDisplay.scales[resultScaleKey(kind)]={min:lo,max:hi};resultDisplay.scaleMode='manual';$('#wrScale').value='manual';applyResult();};
+    $('#wrScale').onchange=e=>{resultDisplay.scaleMode=e.target.value;if(resultDisplay.scaleMode==='fixed'){const kind={stress:'sigma',disp:'disp',fos:'fos',twist:'twist',bending:'bending',torque:'torque'}[S.plot];if(kind)resultDisplay.scales[resultScaleKey(kind)]={...range};}applyResult();};
+    $('#wrApply').onclick=()=>{const lo=Number($('#wrMin').value),hi=Number($('#wrMax').value),kind={stress:'sigma',disp:'disp',fos:'fos',twist:'twist',bending:'bending',torque:'torque'}[S.plot];if(!kind||!$('#wrMin').value.trim()||!$('#wrMax').value.trim()||!Number.isFinite(lo)||!Number.isFinite(hi)||hi<=lo){flash('Enter finite minimum and maximum values with maximum greater than minimum, in a result view.');return;}resultDisplay.scales[resultScaleKey(kind)]={min:lo,max:hi};resultDisplay.scaleMode='manual';$('#wrScale').value='manual';applyResult();};
     $('#wrTop').onclick=()=>setView('plan');$('#wrBottom').onclick=()=>setView('bottom');
     $('#wrPin').onclick=()=>{resultDisplay.pinning=!resultDisplay.pinning;partPick=false;$('#wrPin').setAttribute('aria-pressed',String(resultDisplay.pinning));flash(resultDisplay.pinning?'In Stress view, click a visible selected surface to pin its nominal stress. Drag still rotates; maximum 8 pins.':'Stress pinning off.');};
     $('#wrClearPins').onclick=()=>{resultDisplay.pins=[];positionResultLabels();};
@@ -12676,9 +12679,9 @@ if(typeof module!=='undefined')module.exports=WingWorkspaceUI;
     const poster=document.createElement('canvas');poster.width=w+left;poster.height=h+top+85;const ctx=poster.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,poster.width,poster.height);
     const oldRatio=renderer.getPixelRatio(),oldSize=renderer.getSize(new THREE.Vector2()),oldAspect=camera.aspect;
     try{renderer.setPixelRatio(1);renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();renderer.render(scene,camera);ctx.drawImage(canvas,left,top,w,h);
-      ctx.fillStyle='#111';ctx.font='bold 24px Arial';ctx.fillText(S.projectName||'Wing design',22,32,poster.width-44);ctx.font='16px Arial';const kind={stress:'Nominal normal beam stress (MPa)',disp:'Resultant displacement (mm)',model:'Model geometry',fos:'Normal strength ratio',mode:'Normalised mode shape'}[S.plot];ctx.fillText(kind+' · estimated total mass '+nf(R.mass.total,1)+' g',22,59,poster.width-44);
+      ctx.fillStyle='#111';ctx.font='bold 24px Arial';ctx.fillText(S.projectName||'Wing design',22,32,poster.width-44);ctx.font='16px Arial';const kind={stress:'Nominal normal beam stress (MPa)',disp:'Resultant displacement (mm)',model:'Model geometry',fos:'Normal strength ratio',twist:'Elastic axis twist (degrees)',bending:'Resultant bending moment (N·m)',torque:'Signed local torque (N·m)',mode:'Normalised mode shape'}[S.plot];ctx.fillText(kind+' · estimated total mass '+nf(R.mass.total,1)+' g',22,59,poster.width-44);
       ctx.font='14px Arial';ctx.fillText('Deformation scale '+(S.deformed?nf(deformAmount().scale,2):'0 (undeformed)')+' · '+resultDisplay.scaleMode+' colour scale · '+(resultDisplay.bands?'12 bands':'continuous'),22,82,poster.width-44);
-      if(['stress','disp','fos'].includes(S.plot)){const x=22,y=top+12,bh=Math.min(350,h-30);for(let j=0;j<bh;j++){const c=rainbow(1-j/(bh-1));ctx.fillStyle='#'+c.getHexString();ctx.fillRect(x,y+j,28,1);}ctx.fillStyle='#111';ctx.font='14px Arial';for(let i=0;i<=6;i++)ctx.fillText(sig(range.max-(range.max-range.min)*i/6,5),60,y+12+i*bh/6);}
+      if(['stress','disp','fos','twist','bending','torque'].includes(S.plot)){const x=22,y=top+12,bh=Math.min(350,h-30);for(let j=0;j<bh;j++){const c=rainbow(1-j/(bh-1));ctx.fillStyle='#'+c.getHexString();ctx.fillRect(x,y+j,28,1);}ctx.fillStyle='#111';ctx.font='14px Arial';for(let i=0;i<=6;i++)ctx.fillText(sig(range.max-(range.max-range.min)*i/6,5),60,y+12+i*bh/6);}
       for(const p of resultLabels()){if(!p.mesh.visible)continue;const v=resultWorldPoint(p);if(S.clip&&v.x>S.clipY)continue;v.project(camera);if(Math.abs(v.x)>1||Math.abs(v.y)>1||Math.abs(v.z)>1)continue;const x=left+(v.x+1)*w/2,y=top+(1-v.y)*h/2;ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(x,y,5,0,2*Math.PI);ctx.fill();ctx.font='bold 14px Arial';const txt=p.label+' '+sig(p.value,4)+' MPa';const tw=ctx.measureText(txt).width;const tx=Math.min(poster.width-tw-15,Math.max(left+5,x+10)),ty=Math.max(top+20,y-10);ctx.fillStyle='#fff';ctx.fillRect(tx-3,ty-16,tw+6,22);ctx.fillStyle=p.color;ctx.fillText(txt,tx,ty);}
       ctx.fillStyle='#111';ctx.font='14px Arial';ctx.fillText('Prescribed load · x aft, y spanwise, z up · grey = unresolved · nominal beam result, not local solid stress',22,top+h+30,poster.width-44);ctx.fillText(new Date().toISOString()+' · '+(stale?'stale':'solved')+' · original outline dashed when enabled',22,top+h+54,poster.width-44);
     }catch(error){flash('Image export failed: '+error.message);return;}finally{renderer.setPixelRatio(oldRatio);renderer.setSize(oldSize.x,oldSize.y,false);camera.aspect=oldAspect;camera.updateProjectionMatrix();renderer.render(scene,camera);}
@@ -12693,7 +12696,15 @@ if(typeof module!=='undefined')module.exports=WingWorkspaceUI;
   }
   const at = (arr, y) => E.interp(y, R.y, arr);
   const zscAt = (y) => E.interp(y, R.ySec, R.sections.map((s) => s.zsc));
+  const sectionResultMeta={twist:{label:'Elastic axis twist',unit:'°'},bending:{label:'Resultant bending moment',unit:'N·m'},torque:{label:'Signed local torque',unit:'N·m'}};
+  function sectionResultValue(result,y,kind){
+    if(kind==='twist')return E.interp(y,result.y,result.twist)*180/Math.PI;
+    if(kind==='torque')return E.interp(y,result.y,result.analysis3D?.localT||result.T)/1000;
+    if(kind==='bending')return result.analysis3D?Math.hypot(E.interp(y,result.y,result.analysis3D.localM2),E.interp(y,result.y,result.analysis3D.localM3))/1000:Math.abs(E.interp(y,result.y,result.M))/1000;
+    return NaN;
+  }
   function fieldValue(y, x, z, kind,member) {
+    if(sectionResultMeta[kind])return sectionResultValue(R,y,kind);
     if(R.analysis3D){
       if(kind==='sigma')return E.normalStressAt3D(R,y,[x,z],member?.material||R.pla);
       if(kind==='disp'){const p=E.spatialPointMotion(R,y,[x,z]);return p.displacement?Math.hypot(...p.displacement):NaN;}
@@ -12790,7 +12801,7 @@ if(typeof module!=='undefined')module.exports=WingWorkspaceUI;
     return [s * at(R.deflection, y), s * at(R.twist, y)];
   }
   function updateSpatialModel(){
-    const g=model.g,spatial=!!R?.analysis3D&&!geometryPreview,kind=spatial?{stress:'sigma',disp:'disp'}[S.plot]:null;
+    const g=model.g,spatial=!!R?.analysis3D&&!geometryPreview,kind=spatial?{stress:'sigma',disp:'disp',twist:'twist',bending:'bending',torque:'torque'}[S.plot]:null;
     if(kind)range=displayRange(kind,computeRange(kind));
     const scale=spatial?deformAmount().scale:0;
     const place=(y,x,z,mod=0)=>{
@@ -12804,7 +12815,7 @@ if(typeof module!=='undefined')module.exports=WingWorkspaceUI;
       const u=m.userData,pos=m.geometry.attributes.position.array,col=m.geometry.attributes.color.array;
       for(let i=0;i<u.by.length;i++){
         const p=place(u.by[i],u.bx[i],u.bz[i],u.module||0);pos.set(p,3*i);
-        const selected=kind==='disp'||kind==='sigma'&&(S.stressComponent==='spars'?u.kind==='spar':u.kind!=='spar'&&u.kind!=='rod');
+        const selected=!!sectionResultMeta[kind]||kind==='disp'||kind==='sigma'&&(S.stressComponent==='spars'?u.kind==='spar':u.kind!=='spar'&&u.kind!=='rod');
         const value=selected?fieldValue(u.by[i],u.bx[i],u.bz[i],kind,u):null;
         contourSample(m,i,value,selected);
         const c=selected?(Number.isFinite(value)?rainbow((value-range.min)/(range.max-range.min)):new THREE.Color(0x9ba7b4)):new THREE.Color(base[u.kind]);
@@ -12827,7 +12838,7 @@ if(typeof module!=='undefined')module.exports=WingWorkspaceUI;
     if(!model)return;
     if(geometryPreview||R?.analysis3D){updateSpatialModel();return;}
     if (!R) return;
-    const kind = { stress: "sigma", disp: "disp", fos: "fos" }[S.plot];
+    const kind = { stress: "sigma", disp: "disp", fos: "fos", twist:"twist", bending:"bending", torque:"torque" }[S.plot];
     const useField = !!kind && !geometryPreview;
     if (useField) range = displayRange(kind,computeRange(kind));
     const reqFos = R.load.fos;
@@ -12966,6 +12977,7 @@ if(typeof module!=='undefined')module.exports=WingWorkspaceUI;
       : Array.from({ length: 7 }, (_, i) => range.max - ((range.max - range.min) * i) / 6);
     lg.innerHTML = `<div class="bar-c" style="height:${Math.min(220, Math.max(96, canvas.clientHeight * (canvas.clientWidth < 560 ? 0.24 : 0.36)))}px">${bands.map((c) => `<div style="background:#${c.getHexString()}"></div>`).join("")}</div>` +
       `<div class="ticks">${ticks.map((v) => `<span>${kind === "fos" && v >= 10 ? "≥10" : sig(v, 3)}</span>`).join("")}</div>`;
+    if(sectionResultMeta[kind])lt.textContent=sectionResultMeta[kind].label+' ('+sectionResultMeta[kind].unit+') · section value';
     void unit;
   }
   function renderPlotInfo() {
@@ -12981,7 +12993,7 @@ if(typeof module!=='undefined')module.exports=WingWorkspaceUI;
     if (!R) return;
     if(R.analysis3D){$('#plotinfo').textContent=`3-D SPATIAL BEAM · ${airfoilLabel(R.geometry)} · sweep ${R.geometry.sweepDeg||0}° · dihedral ${R.geometry.dihedralDeg||0}° · ${R.analysis3D.elements.length} elements · prescribed global +z loads · ${S.deformed?'displacement magnification ×'+nf(deformAmount().scale,1):'undeformed geometry'} · nominal normal stress only; grey = unresolved; no overall FoS`;return;}
     const g = R.geometry;
-    const kind = { stress: "Spanwise normal stress σ, beam theory, limit load", disp: "Resultant displacement, limit load", fos: `Factor of safety on PLA strength (red: below ${R.load.fos})`, mode: "Natural frequency mode", model: "Model" }[S.plot];
+    const kind = { stress: "Spanwise normal stress σ, beam theory, limit load", disp: "Resultant displacement, limit load", fos: `Factor of safety on PLA strength (red: below ${R.load.fos})`, twist:"Elastic axis twist (degrees) · section result", bending:"Resultant bending moment (N·m) · section result", torque:"Signed local torque (N·m) · section result", mode: "Natural frequency mode", model: "Model" }[S.plot];
     const d = deformAmount();
     const scaleTxt = S.plot === "mode" ? "animated" : S.deformed ? nf(d.scale, 1) : "off";
     let modeTxt = "";
@@ -13149,7 +13161,10 @@ if(typeof module!=='undefined')module.exports=WingWorkspaceUI;
     const y = mix(u.by), x = mix(u.bx), z = mix(u.bz);
     const c = E.chordAt(R.geometry, y);
     let body;
-    if (u.kind === "rod") {
+    if(sectionResultMeta[S.plot]){
+      const meta=sectionResultMeta[S.plot],value=sectionResultValue(R,y,S.plot);
+      body=`<b>${meta.label}</b><br>y ${nf(y,1)} mm<br><b>${sig(value,5)} ${meta.unit}</b><br>Section result; constant across this section.`;
+    } else if (u.kind === "rod") {
       const k = at(R.kappa, y);
       const rc = E.rodCentres(R.geometry, y).reduce((a, b) => (Math.abs(b[0] - x) < Math.abs(a[0] - x) ? b : a));
       const sRod = R.assembly.rodsBonded ? -R.rod.E * k * (z - at(R.props.zc, y)) : -R.rod.E * k * (z - rc[1]);
@@ -13162,7 +13177,7 @@ if(typeof module!=='undefined')module.exports=WingWorkspaceUI;
       body = `<b>${u.kind === "sleeve" ? "Printed sleeve" : "Printed skin"} · module ${u.module + 1}</b><br>y ${nf(y, 1)} mm · x/c ${nf(x / c, 3)}<br>σ ${nf(sg, 3)} MPa ${!Number.isFinite(sg)?'(unresolved)':sg<0?'(compression)':sg>0?'(tension)':'(zero)'}<br>URES ${nf(ds, 3)} mm · ${R.analysis3D?'normal stress only; overall FoS not computed':'FoS '+(fos > 50 ? ">50" : nf(fos, 1))}`;
     }
     pr.innerHTML = body;
-    if(R.analysis3D){
+    if(R.analysis3D&&!sectionResultMeta[S.plot]){
       const location=E.normalStressLocationAt3D?.(R,y,[x,z],u.material||R.pla);
       const note=el('p',{class:'note'});note.textContent=location&&!location.resolved?(location.reason||'Physical-surface stress is unresolved in this end region.'):'Nominal normal-cut beam stress only; root, load-introduction and local fixture stress concentrations are not resolved.';pr.append(note);
     }
@@ -13177,6 +13192,7 @@ if(typeof module!=='undefined')module.exports=WingWorkspaceUI;
   canvas.addEventListener('pointerdown',ev=>{probePointer={x:ev.clientX,y:ev.clientY,id:ev.pointerId};});
   canvas.addEventListener('pointerup',ev=>{
     const down=probePointer;probePointer=null;
+    if(down&&down.id===ev.pointerId&&Math.hypot(ev.clientX-down.x,ev.clientY-down.y)<=5&&sectionResultMeta[S.plot]&&!stale&&!running){canvas.dispatchEvent(new PointerEvent('pointermove',{clientX:ev.clientX,clientY:ev.clientY,pointerId:ev.pointerId,buttons:0}));return;}
     if(!down||down.id!==ev.pointerId||Math.hypot(ev.clientX-down.x,ev.clientY-down.y)>5||!resultDisplay.pinning||S.plot!=='stress'||!R||!model||stale||geometryPreview||running||wingMultiTouch)return;
     if(resultDisplay.pins.length>=8){flash('Maximum 8 stress pins. Clear pins to start again.');return;}
     const rect=canvas.getBoundingClientRect();ndc.set((ev.clientX-rect.left)/rect.width*2-1,-(ev.clientY-rect.top)/rect.height*2+1);raycaster.setFromCamera(ndc,camera);
@@ -13585,7 +13601,7 @@ if(typeof module!=='undefined')module.exports=WingWorkspaceUI;
     // Opaque complete-wing contours show the external skin. Internal ribs/caps
     // touch it and their independent display tessellation can cause black speckles.
     // Keep those parts available in Inside / clip / exploded / member views.
-    const skinContour=S.plot==='stress'&&S.stressComponent!=='spars'&&S.stressComponent!=='rods'&&k==='assembled'&&!S.xray&&!S.clip&&!S.explode;
+    const skinContour=(!!sectionResultMeta[S.plot]||S.plot==='stress')&&S.stressComponent!=='spars'&&S.stressComponent!=='rods'&&k==='assembled'&&!S.xray&&!S.clip&&!S.explode;
     for (const m of model.skins) m.visible = !onlyRibs && !onlyRods&&!onlySpars;
     for (const m of model.sleeves) {
       m.visible = !onlyRibs&&!onlySpars;
@@ -13987,6 +14003,7 @@ function renderObservations() {
   // ------------------------------------------------------------ wiring
   function setPlot(p) {
     if(R?.analysis3D&&(p==='mode'||p==='fos')){flash('Natural frequencies and an overall factor of safety are not computed by the spatial beam model. Use normal Stress, Displacement and the 3-D result record.');return;}
+    if(sectionResultMeta[p]){S.stressComponent='skin';S.anatomy='assembled';S.xray=false;$('#xrayBtn').setAttribute('aria-pressed','false');applyXray();}
     if(p==='fos')S.stressComponent='skin';
     S.plot = p;
     if (p !== "model" && (S.anatomy === "ribs" || S.anatomy === "rods")) {
@@ -14030,7 +14047,7 @@ function renderObservations() {
     renderSection();
   }));
   $("#cmpBtn").addEventListener("click", runCompare);
-  window.addEventListener("resize", () => { if (!$("#tab-section").hidden) { clearTimeout(secTimer); secTimer = setTimeout(renderSection, 150); } if (R) renderLegend({ stress: "sigma", disp: "disp", fos: "fos" }[S.plot]); });
+  window.addEventListener("resize", () => { if (!$("#tab-section").hidden) { clearTimeout(secTimer); secTimer = setTimeout(renderSection, 150); } if (R) renderLegend({ stress: "sigma", disp: "disp", fos: "fos", twist:"twist", bending:"bending", torque:"torque" }[S.plot]); });
 
   setPlot("model");
   if(window.matchMedia('(max-width:560px)').matches) $('#hudControls').open=false;

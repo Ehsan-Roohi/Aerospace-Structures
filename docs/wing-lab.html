@@ -136,6 +136,9 @@ button, input, select { font: inherit; color: inherit; }
 .overlay { position: absolute; pointer-events: none; color: var(--vp-ink); }
 .infocol { left: 14px; top: 12px; display: flex; flex-direction: column; gap: 10px; max-width: calc(100% - 240px); }
 .plotinfo { font: 12px/1.5 var(--font-data); text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25); }
+#wrImage { background:#086bdc; color:#fff; border:2px solid #0755ae; font-weight:700; box-shadow:0 2px 5px rgba(0,65,145,.22); }
+#wrImage:hover { background:#0755ae; border-color:#03438f; }
+#wrImage:focus-visible { outline:3px solid #ffbf47; outline-offset:3px; }
 .plotinfo b { font-weight: 500; color: var(--vp-ink); opacity: 0.65; }
 .legend { display: flex; gap: 8px; font: 11px/1 var(--font-data); margin-top: -4px; }
 .legend .bar-c { width: 16px; border: 1px solid rgba(0, 0, 0, 0.35); display: flex; flex-direction: column; }

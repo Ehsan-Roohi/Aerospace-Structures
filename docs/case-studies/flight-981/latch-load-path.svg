@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 650" role="img" aria-labelledby="title desc"><title id="title">Closed, latched and locked are different states</title><desc id="desc">A load-path schematic contrasts a correctly latched and locked door with the unintended actuator-support load path. This is not a dimensioned latch drawing.</desc><rect width="100%" height="100%" fill="white"/>
+<text x="28" y="41.36" font-family="Arial,sans-serif" font-size="26" fill="#1b3144" font-weight="700">Closed, latched and locked are different states</text>
+<text x="45" y="100.78" font-family="Arial,sans-serif" font-size="23" fill="#1b3144" font-weight="700">Intended restraint</text>
+<rect x="45" y="135" width="500" height="65" fill="#f1f6f9" stroke="#1b3144" stroke-width="2"/>
+<text x="61" y="173.2" font-family="Arial,sans-serif" font-size="20" fill="#1b3144">Pressure load on outward-opening door</text>
+<line x1="295" y1="200" x2="295" y2="231" stroke="#176b94" stroke-width="3"/>
+<polygon points="295,231 289.78041359066526,220.19463477176788 300.21958640933474,220.19463477176788" fill="#176b94"/>
+<rect x="45" y="240" width="500" height="65" fill="#f1f6f9" stroke="#1b3144" stroke-width="2"/>
+<text x="61" y="278.2" font-family="Arial,sans-serif" font-size="20" fill="#1b3144">Latch hooks and fuselage spools</text>
+<line x1="295" y1="305" x2="295" y2="336" stroke="#176b94" stroke-width="3"/>
+<polygon points="295,336 289.78041359066526,325.1946347717679 300.21958640933474,325.1946347717679" fill="#176b94"/>
+<text x="645" y="100.78" font-family="Arial,sans-serif" font-size="23" fill="#1b3144" font-weight="700">Faulted restraint</text>
+<rect x="645" y="135" width="500" height="65" fill="#f1f6f9" stroke="#1b3144" stroke-width="2"/>
+<text x="661" y="173.2" font-family="Arial,sans-serif" font-size="20" fill="#1b3144">Pressure load on outward-opening door</text>
+<line x1="895" y1="200" x2="895" y2="231" stroke="#176b94" stroke-width="3"/>
+<polygon points="895,231 889.7804135906653,220.19463477176788 900.2195864093347,220.19463477176788" fill="#176b94"/>
+<rect x="645" y="240" width="500" height="65" fill="#f1f6f9" stroke="#1b3144" stroke-width="2"/>
+<text x="661" y="278.2" font-family="Arial,sans-serif" font-size="20" fill="#1b3144">Latch hooks and fuselage spools</text>
+<line x1="895" y1="305" x2="895" y2="336" stroke="#176b94" stroke-width="3"/>
+<polygon points="895,336 889.7804135906653,325.1946347717679 900.2195864093347,325.1946347717679" fill="#176b94"/>
+<rect x="45" y="345" width="500" height="93" fill="#edf6f0" stroke="#1b3144" stroke-width="2"/>
+<text x="62" y="380.2" font-family="Arial,sans-serif" font-size="20" fill="#1b3144" font-weight="700">Over-center linkage + engaged lock pins</text>
+<text x="62" y="412.2" font-family="Arial,sans-serif" font-size="20" fill="#1b3144">Restrain latch rotation and opening.</text>
+<rect x="645" y="345" width="500" height="93" fill="#fff0ee" stroke="#1b3144" stroke-width="2"/>
+<text x="661" y="378.2" font-family="Arial,sans-serif" font-size="20" fill="#1b3144" font-weight="700">Not over-center; lock pins not engaged</text>
+<text x="661" y="411.2" font-family="Arial,sans-serif" font-size="20" fill="#1b3144">Pressure back-drives operating linkage.</text>
+<line x1="895" y1="439" x2="895" y2="469" stroke="#b33939" stroke-width="3"/>
+<polygon points="895,469 889.7804135906653,458.1946347717679 900.2195864093347,458.1946347717679" fill="#b33939"/>
+<rect x="645" y="475" width="500" height="83" fill="#fff0ee" stroke="#1b3144" stroke-width="2"/>
+<text x="661" y="510.06" font-family="Arial,sans-serif" font-size="21" fill="#1b3144" font-weight="700">Actuator support → attachment bolts</text>
+<text x="661" y="541.2" font-family="Arial,sans-serif" font-size="20" fill="#1b3144">Unintended restraint path fails.</text>
+<text x="65" y="501.2" font-family="Arial,sans-serif" font-size="20" fill="#1b3144">Handle position and warning indication</text>
+<text x="65" y="533.2" font-family="Arial,sans-serif" font-size="20" fill="#1b3144">must establish actual latch/lock state.</text>
+<text x="28" y="617.62" font-family="Arial,sans-serif" font-size="17" fill="#1b3144">Functional schematic based on the inquiry, printed p. 38. It does not reproduce the mechanism or its geometry.</text>
+</svg>

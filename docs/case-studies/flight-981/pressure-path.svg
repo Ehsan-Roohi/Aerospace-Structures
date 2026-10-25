@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 620" role="img" aria-labelledby="title desc"><title id="title">The floor acquires a new pressure load</title><desc id="desc">Two conceptual compartment sections compare equal cabin/cargo pressure with cargo depressurization. Pressure on the floor then acts downward; control cables lie below it.</desc><rect width="100%" height="100%" fill="white"/>
+<text x="28" y="41.36" font-family="Arial,sans-serif" font-size="26" fill="#1b3144" font-weight="700">The floor acquires a new pressure load</text>
+<text x="60" y="101.92" font-family="Arial,sans-serif" font-size="22" fill="#1b3144" font-weight="700">Before the door opens</text>
+<rect x="60" y="135" width="475" height="320" fill="#f7fafc" stroke="#1b3144" stroke-width="2"/>
+<rect x="62" y="138" width="471" height="152" fill="#eef5fb" stroke="#eef5fb" stroke-width="2"/>
+<rect x="62" y="297" width="471" height="155" fill="#f3f5f7" stroke="#f3f5f7" stroke-width="2"/>
+<line x1="60" y1="294" x2="535" y2="294" stroke="#1b3144" stroke-width="7"/>
+<text x="84" y="186.78" font-family="Arial,sans-serif" font-size="23" fill="#1b3144">Passenger cabin</text>
+<text x="84" y="367.78" font-family="Arial,sans-serif" font-size="23" fill="#1b3144">Cargo compartment</text>
+<line x1="95" y1="319" x2="485" y2="319" stroke="#a66612" stroke-width="5"/>
+<text x="105" y="436.48" font-family="Arial,sans-serif" font-size="18" fill="#a66612">Control cables below the floor</text>
+<text x="650" y="101.92" font-family="Arial,sans-serif" font-size="22" fill="#1b3144" font-weight="700">Immediately after cargo decompression</text>
+<rect x="650" y="135" width="475" height="320" fill="#f7fafc" stroke="#1b3144" stroke-width="2"/>
+<rect x="652" y="138" width="471" height="152" fill="#eef5fb" stroke="#eef5fb" stroke-width="2"/>
+<rect x="652" y="297" width="471" height="155" fill="#f3f5f7" stroke="#f3f5f7" stroke-width="2"/>
+<line x1="650" y1="294" x2="1125" y2="294" stroke="#1b3144" stroke-width="7"/>
+<text x="674" y="186.78" font-family="Arial,sans-serif" font-size="23" fill="#1b3144">Passenger cabin</text>
+<text x="674" y="367.78" font-family="Arial,sans-serif" font-size="23" fill="#1b3144">Cargo compartment</text>
+<line x1="685" y1="319" x2="1075" y2="319" stroke="#a66612" stroke-width="5"/>
+<text x="695" y="436.48" font-family="Arial,sans-serif" font-size="18" fill="#a66612">Control cables below the floor</text>
+<text x="85" y="238.64" font-family="Arial,sans-serif" font-size="24" fill="#176b94">p_cabin ≈ p_cargo</text>
+<text x="85" y="503.2" font-family="Arial,sans-serif" font-size="20" fill="#1b3144">Passenger / cargo loads exist,</text>
+<text x="85" y="531.2" font-family="Arial,sans-serif" font-size="20" fill="#1b3144">but little pressure difference across floor.</text>
+<text x="680" y="235.64" font-family="Arial,sans-serif" font-size="24" fill="#b33939">p_cabin &gt; p_cargo</text>
+<line x1="715" y1="245" x2="715" y2="286" stroke="#b33939" stroke-width="3"/>
+<polygon points="715,286 709.7804135906653,275.1946347717679 720.2195864093347,275.1946347717679" fill="#b33939"/>
+<line x1="815" y1="245" x2="815" y2="286" stroke="#b33939" stroke-width="3"/>
+<polygon points="815,286 809.7804135906653,275.1946347717679 820.2195864093347,275.1946347717679" fill="#b33939"/>
+<line x1="915" y1="245" x2="915" y2="286" stroke="#b33939" stroke-width="3"/>
+<polygon points="915,286 909.7804135906653,275.1946347717679 920.2195864093347,275.1946347717679" fill="#b33939"/>
+<line x1="1015" y1="245" x2="1015" y2="286" stroke="#b33939" stroke-width="3"/>
+<polygon points="1015,286 1009.7804135906653,275.1946347717679 1020.2195864093347,275.1946347717679" fill="#b33939"/>
+<line x1="1085" y1="245" x2="1085" y2="286" stroke="#b33939" stroke-width="3"/>
+<polygon points="1085,286 1079.7804135906651,275.1946347717679 1090.2195864093349,275.1946347717679" fill="#b33939"/>
+<line x1="650" y1="357" x2="650" y2="412" stroke="white" stroke-width="5"/>
+<line x1="652" y1="382" x2="590" y2="382" stroke="#176b94" stroke-width="5"/>
+<polygon points="590,382 600.8053652282322,376.78041359066526 600.8053652282322,387.21958640933474" fill="#176b94"/>
+<text x="560" y="414.62" font-family="Arial,sans-serif" font-size="17" fill="#176b94">Opening</text>
+<text x="675" y="504.06" font-family="Arial,sans-serif" font-size="21" fill="#b33939">Δp_floor(t) = p_cabin(t) − p_cargo(t)</text>
+<text x="675" y="535.2" font-family="Arial,sans-serif" font-size="20" fill="#1b3144">Downward pressure load bends the floor.</text>
+<text x="28" y="595.62" font-family="Arial,sans-serif" font-size="17" fill="#1b3144">Conceptual section, not DC-10 geometry. Normal passenger loads and shell pressure loads are omitted.</text>
+</svg>

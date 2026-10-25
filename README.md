@@ -160,6 +160,8 @@ The G-code is provided for inspection only. Do not send it directly to a printer
 
 **[The Gimli Glider: an aerospace-structures case study](GIMLI_GLIDER.md)** follows Air Canada Flight 143 from a failed fuel-quantity defense to a 17-minute unpowered glide and emergency landing. It connects unit discipline, system redundancy, landing loads, changing load paths, local damage, crashworthiness and occupant survival. The reading includes licensed historical photographs, original engineering diagrams, discussion questions, the official investigation report and video links.
 
+**[Turkish Airlines Flight 981 and structural failure propagation](TURKISH_AIRLINES_FLIGHT_981.md)** — [illustrated reading](https://ehsan-roohi.github.io/Aerospace-Structures/case-studies/flight-981/). Examines cargo-door restraint, over-center latch geometry, transient floor-pressure loads and common-cause damage to flight controls. Includes five original figures, an explicitly assumed two-compartment pressure model, a floor-beam calculation, official inquiry/FAA/NTSB sources and a correction to the starting Zoomit narrative.
+
 ## Assessment and course support
 
 | Component | Course weight | Details |

@@ -1,0 +1,11 @@
+{
+  "model": "linear equal-capacitance two-compartment surrogate",
+  "initial_overpressure_kPa": 20,
+  "cargo_outflow_per_s": 8,
+  "vent_conductance_per_s": [
+    0.6,
+    6
+  ],
+  "time_end_s": 2,
+  "measured_accident_data": false
+}

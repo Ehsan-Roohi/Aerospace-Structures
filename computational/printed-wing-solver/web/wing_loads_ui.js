@@ -324,8 +324,9 @@ const WingLoadsUI = (() => {
       const select=byId(flightPrefix+'Relief'),allowed=ad.flight.allowInertiaRelief?ad.flight.allowInertiaRelief():true;
       const included=select.querySelector('option[value="true"]');included.disabled=!allowed;
       if(!allowed)select.value='false';select.disabled=!allowed;
-      let note=select.parentElement.querySelector('.wle-relief-note');if(!note){note=doc.createElement('small');note.className='wle-relief-note';select.parentElement.append(note);}
-      note.textContent=allowed?'':'Inertia relief is unavailable for this case. Use Include wing self-weight above for 1-g gravity. Apply lift case confirms lift without inertia relief.';
+      select.closest('.field').hidden=!allowed;
+      const explanation=select.closest('fieldset').querySelector('p.note');
+      explanation.textContent='Each semi-wing receives n × aircraft mass × 9.81 / 2 N of gross lift. This replaces the current load case. The distribution is prescribed, not calculated from the airfoil.'+(allowed?' With inertia relief the net structural force differs from gross lift.':' Include wing self-weight applies the downward 1-g weight separately.');
     }
     function flightCase(){
       syncReliefAvailability();

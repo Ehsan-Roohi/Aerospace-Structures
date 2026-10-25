@@ -1416,7 +1416,7 @@ body { margin: 0; }
   function syncCompactStatus(customText) {
     const chip=$('#stateChip'),preview=$('#statePreview');if(!preview)return;
     const label=chip.textContent,full=$('#stateText').textContent;
-    preview.textContent=customText?'See status details.':label==='Linear range exceeded'?'Illustrative only · reduce loads.':label==='Input error'?'Check input details.':label==='Analysis blocked'?'Confirm imported structure.':label==='Empty study'?'Choose Airfoil & planform.':label==='Out of date'?'Press Solve to update.':label==='Solving'?'Computing…':/no load/i.test(full)?'No loads applied.':label==='Solved · 3-D beam'?'Nominal beam results.':/, exceeded/.test(full)?'Strength check exceeded.':'Results match inputs.';
+    preview.textContent=customText?'See status details.':label==='Linear range exceeded'?'Illustrative only · reduce loads.':label==='Input error'?'Check input details.':label==='Analysis blocked'?'Confirm imported structure.':label==='Empty study'?'Choose Airfoil & planform.':label==='Out of date'?'Press Solve to update.':label==='Solving'?'Computing…':/no load/i.test(full)?'No loads applied.':label==='Solved · 3-D beam'?(R?.analysis3D?.loadMapping?.endWrenches.length?'End-load approximation · see results warning.':'Nominal beam results.'):/, exceeded/.test(full)?'Strength check exceeded.':'Results match inputs.';
     chip.title=full;
   }
   function setStatus(text) { renderStatus(text);syncCompactStatus(text); }
@@ -2786,7 +2786,7 @@ body { margin: 0; }
     host.querySelector('h2').after(el('p',{class:'callout'},'<b>Case-specific benchmark evidence.</b> Valid airfoil/angle inputs do not establish structural accuracy for every design. Custom DAT profiles and other untested constructions remain unvalidated applications of this beam approximation—not a validated angular box. <a href="https://github.com/Ehsan-Roohi/Aerospace-Structures/blob/main/computational/printed-wing-solver/web/SPATIAL_BEAM_VALIDATION.md" target="_blank" rel="noopener">Read the reference cases and intended-use limits.</a>'));
     host.querySelector('h2').after(el('div',{class:'callout'},'<b>Nominal beam response—not local wing-root stress</b><p>The beam clamp cannot reproduce load redistribution at an oblique physical fixture. Grey surface regions and gaps in stress curves have no resolved normal-cut stress; they are not zero stress. Rapid profile transitions or a broad chord can also make the normal-plane mapping unresolved. The geometric end mask is only a minimum exclusion, not a validated Saint-Venant decay distance. Point loads assume rigid section load transfer; local ribs, hardpoints and skin indentation require a separate model.</p>'));
     host.querySelector('h2').after(el('p',{class:'callout'},'<b>Torsional warping stress is not recovered.</b> In the reference pure-torque case, raw solid normal-stress discrepancies reached 22.3%, despite close global compliance and nominal affine stress. These contours are not a validated local strength check.'));
-    if(a.loadMapping?.endWrenches.length)host.querySelector('h2').after(el('p',{class:'callout'},`${a.loadMapping.endWrenches.length} load item/interval(s) project beyond the finite beam axis. Their full global force and moment are retained as equivalent endpoint wrenches; local end response is nominal, not a resolved physical load-introduction stress.`));
+    if(a.loadMapping?.endWrenches.length)host.querySelector('h2').after(el('p',{class:'callout',role:'note'},`End-load approximation: ${a.loadMapping.endWrenches.length} load item/interval(s) project beyond the beam reference axis. Total force and moment are preserved at the nearest endpoint. Global bending and reactions include these loads; local stress near that endpoint is approximate. Do not use it to assess the load attachment.`));
     const stressTools=el('div',{class:'lesson-actions',role:'group','aria-label':'Spatial nominal stress display'});
     for(const[value,label]of [['skin','Show nominal skin stress'],['spars','Show nominal spar stress']]){const b=el('button',{type:'button',class:'btn','aria-pressed':String(S.stressComponent===value)},label);b.disabled=value==='spars'&&!R.geometry.spars.length;b.onclick=()=>{S.stressComponent=value;if(value==='spars')setAnatomy('inside');setPlot('stress');stressTools.querySelectorAll('button').forEach(n=>n.setAttribute('aria-pressed',String(n===b)));};stressTools.append(b);}host.querySelector('h2').after(stressTools);
     chart(charts,'Global displacement ux / uy / uz','mm',a.spanStations,curves(a.displacements));
@@ -3482,8 +3482,7 @@ body { margin: 0; }
     const statusDetails=$('#wingStatusDetails');
     document.addEventListener('pointerdown',e=>{if(!statusDetails.contains(e.target))statusDetails.open=false;});
     statusDetails.addEventListener('keydown',e=>{if(e.key==='Escape'){statusDetails.open=false;statusDetails.querySelector('summary').focus();e.stopPropagation();}});
-    $('#app .wl-run-actions').append(clearButton);
-    const quickClear=clearButton.cloneNode(true);quickClear.id='wingQuickClear';quickClear.onclick=e=>requestClearWingStudy(null,e.currentTarget);printedWorkspace.tools.prepend(quickClear);
+    printedWorkspace.tools.prepend(clearButton);
     const projectInput=$('#wingProjectName');
     projectInput.oninput=()=>projectInput.setCustomValidity('');
     projectInput.onchange=()=>{try{S.projectName=WingStudyIO.normalizeProjectName(projectInput.value);projectInput.value=S.projectName;projectInput.setCustomValidity('');renderInputs();recordWingHistory();}catch(e){projectInput.setCustomValidity(e.message);projectInput.reportValidity();}};
@@ -3505,7 +3504,7 @@ body { margin: 0; }
     const modelHelp=el('details',{},'<summary>Model &amp; manufacturing limits</summary>');modelHelp.append($('#wingModelNote'));helpBody.append(modelHelp);
     helpBody.append(el('details',{id:'wingHelpStructure'},'<summary>Ribs, rods &amp; bonded spars · model and limits</summary>'));
     const historyHelp=el('details',{class:'wing-history-help'},'<summary>Undo / Redo</summary><p class="note">Undo/Redo restores up to 100 saved input states, including geometry, project name, materials, loads and the cleared canvas. A new edit clears Redo. Outside text fields use Ctrl/Cmd+Z, Ctrl/Cmd+Shift+Z or Ctrl+Y. Restored inputs need Solve unless automatic solving is enabled. History is kept for this page session, not saved in JSON.</p>');helpBody.append(historyHelp);
-    helpBody.append(el('details',{},'<summary>Selection &amp; clearing</summary><p class="note">Click visible parts to edit them. To select the entire wing, click Select wing, or use Ctrl/Cmd+A outside text fields. An outline and Delete selected button confirm the selection. You can also drag a rectangle around the whole wing. Delete selected or the Delete key opens Clear confirmation. Esc cancels selection. New / Clear is beside Solve; Undo restores your previous inputs. Normal dragging rotates the view.</p>'));
+    helpBody.append(el('details',{},'<summary>Selection &amp; clearing</summary><p class="note">Click visible parts to edit them. To select the entire wing, click Select wing, or use Ctrl/Cmd+A outside text fields. An outline and Delete selected button confirm the selection. You can also drag a rectangle around the whole wing. Delete selected or the Delete key opens Clear confirmation. Esc cancels selection. New / Clear is in the main toolbar; Undo restores your previous inputs. Normal dragging rotates the view.</p>'));
     const example=el('button',{class:'btn',type:'button',id:'wgCourseExample'},'Optional course wing example');example.onclick=()=>{if(confirm('Replace the current wing with the course example? Geometry, materials and connections will reset, and applied loads will be cleared.'))window.dispatchEvent(new CustomEvent('wing-learning-stage',{detail:'project'}));};helpBody.append(example);
     printedWorkspace.tools.insertBefore(help,printedWorkspace.tools.querySelector('.wing-quick-hint'));
     const usageHelp=el('details',{},'<summary>Mouse, touch &amp; browser backup</summary>'),quickHint=printedWorkspace.tools.querySelector('.wing-quick-hint');
@@ -3519,7 +3518,7 @@ body { margin: 0; }
     for(const id of ['clear','open-json','geometry','structure','materials','rib','rod','spar','load']){
       const button=printedWorkspace.tools.querySelector('[data-wing-action="'+id+'"]');if(button)primaryTools.append(button);
     }
-    primaryTools.append(meshControl);primaryTools.setAttribute('aria-label','Geometry, structure, loads and mesh');
+    primaryTools.prepend($('#runBtn'));primaryTools.append(meshControl,$('#wingAutoSolve').closest('label'));primaryTools.setAttribute('aria-label','Geometry, structure, loads and mesh');
     for(const id of ['select-wing','inside','save-json','notebook']){
       const button=printedWorkspace.tools.querySelector('[data-wing-action="'+id+'"]');if(button)secondaryTools.append(button);
     }

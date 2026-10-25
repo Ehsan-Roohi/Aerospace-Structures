@@ -313,6 +313,28 @@ td.num { font-family: var(--font-data); font-variant-numeric: tabular-nums; text
 #app .wing-experiments[open] > div { position: fixed; overflow: auto; }
 #app #wingInputHelp { position: sticky; right: 0; background: var(--panel); z-index: 2; }
 @media (max-width: 1100px) { #app.wing-workspace > .bar > .wl-run { max-width: none; } #app.wing-workspace:not(.learning-view) { grid-template-areas: "bar" "quick" "display" "view" "dock"; } #app .wing-tool-row .btn,#app .wing-inline-display .hud-row button,#app .wing-inline-display .wl-zoom button { min-height: 44px; } }
+/* Use available width rather than reserving two mostly empty tool rows. */
+#app.wing-workspace > .bar { padding:6px 10px; gap:6px 10px; }
+#app.wing-workspace > .bar > .wl-run { display:flex; flex:0 1 auto; max-width:300px; margin-left:auto; border:0; border-radius:0; box-shadow:none; }
+#app > .bar .wl-run-actions:empty { display:none; }
+#app > .bar .brand { padding-right:10px; gap:7px; }
+#app > .bar .brand b { font-size:17px; }
+#app > .bar .group { padding-right:8px; gap:3px; }
+#app > .bar .tool { padding:0 7px; }
+#app .wing-quick-tools { display:flex; flex-wrap:wrap; gap:6px; padding:7px 10px; align-items:center; }
+#app .wing-tool-row { display:contents; }
+#app .wing-quick-tools .wing-history-tools { margin-left:auto!important; }
+#app .wing-quick-tools #runBtn { min-height:38px; height:38px; padding:0 13px; }
+#app .wing-quick-tools .wl-auto { white-space:nowrap; font-size:12px; gap:5px; }
+#app .wing-quick-tools .wing-selection-feedback[hidden] { display:none; }
+@media(max-width:1100px){
+ #app.wing-workspace > .bar > .wl-run { flex:0 1 auto; max-width:none; padding:0; }
+ #app .wing-quick-tools #runBtn { min-height:44px; height:44px; }
+ #app .wing-quick-tools .wing-history-tools { margin-left:0!important; }
+ #app .wing-inline-display .wl-vbody { gap:5px 8px; padding:6px 8px; }
+ #app .wing-inline-display .wl-vbody > *,#app .wing-inline-display .hud-row { max-width:100%; min-width:0; flex-wrap:wrap; }
+ #app .wing-inline-display .seg { display:flex; flex-wrap:wrap; max-width:100%; }
+}
 .wl-modelnote { margin: 0; padding: 10px 14px; font-size: 12px; line-height: 1.45; color: var(--muted); border-bottom: 1px solid var(--line); }
 .wl-gate { margin: 0; padding: 10px 14px; border-bottom: 1px solid var(--line); background: color-mix(in srgb, var(--warn) 12%, var(--panel)); font-size: 13px; line-height: 1.45; }
 .wl-gate p { margin: 0 0 6px; } .wl-gate-list { margin: 4px 0 8px; padding: 0; list-style: none; display: grid; gap: 4px; }

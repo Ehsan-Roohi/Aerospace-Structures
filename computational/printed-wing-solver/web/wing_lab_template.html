@@ -341,6 +341,14 @@ td.num { font-family: var(--font-data); font-variant-numeric: tabular-nums; text
  #app > .bar .wing-project-name { margin:0; }
  #app > .bar .wing-project-name input { width:145px; }
 }
+/* The sidebar and large geometry popup share these same real controls. */
+#wingSide #wingAdvancedGeometry fieldset { min-width:0; padding:8px; }
+#wingSide #wingAdvancedGeometry .wing-geometry-grid { grid-template-columns:minmax(0,1fr); gap:7px; }
+#wingSide #wingAdvancedGeometry .wing-geometry-field { display:grid; grid-template-columns:minmax(0,1fr) 128px; gap:2px 6px; }
+#wingSide #wingAdvancedGeometry .wing-geometry-field small { grid-column:1; }
+#wingSide #wingAdvancedGeometry .wing-geometry-field input,#wingSide #wingAdvancedGeometry .wing-geometry-field select { grid-column:2; grid-row:1 / span 2; min-width:0; }
+#wingSide #wingAdvancedGeometry .note { font-size:12px; }
+#wingSide #wingAdvancedGeometry select,#wingSide #wingAdvancedGeometry input { max-width:100%; }
 /* Dense desktop commands: no auto margins or empty full-width groups. */
 #app.wing-workspace > .bar > .wl-run { margin-left:0; max-width:270px; }
 #app > .bar .group > span { display:none; }
@@ -843,6 +851,7 @@ body { margin: 0; }
   };
   let R = null, lastGeoKey = "", stale = true, running = false, pending = false;
   let printedWorkspace=null,wingSelection=null;
+  let advancedGeometryEditor=null,geometryEditorStamp='';
   const lessonAnswers = new Map();
   let savedLessonLoad = null;
   let designBaseline = null, saveDesignAfterRun = false;
@@ -1234,28 +1243,11 @@ body { margin: 0; }
     if (focusId && document.getElementById(focusId)) document.getElementById(focusId).focus({ preventScroll: true });
   }
   function renderGeometryForm() {
-    const g = S.geometry, area = WingGeometry.area(g);
-    $("#wingGeometryForm").innerHTML = `<h3>Build your wing</h3><button class="btn wing-airfoil-launch" type="button" id="wgAirfoilPicker"><b>Airfoil &amp; planform ▾</b><span>${esc(airfoilLabel(g))} · library, DAT, taper, twist, sweep &amp; dihedral</span></button>
-      ${geoField("semiSpan", "wgSpan", "Semi-span", "mm, root to tip", g.semiSpan, 1)}
-      <div class="field"><label for="wgChordMode">Chord input method</label><select id="wgChordMode"><option value="tip">Root + Tip → calculate λ</option><option value="ratio">Root + λ → calculate Tip</option></select></div>
-      ${geoField("rootChord", "wgRoot", "Root chord", "mm", g.rootChord, 1)}
-      ${geoField("tipChord", "wgTip", "Tip chord", "mm, straight taper, ≤ root chord", g.tipChord, 1)}
-      ${geoField("taper", "wgTaper", "Taper ratio λ", "tip chord / root chord · 1 = rectangular", +(g.tipChord/g.rootChord).toPrecision(8), "any")}
-      <p class="note" id="wgChordHint"></p>
-      <div class="field"><label for="wgModules">Printed modules<small>equal lengths; seams between them</small></label><select id="wgModules" aria-invalid="${!!fieldErrors.modules}" aria-describedby="wgErr-modules">${[1, 2, 3].map((m) => `<option value="${m}" ${m === +g.modules ? "selected" : ""}>${m === 1 ? "1 · one piece" : m}</option>`).join("")}</select></div>${errLine("modules")}
-      <dl class="kv wl-kv"><dt>Semi-wing area</dt><dd>${nf(area / 100, 1)} cm²</dd><dt>Taper ratio</dt><dd>${nf(g.tipChord / g.rootChord, 3)}</dd><dt>Aspect ratio (full wing)</dt><dd>${nf((4 * g.semiSpan ** 2) / (2 * area), 2)}</dd><dt>Module length</dt><dd>${mm(g.semiSpan / g.modules)}</dd></dl>`;
-    $("#wlGeometryBadge").textContent = S.emptyStudy?'New wing · not created':`${airfoilLabel(g)} · ${nf(g.semiSpan, 0)} × ${nf(g.rootChord, 0)}/${nf(g.tipChord, 0)} mm`;
-    $("#wgAirfoilPicker").onclick=e=>openAdvancedGeometryPopup(e.currentTarget);
-    const ratioMode=window.wingChordInputMode==='ratio';
-    $('#wgChordMode').value=ratioMode?'ratio':'tip';$('#wgTip').readOnly=ratioMode;$('#wgTaper').readOnly=!ratioMode;
-    $('#wgTip').setAttribute('aria-readonly',String(ratioMode));$('#wgTaper').setAttribute('aria-readonly',String(!ratioMode));
-    $('#wgChordHint').textContent=ratioMode?'Tip is calculated from Root × λ. Changing Root preserves λ.':'λ is calculated from Tip / Root. Enter both chord lengths.';
-    $('#wgChordMode').onchange=e=>{window.wingChordInputMode=e.target.value;renderInputs(true);};
-    $("#wgTaper").onchange=e=>{if(window.wingChordInputMode!=='ratio')return;const ratio=numberFrom(e.target);if(!Number.isFinite(ratio)||ratio<=0||ratio>1){e.target.setCustomValidity('Taper ratio must be greater than 0 and no greater than 1.');e.target.reportValidity();return;}e.target.setCustomValidity('');applyGeometry({tipChord:S.geometry.rootChord*ratio},'tipChord','taper ratio '+ratio);};
-    $("#wgTaper").onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();e.target.onchange(e);}};
-    for (const [id, k] of [["wgSpan", "semiSpan"], ["wgRoot", "rootChord"], ["wgTip", "tipChord"]])
-      $("#" + id).addEventListener("change", (e) => {if(k==='tipChord'&&window.wingChordInputMode==='ratio')return;const value=numberFrom(e.target),patch={ [k]:value };if(k==='rootChord'&&window.wingChordInputMode==='ratio')patch.tipChord=value*(S.geometry.tipChord/S.geometry.rootChord);applyGeometry(patch,k,e.target.value.trim()===''?'an empty value':mm(value));});
-    $("#wgModules").addEventListener("change", (e) => applyGeometry({ modules: +e.target.value }, "modules", `${e.target.value} module${e.target.value === "1" ? "" : "s"}`));
+    const g=S.geometry;
+    $('#wlGeometryBadge').textContent=S.emptyStudy?'New wing · not created':`${airfoilLabel(g)} · ${g.planform||'linear'} · ${nf(g.semiSpan,0)} mm`;
+    // One live form is portalled between the sidebar and the toolbar popup.
+    // Repainting other inputs must not destroy that form, its placeholder or draft.
+    if(advancedGeometryEditor){const stamp=JSON.stringify(g);if(stamp!==geometryEditorStamp){geometryEditorStamp=stamp;advancedGeometryEditor.refresh();}}
   }
   function suggestRib(g, ribs) {
     const sup = [0, ...ribs, g.semiSpan];
@@ -3440,10 +3432,10 @@ body { margin: 0; }
     studyFiles: () => studyFiles,
     view: () => (model ? { distance: camera.position.distanceTo(controls.target), resetDistance, solved: { semiSpan: model.g.semiSpan, rootChord: model.g.rootChord, tipChord: model.g.tipChord },preview:geometryPreview,members:{ribs:model.ribs.length,rods:model.rods.length,sparParts:(model.spars||[]).length} } : null),
   };
-  const advancedGeometryHome=el('div',{hidden:true}),advancedGeometryPanel=el('div',{id:'wingAdvancedGeometry'});
-  advancedGeometryHome.append(advancedGeometryPanel);$('#wingSide').append(advancedGeometryHome);
-  const advancedGeometryEditor=WingGeometryUI.mount(advancedGeometryPanel,{getGeometry:()=>S.geometry,applyGeometry,onApplied:()=>{printedWorkspace?.close();setAnatomy('inside');}});
-  function openAdvancedGeometryPopup(anchor){if(!printedWorkspace)return;advancedGeometryEditor.refresh();printedWorkspace.open('Airfoils & planform · dimensions, taper, twist, sweep, dihedral',advancedGeometryPanel,anchor);printedWorkspace.popup.style.width='min(680px,calc(100vw - 16px))';printedWorkspace.position();}
+  const advancedGeometryPanel=el('div',{id:'wingAdvancedGeometry'});
+  $('#wingGeometryForm').append(advancedGeometryPanel);
+  advancedGeometryEditor=WingGeometryUI.mount(advancedGeometryPanel,{getGeometry:()=>S.geometry,applyGeometry,onApplied:()=>{printedWorkspace?.close();setAnatomy('inside');}});
+  function openAdvancedGeometryPopup(anchor){if(!printedWorkspace)return;renderGeometryForm();printedWorkspace.open('Airfoils & planform · dimensions, taper, twist, sweep, dihedral',advancedGeometryPanel,anchor);printedWorkspace.popup.style.width='min(680px,calc(100vw - 16px))';printedWorkspace.position();}
   function showEmptyWing(){
     clearRenderedWing();wingSelection?.clear();R=null;stale=true;geometryPreview=true;lastGeoKey=null;
     $('#app > .dock').hidden=true;$('#probe').hidden=true;$('#legend').hidden=true;$('#wingEmptyStart')?.removeAttribute('hidden');
@@ -3496,7 +3488,7 @@ body { margin: 0; }
     editor.newLoad();printedWorkspace.open('Wing load · upward positive',editor.container,anchor);
     if(p){$('#wingKind').value='point';$('#wingKind').dispatchEvent(new Event('change'));editor.acceptPick(p);}else $('#wingKind').focus({preventScroll:true});
   }
-  function showWingDeformation(){if(!R||stale||running||gateOpen())throw new Error('Solve the applied loads first.');S.deformed=true;$('#defBtn').setAttribute('aria-pressed','true');setPlot('disp');applyResult();canvas.scrollIntoView({block:'center'});}
+  function showWingDeformation(){if(!R||stale||running||gateOpen())throw new Error('Solve the applied loads first.');printedWorkspace?.close();S.deformed=true;$('#defBtn').setAttribute('aria-pressed','true');setPlot('disp');applyResult();canvas.scrollIntoView({block:'center'});}
   function openWingStructurePopup(anchor,focusId){printedWorkspace.open('Structure · dimensions',$('#wingStructureForm'),anchor);const target=focusId&&$('#'+focusId);target?.scrollIntoView({block:'nearest'});target?.focus({preventScroll:true});}
   // A load click selects its real editor; an orbit/pan drag never changes the selection.
   let loadPointer=null,loadMoved=false;
@@ -3604,7 +3596,7 @@ body { margin: 0; }
     for(const b of standardViews.querySelectorAll('button')){b.title=b.textContent;b.setAttribute('aria-label',b.textContent);b.textContent={iso:'3D',plan:'Top',section:'Side',front:'Front'}[b.dataset.view];}
     viewBody.insertBefore(standardViews,inlineHud);viewBody.insertBefore(explodeControls,inlineHud);
     installResultDisplayTools(viewBody);
-    const showShape=el('button',{class:'btn',type:'button',id:'wingShowBendingTwist'},'Show bending & twist');showShape.onclick=()=>{try{showWingDeformation();}catch(e){flash(e.message);}};viewBody.append(showShape);
+    const showShape=el('button',{class:'btn',type:'button',id:'wingShowBendingTwist'},'Show bending & twist');showShape.onclick=()=>{try{showWingDeformation();}catch(e){flash(e.message);}};primaryTools.append(showShape);
     // Display controls already live beside the wing; keep the toolbar focused on files and help.
     const viewJump=[...secondaryTools.querySelectorAll('button')].find(b=>b.textContent==='View & display ▾');
     for(const id of ['select-wing','inside'])printedWorkspace.tools.querySelector('[data-wing-action="'+id+'"]')?.remove();

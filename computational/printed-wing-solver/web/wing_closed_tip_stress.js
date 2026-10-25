@@ -1,0 +1,119 @@
+/* Exact closed-tip geometry: section-equilibrium nominal normal stress only.
+ * No displacement solution, artificial tip section, or solid-FE field is used.
+ * Coordinates are aircraft x aft, y span, z up; all sections remain y=constant.
+ */
+const WingClosedTipStress = (() => {
+  'use strict';
+  const GX=[-.9602898564975363,-.7966664774136267,-.525532409916329,-.1834346424956498,.1834346424956498,.525532409916329,.7966664774136267,.9602898564975363];
+  const GW=[.1012285362903763,.2223810344533745,.3137066458778873,.362683783378362,.362683783378362,.3137066458778873,.2223810344533745,.1012285362903763];
+  const uniq=a=>[...new Set(a)].sort((a,b)=>a-b);
+  function solve(input,tools){
+    const {normalize,polyIntegrals,prescribedFlightLoads,customLine,customFraction,Geometry,GRAV=9.80665}=tools,E=tools.E;
+    const {g,pla,rod,asm,load:source,crit}=normalize(input),L=g.semiSpan,chord=tools.chordAt||((g,y)=>Geometry.chordAt(g,y));
+    if(g.tipChord!==0||!['elliptic','delta'].includes(g.planform))throw Error('Closed-tip normal stress requires an exact elliptic or delta zero-chord tip.');
+    const zero=v=>Math.abs(v||0)<=1e-12;
+    if(!zero(g.sweepDeg)||!zero(g.dihedralDeg)||!zero(Geometry.stationAt(g,0).incidenceDeg)||!zero(Geometry.stationAt(g,L).incidenceDeg)||(g.stations||[]).some(s=>!zero(s.incidenceDeg)))throw Error('Closed-tip normal stress currently requires zero user sweep, dihedral and incidence at every station.');
+    if(g.rodFractions.length||g.spars.length)throw Error('Closed-tip normal stress currently supports skin and ribs only.');
+    const ribs=E.ribStations(g),seams=E.seams(g),cavityEnd=E.cavityTipLimit(g);
+    if(seams.length&&!asm.seamsBonded)throw Error('Closed-tip normal stress requires bonded seams or a one-piece wing.');
+    if(source.tipMass)throw Error('A mass attached at a zero-area apex needs a resolved attachment model. Move it to a finite section.');
+    let base=source.kind==='flight'?prescribedFlightLoads(source,g):source.kind==='tip'?[{kind:'point',position:L,force:source.tipForce,fraction:source.tipFraction}]:source.items;
+    const planformArea=(g.planform==='elliptic'?Math.PI/4:.5)*L*g.rootChord;
+    // Existing flight tables are arrow-display records only. Structural integration
+    // retains the exact chord law, including the elliptic endpoint square root.
+    if(source.kind==='flight'&&source.distribution==='planform')base=base.map(p=>({...p,actualChordLaw:true,total:source.aircraftMass*source.loadFactor*GRAV/2}));
+    if(base.some(p=>p.kind==='point'&&p.position>=L&&p.force!==0))throw Error('A point force at the zero-area apex is not admitted. Apply the load at a finite section or use a distributed load.');
+    const boundaries=uniq([0,L,cavityEnd,Math.max(0,cavityEnd-g.cap),Math.min(L,g.cap),...(g.stations||[]).map(s=>s.eta*L),...ribs.flatMap(y=>[Math.max(0,y-g.ribThickness/2),Math.min(L,y+g.ribThickness/2)])]);
+    const sectionCache=new Map();
+    function section(y){
+      if(!(y>=0&&y<L))return null;
+      if(sectionCache.has(y))return sectionCache.get(y);
+      const loops=E.ringLoops(g,y),outer=E.outerContour(g,y,241),oi=polyIntegrals(outer),ii=polyIntegrals(loops.inner||[]);
+      const cap=y<g.cap||y>=cavityEnd-g.cap,rib=ribs.some(q=>Math.abs(y-q)<=g.ribThickness/2),filled=cap||rib;
+      const p=oi.map((v,k)=>v-(filled?0:ii[k])),A=p[0];
+      if(!(A>0&&Number.isFinite(A)))throw Error(`Invalid positive-area material section at y=${y} mm.`);
+      const xc=p[2]/A,zc=p[1]/A,scale=chord(g,y);
+      // Reintegrate centered, nondimensional polygons to avoid raw-moment cancellation.
+      const centered=polygon=>polyIntegrals(polygon.map(q=>[(q[0]-xc)/scale,(q[1]-zc)/scale]));
+      const po=centered(outer),pi=filled?[0,0,0,0,0,0]:centered(loops.inner||[]),h=po.map((v,k)=>v-pi[k]);
+      const Izz=h[3],Ixx=h[4],Ixz=h[5],det=Ixx*Izz-Ixz*Ixz,trace=Ixx+Izz;
+      if(!(scale>0&&Ixx>0&&Izz>0&&det>1e-12*trace*trace))throw Error(`The centered section tensor is singular or ill conditioned at y=${y} mm; no regularized stress is returned.`);
+      const shellA=oi[0]-ii[0],extra=A-shellA;
+      const out={y,A,xc,zc,scale,outer,filled,cap,rib,Ixx,Izz,Ixz,det,shellA,capA:cap?extra:0,ribA:!cap&&rib?extra:0};
+      sectionCache.set(y,out);return out;
+    }
+    function gauss(fn,a,b){const v=[];for(let i=0;i<8;i++){const q=fn((a+b)/2+(b-a)*GX[i]/2),w=GW[i]*(b-a)/2;for(let k=0;k<q.length;k++)v[k]=(v[k]||0)+w*q[k];}return v;}
+    function integrate(fn,a,b,depth=0){
+      if(!(b>a))return [0,0,0];
+      const full=gauss(fn,a,b),mid=(a+b)/2,left=gauss(fn,a,mid),right=gauss(fn,mid,b),fine=left.map((v,k)=>v+right[k]);
+      const okay=fine.every((v,k)=>Math.abs(v-full[k])<=2e-9*Math.max(1,Math.abs(v)));
+      if(okay)return fine;
+      if(depth>=16)throw Error('Closed-tip load/mass quadrature did not converge; no unverified stress is returned.');
+      const u=integrate(fn,a,mid,depth+1),v=integrate(fn,mid,b,depth+1);return u.map((x,k)=>x+v[k]);
+    }
+    function splitIntegral(fn,a,b,breaks=boundaries){let out=null;const cuts=uniq([a,b,...breaks.filter(q=>q>a&&q<b)]);for(let i=1;i<cuts.length;i++){const v=integrate(fn,cuts[i-1],cuts[i]);if(!out)out=v;else out=out.map((x,k)=>x+v[k]);}return out||[0,0,0];}
+    const rho=pla.rho/1000,massParts=splitIntegral(y=>{const s=section(y);return [s.shellA,s.ribA,s.capA].map(a=>rho*a);},0,L);
+    const mass={shell:massParts[0],ribs:massParts[1],caps:massParts[2],spars:0,rods:0,tip:0};mass.printed=mass.total=mass.shell+mass.ribs+mass.caps;
+    const position=(p,y)=>Geometry.transformPoint(g,y,p.localPoint||[customFraction(p,y)*chord(g,y),0]);
+    const loadBreaks=p=>p.kind==='table'?p.points.map(q=>q[0]):p.kind==='schrenk'?[0,L]:[p.start,p.end];
+    const line=(p,y)=>p.actualChordLaw?p.total*chord(g,y)/planformArea:p.kind==='schrenk'?.5*p.total*(chord(g,y)/planformArea+4/(Math.PI*L)*Math.sqrt(Math.max(0,1-(y/L)**2))):p.kind==='distributed'?(y<p.start||y>p.end?0:p.qStart+(p.qEnd-p.qStart)*(y-p.start)/(p.end-p.start)):customLine(p,g,y);
+    function sourceWrench(y,referenceX=0){
+      let V=0,Mx=0,minusMy=0;
+      for(const p of base){
+        if(p.kind==='point'){if(p.position>=y){const P=position(p,p.position);V+=p.force;Mx+=(p.position-y)*p.force;minusMy+=(P[0]-referenceX)*p.force;}continue;}
+        const bs=loadBreaks(p),a=Math.max(y,bs[0]),b=bs.at(-1);if(!(b>a))continue;
+        const v=splitIntegral(q=>{const f=line(p,q),P=position(p,q);return [f,(q-y)*f,(P[0]-referenceX)*f];},a,b,uniq([...boundaries,...bs]));V+=v[0];Mx+=v[1];minusMy+=v[2];
+      }
+      if(source.selfWeight){const v=splitIntegral(q=>{const s=section(q),f=-rho*s.A*GRAV/1000,P=Geometry.transformPoint(g,q,[s.xc,s.zc]);return [f,(q-y)*f,(P[0]-referenceX)*f];},y,L);V+=v[0];Mx+=v[1];minusMy+=v[2];}
+      return {V,Mx,minusMy};
+    }
+    const cuts=new Map();let maxRecoveryResidual=0;
+    function cutAt(y){
+      if(!Number.isFinite(y)||y<0||y>L)throw Error('Stress station must lie within the physical span.');
+      if(cuts.has(y))return cuts.get(y);
+      if(y===L){const out={y,nominal:true,resolved:false,endZone:'tip',reason:'Zero-area apex: stress is undefined; no finite tip section is substituted.',force:[0,0,0],moment:[0,0,0],localForce:[0,0,0],localMoment:[0,0,0]};cuts.set(y,out);return out;}
+      const s=section(y),reference=Geometry.transformPoint(g,y,[s.xc,s.zc]),w=sourceWrench(y,reference[0]);
+      // Unknowns are stress coefficients for x/chord,z/chord. N=Mz=0 for global-z loads.
+      const target=-w.Mx/(s.scale**3),b=-target*s.Ixz/s.det,c=target*s.Ixx/s.det;
+      const recoveredX=(b*s.Ixx+c*s.Ixz)*s.scale**3,recoveredZ=(b*s.Ixz+c*s.Izz)*s.scale**3;
+      const residual=Math.max(Math.abs(recoveredX),Math.abs(recoveredZ+w.Mx))/Math.max(1,Math.abs(w.Mx));maxRecoveryResidual=Math.max(maxRecoveryResidual,residual);
+      if(!(residual<1e-8))throw Error('Recovered normal stress failed section moment equilibrium.');
+      const out={...s,y,reference,force:[0,0,w.V],moment:[w.Mx,-w.minusMy,0],localForce:[0,0,-w.V],localMoment:[-w.minusMy,w.Mx,0],coefficientX:b,coefficientZ:c,nominal:true,resolved:true,endZone:null,recoveryResidual:residual};cuts.set(y,out);return out;
+    }
+    function evaluateStress(y,point,material=pla){
+      const cut=cutAt(y);if(!cut.resolved)return {value:NaN,resolved:false,nominal:true,station:y,endZone:'tip',reason:cut.reason};
+      const modulus=typeof material==='number'?material:material.E;
+      if(!Number.isFinite(modulus)||Math.abs(modulus-pla.E)>1e-8*pla.E)throw Error('This stress-only model contains only the selected homogeneous skin/rib material.');
+      const value=cut.coefficientX*(point[0]-cut.xc)/cut.scale+cut.coefficientZ*(point[1]-cut.zc)/cut.scale;
+      return {value,resolved:true,nominal:true,station:y,endZone:null,reason:'Section-equilibrium nominal spanwise normal stress; local taper, rib, bond and tip concentrations are unresolved.'};
+    }
+    const tipStations=Array.from({length:7},(_,k)=>L*(1-10**(-k-1))),gridCount=Math.min(1001,Math.max(21,input.nGrid||5*(input.nElements||40)+1));
+    const yy=uniq([...Array.from({length:gridCount},(_,i)=>L*i/(gridCount-1)),...boundaries,...base.flatMap(p=>p.kind==='point'?[p.position]:loadBreaks(p)),...tipStations]);
+    const y=Float64Array.from(yy),recovered=yy.map(cutAt),tension=[],compression=[];
+    recovered.forEach(c=>{if(!c.resolved){tension.push(NaN);compression.push(NaN);return;}const values=c.outer.map(p=>evaluateStress(c.y,p).value);tension.push(Math.max(0,...values));compression.push(Math.max(0,...values.map(v=>-v)));});
+    const tipSamples=tipStations.map(q=>{const i=yy.indexOf(q);return {y:q,distanceToTip:L-q,chord:chord(g,q),tension:tension[i],compression:compression[i]};});
+    const qtip=base.filter(p=>p.kind!=='point').reduce((v,p)=>v+line(p,L),0),qscale=Math.max(1,...base.filter(p=>p.kind!=='point').map(p=>Math.abs(line(p,L*(1-1e-6)))));
+    const sqrtCoefficient=base.reduce((v,p)=>v+(p.kind==='schrenk'?.5*p.total*4/(Math.PI*L)*Math.sqrt(2/L):p.kind==='elliptic'&&p.end===L&&p.shape!=='end'?p.peak*(p.shape==='middle'?2:Math.sqrt(2))/Math.sqrt(p.end-p.start):0),0);
+    const uniformDivergence=g.planform==='delta'&&Math.abs(qtip)>1e-10*qscale,sqrtDivergence=g.planform==='delta'&&!uniformDivergence&&Math.abs(sqrtCoefficient)>1e-10*qscale/Math.sqrt(L),divergent=uniformDivergence||sqrtDivergence;
+    const tipBehavior={endpoint:'undefined-zero-area',status:divergent?'divergent':g.planform==='elliptic'?'vanishing-for-bounded-line-load':'limit-unclassified',samples:tipSamples,tipLineLoadNPerMm:qtip,reason:uniformDivergence?'Delta solid-tip nominal bending stress diverges as 1/(L-y) for nonzero bounded endpoint line load.':sqrtDivergence?'A noncancelling elliptic endpoint component gives unbounded nominal delta-tip bending stress; near-cancelling endpoint loads require a separate asymptotic assessment.':g.planform==='elliptic'?'For bounded line loads and no apex point force, the homothetic solid elliptic-tip nominal bending stress tends to zero; the apex itself has no stress value.':'A zero endpoint line load does not by itself determine the delta-tip limit. The displayed finite samples are not a global maximum.',globalMaximumCertified:false};
+    // Display gravity as quadrature points; stress integration above remains continuous.
+    const gravity=[];
+    function gravityMarkers(a,b,depth=0){
+      const density=q=>{const s=section(q),P=Geometry.transformPoint(g,q,[s.xc,s.zc]),m=rho*s.A;return [m,m*q,m*P[0]];};
+      const mid=(a+b)/2,full=gauss(density,a,b),left=gauss(density,a,mid),right=gauss(density,mid,b),fine=left.map((v,k)=>v+right[k]);
+      if(!fine.every((v,k)=>Math.abs(v-full[k])<=2e-9*Math.max(1,Math.abs(v)))){if(depth>=16)throw Error('Self-weight display quadrature did not converge.');gravityMarkers(a,mid,depth+1);gravityMarkers(mid,b,depth+1);return;}
+      for(const[lo,hi]of[[a,mid],[mid,b]])for(let j=0;j<8;j++){const q=(lo+hi)/2+(hi-lo)*GX[j]/2,s=section(q),m=rho*s.A*GW[j]*(hi-lo)/2;gravity.push({kind:'point',position:q,force:-m*GRAV/1000,fraction:s.xc/chord(g,q),localPoint:[s.xc,s.zc],gravity:true,quadratureDisplay:true});}
+    }
+    if(source.selfWeight)for(let k=1;k<boundaries.length;k++)gravityMarkers(boundaries[k-1],boundaries[k]);
+    const root=cutAt(0),applied=sourceWrench(0),displayWeight=-gravity.reduce((a,p)=>a+p.force,0),actualWeight=source.selfWeight?mass.total*GRAV/1000:0;
+    const load={...source,kind:'custom',items:[...base,...gravity],sourceLoad:source,gravitySummary:source.selfWeight?{weightN:actualWeight,appliedN:applied.V+actualWeight,netN:applied.V,quadrature:'Continuous adaptive 8-point Gauss integration split at CAD cap/rib/cavity transitions; display points are quadrature markers'}:undefined};
+    const limitations=['Section-equilibrium nominal spanwise normal stress on actual aircraft-y material polygons; no displacement or frame solution','Zero user sweep, dihedral and incidence only; delta planform leading-edge sweep is retained geometrically','Locally prismatic Navier stress is a beam approximation; finite taper and rib/cap transitions do not resolve 3-D concentrations','Actual CAD skin/rib/cap union is included without overlap; thin printed material is represented by effective homogeneous isotropic properties','Shear, torsional shear, warping, local buckling, bond/joint stresses, dynamics and overall safety certification are unavailable','The exact zero-area apex has undefined stress; finite samples are not a certified global maximum'];
+    const verification={method:'Outboard load integration and polygon moment recovery',normalStressEquilibriumRelativeResidual:maxRecoveryResidual,forceBalanceResidual:root.force[2]-applied.V,momentBalanceResidual:root.moment[0]-applied.Mx,selfWeightN:actualWeight,displayQuadratureWeightN:displayWeight,displayQuadratureRelativeError:Math.abs(displayWeight-actualWeight)/Math.max(1,actualWeight),adaptiveQuadratureRelativeTolerance:2e-9,passed:maxRecoveryResidual<1e-8};
+    const NaNs=()=>Float64Array.from(y,()=>NaN),V=Float64Array.from(recovered,c=>c.force[2]),M=Float64Array.from(recovered,c=>c.moment[0]),T=Float64Array.from(recovered,c=>c.moment[1]);
+    const mesh={requestedElements:input.nElements||null,actualElements:0,nodeCount:0,mandatorySpanStations:boundaries,stressStations:y.length};
+    const analysis3D={stressOnly:true,method:'Exact closed-tip section-equilibrium nominal normal stress (no deformation solve)',limitations,units:{length:'mm',force:'N',moment:'N mm',stress:'MPa',mass:'g'},evaluateStress,cutAt,normalStress:{skinTension:tension,skinCompression:compression,spars:[]},resultants:recovered.map(c=>({y:c.y,force:c.force,moment:c.moment,localForce:c.localForce,localMoment:c.localMoment,endZone:c.endZone})),localM2:M,localM3:Float64Array.from(y,()=>0),localT:T,loadMapping:{endWrenches:[],method:'Original physical positions; continuous outboard wrench integration'},verification,tipBehavior,spanStations:yy,sectionSamples:[],validity:{nominalOnly:true,stressOnly:true,zeroAreaApexExcluded:true}};
+    return {analysis3D,geometry:g,pla,rod,assembly:asm,load,criteria:crit,y,ySec:boundaries,sections:[],mass,V,M,T,stress:{sigTop:Float64Array.from(tension),sigBot:Float64Array.from(compression,v=>-v),spars:[]},ribs,seams,seamsActive:[],deflection:NaNs(),twist:NaNs(),chordwiseDeflection:NaNs(),fem:{fBending:[],fTorsion:[]},mesh,verification,tipBehavior,checks:[],governing:null,appliedForce:root.force[2],appliedMoment:root.moment[0]};
+  }
+  return {solve};
+})();
+if(typeof module!=='undefined'&&module.exports)module.exports=WingClosedTipStress;

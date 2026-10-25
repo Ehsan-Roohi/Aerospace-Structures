@@ -25,7 +25,7 @@ const WingGeometry = (() => {
     for (const name of ['sweepReferenceFraction','twistReferenceFraction']) {
       if (Object.hasOwn(g,name)) out[name] = finite(g[name], name, 0, 1);
     }
-    if(g.planform==='elliptic'&&!Object.hasOwn(g,'sweepReferenceFraction'))out.sweepReferenceFraction=.5;
+    if(g.planform==='elliptic'&&(g.tipChord===0||!Object.hasOwn(g,'sweepReferenceFraction')))out.sweepReferenceFraction=.5;
     if(g.planform==='delta')out.sweepReferenceFraction=1;
     if (Object.hasOwn(g,'twistEnabled')) {
       if (typeof g.twistEnabled !== 'boolean') throw Error('twistEnabled must be true or false.');
@@ -48,6 +48,7 @@ const WingGeometry = (() => {
     }
     return out;
   }
+  const closedTip=g=>g.tipChord===0&&['elliptic','delta'].includes(g.planform);
   const chordAt = (g,y) => {const e=Math.max(0,Math.min(1,y/g.semiSpan));return g.planform==='elliptic'?Math.sqrt(g.rootChord**2*(1-e*e)+g.tipChord**2*e*e):g.rootChord+e*(g.tipChord-g.rootChord);};
   const chordDerivative=(g,y)=>g.planform==='elliptic'?(g.tipChord**2-g.rootChord**2)*(y/g.semiSpan)/(g.semiSpan*chordAt(g,y)):(g.tipChord-g.rootChord)/g.semiSpan;
   const area = g => {if(g.planform!=='elliptic')return (g.rootChord+g.tipChord)*g.semiSpan/2;const k=Math.sqrt(Math.max(0,1-(g.tipChord/g.rootChord)**2));return g.semiSpan*(g.tipChord+g.rootChord*(k?Math.asin(k)/k:1))/2;};
@@ -100,6 +101,6 @@ const WingGeometry = (() => {
       loadFrame:'Aircraft +z (up); N for point loads, N/mm per projected y for line loads.',
       message:reasons.length?`Geometry and CAD export are available, but structural Solve is not supported for ${reasons.join(', ')}. The current solver is a straight, untwisted spanwise beam, not a validated 3-D swept/dihedral frame. Set these angles to zero and align the leading edge to use this solver; no straight-wing stress or safety result will be substituted.`:'Straight, untwisted spanwise beam approximation; local sections may vary. Loads are prescribed, not computed from aerodynamic twist.'};
   }
-  return {LIMITS,normalizeGeometryFields,chordAt,chordDerivative,area,stationAt,airfoilAt,transformPoint,inversePoint,analysisCapability};
+  return {LIMITS,closedTip,normalizeGeometryFields,chordAt,chordDerivative,area,stationAt,airfoilAt,transformPoint,inversePoint,analysisCapability};
 })();
 if(typeof module!=='undefined'&&module.exports)module.exports=WingGeometry;

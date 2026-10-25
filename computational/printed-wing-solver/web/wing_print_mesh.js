@@ -5,13 +5,13 @@ const WingPrintMesh=(()=>{
  'use strict';
  const E=typeof WingEngine!=='undefined'?WingEngine:require('./engine.js');
  const G=typeof WingGeometry!=='undefined'?WingGeometry:require('./wing_geometry.js');
- const VERSION='1.1.0',ENVELOPE=[300,300,300],MAX_MASS=300;
+ const VERSION='1.2.0',ENVELOPE=[300,300,300],MAX_MASS=300;
  const add=(a,b)=>a.map((x,i)=>x+b[i]),sub=(a,b)=>a.map((x,i)=>x-b[i]),scale=(a,s)=>a.map(x=>x*s),dot=(a,b)=>a.reduce((s,x,i)=>s+x*b[i],0),cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],unit=a=>scale(a,1/Math.hypot(...a));
  const signedArea=p=>p.reduce((s,a,i)=>{const b=p[(i+1)%p.length];return s+a[0]*b[1]-b[0]*a[1];},0)/2;
  const linspace=(a,b,n)=>Array.from({length:n},(_,i)=>a+(b-a)*i/(n-1));
  function spanStations(g,a,b){
   const expanded=g.planform&&g.planform!=='linear'||g.airfoil||g.stations||g.sweepDeg||g.dihedralDeg||g.sweepReferenceFraction;
-  const points=linspace(a,b,g.planform==='elliptic'?49:expanded?17:5);
+  const points=g.planform==='elliptic'&&G.closedTip(g)?linspace(Math.asin(a/g.semiSpan),Math.asin(b/g.semiSpan),97).map(t=>g.semiSpan*Math.sin(t)):linspace(a,b,g.planform==='elliptic'?49:expanded?17:5);
   for(const s of g.stations||[])if(s.eta*g.semiSpan>a&&s.eta*g.semiSpan<b)points.push(s.eta*g.semiSpan);
   if(g.twistEnabled)for(let i=1;i<(g.stations||[]).length;i++){const s=g.stations[i-1],t=g.stations[i];for(const y of linspace(s.eta*g.semiSpan,t.eta*g.semiSpan,Math.max(2,Math.ceil(Math.abs(t.incidenceDeg-s.incidenceDeg))+1)))if(y>a&&y<b)points.push(y);}
   return [...new Set(points)].sort((x,y)=>x-y);
@@ -65,10 +65,10 @@ const WingPrintMesh=(()=>{
   const check=(m,label)=>{const status=m.status();if(status!=='NoError'||m.isEmpty())throw Error(label+': invalid CAD solid ('+status+').');return m;};
   function loft(ys,polygonAt,transform=(y,p)=>G.transformPoint(g,y,p)){
    const loops=ys.map(y=>polygonAt(y).map(p=>Array.from(p)));if(loops.length<2||loops.some(p=>p.length!==loops[0].length))throw Error('Inconsistent section contours.');
-   if(signedArea(loops[0])<0)loops.forEach(p=>p.reverse());const n=loops[0].length,vertices=loops.flatMap((loop,j)=>loop.flatMap(p=>transform(ys[j],p))),tri=[];
-   for(let j=0;j<loops.length-1;j++)for(let i=0;i<n;i++){const a=j*n+i,b=(j+1)*n+i,c=(j+1)*n+(i+1)%n,d=j*n+(i+1)%n;tri.push(a,b,c,a,c,d);}
+   if(signedArea(loops[0])<0)loops.forEach(p=>p.reverse());const n=loops[0].length,pointEnd=loops.at(-1).every(p=>Math.hypot(p[0]-loops.at(-1)[0][0],p[1]-loops.at(-1)[0][1])<1e-10),rings=pointEnd?loops.slice(0,-1):loops,vertices=rings.flatMap((loop,j)=>loop.flatMap(p=>transform(ys[j],p))),tri=[];
+   for(let j=0;j<rings.length-1;j++)for(let i=0;i<n;i++){const a=j*n+i,b=(j+1)*n+i,c=(j+1)*n+(i+1)%n,d=j*n+(i+1)%n;tri.push(a,b,c,a,c,d);}
    for(const t of triangulate([loops[0]],1e-8,false))tri.push(...t);
-   const end=(loops.length-1)*n;for(const t of triangulate([loops.at(-1)],1e-8,false))tri.push(end+t[2],end+t[1],end+t[0]);
+   const end=(rings.length-1)*n;if(pointEnd){const apex=vertices.length/3;vertices.push(...transform(ys.at(-1),loops.at(-1)[0]));for(let i=0;i<n;i++)tri.push(end+i,apex,end+(i+1)%n);}else for(const t of triangulate([loops.at(-1)],1e-8,false))tri.push(end+t[2],end+t[1],end+t[0]);
    let volume=0;for(let i=0;i<tri.length;i+=3){const a=vertices.slice(3*tri[i],3*tri[i]+3),b=vertices.slice(3*tri[i+1],3*tri[i+1]+3),c=vertices.slice(3*tri[i+2],3*tri[i+2]+3);volume+=dot(a,cross(b,c))/6;}if(volume<0)for(let i=0;i<tri.length;i+=3)[tri[i+1],tri[i+2]]=[tri[i+2],tri[i+1]];
    return check(own(new Manifold(new Mesh({numProp:3,vertProperties:new Float32Array(vertices),triVerts:new Uint32Array(tri)}))),'Loft');
   }
@@ -76,7 +76,8 @@ const WingPrintMesh=(()=>{
   function slab(s,a,b){const first=own(s.trimByPlane([0,1,0],a));return own(first.trimByPlane([0,-1,0],-b));}
   try{
    onProgress('Building exterior and cavity…');const outer=loft(spanStations(g,0,g.semiSpan),y=>E.outerContour(g,y,161));
-   const cavity=loft(spanStations(g,g.cap,g.semiSpan-g.cap),y=>E.ringLoops(g,y,81,2,2).inner);
+   const cavityEnd=G.closedTip(g)?E.cavityTipLimit(g)-g.cap:g.semiSpan-g.cap;if(cavityEnd<=g.cap)throw Error('The hollow root region is too short. Use a thicker root airfoil or larger root chord.');
+   const cavity=loft(spanStations(g,g.cap,cavityEnd),y=>E.ringLoops(g,y,81,2,2).inner);
    let body=check(own(outer.subtract(cavity)),'Skin');
    onProgress('Adding ribs…');for(const y of E.ribStations(g)){const rib=slab(outer,y-g.ribThickness/2,y+g.ribThickness/2);body=check(own(body.add(rib)),'Rib union');}
    onProgress('Adding integral spars…');for(let index=0;index<g.spars.length;index++){
@@ -111,7 +112,7 @@ const WingPrintMesh=(()=>{
    }
    if(Math.abs(sum-volume)>Math.max(.01,5e-4*volume))throw Error('Module cutting failed volume conservation.');
    if(serializedSum*density/1000>maxMass)throw Error('Serialized STL exceeds the printed-mass limit.');
-   return {files,report:{format:'mie446-browser-print',version:VERSION,fullWing:input.fullWing===true,mirrorPlane:'y = 0 (root)',semiWingVolumeMm3:semiWingVolume,maximumPrintedMassG:maxMass,kernel:'Manifold 3.5.4',units:'mm',geometry:g,fitRecord:input.fitRecord||null,printedMassG:serializedSum*density/1000,referenceSolidVolumeMm3:volume,plasticVolumeMm3:serializedSum,densityGcm3:density,printerEnvelopeMm:ENVELOPE,modules,elapsedMs:Date.now()-start,limitations:['Undeformed mesh CAD, independent of result/display mesh.','Mesh loft and Boolean approximation; not the exact CadQuery B-rep.','STL contains no units; import in millimetres.','Printer fit excludes supports, brim and arbitrary-angle packing. Inspect every slicer layer.','No strength, buckling, bond or flight certification.','Symmetry copies geometry only; source structural results describe the original root-clamped semi-wing. A full-aircraft support/load model is not solved.','For full-wing output, one module joins both halves; multiple modules are counted per semi-wing and require assembly, including the root joint.']}};
+   return {files,report:{format:'mie446-browser-print',version:VERSION,fullWing:input.fullWing===true,mirrorPlane:'y = 0 (root)',semiWingVolumeMm3:semiWingVolume,maximumPrintedMassG:maxMass,kernel:'Manifold 3.5.4',units:'mm',geometry:g,fitRecord:input.fitRecord||null,printedMassG:serializedSum*density/1000,closedTip:G.closedTip(g),cavityEndMm:cavityEnd,referenceSolidVolumeMm3:volume,plasticVolumeMm3:serializedSum,densityGcm3:density,printerEnvelopeMm:ENVELOPE,modules,elapsedMs:Date.now()-start,limitations:[...(G.closedTip(g)?['Exact zero-chord tip with solid outboard region.','Nominal section stress is a separate approximation; no exact-apex stress, deformation or 3-D solid-FE validation is implied.','The pointed terminal region tapers below the nominal wall thickness; inspect its actual slicer layers.']:[]),'Undeformed mesh CAD, independent of result/display mesh.','Mesh loft and Boolean approximation; not the exact CadQuery B-rep.','STL contains no units; import in millimetres.','Printer fit excludes supports, brim and arbitrary-angle packing. Inspect every slicer layer.','No strength, buckling, bond or flight certification.','Symmetry copies geometry only; source structural results describe the original root-clamped semi-wing. A full-aircraft support/load model is not solved.','For full-wing output, one module joins both halves; multiple modules are counted per semi-wing and require assembly, including the root joint.']}};
   }finally{for(const o of [...owned].reverse())try{o.delete();}catch{}}
  }
  return{VERSION,build,inspectSTL,toBinarySTL};

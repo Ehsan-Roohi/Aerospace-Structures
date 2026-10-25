@@ -802,7 +802,7 @@
     if (!own(raw, 'naca')) issues.err(join(path, 'naca'), 'is missing (four digits of a NACA 4-digit section, such as "2412")');
     else if (typeof raw.naca !== 'string' || !/^\d{4}$/.test(raw.naca)) issues.err(join(path, 'naca'), `must be the four digits of a NACA 4-digit section as text, such as "2412", not ${describe(raw.naca)}`);
     else { try { g.naca = E.normalizeNaca(raw.naca); } catch (e) { issues.err(join(path, 'naca'), engineMessage(e, 'WingEngine')); } }
-    for (const [k, label] of Object.entries(POSITIVE_MM)) g[k] = num(issues, raw, k, path, { gt: 0, unit: 'mm', label });
+    for (const [k, label] of Object.entries(POSITIVE_MM)) g[k] = num(issues, raw, k, path, { ...(k==='tipChord'&&['delta','elliptic'].includes(raw.planform)?{ge:0}:{gt:0}), unit: 'mm', label });
     g.modules = num(issues, raw, 'modules', path, { integer: true, ge: 1, le: 3, label: 'number of printed modules' });
     g.interiorRibs = num(issues, raw, 'interiorRibs', path, { integer: true, ge: 0, le: 16, label: 'requested evenly spaced interior ribs' });
     const rp = join(path, 'customInteriorRibs');

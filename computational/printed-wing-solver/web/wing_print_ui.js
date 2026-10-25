@@ -13,49 +13,57 @@ const WingPrintUI=(()=>{
  }
  function mount({host,getInput,workerURL,documentRef=globalThis.document,WorkerClass=globalThis.Worker,onSymmetryChange=()=>{}}){
   const doc=documentRef,node=(tag,text,cls)=>{const n=doc.createElement(tag);if(text)n.textContent=text;if(cls)n.className=cls;return n;};
-  const button=node('button','Download STL','btn primary');button.type='button';button.id='wingDownloadSTL';const symmetry=node('label',null,'wing-print-symmetry'),fullWing=node('input');fullWing.type='checkbox';fullWing.id='wingFullSymmetric';symmetry.append(fullWing,doc.createTextNode(' Full wing · mirror'));const symmetryNote=node('span','Symmetric results: same loads and root clamp on both halves.');symmetryNote.id='wingSymmetryNote';symmetryNote.hidden=true;symmetry.title='Mirror the designed semi-wing across its root. Results reflect the original clamped semi-wing under symmetric loads and supports. Printed modules 1 joins both halves into one STL; 2/3 produces 4/6 pieces for assembly. The full one-piece wing must fit the 300 mm printer.';host.append(symmetry,button,symmetryNote);fullWing.onchange=()=>{symmetryNote.hidden=!fullWing.checked;onSymmetryChange(fullWing.checked);};
+  const button=node('button','Download STL','btn primary');button.type='button';button.id='wingDownloadSTL';const symmetry=node('label',null,'wing-print-symmetry'),fullWing=node('input');fullWing.type='checkbox';fullWing.id='wingFullSymmetric';symmetry.append(fullWing,doc.createTextNode(' Full wing · mirror'));const symmetryNote=node('span','Symmetric results: same loads and root clamp on both halves.');symmetryNote.id='wingSymmetryNote';symmetryNote.hidden=true;symmetry.title='Mirror the designed semi-wing across its root. Results reflect the original clamped semi-wing under symmetric loads and supports. Printed modules 1 joins both halves into one STL; 2/3 produces 4/6 pieces for assembly. The full one-piece wing must fit the 300 mm printer.';const dxf=node('button','DXF','btn'),step=node('button','STEP','btn');dxf.type=step.type='button';dxf.id='wingDownloadDXF';step.id='wingDownloadSTEP';dxf.title='2D millimetre planform and rib profiles';step.title='3D faceted solid CAD exchange; not smooth or parametric features';host.append(symmetry,button,dxf,step,symmetryNote);fullWing.onchange=()=>{symmetryNote.hidden=!fullWing.checked;onSymmetryChange(fullWing.checked);};
   const panel=node('section',null,'wing-print-dialog');panel.hidden=true;panel.setAttribute('role','dialog');panel.setAttribute('aria-modal','true');panel.setAttribute('aria-labelledby','wingPrintTitle');const title=node('h3','Printable STL');title.id='wingPrintTitle';
-  const close=node('button','×','btn wing-print-close');close.type='button';close.setAttribute('aria-label','Close STL builder');const status=node('p');status.id='wingPrintStatus';status.setAttribute('role','status');status.setAttribute('aria-live','polite');const details=node('div');details.id='wingPrintDetails';panel.append(title,close,status,details);doc.body.append(panel);
+  const close=node('button','×','btn wing-print-close');close.type='button';close.setAttribute('aria-label','Close CAD exporter');const status=node('p');status.id='wingPrintStatus';status.setAttribute('role','status');status.setAttribute('aria-live','polite');const details=node('div');details.id='wingPrintDetails';panel.append(title,close,status,details);doc.body.append(panel);
   const style=node('style');style.textContent='.wing-print-dialog{position:fixed;z-index:300;right:12px;top:90px;width:min(580px,calc(100vw - 24px));max-height:calc(100dvh - 110px);overflow:auto;padding:16px;background:var(--panel,#fff);color:var(--fg,#17202c);border:2px solid var(--accent,#0875d1);border-radius:12px;box-shadow:0 12px 40px #10203040}.wing-print-dialog[hidden]{display:none}.wing-print-dialog h3{margin:0 44px 12px 0}.wing-print-close{position:absolute;right:8px;top:8px}.wing-print-dialog table{width:100%;font-size:13px}.wing-print-dialog th,.wing-print-dialog td{text-align:left;padding:5px;border-bottom:1px solid var(--line,#ccd)}.wing-print-dialog .btn{margin:5px 5px 0 0;min-height:40px}.wing-print-symmetry{display:inline-flex;align-items:center;gap:5px;padding:6px;font-weight:600}.wing-print-symmetry input{width:18px;height:18px}#wingSymmetryNote{font-size:12px;color:var(--muted)}#wingPrintStatus[data-error=true]{color:var(--bad,#ba2635)}';doc.head.append(style);
   let worker=null,returnFocus=null,output=null,fitRecord=null;try{fitRecord=JSON.parse(doc.defaultView.localStorage.getItem('winglab:print-fit-record'));}catch{}
-  const release=()=>{worker?.terminate();worker=null;button.disabled=false;};
+  const release=()=>{worker?.terminate();worker=null;for(const b of [button,dxf,step])b.disabled=false;};
   const download=(blob,name)=>{const url=doc.defaultView.URL.createObjectURL(blob),a=node('a');a.href=url;a.download=name;doc.body.append(a);a.click();a.remove();doc.defaultView.setTimeout(()=>doc.defaultView.URL.revokeObjectURL(url),2000);};
   const fail=text=>{release();output=null;status.dataset.error='true';status.textContent=text;};
   const currentInput=()=>({...getInput(),fullWing:fullWing.checked});
   const key=input=>JSON.stringify([input.geometry,input.density,input.shellMaterial,input.fullWing]);
   close.onclick=()=>{if(worker){release();status.textContent='Build cancelled. No file exported.';}panel.hidden=true;returnFocus?.focus({preventScroll:true});};
   panel.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();e.stopPropagation();close.click();}if(e.key==='Tab'){const focusable=[...panel.querySelectorAll('button,a[href]')].filter(n=>!n.disabled),first=focusable[0],last=focusable.at(-1);if(e.shiftKey&&doc.activeElement===first){e.preventDefault();last.focus();}else if(!e.shiftKey&&doc.activeElement===last){e.preventDefault();first.focus();}}});
-  button.onclick=()=>{
-   returnFocus=button;panel.hidden=false;close.focus();details.replaceChildren();status.dataset.error='false';output=null;let input;
-   try{input=currentInput();}catch(e){fail(e.message);return;}
-   if(input.geometry.rodFractions?.length){
+  function start(format='stl',trigger=button){
+   returnFocus=trigger;title.textContent=format==='dxf'?'DXF · 2D profiles':format==='step'?'STEP · faceted 3D solids':'Printable STL';panel.hidden=false;close.focus();details.replaceChildren();status.dataset.error='false';output=null;let input;
+   try{input={...currentInput(),exportFormat:format};}catch(e){fail(e.message);return;}
+   if(format!=='dxf'&&input.geometry.rodFractions?.length){
     const g=input.geometry,signature=JSON.stringify([g.rodDiameter,g.clearance,g.sleeveWall,input.shellMaterial?.name]);
     if(!fitRecord||fitRecord.signature!==signature||fitRecord.tested!==true){
      status.textContent=`Rod-fit record required · rod diameter ${g.rodDiameter} mm; radial clearance ${g.clearance} mm; sleeve wall ${g.sleeveWall} mm. Use your actual completed coupon test.`;
      const label=node('label','Coupon ID / team revision '),reference=node('input');reference.id='wingPrintFitReference';reference.type='text';reference.maxLength=120;label.append(reference);
      const confirm=node('label'),checkbox=node('input');checkbox.type='checkbox';checkbox.id='wingPrintFitConfirmed';confirm.append(checkbox,doc.createTextNode(' I physically tested this rod/coupon and confirmed the fit using these settings and the same print process.'));
-     const proceed=node('button','Confirm fit record & build STL','btn primary');proceed.type='button';proceed.onclick=()=>{if(!reference.value.trim()||!checkbox.checked){status.textContent='Enter the coupon reference and confirm the actual physical fit test. A numerical result does not replace it.';return;}fitRecord={signature,reference:reference.value.trim(),tested:true,rodDiameter:g.rodDiameter,clearance:g.clearance,sleeveWall:g.sleeveWall};try{doc.defaultView.localStorage.setItem('winglab:print-fit-record',JSON.stringify(fitRecord));}catch{}button.click();};details.append(label,node('p'),confirm,node('p'),proceed);reference.focus();return;
+     const proceed=node('button','Confirm fit record & build '+format.toUpperCase(),'btn primary');proceed.type='button';proceed.onclick=()=>{if(!reference.value.trim()||!checkbox.checked){status.textContent='Enter the coupon reference and confirm the actual physical fit test. A numerical result does not replace it.';return;}fitRecord={signature,reference:reference.value.trim(),tested:true,rodDiameter:g.rodDiameter,clearance:g.clearance,sleeveWall:g.sleeveWall};try{doc.defaultView.localStorage.setItem('winglab:print-fit-record',JSON.stringify(fitRecord));}catch{}start(format,trigger);};details.append(label,node('p'),confirm,node('p'),proceed);reference.focus();return;
     }
     input.fitRecord=fitRecord;
    }
 
-   if(doc.defaultView.location.protocol==='file:'){fail('For direct STL export, open Wing Lab from the course website rather than a downloaded HTML file.');return;}
+   if(doc.defaultView.location.protocol==='file:'){fail('For CAD export, open Wing Lab from the course website rather than a downloaded HTML file.');return;}
    if(!WorkerClass){fail('This browser does not support background CAD construction. Open Wing Lab in an updated browser.');return;}
-   const stamp=key(input),name=(input.projectName||'Wing').normalize('NFC').replace(/[^\p{L}\p{N}._ -]/gu,'_').slice(0,70)||'Wing';button.disabled=true;status.textContent='Preparing the CAD kernel…';
+   const stamp=key(input),name=(input.projectName||'Wing').normalize('NFC').replace(/[^\p{L}\p{N}._ -]/gu,'_').slice(0,70)||'Wing';for(const b of [button,dxf,step])b.disabled=true;status.textContent=format==='dxf'?'Preparing DXF reference profiles…':'Preparing the CAD kernel…';
    try{worker=new WorkerClass(workerURL);}catch(e){fail('Cannot start the STL builder: '+e.message);return;}
    worker.onerror=e=>fail('STL builder could not run. Reload the page and try again. '+(e.message||''));
    worker.onmessage=event=>{
     const data=event.data;if(data.kind==='progress'){status.textContent=data.text;return;}if(data.kind==='error'){fail(data.text);return;}if(data.kind!=='complete')return;
     try{if(key(currentInput())!==stamp)throw Error('Inputs changed during construction. Solve the updated study and create STL again.');}catch(e){fail(e.message);return;}release();
-    const report=data.report;status.textContent=`Ready · ${report.fullWing?'Full symmetric wing':'Semi-wing'} · ${report.printedMassG.toFixed(1)} g printed plastic · ${report.modules.length} module(s) · ${(report.elapsedMs/1000).toFixed(1)} s. Watertight STL and printer-envelope checks passed.`;
-    const table=node('table'),head=node('tr');for(const label of ['Module','Dimensions (mm)','Triangles'])head.append(node('th',label));table.append(head);report.modules.forEach(m=>{const row=node('tr');for(const text of [String(m.module),m.sizeMm.map(x=>x.toFixed(1)).join(' × '),String(m.triangles)])row.append(node('td',text));table.append(row);});details.append(table,node('p','Import into OrcaSlicer in millimetres. Inspect orientation, supports, brim and every layer. These checks do not certify structural strength.'));
+    const report=data.report;
+    if(format==='dxf'){
+      status.textContent=`Ready · ${data.files.length} DXF file(s) · millimetres · 2D planform and rib reference profiles.`;
+      details.append(node('p','DXF contains 2D outlines, not a 3D solid. Rib profiles are centre-plane references; review finite rib thickness, taper and tool compensation before cutting.'));
+    }else{
+    status.textContent=`Ready · ${report.fullWing?'Full symmetric wing':'Semi-wing'} · ${report.printedMassG.toFixed(1)} g printed plastic · ${report.modules.length} module(s) · ${(report.elapsedMs/1000).toFixed(1)} s. ${format==='step'?'Faceted STEP; source physical mesh and printer checks passed.':'Watertight STL and printer-envelope checks passed.'}`;
+    const table=node('table'),head=node('tr');for(const label of ['Module','Dimensions (mm)','Triangles'])head.append(node('th',label));table.append(head);report.modules.forEach(m=>{const row=node('tr');for(const text of [String(m.module),m.sizeMm.map(x=>x.toFixed(1)).join(' × '),String(m.triangles)])row.append(node('td',text));table.append(row);});details.append(table,node('p','Import into OrcaSlicer in millimetres. Inspect orientation, supports, brim and every layer. These checks do not certify structural strength.'+(report.closedTip?' The solid pointed tip tapers below nominal wall thickness: inspect the terminal slicer layers.':'')));
+    if(format==='step')details.append(node('p','STEP is a faceted solid B-rep in original aircraft coordinates. It preserves the physical triangle surfaces; it does not reconstruct smooth surfaces or editable feature history. Files can be large.'));
+    }
     const record=encoder.encode(JSON.stringify(report,null,2));
-    output=data.files.length===1?{blob:new Blob([data.files[0].bytes],{type:'model/stl'}),name:name+(input.fullWing?'_full_wing':'')+'.stl'}:{blob:zip([...data.files,{name:'print_record.json',bytes:record.buffer}]),name:name+(input.fullWing?'_full_wing':'')+'_STL.zip'};
-    const again=node('button','Download again','btn primary');again.type='button';again.onclick=()=>download(output.blob,output.name);const save=node('button','Save print record','btn');save.type='button';save.onclick=()=>download(new Blob([record],{type:'application/json'}),name+'_print_record.json');details.append(again,save);download(output.blob,output.name);
+    output=data.files.length===1?{blob:new Blob([data.files[0].bytes],{type:format==='stl'?'model/stl':'application/octet-stream'}),name:name+(input.fullWing?'_full_wing':'')+'.'+(format==='step'?'step':format==='dxf'?'dxf':'stl')}:{blob:zip([...data.files,{name:'print_record.json',bytes:record.buffer}]),name:name+(input.fullWing?'_full_wing':'')+'_'+format.toUpperCase()+'.zip'};
+    const again=node('button','Download again','btn primary');again.type='button';again.onclick=()=>download(output.blob,output.name);const save=node('button',format==='stl'?'Save print record':'Save export record','btn');save.type='button';save.onclick=()=>download(new Blob([record],{type:'application/json'}),name+'_print_record.json');details.append(again,save);download(output.blob,output.name);
    };
    worker.postMessage(input);
-  };
-  return {button,panel,fullWing,cancel:()=>close.click()};
+  }
+  button.onclick=()=>start('stl',button);dxf.onclick=()=>start('dxf',dxf);step.onclick=()=>start('step',step);
+  return {button,dxf,step,panel,fullWing,cancel:()=>close.click()};
  }
  return{mount,zip};
 })();

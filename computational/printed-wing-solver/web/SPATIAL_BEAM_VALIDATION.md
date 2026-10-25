@@ -14,6 +14,31 @@ This distinction follows the intended-use approach described in
 [NASA's modeling and simulation guidance](https://public.ksc.nasa.gov/mns/faq/); no NASA
 approval or standards-compliance certification is claimed.
 
+## Closed-tip planforms
+
+Exact delta and elliptical options have zero tip chord, with reference laws
+`c(y)=c0(1-y/L)` and `c(y)=c0 sqrt(1-(y/L)^2)`. The CAD cavity closes inboard
+and the terminal region is solid; no minimum physical chord replaces the apex.
+
+For zero user sweep, dihedral and section incidence, the skin-and-rib model provides
+**nominal spanwise normal stress from section equilibrium**. Actual material polygons
+include the skin/rib/cap union without overlap. Centered, nondimensional area moments
+recover signed axial/biaxial normal stress under the integrated physical outboard loads.
+Self-weight uses adaptive integration of that same material geometry. This is a
+locally prismatic Navier stress approximation, not a 3-D solid stress solution.
+
+The zero-area apex has no stress value. Delta loading can produce unbounded nominal
+stress toward the tip; sampled extrema must not be called the global maximum. The
+solver records explicit near-tip sample locations and endpoint behavior. Displacement,
+twist, shear/torsional stress, shear center, dynamics, local stress concentrations,
+buckling and overall factor of safety are not computed by this stress-only route.
+No artificial stiffness or fabricated zero deformation is supplied.
+
+`test_wing_closed_tip_stress.mjs` independently checks load/root moments, signed
+stress against Simpson-integrated sections, stress-resultant recovery, superposition,
+actual union mass/gravity, endpoint behavior and actual watertight STL volume.
+Existing nonzero-tip studies retain their original geometry and beam solver.
+
 ## Model
 
 Aircraft coordinates are x aft, y projected span and z up. Airfoil sections remain in aircraft

@@ -26,6 +26,7 @@ const WingEngine = (() => {
   const Airfoils = typeof WingAirfoils !== 'undefined' ? WingAirfoils : (typeof require === 'function' ? require('./wing_airfoils.js') : null);
   const Geometry = typeof WingGeometry !== 'undefined' ? WingGeometry : (typeof require === 'function' ? require('./wing_geometry.js') : null);
   const Frame = typeof WingFrame3D !== 'undefined' ? WingFrame3D : (typeof require === 'function' ? require('./wing_frame3d.js') : null);
+  const ClosedTipStress = typeof WingClosedTipStress !== 'undefined' ? WingClosedTipStress : (typeof require === 'function' ? require('./wing_closed_tip_stress.js') : null);
   if (!Profiles) throw new Error("Load load_profiles.js before engine.js.");
   const GRAV = 9.81;
   const VERSION = "1.3.0";
@@ -126,8 +127,9 @@ const WingEngine = (() => {
     if(g.spars.length&&g.rodFractions.length)throw new Error('Compare shell + rods and shell + bonded spars separately: mixed rod/spar connections are not validated in this model. Remove rods before adding a spar.');
     if (g.rodFractions.some(f => !Number.isFinite(f) || f <= 0 || f >= 1)) throw new Error("Rod positions must be fractions between 0 and 1.");
     const pos = ["semiSpan", "rootChord", "tipChord", "skin", "ribThickness", "te", "cap", "rodDiameter", "sleeveWall"];
-    for (const k of pos) if (!Number.isFinite(g[k])||!(g[k] > 0)) throw new Error(`${k} must be positive and finite.`);
+    for (const k of pos.filter(k=>k!=="tipChord"||!Geometry.closedTip(g))) if (!Number.isFinite(g[k])||!(g[k] > 0)) throw new Error(`${k} must be positive and finite.`);
     if(!Number.isFinite(g.cavityStart)||!Number.isFinite(g.cavityEnd)||g.cavityStart<=0||g.cavityEnd>=1||g.cavityStart>=g.cavityEnd)throw new Error('Cavity limits must satisfy 0 < start < end < 1.');
+    if(Geometry.closedTip(g)&&(g.rodFractions.length||g.spars.length))throw Error('Closed-tip wings currently support skin and ribs. Remove rods and bonded spars before selecting a zero-chord tip.');
     if (g.tipChord > g.rootChord) throw new Error("Tip chord cannot exceed root chord.");
     if (![1, 2, 3].includes(+g.modules)) throw new Error("Use 1, 2 or 3 modules.");
     if (g.interfaceOffset <= g.ribThickness) throw new Error("Interface rib offset must exceed rib thickness.");
@@ -161,6 +163,14 @@ const WingEngine = (() => {
   const localGeometry = (g,y) => g.airfoil || g.stations || g.planform==='elliptic' ? {...g,naca:airfoilAt(g,y),sectionChord:chordAt(g,y)} : g;
   const sparParts = (g,y) => Spars.parts(localGeometry(g,y),y,verticalOrdinates);
   function analysisCapability(g,input={}) {
+    if(Geometry.closedTip(g)){
+      const restrictions=[];
+      if(Math.abs(g.sweepDeg||0)>1e-10||Math.abs(g.dihedralDeg||0)>1e-10||[0,g.semiSpan,...(g.stations||[]).map(s=>s.eta*g.semiSpan)].some(y=>Math.abs(Geometry.stationAt(g,y).incidenceDeg)>1e-10))restrictions.push('Exact-tip section stress requires zero sweep, dihedral and incidence at every station.');
+      if(g.rodFractions?.length||g.spars?.length)restrictions.push('Exact-tip section stress supports skin and ribs; remove rods and spars.');
+      if(g.modules>1&&input.assembly?.seamsBonded!==true)restrictions.push('Use one piece or explicitly fully bonded module seams for section stress.');
+      if((input.load?.kind??DEFAULT_LOAD.kind)==='flight'&&(input.load?.inertiaRelief??DEFAULT_LOAD.inertiaRelief)!==false)restrictions.push('Set Wing inertia relief to Ignored for exact-tip section stress.');
+      return {supported:!restrictions.length,requires3D:true,stressOnly:true,mode:'section-stress',reasons:['Exact zero-chord tip'],restrictions,message:restrictions.length?restrictions.join(' '):'Nominal axial and biaxial normal section stress from physical load equilibrium. Exact apex stress and deformation are unresolved; torsion, shear, local buckling and 3-D stress concentrations are not assessed.'};
+    }
     const c=Geometry.analysisCapability(g);
     if(c.supported&&!g.airfoil&&!g.stations)return c;
     if(c.supported)c.reasons.push('explicit airfoil profiles / station sections require the full biaxial spatial beam');
@@ -268,9 +278,22 @@ const WingEngine = (() => {
   }
   const annulusIntegrals = (c, R, r) => diskIntegrals(c, R).map((v, i) => v - diskIntegrals(c, r)[i]);
 
+  const effectiveTE=(g,y)=>Geometry.closedTip(g)?g.te*Math.min(1,chordAt(g,y)/(12*g.skin)):g.te;
+  const tipCavityCache=new WeakMap();
+  function cavityTipLimit(g){
+    if(!Geometry.closedTip(g))return g.semiSpan;
+    if(tipCavityCache.has(g))return tipCavityCache.get(g);
+    const raw={...g,_rawCavity:true};ringLoops(raw,0,81,8,8);
+    let a=0,b=g.semiSpan;
+    // First closure from the root, rather than admitting disconnected pockets.
+    for(let i=1;i<=128;i++){const y=g.semiSpan*i/128;try{ringLoops(raw,y,81,8,8);a=y;}catch{b=y;break;}}
+    for(let i=0;i<32;i++){const y=(a+b)/2;try{ringLoops(raw,y,81,8,8);a=y;}catch{b=y;}}
+    tipCavityCache.set(g,a);return a;
+  }
   function outerContour(g, y, count = 241) {
     const c = chordAt(g, y);
-    const { xu, zu, xl, zl } = airfoilSurfaces(airfoilAt(g,y), c, g.te, count);
+    if(c===0)return Array.from({length:2*count-1},()=>[0,0]);
+    const { xu, zu, xl, zl } = airfoilSurfaces(airfoilAt(g,y), c, effectiveTE(g,y), count);
     const pts = xu.map((x, i) => [x, zu[i]]);
     for (let i = xl.length - 1; i >= 1; i--) pts.push([xl[i], zl[i]]);
     return pts;
@@ -279,10 +302,13 @@ const WingEngine = (() => {
   // Matched inner (cavity) and outer loops for a mapped ring mesh, CCW around the cavity
   function ringLoops(g, y, Ks = 120, Kn = 40, Ka = 24) {
     const c = chordAt(g, y);
+    if(Geometry.closedTip(g)&&!g._rawCavity&&y>=cavityTipLimit(g))return {inner:[],outer:outerContour(g,y,Ks),corners:[],chord:c,upperSkin:[],solid:true};
+    if(c===0)throw Error('Zero-chord tip has no hollow cavity.');
+    const te=effectiveTE(g,y);
     const t = g.skin;
     const x0 = g.cavityStart, x1 = g.cavityEnd;
     const profile=airfoilAt(g,y);
-    const { xu, zu, xl, zl } = airfoilSurfaces(profile, c, g.te, 401);
+    const { xu, zu, xl, zl } = airfoilSurfaces(profile, c, te, 401);
     const outUp = (x) => interp(x, xu, zu);
     const outLo = (x) => interp(x, xl, zl);
     const xs = cosineSpacing(Ks, x0, x1).map((v) => v * c);
@@ -953,14 +979,16 @@ const WingEngine = (() => {
     return { V, M, X };
   }
   // Progressive solving for a responsive interface: analyse station k now, solve() reuses it.
-  const stations = (input) => normalize(input).ySec;
+  const stations = (input) => {const n=normalize(input);return Geometry.closedTip(n.g)?[]:n.ySec;};
   function warmStation(input, k) {
     const n = normalize(input);
     const cap=analysisCapability(n.g,input);if(!cap.supported)throw Error(cap.message);
+    if(Geometry.closedTip(n.g))return null;
     return cachedSection(n.g, n.pla, n.rod, n.asm, n.ySec[k]);
   }
   function sectionAt(input, y) {
     const n = normalize(input);
+    if(Geometry.closedTip(n.g))throw Error('The hollow-section torsion/warping detail is unavailable for exact-tip stress studies, including their solid tip region. Use the nominal section-stress result.');
     return cachedSection(n.g, n.pla, n.rod, n.asm, Math.min(Math.max(y, 0), n.g.semiSpan));
   }
 
@@ -969,6 +997,7 @@ const WingEngine = (() => {
     let load=sourceLoad;
     const capability=analysisCapability(g,input);
     if(!capability.supported)throw Error(capability.message);
+    if(Geometry.closedTip(g))return solveClosedTipStress(input);
     if(capability.requires3D)return solveSpatial(input,normalized);
     const nGrid = input.nGrid || 901, nElem = requestedElementCount(input);
     const L = g.semiSpan;
@@ -1259,7 +1288,12 @@ const WingEngine = (() => {
   // Spatial extension. The legacy straight-wing route above is deliberately
   // unchanged. Normal cuts are affine projections of aircraft x-z sections;
   // dA_normal = |t_y| dA_xz and ds = dy/|t_y| preserve physical volume.
+  function solveClosedTipStress(input){
+    if(!ClosedTipStress)throw Error('Load wing_closed_tip_stress.js before engine.js for exact-tip section stress.');
+    return ClosedTipStress.solve(input,{E:{ringLoops,outerContour,cavityTipLimit,ribStations,seams},normalize,polyIntegrals,prescribedFlightLoads,customLine,customFraction,Geometry,Frame,GRAV,Profiles,chordAt,airfoilAt,requestedElementCount});
+  }
   function solveSpatial(input,n=normalize(input)) {
+    if(Geometry.closedTip(n.g)){const cap=analysisCapability(n.g,input);if(!cap.supported)throw Error(cap.message);return solveClosedTipStress(input);}
     const {g,pla,rod,asm,load:sourceLoad,crit}=n,L=g.semiSpan,F=Frame;
     let load=sourceLoad;
     const count=requestedElementCount(input,MESH_LIMITS.spatialDefault);
@@ -1460,11 +1494,13 @@ const WingEngine = (() => {
   }
   function spatialPointMotion(result,y,localPoint){
     if(!result.analysis3D)throw Error('A spatial beam result is required.');
+    if(result.analysis3D.stressOnly)return {point:Geometry.transformPoint(result.geometry,y,localPoint),reference:null,resolved:false,nominal:true,station:y,endZone:null,reason:'This section-equilibrium study does not calculate displacement or rotation.',displacement:null,rotation:null,movedPoint:null};
     const a=result.analysis3D,key=[y,...localPoint].join(',');if(a.pointMotionCache.has(key))return a.pointMotionCache.get(key);const point=Geometry.transformPoint(result.geometry,y,localPoint);let foot;try{foot=a.locatePhysicalPoint(point);}catch(error){const out={point,reference:null,resolved:false,nominal:true,station:null,endZone:'mapping',reason:error.message,displacement:null,rotation:null,movedPoint:null};a.pointMotionCache.set(key,out);return out;}
     if(foot.outside)return {point,reference:foot.reference,resolved:false,nominal:true,station:foot.station,endZone:foot.outside,reason:'Physical point normal foot lies outside the finite beam; motion is not extrapolated or silently clamped.',displacement:null,rotation:null,movedPoint:null};
     const r=a.frameAt(foot.station),reference=r.reference,displacement=Frame.add(r.displacement,Frame.cross(r.rotation,Frame.sub(point,reference))),endZone=a.endZoneAt(foot.station),out={point,reference,station:foot.station,resolved:true,nominal:true,endZone,displacement,rotation:r.rotation,movedPoint:Frame.add(point,displacement)};a.pointMotionCache.set(key,out);return out;
   }
   function normalStressLocationAt3D(result,y,localPoint,material=result.pla){
+    if(result.analysis3D?.stressOnly)return result.analysis3D.evaluateStress(y,localPoint,material);
     if(!result.analysis3D)throw Error('A spatial beam result is required.');const a=result.analysis3D,E=typeof material==='number'?material:material.E,key=[y,...localPoint,E].join(',');if(a.pointStressCache.has(key))return a.pointStressCache.get(key);const point=Geometry.transformPoint(result.geometry,y,localPoint);let foot;try{foot=a.locatePhysicalPoint(point);}catch(error){const out={value:NaN,resolved:false,nominal:true,station:null,endZone:'mapping',reason:error.message};a.pointStressCache.set(key,out);return out;}
     if(foot.outside)return {value:NaN,resolved:false,nominal:true,station:foot.station,endZone:foot.outside,reason:'Physical point normal foot lies outside the finite beam.'};
     const cut=a.cutAt(foot.station);if(cut.endZone)return {value:NaN,resolved:false,nominal:true,station:foot.station,endZone:cut.endZone,reason:'Normal cut intersects an oblique end face; local end stresses are unresolved. This geometric mask is not a validated Saint-Venant decay distance.'};
@@ -1534,7 +1570,7 @@ const WingEngine = (() => {
     makeGeometry, chordAt, seams, ribStations, moduleBounds, rodCentres, rodRadius, holeRadius, sleeveRadius,
     airfoilSurfaces, verticalOrdinates, outerContour, ringLoops, ringMesh, shellFE, analyseSection, solve,
     shearField, compareAssemblies, interp, camber, normalizeNaca, normalize, stations, warmStation, sectionAt,
-    sparParts,airfoilAt,analysisCapability,solveSpatial,spatialPointMotion,normalStressAt3D,normalStressLocationAt3D,
+    cavityTipLimit,effectiveTE,sparParts,airfoilAt,analysisCapability,solveSpatial,spatialPointMotion,normalStressAt3D,normalStressLocationAt3D,
     stationAt:Geometry.stationAt,transformPoint:Geometry.transformPoint,inversePoint:Geometry.inversePoint,
   };
 })();

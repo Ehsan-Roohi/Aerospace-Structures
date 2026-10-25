@@ -15,6 +15,7 @@ function setup(initial={}){
 }
 const opened=[];const open=g=>{const v=setup(g);opened.push(v);return v;};
 try{
+ for(const planform of ['delta','elliptic']){const exact=open();exact.change('wgtPlanform',planform);eq(exact.$('wgtTipChord').value,'0');ok(exact.$('wgtTipChord').readOnly);exact.submit();eq(exact.state().tipChord,0);eq(exact.state().planform,planform);eq(E.analysisCapability(exact.state(),{load:{kind:'custom',items:[]},assembly:{seamsBonded:true}}).supported,true);const legacy=open({planform,tipChord:80});eq(legacy.$('wgtPlanform').value,'legacy');legacy.change('wgtPlanform',planform);legacy.submit();eq(legacy.state().tipChord,0);}
  const independent=open();ok(independent.$('wgtSimpleAngles').hidden);independent.$('wgtSections').checked=true;independent.$('wgtSections').dispatchEvent(new independent.w.Event('change'));independent.change('wgtStation1Kind','naca23012');independent.submit();eq(independent.state().twistEnabled,false);eq(independent.state().stations[1].airfoil.code,'23012');ok(independent.state().stations.every(s=>s.incidenceDeg===0),'section airfoils work independently of incidence');
  const u=open();eq(u.$('wgtTwist').value,'no');eq(u.$('wgtSections').checked,false);eq(u.state().stations,undefined);
  u.change('wgtDefaultKind','naca5');eq(u.$('wgtDefaultCode').value,'23012');eq(u.state().airfoil,undefined,'family selection stays a draft');u.submit();eq(u.state().airfoil.kind,'naca5');eq(u.state().airfoil.code,'23012');

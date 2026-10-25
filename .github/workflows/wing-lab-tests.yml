@@ -16,6 +16,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Install independent CAD exchange readers
+        run: python -m pip install cadquery-ocp==7.9.3.1.1 ezdxf==1.4.5
       - name: Install DOM, GLB and real-browser test dependencies
         timeout-minutes: 10
         # Keep r147 for GLB tests and the page's r128/OrbitControls as a separate alias.

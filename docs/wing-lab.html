@@ -6683,7 +6683,7 @@ const WingGeometry = (() => {
     for (const name of ['sweepReferenceFraction','twistReferenceFraction']) {
       if (Object.hasOwn(g,name)) out[name] = finite(g[name], name, 0, 1);
     }
-    if(g.planform==='elliptic'&&!Object.hasOwn(g,'sweepReferenceFraction'))out.sweepReferenceFraction=.5;
+    if(g.planform==='elliptic'&&(g.tipChord===0||!Object.hasOwn(g,'sweepReferenceFraction')))out.sweepReferenceFraction=.5;
     if(g.planform==='delta')out.sweepReferenceFraction=1;
     if (Object.hasOwn(g,'twistEnabled')) {
       if (typeof g.twistEnabled !== 'boolean') throw Error('twistEnabled must be true or false.');
@@ -6706,6 +6706,7 @@ const WingGeometry = (() => {
     }
     return out;
   }
+  const closedTip=g=>g.tipChord===0&&['elliptic','delta'].includes(g.planform);
   const chordAt = (g,y) => {const e=Math.max(0,Math.min(1,y/g.semiSpan));return g.planform==='elliptic'?Math.sqrt(g.rootChord**2*(1-e*e)+g.tipChord**2*e*e):g.rootChord+e*(g.tipChord-g.rootChord);};
   const chordDerivative=(g,y)=>g.planform==='elliptic'?(g.tipChord**2-g.rootChord**2)*(y/g.semiSpan)/(g.semiSpan*chordAt(g,y)):(g.tipChord-g.rootChord)/g.semiSpan;
   const area = g => {if(g.planform!=='elliptic')return (g.rootChord+g.tipChord)*g.semiSpan/2;const k=Math.sqrt(Math.max(0,1-(g.tipChord/g.rootChord)**2));return g.semiSpan*(g.tipChord+g.rootChord*(k?Math.asin(k)/k:1))/2;};
@@ -6758,7 +6759,7 @@ const WingGeometry = (() => {
       loadFrame:'Aircraft +z (up); N for point loads, N/mm per projected y for line loads.',
       message:reasons.length?`Geometry and CAD export are available, but structural Solve is not supported for ${reasons.join(', ')}. The current solver is a straight, untwisted spanwise beam, not a validated 3-D swept/dihedral frame. Set these angles to zero and align the leading edge to use this solver; no straight-wing stress or safety result will be substituted.`:'Straight, untwisted spanwise beam approximation; local sections may vary. Loads are prescribed, not computed from aerodynamic twist.'};
   }
-  return {LIMITS,normalizeGeometryFields,chordAt,chordDerivative,area,stationAt,airfoilAt,transformPoint,inversePoint,analysisCapability};
+  return {LIMITS,closedTip,normalizeGeometryFields,chordAt,chordDerivative,area,stationAt,airfoilAt,transformPoint,inversePoint,analysisCapability};
 })();
 if(typeof module!=='undefined'&&module.exports)module.exports=WingGeometry;
 
@@ -7001,16 +7002,16 @@ const WingGeometryUI=(()=>{
   }
   function renderDimensions(){
    const box=node('fieldset',{class:'wing-planform-dimensions'});
-   box.innerHTML='<legend>Wing dimensions & taper</legend><label>Planform<select id="wgtPlanform"><option value="linear">Rectangular / trapezoidal</option><option value="elliptic">Elliptical · trimmed tip</option><option value="delta">Delta · trimmed tip</option></select></label><p class="note">Tip chord stays positive for printable skin and a finite beam section. Delta uses a straight trailing edge; sweep is additional. Elliptical uses an ellipse cut at the chosen tip chord. Reduce tip chord for a more triangular delta; cavity clearance still applies. Analysis remains a beam approximation: broad delta wings need plate/shell analysis for local stresses.</p><label for="wgtChordMode">Chord input method<select id="wgtChordMode"><option value="tip">Root + Tip → calculate λ</option><option value="ratio">Root + λ → calculate Tip</option></select></label><div class="wing-geometry-grid">'+numeric('Semi-span (mm)','wgtSpan',draft.semiSpan,'Root to tip, projected aircraft y','min="1"')+numeric('Root chord (mm)','wgtRootChord',draft.rootChord,'Reference chord at root','min="1"')+numeric('Tip chord (mm)','wgtTipChord',draft.tipChord,'Reference chord at tip','min="1"')+numeric('Taper ratio λ = tip / root','wgtTaper',draft.tipChord/draft.rootChord,'1 = rectangular; below 1 = narrower tip','min="0.001" max="1"')+numeric('Skin thickness (mm)','wgtSkin',draft.skin,'Measured vertically; course printing minimum 0.8 mm','min="0.001" step="0.1"')+'<label class="wing-geometry-field">Printed modules<small>Equal lengths; seams between modules</small><select id="wgtModules"><option value="1">1 · one piece</option><option value="2">2</option><option value="3">3</option></select></label></div><p class="note" id="wgtChordHint"></p><dl class="kv wl-kv" id="wgtGeometrySummary"></dl>';
-   form.prepend(box);box.querySelector('#wgtModules').value=String(draft.modules??1);box.querySelector('#wgtPlanform').value=draft.planform||'linear';box.querySelector('#wgtPlanform').onchange=e=>{draft.planform=e.target.value;draft.sweepReferenceFraction=draft.planform==='delta'?1:draft.planform==='elliptic'?.5:0;render();};dimensionSource=win.wingChordInputMode==='ratio'?'ratio':'tip';
+   box.innerHTML='<legend>Wing dimensions & taper</legend><label>Planform<select id="wgtPlanform"><option value="linear">Rectangular / trapezoidal</option><option value="elliptic">Elliptical · closed tip</option><option value="delta">Delta · pointed tip</option></select></label><p class="note">Elliptical and delta shapes close at zero tip chord. The narrow tip is solid; the hollow cavity ends inboard. Nominal normal-stress analysis is available with zero user sweep, dihedral and incidence. The exact apex is unresolved; deformation is not computed.</p><label for="wgtChordMode">Chord input method<select id="wgtChordMode"><option value="tip">Root + Tip → calculate λ</option><option value="ratio">Root + λ → calculate Tip</option></select></label><div class="wing-geometry-grid">'+numeric('Semi-span (mm)','wgtSpan',draft.semiSpan,'Root to tip, projected aircraft y','min="1"')+numeric('Root chord (mm)','wgtRootChord',draft.rootChord,'Reference chord at root','min="1"')+numeric('Tip chord (mm)','wgtTipChord',draft.tipChord,'Reference chord at tip','min="0"')+numeric('Taper ratio λ = tip / root','wgtTaper',draft.tipChord/draft.rootChord,'1 = rectangular; below 1 = narrower tip','min="0" max="1"')+numeric('Skin thickness (mm)','wgtSkin',draft.skin,'Measured vertically; course printing minimum 0.8 mm','min="0.001" step="0.1"')+'<label class="wing-geometry-field">Printed modules<small>Equal lengths; seams between modules</small><select id="wgtModules"><option value="1">1 · one piece</option><option value="2">2</option><option value="3">3</option></select></label></div><p class="note" id="wgtChordHint"></p><dl class="kv wl-kv" id="wgtGeometrySummary"></dl>';
+   form.prepend(box);box.querySelector('#wgtModules').value=String(draft.modules??1);const shape=box.querySelector('#wgtPlanform');if(draft.tipChord>0&&['elliptic','delta'].includes(draft.planform)){const old=node('option',{value:'legacy'},'Imported trimmed '+draft.planform+' · choose a closed shape');old.disabled=true;shape.append(old);shape.value='legacy';}else shape.value=draft.planform||'linear';box.querySelector('#wgtPlanform').onchange=e=>{draft.planform=e.target.value;draft.sweepReferenceFraction=draft.planform==='delta'?1:draft.planform==='elliptic'?.5:0;if(draft.planform!=='linear'){draft.tipChord=0;draft.sweepDeg=0;win.wingChordInputMode='tip';}else if(draft.tipChord===0)draft.tipChord=.7*draft.rootChord;render();};dimensionSource=win.wingChordInputMode==='ratio'?'ratio':'tip';
    const value=id=>{const s=form.querySelector('#'+id).value;return s.trim()===''?NaN:Number(s);};
    box.querySelector('#wgtModules').onchange=e=>{draft.modules=Number(e.target.value);preview();};
    box.querySelector('#wgtSkin').oninput=()=>{draft.skin=value('wgtSkin');};
    function preview(){
-    const ratio=dimensionSource==='ratio';box.querySelector('#wgtChordMode').value=dimensionSource;
-    box.querySelector('#wgtTipChord').readOnly=ratio;box.querySelector('#wgtTaper').readOnly=!ratio;
-    box.querySelector('#wgtTipChord').setAttribute('aria-readonly',String(ratio));box.querySelector('#wgtTaper').setAttribute('aria-readonly',String(!ratio));
-    box.querySelector('#wgtChordHint').textContent=ratio?'Tip is calculated from Root × λ. Changing Root preserves λ.':'λ is calculated from Tip / Root. Enter both chord lengths.';
+    const closed=G.closedTip(draft);if(closed)dimensionSource='tip';const ratio=dimensionSource==='ratio';box.querySelector('#wgtChordMode').value=dimensionSource;
+    box.querySelector('#wgtChordMode').disabled=closed;box.querySelector('#wgtTipChord').readOnly=closed||ratio;box.querySelector('#wgtTaper').readOnly=closed||!ratio;
+    box.querySelector('#wgtTipChord').setAttribute('aria-readonly',String(closed||ratio));box.querySelector('#wgtTaper').setAttribute('aria-readonly',String(closed||!ratio));
+    box.querySelector('#wgtChordHint').textContent=closed?'Zero tip chord: exact closed planform; no tip trimming.':ratio?'Tip is calculated from Root × λ. Changing Root preserves λ.':'λ is calculated from Tip / Root. Enter both chord lengths.';
     const area=G.area(draft),length=draft.semiSpan/(draft.modules||1),summary=box.querySelector('#wgtGeometrySummary');
     summary.innerHTML=Number.isFinite(area)&&area>0?`<dt>Semi-wing area</dt><dd>${(area/100).toFixed(1)} cm²</dd><dt>Taper ratio</dt><dd>${(draft.tipChord/draft.rootChord).toFixed(3)}</dd><dt>Aspect ratio (full wing)</dt><dd>${(2*draft.semiSpan**2/area).toFixed(2)}</dd><dt>Module length</dt><dd>${length.toFixed(1)} mm</dd>`:'';
 
@@ -7019,7 +7020,7 @@ const WingGeometryUI=(()=>{
    for(const[id,key]of [['wgtSpan','semiSpan'],['wgtRootChord','rootChord'],['wgtTipChord','tipChord']])box.querySelector('#'+id).oninput=()=>{
     if(key==='tipChord'&&dimensionSource==='ratio')return;
     draft[key]=value(id);
-    if(dimensionSource==='ratio'){draft.tipChord=draft.rootChord*value('wgtTaper');box.querySelector('#wgtTipChord').value=Number.isFinite(draft.tipChord)?+draft.tipChord.toPrecision(12):'';}
+    if(dimensionSource==='ratio'&&!G.closedTip(draft)){draft.tipChord=draft.rootChord*value('wgtTaper');box.querySelector('#wgtTipChord').value=Number.isFinite(draft.tipChord)?+draft.tipChord.toPrecision(12):'';}
     else box.querySelector('#wgtTaper').value=Number.isFinite(draft.tipChord/draft.rootChord)?+(draft.tipChord/draft.rootChord).toPrecision(8):'';
     preview();
    };
@@ -7051,7 +7052,7 @@ const WingGeometryUI=(()=>{
     add.onclick=()=>{let k=1;for(let j=2;j<draft.stations.length;j++)if(draft.stations[j].eta-draft.stations[j-1].eta>draft.stations[k].eta-draft.stations[k-1].eta)k=j;const a=draft.stations[k-1],b=draft.stations[k];draft.stations.splice(k,0,{eta:(a.eta+b.eta)/2,airfoil:clone(a.airfoil),incidenceDeg:(a.incidenceDeg+b.incidenceDeg)/2});render();};stationBox.append(add);
    }
    organiseTwistControls();
-   form.querySelector('#wgtSweepRef').readOnly=draft.planform==='delta';
+   form.querySelector('#wgtSweepRef').readOnly=draft.planform==='delta'||G.closedTip(draft)&&draft.planform==='elliptic';
    if(draft.planform==='delta')form.querySelector('#wgtSweepRef').title='Delta keeps a straight trailing edge (x/c = 1). Sweep adds to this reference line.';
    form.querySelector('#wgtTwist').onchange=e=>{draft.twistEnabled=e.target.value==='yes';if(draft.twistEnabled)stations();else for(const s of draft.stations||[])s.incidenceDeg=0;render();if(!draft.twistEnabled)message('All draft incidences set to zero; airfoil profiles retained. Apply geometry to commit.');};
    form.querySelector('#wgtSections').onchange=e=>{if(e.target.checked)stations();else{if(draft.twistEnabled){e.target.checked=true;message('Twist needs root/tip incidence stations. Turn twist off first.',true);return;}delete draft.stations;}render();};
@@ -7094,7 +7095,7 @@ const WingGeometryUI=(()=>{
     }
     const result=applyGeometry(patch,'advanced','airfoil / sweep / dihedral / incidence');
     if(!result.ok){message(result.error||'Geometry was not applied. Check the wing dimensions and cavity clearance.',true);showGuidance(result.guidance);return;}
-    message('Geometry applied. Solve to update structural results.');onApplied();
+    message(G.closedTip(patch)?'Exact closed-tip geometry applied. Solve computes nominal normal stress; the exact apex and deformation are unresolved.':'Geometry applied. Solve to update structural results.');onApplied();
    }catch(err){message(err.message,true);}
   };
   const style=node('style',{},'.wing-geometry-guidance{border:1px solid var(--warn,#ad7300);border-radius:10px;padding:12px;background:var(--panel-2);font-size:13px;line-height:1.45}.wing-geometry-guidance h3{margin:0 0 6px}.wing-geometry-guidance li{margin:10px 0}.wing-geometry-guidance .btn{margin-top:5px}.wing-geometry-form{display:grid;gap:10px}.wing-geometry-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}.wing-geometry-field{display:grid;gap:4px;font-size:13px}.wing-geometry-field small{color:var(--muted)}.wing-geometry-form input[type=number],.wing-geometry-form input[type=text],.wing-geometry-form select{width:100%;min-height:40px;padding:7px;border:1px solid var(--line);border-radius:7px;background:var(--panel-2);color:var(--fg);font-size:16px}.wing-airfoil-picker{display:grid;gap:6px}.wing-station-card{margin:7px 0;padding:8px;border:1px solid var(--line);border-radius:8px}.wing-station-card>summary{font-weight:700;cursor:pointer;padding:7px 0}.wing-station-card .note{overflow-wrap:anywhere}');doc.head.append(style);
@@ -7180,6 +7181,126 @@ const WingSelectionUI=(()=>{
 })();
 if(typeof module!=='undefined'&&module.exports)module.exports=WingSelectionUI;
 
+/* Exact closed-tip geometry: section-equilibrium nominal normal stress only.
+ * No displacement solution, artificial tip section, or solid-FE field is used.
+ * Coordinates are aircraft x aft, y span, z up; all sections remain y=constant.
+ */
+const WingClosedTipStress = (() => {
+  'use strict';
+  const GX=[-.9602898564975363,-.7966664774136267,-.525532409916329,-.1834346424956498,.1834346424956498,.525532409916329,.7966664774136267,.9602898564975363];
+  const GW=[.1012285362903763,.2223810344533745,.3137066458778873,.362683783378362,.362683783378362,.3137066458778873,.2223810344533745,.1012285362903763];
+  const uniq=a=>[...new Set(a)].sort((a,b)=>a-b);
+  function solve(input,tools){
+    const {normalize,polyIntegrals,prescribedFlightLoads,customLine,customFraction,Geometry,GRAV=9.80665}=tools,E=tools.E;
+    const {g,pla,rod,asm,load:source,crit}=normalize(input),L=g.semiSpan,chord=tools.chordAt||((g,y)=>Geometry.chordAt(g,y));
+    if(g.tipChord!==0||!['elliptic','delta'].includes(g.planform))throw Error('Closed-tip normal stress requires an exact elliptic or delta zero-chord tip.');
+    const zero=v=>Math.abs(v||0)<=1e-12;
+    if(!zero(g.sweepDeg)||!zero(g.dihedralDeg)||!zero(Geometry.stationAt(g,0).incidenceDeg)||!zero(Geometry.stationAt(g,L).incidenceDeg)||(g.stations||[]).some(s=>!zero(s.incidenceDeg)))throw Error('Closed-tip normal stress currently requires zero user sweep, dihedral and incidence at every station.');
+    if(g.rodFractions.length||g.spars.length)throw Error('Closed-tip normal stress currently supports skin and ribs only.');
+    const ribs=E.ribStations(g),seams=E.seams(g),cavityEnd=E.cavityTipLimit(g);
+    if(seams.length&&!asm.seamsBonded)throw Error('Closed-tip normal stress requires bonded seams or a one-piece wing.');
+    if(source.tipMass)throw Error('A mass attached at a zero-area apex needs a resolved attachment model. Move it to a finite section.');
+    let base=source.kind==='flight'?prescribedFlightLoads(source,g):source.kind==='tip'?[{kind:'point',position:L,force:source.tipForce,fraction:source.tipFraction}]:source.items;
+    const planformArea=(g.planform==='elliptic'?Math.PI/4:.5)*L*g.rootChord;
+    // Existing flight tables are arrow-display records only. Structural integration
+    // retains the exact chord law, including the elliptic endpoint square root.
+    if(source.kind==='flight'&&source.distribution==='planform')base=base.map(p=>({...p,actualChordLaw:true,total:source.aircraftMass*source.loadFactor*GRAV/2}));
+    if(base.some(p=>p.kind==='point'&&p.position>=L&&p.force!==0))throw Error('A point force at the zero-area apex is not admitted. Apply the load at a finite section or use a distributed load.');
+    const boundaries=uniq([0,L,cavityEnd,Math.max(0,cavityEnd-g.cap),Math.min(L,g.cap),...(g.stations||[]).map(s=>s.eta*L),...ribs.flatMap(y=>[Math.max(0,y-g.ribThickness/2),Math.min(L,y+g.ribThickness/2)])]);
+    const sectionCache=new Map();
+    function section(y){
+      if(!(y>=0&&y<L))return null;
+      if(sectionCache.has(y))return sectionCache.get(y);
+      const loops=E.ringLoops(g,y),outer=E.outerContour(g,y,241),oi=polyIntegrals(outer),ii=polyIntegrals(loops.inner||[]);
+      const cap=y<g.cap||y>=cavityEnd-g.cap,rib=ribs.some(q=>Math.abs(y-q)<=g.ribThickness/2),filled=cap||rib;
+      const p=oi.map((v,k)=>v-(filled?0:ii[k])),A=p[0];
+      if(!(A>0&&Number.isFinite(A)))throw Error(`Invalid positive-area material section at y=${y} mm.`);
+      const xc=p[2]/A,zc=p[1]/A,scale=chord(g,y);
+      // Reintegrate centered, nondimensional polygons to avoid raw-moment cancellation.
+      const centered=polygon=>polyIntegrals(polygon.map(q=>[(q[0]-xc)/scale,(q[1]-zc)/scale]));
+      const po=centered(outer),pi=filled?[0,0,0,0,0,0]:centered(loops.inner||[]),h=po.map((v,k)=>v-pi[k]);
+      const Izz=h[3],Ixx=h[4],Ixz=h[5],det=Ixx*Izz-Ixz*Ixz,trace=Ixx+Izz;
+      if(!(scale>0&&Ixx>0&&Izz>0&&det>1e-12*trace*trace))throw Error(`The centered section tensor is singular or ill conditioned at y=${y} mm; no regularized stress is returned.`);
+      const shellA=oi[0]-ii[0],extra=A-shellA;
+      const out={y,A,xc,zc,scale,outer,filled,cap,rib,Ixx,Izz,Ixz,det,shellA,capA:cap?extra:0,ribA:!cap&&rib?extra:0};
+      sectionCache.set(y,out);return out;
+    }
+    function gauss(fn,a,b){const v=[];for(let i=0;i<8;i++){const q=fn((a+b)/2+(b-a)*GX[i]/2),w=GW[i]*(b-a)/2;for(let k=0;k<q.length;k++)v[k]=(v[k]||0)+w*q[k];}return v;}
+    function integrate(fn,a,b,depth=0){
+      if(!(b>a))return [0,0,0];
+      const full=gauss(fn,a,b),mid=(a+b)/2,left=gauss(fn,a,mid),right=gauss(fn,mid,b),fine=left.map((v,k)=>v+right[k]);
+      const okay=fine.every((v,k)=>Math.abs(v-full[k])<=2e-9*Math.max(1,Math.abs(v)));
+      if(okay)return fine;
+      if(depth>=16)throw Error('Closed-tip load/mass quadrature did not converge; no unverified stress is returned.');
+      const u=integrate(fn,a,mid,depth+1),v=integrate(fn,mid,b,depth+1);return u.map((x,k)=>x+v[k]);
+    }
+    function splitIntegral(fn,a,b,breaks=boundaries){let out=null;const cuts=uniq([a,b,...breaks.filter(q=>q>a&&q<b)]);for(let i=1;i<cuts.length;i++){const v=integrate(fn,cuts[i-1],cuts[i]);if(!out)out=v;else out=out.map((x,k)=>x+v[k]);}return out||[0,0,0];}
+    const rho=pla.rho/1000,massParts=splitIntegral(y=>{const s=section(y);return [s.shellA,s.ribA,s.capA].map(a=>rho*a);},0,L);
+    const mass={shell:massParts[0],ribs:massParts[1],caps:massParts[2],spars:0,rods:0,tip:0};mass.printed=mass.total=mass.shell+mass.ribs+mass.caps;
+    const position=(p,y)=>Geometry.transformPoint(g,y,p.localPoint||[customFraction(p,y)*chord(g,y),0]);
+    const loadBreaks=p=>p.kind==='table'?p.points.map(q=>q[0]):p.kind==='schrenk'?[0,L]:[p.start,p.end];
+    const line=(p,y)=>p.actualChordLaw?p.total*chord(g,y)/planformArea:p.kind==='schrenk'?.5*p.total*(chord(g,y)/planformArea+4/(Math.PI*L)*Math.sqrt(Math.max(0,1-(y/L)**2))):p.kind==='distributed'?(y<p.start||y>p.end?0:p.qStart+(p.qEnd-p.qStart)*(y-p.start)/(p.end-p.start)):customLine(p,g,y);
+    function sourceWrench(y,referenceX=0){
+      let V=0,Mx=0,minusMy=0;
+      for(const p of base){
+        if(p.kind==='point'){if(p.position>=y){const P=position(p,p.position);V+=p.force;Mx+=(p.position-y)*p.force;minusMy+=(P[0]-referenceX)*p.force;}continue;}
+        const bs=loadBreaks(p),a=Math.max(y,bs[0]),b=bs.at(-1);if(!(b>a))continue;
+        const v=splitIntegral(q=>{const f=line(p,q),P=position(p,q);return [f,(q-y)*f,(P[0]-referenceX)*f];},a,b,uniq([...boundaries,...bs]));V+=v[0];Mx+=v[1];minusMy+=v[2];
+      }
+      if(source.selfWeight){const v=splitIntegral(q=>{const s=section(q),f=-rho*s.A*GRAV/1000,P=Geometry.transformPoint(g,q,[s.xc,s.zc]);return [f,(q-y)*f,(P[0]-referenceX)*f];},y,L);V+=v[0];Mx+=v[1];minusMy+=v[2];}
+      return {V,Mx,minusMy};
+    }
+    const cuts=new Map();let maxRecoveryResidual=0;
+    function cutAt(y){
+      if(!Number.isFinite(y)||y<0||y>L)throw Error('Stress station must lie within the physical span.');
+      if(cuts.has(y))return cuts.get(y);
+      if(y===L){const out={y,nominal:true,resolved:false,endZone:'tip',reason:'Zero-area apex: stress is undefined; no finite tip section is substituted.',force:[0,0,0],moment:[0,0,0],localForce:[0,0,0],localMoment:[0,0,0]};cuts.set(y,out);return out;}
+      const s=section(y),reference=Geometry.transformPoint(g,y,[s.xc,s.zc]),w=sourceWrench(y,reference[0]);
+      // Unknowns are stress coefficients for x/chord,z/chord. N=Mz=0 for global-z loads.
+      const target=-w.Mx/(s.scale**3),b=-target*s.Ixz/s.det,c=target*s.Ixx/s.det;
+      const recoveredX=(b*s.Ixx+c*s.Ixz)*s.scale**3,recoveredZ=(b*s.Ixz+c*s.Izz)*s.scale**3;
+      const residual=Math.max(Math.abs(recoveredX),Math.abs(recoveredZ+w.Mx))/Math.max(1,Math.abs(w.Mx));maxRecoveryResidual=Math.max(maxRecoveryResidual,residual);
+      if(!(residual<1e-8))throw Error('Recovered normal stress failed section moment equilibrium.');
+      const out={...s,y,reference,force:[0,0,w.V],moment:[w.Mx,-w.minusMy,0],localForce:[0,0,-w.V],localMoment:[-w.minusMy,w.Mx,0],coefficientX:b,coefficientZ:c,nominal:true,resolved:true,endZone:null,recoveryResidual:residual};cuts.set(y,out);return out;
+    }
+    function evaluateStress(y,point,material=pla){
+      const cut=cutAt(y);if(!cut.resolved)return {value:NaN,resolved:false,nominal:true,station:y,endZone:'tip',reason:cut.reason};
+      const modulus=typeof material==='number'?material:material.E;
+      if(!Number.isFinite(modulus)||Math.abs(modulus-pla.E)>1e-8*pla.E)throw Error('This stress-only model contains only the selected homogeneous skin/rib material.');
+      const value=cut.coefficientX*(point[0]-cut.xc)/cut.scale+cut.coefficientZ*(point[1]-cut.zc)/cut.scale;
+      return {value,resolved:true,nominal:true,station:y,endZone:null,reason:'Section-equilibrium nominal spanwise normal stress; local taper, rib, bond and tip concentrations are unresolved.'};
+    }
+    const tipStations=Array.from({length:7},(_,k)=>L*(1-10**(-k-1))),gridCount=Math.min(1001,Math.max(21,input.nGrid||5*(input.nElements||40)+1));
+    const yy=uniq([...Array.from({length:gridCount},(_,i)=>L*i/(gridCount-1)),...boundaries,...base.flatMap(p=>p.kind==='point'?[p.position]:loadBreaks(p)),...tipStations]);
+    const y=Float64Array.from(yy),recovered=yy.map(cutAt),tension=[],compression=[];
+    recovered.forEach(c=>{if(!c.resolved){tension.push(NaN);compression.push(NaN);return;}const values=c.outer.map(p=>evaluateStress(c.y,p).value);tension.push(Math.max(0,...values));compression.push(Math.max(0,...values.map(v=>-v)));});
+    const tipSamples=tipStations.map(q=>{const i=yy.indexOf(q);return {y:q,distanceToTip:L-q,chord:chord(g,q),tension:tension[i],compression:compression[i]};});
+    const qtip=base.filter(p=>p.kind!=='point').reduce((v,p)=>v+line(p,L),0),qscale=Math.max(1,...base.filter(p=>p.kind!=='point').map(p=>Math.abs(line(p,L*(1-1e-6)))));
+    const sqrtCoefficient=base.reduce((v,p)=>v+(p.kind==='schrenk'?.5*p.total*4/(Math.PI*L)*Math.sqrt(2/L):p.kind==='elliptic'&&p.end===L&&p.shape!=='end'?p.peak*(p.shape==='middle'?2:Math.sqrt(2))/Math.sqrt(p.end-p.start):0),0);
+    const uniformDivergence=g.planform==='delta'&&Math.abs(qtip)>1e-10*qscale,sqrtDivergence=g.planform==='delta'&&!uniformDivergence&&Math.abs(sqrtCoefficient)>1e-10*qscale/Math.sqrt(L),divergent=uniformDivergence||sqrtDivergence;
+    const tipBehavior={endpoint:'undefined-zero-area',status:divergent?'divergent':g.planform==='elliptic'?'vanishing-for-bounded-line-load':'limit-unclassified',samples:tipSamples,tipLineLoadNPerMm:qtip,reason:uniformDivergence?'Delta solid-tip nominal bending stress diverges as 1/(L-y) for nonzero bounded endpoint line load.':sqrtDivergence?'A noncancelling elliptic endpoint component gives unbounded nominal delta-tip bending stress; near-cancelling endpoint loads require a separate asymptotic assessment.':g.planform==='elliptic'?'For bounded line loads and no apex point force, the homothetic solid elliptic-tip nominal bending stress tends to zero; the apex itself has no stress value.':'A zero endpoint line load does not by itself determine the delta-tip limit. The displayed finite samples are not a global maximum.',globalMaximumCertified:false};
+    // Display gravity as quadrature points; stress integration above remains continuous.
+    const gravity=[];
+    function gravityMarkers(a,b,depth=0){
+      const density=q=>{const s=section(q),P=Geometry.transformPoint(g,q,[s.xc,s.zc]),m=rho*s.A;return [m,m*q,m*P[0]];};
+      const mid=(a+b)/2,full=gauss(density,a,b),left=gauss(density,a,mid),right=gauss(density,mid,b),fine=left.map((v,k)=>v+right[k]);
+      if(!fine.every((v,k)=>Math.abs(v-full[k])<=2e-9*Math.max(1,Math.abs(v)))){if(depth>=16)throw Error('Self-weight display quadrature did not converge.');gravityMarkers(a,mid,depth+1);gravityMarkers(mid,b,depth+1);return;}
+      for(const[lo,hi]of[[a,mid],[mid,b]])for(let j=0;j<8;j++){const q=(lo+hi)/2+(hi-lo)*GX[j]/2,s=section(q),m=rho*s.A*GW[j]*(hi-lo)/2;gravity.push({kind:'point',position:q,force:-m*GRAV/1000,fraction:s.xc/chord(g,q),localPoint:[s.xc,s.zc],gravity:true,quadratureDisplay:true});}
+    }
+    if(source.selfWeight)for(let k=1;k<boundaries.length;k++)gravityMarkers(boundaries[k-1],boundaries[k]);
+    const root=cutAt(0),applied=sourceWrench(0),displayWeight=-gravity.reduce((a,p)=>a+p.force,0),actualWeight=source.selfWeight?mass.total*GRAV/1000:0;
+    const load={...source,kind:'custom',items:[...base,...gravity],sourceLoad:source,gravitySummary:source.selfWeight?{weightN:actualWeight,appliedN:applied.V+actualWeight,netN:applied.V,quadrature:'Continuous adaptive 8-point Gauss integration split at CAD cap/rib/cavity transitions; display points are quadrature markers'}:undefined};
+    const limitations=['Section-equilibrium nominal spanwise normal stress on actual aircraft-y material polygons; no displacement or frame solution','Zero user sweep, dihedral and incidence only; delta planform leading-edge sweep is retained geometrically','Locally prismatic Navier stress is a beam approximation; finite taper and rib/cap transitions do not resolve 3-D concentrations','Actual CAD skin/rib/cap union is included without overlap; thin printed material is represented by effective homogeneous isotropic properties','Shear, torsional shear, warping, local buckling, bond/joint stresses, dynamics and overall safety certification are unavailable','The exact zero-area apex has undefined stress; finite samples are not a certified global maximum'];
+    const verification={method:'Outboard load integration and polygon moment recovery',normalStressEquilibriumRelativeResidual:maxRecoveryResidual,forceBalanceResidual:root.force[2]-applied.V,momentBalanceResidual:root.moment[0]-applied.Mx,selfWeightN:actualWeight,displayQuadratureWeightN:displayWeight,displayQuadratureRelativeError:Math.abs(displayWeight-actualWeight)/Math.max(1,actualWeight),adaptiveQuadratureRelativeTolerance:2e-9,passed:maxRecoveryResidual<1e-8};
+    const NaNs=()=>Float64Array.from(y,()=>NaN),V=Float64Array.from(recovered,c=>c.force[2]),M=Float64Array.from(recovered,c=>c.moment[0]),T=Float64Array.from(recovered,c=>c.moment[1]);
+    const mesh={requestedElements:input.nElements||null,actualElements:0,nodeCount:0,mandatorySpanStations:boundaries,stressStations:y.length};
+    const analysis3D={stressOnly:true,method:'Exact closed-tip section-equilibrium nominal normal stress (no deformation solve)',limitations,units:{length:'mm',force:'N',moment:'N mm',stress:'MPa',mass:'g'},evaluateStress,cutAt,normalStress:{skinTension:tension,skinCompression:compression,spars:[]},resultants:recovered.map(c=>({y:c.y,force:c.force,moment:c.moment,localForce:c.localForce,localMoment:c.localMoment,endZone:c.endZone})),localM2:M,localM3:Float64Array.from(y,()=>0),localT:T,loadMapping:{endWrenches:[],method:'Original physical positions; continuous outboard wrench integration'},verification,tipBehavior,spanStations:yy,sectionSamples:[],validity:{nominalOnly:true,stressOnly:true,zeroAreaApexExcluded:true}};
+    return {analysis3D,geometry:g,pla,rod,assembly:asm,load,criteria:crit,y,ySec:boundaries,sections:[],mass,V,M,T,stress:{sigTop:Float64Array.from(tension),sigBot:Float64Array.from(compression,v=>-v),spars:[]},ribs,seams,seamsActive:[],deflection:NaNs(),twist:NaNs(),chordwiseDeflection:NaNs(),fem:{fBending:[],fTorsion:[]},mesh,verification,tipBehavior,checks:[],governing:null,appliedForce:root.force[2],appliedMoment:root.moment[0]};
+  }
+  return {solve};
+})();
+if(typeof module!=='undefined'&&module.exports)module.exports=WingClosedTipStress;
+
 /*
  * MIE 446 Wing Lab — structural engine.
  * JavaScript port of computational/printed-wing-solver/printed_wing_solver.py (tested Python solver).
@@ -7208,6 +7329,7 @@ const WingEngine = (() => {
   const Airfoils = typeof WingAirfoils !== 'undefined' ? WingAirfoils : (typeof require === 'function' ? require('./wing_airfoils.js') : null);
   const Geometry = typeof WingGeometry !== 'undefined' ? WingGeometry : (typeof require === 'function' ? require('./wing_geometry.js') : null);
   const Frame = typeof WingFrame3D !== 'undefined' ? WingFrame3D : (typeof require === 'function' ? require('./wing_frame3d.js') : null);
+  const ClosedTipStress = typeof WingClosedTipStress !== 'undefined' ? WingClosedTipStress : (typeof require === 'function' ? require('./wing_closed_tip_stress.js') : null);
   if (!Profiles) throw new Error("Load load_profiles.js before engine.js.");
   const GRAV = 9.81;
   const VERSION = "1.3.0";
@@ -7308,8 +7430,9 @@ const WingEngine = (() => {
     if(g.spars.length&&g.rodFractions.length)throw new Error('Compare shell + rods and shell + bonded spars separately: mixed rod/spar connections are not validated in this model. Remove rods before adding a spar.');
     if (g.rodFractions.some(f => !Number.isFinite(f) || f <= 0 || f >= 1)) throw new Error("Rod positions must be fractions between 0 and 1.");
     const pos = ["semiSpan", "rootChord", "tipChord", "skin", "ribThickness", "te", "cap", "rodDiameter", "sleeveWall"];
-    for (const k of pos) if (!Number.isFinite(g[k])||!(g[k] > 0)) throw new Error(`${k} must be positive and finite.`);
+    for (const k of pos.filter(k=>k!=="tipChord"||!Geometry.closedTip(g))) if (!Number.isFinite(g[k])||!(g[k] > 0)) throw new Error(`${k} must be positive and finite.`);
     if(!Number.isFinite(g.cavityStart)||!Number.isFinite(g.cavityEnd)||g.cavityStart<=0||g.cavityEnd>=1||g.cavityStart>=g.cavityEnd)throw new Error('Cavity limits must satisfy 0 < start < end < 1.');
+    if(Geometry.closedTip(g)&&(g.rodFractions.length||g.spars.length))throw Error('Closed-tip wings currently support skin and ribs. Remove rods and bonded spars before selecting a zero-chord tip.');
     if (g.tipChord > g.rootChord) throw new Error("Tip chord cannot exceed root chord.");
     if (![1, 2, 3].includes(+g.modules)) throw new Error("Use 1, 2 or 3 modules.");
     if (g.interfaceOffset <= g.ribThickness) throw new Error("Interface rib offset must exceed rib thickness.");
@@ -7343,6 +7466,14 @@ const WingEngine = (() => {
   const localGeometry = (g,y) => g.airfoil || g.stations || g.planform==='elliptic' ? {...g,naca:airfoilAt(g,y),sectionChord:chordAt(g,y)} : g;
   const sparParts = (g,y) => Spars.parts(localGeometry(g,y),y,verticalOrdinates);
   function analysisCapability(g,input={}) {
+    if(Geometry.closedTip(g)){
+      const restrictions=[];
+      if(Math.abs(g.sweepDeg||0)>1e-10||Math.abs(g.dihedralDeg||0)>1e-10||[0,g.semiSpan,...(g.stations||[]).map(s=>s.eta*g.semiSpan)].some(y=>Math.abs(Geometry.stationAt(g,y).incidenceDeg)>1e-10))restrictions.push('Exact-tip section stress requires zero sweep, dihedral and incidence at every station.');
+      if(g.rodFractions?.length||g.spars?.length)restrictions.push('Exact-tip section stress supports skin and ribs; remove rods and spars.');
+      if(g.modules>1&&input.assembly?.seamsBonded!==true)restrictions.push('Use one piece or explicitly fully bonded module seams for section stress.');
+      if((input.load?.kind??DEFAULT_LOAD.kind)==='flight'&&(input.load?.inertiaRelief??DEFAULT_LOAD.inertiaRelief)!==false)restrictions.push('Set Wing inertia relief to Ignored for exact-tip section stress.');
+      return {supported:!restrictions.length,requires3D:true,stressOnly:true,mode:'section-stress',reasons:['Exact zero-chord tip'],restrictions,message:restrictions.length?restrictions.join(' '):'Nominal axial and biaxial normal section stress from physical load equilibrium. Exact apex stress and deformation are unresolved; torsion, shear, local buckling and 3-D stress concentrations are not assessed.'};
+    }
     const c=Geometry.analysisCapability(g);
     if(c.supported&&!g.airfoil&&!g.stations)return c;
     if(c.supported)c.reasons.push('explicit airfoil profiles / station sections require the full biaxial spatial beam');
@@ -7450,9 +7581,22 @@ const WingEngine = (() => {
   }
   const annulusIntegrals = (c, R, r) => diskIntegrals(c, R).map((v, i) => v - diskIntegrals(c, r)[i]);
 
+  const effectiveTE=(g,y)=>Geometry.closedTip(g)?g.te*Math.min(1,chordAt(g,y)/(12*g.skin)):g.te;
+  const tipCavityCache=new WeakMap();
+  function cavityTipLimit(g){
+    if(!Geometry.closedTip(g))return g.semiSpan;
+    if(tipCavityCache.has(g))return tipCavityCache.get(g);
+    const raw={...g,_rawCavity:true};ringLoops(raw,0,81,8,8);
+    let a=0,b=g.semiSpan;
+    // First closure from the root, rather than admitting disconnected pockets.
+    for(let i=1;i<=128;i++){const y=g.semiSpan*i/128;try{ringLoops(raw,y,81,8,8);a=y;}catch{b=y;break;}}
+    for(let i=0;i<32;i++){const y=(a+b)/2;try{ringLoops(raw,y,81,8,8);a=y;}catch{b=y;}}
+    tipCavityCache.set(g,a);return a;
+  }
   function outerContour(g, y, count = 241) {
     const c = chordAt(g, y);
-    const { xu, zu, xl, zl } = airfoilSurfaces(airfoilAt(g,y), c, g.te, count);
+    if(c===0)return Array.from({length:2*count-1},()=>[0,0]);
+    const { xu, zu, xl, zl } = airfoilSurfaces(airfoilAt(g,y), c, effectiveTE(g,y), count);
     const pts = xu.map((x, i) => [x, zu[i]]);
     for (let i = xl.length - 1; i >= 1; i--) pts.push([xl[i], zl[i]]);
     return pts;
@@ -7461,10 +7605,13 @@ const WingEngine = (() => {
   // Matched inner (cavity) and outer loops for a mapped ring mesh, CCW around the cavity
   function ringLoops(g, y, Ks = 120, Kn = 40, Ka = 24) {
     const c = chordAt(g, y);
+    if(Geometry.closedTip(g)&&!g._rawCavity&&y>=cavityTipLimit(g))return {inner:[],outer:outerContour(g,y,Ks),corners:[],chord:c,upperSkin:[],solid:true};
+    if(c===0)throw Error('Zero-chord tip has no hollow cavity.');
+    const te=effectiveTE(g,y);
     const t = g.skin;
     const x0 = g.cavityStart, x1 = g.cavityEnd;
     const profile=airfoilAt(g,y);
-    const { xu, zu, xl, zl } = airfoilSurfaces(profile, c, g.te, 401);
+    const { xu, zu, xl, zl } = airfoilSurfaces(profile, c, te, 401);
     const outUp = (x) => interp(x, xu, zu);
     const outLo = (x) => interp(x, xl, zl);
     const xs = cosineSpacing(Ks, x0, x1).map((v) => v * c);
@@ -8135,14 +8282,16 @@ const WingEngine = (() => {
     return { V, M, X };
   }
   // Progressive solving for a responsive interface: analyse station k now, solve() reuses it.
-  const stations = (input) => normalize(input).ySec;
+  const stations = (input) => {const n=normalize(input);return Geometry.closedTip(n.g)?[]:n.ySec;};
   function warmStation(input, k) {
     const n = normalize(input);
     const cap=analysisCapability(n.g,input);if(!cap.supported)throw Error(cap.message);
+    if(Geometry.closedTip(n.g))return null;
     return cachedSection(n.g, n.pla, n.rod, n.asm, n.ySec[k]);
   }
   function sectionAt(input, y) {
     const n = normalize(input);
+    if(Geometry.closedTip(n.g))throw Error('The hollow-section torsion/warping detail is unavailable for exact-tip stress studies, including their solid tip region. Use the nominal section-stress result.');
     return cachedSection(n.g, n.pla, n.rod, n.asm, Math.min(Math.max(y, 0), n.g.semiSpan));
   }
 
@@ -8151,6 +8300,7 @@ const WingEngine = (() => {
     let load=sourceLoad;
     const capability=analysisCapability(g,input);
     if(!capability.supported)throw Error(capability.message);
+    if(Geometry.closedTip(g))return solveClosedTipStress(input);
     if(capability.requires3D)return solveSpatial(input,normalized);
     const nGrid = input.nGrid || 901, nElem = requestedElementCount(input);
     const L = g.semiSpan;
@@ -8441,7 +8591,12 @@ const WingEngine = (() => {
   // Spatial extension. The legacy straight-wing route above is deliberately
   // unchanged. Normal cuts are affine projections of aircraft x-z sections;
   // dA_normal = |t_y| dA_xz and ds = dy/|t_y| preserve physical volume.
+  function solveClosedTipStress(input){
+    if(!ClosedTipStress)throw Error('Load wing_closed_tip_stress.js before engine.js for exact-tip section stress.');
+    return ClosedTipStress.solve(input,{E:{ringLoops,outerContour,cavityTipLimit,ribStations,seams},normalize,polyIntegrals,prescribedFlightLoads,customLine,customFraction,Geometry,Frame,GRAV,Profiles,chordAt,airfoilAt,requestedElementCount});
+  }
   function solveSpatial(input,n=normalize(input)) {
+    if(Geometry.closedTip(n.g)){const cap=analysisCapability(n.g,input);if(!cap.supported)throw Error(cap.message);return solveClosedTipStress(input);}
     const {g,pla,rod,asm,load:sourceLoad,crit}=n,L=g.semiSpan,F=Frame;
     let load=sourceLoad;
     const count=requestedElementCount(input,MESH_LIMITS.spatialDefault);
@@ -8642,11 +8797,13 @@ const WingEngine = (() => {
   }
   function spatialPointMotion(result,y,localPoint){
     if(!result.analysis3D)throw Error('A spatial beam result is required.');
+    if(result.analysis3D.stressOnly)return {point:Geometry.transformPoint(result.geometry,y,localPoint),reference:null,resolved:false,nominal:true,station:y,endZone:null,reason:'This section-equilibrium study does not calculate displacement or rotation.',displacement:null,rotation:null,movedPoint:null};
     const a=result.analysis3D,key=[y,...localPoint].join(',');if(a.pointMotionCache.has(key))return a.pointMotionCache.get(key);const point=Geometry.transformPoint(result.geometry,y,localPoint);let foot;try{foot=a.locatePhysicalPoint(point);}catch(error){const out={point,reference:null,resolved:false,nominal:true,station:null,endZone:'mapping',reason:error.message,displacement:null,rotation:null,movedPoint:null};a.pointMotionCache.set(key,out);return out;}
     if(foot.outside)return {point,reference:foot.reference,resolved:false,nominal:true,station:foot.station,endZone:foot.outside,reason:'Physical point normal foot lies outside the finite beam; motion is not extrapolated or silently clamped.',displacement:null,rotation:null,movedPoint:null};
     const r=a.frameAt(foot.station),reference=r.reference,displacement=Frame.add(r.displacement,Frame.cross(r.rotation,Frame.sub(point,reference))),endZone=a.endZoneAt(foot.station),out={point,reference,station:foot.station,resolved:true,nominal:true,endZone,displacement,rotation:r.rotation,movedPoint:Frame.add(point,displacement)};a.pointMotionCache.set(key,out);return out;
   }
   function normalStressLocationAt3D(result,y,localPoint,material=result.pla){
+    if(result.analysis3D?.stressOnly)return result.analysis3D.evaluateStress(y,localPoint,material);
     if(!result.analysis3D)throw Error('A spatial beam result is required.');const a=result.analysis3D,E=typeof material==='number'?material:material.E,key=[y,...localPoint,E].join(',');if(a.pointStressCache.has(key))return a.pointStressCache.get(key);const point=Geometry.transformPoint(result.geometry,y,localPoint);let foot;try{foot=a.locatePhysicalPoint(point);}catch(error){const out={value:NaN,resolved:false,nominal:true,station:null,endZone:'mapping',reason:error.message};a.pointStressCache.set(key,out);return out;}
     if(foot.outside)return {value:NaN,resolved:false,nominal:true,station:foot.station,endZone:foot.outside,reason:'Physical point normal foot lies outside the finite beam.'};
     const cut=a.cutAt(foot.station);if(cut.endZone)return {value:NaN,resolved:false,nominal:true,station:foot.station,endZone:cut.endZone,reason:'Normal cut intersects an oblique end face; local end stresses are unresolved. This geometric mask is not a validated Saint-Venant decay distance.'};
@@ -8716,7 +8873,7 @@ const WingEngine = (() => {
     makeGeometry, chordAt, seams, ribStations, moduleBounds, rodCentres, rodRadius, holeRadius, sleeveRadius,
     airfoilSurfaces, verticalOrdinates, outerContour, ringLoops, ringMesh, shellFE, analyseSection, solve,
     shearField, compareAssemblies, interp, camber, normalizeNaca, normalize, stations, warmStation, sectionAt,
-    sparParts,airfoilAt,analysisCapability,solveSpatial,spatialPointMotion,normalStressAt3D,normalStressLocationAt3D,
+    cavityTipLimit,effectiveTE,sparParts,airfoilAt,analysisCapability,solveSpatial,spatialPointMotion,normalStressAt3D,normalStressLocationAt3D,
     stationAt:Geometry.stationAt,transformPoint:Geometry.transformPoint,inversePoint:Geometry.inversePoint,
   };
 })();
@@ -10254,7 +10411,7 @@ if(typeof module!=='undefined')module.exports=WingWorkspaceUI;
     if (!own(raw, 'naca')) issues.err(join(path, 'naca'), 'is missing (four digits of a NACA 4-digit section, such as "2412")');
     else if (typeof raw.naca !== 'string' || !/^\d{4}$/.test(raw.naca)) issues.err(join(path, 'naca'), `must be the four digits of a NACA 4-digit section as text, such as "2412", not ${describe(raw.naca)}`);
     else { try { g.naca = E.normalizeNaca(raw.naca); } catch (e) { issues.err(join(path, 'naca'), engineMessage(e, 'WingEngine')); } }
-    for (const [k, label] of Object.entries(POSITIVE_MM)) g[k] = num(issues, raw, k, path, { gt: 0, unit: 'mm', label });
+    for (const [k, label] of Object.entries(POSITIVE_MM)) g[k] = num(issues, raw, k, path, { ...(k==='tipChord'&&['delta','elliptic'].includes(raw.planform)?{ge:0}:{gt:0}), unit: 'mm', label });
     g.modules = num(issues, raw, 'modules', path, { integer: true, ge: 1, le: 3, label: 'number of printed modules' });
     g.interiorRibs = num(issues, raw, 'interiorRibs', path, { integer: true, ge: 0, le: 16, label: 'requested evenly spaced interior ribs' });
     const rp = join(path, 'customInteriorRibs');
@@ -11673,49 +11830,57 @@ const WingPrintUI=(()=>{
  }
  function mount({host,getInput,workerURL,documentRef=globalThis.document,WorkerClass=globalThis.Worker,onSymmetryChange=()=>{}}){
   const doc=documentRef,node=(tag,text,cls)=>{const n=doc.createElement(tag);if(text)n.textContent=text;if(cls)n.className=cls;return n;};
-  const button=node('button','Download STL','btn primary');button.type='button';button.id='wingDownloadSTL';const symmetry=node('label',null,'wing-print-symmetry'),fullWing=node('input');fullWing.type='checkbox';fullWing.id='wingFullSymmetric';symmetry.append(fullWing,doc.createTextNode(' Full wing · mirror'));const symmetryNote=node('span','Symmetric results: same loads and root clamp on both halves.');symmetryNote.id='wingSymmetryNote';symmetryNote.hidden=true;symmetry.title='Mirror the designed semi-wing across its root. Results reflect the original clamped semi-wing under symmetric loads and supports. Printed modules 1 joins both halves into one STL; 2/3 produces 4/6 pieces for assembly. The full one-piece wing must fit the 300 mm printer.';host.append(symmetry,button,symmetryNote);fullWing.onchange=()=>{symmetryNote.hidden=!fullWing.checked;onSymmetryChange(fullWing.checked);};
+  const button=node('button','Download STL','btn primary');button.type='button';button.id='wingDownloadSTL';const symmetry=node('label',null,'wing-print-symmetry'),fullWing=node('input');fullWing.type='checkbox';fullWing.id='wingFullSymmetric';symmetry.append(fullWing,doc.createTextNode(' Full wing · mirror'));const symmetryNote=node('span','Symmetric results: same loads and root clamp on both halves.');symmetryNote.id='wingSymmetryNote';symmetryNote.hidden=true;symmetry.title='Mirror the designed semi-wing across its root. Results reflect the original clamped semi-wing under symmetric loads and supports. Printed modules 1 joins both halves into one STL; 2/3 produces 4/6 pieces for assembly. The full one-piece wing must fit the 300 mm printer.';const dxf=node('button','DXF','btn'),step=node('button','STEP','btn');dxf.type=step.type='button';dxf.id='wingDownloadDXF';step.id='wingDownloadSTEP';dxf.title='2D millimetre planform and rib profiles';step.title='3D faceted solid CAD exchange; not smooth or parametric features';host.append(symmetry,button,dxf,step,symmetryNote);fullWing.onchange=()=>{symmetryNote.hidden=!fullWing.checked;onSymmetryChange(fullWing.checked);};
   const panel=node('section',null,'wing-print-dialog');panel.hidden=true;panel.setAttribute('role','dialog');panel.setAttribute('aria-modal','true');panel.setAttribute('aria-labelledby','wingPrintTitle');const title=node('h3','Printable STL');title.id='wingPrintTitle';
-  const close=node('button','×','btn wing-print-close');close.type='button';close.setAttribute('aria-label','Close STL builder');const status=node('p');status.id='wingPrintStatus';status.setAttribute('role','status');status.setAttribute('aria-live','polite');const details=node('div');details.id='wingPrintDetails';panel.append(title,close,status,details);doc.body.append(panel);
+  const close=node('button','×','btn wing-print-close');close.type='button';close.setAttribute('aria-label','Close CAD exporter');const status=node('p');status.id='wingPrintStatus';status.setAttribute('role','status');status.setAttribute('aria-live','polite');const details=node('div');details.id='wingPrintDetails';panel.append(title,close,status,details);doc.body.append(panel);
   const style=node('style');style.textContent='.wing-print-dialog{position:fixed;z-index:300;right:12px;top:90px;width:min(580px,calc(100vw - 24px));max-height:calc(100dvh - 110px);overflow:auto;padding:16px;background:var(--panel,#fff);color:var(--fg,#17202c);border:2px solid var(--accent,#0875d1);border-radius:12px;box-shadow:0 12px 40px #10203040}.wing-print-dialog[hidden]{display:none}.wing-print-dialog h3{margin:0 44px 12px 0}.wing-print-close{position:absolute;right:8px;top:8px}.wing-print-dialog table{width:100%;font-size:13px}.wing-print-dialog th,.wing-print-dialog td{text-align:left;padding:5px;border-bottom:1px solid var(--line,#ccd)}.wing-print-dialog .btn{margin:5px 5px 0 0;min-height:40px}.wing-print-symmetry{display:inline-flex;align-items:center;gap:5px;padding:6px;font-weight:600}.wing-print-symmetry input{width:18px;height:18px}#wingSymmetryNote{font-size:12px;color:var(--muted)}#wingPrintStatus[data-error=true]{color:var(--bad,#ba2635)}';doc.head.append(style);
   let worker=null,returnFocus=null,output=null,fitRecord=null;try{fitRecord=JSON.parse(doc.defaultView.localStorage.getItem('winglab:print-fit-record'));}catch{}
-  const release=()=>{worker?.terminate();worker=null;button.disabled=false;};
+  const release=()=>{worker?.terminate();worker=null;for(const b of [button,dxf,step])b.disabled=false;};
   const download=(blob,name)=>{const url=doc.defaultView.URL.createObjectURL(blob),a=node('a');a.href=url;a.download=name;doc.body.append(a);a.click();a.remove();doc.defaultView.setTimeout(()=>doc.defaultView.URL.revokeObjectURL(url),2000);};
   const fail=text=>{release();output=null;status.dataset.error='true';status.textContent=text;};
   const currentInput=()=>({...getInput(),fullWing:fullWing.checked});
   const key=input=>JSON.stringify([input.geometry,input.density,input.shellMaterial,input.fullWing]);
   close.onclick=()=>{if(worker){release();status.textContent='Build cancelled. No file exported.';}panel.hidden=true;returnFocus?.focus({preventScroll:true});};
   panel.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();e.stopPropagation();close.click();}if(e.key==='Tab'){const focusable=[...panel.querySelectorAll('button,a[href]')].filter(n=>!n.disabled),first=focusable[0],last=focusable.at(-1);if(e.shiftKey&&doc.activeElement===first){e.preventDefault();last.focus();}else if(!e.shiftKey&&doc.activeElement===last){e.preventDefault();first.focus();}}});
-  button.onclick=()=>{
-   returnFocus=button;panel.hidden=false;close.focus();details.replaceChildren();status.dataset.error='false';output=null;let input;
-   try{input=currentInput();}catch(e){fail(e.message);return;}
-   if(input.geometry.rodFractions?.length){
+  function start(format='stl',trigger=button){
+   returnFocus=trigger;title.textContent=format==='dxf'?'DXF · 2D profiles':format==='step'?'STEP · faceted 3D solids':'Printable STL';panel.hidden=false;close.focus();details.replaceChildren();status.dataset.error='false';output=null;let input;
+   try{input={...currentInput(),exportFormat:format};}catch(e){fail(e.message);return;}
+   if(format!=='dxf'&&input.geometry.rodFractions?.length){
     const g=input.geometry,signature=JSON.stringify([g.rodDiameter,g.clearance,g.sleeveWall,input.shellMaterial?.name]);
     if(!fitRecord||fitRecord.signature!==signature||fitRecord.tested!==true){
      status.textContent=`Rod-fit record required · rod diameter ${g.rodDiameter} mm; radial clearance ${g.clearance} mm; sleeve wall ${g.sleeveWall} mm. Use your actual completed coupon test.`;
      const label=node('label','Coupon ID / team revision '),reference=node('input');reference.id='wingPrintFitReference';reference.type='text';reference.maxLength=120;label.append(reference);
      const confirm=node('label'),checkbox=node('input');checkbox.type='checkbox';checkbox.id='wingPrintFitConfirmed';confirm.append(checkbox,doc.createTextNode(' I physically tested this rod/coupon and confirmed the fit using these settings and the same print process.'));
-     const proceed=node('button','Confirm fit record & build STL','btn primary');proceed.type='button';proceed.onclick=()=>{if(!reference.value.trim()||!checkbox.checked){status.textContent='Enter the coupon reference and confirm the actual physical fit test. A numerical result does not replace it.';return;}fitRecord={signature,reference:reference.value.trim(),tested:true,rodDiameter:g.rodDiameter,clearance:g.clearance,sleeveWall:g.sleeveWall};try{doc.defaultView.localStorage.setItem('winglab:print-fit-record',JSON.stringify(fitRecord));}catch{}button.click();};details.append(label,node('p'),confirm,node('p'),proceed);reference.focus();return;
+     const proceed=node('button','Confirm fit record & build '+format.toUpperCase(),'btn primary');proceed.type='button';proceed.onclick=()=>{if(!reference.value.trim()||!checkbox.checked){status.textContent='Enter the coupon reference and confirm the actual physical fit test. A numerical result does not replace it.';return;}fitRecord={signature,reference:reference.value.trim(),tested:true,rodDiameter:g.rodDiameter,clearance:g.clearance,sleeveWall:g.sleeveWall};try{doc.defaultView.localStorage.setItem('winglab:print-fit-record',JSON.stringify(fitRecord));}catch{}start(format,trigger);};details.append(label,node('p'),confirm,node('p'),proceed);reference.focus();return;
     }
     input.fitRecord=fitRecord;
    }
 
-   if(doc.defaultView.location.protocol==='file:'){fail('For direct STL export, open Wing Lab from the course website rather than a downloaded HTML file.');return;}
+   if(doc.defaultView.location.protocol==='file:'){fail('For CAD export, open Wing Lab from the course website rather than a downloaded HTML file.');return;}
    if(!WorkerClass){fail('This browser does not support background CAD construction. Open Wing Lab in an updated browser.');return;}
-   const stamp=key(input),name=(input.projectName||'Wing').normalize('NFC').replace(/[^\p{L}\p{N}._ -]/gu,'_').slice(0,70)||'Wing';button.disabled=true;status.textContent='Preparing the CAD kernel…';
+   const stamp=key(input),name=(input.projectName||'Wing').normalize('NFC').replace(/[^\p{L}\p{N}._ -]/gu,'_').slice(0,70)||'Wing';for(const b of [button,dxf,step])b.disabled=true;status.textContent=format==='dxf'?'Preparing DXF reference profiles…':'Preparing the CAD kernel…';
    try{worker=new WorkerClass(workerURL);}catch(e){fail('Cannot start the STL builder: '+e.message);return;}
    worker.onerror=e=>fail('STL builder could not run. Reload the page and try again. '+(e.message||''));
    worker.onmessage=event=>{
     const data=event.data;if(data.kind==='progress'){status.textContent=data.text;return;}if(data.kind==='error'){fail(data.text);return;}if(data.kind!=='complete')return;
     try{if(key(currentInput())!==stamp)throw Error('Inputs changed during construction. Solve the updated study and create STL again.');}catch(e){fail(e.message);return;}release();
-    const report=data.report;status.textContent=`Ready · ${report.fullWing?'Full symmetric wing':'Semi-wing'} · ${report.printedMassG.toFixed(1)} g printed plastic · ${report.modules.length} module(s) · ${(report.elapsedMs/1000).toFixed(1)} s. Watertight STL and printer-envelope checks passed.`;
-    const table=node('table'),head=node('tr');for(const label of ['Module','Dimensions (mm)','Triangles'])head.append(node('th',label));table.append(head);report.modules.forEach(m=>{const row=node('tr');for(const text of [String(m.module),m.sizeMm.map(x=>x.toFixed(1)).join(' × '),String(m.triangles)])row.append(node('td',text));table.append(row);});details.append(table,node('p','Import into OrcaSlicer in millimetres. Inspect orientation, supports, brim and every layer. These checks do not certify structural strength.'));
+    const report=data.report;
+    if(format==='dxf'){
+      status.textContent=`Ready · ${data.files.length} DXF file(s) · millimetres · 2D planform and rib reference profiles.`;
+      details.append(node('p','DXF contains 2D outlines, not a 3D solid. Rib profiles are centre-plane references; review finite rib thickness, taper and tool compensation before cutting.'));
+    }else{
+    status.textContent=`Ready · ${report.fullWing?'Full symmetric wing':'Semi-wing'} · ${report.printedMassG.toFixed(1)} g printed plastic · ${report.modules.length} module(s) · ${(report.elapsedMs/1000).toFixed(1)} s. ${format==='step'?'Faceted STEP; source physical mesh and printer checks passed.':'Watertight STL and printer-envelope checks passed.'}`;
+    const table=node('table'),head=node('tr');for(const label of ['Module','Dimensions (mm)','Triangles'])head.append(node('th',label));table.append(head);report.modules.forEach(m=>{const row=node('tr');for(const text of [String(m.module),m.sizeMm.map(x=>x.toFixed(1)).join(' × '),String(m.triangles)])row.append(node('td',text));table.append(row);});details.append(table,node('p','Import into OrcaSlicer in millimetres. Inspect orientation, supports, brim and every layer. These checks do not certify structural strength.'+(report.closedTip?' The solid pointed tip tapers below nominal wall thickness: inspect the terminal slicer layers.':'')));
+    if(format==='step')details.append(node('p','STEP is a faceted solid B-rep in original aircraft coordinates. It preserves the physical triangle surfaces; it does not reconstruct smooth surfaces or editable feature history. Files can be large.'));
+    }
     const record=encoder.encode(JSON.stringify(report,null,2));
-    output=data.files.length===1?{blob:new Blob([data.files[0].bytes],{type:'model/stl'}),name:name+(input.fullWing?'_full_wing':'')+'.stl'}:{blob:zip([...data.files,{name:'print_record.json',bytes:record.buffer}]),name:name+(input.fullWing?'_full_wing':'')+'_STL.zip'};
-    const again=node('button','Download again','btn primary');again.type='button';again.onclick=()=>download(output.blob,output.name);const save=node('button','Save print record','btn');save.type='button';save.onclick=()=>download(new Blob([record],{type:'application/json'}),name+'_print_record.json');details.append(again,save);download(output.blob,output.name);
+    output=data.files.length===1?{blob:new Blob([data.files[0].bytes],{type:format==='stl'?'model/stl':'application/octet-stream'}),name:name+(input.fullWing?'_full_wing':'')+'.'+(format==='step'?'step':format==='dxf'?'dxf':'stl')}:{blob:zip([...data.files,{name:'print_record.json',bytes:record.buffer}]),name:name+(input.fullWing?'_full_wing':'')+'_'+format.toUpperCase()+'.zip'};
+    const again=node('button','Download again','btn primary');again.type='button';again.onclick=()=>download(output.blob,output.name);const save=node('button',format==='stl'?'Save print record':'Save export record','btn');save.type='button';save.onclick=()=>download(new Blob([record],{type:'application/json'}),name+'_print_record.json');details.append(again,save);download(output.blob,output.name);
    };
    worker.postMessage(input);
-  };
-  return {button,panel,fullWing,cancel:()=>close.click()};
+  }
+  button.onclick=()=>start('stl',button);dxf.onclick=()=>start('dxf',dxf);step.onclick=()=>start('step',step);
+  return {button,dxf,step,panel,fullWing,cancel:()=>close.click()};
  }
  return{mount,zip};
 })();
@@ -11832,7 +11997,7 @@ if(typeof module!=='undefined'&&module.exports)module.exports=WingPrintUI;
       { id: "connections", g: "link", b: "Connections", kids: [{ id: "con", g: "link", b: "Rods in sleeves", i: S.assembly.rodsBonded ? "Epoxied (bonded)" : "Slip fit" }, { id: "con-seam", g: "link", b: "Module seams", i: S.assembly.seamsBonded ? "Epoxied" : "Dry (rods only)" }] },
       { id: "fixtures", g: "fix", b: "Fixtures", kids: [{ id: "fix", g: "fix", b: "Fixed: root face", i: "Clamped cantilever" }] },
       { id: "loads", g: "load", b: "External loads", kids: [{ id: "load", g: "load", b: L.kind === "flight" ? "Lift distribution" : L.kind === "custom" ? "Custom loads" : "Tip force", i: loadLbl }] },
-      { id: "mesh", g: "mesh", b: "Mesh", i: `${S.analysis?.nElements||'Default'} requested · ${R?.mesh?.actualElements??'–'} actual elements` },
+      { id: "mesh", g: "mesh", b: "Mesh", i: R?.analysis3D?.stressOnly?`${R.y.length} stress stations; section equilibrium`:`${S.analysis?.nElements||'Default'} requested · ${R?.mesh?.actualElements??'–'} actual elements` },
       { id: "results", g: "res", b: "Results", kids: [{ id: "res-stress", g: "res", b: "Stress", i: "Spanwise σ" }, { id: "res-disp", g: "res", b: "Displacement", i: "Resultant" }, { id: "res-fos", g: "res", b: "Factor of safety", i: "Strength" }, { id: "res-mode", g: "res", b: "Frequency modes", i: R ? `f₁ = ${nf(R.fem.fBending[0], 1)} Hz` : "–" }] },
     ].filter(n=>n.id!=='results');
   }
@@ -11902,6 +12067,7 @@ if(typeof module!=='undefined'&&module.exports)module.exports=WingPrintUI;
     const g = S.geometry, { pla, rod } = materials();
     const id = S.selected;
     if(R?.analysis3D&&(id==='results'||id.startsWith('res-')||id==='mesh')){
+      if(R.analysis3D.stressOnly){$('#pmHead').textContent='Section stress';pm.append(el('h2',{},'Nominal normal stress'),el('p',{class:'note'},'Actual closed-tip material sections and applied-load equilibrium. Apex stress is undefined; displacement, shear/torsional stress and overall safety are not computed.'));return;}
       $('#pmHead').textContent='Spatial beam results';
       pm.append(el('h2',{},'3-D structural beam'),el('p',{class:'note'},'Six degrees of freedom per node. Normal beam stress and displacement are available. Natural frequencies, shear failure, buckling and an overall factor of safety are not computed for this model. See the full 3-D result record below the wing.'));
       return;
@@ -12018,7 +12184,7 @@ if(typeof module!=='undefined'&&module.exports)module.exports=WingPrintUI;
   function checkGeometry(candidate) {
     const c = { ...candidate, modules: +candidate.modules, rodFractions: [...(candidate.rodFractions || [])] };
     for (const k of ["semiSpan", "rootChord", "tipChord", "skin", "ribThickness", "rodDiameter", "sleeveWall"])
-      if (!Number.isFinite(c[k]) || !(c[k] > 0)) throw new Error(`${GEO_FIELDS[k]} must be a positive number of millimetres.`);
+      if (!Number.isFinite(c[k]) || !(c[k] > 0 || k==="tipChord"&&WingGeometry.closedTip(c))) throw new Error(`${GEO_FIELDS[k]} must be a positive number of millimetres.`);
     if (!Number.isFinite(c.clearance) || c.clearance < 0 || c.clearance > 0.8) throw new Error("Radial rod clearance must lie between 0 and 0.8 mm (the engine's slip-fit range).");
     if (c.tipChord > c.rootChord) throw new Error(`Tip chord ${mm(c.tipChord)} exceeds root chord ${mm(c.rootChord)}. This model is a straight taper with tip chord ≤ root chord.`);
     if (![1, 2, 3].includes(c.modules)) throw new Error("Use 1, 2 or 3 modules.");
@@ -12104,6 +12270,7 @@ if(typeof module!=='undefined'&&module.exports)module.exports=WingPrintUI;
     }
     S.geometry = { ...g, rodFractions: [...g.rodFractions], customInteriorRibs: g.customInteriorRibs == null ? null : [...g.customInteriorRibs] };
     S.emptyStudy=false;
+    if(WingGeometry.closedTip(S.geometry)){S.plot='model';S.deformed=false;$('#defBtn').setAttribute('aria-pressed','false');}
     wingSelection?.clear();
     fieldErrors = {};
     edited();
@@ -12134,7 +12301,8 @@ if(typeof module!=='undefined'&&module.exports)module.exports=WingPrintUI;
     const create=$('#wingEmptyStart');if(create)create.hidden=!S.emptyStudy;
     const title=$('#wingProjectTitle');if(title)title.textContent=S.projectName||'Wing Virtual Lab';
     if(typeof printedWorkspace!=='undefined'&&printedWorkspace)for(const b of printedWorkspace.tools.querySelectorAll('[data-wing-action]'))if(['load','rib','rod','spar','parts','inside','notebook','select-wing'].includes(b.dataset.wingAction))b.disabled=!!S.emptyStudy||running;
-    const mesh=$('#wingMeshElements');if(mesh&&document.activeElement!==mesh)mesh.value=S.analysis?.nElements??'';
+    document.querySelectorAll('[data-wing-action="notebook"],#wingNotebookExport').forEach(b=>{b.disabled=WingGeometry.closedTip(S.geometry);if(b.disabled)b.title='The optional legacy notebook does not admit zero-chord tips. Use direct STL, STEP or DXF export.';});
+    const mesh=$('#wingMeshElements');if(mesh&&document.activeElement!==mesh)mesh.value=S.analysis?.nElements??'';if(mesh){const exact=WingGeometry.closedTip(S.geometry);mesh.parentNode.firstChild.nodeValue=exact?'Stress sampling ':'Beam mesh ';mesh.setAttribute('aria-label',exact?'Requested spanwise stress sampling':'Requested wing beam elements');mesh.parentNode.title=exact?'Controls the spanwise stress-plot sampling; this section-equilibrium method has no beam mesh. Geometry/STL are unchanged.':'4–100 requested spanwise beam elements; required stations may add elements.';}
     const key = JSON.stringify([S.geometry, fieldErrors, S.assembly.seamsBonded,S.emptyStudy,window.wingChordInputMode||'tip']);
     if (!force && key === inputsKey) return;
     inputsKey = key;
@@ -12325,7 +12493,7 @@ if(typeof module!=='undefined'&&module.exports)module.exports=WingPrintUI;
       updateModel(); frameView(false); renderViewReadout(true); renderPlotInfo();
       renderSparResults();
       $('#probe').hidden = true;
-      $('#viewStale').textContent = 'Geometry preview of current inputs; stress, deformation and load arrows are hidden. Press Solve to update analysis. Results below still belong to the last solved model.';
+      $('#viewStale').textContent = WingGeometry.closedTip(g)?E.analysisCapability(g).message:'Geometry preview of current inputs; stress, deformation and load arrows are hidden. Press Solve to update analysis. Results below still belong to the last solved model.';
     } catch (err) {
       updateModel();
       $('#probe').hidden = true;
@@ -12359,14 +12527,16 @@ if(typeof module!=='undefined'&&module.exports)module.exports=WingPrintUI;
   function syncCompactStatus(customText) {
     const chip=$('#stateChip'),preview=$('#statePreview');if(!preview)return;
     const label=chip.textContent,full=$('#stateText').textContent;
-    preview.textContent=customText?'See status details.':label==='Linear range exceeded'?'Illustrative only · reduce loads.':label==='Input error'?'Check input details.':label==='Analysis blocked'?'Confirm imported structure.':label==='Empty study'?'Choose Airfoil & planform.':label==='Out of date'?'Press Solve to update.':label==='Solving'?'Computing…':/no load/i.test(full)?'No loads applied.':label==='Solved · 3-D beam'?(R?.analysis3D?.loadMapping?.endWrenches.length?'End-load approximation · see results warning.':'Nominal beam results.'):/, exceeded/.test(full)?'Strength check exceeded.':'Results match inputs.';
+    preview.textContent=customText?'See status details.':label==='Linear range exceeded'?'Illustrative only · reduce loads.':label==='Input error'?'Check input details.':label==='Solved · section stress'?'Nominal normal stress · tip unresolved.':label==='Analysis blocked'?'Confirm imported structure.':label==='Empty study'?'Choose Airfoil & planform.':label==='Out of date'?'Press Solve to update.':label==='Solving'?'Computing…':/no load/i.test(full)?'No loads applied.':label==='Solved · 3-D beam'?(R?.analysis3D?.loadMapping?.endWrenches.length?'End-load approximation · see results warning.':'Nominal beam results.'):/, exceeded/.test(full)?'Strength check exceeded.':'Results match inputs.';
     chip.title=full;
   }
   function setStatus(text) { renderStatus(text);syncCompactStatus(text); }
   function renderStatus(text) {
     syncWingHistory();
     const chip = $("#stateChip"), t = $("#stateText"), btn = $("#runBtn");
-    btn.disabled=!!S.emptyStudy;
+    const closed=WingGeometry.closedTip(S.geometry);btn.disabled=!!S.emptyStudy;btn.title=closed?'Solve nominal normal section stress; exact apex and deformation are unresolved.':'';
+    document.querySelectorAll('#app [data-plot]').forEach(b=>b.disabled=closed&&!['model','stress'].includes(b.dataset.plot));
+    $('#wingMoreResults').disabled=closed;$('#wingShowBendingTwist')?.toggleAttribute('disabled',closed);$('#defBtn').disabled=closed;$('#shearCentreBtn').disabled=closed;$('#shearCentreBtn').title=closed?'Shear centre is not computed by this section-equilibrium normal-stress model.':'Calculated shear-centre path; eccentric loads may twist the wing.';
     const out = stale && !!R;
     btn.classList.toggle("stale", stale && !running);
     btn.dataset.pending = String(stale && !running);
@@ -12380,6 +12550,7 @@ if(typeof module!=='undefined'&&module.exports)module.exports=WingPrintUI;
     if (running) { chip.className = "chip idle"; chip.textContent = "Solving"; t.textContent = text || "Solving the inputs on screen"; return; }
     if(S.emptyStudy){chip.className='chip idle';chip.textContent='Empty study';t.textContent='Choose an airfoil and dimensions, then Apply geometry to create your wing.';return;}
     if (gateOpen()) { chip.className = "chip warn"; chip.textContent = "Analysis blocked"; t.textContent = "Imported outer geometry: confirm its structural inputs (list at the top of this column) before solving."; return; }
+    if(closed&&R?.analysis3D?.stressOnly&&!stale){chip.className='chip ok';chip.textContent='Solved · section stress';t.textContent='Nominal normal section stress; exact apex undefined. No displacement or shear/torsional stress solution.';return;}
     if (inputError) { chip.className = "chip bad"; chip.textContent = "Input error"; t.textContent = inputError + (!R ? "" : stale ? " Results shown are for the last solved model." : " The results shown still match the inputs on screen."); return; }
     if (stale) { chip.className = "chip warn"; chip.textContent = "Out of date"; t.textContent = R ? "Inputs changed — press Solve. Results shown are for the last solved model." : "Press Solve to compute the first result."; return; }
     if (!R) return;
@@ -12429,7 +12600,7 @@ if(typeof module!=='undefined'&&module.exports)module.exports=WingPrintUI;
         await frame();
       }
       R = TeachingModels.studentResult(E.solve(input));
-      if(R.analysis3D&&['mode','fos'].includes(S.plot)){S.plot='model';document.querySelectorAll('#app [data-plot]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.plot==='model')));}
+      if(R.analysis3D&&(['mode','fos'].includes(S.plot)||R.analysis3D.stressOnly&&!['model','stress'].includes(S.plot))){S.plot='model';document.querySelectorAll('#app [data-plot]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.plot==='model')));}
       // A successful solve clears an error message that was on screen when it started (not one entered meanwhile).
       if (inputError === errorAtStart) inputError = null;
       if (fieldErrors === fieldErrorsAtStart) fieldErrors = {};
@@ -12439,7 +12610,7 @@ if(typeof module!=='undefined'&&module.exports)module.exports=WingPrintUI;
       applyResult();
       renderAll();
       const ms = performance.now() - t0;
-      $("#footline").textContent = R.analysis3D?`Solved in ${(ms/1000).toFixed(2)} s · ${R.analysis3D.elements.length} spatial beam elements · 6 DOF/node · locally prismatic sections, not a 3-D solid FE mesh`:`Solved in ${(ms / 1000).toFixed(2)} s · ${R.sections.length} sections × ${(R.sections[0].mesh.tris.length / 3).toLocaleString()} triangles · ${R.fem.y.length - 1} beam elements · ${R.sparModel?"bonded thin-wall section approximation":"beam theory on exact printed sections"}, not 3-D FE`;
+      $("#footline").textContent = R.analysis3D?.stressOnly?`Solved in ${(ms/1000).toFixed(2)} s · nominal section-equilibrium stress · exact zero-chord tip unresolved`:R.analysis3D?`Solved in ${(ms/1000).toFixed(2)} s · ${R.analysis3D.elements.length} spatial beam elements · 6 DOF/node · locally prismatic sections, not a 3-D solid FE mesh`:`Solved in ${(ms / 1000).toFixed(2)} s · ${R.sections.length} sections × ${(R.sections[0].mesh.tris.length / 3).toLocaleString()} triangles · ${R.fem.y.length - 1} beam elements · ${R.sparModel?"bonded thin-wall section approximation":"beam theory on exact printed sections"}, not 3-D FE`;
     } catch (err) {
       stale = true;
       saveDesignAfterRun = false;
@@ -12557,7 +12728,7 @@ if(typeof module!=='undefined'&&module.exports)module.exports=WingPrintUI;
     const contour=outer.map(([x,z])=>new THREE.Vector2(x,z));
     if(!THREE.ShapeUtils.isClockWise(contour))contour.reverse();
     const sh = new THREE.Shape(contour);
-    holes.forEach(h=>{const p=h.map(([x,z])=>new THREE.Vector2(x,z));if(THREE.ShapeUtils.isClockWise(p))p.reverse();sh.holes.push(new THREE.Path(p));});
+    holes.filter(h=>h.length>=3).forEach(h=>{const p=h.map(([x,z])=>new THREE.Vector2(x,z));if(THREE.ShapeUtils.isClockWise(p))p.reverse();sh.holes.push(new THREE.Path(p));});
     return sh;
   }
   // map shape space (X = chord, Y = up, Z = extrusion) to three space (X = span, Y = up, Z = chord)
@@ -12585,7 +12756,8 @@ if(typeof module!=='undefined'&&module.exports)module.exports=WingPrintUI;
       const grp = new THREE.Group();
       const y0 = bounds[k], y1 = bounds[k + 1];
       const n = Math.max(8, Math.round((y1 - y0) / 4));
-      const st = [...new Set([...Array.from({ length: n + 1 }, (_, i) => y0 + ((y1 - y0) * i) / n),...(g.stations||[]).map(s=>s.eta*L).filter(y=>y>y0&&y<y1)])].sort((a,b)=>a-b);
+      const nView=WingGeometry.closedTip(g)&&g.planform==='elliptic'?Math.max(96,n):n;
+      const st = [...new Set([...Array.from({ length: nView + 1 }, (_, i) => WingGeometry.closedTip(g)&&g.planform==='elliptic'?L*Math.sin(Math.asin(y0/L)+(Math.asin(y1/L)-Math.asin(y0/L))*i/nView):y0+((y1-y0)*i)/nView),...(g.stations||[]).map(s=>s.eta*L).filter(y=>y>y0&&y<y1)])].sort((a,b)=>a-b);
       const skin = swept(st, outerAt, { transparent: false, opacity: 1 });
       skin.userData.kind = "skin"; skin.userData.module = k;
       grp.add(skin); skins.push(skin);
@@ -12597,6 +12769,7 @@ if(typeof module!=='undefined'&&module.exports)module.exports=WingPrintUI;
       }
       // module end faces: printed ring + sleeves, holes for the rods
       for (const ye of [y0, y1]) {
+        if(WingGeometry.closedTip(g)&&ye===L)continue;
         const outer = outerAt(ye);
         const cav = E.ringLoops(g, Math.min(Math.max(ye, 0.01), L)).inner;
         const solidEnd = (ye === 0 || ye === L);
@@ -12604,6 +12777,10 @@ if(typeof module!=='undefined'&&module.exports)module.exports=WingPrintUI;
         const t = solidEnd ? g.cap : 0.6;
         const yy = ye === y0 ? ye : ye - t;
         const face = platePart(outer, holes, t, yy, COLORS.pla);
+        if(WingGeometry.closedTip(g)){
+          const raw=face.userData.rawPositions;
+          for(let i=0;i<raw.length;i+=3){const ratio=E.chordAt(g,raw[i])/E.chordAt(g,ye);raw[i+1]*=ratio;raw[i+2]*=ratio;}
+        }
         face.userData.kind = "face"; face.userData.module = k;
         grp.add(face); rigid.push(face);
         if (!solidEnd) for (const c of E.rodCentres(g, ye)) {
@@ -12618,6 +12795,10 @@ if(typeof module!=='undefined'&&module.exports)module.exports=WingPrintUI;
       const k = bounds.findIndex((b, i) => i < bounds.length - 1 && yr >= b && yr <= bounds[i + 1]);
       const holes = E.rodCentres(g, yr).map((c) => circleLoop(c, E.holeRadius(g), 24)).concat(E.sparParts(g,yr).map(p=>p.outline));
       const rib = platePart(outerAt(yr), holes, g.ribThickness, yr - g.ribThickness / 2, COLORS.rib);
+      if(WingGeometry.closedTip(g)){
+        const raw=rib.userData.rawPositions;
+        for(let i=0;i<raw.length;i+=3){const y=raw[i],ratio=E.chordAt(g,y)/E.chordAt(g,yr);raw[i+1]*=ratio;raw[i+2]*=ratio;}
+      }
       rib.userData.kind = "rib"; rib.userData.module = k; rib.userData.station = yr;
       modules[k].add(rib); ribs.push(rib); rigid.push(rib);
     }
@@ -12678,7 +12859,10 @@ if(typeof module!=='undefined'&&module.exports)module.exports=WingPrintUI;
     }
     if(model.symmetry){
       const symmetry=model.symmetry;symmetry.group.visible=show;
-      for(const[a,b]of symmetry.pairs){b.visible=a.visible;b.position.copy(a.position);b.quaternion.copy(a.quaternion);b.scale.copy(a.scale);}
+      const syncObject=(a,b)=>{b.visible=a.visible;b.position.copy(a.position);b.quaternion.copy(a.quaternion);b.scale.copy(a.scale);if(a.geometry)b.geometry=a.geometry;if(a.material)b.material=a.material;};
+      // Result plots can replace a source material (Phong model -> Basic field)
+      // or its geometry. Share the current references, not the initial clones.
+      for(const[a,b]of symmetry.pairs)syncObject(a,b);
       if(show)for(const source of [model.loads,model.shearCentre]){
         const signature=source.children.map(o=>o.uuid).join(','),previous=symmetry.overlays.get(source);
         if(!previous||previous.signature!==signature){
@@ -12688,7 +12872,7 @@ if(typeof module!=='undefined'&&module.exports)module.exports=WingPrintUI;
           const a=[],b=[];source.traverse(o=>a.push(o));copy.traverse(o=>b.push(o));a.forEach((o,i)=>{symmetry.sourceOf.set(b[i],o);symmetry.copyOf.set(o,b[i]);});
           symmetry.group.add(copy);symmetry.overlays.set(source,{signature,copy});
         }
-        const copy=symmetry.overlays.get(source).copy;copy.visible=source.visible;copy.position.copy(source.position);copy.quaternion.copy(source.quaternion);copy.scale.copy(source.scale);
+        const copy=symmetry.overlays.get(source).copy;copy.traverse(o=>{const original=symmetry.sourceOf.get(o);if(original)syncObject(original,o);});
       }
     }
   }
@@ -12969,7 +13153,7 @@ if(typeof module!=='undefined'&&module.exports)module.exports=WingPrintUI;
     const box=$('#stressPeaks');box.hidden=kind!=='sigma'||geometryPreview;
     if(box.hidden){box.innerHTML='';return;}
     const entry=(key,label,color)=>{const p=stressExtrema[key];return p?`<div><b style="color:${color}">${label}: ${sig(p.value,4)} MPa</b><br>y ${nf(p.y,1)} mm · x/c ${nf(p.x/E.chordAt(R.geometry,p.y),3)} <button type="button" class="btn" data-peak="${key}" style="padding:2px 6px">Locate</button></div>`:'';};
-    box.innerHTML=entry('max','Red · maximum signed stress','#b00000')+entry('min','Blue · minimum signed stress','#0039a6')+'<div>Positive = tension; negative = compression. Colours rescale per run; red does not mean failure. Grey = unresolved.</div>';
+    box.innerHTML=entry('max',R?.analysis3D?.stressOnly?'Red · sampled maximum signed stress':'Red · maximum signed stress','#b00000')+entry('min',R?.analysis3D?.stressOnly?'Blue · sampled minimum signed stress':'Blue · minimum signed stress','#0039a6')+'<div>Positive = tension; negative = compression. Colours rescale per run; red does not mean failure. Grey = unresolved.</div>';
     box.querySelectorAll('[data-peak]').forEach(b=>b.onclick=()=>{const p=stressExtrema[b.dataset.peak];if(!p)return;const v=new THREE.Vector3().fromBufferAttribute(p.mesh.geometry.attributes.position,p.index);p.mesh.localToWorld(v);const center=new THREE.Box3().setFromPoints(fitPoints()).getCenter(new THREE.Vector3());controls.target.copy(center);camera.position.copy(center).add(new THREE.Vector3(.25,p.z>=0?1:-1,.35).normalize().multiplyScalar(2*Math.max(model.g.semiSpan,model.g.rootChord)));controls.update();placeAtFit(false);});
   }
   function updatePeakMarkers(kind) {
@@ -12991,6 +13175,7 @@ if(typeof module!=='undefined'&&module.exports)module.exports=WingPrintUI;
     return { min: mn, max: mx };
   }
   function deformAmount() {
+    if(R?.analysis3D?.stressOnly)return {auto:0,scale:0};
     if (!R) return 0;
     const maxU = Math.max(...R.deflection.map(Math.abs)) + (R.chordwiseDeflection?Math.max(...R.chordwiseDeflection.map(Math.abs)):0)+Math.max(...R.twist.map(Math.abs)) * R.geometry.rootChord * 0.6;
     const auto = maxU > 1e-9 ? (0.08 * R.geometry.semiSpan) / maxU : 1;
@@ -12998,7 +13183,7 @@ if(typeof module!=='undefined'&&module.exports)module.exports=WingPrintUI;
   }
   let modeT = 0;
   function sectionMotion(y) {
-    if (geometryPreview) return [0, 0];
+    if (geometryPreview||R?.analysis3D?.stressOnly) return [0, 0];
     // returns [w, phi] displacement of the section at y for the current display (static or mode)
     if (S.plot === "mode" && R) {
       const shape = S.mode.kind === "bending" ? R.fem.modesBending[S.mode.index] : R.fem.modesTorsion[S.mode.index];
@@ -13106,7 +13291,7 @@ if(typeof module!=='undefined'&&module.exports)module.exports=WingPrintUI;
     const group=model?.shearCentre;if(!group)return;
     while(group.children.length){const o=group.children.pop();o.geometry?.dispose();o.material?.dispose();}
     // Do not overlay a single continuous reference path on exploded modules or modes.
-    if(!showShearCentre||!R||stale||geometryPreview||S.plot==='mode'||S.explode>0)return;
+    if(!showShearCentre||!R||R.analysis3D?.stressOnly||stale||geometryPreview||S.plot==='mode'||S.explode>0)return;
     const g=R.geometry,points=[];
     for(let i=0;i<=64;i++){
       const y=g.semiSpan*i/64;if(S.clip&&y>S.clipY)continue;
@@ -13178,7 +13363,7 @@ if(typeof module!=='undefined'&&module.exports)module.exports=WingPrintUI;
     const unit = { sigma: "MPa", disp: "mm", fos: "" }[kind];
     lt.textContent = { sigma: "Stress σ, span (MPa)", disp: "Displacement (mm)", fos: "Factor of safety" }[kind];
     if(kind==='sigma')lt.textContent=(S.stressComponent==='rods'?'Rod bending σ':S.stressComponent==='spars'?'Spar cap / web bending σ':'Skin / sleeve bending σ')+' (MPa)';
-    if(kind==='sigma'&&R.analysis3D)lt.textContent='Nominal σ · warping omitted (MPa)';
+    if(kind==='sigma'&&R.analysis3D)lt.textContent=R.analysis3D.stressOnly?'Nominal σyy (MPa)':'Nominal σ · warping omitted (MPa)';
     if(kind==='fos'&&R.sparModel)lt.textContent='Normal-stress strength ratio only · see Checks for shear and unresolved failures';
     const bands = Array.from({ length: 64 }, (_, i) => rainbow((63 - i) / 63));
     const ticks = kind === "fos"
@@ -13192,14 +13377,15 @@ if(typeof module!=='undefined'&&module.exports)module.exports=WingPrintUI;
   function renderPlotInfo() {
     const massBox=$('#wingMassReadout');
     massBox.hidden=!R||S.emptyStudy;
-    if(!massBox.hidden){massBox.textContent=geometryPreview?'Wing mass — solve to update':`${fullWingPrint?'Estimated full-wing mass '+nf(2*R.mass.total,1)+' g (2 × semi-wing)':'Estimated semi-wing mass '+nf(R.mass.total,1)+' g'} · includes spars ${nf((R.mass.spars||0)*(fullWingPrint?2:1),1)} g${R.load.gravitySummary?' · Applied '+nf(R.load.gravitySummary.appliedN*(fullWingPrint?2:1),3)+' N · Weight ↓ '+nf(R.load.gravitySummary.weightN*(fullWingPrint?2:1),3)+' N · Net '+nf(R.appliedForce*(fullWingPrint?2:1),3)+' N':''}${stale?' · previous solve':''}`;massBox.title='Estimated model mass including skin, ribs, end caps, spars, rods and any tip mass. Verify manufacturing mass in CAD and the slicer.';}
+    if(!massBox.hidden){massBox.textContent=geometryPreview?(WingGeometry.closedTip(model.g)?'Solve or download STL to update mass':'Wing mass — solve to update'):`${fullWingPrint?'Estimated full-wing mass '+nf(2*R.mass.total,1)+' g (2 × semi-wing)':'Estimated semi-wing mass '+nf(R.mass.total,1)+' g'} · includes spars ${nf((R.mass.spars||0)*(fullWingPrint?2:1),1)} g${R.load.gravitySummary?' · Applied '+nf(R.load.gravitySummary.appliedN*(fullWingPrint?2:1),3)+' N · Weight ↓ '+nf(R.load.gravitySummary.weightN*(fullWingPrint?2:1),3)+' N · Net '+nf(R.appliedForce*(fullWingPrint?2:1),3)+' N':''}${stale?' · previous solve':''}`;massBox.title='Estimated model mass including skin, ribs, end caps, spars, rods and any tip mass. Verify manufacturing mass in CAD and the slicer.';}
     if (geometryPreview&&model) {
       const g = model.g;
-      $('#plotinfo').textContent = `UNSOLVED GEOMETRY PREVIEW · ${airfoilLabel(g)} · semi-span ${g.semiSpan} mm · ${model.ribs.length} ribs · ${model.rods.length} rods. Stress and deformation hidden; press Solve for analysis.`;
-      $('#footline').textContent='Geometry preview only · no structural result yet. Press Solve to analyse.';
+      $('#plotinfo').textContent = `UNSOLVED GEOMETRY PREVIEW · ${airfoilLabel(g)} · semi-span ${g.semiSpan} mm · ${model.ribs.length} ribs · ${model.rods.length} rods. ${WingGeometry.closedTip(g)?'Exact closed-tip shape. Solve for nominal normal stress; apex unresolved.':'Stress and deformation hidden; press Solve for analysis.'}`;
+      $('#footline').textContent=WingGeometry.closedTip(g)?'Exact closed-tip geometry · Solve for nominal normal stress · exact apex unresolved.':'Geometry preview only · no structural result yet. Press Solve to analyse.';
       return;
     }
     if (!R) return;
+    if(R.analysis3D?.stressOnly){$('#plotinfo').textContent=`CLOSED-TIP SECTION STRESS · ${R.geometry.planform} · nominal spanwise normal stress · prescribed loads · exact apex undefined · ${R.tipBehavior?.status==='divergent'?'unbounded nominal tip stress; displayed extrema are sampled':'sampled extrema, not a certified global maximum'} · no deformation solution`;return;}
     if(R.analysis3D){$('#plotinfo').textContent=`3-D SPATIAL BEAM · ${R.geometry.planform||'linear'} planform · ${airfoilLabel(R.geometry)} · sweep ${R.geometry.sweepDeg||0}° · dihedral ${R.geometry.dihedralDeg||0}° · ${R.analysis3D.elements.length} elements · prescribed global +z loads · ${S.deformed?'displacement magnification ×'+nf(deformAmount().scale,1):'undeformed geometry'} · nominal normal stress only; grey = unresolved; no overall FoS`;return;}
     const g = R.geometry;
     const kind = { stress: "Spanwise normal stress σ, beam theory, limit load", disp: "Resultant displacement, limit load", fos: `Factor of safety on PLA strength (red: below ${R.load.fos})`, twist:"Elastic axis twist (degrees) · section result", bending:"Resultant bending moment (N·m) · section result", torque:"Signed local torque (N·m) · section result", mode: "Natural frequency mode", model: "Model" }[S.plot];
@@ -13385,10 +13571,11 @@ if(typeof module!=='undefined'&&module.exports)module.exports=WingPrintUI;
       const sg = fieldValue(y, x, z, "sigma"), ds = fieldValue(y, x, z, "disp"), fos = fieldValue(y, x, z, "fos");
       body = `<b>${u.kind === "sleeve" ? "Printed sleeve" : "Printed skin"} · module ${u.module + 1}</b><br>y ${nf(y, 1)} mm · x/c ${nf(x / c, 3)}<br>σ ${nf(sg, 3)} MPa ${!Number.isFinite(sg)?'(unresolved)':sg<0?'(compression)':sg>0?'(tension)':'(zero)'}<br>URES ${nf(ds, 3)} mm · ${R.analysis3D?'normal stress only; overall FoS not computed':'FoS '+(fos > 50 ? ">50" : nf(fos, 1))}`;
     }
+    if(R.analysis3D?.stressOnly)body=body.replace(/<br>URES [^<]*/, '<br>Section-equilibrium normal stress; deformation not computed.');
     pr.innerHTML = body;
     if(R.analysis3D&&!sectionResultMeta[S.plot]){
       const location=E.normalStressLocationAt3D?.(R,y,[x,z],u.material||R.pla);
-      const note=el('p',{class:'note'});note.textContent=location&&!location.resolved?(location.reason||'Physical-surface stress is unresolved in this end region.'):'Nominal normal-cut beam stress only; root, load-introduction and local fixture stress concentrations are not resolved.';pr.append(note);
+      const note=el('p',{class:'note'});note.textContent=location&&!location.resolved?(location.reason||'Physical-surface stress is unresolved in this end region.'):R.analysis3D.stressOnly?'Nominal spanwise section stress; no local rib, root or tip stress-concentration solution.':'Nominal normal-cut beam stress only; root, load-introduction and local fixture stress concentrations are not resolved.';pr.append(note);
     }
     pr.hidden = false;
     const vr = $(".view").getBoundingClientRect();
@@ -13754,10 +13941,20 @@ if(typeof module!=='undefined'&&module.exports)module.exports=WingPrintUI;
   }
   function spatialReportText(){
     if(!R?.analysis3D)return '';
+    if(R.analysis3D.stressOnly)return [R.analysis3D.method,'Mass [g]: '+R.mass.total,'Tip behavior: '+JSON.stringify(R.tipBehavior),'Verification: '+JSON.stringify(R.verification),...R.analysis3D.limitations].join('\n');
     const a=R.analysis3D,tip=a.displacements.at(-1),rot=a.rotations.at(-1),reactions=Array.from({length:6},(_,i)=>a.reactions.find(r=>r.dof===i)?.value??0);
     return ['3-D spatial beam result (not 3-D solid FEA)',a.method,'Airfoil: '+airfoilLabel(R.geometry),'Root reactions [N,N,N,Nmm,Nmm,Nmm]: '+reactions.join(', '),'Tip axis displacement [mm]: '+tip.join(', '),'Tip elastic rotation [rad]: '+rot.join(', '),'Tip streamwise elastic incidence change [deg]: '+(a.elasticIncidenceDeg?.at(-1)??rot[1]*180/Math.PI),'Root constraint: equivalent beam axis, not the entire oblique physical face. Local root/load-introduction stresses are unresolved.','Stress envelopes use the axis station of the normal cut, not a streamwise surface abscissa.','Stress gaps and grey areas are unresolved, not zero. The geometric end mask is not a validated decay distance.','Benchmark evidence is case-specific; arbitrary profiles and untested designs are unvalidated applications.','Endpoint wrench mapping: '+JSON.stringify(a.loadMapping||null),'Applied global wrench: '+JSON.stringify(a.appliedWrench||null),a.validity.message,...a.limitations,'Verification: '+JSON.stringify(a.verification)].join('\n');
   }
+  function renderClosedStressResults(){
+    const a=R.analysis3D,dock=$('#app > .dock');document.querySelectorAll('#app > .dock > .tabpanel').forEach(p=>p.hidden=true);
+    let host=$('#wingSpatialResults');if(!host){host=el('section',{id:'wingSpatialResults',class:'tabpanel'});dock.prepend(host);}host.hidden=false;
+    const tip=R.tipBehavior,root=a.cutAt(0),v=R.verification;
+    host.innerHTML=`<h2>Closed-tip wing · nominal normal stress</h2><p>Actual material sections and applied-load equilibrium; geometry is not trimmed.</p><dl class="kv"><dt>Model mass</dt><dd>${nf(R.mass.total,2)} g</dd><dt>Root vertical force</dt><dd>${sig(root.force[2],5)} N</dd><dt>Root bending moment</dt><dd>${sig(root.moment[0]/1000,5)} N·m</dd><dt>Section equilibrium residual</dt><dd>${sig(v.normalStressEquilibriumRelativeResidual,3)}</dd></dl><p class="callout">${esc(tip.reason||tip.status)}. The exact zero-area tip has undefined stress; displayed extrema cover sampled sections only.</p><div class="charts" id="closedStressCharts"></div><details><summary>Model scope</summary><ul>${a.limitations.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></details>`;
+    const chartHost=$('#closedStressCharts');chart(chartHost,'Signed normal-stress envelope','MPa',Array.from(R.y),[{y:Array.from(R.stress.sigTop),color:'#c93d48'},{y:Array.from(R.stress.sigBot),color:'#246fd0'}]);
+    $('#report').value=spatialReportText();
+  }
   function renderSpatialResults(){
+    if(R?.analysis3D?.stressOnly){renderClosedStressResults();return;}
     const a=R.analysis3D,dock=$('#app > .dock');
     document.querySelectorAll('#app > .dock > .tabpanel').forEach(p=>p.hidden=true);
     let host=$('#wingSpatialResults');if(!host){host=el('section',{id:'wingSpatialResults',class:'tabpanel','aria-label':'Spatial beam result record'});dock.prepend(host);}host.hidden=false;
@@ -14234,6 +14431,7 @@ function renderObservations() {
 
   // ------------------------------------------------------------ wiring
   function setPlot(p) {
+    if(WingGeometry.closedTip(S.geometry)&&!['model','stress'].includes(p)){$('#wingStatusDetails').open=true;return;}
     if(R?.analysis3D&&(p==='mode'||p==='fos')){flash('Natural frequencies and an overall factor of safety are not computed by the spatial beam model. Use normal Stress, Displacement and the 3-D result record.');return;}
     if(sectionResultMeta[p]){S.stressComponent='skin';S.anatomy='assembled';S.xray=false;$('#xrayBtn').setAttribute('aria-pressed','false');applyXray();}
     if(p==='fos')S.stressComponent='skin';
@@ -14492,7 +14690,7 @@ function renderObservations() {
     editor.newLoad();printedWorkspace.open('Wing load · upward positive',editor.container,anchor);
     if(p){$('#wingKind').value='point';$('#wingKind').dispatchEvent(new Event('change'));editor.acceptPick(p);}else $('#wingKind').focus({preventScroll:true});
   }
-  function showWingDeformation(){if(!R||stale||running||gateOpen())throw new Error('Solve the applied loads first.');printedWorkspace?.close();S.deformed=true;$('#defBtn').setAttribute('aria-pressed','true');setPlot('disp');applyResult();canvas.scrollIntoView({block:'center'});}
+  function showWingDeformation(){if(R?.analysis3D?.stressOnly)throw new Error('This exact-tip analysis computes nominal normal stress only; deformation is not computed.');if(!R||stale||running||gateOpen())throw new Error('Solve the applied loads first.');printedWorkspace?.close();S.deformed=true;$('#defBtn').setAttribute('aria-pressed','true');setPlot('disp');applyResult();canvas.scrollIntoView({block:'center'});}
   function openWingStructurePopup(anchor,focusId){printedWorkspace.open('Structure · dimensions',$('#wingStructureForm'),anchor);const target=focusId&&$('#'+focusId);target?.scrollIntoView({block:'nearest'});target?.focus({preventScroll:true});}
   // A load click selects its real editor; an orbit/pan drag never changes the selection.
   let loadPointer=null,loadMoved=false;
@@ -14612,8 +14810,9 @@ function renderObservations() {
     const studyTreeSection=$('#wlTreeSection'),studyTreeBody=studyTreeSection.querySelector('.wl-treepm');studyTreeSection.hidden=true;
     const treeButton=el('button',{class:'btn',type:'button',id:'wingStudyTreeButton','aria-haspopup':'dialog'},'Study tree');
     treeButton.onclick=()=>printedWorkspace.open('Study tree',studyTreeBody,treeButton);secondaryTools.prepend(treeButton);
-    WingPrintUI.mount({host:secondaryTools,workerURL:new URL('wing-print/wing_print_worker.js?v=1.1.0',document.baseURI).href,onSymmetryChange:enabled=>{fullWingPrint=enabled;syncFullWingPreview();renderPlotInfo();if(model){model.fitCache=null;placeAtFit(true);}},getInput:()=>{
-      if(S.emptyStudy||!R||stale||running||gateOpen())throw Error('Solve the current wing inputs before creating STL.');
+    WingPrintUI.mount({host:secondaryTools,workerURL:new URL('wing-print/wing_print_worker.js?v=1.2.0',document.baseURI).href,onSymmetryChange:enabled=>{fullWingPrint=enabled;syncFullWingPreview();renderPlotInfo();if(model){model.fitCache=null;placeAtFit(true);}},getInput:()=>{
+      if(S.emptyStudy||running||gateOpen()||(!WingGeometry.closedTip(S.geometry)&&(!R||stale)))throw Error('Solve the current wing inputs before creating STL.');
+      if(WingGeometry.closedTip(S.geometry))checkGeometry(S.geometry);
       const {pla}=materials();return {geometry:JSON.parse(JSON.stringify(S.geometry)),density:pla.rho,shellMaterial:pla,projectName:S.projectName,sourceStudy:WingStudyIO.printedStudyDocument(S,E)};
     }});
 

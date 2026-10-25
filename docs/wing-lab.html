@@ -6962,8 +6962,8 @@ const WingGeometryUI=(()=>{
   }
   function renderDimensions(){
    const box=node('fieldset',{class:'wing-planform-dimensions'});
-   box.innerHTML='<legend>Wing dimensions & taper</legend><label for="wgtChordMode">Chord input method<select id="wgtChordMode"><option value="tip">Root + Tip → calculate λ</option><option value="ratio">Root + λ → calculate Tip</option></select></label><div class="wing-geometry-grid">'+numeric('Semi-span (mm)','wgtSpan',draft.semiSpan,'Root to tip, projected aircraft y','min="1"')+numeric('Root chord (mm)','wgtRootChord',draft.rootChord,'Reference chord at root','min="1"')+numeric('Tip chord (mm)','wgtTipChord',draft.tipChord,'Reference chord at tip','min="1"')+numeric('Taper ratio λ = tip / root','wgtTaper',draft.tipChord/draft.rootChord,'1 = rectangular; below 1 = narrower tip','min="0.001" max="1"')+numeric('Skin thickness (mm)','wgtSkin',draft.skin,'Measured vertically; course printing minimum 0.8 mm','min="0.001" step="0.1"')+'</div><p class="note" id="wgtChordHint"></p>';
-   form.prepend(box);dimensionSource=win.wingChordInputMode==='ratio'?'ratio':'tip';
+   box.innerHTML='<legend>Wing dimensions & taper</legend><label for="wgtChordMode">Chord input method<select id="wgtChordMode"><option value="tip">Root + Tip → calculate λ</option><option value="ratio">Root + λ → calculate Tip</option></select></label><div class="wing-geometry-grid">'+numeric('Semi-span (mm)','wgtSpan',draft.semiSpan,'Root to tip, projected aircraft y','min="1"')+numeric('Root chord (mm)','wgtRootChord',draft.rootChord,'Reference chord at root','min="1"')+numeric('Tip chord (mm)','wgtTipChord',draft.tipChord,'Reference chord at tip','min="1"')+numeric('Taper ratio λ = tip / root','wgtTaper',draft.tipChord/draft.rootChord,'1 = rectangular; below 1 = narrower tip','min="0.001" max="1"')+numeric('Skin thickness (mm)','wgtSkin',draft.skin,'Measured vertically; course printing minimum 0.8 mm','min="0.001" step="0.1"')+'<label class="wing-geometry-field">Printed modules<small>Equal lengths; seams between modules</small><select id="wgtModules"><option value="1">1 · one piece</option><option value="2">2</option><option value="3">3</option></select></label></div><p class="note" id="wgtChordHint"></p>';
+   form.prepend(box);box.querySelector('#wgtModules').value=String(draft.modules??1);dimensionSource=win.wingChordInputMode==='ratio'?'ratio':'tip';
    const value=id=>{const s=form.querySelector('#'+id).value;return s.trim()===''?NaN:Number(s);};
    box.querySelector('#wgtSkin').oninput=()=>{draft.skin=value('wgtSkin');};
    function preview(){
@@ -7038,7 +7038,7 @@ const WingGeometryUI=(()=>{
     }
     const skinText=form.querySelector('#wgtSkin').value;draft.skin=skinText.trim()===''?NaN:Number(skinText);
     if(!Number.isFinite(draft.skin)||draft.skin<=0)throw Error('Skin thickness must be a positive number of millimetres.');
-    const patch={semiSpan:draft.semiSpan,rootChord:draft.rootChord,tipChord:draft.tipChord,skin:draft.skin,airfoil:clone(A.normalizeProfile(baseProfile())),twistEnabled:!!draft.twistEnabled,sweepDeg:draft.sweepDeg??0,dihedralDeg:draft.dihedralDeg??0,sweepReferenceFraction:draft.sweepReferenceFraction??0,twistReferenceFraction:draft.twistReferenceFraction??.25};
+    const patch={modules:Number(form.querySelector('#wgtModules').value),semiSpan:draft.semiSpan,rootChord:draft.rootChord,tipChord:draft.tipChord,skin:draft.skin,airfoil:clone(A.normalizeProfile(baseProfile())),twistEnabled:!!draft.twistEnabled,sweepDeg:draft.sweepDeg??0,dihedralDeg:draft.dihedralDeg??0,sweepReferenceFraction:draft.sweepReferenceFraction??0,twistReferenceFraction:draft.twistReferenceFraction??.25};
     // Explicitly removing section variation uses the same global profile at root and tip.
     patch.stations=draft.stations?clone(draft.stations):undefined;
     // A uniform, unrotated four-digit section with leading-edge alignment is
@@ -13771,7 +13771,7 @@ if(typeof module!=='undefined')module.exports=WingWorkspaceUI;
     onScale:mode=>{S.lineArrowScale=mode;if(model&&R)drawLoads();},
     schrenkProfile:total=>{const g=E.makeGeometry(S.geometry);return WingLoadsUI.schrenkData(g.semiSpan,y=>E.chordAt(g,y),total,[g.rootChord,g.tipChord]);},
     pickOnModel:accept=>beginPrintedSurfacePick(accept),
-    showDeformation:()=>{if(!R||stale||running||gateOpen())throw new Error('Solve the applied loads first.');S.deformed=true;$('#defBtn').setAttribute('aria-pressed','true');setPlot('disp');applyResult();canvas.scrollIntoView({block:'center'});},
+    showDeformation:showWingDeformation,
     workspace:'printed',
     selfWeight:{value:()=>!!S.load.selfWeight,set:value=>{const load={...S.load,selfWeight:value};E.normalize({...engineInput(),load});S.load=load;changed();}},units:{length:'mm',line:'N/mm',force:'N',moment:'N·mm'},
     ids:{form:'wingLoadForm',kind:'wingKind',a:'wingA',b:'wingB',P:'wingP',q0:'wingQ0',q1:'wingQ1',shape:'wingCurveShape',basis:'wingCurveBasis',value:'wingCurveValue',xc:'wingFraction',law:'wingCurveLaw',
@@ -14334,6 +14334,7 @@ function renderObservations() {
     editor.newLoad();printedWorkspace.open('Wing load · upward positive',editor.container,anchor);
     if(p){$('#wingKind').value='point';$('#wingKind').dispatchEvent(new Event('change'));editor.acceptPick(p);}else $('#wingKind').focus({preventScroll:true});
   }
+  function showWingDeformation(){if(!R||stale||running||gateOpen())throw new Error('Solve the applied loads first.');S.deformed=true;$('#defBtn').setAttribute('aria-pressed','true');setPlot('disp');applyResult();canvas.scrollIntoView({block:'center'});}
   function openWingStructurePopup(anchor,focusId){printedWorkspace.open('Structure · dimensions',$('#wingStructureForm'),anchor);const target=focusId&&$('#'+focusId);target?.scrollIntoView({block:'nearest'});target?.focus({preventScroll:true});}
   // A load click selects its real editor; an orbit/pan drag never changes the selection.
   let loadPointer=null,loadMoved=false;
@@ -14441,6 +14442,7 @@ function renderObservations() {
     for(const b of standardViews.querySelectorAll('button')){b.title=b.textContent;b.setAttribute('aria-label',b.textContent);b.textContent={iso:'3D',plan:'Top',section:'Side',front:'Front'}[b.dataset.view];}
     viewBody.insertBefore(standardViews,inlineHud);viewBody.insertBefore(explodeControls,inlineHud);
     installResultDisplayTools(viewBody);
+    const showShape=el('button',{class:'btn',type:'button',id:'wingShowBendingTwist'},'Show bending & twist');showShape.onclick=()=>{try{showWingDeformation();}catch(e){flash(e.message);}};viewBody.append(showShape);
     // Display controls already live beside the wing; keep the toolbar focused on files and help.
     const viewJump=[...secondaryTools.querySelectorAll('button')].find(b=>b.textContent==='View & display ▾');
     for(const id of ['select-wing','inside'])printedWorkspace.tools.querySelector('[data-wing-action="'+id+'"]')?.remove();

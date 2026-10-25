@@ -2947,7 +2947,7 @@ body { margin: 0; }
     onScale:mode=>{S.lineArrowScale=mode;if(model&&R)drawLoads();},
     schrenkProfile:total=>{const g=E.makeGeometry(S.geometry);return WingLoadsUI.schrenkData(g.semiSpan,y=>E.chordAt(g,y),total,[g.rootChord,g.tipChord]);},
     pickOnModel:accept=>beginPrintedSurfacePick(accept),
-    showDeformation:()=>{if(!R||stale||running||gateOpen())throw new Error('Solve the applied loads first.');S.deformed=true;$('#defBtn').setAttribute('aria-pressed','true');setPlot('disp');applyResult();canvas.scrollIntoView({block:'center'});},
+    showDeformation:showWingDeformation,
     workspace:'printed',
     selfWeight:{value:()=>!!S.load.selfWeight,set:value=>{const load={...S.load,selfWeight:value};E.normalize({...engineInput(),load});S.load=load;changed();}},units:{length:'mm',line:'N/mm',force:'N',moment:'N·mm'},
     ids:{form:'wingLoadForm',kind:'wingKind',a:'wingA',b:'wingB',P:'wingP',q0:'wingQ0',q1:'wingQ1',shape:'wingCurveShape',basis:'wingCurveBasis',value:'wingCurveValue',xc:'wingFraction',law:'wingCurveLaw',
@@ -3451,6 +3451,7 @@ body { margin: 0; }
     editor.newLoad();printedWorkspace.open('Wing load · upward positive',editor.container,anchor);
     if(p){$('#wingKind').value='point';$('#wingKind').dispatchEvent(new Event('change'));editor.acceptPick(p);}else $('#wingKind').focus({preventScroll:true});
   }
+  function showWingDeformation(){if(!R||stale||running||gateOpen())throw new Error('Solve the applied loads first.');S.deformed=true;$('#defBtn').setAttribute('aria-pressed','true');setPlot('disp');applyResult();canvas.scrollIntoView({block:'center'});}
   function openWingStructurePopup(anchor,focusId){printedWorkspace.open('Structure · dimensions',$('#wingStructureForm'),anchor);const target=focusId&&$('#'+focusId);target?.scrollIntoView({block:'nearest'});target?.focus({preventScroll:true});}
   // A load click selects its real editor; an orbit/pan drag never changes the selection.
   let loadPointer=null,loadMoved=false;
@@ -3558,6 +3559,7 @@ body { margin: 0; }
     for(const b of standardViews.querySelectorAll('button')){b.title=b.textContent;b.setAttribute('aria-label',b.textContent);b.textContent={iso:'3D',plan:'Top',section:'Side',front:'Front'}[b.dataset.view];}
     viewBody.insertBefore(standardViews,inlineHud);viewBody.insertBefore(explodeControls,inlineHud);
     installResultDisplayTools(viewBody);
+    const showShape=el('button',{class:'btn',type:'button',id:'wingShowBendingTwist'},'Show bending & twist');showShape.onclick=()=>{try{showWingDeformation();}catch(e){flash(e.message);}};viewBody.append(showShape);
     // Display controls already live beside the wing; keep the toolbar focused on files and help.
     const viewJump=[...secondaryTools.querySelectorAll('button')].find(b=>b.textContent==='View & display ▾');
     for(const id of ['select-wing','inside'])printedWorkspace.tools.querySelector('[data-wing-action="'+id+'"]')?.remove();

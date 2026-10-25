@@ -14,9 +14,9 @@ Assume your wing belongs to an aircraft with a total mass of 200 g in steady, le
 For a simple starting geometry, use NACA 2412 at the root and NACA 0012 at the tip (root eta = 0, tip eta = 1), taper ratio 0.7 (tip chord = 0.7 × root chord), zero sweep, zero dihedral, and zero incidence. Wing span can vary between 350 and 600 mm, and skin thickness should be any value between 1 and 2 mm. These are suggested starting choices; Wing Lab does not automatically determine the lift applied by the airfoils.
 
 Compare three layouts under the same upward distributed load totaling 5 N: 
-no spar, 
-one full-span bonded spar at 25% chord, 
-and the same spar at 40% chord, keeping all other inputs unchanged. 
+a) no spar, 
+b) one full-span bonded spar at 25% chord, 
+c) the same spar at 40% chord, keeping all other inputs unchanged. 
 Use as many ribs as you find useful.
 The spar material should match the other parts of the wing.
 Record mass, tip displacement, tip twist, and maximum nominal stress for each, then briefly justify your choice and build only the selected design after the CAD and print checks.

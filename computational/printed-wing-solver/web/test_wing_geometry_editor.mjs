@@ -15,6 +15,7 @@ function setup(initial={}){
 }
 const opened=[];const open=g=>{const v=setup(g);opened.push(v);return v;};
 try{
+ const independent=open();ok(independent.$('wgtSimpleAngles').hidden);independent.$('wgtSections').checked=true;independent.$('wgtSections').dispatchEvent(new independent.w.Event('change'));independent.change('wgtStation1Kind','naca23012');independent.submit();eq(independent.state().twistEnabled,false);eq(independent.state().stations[1].airfoil.code,'23012');ok(independent.state().stations.every(s=>s.incidenceDeg===0),'section airfoils work independently of incidence');
  const u=open();eq(u.$('wgtTwist').value,'no');eq(u.$('wgtSections').checked,false);eq(u.state().stations,undefined);
  u.change('wgtDefaultKind','naca5');eq(u.$('wgtDefaultCode').value,'23012');eq(u.state().airfoil,undefined,'family selection stays a draft');u.submit();eq(u.state().airfoil.kind,'naca5');eq(u.state().airfoil.code,'23012');
  u.change('wgtDefaultCode','24015');u.submit();eq(u.state().airfoil.code,'24015');
@@ -26,9 +27,8 @@ try{
  u.change('wgtTwist','yes');eq(u.$('wgtSections').checked,true);ok(u.$('wgtEta0').readOnly);ok(u.$('wgtEta2').readOnly);eq(u.$('wgtEta1').value,'0.5');
  u.change('wgtInc0',3);u.change('wgtInc1',1);u.change('wgtInc2',-2);u.change('wgtStation0Kind','naca2412');u.change('wgtStation1Kind','naca23012');u.change('wgtStation2Kind','naca0012');
  u.submit();eq(u.state().stations.length,3);eq(u.state().stations[1].airfoil.kind,'naca5');eq(u.state().stations[2].incidenceDeg,-2);eq(u.state().twistEnabled,true);
- const beforeOff=u.raw();u.change('wgtTwist','no');eq(u.$('wgtTwist').value,'yes');ok(/zero|0°/.test(u.ui.notice.textContent));eq(u.raw(),beforeOff,'turning twist off cannot silently discard committed angles');
  u.$('wgtSections').checked=false;u.$('wgtSections').dispatchEvent(new u.w.Event('change'));eq(u.$('wgtSections').checked,true,'cannot remove needed incidence stations');
- u.$('wgtZeroAngles').click();eq(u.$('wgtTwist').value,'no');u.submit();ok(u.state().stations.every(s=>s.incidenceDeg===0));eq(u.state().twistEnabled,false);
+ const beforeOff=u.raw(),profilesBeforeOff=JSON.stringify(u.state().stations.map(s=>s.airfoil));u.change('wgtTwist','no');eq(u.$('wgtTwist').value,'no');eq(u.raw(),beforeOff,'zero-angle selection remains a draft');eq(u.$('wgtZeroAngles'),null);u.submit();ok(u.state().stations.every(s=>s.incidenceDeg===0));eq(u.state().twistEnabled,false);eq(JSON.stringify(u.state().stations.map(s=>s.airfoil)),profilesBeforeOff,'zeroing angles retains section profiles');
  // Additions split the largest gap, remain strictly ordered and are limited
  // to nine; root/tip have no removal button.
  while(!u.$('wgtAddStation').disabled)u.$('wgtAddStation').click();eq(u.d.querySelectorAll('.wing-station-card').length,9);u.submit();eq(u.state().stations.length,9);ok(u.state().stations.every((s,i,a)=>!i||s.eta>a[i-1].eta));
@@ -59,14 +59,14 @@ try{
  dims.submit();eq(dims.state().rootChord,120);eq(dims.state().tipChord,60);ok(!E.analysisCapability(dims.state(),E.DEFAULT_ASSEMBLY).requires3D,'uniform NACA4 picker does not upgrade a legacy rod geometry');eq(dims.d.querySelector('#wgtPlanformPreview'),null);
  const dimBefore=dims.raw();input('wgtTaper',1.2);dims.submit();eq(dims.raw(),dimBefore,'invalid taper is atomic');dims.ui.refresh();eq(dims.$('wgtChordMode').value,'ratio');dims.change('wgtChordMode','tip');input('wgtTipChord',90);eq(dims.$('wgtTaper').value,'0.75');dims.submit();eq(dims.state().tipChord,90);
  // Beginner root/tip controls interpolate angles without altering section profiles.
- const simple=open();simple.change('wgtTwist','yes');ok(!simple.$('wgtAdvancedSections').open);ok(!simple.$('wgtSimpleAngles').hidden);
+ const simple=open();simple.change('wgtTwist','yes');eq(simple.$('wgtAdvancedSections'),null);ok(simple.$('wgtSpanwiseProfiles'));eq(simple.$('wgtSections').closest('details'),null);ok(!simple.$('wgtSimpleAngles').hidden);
  const editAngle=(id,value)=>{simple.$(id).value=String(value);simple.$(id).dispatchEvent(new simple.w.Event('input',{bubbles:true}));};
  editAngle('wgtRootInc',2);editAngle('wgtTipInc',0);eq(simple.$('wgtInc1').value,'1');ok(/2° washout/.test(simple.$('wgtTwistSummary').textContent));eq(simple.count(),0,'quick editing stays draft');
  simple.$('wgtRootInc').value='4';simple.submit();eq(simple.state().stations[0].incidenceDeg,4,'Enter without blur uses the typed root angle');eq(simple.state().stations[1].incidenceDeg,2);eq(simple.state().stations[2].incidenceDeg,0);
  editAngle('wgtTipInc',4);ok(/no spanwise geometric twist/.test(simple.$('wgtTwistSummary').textContent));
  const validSimple=simple.raw();simple.$('wgtRootInc').value='';simple.submit();eq(simple.raw(),validSimple,'blank quick angle cannot be applied');
  const custom=open({twistEnabled:true,stations:[{eta:0,airfoil:{kind:'naca4',code:'4415'},incidenceDeg:3},{eta:.5,airfoil:{kind:'naca5',code:'23012'},incidenceDeg:2},{eta:1,airfoil:{kind:'naca4',code:'2412'},incidenceDeg:0}]});
- ok(custom.$('wgtAdvancedSections').open);ok(custom.$('wgtRootInc').readOnly);custom.submit();eq(custom.state().stations[1].incidenceDeg,2,'imported nonlinear incidence is preserved');
+ ok(custom.$('wgtSpanwiseProfiles'));eq(custom.$('wgtAdvancedSections'),null);ok(custom.$('wgtRootInc').readOnly);custom.submit();eq(custom.state().stations[1].incidenceDeg,2,'imported nonlinear incidence is preserved');
  const oldProfiles=JSON.stringify(custom.state().stations.map(s=>s.airfoil));const appliedBeforeLinear=custom.count();custom.$('wgtLinearAngles').click();eq(custom.count(),appliedBeforeLinear,'linear conversion requires Apply');custom.submit();eq(custom.state().stations[1].incidenceDeg,1.5);eq(JSON.stringify(custom.state().stations.map(s=>s.airfoil)),oldProfiles,'linear conversion retains root middle and tip airfoils');
  console.log(`Wing geometry editor: ${checks} family/library, simple root/tip angles, custom-station preservation, atomic validation, real DAT upload, provenance and Enter checks passed.`);
 }finally{for(const v of opened)v.dom.window.close();}

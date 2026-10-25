@@ -1,5 +1,5 @@
 /* Off-main-thread print construction; no result meshes or network service. */
-importScripts('./engine_bundle.js?v=371d2b3016ef');
+importScripts('./engine_bundle.js?v=7f25343291e1');
 self.onmessage=async event=>{
  try{
   const {default:Module}=await import('./vendor/manifold.js');

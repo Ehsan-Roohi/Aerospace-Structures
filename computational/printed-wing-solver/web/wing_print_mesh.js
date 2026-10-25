@@ -5,7 +5,7 @@ const WingPrintMesh=(()=>{
  'use strict';
  const E=typeof WingEngine!=='undefined'?WingEngine:require('./engine.js');
  const G=typeof WingGeometry!=='undefined'?WingGeometry:require('./wing_geometry.js');
- const VERSION='1.0.0',ENVELOPE=[300,300,300],MAX_MASS=300;
+ const VERSION='1.1.0',ENVELOPE=[300,300,300],MAX_MASS=300;
  const add=(a,b)=>a.map((x,i)=>x+b[i]),sub=(a,b)=>a.map((x,i)=>x-b[i]),scale=(a,s)=>a.map(x=>x*s),dot=(a,b)=>a.reduce((s,x,i)=>s+x*b[i],0),cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],unit=a=>scale(a,1/Math.hypot(...a));
  const signedArea=p=>p.reduce((s,a,i)=>{const b=p[(i+1)%p.length];return s+a[0]*b[1]-b[0]*a[1];},0)/2;
  const linspace=(a,b,n)=>Array.from({length:n},(_,i)=>a+(b-a)*i/(n-1));
@@ -95,21 +95,23 @@ const WingPrintMesh=(()=>{
     rodPaths.push([a,b]);body=check(own(body.add(cylinder(a,b,E.sleeveRadius(g)))),'Sleeve union');
    }
    for(const [a,b]of rodPaths)body=check(own(body.subtract(cylinder(a,b,E.holeRadius(g),2))),'Rod holes');
-   onProgress('Checking connected solids and printer fit…');const volume=body.volume(),mass=volume*density/1000;if(mass>MAX_MASS)throw Error(`Printed plastic mass ${mass.toFixed(1)} g exceeds ${MAX_MASS} g. Revise the design; it has not been scaled.`);
+   onProgress('Checking connected solids and printer fit…');const semiWingVolume=body.volume();
+   if(input.fullWing===true){onProgress('Mirroring across the root plane and joining the full wing…');const mirrored=own(body.mirror([0,1,0]));body=check(own(body.add(mirrored)),'Symmetric full wing');if(Math.abs(body.volume()-2*semiWingVolume)>Math.max(.01,5e-5*semiWingVolume))throw Error('Full-wing symmetry failed volume conservation.');}
+   const maxMass=MAX_MASS*(input.fullWing===true?2:1),volume=body.volume(),mass=volume*density/1000;if(mass>maxMass)throw Error(`Printed plastic mass ${mass.toFixed(1)} g exceeds ${maxMass} g (${MAX_MASS} g per semi-wing). Revise the design; it has not been scaled.`);
    const wholeParts=body.decompose();wholeParts.forEach(own);if(wholeParts.filter(p=>p.volume()>1e-6).length!==1)throw Error('The complete wing must have one connected material region. Check rib/spar/skin connections.');
-   const files=[],modules=[],bounds=E.moduleBounds(g);let sum=0,serializedSum=0;
-   for(let i=0;i<g.modules;i++){
-    const module=g.modules===1?body:check(slab(body,bounds[i],bounds[i+1]),'Module '+(i+1)),pieces=module.decompose();pieces.forEach(own);if(pieces.filter(p=>p.volume()>1e-6).length!==1)throw Error(`Module ${i+1} contains disconnected material regions.`);
+   const files=[],modules=[],halfBounds=E.moduleBounds(g),bounds=input.fullWing===true&&g.modules>1?[...halfBounds.slice(1).reverse().map(y=>-y),...halfBounds]:input.fullWing===true?[-g.semiSpan,g.semiSpan]:halfBounds;let sum=0,serializedSum=0;
+   for(let i=0;i<bounds.length-1;i++){
+    const module=bounds.length===2?body:check(slab(body,bounds[i],bounds[i+1]),'Module '+(i+1)),pieces=module.decompose();pieces.forEach(own);if(pieces.filter(p=>p.volume()>1e-6).length!==1)throw Error(`Module ${i+1} contains disconnected material regions.`);
     const box=module.boundingBox(),size=box.max.map((x,k)=>x-box.min[k]);if(size.some((x,k)=>x>ENVELOPE[k]+1e-3))throw Error(`Module ${i+1} is ${size.map(x=>x.toFixed(1)).join(' × ')} mm; it does not fit the 300 × 300 × 300 mm printer. Increase Printed modules or revise dimensions. No automatic scaling.`);
     const tolerance=.0002,shifted=own(own(module.translate(scale(box.min,-1))).simplify(tolerance)),bytes=toBinarySTL(shifted.getMesh()),verified=inspectSTL(bytes),v=module.volume(),meshVolume=shifted.volume();
     if(Math.abs(meshVolume-v)>Math.max(.01,tolerance*module.surfaceArea()))throw Error('STL surface simplification exceeded its volume-change bound: '+v+' -> '+meshVolume+'; area '+module.surfaceArea()+'; actual tolerance '+module.tolerance());
     if(Math.abs(verified.volumeMm3-meshVolume)>Math.max(.01,1e-5*meshVolume))throw Error('STL serialization changed the simplified solid volume.');sum+=v;serializedSum+=verified.volumeMm3;
-    files.push({name:`wing_module_${i+1}.stl`,bytes});modules.push({module:i+1,sizeMm:size,translationMm:scale(box.min,-1),referenceVolumeMm3:v,meshToleranceMm:tolerance,...verified});
+    files.push({name:`wing_module_${i+1}.stl`,bytes});modules.push({module:i+1,spanBoundsMm:[bounds[i],bounds[i+1]],sizeMm:size,translationMm:scale(box.min,-1),referenceVolumeMm3:v,meshToleranceMm:tolerance,...verified});
 
    }
    if(Math.abs(sum-volume)>Math.max(.01,5e-4*volume))throw Error('Module cutting failed volume conservation.');
-   if(serializedSum*density/1000>MAX_MASS)throw Error('Serialized STL exceeds the printed-mass limit.');
-   return {files,report:{format:'mie446-browser-print',version:VERSION,kernel:'Manifold 3.5.4',units:'mm',geometry:g,fitRecord:input.fitRecord||null,printedMassG:serializedSum*density/1000,referenceSolidVolumeMm3:volume,plasticVolumeMm3:serializedSum,densityGcm3:density,printerEnvelopeMm:ENVELOPE,modules,elapsedMs:Date.now()-start,limitations:['Undeformed mesh CAD, independent of result/display mesh.','Mesh loft and Boolean approximation; not the exact CadQuery B-rep.','STL contains no units; import in millimetres.','Printer fit excludes supports, brim and arbitrary-angle packing. Inspect every slicer layer.','No strength, buckling, bond or flight certification.']}};
+   if(serializedSum*density/1000>maxMass)throw Error('Serialized STL exceeds the printed-mass limit.');
+   return {files,report:{format:'mie446-browser-print',version:VERSION,fullWing:input.fullWing===true,mirrorPlane:'y = 0 (root)',semiWingVolumeMm3:semiWingVolume,maximumPrintedMassG:maxMass,kernel:'Manifold 3.5.4',units:'mm',geometry:g,fitRecord:input.fitRecord||null,printedMassG:serializedSum*density/1000,referenceSolidVolumeMm3:volume,plasticVolumeMm3:serializedSum,densityGcm3:density,printerEnvelopeMm:ENVELOPE,modules,elapsedMs:Date.now()-start,limitations:['Undeformed mesh CAD, independent of result/display mesh.','Mesh loft and Boolean approximation; not the exact CadQuery B-rep.','STL contains no units; import in millimetres.','Printer fit excludes supports, brim and arbitrary-angle packing. Inspect every slicer layer.','No strength, buckling, bond or flight certification.','Symmetry copies geometry only; source structural results describe the original root-clamped semi-wing. A full-aircraft support/load model is not solved.','For full-wing output, one module joins both halves; multiple modules are counted per semi-wing and require assembly, including the root joint.']}};
   }finally{for(const o of [...owned].reverse())try{o.delete();}catch{}}
  }
  return{VERSION,build,inspectSTL,toBinarySTL};

@@ -852,6 +852,7 @@ body { margin: 0; }
   let R = null, lastGeoKey = "", stale = true, running = false, pending = false;
   let printedWorkspace=null,wingSelection=null;
   let advancedGeometryEditor=null,geometryEditorStamp='';
+  let fullWingPrint=false;
   const lessonAnswers = new Map();
   let savedLessonLoad = null;
   let designBaseline = null, saveDesignAfterRun = false;
@@ -1759,6 +1760,21 @@ body { margin: 0; }
     applyAnatomy();
   }
 
+  // Mirror physical members only. The original clamped semi-wing retains its analysis.
+  function syncFullWingPreview(){
+    if(!model)return;
+    const show=fullWingPrint&&S.plot==='model'&&!S.deformed;
+    if(show&&!model.symmetry){
+      const group=new THREE.Group(),pairs=[];
+      for(const original of [...model.modules,...model.rods,...model.spars]){
+        const copy=original.clone(true);group.add(copy);
+        const a=[],b=[];original.traverse(o=>a.push(o));copy.traverse(o=>b.push(o));
+        a.forEach((o,i)=>pairs.push([o,b[i]]));
+      }
+      group.scale.x=-1;model.root.add(group);model.symmetry={group,pairs};
+    }
+    if(model.symmetry){model.symmetry.group.visible=show;for(const[a,b]of model.symmetry.pairs){b.visible=a.visible;b.position.copy(a.position);b.quaternion.copy(a.quaternion);b.scale.copy(a.scale);}}
+  }
   function frameView(force) {
     if (!model) return;
     const g = model.g;
@@ -1795,7 +1811,8 @@ body { margin: 0; }
   function fitPoints() {
     if(!model)return [];
     const g = model.g, pts = [], exploded=Number(S.explode)||0;
-    if(model.fitCache?.explode===exploded)return model.fitCache.points;
+    const mirror=fullWingPrint&&S.plot==='model'&&!S.deformed;
+    if(model.fitCache?.explode===exploded&&model.fitCache.mirror===mirror)return model.fitCache.points;
     const add=(y,x,z,module=0)=>{const p=WingGeometry.transformPoint(g,y,[x,z]);pts.push(new THREE.Vector3(p[1]+module*exploded,p[2],p[0]));};
     // Use the actual rendered station/contour vertices, including interior profile/twist extrema,
     // without changing their millimetre coordinates or stretching a taper to fill the screen.
@@ -1805,7 +1822,8 @@ body { margin: 0; }
     for(const mesh of model.rigid){const u=mesh.userData,p=u.rawPositions;for(let i=0;i<p.length;i+=3)add(p[i],p[i+2],p[i+1],u.module||0);}
     model.fix.updateMatrixWorld(true);
     model.fix.traverse(o=>{const a=o.geometry?.attributes?.position;if(a)for(let i=0;i<a.count;i++)pts.push(new THREE.Vector3().fromBufferAttribute(a,i).applyMatrix4(o.matrixWorld));});
-    model.fitCache={explode:exploded,points:pts};
+    if(mirror)pts.push(...pts.map(p=>new THREE.Vector3(-p.x,p.y,p.z)));
+    model.fitCache={explode:exploded,mirror,points:pts};
     return pts;
   }
   function placeAtFit(retarget) {
@@ -2248,7 +2266,7 @@ body { margin: 0; }
   function renderPlotInfo() {
     const massBox=$('#wingMassReadout');
     massBox.hidden=!R||S.emptyStudy;
-    if(!massBox.hidden){massBox.textContent=geometryPreview?'Wing mass — solve to update':`Total wing mass ${nf(R.mass.total,1)} g · includes spars ${nf(R.mass.spars||0,1)} g${R.load.gravitySummary?' · Applied '+nf(R.load.gravitySummary.appliedN,3)+' N · Weight ↓ '+nf(R.load.gravitySummary.weightN,3)+' N · Net '+nf(R.appliedForce,3)+' N':''}${stale?' · previous solve':''}`;massBox.title='Estimated model mass including skin, ribs, end caps, spars, rods and any tip mass. Verify manufacturing mass in CAD and the slicer.';}
+    if(!massBox.hidden){massBox.textContent=geometryPreview?'Wing mass — solve to update':`Estimated semi-wing mass ${nf(R.mass.total,1)} g · includes spars ${nf(R.mass.spars||0,1)} g${R.load.gravitySummary?' · Applied '+nf(R.load.gravitySummary.appliedN,3)+' N · Weight ↓ '+nf(R.load.gravitySummary.weightN,3)+' N · Net '+nf(R.appliedForce,3)+' N':''}${stale?' · previous solve':''}`;massBox.title='Estimated model mass including skin, ribs, end caps, spars, rods and any tip mass. Verify manufacturing mass in CAD and the slicer.';}
     if (geometryPreview&&model) {
       const g = model.g;
       $('#plotinfo').textContent = `UNSOLVED GEOMETRY PREVIEW · ${airfoilLabel(g)} · semi-span ${g.semiSpan} mm · ${model.ribs.length} ribs · ${model.rods.length} rods. Stress and deformation hidden; press Solve for analysis.`;
@@ -2497,6 +2515,7 @@ body { margin: 0; }
       updateModel();
     }
     lastT = t;
+    syncFullWingPreview();
     renderer.render(scene, camera);
     requestAnimationFrame(loop);
   }
@@ -3608,7 +3627,7 @@ body { margin: 0; }
     const studyTreeSection=$('#wlTreeSection'),studyTreeBody=studyTreeSection.querySelector('.wl-treepm');studyTreeSection.hidden=true;
     const treeButton=el('button',{class:'btn',type:'button',id:'wingStudyTreeButton','aria-haspopup':'dialog'},'Study tree');
     treeButton.onclick=()=>printedWorkspace.open('Study tree',studyTreeBody,treeButton);secondaryTools.prepend(treeButton);
-    WingPrintUI.mount({host:secondaryTools,workerURL:new URL('wing-print/wing_print_worker.js?v=1.0.0',document.baseURI).href,getInput:()=>{
+    WingPrintUI.mount({host:secondaryTools,workerURL:new URL('wing-print/wing_print_worker.js?v=1.1.0',document.baseURI).href,onSymmetryChange:enabled=>{fullWingPrint=enabled;if(enabled){S.deformed=false;$('#defBtn').setAttribute('aria-pressed','false');setPlot('model');}syncFullWingPreview();if(model){model.fitCache=null;placeAtFit(true);}},getInput:()=>{
       if(S.emptyStudy||!R||stale||running||gateOpen())throw Error('Solve the current wing inputs before creating STL.');
       const {pla}=materials();return {geometry:JSON.parse(JSON.stringify(S.geometry)),density:pla.rho,shellMaterial:pla,projectName:S.projectName,sourceStudy:WingStudyIO.printedStudyDocument(S,E)};
     }});

@@ -9,16 +9,16 @@ MIE 446 Aerospace Structures | Project guide
 ## 1. Design and analyze your wing
 Open [Wing Lab](https://ehsan-roohi.github.io/Aerospace-Structures/wing-lab.html#wing). Name your project and choose the airfoil, dimensions, skin, ribs, and reinforcement as described below. Add your load, check the root support, and press **Solve**. Review the displacement and stress results, and note any warnings.
 
-Assume your wing belongs to an aircraft with a total mass of 200 g in steady, level cruise. Each semi-wing carries half the total lift, so apply an upward load of approximately 1 N to your semi-wing at x/c = 0.25. Please note: do not put 1 N as a point force. Remember from the class lectures what actual lift looks like!
+Assume your wing belongs to an aircraft with a total mass of 200 g in steady, level cruise. Each semi-wing carries half the total lift, so apply an upward load of approximately 5 N to your semi-wing at x/c = 0.25. Please note: do not model the 5 N load as a point force. Remember from the class lectures what actual lift looks like!
 
-For a simple starting geometry, use NACA 2412 at the root and NACA 0012 at the tip (root eta = 0, tip eta = 1), taper ratio 0.7 (tip chord = 0.7 × root chord), zero sweep, zero dihedral, and zero incidence. Wing span can vary between 350 and 600 mm, and skin thickness should be any value between 1 and 2 mm. These are suggested starting choices; Wing Lab does not automatically determine the applied lift from the airfoils.
+For a simple starting geometry, use NACA 2412 at the root and NACA 0012 at the tip (root eta = 0, tip eta = 1), taper ratio 0.7 (tip chord = 0.7 × root chord), zero sweep, zero dihedral, and zero incidence. Wing span can vary between 350 and 600 mm, and skin thickness should be any value between 1 and 2 mm. These are suggested starting choices; Wing Lab does not automatically determine the lift applied by the airfoils.
 
 Compare three layouts under the same upward distributed load totaling 1 N: 
 no spar, 
 one full-span bonded spar at 25% chord, 
 and the same spar at 40% chord, keeping all other inputs unchanged. 
 Use as many ribs as you find useful.
-The material of the spar should be similar to the other parts of the wing.
+The spar material should match the other parts of the wing.
 Record mass, tip displacement, tip twist, and maximum nominal stress for each, then briefly justify your choice and build only the selected design after the CAD and print checks.
 
 In your saved Colab notebook, click **+ Text** and title the cell **Design basis**. Write a few sentences answering: Why did you choose this wing? What force did you apply, where, in which direction, and why? Give the value and unit (N for a point force; N/mm for a line load). What result are you aiming for (e.g., maximum tip displacement)? Does your result meet that target? Add one screenshot of the load and result. Ask the instructor if you need help choosing a reasonable load or target.

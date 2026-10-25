@@ -102,7 +102,7 @@ Use the fillable worksheet and fit/release record below, retaining a copy for yo
 
 <img src="docs/baseline_preview.png" alt="Code-generated baseline semi-wing with printed shell, ribs and rod interfaces" width="640">
 
-![Wing Lab design, direct STL download, OrcaSlicer and supervised printing](docs/project_workflow.svg)
+![Three steps: Wing Lab design and STL, OrcaSlicer preparation, then supervised printing](docs/project_workflow.svg)
 
 Teams of three design and analyze a semi-wing in Wing Lab, download printable STL directly, confirm any rod-fit coupon, build approved modules and document the assembled result. Students may use AI for code assistance, but must understand and independently verify the work.
 

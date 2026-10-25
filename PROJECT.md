@@ -2,11 +2,11 @@
 
 MIE 446 Aerospace Structures | Project guide
 
-**Design and analyze your semi-wing in Wing Lab, download STL directly, then slice and manufacture it. No notebook is required.**
+**Wing Lab: design, analyze and download STL → OrcaSlicer: prepare the print → Print and assemble.**
 
-![Design and solve in Wing Lab, download STL directly, review it in OrcaSlicer, then print and assemble](docs/project_workflow.svg)
+![Three steps: Wing Lab design and STL, OrcaSlicer preparation, then printing and assembly](docs/project_workflow.svg)
 
-## 1. Design and analyze your wing
+## 1. Wing Lab: design, analyze and download STL
 Open [Wing Lab](https://ehsan-roohi.github.io/Aerospace-Structures/wing-lab.html#wing). Name your project and choose the airfoil, dimensions, skin, ribs, and reinforcement as described below. Add your load, check the root support, and press **Solve**. Review the displacement and stress results, and note any warnings.
 
 Apply an upward distributed lift of **5 N total** at **x/c = 0.25** and enable **Include wing self-weight**. With the aircraft-mass option, use **1 kg** and **n = 1**, giving **4.905 N per semi-wing** (approximately 5 N in steady, level cruise); use the same load for all three comparisons and record the software's semi-wing mass and downward weight.
@@ -31,28 +31,23 @@ In your report, include a short **Design basis**: why you chose this wing, the l
 
 Our printer is **300 x 300 x 300 mm**. Choose 1 piece only if the actual CAD fits, or split the wing into 2 or 3 modules. Keep the final plastic mass at or below **300 g**. The loads are for computer analysis only; keep the printed wing unloaded.
 
-Keep a **Save JSON** copy so you can reopen and edit the design. Include your team and revision in the project name. Solve the final design before creating STL.
-
-## 2. Download printable files directly
-
-In Wing Lab, click **Download STL**. The app builds the **undeformed** skin, ribs, integral spars and any rod sleeves/holes, then checks the mesh, printed-plastic mass and printer envelope.
+Include your team and revision in the project name. Solve the final design, then click **Download STL** in Wing Lab. The app builds the **undeformed** skin, ribs, integral spars and any rod sleeves/holes, then checks the mesh, printed-plastic mass and printer envelope.
 
 - **1 printed module:** download one `.stl` file.
-- **2 or 3 printed modules:** download a ZIP containing the module STLs and `print_record.json`; extract it before slicing.
-- Click **Save print record** to retain the build checks and source design with your files. If a check fails, correct the stated dimensions, thickness or interface; no automatic scaling is applied.
+- **2 or 3 printed modules:** download the ZIP and extract the module STL files before slicing.
+
+If a check fails, correct the stated dimensions, thickness or interface; no automatic scaling is applied.
 
 For external rods, enter the reference of your **completed physical fit-coupon test** and confirm that the rod diameter, clearance and print process match. Keep the coupon record and photographs. A wing without external rods does not need this record.
 
-**JSON is your editable design; STL is the printable geometry.** The notebook is an optional alternative, not a required project step.
-
-## 3. Slice, obtain approval and print
+## 2. OrcaSlicer: prepare the print
 
 If you downloaded a ZIP, extract a working copy. In **OrcaSlicer**, import the STL for every module. Use the assigned **Creality K2 Pro, 0.4 mm nozzle and staff-approved PLA Pro profile**. Check millimetres, **100% scale**, orientation, actual dimensions, space for supports/brim, every layer, mass and print time.
 
+## 3. Print, assemble and document
+
 Obtain staff approval before printing. Use the assigned printer procedure and supervise the first layers. Keep the team wing unloaded: it is a non-flying fabrication model, not an airworthy structure.
 
-## 4. Keep the build evidence
-
-Save your editable Wing Lab JSON, STL file(s), print record, short design/comparison report, slicer project and photographs of the finished parts/assembly. Label them with the same team and revision. Measure semi-span, root/tip chord and actual mass; record the fit of any rods/module joints.
+Save the STL file(s), short design/comparison report, slicer project and photographs of the finished parts/assembly. Label them with the same team and revision. Measure semi-span, root/tip chord and actual mass; record the fit of any rods/module joints.
 
 **Your result: your own designed and printed semi-wing, with the files needed to reproduce it.** Use Canvas for submission instructions. This page covers the build stage only.

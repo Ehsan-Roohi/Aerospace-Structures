@@ -32,7 +32,7 @@ for c in nb['cells']:
         assert c['execution_count'] is not None
         assert not any(o['output_type']=='error' for o in c['outputs'])
         figures+=sum('image/png' in o.get('data',{}) for o in c['outputs'])
-assert figures==26
+assert figures==27
 assert 'beamCase=hw3-' not in markdown and 'beamCase=hw2b-' not in markdown
 assert 'What are 10, 30 or 40 elements?' in markdown
 assert 'A grounded pin does not cut the beam' in markdown
@@ -46,7 +46,7 @@ assert r'\thetax' not in markdown
 assert '$$V(x)=P' in markdown
 allowed_commands={'theta','frac','sum','quad','qquad','mathrm','boxed','sigma','max','tau',
                   'left','right','varepsilon','mathbf','int','kappa','Delta','ell',
-                  'approx','text','pi','phi','propto','times','lim','to','Delta','begin','end','partial','bar','Longrightarrow','boldsymbol','gamma','leq'}
+                  'approx','text','pi','phi','xi','zeta','propto','times','lim','to','Delta','begin','end','partial','bar','underbrace','Longrightarrow','Rightarrow','boldsymbol','gamma','leq'}
 for equation in re.findall(r'\$\$(.*?)\$\$',markdown,flags=re.S):
     unknown=set(re.findall(r'\\([A-Za-z]+)',equation))-allowed_commands
     assert not unknown, f'Unrecognized/corrupted LaTeX commands: {unknown}'
@@ -72,3 +72,9 @@ assert close(P*L/8,112.5)
 assert close(P*(L/2)**2*(3*L-L/2)/(6*E*I),5.6953125)
 assert close((2*187.5/I)*10,2.25)
 print(f'PASS: {len(nb["cells"])} cells, {figures} saved figures, no inline dollar signs; six app links and numerical reaction/stress/strain/deflection checks.')
+
+assert 'Work through the two compatibility integrals' in markdown
+assert 'A determinate truss warm-up for HW 4' in markdown
+assert 'What Wing Lab solves' in markdown
+assert 'not the Flyer geometry or the answer to HW 4' in markdown
+assert '0.0150000' in markdown

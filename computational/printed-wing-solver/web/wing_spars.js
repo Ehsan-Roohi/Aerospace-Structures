@@ -47,6 +47,8 @@ const WingSpars=(()=>{
         if(Math.min(xt,xb)<=g.cavityStart*c||Math.max(xt,xb)>=g.cavityEnd*c)throw Error(`Spar ${index+1} caps must fit wholly inside the cavity at y=${y.toFixed(1)} mm.`);
         const u=ordinates(g.naca,xt/c,c,g.te).upper-g.skin;
         const b=ordinates(g.naca,xb/c,c,g.te).lower+g.skin;
+        const atTop=ordinates(g.naca,xt/c,c,g.te),atBottom=ordinates(g.naca,xb/c,c,g.te);
+        if(u-s.topThickness<=atTop.lower+g.skin||b+s.bottomThickness>=atBottom.upper-g.skin)throw Error(`Spar ${index+1} cap thickness must fit between the inner skins at y=${y.toFixed(1)} mm.`);
         top.push([xt,u]);bottom.push([xb,b]);
       }
       const v=ordinates(g.naca,s.fraction,c,g.te),zt=v.upper-g.skin-s.topThickness/2,zb=v.lower+g.skin+s.bottomThickness/2;
@@ -54,6 +56,7 @@ const WingSpars=(()=>{
       if(h<=0||s.webThickness>h/5)throw Error(`Spar ${index+1}: positive web height and web thickness ≤ height/5 required at y=${y.toFixed(1)} mm.`);
       const at=(line,q)=>{let i=1;while(i<line.length-1&&line[i][0]<q)i++;const a=line[i-1],b=line[i];return a[1]+(b[1]-a[1])*(q-a[0])/(b[0]-a[0]);};
       const xl=x-s.webThickness/2,xr=x+s.webThickness/2,tu=q=>at(top,q)-s.topThickness,bl=q=>at(bottom,q)+s.bottomThickness;
+      for(const q of [xl,xr,...top.map(p=>p[0]),...bottom.map(p=>p[0])].filter(q=>q>=xl&&q<=xr))if(tu(q)-bl(q)<5*s.webThickness)throw Error(`Spar ${index+1}: web thickness must be at most one fifth of the web height across its full width at y=${y.toFixed(1)} mm.`);
       const web=[[xl,bl(xl)],...bottom.filter(p=>p[0]>xl&&p[0]<xr).map(p=>[p[0],bl(p[0])]),[xr,bl(xr)],[xr,tu(xr)],...[...top].reverse().filter(p=>p[0]>xl&&p[0]<xr).map(p=>[p[0],tu(p[0])]),[xl,tu(xl)]];
       const polygons=[top.concat([...top].reverse().map(([a,b])=>[a,b-s.topThickness])),bottom.concat([...bottom].reverse().map(([a,b])=>[a,b+s.bottomThickness])),web];
       const outline=[...top,[top.at(-1)[0],tu(top.at(-1)[0])],...[...top].reverse().filter(p=>p[0]>xr&&p[0]<top.at(-1)[0]).map(p=>[p[0],tu(p[0])]),[xr,tu(xr)],[xr,bl(xr)],...bottom.filter(p=>p[0]>xr).map(p=>[p[0],bl(p[0])]),...bottom.slice().reverse(),[bottom[0][0],bl(bottom[0][0])],...bottom.filter(p=>p[0]>bottom[0][0]&&p[0]<xl).map(p=>[p[0],bl(p[0])]),[xl,bl(xl)],[xl,tu(xl)],...[...top].reverse().filter(p=>p[0]<xl).map(p=>[p[0],tu(p[0])])];

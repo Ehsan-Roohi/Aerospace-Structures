@@ -129,7 +129,7 @@ const WingEngine = (() => {
     const pos = ["semiSpan", "rootChord", "tipChord", "skin", "ribThickness", "te", "cap", "rodDiameter", "sleeveWall"];
     for (const k of pos.filter(k=>k!=="tipChord"||!Geometry.closedTip(g))) if (!Number.isFinite(g[k])||!(g[k] > 0)) throw new Error(`${k} must be positive and finite.`);
     if(!Number.isFinite(g.cavityStart)||!Number.isFinite(g.cavityEnd)||g.cavityStart<=0||g.cavityEnd>=1||g.cavityStart>=g.cavityEnd)throw new Error('Cavity limits must satisfy 0 < start < end < 1.');
-    if(Geometry.closedTip(g)&&(g.rodFractions.length||g.spars.length))throw Error('Closed-tip wings currently support skin and ribs. Remove rods and bonded spars before selecting a zero-chord tip.');
+    if(Geometry.closedTip(g)&&g.rodFractions.length)throw Error('Remove external rods before selecting a zero-chord tip; closed-tip rod paths are not supported.');
     if (g.tipChord > g.rootChord) throw new Error("Tip chord cannot exceed root chord.");
     if (![1, 2, 3].includes(+g.modules)) throw new Error("Use 1, 2 or 3 modules.");
     if (g.interfaceOffset <= g.ribThickness) throw new Error("Interface rib offset must exceed rib thickness.");
@@ -152,7 +152,11 @@ const WingEngine = (() => {
       }
       g.customInteriorRibs = Object.freeze(ribs);
     }
-    if(g.spars.length)for(let i=0;i<=32;i++)sparParts(g,g.semiSpan*i/32);
+    if(g.spars.length){
+      if(Geometry.closedTip(g))for(const s of g.spars){const limit=closedTipSparLimit(g,s);if(s.length>limit+1e-8)throw Error(`Closed-tip spar length ${s.length.toFixed(2)} mm exceeds its finite runout fit limit ${limit.toFixed(2)} mm. Reduce Length; a fixed-width spar cannot reach the zero-area tip.`);}
+      const points=[...linspace(0,g.semiSpan,129),...g.spars.map(s=>s.length),...(g.stations||[]).map(s=>s.eta*g.semiSpan)];
+      for(const y of points)sparParts(g,y);
+    }
     return Object.freeze(g);
   }
 
@@ -162,11 +166,29 @@ const WingEngine = (() => {
   // only at geometry/CAD/display boundaries, never to the old scalar solver.
   const localGeometry = (g,y) => g.airfoil || g.stations || g.planform==='elliptic' ? {...g,naca:airfoilAt(g,y),sectionChord:chordAt(g,y)} : g;
   const sparParts = (g,y) => Spars.parts(localGeometry(g,y),y,verticalOrdinates);
+  function closedTipSparLimit(g,spec){
+    if(!Geometry.closedTip(g))return g.semiSpan;
+    // Keep the actual fixed cap/web dimensions. Find the first loss of fit,
+    // rather than extending material through a solid closure or scaling it.
+    const end=cavityTipLimit(g)-g.cap;
+    if(!(end>0))throw Error('Closed-tip spar has no hollow root region. Increase root chord or airfoil thickness.');
+    const other=(g.spars||[]).filter(s=>s!==spec&&Math.abs(s.fraction-spec.fraction)>1e-12);
+    const test={...g,spars:[...other,{...spec,length:g.semiSpan}]};
+    const fits=y=>{try{sparParts(test,y);return true;}catch{return false;}};
+    if(!fits(0))throw Error('Closed-tip spar dimensions do not fit the root cavity. Reduce cap width/thickness or web thickness, move the spar, or increase root chord/airfoil thickness.');
+    const points=[...linspace(0,end,257),...other.flatMap(s=>[s.length,Math.min(end,s.length+1e-7)]),...(g.stations||[]).map(s=>s.eta*g.semiSpan)].filter(y=>y>=0&&y<=end).sort((a,b)=>a-b);
+    let lo=0,hi=end;
+    for(const y of points){if(!fits(y)){hi=y;break;}lo=y;}
+    if(lo<hi)for(let i=0;i<40;i++){const y=(lo+hi)/2;if(fits(y))lo=y;else hi=y;}
+    const limit=Math.max(0,Math.min(lo,end)-Math.max(1e-5,g.semiSpan*1e-7));
+    if(limit<Math.min(20,g.semiSpan))throw Error('Closed-tip spar has less than the minimum 20 mm fit length. Revise root dimensions or spar dimensions.');
+    return limit;
+  }
   function analysisCapability(g,input={}) {
     if(Geometry.closedTip(g)){
       const restrictions=[];
       if(Math.abs(g.sweepDeg||0)>1e-10||Math.abs(g.dihedralDeg||0)>1e-10||[0,g.semiSpan,...(g.stations||[]).map(s=>s.eta*g.semiSpan)].some(y=>Math.abs(Geometry.stationAt(g,y).incidenceDeg)>1e-10))restrictions.push('Exact-tip section stress requires zero sweep, dihedral and incidence at every station.');
-      if(g.rodFractions?.length||g.spars?.length)restrictions.push('Exact-tip section stress supports skin and ribs; remove rods and spars.');
+      if(g.rodFractions?.length)restrictions.push('Exact-tip section stress supports integral skin, ribs and finite-length spars; remove external rods.');
       if(g.modules>1&&input.assembly?.seamsBonded!==true)restrictions.push('Use one piece or explicitly fully bonded module seams for section stress.');
       if((input.load?.kind??DEFAULT_LOAD.kind)==='flight'&&(input.load?.inertiaRelief??DEFAULT_LOAD.inertiaRelief)!==false)restrictions.push('Set Wing inertia relief to Ignored for exact-tip section stress.');
       return {supported:!restrictions.length,requires3D:true,stressOnly:true,mode:'section-stress',reasons:['Exact zero-chord tip'],restrictions,message:restrictions.length?restrictions.join(' '):'Nominal axial and biaxial normal section stress from physical load equilibrium. Exact apex stress and deformation are unresolved; torsion, shear, local buckling and 3-D stress concentrations are not assessed.'};
@@ -854,7 +876,8 @@ const WingEngine = (() => {
     const asm = { ...DEFAULT_ASSEMBLY, ...(input.assembly || {}) };
     if(g.spars.length&&!asm.seamsBonded&&seams(g).length)throw new Error('Bonded spars require bonded module seams (or a one-piece shell). Dry-seam joint mechanics with spars are not validated.');
     const load = { ...DEFAULT_LOAD, selfWeight:false, ...(input.load || {}) };
-    if(load.selfWeight&&g.spars.some(s=>s.length<g.semiSpan-1e-8))throw Error('Self-weight currently requires full-span spars. Partial-span spar runout gravity needs a segmented mass integration model.');
+    if(load.selfWeight&&!Geometry.closedTip(g)&&g.spars.some(s=>s.length<g.semiSpan-1e-8))throw Error('Self-weight currently requires full-span spars. Partial-span spar runout gravity needs a segmented mass integration model.');
+    if(Geometry.closedTip(g))for(const s of g.spars)for(const key of ['E','nu','rho','ft','fc','fs'])if(Math.abs(s.material[key]-pla[key])>1e-7*Math.max(1,Math.abs(pla[key])))throw Error('Closed-tip integral spars must use the same material as the shell.');
     if(typeof load.selfWeight!=='boolean')throw Error('Include wing self-weight must be true or false.');
     if(load.selfWeight&&load.kind==='flight'&&load.inertiaRelief)throw Error('Choose self-weight or flight inertia relief, not both. Self-weight uses 1 g; inertia relief already includes wing mass at n g.');
     if (!g.rodFractions.length && !asm.seamsBonded && seams(g).length)
@@ -1290,7 +1313,7 @@ const WingEngine = (() => {
   // dA_normal = |t_y| dA_xz and ds = dy/|t_y| preserve physical volume.
   function solveClosedTipStress(input){
     if(!ClosedTipStress)throw Error('Load wing_closed_tip_stress.js before engine.js for exact-tip section stress.');
-    return ClosedTipStress.solve(input,{E:{ringLoops,outerContour,cavityTipLimit,ribStations,seams},normalize,polyIntegrals,prescribedFlightLoads,customLine,customFraction,Geometry,Frame,GRAV,Profiles,chordAt,airfoilAt,requestedElementCount});
+    return ClosedTipStress.solve(input,{E:{ringLoops,outerContour,cavityTipLimit,ribStations,seams,sparParts},normalize,polyIntegrals,prescribedFlightLoads,customLine,customFraction,Geometry,Frame,GRAV,Profiles,chordAt,airfoilAt,requestedElementCount});
   }
   function solveSpatial(input,n=normalize(input)) {
     if(Geometry.closedTip(n.g)){const cap=analysisCapability(n.g,input);if(!cap.supported)throw Error(cap.message);return solveClosedTipStress(input);}
@@ -1570,7 +1593,7 @@ const WingEngine = (() => {
     makeGeometry, chordAt, seams, ribStations, moduleBounds, rodCentres, rodRadius, holeRadius, sleeveRadius,
     airfoilSurfaces, verticalOrdinates, outerContour, ringLoops, ringMesh, shellFE, analyseSection, solve,
     shearField, compareAssemblies, interp, camber, normalizeNaca, normalize, stations, warmStation, sectionAt,
-    cavityTipLimit,effectiveTE,sparParts,airfoilAt,analysisCapability,solveSpatial,spatialPointMotion,normalStressAt3D,normalStressLocationAt3D,
+    cavityTipLimit,effectiveTE,sparParts,closedTipSparLimit,airfoilAt,analysisCapability,solveSpatial,spatialPointMotion,normalStressAt3D,normalStressLocationAt3D,
     stationAt:Geometry.stationAt,transformPoint:Geometry.transformPoint,inversePoint:Geometry.inversePoint,
   };
 })();

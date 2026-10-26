@@ -5,7 +5,7 @@ const WingPrintMesh=(()=>{
  'use strict';
  const E=typeof WingEngine!=='undefined'?WingEngine:require('./engine.js');
  const G=typeof WingGeometry!=='undefined'?WingGeometry:require('./wing_geometry.js');
- const VERSION='1.2.0',ENVELOPE=[300,300,300],MAX_MASS=300;
+ const VERSION='1.3.0',ENVELOPE=[300,300,300],MAX_MASS=300;
  const add=(a,b)=>a.map((x,i)=>x+b[i]),sub=(a,b)=>a.map((x,i)=>x-b[i]),scale=(a,s)=>a.map(x=>x*s),dot=(a,b)=>a.reduce((s,x,i)=>s+x*b[i],0),cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],unit=a=>scale(a,1/Math.hypot(...a));
  const signedArea=p=>p.reduce((s,a,i)=>{const b=p[(i+1)%p.length];return s+a[0]*b[1]-b[0]*a[1];},0)/2;
  const linspace=(a,b,n)=>Array.from({length:n},(_,i)=>a+(b-a)*i/(n-1));
@@ -49,7 +49,7 @@ const WingPrintMesh=(()=>{
   if(g.rodFractions.length>8)throw Error('Use at most eight rod paths.');
   if(g.rodFractions.length){const fit=input.fitRecord;if(!fit||fit.tested!==true||typeof fit.reference!=='string'||!fit.reference.trim()||fit.rodDiameter!==g.rodDiameter||fit.clearance!==g.clearance||fit.sleeveWall!==g.sleeveWall)throw Error('Confirm the physical rod-fit coupon record for these rod diameter, clearance and sleeve-wall settings before STL export.');}
 
-  const sampling=[...new Set([...spanStations(g,0,g.semiSpan),...E.ribStations(g),...E.seams(g)])],radius=E.sleeveRadius(g);
+  const sampling=[...new Set([...spanStations(g,0,g.semiSpan),...E.ribStations(g),...E.seams(g),...g.spars.map(s=>s.length)])],radius=E.sleeveRadius(g);
   for(const y of sampling){
    E.ringLoops(g,y,81,2,2);const chord=E.chordAt(g,y),centres=E.rodCentres(g,y),profile=E.airfoilAt(g,y);
    centres.forEach(([x,z],i)=>{
@@ -61,7 +61,8 @@ const WingPrintMesh=(()=>{
    });
   }
 
-  for(const s of g.spars)for(const key of ['E','nu','rho','ft','fc','fs'])if(input.shellMaterial&&Math.abs(s.material[key]-input.shellMaterial[key])>1e-7*Math.max(1,Math.abs(input.shellMaterial[key])))throw Error('Integral printed spars must use the same material as the shell. Set Materials → Spars to the shell material.');
+  const shellMaterial=input.shellMaterial||(G.closedTip(g)?E.MATERIALS.pla_upright:null);
+  for(const s of g.spars)for(const key of ['E','nu','rho','ft','fc','fs'])if(shellMaterial&&Math.abs(s.material[key]-shellMaterial[key])>1e-7*Math.max(1,Math.abs(shellMaterial[key])))throw Error('Integral printed spars must use the same material as the shell. Set Materials → Spars to the shell material.');
   const check=(m,label)=>{const status=m.status();if(status!=='NoError'||m.isEmpty())throw Error(label+': invalid CAD solid ('+status+').');return m;};
   function loft(ys,polygonAt,transform=(y,p)=>G.transformPoint(g,y,p)){
    const loops=ys.map(y=>polygonAt(y).map(p=>Array.from(p)));if(loops.length<2||loops.some(p=>p.length!==loops[0].length))throw Error('Inconsistent section contours.');

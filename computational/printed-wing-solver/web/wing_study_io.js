@@ -961,8 +961,17 @@
   }
   function checkPrintedStudy(issues, raw, path, E) {
     if (!isObj(raw)) { issues.err(path, `must be an object {geometry, materials, assembly, load, criteria}, not ${describe(raw)}`); return undefined; }
-    checkKeys(issues, raw, path, ['geometry', 'materials', 'assembly', 'load', 'criteria', 'analysis']);
-    let analysis;
+    checkKeys(issues, raw, path, ['geometry', 'materials', 'assembly', 'load', 'criteria', 'analysis', 'fabrication']);
+    let analysis,fabrication;
+    if(own(raw,'fabrication')){
+      const fp=join(path,'fabrication');
+      if(!isObj(raw.fabrication))issues.err(fp,'must be an object {mirrorFullWing}');
+      else{
+        checkKeys(issues,raw.fabrication,fp,['mirrorFullWing']);
+        if(typeof raw.fabrication.mirrorFullWing!=='boolean')issues.err(join(fp,'mirrorFullWing'),'must be true or false');
+        else fabrication={mirrorFullWing:raw.fabrication.mirrorFullWing};
+      }
+    }
     if(own(raw,'analysis')){
       if(!isObj(raw.analysis))issues.err(join(path,'analysis'),'must be an object {nElements}');
       else{
@@ -979,17 +988,17 @@
     const load = need('load') ? checkPrintedLoad(issues, raw.load, join(path, 'load'), geometry ? geometry.semiSpan : undefined, E) : undefined;
     const criteria = need('criteria') ? checkCriteria(issues, raw.criteria, join(path, 'criteria'), E) : undefined;
     if ([geometry, materials, assembly, load, criteria].includes(undefined)) return undefined;
-    return { geometry, materials, assembly, load, criteria, ...(analysis?{analysis}:{}) };
+    return { geometry, materials, assembly, load, criteria, ...(analysis?{analysis}:{}),...(fabrication?{fabrication}:{}) };
   }
   // State handed to applyState: the UI's own field names.
   const printedState = (s) => ({
-    projectName: '', emptyStudy: false,
+    projectName: '', emptyStudy: false, mirrorFullWing:s.fabrication?.mirrorFullWing===true,
     geometry: clone(s.geometry), plaKey: s.materials.plaKey, plaOver: clone(s.materials.plaOver), rodKey: s.materials.rodKey,
     rodOver: clone(s.materials.rodOver), assembly: clone(s.assembly), load: clone(s.load), criteria: clone(s.criteria), analysis:s.analysis?clone(s.analysis):null,
   });
   const printedStudyOf = (st) => ({
     geometry: clone(st.geometry), materials: { plaKey: st.plaKey, plaOver: clone(st.plaOver), rodKey: st.rodKey, rodOver: clone(st.rodOver) },
-    assembly: clone(st.assembly), load: clone(st.load), criteria: clone(st.criteria), ...(st.analysis?{analysis:clone(st.analysis)}:{}),
+    assembly: clone(st.assembly), load: clone(st.load), criteria: clone(st.criteria), ...(st.analysis?{analysis:clone(st.analysis)}:{}),...(st.mirrorFullWing===true?{fabrication:{mirrorFullWing:true}}:{}),
   });
   /** Engine input for a printed state, exactly as the Wing Lab page builds it (card values unless an override is > 0). */
   function printedEngineInput(state, engine) {
@@ -1071,7 +1080,7 @@
     return {
       geometry,
       materials: { plaKey: S.plaKey, plaOver: over(S.plaOver, ['E', 'ft', 'fc', 'fs','rho','nu']), rodKey: S.rodKey, rodOver: over(S.rodOver, ['E']) },
-      assembly: pick(S.assembly, E.DEFAULT_ASSEMBLY), load, criteria: pick(S.criteria, E.DEFAULT_CRITERIA), ...(S.analysis?{analysis:clone(S.analysis)}:{}),
+      assembly: pick(S.assembly, E.DEFAULT_ASSEMBLY), load, criteria: pick(S.criteria, E.DEFAULT_CRITERIA), ...(S.analysis?{analysis:clone(S.analysis)}:{}),...(S.mirrorFullWing===true?{fabrication:{mirrorFullWing:true}}:{}),
     };
   }
   function printedRows(state, E) {
@@ -1079,6 +1088,7 @@
     const profileName=p=>p?(p.name||`NACA ${p.code}`):`NACA ${g.naca}`;
     add('Geometry', 'Airfoil', g.stations?'Spanwise airfoil stations (listed below)':profileName(g.airfoil));
     add('Geometry', 'Semi-span', `${fmt(g.semiSpan)} mm`);
+    if(state.mirrorFullWing)add('Fabrication','Full-wing mirror',`enabled; symmetric full span ${fmt(2*g.semiSpan)} mm; structural analysis remains one root-clamped semi-wing`);
     add('Geometry', 'Root / tip chord', `${fmt(g.rootChord)} / ${fmt(g.tipChord)} mm (${g.planform||'linear'} reference-chord planform)`);
     if(hasAdvancedGeometry(g)){
       add('Geometry','Sweep / dihedral',`${fmt(g.sweepDeg||0)}° at ${fmt(g.sweepReferenceFraction??0)}c / ${fmt(g.dihedralDeg||0)}°; projected span y, x aft, z up`);
@@ -1332,7 +1342,7 @@
     if (study && !issues.count) printedEngineChecks(issues, printedState(study), 'study', E);
     issues.finish();
     if (issues.errors.length) throw savedError('The current study cannot be saved', issues.errors);
-    return { format: STUDY_FORMAT, version: hasAdvancedGeometry(study.geometry)||study.analysis?2:FILE_VERSION, workspace: 'printed', ...(projectName ? { projectName } : {}), ...(emptyStudy ? { emptyStudy: true } : {}), savedAt: opts.savedAt || new Date().toISOString(), app: { name: 'MIE 446 Wing Lab', engine: E.VERSION, io: IO_VERSION }, study };
+    return { format: STUDY_FORMAT, version: hasAdvancedGeometry(study.geometry)||study.analysis||study.fabrication?2:FILE_VERSION, workspace: 'printed', ...(projectName ? { projectName } : {}), ...(emptyStudy ? { emptyStudy: true } : {}), savedAt: opts.savedAt || new Date().toISOString(), app: { name: 'MIE 446 Wing Lab', engine: E.VERSION, io: IO_VERSION }, study };
   }
   const exportPrintedStudy = (S, engine, opts) => `${JSON.stringify(printedStudyDocument(S, engine, opts), null, 2)}\n`;
   /** Manufacturing preflight only. No model edits, no CAD generation and no safety approval. */

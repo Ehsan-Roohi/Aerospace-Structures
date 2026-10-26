@@ -1,0 +1,32 @@
+/* DOM/UI integration with real THREE mesh/bounds for the STL reference module.
+ * The full generated app uses the existing scene stand-in; this is not a WebGL
+ * pixel test. Actual rendered browser review is a separate check.
+ */
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {createRequire} from 'node:module';
+import vm from 'node:vm';
+const require=createRequire(import.meta.url),{JSDOM,VirtualConsole}=require(process.env.MIE446_JSDOM_MODULE||'../../../.review-js/node_modules/jsdom'),THREE=require(process.env.MIE446_THREE_MODULE||process.env.WING_THREE_MODULE||'../../../.review-js/node_modules/three/build/three.cjs'),E=require('./engine.js'),IO=require('./wing_study_io.js'),P=require('./wing_print_mesh.js'),STL=require('./wing_stl_import.js');
+const read=f=>readFileSync(new URL(f,import.meta.url),'utf8'),example=read('../../../docs/examples/full-delta-2-spars.wing-study.json'),study=IO.importPrintedStudy(example,E);assert.ok(study.ok);
+const {default:Module}=await import('./vendor/manifold-3.5.4/manifold.js'),wasm=await Module();wasm.setup();const source=await P.build({...IO.printedEngineInput(study.state,E),fullWing:true},wasm),sourceBytes=source.files[0].bytes,expected=STL.parse(sourceBytes,{units:'mm'}).report;
+{
+  const d=new JSDOM('<div id="host"></div>',{runScripts:'outside-only'}),w=d.window,scene=new THREE.Scene(),original=new THREE.Group();scene.add(original);let shown=0,hidden=0;
+  const camera=new THREE.PerspectiveCamera(),controls={target:new THREE.Vector3(),update(){}};w.WingSTLImport=STL;vm.runInContext(read('./wing_stl_reference_ui.js'),d.getInternalVMContext());
+  const mounted=w.WingSTLReferenceUI.mount({host:w.document.querySelector('#host'),THREE,scene,camera,controls,onShow(){shown++;original.visible=false;},onHide(){hidden++;original.visible=true;}}),host=w.document.querySelector('#host'),input=host.querySelector('input[type=file]');
+  Object.defineProperty(input,'files',{configurable:true,value:[{name:'synthetic-full-delta.stl',arrayBuffer:async()=>sourceBytes}]});await input.onchange();const panel=host.querySelector('.wing-print-dialog'),load=[...panel.querySelectorAll('button')].find(b=>b.textContent==='Read STL');
+  await load.onclick();assert.equal(mounted.mesh,null);assert.match(panel.textContent,/Confirm the file units/);assert.equal(original.visible,true,'unit rejection cannot hide editable geometry');
+  panel.querySelector('input[type=checkbox]').checked=true;await load.onclick();assert.equal(shown,1);assert.equal(original.visible,false);assert.ok(mounted.mesh instanceof THREE.Mesh);assert.ok(mounted.mesh.material instanceof THREE.MeshNormalMaterial);assert.equal(mounted.mesh.geometry.index.count,expected.triangles*3,'actual parsed mesh uploaded to THREE');
+  const size=new THREE.Box3().setFromObject(mounted.mesh).getSize(new THREE.Vector3()).toArray();assert.ok(Math.abs(size[0]-160)<.001);assert.ok(Math.abs(size[1]-260)<.001);assert.ok(size[2]>20&&size[2]<40);assert.match(panel.textContent,/Reference only/);assert.match(panel.textContent,/does not calculate stress/);assert.match(panel.textContent,/260\.00/);assert.equal(scene.children.length,2);
+  let disposed=false;mounted.mesh.geometry.addEventListener('dispose',()=>disposed=true);[...panel.querySelectorAll('button')].find(b=>b.textContent==='Return to Wing Lab').click();assert.equal(mounted.mesh,null);assert.equal(scene.children.length,1);assert.equal(original.visible,true);assert.equal(hidden,1);assert.ok(disposed);assert.ok(panel.hidden);d.window.close();
+  console.log('PASS STL reference UI: explicit mm gate, actual THREE indexed mesh/bounds, no stress claim, Return restores original and disposes reference');
+}
+{
+  const page=read('../../../docs/wing-lab.html'),harness=read('./test_wing_layout_controls.mjs'),makeThree=new Function(harness.slice(harness.indexOf('function makeThree()'),harness.indexOf('function openPage('))+'\nreturn makeThree;')(),errors=[],vc=new VirtualConsole();vc.on('jsdomError',e=>errors.push(e.message));
+  const dom=new JSDOM(page,{url:'https://example.org/wing-lab.html#wing',runScripts:'outside-only',virtualConsole:vc}),w=dom.window,$=s=>w.document.querySelector(s);w.matchMedia=()=>({matches:false,addEventListener(){},removeEventListener(){}});w.requestAnimationFrame=()=>0;w.cancelAnimationFrame=()=>{};w.setInterval=()=>0;w.confirm=()=>true;w.HTMLElement.prototype.scrollIntoView=function(){};w.HTMLCanvasElement.prototype.getContext=()=>null;w.ResizeObserver=class{observe(){}unobserve(){}disconnect(){}};w.Blob=Blob;w.URL.createObjectURL=()=> 'blob:test';w.URL.revokeObjectURL=()=>{};
+  for(const[,attrs,code]of page.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)){if(/\bsrc=/.test(attrs)){if(/OrbitControls/.test(attrs)){w.THREE=makeThree();w.THREE.Object3D.prototype.localToWorld=function(v){return v;};w.THREE.Object3D.prototype.worldToLocal=function(v){return v;};}continue;}vm.runInContext(code,dom.getInternalVMContext());}
+  const ui=w.WingLabUI,tick=()=>new Promise(r=>setTimeout(r,10)),wait=async(label)=>{const end=Date.now()+90000;while(!ui.result()||ui.isRunning()||ui.isStale()){assert.ok(Date.now()<end,label+': '+errors.join('; '));await tick();}};await wait('initial solve');
+  const preview=ui.studyFiles().openText(example,'full-delta-2-spars.wing-study.json');assert.ok(preview.ok,JSON.stringify(preview.errors));$('#wingStudyFiles .wio-apply').click();assert.equal(ui.state().mirrorFullWing,true);assert.equal($('#wingFullSymmetric').checked,true);$('#runBtn').click();await wait('closed-tip solve');const result=ui.result();assert.ok(result.analysis3D.stressOnly);assert.equal(result.geometry.spars.length,2);
+  for(const[label,component]of[['Show nominal skin stress','skin'],['Show nominal spar stress','spars']]){const b=[...$('#wingSpatialResults').querySelectorAll('button')].find(b=>b.textContent===label);assert.ok(b&&!b.disabled);b.click();assert.equal(ui.state().plot,'stress');assert.equal(ui.state().stressComponent,component);assert.equal(ui.result(),result);assert.equal(ui.isStale(),false);assert.match($('#plotinfo').textContent,/SECTION STRESS/);}
+  assert.equal($('#defBtn').disabled,true);assert.equal($('#shearCentreBtn').disabled,true);assert.ok($('#wingOpenSTL'));assert.equal(errors.length,0,errors.join('; '));dom.window.close();
+  console.log('PASS generated app: full-delta mirror imports checked; skin/spar stress controls use solved result; unsupported deformation/shear centre stay disabled; Open STL mounted without errors');
+}

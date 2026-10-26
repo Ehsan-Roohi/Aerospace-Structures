@@ -1,0 +1,126 @@
+{
+  "format": "mie446-wing-study",
+  "version": 2,
+  "workspace": "printed",
+  "projectName": "Synthetic full delta wing - 2 integral spars",
+  "savedAt": "2026-10-25T12:00:00.000Z",
+  "app": {
+    "name": "MIE 446 Wing Lab",
+    "engine": "1.3.0",
+    "io": "2.0.0"
+  },
+  "study": {
+    "geometry": {
+      "naca": "0020",
+      "semiSpan": 130,
+      "rootChord": 160,
+      "tipChord": 0,
+      "skin": 0.8,
+      "ribThickness": 4,
+      "modules": 1,
+      "te": 0.8,
+      "interiorRibs": 0,
+      "customInteriorRibs": [
+        5,
+        53
+      ],
+      "interfaceOffset": 5,
+      "cap": 2,
+      "cavityStart": 0.12,
+      "cavityEnd": 0.8,
+      "rodFractions": [],
+      "rodDiameter": 4,
+      "clearance": 0.25,
+      "sleeveWall": 1.2,
+      "spars": [
+        {
+          "fraction": 0.3,
+          "length": 65,
+          "topWidth": 8,
+          "topThickness": 0.8,
+          "bottomWidth": 8,
+          "bottomThickness": 0.8,
+          "webThickness": 0.6,
+          "material": {
+            "name": "Printed PLA Pro — span along printer Z",
+            "E": 2000,
+            "nu": 0.35,
+            "rho": 1.24,
+            "ft": 15,
+            "fc": 50,
+            "fs": 10
+          }
+        },
+        {
+          "fraction": 0.6,
+          "length": 65,
+          "topWidth": 8,
+          "topThickness": 0.8,
+          "bottomWidth": 8,
+          "bottomThickness": 0.8,
+          "webThickness": 0.6,
+          "material": {
+            "name": "Printed PLA Pro — span along printer Z",
+            "E": 2000,
+            "nu": 0.35,
+            "rho": 1.24,
+            "ft": 15,
+            "fc": 50,
+            "fs": 10
+          }
+        }
+      ],
+      "planform": "delta",
+      "sweepDeg": 0,
+      "dihedralDeg": 0
+    },
+    "materials": {
+      "plaKey": "pla_upright",
+      "plaOver": {
+        "E": null,
+        "ft": null,
+        "fc": null,
+        "fs": null,
+        "rho": null,
+        "nu": null
+      },
+      "rodKey": "rod_hobby",
+      "rodOver": {
+        "E": null
+      }
+    },
+    "assembly": {
+      "rodsBonded": false,
+      "seamsBonded": true,
+      "seamFreeLength": null,
+      "adhesiveTensile": 5
+    },
+    "load": {
+      "kind": "custom",
+      "selfWeight": false,
+      "items": [
+        {
+          "kind": "distributed",
+          "start": 0,
+          "end": 130,
+          "qStart": 0.038461538461538464,
+          "qEnd": 0,
+          "fraction": 0.25
+        }
+      ],
+      "fos": 1,
+      "tipMass": 0
+    },
+    "criteria": {
+      "maxTipDeflection": 45,
+      "maxTipTwist": 2
+    },
+    "analysis": {
+      "nElements": 40
+    },
+    "fabrication": {
+      "mirrorFullWing": true
+    }
+  }
+}
+

@@ -496,6 +496,7 @@ body { margin: 0; }
   #wingNavigation .btn { font-size: 12px; padding: 6px; min-height: 36px; }
 }
 /*__BEAM_STYLES__*/
+.stl-reference-active #anatomyKey,.stl-reference-active #aircraftAxes,.stl-reference-active #wingModelAxes,.stl-reference-active #wingMassReadout,.stl-reference-active #ribLabels,.stl-reference-active #legend,.stl-reference-active #stressPeaks,.stl-reference-active #plotinfo{visibility:hidden!important}
 </style>
 
 <div id="foundations"></div>
@@ -819,6 +820,8 @@ body { margin: 0; }
 /*__WING_LOADS_UI__*/
 /*__WING_WORKSPACE_UI__*/
 /*__WING_STUDY_IO__*/
+/*__WING_STL_IMPORT__*/
+/*__WING_STL_REFERENCE_UI__*/
 /*__WING_PRINT_UI__*/
 </script>
 <script>
@@ -837,7 +840,7 @@ body { margin: 0; }
   const noLoad = () => ({ kind: "custom", items: [], fos: E.DEFAULT_LOAD.fos, tipMass: 0 });
   const S = {
     geometry: { ...E.DEFAULT_GEOMETRY },
-    projectName: '', emptyStudy: false,
+    projectName: '', emptyStudy: false, mirrorFullWing: false,
     plaKey: "pla_upright", rodKey: "rod_hobby",
     plaOver: { E: null, ft: null, fc: null, fs: null }, rodOver: { E: null },
     assembly: { ...E.DEFAULT_ASSEMBLY, seamFreeLength: 8 },
@@ -853,14 +856,16 @@ body { margin: 0; }
   let R = null, lastGeoKey = "", stale = true, running = false, pending = false;
   let printedWorkspace=null,wingSelection=null;
   let advancedGeometryEditor=null,geometryEditorStamp='';
+  let stlReference=null;
   let fullWingPrint=false;
+  function syncMirrorState(){fullWingPrint=!!S.mirrorFullWing;const box=$('#wingFullSymmetric');if(box)box.checked=fullWingPrint;const note=$('#wingSymmetryNote');if(note)note.hidden=!fullWingPrint;syncFullWingPreview();}
   const lessonAnswers = new Map();
   let savedLessonLoad = null;
   let designBaseline = null, saveDesignAfterRun = false;
   // Explicit Solve, as in the Beam Lab: field edits stay pending until Solve (or "Solve automatically");
   // a rejected edit leaves the previous valid inputs and the last solved result in place.
   let autoSolve = false, inputError = null, fieldErrors = {};
-  const historyFields=['geometry','plaKey','plaOver','rodKey','rodOver','assembly','load','criteria','analysis','projectName','emptyStudy'];
+  const historyFields=['geometry','plaKey','plaOver','rodKey','rodOver','assembly','load','criteria','analysis','projectName','emptyStudy','mirrorFullWing'];
   let wingHistory=[],wingHistoryIndex=-1,historySuspended=0;
   const wingSessionKey='winglab:printed-study:v1';
   let wingSessionReady=false,wingSessionInputs='',wingSessionMessage='Changes are saved in this browser. Use Save JSON for a portable backup.';
@@ -889,7 +894,7 @@ body { margin: 0; }
     const editor=wingLoadKeeper?.editor;editor?.cancelDraft();
     const snapshot=JSON.parse(wingHistory[next]);wingHistoryIndex=next;historySuspended++;
     try{
-      Object.assign(S,snapshot.inputs);importGate=snapshot.gate?{...snapshot.gate,confirmed:new Set(snapshot.gate.confirmed)}:null;
+      Object.assign(S,snapshot.inputs);syncMirrorState();importGate=snapshot.gate?{...snapshot.gate,confirmed:new Set(snapshot.gate.confirmed)}:null;
       fieldErrors={};inputError=null;partSelection=null;partUndo=null;partPick=false;
       S.secY=Math.min(S.secY,S.geometry.semiSpan);S.clipY=Math.min(S.clipY,S.geometry.semiSpan);$('#secY').value=S.secY;$('#clipIn').value=S.clipY;
       edited();renderImportGate();renderInputs(true);renderPM();editor?.refresh();
@@ -1317,16 +1322,20 @@ body { margin: 0; }
     const host=el('section',{class:'wl-spars'},'');$('#wingStructureForm').append(host);
     const fields=[['fraction','Position x/c','fraction'],['length','Length from root','mm'],['topWidth','Upper cap width','mm'],['topThickness','Upper cap thickness','mm'],['bottomWidth','Lower cap width','mm'],['bottomThickness','Lower cap thickness','mm'],['webThickness','Web thickness','mm']];
     const mats=[['E','Elastic modulus E','MPa'],['nu','Poisson ratio',''],['rho','Density','g/cm³'],['ft','Tensile allowable','MPa'],['fc','Compressive allowable','MPa'],['fs','Shear allowable','MPa']];
-    host.innerHTML=`<h3>Reinforcement layout</h3><p class="note"><b>Active: ${g.spars.length ? `shell + ${g.spars.length} spar(s)` : g.rodFractions.length ? `shell + ${g.rodFractions.length} rod(s)` : 'shell only'}; ribs retained.</b> Choose an alternative below. Switching removes the other reinforcement; only the active parts enter the analysis. A spar-only structure without skin is not supported.</p><p class="note" data-wing-structure-help="spar-model">Thin-wall beam model: upper/lower caps carry bending tension and compression; the web participates in transverse shear and closed-cell torsion. Perfect skin/rib bonds are assumed. Compare shell only, shell + rods and shell + spars separately; mixed rod/spar joints are not validated. No load is changed by these controls.</p><div class="lesson-actions"><button class="btn" type="button" id="wsShell">Use shell only</button><button class="btn" type="button" id="wsRods">Use shell + rods</button><button class="btn" type="button" id="wsAdd">+ Bonded spar</button><button class="btn" type="button" id="wsHelp">Model help</button></div>${errLine('spars')}${g.spars.map((s,i)=>{
-      const p=E.sparParts(g,0).find(p=>p.index===i),tip=E.sparParts(g,s.length).find(p=>p.index===i);
-      return `<fieldset><legend>Spar ${i+1} · perfectly bonded</legend>${fields.map(([k,label,unit])=>`<div class="field"><label for="ws${i}_${k}">${label}<small>${unit}</small></label><input id="ws${i}_${k}" type="number" step="any" value="${s[k]}"></div>`).join('')}<p class="note">Web clear height is derived from the bonded skin surfaces and cap thicknesses: root ${nf(p.h,2)} mm; end ${nf(tip.h,2)} mm. It is not an independent gap-producing dimension. Caps follow the inner skin; width and thickness are vertical section dimensions.</p><p class="note">Material: ${esc(s.material.name)} · edit in Materials → Spars.</p><button class="btn" type="button" id="ws${i}_apply">Apply spar ${i+1} inputs</button> <button class="btn" type="button" id="ws${i}_remove">Remove spar ${i+1}</button></fieldset>`;
-    }).join('')}<p class="note" data-wing-structure-help="spar-limits"><b>Model limits:</b> cap/web buckling, adhesive stresses, debonding, crippling and local runout stresses are not resolved. Thin-wall shear flow and elastic beam stresses are not a manufacturing approval or a 3-D FE result. Changing material does not change the exported CAD.</p>`;
+    const sparModelHelp=WingGeometry.closedTip(g)?'Exact-tip section model: actual skin, ribs and same-material finite-length spars enter nominal normal-stress equilibrium. Fixed-width spars end before the solid tip. Deformation, transverse shear, torsion and local runout stresses are unresolved. Perfect material bonds are assumed.':'Thin-wall beam model: upper/lower caps carry bending tension and compression; the web participates in transverse shear and closed-cell torsion. Perfect skin/rib bonds are assumed. Compare shell only, shell + rods and shell + spars separately; mixed rod/spar joints are not validated.';
+    host.innerHTML=`<h3>Reinforcement layout</h3><p class="note"><b>Active: ${g.spars.length ? `shell + ${g.spars.length} spar(s)` : g.rodFractions.length ? `shell + ${g.rodFractions.length} rod(s)` : 'shell only'}; ribs retained.</b> Choose an alternative below. Switching removes the other reinforcement; only the active parts enter the analysis. A spar-only structure without skin is not supported.</p><p class="note" data-wing-structure-help="spar-model">${sparModelHelp} No load is changed by these controls.</p><div class="lesson-actions"><button class="btn" type="button" id="wsShell">Use shell only</button><button class="btn" type="button" id="wsRods">Use shell + rods</button><button class="btn" type="button" id="wsAdd">+ Bonded spar</button><button class="btn" type="button" id="wsHelp">Model help</button></div>${errLine('spars')}${g.spars.map((s,i)=>{
+      const p=E.sparParts(g,0).find(p=>p.index===i),tip=E.sparParts(g,s.length).find(p=>p.index===i),limit=WingGeometry.closedTip(g)?E.closedTipSparLimit(g,s):null;
+      return `<fieldset><legend>Spar ${i+1} · perfectly bonded</legend>${fields.map(([k,label,unit])=>`<div class="field"><label for="ws${i}_${k}">${label}<small>${unit}</small></label><input id="ws${i}_${k}" type="number" step="any" value="${s[k]}"${k==='length'&&limit!==null?` max="${limit}"`:''}></div>`).join('')}${limit!==null?`<div class="note" data-closed-spar-limit>Finite spar length ${nf(s.length,2)} mm; maximum fit length ${nf(limit,2)} mm for these fixed cap/web dimensions. The spar ends before the solid tip; reduce Length if desired. Local runout stress is unresolved.</div>`:''}<p class="note">Web clear height is derived from the bonded skin surfaces and cap thicknesses: root ${nf(p.h,2)} mm; end ${nf(tip.h,2)} mm. It is not an independent gap-producing dimension. Caps follow the inner skin; width and thickness are vertical section dimensions.</p><p class="note">Material: ${esc(s.material.name)} · edit in Materials → Spars.</p><button class="btn" type="button" id="ws${i}_apply">Apply spar ${i+1} inputs</button> <button class="btn" type="button" id="ws${i}_remove">Remove spar ${i+1}</button></fieldset>`;
+    }).join('')}<p class="note" data-wing-structure-help="spar-limits"><b>Model limits:</b> cap/web buckling, adhesive stresses, debonding, crippling and local runout stresses are not resolved. Nominal section stresses are not a manufacturing approval or a 3-D FE result. Changing material does not change the exported CAD.</p>`;
     $('#wsHelp').onclick=()=>{printedWorkspace?.close();const help=$('#wingInputHelp'),section=$('#wingHelpStructure');if(!help||!section)return;help.scrollIntoView({block:'nearest'});help.open=true;section.open=true;help.dispatchEvent(new Event('toggle'));section.querySelector('summary').focus({preventScroll:true});};
     const configure=(patch)=>{const previous=S.assembly;S.assembly={...previous,seamsBonded:true};const result=applyGeometry(patch,'spars','bonded structural layout');if(!result.ok)S.assembly=previous;renderTree();return result;};
     $('#wsShell').onclick=()=>{if(!confirm('Remove rods and spars, retain ribs, geometry and loads, and use a continuous/bonded shell?'))return;configure({rodFractions:[],spars:[]});};
     $('#wsRods').onclick=()=>{if(!confirm('Use rods instead of spars? Spars will be removed and module seams set to bonded for this comparison; loads are retained.'))return;configure({spars:[],rodFractions:[.3,.6]});};
-    $('#wsAdd').onclick=(fraction)=>{if(g.spars.length>=2){flash('At most two bonded spars.');return;}if(!confirm('Add a bonded spar? Existing rods will be removed and module seams set to bonded. Loads are retained.'))return;
-      configure({rodFractions:[],spars:[...g.spars,{fraction:typeof fraction==='number'?fraction:g.spars.length?.6:.35,length:g.semiSpan,topWidth:8,topThickness:.8,bottomWidth:8,bottomThickness:.8,webThickness:.6,material:{...WingSpars.MAT}}]});};
+    $('#wsAdd').onclick=(fraction)=>{if(g.spars.length>=2){flash('At most two bonded spars.');return {ok:false};}if(!confirm('Add a bonded spar? Existing rods will be removed and module seams set to bonded. Loads are retained.'))return {ok:false};
+      try{const shell=materials().pla,spec={fraction:typeof fraction==='number'?fraction:g.spars.length?.6:.35,length:g.semiSpan,topWidth:8,topThickness:.8,bottomWidth:8,bottomThickness:.8,webThickness:.6,material:Object.fromEntries(Object.keys(WingSpars.MAT).map(k=>[k,shell[k]]))};
+        if(WingGeometry.closedTip(g)){const limit=E.closedTipSparLimit({...g,rodFractions:[]},spec);spec.length=Math.min(Math.floor(limit*10)/10,Math.max(20,Math.floor(.95*limit*10)/10));}
+        const result=configure({rodFractions:[],spars:[...g.spars,spec]});if(result.ok&&WingGeometry.closedTip(g))flash(`Added finite spar: ${nf(spec.length,2)} mm. Its fixed cap/web dimensions end before the solid tip; inspect Length and maximum fit in Structure dimensions.`);return result;
+      }catch(error){flash(error.message);return {ok:false,error:error.message};}};
     g.spars.forEach((s,i)=>{
       const p=E.sparParts(g,0).find(v=>v.index===i),diagram=el('div',{},`<svg viewBox="0 0 290 215" role="img" aria-label="Spar ${i+1} root dimensions, schematic not to scale" style="width:100%;max-width:360px;background:var(--raise);color:var(--fg)"><rect x="84" y="43" width="100" height="14" fill="#9871dd"/><rect x="128" y="57" width="12" height="106" fill="#39a3b7"/><rect x="74" y="163" width="120" height="14" fill="#9871dd"/><g stroke="currentColor" fill="none"><path d="M84 35v-9h100v9 M74 185v9h120v-9 M214 57h8v106h-8 M120 112h-18m38 0h18"/></g><g fill="currentColor" font-size="11" font-family="system-ui"><text x="134" y="19" text-anchor="middle">Upper cap bᵤ = ${nf(s.topWidth,2)} mm</text><text x="134" y="210" text-anchor="middle">Lower cap bₗ = ${nf(s.bottomWidth,2)} mm</text><text x="8" y="53">tᵤ = ${nf(s.topThickness,2)}</text><text x="8" y="174">tₗ = ${nf(s.bottomThickness,2)}</text><text x="150" y="140">t_w = ${nf(s.webThickness,2)} mm</text><text x="228" y="105">h_web</text><text x="228" y="121">${nf(p.h,2)} mm</text><text x="6" y="147">Web</text></g></svg><p class="note">Root schematic, not to scale. Actual caps follow the inner skin contours. b = cap width, t = thickness; h_web is the clear height between caps. Upper/lower cap dimensions are independent.</p>`);
       $('#ws'+i+'_apply').closest('fieldset').querySelector('legend').after(diagram);
@@ -1338,7 +1347,7 @@ body { margin: 0; }
   }
   function renderSparResults(){
     const box=$('#wingSparResults');if(!box)return;
-    if(R?.analysis3D){box.innerHTML='<p class="note">Projected bonded thin-wall spar sections are included in the spatial beam. Normal stresses are shown in the 3-D record below the wing; shear failure, bond failure and buckling are unresolved.</p>';return;}
+    if(R?.analysis3D){box.innerHTML=R.analysis3D.stressOnly?'<p class="note">Finite-length integral spars are included in the actual material union for nominal normal-stress equilibrium. Normal stresses are shown in the section record below the wing. Deformation, transverse shear, torsion, local runout/bond stresses and buckling remain unresolved.</p>':'<p class="note">Projected bonded thin-wall spar sections are included in the spatial beam. Normal stresses are shown in the 3-D record below the wing; shear failure, bond failure and buckling are unresolved.</p>';return;}
     const specs=S.geometry.spars||[];
     if(!specs.length){box.innerHTML='<h3>Spars</h3><p class="note">No spars in the current inputs. Add one in Structure → Bonded spars. Rods and spars are distinct alternatives.</p>';return;}
     const pending=stale||running||!R||!R.sparModel;
@@ -1502,6 +1511,7 @@ body { margin: 0; }
   // Do not stall a study when the browser suspends animation in a background tab.
   const frame = () => new Promise((r) => setTimeout(r, 0));
   async function runStudy() {
+    stlReference?.clear();
     if(S.emptyStudy){clearTimeout(runTimer);showEmptyWing();setStatus();return;}
     if (running) { pending = true; return; }
     recordWingHistory();
@@ -2884,6 +2894,8 @@ body { margin: 0; }
     let host=$('#wingSpatialResults');if(!host){host=el('section',{id:'wingSpatialResults',class:'tabpanel'});dock.prepend(host);}host.hidden=false;
     const tip=R.tipBehavior,root=a.cutAt(0),v=R.verification;
     host.innerHTML=`<h2>Closed-tip wing · nominal normal stress</h2><p>Actual material sections and applied-load equilibrium; geometry is not trimmed.</p><dl class="kv"><dt>Model mass</dt><dd>${nf(R.mass.total,2)} g</dd><dt>Root vertical force</dt><dd>${sig(root.force[2],5)} N</dd><dt>Root bending moment</dt><dd>${sig(root.moment[0]/1000,5)} N·m</dd><dt>Section equilibrium residual</dt><dd>${sig(v.normalStressEquilibriumRelativeResidual,3)}</dd></dl><p class="callout">${esc(tip.reason||tip.status)}. The exact zero-area tip has undefined stress; displayed extrema cover sampled sections only.</p><div class="charts" id="closedStressCharts"></div><details><summary>Model scope</summary><ul>${a.limitations.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></details>`;
+    const stressTools=el('div',{class:'lesson-actions'});
+    for(const[value,label]of [['skin','Show nominal skin stress'],['spars','Show nominal spar stress']]){const b=el('button',{type:'button',class:'btn','aria-pressed':String(S.stressComponent===value)},label);b.disabled=value==='spars'&&!R.geometry.spars.length;b.onclick=()=>{S.stressComponent=value;if(value==='spars')setAnatomy('inside');setPlot('stress');stressTools.querySelectorAll('button').forEach(n=>n.setAttribute('aria-pressed',String(n===b)));};stressTools.append(b);}host.querySelector('h2').after(stressTools);
     const chartHost=$('#closedStressCharts');chart(chartHost,'Signed normal-stress envelope','MPa',Array.from(R.y),[{y:Array.from(R.stress.sigTop),color:'#c93d48'},{y:Array.from(R.stress.sigBot),color:'#246fd0'}]);
     $('#report').value=spatialReportText();
   }
@@ -3404,6 +3416,7 @@ body { margin: 0; }
   // Messages about files and links (not input errors): shown in Study files, which is opened.
   function filesNote(msg) { const n = $("#wingFilesNote"); if (n) n.textContent = msg; const d = $("#wlFiles"); if (d) d.open = true; }
   function applyStudyState(state, info) {
+    stlReference?.clear();
     historySuspended++;
     try{
     if (info.kind === "outer-geometry") {
@@ -3414,7 +3427,8 @@ body { margin: 0; }
       importGate = { required: info.required.map((r) => ({ id: r.id, label: r.label })), confirmed: new Set(), provenance: info.provenance, conflicts: info.conflicts || [], previous };
     } else {
       S.geometry = { ...state.geometry, rodFractions: [...state.geometry.rodFractions], customInteriorRibs: state.geometry.customInteriorRibs == null ? null : [...state.geometry.customInteriorRibs] };
-      Object.assign(S, { plaKey: state.plaKey, plaOver: { ...state.plaOver }, rodKey: state.rodKey, rodOver: { ...state.rodOver }, assembly: { ...state.assembly }, criteria: { ...state.criteria }, analysis:state.analysis?{...state.analysis}:null,projectName:state.projectName||'',emptyStudy:!!state.emptyStudy });
+      Object.assign(S, { plaKey: state.plaKey, plaOver: { ...state.plaOver }, rodKey: state.rodKey, rodOver: { ...state.rodOver }, assembly: { ...state.assembly }, criteria: { ...state.criteria }, analysis:state.analysis?{...state.analysis}:null,projectName:state.projectName||'',emptyStudy:!!state.emptyStudy,mirrorFullWing:!!state.mirrorFullWing });
+      syncMirrorState();
       S.load = { ...E.DEFAULT_LOAD, ...JSON.parse(JSON.stringify(state.load)) };   // the page expects every load field; the file stores the active case
       importGate = null; fieldErrors = {}; edited();
     }
@@ -3529,6 +3543,7 @@ body { margin: 0; }
     form.querySelector('[data-wing-clear-cancel]').focus({preventScroll:true});
   }
   function clearWingStudy(){
+    stlReference?.clear();
     if(running){flash('Wait for the current solve to finish before clearing the study.');return;}
     recordWingHistory();
     clearTimeout(runTimer);clearTimeout(secTimer);pending=false;
@@ -3537,14 +3552,14 @@ body { margin: 0; }
     historySuspended++;
     try{
       Object.assign(S,{
-        projectName:'',emptyStudy:true,
+        projectName:'',emptyStudy:true,mirrorFullWing:false,
         geometry:{...E.DEFAULT_GEOMETRY,modules:1,rodFractions:[],customInteriorRibs:[],spars:[]},
         plaKey:'pla_upright',rodKey:'rod_hobby',plaOver:{},rodOver:{},
         assembly:{...E.DEFAULT_ASSEMBLY,seamFreeLength:8},load:noLoad(),criteria:{...E.DEFAULT_CRITERIA},analysis:null,
         selected:'part',stressComponent:'skin',mode:{kind:'bending',index:0},secY:0,clipY:150
       });
       importGate=null;inputError=null;fieldErrors={};partSelection=null;partUndo=null;partPick=false;
-      R=null;lastGeoKey=null;stale=true;designBaseline=null;saveDesignAfterRun=false;
+      syncMirrorState();R=null;lastGeoKey=null;stale=true;designBaseline=null;saveDesignAfterRun=false;
       savedLessonLoad=null;lessonAnswers.clear();wingStudyOpened=true;
       $('#report').value='';$('#copyState').textContent='No previous results are kept. Create a new wing to begin.';
       $('#wingShareBox').hidden=true;$('#wingShareBox').value='';$('#wingShareMsg').textContent='';
@@ -3586,10 +3601,10 @@ body { margin: 0; }
     printedWorkspace.open('Add '+kind,form,anchor);form.querySelector('input').focus({preventScroll:true});
     form.querySelector('[data-edit-structure]').onclick=()=>openWingStructurePopup(anchor,isSpar?'wsAdd':isRib?'wgRibNew':'wgRodAdd');
     form.onsubmit=e=>{e.preventDefault();const input=form.elements.namedItem('position'),v=input.value.trim()===''?NaN:Number(input.value);if(!Number.isFinite(v)){form.querySelector('[role="alert"]').textContent='Enter a finite position.';return;}
-      let out;if(isSpar){const before=partStamp(),previous=partSnapshot();$('#wsAdd').onclick(v);out={ok:before!==partStamp()};if(out.ok)partUndo={...previous,after:partStamp()};}
+      let out;if(isSpar){const before=partStamp(),previous=partSnapshot(),added=$('#wsAdd').onclick(v);out={ok:before!==partStamp(),error:added?.error};if(out.ok)partUndo={...previous,after:partStamp()};}
       else out=isRib?partChange({customInteriorRibs:[...interiorStations(g),v]},'ribs'):partChange({rodFractions:[...g.rodFractions,v]},'rods');
       if(out.ok){printedWorkspace.close();setAnatomy('inside');if(isSpar)openWingStructurePopup(anchor,'ws'+(S.geometry.spars.length-1)+'_fraction');}
-      else form.querySelector('[role="alert"]').textContent=Object.values(fieldErrors).join(' ')||inputError||'No part added. Check the position, available space, or the confirmation choice.';
+      else form.querySelector('[role="alert"]').textContent=out.error||Object.values(fieldErrors).join(' ')||inputError||'No part added. Check the position, available space, or the confirmation choice.';
     };
   }
   if(typeof WingWorkspaceUI!=='undefined'){
@@ -3685,7 +3700,9 @@ body { margin: 0; }
     const studyTreeSection=$('#wlTreeSection'),studyTreeBody=studyTreeSection.querySelector('.wl-treepm');studyTreeSection.hidden=true;
     const treeButton=el('button',{class:'btn',type:'button',id:'wingStudyTreeButton','aria-haspopup':'dialog'},'Study tree');
     treeButton.onclick=()=>printedWorkspace.open('Study tree',studyTreeBody,treeButton);secondaryTools.prepend(treeButton);
-    WingPrintUI.mount({host:secondaryTools,workerURL:new URL('wing-print/wing_print_worker.js?v=1.2.0',document.baseURI).href,onSymmetryChange:enabled=>{fullWingPrint=enabled;syncFullWingPreview();renderPlotInfo();if(model){model.fitCache=null;placeAtFit(true);}},getInput:()=>{
+    stlReference=WingSTLReferenceUI.mount({host:secondaryTools,THREE,scene,camera,controls,onShow:()=>{setPlot('model');if(model)model.root.visible=false;$('#app').classList.add('stl-reference-active');},onHide:()=>{if(model)model.root.visible=true;$('#app').classList.remove('stl-reference-active');}});
+    document.querySelectorAll('#app [data-plot]').forEach(b=>b.addEventListener('click',()=>{if(stlReference?.mesh)stlReference.clear();},true));
+    WingPrintUI.mount({host:secondaryTools,workerURL:new URL('wing-print/wing_print_worker.js?v=1.3.0',document.baseURI).href,onSymmetryChange:enabled=>{S.mirrorFullWing=enabled;fullWingPrint=enabled;recordWingHistory();syncFullWingPreview();renderPlotInfo();if(model){model.fitCache=null;placeAtFit(true);}},getInput:()=>{
       if(S.emptyStudy||running||gateOpen()||(!WingGeometry.closedTip(S.geometry)&&(!R||stale)))throw Error('Solve the current wing inputs before creating STL.');
       if(WingGeometry.closedTip(S.geometry))checkGeometry(S.geometry);
       const {pla}=materials();return {geometry:JSON.parse(JSON.stringify(S.geometry)),density:pla.rho,shellMaterial:pla,projectName:S.projectName,sourceStudy:WingStudyIO.printedStudyDocument(S,E)};

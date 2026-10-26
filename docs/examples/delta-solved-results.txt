@@ -1,0 +1,22 @@
+Synthetic full delta wing examples
+Full planform: 260 mm tip-to-tip span x 160 mm root chord; exact zero-chord tips.
+Load: 5 N total upward on the symmetric full wing, chord-proportional (2.5 N per half). Self-weight is ignored in these two studies.
+Both studies use NACA 0020, effective printed PLA, 0.8 mm skin, one piece, and finite integral same-material spars ending at y=65 mm.
+The solver analyzes one root-clamped semi-wing; mirror it for the full symmetric geometry and loads. This does not resolve the actual centre fixture.
+
+full-delta-1-spar.wing-study.json
+Full mass: 146.075762 g (2 x 73.037881 g). Spar material per half: 1.699317 g.
+Half root force: 2.500000 N; half root bending moment: 108.333333 N mm.
+At y=30 mm, top/bottom signed normal stress: -0.028545 / 0.028545 MPa.
+Sampled tension/compression: 0.034074 / -0.034074 MPa; these are not certified global extrema.
+Section equilibrium relative residual: 2.444e-16.
+
+full-delta-2-spars.wing-study.json
+Full mass: 149.048412 g (2 x 74.524206 g). Spar material per half: 3.185642 g.
+Half root force: 2.500000 N; half root bending moment: 108.333333 N mm.
+At y=30 mm, top/bottom signed normal stress: -0.027154 / 0.027154 MPa.
+Sampled tension/compression: 0.032691 / -0.032691 MPa; these are not certified global extrema.
+Section equilibrium relative residual: 2.213e-16.
+
+Exact apex stress is undefined. Finite chord-proportional delta-tip nominal stress is sampled, not certified as a global maximum. Local taper/rib/root/spar-runout stresses, shear, torsion, deformation and safety certification remain unresolved.
+These editable synthetic examples contain no private or third-party CAD.

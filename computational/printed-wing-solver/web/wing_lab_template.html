@@ -156,6 +156,7 @@ button, input, select { font: inherit; color: inherit; }
 .footline { left: 14px; bottom: 10px; font: 11px/1.4 var(--font-data); opacity: 0.75; max-width: calc(100% - 28px); }
 .modeplayer { position: absolute; right: 12px; bottom: 12px; display: flex; gap: 6px; align-items: center; background: color-mix(in srgb, var(--panel) 85%, transparent); border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; font: 600 12px/1 var(--font-label); backdrop-filter: blur(6px); }
 .loading { position: absolute; inset: 0; display: grid; place-items: center; background: color-mix(in srgb, var(--bg) 55%, transparent); backdrop-filter: blur(3px); }
+.loading[hidden] { display: none !important; }
 .loading .card { width: min(380px, 86%); background: var(--raise); border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; box-shadow: var(--shadow); }
 .loading h3 { margin: 0 0 4px; font: 700 18px/1.2 var(--font-label); letter-spacing: 0.03em; }
 .loading p { margin: 0; color: var(--muted); font: 12px/1.5 var(--font-data); min-height: 3em; }
@@ -611,7 +612,7 @@ body { margin: 0; }
       <span>Mode</span>
       <div class="seg" id="modeSeg"></div>
     </div>
-    <div class="loading" id="loading">
+    <div class="loading" id="loading" hidden>
       <div class="card" role="status">
         <h3 id="loadTitle">Starting the solver</h3>
         <p id="loadStep">Building the NACA geometry</p>
@@ -1473,7 +1474,7 @@ body { margin: 0; }
     preview.textContent=customText?'See status details.':label==='Linear range exceeded'?'Illustrative only · reduce loads.':label==='Input error'?'Check input details.':label==='Solved · section stress'?'Nominal normal stress · tip unresolved.':label==='Analysis blocked'?'Confirm imported structure.':label==='Empty study'?'Choose Airfoil & planform.':label==='Out of date'?'Press Solve to update.':label==='Solving'?'Computing…':/no load/i.test(full)?'No loads applied.':label==='Solved · 3-D beam'?(R?.analysis3D?.loadMapping?.endWrenches.length?'End-load approximation · see results warning.':'Nominal beam results.'):/, exceeded/.test(full)?'Strength check exceeded.':'Results match inputs.';
     chip.title=full;
   }
-  function setStatus(text) { renderStatus(text);syncCompactStatus(text); }
+  function setStatus(text) { if(!running)$('#loading').hidden=true;renderStatus(text);syncCompactStatus(text); }
   function renderStatus(text) {
     syncWingHistory();
     const chip = $("#stateChip"), t = $("#stateText"), btn = $("#runBtn");
@@ -3529,6 +3530,7 @@ body { margin: 0; }
   advancedGeometryEditor=WingGeometryUI.mount(advancedGeometryPanel,{getGeometry:()=>S.geometry,applyGeometry,onApplied:()=>{printedWorkspace?.close();setAnatomy('inside');}});
   function openAdvancedGeometryPopup(anchor){if(!printedWorkspace)return;renderGeometryForm();printedWorkspace.open('Airfoils & planform · dimensions, taper, twist, sweep, dihedral',advancedGeometryPanel,anchor);printedWorkspace.popup.style.width='min(680px,calc(100vw - 16px))';printedWorkspace.position();}
   function showEmptyWing(){
+    $('#loading').hidden=true;
     clearRenderedWing();wingSelection?.clear();R=null;stale=true;geometryPreview=true;lastGeoKey=null;
     $('#app > .dock').hidden=true;$('#probe').hidden=true;$('#legend').hidden=true;$('#wingEmptyStart')?.removeAttribute('hidden');
     $('#plotinfo').textContent='Empty study · no wing or loads. Create a wing with Airfoil & planform.';

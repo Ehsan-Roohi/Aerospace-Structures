@@ -21,7 +21,7 @@ const WingSpars=(()=>{
   const G=m=>m.E/(2*(1+m.nu));
   function specs(raw,L){
     if(raw==null)return [];
-    if(!Array.isArray(raw)||raw.length>2)throw Error('Use zero, one or two bonded spars.');
+    if(!Array.isArray(raw))throw Error('Supply bonded spars as an array.');
     return raw.map((s,i)=>{
       if(!s||typeof s!=='object'||Array.isArray(s)||Object.keys(s).some(k=>!keys.includes(k)))throw Error(`Spar ${i+1}: unsupported field.`);
       const v={...s};

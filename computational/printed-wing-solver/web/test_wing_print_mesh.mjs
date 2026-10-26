@@ -24,8 +24,8 @@ const modules=await P.build({geometry:{...rodGeometry,semiSpan:450,modules:3},fi
 await assert.rejects(P.build({geometry:rodGeometry},wasm),/physical rod-fit/);
 await assert.rejects(P.build({geometry:{...base,skin:.3}},wasm),/0.8 mm/);
 await assert.rejects(P.build({geometry:{...base,semiSpan:450}},wasm),/does not fit/);
-await assert.rejects(P.build({geometry:base,density:10},wasm),/exceeds 300/);
+const heavy=await P.build({geometry:base,density:10},wasm);assert.ok(heavy.report.printedMassG>300);assert.equal(heavy.report.maximumPrintedMassG,null);assert.ok(P.inspectSTL(heavy.files[0].bytes).volumeMm3>0);
 await assert.rejects(P.build({geometry:{...base,spars:[spar]},shellMaterial:{E:3000,nu:.35,rho:1.24,ft:15,fc:50,fs:10}},wasm),/same material/);
 const corrupted=rod.files[0].bytes.slice(0);new DataView(corrupted).setFloat32(96,NaN,true);assert.throws(()=>P.inspectSTL(corrupted),/Non-finite/);
 const opened=rod.files[0].bytes.slice(0,-50),header=new DataView(opened);header.setUint32(80,header.getUint32(80,true)-1,true);assert.throws(()=>P.inspectSTL(opened),/watertight/);
-console.log('PASS: real STL topology, bore/sleeve/cavity/skin ray probes, 3-module conservation, physical-fit gate, material/nozzle/printer/mass rejection, and corrupt/open STL rejection.');
+console.log('PASS: real STL topology, bore/sleeve/cavity/skin ray probes, 3-module conservation, physical-fit gate, material/nozzle/printer rejection, heavy-wing export, and corrupt/open STL rejection.');

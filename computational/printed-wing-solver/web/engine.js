@@ -135,11 +135,11 @@ const WingEngine = (() => {
     if (g.interfaceOffset <= g.ribThickness) throw new Error("Interface rib offset must exceed rib thickness.");
     if (g.clearance < 0 || g.clearance > 0.8) throw new Error("Radial clearance must lie between 0 and 0.8 mm.");
     g.modules = +g.modules;
-    if (!Number.isInteger(g.interiorRibs) || g.interiorRibs < 0 || g.interiorRibs > 16)
-      throw new Error("Use 0–16 requested interior ribs.");
+    if (!Number.isSafeInteger(g.interiorRibs) || g.interiorRibs < 0)
+      throw new Error("Use a nonnegative safe-integer count of requested interior ribs.");
     if (g.customInteriorRibs != null) {
-      if (!Array.isArray(g.customInteriorRibs) || g.customInteriorRibs.length > 16)
-        throw new Error("Use at most 16 custom interior ribs.");
+      if (!Array.isArray(g.customInteriorRibs))
+        throw new Error("Supply custom interior ribs as an array of span stations.");
       const ribs = [...g.customInteriorRibs].sort((a, b) => a - b);
       for (let i = 0; i < ribs.length; i++) {
         const y = ribs[i];

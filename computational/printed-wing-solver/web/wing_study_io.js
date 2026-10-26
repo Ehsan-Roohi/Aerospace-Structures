@@ -33,7 +33,7 @@
     shareChars: 8000,                   // base64url token of a share link
     depth: 12, arrayItems: 256, objectKeys: 64, stringChars: 4096, numberChars: 100,
     printedItems: 12, printedSegments: 30, d520Items: 30, d520Segments: 30,
-    tableRowsMin: 2, tableRowsMax: 31, rods: 8, ribs: 16,     // rods: the printed-wing page offers at most 8 (MAX_RODS)
+    tableRowsMin: 2, tableRowsMax: 31, rods: 8,     // rods: the printed-wing page offers at most 8 (MAX_RODS)
     nameChars: 80, labelChars: 120, filenameChars: 255, notesChars: 2000, messages: 60,
   });
   const WORKSPACE_LABEL = Object.freeze({ printed: 'printed PLA semi-wing', d520: 'D.520 metal wing' });
@@ -804,12 +804,11 @@
     else { try { g.naca = E.normalizeNaca(raw.naca); } catch (e) { issues.err(join(path, 'naca'), engineMessage(e, 'WingEngine')); } }
     for (const [k, label] of Object.entries(POSITIVE_MM)) g[k] = num(issues, raw, k, path, { ...(k==='tipChord'&&['delta','elliptic'].includes(raw.planform)?{ge:0}:{gt:0}), unit: 'mm', label });
     g.modules = num(issues, raw, 'modules', path, { integer: true, ge: 1, le: 3, label: 'number of printed modules' });
-    g.interiorRibs = num(issues, raw, 'interiorRibs', path, { integer: true, ge: 0, le: 16, label: 'requested evenly spaced interior ribs' });
+    g.interiorRibs = num(issues, raw, 'interiorRibs', path, { integer: true, ge: 0, label: 'requested evenly spaced interior ribs' });
     const rp = join(path, 'customInteriorRibs');
     if (!own(raw, 'customInteriorRibs')) issues.err(rp, 'is missing (null, or a list of interior rib stations in mm)');
     else if (raw.customInteriorRibs === null) g.customInteriorRibs = null;
     else if (!Array.isArray(raw.customInteriorRibs)) issues.err(rp, `must be null or a list of rib stations in mm, not ${describe(raw.customInteriorRibs)}`);
-    else if (raw.customInteriorRibs.length > LIMITS.ribs) issues.err(rp, `has ${raw.customInteriorRibs.length} stations; at most ${LIMITS.ribs} interior ribs are allowed`);
     else {
       const ribs = [];
       raw.customInteriorRibs.forEach((v, i) => {
@@ -1662,12 +1661,11 @@
             if (hasI && hasS) issues.err('structure.ribs', 'give either interior (a count of evenly spaced ribs) or stations (a list), not both');
             else if (!hasI && !hasS) issues.err('structure.ribs', 'needs interior (a count of evenly spaced ribs) or stations (a list of rib stations)');
             else if (hasI) {
-              const n = num(issues, R, 'interior', 'structure.ribs', { integer: true, ge: 0, le: 16, label: 'evenly spaced interior ribs' });
+              const n = num(issues, R, 'interior', 'structure.ribs', { integer: true, ge: 0, label: 'evenly spaced interior ribs' });
               if (n !== undefined) { st.interiorRibs = n; st.customInteriorRibs = null; have.ribs = true; field('structure.ribs.interior', ov(n), ov(n), 'supplied', 'evenly spaced; the engine adds interface ribs at seams', 'geometry.interiorRibs'); }
             } else {
               const list = R.stations, lp = 'structure.ribs.stations';
               if (!Array.isArray(list)) issues.err(lp, `must be a list of stations, not ${describe(list)}`);
-              else if (list.length > LIMITS.ribs) issues.err(lp, `lists ${list.length} ribs; at most ${LIMITS.ribs} are allowed`);
               else {
                 const out = [];
                 let okList = true;

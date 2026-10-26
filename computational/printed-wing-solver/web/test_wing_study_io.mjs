@@ -361,7 +361,7 @@ await group('native study rejections', () => {
     [g({ modules: 4 }), /modules: must be at most 3/], [g({ modules: 2.5 }), /modules: must be a whole number/], [g({ skin: -1 }), /skin: must be greater than 0 mm/],
     [g({ customInteriorRibs: [100, 101] }), /customInteriorRibs: Interior ribs must not overlap/], [g({ customInteriorRibs: [150] }), /customInteriorRibs: Keep interior ribs clear of the seam/],
     [g({ customInteriorRibs: [460] }), /customInteriorRibs: Interior ribs must lie inside the span/], [g({ customInteriorRibs: [300, 100] }), /customInteriorRibs\[1\]: rib stations must be listed in strictly increasing order/],
-    [g({ customInteriorRibs: Array.from({ length: 17 }, (_, i) => 20 + 20 * i) }), /at most 16 interior ribs/], [g({ interiorRibs: 17 }), /interiorRibs: must be at most 16/],
+    [g({ customInteriorRibs: Array.from({ length: 17 }, (_, i) => 20 + 20 * i) }), /Keep interior ribs clear of the seam/], [g({ interiorRibs: -1 }), /interiorRibs: must be at least 0/],
     [g({ rodFractions: Array.from({ length: 9 }, (_, i) => +(0.1 + 0.06 * i).toFixed(2)) }), /rodFractions: lists 9 rods; at most 8 are allowed/],
     [g({ rodFractions: [0, 0.5] }), /rodFractions\[0\]: must lie strictly between 0 and 1/], [g({ rodFractions: [1.2] }), /rodFractions\[0\]: must lie strictly between 0 and 1/],
     [g({ rodFractions: [0.3, 0.31] }), /rodFractions\[1\]: the printed sleeves of the rods at x\/c = 0.3 and 0.31 overlap/], [g({ rodFractions: [0.3, 0.3] }), /overlap/],

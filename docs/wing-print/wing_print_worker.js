@@ -1,5 +1,5 @@
 /* Background physical geometry and CAD exchange; no result meshes or server. */
-importScripts('./engine_bundle.js?v=12899b86521a');
+importScripts('./engine_bundle.js?v=572807383dd1');
 self.onmessage=async event=>{
  try{
   const input=event.data,format=input.exportFormat||'stl';let result;

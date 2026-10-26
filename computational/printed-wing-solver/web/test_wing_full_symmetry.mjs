@@ -4,7 +4,7 @@ const require=createRequire(import.meta.url),P=require('./wing_print_mesh.js');
 const {default:Module}=await import('./vendor/manifold-3.5.4/manifold.js'),wasm=await Module();wasm.setup();
 const geometry={naca:'0020',semiSpan:130,rootChord:160,tipChord:80,skin:.8,cavityEnd:.8,modules:1,rodFractions:[],interiorRibs:3};
 const half=await P.build({geometry},wasm),full=await P.build({geometry,fullWing:true},wasm);
-assert.equal(full.files.length,1);assert.equal(full.report.maximumPrintedMassG,600);assert.equal(half.report.maximumPrintedMassG,300);assert.equal(full.report.fullWing,true);
+assert.equal(full.files.length,1);assert.equal(full.report.maximumPrintedMassG,null);assert.equal(half.report.maximumPrintedMassG,null);assert.equal(full.report.fullWing,true);
 assert.ok(Math.abs(full.report.plasticVolumeMm3/half.report.plasticVolumeMm3-2)<1e-4);
 assert.ok(Math.abs(full.report.modules[0].sizeMm[1]-260)<.001);
 assert.ok(Math.abs(full.report.modules[0].sizeMm[0]-half.report.modules[0].sizeMm[0])<.001);

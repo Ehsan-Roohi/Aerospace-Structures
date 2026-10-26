@@ -774,7 +774,7 @@ body { margin: 0; }
         </div>
         <div class="callout">
           <h3>Design challenge: lightest wing that passes</h3>
-          <p>Keep every check at U ≤ 1 for the current load case, skin and ribs ≥ 0.8 mm, and printed mass ≤ 300 g. One-piece wings are allowed. Actual CAD must fit the usable printer envelope configured in the notebook; this browser challenge does not certify printer fit. Adjust the wing in Geometry and Structure.</p>
+          <p>Keep every available check at U ≤ 1 for the current load case and skin and ribs ≥ 0.8 mm. Compare mass as a design outcome; there is no fixed printed-mass limit. One-piece wings are allowed when the exported CAD fits the printer envelope. Download STL checks the actual solid dimensions. Adjust the wing in Geometry and Structure.</p>
           <div style="display:flex;gap:24px;flex-wrap:wrap;align-items:end">
             <div><span class="note">This design</span><div class="big" id="chMass">–</div></div>
             <div><span class="note">Your best passing design</span><div class="big" id="chBest">–</div></div>
@@ -1129,12 +1129,12 @@ body { margin: 0; }
     if (!Number.isFinite(c.clearance) || c.clearance < 0 || c.clearance > 0.8) throw new Error("Radial rod clearance must lie between 0 and 0.8 mm (the engine's slip-fit range).");
     if (c.tipChord > c.rootChord) throw new Error(`Tip chord ${mm(c.tipChord)} exceeds root chord ${mm(c.rootChord)}. This model is a straight taper with tip chord ≤ root chord.`);
     if (![1, 2, 3].includes(c.modules)) throw new Error("Use 1, 2 or 3 modules.");
+    if(c.customInteriorRibs==null&&(!Number.isSafeInteger(c.interiorRibs)||c.interiorRibs<0))throw new Error("Interior rib count must be a finite nonnegative integer.");
     if (c.rodFractions.length > MAX_RODS) throw new Error(`Use at most ${MAX_RODS} rods in this browser model.`);
     c.rodFractions.forEach((f, i) => { if (!Number.isFinite(f) || f <= 0 || f >= 1) throw new Error(`Rod ${i + 1}: x/c must be a fraction between 0 and 1.`); });
     // Custom interior ribs against the (new) span, end caps, seams and each other, named rib by rib.
     if (c.customInteriorRibs != null) {
       const ribs = [...c.customInteriorRibs].sort((a, b) => a - b), seamsNew = E.moduleBounds(c).slice(1, -1);
-      if (ribs.length > 16) throw new Error("Use at most 16 interior ribs.");
       const lo = c.cap + c.ribThickness / 2, hi = c.semiSpan - c.cap - c.ribThickness / 2;
       for (const y of ribs) {
         if (!Number.isFinite(y)) throw new Error("Enter every rib station as a number of millimetres from the root.");
@@ -1286,7 +1286,7 @@ body { margin: 0; }
       <p class="note" data-wing-structure-help="ribs">Interface ribs sit beside each seam at ±${mm(gg.interfaceOffset)}. Root and tip caps are separate. Ribs change mass, bay length and modes; this beam model gives them no EI or GJ of their own.</p>
       <div class="tablewrap"><table class="wl-list" aria-label="Rib stations"><thead><tr><th>Rib</th><th>y (mm)</th><th>Edit</th></tr></thead><tbody>${ribRows || '<tr><td colspan="3">No ribs in this layout.</td></tr>'}</tbody></table></div>
       <div class="wl-row"><label for="wgRibNew">Add a rib at y =</label><input id="wgRibNew" type="number" step="0.1" inputmode="decimal" value="${suggestRib(gg, ribs)}"><span>mm</span><button class="btn" type="button" id="wgRibAdd">Add rib</button></div>
-      <div class="wl-row"><label for="wgRibCount">Evenly spaced interior ribs</label><input id="wgRibCount" type="number" min="0" max="16" step="1" value="${interiors.length}"><button class="btn" type="button" id="wgRibEqual">Apply spacing</button></div>
+      <div class="wl-row"><label for="wgRibCount">Evenly spaced interior ribs</label><input id="wgRibCount" type="number" min="0" step="1" value="${interiors.length}"><button class="btn" type="button" id="wgRibEqual">Apply spacing</button></div>
       <div class="wl-row"><button class="btn" type="button" id="wgRibReset">Course rib rule (3 interior)</button></div>
       ${errLine("ribs")}
       <p class="note" data-wing-structure-help="rib-spacing">Edit a station and press Enter to move that rib. Equal spacing puts N ribs at iL/(N+1) and skips stations inside a seam zone, so fewer may appear.</p>
@@ -1354,7 +1354,7 @@ body { margin: 0; }
     const configure=(patch)=>{const previous=S.assembly;S.assembly={...previous,seamsBonded:true};const result=applyGeometry(patch,'spars','bonded structural layout');if(!result.ok)S.assembly=previous;renderTree();return result;};
     $('#wsShell').onclick=()=>{if(!confirm('Remove rods and spars, retain ribs, geometry and loads, and use a continuous/bonded shell?'))return;configure({rodFractions:[],spars:[]});};
     $('#wsRods').onclick=()=>{if(!confirm('Use rods instead of spars? Spars will be removed and module seams set to bonded for this comparison; loads are retained.'))return;configure({spars:[],rodFractions:[.3,.6]});};
-    $('#wsAdd').onclick=(fraction)=>{if(g.spars.length>=2){flash('At most two bonded spars.');return {ok:false};}if(!confirm('Add a bonded spar? Existing rods will be removed and module seams set to bonded. Loads are retained.'))return {ok:false};
+    $('#wsAdd').onclick=(fraction)=>{if(!confirm('Add a bonded spar? Existing rods will be removed and module seams set to bonded. Loads are retained.'))return {ok:false};
       try{const shell=materials().pla,spec={fraction:typeof fraction==='number'?fraction:g.spars.length?.6:.35,widthMode:'auto',length:g.semiSpan,topWidth:8,topThickness:.8,bottomWidth:8,bottomThickness:.8,webThickness:.6,material:Object.fromEntries(Object.keys(WingSpars.MAT).map(k=>[k,shell[k]]))};
         if(WingGeometry.closedTip(g)){const limit=E.closedTipSparLimit({...g,rodFractions:[]},spec);spec.length=Math.max(Math.min(20,g.semiSpan),Math.floor(limit*10)/10);}
         const result=configure({rodFractions:[],spars:[...g.spars,spec]});if(result.ok&&WingGeometry.closedTip(g))flash(`Added automatically tapered spar: ${nf(spec.length,2)} mm. Inspect Length, width variation and any solid-tip continuation in Structure dimensions.`);return result;
@@ -2831,7 +2831,7 @@ body { margin: 0; }
     }
     if (R) {
       const g = R.geometry, m = R.mass.printed;
-      const ok = R.checks.every((c) => c.U <= 1) && m <= 300 && g.skin >= 0.8 && g.ribThickness >= 0.8;
+      const ok = R.checks.every((c) => c.U <= 1) && g.skin >= 0.8 && g.ribThickness >= 0.8;
       $("#chMass").textContent = `${nf(m, 1)} g`;
       let best = store.get("best", null);
       const caseKey = JSON.stringify([S.load, S.plaKey, S.rodKey, S.assembly]);
@@ -3225,7 +3225,7 @@ body { margin: 0; }
     // atomically and wait for Solve (or automatic solving); this tab then compares the solved design with the baseline.
     controls.innerHTML = `<h3>Edit the rib layout</h3>
       <p><b>${R.ribs.length} ribs = ${interiors.length} editable interior + ${locked.length} locked interface.</b> Locked stations: ${locked.length ? locked.map(y => nf(y, 1)).join(", ") + " mm" : "none (one module)"}. Root/tip caps are separate.</p>
-      <p>Add, move or remove ribs, set equal spacing, and change rib or skin thickness in <b>Structure</b> in the input column (below the 3-D view on a phone). Changes wait for <b>Solve</b> unless “Solve automatically” is ticked; this comparison then updates against your saved baseline. Up to 16 interior ribs; positions that overlap a rib, an end cap or a protected seam zone are refused with a reason.</p>
+      <p>Add, move or remove ribs, set equal spacing, and change rib or skin thickness in <b>Structure</b> in the input column (below the 3-D view on a phone). Changes wait for <b>Solve</b> unless “Solve automatically” is ticked; this comparison then updates against your saved baseline. Positions that overlap a rib, an end cap or a protected seam zone are refused with a reason.</p>
       <div class="lesson-actions"><button class="btn primary" id="designEditRibs" type="button">Edit ribs in Structure</button><button class="btn" id="designEditSkin" type="button">Edit skin thickness</button></div>
       <h3>Try another design variable</h3><p>Keep the load fixed and change only one thickness. Skin thickness affects the section stiffness and mass; rib thickness affects rib mass and the available layout space.</p>`;
     $("#designEditRibs").addEventListener("click", () => openSection("wlStructure", "wgRibNew"));

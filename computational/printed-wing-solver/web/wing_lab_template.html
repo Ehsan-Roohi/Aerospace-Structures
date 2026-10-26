@@ -1539,8 +1539,9 @@ body { margin: 0; }
           await frame();
           E.warmStation(input, k);
         }
-        $("#loadStep").textContent = E.analysisCapability(input.geometry,input).mode==='spatial-beam'?"Assembling the spatial beam · six DOF per node":"Assembling the beam model";
-        $("#loadBar").style.width = `${(100 * ys.length) / (ys.length + 2)}%`;
+        const solvingMode=E.analysisCapability(input.geometry,input).mode;
+        $("#loadStep").textContent = solvingMode==='section-stress'?"Computing section stresses and distributed loads" : solvingMode==='spatial-beam'?"Assembling the spatial beam · six DOF per node":"Assembling the beam model";
+        $("#loadBar").style.width = `${Math.max(35,(100 * ys.length) / (ys.length + 2))}%`;
         await frame();
       }
       R = TeachingModels.studentResult(E.solve(input));

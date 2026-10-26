@@ -403,11 +403,20 @@ const WingEngine = (() => {
     const n = b.length;
     const diag = new Float64Array(n);
     for (let i = 0; i < n; i++) diag[i] = rows[i].get(i) || 1;
+    // Preserve each assembled row's addition order, but traverse contiguous
+    // numeric storage during PCG rather than allocating Map entry iterators
+    // for every multiply. Matrix, gauge, tolerance and iteration limit agree.
+    const offsets=new Int32Array(n+1),columns=[],entries=[];
+    for(let i=0;i<n;i++){
+      if(i!==fixed)for(const [j,v]of rows[i])if(j!==fixed){columns.push(j);entries.push(v);}
+      offsets[i+1]=columns.length;
+    }
+    const col=Int32Array.from(columns),values=Float64Array.from(entries);
     const mult = (x, out) => {
       for (let i = 0; i < n; i++) {
         if (i === fixed) { out[i] = x[i]; continue; }
         let s = 0;
-        for (const [j, v] of rows[i]) if (j !== fixed) s += v * x[j];
+        for(let k=offsets[i];k<offsets[i+1];k++)s+=values[k]*x[col[k]];
         out[i] = s;
       }
     };
@@ -566,6 +575,10 @@ const WingEngine = (() => {
 
   // Geometry-only part of a section (mesh, warping FE, Bredt check): cached by geometry and station.
   const geoCache = new Map();
+  // Normal-plane warping solves depend on the physical section and its
+  // projection, not its applied load. Reuse the existing section/projection
+  // key across solves as well as within the shear-centre-axis iteration.
+  const projectedSectionCache=new Map();
   function geometricSection(g, y, layers = 4) {
     // Warping mesh depends only on this shell outline, not on spar materials,
     // rods, rib layout or module labels. Reuse exactly the same immutable FE data.
@@ -1313,7 +1326,7 @@ const WingEngine = (() => {
   // dA_normal = |t_y| dA_xz and ds = dy/|t_y| preserve physical volume.
   function solveClosedTipStress(input){
     if(!ClosedTipStress)throw Error('Load wing_closed_tip_stress.js before engine.js for exact-tip section stress.');
-    return ClosedTipStress.solve(input,{E:{ringLoops,outerContour,cavityTipLimit,ribStations,seams,sparParts},normalize,polyIntegrals,prescribedFlightLoads,customLine,customFraction,Geometry,Frame,GRAV,Profiles,chordAt,airfoilAt,requestedElementCount});
+    return ClosedTipStress.solve(input,{E:{ringLoops,outerContour,cavityTipLimit,ribStations,seams,sparParts,verticalOrdinates},normalize,polyIntegrals,prescribedFlightLoads,customLine,customFraction,Geometry,Frame,GRAV,Profiles,chordAt,airfoilAt,requestedElementCount});
   }
   function solveSpatial(input,n=normalize(input)) {
     if(Geometry.closedTip(n.g)){const cap=analysisCapability(n.g,input);if(!cap.supported)throw Error(cap.message);return solveClosedTipStress(input);}
@@ -1326,7 +1339,7 @@ const WingEngine = (() => {
     load=loadWithSelfWeight(sourceLoad,g,pla,local,ys);
     const frac=g.twistReferenceFraction??.25;
     let reference=ys.map(y=>Geometry.transformPoint(g,y,[frac*chordAt(g,y),0])),samples=[],axisChange=0;
-    const projectedCache=new Map();
+    const projectedCache=projectedSectionCache;
     function projectSection(sec,y,tangent){
       const angle=Geometry.stationAt(g,y).incidenceDeg*Math.PI/180,ex=[Math.cos(angle),0,-Math.sin(angle)],ez=[Math.sin(angle),0,Math.cos(angle)];
       const R=F.basis([0,0,0],tangent,ex),B=[[F.dot(R[1],ex),F.dot(R[1],ez)],[F.dot(R[2],ex),F.dot(R[2],ez)]],det=B[0][0]*B[1][1]-B[0][1]*B[1][0],area=Math.abs(det);
@@ -1339,7 +1352,7 @@ const WingEngine = (() => {
         if(Math.abs(area-1)<1e-12){const sc=map([sec.fe.xsc,sec.fe.zsc]);fe={J:sec.fe.J,xsc:sc[0],zsc:sc[1]};}
         else{
           const key=JSON.stringify([airfoilAt(g,y),sec.chord,g.skin,g.te,g.cavityStart,g.cavityEnd,B.flat().map(v=>+v.toFixed(10))]);
-          if(!projectedCache.has(key))projectedCache.set(key,shellFE(mesh));
+          if(!projectedCache.has(key)){if(projectedCache.size>=160)projectedCache.clear();projectedCache.set(key,shellFE(mesh));}
           fe=projectedCache.get(key);
         }
       }

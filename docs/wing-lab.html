@@ -12602,7 +12602,6 @@ if(typeof module!=='undefined'&&module.exports)module.exports=WingPrintUI;
     const create=$('#wingEmptyStart');if(create)create.hidden=!S.emptyStudy;
     const title=$('#wingProjectTitle');if(title)title.textContent=S.projectName||'Wing Virtual Lab';
     if(typeof printedWorkspace!=='undefined'&&printedWorkspace)for(const b of printedWorkspace.tools.querySelectorAll('[data-wing-action]'))if(['load','rib','rod','spar','parts','inside','notebook','select-wing'].includes(b.dataset.wingAction))b.disabled=!!S.emptyStudy||running;
-    document.querySelectorAll('[data-wing-action="notebook"],#wingNotebookExport').forEach(b=>{b.disabled=WingGeometry.closedTip(S.geometry);if(b.disabled)b.title='The optional legacy notebook does not admit zero-chord tips. Use direct STL, STEP or DXF export.';});
     const mesh=$('#wingMeshElements');if(mesh&&document.activeElement!==mesh)mesh.value=S.analysis?.nElements??'';if(mesh){const exact=WingGeometry.closedTip(S.geometry);mesh.parentNode.firstChild.nodeValue=exact?'Stress sampling ':'Beam mesh ';mesh.setAttribute('aria-label',exact?'Requested spanwise stress sampling':'Requested wing beam elements');mesh.parentNode.title=exact?'Controls the spanwise stress-plot sampling; this section-equilibrium method has no beam mesh. Geometry/STL are unchanged.':'4–100 requested spanwise beam elements; required stations may add elements.';}
     const key = JSON.stringify([S.geometry, fieldErrors, S.assembly.seamsBonded,S.emptyStudy,window.wingChordInputMode||'tip']);
     if (!force && key === inputsKey) return;
@@ -14909,9 +14908,8 @@ function renderObservations() {
   function renderShare() {
     const box = $("#wingShare");
     if (!box || typeof WingStudyIO === "undefined") return;
-    box.innerHTML = `<p class="note" id="wingFilesNote" role="status"></p><div class="lesson-actions"><button class="btn" type="button" id="wingNotebookExport">Notebook JSON (optional)</button><button class="btn" type="button" id="wingShareBtn">Copy a link to this solved study</button></div><p class="note">Use Download STL for direct print geometry. Save JSON keeps the editable design. The notebook JSON route remains optional. Physical rod-fit evidence and slicer-layer inspection still apply; no strength certification is implied.</p>
-      <p class="note"><a href="https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/main/notebooks/MIE446_Code_to_Print_Wing.ipynb" target="_blank" rel="noopener">Open the Code-to-Print notebook ↗</a> · Step 2: Wing Lab JSON → upload → inspect → build → export.</p><input type="text" id="wingShareBox" class="wl-share" readonly hidden aria-label="Link to this study"><p class="note" id="wingShareMsg" role="status"></p>`;
-    $('#wingNotebookExport').onclick=exportToNotebook;
+    box.innerHTML = `<p class="note" id="wingFilesNote" role="status"></p><div class="lesson-actions"><button class="btn" type="button" id="wingShareBtn">Copy a link to this solved study</button></div><p class="note">Use Download STL for direct print geometry. Save JSON keeps the editable design. Physical rod-fit evidence and slicer-layer inspection still apply; no strength certification is implied.</p>
+      <input type="text" id="wingShareBox" class="wl-share" readonly hidden aria-label="Link to this study"><p class="note" id="wingShareMsg" role="status"></p>`;
     $("#wingShareBtn").onclick = async () => {
       const out = $("#wingShareBox"), msg = $("#wingShareMsg");
       out.hidden = true; out.value = "";
@@ -14924,19 +14922,6 @@ function renderObservations() {
         catch (e) { msg.textContent = "Select the link and copy it. It opens these inputs and solves them on the page (nothing is uploaded)."; }
       } catch (e) { msg.textContent = e.message; }
     };
-  }
-  function exportToNotebook(){
-    // Download/manufacturing messages must not become solver input errors.
-    const note=message=>{filesNote(message);$('#stateText').textContent=message;syncCompactStatus(message);};
-    if(S.emptyStudy){note('Create a wing first: choose Airfoil & planform and Apply geometry.');return;}
-    if(gateOpen()){note(blockedText);return;}
-    if(!R||stale||running||inputError){note('Solve the current valid design before exporting to the notebook.');return;}
-    try{
-      const issues=WingStudyIO.fabricationIssues(S,E);if(issues.length){note('Notebook export blocked: '+issues.join(' '));return;}
-      const text=WingStudyIO.exportPrintedStudy(S,E);
-      downloadText(S.projectName?WingStudyIO.safeFilenameStem(S.projectName)+'.json':'MIE446_WingLab_to_Notebook.json',text,'application/json');
-      note('Design JSON downloaded. In the Code-to-Print notebook choose Wing Lab JSON in Step 2, enter the actual usable printer dimensions and run the upload cell. One-piece geometry is preserved. Printer fit is not yet checked; inspect the inventory and final CAD validation.');
-    }catch(e){note('Notebook export blocked: '+e.message);}
   }
   renderShare();
   // A "#wingstudy=…" link opens the printed workspace with that study and solves it; a damaged link opens the course
@@ -15068,8 +15053,7 @@ function renderObservations() {
       {id:'inside',label:'Inside wing',run:()=>setAnatomy('inside')},
       {id:'open-json',label:'Open JSON',run:()=>{$('#wingStudyFiles .wio-open input').click();}},
       {id:'save-json',label:'Save JSON',run:()=>studyFiles?.save()},
-      {id:'clear',label:'Clear',run:requestClearWingStudy},
-      {id:'notebook',label:'Notebook (optional)',run:()=>exportToNotebook()}]});
+      {id:'clear',label:'Clear',run:requestClearWingStudy}]});
     const sessionStatus=el('p',{id:'wingSessionStatus',class:'note',role:'status'},wingSessionMessage);sessionStatus.style.cssText='flex-basis:100%;margin:0;font-size:12px';printedWorkspace.tools.append(sessionStatus);
     const meshControl=el('label',{class:'wing-mesh-control'},'Beam mesh '),meshInput=el('input',{type:'number',id:'wingMeshElements',min:4,max:100,step:1,'aria-label':'Requested wing beam elements',placeholder:'Auto'});
     meshInput.style.cssText='width:76px';meshControl.append(meshInput);meshControl.title='4–100 requested spanwise beam elements. Required load, rib, seam and section stations may add elements. This does not change CAD/STL geometry.';
@@ -15113,16 +15097,17 @@ function renderObservations() {
     const usageHelp=el('details',{},'<summary>Mouse, touch &amp; browser backup</summary>'),quickHint=printedWorkspace.tools.querySelector('.wing-quick-hint');
     quickHint.classList.remove('wing-quick-hint');usageHelp.append(quickHint,sessionStatus);helpBody.append(usageHelp);
     const primaryTools=el('div',{class:'wing-tool-row','aria-label':'Create and edit wing'}),secondaryTools=el('div',{class:'wing-tool-row','aria-label':'Files, view and help'});
-    const primaryActions=new Set(['clear','select-wing','load','rib','rod','spar','structure','materials','geometry']);
+    const primaryActions=new Set(['clear','select-wing','load','rib','rod','spar','structure','materials','geometry','save-json']);
     for(const node of [...printedWorkspace.tools.children]){if(node.classList.contains('wing-quick-hint'))continue;(primaryActions.has(node.dataset.wingAction)||node.classList.contains('wing-selection-feedback')?primaryTools:secondaryTools).append(node);}
     printedWorkspace.tools.prepend(primaryTools,secondaryTools);
     // Follow the modelling workflow: geometry first, then structure/materials,
     // physical members, loads and the numerical mesh. Files/selection stay separate.
-    for(const id of ['clear','open-json','geometry','structure','materials','rib','rod','spar','load']){
+    for(const id of ['clear','open-json','save-json','geometry','structure','materials','rib','rod','spar','load']){
       const button=printedWorkspace.tools.querySelector('[data-wing-action="'+id+'"]');if(button)primaryTools.append(button);
     }
     primaryTools.prepend($('#runBtn'));primaryTools.append(meshControl,$('#wingAutoSolve').closest('label'));primaryTools.setAttribute('aria-label','Geometry, structure, loads and mesh');
-    for(const id of ['select-wing','inside','save-json','notebook']){
+    printedWorkspace.tools.querySelector('[data-wing-action="save-json"]').classList.add('primary');
+    for(const id of ['select-wing','inside']){
       const button=printedWorkspace.tools.querySelector('[data-wing-action="'+id+'"]');if(button)secondaryTools.append(button);
     }
     // Keep all real display controls on the page. No copies, duplicate IDs or model edits.
@@ -15144,7 +15129,7 @@ function renderObservations() {
     const viewJump=[...secondaryTools.querySelectorAll('button')].find(b=>b.textContent==='View & display ▾');
     for(const id of ['select-wing','inside'])printedWorkspace.tools.querySelector('[data-wing-action="'+id+'"]')?.remove();
     viewJump?.remove();
-    secondaryTools.replaceChildren(...['save-json','notebook'].map(id=>printedWorkspace.tools.querySelector('[data-wing-action="'+id+'"]')),experiments,historyTools,help);
+    secondaryTools.replaceChildren(experiments,historyTools,help);
     const positionToolMenu=(menu,body,size)=>{if(!menu.open)return;const r=menu.querySelector('summary').getBoundingClientRect(),width=Math.min(size,window.innerWidth-24);body.style.left=Math.max(8,Math.min(r.right-width,window.innerWidth-width-12))+'px';body.style.right='auto';body.style.top=Math.min(r.bottom+6,Math.max(8,window.innerHeight-200))+'px';body.style.maxHeight=Math.max(120,window.innerHeight-parseFloat(body.style.top)-12)+'px';};
     for(const [menu,body,width]of [[help,helpBody,390],[experiments,experiments.querySelector('div'),240]]){const position=()=>positionToolMenu(menu,body,width);menu.addEventListener('toggle',position);window.addEventListener('resize',position);window.addEventListener('scroll',position,true);document.addEventListener('pointerdown',e=>{if(!menu.contains(e.target))menu.open=false;});menu.addEventListener('keydown',e=>{if(e.key==='Escape'){menu.open=false;menu.querySelector('summary').focus();e.stopPropagation();}});}
     const uiStyle=el('style',{},'.wing-project-name{display:grid;gap:3px;font-size:11px;color:var(--muted);margin-top:6px}.wing-project-name input{min-height:36px;width:min(230px,100%);font-size:15px;padding:5px 8px;background:var(--panel-2);color:var(--fg);border:1px solid var(--line);border-radius:7px}#wingProjectTitle{display:block;max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.wing-airfoil-launch{display:grid;gap:5px;text-align:left;width:100%;margin:8px 0 12px}.wing-airfoil-launch span{font-size:12px;font-weight:400;white-space:normal}.wing-input-help{position:relative;margin-left:8px}.wing-help-content{position:absolute;right:0;top:100%;z-index:110;background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:12px;padding:14px;width:min(390px,calc(100vw - 24px));max-height:65dvh;overflow:auto;box-shadow:0 12px 32px #102d4f30}.wing-help-content details{padding:9px 0}.wing-help-content summary{cursor:pointer;font-weight:700}.wing-help-content .wl-modelnote{padding:8px 0;border:0}@media(max-width:600px){.wing-help-content{position:fixed;right:10px;top:100px}.wing-project-name input{min-height:44px}}');document.head.append(uiStyle);

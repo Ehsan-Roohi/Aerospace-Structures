@@ -1007,7 +1007,7 @@ body { margin: 0; }
     const g = S.geometry, { pla, rod } = materials();
     const id = S.selected;
     if(R?.analysis3D&&(id==='results'||id.startsWith('res-')||id==='mesh')){
-      if(R.analysis3D.stressOnly){$('#pmHead').textContent='Section stress';pm.append(el('h2',{},'Nominal normal stress'),el('p',{class:'note'},'Actual closed-tip material sections and applied-load equilibrium. Apex stress is undefined; displacement, shear/torsional stress and overall safety are not computed.'));return;}
+      if(R.analysis3D.stressOnly){$('#pmHead').textContent='Section stress';pm.append(el('h2',{},'Nominal normal stress'),el('p',{class:'note'},'Actual closed-tip material sections and applied-load equilibrium. Apex stress is undefined. Bending translation components are reported separately; torsional displacement, shear/torsional stress and overall safety are not computed.'));return;}
       $('#pmHead').textContent='Spatial beam results';
       pm.append(el('h2',{},'3-D structural beam'),el('p',{class:'note'},'Six degrees of freedom per node. Normal beam stress and displacement are available. Natural frequencies, shear failure, buckling and an overall factor of safety are not computed for this model. See the full 3-D result record below the wing.'));
       return;
@@ -1344,7 +1344,7 @@ body { margin: 0; }
     const host=el('section',{class:'wl-spars'},'');$('#wingStructureForm').append(host);
     const fields=[['fraction','Position x/c','fraction'],['length','Length from root','mm'],['topWidth','Upper cap width','mm'],['topThickness','Upper cap thickness','mm'],['bottomWidth','Lower cap width','mm'],['bottomThickness','Lower cap thickness','mm'],['webThickness','Web thickness','mm']];
     const mats=[['E','Elastic modulus E','MPa'],['nu','Poisson ratio',''],['rho','Density','g/cm³'],['ft','Tensile allowable','MPa'],['fc','Compressive allowable','MPa'],['fs','Shear allowable','MPa']];
-    const sparModelHelp=WingGeometry.closedTip(g)?'Exact-tip section model: actual skin, ribs and same-material finite-length spars enter nominal normal-stress equilibrium. Fixed-width spars end before the solid tip; automatic widths may continue embedded in that same material, counted once. Deformation, transverse shear, torsion and local runout stresses are unresolved. Perfect material bonds are assumed.':'Thin-wall beam model: upper/lower caps carry bending tension and compression; the web participates in transverse shear and closed-cell torsion. Perfect skin/rib bonds are assumed. Compare shell only, shell + rods and shell + spars separately; mixed rod/spar joints are not validated.';
+    const sparModelHelp=WingGeometry.closedTip(g)?'Exact-tip section model: actual skin, ribs and same-material finite-length spars enter nominal normal-stress equilibrium. Fixed-width spars end before the solid tip; automatic widths may continue embedded in that same material, counted once. Bending components are computed separately; torsional displacement, transverse shear and local runout stresses are unresolved. Perfect material bonds are assumed.':'Thin-wall beam model: upper/lower caps carry bending tension and compression; the web participates in transverse shear and closed-cell torsion. Perfect skin/rib bonds are assumed. Compare shell only, shell + rods and shell + spars separately; mixed rod/spar joints are not validated.';
     host.innerHTML=`<h3>Reinforcement layout</h3><p class="note"><b>Active: ${g.spars.length ? `shell + ${g.spars.length} spar(s)` : g.rodFractions.length ? `shell + ${g.rodFractions.length} rod(s)` : 'shell only'}; ribs retained.</b> Choose an alternative below. Switching removes the other reinforcement; only the active parts enter the analysis. A spar-only structure without skin is not supported.</p><p class="note" data-wing-structure-help="spar-model">${sparModelHelp} No load is changed by these controls.</p><div class="lesson-actions"><button class="btn" type="button" id="wsShell">Use shell only</button><button class="btn" type="button" id="wsRods">Use shell + rods</button><button class="btn" type="button" id="wsAdd">+ Bonded spar</button><button class="btn" type="button" id="wsHelp">Model help</button></div>${errLine('spars')}${g.spars.map((s,i)=>{
       const p=E.sparParts(g,0).find(p=>p.index===i),tip=E.sparParts(g,s.length).find(p=>p.index===i),fit=WingGeometry.closedTip(g)?E.closedTipSparFit(g,s):null,limit=fit?.maximumLengthMm??null;
       return `<fieldset><legend>Spar ${i+1} · perfectly bonded</legend><div class="field"><label for="ws${i}_widthMode">Cap width mode</label><select id="ws${i}_widthMode"><option value="auto" ${s.widthMode==='auto'?'selected':''}>Automatic taper · follow chord</option><option value="fixed" ${s.widthMode!=='auto'?'selected':''}>Fixed width</option></select></div>${fields.map(([k,label,unit])=>`<div class="field"><label for="ws${i}_${k}">${label}<small>${unit}</small></label><input id="ws${i}_${k}" type="number" step="any" value="${s[k]}"${k==='length'&&limit!==null?` max="${limit}" aria-describedby="ws${i}_fit"`:''}></div>${k==='length'&&fit?`<div class="note" id="ws${i}_fit" data-closed-spar-limit aria-live="polite" style="margin:4px 0 12px">${sparFitExplanation(fit,s,s)}</div>`:''}`).join('')}<p class="note">Web clear height is derived from the bonded skin surfaces and cap thicknesses: root ${nf(p.h,2)} mm; end ${nf(tip.h,2)} mm. It is not an independent gap-producing dimension. Caps follow the inner skin; width and thickness are vertical section dimensions.</p><p class="note">Material: ${esc(s.material.name)} · edit in Materials → Spars.</p><button class="btn" type="button" id="ws${i}_longest">Auto taper · use longest fit</button> <button class="btn" type="button" id="ws${i}_apply">Apply spar ${i+1} inputs</button> <button class="btn" type="button" id="ws${i}_remove">Remove spar ${i+1}</button></fieldset>`;
@@ -1375,7 +1375,7 @@ body { margin: 0; }
   }
   function renderSparResults(){
     const box=$('#wingSparResults');if(!box)return;
-    if(R?.analysis3D){box.innerHTML=R.analysis3D.stressOnly?'<p class="note">Finite-length integral spars are included in the actual material union for nominal normal-stress equilibrium. Normal stresses are shown in the section record below the wing. Deformation, transverse shear, torsion, local runout/bond stresses and buckling remain unresolved.</p>':'<p class="note">Projected bonded thin-wall spar sections are included in the spatial beam. Normal stresses are shown in the 3-D record below the wing; shear failure, bond failure and buckling are unresolved.</p>';return;}
+    if(R?.analysis3D){box.innerHTML=R.analysis3D.stressOnly?'<p class="note">Finite-length integral spars are included in the actual material union for nominal normal-stress equilibrium. Normal stresses are shown in the section record below the wing. Bending components are computed separately. Torsional displacement, transverse shear, local runout/bond stresses and buckling remain unresolved.</p>':'<p class="note">Projected bonded thin-wall spar sections are included in the spatial beam. Normal stresses are shown in the 3-D record below the wing; shear failure, bond failure and buckling are unresolved.</p>';return;}
     const specs=S.geometry.spars||[];
     if(!specs.length){box.innerHTML='<h3>Spars</h3><p class="note">No spars in the current inputs. Add one in Structure → Bonded spars. Rods and spars are distinct alternatives.</p>';return;}
     const pending=stale||running||!R||!R.sparModel;
@@ -1505,9 +1505,9 @@ body { margin: 0; }
   function renderStatus(text) {
     syncWingHistory();
     const chip = $("#stateChip"), t = $("#stateText"), btn = $("#runBtn");
-    const closed=WingGeometry.closedTip(S.geometry);btn.disabled=!!S.emptyStudy;btn.title=closed?'Solve nominal normal section stress; exact apex and deformation are unresolved.':'';
-    document.querySelectorAll('#app [data-plot]').forEach(b=>b.disabled=closed&&!['model','stress'].includes(b.dataset.plot));
-    $('#wingMoreResults').disabled=closed;$('#wingShowBendingTwist')?.toggleAttribute('disabled',closed);$('#defBtn').disabled=closed;$('#shearCentreBtn').disabled=closed;$('#shearCentreBtn').title=closed?'Shear centre is not computed by this section-equilibrium normal-stress model.':'Calculated shear-centre path; eccentric loads may twist the wing.';
+    const closed=WingGeometry.closedTip(S.geometry),bending=closed&&!stale?R?.analysis3D?.bending:null;btn.disabled=!!S.emptyStudy;btn.title=closed?'Solve nominal section stress and Euler–Bernoulli bending components; torsion and exact-apex stress are unresolved.':'';
+    document.querySelectorAll('#app [data-plot]').forEach(b=>b.disabled=closed&&!['model','stress',...(bending?['disp']:[])].includes(b.dataset.plot));
+    $('#wingMoreResults').disabled=closed;const bendButton=$('#wingShowBendingTwist');if(bendButton){bendButton.disabled=closed&&(!bending||!bending.tip.translationFinite);bendButton.textContent=closed?'Show bending component':'Show bending & twist';}$('#defBtn').disabled=closed&&(!bending||!bending.tip.translationFinite);$('#defBtn').textContent=closed?'Bending illustration':'Deformed';document.querySelector('#app [data-plot="disp"]').textContent=closed?'Bending displacement':'Displacement';$('#shearCentreBtn').disabled=closed;$('#shearCentreBtn').title=closed?'Shear centre is not computed by this section-equilibrium normal-stress model.':'Calculated shear-centre path; eccentric loads may twist the wing.';
     const out = stale && !!R;
     btn.classList.toggle("stale", stale && !running);
     btn.dataset.pending = String(stale && !running);
@@ -1521,7 +1521,7 @@ body { margin: 0; }
     if (running) { chip.className = "chip idle"; chip.textContent = "Solving"; t.textContent = text || "Solving the inputs on screen"; return; }
     if(S.emptyStudy){chip.className='chip idle';chip.textContent='Empty study';t.textContent='Choose an airfoil and dimensions, then Apply geometry to create your wing.';return;}
     if (gateOpen()) { chip.className = "chip warn"; chip.textContent = "Analysis blocked"; t.textContent = "Imported outer geometry: confirm its structural inputs (list at the top of this column) before solving."; return; }
-    if(closed&&R?.analysis3D?.stressOnly&&!stale){chip.className='chip ok';chip.textContent='Solved · section stress';t.textContent='Nominal normal section stress; exact apex undefined. No displacement or shear/torsional stress solution.';return;}
+    if(closed&&R?.analysis3D?.stressOnly&&!stale){const b=R.analysis3D.bending;chip.className='chip '+(b&&!b.validity.smallDisplacement?'warn':'ok');chip.textContent=b?'Solved · stress + bending':'Solved · section stress';t.textContent=b?`Bending components only; torsion excluded. ${b.tip.slopeFinite?'Finite tip slope.':'Exact-tip slope is unbounded; global small-rotation assumptions fail.'}`:'Nominal normal section stress; exact apex undefined.';return;}
     if (inputError) { chip.className = "chip bad"; chip.textContent = "Input error"; t.textContent = inputError + (!R ? "" : stale ? " Results shown are for the last solved model." : " The results shown still match the inputs on screen."); return; }
     if (stale) { chip.className = "chip warn"; chip.textContent = "Out of date"; t.textContent = R ? "Inputs changed — press Solve. Results shown are for the last solved model." : "Press Solve to compute the first result."; return; }
     if (!R) return;
@@ -1573,7 +1573,7 @@ body { margin: 0; }
         await frame();
       }
       R = TeachingModels.studentResult(E.solve(input));
-      if(R.analysis3D&&(['mode','fos'].includes(S.plot)||R.analysis3D.stressOnly&&!['model','stress'].includes(S.plot))){S.plot='model';document.querySelectorAll('#app [data-plot]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.plot==='model')));}
+      if(R.analysis3D&&(['mode','fos'].includes(S.plot)||R.analysis3D.stressOnly&&!['model','stress',...(R.analysis3D.bending?['disp']:[])].includes(S.plot))){S.plot='model';document.querySelectorAll('#app [data-plot]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.plot==='model')));}
       // A successful solve clears an error message that was on screen when it started (not one entered meanwhile).
       if (inputError === errorAtStart) inputError = null;
       if (fieldErrors === fieldErrorsAtStart) fieldErrors = {};
@@ -1583,7 +1583,7 @@ body { margin: 0; }
       applyResult();
       renderAll();
       const ms = performance.now() - t0;
-      $("#footline").textContent = R.analysis3D?.stressOnly?`Solved in ${(ms/1000).toFixed(2)} s · nominal section-equilibrium stress · exact zero-chord tip unresolved`:R.analysis3D?`Solved in ${(ms/1000).toFixed(2)} s · ${R.analysis3D.elements.length} spatial beam elements · 6 DOF/node · locally prismatic sections, not a 3-D solid FE mesh`:`Solved in ${(ms / 1000).toFixed(2)} s · ${R.sections.length} sections × ${(R.sections[0].mesh.tris.length / 3).toLocaleString()} triangles · ${R.fem.y.length - 1} beam elements · ${R.sparModel?"bonded thin-wall section approximation":"beam theory on exact printed sections"}, not 3-D FE`;
+      $("#footline").textContent = R.analysis3D?.stressOnly?`Solved in ${(ms/1000).toFixed(2)} s · nominal section stress + bending components · exact-apex stress and torsion unresolved`:R.analysis3D?`Solved in ${(ms/1000).toFixed(2)} s · ${R.analysis3D.elements.length} spatial beam elements · 6 DOF/node · locally prismatic sections, not a 3-D solid FE mesh`:`Solved in ${(ms / 1000).toFixed(2)} s · ${R.sections.length} sections × ${(R.sections[0].mesh.tris.length / 3).toLocaleString()} triangles · ${R.fem.y.length - 1} beam elements · ${R.sparModel?"bonded thin-wall section approximation":"beam theory on exact printed sections"}, not 3-D FE`;
     } catch (err) {
       stale = true;
       saveDesignAfterRun = false;
@@ -1980,7 +1980,7 @@ body { margin: 0; }
 
   // ------------------------------------------------------------ results on the model
   // Display preferences never change the solver inputs or transfer JSON.
-  const resultDisplay={bands:false,scaleMode:'auto',scales:{},reference:true,pinning:false,pins:[],pinResult:null};
+  const resultDisplay={bands:false,scaleMode:'auto',contrast:'auto',scales:{},reference:true,pinning:false,pins:[],pinResult:null};
   const resultScaleKey=kind=>kind+':'+(kind==='sigma'?S.stressComponent:'all');
   function displayRange(kind,actual){
     if(resultDisplay.scaleMode==='auto')return actual;
@@ -1988,6 +1988,10 @@ body { margin: 0; }
     if(!resultDisplay.scales[key])resultDisplay.scales[key]={...actual};
     return {...resultDisplay.scales[key]};
   }
+  function signedLogColours(){return S.plot==='stress'&&(resultDisplay.contrast==='signed-log'||resultDisplay.contrast==='auto'&&R?.analysis3D?.stressOnly&&R.tipBehavior?.status==='divergent');}
+  function colourTransform(value){if(!signedLogColours())return value;const threshold=Math.max(1e-15,Math.max(Math.abs(range.min),Math.abs(range.max))*.001);return Math.sign(value)*Math.log1p(Math.abs(value)/threshold);}
+  function colourFraction(value){const lo=colourTransform(range.min),hi=colourTransform(range.max);return (colourTransform(value)-lo)/(hi-lo);}
+  function colourValue(fraction){const v=colourTransform(range.min)+fraction*(colourTransform(range.max)-colourTransform(range.min));if(!signedLogColours())return v;const threshold=Math.max(1e-15,Math.max(Math.abs(range.min),Math.abs(range.max))*.001);return Math.sign(v)*threshold*Math.expm1(Math.abs(v));}
   function resultWorldPoint(p){
     const a=p.mesh.geometry.attributes.position,v=new THREE.Vector3();
     if(p.indices){p.indices.forEach((index,i)=>v.addScaledVector(new THREE.Vector3().fromBufferAttribute(a,index),p.weights[i]));}
@@ -2028,7 +2032,8 @@ body { margin: 0; }
     model.originalOutline.visible=resultDisplay.reference&&S.deformed&&S.plot!=='mode'&&!S.explode&&!geometryPreview;
   }
   function installResultDisplayTools(host){
-    const tools=el('details',{id:'wingContourOptions'},`<summary style="cursor:pointer;font-weight:700;padding:8px">Contours, probes &amp; image export</summary><div class="hud-row" style="display:flex;flex-wrap:wrap;gap:8px;padding:8px"><label>Contours <select id="wrContour"><option value="smooth">Continuous</option><option value="bands">12 bands</option></select></label><label>Scale <select id="wrScale"><option value="auto">Auto per result</option><option value="fixed">Lock scale across designs</option><option value="manual">Manual limits</option></select></label><label>Min <input id="wrMin" type="number" step="any" style="width:90px"></label><label>Max <input id="wrMax" type="number" step="any" style="width:90px"></label><button class="btn" id="wrApply">Apply limits</button><button class="btn" id="wrTop">Top surface</button><button class="btn" id="wrBottom">Bottom surface</button><button class="btn" id="wrPin" aria-pressed="false">Pin stress</button><button class="btn" id="wrClearPins">Clear pins</button><label><input type="checkbox" id="wrOriginal" checked> Dashed original outline</label><button class="btn" id="wrImage">Save high resolution PNG</button></div><p style="font-size:12px;margin:0 8px 8px" id="wrStatus">Nominal normal beam stress; grey regions are unresolved. These controls change the display only.</p>`);host.append(tools);
+    const tools=el('details',{id:'wingContourOptions'},`<summary style="cursor:pointer;font-weight:700;padding:8px">Contours, probes &amp; image export</summary><div class="hud-row" style="display:flex;flex-wrap:wrap;gap:8px;padding:8px"><label>Contours <select id="wrContour"><option value="smooth">Continuous</option><option value="bands">12 bands</option></select></label><label>Scale <select id="wrScale"><option value="auto">Auto per result</option><option value="fixed">Lock scale across designs</option><option value="manual">Manual limits</option></select></label><label>Contrast <select id="wrContrast"><option value="auto">Auto</option><option value="linear">Linear</option><option value="signed-log">Signed logarithmic</option></select></label><label>Min <input id="wrMin" type="number" step="any" style="width:90px"></label><label>Max <input id="wrMax" type="number" step="any" style="width:90px"></label><button class="btn" id="wrApply">Apply limits</button><button class="btn" id="wrTop">Top surface</button><button class="btn" id="wrBottom">Bottom surface</button><button class="btn" id="wrPin" aria-pressed="false">Pin stress</button><button class="btn" id="wrClearPins">Clear pins</button><label><input type="checkbox" id="wrOriginal" checked> Dashed original outline</label><button class="btn" id="wrImage">Save high resolution PNG</button></div><p style="font-size:12px;margin:0 8px 8px" id="wrStatus">Nominal normal beam stress; grey regions are unresolved. These controls change the display only.</p>`);host.append(tools);
+    $('#wrContrast').onchange=e=>{resultDisplay.contrast=e.target.value;applyResult();};
     $('#wrContour').onchange=e=>{resultDisplay.bands=e.target.value==='bands';applyResult();};
     $('#wrScale').onchange=e=>{resultDisplay.scaleMode=e.target.value;if(resultDisplay.scaleMode==='fixed'){const kind={stress:'sigma',disp:'disp',fos:'fos',twist:'twist',bending:'bending',torque:'torque'}[S.plot];if(kind)resultDisplay.scales[resultScaleKey(kind)]={...range};}applyResult();};
     $('#wrApply').onclick=()=>{const lo=Number($('#wrMin').value),hi=Number($('#wrMax').value),kind={stress:'sigma',disp:'disp',fos:'fos',twist:'twist',bending:'bending',torque:'torque'}[S.plot];if(!kind||!$('#wrMin').value.trim()||!$('#wrMax').value.trim()||!Number.isFinite(lo)||!Number.isFinite(hi)||hi<=lo){flash('Enter finite minimum and maximum values with maximum greater than minimum, in a result view.');return;}resultDisplay.scales[resultScaleKey(kind)]={min:lo,max:hi};resultDisplay.scaleMode='manual';$('#wrScale').value='manual';applyResult();};
@@ -2044,9 +2049,9 @@ body { margin: 0; }
     const poster=document.createElement('canvas');poster.width=w+left;poster.height=h+top+85;const ctx=poster.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,poster.width,poster.height);
     const oldRatio=renderer.getPixelRatio(),oldSize=renderer.getSize(new THREE.Vector2()),oldAspect=camera.aspect;
     try{renderer.setPixelRatio(1);renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();renderer.render(scene,camera);ctx.drawImage(canvas,left,top,w,h);
-      ctx.fillStyle='#111';ctx.font='bold 24px Arial';ctx.fillText(S.projectName||'Wing design',22,32,poster.width-44);ctx.font='16px Arial';const kind={stress:'Nominal normal beam stress (MPa)',disp:'Resultant displacement (mm)',model:'Model geometry',fos:'Normal strength ratio',twist:'Elastic axis twist (degrees)',bending:'Resultant bending moment (N·m)',torque:'Signed local torque (N·m)',mode:'Normalised mode shape'}[S.plot];ctx.fillText(kind+' · estimated '+(fullWingPrint?'full-wing':'semi-wing')+' mass '+nf(R.mass.total*(fullWingPrint?2:1),1)+' g',22,59,poster.width-44);
-      ctx.font='14px Arial';ctx.fillText('Deformation scale '+(S.deformed?nf(deformAmount().scale,2):'0 (undeformed)')+' · '+resultDisplay.scaleMode+' colour scale · '+(resultDisplay.bands?'12 bands':'continuous'),22,82,poster.width-44);
-      if(['stress','disp','fos','twist','bending','torque'].includes(S.plot)){const x=22,y=top+12,bh=Math.min(350,h-30);for(let j=0;j<bh;j++){const c=rainbow(1-j/(bh-1));ctx.fillStyle='#'+c.getHexString();ctx.fillRect(x,y+j,28,1);}ctx.fillStyle='#111';ctx.font='14px Arial';for(let i=0;i<=6;i++)ctx.fillText(sig(range.max-(range.max-range.min)*i/6,5),60,y+12+i*bh/6);}
+      ctx.fillStyle='#111';ctx.font='bold 24px Arial';ctx.fillText(S.projectName||'Wing design',22,32,poster.width-44);ctx.font='16px Arial';const kind={stress:'Nominal normal beam stress (MPa)',disp:R.analysis3D?.bending?'Transverse bending component (mm), torsion excluded':'Resultant displacement (mm)',model:'Model geometry',fos:'Normal strength ratio',twist:'Elastic axis twist (degrees)',bending:'Resultant bending moment (N·m)',torque:'Signed local torque (N·m)',mode:'Normalised mode shape'}[S.plot];ctx.fillText(kind+' · estimated '+(fullWingPrint?'full-wing':'semi-wing')+' mass '+nf(R.mass.total*(fullWingPrint?2:1),1)+' g',22,59,poster.width-44);
+      ctx.font='14px Arial';ctx.fillText((R.analysis3D?.bending?'Bending-only translation illustration · ':'')+'Deformation scale '+(S.deformed?nf(deformAmount().scale,2):'0 (undeformed)')+' · '+resultDisplay.scaleMode+' colour scale · '+(signedLogColours()?'signed logarithmic contrast · ':'linear contrast · ')+(resultDisplay.bands?'12 bands':'continuous'),22,82,poster.width-44);
+      if(['stress','disp','fos','twist','bending','torque'].includes(S.plot)){const x=22,y=top+12,bh=Math.min(350,h-30);for(let j=0;j<bh;j++){const c=rainbow(1-j/(bh-1));ctx.fillStyle='#'+c.getHexString();ctx.fillRect(x,y+j,28,1);}ctx.fillStyle='#111';ctx.font='14px Arial';for(let i=0;i<=6;i++)ctx.fillText(sig(colourValue(1-i/6),5),60,y+12+i*bh/6);}
       for(const p of resultLabels()){if(!p.mesh.visible)continue;const v=resultWorldPoint(p);if(S.clip&&v.x>S.clipY)continue;v.project(camera);if(Math.abs(v.x)>1||Math.abs(v.y)>1||Math.abs(v.z)>1)continue;const x=left+(v.x+1)*w/2,y=top+(1-v.y)*h/2;ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(x,y,5,0,2*Math.PI);ctx.fill();ctx.font='bold 14px Arial';const txt=p.label+' '+sig(p.value,4)+' MPa';const tw=ctx.measureText(txt).width;const tx=Math.min(poster.width-tw-15,Math.max(left+5,x+10)),ty=Math.max(top+20,y-10);ctx.fillStyle='#fff';ctx.fillRect(tx-3,ty-16,tw+6,22);ctx.fillStyle=p.color;ctx.fillText(txt,tx,ty);}
       ctx.fillStyle='#111';ctx.font='14px Arial';ctx.fillText('Prescribed load · x aft, y spanwise, z up · grey = unresolved · nominal beam result, not local solid stress',22,top+h+30,poster.width-44);ctx.fillText(new Date().toISOString()+' · '+(stale?'stale':'solved')+' · original outline dashed when enabled',22,top+h+54,poster.width-44);
     }catch(error){flash('Image export failed: '+error.message);return;}finally{renderer.setPixelRatio(oldRatio);renderer.setSize(oldSize.x,oldSize.y,false);camera.aspect=oldAspect;camera.updateProjectionMatrix();renderer.render(scene,camera);}
@@ -2072,6 +2077,7 @@ body { margin: 0; }
     if(sectionResultMeta[kind])return sectionResultValue(R,y,kind);
     if(R.analysis3D){
       if(kind==='sigma')return E.normalStressAt3D(R,y,[x,z],member?.material||R.pla);
+      if(kind==='disp'&&R.analysis3D.stressOnly&&R.analysis3D.bending){const b=R.analysis3D.bending.at(y);return b.resolved?Math.hypot(b.chordwiseMm,b.verticalMm):NaN;}
       if(kind==='disp'){const p=E.spatialPointMotion(R,y,[x,z]);return p.displacement?Math.hypot(...p.displacement):NaN;}
       return NaN;
     }
@@ -2119,7 +2125,7 @@ body { margin: 0; }
   }
   function contourSample(mesh,i,value,selected){
     const a=mesh.geometry.attributes,f=a.wingFraction,valid=a.wingValid;if(!f)return;
-    f.array[i]=selected&&Number.isFinite(value)?(value-range.min)/(range.max-range.min):0;
+    f.array[i]=selected&&Number.isFinite(value)?colourFraction(value):0;
     valid.array[i]=selected?(Number.isFinite(value)?1:0):-1;f.needsUpdate=true;valid.needsUpdate=true;
   }
   function renderStressPeaks(kind) {
@@ -2148,7 +2154,7 @@ body { margin: 0; }
     return { min: mn, max: mx };
   }
   function deformAmount() {
-    if(R?.analysis3D?.stressOnly)return {auto:0,scale:0};
+    if(R?.analysis3D?.stressOnly){const b=R.analysis3D.bending;if(!b||!b.tip.translationFinite)return {auto:0,scale:0};const m=Math.max(0,...Array.from(b.verticalMm,(v,i)=>Math.hypot(v,b.chordwiseMm[i])).filter(Number.isFinite)),auto=m>1e-9?.08*R.geometry.semiSpan/m:1;return {auto,scale:S.deformed?auto*S.scale:0};}
     if (!R) return 0;
     const maxU = Math.max(...R.deflection.map(Math.abs)) + (R.chordwiseDeflection?Math.max(...R.chordwiseDeflection.map(Math.abs)):0)+Math.max(...R.twist.map(Math.abs)) * R.geometry.rootChord * 0.6;
     const auto = maxU > 1e-9 ? (0.08 * R.geometry.semiSpan) / maxU : 1;
@@ -2172,7 +2178,7 @@ body { margin: 0; }
     const scale=spatial?deformAmount().scale:0;
     const place=(y,x,z,mod=0)=>{
       const p=WingGeometry.transformPoint(g,y,[x,z]);
-      if(scale){const u=E.spatialPointMotion(R,y,[x,z]).displacement;if(u)for(let k=0;k<3;k++)p[k]+=scale*u[k];}
+      if(scale){if(R.analysis3D.stressOnly&&R.analysis3D.bending){const b=R.analysis3D.bending.at(y);if(b.resolved){p[0]+=scale*b.chordwiseMm;p[2]+=scale*b.verticalMm;}}else{const u=E.spatialPointMotion(R,y,[x,z]).displacement;if(u)for(let k=0;k<3;k++)p[k]+=scale*u[k];}}
       return[p[1]+mod*S.explode,p[2],p[0]];
     };
     const base={skin:COLORS.pla,sleeve:COLORS.sleeve,rod:COLORS.rod,spar:0x9871dd};
@@ -2184,7 +2190,7 @@ body { margin: 0; }
         const selected=!!sectionResultMeta[kind]||kind==='disp'||kind==='sigma'&&(S.stressComponent==='spars'?u.kind==='spar':u.kind!=='spar'&&u.kind!=='rod');
         const value=selected?fieldValue(u.by[i],u.bx[i],u.bz[i],kind,u):null;
         contourSample(m,i,value,selected);
-        const c=selected?(Number.isFinite(value)?rainbow((value-range.min)/(range.max-range.min)):new THREE.Color(0x9ba7b4)):new THREE.Color(base[u.kind]);
+        const c=selected?(Number.isFinite(value)?rainbow(colourFraction(value)):new THREE.Color(0x9ba7b4)):new THREE.Color(base[u.kind]);
         col[3*i]=c.r;col[3*i+1]=c.g;col[3*i+2]=c.b;
       }
       m.geometry.attributes.position.needsUpdate=true;m.geometry.attributes.color.needsUpdate=true;m.geometry.computeVertexNormals();m.geometry.computeBoundingSphere();
@@ -2212,7 +2218,7 @@ body { margin: 0; }
       if (!useField) return base;
       const v = fieldValue(y, x, z, kind,member);
       if (kind === "fos") return v < reqFos ? new THREE.Color(0xff1f3d) : rainbow(1 - (Math.min(v, range.max) - range.min) / (range.max - range.min));
-      return rainbow((v - range.min) / (range.max - range.min));
+      return rainbow(colourFraction(v));
     };
     const explode = S.explode;
     const motionCache = new Map();
@@ -2297,7 +2303,7 @@ body { margin: 0; }
       const len = Math.min(90, scaleLen * Math.abs(F));if(len<0.01)return;
       let origin;
       if(R.analysis3D){
-        const c=E.chordAt(g,y),z=E.verticalOrdinates(E.airfoilAt(g,y),x/c,c,g.te).camber,m=E.spatialPointMotion(R,y,[x,z]),p=m.point.map((v,k)=>v+(m.displacement?deformAmount().scale*m.displacement[k]:0));
+        const c=E.chordAt(g,y),z=c>0?E.verticalOrdinates(E.airfoilAt(g,y),x/c,c,g.te).camber:0,m=E.spatialPointMotion(R,y,[x,z]),p=m.point.map((v,k)=>v+(m.displacement?deformAmount().scale*m.displacement[k]:0));if(R.analysis3D.bending&&S.deformed){const b=R.analysis3D.bending.at(y),scale=deformAmount().scale;if(b.resolved){p[0]+=scale*b.chordwiseMm;p[2]+=scale*b.verticalMm;}}
         origin=new THREE.Vector3(p[1],p[2]+(F>0?-len:len),p[0]);
       }else{const zLow = at(R.props.zBot, y) - 4, zHigh = at(R.props.zTop, y) + 4;origin=new THREE.Vector3(y,F>0?zLow-len+w:zHigh+len+w,x);}
       const arrow=new THREE.ArrowHelper(new THREE.Vector3(0,F>0?1:-1,0),origin,len,color,Math.min(10,len*.35),5);
@@ -2331,17 +2337,19 @@ body { margin: 0; }
   function renderLegend(kind) {
     const lg = $("#legend"), lt = $("#legendTitle");
     lg.hidden = false;
-    if($('#wrMin')&&kind){if(document.activeElement!==$('#wrMin'))$('#wrMin').value=range.min;if(document.activeElement!==$('#wrMax'))$('#wrMax').value=range.max;$('#wrStatus').textContent=`${resultDisplay.scaleMode==='auto'?'Auto scale':'Fixed scale for '+resultScaleKey(kind)} · values outside limits use end colours; extrema and probes retain actual values. Grey = unresolved.`;}
+    if($('#wrMin')&&kind){if(document.activeElement!==$('#wrMin'))$('#wrMin').value=range.min;if(document.activeElement!==$('#wrMax'))$('#wrMax').value=range.max;$('#wrStatus').textContent=`${resultDisplay.scaleMode==='auto'?'Auto scale':'Fixed scale for '+resultScaleKey(kind)} · ${signedLogColours()?'Signed logarithmic colour contrast (actual MPa ticks); tip peaks otherwise hide the body variation.':'Linear colour contrast.'} Values and extrema are unchanged. Grey = unresolved.`;}
     if (!kind) { lg.innerHTML = ""; lt.textContent = ""; return; }
     const unit = { sigma: "MPa", disp: "mm", fos: "" }[kind];
     lt.textContent = { sigma: "Stress σ, span (MPa)", disp: "Displacement (mm)", fos: "Factor of safety" }[kind];
     if(kind==='sigma')lt.textContent=(S.stressComponent==='rods'?'Rod bending σ':S.stressComponent==='spars'?'Spar cap / web bending σ':'Skin / sleeve bending σ')+' (MPa)';
     if(kind==='sigma'&&R.analysis3D)lt.textContent=R.analysis3D.stressOnly?'Nominal σyy (MPa)':'Nominal σ · warping omitted (MPa)';
+    if(kind==='disp'&&R.analysis3D?.bending)lt.textContent='Transverse bending component (mm) · torsion excluded';
+    if(kind==='sigma'&&signedLogColours())lt.textContent+=' · signed log colours';
     if(kind==='fos'&&R.sparModel)lt.textContent='Normal-stress strength ratio only · see Checks for shear and unresolved failures';
     const bands = Array.from({ length: 64 }, (_, i) => rainbow((63 - i) / 63));
     const ticks = kind === "fos"
       ? Array.from({ length: 7 }, (_, i) => range.min + ((range.max - range.min) * i) / 6)
-      : Array.from({ length: 7 }, (_, i) => range.max - ((range.max - range.min) * i) / 6);
+      : Array.from({ length: 7 }, (_, i) => colourValue(1-i/6));
     lg.innerHTML = `<div class="bar-c" style="height:${Math.min(220, Math.max(96, canvas.clientHeight * (canvas.clientWidth < 560 ? 0.24 : 0.36)))}px">${bands.map((c) => `<div style="background:#${c.getHexString()}"></div>`).join("")}</div>` +
       `<div class="ticks">${ticks.map((v) => `<span>${kind === "fos" && v >= 10 ? "≥10" : sig(v, 3)}</span>`).join("")}</div>`;
     if(sectionResultMeta[kind])lt.textContent=sectionResultMeta[kind].label+' ('+sectionResultMeta[kind].unit+') · section value';
@@ -2358,7 +2366,7 @@ body { margin: 0; }
       return;
     }
     if (!R) return;
-    if(R.analysis3D?.stressOnly){$('#plotinfo').textContent=`CLOSED-TIP SECTION STRESS · ${R.geometry.planform} · nominal spanwise normal stress · prescribed loads · exact apex undefined · ${R.tipBehavior?.status==='divergent'?'unbounded nominal tip stress; displayed extrema are sampled':'sampled extrema, not a certified global maximum'} · no deformation solution`;return;}
+    if(R.analysis3D?.stressOnly){$('#plotinfo').textContent=`CLOSED-TIP SECTION STRESS · ${R.geometry.planform} · nominal spanwise normal stress · prescribed loads · exact apex undefined · ${R.tipBehavior?.status==='divergent'?'unbounded nominal tip stress; displayed extrema are sampled':'sampled extrema, not a certified global maximum'} · ${R.analysis3D.bending?'bending translation components available; torsion excluded':'no deformation solution'}`;return;}
     if(R.analysis3D){$('#plotinfo').textContent=`3-D SPATIAL BEAM · ${R.geometry.planform||'linear'} planform · ${airfoilLabel(R.geometry)} · sweep ${R.geometry.sweepDeg||0}° · dihedral ${R.geometry.dihedralDeg||0}° · ${R.analysis3D.elements.length} elements · prescribed global +z loads · ${S.deformed?'displacement magnification ×'+nf(deformAmount().scale,1):'undeformed geometry'} · nominal normal stress only; grey = unresolved; no overall FoS`;return;}
     const g = R.geometry;
     const kind = { stress: "Spanwise normal stress σ, beam theory, limit load", disp: "Resultant displacement, limit load", fos: `Factor of safety on PLA strength (red: below ${R.load.fos})`, twist:"Elastic axis twist (degrees) · section result", bending:"Resultant bending moment (N·m) · section result", torque:"Signed local torque (N·m) · section result", mode: "Natural frequency mode", model: "Model" }[S.plot];
@@ -2544,7 +2552,7 @@ body { margin: 0; }
       const sg = fieldValue(y, x, z, "sigma"), ds = fieldValue(y, x, z, "disp"), fos = fieldValue(y, x, z, "fos");
       body = `<b>${u.kind === "sleeve" ? "Printed sleeve" : "Printed skin"} · module ${u.module + 1}</b><br>y ${nf(y, 1)} mm · x/c ${nf(x / c, 3)}<br>σ ${nf(sg, 3)} MPa ${!Number.isFinite(sg)?'(unresolved)':sg<0?'(compression)':sg>0?'(tension)':'(zero)'}<br>URES ${nf(ds, 3)} mm · ${R.analysis3D?'normal stress only; overall FoS not computed':'FoS '+(fos > 50 ? ">50" : nf(fos, 1))}`;
     }
-    if(R.analysis3D?.stressOnly)body=body.replace(/<br>URES [^<]*/, '<br>Section-equilibrium normal stress; deformation not computed.');
+    if(R.analysis3D?.stressOnly){const b=R.analysis3D.bending?.at(y);body=body.replace(/<br>URES [^<]*/,b?`<br>Bending component ${sig(Math.hypot(b.chordwiseMm,b.verticalMm),5)} mm<br>ux,b ${sig(b.chordwiseMm,5)} · uz,b ${sig(b.verticalMm,5)} mm<br>Torsion excluded; section rotations not animated.`:'<br>Bending displacement not available.');}
     pr.innerHTML = body;
     if(R.analysis3D&&!sectionResultMeta[S.plot]){
       const location=E.normalStressLocationAt3D?.(R,y,[x,z],u.material||R.pla);
@@ -2921,11 +2929,12 @@ body { margin: 0; }
   function renderClosedStressResults(){
     const a=R.analysis3D,dock=$('#app > .dock');document.querySelectorAll('#app > .dock > .tabpanel').forEach(p=>p.hidden=true);
     let host=$('#wingSpatialResults');if(!host){host=el('section',{id:'wingSpatialResults',class:'tabpanel'});dock.prepend(host);}host.hidden=false;
-    const tip=R.tipBehavior,root=a.cutAt(0),v=R.verification;
+    const tip=R.tipBehavior,root=a.cutAt(0),v=R.verification,bending=a.bending;
     host.innerHTML=`<h2>Closed-tip wing · nominal normal stress</h2><p>Actual material sections and applied-load equilibrium; geometry is not trimmed.</p><dl class="kv"><dt>Model mass</dt><dd>${nf(R.mass.total,2)} g</dd><dt>Root vertical force</dt><dd>${sig(root.force[2],5)} N</dd><dt>Root bending moment</dt><dd>${sig(root.moment[0]/1000,5)} N·m</dd><dt>Section equilibrium residual</dt><dd>${sig(v.normalStressEquilibriumRelativeResidual,3)}</dd></dl><p class="callout">${esc(tip.reason||tip.status)}. The exact zero-area tip has undefined stress; displayed extrema cover sampled sections only.</p><div class="charts" id="closedStressCharts"></div><details><summary>Model scope</summary><ul>${a.limitations.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></details>`;
+    if(bending){const response=el('section',{},`<h3>Euler–Bernoulli bending components</h3><p>Root-clamped transverse bending only; torsional displacement and physical cross-section orientation are not computed. The exact planform is retained.</p><dl class="kv"><dt>Tip vertical bending component</dt><dd>${bending.tip.translationFinite?sig(bending.tip.verticalMm,7)+' mm':'Unbounded — no finite value'}</dd><dt>Tip chordwise bending component</dt><dd>${bending.tip.translationFinite?sig(bending.tip.chordwiseMm,7)+' mm':'Unbounded'}</dd><dt>Exact-tip slope</dt><dd>${bending.tip.slopeFinite?'Finite':'Unbounded'}</dd></dl><div class="callout">${esc(bending.tip.reason)} ${bending.validity.globalSmallRotationSatisfied?'':'This formal bending component does not establish a globally valid small-rotation response.'}</div><button class="btn" type="button" data-closed-bending>Show bending displacement component</button>`);host.querySelector('h2').after(response);response.querySelector('button').onclick=()=>setPlot('disp');}
     const stressTools=el('div',{class:'lesson-actions'});
     for(const[value,label]of [['skin','Show nominal skin stress'],['spars','Show nominal spar stress']]){const b=el('button',{type:'button',class:'btn','aria-pressed':String(S.stressComponent===value)},label);b.disabled=value==='spars'&&!R.geometry.spars.length;b.onclick=()=>{S.stressComponent=value;if(value==='spars')setAnatomy('inside');setPlot('stress');stressTools.querySelectorAll('button').forEach(n=>n.setAttribute('aria-pressed',String(n===b)));};stressTools.append(b);}host.querySelector('h2').after(stressTools);
-    const chartHost=$('#closedStressCharts');chart(chartHost,'Signed normal-stress envelope','MPa',Array.from(R.y),[{y:Array.from(R.stress.sigTop),color:'#c93d48'},{y:Array.from(R.stress.sigBot),color:'#246fd0'}]);
+    const chartHost=$('#closedStressCharts');if(bending){chart(chartHost,'Vertical bending component · torsion excluded','mm',Array.from(R.y),[{y:Array.from(bending.verticalMm),color:'#246fd0'}]);chart(chartHost,'Chordwise bending component · torsion excluded','mm',Array.from(R.y),[{y:Array.from(bending.chordwiseMm),color:'#c93d48'}]);}chart(chartHost,'Signed normal-stress envelope','MPa',Array.from(R.y),[{y:Array.from(R.stress.sigTop),color:'#c93d48'},{y:Array.from(R.stress.sigBot),color:'#246fd0'}]);
     $('#report').value=spatialReportText();
   }
   function renderSpatialResults(){
@@ -3347,7 +3356,7 @@ body { margin: 0; }
 
   // ------------------------------------------------------------ wiring
   function setPlot(p) {
-    if(WingGeometry.closedTip(S.geometry)&&!['model','stress'].includes(p)){$('#wingStatusDetails').open=true;return;}
+    if(WingGeometry.closedTip(S.geometry)&&!['model','stress',...(R?.analysis3D?.bending?['disp']:[])].includes(p)){$('#wingStatusDetails').open=true;return;}
     if(R?.analysis3D&&(p==='mode'||p==='fos')){flash('Natural frequencies and an overall factor of safety are not computed by the spatial beam model. Use normal Stress, Displacement and the 3-D result record.');return;}
     if(sectionResultMeta[p]){S.stressComponent='skin';S.anatomy='assembled';S.xray=false;$('#xrayBtn').setAttribute('aria-pressed','false');applyXray();}
     if(p==='fos')S.stressComponent='skin';
@@ -3596,7 +3605,7 @@ body { margin: 0; }
     editor.newLoad();printedWorkspace.open('Wing load · upward positive',editor.container,anchor);
     if(p){$('#wingKind').value='point';$('#wingKind').dispatchEvent(new Event('change'));editor.acceptPick(p);}else $('#wingKind').focus({preventScroll:true});
   }
-  function showWingDeformation(){if(R?.analysis3D?.stressOnly)throw new Error('This exact-tip analysis computes nominal normal stress only; deformation is not computed.');if(!R||stale||running||gateOpen())throw new Error('Solve the applied loads first.');printedWorkspace?.close();S.deformed=true;$('#defBtn').setAttribute('aria-pressed','true');setPlot('disp');applyResult();canvas.scrollIntoView({block:'center'});}
+  function showWingDeformation(){if(R?.analysis3D?.stressOnly&&!R.analysis3D.bending?.tip.translationFinite)throw new Error('This exact-tip bending translation is unavailable or unbounded; no finite deformation is substituted.');if(!R||stale||running||gateOpen())throw new Error('Solve the applied loads first.');printedWorkspace?.close();S.deformed=true;$('#defBtn').setAttribute('aria-pressed','true');setPlot('disp');applyResult();canvas.scrollIntoView({block:'center'});}
   function openWingStructurePopup(anchor,focusId){printedWorkspace.open('Structure · dimensions',$('#wingStructureForm'),anchor);const target=focusId&&$('#'+focusId);target?.scrollIntoView({block:'nearest'});target?.focus({preventScroll:true});}
   // A load click selects its real editor; an orbit/pan drag never changes the selection.
   let loadPointer=null,loadMoved=false;

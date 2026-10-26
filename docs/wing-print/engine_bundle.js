@@ -998,6 +998,37 @@ const WingClosedTipStress = (() => {
   const GX=[-.9602898564975363,-.7966664774136267,-.525532409916329,-.1834346424956498,.1834346424956498,.525532409916329,.7966664774136267,.9602898564975363];
   const GW=[.1012285362903763,.2223810344533745,.3137066458778873,.362683783378362,.362683783378362,.3137066458778873,.2223810344533745,.1012285362903763];
   const uniq=a=>[...new Set(a)].sort((a,b)=>a-b);
+  // Clamped Euler-Bernoulli transverse bending components. This accepts exact
+  // curvature, not a fictitious regular tip section. The endpoint substitution
+  // s=L-t^2 regularizes the finite delta/elliptic-load translation integral.
+  function integrateBending({length:L,curvatureAt,breaks=[],tipTranslationFinite=true,tipSlopeFinite=true}){
+    if(!(Number.isFinite(L)&&L>0)||typeof curvatureAt!=='function')throw Error('Bending integration needs a positive span and a curvature evaluator.');
+    const stations=uniq([0,L,...breaks.filter(y=>y>0&&y<L)]),panelCache=new Map(),pointCache=new Map(),curvatureCache=new Map(),counters={curvatureEvaluations:0,quadratureEvaluations:0};
+    const tolerance=2e-9;
+    function curvature(y){if(!curvatureCache.has(y)){const k=Array.from(curvatureAt(y));if(k.length!==2||!k.every(Number.isFinite))throw Error(`Unresolved bending curvature at y=${y} mm.`);curvatureCache.set(y,k);counters.curvatureEvaluations++;}return curvatureCache.get(y);}
+    function gauss(fn,a,b){const sum=[0,0,0,0];for(let i=0;i<8;i++){const q=fn((a+b)/2+(b-a)*GX[i]/2),w=GW[i]*(b-a)/2;counters.quadratureEvaluations++;for(let k=0;k<4;k++)sum[k]+=w*q[k];}return sum;}
+    function adaptive(fn,a,b,depth=0){const full=gauss(fn,a,b),mid=(a+b)/2,left=gauss(fn,a,mid),right=gauss(fn,mid,b),fine=left.map((v,k)=>v+right[k]);if(fine.every((v,k)=>Math.abs(v-full[k])<=tolerance*Math.max(1,Math.abs(v))))return fine;if(depth>=20)throw Error('Pure-bending compliance quadrature did not converge; no regularized displacement is substituted.');const u=adaptive(fn,a,mid,depth+1),v=adaptive(fn,mid,b,depth+1);return u.map((x,k)=>x+v[k]);}
+    function integral(a,b,target,slopes){
+      if(!(b>a))return [0,0,0,0];
+      const lo=Math.sqrt(Math.max(0,L-b)),hi=Math.sqrt(Math.max(0,L-a));
+      return adaptive(t=>{const distance=t*t,y=L-distance;if(y===L)throw Error('The improper bending integral exceeded floating-point station resolution; no physical tip-chord floor is introduced.');const k=curvature(y),weight=2*t,arm=(target-L)+distance;return [slopes?weight*k[0]:0,slopes?weight*k[1]:0,weight*arm*k[0],weight*arm*k[1]];},lo,hi);
+    }
+    function at(y){
+      if(!Number.isFinite(y)||y<0||y>L)throw Error('Bending displacement station must lie on the actual span.');
+      if(pointCache.has(y))return pointCache.get(y);
+      const endpoint=y===L;
+      if(endpoint&&!tipTranslationFinite){const out={y,verticalMm:NaN,chordwiseMm:NaN,slopeVertical:NaN,slopeChordwise:NaN,resolved:false,translationFinite:false,slopeFinite:false,componentOnly:true,torsionIncluded:false,reason:'The exact delta-tip bending translation is unbounded for a nonzero endpoint line load; no artificial finite tip section is substituted.'};pointCache.set(y,out);return out;}
+      const sum=[0,0,0,0],slopes=!endpoint||tipSlopeFinite;
+      for(let i=1;i<stations.length;i++){
+        const a=stations[i-1],b=stations[i];if(a>=y)break;let v;
+        if(b<=y&&b<L){let p=panelCache.get(i);if(!p){p=integral(a,b,b,true);panelCache.set(i,p);}v=[p[0],p[1],p[2]+(y-b)*p[0],p[3]+(y-b)*p[1]];}
+        else v=integral(a,Math.min(b,y),y,slopes);
+        for(let k=0;k<4;k++)sum[k]+=v[k];
+      }
+      const out={y,verticalMm:sum[3],chordwiseMm:sum[2],slopeVertical:slopes?sum[1]:NaN,slopeChordwise:slopes?sum[0]:NaN,resolved:true,translationFinite:true,slopeFinite:slopes,componentOnly:true,torsionIncluded:false,reason:endpoint&&!slopes?'The improper pure-bending translation is finite, but the exact tip slope is unbounded. Small-rotation beam kinematics are not valid arbitrarily close to this apex.':'Clamped nominal Euler-Bernoulli transverse bending components only; torsional displacement and physical cross-section orientation are not computed.'};pointCache.set(y,out);return out;
+    }
+    return {at,counters,quadratureRelativeTolerance:tolerance,method:'Direct compliance kernel with exact-span square-root endpoint substitution',tipTranslationFinite,tipSlopeFinite};
+  }
   function solve(input,tools){
     const {normalize,polyIntegrals,prescribedFlightLoads,customLine,customFraction,Geometry,GRAV=9.80665}=tools,E=tools.E;
     const {g,pla,rod,asm,load:source,crit}=normalize(input),L=g.semiSpan,chord=tools.chordAt||((g,y)=>Geometry.chordAt(g,y));
@@ -1173,14 +1204,45 @@ const WingClosedTipStress = (() => {
     if(source.selfWeight)for(let k=1;k<boundaries.length;k++)gravityMarkers(boundaries[k-1],boundaries[k]);
     const root=cutAt(0),applied=sourceWrench(0),displayWeight=-gravity.reduce((a,p)=>a+p.force,0),actualWeight=source.selfWeight?mass.total*GRAV/1000:0;
     const load={...source,kind:'custom',items:[...base,...gravity],sourceLoad:source,gravitySummary:source.selfWeight?{weightN:actualWeight,appliedN:applied.V+actualWeight,netN:applied.V,quadrature:'Continuous adaptive 8-point Gauss integration split at CAD cap/rib/cavity transitions; display points are quadrature markers'}:undefined};
-    const limitations=['Section-equilibrium nominal spanwise normal stress on actual aircraft-y material polygons; no displacement or frame solution','Zero user sweep, dihedral and incidence only; delta planform leading-edge sweep is retained geometrically','Locally prismatic Navier stress is a beam approximation; finite taper and rib/cap transitions do not resolve 3-D concentrations','Actual CAD skin/rib/cap and integral same-material spar union is included without double counting filled sections; effective homogeneous isotropic properties','Spars have finite admitted runouts; abrupt termination stress concentrations and load transfer are unresolved','Automatic cap widths taper with actual chord down to the admitted width floor, while cap/web thicknesses remain fixed. A same-material spar inside an already solid tip is embedded material, not an additional separate I-section or extra stiffness.','Shear, torsional shear, warping, local buckling, bond/joint stresses, dynamics and overall safety certification are unavailable','The exact zero-area apex has undefined stress; finite samples are not a certified global maximum'];
+    const limitations=['Section-equilibrium nominal spanwise normal stress and Euler-Bernoulli pure-bending translation components on actual aircraft-y material polygons; no torsional or full-motion solution','Zero user sweep, dihedral and incidence only; delta planform leading-edge sweep is retained geometrically','Locally prismatic Navier stress is a beam approximation; finite taper and rib/cap transitions do not resolve 3-D concentrations','Actual CAD skin/rib/cap and integral same-material spar union is included without double counting filled sections; effective homogeneous isotropic properties','Spars have finite admitted runouts; abrupt termination stress concentrations and load transfer are unresolved','Automatic cap widths taper with actual chord down to the admitted width floor, while cap/web thicknesses remain fixed. A same-material spar inside an already solid tip is embedded material, not an additional separate I-section or extra stiffness.','Shear, torsional shear, warping, local buckling, bond/joint stresses, dynamics and overall safety certification are unavailable','The exact zero-area apex has undefined stress; finite samples are not a certified global maximum'];
     const verification={method:'Outboard load integration and polygon moment recovery',normalStressEquilibriumRelativeResidual:maxRecoveryResidual,forceBalanceResidual:root.force[2]-applied.V,momentBalanceResidual:root.moment[0]-applied.Mx,selfWeightN:actualWeight,displayQuadratureWeightN:displayWeight,displayQuadratureRelativeError:Math.abs(displayWeight-actualWeight)/Math.max(1,actualWeight),adaptiveQuadratureRelativeTolerance:2e-9,passed:maxRecoveryResidual<1e-8};
+    // Only the first three exact endpoint terms matter for delta-tip existence:
+    // q(L-d)=a0+aHalf*sqrt(d)+a1*d+O(d^1.5). Sum before classifying so opposing
+    // prescribed loads cancel algebraically; never discard a nonzero term by a
+    // numerical magnitude threshold. Homogeneous solid-tip gravity is O(d^2).
+    const tail={constant:0,squareRoot:0,linear:0};
+    for(const p of base){
+      if(p.kind==='point')continue;
+      if(p.actualChordLaw){if(g.planform==='delta')tail.linear+=p.total*g.rootChord/(planformArea*L);else tail.squareRoot+=p.total*g.rootChord/planformArea*Math.sqrt(2/L);continue;}
+      if(p.kind==='schrenk'){tail.squareRoot+=.5*p.total*4/(Math.PI*L)*Math.sqrt(2/L);if(g.planform==='delta')tail.linear+=.5*p.total*g.rootChord/(planformArea*L);else tail.squareRoot+=.5*p.total*g.rootChord/planformArea*Math.sqrt(2/L);continue;}
+      const bs=loadBreaks(p);if(bs.at(-1)!==L)continue;
+      if(p.kind==='distributed'){tail.constant+=p.qEnd;tail.linear+=(p.qStart-p.qEnd)/(p.end-p.start);}
+      else if(p.kind==='table'){const a=p.points.at(-2),b=p.points.at(-1);tail.constant+=b[1];tail.linear+=(a[1]-b[1])/(b[0]-a[0]);}
+      else if(p.kind==='elliptic'){if(p.shape==='end')tail.constant+=p.peak;else tail.squareRoot+=p.peak*(p.shape==='middle'?2:Math.sqrt(2))/Math.sqrt(p.end-p.start);}
+      else if(p.kind==='parabolic'){if(p.shape==='end')tail.constant+=p.peak;else tail.linear+=p.peak*(p.shape==='middle'?4:2)/(p.end-p.start);}
+    }
+    const tipTranslationFinite=g.planform==='elliptic'||tail.constant===0,tipSlopeFinite=g.planform==='elliptic'||tail.constant===0&&tail.squareRoot===0&&tail.linear===0;
+    const bending=integrateBending({length:L,breaks:uniq([...boundaries,...base.flatMap(p=>p.kind==='point'?[p.position]:loadBreaks(p))]),curvatureAt:q=>{const c=cutAt(q);return [-c.coefficientX/(pla.E*c.scale),-c.coefficientZ/(pla.E*c.scale)];},tipTranslationFinite,tipSlopeFinite});
+    let bendingTip=null;
+    Object.defineProperty(bending,'tip',{enumerable:true,get:()=>bendingTip||(bendingTip={...bending.at(L),classification:!tipTranslationFinite?'unbounded-translation-and-slope':!tipSlopeFinite?'finite-translation-unbounded-slope':'finite-translation-and-slope',translationStatus:tipTranslationFinite?'finite':'unbounded',slopeStatus:tipSlopeFinite?'finite':tail.constant!==0?'unbounded-power':tail.squareRoot!==0?'unbounded-power':'unbounded-logarithmic',netEndpointLoadTerms:tail})});
+    bending.scope='Nominal Euler-Bernoulli transverse pure-bending components from actual sectional compliance; not full physical surface displacement.';
+    bending.torsionIncluded=false;bending.physicalSectionOrientationAvailable=false;
+    bending.limitations=['The undeformed geometry and exact zero-chord apex are retained. No physical tip-chord floor or shortened span is introduced.','Cross-section translations illustrate transverse bending only. Torsional displacement, shear deformation, section distortion and physical section orientation are unresolved.','A finite improper tip translation does not imply a finite tip slope or validity of small-rotation kinematics near the apex.','This reduced sectional beam response is not a 3-D solid finite-element displacement solution.'];
+    // Compute display samples only when the displacement view/report requests
+    // them; a stress-only view does not repeat thousands of compliance cuts.
+    let bendingSamples=null;
+    const samples=()=>bendingSamples||(bendingSamples=Array.from(y,q=>bending.at(q)));
+    for(const key of ['verticalMm','chordwiseMm','slopeVertical','slopeChordwise'])Object.defineProperty(bending,key,{enumerable:true,get:()=>Float64Array.from(samples(),s=>s[key])});
+    Object.defineProperty(bending,'validity',{enumerable:true,get:()=>{
+      const ss=samples(),finite=ss.filter(s=>s.resolved),maxSampledTranslationMm=Math.max(0,...finite.map(s=>Math.hypot(s.verticalMm,s.chordwiseMm))),maxSampledSlopeRad=Math.max(0,...ss.filter(s=>s.slopeFinite).map(s=>Math.hypot(s.slopeVertical,s.slopeChordwise))),translationRatio=maxSampledTranslationMm/L,failed=!tipTranslationFinite||!tipSlopeFinite||translationRatio>.05||maxSampledSlopeRad>.1;
+      return {tipTranslationFinite,tipSlopeFinite,globalSmallRotationSatisfied:!tipSlopeFinite||maxSampledSlopeRad>.1?false:null,sampledSmallRotationSatisfied:maxSampledSlopeRad<=.1,maxSampledTranslationMm,maxSampledSlopeRad,translationRatio,smallDisplacement:!failed,sampleScreeningOnly:true,rotationLimitRad:.1,translationRatioLimit:.05,message:!tipTranslationFinite?'The exact tip bending translation is unbounded; a finite whole-wing displacement is not available.':!tipSlopeFinite?'The nominal tip bending translation is finite, but the exact tip slope diverges. Small-rotation beam kinematics fail arbitrarily close to the apex; this is a formal bending component, not a validated full-wing displacement.':failed?'Sampled bending response exceeds the linear-model screening limits. A geometrically nonlinear analysis is required for physical displacement validation.':'Sampled pure-bending screening satisfies translation/span <=5% and slope <=0.1rad. This is not a global nonlinear or torsional validation.'};
+    }});
     const NaNs=()=>Float64Array.from(y,()=>NaN),V=Float64Array.from(recovered,c=>c.force[2]),M=Float64Array.from(recovered,c=>c.moment[0]),T=Float64Array.from(recovered,c=>c.moment[1]);
     const mesh={requestedElements:input.nElements||null,actualElements:0,nodeCount:0,mandatorySpanStations:boundaries,stressStations:y.length};
-    const analysis3D={stressOnly:true,method:'Exact closed-tip section-equilibrium nominal normal stress (no deformation solve)',limitations,units:{length:'mm',force:'N',moment:'N mm',stress:'MPa',mass:'g'},evaluateStress,cutAt,performanceCounters,normalStress:{skinTension:tension,skinCompression:compression,spars:sparStress},resultants:recovered.map(c=>({y:c.y,force:c.force,moment:c.moment,localForce:c.localForce,localMoment:c.localMoment,endZone:c.endZone})),localM2:M,localM3:Float64Array.from(y,()=>0),localT:T,loadMapping:{endWrenches:[],method:'Original physical positions; continuous outboard wrench integration'},verification,tipBehavior,spanStations:yy,sectionSamples:[],validity:{nominalOnly:true,stressOnly:true,zeroAreaApexExcluded:true}};
+    const analysis3D={stressOnly:true,method:'Exact closed-tip nominal normal stress and pure-bending components; no torsional or full-motion solve',limitations,units:{length:'mm',force:'N',moment:'N mm',stress:'MPa',mass:'g'},bending,evaluateStress,cutAt,performanceCounters,normalStress:{skinTension:tension,skinCompression:compression,spars:sparStress},resultants:recovered.map(c=>({y:c.y,force:c.force,moment:c.moment,localForce:c.localForce,localMoment:c.localMoment,endZone:c.endZone})),localM2:M,localM3:Float64Array.from(y,()=>0),localT:T,loadMapping:{endWrenches:[],method:'Original physical positions; continuous outboard wrench integration'},verification,tipBehavior,spanStations:yy,sectionSamples:[],validity:{nominalOnly:true,stressOnly:true,zeroAreaApexExcluded:true}};
     return {analysis3D,geometry:g,pla,rod,assembly:asm,load,criteria:crit,y,ySec:boundaries,sections:[],mass,V,M,T,stress:{sigTop:Float64Array.from(tension),sigBot:Float64Array.from(compression,v=>-v),spars:sparStress},ribs,seams,seamsActive:[],deflection:NaNs(),twist:NaNs(),chordwiseDeflection:NaNs(),fem:{fBending:[],fTorsion:[]},mesh,verification,tipBehavior,checks:[],governing:null,appliedForce:root.force[2],appliedMoment:root.moment[0]};
   }
-  return {solve};
+  return {solve,integrateBending};
 })();
 if(typeof module!=='undefined'&&module.exports)module.exports=WingClosedTipStress;
 

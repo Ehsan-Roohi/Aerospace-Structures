@@ -17,7 +17,7 @@
 const WingSpars=(()=>{
   'use strict';
   const MAT={name:'Printed PLA · teaching input',E:2000,nu:.35,rho:1.24,ft:15,fc:50,fs:10};
-  const keys=['fraction','length','topWidth','topThickness','bottomWidth','bottomThickness','webThickness','material'];
+  const keys=['fraction','length','topWidth','topThickness','bottomWidth','bottomThickness','webThickness','material','widthMode'];
   const G=m=>m.E/(2*(1+m.nu));
   function specs(raw,L){
     if(raw==null)return [];
@@ -25,7 +25,8 @@ const WingSpars=(()=>{
     return raw.map((s,i)=>{
       if(!s||typeof s!=='object'||Array.isArray(s)||Object.keys(s).some(k=>!keys.includes(k)))throw Error(`Spar ${i+1}: unsupported field.`);
       const v={...s};
-      for(const k of keys.filter(k=>k!=='material'))if(!Number.isFinite(v[k])||v[k]<=0)throw Error(`Spar ${i+1}: ${k} must be finite and positive.`);
+      for(const k of keys.filter(k=>k!=='material'&&k!=='widthMode'))if(!Number.isFinite(v[k])||v[k]<=0)throw Error(`Spar ${i+1}: ${k} must be finite and positive.`);
+      if(v.widthMode!==undefined&&!['fixed','auto'].includes(v.widthMode))throw Error(`Spar ${i+1}: widthMode must be fixed or auto.`);
       if(v.fraction>=1||v.length>L||v.length<Math.min(20,L))throw Error('Spar station must be inside the chord; length must be 20 mm to the semi-span (or the full shorter span).');
       if(v.topThickness>v.topWidth/5||v.bottomThickness>v.bottomWidth/5)throw Error('Thin-wall spar caps require thickness ≤ width/5.');
       if(v.webThickness>=Math.min(v.topWidth,v.bottomWidth))throw Error('Spar web must be narrower than both caps.');
@@ -37,13 +38,19 @@ const WingSpars=(()=>{
       return Object.freeze({...v,material:Object.freeze({...m})});
     });
   }
+  function widths(g,s,y){
+    const chord=g.sectionChord??(g.rootChord+(g.tipChord-g.rootChord)*y/g.semiSpan),scale=Math.min(1,Math.max(0,chord/g.rootChord)),auto=s.widthMode==='auto';
+    return {topWidth:auto?Math.max(5*s.topThickness,s.topWidth*scale):s.topWidth,bottomWidth:auto?Math.max(5*s.bottomThickness,s.bottomWidth*scale):s.bottomWidth,scale:auto?scale:1,mode:auto?'auto':'fixed',minimumTopWidth:5*s.topThickness,minimumBottomWidth:5*s.bottomThickness};
+  }
   function parts(g,y,ordinates){
     const c=g.sectionChord??(g.rootChord+(g.tipChord-g.rootChord)*y/g.semiSpan),out=[];
     (g.spars||[]).forEach((s,index)=>{
       if(y>s.length+1e-8)return;
+      const effective=widths(g,s,y),topWidth=effective.topWidth,bottomWidth=effective.bottomWidth;
+      if(s.webThickness>=Math.min(topWidth,bottomWidth))throw Error(`Spar ${index+1}: tapered caps must remain wider than the web at y=${y.toFixed(1)} mm.`);
       const x=s.fraction*c,top=[],bottom=[];
       for(let j=0;j<=8;j++){
-        const xt=x+s.topWidth*(j/8-.5),xb=x+s.bottomWidth*(j/8-.5);
+        const xt=x+topWidth*(j/8-.5),xb=x+bottomWidth*(j/8-.5);
         if(Math.min(xt,xb)<=g.cavityStart*c||Math.max(xt,xb)>=g.cavityEnd*c)throw Error(`Spar ${index+1} caps must fit wholly inside the cavity at y=${y.toFixed(1)} mm.`);
         const u=ordinates(g.naca,xt/c,c,g.te).upper-g.skin;
         const b=ordinates(g.naca,xb/c,c,g.te).lower+g.skin;
@@ -60,10 +67,10 @@ const WingSpars=(()=>{
       const web=[[xl,bl(xl)],...bottom.filter(p=>p[0]>xl&&p[0]<xr).map(p=>[p[0],bl(p[0])]),[xr,bl(xr)],[xr,tu(xr)],...[...top].reverse().filter(p=>p[0]>xl&&p[0]<xr).map(p=>[p[0],tu(p[0])]),[xl,tu(xl)]];
       const polygons=[top.concat([...top].reverse().map(([a,b])=>[a,b-s.topThickness])),bottom.concat([...bottom].reverse().map(([a,b])=>[a,b+s.bottomThickness])),web];
       const outline=[...top,[top.at(-1)[0],tu(top.at(-1)[0])],...[...top].reverse().filter(p=>p[0]>xr&&p[0]<top.at(-1)[0]).map(p=>[p[0],tu(p[0])]),[xr,tu(xr)],[xr,bl(xr)],...bottom.filter(p=>p[0]>xr).map(p=>[p[0],bl(p[0])]),...bottom.slice().reverse(),[bottom[0][0],bl(bottom[0][0])],...bottom.filter(p=>p[0]>bottom[0][0]&&p[0]<xl).map(p=>[p[0],bl(p[0])]),[xl,bl(xl)],[xl,tu(xl)],...[...top].reverse().filter(p=>p[0]<xl).map(p=>[p[0],tu(p[0])])];
-      out.push({index,s,x,zt,zb,h,top,bottom,polygons,outline});
+      out.push({index,s,widths:effective,x,zt,zb,h,top,bottom,polygons,outline});
     });
     for(let i=0;i<out.length;i++)for(let j=0;j<i;j++){
-      const a=out[i],b=out[j],half=(Math.max(a.s.topWidth,a.s.bottomWidth)+Math.max(b.s.topWidth,b.s.bottomWidth))/2;
+      const a=out[i],b=out[j],half=(Math.max(a.widths.topWidth,a.widths.bottomWidth)+Math.max(b.widths.topWidth,b.widths.bottomWidth))/2;
       if(Math.abs(a.x-b.x)<=half)throw Error('Bonded spar caps must not overlap each other.');
     }
     return out;
@@ -106,7 +113,7 @@ const WingSpars=(()=>{
       };
       attach(ut,true);attach(lt,false);
       // Cap branches include independent upper/lower dimensions; the web excludes cap thickness.
-      for(const [mid,width,t,kind] of [[ut,p.s.topWidth,p.s.topThickness,'top cap'],[lt,p.s.bottomWidth,p.s.bottomThickness,'bottom cap']])for(const sign of [-1,1]){
+      for(const [mid,width,t,kind] of [[ut,p.widths?.topWidth??p.s.topWidth,p.s.topThickness,'top cap'],[lt,p.widths?.bottomWidth??p.s.bottomWidth,p.s.bottomThickness,'bottom cap']])for(const sign of [-1,1]){
         const base=nodes[mid],a=node([base[0]+sign*width/4,base[1]]),b=node([base[0]+sign*width/2,base[1]]);edge(mid,a,t,m,kind,p.index);edge(a,b,t,m,kind,p.index);attach(a,mid===ut);attach(b,mid===ut);
       }
       const lo=node([p.x,p.zb+p.s.bottomThickness/2]),hi=node([p.x,p.zt-p.s.topThickness/2]);
@@ -183,6 +190,6 @@ const WingSpars=(()=>{
       projection:A.map(r=>r.slice()),areaFactor,sourceX,sourceZ,
       method:'affine-projected bonded thin-wall network; two transverse shears; cap-local Saint-Venant torsion neglected'};
   }
-  return {MAT,specs,parts,polygon,network,projectedNetwork,field,G};
+  return {MAT,specs,widths,parts,polygon,network,projectedNetwork,field,G};
 })();
 if(typeof module!=='undefined'&&module.exports)module.exports=WingSpars;

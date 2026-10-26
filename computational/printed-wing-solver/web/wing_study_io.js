@@ -1099,7 +1099,7 @@
     add('Structure', 'Skin / rib thickness', `${fmt(g.skin)} / ${fmt(g.ribThickness)} mm`);
     add('Structure', 'Interior ribs', g.customInteriorRibs ? (g.customInteriorRibs.length ? `custom stations ${g.customInteriorRibs.map(fmt).join(', ')} mm` : 'none (empty custom list)') : `${g.interiorRibs} requested, evenly spaced (interface ribs are added at seams)`);
     add('Structure', 'Rods', g.rodFractions.length ? `${g.rodFractions.length} × ⌀${fmt(g.rodDiameter)} mm at ${g.rodFractions.map((f) => `${fmt(f)}c`).join(', ')}; radial clearance ${fmt(g.clearance)} mm; sleeve wall ${fmt(g.sleeveWall)} mm` : 'none');
-    for(const [i,s]of (g.spars||[]).entries())add('Structure',`Bonded spar ${i+1}`,`x/c ${fmt(s.fraction)}; root-to-end ${fmt(s.length)} mm; upper cap ${fmt(s.topWidth)} × ${fmt(s.topThickness)} mm; lower cap ${fmt(s.bottomWidth)} × ${fmt(s.bottomThickness)} mm; web ${fmt(s.webThickness)} mm, skin-derived height; ${s.material.name}, E ${fmt(s.material.E)} MPa, nu ${fmt(s.material.nu)}, rho ${fmt(s.material.rho)} g/cm³, ft/fc/fs ${fmt(s.material.ft)}/${fmt(s.material.fc)}/${fmt(s.material.fs)} MPa; perfect bond, thin-wall model`);
+    for(const [i,s]of (g.spars||[]).entries())add('Structure',`Bonded spar ${i+1}`,`x/c ${fmt(s.fraction)}; root-to-end ${fmt(s.length)} mm; ${s.widthMode==='auto'?'automatic chord-based cap-width taper; fixed thickness':'fixed cap widths'}; upper root cap ${fmt(s.topWidth)} × ${fmt(s.topThickness)} mm; lower cap ${fmt(s.bottomWidth)} × ${fmt(s.bottomThickness)} mm; web ${fmt(s.webThickness)} mm, skin-derived height; ${s.material.name}, E ${fmt(s.material.E)} MPa, nu ${fmt(s.material.nu)}, rho ${fmt(s.material.rho)} g/cm³, ft/fc/fs ${fmt(s.material.ft)}/${fmt(s.material.fc)}/${fmt(s.material.fs)} MPa; perfect bond, thin-wall model`);
     add('Structure', 'Other', `trailing edge ${fmt(g.te)} mm; root/tip caps ${fmt(g.cap)} mm; interface rib offset ${fmt(g.interfaceOffset)} mm; cavity ${fmt(g.cavityStart)}–${fmt(g.cavityEnd)}c`);
     const card = (key, over, fields, unit) => {
       const m = E.MATERIALS[key];
@@ -1354,6 +1354,7 @@
     if(!['pla_upright','pla_flat'].includes(S.plaKey))errors.push('The notebook currently fabricates PLA, not custom/metal shell materials.');
     if(g.rodFractions.some(f=>f<.1||f>.8)||g.rodFractions.length&&(g.clearance<.05||g.sleeveWall<.8))errors.push('CAD rod positions must be 0.10–0.80c; radial clearance ≥0.05 mm and sleeve wall ≥0.8 mm.');
     for(const [i,s]of (g.spars||[]).entries()){
+      if(s.widthMode==='auto')errors.push(`Spar ${i+1}: automatic cap-width taper is supported by the browser CAD exporter; use Download STL/DXF/STEP rather than the optional legacy notebook.`);
       if(['E','nu','rho','ft','fc','fs'].some(k=>Math.abs(s.material[k]-m[k])>1e-9*Math.max(1,Math.abs(m[k]))))errors.push(`Spar ${i+1}: integral single-filament printing requires the same effective PLA properties as the shell. Match its material card and Solve; a carbon/metal spar cannot silently become printed PLA.`);
       if(Math.min(s.topThickness,s.bottomThickness,s.webThickness)<.4)errors.push(`Spar ${i+1}: cap/web thickness must be ≥0.4 mm; slicer extrusion-path inspection remains required.`);
     }

@@ -153,8 +153,8 @@ const WingEngine = (() => {
       g.customInteriorRibs = Object.freeze(ribs);
     }
     if(g.spars.length){
-      if(Geometry.closedTip(g))for(const s of g.spars){const limit=closedTipSparLimit(g,s);if(s.length>limit+1e-8)throw Error(`Closed-tip spar length ${s.length.toFixed(2)} mm exceeds its finite runout fit limit ${limit.toFixed(2)} mm. Reduce Length; a fixed-width spar cannot reach the zero-area tip.`);}
-      const points=[...linspace(0,g.semiSpan,129),...g.spars.map(s=>s.length),...(g.stations||[]).map(s=>s.eta*g.semiSpan)];
+      if(Geometry.closedTip(g))for(const s of g.spars){const limit=closedTipSparLimit(g,s);if(s.length>limit+1e-8)throw Error(`Closed-tip spar length ${s.length.toFixed(2)} mm exceeds its finite runout fit limit ${limit.toFixed(2)} mm. Reduce Length; ${s.widthMode==='auto'?'auto-tapered widths retain finite cap/web thickness and cannot reach the zero-area tip':'a fixed-width spar cannot reach the zero-area tip'}.`);}
+      const points=[...linspace(0,g.semiSpan,129),...g.spars.map(s=>s.length),...g.spars.flatMap(s=>sparWidthBreaks(g,s)),...(g.stations||[]).map(s=>s.eta*g.semiSpan)];
       for(const y of points)sparParts(g,y);
     }
     return Object.freeze(g);
@@ -165,24 +165,52 @@ const WingEngine = (() => {
   // Cross-section mechanics use unrotated local x/z. Apply station transforms
   // only at geometry/CAD/display boundaries, never to the old scalar solver.
   const localGeometry = (g,y) => g.airfoil || g.stations || g.planform==='elliptic' ? {...g,naca:airfoilAt(g,y),sectionChord:chordAt(g,y)} : g;
-  const sparParts = (g,y) => Spars.parts(localGeometry(g,y),y,verticalOrdinates);
-  function closedTipSparLimit(g,spec){
-    if(!Geometry.closedTip(g))return g.semiSpan;
+  const sparParts = (g,y) => {const parts=Spars.parts(localGeometry(g,y),y,verticalOrdinates);if(Geometry.closedTip(g)&&parts.some(p=>p.s.widthMode==='auto')){const start=cavityTipLimit(g)-g.cap;for(const p of parts)if(p.s.widthMode==='auto')p.embeddedInSolidTip=y>=start;}return parts;};
+  const sparWidths=(g,s,y)=>Spars.widths(localGeometry(g,y),s,y);
+  function sparWidthBreaks(g,s){
+    if(s.widthMode!=='auto')return [];
+    const out=[];
+    for(const [width,thickness]of [[s.topWidth,s.topThickness],[s.bottomWidth,s.bottomThickness]]){
+      const target=g.rootChord*5*thickness/width;
+      if(target>=g.rootChord||target<=chordAt(g,g.semiSpan))continue;
+      let a=0,b=g.semiSpan;for(let i=0;i<48;i++){const y=(a+b)/2;if(chordAt(g,y)>target)a=y;else b=y;}const y=(a+b)/2;if(y<s.length)out.push(y);
+    }
+    return [...new Set(out)].sort((a,b)=>a-b);
+  }
+  function closedTipSparLimit(g,spec){return closedTipSparFit(g,spec).maximumLengthMm;}
+  function closedTipSparFit(g,spec){
+    if(!Geometry.closedTip(g))return {closedTip:false,maximumLengthMm:g.semiSpan,governingLimit:'span',category:'geometry',reason:'The nonzero-tip span bounds the spar length.',boundaryMm:g.semiSpan,safetyInsetMm:0};
     // Keep the actual fixed cap/web dimensions. Find the first loss of fit,
     // rather than extending material through a solid closure or scaling it.
-    const end=cavityTipLimit(g)-g.cap;
-    if(!(end>0))throw Error('Closed-tip spar has no hollow root region. Increase root chord or airfoil thickness.');
+    const solidStart=cavityTipLimit(g)-g.cap,auto=spec.widthMode==='auto',end=auto?g.semiSpan:solidStart;
+    if(!(solidStart>0))throw Error('Closed-tip spar has no hollow root region. Increase root chord or airfoil thickness.');
     const other=(g.spars||[]).filter(s=>s!==spec&&Math.abs(s.fraction-spec.fraction)>1e-12);
     const test={...g,spars:[...other,{...spec,length:g.semiSpan}]};
-    const fits=y=>{try{sparParts(test,y);return true;}catch{return false;}};
+    let lastFailure=null;
+    const fits=y=>{try{sparParts(test,y);return true;}catch(error){lastFailure={stationMm:y,message:error.message};return false;}};
     if(!fits(0))throw Error('Closed-tip spar dimensions do not fit the root cavity. Reduce cap width/thickness or web thickness, move the spar, or increase root chord/airfoil thickness.');
-    const points=[...linspace(0,end,257),...other.flatMap(s=>[s.length,Math.min(end,s.length+1e-7)]),...(g.stations||[]).map(s=>s.eta*g.semiSpan)].filter(y=>y>=0&&y<=end).sort((a,b)=>a-b);
-    let lo=0,hi=end;
-    for(const y of points){if(!fits(y)){hi=y;break;}lo=y;}
+    const points=[...linspace(0,end,257),...sparWidthBreaks(g,{...spec,length:g.semiSpan}),...other.flatMap(s=>[s.length,Math.min(end,s.length+1e-7)]),...(g.stations||[]).map(s=>s.eta*g.semiSpan)].filter(y=>y>=0&&y<=end).sort((a,b)=>a-b);
+    let lo=0,hi=end,sectionLimited=false;
+    for(const y of points){if(!fits(y)){hi=y;sectionLimited=true;break;}lo=y;}
     if(lo<hi)for(let i=0;i<40;i++){const y=(lo+hi)/2;if(fits(y))lo=y;else hi=y;}
     const limit=Math.max(0,Math.min(lo,end)-Math.max(1e-5,g.semiSpan*1e-7));
     if(limit<Math.min(20,g.semiSpan))throw Error('Closed-tip spar has less than the minimum 20 mm fit length. Revise root dimensions or spar dimensions.');
-    return limit;
+    const part=sparParts(test,limit).find(p=>p.index===other.length),c=chordAt(g,limit),profile=airfoilAt(g,limit);
+    const lineAt=(line,x)=>{let i=1;while(i<line.length-1&&line[i][0]<x)i++;const a=line[i-1],b=line[i];return a[1]+(b[1]-a[1])*(x-a[0])/(b[0]-a[0]);};
+    const xl=part.x-spec.webThickness/2,xr=part.x+spec.webThickness/2,webPoints=[xl,xr,...part.top.map(p=>p[0]),...part.bottom.map(p=>p[0])].filter(x=>x>=xl&&x<=xr);
+    const minimumWebHeight=Math.min(...webPoints.map(x=>lineAt(part.top,x)-spec.topThickness-lineAt(part.bottom,x)-spec.bottomThickness));
+    const capXs=[...part.top,...part.bottom].map(p=>p[0]),capClearance=Math.min(...part.top.map(([x,z])=>z-spec.topThickness-(verticalOrdinates(profile,x/c,c,g.te).lower+g.skin)),...part.bottom.map(([x,z])=>(verticalOrdinates(profile,x/c,c,g.te).upper-g.skin)-(z+spec.bottomThickness)));
+    let governingLimit='solid-tip-closure',category='closure-policy',reason='The selected hollow region ends here: cavity closure station minus the cap offset. This is a hollow-to-solid geometry policy, not a claim that the local spar cannot physically extend farther.';
+    if(sectionLimited){
+      const message=lastFailure?.message||'';
+      if(/overlap/.test(message)){governingLimit='spar-overlap';category='geometry';reason='The fixed-width caps would overlap another spar.';}
+      else if(/caps must fit wholly/.test(message)){governingLimit='cap-cavity-width';category='geometry';reason='The fixed-width caps reach a chordwise cavity boundary.';}
+      else if(/cap thickness/.test(message)){governingLimit='cap-skin-clearance';category='geometry';reason='A fixed cap thickness reaches the opposite inner skin.';}
+      else if(/caps must remain wider/.test(message)){governingLimit='cap-web-clearance';category='geometry';reason='The tapered cap would become no wider than the fixed web. An I-section needs positive cap flange width.';}
+      else if(/web thickness|web height/.test(message)){governingLimit='web-thin-wall';category='model-admission';reason='The current spar model requires positive clear web height and web thickness no greater than one fifth of that height across the web width. This is a model-admission limit, not proof of physical impossibility.';}
+      else {governingLimit='section-fit';category='geometry';reason=message||'The actual fixed-dimension spar section fails its fit checks.';}
+    }
+    return {closedTip:true,maximumLengthMm:limit,governingLimit,category,reason,boundaryMm:sectionLimited?lo:end,safetyInsetMm:Math.max(1e-5,g.semiSpan*1e-7),firstRejectedStationMm:sectionLimited?hi:null,failureMessage:sectionLimited?lastFailure?.message:null,cavityClosureMm:solidStart+g.cap,solidTipStartMm:solidStart,capOffsetMm:g.cap,cavityCriterion:'The hollow contour requires at least 0.8 mm inner separation at its sampled cavity stations; the cap offset is reserved before that closure.',widthMode:auto?'auto':'fixed',widthFloorStationsMm:sparWidthBreaks(g,{...spec,length:limit}),rootTopWidthMm:spec.topWidth,rootBottomWidthMm:spec.bottomWidth,embeddedContinuation:auto&&limit>solidStart,embeddingReason:auto?'Any continuation inside the existing homogeneous solid tip is embedded material, counted once in the physical union; it is not a separate hollow I-section.':null,sectionAtMaximum:{stationMm:limit,chordMm:c,topWidthMm:part.widths.topWidth,bottomWidthMm:part.widths.bottomWidth,minimumTopWidthMm:part.widths.minimumTopWidth,minimumBottomWidthMm:part.widths.minimumBottomWidth,webHeightMm:part.h,minimumWebHeightMm:minimumWebHeight,webThicknessMm:spec.webThickness,requiredWebHeightMm:5*spec.webThickness,capVerticalClearanceMm:capClearance,capLeftClearanceMm:Math.min(...capXs)-g.cavityStart*c,capRightClearanceMm:g.cavityEnd*c-Math.max(...capXs)},dimensionsChanged:false};
   }
   function analysisCapability(g,input={}) {
     if(Geometry.closedTip(g)){
@@ -1326,7 +1354,7 @@ const WingEngine = (() => {
   // dA_normal = |t_y| dA_xz and ds = dy/|t_y| preserve physical volume.
   function solveClosedTipStress(input){
     if(!ClosedTipStress)throw Error('Load wing_closed_tip_stress.js before engine.js for exact-tip section stress.');
-    return ClosedTipStress.solve(input,{E:{ringLoops,outerContour,cavityTipLimit,ribStations,seams,sparParts,verticalOrdinates},normalize,polyIntegrals,prescribedFlightLoads,customLine,customFraction,Geometry,Frame,GRAV,Profiles,chordAt,airfoilAt,requestedElementCount});
+    return ClosedTipStress.solve(input,{E:{ringLoops,outerContour,cavityTipLimit,ribStations,seams,sparParts,sparWidthBreaks,verticalOrdinates},normalize,polyIntegrals,prescribedFlightLoads,customLine,customFraction,Geometry,Frame,GRAV,Profiles,chordAt,airfoilAt,requestedElementCount});
   }
   function solveSpatial(input,n=normalize(input)) {
     if(Geometry.closedTip(n.g)){const cap=analysisCapability(n.g,input);if(!cap.supported)throw Error(cap.message);return solveClosedTipStress(input);}
@@ -1606,7 +1634,7 @@ const WingEngine = (() => {
     makeGeometry, chordAt, seams, ribStations, moduleBounds, rodCentres, rodRadius, holeRadius, sleeveRadius,
     airfoilSurfaces, verticalOrdinates, outerContour, ringLoops, ringMesh, shellFE, analyseSection, solve,
     shearField, compareAssemblies, interp, camber, normalizeNaca, normalize, stations, warmStation, sectionAt,
-    cavityTipLimit,effectiveTE,sparParts,closedTipSparLimit,airfoilAt,analysisCapability,solveSpatial,spatialPointMotion,normalStressAt3D,normalStressLocationAt3D,
+    cavityTipLimit,effectiveTE,sparParts,sparWidths,sparWidthBreaks,closedTipSparLimit,closedTipSparFit,airfoilAt,analysisCapability,solveSpatial,spatialPointMotion,normalStressAt3D,normalStressLocationAt3D,
     stationAt:Geometry.stationAt,transformPoint:Geometry.transformPoint,inversePoint:Geometry.inversePoint,
   };
 })();

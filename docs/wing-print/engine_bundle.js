@@ -395,7 +395,7 @@ if (typeof window !== 'undefined') window.LoadProfiles = LoadProfiles;
 const WingSpars=(()=>{
   'use strict';
   const MAT={name:'Printed PLA · teaching input',E:2000,nu:.35,rho:1.24,ft:15,fc:50,fs:10};
-  const keys=['fraction','length','topWidth','topThickness','bottomWidth','bottomThickness','webThickness','material'];
+  const keys=['fraction','length','topWidth','topThickness','bottomWidth','bottomThickness','webThickness','material','widthMode'];
   const G=m=>m.E/(2*(1+m.nu));
   function specs(raw,L){
     if(raw==null)return [];
@@ -403,7 +403,8 @@ const WingSpars=(()=>{
     return raw.map((s,i)=>{
       if(!s||typeof s!=='object'||Array.isArray(s)||Object.keys(s).some(k=>!keys.includes(k)))throw Error(`Spar ${i+1}: unsupported field.`);
       const v={...s};
-      for(const k of keys.filter(k=>k!=='material'))if(!Number.isFinite(v[k])||v[k]<=0)throw Error(`Spar ${i+1}: ${k} must be finite and positive.`);
+      for(const k of keys.filter(k=>k!=='material'&&k!=='widthMode'))if(!Number.isFinite(v[k])||v[k]<=0)throw Error(`Spar ${i+1}: ${k} must be finite and positive.`);
+      if(v.widthMode!==undefined&&!['fixed','auto'].includes(v.widthMode))throw Error(`Spar ${i+1}: widthMode must be fixed or auto.`);
       if(v.fraction>=1||v.length>L||v.length<Math.min(20,L))throw Error('Spar station must be inside the chord; length must be 20 mm to the semi-span (or the full shorter span).');
       if(v.topThickness>v.topWidth/5||v.bottomThickness>v.bottomWidth/5)throw Error('Thin-wall spar caps require thickness ≤ width/5.');
       if(v.webThickness>=Math.min(v.topWidth,v.bottomWidth))throw Error('Spar web must be narrower than both caps.');
@@ -415,13 +416,19 @@ const WingSpars=(()=>{
       return Object.freeze({...v,material:Object.freeze({...m})});
     });
   }
+  function widths(g,s,y){
+    const chord=g.sectionChord??(g.rootChord+(g.tipChord-g.rootChord)*y/g.semiSpan),scale=Math.min(1,Math.max(0,chord/g.rootChord)),auto=s.widthMode==='auto';
+    return {topWidth:auto?Math.max(5*s.topThickness,s.topWidth*scale):s.topWidth,bottomWidth:auto?Math.max(5*s.bottomThickness,s.bottomWidth*scale):s.bottomWidth,scale:auto?scale:1,mode:auto?'auto':'fixed',minimumTopWidth:5*s.topThickness,minimumBottomWidth:5*s.bottomThickness};
+  }
   function parts(g,y,ordinates){
     const c=g.sectionChord??(g.rootChord+(g.tipChord-g.rootChord)*y/g.semiSpan),out=[];
     (g.spars||[]).forEach((s,index)=>{
       if(y>s.length+1e-8)return;
+      const effective=widths(g,s,y),topWidth=effective.topWidth,bottomWidth=effective.bottomWidth;
+      if(s.webThickness>=Math.min(topWidth,bottomWidth))throw Error(`Spar ${index+1}: tapered caps must remain wider than the web at y=${y.toFixed(1)} mm.`);
       const x=s.fraction*c,top=[],bottom=[];
       for(let j=0;j<=8;j++){
-        const xt=x+s.topWidth*(j/8-.5),xb=x+s.bottomWidth*(j/8-.5);
+        const xt=x+topWidth*(j/8-.5),xb=x+bottomWidth*(j/8-.5);
         if(Math.min(xt,xb)<=g.cavityStart*c||Math.max(xt,xb)>=g.cavityEnd*c)throw Error(`Spar ${index+1} caps must fit wholly inside the cavity at y=${y.toFixed(1)} mm.`);
         const u=ordinates(g.naca,xt/c,c,g.te).upper-g.skin;
         const b=ordinates(g.naca,xb/c,c,g.te).lower+g.skin;
@@ -438,10 +445,10 @@ const WingSpars=(()=>{
       const web=[[xl,bl(xl)],...bottom.filter(p=>p[0]>xl&&p[0]<xr).map(p=>[p[0],bl(p[0])]),[xr,bl(xr)],[xr,tu(xr)],...[...top].reverse().filter(p=>p[0]>xl&&p[0]<xr).map(p=>[p[0],tu(p[0])]),[xl,tu(xl)]];
       const polygons=[top.concat([...top].reverse().map(([a,b])=>[a,b-s.topThickness])),bottom.concat([...bottom].reverse().map(([a,b])=>[a,b+s.bottomThickness])),web];
       const outline=[...top,[top.at(-1)[0],tu(top.at(-1)[0])],...[...top].reverse().filter(p=>p[0]>xr&&p[0]<top.at(-1)[0]).map(p=>[p[0],tu(p[0])]),[xr,tu(xr)],[xr,bl(xr)],...bottom.filter(p=>p[0]>xr).map(p=>[p[0],bl(p[0])]),...bottom.slice().reverse(),[bottom[0][0],bl(bottom[0][0])],...bottom.filter(p=>p[0]>bottom[0][0]&&p[0]<xl).map(p=>[p[0],bl(p[0])]),[xl,bl(xl)],[xl,tu(xl)],...[...top].reverse().filter(p=>p[0]<xl).map(p=>[p[0],tu(p[0])])];
-      out.push({index,s,x,zt,zb,h,top,bottom,polygons,outline});
+      out.push({index,s,widths:effective,x,zt,zb,h,top,bottom,polygons,outline});
     });
     for(let i=0;i<out.length;i++)for(let j=0;j<i;j++){
-      const a=out[i],b=out[j],half=(Math.max(a.s.topWidth,a.s.bottomWidth)+Math.max(b.s.topWidth,b.s.bottomWidth))/2;
+      const a=out[i],b=out[j],half=(Math.max(a.widths.topWidth,a.widths.bottomWidth)+Math.max(b.widths.topWidth,b.widths.bottomWidth))/2;
       if(Math.abs(a.x-b.x)<=half)throw Error('Bonded spar caps must not overlap each other.');
     }
     return out;
@@ -484,7 +491,7 @@ const WingSpars=(()=>{
       };
       attach(ut,true);attach(lt,false);
       // Cap branches include independent upper/lower dimensions; the web excludes cap thickness.
-      for(const [mid,width,t,kind] of [[ut,p.s.topWidth,p.s.topThickness,'top cap'],[lt,p.s.bottomWidth,p.s.bottomThickness,'bottom cap']])for(const sign of [-1,1]){
+      for(const [mid,width,t,kind] of [[ut,p.widths?.topWidth??p.s.topWidth,p.s.topThickness,'top cap'],[lt,p.widths?.bottomWidth??p.s.bottomWidth,p.s.bottomThickness,'bottom cap']])for(const sign of [-1,1]){
         const base=nodes[mid],a=node([base[0]+sign*width/4,base[1]]),b=node([base[0]+sign*width/2,base[1]]);edge(mid,a,t,m,kind,p.index);edge(a,b,t,m,kind,p.index);attach(a,mid===ut);attach(b,mid===ut);
       }
       const lo=node([p.x,p.zb+p.s.bottomThickness/2]),hi=node([p.x,p.zt-p.s.topThickness/2]);
@@ -561,7 +568,7 @@ const WingSpars=(()=>{
       projection:A.map(r=>r.slice()),areaFactor,sourceX,sourceZ,
       method:'affine-projected bonded thin-wall network; two transverse shears; cap-local Saint-Venant torsion neglected'};
   }
-  return {MAT,specs,parts,polygon,network,projectedNetwork,field,G};
+  return {MAT,specs,widths,parts,polygon,network,projectedNetwork,field,G};
 })();
 if(typeof module!=='undefined'&&module.exports)module.exports=WingSpars;
 
@@ -1012,9 +1019,10 @@ const WingClosedTipStress = (() => {
     // retains the exact chord law, including the elliptic endpoint square root.
     if(source.kind==='flight'&&source.distribution==='planform')base=base.map(p=>({...p,actualChordLaw:true,total:source.aircraftMass*source.loadFactor*GRAV/2}));
     if(base.some(p=>p.kind==='point'&&p.position>=L&&p.force!==0))throw Error('A point force at the zero-area apex is not admitted. Apply the load at a finite section or use a distributed load.');
-    for(const[i,s]of g.spars.entries())if(!(s.length<cavityEnd-g.cap))throw Error(`Closed-tip spar ${i+1} must stop inboard of the solid tip-cap region.`);
+    for(const[i,s]of g.spars.entries())if(s.widthMode!=='auto'&&!(s.length<cavityEnd-g.cap))throw Error(`Closed-tip fixed-width spar ${i+1} must stop inboard of the solid tip-cap region.`);
     const teChord=12*g.skin,teTransition=teChord<g.rootChord?L*(g.planform==='delta'?1-teChord/g.rootChord:Math.sqrt(1-(teChord/g.rootChord)**2)):0;
-    const boundaries=uniq([0,L,cavityEnd,teTransition,Math.max(0,cavityEnd-g.cap),Math.min(L,g.cap),...g.spars.map(s=>s.length),...(g.stations||[]).map(s=>s.eta*L),...ribs.flatMap(y=>[Math.max(0,y-g.ribThickness/2),Math.min(L,y+g.ribThickness/2)])]);
+    const widthBreaks=g.spars.flatMap(s=>typeof tools.sparWidthBreaks==='function'?tools.sparWidthBreaks(g,s):typeof E.sparWidthBreaks==='function'?E.sparWidthBreaks(g,s):[]);
+    const boundaries=uniq([0,L,cavityEnd,teTransition,Math.max(0,cavityEnd-g.cap),Math.min(L,g.cap),...g.spars.map(s=>s.length),...widthBreaks,...(g.stations||[]).map(s=>s.eta*L),...ribs.flatMap(y=>[Math.max(0,y-g.ribThickness/2),Math.min(L,y+g.ribThickness/2)])]);
     const sectionCache=new Map(),performanceCounters={sectionGeometryEvaluations:0,sectionTensorEvaluations:0,quadraturePointEvaluations:0,fullPanelCacheHits:0,fullPanelIntegrations:0};
     function section(y,requireTensor=false){
       if(!(y>=0&&y<L))return null;
@@ -1165,7 +1173,7 @@ const WingClosedTipStress = (() => {
     if(source.selfWeight)for(let k=1;k<boundaries.length;k++)gravityMarkers(boundaries[k-1],boundaries[k]);
     const root=cutAt(0),applied=sourceWrench(0),displayWeight=-gravity.reduce((a,p)=>a+p.force,0),actualWeight=source.selfWeight?mass.total*GRAV/1000:0;
     const load={...source,kind:'custom',items:[...base,...gravity],sourceLoad:source,gravitySummary:source.selfWeight?{weightN:actualWeight,appliedN:applied.V+actualWeight,netN:applied.V,quadrature:'Continuous adaptive 8-point Gauss integration split at CAD cap/rib/cavity transitions; display points are quadrature markers'}:undefined};
-    const limitations=['Section-equilibrium nominal spanwise normal stress on actual aircraft-y material polygons; no displacement or frame solution','Zero user sweep, dihedral and incidence only; delta planform leading-edge sweep is retained geometrically','Locally prismatic Navier stress is a beam approximation; finite taper and rib/cap transitions do not resolve 3-D concentrations','Actual CAD skin/rib/cap and integral same-material spar union is included without double counting filled sections; effective homogeneous isotropic properties','Finite spars stop inboard of the solid tip; abrupt spar runout stress concentrations and load transfer are unresolved','Shear, torsional shear, warping, local buckling, bond/joint stresses, dynamics and overall safety certification are unavailable','The exact zero-area apex has undefined stress; finite samples are not a certified global maximum'];
+    const limitations=['Section-equilibrium nominal spanwise normal stress on actual aircraft-y material polygons; no displacement or frame solution','Zero user sweep, dihedral and incidence only; delta planform leading-edge sweep is retained geometrically','Locally prismatic Navier stress is a beam approximation; finite taper and rib/cap transitions do not resolve 3-D concentrations','Actual CAD skin/rib/cap and integral same-material spar union is included without double counting filled sections; effective homogeneous isotropic properties','Spars have finite admitted runouts; abrupt termination stress concentrations and load transfer are unresolved','Automatic cap widths taper with actual chord down to the admitted width floor, while cap/web thicknesses remain fixed. A same-material spar inside an already solid tip is embedded material, not an additional separate I-section or extra stiffness.','Shear, torsional shear, warping, local buckling, bond/joint stresses, dynamics and overall safety certification are unavailable','The exact zero-area apex has undefined stress; finite samples are not a certified global maximum'];
     const verification={method:'Outboard load integration and polygon moment recovery',normalStressEquilibriumRelativeResidual:maxRecoveryResidual,forceBalanceResidual:root.force[2]-applied.V,momentBalanceResidual:root.moment[0]-applied.Mx,selfWeightN:actualWeight,displayQuadratureWeightN:displayWeight,displayQuadratureRelativeError:Math.abs(displayWeight-actualWeight)/Math.max(1,actualWeight),adaptiveQuadratureRelativeTolerance:2e-9,passed:maxRecoveryResidual<1e-8};
     const NaNs=()=>Float64Array.from(y,()=>NaN),V=Float64Array.from(recovered,c=>c.force[2]),M=Float64Array.from(recovered,c=>c.moment[0]),T=Float64Array.from(recovered,c=>c.moment[1]);
     const mesh={requestedElements:input.nElements||null,actualElements:0,nodeCount:0,mandatorySpanStations:boundaries,stressStations:y.length};
@@ -1332,8 +1340,8 @@ const WingEngine = (() => {
       g.customInteriorRibs = Object.freeze(ribs);
     }
     if(g.spars.length){
-      if(Geometry.closedTip(g))for(const s of g.spars){const limit=closedTipSparLimit(g,s);if(s.length>limit+1e-8)throw Error(`Closed-tip spar length ${s.length.toFixed(2)} mm exceeds its finite runout fit limit ${limit.toFixed(2)} mm. Reduce Length; a fixed-width spar cannot reach the zero-area tip.`);}
-      const points=[...linspace(0,g.semiSpan,129),...g.spars.map(s=>s.length),...(g.stations||[]).map(s=>s.eta*g.semiSpan)];
+      if(Geometry.closedTip(g))for(const s of g.spars){const limit=closedTipSparLimit(g,s);if(s.length>limit+1e-8)throw Error(`Closed-tip spar length ${s.length.toFixed(2)} mm exceeds its finite runout fit limit ${limit.toFixed(2)} mm. Reduce Length; ${s.widthMode==='auto'?'auto-tapered widths retain finite cap/web thickness and cannot reach the zero-area tip':'a fixed-width spar cannot reach the zero-area tip'}.`);}
+      const points=[...linspace(0,g.semiSpan,129),...g.spars.map(s=>s.length),...g.spars.flatMap(s=>sparWidthBreaks(g,s)),...(g.stations||[]).map(s=>s.eta*g.semiSpan)];
       for(const y of points)sparParts(g,y);
     }
     return Object.freeze(g);
@@ -1344,24 +1352,52 @@ const WingEngine = (() => {
   // Cross-section mechanics use unrotated local x/z. Apply station transforms
   // only at geometry/CAD/display boundaries, never to the old scalar solver.
   const localGeometry = (g,y) => g.airfoil || g.stations || g.planform==='elliptic' ? {...g,naca:airfoilAt(g,y),sectionChord:chordAt(g,y)} : g;
-  const sparParts = (g,y) => Spars.parts(localGeometry(g,y),y,verticalOrdinates);
-  function closedTipSparLimit(g,spec){
-    if(!Geometry.closedTip(g))return g.semiSpan;
+  const sparParts = (g,y) => {const parts=Spars.parts(localGeometry(g,y),y,verticalOrdinates);if(Geometry.closedTip(g)&&parts.some(p=>p.s.widthMode==='auto')){const start=cavityTipLimit(g)-g.cap;for(const p of parts)if(p.s.widthMode==='auto')p.embeddedInSolidTip=y>=start;}return parts;};
+  const sparWidths=(g,s,y)=>Spars.widths(localGeometry(g,y),s,y);
+  function sparWidthBreaks(g,s){
+    if(s.widthMode!=='auto')return [];
+    const out=[];
+    for(const [width,thickness]of [[s.topWidth,s.topThickness],[s.bottomWidth,s.bottomThickness]]){
+      const target=g.rootChord*5*thickness/width;
+      if(target>=g.rootChord||target<=chordAt(g,g.semiSpan))continue;
+      let a=0,b=g.semiSpan;for(let i=0;i<48;i++){const y=(a+b)/2;if(chordAt(g,y)>target)a=y;else b=y;}const y=(a+b)/2;if(y<s.length)out.push(y);
+    }
+    return [...new Set(out)].sort((a,b)=>a-b);
+  }
+  function closedTipSparLimit(g,spec){return closedTipSparFit(g,spec).maximumLengthMm;}
+  function closedTipSparFit(g,spec){
+    if(!Geometry.closedTip(g))return {closedTip:false,maximumLengthMm:g.semiSpan,governingLimit:'span',category:'geometry',reason:'The nonzero-tip span bounds the spar length.',boundaryMm:g.semiSpan,safetyInsetMm:0};
     // Keep the actual fixed cap/web dimensions. Find the first loss of fit,
     // rather than extending material through a solid closure or scaling it.
-    const end=cavityTipLimit(g)-g.cap;
-    if(!(end>0))throw Error('Closed-tip spar has no hollow root region. Increase root chord or airfoil thickness.');
+    const solidStart=cavityTipLimit(g)-g.cap,auto=spec.widthMode==='auto',end=auto?g.semiSpan:solidStart;
+    if(!(solidStart>0))throw Error('Closed-tip spar has no hollow root region. Increase root chord or airfoil thickness.');
     const other=(g.spars||[]).filter(s=>s!==spec&&Math.abs(s.fraction-spec.fraction)>1e-12);
     const test={...g,spars:[...other,{...spec,length:g.semiSpan}]};
-    const fits=y=>{try{sparParts(test,y);return true;}catch{return false;}};
+    let lastFailure=null;
+    const fits=y=>{try{sparParts(test,y);return true;}catch(error){lastFailure={stationMm:y,message:error.message};return false;}};
     if(!fits(0))throw Error('Closed-tip spar dimensions do not fit the root cavity. Reduce cap width/thickness or web thickness, move the spar, or increase root chord/airfoil thickness.');
-    const points=[...linspace(0,end,257),...other.flatMap(s=>[s.length,Math.min(end,s.length+1e-7)]),...(g.stations||[]).map(s=>s.eta*g.semiSpan)].filter(y=>y>=0&&y<=end).sort((a,b)=>a-b);
-    let lo=0,hi=end;
-    for(const y of points){if(!fits(y)){hi=y;break;}lo=y;}
+    const points=[...linspace(0,end,257),...sparWidthBreaks(g,{...spec,length:g.semiSpan}),...other.flatMap(s=>[s.length,Math.min(end,s.length+1e-7)]),...(g.stations||[]).map(s=>s.eta*g.semiSpan)].filter(y=>y>=0&&y<=end).sort((a,b)=>a-b);
+    let lo=0,hi=end,sectionLimited=false;
+    for(const y of points){if(!fits(y)){hi=y;sectionLimited=true;break;}lo=y;}
     if(lo<hi)for(let i=0;i<40;i++){const y=(lo+hi)/2;if(fits(y))lo=y;else hi=y;}
     const limit=Math.max(0,Math.min(lo,end)-Math.max(1e-5,g.semiSpan*1e-7));
     if(limit<Math.min(20,g.semiSpan))throw Error('Closed-tip spar has less than the minimum 20 mm fit length. Revise root dimensions or spar dimensions.');
-    return limit;
+    const part=sparParts(test,limit).find(p=>p.index===other.length),c=chordAt(g,limit),profile=airfoilAt(g,limit);
+    const lineAt=(line,x)=>{let i=1;while(i<line.length-1&&line[i][0]<x)i++;const a=line[i-1],b=line[i];return a[1]+(b[1]-a[1])*(x-a[0])/(b[0]-a[0]);};
+    const xl=part.x-spec.webThickness/2,xr=part.x+spec.webThickness/2,webPoints=[xl,xr,...part.top.map(p=>p[0]),...part.bottom.map(p=>p[0])].filter(x=>x>=xl&&x<=xr);
+    const minimumWebHeight=Math.min(...webPoints.map(x=>lineAt(part.top,x)-spec.topThickness-lineAt(part.bottom,x)-spec.bottomThickness));
+    const capXs=[...part.top,...part.bottom].map(p=>p[0]),capClearance=Math.min(...part.top.map(([x,z])=>z-spec.topThickness-(verticalOrdinates(profile,x/c,c,g.te).lower+g.skin)),...part.bottom.map(([x,z])=>(verticalOrdinates(profile,x/c,c,g.te).upper-g.skin)-(z+spec.bottomThickness)));
+    let governingLimit='solid-tip-closure',category='closure-policy',reason='The selected hollow region ends here: cavity closure station minus the cap offset. This is a hollow-to-solid geometry policy, not a claim that the local spar cannot physically extend farther.';
+    if(sectionLimited){
+      const message=lastFailure?.message||'';
+      if(/overlap/.test(message)){governingLimit='spar-overlap';category='geometry';reason='The fixed-width caps would overlap another spar.';}
+      else if(/caps must fit wholly/.test(message)){governingLimit='cap-cavity-width';category='geometry';reason='The fixed-width caps reach a chordwise cavity boundary.';}
+      else if(/cap thickness/.test(message)){governingLimit='cap-skin-clearance';category='geometry';reason='A fixed cap thickness reaches the opposite inner skin.';}
+      else if(/caps must remain wider/.test(message)){governingLimit='cap-web-clearance';category='geometry';reason='The tapered cap would become no wider than the fixed web. An I-section needs positive cap flange width.';}
+      else if(/web thickness|web height/.test(message)){governingLimit='web-thin-wall';category='model-admission';reason='The current spar model requires positive clear web height and web thickness no greater than one fifth of that height across the web width. This is a model-admission limit, not proof of physical impossibility.';}
+      else {governingLimit='section-fit';category='geometry';reason=message||'The actual fixed-dimension spar section fails its fit checks.';}
+    }
+    return {closedTip:true,maximumLengthMm:limit,governingLimit,category,reason,boundaryMm:sectionLimited?lo:end,safetyInsetMm:Math.max(1e-5,g.semiSpan*1e-7),firstRejectedStationMm:sectionLimited?hi:null,failureMessage:sectionLimited?lastFailure?.message:null,cavityClosureMm:solidStart+g.cap,solidTipStartMm:solidStart,capOffsetMm:g.cap,cavityCriterion:'The hollow contour requires at least 0.8 mm inner separation at its sampled cavity stations; the cap offset is reserved before that closure.',widthMode:auto?'auto':'fixed',widthFloorStationsMm:sparWidthBreaks(g,{...spec,length:limit}),rootTopWidthMm:spec.topWidth,rootBottomWidthMm:spec.bottomWidth,embeddedContinuation:auto&&limit>solidStart,embeddingReason:auto?'Any continuation inside the existing homogeneous solid tip is embedded material, counted once in the physical union; it is not a separate hollow I-section.':null,sectionAtMaximum:{stationMm:limit,chordMm:c,topWidthMm:part.widths.topWidth,bottomWidthMm:part.widths.bottomWidth,minimumTopWidthMm:part.widths.minimumTopWidth,minimumBottomWidthMm:part.widths.minimumBottomWidth,webHeightMm:part.h,minimumWebHeightMm:minimumWebHeight,webThicknessMm:spec.webThickness,requiredWebHeightMm:5*spec.webThickness,capVerticalClearanceMm:capClearance,capLeftClearanceMm:Math.min(...capXs)-g.cavityStart*c,capRightClearanceMm:g.cavityEnd*c-Math.max(...capXs)},dimensionsChanged:false};
   }
   function analysisCapability(g,input={}) {
     if(Geometry.closedTip(g)){
@@ -2505,7 +2541,7 @@ const WingEngine = (() => {
   // dA_normal = |t_y| dA_xz and ds = dy/|t_y| preserve physical volume.
   function solveClosedTipStress(input){
     if(!ClosedTipStress)throw Error('Load wing_closed_tip_stress.js before engine.js for exact-tip section stress.');
-    return ClosedTipStress.solve(input,{E:{ringLoops,outerContour,cavityTipLimit,ribStations,seams,sparParts,verticalOrdinates},normalize,polyIntegrals,prescribedFlightLoads,customLine,customFraction,Geometry,Frame,GRAV,Profiles,chordAt,airfoilAt,requestedElementCount});
+    return ClosedTipStress.solve(input,{E:{ringLoops,outerContour,cavityTipLimit,ribStations,seams,sparParts,sparWidthBreaks,verticalOrdinates},normalize,polyIntegrals,prescribedFlightLoads,customLine,customFraction,Geometry,Frame,GRAV,Profiles,chordAt,airfoilAt,requestedElementCount});
   }
   function solveSpatial(input,n=normalize(input)) {
     if(Geometry.closedTip(n.g)){const cap=analysisCapability(n.g,input);if(!cap.supported)throw Error(cap.message);return solveClosedTipStress(input);}
@@ -2785,7 +2821,7 @@ const WingEngine = (() => {
     makeGeometry, chordAt, seams, ribStations, moduleBounds, rodCentres, rodRadius, holeRadius, sleeveRadius,
     airfoilSurfaces, verticalOrdinates, outerContour, ringLoops, ringMesh, shellFE, analyseSection, solve,
     shearField, compareAssemblies, interp, camber, normalizeNaca, normalize, stations, warmStation, sectionAt,
-    cavityTipLimit,effectiveTE,sparParts,closedTipSparLimit,airfoilAt,analysisCapability,solveSpatial,spatialPointMotion,normalStressAt3D,normalStressLocationAt3D,
+    cavityTipLimit,effectiveTE,sparParts,sparWidths,sparWidthBreaks,closedTipSparLimit,closedTipSparFit,airfoilAt,analysisCapability,solveSpatial,spatialPointMotion,normalStressAt3D,normalStressLocationAt3D,
     stationAt:Geometry.stationAt,transformPoint:Geometry.transformPoint,inversePoint:Geometry.inversePoint,
   };
 })();
@@ -2800,7 +2836,7 @@ const WingPrintMesh=(()=>{
  'use strict';
  const E=typeof WingEngine!=='undefined'?WingEngine:require('./engine.js');
  const G=typeof WingGeometry!=='undefined'?WingGeometry:require('./wing_geometry.js');
- const VERSION='1.3.0',ENVELOPE=[300,300,300],MAX_MASS=300;
+ const VERSION='1.3.1',ENVELOPE=[300,300,300],MAX_MASS=300;
  const add=(a,b)=>a.map((x,i)=>x+b[i]),sub=(a,b)=>a.map((x,i)=>x-b[i]),scale=(a,s)=>a.map(x=>x*s),dot=(a,b)=>a.reduce((s,x,i)=>s+x*b[i],0),cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],unit=a=>scale(a,1/Math.hypot(...a));
  const signedArea=p=>p.reduce((s,a,i)=>{const b=p[(i+1)%p.length];return s+a[0]*b[1]-b[0]*a[1];},0)/2;
  const linspace=(a,b,n)=>Array.from({length:n},(_,i)=>a+(b-a)*i/(n-1));
@@ -2876,8 +2912,15 @@ const WingPrintMesh=(()=>{
    const cavity=loft(spanStations(g,g.cap,cavityEnd),y=>E.ringLoops(g,y,81,2,2).inner);
    let body=check(own(outer.subtract(cavity)),'Skin');
    onProgress('Adding ribs…');for(const y of E.ribStations(g)){const rib=slab(outer,y-g.ribThickness/2,y+g.ribThickness/2);body=check(own(body.add(rib)),'Rib union');}
+   const sparManufacturing=[];
    onProgress('Adding integral spars…');for(let index=0;index<g.spars.length;index++){
-    const s=g.spars[index],ys=spanStations(g,0,s.length);
+    const s=g.spars[index],auto=s.widthMode==='auto',materialEnd=auto?Math.min(s.length,cavityEnd):s.length;
+    // Outboard of cavityEnd the same plastic already fills the whole section.
+    // An admitted embedded continuation adds no separate solid or volume.
+    const breaks=typeof E.sparWidthBreaks==='function'?E.sparWidthBreaks(g,s):[];
+    const ys=[...new Set([...spanStations(g,0,materialEnd),...breaks.filter(y=>y>0&&y<materialEnd)])].sort((a,b)=>a-b);
+    const end=E.sparParts(g,s.length).find(p=>p.index===index);
+    sparManufacturing.push({index,widthMode:auto?'auto':'fixed',declaredLengthMm:s.length,addedMaterialLoftEndMm:materialEnd,embeddedSolidTipStartMm:auto&&s.length>cavityEnd?cavityEnd:null,rootCapWidthsMm:[s.topWidth,s.bottomWidth],endCapWidthsMm:end?.widths?[end.widths.topWidth,end.widths.bottomWidth]:[s.topWidth,s.bottomWidth],widthFloorStationsMm:breaks,embeddedMeaning:auto&&s.length>cavityEnd?'Continuation is embedded in existing same-material solid tip; no extra I-section volume or stiffness is added there.':null});
     // Overlap only within existing plastic: cap/skin 0.05 mm and web/cap
     // 0.03 mm. This avoids coincident-face slivers without thickening the wing.
     for(let part=0;part<3;part++){
@@ -2900,15 +2943,20 @@ const WingPrintMesh=(()=>{
    for(let i=0;i<bounds.length-1;i++){
     const module=bounds.length===2?body:check(slab(body,bounds[i],bounds[i+1]),'Module '+(i+1)),pieces=module.decompose();pieces.forEach(own);if(pieces.filter(p=>p.volume()>1e-6).length!==1)throw Error(`Module ${i+1} contains disconnected material regions.`);
     const box=module.boundingBox(),size=box.max.map((x,k)=>x-box.min[k]);if(size.some((x,k)=>x>ENVELOPE[k]+1e-3))throw Error(`Module ${i+1} is ${size.map(x=>x.toFixed(1)).join(' × ')} mm; it does not fit the 300 × 300 × 300 mm printer. Increase Printed modules or revise dimensions. No automatic scaling.`);
-    const tolerance=.0002,shifted=own(own(module.translate(scale(box.min,-1))).simplify(tolerance)),bytes=toBinarySTL(shifted.getMesh()),verified=inspectSTL(bytes),v=module.volume(),meshVolume=shifted.volume();
+    // STL has one material and no Boolean face provenance. Keeping every old
+    // coplanar Boolean face boundary prevents the kernel from collapsing tiny
+    // seam slivers; float32 STL coordinates can then pinch a four-face edge or
+    // collapse a triangle. Canonicalize those coplanar relations in the kernel
+    // before simplifying at the existing 0.0002 mm surface error bound.
+    const tolerance=.0002,translated=own(module.translate(scale(box.min,-1))),canonical=own(translated.asOriginal()),toleranced=own(canonical.setTolerance(tolerance)),shifted=own(toleranced.simplify(tolerance)),bytes=toBinarySTL(shifted.getMesh()),verified=inspectSTL(bytes),v=module.volume(),meshVolume=shifted.volume();
     if(Math.abs(meshVolume-v)>Math.max(.01,tolerance*module.surfaceArea()))throw Error('STL surface simplification exceeded its volume-change bound: '+v+' -> '+meshVolume+'; area '+module.surfaceArea()+'; actual tolerance '+module.tolerance());
     if(Math.abs(verified.volumeMm3-meshVolume)>Math.max(.01,1e-5*meshVolume))throw Error('STL serialization changed the simplified solid volume.');sum+=v;serializedSum+=verified.volumeMm3;
-    files.push({name:`wing_module_${i+1}.stl`,bytes});modules.push({module:i+1,spanBoundsMm:[bounds[i],bounds[i+1]],sizeMm:size,translationMm:scale(box.min,-1),referenceVolumeMm3:v,meshToleranceMm:tolerance,...verified});
+    files.push({name:`wing_module_${i+1}.stl`,bytes});modules.push({module:i+1,spanBoundsMm:[bounds[i],bounds[i+1]],sizeMm:size,translationMm:scale(box.min,-1),referenceVolumeMm3:v,meshToleranceMm:tolerance,coplanarBooleanFacesCanonicalized:true,serializationKernelToleranceMm:shifted.tolerance(),...verified});
 
    }
    if(Math.abs(sum-volume)>Math.max(.01,5e-4*volume))throw Error('Module cutting failed volume conservation.');
    if(serializedSum*density/1000>maxMass)throw Error('Serialized STL exceeds the printed-mass limit.');
-   return {files,report:{format:'mie446-browser-print',version:VERSION,fullWing:input.fullWing===true,mirrorPlane:'y = 0 (root)',semiWingVolumeMm3:semiWingVolume,maximumPrintedMassG:maxMass,kernel:'Manifold 3.5.4',units:'mm',geometry:g,fitRecord:input.fitRecord||null,printedMassG:serializedSum*density/1000,closedTip:G.closedTip(g),cavityEndMm:cavityEnd,referenceSolidVolumeMm3:volume,plasticVolumeMm3:serializedSum,densityGcm3:density,printerEnvelopeMm:ENVELOPE,modules,elapsedMs:Date.now()-start,limitations:[...(G.closedTip(g)?['Exact zero-chord tip with solid outboard region.','Nominal section stress is a separate approximation; no exact-apex stress, deformation or 3-D solid-FE validation is implied.','The pointed terminal region tapers below the nominal wall thickness; inspect its actual slicer layers.']:[]),'Undeformed mesh CAD, independent of result/display mesh.','Mesh loft and Boolean approximation; not the exact CadQuery B-rep.','STL contains no units; import in millimetres.','Printer fit excludes supports, brim and arbitrary-angle packing. Inspect every slicer layer.','No strength, buckling, bond or flight certification.','Symmetry copies geometry only; source structural results describe the original root-clamped semi-wing. A full-aircraft support/load model is not solved.','For full-wing output, one module joins both halves; multiple modules are counted per semi-wing and require assembly, including the root joint.']}};
+   return {files,report:{format:'mie446-browser-print',version:VERSION,fullWing:input.fullWing===true,mirrorPlane:'y = 0 (root)',semiWingVolumeMm3:semiWingVolume,maximumPrintedMassG:maxMass,kernel:'Manifold 3.5.4',units:'mm',geometry:g,sparManufacturing,fitRecord:input.fitRecord||null,printedMassG:serializedSum*density/1000,closedTip:G.closedTip(g),cavityEndMm:cavityEnd,referenceSolidVolumeMm3:volume,plasticVolumeMm3:serializedSum,densityGcm3:density,printerEnvelopeMm:ENVELOPE,modules,elapsedMs:Date.now()-start,limitations:[...(G.closedTip(g)?['Exact zero-chord tip with solid outboard region.','Nominal section stress is a separate approximation; no exact-apex stress, deformation or 3-D solid-FE validation is implied.','The pointed terminal region tapers below the nominal wall thickness; inspect its actual slicer layers.']:[]),...(sparManufacturing.some(s=>s.embeddedSolidTipStartMm!==null)?['Automatic cap taper preserves fixed cap/web thicknesses. Any continuation inside the filled same-material tip is embedded in that existing plastic, with no extra member volume.']:[]),'Undeformed mesh CAD, independent of result/display mesh.','Mesh loft and Boolean approximation; not the exact CadQuery B-rep.','STL contains no units; import in millimetres.','Printer fit excludes supports, brim and arbitrary-angle packing. Inspect every slicer layer.','No strength, buckling, bond or flight certification.','Symmetry copies geometry only; source structural results describe the original root-clamped semi-wing. A full-aircraft support/load model is not solved.','For full-wing output, one module joins both halves; multiple modules are counted per semi-wing and require assembly, including the root joint.']}};
   }finally{for(const o of [...owned].reverse())try{o.delete();}catch{}}
  }
  return{VERSION,build,inspectSTL,toBinarySTL};

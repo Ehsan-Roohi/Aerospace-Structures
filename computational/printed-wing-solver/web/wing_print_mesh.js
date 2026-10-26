@@ -5,7 +5,7 @@ const WingPrintMesh=(()=>{
  'use strict';
  const E=typeof WingEngine!=='undefined'?WingEngine:require('./engine.js');
  const G=typeof WingGeometry!=='undefined'?WingGeometry:require('./wing_geometry.js');
- const VERSION='1.3.0',ENVELOPE=[300,300,300],MAX_MASS=300;
+ const VERSION='1.3.1',ENVELOPE=[300,300,300],MAX_MASS=300;
  const add=(a,b)=>a.map((x,i)=>x+b[i]),sub=(a,b)=>a.map((x,i)=>x-b[i]),scale=(a,s)=>a.map(x=>x*s),dot=(a,b)=>a.reduce((s,x,i)=>s+x*b[i],0),cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],unit=a=>scale(a,1/Math.hypot(...a));
  const signedArea=p=>p.reduce((s,a,i)=>{const b=p[(i+1)%p.length];return s+a[0]*b[1]-b[0]*a[1];},0)/2;
  const linspace=(a,b,n)=>Array.from({length:n},(_,i)=>a+(b-a)*i/(n-1));
@@ -81,8 +81,15 @@ const WingPrintMesh=(()=>{
    const cavity=loft(spanStations(g,g.cap,cavityEnd),y=>E.ringLoops(g,y,81,2,2).inner);
    let body=check(own(outer.subtract(cavity)),'Skin');
    onProgress('Adding ribs…');for(const y of E.ribStations(g)){const rib=slab(outer,y-g.ribThickness/2,y+g.ribThickness/2);body=check(own(body.add(rib)),'Rib union');}
+   const sparManufacturing=[];
    onProgress('Adding integral spars…');for(let index=0;index<g.spars.length;index++){
-    const s=g.spars[index],ys=spanStations(g,0,s.length);
+    const s=g.spars[index],auto=s.widthMode==='auto',materialEnd=auto?Math.min(s.length,cavityEnd):s.length;
+    // Outboard of cavityEnd the same plastic already fills the whole section.
+    // An admitted embedded continuation adds no separate solid or volume.
+    const breaks=typeof E.sparWidthBreaks==='function'?E.sparWidthBreaks(g,s):[];
+    const ys=[...new Set([...spanStations(g,0,materialEnd),...breaks.filter(y=>y>0&&y<materialEnd)])].sort((a,b)=>a-b);
+    const end=E.sparParts(g,s.length).find(p=>p.index===index);
+    sparManufacturing.push({index,widthMode:auto?'auto':'fixed',declaredLengthMm:s.length,addedMaterialLoftEndMm:materialEnd,embeddedSolidTipStartMm:auto&&s.length>cavityEnd?cavityEnd:null,rootCapWidthsMm:[s.topWidth,s.bottomWidth],endCapWidthsMm:end?.widths?[end.widths.topWidth,end.widths.bottomWidth]:[s.topWidth,s.bottomWidth],widthFloorStationsMm:breaks,embeddedMeaning:auto&&s.length>cavityEnd?'Continuation is embedded in existing same-material solid tip; no extra I-section volume or stiffness is added there.':null});
     // Overlap only within existing plastic: cap/skin 0.05 mm and web/cap
     // 0.03 mm. This avoids coincident-face slivers without thickening the wing.
     for(let part=0;part<3;part++){
@@ -105,15 +112,20 @@ const WingPrintMesh=(()=>{
    for(let i=0;i<bounds.length-1;i++){
     const module=bounds.length===2?body:check(slab(body,bounds[i],bounds[i+1]),'Module '+(i+1)),pieces=module.decompose();pieces.forEach(own);if(pieces.filter(p=>p.volume()>1e-6).length!==1)throw Error(`Module ${i+1} contains disconnected material regions.`);
     const box=module.boundingBox(),size=box.max.map((x,k)=>x-box.min[k]);if(size.some((x,k)=>x>ENVELOPE[k]+1e-3))throw Error(`Module ${i+1} is ${size.map(x=>x.toFixed(1)).join(' × ')} mm; it does not fit the 300 × 300 × 300 mm printer. Increase Printed modules or revise dimensions. No automatic scaling.`);
-    const tolerance=.0002,shifted=own(own(module.translate(scale(box.min,-1))).simplify(tolerance)),bytes=toBinarySTL(shifted.getMesh()),verified=inspectSTL(bytes),v=module.volume(),meshVolume=shifted.volume();
+    // STL has one material and no Boolean face provenance. Keeping every old
+    // coplanar Boolean face boundary prevents the kernel from collapsing tiny
+    // seam slivers; float32 STL coordinates can then pinch a four-face edge or
+    // collapse a triangle. Canonicalize those coplanar relations in the kernel
+    // before simplifying at the existing 0.0002 mm surface error bound.
+    const tolerance=.0002,translated=own(module.translate(scale(box.min,-1))),canonical=own(translated.asOriginal()),toleranced=own(canonical.setTolerance(tolerance)),shifted=own(toleranced.simplify(tolerance)),bytes=toBinarySTL(shifted.getMesh()),verified=inspectSTL(bytes),v=module.volume(),meshVolume=shifted.volume();
     if(Math.abs(meshVolume-v)>Math.max(.01,tolerance*module.surfaceArea()))throw Error('STL surface simplification exceeded its volume-change bound: '+v+' -> '+meshVolume+'; area '+module.surfaceArea()+'; actual tolerance '+module.tolerance());
     if(Math.abs(verified.volumeMm3-meshVolume)>Math.max(.01,1e-5*meshVolume))throw Error('STL serialization changed the simplified solid volume.');sum+=v;serializedSum+=verified.volumeMm3;
-    files.push({name:`wing_module_${i+1}.stl`,bytes});modules.push({module:i+1,spanBoundsMm:[bounds[i],bounds[i+1]],sizeMm:size,translationMm:scale(box.min,-1),referenceVolumeMm3:v,meshToleranceMm:tolerance,...verified});
+    files.push({name:`wing_module_${i+1}.stl`,bytes});modules.push({module:i+1,spanBoundsMm:[bounds[i],bounds[i+1]],sizeMm:size,translationMm:scale(box.min,-1),referenceVolumeMm3:v,meshToleranceMm:tolerance,coplanarBooleanFacesCanonicalized:true,serializationKernelToleranceMm:shifted.tolerance(),...verified});
 
    }
    if(Math.abs(sum-volume)>Math.max(.01,5e-4*volume))throw Error('Module cutting failed volume conservation.');
    if(serializedSum*density/1000>maxMass)throw Error('Serialized STL exceeds the printed-mass limit.');
-   return {files,report:{format:'mie446-browser-print',version:VERSION,fullWing:input.fullWing===true,mirrorPlane:'y = 0 (root)',semiWingVolumeMm3:semiWingVolume,maximumPrintedMassG:maxMass,kernel:'Manifold 3.5.4',units:'mm',geometry:g,fitRecord:input.fitRecord||null,printedMassG:serializedSum*density/1000,closedTip:G.closedTip(g),cavityEndMm:cavityEnd,referenceSolidVolumeMm3:volume,plasticVolumeMm3:serializedSum,densityGcm3:density,printerEnvelopeMm:ENVELOPE,modules,elapsedMs:Date.now()-start,limitations:[...(G.closedTip(g)?['Exact zero-chord tip with solid outboard region.','Nominal section stress is a separate approximation; no exact-apex stress, deformation or 3-D solid-FE validation is implied.','The pointed terminal region tapers below the nominal wall thickness; inspect its actual slicer layers.']:[]),'Undeformed mesh CAD, independent of result/display mesh.','Mesh loft and Boolean approximation; not the exact CadQuery B-rep.','STL contains no units; import in millimetres.','Printer fit excludes supports, brim and arbitrary-angle packing. Inspect every slicer layer.','No strength, buckling, bond or flight certification.','Symmetry copies geometry only; source structural results describe the original root-clamped semi-wing. A full-aircraft support/load model is not solved.','For full-wing output, one module joins both halves; multiple modules are counted per semi-wing and require assembly, including the root joint.']}};
+   return {files,report:{format:'mie446-browser-print',version:VERSION,fullWing:input.fullWing===true,mirrorPlane:'y = 0 (root)',semiWingVolumeMm3:semiWingVolume,maximumPrintedMassG:maxMass,kernel:'Manifold 3.5.4',units:'mm',geometry:g,sparManufacturing,fitRecord:input.fitRecord||null,printedMassG:serializedSum*density/1000,closedTip:G.closedTip(g),cavityEndMm:cavityEnd,referenceSolidVolumeMm3:volume,plasticVolumeMm3:serializedSum,densityGcm3:density,printerEnvelopeMm:ENVELOPE,modules,elapsedMs:Date.now()-start,limitations:[...(G.closedTip(g)?['Exact zero-chord tip with solid outboard region.','Nominal section stress is a separate approximation; no exact-apex stress, deformation or 3-D solid-FE validation is implied.','The pointed terminal region tapers below the nominal wall thickness; inspect its actual slicer layers.']:[]),...(sparManufacturing.some(s=>s.embeddedSolidTipStartMm!==null)?['Automatic cap taper preserves fixed cap/web thicknesses. Any continuation inside the filled same-material tip is embedded in that existing plastic, with no extra member volume.']:[]),'Undeformed mesh CAD, independent of result/display mesh.','Mesh loft and Boolean approximation; not the exact CadQuery B-rep.','STL contains no units; import in millimetres.','Printer fit excludes supports, brim and arbitrary-angle packing. Inspect every slicer layer.','No strength, buckling, bond or flight certification.','Symmetry copies geometry only; source structural results describe the original root-clamped semi-wing. A full-aircraft support/load model is not solved.','For full-wing output, one module joins both halves; multiple modules are counted per semi-wing and require assembly, including the root joint.']}};
   }finally{for(const o of [...owned].reverse())try{o.delete();}catch{}}
  }
  return{VERSION,build,inspectSTL,toBinarySTL};

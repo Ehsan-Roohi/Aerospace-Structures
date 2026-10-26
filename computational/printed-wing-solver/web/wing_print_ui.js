@@ -11,7 +11,7 @@ const WingPrintUI=(()=>{
   }
   const end=new Uint8Array(22),e=new DataView(end.buffer);e.setUint32(0,0x06054b50,true);e.setUint16(8,files.length,true);e.setUint16(10,files.length,true);e.setUint32(12,centralSize,true);e.setUint32(16,offset,true);return new Blob([...chunks,...central,end],{type:'application/zip'});
  }
- function mount({host,getInput,workerURL,documentRef=globalThis.document,WorkerClass=globalThis.Worker,onSymmetryChange=()=>{}}){
+ function mount({host,getInput,workerURL,documentRef=globalThis.document,WorkerClass=globalThis.Worker,onSymmetryChange=()=>{},onRequestModules=null}){
   const doc=documentRef,node=(tag,text,cls)=>{const n=doc.createElement(tag);if(text)n.textContent=text;if(cls)n.className=cls;return n;};
   const button=node('button','Download STL','btn primary');button.type='button';button.id='wingDownloadSTL';const symmetry=node('label',null,'wing-print-symmetry'),fullWing=node('input');fullWing.type='checkbox';fullWing.id='wingFullSymmetric';symmetry.append(fullWing,doc.createTextNode(' Full wing · mirror'));const symmetryNote=node('span','Symmetric results: same loads and root clamp on both halves.');symmetryNote.id='wingSymmetryNote';symmetryNote.hidden=true;symmetry.title='Mirror the designed semi-wing across its root. Results reflect the original clamped semi-wing under symmetric loads and supports. Printed modules 1 joins both halves into one STL; 2/3 produces 4/6 pieces for assembly. The full one-piece wing must fit the 300 mm printer.';const dxf=node('button','DXF','btn'),step=node('button','STEP','btn');dxf.type=step.type='button';dxf.id='wingDownloadDXF';step.id='wingDownloadSTEP';dxf.title='2D millimetre planform and rib profiles';step.title='3D faceted solid CAD exchange; not smooth or parametric features';host.append(symmetry,button,dxf,step,symmetryNote);fullWing.onchange=()=>{symmetryNote.hidden=!fullWing.checked;onSymmetryChange(fullWing.checked);};
   const panel=node('section',null,'wing-print-dialog');panel.hidden=true;panel.setAttribute('role','dialog');panel.setAttribute('aria-modal','true');panel.setAttribute('aria-labelledby','wingPrintTitle');const title=node('h3','Printable STL');title.id='wingPrintTitle';
@@ -23,6 +23,31 @@ const WingPrintUI=(()=>{
   const fail=text=>{release();output=null;status.dataset.error='true';status.textContent=text;};
   const currentInput=()=>({...getInput(),fullWing:fullWing.checked});
   const key=input=>JSON.stringify([input.geometry,input.density,input.shellMaterial,input.fullWing]);
+  function offerModuleSplits(input,format){
+   const current=input.geometry.modules||1,counts=[2,3].filter(n=>n>current),box=node('div');box.id='wingPrintFitSuggestions';
+   box.append(node('p',`The physical printer envelope is 300 × 300 × 300 mm. ${input.fullWing&&current===1?'A single full-wing module joins both halves into one piece. ':''}Split the wing into shorter printed modules while keeping its span, chords and loads. No automatic scaling is applied.`));
+   box.append(node('p','Changing modules also changes seam locations and their interface ribs. Review the assembly assumptions and solve the updated study. Fit is confirmed only when the physical CAD builder checks the new pieces; a span estimate alone does not certify fit.'));
+   if(!counts.length){box.append(node('p','The supported two- and three-module layouts are already exhausted. Review the actual chord, thickness and printer orientation; increasing a span split cannot fix every oversized dimension.'));details.append(box);return;}
+   const buttons=[];
+   for(const count of counts){
+    const pieces=input.fullWing?2*count:count,label=`Use ${count} modules per half · ${pieces} ${input.fullWing?'full-wing':'semi-wing'} pieces`,apply=node('button',label,'btn');apply.type='button';apply.dataset.modules=String(count);apply.id='wingPrintUseModules'+count;buttons.push(apply);
+    if(typeof onRequestModules!=='function'){apply.disabled=true;apply.title='Change Printed modules in the study, solve, then download again.';}
+    apply.onclick=async()=>{
+     for(const b of [...buttons,button,dxf,step])b.disabled=true;status.dataset.error='false';status.textContent=`Applying ${count} modules per half; validating the revised study…`;
+     try{
+      const result=await onRequestModules(count),applied=result===true||result?.applied===true;
+      if(!applied)throw Error(result?.message||'The module change was not applied. Review the rib/seam geometry in the study before trying again.');
+      const solved=!!result?.solved;status.textContent=`Applied ${count} modules per half · ${pieces} ${input.fullWing?'full-wing':'semi-wing'} pieces. ${solved?'The updated study has been solved.':'Run Solve for the updated study.'} Close this panel and choose Download ${format.toUpperCase()} again to build and check the actual pieces.`;
+      if(result?.message)details.append(node('p',result.message));
+      box.querySelectorAll('button').forEach(b=>{b.disabled=true;});
+     }catch(error){status.dataset.error='true';status.textContent=error.message||String(error);for(const b of buttons)b.disabled=false;}
+     finally{for(const b of [button,dxf,step])b.disabled=false;}
+    };
+    box.append(apply);
+   }
+   if(typeof onRequestModules!=='function')box.append(node('p','Set Printed modules to two or three in the study controls, solve, then download again.'));
+   details.append(box);
+  }
   close.onclick=()=>{if(worker){release();status.textContent='Build cancelled. No file exported.';}panel.hidden=true;returnFocus?.focus({preventScroll:true});};
   panel.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();e.stopPropagation();close.click();}if(e.key==='Tab'){const focusable=[...panel.querySelectorAll('button,a[href]')].filter(n=>!n.disabled),first=focusable[0],last=focusable.at(-1);if(e.shiftKey&&doc.activeElement===first){e.preventDefault();last.focus();}else if(!e.shiftKey&&doc.activeElement===last){e.preventDefault();first.focus();}}});
   function start(format='stl',trigger=button){
@@ -45,7 +70,7 @@ const WingPrintUI=(()=>{
    try{worker=new WorkerClass(workerURL);}catch(e){fail('Cannot start the STL builder: '+e.message);return;}
    worker.onerror=e=>fail('STL builder could not run. Reload the page and try again. '+(e.message||''));
    worker.onmessage=event=>{
-    const data=event.data;if(data.kind==='progress'){status.textContent=data.text;return;}if(data.kind==='error'){fail(data.text);return;}if(data.kind!=='complete')return;
+    const data=event.data;if(data.kind==='progress'){status.textContent=data.text;return;}if(data.kind==='error'){fail(data.text);if(format!=='dxf'&&/does not fit/i.test(data.text)&&/300/.test(data.text))offerModuleSplits(input,format);return;}if(data.kind!=='complete')return;
     try{if(key(currentInput())!==stamp)throw Error('Inputs changed during construction. Solve the updated study and create STL again.');}catch(e){fail(e.message);return;}release();
     const report=data.report;
     if(format==='dxf'){

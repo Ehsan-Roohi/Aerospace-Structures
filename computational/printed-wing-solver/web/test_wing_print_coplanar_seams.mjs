@@ -1,0 +1,12 @@
+// Regression for float32 STL degeneracy at coplanar Boolean/rib/module seams.
+// All strict oriented-edge, positive-volume and geometric error checks remain on.
+import assert from 'node:assert/strict';import {createRequire} from 'node:module';
+const require=createRequire(import.meta.url),E=require('./engine.js'),P=require('./wing_print_mesh.js'),{default:Module}=await import('./vendor/manifold-3.5.4/manifold.js'),wasm=await Module();wasm.setup();
+const shell=E.MATERIALS.pla_upright,material=Object.fromEntries(['name','E','nu','rho','ft','fc','fs'].map(k=>[k,shell[k]])),spar=fraction=>({fraction,length:450,topWidth:8,topThickness:.8,bottomWidth:8,bottomThickness:.8,webThickness:.6,material});
+for(const modules of [2,3]){
+ const geometry={...E.DEFAULT_GEOMETRY,naca:'2412',semiSpan:450,rootChord:160,tipChord:100,skin:1.2,ribThickness:1.6,modules,te:1.2,interiorRibs:16,customInteriorRibs:null,interfaceOffset:4,cap:2,cavityStart:.06,cavityEnd:.9,rodFractions:[],spars:[spar(.25),spar(.4)],planform:'linear',sweepDeg:0,dihedralDeg:0,sweepReferenceFraction:0,twistReferenceFraction:.25,twistEnabled:false},input={geometry,fullWing:true,shellMaterial:shell,density:shell.rho},before=JSON.stringify(input),r=await P.build(input,wasm);
+ assert.equal(JSON.stringify(input),before,'input geometry and dimensions are immutable');assert.equal(r.files.length,2*modules);assert.equal(r.report.modules.length,2*modules);let volume=0;
+ for(let i=0;i<r.files.length;i++){const verified=P.inspectSTL(r.files[i].bytes),m=r.report.modules[i];assert.ok(verified.volumeMm3>0);assert.ok(verified.triangles>1000);assert.equal(verified.triangles,m.triangles);assert.equal(m.meshToleranceMm,.0002,'existing surface error bound is retained');assert.equal(m.serializationKernelToleranceMm,.0002);assert.ok(m.coplanarBooleanFacesCanonicalized);assert.ok(m.sizeMm.every(x=>x<=300.001));assert.ok(Math.abs(verified.volumeMm3-m.referenceVolumeMm3)<.001*m.referenceVolumeMm3,'serialization preserves module solid volume');volume+=verified.volumeMm3;}
+ assert.ok(Math.abs(volume-r.report.referenceSolidVolumeMm3)<.001*volume);assert.ok(Math.abs(volume*shell.rho/1000-r.report.printedMassG)<1e-7);assert.ok(Math.abs(r.report.semiWingVolumeMm3*2-r.report.referenceSolidVolumeMm3)<.001);
+ console.log(`PASS full NACA2412 450/160/100,16ribs,2spars: ${2*modules} strict watertight STL modules, ${r.report.printedMassG.toFixed(6)}g, unchanged dimensions and0.0002mm error bound`);
+}

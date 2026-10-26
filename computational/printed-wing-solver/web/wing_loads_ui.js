@@ -289,6 +289,14 @@ const WingLoadsUI = (() => {
     </div>`;
     const $ = (sel) => container.querySelector(sel);
     const byId = (x) => container.querySelector('#' + x);
+    function syncLoadHelp(){
+      if(ad.workspace!=='printed')return;const body=doc.querySelector('#wingInputHelp .wing-help-content');if(!body)return;
+      let help=doc.querySelector('#wingHelpLoads');if(!help){help=doc.createElement('details');help.id='wingHelpLoads';help.innerHTML='<summary>Loads · applying, picking and distributions</summary>';body.append(help);}
+      help.querySelectorAll('[data-load-instruction]').forEach(n=>n.remove());
+      for(const note of container.querySelectorAll('p.note'))if(/^(Draft only until confirmed|Select the shape below|Each semi-wing receives|Total F |The first custom load)/.test(note.textContent.trim())){
+        note.hidden=true;const copy=note.cloneNode(true);copy.hidden=false;copy.dataset.loadInstruction='1';help.append(copy);
+      }
+    }
     const status = (t,bad=false) => { const box=byId(id.status);box.innerHTML=t;if(bad||box.querySelector('.wle-err')){box.tabIndex=-1;doc.defaultView.WingLabUI?.showError?.(box.textContent,container.querySelector('[aria-invalid="true"],input:invalid,select:invalid')||box);} };
     let stopPick=null,firstPick=null;
     function cancelPick() {if(stopPick)stopPick();stopPick=null;firstPick=null;const b=container.querySelector('.wle-pick');if(b){b.textContent='⌖ Pick on 3-D wing';b.setAttribute('aria-pressed','false');}}
@@ -327,6 +335,7 @@ const WingLoadsUI = (() => {
       select.closest('.field').hidden=!allowed;
       const explanation=select.closest('fieldset').querySelector('p.note');
       explanation.textContent='Each semi-wing receives n × aircraft mass × 9.81 / 2 N of gross lift. This replaces the current load case. The distribution is prescribed, not calculated from the airfoil.'+(allowed?' With inertia relief the net structural force differs from gross lift.':' Include wing self-weight applies the downward 1-g weight separately.');
+      syncLoadHelp();
     }
     function flightCase(){
       syncReliefAvailability();
@@ -553,8 +562,8 @@ const WingLoadsUI = (() => {
     };
     byId(id.csv + 'Template').onclick = () => { if (ad.download) ad.download(`${ad.workspace}_line_load_template.csv`, P.csvTemplate(ad.workspace), 'text/csv'); };
     byId(id.csv+'PowerPreview').onclick=()=>{try{const n=k=>readNum(id.csv+'Power'+k,k);const p=P.powerTable({start:n('A'),end:n('B'),total:n('F'),exponent:n('N'),shape:byId(id.csv+'PowerShape').value});byId(id.csv+'Text').value=P.CSV_SPECS[ad.workspace].columns.join(',')+'\n'+p.points.map(r=>r.join(',')).join('\n');preview();}catch(e){byId(id.csv+'Out').textContent=e.message;}};
-    visible(); renderList();if(ad.onScale)ad.onScale($('.wle-scale').value);
-    return { refresh() { renderList(); chord();livePreview(); }, openFlight(){if(!configurableFlight)return;const v=ad.flight.values();for(const [key,suffix]of [['aircraftMass','Mass'],['loadFactor','N'],['distribution','Shape'],['liftFraction','Xc'],['inertiaRelief','Relief']])byId(flightPrefix+suffix).value=String(v[key]);byId(id.kind).value=val('flight');newLoad();cancelPick();visible();}, cancelDraft(){newLoad();cancelPick();closeCsv();}, preview, openCsv, edit, newLoad, container, acceptPick, cancelPick };
+    visible(); renderList();syncLoadHelp();if(ad.onScale)ad.onScale($('.wle-scale').value);
+    return { refresh() { renderList(); chord();livePreview();syncLoadHelp(); }, openFlight(){if(!configurableFlight)return;const v=ad.flight.values();for(const [key,suffix]of [['aircraftMass','Mass'],['loadFactor','N'],['distribution','Shape'],['liftFraction','Xc'],['inertiaRelief','Relief']])byId(flightPrefix+suffix).value=String(v[key]);byId(id.kind).value=val('flight');newLoad();cancelPick();visible();}, cancelDraft(){newLoad();cancelPick();closeCsv();}, preview, openCsv, edit, newLoad, container, acceptPick, cancelPick };
   }
 
   /**

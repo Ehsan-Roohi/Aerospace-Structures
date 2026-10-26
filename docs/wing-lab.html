@@ -6921,6 +6921,25 @@ const WingGeometryUI=(()=>{
   const form=node('form',{class:'wing-geometry-form'});
   const notice=node('p',{role:'status',class:'note',id:'wingGeometryEditorStatus',tabindex:'-1'});
   container.append(form,notice);
+  // Keep instructional copy in the shared Help menu; retain live validation in the editor.
+  function syncGeometryHelp(){
+   const host=doc.querySelector('#wingInputHelp .wing-help-content');if(!host)return;
+   let section=host.querySelector('#wingHelpGeometry');
+   if(!section){section=node('details',{id:'wingHelpGeometry'});section.append(node('summary',{},'Airfoils, dimensions, taper & orientation'));host.prepend(section);}
+   let body=section.querySelector('[data-geometry-help-body]');if(!body){body=node('div',{'data-geometry-help-body':''});section.append(body);}
+   const copies=[],seen=new Set();
+   for(const original of form.querySelectorAll('p.note,small')){
+    if(original.closest('.wing-geometry-guidance'))continue;
+    const text=original.textContent.trim();original.hidden=true;if(!text)continue;
+    const label=original.matches('small')?original.closest('label')?.firstChild?.textContent?.trim():'';
+    const key=(label?label+': ':'')+text;if(seen.has(key))continue;seen.add(key);
+    const copy=node('p',{class:'note'});copy.textContent=key;copies.push(copy);
+   }
+   body.replaceChildren(...copies);
+   for(const detail of form.querySelectorAll('details'))if(detail.querySelector('summary')?.textContent==='Airfoil file format & print geometry')detail.hidden=true;
+  }
+  form.addEventListener('input',syncGeometryHelp);form.addEventListener('change',syncGeometryHelp);
+  doc.addEventListener('wing-help-ready',syncGeometryHelp);
   const name=p=>p.name||('NACA '+p.code);
   const numeric=(label,id,value,hint='',attrs='')=>`<label class="wing-geometry-field" for="${id}">${label}<small>${hint}</small><input id="${id}" type="number" step="any" value="${value}" ${attrs} required></label>`;
   const baseProfile=()=>draft.airfoil||{kind:'naca4',code:draft.naca};
@@ -6962,7 +6981,7 @@ const WingGeometryUI=(()=>{
    card.querySelector('[data-profile-source]').textContent=p.source?.url||p.source?.filename||'Analytical NACA section; no aerodynamic polar is inferred.';
    const choose=card.querySelector('select'),code=card.querySelector('[type=text]');
    profileValidators.set(id,()=>{if(!code.disabled){const value=code.value.trim();set(clone(A.normalizeProfile({kind:value.replace(/^NACA\s*/i,'').length===5?'naca5':'naca4',code:value})));}});
-   const repaint=()=>{holder.replaceChildren();profilePicker(holder,get,set,id);};
+   const repaint=()=>{holder.replaceChildren();profilePicker(holder,get,set,id);syncGeometryHelp();};
    choose.onchange=()=>{cancelPickerRead(id);try{set(clone(choose.value==='current'?get():choose.value==='naca4'?A.normalizeProfile({kind:'naca4',code:'2412'}):choose.value==='naca5'?A.normalizeProfile({kind:'naca5',code:'23012'}):A.preset(choose.value)));repaint();message('Airfoil selected in the draft. Apply geometry to update the wing.');}catch(e){message(e.message,true);}};
    code.addEventListener('input',()=>cancelPickerRead(id));
    code.onchange=()=>{cancelPickerRead(id);try{set(clone(A.normalizeProfile({kind:code.value.trim().replace(/^NACA\s*/i,'').length===5?'naca5':'naca4',code:code.value.trim()})));repaint();}catch(e){message(e.message,true);}};
@@ -7080,6 +7099,7 @@ const WingGeometryUI=(()=>{
    form.querySelector('#wgtTwist').onchange=e=>{draft.twistEnabled=e.target.value==='yes';if(draft.twistEnabled)stations();else for(const s of draft.stations||[])s.incidenceDeg=0;render();if(!draft.twistEnabled)message('All draft incidences set to zero; airfoil profiles retained. Apply geometry to commit.');};
    form.querySelector('#wgtSections').onchange=e=>{if(e.target.checked)stations();else{if(draft.twistEnabled){e.target.checked=true;message('Twist needs root/tip incidence stations. Turn twist off first.',true);return;}delete draft.stations;}render();};
    for(const[id,key]of [['wgtSweep','sweepDeg'],['wgtDihedral','dihedralDeg'],['wgtSweepRef','sweepReferenceFraction'],['wgtTwistRef','twistReferenceFraction']])form.querySelector('#'+id).onchange=e=>{draft[key]=e.target.value.trim()===''?NaN:Number(e.target.value);};
+   syncGeometryHelp();
   }
   form.onsubmit=e=>{
    e.preventDefault();if(activeReads.size){message('Wait until the airfoil file has finished reading.',true);return;}
@@ -7118,7 +7138,7 @@ const WingGeometryUI=(()=>{
     }
     const result=applyGeometry(patch,'advanced','airfoil / sweep / dihedral / incidence');
     if(!result.ok){message(result.error||'Geometry was not applied. Check the wing dimensions and cavity clearance.',true);showGuidance(result.guidance);return;}
-    message(G.closedTip(patch)?'Exact closed-tip geometry applied. Solve computes nominal normal stress; the exact apex and deformation are unresolved.':'Geometry applied. Solve to update structural results.');onApplied();
+    message('Geometry applied.');onApplied();
    }catch(err){message(err.message,true);}
   };
   const style=node('style',{},'.wing-geometry-guidance{border:1px solid var(--warn,#ad7300);border-radius:10px;padding:12px;background:var(--panel-2);font-size:13px;line-height:1.45}.wing-geometry-guidance h3{margin:0 0 6px}.wing-geometry-guidance li{margin:10px 0}.wing-geometry-guidance .btn{margin-top:5px}.wing-geometry-form{display:grid;gap:10px}.wing-geometry-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}.wing-geometry-field{display:grid;gap:4px;font-size:13px}.wing-geometry-field small{color:var(--muted)}.wing-geometry-form input[type=number],.wing-geometry-form input[type=text],.wing-geometry-form select{width:100%;min-height:40px;padding:7px;border:1px solid var(--line);border-radius:7px;background:var(--panel-2);color:var(--fg);font-size:16px}.wing-airfoil-picker{display:grid;gap:6px}.wing-station-card{margin:7px 0;padding:8px;border:1px solid var(--line);border-radius:8px}.wing-station-card>summary{font-weight:700;cursor:pointer;padding:7px 0}.wing-station-card .note{overflow-wrap:anywhere}');doc.head.append(style);
@@ -9449,6 +9469,14 @@ const WingLoadsUI = (() => {
     </div>`;
     const $ = (sel) => container.querySelector(sel);
     const byId = (x) => container.querySelector('#' + x);
+    function syncLoadHelp(){
+      if(ad.workspace!=='printed')return;const body=doc.querySelector('#wingInputHelp .wing-help-content');if(!body)return;
+      let help=doc.querySelector('#wingHelpLoads');if(!help){help=doc.createElement('details');help.id='wingHelpLoads';help.innerHTML='<summary>Loads · applying, picking and distributions</summary>';body.append(help);}
+      help.querySelectorAll('[data-load-instruction]').forEach(n=>n.remove());
+      for(const note of container.querySelectorAll('p.note'))if(/^(Draft only until confirmed|Select the shape below|Each semi-wing receives|Total F |The first custom load)/.test(note.textContent.trim())){
+        note.hidden=true;const copy=note.cloneNode(true);copy.hidden=false;copy.dataset.loadInstruction='1';help.append(copy);
+      }
+    }
     const status = (t,bad=false) => { const box=byId(id.status);box.innerHTML=t;if(bad||box.querySelector('.wle-err')){box.tabIndex=-1;doc.defaultView.WingLabUI?.showError?.(box.textContent,container.querySelector('[aria-invalid="true"],input:invalid,select:invalid')||box);} };
     let stopPick=null,firstPick=null;
     function cancelPick() {if(stopPick)stopPick();stopPick=null;firstPick=null;const b=container.querySelector('.wle-pick');if(b){b.textContent='⌖ Pick on 3-D wing';b.setAttribute('aria-pressed','false');}}
@@ -9487,6 +9515,7 @@ const WingLoadsUI = (() => {
       select.closest('.field').hidden=!allowed;
       const explanation=select.closest('fieldset').querySelector('p.note');
       explanation.textContent='Each semi-wing receives n × aircraft mass × 9.81 / 2 N of gross lift. This replaces the current load case. The distribution is prescribed, not calculated from the airfoil.'+(allowed?' With inertia relief the net structural force differs from gross lift.':' Include wing self-weight applies the downward 1-g weight separately.');
+      syncLoadHelp();
     }
     function flightCase(){
       syncReliefAvailability();
@@ -9713,8 +9742,8 @@ const WingLoadsUI = (() => {
     };
     byId(id.csv + 'Template').onclick = () => { if (ad.download) ad.download(`${ad.workspace}_line_load_template.csv`, P.csvTemplate(ad.workspace), 'text/csv'); };
     byId(id.csv+'PowerPreview').onclick=()=>{try{const n=k=>readNum(id.csv+'Power'+k,k);const p=P.powerTable({start:n('A'),end:n('B'),total:n('F'),exponent:n('N'),shape:byId(id.csv+'PowerShape').value});byId(id.csv+'Text').value=P.CSV_SPECS[ad.workspace].columns.join(',')+'\n'+p.points.map(r=>r.join(',')).join('\n');preview();}catch(e){byId(id.csv+'Out').textContent=e.message;}};
-    visible(); renderList();if(ad.onScale)ad.onScale($('.wle-scale').value);
-    return { refresh() { renderList(); chord();livePreview(); }, openFlight(){if(!configurableFlight)return;const v=ad.flight.values();for(const [key,suffix]of [['aircraftMass','Mass'],['loadFactor','N'],['distribution','Shape'],['liftFraction','Xc'],['inertiaRelief','Relief']])byId(flightPrefix+suffix).value=String(v[key]);byId(id.kind).value=val('flight');newLoad();cancelPick();visible();}, cancelDraft(){newLoad();cancelPick();closeCsv();}, preview, openCsv, edit, newLoad, container, acceptPick, cancelPick };
+    visible(); renderList();syncLoadHelp();if(ad.onScale)ad.onScale($('.wle-scale').value);
+    return { refresh() { renderList(); chord();livePreview();syncLoadHelp(); }, openFlight(){if(!configurableFlight)return;const v=ad.flight.values();for(const [key,suffix]of [['aircraftMass','Mass'],['loadFactor','N'],['distribution','Shape'],['liftFraction','Xc'],['inertiaRelief','Relief']])byId(flightPrefix+suffix).value=String(v[key]);byId(id.kind).value=val('flight');newLoad();cancelPick();visible();}, cancelDraft(){newLoad();cancelPick();closeCsv();}, preview, openCsv, edit, newLoad, container, acceptPick, cancelPick };
   }
 
   /**
@@ -12431,6 +12460,12 @@ if(typeof module!=='undefined'&&module.exports)module.exports=WingPrintUI;
   const fs = (title, ...kids) => { const f = el("fieldset", {}, `<legend>${title}</legend>`); kids.forEach((k) => f.append(k)); return f; };
   const kv = (pairs) => el("dl", { class: "kv" }, pairs.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join(""));
 
+  function parkWingInstruction(sectionId,title,key,note){
+    const body=$('#wingInputHelp .wing-help-content');if(!body)return false;
+    let section=$('#'+sectionId);if(!section){section=el('details',{id:sectionId},'<summary>'+esc(title)+'</summary>');body.append(section);}
+    for(const old of section.querySelectorAll('[data-input-help-key]'))if(old.dataset.inputHelpKey===key)old.remove();
+    note.dataset.inputHelpKey=key;section.append(note);return true;
+  }
   function renderPM() {
     const pm = $("#pm");
     pm.innerHTML = "";
@@ -12441,10 +12476,11 @@ if(typeof module!=='undefined'&&module.exports)module.exports=WingPrintUI;
     if(R?.analysis3D&&(id==='results'||id.startsWith('res-')||id==='mesh')){
       if(R.analysis3D.stressOnly){$('#pmHead').textContent='Section stress';pm.append(el('h2',{},'Nominal normal stress'),el('p',{class:'note'},'Actual closed-tip material sections and applied-load equilibrium. Apex stress is undefined. Bending translation components are reported separately; torsional displacement, shear/torsional stress and overall safety are not computed.'));return;}
       $('#pmHead').textContent='Spatial beam results';
-      pm.append(el('h2',{},'3-D structural beam'),el('p',{class:'note'},'Six degrees of freedom per node. Normal beam stress and displacement are available. Natural frequencies, shear failure, buckling and an overall factor of safety are not computed for this model. See the full 3-D result record below the wing.'));
+      parkWingInstruction('wingHelpInputs','Materials, loads & connections','spatial-results',el('p',{class:'note'},'Six degrees of freedom per node. Normal beam stress and displacement are available. Natural frequencies, shear failure, buckling and an overall factor of safety are not computed for this model. See the full 3-D result record below the wing.'));
+      pm.append(el('h2',{},'3-D structural beam'),el('p',{class:'note'},'Normal stress and displacement · overall safety and modes unavailable.'));
       return;
     }
-    const head = (t, lede) => { pm.append(el("h2", {}, t)); if (lede) pm.append(el("p", { class: "lede" }, lede)); };
+    const head = (t, lede) => { pm.append(el("h2", {}, t)); if (lede) {const note=el('p',{class:'note'},lede);if(!['materials','mat-pla','mat-rod','loads','load','connections','con','con-seam','fixtures','fix'].includes(id)||!parkWingInstruction('wingHelpInputs','Materials, loads & connections',id,note))pm.append(note);} };
     if (id === "materials" || id === "mat-pla") {
       $("#pmHead").textContent = "Material";
       head("Shell / rib material", "The class fabrication notebook specifies regular PLA Pro for skin, ribs and integral printed spars; carbon rods are separate. Match the card to the actual print: Upright = wing span along printer Z; Flat = span in the build plane. These are teaching placeholders, not measured properties of your team's filament. Brand, layers, walls and print settings matter. Enter coupon-derived effective properties before interpreting strength margins. The scalar spanwise model is not a full anisotropic failure law.");
@@ -12477,7 +12513,8 @@ if(typeof module!=='undefined'&&module.exports)module.exports=WingPrintUI;
       pm.append(fs("Card", segField([["rod_hobby", "Hobby grade"], ["rod_t700", "T700 aerospace"]], S.rodKey, (v) => { S.rodKey = v; S.rodOver = { E: null }; }, "Rod card"),
         numField("rE", "Elastic modulus E", "MPa (flexural)", rod.E, 1000, (v) => (S.rodOver.E = v), positive)));
       pm.append(fs("Fixed values", kv([["Tension / compression", `${rod.ft} / ${rod.fc} MPa`], ["Shear", `${rod.fs} MPa`], ["Density", `${rod.rho} g/cm³`]])));
-      const hang = el("fieldset", {}, `<legend>Measure E with a hanging weight</legend><p class="note">Clamp the rod, hang a mass at length L, measure the drop δ. E = P L³ / (3 δ I).</p>`);
+      const hang = el("fieldset", {}, `<legend>Measure E with a hanging weight</legend>`);
+      parkWingInstruction('wingHelpInputs','Materials, loads & connections','rod-measurement',el('p',{class:'note'},'Clamp the rod, hang a mass at length L, measure the drop δ. E = P L³ / (3 δ I).'));
       const st = { m: 100, L: 300, d: 0 };
       const out = el("p", { class: "scoreline" }, "Enter a measured drop.");
       const upd = () => { if (st.d > 0) { const I = (Math.PI * g.rodDiameter ** 4) / 64; const Ev = (st.m * 9.81e-3 * st.L ** 3) / (3 * st.d * I); out.innerHTML = `E ≈ <b>${nf(Ev / 1000, 1)} GPa</b> <button class="btn" type="button" id="useE">Use it</button>`; out.querySelector("#useE").addEventListener("click", () => { S.rodOver.E = Math.round(Ev); edited(); renderPM(); }); } };
@@ -12769,6 +12806,7 @@ if(typeof module!=='undefined'&&module.exports)module.exports=WingPrintUI;
   }
   function sparFitExplanation(fit,applied,draft){
     const maximum=fit.maximumLengthMm,over=draft.length>maximum+1e-8;
+    parkWingInstruction('wingHelpInputs','Materials, loads & connections','spar-fit-model',el('p',{class:'note'},'Real spars can change depth, cap width and thickness along the span. Their termination must transfer load into the surrounding skin/ribs with a designed transition. Automatic taper changes cap widths with the local chord, subject to the thin-wall width floor of five times cap thickness. It does not reduce cap/web thickness. Fixed-width mode retains the hollow-region endpoint. Narrowing a cap does not change the cavity itself. Local runout, joint and buckling stresses are unresolved. Fit alone does not demonstrate structural safety.'));
     const current=`Finite spar length ${nf(applied.length,2)} mm applied; maximum fit length ${nf(maximum,2)} mm for these draft dimensions.`;
     const automatic=fit.widthMode==='auto',section=fit.sectionAtMaximum;
     const widthInfo=automatic?`Auto taper: upper/lower cap widths start at ${nf(draft.topWidth,2)}/${nf(draft.bottomWidth,2)} mm and reach ${nf(section.topWidthMm,2)}/${nf(section.bottomWidthMm,2)} mm at the limit. Cap/web thicknesses stay fixed; finite-thickness members cannot reach a zero-area apex.`:'';
@@ -12787,7 +12825,7 @@ if(typeof module!=='undefined'&&module.exports)module.exports=WingPrintUI;
     const remedy=fit.governingLimit==='solid-tip-closure'
       ? 'For more length, revise chord, airfoil thickness or skin thickness within the printing limits, then recheck.'
       : 'Revise the root spar dimensions/position or wing section, then recheck. Cap/web thicknesses are retained.';
-    return `<div><b>${current}</b></div>${automatic?`<div>${esc(widthInfo)}</div>`:''}${embedded?`<div><b>${esc(embedded)}</b></div>`:''}<div>${esc(reason)}</div><div>${esc(remedy)}</div><div data-spar-draft-status style="margin-top:6px;color:${over?'var(--bad)':'var(--muted)'}">${over?`Draft length ${nf(draft.length,2)} mm exceeds this limit; it has not been applied. Reduce Length or revise the dimensions.`:`Draft length ${nf(draft.length,2)} mm is within this length limit. Press Apply to update the wing.`}</div><details><summary>Real wings and model limits</summary><div>Real spars can change depth, cap width and thickness along the span. Their termination must transfer load into the surrounding skin/ribs with a designed transition. Automatic taper changes cap widths with the local chord, subject to the thin-wall width floor of five times cap thickness. It does not reduce cap/web thickness. Fixed-width mode retains the hollow-region endpoint. Narrowing a cap does not change the cavity itself. Local runout, joint and buckling stresses are unresolved. Fit alone does not demonstrate structural safety.</div></details>`;
+    return `<div><b>${current}</b></div>${automatic?`<div>${esc(widthInfo)}</div>`:''}${embedded?`<div><b>${esc(embedded)}</b></div>`:''}<div>${esc(reason)}</div><div>${esc(remedy)}</div><div data-spar-draft-status style="margin-top:6px;color:${over?'var(--bad)':'var(--muted)'}">${over?`Draft length ${nf(draft.length,2)} mm exceeds this limit; it has not been applied. Reduce Length or revise the dimensions.`:`Draft length ${nf(draft.length,2)} mm is within this length limit. Press Apply to update the wing.`}</div>`;
   }
   function renderSparForm(g){
     const host=el('section',{class:'wl-spars'},'');$('#wingStructureForm').append(host);
@@ -12819,7 +12857,11 @@ if(typeof module!=='undefined'&&module.exports)module.exports=WingPrintUI;
       fields.forEach(([k])=>$('#ws'+i+'_'+k).addEventListener('input',()=>{clearTimeout(fitTimer);fitTimer=setTimeout(checkDraft,180);}));
       $('#ws'+i+'_apply').onclick=()=>{clearTimeout(fitTimer);if(!checkDraft()){showErrorDialog(fitBox.textContent,$('#ws'+i+'_length'));return;}const next=readDraft();configure({spars:g.spars.map((v,j)=>j===i?next:v)});};
     });
-    host.querySelectorAll('fieldset').forEach((field,i)=>field.querySelectorAll('p.note').forEach((note,j)=>note.dataset.wingStructureHelp='spar-'+i+'-note-'+j));
+    const active=host.querySelector('h3 + p');if(active){const explanation=el('p',{'data-wing-structure-help':'reinforcement-selection'},'Switching removes the other reinforcement; only the active parts enter the analysis. A spar-only structure without skin is not supported.');active.replaceChildren(active.querySelector('b'));host.append(explanation);}
+    host.querySelectorAll('fieldset').forEach((field,i)=>field.querySelectorAll('p.note').forEach((note,j)=>{
+      if(note.textContent.startsWith('Root schematic'))note.dataset.wingStructureHelp='spar-'+i+'-diagram';
+      else if(note.textContent.includes(' It is not an independent')){const [readout,...explanation]=note.textContent.split(' It is not an independent');note.textContent=readout;host.append(el('p',{'data-wing-structure-help':'spar-'+i+'-dimensions'},'It is not an independent'+explanation.join(' It is not an independent')));}
+    }));
     const help=$('#wingHelpStructure');if(help){for(const old of help.querySelectorAll('[data-wing-structure-help]'))old.remove();for(const note of $('#wingStructureForm').querySelectorAll('[data-wing-structure-help]'))help.append(note);}
   }
   function renderSparResults(){

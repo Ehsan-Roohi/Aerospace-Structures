@@ -1000,6 +1000,12 @@ body { margin: 0; }
   const fs = (title, ...kids) => { const f = el("fieldset", {}, `<legend>${title}</legend>`); kids.forEach((k) => f.append(k)); return f; };
   const kv = (pairs) => el("dl", { class: "kv" }, pairs.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join(""));
 
+  function parkWingInstruction(sectionId,title,key,note){
+    const body=$('#wingInputHelp .wing-help-content');if(!body)return false;
+    let section=$('#'+sectionId);if(!section){section=el('details',{id:sectionId},'<summary>'+esc(title)+'</summary>');body.append(section);}
+    for(const old of section.querySelectorAll('[data-input-help-key]'))if(old.dataset.inputHelpKey===key)old.remove();
+    note.dataset.inputHelpKey=key;section.append(note);return true;
+  }
   function renderPM() {
     const pm = $("#pm");
     pm.innerHTML = "";
@@ -1010,10 +1016,11 @@ body { margin: 0; }
     if(R?.analysis3D&&(id==='results'||id.startsWith('res-')||id==='mesh')){
       if(R.analysis3D.stressOnly){$('#pmHead').textContent='Section stress';pm.append(el('h2',{},'Nominal normal stress'),el('p',{class:'note'},'Actual closed-tip material sections and applied-load equilibrium. Apex stress is undefined. Bending translation components are reported separately; torsional displacement, shear/torsional stress and overall safety are not computed.'));return;}
       $('#pmHead').textContent='Spatial beam results';
-      pm.append(el('h2',{},'3-D structural beam'),el('p',{class:'note'},'Six degrees of freedom per node. Normal beam stress and displacement are available. Natural frequencies, shear failure, buckling and an overall factor of safety are not computed for this model. See the full 3-D result record below the wing.'));
+      parkWingInstruction('wingHelpInputs','Materials, loads & connections','spatial-results',el('p',{class:'note'},'Six degrees of freedom per node. Normal beam stress and displacement are available. Natural frequencies, shear failure, buckling and an overall factor of safety are not computed for this model. See the full 3-D result record below the wing.'));
+      pm.append(el('h2',{},'3-D structural beam'),el('p',{class:'note'},'Normal stress and displacement · overall safety and modes unavailable.'));
       return;
     }
-    const head = (t, lede) => { pm.append(el("h2", {}, t)); if (lede) pm.append(el("p", { class: "lede" }, lede)); };
+    const head = (t, lede) => { pm.append(el("h2", {}, t)); if (lede) {const note=el('p',{class:'note'},lede);if(!['materials','mat-pla','mat-rod','loads','load','connections','con','con-seam','fixtures','fix'].includes(id)||!parkWingInstruction('wingHelpInputs','Materials, loads & connections',id,note))pm.append(note);} };
     if (id === "materials" || id === "mat-pla") {
       $("#pmHead").textContent = "Material";
       head("Shell / rib material", "The class fabrication notebook specifies regular PLA Pro for skin, ribs and integral printed spars; carbon rods are separate. Match the card to the actual print: Upright = wing span along printer Z; Flat = span in the build plane. These are teaching placeholders, not measured properties of your team's filament. Brand, layers, walls and print settings matter. Enter coupon-derived effective properties before interpreting strength margins. The scalar spanwise model is not a full anisotropic failure law.");
@@ -1046,7 +1053,8 @@ body { margin: 0; }
       pm.append(fs("Card", segField([["rod_hobby", "Hobby grade"], ["rod_t700", "T700 aerospace"]], S.rodKey, (v) => { S.rodKey = v; S.rodOver = { E: null }; }, "Rod card"),
         numField("rE", "Elastic modulus E", "MPa (flexural)", rod.E, 1000, (v) => (S.rodOver.E = v), positive)));
       pm.append(fs("Fixed values", kv([["Tension / compression", `${rod.ft} / ${rod.fc} MPa`], ["Shear", `${rod.fs} MPa`], ["Density", `${rod.rho} g/cm³`]])));
-      const hang = el("fieldset", {}, `<legend>Measure E with a hanging weight</legend><p class="note">Clamp the rod, hang a mass at length L, measure the drop δ. E = P L³ / (3 δ I).</p>`);
+      const hang = el("fieldset", {}, `<legend>Measure E with a hanging weight</legend>`);
+      parkWingInstruction('wingHelpInputs','Materials, loads & connections','rod-measurement',el('p',{class:'note'},'Clamp the rod, hang a mass at length L, measure the drop δ. E = P L³ / (3 δ I).'));
       const st = { m: 100, L: 300, d: 0 };
       const out = el("p", { class: "scoreline" }, "Enter a measured drop.");
       const upd = () => { if (st.d > 0) { const I = (Math.PI * g.rodDiameter ** 4) / 64; const Ev = (st.m * 9.81e-3 * st.L ** 3) / (3 * st.d * I); out.innerHTML = `E ≈ <b>${nf(Ev / 1000, 1)} GPa</b> <button class="btn" type="button" id="useE">Use it</button>`; out.querySelector("#useE").addEventListener("click", () => { S.rodOver.E = Math.round(Ev); edited(); renderPM(); }); } };
@@ -1338,6 +1346,7 @@ body { margin: 0; }
   }
   function sparFitExplanation(fit,applied,draft){
     const maximum=fit.maximumLengthMm,over=draft.length>maximum+1e-8;
+    parkWingInstruction('wingHelpInputs','Materials, loads & connections','spar-fit-model',el('p',{class:'note'},'Real spars can change depth, cap width and thickness along the span. Their termination must transfer load into the surrounding skin/ribs with a designed transition. Automatic taper changes cap widths with the local chord, subject to the thin-wall width floor of five times cap thickness. It does not reduce cap/web thickness. Fixed-width mode retains the hollow-region endpoint. Narrowing a cap does not change the cavity itself. Local runout, joint and buckling stresses are unresolved. Fit alone does not demonstrate structural safety.'));
     const current=`Finite spar length ${nf(applied.length,2)} mm applied; maximum fit length ${nf(maximum,2)} mm for these draft dimensions.`;
     const automatic=fit.widthMode==='auto',section=fit.sectionAtMaximum;
     const widthInfo=automatic?`Auto taper: upper/lower cap widths start at ${nf(draft.topWidth,2)}/${nf(draft.bottomWidth,2)} mm and reach ${nf(section.topWidthMm,2)}/${nf(section.bottomWidthMm,2)} mm at the limit. Cap/web thicknesses stay fixed; finite-thickness members cannot reach a zero-area apex.`:'';
@@ -1356,7 +1365,7 @@ body { margin: 0; }
     const remedy=fit.governingLimit==='solid-tip-closure'
       ? 'For more length, revise chord, airfoil thickness or skin thickness within the printing limits, then recheck.'
       : 'Revise the root spar dimensions/position or wing section, then recheck. Cap/web thicknesses are retained.';
-    return `<div><b>${current}</b></div>${automatic?`<div>${esc(widthInfo)}</div>`:''}${embedded?`<div><b>${esc(embedded)}</b></div>`:''}<div>${esc(reason)}</div><div>${esc(remedy)}</div><div data-spar-draft-status style="margin-top:6px;color:${over?'var(--bad)':'var(--muted)'}">${over?`Draft length ${nf(draft.length,2)} mm exceeds this limit; it has not been applied. Reduce Length or revise the dimensions.`:`Draft length ${nf(draft.length,2)} mm is within this length limit. Press Apply to update the wing.`}</div><details><summary>Real wings and model limits</summary><div>Real spars can change depth, cap width and thickness along the span. Their termination must transfer load into the surrounding skin/ribs with a designed transition. Automatic taper changes cap widths with the local chord, subject to the thin-wall width floor of five times cap thickness. It does not reduce cap/web thickness. Fixed-width mode retains the hollow-region endpoint. Narrowing a cap does not change the cavity itself. Local runout, joint and buckling stresses are unresolved. Fit alone does not demonstrate structural safety.</div></details>`;
+    return `<div><b>${current}</b></div>${automatic?`<div>${esc(widthInfo)}</div>`:''}${embedded?`<div><b>${esc(embedded)}</b></div>`:''}<div>${esc(reason)}</div><div>${esc(remedy)}</div><div data-spar-draft-status style="margin-top:6px;color:${over?'var(--bad)':'var(--muted)'}">${over?`Draft length ${nf(draft.length,2)} mm exceeds this limit; it has not been applied. Reduce Length or revise the dimensions.`:`Draft length ${nf(draft.length,2)} mm is within this length limit. Press Apply to update the wing.`}</div>`;
   }
   function renderSparForm(g){
     const host=el('section',{class:'wl-spars'},'');$('#wingStructureForm').append(host);
@@ -1388,7 +1397,11 @@ body { margin: 0; }
       fields.forEach(([k])=>$('#ws'+i+'_'+k).addEventListener('input',()=>{clearTimeout(fitTimer);fitTimer=setTimeout(checkDraft,180);}));
       $('#ws'+i+'_apply').onclick=()=>{clearTimeout(fitTimer);if(!checkDraft()){showErrorDialog(fitBox.textContent,$('#ws'+i+'_length'));return;}const next=readDraft();configure({spars:g.spars.map((v,j)=>j===i?next:v)});};
     });
-    host.querySelectorAll('fieldset').forEach((field,i)=>field.querySelectorAll('p.note').forEach((note,j)=>note.dataset.wingStructureHelp='spar-'+i+'-note-'+j));
+    const active=host.querySelector('h3 + p');if(active){const explanation=el('p',{'data-wing-structure-help':'reinforcement-selection'},'Switching removes the other reinforcement; only the active parts enter the analysis. A spar-only structure without skin is not supported.');active.replaceChildren(active.querySelector('b'));host.append(explanation);}
+    host.querySelectorAll('fieldset').forEach((field,i)=>field.querySelectorAll('p.note').forEach((note,j)=>{
+      if(note.textContent.startsWith('Root schematic'))note.dataset.wingStructureHelp='spar-'+i+'-diagram';
+      else if(note.textContent.includes(' It is not an independent')){const [readout,...explanation]=note.textContent.split(' It is not an independent');note.textContent=readout;host.append(el('p',{'data-wing-structure-help':'spar-'+i+'-dimensions'},'It is not an independent'+explanation.join(' It is not an independent')));}
+    }));
     const help=$('#wingHelpStructure');if(help){for(const old of help.querySelectorAll('[data-wing-structure-help]'))old.remove();for(const note of $('#wingStructureForm').querySelectorAll('[data-wing-structure-help]'))help.append(note);}
   }
   function renderSparResults(){

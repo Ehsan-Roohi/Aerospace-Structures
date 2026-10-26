@@ -17,6 +17,25 @@ const WingGeometryUI=(()=>{
   const form=node('form',{class:'wing-geometry-form'});
   const notice=node('p',{role:'status',class:'note',id:'wingGeometryEditorStatus',tabindex:'-1'});
   container.append(form,notice);
+  // Keep instructional copy in the shared Help menu; retain live validation in the editor.
+  function syncGeometryHelp(){
+   const host=doc.querySelector('#wingInputHelp .wing-help-content');if(!host)return;
+   let section=host.querySelector('#wingHelpGeometry');
+   if(!section){section=node('details',{id:'wingHelpGeometry'});section.append(node('summary',{},'Airfoils, dimensions, taper & orientation'));host.prepend(section);}
+   let body=section.querySelector('[data-geometry-help-body]');if(!body){body=node('div',{'data-geometry-help-body':''});section.append(body);}
+   const copies=[],seen=new Set();
+   for(const original of form.querySelectorAll('p.note,small')){
+    if(original.closest('.wing-geometry-guidance'))continue;
+    const text=original.textContent.trim();original.hidden=true;if(!text)continue;
+    const label=original.matches('small')?original.closest('label')?.firstChild?.textContent?.trim():'';
+    const key=(label?label+': ':'')+text;if(seen.has(key))continue;seen.add(key);
+    const copy=node('p',{class:'note'});copy.textContent=key;copies.push(copy);
+   }
+   body.replaceChildren(...copies);
+   for(const detail of form.querySelectorAll('details'))if(detail.querySelector('summary')?.textContent==='Airfoil file format & print geometry')detail.hidden=true;
+  }
+  form.addEventListener('input',syncGeometryHelp);form.addEventListener('change',syncGeometryHelp);
+  doc.addEventListener('wing-help-ready',syncGeometryHelp);
   const name=p=>p.name||('NACA '+p.code);
   const numeric=(label,id,value,hint='',attrs='')=>`<label class="wing-geometry-field" for="${id}">${label}<small>${hint}</small><input id="${id}" type="number" step="any" value="${value}" ${attrs} required></label>`;
   const baseProfile=()=>draft.airfoil||{kind:'naca4',code:draft.naca};
@@ -58,7 +77,7 @@ const WingGeometryUI=(()=>{
    card.querySelector('[data-profile-source]').textContent=p.source?.url||p.source?.filename||'Analytical NACA section; no aerodynamic polar is inferred.';
    const choose=card.querySelector('select'),code=card.querySelector('[type=text]');
    profileValidators.set(id,()=>{if(!code.disabled){const value=code.value.trim();set(clone(A.normalizeProfile({kind:value.replace(/^NACA\s*/i,'').length===5?'naca5':'naca4',code:value})));}});
-   const repaint=()=>{holder.replaceChildren();profilePicker(holder,get,set,id);};
+   const repaint=()=>{holder.replaceChildren();profilePicker(holder,get,set,id);syncGeometryHelp();};
    choose.onchange=()=>{cancelPickerRead(id);try{set(clone(choose.value==='current'?get():choose.value==='naca4'?A.normalizeProfile({kind:'naca4',code:'2412'}):choose.value==='naca5'?A.normalizeProfile({kind:'naca5',code:'23012'}):A.preset(choose.value)));repaint();message('Airfoil selected in the draft. Apply geometry to update the wing.');}catch(e){message(e.message,true);}};
    code.addEventListener('input',()=>cancelPickerRead(id));
    code.onchange=()=>{cancelPickerRead(id);try{set(clone(A.normalizeProfile({kind:code.value.trim().replace(/^NACA\s*/i,'').length===5?'naca5':'naca4',code:code.value.trim()})));repaint();}catch(e){message(e.message,true);}};
@@ -176,6 +195,7 @@ const WingGeometryUI=(()=>{
    form.querySelector('#wgtTwist').onchange=e=>{draft.twistEnabled=e.target.value==='yes';if(draft.twistEnabled)stations();else for(const s of draft.stations||[])s.incidenceDeg=0;render();if(!draft.twistEnabled)message('All draft incidences set to zero; airfoil profiles retained. Apply geometry to commit.');};
    form.querySelector('#wgtSections').onchange=e=>{if(e.target.checked)stations();else{if(draft.twistEnabled){e.target.checked=true;message('Twist needs root/tip incidence stations. Turn twist off first.',true);return;}delete draft.stations;}render();};
    for(const[id,key]of [['wgtSweep','sweepDeg'],['wgtDihedral','dihedralDeg'],['wgtSweepRef','sweepReferenceFraction'],['wgtTwistRef','twistReferenceFraction']])form.querySelector('#'+id).onchange=e=>{draft[key]=e.target.value.trim()===''?NaN:Number(e.target.value);};
+   syncGeometryHelp();
   }
   form.onsubmit=e=>{
    e.preventDefault();if(activeReads.size){message('Wait until the airfoil file has finished reading.',true);return;}
@@ -214,7 +234,7 @@ const WingGeometryUI=(()=>{
     }
     const result=applyGeometry(patch,'advanced','airfoil / sweep / dihedral / incidence');
     if(!result.ok){message(result.error||'Geometry was not applied. Check the wing dimensions and cavity clearance.',true);showGuidance(result.guidance);return;}
-    message(G.closedTip(patch)?'Exact closed-tip geometry applied. Solve computes nominal normal stress; the exact apex and deformation are unresolved.':'Geometry applied. Solve to update structural results.');onApplied();
+    message('Geometry applied.');onApplied();
    }catch(err){message(err.message,true);}
   };
   const style=node('style',{},'.wing-geometry-guidance{border:1px solid var(--warn,#ad7300);border-radius:10px;padding:12px;background:var(--panel-2);font-size:13px;line-height:1.45}.wing-geometry-guidance h3{margin:0 0 6px}.wing-geometry-guidance li{margin:10px 0}.wing-geometry-guidance .btn{margin-top:5px}.wing-geometry-form{display:grid;gap:10px}.wing-geometry-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}.wing-geometry-field{display:grid;gap:4px;font-size:13px}.wing-geometry-field small{color:var(--muted)}.wing-geometry-form input[type=number],.wing-geometry-form input[type=text],.wing-geometry-form select{width:100%;min-height:40px;padding:7px;border:1px solid var(--line);border-radius:7px;background:var(--panel-2);color:var(--fg);font-size:16px}.wing-airfoil-picker{display:grid;gap:6px}.wing-station-card{margin:7px 0;padding:8px;border:1px solid var(--line);border-radius:8px}.wing-station-card>summary{font-weight:700;cursor:pointer;padding:7px 0}.wing-station-card .note{overflow-wrap:anywhere}');doc.head.append(style);

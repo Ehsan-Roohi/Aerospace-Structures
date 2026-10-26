@@ -289,7 +289,7 @@ const WingLoadsUI = (() => {
     </div>`;
     const $ = (sel) => container.querySelector(sel);
     const byId = (x) => container.querySelector('#' + x);
-    const status = (t) => { byId(id.status).innerHTML = t; };
+    const status = (t,bad=false) => { const box=byId(id.status);box.innerHTML=t;if(bad||box.querySelector('.wle-err')){box.tabIndex=-1;doc.defaultView.WingLabUI?.showError?.(box.textContent,container.querySelector('[aria-invalid="true"],input:invalid,select:invalid')||box);} };
     let stopPick=null,firstPick=null;
     function cancelPick() {if(stopPick)stopPick();stopPick=null;firstPick=null;const b=container.querySelector('.wle-pick');if(b){b.textContent='⌖ Pick on 3-D wing';b.setAttribute('aria-pressed','false');}}
     function acceptPick(p) {

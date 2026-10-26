@@ -15,12 +15,22 @@ const WingGeometryUI=(()=>{
   function cancelReads(){generation++;for(const id of activeReads.keys())cancelPickerRead(id);}
   const profileValidators=new Map();
   const form=node('form',{class:'wing-geometry-form'});
-  const notice=node('p',{role:'status',class:'note',id:'wingGeometryEditorStatus'});
+  const notice=node('p',{role:'status',class:'note',id:'wingGeometryEditorStatus',tabindex:'-1'});
   container.append(form,notice);
   const name=p=>p.name||('NACA '+p.code);
   const numeric=(label,id,value,hint='',attrs='')=>`<label class="wing-geometry-field" for="${id}">${label}<small>${hint}</small><input id="${id}" type="number" step="any" value="${value}" ${attrs} required></label>`;
   const baseProfile=()=>draft.airfoil||{kind:'naca4',code:draft.naca};
-  function message(text,bad=false){notice.textContent=text;notice.setAttribute('role',bad?'alert':'status');notice.style.color=bad?'var(--bad)':'';}
+  function message(text,bad=false){
+   notice.textContent=text;notice.setAttribute('role',bad?'alert':'status');notice.style.color=bad?'var(--bad)':'';
+   if(bad){
+    let target=form.querySelector('[aria-invalid="true"],input:invalid,select:invalid,textarea:invalid');
+    if(!target&&!/spar|rod|seam/i.test(text)){
+     const id=/skin|cavity|hollow/i.test(text)?'wgtSkin':/root chord/i.test(text)?'wgtRootChord':/tip chord/i.test(text)?'wgtTipChord':/semi.span/i.test(text)?'wgtSpan':null;
+     if(id)target=form.querySelector('#'+id);
+    }
+    win.WingLabUI?.showError?.(text,target||notice);
+   }
+  }
   function showGuidance(d){
    if(!d||d.kind!=='cavity')return;
    const box=node('section',{class:'wing-geometry-guidance',role:'alert','aria-label':'How to fix this wing geometry'});

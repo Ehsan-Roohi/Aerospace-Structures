@@ -6919,12 +6919,22 @@ const WingGeometryUI=(()=>{
   function cancelReads(){generation++;for(const id of activeReads.keys())cancelPickerRead(id);}
   const profileValidators=new Map();
   const form=node('form',{class:'wing-geometry-form'});
-  const notice=node('p',{role:'status',class:'note',id:'wingGeometryEditorStatus'});
+  const notice=node('p',{role:'status',class:'note',id:'wingGeometryEditorStatus',tabindex:'-1'});
   container.append(form,notice);
   const name=p=>p.name||('NACA '+p.code);
   const numeric=(label,id,value,hint='',attrs='')=>`<label class="wing-geometry-field" for="${id}">${label}<small>${hint}</small><input id="${id}" type="number" step="any" value="${value}" ${attrs} required></label>`;
   const baseProfile=()=>draft.airfoil||{kind:'naca4',code:draft.naca};
-  function message(text,bad=false){notice.textContent=text;notice.setAttribute('role',bad?'alert':'status');notice.style.color=bad?'var(--bad)':'';}
+  function message(text,bad=false){
+   notice.textContent=text;notice.setAttribute('role',bad?'alert':'status');notice.style.color=bad?'var(--bad)':'';
+   if(bad){
+    let target=form.querySelector('[aria-invalid="true"],input:invalid,select:invalid,textarea:invalid');
+    if(!target&&!/spar|rod|seam/i.test(text)){
+     const id=/skin|cavity|hollow/i.test(text)?'wgtSkin':/root chord/i.test(text)?'wgtRootChord':/tip chord/i.test(text)?'wgtTipChord':/semi.span/i.test(text)?'wgtSpan':null;
+     if(id)target=form.querySelector('#'+id);
+    }
+    win.WingLabUI?.showError?.(text,target||notice);
+   }
+  }
   function showGuidance(d){
    if(!d||d.kind!=='cavity')return;
    const box=node('section',{class:'wing-geometry-guidance',role:'alert','aria-label':'How to fix this wing geometry'});
@@ -9439,7 +9449,7 @@ const WingLoadsUI = (() => {
     </div>`;
     const $ = (sel) => container.querySelector(sel);
     const byId = (x) => container.querySelector('#' + x);
-    const status = (t) => { byId(id.status).innerHTML = t; };
+    const status = (t,bad=false) => { const box=byId(id.status);box.innerHTML=t;if(bad||box.querySelector('.wle-err')){box.tabIndex=-1;doc.defaultView.WingLabUI?.showError?.(box.textContent,container.querySelector('[aria-invalid="true"],input:invalid,select:invalid')||box);} };
     let stopPick=null,firstPick=null;
     function cancelPick() {if(stopPick)stopPick();stopPick=null;firstPick=null;const b=container.querySelector('.wle-pick');if(b){b.textContent='⌖ Pick on 3-D wing';b.setAttribute('aria-pressed','false');}}
     function acceptPick(p) {
@@ -12526,9 +12536,26 @@ if(typeof module!=='undefined'&&module.exports)module.exports=WingPrintUI;
   }
   // An input error stays on screen (chip "Input error") until the next valid edit or a successful solve;
   // the previous valid inputs and the last solved result are kept meanwhile.
+  let errorDialog=null,errorTarget=null,errorReturnFocus=null;
+  function showErrorDialog(message,target=null){
+    if(!errorDialog){
+      const style=document.createElement('style');style.textContent='#wingErrorDialog{box-sizing:border-box;width:min(560px,calc(100vw - 28px));max-height:calc(100dvh - 28px);overflow:auto;padding:22px;border:2px solid #b42318;border-radius:14px;background:#fff;color:#172c40;box-shadow:0 18px 60px #0005}#wingErrorDialog::backdrop{background:#14253565}#wingErrorDialog h2{font-size:20px;margin:0 40px 14px 0;color:#b42318}#wingErrorMessage{font-size:16px;line-height:1.55;white-space:pre-wrap;overflow-wrap:anywhere}#wingErrorDialog .wing-error-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}#wingErrorDialog button{min-height:42px;padding:8px 16px;border:1px solid #bdcbd8;border-radius:8px;background:#edf3f8;color:#172c40}#wingErrorClose{background:#096dce!important;color:white!important;border-color:#096dce!important}';document.head.append(style);
+      errorDialog=document.createElement('dialog');errorDialog.id='wingErrorDialog';errorDialog.setAttribute('role','alertdialog');errorDialog.setAttribute('aria-labelledby','wingErrorTitle');errorDialog.setAttribute('aria-describedby','wingErrorMessage');
+      errorDialog.innerHTML='<h2 id="wingErrorTitle">Could not apply this change</h2><p id="wingErrorMessage"></p><div class="wing-error-actions"><button type="button" id="wingErrorClose">OK</button><button type="button" id="wingErrorGo">Go to the input</button></div>';document.body.append(errorDialog);
+      const close=()=>errorDialog.close();$('#wingErrorClose').onclick=close;
+      $('#wingErrorGo').onclick=()=>{const target=errorTarget;if(target?.isConnected)errorReturnFocus=target;close();if(target?.isConnected){target.closest('details')?.setAttribute('open','');target.scrollIntoView({block:'center',behavior:'smooth'});target.focus({preventScroll:true});}};
+      errorDialog.addEventListener('close',()=>{if(errorReturnFocus?.isConnected)errorReturnFocus.focus({preventScroll:true});});
+      errorDialog.addEventListener('keydown',event=>{if(event.key==='Escape')event.stopPropagation();});
+    }
+    if(!errorDialog.open)errorReturnFocus=document.activeElement;
+    errorTarget=target?.isConnected?target:document.activeElement?.closest('form,fieldset')?.querySelector('[aria-invalid="true"]')||null;
+    $('#wingErrorMessage').textContent=String(message);$('#wingErrorGo').hidden=!errorTarget;$('#wingErrorGo').textContent=errorTarget?.matches('input,select,textarea')?'Go to the input':'Show error in form';
+    if(!errorDialog.open)errorDialog.showModal();$('#wingErrorClose').focus();
+  }
   function flash(msg) {
     inputError = msg;
     setStatus();
+    showErrorDialog(msg);
   }
 
   // ------------------------------------------------------------ input column: geometry and structure
@@ -12778,7 +12805,7 @@ if(typeof module!=='undefined'&&module.exports)module.exports=WingPrintUI;
     $('#wsAdd').onclick=(fraction)=>{if(!confirm('Add a bonded spar? Existing rods will be removed and module seams set to bonded. Loads are retained.'))return {ok:false};
       try{const shell=materials().pla,spec={fraction:typeof fraction==='number'?fraction:g.spars.length?.6:.35,widthMode:'auto',length:g.semiSpan,topWidth:8,topThickness:.8,bottomWidth:8,bottomThickness:.8,webThickness:.6,material:Object.fromEntries(Object.keys(WingSpars.MAT).map(k=>[k,shell[k]]))};
         if(WingGeometry.closedTip(g)){const limit=E.closedTipSparLimit({...g,rodFractions:[]},spec);spec.length=Math.max(Math.min(20,g.semiSpan),Math.floor(limit*10)/10);}
-        const result=configure({rodFractions:[],spars:[...g.spars,spec]});if(result.ok&&WingGeometry.closedTip(g))flash(`Added automatically tapered spar: ${nf(spec.length,2)} mm. Inspect Length, width variation and any solid-tip continuation in Structure dimensions.`);return result;
+        const result=configure({rodFractions:[],spars:[...g.spars,spec]});if(result.ok&&WingGeometry.closedTip(g))sessionNote(`Added automatically tapered spar: ${nf(spec.length,2)} mm. Inspect Length, width variation and any solid-tip continuation in Structure dimensions.`);return result;
       }catch(error){flash(error.message);return {ok:false,error:error.message};}};
     g.spars.forEach((s,i)=>{
       const p=E.sparParts(g,0).find(v=>v.index===i),diagram=el('div',{},`<svg viewBox="0 0 290 215" role="img" aria-label="Spar ${i+1} root dimensions, schematic not to scale" style="width:100%;max-width:360px;background:var(--raise);color:var(--fg)"><rect x="84" y="43" width="100" height="14" fill="#9871dd"/><rect x="128" y="57" width="12" height="106" fill="#39a3b7"/><rect x="74" y="163" width="120" height="14" fill="#9871dd"/><g stroke="currentColor" fill="none"><path d="M84 35v-9h100v9 M74 185v9h120v-9 M214 57h8v106h-8 M120 112h-18m38 0h18"/></g><g fill="currentColor" font-size="11" font-family="system-ui"><text x="134" y="19" text-anchor="middle">Upper cap bᵤ = ${nf(s.topWidth,2)} mm</text><text x="134" y="210" text-anchor="middle">Lower cap bₗ = ${nf(s.bottomWidth,2)} mm</text><text x="8" y="53">tᵤ = ${nf(s.topThickness,2)}</text><text x="8" y="174">tₗ = ${nf(s.bottomThickness,2)}</text><text x="150" y="140">t_w = ${nf(s.webThickness,2)} mm</text><text x="228" y="105">h_web</text><text x="228" y="121">${nf(p.h,2)} mm</text><text x="6" y="147">Web</text></g></svg><p class="note">Root schematic, not to scale. Actual caps follow the inner skin contours. b = cap width, t = thickness; h_web is the clear height between caps. Upper/lower cap dimensions are independent.</p>`);
@@ -12790,7 +12817,7 @@ if(typeof module!=='undefined'&&module.exports)module.exports=WingPrintUI;
       let fitTimer;$('#ws'+i+'_widthMode').addEventListener('change',()=>{clearTimeout(fitTimer);checkDraft();});
       $('#ws'+i+'_longest').onclick=()=>{try{const draft=readDraft();draft.widthMode='auto';WingSpars.specs([draft],g.semiSpan);const fit=E.closedTipSparFit({...g,spars:g.spars.map((v,j)=>j===i?draft:v)},draft);draft.length=WingGeometry.closedTip(g)?Math.floor(fit.maximumLengthMm*10)/10:fit.maximumLengthMm;configure({spars:g.spars.map((v,j)=>j===i?draft:v)});}catch(error){flash(error.message);}};
       fields.forEach(([k])=>$('#ws'+i+'_'+k).addEventListener('input',()=>{clearTimeout(fitTimer);fitTimer=setTimeout(checkDraft,180);}));
-      $('#ws'+i+'_apply').onclick=()=>{clearTimeout(fitTimer);if(!checkDraft())return;const next=readDraft();configure({spars:g.spars.map((v,j)=>j===i?next:v)});};
+      $('#ws'+i+'_apply').onclick=()=>{clearTimeout(fitTimer);if(!checkDraft()){showErrorDialog(fitBox.textContent,$('#ws'+i+'_length'));return;}const next=readDraft();configure({spars:g.spars.map((v,j)=>j===i?next:v)});};
     });
     host.querySelectorAll('fieldset').forEach((field,i)=>field.querySelectorAll('p.note').forEach((note,j)=>note.dataset.wingStructureHelp='spar-'+i+'-note-'+j));
     const help=$('#wingHelpStructure');if(help){for(const old of help.querySelectorAll('[data-wing-structure-help]'))old.remove();for(const note of $('#wingStructureForm').querySelectorAll('[data-wing-structure-help]'))help.append(note);}
@@ -13460,7 +13487,7 @@ if(typeof module!=='undefined'&&module.exports)module.exports=WingPrintUI;
     $('#wrScale').onchange=e=>{resultDisplay.scaleMode=e.target.value;if(resultDisplay.scaleMode==='fixed'){const kind={stress:'sigma',disp:'disp',fos:'fos',twist:'twist',bending:'bending',torque:'torque'}[S.plot];if(kind)resultDisplay.scales[resultScaleKey(kind)]={...range};}applyResult();};
     $('#wrApply').onclick=()=>{const lo=Number($('#wrMin').value),hi=Number($('#wrMax').value),kind={stress:'sigma',disp:'disp',fos:'fos',twist:'twist',bending:'bending',torque:'torque'}[S.plot];if(!kind||!$('#wrMin').value.trim()||!$('#wrMax').value.trim()||!Number.isFinite(lo)||!Number.isFinite(hi)||hi<=lo){flash('Enter finite minimum and maximum values with maximum greater than minimum, in a result view.');return;}resultDisplay.scales[resultScaleKey(kind)]={min:lo,max:hi};resultDisplay.scaleMode='manual';$('#wrScale').value='manual';applyResult();};
     $('#wrTop').onclick=()=>setView('plan');$('#wrBottom').onclick=()=>setView('bottom');
-    $('#wrPin').onclick=()=>{resultDisplay.pinning=!resultDisplay.pinning;partPick=false;$('#wrPin').setAttribute('aria-pressed',String(resultDisplay.pinning));flash(resultDisplay.pinning?'In Stress view, click a visible selected surface to pin its nominal stress. Drag still rotates; maximum 8 pins.':'Stress pinning off.');};
+    $('#wrPin').onclick=()=>{resultDisplay.pinning=!resultDisplay.pinning;partPick=false;$('#wrPin').setAttribute('aria-pressed',String(resultDisplay.pinning));sessionNote(resultDisplay.pinning?'In Stress view, click a visible selected surface to pin its nominal stress. Drag still rotates; maximum 8 pins.':'Stress pinning off.');};
     $('#wrClearPins').onclick=()=>{resultDisplay.pins=[];positionResultLabels();};
     $('#wrOriginal').onchange=e=>{resultDisplay.reference=e.target.checked;updateOriginalOutline();};
     $('#wrImage').onclick=()=>exportResultImage();
@@ -15033,7 +15060,7 @@ function renderObservations() {
   // Read-only access for tests and for the study-file module; geometry goes through the same atomic validation.
   window.WingLabUI = {
     state: () => S, result: () => R, isStale: () => stale, isRunning: () => running, inputError: () => inputError,
-    engineInput, inventory: () => inventoryData(S.geometry),
+    showError:showErrorDialog, engineInput, inventory: () => inventoryData(S.geometry),
     checkGeometry: (patch) => checkGeometry({ ...S.geometry, ...patch }),
     applyGeometry: (patch) => applyGeometry(patch),
     solve: () => { clearTimeout(runTimer); return runStudy(); },
@@ -15119,11 +15146,11 @@ function renderObservations() {
     const form=el('form',{class:'wing-quick-form'},`<label>${isRib?'Span station y (mm)':'Chord position x/c'}<input name="position" type="number" step="any" value="${value}" required></label><p class="note">${isRib?'Adds an interior rib; root/tip caps and seam ribs are not moved.':isSpar?'Upper/lower caps and web are bonded to skin and ribs. You will be asked before rods are replaced. Edit dimensions and material after adding.':'A rod is distinct from a cap/web spar. Position and sleeve clearance are validated before addition.'}</p><p class="wl-err" role="alert"></p><button class="btn primary" type="submit">Add ${kind}</button> <button class="btn" type="button" data-edit-structure>Edit dimensions & material</button>`);
     printedWorkspace.open('Add '+kind,form,anchor);form.querySelector('input').focus({preventScroll:true});
     form.querySelector('[data-edit-structure]').onclick=()=>openWingStructurePopup(anchor,isSpar?'wsAdd':isRib?'wgRibNew':'wgRodAdd');
-    form.onsubmit=e=>{e.preventDefault();const input=form.elements.namedItem('position'),v=input.value.trim()===''?NaN:Number(input.value);if(!Number.isFinite(v)){form.querySelector('[role="alert"]').textContent='Enter a finite position.';return;}
+    form.onsubmit=e=>{e.preventDefault();const input=form.elements.namedItem('position'),v=input.value.trim()===''?NaN:Number(input.value);if(!Number.isFinite(v)){form.querySelector('[role="alert"]').textContent='Enter a finite position.';showErrorDialog('Enter a finite position.',input);return;}
       let out;if(isSpar){const before=partStamp(),previous=partSnapshot(),added=$('#wsAdd').onclick(v);out={ok:before!==partStamp(),error:added?.error};if(out.ok)partUndo={...previous,after:partStamp()};}
       else out=isRib?partChange({customInteriorRibs:[...interiorStations(g),v]},'ribs'):partChange({rodFractions:[...g.rodFractions,v]},'rods');
       if(out.ok){printedWorkspace.close();setAnatomy('inside');if(isSpar)openWingStructurePopup(anchor,'ws'+(S.geometry.spars.length-1)+'_fraction');}
-      else form.querySelector('[role="alert"]').textContent=out.error||Object.values(fieldErrors).join(' ')||inputError||'No part added. Check the position, available space, or the confirmation choice.';
+      else{const message=out.error||Object.values(fieldErrors).join(' ')||inputError||'No part added. Check the position, available space, or the confirmation choice.';form.querySelector('[role="alert"]').textContent=message;showErrorDialog(message,input);}
     };
   }
   if(typeof WingWorkspaceUI!=='undefined'){

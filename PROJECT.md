@@ -40,7 +40,7 @@ If a check fails, correct the stated dimensions, thickness or interface; no auto
 
 ## 2. OrcaSlicer: prepare the print
 
-If you downloaded a ZIP, extract a working copy. In **OrcaSlicer**, import the STL for every module. Use the assigned **Creality K2 Pro, 0.4 mm nozzle and staff-approved PLA Pro profile**. Check millimetres, **100% scale**, orientation, actual dimensions, space for supports/brim, every layer, mass and print time.
+If you downloaded a ZIP, extract a working copy. In **OrcaSlicer**, import the STL for every module. Use the assigned **Creality K2 Pro, 0.4 mm nozzle and staff-approved PLA Pro profile**. Check millimetres, **100% scale**, orientation, actual dimensions, space for supports/brim, every layer, mass and print time. Auto-rotate the wing (which makes it vertical) before preparing its G-code.
 
 ## 3. Print, assemble and document
 

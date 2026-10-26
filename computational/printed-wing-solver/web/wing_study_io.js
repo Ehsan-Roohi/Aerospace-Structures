@@ -972,12 +972,19 @@
       }
     }
     if(own(raw,'analysis')){
-      if(!isObj(raw.analysis))issues.err(join(path,'analysis'),'must be an object {nElements}');
+      if(!isObj(raw.analysis))issues.err(join(path,'analysis'),'must be an analysis settings object');
       else{
-        checkKeys(issues,raw.analysis,join(path,'analysis'),['nElements']);
-        const n=raw.analysis.nElements;
-        if(!Number.isInteger(n)||n<4||n>100)issues.err(join(path,'analysis.nElements'),'must be an integer from 4 to 100');
-        else analysis={nElements:n};
+        checkKeys(issues,raw.analysis,join(path,'analysis'),['nElements','finiteSectionTorsion']);
+        analysis={};
+        if(own(raw.analysis,'nElements')){
+          const n=raw.analysis.nElements;
+          if(!Number.isInteger(n)||n<4||n>100)issues.err(join(path,'analysis.nElements'),'must be an integer from 4 to 100');
+          else analysis.nElements=n;
+        }
+        if(own(raw.analysis,'finiteSectionTorsion')){
+          if(typeof raw.analysis.finiteSectionTorsion!=='boolean')issues.err(join(path,'analysis.finiteSectionTorsion'),'must be true or false');
+          else analysis.finiteSectionTorsion=raw.analysis.finiteSectionTorsion;
+        }
       }
     }
     const need = (k) => { if (!own(raw, k)) issues.err(join(path, k), 'is missing'); return own(raw, k); };
@@ -1007,7 +1014,7 @@
     if(state.plaOver&&state.plaOver.nu!=null)pla.nu=state.plaOver.nu;
     const rod = { ...E.MATERIALS[state.rodKey] };
     if (state.rodOver && state.rodOver.E > 0) rod.E = state.rodOver.E;
-    return { geometry: clone(state.geometry), pla, rod, assembly: clone(state.assembly), load: clone(state.load), criteria: clone(state.criteria), ...(state.analysis?{nElements:state.analysis.nElements}:{}) };
+    return { geometry: clone(state.geometry), pla, rod, assembly: clone(state.assembly), load: clone(state.load), criteria: clone(state.criteria), ...(state.analysis?{...state.analysis}:{}) };
   }
   /** Rod holes must fit inside the airfoil and printed sleeves must not overlap (checked at the tip, the smallest chord). */
   function rodLayoutIssues(g, E) {
@@ -1120,7 +1127,8 @@
     }
     add('Checks', 'Factor of safety / tip mass', `${fmt(L.fos)} / ${fmt(L.tipMass)} g`);
     add('Checks', 'Stiffness criteria', `tip deflection ≤ ${fmt(state.criteria.maxTipDeflection)} mm; tip twist ≤ ${fmt(state.criteria.maxTipTwist)}°`);
-    add('Analysis','Requested beam elements',state.analysis?`${state.analysis.nElements}; required stations may add elements. CAD/STL geometry is unchanged.`:'Solver default; required stations may add elements.');
+    add('Analysis','Requested beam elements',state.analysis?.nElements?`${state.analysis.nElements}; required stations may add elements. CAD/STL geometry is unchanged.`:'Solver default; required stations may add elements.');
+    add('Analysis','Torsion sections',state.analysis?.finiteSectionTorsion===true?'Finite-wall homogeneous bonded-spar refinement requested; mixed shear moduli retain the thin-wall method. Closed-tip torsion is unavailable.':'Fast method (default)');
     return rows;
   }
 

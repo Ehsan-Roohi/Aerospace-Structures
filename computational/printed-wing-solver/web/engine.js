@@ -1,7 +1,7 @@
 /*
  * MIE 446 Wing Lab — structural engine.
  * JavaScript port of computational/printed-wing-solver/printed_wing_solver.py (tested Python solver).
- * Units: mm, N, MPa (N/mm^2), g.  No dependencies; runs in the browser and in Node.
+ * Units: mm, N, MPa (N/mm^2), g. Runs in the browser and in Node with bundled section geometry utilities.
  *
  * Differences from the Python solver (checked by verify_engine.mjs):
  *  - the PLA shell section is meshed with a mapped ring of linear triangles instead of
@@ -28,6 +28,8 @@ const WingEngine = (() => {
   const Frame = typeof WingFrame3D !== 'undefined' ? WingFrame3D : (typeof require === 'function' ? require('./wing_frame3d.js') : null);
   const ClosedTipStress = typeof WingClosedTipStress !== 'undefined' ? WingClosedTipStress : (typeof require === 'function' ? require('./wing_closed_tip_stress.js') : null);
   if (!Profiles) throw new Error("Load load_profiles.js before engine.js.");
+  const FiniteSection=typeof WingFiniteSection!=='undefined'?WingFiniteSection:(typeof require==='function'?require('./wing_finite_section.js'):null);
+  const FiniteSectionDeps=typeof WingFiniteSectionDeps!=='undefined'?WingFiniteSectionDeps:(typeof require==='function'?require('./vendor/finite-section-geometry/geometry.min.js'):null);
   const GRAV = 9.81;
   const VERSION = "1.3.0";
   const MESH_LIMITS=Object.freeze({min:4,max:100,legacyDefault:60,spatialDefault:40});
@@ -1053,7 +1055,7 @@ const WingEngine = (() => {
   function sectionAt(input, y) {
     const n = normalize(input);
     if(Geometry.closedTip(n.g))throw Error('The hollow-section torsion/warping detail is unavailable for exact-tip stress studies, including their solid tip region. Use the nominal section-stress result.');
-    return cachedSection(n.g, n.pla, n.rod, n.asm, Math.min(Math.max(y, 0), n.g.semiSpan));
+    const station=Math.min(Math.max(y,0),n.g.semiSpan),sec=cachedSection(n.g,n.pla,n.rod,n.asm,station);return {...sec,...finiteSectionTorsion(input,n.g,n.pla,station,[[1,0],[0,1]],sec.GJ)};
   }
 
   function solve(input = {}) {
@@ -1067,7 +1069,7 @@ const WingEngine = (() => {
     const L = g.semiSpan;
     const seamsActive = asm.seamsBonded ? [] : seams(g);
     const ribs = ribStations(g);
-    const sections = ySec.map((y) => cachedSection(g, pla, rod, asm, y));
+    const sections = ySec.map((y) => {const sec=cachedSection(g,pla,rod,asm,y);return {...sec,...finiteSectionTorsion(input,g,pla,y,[[1,0],[0,1]],sec.GJ)};});
     load=loadWithSelfWeight(sourceLoad,g,pla,sections,ySec,true);
     const col = (k) => sections.map((s) => s[k]);
     const loadNodes = load.kind === "custom" ? load.items.filter(p=>!p.gravity).flatMap(p => loadStations(p, L)) : [];
@@ -1356,6 +1358,15 @@ const WingEngine = (() => {
     if(!ClosedTipStress)throw Error('Load wing_closed_tip_stress.js before engine.js for exact-tip section stress.');
     return ClosedTipStress.solve(input,{E:{ringLoops,outerContour,cavityTipLimit,ribStations,seams,sparParts,sparWidthBreaks,verticalOrdinates},normalize,polyIntegrals,prescribedFlightLoads,customLine,customFraction,Geometry,Frame,GRAV,Profiles,chordAt,airfoilAt,requestedElementCount});
   }
+  function finiteSectionTorsion(input,g,pla,y,B,previous){
+    const parts=sparParts(g,y);if(!parts.length)return {GJ:previous,torsionSection:{method:'existing shell warping FE',finiteWall:false}};
+    if(input.finiteSectionTorsion!==true)return {GJ:previous,torsionSection:{method:'thin-wall network',finiteWall:false}};
+    const G=shearModulus(pla),partG=parts.map(p=>shearModulus(p.s.material));
+    if(partG.some(v=>Math.abs(v-G)>1e-12*G))return {GJ:previous,torsionSection:{method:'multi-material thin-wall network',finiteWall:false,reason:'Finite material-union solve requires a homogeneous shear modulus.'}};
+    const loops=ringLoops(g,y),map=p=>[B[0][0]*p[0]+B[0][1]*p[1],B[1][0]*p[0]+B[1][1]*p[1]];
+    const value=FiniteSection.solve({G,outer:loops.outer.map(map),inner:loops.inner.map(map),spars:parts.flatMap(p=>p.polygons.map(poly=>poly.map(map))),partShearModuli:partG},{deps:FiniteSectionDeps});
+    return {GJ:value.GJ,torsionSection:{method:'finite-wall homogeneous material-union P1 Saint-Venant section',finiteWall:true,J:value.J,GJ:value.GJ,networkGJ:previous,nodes:value.nodes,triangles:value.triangles,refinementRelative:value.refinementRelative,trueRelativeResidual:value.trueRelativeResidual,energyIdentityRelative:value.energyIdentityRelative,shearCentreReplaced:false,scope:value.variationalScope}};
+  }
   function solveSpatial(input,n=normalize(input)) {
     if(Geometry.closedTip(n.g)){const cap=analysisCapability(n.g,input);if(!cap.supported)throw Error(cap.message);return solveClosedTipStress(input);}
     const {g,pla,rod,asm,load:sourceLoad,crit}=n,L=g.semiSpan,F=Frame;
@@ -1403,6 +1414,7 @@ const WingEngine = (() => {
       if(axisChange<1e-5)break;
     }
     if(axisChange>=1e-5)throw Error('The 3-D beam normal-cut/shear-centre iteration did not converge to 0.00001 mm. Reduce geometric gradients or increase section resolution; no unconverged structural result is returned.');
+    samples=samples.map(s=>{const upgrade=finiteSectionTorsion(input,g,pla,s.y,s.B,s.GJ);return {...s,...upgrade,D:Frame.constitutive({...s,GJ:upgrade.GJ})};});
     const column=k=>samples.map(s=>s[k]),at=(k,y)=>interp(y,ys,column(k)),scAt=y=>[interp(y,ys,samples.map(s=>s.scLocal[0])),interp(y,ys,samples.map(s=>s.scLocal[1]))];
     const referenceAt=y=>Geometry.transformPoint(g,y,scAt(y));
     const normalIntegralCache=new Map();

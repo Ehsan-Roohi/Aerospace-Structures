@@ -1,0 +1,254 @@
+{
+  "purpose": "Local polygon union and constrained 2D triangulation; no network service or result fitting",
+  "bundleSha256": "6673d3336d7aa489131e4ff26bb91705ab0181020742c54f5cff2ebb07f5a5ca",
+  "bytes": 56043,
+  "bundler": "esbuild0.25.12",
+  "packages": [
+    {
+      "name": "binary-search-bounds",
+      "version": "2.0.5",
+      "license": "MIT"
+    },
+    {
+      "name": "two-product",
+      "version": "1.0.2",
+      "license": "MIT"
+    },
+    {
+      "name": "robust-sum",
+      "version": "1.0.0",
+      "license": "MIT"
+    },
+    {
+      "name": "two-sum",
+      "version": "1.0.0",
+      "license": "MIT"
+    },
+    {
+      "name": "robust-scale",
+      "version": "1.0.2",
+      "license": "MIT"
+    },
+    {
+      "name": "robust-subtract",
+      "version": "1.0.0",
+      "license": "MIT"
+    },
+    {
+      "name": "robust-orientation",
+      "version": "1.2.1",
+      "license": "MIT"
+    },
+    {
+      "name": "cdt2d",
+      "version": "1.0.0",
+      "license": "MIT"
+    },
+    {
+      "name": "robust-in-sphere",
+      "version": "1.2.1",
+      "license": "MIT"
+    },
+    {
+      "name": "polygon-clipping",
+      "version": "0.15.7",
+      "license": "MIT"
+    }
+  ],
+  "inputs": {
+    ".review-js/node_modules/.pnpm/binary-search-bounds@2.0.5/node_modules/binary-search-bounds/search-bounds.js": {
+      "bytes": 1829,
+      "imports": [],
+      "format": "cjs"
+    },
+    ".review-js/node_modules/.pnpm/two-product@1.0.2/node_modules/two-product/two-product.js": {
+      "bytes": 520,
+      "imports": [],
+      "format": "cjs"
+    },
+    ".review-js/node_modules/.pnpm/robust-sum@1.0.0/node_modules/robust-sum/robust-sum.js": {
+      "bytes": 2417,
+      "imports": [],
+      "format": "cjs"
+    },
+    ".review-js/node_modules/.pnpm/two-sum@1.0.0/node_modules/two-sum/two-sum.js": {
+      "bytes": 252,
+      "imports": [],
+      "format": "cjs"
+    },
+    ".review-js/node_modules/.pnpm/robust-scale@1.0.2/node_modules/robust-scale/robust-scale.js": {
+      "bytes": 862,
+      "imports": [
+        {
+          "path": ".review-js/node_modules/.pnpm/two-product@1.0.2/node_modules/two-product/two-product.js",
+          "kind": "require-call",
+          "original": "two-product"
+        },
+        {
+          "path": ".review-js/node_modules/.pnpm/two-sum@1.0.0/node_modules/two-sum/two-sum.js",
+          "kind": "require-call",
+          "original": "two-sum"
+        }
+      ],
+      "format": "cjs"
+    },
+    ".review-js/node_modules/.pnpm/robust-subtract@1.0.0/node_modules/robust-subtract/robust-diff.js": {
+      "bytes": 2415,
+      "imports": [],
+      "format": "cjs"
+    },
+    ".review-js/node_modules/.pnpm/robust-orientation@1.2.1/node_modules/robust-orientation/orientation.js": {
+      "bytes": 8834,
+      "imports": [
+        {
+          "path": ".review-js/node_modules/.pnpm/two-product@1.0.2/node_modules/two-product/two-product.js",
+          "kind": "require-call",
+          "original": "two-product"
+        },
+        {
+          "path": ".review-js/node_modules/.pnpm/robust-sum@1.0.0/node_modules/robust-sum/robust-sum.js",
+          "kind": "require-call",
+          "original": "robust-sum"
+        },
+        {
+          "path": ".review-js/node_modules/.pnpm/robust-scale@1.0.2/node_modules/robust-scale/robust-scale.js",
+          "kind": "require-call",
+          "original": "robust-scale"
+        },
+        {
+          "path": ".review-js/node_modules/.pnpm/robust-subtract@1.0.0/node_modules/robust-subtract/robust-diff.js",
+          "kind": "require-call",
+          "original": "robust-subtract"
+        }
+      ],
+      "format": "cjs"
+    },
+    ".review-js/node_modules/.pnpm/cdt2d@1.0.0/node_modules/cdt2d/lib/monotone.js": {
+      "bytes": 4282,
+      "imports": [
+        {
+          "path": ".review-js/node_modules/.pnpm/binary-search-bounds@2.0.5/node_modules/binary-search-bounds/search-bounds.js",
+          "kind": "require-call",
+          "original": "binary-search-bounds"
+        },
+        {
+          "path": ".review-js/node_modules/.pnpm/robust-orientation@1.2.1/node_modules/robust-orientation/orientation.js",
+          "kind": "require-call",
+          "original": "robust-orientation"
+        }
+      ],
+      "format": "cjs"
+    },
+    ".review-js/node_modules/.pnpm/cdt2d@1.0.0/node_modules/cdt2d/lib/triangulation.js": {
+      "bytes": 2147,
+      "imports": [
+        {
+          "path": ".review-js/node_modules/.pnpm/binary-search-bounds@2.0.5/node_modules/binary-search-bounds/search-bounds.js",
+          "kind": "require-call",
+          "original": "binary-search-bounds"
+        }
+      ],
+      "format": "cjs"
+    },
+    ".review-js/node_modules/.pnpm/robust-in-sphere@1.2.1/node_modules/robust-in-sphere/in-sphere.js": {
+      "bytes": 24566,
+      "imports": [
+        {
+          "path": ".review-js/node_modules/.pnpm/two-product@1.0.2/node_modules/two-product/two-product.js",
+          "kind": "require-call",
+          "original": "two-product"
+        },
+        {
+          "path": ".review-js/node_modules/.pnpm/robust-sum@1.0.0/node_modules/robust-sum/robust-sum.js",
+          "kind": "require-call",
+          "original": "robust-sum"
+        },
+        {
+          "path": ".review-js/node_modules/.pnpm/robust-subtract@1.0.0/node_modules/robust-subtract/robust-diff.js",
+          "kind": "require-call",
+          "original": "robust-subtract"
+        },
+        {
+          "path": ".review-js/node_modules/.pnpm/robust-scale@1.0.2/node_modules/robust-scale/robust-scale.js",
+          "kind": "require-call",
+          "original": "robust-scale"
+        }
+      ],
+      "format": "cjs"
+    },
+    ".review-js/node_modules/.pnpm/cdt2d@1.0.0/node_modules/cdt2d/lib/delaunay.js": {
+      "bytes": 2418,
+      "imports": [
+        {
+          "path": ".review-js/node_modules/.pnpm/robust-in-sphere@1.2.1/node_modules/robust-in-sphere/in-sphere.js",
+          "kind": "require-call",
+          "original": "robust-in-sphere"
+        },
+        {
+          "path": ".review-js/node_modules/.pnpm/binary-search-bounds@2.0.5/node_modules/binary-search-bounds/search-bounds.js",
+          "kind": "require-call",
+          "original": "binary-search-bounds"
+        }
+      ],
+      "format": "cjs"
+    },
+    ".review-js/node_modules/.pnpm/cdt2d@1.0.0/node_modules/cdt2d/lib/filter.js": {
+      "bytes": 3648,
+      "imports": [
+        {
+          "path": ".review-js/node_modules/.pnpm/binary-search-bounds@2.0.5/node_modules/binary-search-bounds/search-bounds.js",
+          "kind": "require-call",
+          "original": "binary-search-bounds"
+        }
+      ],
+      "format": "cjs"
+    },
+    ".review-js/node_modules/.pnpm/cdt2d@1.0.0/node_modules/cdt2d/cdt2d.js": {
+      "bytes": 2064,
+      "imports": [
+        {
+          "path": ".review-js/node_modules/.pnpm/cdt2d@1.0.0/node_modules/cdt2d/lib/monotone.js",
+          "kind": "require-call",
+          "original": "./lib/monotone"
+        },
+        {
+          "path": ".review-js/node_modules/.pnpm/cdt2d@1.0.0/node_modules/cdt2d/lib/triangulation.js",
+          "kind": "require-call",
+          "original": "./lib/triangulation"
+        },
+        {
+          "path": ".review-js/node_modules/.pnpm/cdt2d@1.0.0/node_modules/cdt2d/lib/delaunay.js",
+          "kind": "require-call",
+          "original": "./lib/delaunay"
+        },
+        {
+          "path": ".review-js/node_modules/.pnpm/cdt2d@1.0.0/node_modules/cdt2d/lib/filter.js",
+          "kind": "require-call",
+          "original": "./lib/filter"
+        }
+      ],
+      "format": "cjs"
+    },
+    ".review-js/node_modules/.pnpm/polygon-clipping@0.15.7/node_modules/polygon-clipping/dist/polygon-clipping.umd.js": {
+      "bytes": 89619,
+      "imports": [],
+      "format": "cjs"
+    },
+    ".review-js/finite-section-entry.cjs": {
+      "bytes": 85,
+      "imports": [
+        {
+          "path": ".review-js/node_modules/.pnpm/cdt2d@1.0.0/node_modules/cdt2d/cdt2d.js",
+          "kind": "require-call",
+          "original": "cdt2d"
+        },
+        {
+          "path": ".review-js/node_modules/.pnpm/polygon-clipping@0.15.7/node_modules/polygon-clipping/dist/polygon-clipping.umd.js",
+          "kind": "require-call",
+          "original": "polygon-clipping"
+        }
+      ],
+      "format": "cjs"
+    }
+  }
+}

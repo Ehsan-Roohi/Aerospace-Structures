@@ -812,6 +812,8 @@ body { margin: 0; }
 /*__WING_CHART_MATH__*/
 /*__WING_AIRFOILS__*/
 /*__WING_GEOMETRY__*/
+/*__WING_FINITE_SECTION_DEPS__*/
+/*__WING_FINITE_SECTION__*/
 /*__WING_FRAME3D__*/
 /*__WING_GEOMETRY_UI__*/
 /*__WING_GEOMETRY_HELP__*/
@@ -915,7 +917,7 @@ body { margin: 0; }
   }
   function engineInput() {
     const { pla, rod } = materials();
-    return { geometry: { ...S.geometry }, pla, rod, assembly: { ...S.assembly }, load: { ...S.load }, criteria: { ...S.criteria }, ...(S.analysis?{nElements:S.analysis.nElements}:{}) };
+    return { geometry: { ...S.geometry }, pla, rod, assembly: { ...S.assembly }, load: { ...S.load }, criteria: { ...S.criteria }, ...(S.analysis?{...S.analysis}:{}) };
   }
 
   // ------------------------------------------------------------ study tree
@@ -1267,6 +1269,7 @@ body { margin: 0; }
     const create=$('#wingEmptyStart');if(create)create.hidden=!S.emptyStudy;
     const title=$('#wingProjectTitle');if(title)title.textContent=S.projectName||'Wing Virtual Lab';
     if(typeof printedWorkspace!=='undefined'&&printedWorkspace)for(const b of printedWorkspace.tools.querySelectorAll('[data-wing-action]'))if(['load','rib','rod','spar','parts','inside','notebook','select-wing'].includes(b.dataset.wingAction))b.disabled=!!S.emptyStudy||running;
+    const refine=$('#wingRefineTorsion');if(refine){refine.checked=S.analysis?.finiteSectionTorsion===true;refine.disabled=WingGeometry.closedTip(S.geometry);}
     const mesh=$('#wingMeshElements');if(mesh&&document.activeElement!==mesh)mesh.value=S.analysis?.nElements??'';if(mesh){const exact=WingGeometry.closedTip(S.geometry);mesh.parentNode.firstChild.nodeValue=exact?'Stress sampling ':'Beam mesh ';mesh.setAttribute('aria-label',exact?'Requested spanwise stress sampling':'Requested wing beam elements');mesh.parentNode.title=exact?'Controls the spanwise stress-plot sampling; this section-equilibrium method has no beam mesh. Geometry/STL are unchanged.':'4–100 requested spanwise beam elements; required stations may add elements.';}
     const key = JSON.stringify([S.geometry, fieldErrors, S.assembly.seamsBonded,S.emptyStudy,window.wingChordInputMode||'tip']);
     if (!force && key === inputsKey) return;
@@ -3691,7 +3694,7 @@ body { margin: 0; }
     const meshControl=el('label',{class:'wing-mesh-control'},'Beam mesh '),meshInput=el('input',{type:'number',id:'wingMeshElements',min:4,max:100,step:1,'aria-label':'Requested wing beam elements',placeholder:'Auto'});
     meshInput.style.cssText='width:76px';meshControl.append(meshInput);meshControl.title='4–100 requested spanwise beam elements. Required load, rib, seam and section stations may add elements. This does not change CAD/STL geometry.';
     printedWorkspace.tools.insertBefore(meshControl,printedWorkspace.tools.querySelector('.wing-quick-hint'));
-    meshInput.onchange=()=>{const text=meshInput.value.trim(),n=Number(text);if(text&&(!Number.isInteger(n)||n<4||n>100)){meshInput.setCustomValidity('Enter a whole number from 4 to 100, or leave blank for the solver default.');meshInput.reportValidity();return;}meshInput.setCustomValidity('');S.analysis=text?{nElements:n}:null;edited();renderTree();};
+    meshInput.onchange=()=>{const text=meshInput.value.trim(),n=Number(text);if(text&&(!Number.isInteger(n)||n<4||n>100)){meshInput.setCustomValidity('Enter a whole number from 4 to 100, or leave blank for the solver default.');meshInput.reportValidity();return;}meshInput.setCustomValidity('');S.analysis={...(S.analysis||{})};if(text)S.analysis.nElements=n;else delete S.analysis.nElements;if(!Object.keys(S.analysis).length)S.analysis=null;edited();renderTree();};
     meshInput.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();meshInput.onchange();}};
     const clearButton=printedWorkspace.tools.querySelector('[data-wing-action="clear"]');clearButton.textContent='New / Clear';clearButton.title='Clear the whole study and start on an empty canvas · Undo available';clearButton.style.cssText='color:var(--bad);border-color:var(--bad)';
     wingSelection=WingSelectionUI.mount({canvas,viewport:canvas.parentElement,button:printedWorkspace.tools.querySelector('[data-wing-action="select-wing"]'),getBounds:()=>renderedWingScreenBounds(),onDelete:()=>{if(printedWorkspace.popup.hidden)requestClearWingStudy(null,clearButton);},setOrbitEnabled:enabled=>{controls.enabled=enabled;},isActive:()=>!$('#app').hidden&&!S.emptyStudy&&!running&&!gateOpen()&&printedWorkspace.popup.hidden});
@@ -3723,6 +3726,9 @@ body { margin: 0; }
     const help=el('details',{class:'wing-input-help',id:'wingInputHelp'},'<summary class="btn">Help ▾</summary><div class="wing-help-content"></div>'),helpBody=help.querySelector('div');
     const modelHelp=el('details',{},'<summary>Model &amp; manufacturing limits</summary>');modelHelp.append($('#wingModelNote'));helpBody.append(modelHelp);
     helpBody.append(el('details',{id:'wingHelpStructure'},'<summary>Ribs, rods &amp; bonded spars · model and limits</summary>'));
+    const torsionHelp=el('details',{},'<summary>Torsion accuracy</summary><label><input type="checkbox" id="wingRefineTorsion"> Refine homogeneous bonded-spar torsion</label><p class="note">Optional finite-wall material-union section FE for GJ; the fast thin-wall method remains the default. Initial solves may take several seconds; unchanged sections are cached. The setting is saved in JSON. Mixed shear moduli retain the thin-wall method. Closed-tip studies do not compute torsional displacement. Shear-centre location and restrained-warping normal stress are not upgraded.</p><p class="note">Independent CalculiX 2.23 solid comparison on one swept, tapered benchmark: generalized torque response difference about 2.1% with the fast method and 0.8–0.9% with refinement. This is a benchmark, not a universal error bound. Local rib, clamp and warping stresses remain outside beam-model validation.</p>');helpBody.append(torsionHelp);
+    torsionHelp.querySelector('input').onchange=e=>{S.analysis={...(S.analysis||{}),finiteSectionTorsion:e.target.checked};edited();renderTree();};
+
     const historyHelp=el('details',{class:'wing-history-help'},'<summary>Undo / Redo</summary><p class="note">Undo/Redo restores up to 100 saved input states, including geometry, project name, materials, loads and the cleared canvas. A new edit clears Redo. Outside text fields use Ctrl/Cmd+Z, Ctrl/Cmd+Shift+Z or Ctrl+Y. Restored inputs need Solve unless automatic solving is enabled. History is kept for this page session, not saved in JSON.</p>');helpBody.append(historyHelp);
     helpBody.append(el('details',{},'<summary>Selection &amp; clearing</summary><p class="note">Click visible parts to edit them. To select the entire wing, click Select wing, or use Ctrl/Cmd+A outside text fields. An outline and Delete selected button confirm the selection. You can also drag a rectangle around the whole wing. Delete selected or the Delete key opens Clear confirmation. Esc cancels selection. New / Clear is in the main toolbar; Undo restores your previous inputs. Normal dragging rotates the view.</p>'));
     const example=el('button',{class:'btn',type:'button',id:'wgCourseExample'},'Optional course wing example');example.onclick=()=>{if(confirm('Replace the current wing with the course example? Geometry, materials and connections will reset, and applied loads will be cleared.'))window.dispatchEvent(new CustomEvent('wing-learning-stage',{detail:'project'}));};helpBody.append(example);

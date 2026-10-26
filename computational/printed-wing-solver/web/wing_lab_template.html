@@ -133,7 +133,8 @@ button, input, select { font: inherit; color: inherit; }
 #wrImage:hover { background:#0755ae; border-color:#03438f; }
 #wrImage:focus-visible { outline:3px solid #ffbf47; outline-offset:3px; }
 [aria-label="Plot"] { flex-wrap:nowrap; }
-#wingMoreResults { max-width:155px; padding:7px 5px; }
+#wingMoreResults { max-width:235px; padding:7px 5px; }
+#wingMoreResultsNote { max-width:560px; font-size:11px; line-height:1.25; }
 .plotinfo b { font-weight: 500; color: var(--vp-ink); opacity: 0.65; }
 .legend { display: flex; gap: 8px; font: 11px/1 var(--font-data); margin-top: -4px; }
 .legend .bar-c { width: 16px; border: 1px solid rgba(0, 0, 0, 0.35); display: flex; flex-direction: column; }
@@ -1506,8 +1507,8 @@ body { margin: 0; }
     syncWingHistory();
     const chip = $("#stateChip"), t = $("#stateText"), btn = $("#runBtn");
     const closed=WingGeometry.closedTip(S.geometry),bending=closed&&!stale?R?.analysis3D?.bending:null;btn.disabled=!!S.emptyStudy;btn.title=closed?'Solve nominal section stress and Euler–Bernoulli bending components; torsion and exact-apex stress are unresolved.':'';
-    document.querySelectorAll('#app [data-plot]').forEach(b=>b.disabled=closed&&!['model','stress',...(bending?['disp']:[])].includes(b.dataset.plot));
-    $('#wingMoreResults').disabled=closed;const bendButton=$('#wingShowBendingTwist');if(bendButton){bendButton.disabled=closed&&(!bending||!bending.tip.translationFinite);bendButton.textContent=closed?'Show bending component':'Show bending & twist';}$('#defBtn').disabled=closed&&(!bending||!bending.tip.translationFinite);$('#defBtn').textContent=closed?'Bending illustration':'Deformed';document.querySelector('#app [data-plot="disp"]').textContent=closed?'Bending displacement':'Displacement';$('#shearCentreBtn').disabled=closed;$('#shearCentreBtn').title=closed?'Shear centre is not computed by this section-equilibrium normal-stress model.':'Calculated shear-centre path; eccentric loads may twist the wing.';
+    document.querySelectorAll('#app [data-plot]').forEach(b=>b.disabled=closed&&!['model','stress','bending','torque',...(bending?['disp']:[])].includes(b.dataset.plot));
+    syncMoreResults();const bendButton=$('#wingShowBendingTwist');if(bendButton){bendButton.disabled=closed&&(!bending||!bending.tip.translationFinite);bendButton.textContent=closed?'Show bending component':'Show bending & twist';}$('#defBtn').disabled=closed&&(!bending||!bending.tip.translationFinite);$('#defBtn').textContent=closed?'Bending illustration':'Deformed';document.querySelector('#app [data-plot="disp"]').textContent='Displacement';$('#shearCentreBtn').disabled=closed;$('#shearCentreBtn').title=closed?'Shear centre is not computed by this section-equilibrium normal-stress model.':'Calculated shear-centre path; eccentric loads may twist the wing.';
     const out = stale && !!R;
     btn.classList.toggle("stale", stale && !running);
     btn.dataset.pending = String(stale && !running);
@@ -1573,7 +1574,7 @@ body { margin: 0; }
         await frame();
       }
       R = TeachingModels.studentResult(E.solve(input));
-      if(R.analysis3D&&(['mode','fos'].includes(S.plot)||R.analysis3D.stressOnly&&!['model','stress',...(R.analysis3D.bending?['disp']:[])].includes(S.plot))){S.plot='model';document.querySelectorAll('#app [data-plot]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.plot==='model')));}
+      if(R.analysis3D&&(['mode','fos'].includes(S.plot)||R.analysis3D.stressOnly&&!['model','stress','bending','torque',...(R.analysis3D.bending?['disp']:[])].includes(S.plot))){S.plot='model';document.querySelectorAll('#app [data-plot]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.plot==='model')));}
       // A successful solve clears an error message that was on screen when it started (not one entered meanwhile).
       if (inputError === errorAtStart) inputError = null;
       if (fieldErrors === fieldErrorsAtStart) fieldErrors = {};
@@ -2049,7 +2050,7 @@ body { margin: 0; }
     const poster=document.createElement('canvas');poster.width=w+left;poster.height=h+top+85;const ctx=poster.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,poster.width,poster.height);
     const oldRatio=renderer.getPixelRatio(),oldSize=renderer.getSize(new THREE.Vector2()),oldAspect=camera.aspect;
     try{renderer.setPixelRatio(1);renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();renderer.render(scene,camera);ctx.drawImage(canvas,left,top,w,h);
-      ctx.fillStyle='#111';ctx.font='bold 24px Arial';ctx.fillText(S.projectName||'Wing design',22,32,poster.width-44);ctx.font='16px Arial';const kind={stress:'Nominal normal beam stress (MPa)',disp:R.analysis3D?.bending?'Transverse bending component (mm), torsion excluded':'Resultant displacement (mm)',model:'Model geometry',fos:'Normal strength ratio',twist:'Elastic axis twist (degrees)',bending:'Resultant bending moment (N·m)',torque:'Signed local torque (N·m)',mode:'Normalised mode shape'}[S.plot];ctx.fillText(kind+' · estimated '+(fullWingPrint?'full-wing':'semi-wing')+' mass '+nf(R.mass.total*(fullWingPrint?2:1),1)+' g',22,59,poster.width-44);
+      ctx.fillStyle='#111';ctx.font='bold 24px Arial';ctx.fillText(S.projectName||'Wing design',22,32,poster.width-44);ctx.font='16px Arial';const kind={stress:'Nominal normal beam stress (MPa)',disp:R.analysis3D?.bending?'Transverse bending component (mm), torsion excluded':'Resultant displacement (mm)',model:'Model geometry',fos:'Normal strength ratio',twist:'Elastic axis twist (degrees)',bending:'Resultant bending moment (N·m)',torque:R.analysis3D?.stressOnly?'Span-axis moment about section centroid (N·m), shear-centre torque unresolved':'Signed local torque (N·m)',mode:'Normalised mode shape'}[S.plot];ctx.fillText(kind+' · estimated '+(fullWingPrint?'full-wing':'semi-wing')+' mass '+nf(R.mass.total*(fullWingPrint?2:1),1)+' g',22,59,poster.width-44);
       ctx.font='14px Arial';ctx.fillText((R.analysis3D?.bending?'Bending-only translation illustration · ':'')+'Deformation scale '+(S.deformed?nf(deformAmount().scale,2):'0 (undeformed)')+' · '+resultDisplay.scaleMode+' colour scale · '+(signedLogColours()?'signed logarithmic contrast · ':'linear contrast · ')+(resultDisplay.bands?'12 bands':'continuous'),22,82,poster.width-44);
       if(['stress','disp','fos','twist','bending','torque'].includes(S.plot)){const x=22,y=top+12,bh=Math.min(350,h-30);for(let j=0;j<bh;j++){const c=rainbow(1-j/(bh-1));ctx.fillStyle='#'+c.getHexString();ctx.fillRect(x,y+j,28,1);}ctx.fillStyle='#111';ctx.font='14px Arial';for(let i=0;i<=6;i++)ctx.fillText(sig(colourValue(1-i/6),5),60,y+12+i*bh/6);}
       for(const p of resultLabels()){if(!p.mesh.visible)continue;const v=resultWorldPoint(p);if(S.clip&&v.x>S.clipY)continue;v.project(camera);if(Math.abs(v.x)>1||Math.abs(v.y)>1||Math.abs(v.z)>1)continue;const x=left+(v.x+1)*w/2,y=top+(1-v.y)*h/2;ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(x,y,5,0,2*Math.PI);ctx.fill();ctx.font='bold 14px Arial';const txt=p.label+' '+sig(p.value,4)+' MPa';const tw=ctx.measureText(txt).width;const tx=Math.min(poster.width-tw-15,Math.max(left+5,x+10)),ty=Math.max(top+20,y-10);ctx.fillStyle='#fff';ctx.fillRect(tx-3,ty-16,tw+6,22);ctx.fillStyle=p.color;ctx.fillText(txt,tx,ty);}
@@ -2067,10 +2068,23 @@ body { margin: 0; }
   const at = (arr, y) => E.interp(y, R.y, arr);
   const zscAt = (y) => E.interp(y, R.ySec, R.sections.map((s) => s.zsc));
   const sectionResultMeta={twist:{label:'Elastic axis twist',unit:'°'},bending:{label:'Resultant bending moment',unit:'N·m'},torque:{label:'Signed local torque',unit:'N·m'}};
+  function sectionMeta(kind){return kind==='torque'&&R?.analysis3D?.stressOnly?{label:'Span-axis moment (centroid)',unit:'N·m'}:sectionResultMeta[kind];}
+  function syncMoreResults(){
+    const closed=WingGeometry.closedTip(S.geometry),spatial=!!R?.analysis3D,select=$('#wingMoreResults');
+    select.disabled=false;
+    for(const option of select.options){
+      const unavailable=closed&&option.value==='twist'||(closed||spatial)&&['fos','mode'].includes(option.value);
+      option.disabled=unavailable;
+      option.title=unavailable?(option.value==='twist'?'Twist is not computed by the closed-tip bending-component model.':'Not computed by the spatial beam model.') : '';
+      if(option.value==='torque')option.textContent=closed?'Span-axis moment (centroid)':'Torque';
+    }
+    let note=$('#wingMoreResultsNote');if(!note){note=el('span',{id:'wingMoreResultsNote',class:'note'});$('#legend').after(note);}
+    note.hidden=!closed;note.textContent=closed?'Twist, overall factor of safety and modes are unavailable. Span-axis moment is about the section centroid; shear-centre torque is unresolved.':'';
+  }
   function sectionResultValue(result,y,kind){
     if(kind==='twist')return E.interp(y,result.y,result.twist)*180/Math.PI;
     if(kind==='torque')return E.interp(y,result.y,result.analysis3D?.localT||result.T)/1000;
-    if(kind==='bending')return result.analysis3D?Math.hypot(E.interp(y,result.y,result.analysis3D.localM2),E.interp(y,result.y,result.analysis3D.localM3))/1000:Math.abs(E.interp(y,result.y,result.M))/1000;
+    if(kind==='bending')return result.analysis3D?.localM2&&result.analysis3D?.localM3?Math.hypot(E.interp(y,result.y,result.analysis3D.localM2),E.interp(y,result.y,result.analysis3D.localM3))/1000:Math.abs(E.interp(y,result.y,result.M))/1000;
     return NaN;
   }
   function fieldValue(y, x, z, kind,member) {
@@ -2352,7 +2366,7 @@ body { margin: 0; }
       : Array.from({ length: 7 }, (_, i) => colourValue(1-i/6));
     lg.innerHTML = `<div class="bar-c" style="height:${Math.min(220, Math.max(96, canvas.clientHeight * (canvas.clientWidth < 560 ? 0.24 : 0.36)))}px">${bands.map((c) => `<div style="background:#${c.getHexString()}"></div>`).join("")}</div>` +
       `<div class="ticks">${ticks.map((v) => `<span>${kind === "fos" && v >= 10 ? "≥10" : sig(v, 3)}</span>`).join("")}</div>`;
-    if(sectionResultMeta[kind])lt.textContent=sectionResultMeta[kind].label+' ('+sectionResultMeta[kind].unit+') · section value';
+    if(sectionResultMeta[kind])lt.textContent=sectionMeta(kind).label+' ('+sectionMeta(kind).unit+') · section value';
     void unit;
   }
   function renderPlotInfo() {
@@ -2538,7 +2552,7 @@ body { margin: 0; }
     const c = E.chordAt(R.geometry, y);
     let body;
     if(sectionResultMeta[S.plot]){
-      const meta=sectionResultMeta[S.plot],value=sectionResultValue(R,y,S.plot);
+      const meta=sectionMeta(S.plot),value=sectionResultValue(R,y,S.plot);
       body=`<b>${meta.label}</b><br>y ${nf(y,1)} mm<br><b>${sig(value,5)} ${meta.unit}</b><br>Section result; constant across this section.`;
     } else if (u.kind === "rod") {
       const k = at(R.kappa, y);
@@ -2904,7 +2918,7 @@ body { margin: 0; }
     $('#app > .dock').hidden = false;
     const spatial=!!R.analysis3D;
     $('#app > .dock > .tabs').hidden=spatial;
-    $('#wingMoreResults').querySelectorAll('option[value="mode"],option[value="fos"]').forEach(b=>b.disabled=spatial);
+    syncMoreResults();
     document.querySelectorAll('#app > .bar [data-plot="mode"],#app > .bar [data-plot="fos"]').forEach(b=>{b.disabled=spatial;b.title=spatial?'Unavailable for the spatial beam model':'';});
     if(spatial){
       renderTree();renderPM();renderWingLoads();renderInputs();renderInventory();renderViewReadout(true);
@@ -2960,7 +2974,7 @@ body { margin: 0; }
     chart(charts,'Elastic axis twist / streamwise incidence change','degrees',a.spanStations,[{y:R.twist.map(x=>x*180/Math.PI),color:'#246fd0',label:'Axis twist'},{y:a.elasticIncidenceDeg||a.rotations.map(p=>p[1]*180/Math.PI),color:'#c93d48',label:'Streamwise incidence'}]);
     chart(charts,'Cut force Fx / Fy / Fz','N',R.y,curves(a.resultants.map(p=>p.force)));
     chart(charts,'Cut moment Mx / My / Mz','N·m',R.y,curves(a.resultants.map(p=>p.moment.map(x=>x/1000))));
-    if(a.localM2&&a.localM3&&a.localT)chart(charts,'Signed local bending M2 / M3 and torsion T','N·m',R.y,[{y:a.localM2.map(x=>x/1000),color:colors[0],label:'M2'},{y:a.localM3.map(x=>x/1000),color:colors[1],label:'M3'},{y:a.localT.map(x=>x/1000),color:colors[2],label:'T'}]);
+    if(a.localM2&&a.localM3&&a.localT)chart(charts,a.stressOnly?'Signed local bending M2 / M3 and span-axis moment about centroid':'Signed local bending M2 / M3 and torsion T','N·m',R.y,[{y:a.localM2.map(x=>x/1000),color:colors[0],label:'M2'},{y:a.localM3.map(x=>x/1000),color:colors[1],label:'M3'},{y:a.localT.map(x=>x/1000),color:colors[2],label:'T'}]);
     chart(charts,'Skin normal stress · tension / compression','MPa',R.y,[{y:a.normalStress.skinTension,color:'#246fd0'},{y:a.normalStress.skinCompression.map(x=>-x),color:'#c93d48'}]);
     $('#report').value=spatialReportText();
   }
@@ -3356,7 +3370,7 @@ body { margin: 0; }
 
   // ------------------------------------------------------------ wiring
   function setPlot(p) {
-    if(WingGeometry.closedTip(S.geometry)&&!['model','stress',...(R?.analysis3D?.bending?['disp']:[])].includes(p)){$('#wingStatusDetails').open=true;return;}
+    if(WingGeometry.closedTip(S.geometry)&&!['model','stress','bending','torque',...(R?.analysis3D?.bending?['disp']:[])].includes(p)){$('#wingStatusDetails').open=true;return;}
     if(R?.analysis3D&&(p==='mode'||p==='fos')){flash('Natural frequencies and an overall factor of safety are not computed by the spatial beam model. Use normal Stress, Displacement and the 3-D result record.');return;}
     if(sectionResultMeta[p]){S.stressComponent='skin';S.anatomy='assembled';S.xray=false;$('#xrayBtn').setAttribute('aria-pressed','false');applyXray();}
     if(p==='fos')S.stressComponent='skin';

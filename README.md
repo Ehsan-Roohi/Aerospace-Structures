@@ -132,6 +132,8 @@ The G-code is provided for inspection only. Do not send it directly to a printer
 
 ## Engineering readings and case studies
 
+**[Fermat’s Last Theorem: from integer triangles to modularity and machine-checked proof](FERMATS_LAST_THEOREM.md)** — extended mathematical enrichment reading: a complete exponent-four descent proof, Frey curves, modular forms, the Wiles–Taylor–Wiles argument, a sourced assessment of the 2026 Lean formalization, and reproducible Python activities linking exact arithmetic with structural model verification. Includes exercises, a glossary and primary references; optional reading, not a syllabus change.
+
 **[Speed Tape and Aircraft Repairs](SPEED_TAPE_AND_AIRCRAFT_REPAIRS.md)** — [complete illustrated reading](https://ehsan-roohi.github.io/Aerospace-Structures/case-studies/speed-tape/): foil/adhesive construction, peel versus shear, aerodynamic loads, thermal mismatch, a documented rejected repair proposal, claim checks and classroom calculations. Explains why a surface cover is not a structural joint and catalogue data are not aircraft repair authorization.
 
 ### Wright flight controls and structural flexibility

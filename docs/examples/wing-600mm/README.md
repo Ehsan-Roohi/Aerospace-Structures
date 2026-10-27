@@ -1,6 +1,6 @@
 # Wing Lab tutorial sample
 
-[Watch the Wing Lab tutorial](https://www.youtube.com/watch?v=pAAL-Z3Q5co) · [Open Wing Lab](https://ehsan-roohi.github.io/Aerospace-Structures/wing-lab)
+[Watch the Wing Lab tutorial](https://www.youtube.com/watch?v=jPvV_6v4KXA) · [Open Wing Lab](https://ehsan-roohi.github.io/Aerospace-Structures/wing-lab)
 
 - [Editable design JSON](Wing_600mm.json): use **Open JSON** in Wing Lab.
 - [Semi-wing STL ZIP](Wing_600mm_Semi_Wing_STL.zip): three modules.

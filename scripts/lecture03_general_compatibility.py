@@ -51,29 +51,76 @@ The procedure stays the same:
 
 The following example shows how this works with one extra support. The beam remains continuous across the roller: its displacement and slope do not jump there.
 
-#### Example: keep both end clamps and add a vertical roller at C
+#### Example: two end clamps and one middle roller
 
-Let A be x = 0, C be x = a = L/2, and B be x = L. The five transverse unknowns are Rₐ, Cₐ, R꜀, R<sub>B</sub> and C<sub>B</sub>. There are two independent equilibrium equations, so this beam has **three redundants**. Build the shape from A with v(0) = θ(0) = 0. The three remaining geometric equations are
+The load P = 2 N acts at **x = L/4**. The roller C is at **x = L/2**. A is at zero and B is at L. First draw the physical supports; then replace them with reactions in a separate free-body diagram, as the figure below does.
 
-$$\boxed{v(a)=0},\qquad \boxed{v(L)=0},\qquad \boxed{\theta(L)=0}.$$
+| Support | What it prevents | Unknown reactions | Geometric conditions |
+|---|---|---|---|
+| A: left clamp | Vertical movement and rotation | R<sub>A</sub>, C<sub>A</sub> | v(0) = 0, θ(0) = 0 |
+| C: middle roller | Vertical movement only | R<sub>C</sub> | v(L/2) = 0 |
+| B: right clamp | Vertical movement and rotation | R<sub>B</sub>, C<sub>B</sub> | v(L) = 0, θ(L) = 0 |
 
-**Do not add θ(a) = 0:** a roller permits rotation. Also, a roller underneath a continuous beam is not an internal hinge: M(a) need not be zero. If the roller can lift off, the assumed contact must be checked after solving; the example below has an upward contact reaction.
+There are five transverse reactions but only two whole-beam equilibrium equations. This leaves **three redundants**. The two conditions at A fix the starting displacement and slope when we integrate. The three remaining conditions determine the remaining reactions:
 
-For a 2 N downward point load at b = L/4, and with every transverse reaction positive downward and every external couple positive clockwise, the moment from a left-part cut is
+- **v(L/2) = 0:** the beam stays at the roller's height at C.
+- **v(L) = 0:** the right clamp keeps B at its original height.
+- **θ(L) = 0:** the right clamp keeps the tangent at B horizontal.
 
-$$M(x)=C_A-R_Ax-P\max(x-b,0)-R_C\max(x-a,0).$$
+**Do not add θ(L/2) = 0:** the roller does not hold the beam horizontal. Also, the beam is not cut at C. Its material can still transmit an internal bending moment across that section, even though the roller supplies no external reaction couple. Thus **M(L/2) need not be zero**. An actual internal hinge would be a different model.
 
-A max term activates only after the cut passes that force. With constant EI, the three displacement/rotation conditions reduce to
+#### Step 1: write the moment for three possible cut positions
 
-$$C_AL-\frac{R_AL^2}{2}-\frac{P(L-b)^2}{2}-\frac{R_C(L-a)^2}{2}=0,$$
+In the free-body diagram, assume **all reactions downward and both reaction couples clockwise**. These are positive reference directions, not a prediction of their actual directions. A negative answer reverses the corresponding arrow. The internal moment M is still sagging-positive, as in the rest of the notebook.
 
-$$\frac{C_AL^2}{2}-\frac{R_AL^3}{6}-\frac{P(L-b)^3}{6}-\frac{R_C(L-a)^3}{6}=0,$$
+Isolate the part to the **left** of the cut. A force enters its moment balance only once that force lies on the isolated part:
 
-$$\frac{C_Aa^2}{2}-\frac{R_Aa^3}{6}-\frac{P\max(a-b,0)^3}{6}=0.$$
+$$M(x)=\begin{cases}
+C_A-R_Ax,&0\leq x<L/4,\\
+C_A-R_Ax-P(x-L/4),&L/4\leq x<L/2,\\
+C_A-R_Ax-P(x-L/4)-R_C(x-L/2),&L/2\leq x\leq L.
+\end{cases}$$
 
-These three equations determine Cₐ, Rₐ and R꜀. Then whole-beam equilibrium determines R<sub>B</sub> and C<sub>B</sub>. The code below checks all five prescribed motions and plots the continuous shape; the slope at C is free to be nonzero.
+Before L/4, the left part contains only the actions at A. After L/4, include P with lever arm x − L/4. After L/2, also include R<sub>C</sub> with lever arm x − L/2. The right-support reactions do not appear in these left-part cuts inside the span; we recover them later from whole-beam equilibrium.
 
-**Special case:** if the original middle point force is placed exactly over the newly added support at C, that support can carry the whole force directly: R꜀ = −P, with zero bending and zero other reactions in this ideal model. That is a special load path, not the general three-redundant solution. We move the demonstration load to L/4 to make the compatibility calculation visible.
+#### Step 2: integrate each contribution
+
+For constant EI, integrate M once to obtain slope and again to obtain displacement. Multiply the entries in each integration column below by **−1/EI**. The starting values v(0) = θ(0) = 0 are already applied.
+
+| Contribution to M | After one integration, for θ | After two integrations, for v |
+|---|---|---|
+| C<sub>A</sub> | C<sub>A</sub>x | C<sub>A</sub>x²/2 |
+| −R<sub>A</sub>x | −R<sub>A</sub>x²/2 | −R<sub>A</sub>x³/6 |
+| −P(x − L/4), after the load | −P(x − L/4)²/2 | −P(x − L/4)³/6 |
+| −R<sub>C</sub>(x − L/2), after C | −R<sub>C</sub>(x − L/2)²/2 | −R<sub>C</sub>(x − L/2)³/6 |
+
+For example, the load contribution gains a squared lever arm after the first integration and a cubed lever arm after the second. The factors 2 and 6 come from integrating once and then again. **Before its force position, each delayed contribution is zero.** At that position its new terms start at zero, so the beam's displacement and slope stay continuous.
+
+#### Step 3: turn each support condition into one equation
+
+**Equation 1 comes from θ(L) = 0.** Use the first-integration column at x = L. The lever arms are L − L/4 = 3L/4 for P and L − L/2 = L/2 for R<sub>C</sub>. Because θ(L) is zero, the common nonzero factor −1/EI cancels:
+
+$$C_AL-\frac{R_AL^2}{2}-\frac{P(3L/4)^2}{2}-\frac{R_C(L/2)^2}{2}=0.$$
+
+**Equation 2 comes from v(L) = 0.** Use the second-integration column at x = L, with the same two lever arms:
+
+$$\frac{C_AL^2}{2}-\frac{R_AL^3}{6}-\frac{P(3L/4)^3}{6}-\frac{R_C(L/2)^3}{6}=0.$$
+
+**Equation 3 comes from v(L/2) = 0.** Now evaluate displacement at C instead of at B. The load P is L/4 away from C. The term associated with R<sub>C</sub> starts at C, so its cubed lever arm is zero there:
+
+$$\frac{C_A(L/2)^2}{2}-\frac{R_A(L/2)^3}{6}-\frac{P(L/4)^3}{6}=0.$$
+
+R<sub>C</sub> is determined together with the other unknowns through the first two equations; its absence from the third does not mean that the middle support has no effect.
+
+Solve these three equations for C<sub>A</sub>, R<sub>A</sub> and R<sub>C</sub>. Finally use **whole-beam equilibrium** to find R<sub>B</sub> and C<sub>B</sub>:
+
+$$R_A+R_C+R_B+P=0,$$
+
+$$C_A+C_B+R_C\frac{L}{2}+R_BL+P\frac{L}{4}=0.$$
+
+The code below checks these two balances and all five prescribed support motions. Its nonzero θ(C) shows that a roller permits rotation. A roller underneath the beam must also remain in contact; the upward R<sub>C</sub> in this example satisfies that contact direction.
+
+**Special case:** if P acts exactly over C rather than at L/4, C can carry the whole load directly: R<sub>C</sub> = −P, with zero other reactions and zero bending in this ideal model. We use L/4 here to show a nontrivial compatibility calculation.
 
 This is still the integration method used in this lecture. A later unit-load/flexibility formulation organizes the same independent conditions into a matrix; adding more supports does not require inventing new equilibrium laws.
 """

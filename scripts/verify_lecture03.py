@@ -80,7 +80,7 @@ assert 'not the Flyer geometry or the answer to HW 4' in markdown
 assert '0.0150000' in markdown
 
 assert 'Why use the conditions at L rather than at zero?' in markdown
-assert 'three redundants' in markdown and 'Do not add θ(a) = 0' in markdown
+assert 'three redundants' in markdown and 'Do not add θ(L/2) = 0' in markdown
 assert 'Compatibility, one step at a time' in markdown
 assert r'v(L)-v(0)=\int_0^L\theta(x)' in markdown
 assert any(c['id']=='cut-fbd-schematic' for c in nb['cells'])

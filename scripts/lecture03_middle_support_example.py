@@ -1,7 +1,7 @@
 #@title A fixed-fixed beam with an additional middle roller: solve and check
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.patches import Rectangle, Polygon
+from matplotlib.patches import Rectangle, Polygon, FancyArrowPatch
 
 
 def lecture03_middle_support_example():
@@ -11,7 +11,7 @@ def lecture03_middle_support_example():
     rigidity = elastic_modulus * inertia
 
     def reactions(load_station):
-        # Columns: CA, RA, RC. Rows: theta(L), v(L), v(a).
+        # Columns: CA, RA, RC. Rows: theta(L), v(L), v(L/2).
         matrix = np.array([[span, -span**2/2, -(span-support)**2/2],
                            [span**2/2, -span**3/6, -(span-support)**3/6],
                            [support**2/2, -support**3/6, 0.0]])
@@ -46,7 +46,7 @@ def lecture03_middle_support_example():
     print("RB is downward; an end clamp can transmit either sign of vertical reaction.")
     print("All five prescribed support motions and both equilibrium equations passed.")
 
-    fig, axes = plt.subplots(2,1,figsize=(12,6.3),layout='constrained')
+    fig, axes = plt.subplots(3,1,figsize=(12,9.5),layout='constrained')
     ax = axes[0]
     ax.set_title("Physical supports: two clamps plus a middle roller (the beam is continuous)",loc='left')
     ax.plot([0,span],[0,0],lw=5,color='#19394e')
@@ -55,16 +55,38 @@ def lecture03_middle_support_example():
     ax.add_patch(Polygon([[support, -3],[support-12,-20],[support+12,-20]],closed=True,
                          facecolor='#dddddd',edgecolor='#333333'))
     ax.plot([support-16,support+16],[-25,-25],color='#555555')
-    ax.annotate('P = 2 N', (force_at,3),(force_at,48),ha='center',
+    ax.annotate('P = 2 N\nx = L/4', (force_at,3),(force_at,48),ha='center',
                 arrowprops=dict(arrowstyle='-|>',lw=2,color='#19394e'))
     for station,label in [(0,'A: clamp'),(support,'C: roller'),(span,'B: clamp')]:
         ax.text(station,-43,label,ha='center',fontsize=11)
     ax.text(support,38,'v(C) = 0; rotation is free',ha='center',fontsize=11)
-    ax.annotate('', (0,-57), (support,-57),
-                arrowprops=dict(arrowstyle='<->',color='#555555',lw=1.2))
-    ax.text(support/2,-70,'a = L/2 = 225 mm',ha='center',fontsize=11)
-    ax.set_xlim(-35,485);ax.set_ylim(-82,70);ax.axis('off')
+    for end,height,label in [(force_at,-58,'L/4 = 112.5 mm'),(support,-82,'L/2 = 225 mm')]:
+        ax.annotate('', (0,height), (end,height),
+                    arrowprops=dict(arrowstyle='<->',color='#555555',lw=1.2))
+        ax.text(end/2,height-12,label,ha='center',fontsize=11)
+    ax.set_xlim(-35,485);ax.set_ylim(-105,75);ax.axis('off')
     ax = axes[1]
+    ax.set_title('Free body: supports removed; assumed positive reactions replace them',loc='left')
+    ax.plot([0,span],[0,0],lw=5,color='#19394e')
+    for station,name in [(0,r'$R_A$'),(support,r'$R_C$'),(span,r'$R_B$')]:
+        ax.annotate(name,(station,3),(station,50),ha='center',fontsize=12,color='#ba4a00',
+                    arrowprops=dict(arrowstyle='-|>',lw=2,color='#ba4a00'))
+    ax.annotate('P = 2 N',(force_at,3),(force_at,50),ha='center',fontsize=11,
+                arrowprops=dict(arrowstyle='-|>',lw=2,color='#19394e'))
+    # Decreasing angle makes the ASSUMED reaction couples clockwise.
+    for station,name in [(0,r'$C_A$'),(span,r'$C_B$')]:
+        angles=np.linspace(np.deg2rad(130),np.deg2rad(-130),100)
+        xx=station+19*np.cos(angles);yy=22*np.sin(angles)
+        ax.plot(xx[:-4],yy[:-4],color='#ba4a00',lw=1.8)
+        ax.add_patch(FancyArrowPatch((xx[-5],yy[-5]),(xx[-1],yy[-1]),
+                                    arrowstyle='-|>',mutation_scale=13,lw=1.8,color='#ba4a00'))
+        ax.text(station,-35,name+' (CW)',ha='center',fontsize=11,color='#ba4a00')
+    for station,label in [(0,'0'),(force_at,'L/4'),(support,'L/2'),(span,'L')]:
+        ax.text(station,-58,label,ha='center',fontsize=10)
+    ax.text(span/2,-84,'Downward forces and clockwise couples are assumed positive; a negative result reverses its arrow.',
+            ha='center',fontsize=10)
+    ax.set_xlim(-35,485);ax.set_ylim(-100,75);ax.axis('off')
+    ax = axes[2]
     positions = np.unique(np.r_[np.linspace(0,span,901),support,force_at])
     ax.plot(positions,displacement(positions),color='#19394e',lw=2)
     ax.plot([0,support,span],[0,0,0],'o',color='#ba4a00',label='Prescribed v = 0')

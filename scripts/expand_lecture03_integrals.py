@@ -27,13 +27,50 @@ def expand(cells):
     anchor = '#### How do these geometric conditions become equations for reactions?'
     explanation = r"""#### Why use the conditions at L rather than at zero?
 
-**We use both ends. The left-end conditions have already been built into the integration.** Before imposing any end restraints, integrate the curvature relation from zero to an arbitrary station x:
+**Start with bending, then integrate twice.** We use the small-deflection Euler–Bernoulli beam model: cross-sections remain plane and normal to the bent centreline. Here displacement v is positive downward, θ = dv/dx, and internal moment M is positive in sagging.
 
-$$\theta(x)=C_\theta-\int_0^x\frac{M(s)}{EI(s)}\,ds,$$
+**Step 1 — moment produces curvature.** The bending law is M = EIκ. With our signs, sagging curvature is κ = −dθ/dx: a positive sagging moment makes the downward-positive slope decrease as x increases. Therefore
 
-$$v(x)=C_v+C_\theta x-\int_0^x(x-s)\frac{M(s)}{EI(s)}\,ds.$$
+$$M=EI\kappa,\qquad \kappa=-\frac{d\theta}{dx}
+\quad\Rightarrow\quad \frac{d\theta}{dx}=-\frac{M(x)}{EI(x)}.$$
 
-Here s is only an integration variable; x is the station where we evaluate the answer. At x = 0, both integrals vanish. Therefore θ(0) = Cθ and v(0) = Cᵥ. The clamp at A imposes **Cθ = 0 and Cᵥ = 0**. These are the two left-end conditions; they have not been omitted.
+This is the moment–curvature law, not another equilibrium equation. E describes the material and I describes the section's resistance to bending. The stress/strain derivation is developed in the bending-stress section below.
+
+**Step 2 — add the changes in slope from 0 to x.** The fundamental theorem of calculus gives
+
+$$\int_0^x\frac{d\theta(s)}{ds}\,ds
+=\theta(x)-\theta(0)
+=-\int_0^x\frac{M(s)}{EI(s)}\,ds.$$
+
+Move θ(0) to the right and call it Cθ:
+
+$$\boxed{\theta(x)=C_\theta-\int_0^x\frac{M(s)}{EI(s)}\,ds},
+\qquad C_\theta=\theta(0).$$
+
+The integral gives the **change** in slope; the starting slope must be added. The letter s labels the running position inside the integral; x is the position where we want the answer.
+
+**Step 3 — add the slopes to obtain displacement.** Since dv/dx = θ,
+
+$$v(x)-v(0)=\int_0^x\theta(t)\,dt.$$
+
+Substitute the slope just obtained (using t for its endpoint):
+
+$$v(x)=v(0)+x\theta(0)
+-\int_0^x\left[\int_0^t\frac{M(s)}{EI(s)}\,ds\right]dt.$$
+
+**Why does the factor (x − s) appear?** A small length ds at s contributes a small slope change −M(s)ds/EI(s). That change contributes to the slope at every later position t between s and x. Its total contribution to displacement is therefore its slope change multiplied by the remaining distance, x − s. Adding all these contributions turns the double integral into
+
+$$\int_0^x\left[\int_0^t\frac{M(s)}{EI(s)}\,ds\right]dt
+=\int_0^x(x-s)\frac{M(s)}{EI(s)}\,ds.$$
+
+Thus the second relation is
+
+$$\boxed{v(x)=C_v+C_\theta x-\int_0^x(x-s)\frac{M(s)}{EI(s)}\,ds},
+\qquad C_v=v(0).$$
+
+The three terms are **starting displacement + displacement from starting tilt + displacement caused by bending**. Units provide a check: M/EI has units 1/length; its first integral is a rotation, and multiplying by (x − s) before integrating gives a length. Keep EI(s) inside the integral when stiffness varies.
+
+**Now apply the left clamp.** At x = 0 the integrals vanish, so the clamp sets Cθ = θ(0) = 0 and Cᵥ = v(0) = 0. Both left-end conditions have been used; they were not omitted.
 
 Once those constants are zero, substituting x = 0 again merely gives 0 = 0. It supplies no new equation for the unknown reactions. The right clamp supplies the remaining two independent conditions, **θ(L) = 0 and v(L) = 0**, which determine the redundant reactions through the moment function M(s). In total, all four displacement/rotation end conditions are satisfied, but they play different roles: two fix the integration constants; two determine the remaining reactions.
 
@@ -107,3 +144,13 @@ $$H_A=\int_0^Lxq\,dx=q\left[\frac{x^2}{2}\right]_0^L
 
 The resultant position is Hₐ/F = 450/2 = 225 mm. The first integral adds forces (N/mm × mm); the second adds force times lever arm (N mm). A varying q(x) must remain inside both integrals, with separate intervals if its formula changes.
 '''
+
+    # Place the contribution diagram beside the derivation, before the worked equations.
+    marker = '#### How do these geometric conditions become equations for reactions?'
+    before, after = fixed['source'].split(marker, 1)
+    fixed['source'] = before
+    at = cells.index(fixed) + 1
+    diagram = Path(__file__).with_name('lecture03_curvature_schematic.py').read_text(encoding='utf-8')
+    cells[at:at] = [dict(cell_type='code', id='curvature-contribution', metadata={}, source=diagram,
+                         execution_count=None, outputs=[]),
+                    dict(cell_type='markdown', id='fixed-compatibility-worked', metadata={}, source=marker + after)]

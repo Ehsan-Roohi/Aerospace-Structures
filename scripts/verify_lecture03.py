@@ -32,7 +32,7 @@ for c in nb['cells']:
         assert c['execution_count'] is not None
         assert not any(o['output_type']=='error' for o in c['outputs'])
         figures+=sum('image/png' in o.get('data',{}) for o in c['outputs'])
-assert figures==29
+assert figures==30
 assert 'beamCase=hw3-' not in markdown and 'beamCase=hw2b-' not in markdown
 assert 'What are 10, 30 or 40 elements?' in markdown
 assert 'A grounded pin does not cut the beam' in markdown

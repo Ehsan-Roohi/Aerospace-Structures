@@ -124,6 +124,7 @@ The code below checks these two balances and all five prescribed support motions
 
 This is still the integration method used in this lecture. A later unit-load/flexibility formulation organizes the same independent conditions into a matrix; adding more supports does not require inventing new equilibrium laws.
 """
+    explanation += '\n\n**[Open and solve this exact example in Beam Lab](https://ehsan-roohi.github.io/Aerospace-Structures/wing-lab.html?beam=eyJ2IjoyLCJtIjp7Imxlbmd0aCI6NDUwLCJFIjoyMDAwLCJkZW5zaXR5IjoxLjI0LCJlbGVtZW50cyI6NjAsInNlY3Rpb24iOnsic2hhcGUiOiJyZWN0YW5nbGUiLCJ3aWR0aCI6MjAsImhlaWdodCI6MTB9LCJzdXBwb3J0cyI6W3sieCI6MCwia2luZCI6ImZpeGVkIn0seyJ4IjoyMjUsImtpbmQiOiJyb2xsZXIifSx7IngiOjQ1MCwia2luZCI6ImZpeGVkIn1dLCJoaW5nZXMiOltdLCJsb2FkcyI6W3sia2luZCI6InBvaW50IiwicG9zaXRpb24iOjExMi41LCJmb3JjZSI6Mn1dLCJzZWxmV2VpZ2h0IjpmYWxzZX19#beam)** — L = 450 mm; fixed ends at 0 and 450 mm; roller at 225 mm; 2 N downward at 112.5 mm; rectangular section 20 × 10 mm; E = 2000 MPa. The link replaces the current Beam Lab study with this example.\n'
     code = Path(__file__).with_name('lecture03_middle_support_example.py').read_text(encoding='utf-8')
     where = next(i for i,c in enumerate(cells) if c['cell_type']=='markdown' and '## 3. A cut reveals' in c['source'])
     cells[where:where] = [dict(cell_type='markdown',id='general-compatibility',metadata={},source=explanation),

@@ -8,6 +8,8 @@ MIE 446 Aerospace Structures | Project guide
 
 [Step-by-step project guide (PDF)](docs/MIE446_Simple_Wing_Walkthrough.pdf)
 
+**Video guide:** [Wing Lab: design, analyze and export a 600 mm semi-wing](https://www.youtube.com/watch?v=pAAL-Z3Q5co). [Download the example JSON and STL files](docs/examples/wing-600mm/README.md). The video demonstrates the controls; your final design must meet the project limits below.
+
 ## 1. Wing Lab: design, analyze and download STL
 Open [Wing Lab](https://ehsan-roohi.github.io/Aerospace-Structures/wing-lab.html#wing) and name your project with your team and revision. Follow the controls in this order.
 

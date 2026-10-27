@@ -417,6 +417,8 @@ def build():
     modernize(cells)
     from expand_lecture03_integrals import expand
     expand(cells)
+    from lecture03_general_compatibility import add_general_compatibility
+    add_general_compatibility(cells)
     from lecture03_truss_example import add_truss
     add_truss(cells)
     # Saved outputs are generated from the same executable cells students receive.

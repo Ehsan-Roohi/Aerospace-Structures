@@ -22,7 +22,32 @@ def expand(cells):
     def find(fragment):
         return next(c for c in cells if fragment in c['source'])
 
+
     fixed = find('#### How do these geometric conditions become equations for reactions?')
+    anchor = '#### How do these geometric conditions become equations for reactions?'
+    explanation = r"""#### Why use the conditions at L rather than at zero?
+
+**We use both ends. The left-end conditions have already been built into the integration.** Before imposing any end restraints, integrate the curvature relation from zero to an arbitrary station x:
+
+$$\theta(x)=C_\theta-\int_0^x\frac{M(s)}{EI(s)}\,ds,$$
+
+$$v(x)=C_v+C_\theta x-\int_0^x(x-s)\frac{M(s)}{EI(s)}\,ds.$$
+
+Here s is only an integration variable; x is the station where we evaluate the answer. At x = 0, both integrals vanish. Therefore θ(0) = Cθ and v(0) = Cᵥ. The clamp at A imposes **Cθ = 0 and Cᵥ = 0**. These are the two left-end conditions; they have not been omitted.
+
+Once those constants are zero, substituting x = 0 again merely gives 0 = 0. It supplies no new equation for the unknown reactions. The right clamp supplies the remaining two independent conditions, **θ(L) = 0 and v(L) = 0**, which determine the redundant reactions through the moment function M(s). In total, all four displacement/rotation end conditions are satisfied, but they play different roles: two fix the integration constants; two determine the remaining reactions.
+
+We could instead integrate starting at B, build in its two clamp conditions, and impose the conditions at A afterward. The final reactions and deflected shape would be the same.
+
+**Keep the support cases separate:** these four zero end conditions belong to the fixed–fixed beam. In the cantilever cut example that follows, only the root is clamped; its free tip generally has nonzero rotation and displacement. Do not impose θ(L) = v(L) = 0 on that cantilever.
+
+"""
+    fixed['source'] = fixed['source'].replace(anchor, explanation + anchor)
+    cut = find('## 3. A cut reveals the internal shear and moment')
+    schematic = Path(__file__).with_name('lecture03_cut_schematic.py').read_text(encoding='utf-8')
+    cells.insert(cells.index(cut) + 1, dict(cell_type='code', id='cut-fbd-schematic', metadata={}, source=schematic,
+                                        execution_count=None, outputs=[]))
+
     start = fixed['source'].index('The load contributes only after the cut passes its location.')
     end = fixed['source'].index('These are **zero rotation and zero displacement**', start)
     fixed['source'] = fixed['source'][:start] + notes['cell32_piecewise_compatibility'] + '\n\n' + fixed['source'][end:]

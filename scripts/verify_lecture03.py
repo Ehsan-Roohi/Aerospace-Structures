@@ -32,7 +32,7 @@ for c in nb['cells']:
         assert c['execution_count'] is not None
         assert not any(o['output_type']=='error' for o in c['outputs'])
         figures+=sum('image/png' in o.get('data',{}) for o in c['outputs'])
-assert figures==27
+assert figures==29
 assert 'beamCase=hw3-' not in markdown and 'beamCase=hw2b-' not in markdown
 assert 'What are 10, 30 or 40 elements?' in markdown
 assert 'A grounded pin does not cut the beam' in markdown
@@ -78,3 +78,9 @@ assert 'A determinate truss warm-up for HW 4' in markdown
 assert 'What Wing Lab solves' in markdown
 assert 'not the Flyer geometry or the answer to HW 4' in markdown
 assert '0.0150000' in markdown
+
+assert 'Why use the conditions at L rather than at zero?' in markdown
+assert 'three redundants' in markdown and 'Do not add θ(a) = 0' in markdown
+assert 'v(x)-v(0)-x' in markdown
+assert any(c['id']=='cut-fbd-schematic' for c in nb['cells'])
+assert any(c['id']=='middle-support-example' for c in nb['cells'])

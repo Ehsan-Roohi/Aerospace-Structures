@@ -45,7 +45,7 @@ An extension is positive; shortening is negative. These are **member length chan
 
 $$\Delta\ell_{ij}=c(u_{jx}-u_{ix})+s(u_{jy}-u_{iy}),$$
 
-where c and s are signed direction cosines from i to j. The restraints give uₐₓ = uₐᵧ = uᵦᵧ = 0. Member AB gives uᵦₓ = 0.00761905 mm. Applying the length-change relation to AC and BC gives:
+where c and s are signed direction cosines from i to j. The restraints give uₐₓ = uₐᵧ = u<sub>By</sub> = 0. Member AB gives u<sub>Bx</sub> = 0.00761905 mm. Applying the length-change relation to AC and BC gives:
 
 $$0.8u_{Cx}+0.6u_{Cy}=-0.00595238,$$
 

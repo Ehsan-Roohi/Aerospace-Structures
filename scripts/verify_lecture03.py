@@ -85,3 +85,5 @@ assert 'Compatibility, one step at a time' in markdown
 assert r'v(L)-v(0)=\int_0^L\theta(x)' in markdown
 assert any(c['id']=='cut-fbd-schematic' for c in nb['cells'])
 assert any(c['id']=='middle-support-example' for c in nb['cells'])
+
+assert 'ᵦ' not in markdown, 'Latin support B must not be written with subscript Greek beta'

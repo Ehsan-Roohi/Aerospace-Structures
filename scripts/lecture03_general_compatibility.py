@@ -53,7 +53,7 @@ The following example shows how this works with one extra support. The beam rema
 
 #### Example: keep both end clamps and add a vertical roller at C
 
-Let A be x = 0, C be x = a = L/2, and B be x = L. The five transverse unknowns are Rₐ, Cₐ, R꜀, Rᵦ and Cᵦ. There are two independent equilibrium equations, so this beam has **three redundants**. Build the shape from A with v(0) = θ(0) = 0. The three remaining geometric equations are
+Let A be x = 0, C be x = a = L/2, and B be x = L. The five transverse unknowns are Rₐ, Cₐ, R꜀, R<sub>B</sub> and C<sub>B</sub>. There are two independent equilibrium equations, so this beam has **three redundants**. Build the shape from A with v(0) = θ(0) = 0. The three remaining geometric equations are
 
 $$\boxed{v(a)=0},\qquad \boxed{v(L)=0},\qquad \boxed{\theta(L)=0}.$$
 
@@ -71,7 +71,7 @@ $$\frac{C_AL^2}{2}-\frac{R_AL^3}{6}-\frac{P(L-b)^3}{6}-\frac{R_C(L-a)^3}{6}=0,$$
 
 $$\frac{C_Aa^2}{2}-\frac{R_Aa^3}{6}-\frac{P\max(a-b,0)^3}{6}=0.$$
 
-These three equations determine Cₐ, Rₐ and R꜀. Then whole-beam equilibrium determines Rᵦ and Cᵦ. The code below checks all five prescribed motions and plots the continuous shape; the slope at C is free to be nonzero.
+These three equations determine Cₐ, Rₐ and R꜀. Then whole-beam equilibrium determines R<sub>B</sub> and C<sub>B</sub>. The code below checks all five prescribed motions and plots the continuous shape; the slope at C is free to be nonzero.
 
 **Special case:** if the original middle point force is placed exactly over the newly added support at C, that support can carry the whole force directly: R꜀ = −P, with zero bending and zero other reactions in this ideal model. That is a special load path, not the general three-redundant solution. We move the demonstration load to L/4 to make the compatibility calculation visible.
 

@@ -109,7 +109,7 @@ Therefore Rₐ = 2 N upward and Cₐ = 450 N mm CCW. The centre point-load and u
     md('### 2B. Pin and roller — the same centre force')
     support_figure('simple','Figure 1B — simply supported, 2 N at the centre')
     md(r'''
-The pin supplies horizontal/vertical force, but no couple. A horizontal roller supplies vertical force only. Thus Rₓ = 0 and Cₐ = Cᵦ = 0. Take moments about A first:
+The pin supplies horizontal/vertical force, but no couple. A horizontal roller supplies vertical force only. Thus Rₓ = 0 and Cₐ = C<sub>B</sub> = 0. Take moments about A first:
 
 $$R_A+R_B-2=0,$$
 
@@ -121,7 +121,7 @@ Then Rₐ = 2 − 1 = 1 N upward. Two transverse unknowns are found from equilib
     md('### 2C. Both ends fixed — the same centre force')
     support_figure('fixed','Figure 1C — fixed–fixed, 2 N at the centre')
     md(r'''
-Both supports prevent translation and rotation. There are four transverse unknowns: Rₐ, Rᵦ, Cₐ and Cᵦ. Whole-beam equilibrium gives:
+Both supports prevent translation and rotation. There are four transverse unknowns: Rₐ, R<sub>B</sub>, Cₐ and C<sub>B</sub>. Whole-beam equilibrium gives:
 
 $$R_A+R_B-2=0,$$
 
@@ -177,7 +177,7 @@ $$-450C_A+101250R_A-50625=0,$$
 
 $$-101250C_A+15187500R_A-3796875=0.$$
 
-Multiply the first equation by L/2 = 225 mm and subtract the second. This gives Rₐ = 1 N. Substitution in the first gives Cₐ = 112.5 N mm CCW. Equilibrium then gives Rᵦ = 1 N and Cᵦ = −112.5 N mm (clockwise). Equal vertical reactions are also an independent symmetry check.
+Multiply the first equation by L/2 = 225 mm and subtract the second. This gives Rₐ = 1 N. Substitution in the first gives Cₐ = 112.5 N mm CCW. Equilibrium then gives R<sub>B</sub> = 1 N and C<sub>B</sub> = −112.5 N mm (clockwise). Equal vertical reactions are also an independent symmetry check.
 
 $$C_A=\frac{PL}{8}=112.5\ \mathrm{N\,mm\ CCW},\qquad C_B=-112.5\ \mathrm{N\,mm\ CW}.$$
 

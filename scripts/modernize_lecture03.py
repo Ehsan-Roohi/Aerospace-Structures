@@ -82,7 +82,7 @@ Open the blank [Beam Lab](https://ehsan-roohi.github.io/Aerospace-Structures/win
             s=s.replace('-C_A+R_Ax','C_A-R_Ax')
             s=s.replace('-C_A L+\\frac{R_A L^2}{2}-','C_A L-\\frac{R_A L^2}{2}-').replace('-\\frac{C_A L^2}{2}+\\frac{R_A L^3}{6}-','\\frac{C_A L^2}{2}-\\frac{R_A L^3}{6}-')
             s=s.replace('-450C_A+101250R_A-50625=0','450C_A-101250R_A-50625=0').replace('-101250C_A+15187500R_A-3796875=0','101250C_A-15187500R_A-3796875=0')
-            s=s.replace('Rₐ = 1 N. Substitution in the first gives Cₐ = 112.5 N mm CCW. Equilibrium then gives Rᵦ = 1 N and Cᵦ = −112.5 N mm (clockwise).','Rₐ = −1 N. Substitution gives Cₐ = −112.5 N mm (CCW). Equilibrium gives Rᵦ = −1 N and Cᵦ = +112.5 N mm (clockwise).')
+            s=s.replace('Rₐ = 1 N. Substitution in the first gives Cₐ = 112.5 N mm CCW. Equilibrium then gives R<sub>B</sub> = 1 N and C<sub>B</sub> = −112.5 N mm (clockwise).','Rₐ = −1 N. Substitution gives Cₐ = −112.5 N mm (CCW). Equilibrium gives R<sub>B</sub> = −1 N and C<sub>B</sub> = +112.5 N mm (clockwise).')
             s=s.replace('C_A=\\frac{PL}{8}=112.5\\ \\mathrm{N\\,mm\\ CCW},\\qquad C_B=-112.5\\ \\mathrm{N\\,mm\\ CW}','C_A=-\\frac{PL}{8}=-112.5\\ \\mathrm{N\\,mm}\\ (\\mathrm{CCW}),\\qquad C_B=+112.5\\ \\mathrm{N\\,mm}\\ (\\mathrm{CW})')
             s=s.replace('112.5 − 112.5 + 450 − 450 = 0','−112.5 + 112.5 − 450 + 450 = 0').replace('The app reports −112.5 at A and +112.5 at B because its positive couple direction is clockwise.','The app reports the same −112.5 at A and +112.5 at B with our shared clockwise-positive convention.')
         if s.startswith('### Compare reactions before'):

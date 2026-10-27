@@ -60,7 +60,10 @@ def lecture03_middle_support_example():
     for station,label in [(0,'A: clamp'),(support,'C: roller'),(span,'B: clamp')]:
         ax.text(station,-43,label,ha='center',fontsize=11)
     ax.text(support,38,'v(C) = 0; rotation is free',ha='center',fontsize=11)
-    ax.set_xlim(-35,485);ax.set_ylim(-65,70);ax.axis('off')
+    ax.annotate('', (0,-57), (support,-57),
+                arrowprops=dict(arrowstyle='<->',color='#555555',lw=1.2))
+    ax.text(support/2,-70,'a = L/2 = 225 mm',ha='center',fontsize=11)
+    ax.set_xlim(-35,485);ax.set_ylim(-82,70);ax.axis('off')
     ax = axes[1]
     positions = np.unique(np.r_[np.linspace(0,span,901),support,force_at])
     ax.plot(positions,displacement(positions),color='#19394e',lw=2)

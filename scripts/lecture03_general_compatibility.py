@@ -3,26 +3,53 @@ from pathlib import Path
 
 
 def add_general_compatibility(cells):
-    explanation = r"""### Extension: a general recipe when the beam has more redundant reactions
+    explanation = r"""### Compatibility, one step at a time
 
-Write the rotation relation as a **difference**, so neither end condition disappears:
+**The idea is simple: the bent beam must still fit its supports.** First calculate how the slope changes; then calculate how the height changes. For this example, EI is constant.
 
-$$\boxed{\theta(x)-\theta(0)=-\int_0^x\frac{M(s)}{EI(s)}\,ds}.$$
+#### 1. Add the small changes in slope
 
-After integrating once more, keep the initial rotation term too:
+A very short piece of beam has length dx. Its bending moment changes the slope by
 
-$$\boxed{v(x)-v(0)-x\theta(0)
-=-\int_0^x(x-s)\frac{M(s)}{EI(s)}\,ds}.$$
+$$d\theta=-\frac{M(x)}{EI}\,dx.$$
 
-The minus sign follows this notebook's convention: downward v is positive and sagging M is positive. These formulas allow variable EI(s); it must stay inside the integrals. The starting values are zero only when the starting support actually restrains those motions.
+Add those small changes from the left end A to the right end B:
 
-**General procedure for this linear transverse-bending model**
+$$\boxed{\theta(L)-\theta(0)=-\frac{1}{EI}\int_0^L M(x)\,dx}.$$
 
-1. Draw the supports and list their unknown transverse reactions and reaction couples. For a stable beam, subtract the number of independent whole-beam equilibrium equations to count the remaining redundants. This planar bending model has two such equilibrium equations: vertical force and moment balance. A general planar frame may also require axial equilibrium and a different count.
-2. Write M(x) in terms of the unknown reactions, using separate intervals at loads, supports and stiffness changes. An interior support changes the force diagram; it does not automatically create a hinge.
-3. Integrate curvature, keeping the starting displacement and rotation constants. Apply the actual support conditions: a clamp prescribes v and θ; an ordinary vertical roller prescribes v only. Settlement or imposed rotation gives a prescribed nonzero value, not zero.
-4. Solve equilibrium and the **independent** geometric conditions together. A released-force formulation gives one independent compatibility equation for each redundant. Alternatively, solve all reaction and integration-constant unknowns together; the four end conditions then also determine the two integration constants.
-5. At an ordinary continuous interior section, v and θ remain continuous. Use those matching conditions if you introduce separate integration constants on each interval; do not count continuity twice when a single integrated formula already enforces it. Check reactions, end conditions and the resulting shape.
+Read the left side as **final slope minus starting slope**. It is the total change in slope along the beam. The integral adds up all the small changes; it does not give the final slope unless the starting slope is zero. The minus sign follows our downward-positive displacement and sagging-positive moment convention.
+
+For two clamps, θ(0) = 0 and θ(L) = 0. Therefore
+
+$$0-0=-\frac{1}{EI}\int_0^L M(x)\,dx.$$
+
+The positive and negative moment regions must balance in this integral. This does not mean the moment is zero everywhere.
+
+#### 2. Add the small changes in height
+
+The slope tells us how much the height changes over a short distance:
+
+$$dv=\theta(x)\,dx.$$
+
+For example, a constant small slope of 0.01 rad over 100 mm changes the downward displacement by approximately 1 mm. Adding all the actual slopes along the beam gives
+
+$$\boxed{v(L)-v(0)=\int_0^L\theta(x)\,dx}.$$
+
+For two clamps, v(0) = v(L) = 0, so this second integral must also be zero. **Zero change in slope and zero change in height are two different conditions.** One does not replace the other.
+
+We can therefore work in two familiar steps: **integrate M to get θ; integrate θ to get v.** Keep the starting value each time. There is no need to begin with a combined weighted-integral formula. If EI varies along the beam, keep 1/EI(x) inside the first integral.
+
+**Where did the earlier term xθ(0) come from?** A straight beam starting with a small slope θ(0) would already change height by xθ(0), even without bending. The combined formula separates this initial tilt from the displacement caused by curvature. Here the left clamp makes θ(0) = 0, so that term is zero. Using the two integration steps above includes the same effect without needing the combined formula.
+
+#### 3. What changes when we add a support?
+
+The procedure stays the same:
+
+1. Use equilibrium to write M(x) in terms of the unknown reactions.
+2. Integrate to obtain θ(x) and v(x), applying the starting support conditions.
+3. At every additional support, require the motion that the support prevents: a clamp fixes both height and slope; a vertical roller fixes height only. Solve these independent conditions with equilibrium.
+
+The following example shows how this works with one extra support. The beam remains continuous across the roller: its displacement and slope do not jump there.
 
 #### Example: keep both end clamps and add a vertical roller at C
 

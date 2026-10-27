@@ -8,6 +8,8 @@ MIE 446 Aerospace Structures | Project guide
 
 [Step-by-step project guide (PDF)](docs/MIE446_Simple_Wing_Walkthrough.pdf)
 
+[Watch the Wing Lab video tutorial](https://www.youtube.com/watch?v=pAAL-Z3Q5co).
+
 [Download the 600 mm tutorial example: editable JSON and STL files](docs/examples/wing-600mm/README.md). This example demonstrates the controls; your final design must meet the project limits below.
 
 ## 1. Wing Lab: design, analyze and download STL

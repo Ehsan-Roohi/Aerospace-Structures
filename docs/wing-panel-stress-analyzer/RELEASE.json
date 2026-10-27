@@ -1,0 +1,9 @@
+{
+  "application": "Wing Panel Stress Analyzer (Wing AeroStruct)",
+  "version": "0.3.0-dev",
+  "source_archive": "wing-aerostruct-0.3.0-dev-review.zip",
+  "source_sha256": "bc6986c744568a516fd22bdd3b9508550625b82a77cd924adf52dfaa5156a54d",
+  "original_base": "5ab2498",
+  "independent_review": "validation/INDEPENDENT_REVIEW.md",
+  "scope": "Educational potential-flow panels coupled one-way to nominal spatial-beam stress. No viscous/stall or local solid stress. Unresolved torque/twist withheld; unsuitable cases refused."
+}

@@ -1,0 +1,189 @@
+{
+  "product": "MIE 446 Wing AeroStruct",
+  "version": "0.3.0-dev",
+  "status": "development build, not published; a separate application from Wing Lab",
+  "builtAt": "2026-10-27T13:19:00+00:00",
+  "page": "index.html",
+  "pageSha256": "f24efa963e0c760887f5997f77b480fb9e907cd91ed14ecc954455275fbbf0e1",
+  "workers": {
+    "wing-aero": {
+      "worker": "2ff1da57ee4c",
+      "bundle": "13eb802302b6"
+    },
+    "wing-print": "a56bd8704a71"
+  },
+  "sources": {
+    "beam_diagrams.js": {
+      "path": "computational/printed-wing-solver/web/beam_diagrams.js",
+      "sha256": "a50dd09edde812645a5d50b128611a55e5b47df98e5464b95889b284fee5f1f5"
+    },
+    "beam_lab.css": {
+      "path": "computational/printed-wing-solver/web/beam_lab.css",
+      "sha256": "5d50ec9a63627460c5abd05f2343c311633e102b38ca5e071e0b4df31a87f946"
+    },
+    "beam_learning_engine.js": {
+      "path": "computational/printed-wing-solver/web/beam_learning_engine.js",
+      "sha256": "3ae9f0e7a7e1249a767c07194f73bb53e6d95d73cd3ce82409ab2a360e9319d4"
+    },
+    "beam_sections.js": {
+      "path": "computational/printed-wing-solver/web/beam_sections.js",
+      "sha256": "1fdde4394f604f1763df4f88db3dbfb1fdac73e520d7102ba1cc41c51c6a5faf"
+    },
+    "beam_solution.js": {
+      "path": "computational/printed-wing-solver/web/beam_solution.js",
+      "sha256": "6ac530df95fff80ea867f878f243765fc12741c03773d2d8eb38032964f26e2c"
+    },
+    "beam_strength.js": {
+      "path": "computational/printed-wing-solver/web/beam_strength.js",
+      "sha256": "9dcb44772e7b3fb6ef3289fefbdc0d2cbd006548f3ce798275764dcf2c1ebdcb"
+    },
+    "beam_strength_ui.js": {
+      "path": "computational/printed-wing-solver/web/beam_strength_ui.js",
+      "sha256": "f6dea9bf6c08c28595d55830fecc03b4f13a8c73c555f70dd6d318e548012f87"
+    },
+    "beam_study.js": {
+      "path": "computational/printed-wing-solver/web/beam_study.js",
+      "sha256": "329b4d16ad273865d530f0af1785623184e386deb1a2db911372e4f657ceaefe"
+    },
+    "companion_tools.js": {
+      "path": "computational/printed-wing-solver/web/companion_tools.js",
+      "sha256": "cb58f5e2b40d711217bf9b6c2a982f0fb3f672efaf2fd43c7b2785a2c96f03ba"
+    },
+    "engine.js": {
+      "path": "computational/printed-wing-solver/aerostruct/engine.js",
+      "sha256": "0499c58c795d4297413f1cbdf64b0f5078561d34f87c97236a3afb5e3f41b6dd"
+    },
+    "foundations_ui.js": {
+      "path": "computational/printed-wing-solver/web/foundations_ui.js",
+      "sha256": "1065c923eb0cb1fe44478a79738a97c3eaefff30616b406dc1fe5916075d8f09"
+    },
+    "load_profiles.js": {
+      "path": "computational/printed-wing-solver/web/load_profiles.js",
+      "sha256": "9f481f7db3220ecbe4e392adbee6484c6b5459a5b38563cc62364d80acd5356f"
+    },
+    "metal_wing_engine.js": {
+      "path": "computational/printed-wing-solver/web/metal_wing_engine.js",
+      "sha256": "c5ab0c8da4b4013927ab122e42d931b728276d9c86b590b01a1c8b0dad1cd257"
+    },
+    "metal_wing_reference.json": {
+      "path": "computational/printed-wing-solver/web/metal_wing_reference.json",
+      "sha256": "51f801429e1729032406a013838b24db1117e03957ca3448e4364331c0ef3b6d"
+    },
+    "metal_wing_ui.js": {
+      "path": "computational/printed-wing-solver/web/metal_wing_ui.js",
+      "sha256": "639eb3cc3060781bf7ededbe45d6e47ce06db530421ca7130c95270be2c69322"
+    },
+    "teaching_models.js": {
+      "path": "computational/printed-wing-solver/web/teaching_models.js",
+      "sha256": "1168af1f624b682f2ed061763a3d51130655c1055bb5bdbd301e8f6543388fd4"
+    },
+    "teaching_panels.js": {
+      "path": "computational/printed-wing-solver/web/teaching_panels.js",
+      "sha256": "64b10a6eb0f4441979bb25558600a1b381b08fbee9641cf60c55722be26328de"
+    },
+    "truss-lab.html (copied unchanged)": {
+      "path": "docs/truss-lab.html",
+      "sha256": "29ab37aa778748c0280521ff217d2bc0d4d52e4368e1d9da9852cdc70a7b4513"
+    },
+    "vendor/finite-section-geometry/LICENSES.txt": {
+      "path": "computational/printed-wing-solver/web/vendor/finite-section-geometry/LICENSES.txt",
+      "sha256": "c4e3ebf2e881a5976142558bc6e35539df959f2bfb4dd5505b317454e6475c0a"
+    },
+    "vendor/finite-section-geometry/geometry.min.js": {
+      "path": "computational/printed-wing-solver/web/vendor/finite-section-geometry/geometry.min.js",
+      "sha256": "6673d3336d7aa489131e4ff26bb91705ab0181020742c54f5cff2ebb07f5a5ca"
+    },
+    "wing_aero_panel.js": {
+      "path": "computational/printed-wing-solver/aerostruct/wing_aero_panel.js",
+      "sha256": "f9e13ab90adb8a69b17fb9d65e4cec16397fbc264682afdd77b7f9ab3eee1e72"
+    },
+    "wing_aero_ui.js": {
+      "path": "computational/printed-wing-solver/aerostruct/wing_aero_ui.js",
+      "sha256": "e6b3fa34c7148109cd97e36e05372732b3efed42da5541dc709919e1aca71758"
+    },
+    "wing_aero_worker.js": {
+      "path": "computational/printed-wing-solver/aerostruct/wing_aero_worker.js",
+      "sha256": "8073f8cacd2a99ee2f63de2491ce46308e148ea7f1f13e9647864aee9b8dada6"
+    },
+    "wing_aerostruct_template.html": {
+      "path": "computational/printed-wing-solver/aerostruct/wing_aerostruct_template.html",
+      "sha256": "1067c11b45d3df749314c13686ea0d0f76e9e8794d1f8a567e2b42ac66594527"
+    },
+    "wing_airfoils.js": {
+      "path": "computational/printed-wing-solver/web/wing_airfoils.js",
+      "sha256": "473e66e1335ee08349d6ada6863c32673b88cc05459bbe6301ca99e27f33ddee"
+    },
+    "wing_cad_export.js": {
+      "path": "computational/printed-wing-solver/web/wing_cad_export.js",
+      "sha256": "b59e841acf56ef0ebb782475f363500c6c532ab1777adfa4d70ee13c4b007854"
+    },
+    "wing_chart_math.js": {
+      "path": "computational/printed-wing-solver/web/wing_chart_math.js",
+      "sha256": "0982d918fbfeb6667ea03ac548a409f355e61a6d17188aa9a83b48eb8710bd8a"
+    },
+    "wing_closed_tip_stress.js": {
+      "path": "computational/printed-wing-solver/web/wing_closed_tip_stress.js",
+      "sha256": "118a5792a236a803e69a708cb504a26d78cfa9ed90672edb121dc3e0e0eaa7bf"
+    },
+    "wing_finite_section.js": {
+      "path": "computational/printed-wing-solver/web/wing_finite_section.js",
+      "sha256": "6f236f9cad98400951b360fa3f486ad67d7e5f80b503111c4b26d218339d1b4e"
+    },
+    "wing_frame3d.js": {
+      "path": "computational/printed-wing-solver/web/wing_frame3d.js",
+      "sha256": "823b27ea0d8a41fcb5cf71d7935a7ae65bc9ef6c8426840930d14222c15e656f"
+    },
+    "wing_geometry.js": {
+      "path": "computational/printed-wing-solver/web/wing_geometry.js",
+      "sha256": "71ec0893f6587eb3ee0a6568a5c8ab27d9936117b141e22dcaf1ded2ecf9fd27"
+    },
+    "wing_geometry_help.js": {
+      "path": "computational/printed-wing-solver/web/wing_geometry_help.js",
+      "sha256": "033063c2e70923da323370b083ef9a5cc581b18b9aff9ef8807e85a31f08df9c"
+    },
+    "wing_geometry_ui.js": {
+      "path": "computational/printed-wing-solver/web/wing_geometry_ui.js",
+      "sha256": "99e5b1958c9b11c14fdfc609b5111f7a65f827edb8755a8fb5a58a7f4ee6d42f"
+    },
+    "wing_loads_ui.js": {
+      "path": "computational/printed-wing-solver/web/wing_loads_ui.js",
+      "sha256": "537140047715922be72b65d436eb27f4852edf6e8b18c5d8e6346b958a63cb72"
+    },
+    "wing_print_mesh.js": {
+      "path": "computational/printed-wing-solver/web/wing_print_mesh.js",
+      "sha256": "e2aa64cd3ca62a9709c589eecc0bed12cfbbee89bd8dc0cc9d2e0731fa5af44d"
+    },
+    "wing_print_ui.js": {
+      "path": "computational/printed-wing-solver/web/wing_print_ui.js",
+      "sha256": "35ed7525a8e034bd8d18e2926ecf513b13cdeff6d559177ece9bf89833cdddaf"
+    },
+    "wing_print_worker.js": {
+      "path": "computational/printed-wing-solver/web/wing_print_worker.js",
+      "sha256": "3c09d59da80aea4c1af018574b8224ae1d0c72d1ef416121eaca98240f46c198"
+    },
+    "wing_selection_ui.js": {
+      "path": "computational/printed-wing-solver/web/wing_selection_ui.js",
+      "sha256": "c29062ea8d090d28271806fb217fb58f067ecd5ba2ad66a0bdac406b752d9021"
+    },
+    "wing_spars.js": {
+      "path": "computational/printed-wing-solver/web/wing_spars.js",
+      "sha256": "35a7ddf57fb27c4d64dba7eb35f86b92ed89fd69116cb6559e22158989f1cc2c"
+    },
+    "wing_stl_import.js": {
+      "path": "computational/printed-wing-solver/web/wing_stl_import.js",
+      "sha256": "579b6fbd9a6196e032ed4d26180475ba34b10781d4585e54ffb1ec696db9f297"
+    },
+    "wing_stl_reference_ui.js": {
+      "path": "computational/printed-wing-solver/web/wing_stl_reference_ui.js",
+      "sha256": "ea97ef61ff94dad7912f2c13e6eef9e5f44f27dbbfa22a8239ead4326432aadd"
+    },
+    "wing_study_io.js": {
+      "path": "computational/printed-wing-solver/aerostruct/wing_study_io.js",
+      "sha256": "618e8c9505ace62850b1e6452e61505437645b42956c38b887da46c0c0012ed2"
+    },
+    "wing_workspace_ui.js": {
+      "path": "computational/printed-wing-solver/web/wing_workspace_ui.js",
+      "sha256": "5bf463a9bf8994f7ed93d6e919d70a9be564363ca0bc888eb64c8a8a61f60e31"
+    }
+  }
+}

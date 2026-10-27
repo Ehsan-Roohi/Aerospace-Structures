@@ -1,0 +1,794 @@
+Browser tab: 19, Title: "MIE 446 · Wing AeroStruct (development) · coupled panel aerodynamics and spatial-beam structure", URL: "http://127.0.0.1:8873/#wing".
+0 AXWebArea MIE 446 · Wing AeroStruct (development) · coupled panel aerodynamics and spatial-beam structure, URL: 127.0.0.1:8873/#wing
+	1 container Description: Workspaces, ID: wingNavigation
+		2 button Beam, ID: backFoundations
+		3 link Description: Truss, Value: 127.0.0.1:8873/truss-lab.html
+		4 button Wing, ID: currentPrintedWing
+		5 button Full-scale wing, ID: toMetalWing
+		6 link Description: Wing geometry tool, Value: vinco-rc.com/?generator=wing
+	7 container app
+		8 container Commands
+			1008 text Wing AeroStruct
+			10 text field (settable) wingProjectName
+			11 container Plot
+				12 checkbox Model, Value: 1
+				13 checkbox Stress, Value: 0
+				14 checkbox Displacement, Value: 0
+				15 pop up button (collapsed, settable) Description: More results, Help: Twist, bending, torque, factor of safety and modes, Value: More results…, ID: wingMoreResults, Secondary Actions: Expand
+					16 menu
+						17 (selected) More results…
+						18 Twist
+						19 Bending moment
+						20 Torque
+						21 (disabled) Help: Not computed by the spatial beam model., Value: Factor of safety
+						22 (disabled) Help: Not computed by the spatial beam model., Value: Modes
+			23 button Guided lesson, ID: learnBtn
+			24 button (expanded) Inputs, ID: inputsBtn, Secondary Actions: Collapse
+			25 container
+				1009 text SOLVED · 3-D BEAM
+				1010 text End-load approximation · see results warning.
+				28 button (collapsed) Description: Full solver status and warning details, Help: Details, Secondary Actions: Expand
+					29 text Details
+		30 container Description: Wing inputs, ID: wingSide
+			31 button Close wing inputs
+			32 container wlGeometry
+				33 button (expanded) Geometry NACA 2412 · linear · 450 mm, Secondary Actions: Collapse
+					34 text Geometry
+					35 text NACA 2412 · linear · 450 mm
+				36 container wingAdvancedGeometry
+					37 container
+						38 container WING DIMENSIONS & TAPER
+							39 text WING DIMENSIONS & TAPER
+							40 container
+								41 text Planform
+								42 pop up button (collapsed, settable) Planform, Value: Rectangular / trapezoidal, ID: wgtPlanform, Secondary Actions: Expand
+									43 menu
+										44 (selected) Rectangular / trapezoidal
+										45 Elliptical · closed tip
+										46 Delta · pointed tip
+							47 container
+								48 text Chord input method
+								49 pop up button (collapsed, settable) Chord input method, Value: Root + Tip → calculate λ, ID: wgtChordMode, Secondary Actions: Expand
+									50 menu
+										51 (selected) Root + Tip → calculate λ
+										52 Root + λ → calculate Tip
+							53 container
+								54 text Semi-span (mm)
+								55 stepper (settable, integer) Semi-span (mm), Value: 450, ID: wgtSpan
+							56 container
+								57 text Root chord (mm)
+								58 stepper (settable, integer) Root chord (mm), Value: 160, ID: wgtRootChord
+							59 container
+								60 text Tip chord (mm)
+								61 stepper (settable, integer) Tip chord (mm), Value: 100, ID: wgtTipChord
+							62 container
+								63 text Taper ratio λ = tip / root
+								64 stepper (settable, float) Taper ratio λ = tip / root, Value: 0.625, ID: wgtTaper
+							65 container
+								66 text Skin thickness (mm)
+								67 stepper (settable, float) Skin thickness (mm), Value: 1.2000000476837158, Details: 1.2, ID: wgtSkin
+							68 container
+								69 text Printed modules
+								70 pop up button (collapsed, settable) Printed modules, Value: 1 · one piece, ID: wgtModules, Secondary Actions: Expand
+									71 menu
+										72 (selected) 1 · one piece
+										73 2
+										74 3
+							75 definition list wgtGeometrySummary
+								76 container Semi-wing area
+									77 text Semi-wing area
+								78 text 585.0 cm²
+								79 container Taper ratio
+									80 text Taper ratio
+								81 text 0.625
+								82 container Aspect ratio (full wing)
+									83 text Aspect ratio (full wing)
+								84 text 6.92
+								85 container Module length
+									86 text Module length
+								87 text 450.0 mm
+						88 button Apply geometry, ID: wgtApply
+						89 heading DEFAULT AIRFOIL, Value: 4
+							90 text DEFAULT AIRFOIL
+						91 container wgtDefaultProfile
+							92 text Airfoil family / library
+							93 pop up button (collapsed, settable) Description: Airfoil family at wgtDefault, Value: NACA 2412 · current, ID: wgtDefaultKind, Secondary Actions: Expand
+								94 menu
+									95 (selected) NACA 2412 · current
+									96 NACA 4-digit · enter code
+									97 NACA 5-digit · non-reflex code
+									98 NACA 0012 · NACA 4-digit · symmetric
+									99 NACA 2412 · NACA 4-digit · cambered
+									100 NACA 4415 · NACA 4-digit · cambered
+									101 NACA 23012 · NACA 5-digit · non-reflex
+									102 NACA 63(2)-615 · NACA 6-series · coordinate data
+									103 NASA SC(2)-0412 · NASA supercritical · coordinate data
+									104 Clark Y · Clark · coordinate data
+									105 Eppler 205 · Eppler · coordinate data
+									106 Drela AG24 · Drela · coordinate data
+									107 Selig S1223 · Selig · coordinate data
+							108 text NACA code
+							109 text field (settable) NACA code, Value: 2412, ID: wgtDefaultCode
+							110 container
+								111 text Upload airfoil .dat / .txt
+								112 button Description: Upload airfoil at wgtDefault, ID: wgtDefaultDat
+							113 image Local airfoil profile, normalized coordinates
+						114 container Description: SPANWISE AIRFOILS, ID: wgtSpanwiseProfiles
+							115 text SPANWISE AIRFOILS
+							116 checkbox (settable, integer) Description: Choose airfoils at root, intermediate stations and tip, Value: 0, ID: wgtSections
+						117 container WING INCIDENCE AND TWIST
+							118 text WING INCIDENCE AND TWIST
+							119 text Set wing angles
+							120 pop up button (collapsed, settable) Set wing angles, Value: None · all incidences 0°, ID: wgtTwist, Secondary Actions: Expand
+								121 menu
+									122 (selected) None · all incidences 0°
+									123 Set root and tip incidence
+							124 container
+								125 text Incidence pivot x/c
+								126 stepper (settable, float) Incidence pivot x/c, Value: 0.25, ID: wgtTwistRef
+						127 heading PLANFORM & ORIENTATION, Value: 4
+							128 text PLANFORM & ORIENTATION
+						129 text Sweep (degrees)
+						130 stepper (settable, integer) Sweep (degrees), Value: 0, ID: wgtSweep
+						131 text Dihedral (degrees)
+						132 stepper (settable, integer) Dihedral (degrees), Value: 0, ID: wgtDihedral
+						133 text Sweep reference x/c
+						134 stepper (settable, integer) Sweep reference x/c, Value: 0, ID: wgtSweepRef
+					135 text Changes remain a draft until Apply geometry.
+			136 container wlStructure
+				137 button (expanded) Structure 1 module · 0 ribs · 0 rods, Secondary Actions: Collapse
+					138 text Structure
+					139 text 1 module · 0 ribs · 0 rods
+				140 container wingStructureForm
+					141 heading RIBS, Value: 4
+						142 text RIBS
+					143 text 0 ribs · 0 editable interior · 0 locked interface.
+					144 table Rib stations
+						145 row
+							146 cell
+								147 text RIB
+							148 cell
+								149 text Y (MM)
+							150 cell
+								151 text EDIT
+						152 row
+							153 cell
+								154 text No ribs in this layout.
+					155 text Add a rib at y =
+					156 stepper (settable, integer) Add a rib at y =, Value: 225, ID: wgRibNew
+					157 text mm
+					158 button Add rib, ID: wgRibAdd
+					159 text Evenly spaced interior ribs
+					160 stepper (settable, integer) Evenly spaced interior ribs, Value: 0, ID: wgRibCount
+					161 button Apply spacing, ID: wgRibEqual
+					162 button Course rib rule (3 interior), ID: wgRibReset
+					163 heading RODS AND SLEEVES, Value: 4
+						164 text RODS AND SLEEVES
+					165 text No rods in the active layout.
+					166 button Add rod, ID: wgRodAdd
+					167 text 0/8 rods
+					168 container
+						169 text Rod diameter mm, all rods
+					170 stepper (settable, integer) Rod diameter mm, all rods, Value: 4, ID: wgRodD
+					171 container
+						172 text Rod clearance mm, radial, from coupons (0–0.8)
+					173 stepper (settable, float) Rod clearance mm, radial, from coupons (0–0.8), Value: 0.25, ID: wgClear
+					174 container
+						175 text Sleeve wall mm
+					176 stepper (settable, float) Sleeve wall mm, Value: 1.2000000476837158, Details: 1.2, ID: wgWall
+					177 definition list
+						178 container Hole ⌀ (rod + clearance)
+							179 text Hole ⌀ (rod + clearance)
+						180 text 4.50 mm
+						181 container Sleeve outer ⌀
+							182 text Sleeve outer ⌀
+						183 text 6.90 mm
+					184 container
+						185 heading Reinforcement layout, Value: 3
+							186 text Reinforcement layout
+						187 text Active: shell only; ribs retained.
+						188 button Use shell only, ID: wsShell
+						189 button Use shell + rods, ID: wsRods
+						190 button + Bonded spar, ID: wsAdd
+						191 button Model help, ID: wsHelp
+			192 container wlLoads
+				193 button (expanded) Loads, Secondary Actions: Collapse
+					194 text Loads
+				195 container wingLoadEditor
+					196 checkbox (settable, integer) Description: Include wing self-weight, Value: 0
+					197 text Gravity: 1 g downward, from the mass of this semi-wing. Separate from flight inertia relief.
+					198 container wingLoadForm
+						199 heading Add a load to the current wing, Value: 3
+							200 text Add a load to the current wing
+						201 container
+							202 button Add load
+						203 checkbox ⌖ Pick on 3-D wing, Value: 0
+						204 button Show bending & twist
+						205 text Load type
+						206 pop up button (collapsed, settable) Load type, Value: Point force, ID: wingKind, Secondary Actions: Expand
+							207 menu
+								208 (selected) Point force
+								209 Rectangular / uniform
+								210 Triangular (zero at start / tip-heavy)
+								211 Triangular (zero at end / root-heavy)
+								212 Trapezoidal
+								213 Elliptic (curved)
+								214 Parabolic (curved)
+								215 Schrenk: whole semi-span, this planform
+								216 Lift from aircraft mass · n m g / 2
+						217 text Allowed stations: 0–450 mm from root. Enter bounds within this interval; no load is clipped or moved automatically.
+						218 text Point station y (mm from root)
+						219 stepper (settable, integer) Point station y (mm from root), Value: 225, ID: wingA
+						220 text Point force (N, upward +)
+						221 stepper (settable, integer) Point force (N, upward +), Value: 2, ID: wingP
+						222 text Chord position x/c (0 = leading edge, 1 = trailing edge)
+						223 stepper (settable, float) Chord position x/c (0 = leading edge, 1 = trailing edge), Value: 0.30000001192092896, Details: 0.3, ID: wingFraction
+						224 container
+							225 text Profile display scale 
+							226 pop up button (collapsed, settable) Profile display scale, Value: Independent height · inspect shape, Secondary Actions: Expand
+								227 menu
+									228 (selected) Independent height · inspect shape
+									229 Shared intensity scale · compare loads
+						230 container
+							1011 text Live input preview — not applied until Add load
+							1044 container Point force schematic
+							1045 text Point force: measured in N, not force per length.
+						234 button Add load
+					1012 text No load defined. Add your own load.
+					236 button Clear applied loads, ID: wingClearLoad
+					1013 text Spatial beam · six-component aerodynamic panel load · total F [-0.191, 0.077, 4.183] N · total M about beam root [812.617, -9.064, 35.375] N·mm. Signed local bending/torsion and vector reactions are in the result record.
+					238 container
+						1014 text Solve the current inputs to draw the section and its shear centre.
+					242 button (collapsed) Import a spanwise line-load table (CSV), Secondary Actions: Expand
+						243 text Import a spanwise line-load table (CSV)
+			385 container wlAero
+				386 button (expanded) Aerodynamics panel method, Secondary Actions: Collapse
+					387 text Aerodynamics
+					388 text panel method
+				389 container wingAeroPanel
+					390 text Attached, incompressible potential flow on the actual wing surface (source and doublet panels, Kutta-condition wake, rounded tip). A sequence of seven meshes is solved and extrapolated; the resulting six-component load is admitted to the structure only if its estimated discretization error is within tolerance.
+					391 container
+						392 text Speed V (m/s)
+						393 stepper (settable, integer) Speed V (m/s), Value: 15, ID: aeroV
+					394 container
+						395 text Air density ρ (kg/m³)
+						396 stepper (settable, float) Air density ρ (kg/m³), Value: 1.225000023841858, Details: 1.225, ID: aeroRho
+					397 container
+						398 text Angle of attack α (°)
+						399 stepper (settable, integer) Angle of attack α (°), Value: 4, ID: aeroAlpha
+					400 container
+						401 text or target lift, both halves (N)
+						402 stepper (settable) or target lift, both halves (N), ID: aeroTarget
+					403 container
+						404 text Mesh sequence
+						405 pop up button (collapsed, settable) Mesh sequence, Value: Fine, ID: aeroSequence, Secondary Actions: Expand
+							406 menu
+								407 Standard
+								408 (selected) Fine
+					409 text Each sequence solves 7 meshes. Standard: up to 96 × 16 and 64 × 24 panels (around × spanwise), a few seconds. Fine: up to 192 × 16 and 64 × 48 panels, about 20 s; use it when Standard is not admitted or withholds torque and twist.
+					410 button (collapsed) Air properties, Secondary Actions: Expand
+						411 text Air properties
+					412 button Run mesh sequence, ID: aeroRun
+					413 button Apply to structure and solve, ID: aeroApply
+					575 button Remove aerodynamic load, ID: aeroRemove
+					1015 text Admission test (fine sequence): admitted with torque and twist. See the table below.
+					1016 container
+						1017 text Applied:  Panel-method pressure load, α 4°, V 15 m/s, fine sequence.
+					1046 container aeroAdmission
+						1047 text Aerodynamic load admitted: the coupled structural result is shown, including torque and twist (resolved to 10%).
+						1048 table
+							1049 row
+								1050 cell
+									1051 text ADMISSION CHECK (N, N·MM)
+								1052 cell
+									1053 text VALUE ± U
+								1054 cell
+									1055 text ERROR VS LIMIT
+							1056 row
+								1057 cell
+									1058 text ✓
+									1059 text  Root torque (shear-centre axis)
+								1060 cell
+									1061 text −37.85 ± 1.19
+								1062 cell
+									1063 text 3.1% of |T| (limit 10%)
+							1064 row
+								1065 cell
+									1066 text ✓
+									1067 text  Root force |F|
+								1068 cell
+									1069 text 4.189 ± 0.0381
+								1070 cell
+									1071 text 0.91% (limit 5.0%)
+							1072 row
+								1073 cell
+									1074 text ✓
+									1075 text  Root bending moment |M_b|
+								1076 cell
+									1077 text 812.6 ± 8.99
+								1078 cell
+									1079 text 1.1% (limit 5.0%)
+							1080 row
+								1081 cell
+									1082 text ✓
+									1083 text  Torque at 25% span (y 112.5 mm)
+								1084 cell
+									1085 text −24.62 ± 1.26
+								1086 cell
+									1087 text 5.1% of |T| (limit 10%)
+							1088 row
+								1089 cell
+									1090 text ✓
+									1091 text  Torque at 50% span (y 225.0 mm)
+								1092 cell
+									1093 text −13.69 ± 0.642
+								1094 cell
+									1095 text 4.7% of |T| (limit 10%)
+							1096 row
+								1097 cell
+									1098 text ✓
+									1099 text  Torque at 75% span (y 337.5 mm)
+								1100 cell
+									1101 text −5.348 ± 0.346
+								1102 cell
+									1103 text 6.5% of |T| (limit 10%)
+							1104 row
+								1105 cell
+									1106 text ✓
+									1107 text  Lift: pressure vs Trefftz plane
+								1108 cell
+									1109 text 0.5193 vs 0.5229
+								1110 cell
+									1111 text 0.69% (limit 2.0%)
+							1112 row
+								1113 cell
+									1114 text ✓
+									1115 text  Twist (shear-centre axis)
+								1116 cell
+									1117 text −0.0136° ± 7.621e−4° (tip)
+								1118 cell
+									1119 text 5.6% of |θ| (limit 10%)
+							1120 row
+								1121 cell
+									1122 text ✓
+									1123 text  One-way coupling: twist effect on lift
+								1124 cell
+									1125 text computed twist
+								1126 cell
+									1127 text 0.17% of lift (limit 2.0%)
+						1128 container
+							1129 text ✓ resolved; ! not resolved, value withheld; ✗ fails. A torque is resolved only if U ≤ 10% of |T| and every mesh that carries weight in the load gives the same sign; there is no absolute floor. The twist uncertainty uses this structure's torsional compliance, Δθ(y) = ∫ U T /GJ ds. Twist is shown only if every torque is resolved and Δθ ≤ 10% of |θ|; otherwise only the bound on |θ| is reported, and the load is admitted only if that bound, applied as an incidence change with the thin-airfoil lift slope 2π, changes the lift by at most 1% (an area-weighted mean twist of 0.0474° would do that). One-way coupling: the load is computed on the rigid wing, so the computed twist itself may change the lift by at most 2% (same lift slope); a more flexible wing is refused. Torques are about the structural shear-centre axis of the spatial beam. Pressure and Trefftz-plane drag of the extrapolated solution: 0.01259 and 0.01267 (reported, not a criterion).
+					415 container aeroResults
+						858 table
+							859 row
+								860 cell
+									861 text EXTRAPOLATED RESULT (BOTH HALVES UNLESS STATED)
+								862 cell
+									863 text VALUE ± U
+								864 cell
+									865 text FINEST MESHES
+							866 row
+								867 cell
+									868 text Lift coefficient C
+									869 text L
+									870 text , pressure integral
+								871 cell
+									872 text 0.5193 ± 0.0047
+								873 cell
+									874 text 0.5186
+							875 row
+								876 cell
+									877 text C
+									878 text L
+									879 text , Trefftz plane
+								880 cell
+									881 text 0.5229 ± 0.0047
+								882 cell
+									883 text 0.5218
+							884 row
+								885 cell
+									886 text Induced drag C
+									887 text Di
+									888 text , Trefftz plane
+								889 cell
+									890 text 0.01267 ± 2.357e−4
+								891 cell
+									892 text 0.01262
+							893 row
+								894 cell
+									895 text Pressure drag C
+									896 text D,p
+									897 text  (equals C
+									898 text Di
+									899 text  in exact potential flow)
+								900 cell
+									901 text 0.01259 ± 3.989e−4
+								902 cell
+									903 text 0.01235
+							904 row
+								905 cell
+									906 text Pitching moment C
+									907 text m
+									908 text  about ¼ MAC (nose-up +)
+								909 cell
+									910 text −0.05423 ± 0.0013
+								911 cell
+									912 text −0.05342
+							913 row
+								914 cell
+									915 text Semi-wing force F
+									916 text x
+									917 text  (N)
+								918 cell
+									919 text −0.1908 ± 0.0026
+								920 cell
+									921 text −0.1923
+							922 row
+								923 cell
+									924 text Semi-wing force F
+									925 text y
+									926 text  (N)
+								927 cell
+									928 text 0.07719 ± 6.113e−4
+								929 cell
+									930 text 0.07674
+							931 row
+								932 cell
+									933 text Semi-wing force F
+									934 text z
+									935 text  (N)
+								936 cell
+									937 text 4.183 ± 0.038
+								938 cell
+									939 text 4.178
+							940 row
+								941 cell
+									942 text Semi-wing moment M
+									943 text x
+									944 text  about the root origin (N·mm)
+								945 cell
+									946 text 812.3 ± 9
+								947 cell
+									948 text 813.6
+							949 row
+								950 cell
+									951 text Semi-wing moment M
+									952 text y
+									953 text  about the root origin (N·mm)
+								954 cell
+									955 text −196.2 ± 2.5
+								956 cell
+									957 text −195.2
+							958 row
+								959 cell
+									960 text Semi-wing moment M
+									961 text z
+									962 text  about the root origin (N·mm)
+								963 cell
+									964 text 38.81 ± 0.45
+								965 cell
+									966 text 39.03
+						967 text Global consistency of the extrapolated solution: pressure and Trefftz-plane lift differ by 0.69 % (criterion 2%); pressure and induced drag differ by −7.702e-5 (combined U 6.346e−4). Reynolds number (MAC) 1.343e+5, Mach 0.0441, q 137.8 Pa.
+						968 text Reynolds number 1.34e+5 (mean aerodynamic chord): laminar separation and low-Re effects can reduce lift slope and maximum lift substantially; inviscid results are optimistic.
+						969 text Use as structural load
+						970 text The extrapolated load is 53 spanwise strips, each with its full force vector and moment (six components; nothing is dropped). The spatial beam carries a strip as a uniform force on the quarter-chord line plus the couple that restores the strip moment exactly.
+						971 container
+							972 container Vertical aerodynamic force per unit span versus span station
+							973 text Vertical force per unit span F
+							974 text z
+							975 text /Δy (N/mm): delivered extrapolated strips (solid) and the 64 × 16 base mesh (dashed).
+						976 container
+							977 text Chordwise Cp station (base mesh)
+							978 pop up button (collapsed, settable) Chordwise Cp station (base mesh), Value: y = 22.05 mm (η = 0.049), ID: aeroStation, Secondary Actions: Expand
+								979 menu
+									980 (selected) y = 22.05 mm (η = 0.049)
+									981 y = 65.95 mm (η = 0.147)
+									982 y = 109.2 mm (η = 0.243)
+									983 y = 151.4 mm (η = 0.336)
+									984 y = 192.2 mm (η = 0.427)
+									985 y = 231.1 mm (η = 0.513)
+									986 y = 267.7 mm (η = 0.595)
+									987 y = 301.8 mm (η = 0.671)
+									988 y = 333 mm (η = 0.74)
+									989 y = 361 mm (η = 0.802)
+									990 y = 385.5 mm (η = 0.857)
+									991 y = 406.3 mm (η = 0.903)
+									992 y = 423.2 mm (η = 0.94)
+									993 y = 436 mm (η = 0.969)
+									994 y = 442.7 mm (η = 0.984)
+									995 y = 445.1 mm (η = 0.989)
+									996 y = 447.3 mm (η = 0.994)
+									997 y = 448.9 mm (η = 0.998)
+									998 y = 449.8 mm (η = 0.999)
+						999 container aeroCp
+							1000 container Pressure coefficient along the chord at the selected station, upper and lower surfaces
+							1001 container
+								1002 text −C p  versus x/c at y = 22.05 mm (local chord 157.1 mm) on the 64 × 16 base mesh: upper surface solid, lower surface dashed.
+						1003 button (collapsed) Meshes of the sequence, Secondary Actions: Expand
+							1004 text Meshes of the sequence
+						1005 button Download aerodynamic load (CSV), ID: aeroCsv
+						1006 button (collapsed) Method and scope, Secondary Actions: Expand
+							1007 text Method and scope
+			247 container Description: Material controls, ID: wingMaterialShortcuts
+				248 text Materials
+				249 button Shell / rib material & E, ID: wingShellMaterial
+				250 button Rod material & E, ID: wingRodMaterial
+				251 text Open the material card to edit the shell/rib elastic modulus and strengths, or the rod modulus. These are engineering inputs; use measured coupon data for printed parts.
+			252 button (collapsed) Study files, Secondary Actions: Expand
+				253 text Study files
+			254 button (collapsed) Model inventory 1 mod · 0 ribs · 0 rods, Secondary Actions: Expand
+				255 text Model inventory
+				1018 text 1 mod · 0 ribs · 0 rods
+		257 container Wing model tools
+			258 container Geometry, structure, loads and mesh
+				259 button Solve, ID: runBtn
+				260 button New / Clear, Help: Clear the whole study and start on an empty canvas · Undo available
+				261 button Open JSON
+				262 button Save JSON
+				263 button Airfoils & planform
+				264 button Structure dimensions
+				265 button Materials
+				266 button + Rib
+				267 button + Rod
+				268 button + Spar
+				269 button + Load
+				270 container 4–100 requested spanwise beam elements; required stations may add elements.
+					271 text Beam mesh 
+					272 stepper (settable) Description: Requested wing beam elements, ID: wingMeshElements
+				273 container Solve automatically after each valid change
+					274 checkbox (settable, integer) Description: Auto-solve, Value: 0, ID: wingAutoSolve
+					275 text Auto-solve
+				276 button Show bending & twist, ID: wingShowBendingTwist
+			277 container Files, view and help
+				278 pop up button Study tree, ID: wingStudyTreeButton
+				279 button (collapsed) Experiments & theory ▾, Secondary Actions: Expand
+					280 text Experiments & theory ▾
+				281 container Wing edit history
+					282 button ↶ Undo, Help: Undo wing edit (Ctrl/Cmd+Z), ID: wingUndo
+					283 button (disabled) ↷ Redo, Help: Redo wing edit (Ctrl/Cmd+Shift+Z or Ctrl+Y), ID: wingRedo
+				854 container wingInputHelp
+					855 button (collapsed) Help ▾, Secondary Actions: Expand
+						856 text Help ▾
+				286 button Open STL, ID: wingOpenSTL
+				287 container Mirror the designed semi-wing across its root. Results reflect the original clamped semi-wing under symmetric loads and supports. Printed modules 1 joins both halves into one STL; 2/3 produces 4/6 pieces for assembly. The full one-piece wing must fit the 300 mm printer.
+					288 checkbox (settable, integer) Description: Full wing · mirror, Value: 0, ID: wingFullSymmetric
+					289 text Full wing · mirror
+				290 button Download STL, ID: wingDownloadSTL
+				291 button DXF, Help: 2D millimetre planform and rib profiles, ID: wingDownloadDXF
+				292 button STEP, Help: 3D faceted solid CAD exchange; not smooth or parametric features, ID: wingDownloadSTEP
+		293 container 3-D viewport
+			294 image Description: Wing model: click or tap a visible rib, rod or spar to edit it; Delete removes the selected part, ID: gl
+			295 container Description: Aircraft axes on the wing: origin at the undeformed root quarter-chord; x aft, y outboard, z up, ID: wingModelAxes
+			296 container Perspective camera views
+				297 checkbox Top, Help: Top / planform: look down from aircraft +z; leading edge up, Value: 0
+				298 checkbox Front, Help: Front: look aft from aircraft −x; +z up, Value: 0
+				299 checkbox Side, Help: Side / root: look outward from aircraft −y; +z up, Value: 0
+				300 checkbox 3D, Help: Three-quarter perspective view, Value: 1
+			301 container ID: aircraftAxes, Description: Aircraft axes: positive x aft, positive y outboard along the semi-wing, positive z up. Axes rotate with the camera.
+			302 container Description: Stress probes, ID: wingResultLabels
+			303 container
+				304 container ID: wingMassReadout, Description: Estimated model mass including skin, ribs, end caps, spars, rods and any tip mass. Verify manufacturing mass in CAD and the slicer.
+					1019 text Estimated semi-wing mass 204.0 g · includes spars 0.0 g
+				1020 text 3-D SPATIAL BEAM · linear planform · NACA 2412 · sweep 0° · dihedral 0° · 95 elements · six-component aerodynamic panel load (arrows: vertical part) · undeformed geometry · nominal normal stress only; grey = unresolved; no overall FoS
+			311 container anatomyKey
+				1021 text Skin made transparent for teaching · material is not removed
+				313 text PLA skin
+				314 text Ribs
+				315 text Printed sleeves
+				316 text Carbon rods
+				317 text Clamped root · hatched support, not a force
+			1022 text Solved in 1.89 s · 95 spatial beam elements · 6 DOF/node · locally prismatic sections, not a 3-D solid FE mesh
+		319 container Description: View and display controls, ID: wingInlineDisplay
+			320 container Description: View and display, ID: wingViewPanel
+				321 text ZOOM
+				322 container ZOOM
+					323 button Description: Zoom out, ID: zoomOut
+					324 button Description: Zoom in, ID: zoomIn
+					325 button Fit, Help: Fit the whole wing in the view, ID: zoomFit
+					326 button Reset view, Help: Three-quarter perspective view at the starting distance, ID: zoomReset
+				327 container Standard views
+					328 checkbox Description: 3D · perspective, Value: 1
+					329 checkbox Description: Top / planform (+z), Value: 0
+					330 checkbox Description: Side / root (−y), Value: 0
+					331 checkbox Description: Front (−x), Value: 0
+				332 container
+					333 text Explode
+					334 slider (settable, integer) Explode, Value: 0, ID: explodeIn
+				335 checkbox Clip, Value: 0, ID: clipBtn
+				336 container
+					337 text Clip station
+					338 slider (settable, integer) Clip station, Value: 150, ID: clipIn
+				339 container Description: Wing display controls, ID: hudControls
+					340 container Wing anatomy
+						341 checkbox Complete wing, Value: 0
+						342 checkbox Inside wing, Value: 1
+						343 checkbox Ribs only, Value: 0
+						344 checkbox Rods & sleeves, Value: 0
+						345 checkbox Spars · caps & webs, Value: 0
+					346 checkbox Deformed, Value: 0, ID: defBtn
+					347 container
+						348 text Scale
+						349 slider (settable, integer) Scale, Value: 1, ID: scaleIn
+					350 checkbox See-through, Value: 0, ID: xrayBtn
+					351 checkbox Shear centre · ┄, Help: Calculated shear-centre path; eccentric loads may twist the wing., Value: 1, ID: shearCentreBtn
+				352 button (collapsed) Contours, probes & image export, Secondary Actions: Expand
+					353 text Contours, probes & image export
+		354 container Results
+			669 container Description: Spatial beam result record, ID: wingSpatialResults
+				1023 heading 3-D structural beam · results, Value: 2
+					1130 text 3-D structural beam · results
+				1024 container Spatial nominal stress display
+					1025 checkbox Show nominal skin stress, Value: 1
+					1026 checkbox (disabled) Show nominal spar stress, Value: 0
+				1131 text End-load approximation: 1 load item/interval(s) project beyond the beam reference axis. Total force and moment are preserved at the nearest endpoint. Global bending and reactions include these loads; local stress near that endpoint is approximate. Do not use it to assess the load attachment.
+				1132 container wingAeroLoadResult
+					1133 text Aerodynamic load: six components, admitted
+					1134 text Panel-method pressure load, α 4°, V 15 m/s, fine sequence. 53 strips on the quarter-chord line, each with its full force vector and the couple that restores its moment. Applied to the beam: F = [-0.190753, 0.0771931, 4.18346] N and M about the root axis node = [812.617, -9.06401, 35.3749] N·mm; largest difference from the strip sums 5.3e-15 N and 1.1e-13 N·mm.
+					1135 text Torque and twist resolved (fine mesh sequence): root torque about the structural axis -37.85 ± 1.19 N·mm; tip twist -0.01365 ± 0.00076°.
+					1136 text Full admission table: Aerodynamics section.
+				1137 text Torsional warping stress is not recovered.
+				1027 text In the reference pure-torque case, raw solid normal-stress discrepancies reached 22.3%, despite close global compliance and nominal affine stress. These contours are not a validated local strength check.
+				1138 text Nominal beam response—not local wing-root stress
+				1139 text The beam clamp cannot reproduce load redistribution at an oblique physical fixture. Grey surface regions and gaps in stress curves have no resolved normal-cut stress; they are not zero stress. Rapid profile transitions or a broad chord can also make the normal-plane mapping unresolved. The geometric end mask is only a minimum exclusion, not a validated Saint-Venant decay distance. Point loads assume rigid section load transfer; local ribs, hardpoints and skin indentation require a separate model.
+				1140 text Case-specific benchmark evidence.
+				1028 text Valid airfoil/angle inputs do not establish structural accuracy for every design. Custom DAT profiles and other untested constructions remain unvalidated applications of this beam approximation—not a validated angular box.
+				1029 link Description: Read the reference cases and intended-use limits., Value: github.com/Ehsan-Roohi/Aerospace-Structures/blob/main/computational/printed-wing-solver/web/SPATIAL_BEAM_VALIDATION.md
+				1141 text 6-DOF spatial Euler–Bernoulli frame; condensed quadratic axial mode + coupled biaxial bending + Saint-Venant torsion. Six root degrees of freedom are fixed on the equivalent beam axis, not on every point of the oblique physical root face. Aircraft axes: x aft, y spanwise, z up.
+				1142 text Linear-model screening — not a safety approval
+				1143 text Small-displacement screening passed (translation/span ≤ 5%, rotation ≤ 0.1 rad); this is not a nonlinear validation.
+				1144 text Maximum translation/span 0.310%; maximum section rotation 0.00432 rad. Buckling, shear failure, local bond stress, flutter and overall FoS are unresolved.
+				1030 heading Root reactions (on wing), Value: 3
+					1145 text Root reactions (on wing)
+				1146 table
+					1147 row
+						1148 cell
+							1149 text COMPONENT
+						1150 cell
+							1151 text VALUE
+						1152 cell
+							1153 text UNIT
+					1154 row
+						1155 cell
+							1156 text FX
+						1157 cell
+							1158 text 0.190753
+						1159 cell
+							1160 text N
+					1161 row
+						1162 cell
+							1163 text FY
+						1164 cell
+							1165 text -0.0771931
+						1166 cell
+							1167 text N
+					1168 row
+						1169 cell
+							1170 text FZ
+						1171 cell
+							1172 text -4.18346
+						1173 cell
+							1174 text N
+					1175 row
+						1176 cell
+							1177 text MX
+						1178 cell
+							1179 text -812.618
+						1180 cell
+							1181 text N·mm
+					1182 row
+						1183 cell
+							1184 text MY
+						1185 cell
+							1186 text 9.06401
+						1187 cell
+							1188 text N·mm
+					1189 row
+						1190 cell
+							1191 text MZ
+						1192 cell
+							1193 text -35.3749
+						1194 cell
+							1195 text N·mm
+				1031 heading Tip response · actual, not magnified, Value: 3
+					1196 text Tip response · actual, not magnified
+				1197 table
+					1198 row
+						1199 cell
+							1200 text UX
+						1201 cell
+							1202 text -0.000151296
+						1203 cell
+							1204 text mm
+					1205 row
+						1206 cell
+							1207 text UY
+						1208 cell
+							1209 text -0.00250289
+						1210 cell
+							1211 text mm
+					1212 row
+						1213 cell
+							1214 text UZ
+						1215 cell
+							1216 text 1.39575
+						1217 cell
+							1218 text mm
+					1219 row
+						1220 cell
+							1221 text ΘX
+						1222 cell
+							1223 text 0.247449
+						1224 cell
+							1225 text degrees
+					1226 row
+						1227 cell
+							1228 text ΘY
+						1229 cell
+							1230 text -0.0047154
+						1231 cell
+							1232 text degrees
+					1233 row
+						1234 cell
+							1235 text ΘZ
+						1236 cell
+							1237 text 0.0000723943
+						1238 cell
+							1239 text degrees
+				1240 text Plastic model mass 204.03 g · 95 beam elements.
+				1032 heading Equilibrium & numerical checks, Value: 3
+					1241 text Equilibrium & numerical checks
+				1242 definition list
+					1243 container Force residual
+						1244 text Force residual
+					1245 text 8.756e-7 N
+					1246 container Moment residual
+						1247 text Moment residual
+					1248 text 0.00006858 N·mm
+					1249 container Energy relative residual
+						1250 text Energy relative residual
+					1251 text 2.154e-7
+					1252 container Strain energy
+						1253 text Strain energy
+					1254 text 0.910782 N·mm
+					1255 container Normal-axis iteration change
+						1256 text Normal-axis iteration change
+					1257 text 1.148e-8 mm
+				1258 text Residual checks test numerical consistency, not all physical assumptions. Refining the beam mesh and the section approximation remains necessary for a new design.
+				1033 heading Nominal distributions versus beam-axis station y (mm), Value: 3
+					1259 text Nominal distributions versus beam-axis station y (mm)
+				1260 text The abscissa is the projected y of the beam axis / normal-cut origin, not the y of each physical surface point. Stress envelopes and section resultants belong to that normal cut. Surface colours use physical-point normal-foot mapping instead. Vector curves: x = red, y = green, z = blue. Rotations are elastic, not prescribed incidence.
+				1034 container wingSpatialCharts
+					1035 heading GLOBAL DISPLACEMENT UX / UY / UZ mm, Value: 4
+						1261 text GLOBAL DISPLACEMENT UX / UY / UZ
+						1262 text mm
+					1263 container Global displacement ux / uy / uz
+					1036 heading ELASTIC ROTATION ΘX / ΘY / ΘZ degrees, Value: 4
+						1264 text ELASTIC ROTATION ΘX / ΘY / ΘZ
+						1265 text degrees
+					1266 container Elastic rotation θx / θy / θz
+					1037 heading ELASTIC AXIS TWIST / STREAMWISE INCIDENCE CHANGE degrees, Value: 4
+						1267 text ELASTIC AXIS TWIST / STREAMWISE INCIDENCE CHANGE
+						1268 text degrees
+					1269 container Elastic axis twist / streamwise incidence change
+					1038 heading CUT FORCE FX / FY / FZ N, Value: 4
+						1270 text CUT FORCE FX / FY / FZ
+						1271 text N
+					1272 container Cut force Fx / Fy / Fz
+					1039 heading CUT MOMENT MX / MY / MZ N·m, Value: 4
+						1273 text CUT MOMENT MX / MY / MZ
+						1274 text N·m
+					1275 container Cut moment Mx / My / Mz
+					1040 heading SIGNED LOCAL BENDING M2 / M3 AND TORSION T N·m, Value: 4
+						1276 text SIGNED LOCAL BENDING M2 / M3 AND TORSION T
+						1277 text N·m
+					1278 container Signed local bending M2 / M3 and torsion T
+					1041 heading SKIN NORMAL STRESS · TENSION / COMPRESSION MPa, Value: 4
+						1279 text SKIN NORMAL STRESS · TENSION / COMPRESSION
+						1280 text MPa
+					1281 container Skin normal stress · tension / compression
+				1042 button (collapsed) How the software solves this model, Secondary Actions: Expand
+					1282 text How the software solves this model
+				1043 button (collapsed) Assumptions and unavailable results, Secondary Actions: Expand
+					1283 text Assumptions and unavailable results
+
+The focused UI element is 413 button Apply to structure and solve, ID: aeroApply

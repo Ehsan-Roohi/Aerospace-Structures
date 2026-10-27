@@ -1,0 +1,86 @@
+[
+  {
+    "suite": "test_wing_aero_kernels",
+    "exit": 0,
+    "seconds": 2.04,
+    "last": "test_wing_aero_kernels: 21 checks passed"
+  },
+  {
+    "suite": "test_wing_aero_closed_bodies",
+    "exit": 0,
+    "seconds": 6.68,
+    "last": "test_wing_aero_closed_bodies: 34 checks passed"
+  },
+  {
+    "suite": "test_wing_aero_trefftz",
+    "exit": 0,
+    "seconds": 0.36,
+    "last": "test_wing_aero_trefftz: 23 checks passed"
+  },
+  {
+    "suite": "test_wing_aero_conformal",
+    "exit": 0,
+    "seconds": 13.77,
+    "last": "test_wing_aero_conformal: 28 checks passed"
+  },
+  {
+    "suite": "test_wing_aero_wing",
+    "exit": 0,
+    "seconds": 21.62,
+    "last": "test_wing_aero_wing: 65 checks passed"
+  },
+  {
+    "suite": "test_wing_aero_vlm",
+    "exit": 0,
+    "seconds": 4.2,
+    "last": "test_wing_aero_vlm: 7 checks passed"
+  },
+  {
+    "suite": "test_wing_aero_admission",
+    "exit": 0,
+    "seconds": 48.58,
+    "last": "test_wing_aero_admission: 259 checks passed (48.2 s)"
+  },
+  {
+    "suite": "test_wing_aero_transfer",
+    "exit": 0,
+    "seconds": 17.18,
+    "last": "test_wing_aero_transfer: 28 checks passed"
+  },
+  {
+    "suite": "test_aerostruct_engine_fork",
+    "exit": 0,
+    "seconds": 15.02,
+    "last": "test_aerostruct_engine_fork: 128 checks passed (14.7 s)"
+  },
+  {
+    "suite": "test_aerostruct_twist",
+    "exit": 0,
+    "seconds": 46.56,
+    "last": "test_aerostruct_twist: 96 checks passed (45.7 s)"
+  },
+  {
+    "suite": "test_wing_aero_worker",
+    "exit": 0,
+    "seconds": 15.17,
+    "last": "test_wing_aero_worker: 18 checks passed"
+  },
+  {
+    "suite": "r_io",
+    "exit": 0,
+    "seconds": 46.12,
+    "last": "test_aerostruct_study_io: 51 checks passed"
+  },
+  {
+    "suite": "test_aerostruct_aero_ui",
+    "exit": 0,
+    "seconds": 11.24,
+    "last": "test_aerostruct_aero_ui: 35 checks passed"
+  },
+  {
+    "suite": "test_aerostruct_page",
+    "exit": 0,
+    "seconds": 93.26,
+    "last": "test_aerostruct_page: 43 checks passed"
+  }
+]

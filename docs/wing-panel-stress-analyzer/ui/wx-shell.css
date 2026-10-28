@@ -279,6 +279,10 @@ body.wx-wing-on .wing-editor-pop.wx-below-bar > div { max-height: calc(100dvh - 
 .wx-ar-head h3 { margin: 0; font: 700 16px/1.2 var(--font-ui); }
 .wx-ar-src { margin: 3px 0 0; font-size: 12px; line-height: 1.35; color: var(--muted); max-width: 980px; }
 .wx-ar-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+#wxFoilControls { margin-top: 8px; }
+#wxFoilControls label { display: inline-flex; align-items: center; gap: 5px; font-size: 13px; }
+#wxFoilControls input { width: 78px; height: 34px; padding: 0 6px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--fg); }
+#app.wx #wxFoilSolve { background: #0b5fc2; color: #fff; }
 #app.wx .wx-ar-tools .btn { height: 34px; min-height: 34px; padding: 0 11px; background: var(--panel); }
 #app.wx .wx-ar-tools .btn:disabled { opacity: 0.45; cursor: not-allowed; }
 .wx-ar-tools select { height: 34px; max-width: 290px; padding: 0 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--fg); font: 13px var(--font-ui); }

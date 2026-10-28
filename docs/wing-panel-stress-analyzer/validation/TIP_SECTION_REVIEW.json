@@ -1,0 +1,158 @@
+{
+  "geometry": {
+    "naca": "2412",
+    "semiSpan": 900,
+    "rootChord": 160,
+    "tipChord": 100,
+    "planform": "linear",
+    "sweepDeg": 10,
+    "dihedralDeg": 10,
+    "sweepReferenceFraction": 0.25,
+    "twistReferenceFraction": 0.25,
+    "twistEnabled": false
+  },
+  "flow": {
+    "speed": 10,
+    "density": 1.225,
+    "alphaDeg": 4
+  },
+  "rounded_tip": {
+    "length_mm": 5.998843348126798,
+    "start_mm": 894.0011566518732,
+    "strips": 4
+  },
+  "base_last_five_samples": [
+    {
+      "y0": 882.7067523629074,
+      "y1": 894.0011566518732,
+      "y": 888.3539545073903,
+      "cl": 0.2743933807640967,
+      "clKJ": 0.28299134644678076,
+      "gamma": 0.14259424992163508,
+      "cm": -0.029607443352510997,
+      "te": 0.02453843961445057
+    },
+    {
+      "y0": 894.0011566518732,
+      "y1": 896.2968146145548,
+      "y": 895.148985633214,
+      "cl": 0.2639802793948218,
+      "clKJ": 0.21343720788049925,
+      "gamma": 0.10706373292752795,
+      "cm": -0.06738071474230116,
+      "te": -0.05253548317102874
+    },
+    {
+      "y0": 896.2968146145548,
+      "y1": 898.2429794626095,
+      "y": 897.2698970385821,
+      "cl": 0.31187998958010316,
+      "clKJ": 0.1626684901184712,
+      "gamma": 0.08148227896810288,
+      "cm": -0.11278614626473618,
+      "te": -0.15614286537177535
+    },
+    {
+      "y0": 898.2429794626095,
+      "y1": 899.543365239949,
+      "y": 898.8931723512792,
+      "cl": 0.4733352186985719,
+      "clKJ": 0.11341956512771877,
+      "gamma": 0.05675162786738913,
+      "cm": -0.2342600926647041,
+      "te": -0.417621321383598
+    },
+    {
+      "y0": 899.543365239949,
+      "y1": 900,
+      "y": 899.7716826199745,
+      "cl": 0.5949431417045572,
+      "clKJ": 0.06796484628115278,
+      "gamma": 0.033987595659121975,
+      "cm": -0.34632519135963546,
+      "te": -0.9185109181877347
+    }
+  ],
+  "levels": [
+    {
+      "chord": 32,
+      "span": 16,
+      "CL": 0.5942389786136926,
+      "Cm": -0.04265763659960238,
+      "tip_start_mm": 894.0011566518732,
+      "last_strip_cm": -0.3463251913596352,
+      "minCp": -4.742020441704398,
+      "maxCp": 0.9444035010863804,
+      "TE_mismatch_inboard90": 0.02294799012529547
+    },
+    {
+      "chord": 48,
+      "span": 16,
+      "CL": 0.5987357937070586,
+      "Cm": -0.044307556578773916,
+      "tip_start_mm": 894.0011566518732,
+      "last_strip_cm": -0.3506818927999675,
+      "minCp": -4.8170810056154245,
+      "maxCp": 0.9581576359151901,
+      "TE_mismatch_inboard90": 0.026087124180521615
+    },
+    {
+      "chord": 64,
+      "span": 16,
+      "CL": 0.6010325905277895,
+      "Cm": -0.0450601116510583,
+      "tip_start_mm": 894.0011566518732,
+      "last_strip_cm": -0.35198448031528506,
+      "minCp": -4.843044600450016,
+      "maxCp": 0.9567034389120015,
+      "TE_mismatch_inboard90": 0.027391682558572383
+    },
+    {
+      "chord": 96,
+      "span": 16,
+      "CL": 0.6032489294500293,
+      "Cm": -0.04573796061925342,
+      "tip_start_mm": 894.000080828553,
+      "last_strip_cm": -0.3525790342657036,
+      "minCp": -4.858092951780262,
+      "maxCp": 0.9585049062339583,
+      "TE_mismatch_inboard90": 0.02838995373004738
+    },
+    {
+      "chord": 32,
+      "span": 24,
+      "CL": 0.5927839489380179,
+      "Cm": -0.04182665695316581,
+      "tip_start_mm": 894.0011566518732,
+      "last_strip_cm": -0.40687954594179365,
+      "minCp": -8.772005957616221,
+      "maxCp": 0.9484016693944808,
+      "TE_mismatch_inboard90": 0.024410310130134283
+    },
+    {
+      "chord": 32,
+      "span": 32,
+      "CL": 0.5922323827359717,
+      "Cm": -0.04142636268882351,
+      "tip_start_mm": 894.0011566518732,
+      "last_strip_cm": -0.46669337331504523,
+      "minCp": -13.919749615943912,
+      "maxCp": 0.9488710276493891,
+      "TE_mismatch_inboard90": 0.023746304519517758
+    },
+    {
+      "chord": 32,
+      "span": 48,
+      "CL": 0.5918288265958529,
+      "Cm": -0.04103460032029179,
+      "tip_start_mm": 894.0011566518732,
+      "last_strip_cm": -0.5935599316760396,
+      "minCp": -28.859584648672843,
+      "maxCp": 0.9496797211342319,
+      "TE_mismatch_inboard90": 0.0250046293651367
+    }
+  ],
+  "verdict": "The abrupt local tip drop is not established as physical. It coincides with the 6 mm rounded aerodynamic tip and is not a resolved 2D section quantity. The last-strip cm and pressure extrema change with span refinement; integrated coefficients are much more stable. No values were smoothed, clipped, or repaired by changing signs.",
+  "reference_comparison": "AirFrame 0.0.20261017 ZIP has APAME executables, binary Python modules, API headers and examples, not its full numerical source. Shared potential-flow/source-doublet family is not proof of implementation equivalence or measured equal accuracy.",
+  "scope": "Existing 3D numerical solver unchanged. Display flags distinguish uncertain tip samples."
+}

@@ -22342,6 +22342,10 @@ body.wx-wing-on .wing-editor-pop.wx-below-bar > div { max-height: calc(100dvh - 
 .wx-ar-head h3 { margin: 0; font: 700 16px/1.2 var(--font-ui); }
 .wx-ar-src { margin: 3px 0 0; font-size: 12px; line-height: 1.35; color: var(--muted); max-width: 980px; }
 .wx-ar-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+#wxFoilControls { margin-top: 8px; }
+#wxFoilControls label { display: inline-flex; align-items: center; gap: 5px; font-size: 13px; }
+#wxFoilControls input { width: 78px; height: 34px; padding: 0 6px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--fg); }
+#app.wx #wxFoilSolve { background: #0b5fc2; color: #fff; }
 #app.wx .wx-ar-tools .btn { height: 34px; min-height: 34px; padding: 0 11px; background: var(--panel); }
 #app.wx .wx-ar-tools .btn:disabled { opacity: 0.45; cursor: not-allowed; }
 .wx-ar-tools select { height: 34px; max-width: 290px; padding: 0 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--fg); font: 13px var(--font-ui); }
@@ -22390,15 +22394,79 @@ body.wx-wing-on .wing-editor-pop.wx-below-bar > div { max-height: calc(100dvh - 
 
 </style>
 <script id="wxShellScript">
-/* Wing AeroStruct aerodynamic result views. They draw the panel method's own stored output and nothing else:
+/* Wing AeroStruct aerodynamic results plus a separate, explicit 2-D section solver below.
+ * The 3-D views draw only the wing panel method's stored output:
  *  - surface Cp and p − p∞ = q∞ Cp at the panel centroids of the BASE mesh (result.base.chordwise; one solved mesh of
  *    the sequence, not extrapolated), placed on the planform from the strip edges, chords and quarter-chord points;
  *  - sectional Cp of one base-mesh strip;
  *  - spanwise lift of the delivered (extrapolated) strip load, the base mesh and every other mesh of the sequence;
  *  - extrapolated coefficients with their uncertainty, mesh convergence, consistency checks and the admission record.
  * Shown without a structural solve and withheld when the wing shape or the flow inputs changed after the solve.
- * The panel module computes no surface velocity field, viscous drag, stall, boundary layer or streamlines, so none
- * is offered. Browser: global WingAeroStructResults.install(env). */
+ * Neither solver supplies viscosity, stall, boundary layers or streamlines. The independent 2-D solver
+ * reports its own tangential velocity and is never substituted for a 3-D wing result.
+ * Browser: global WingAeroStructResults.install(env). */
+/* Independent 2-D linear vortex-sheet panel method. Unit chord and unit freestream.
+ * Analytic straight-panel influence integrals; midpoint impermeability; endpoint
+ * Kutta gamma[0]+gamma[N]=0. This is inviscid, not XFOIL's viscous formulation.
+ * Theory: https://www.engapplets.vt.edu/fluids/vpm/vpminfo.html
+ */
+window.WingAirfoilPanel2D = (() => {
+  'use strict';
+  const PI2 = 2 * Math.PI;
+  function solveLinear(A, rhs) {
+    const n=rhs.length, a=A.map((r,i)=>Float64Array.from([...r,rhs[i]]));
+    for(let k=0;k<n;k++){
+      let p=k;for(let i=k+1;i<n;i++)if(Math.abs(a[i][k])>Math.abs(a[p][k]))p=i;
+      if(Math.abs(a[p][k])<1e-13)throw Error('Singular 2D panel system: check the section contour.');
+      [a[p],a[k]]=[a[k],a[p]];
+      for(let i=k+1;i<n;i++){const f=a[i][k]/a[k][k];for(let j=k+1;j<=n;j++)a[i][j]-=f*a[k][j];a[i][k]=0;}
+    }
+    const x=new Float64Array(n);for(let i=n-1;i>=0;i--){let s=a[i][n];for(let j=i+1;j<n;j++)s-=a[i][j]*x[j];x[i]=s/a[i][i];}return x;
+  }
+  function influences(p, c, self=false) {
+    const dx=c[0]-p.a[0], dz=c[1]-p.a[1], X=dx*p.tx+dz*p.tz, Y=-dx*p.tz+dz*p.tx, L=p.length;
+    let beta=self?0:Math.atan2(Y,X-L)-Math.atan2(Y,X);
+    if(beta>Math.PI)beta-=PI2;if(beta< -Math.PI)beta+=PI2;
+    const log=self?0:.5*Math.log((X*X+Y*Y)/((X-L)**2+Y*Y));
+    const u=-beta/PI2,v=log/PI2,ub=-(X*beta-Y*log)/(L*PI2),vb=(X*log-L+Y*beta)/(L*PI2);
+    const world=(u,v)=>[p.tx*u-p.tz*v,p.tz*u+p.tx*v];
+    return [world(u-ub,v-vb),world(ub,vb)];
+  }
+  function solveCoordinates(raw, alphaDeg=0) {
+    if(!Number.isFinite(alphaDeg)||Math.abs(alphaDeg)>15)throw Error('Use a 2D angle of attack between -15 and 15 degrees. Stall is not modelled.');
+    let pts=raw.map(p=>[+p[0],+p[1]]);
+    if(pts.length<17||pts.length>641||pts.some(p=>p.some(v=>!Number.isFinite(v))))throw Error('The 2D section needs 16–640 finite contour panels.');
+    if(Math.hypot(pts[0][0]-pts.at(-1)[0],pts[0][1]-pts.at(-1)[1])>1e-7)throw Error('The 2D aerodynamic trailing edge must close.');
+    let area=0;for(let i=0;i<pts.length-1;i++)area+=pts[i][0]*pts[i+1][1]-pts[i+1][0]*pts[i][1];
+    if(area>0)pts.reverse(); // Clockwise contour: left normal is outward.
+    const N=pts.length-1, panels=[];
+    for(let i=0;i<N;i++){const a=pts[i],b=pts[i+1],L=Math.hypot(b[0]-a[0],b[1]-a[1]);if(L<1e-10)throw Error('Zero-length 2D panel.');const tx=(b[0]-a[0])/L,tz=(b[1]-a[1])/L;panels.push({a,b,length:L,tx,tz,nx:-tz,nz:tx,x:.5*(a[0]+b[0]),z:.5*(a[1]+b[1])});}
+    const angle=alphaDeg*Math.PI/180, ca=Math.cos(angle),sa=Math.sin(angle), A=Array.from({length:N+1},()=>new Float64Array(N+1)), B=new Float64Array(N+1), kernels=[];
+    for(let i=0;i<N;i++){const p=panels[i], row=[];B[i]=-(ca*p.nx+sa*p.nz);for(let j=0;j<N;j++){const uv=influences(panels[j],[p.x,p.z],i===j);row.push(uv);for(let k=0;k<2;k++)A[i][j+k]+=uv[k][0]*p.nx+uv[k][1]*p.nz;}kernels.push(row);}
+    A[N][0]=A[N][N]=1;
+    const gamma=solveLinear(A,B);let Fx=0,Fz=0,My=0,circulation=0,maxResidual=0;
+    for(let i=0;i<=N;i++){let r=-B[i];for(let j=0;j<=N;j++)r+=A[i][j]*gamma[j];maxResidual=Math.max(maxResidual,Math.abs(r));}
+    for(let i=0;i<N;i++){const p=panels[i];let vt=ca*p.tx+sa*p.tz;
+      for(let j=0;j<N;j++)for(let k=0;k<2;k++)vt+=gamma[j+k]*(kernels[i][j][k][0]*p.tx+kernels[i][j][k][1]*p.tz);
+      vt-=.25*(gamma[i]+gamma[i+1]); // Exterior-side vortex-sheet jump: -gamma(midpoint)/2.
+      p.vt=vt;p.cp=1-vt*vt;p.side=i<N/2?'lower':'upper';
+      const fx=-p.cp*p.nx*p.length,fz=-p.cp*p.nz*p.length;Fx+=fx;Fz+=fz;My+=p.z*fx-(p.x-.25)*fz;circulation+=.5*(gamma[i]+gamma[i+1])*p.length;
+    }
+    if(maxResidual>1e-8||panels.some(p=>!Number.isFinite(p.cp)))throw Error('The 2D panel solution failed its residual check.');
+    return {alphaDeg,panels,gamma:Array.from(gamma),cl:Fz*ca-Fx*sa,clCirculation:-2*circulation,cm:My,pressureDrag:Fx*ca+Fz*sa,maxResidual,kuttaResidual:Math.abs(gamma[0]+gamma[N]),scope:'2D inviscid attached incompressible flow; no finite-wing induced drag, viscosity or stall.'};
+  }
+  function section(g,eta,nHalf){
+    if(!Number.isFinite(eta)||eta<0||eta>1)throw Error('Section eta must be between 0 and 1.');
+    if(![20,40,80,160].includes(nHalf))throw Error('Unsupported 2D panel count.');
+    const ag=WingAeroPanel.aeroGeometry(g), y=eta*ag.semiSpan,st=WingGeometry.stationAt(ag,y);
+    if(st.chord<1e-7)throw Error('The exact zero-chord tip is not an airfoil section. Select an inboard station.');
+    const profile=WingGeometry.airfoilAt(ag,y), s=WingAirfoils.surfaces(profile,1,0,nHalf+1),pts=[];
+    for(let i=nHalf;i>=0;i--)pts.push([s.xl[i],s.zl[i]]);for(let i=1;i<=nHalf;i++)pts.push([s.xu[i],s.zu[i]]);
+    return {points:pts,eta,chord_mm:st.chord,incidenceDeg:st.incidenceDeg,profile};
+  }
+  return Object.freeze({solveCoordinates,section});
+})();
+
 window.WingAeroStructResults = (() => {
   'use strict';
   const VIEWS = [
@@ -22410,6 +22478,7 @@ window.WingAeroStructResults = (() => {
     ['gamma', 'Circulation Γ(y)'],
     ['cm', 'Section pitching moment cm(y)'],
     ['te', 'Trailing-edge Cp difference'],
+    ['foil2d', '2D airfoil · independent panel solve'],
     ['coef', 'Coefficients & convergence'],
   ];
   const FONT = 'system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif';
@@ -22541,12 +22610,18 @@ window.WingAeroStructResults = (() => {
     const pngBtn = el('button', { type: 'button', class: 'btn', id: 'wxArPng', text: 'Export current figure (PNG)' });
     const csvBtn = el('button', { type: 'button', class: 'btn', id: 'wxArCsv', text: 'Export aerodynamic data (CSV)', disabled: true });
     const backBtn = el('button', { type: 'button', class: 'btn', id: 'wxArBack', 'aria-label': 'Close the aerodynamic result and show the structural view' }, 'Back', el('span', { class: 'wx-long', text: ' to structure view' }));
+    const foilEta=el('input',{id:'wxFoilEta',type:'number',min:'0',max:'1',step:'.05',value:'.5','aria-label':'2D section span fraction eta'});
+    const foilAlpha=el('input',{id:'wxFoilAlpha',type:'number',min:'-15',max:'15',step:'.5',value:'4','aria-label':'2D angle of attack relative to section chord, degrees'});
+    const foilN=el('select',{id:'wxFoilN','aria-label':'2D panels per surface'},...[40,80,160].map(n=>el('option',{value:String(n),text:String(n),selected:n===80})));
+    const foilSolve=el('button',{type:'button',class:'btn primary',id:'wxFoilSolve',text:'Solve 2D airfoil'});
+    const foilControls=el('div',{class:'wx-ar-tools',id:'wxFoilControls',hidden:true},el('label',{},'Section η ',foilEta),el('label',{},'α to local chord (°) ',foilAlpha),el('label',{},'Panels / side ',foilN),foilSolve);
+    let foil2D=null,foilBusy=false,foilMessage='Choose a section and its 2D angle of attack, then press Solve 2D airfoil. A wing aerodynamic solve is not required.';
     const canvas = el('canvas', { id: 'wxArCanvas', role: 'img', tabindex: '0', 'aria-label': 'Aerodynamic result' });
     const html = el('div', { id: 'wxArHtml', class: 'wx-ar-html', hidden: true });
     const notice = el('div', { id: 'wxArNotice', class: 'wx-ar-notice', hidden: true });
     const probeBox = el('div', { id: 'wxArProbe', class: 'wx-ar-probe', role: 'status', 'aria-live': 'polite' });
     const overlay = el('section', { id: 'wxAeroResult', class: 'wx-aero-result', hidden: true, 'aria-label': 'Aerodynamic result view' },
-      el('header', { class: 'wx-ar-head' }, el('div', { class: 'wx-ar-titles' }, title, source), el('div', { class: 'wx-ar-tools' }, projection, resetView, panelToggle, scaleMode, manualTools, station, clearBtn, backBtn), scaleInfo),
+      el('header', { class: 'wx-ar-head' }, el('div', { class: 'wx-ar-titles' }, title, source), el('div', { class: 'wx-ar-tools' }, projection, resetView, panelToggle, scaleMode, manualTools, station, clearBtn, backBtn), foilControls, scaleInfo),
       el('div', { class: 'wx-ar-body' }, canvas, html, notice), probeBox);
     const loading = view.querySelector('#loading');
     view.insertBefore(overlay, loading || null);
@@ -22608,6 +22683,20 @@ window.WingAeroStructResults = (() => {
       if (next) render();
     }
     const close = () => show('');
+    const foilInputKey=()=>JSON.stringify([ui.state().geometry,foilEta.value,foilAlpha.value,foilN.value]);
+    const foilCurrent=()=>foil2D&&foil2D.key===foilInputKey();
+    foilSolve.addEventListener('click',async()=>{
+      if(foilBusy)return;foilBusy=true;foilSolve.disabled=true;foilMessage='Solving the 2D section and its half-density mesh…';render();
+      await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+      try{
+        if(!foilEta.value.trim()||!foilAlpha.value.trim())throw Error('Enter section η and a 2D angle of attack.');
+        const key=foilInputKey(),n=+foilN.value,sec=window.WingAirfoilPanel2D.section(ui.state().geometry,+foilEta.value,n),coarse=window.WingAirfoilPanel2D.section(ui.state().geometry,+foilEta.value,n/2);
+        const r=window.WingAirfoilPanel2D.solveCoordinates(sec.points,+foilAlpha.value),old=window.WingAirfoilPanel2D.solveCoordinates(coarse.points,+foilAlpha.value);
+        foil2D={...r,section:sec,coarse:old,key,n};foilMessage='';probes=[];
+      }catch(e){foil2D=null;foilMessage=e.message;}
+      finally{foilBusy=false;foilSolve.disabled=false;render();}
+    });
+    for(const e of [foilEta,foilAlpha,foilN])e.addEventListener('change',()=>{probes=[];render();});
     select.addEventListener('change', () => show(select.value));
     backBtn.addEventListener('click', () => { close(); select.focus(); });
     for (const b of strip.querySelectorAll('[data-plot]')) b.addEventListener('click', close, true);
@@ -22624,6 +22713,8 @@ window.WingAeroStructResults = (() => {
       if (!kind || overlay.hidden) return;
       const label = (VIEWS.find(([v]) => v === kind) || [, ''])[1];
       title.textContent = label;
+      foilControls.hidden=kind!=='foil2d';
+      if(kind==='foil2d'){renderFoil();return;}
       const s = state();
       if (s.status === 'none') { source.textContent = 'No aerodynamic solution in this session.'; setNotice('Open Aerodynamics, set the flow conditions and press Solve Aerodynamics. These results do not need a structural solve.', true); return; }
       if (s.status === 'running') { source.textContent = 'Solving the aerodynamic mesh sequence…'; setNotice('The aerodynamic solve is running; the result appears here when it finishes.', false); return; }
@@ -22659,6 +22750,7 @@ window.WingAeroStructResults = (() => {
         source.textContent = `Upper and lower surface Cp at one base-mesh strip. Negative Cp (suction) is at the top; positive Cp is at the bottom. LE = x/c 0, TE = x/c 1. ${flowText(b)}.`;
       } else if (['cl', 'gamma', 'cm', 'te'].includes(kind)) {
         source.textContent = `Semi-wing strip samples of the ${meshText(b)}; these local values are not extrapolated. ${kind === 'te' ? 'Cp upper − Cp lower at the last panel centroids near the trailing edge; the Kutta condition requires equality at the edge, not Cp = 0.' : kind === 'gamma' ? 'Wake circulation from the solved doublet jump (m²/s).' : kind === 'cm' ? 'Pitching moment about each strip quarter chord; body +y moment is nose-up, divided by q∞ c² Δy.' : 'Pressure-integrated cl compared with 2Γ/(V c) from the solved wake.'} ${flowText(b)}.`;
+        if(b.mesh?.roundedTip)source.textContent+=` Rounded-tip zone: y ≥ ${sig(b.mesh.roundedTip.start_mm,5)} mm. Abrupt local Cp/cm changes there are not validated physical predictions; use the inboard sections and the mesh checks.`;
       } else {
         const f = surfaceField(b), key = kind === 'dp' ? 'dp' : 'cp', ex = f ? extremes(f.panels, key) : null, at = (p) => `${p.side} surface, y ${sig(p.y, 4)} mm, x/c ${sig(p.xc, 3)}`;
         source.textContent = `Panel-centroid values of the ${meshText(b)} (one solved mesh of the ${result.sequence} sequence, not extrapolated${combined.structuralLoadAvailable === false ? '; no structural load generated' : '; the delivered structural load is extrapolated'}). ${ex ? `Minimum ${sig(ex.lo[key])} (${at(ex.lo)}); maximum ${sig(ex.hi[key])} (${at(ex.hi)}). ` : ''}${flowText(b)}.`;
@@ -22685,6 +22777,7 @@ window.WingAeroStructResults = (() => {
       else if (kind === 'section') drawSection(ctx, W, H, top, s, !exportSize);
       else if (kind === 'span') drawSpan(ctx, W, H, top, s, !exportSize);
       else if (['cl', 'gamma', 'cm', 'te'].includes(kind)) drawMetric(ctx, W, H, top, s, !exportSize);
+      else if (kind === 'foil2d') drawFoil(ctx,W,H,top,!exportSize);
     }
     function wrapText(ctx, text, x, y, maxW, lh) {
       let line = '';
@@ -22860,7 +22953,7 @@ window.WingAeroStructResults = (() => {
       ctx.strokeStyle = '#d4dce5'; ctx.lineWidth = 1; ctx.fillStyle = '#4e5f71'; ctx.font = `12px ${FONT}`;
       const sx = niceStep(xr[1] - xr[0], w < 360 ? 4 : 8), sy = niceStep(yr[1] - yr[0], 6);
       for (let v = Math.ceil(xr[0] / sx) * sx; v <= xr[1] + 1e-9; v += sx) { const t = sig(v, 3); ctx.beginPath(); ctx.moveTo(X(v), T); ctx.lineTo(X(v), T + h); ctx.stroke(); ctx.fillText(t, X(v) - ctx.measureText(t).width / 2, T + h + 16); }
-      for (let v = Math.ceil(yr[0] / sy) * sy; v <= yr[1] + 1e-9; v += sy) { const t = sig(v, 3); ctx.beginPath(); ctx.moveTo(L, Y(v)); ctx.lineTo(L + w, Y(v)); ctx.stroke(); ctx.fillText(t, L - 8 - ctx.measureText(t).width, Y(v) + 4); }
+      for (let v = Math.ceil(yr[0] / sy) * sy; v <= yr[1] + 1e-9; v += sy) { const t = sig(Math.abs(v)<1e-10*sy?0:v, 3); ctx.beginPath(); ctx.moveTo(L, Y(v)); ctx.lineTo(L + w, Y(v)); ctx.stroke(); ctx.fillText(t, L - 8 - ctx.measureText(t).width, Y(v) + 4); }
       ctx.strokeStyle = '#7a8a9b'; ctx.strokeRect(L + 0.5, T + 0.5, w, h);
       if (yr[0] < 0 && yr[1] > 0) { ctx.strokeStyle = '#4e5f71'; ctx.beginPath(); ctx.moveTo(L, Y(0)); ctx.lineTo(L + w, Y(0)); ctx.stroke(); }
       ctx.fillStyle = '#14212e'; ctx.font = `700 13px ${FONT}`; const xt = fit(ctx, [xl], w); ctx.fillText(xt, L + w / 2 - ctx.measureText(xt).width / 2, T + h + 38);
@@ -22888,6 +22981,33 @@ window.WingAeroStructResults = (() => {
         const y = head.noteRow ? rowY(head.count - 1) : rowY(head.rows.length - 1), t = head.noteRow ? fit(ctx, [head.note], fr.w) : head.note;
         ctx.fillText(t, head.noteRow ? fr.L : fr.L + fr.w - ctx.measureText(t).width, y);
       }
+    }
+    function renderFoil(){
+      for(const e of [station,projection,resetView,scaleMode,manualTools,scaleInfo])e.hidden=true;
+      panelToggle.hidden=false;clearBtn.hidden=false;clearBtn.disabled=!probes.length;html.hidden=true;pngBtn.hidden=false;
+      canvas.style.touchAction='auto';canvas.style.cursor='crosshair';
+      const valid=foilCurrent()&&!foilBusy;
+      pngBtn.disabled=csvBtn.disabled=!valid;
+      if(!valid){canvas.hidden=true;notice.hidden=false;notice.replaceChildren(el('p',{text:foilBusy?foilMessage:foil2D?'Inputs changed. Press Solve 2D airfoil to update this independent section solution.':foilMessage}));source.textContent='Independent 2D inviscid airfoil analysis · no 3D downwash or finite-wing induced drag';return;}
+      notice.hidden=true;canvas.hidden=false;const r=foil2D,delta=Math.abs(r.cl-r.coarse.cl);
+      source.textContent=`η ${sig(r.section.eta)} · chord ${sig(r.section.chord_mm)} mm · α2D ${sig(r.alphaDeg)}° relative to local chord (entered directly; wing incidence is ${sig(r.section.incidenceDeg)}°). cl = ${sig(r.cl,5)}, circulation cl = ${sig(r.clCirculation,5)}, cm¼ = ${sig(r.cm,5)}. ${2*r.n} contour panels; half-density change: Δcl ${sig(delta,3)}, Δcm ${sig(Math.abs(r.cm-r.coarse.cm),3)}. Residual ${sig(r.maxResidual,2)}. Inviscid, sharp TE; no viscosity/stall. The half-density change is not a certified error bound.`;
+      draw(canvas,null);
+    }
+    function drawFoil(ctx,W,H,top,interactive){
+      const r=foil2D, values=r.panels.map(p=>p.cp),lo=Math.min(...values),hi=Math.max(...values),pad=.08*((hi-lo)||1);
+      const head=headRows(ctx,W,[['upper · selected mesh','#2166ac'],['lower · selected mesh','#b2182b',[7,5]],['half-density mesh','#8796a5',[2,3]]],'Independent 2D solution; negative Cp at the top');
+      const fr=chartFrame(ctx,W,H-115,top,[0,1],[lo-pad,hi+pad],'x/c · leading edge 0 → trailing edge 1','Cp · suction up',head.count,true);hits=[];
+      for(const [result,coarse] of [[r.coarse,true],[r,false]])for(const side of ['upper','lower']){
+        const ps=result.panels.filter(p=>p.side===side).sort((a,b)=>a.x-b.x);ctx.strokeStyle=coarse?'#8796a5':side==='upper'?'#2166ac':'#b2182b';ctx.fillStyle=ctx.strokeStyle;ctx.lineWidth=coarse?1:2;ctx.setLineDash(coarse?[2,3]:side==='lower'?[7,5]:[]);ctx.beginPath();ps.forEach((p,i)=>i?ctx.lineTo(fr.X(p.x),fr.Y(p.cp)):ctx.moveTo(fr.X(p.x),fr.Y(p.cp)));ctx.stroke();ctx.setLineDash([]);
+        if(!coarse)ps.forEach((p,i)=>{const at=[fr.X(p.x),fr.Y(p.cp)];ctx.beginPath();ctx.arc(...at,2,0,Math.PI*2);ctx.fill();hits.push({point:{kind:'foil2d',side,xc:p.x,cp:p.cp,vt:p.vt,i},at});});
+      }
+      drawHead(ctx,fr,head);
+      const scale=Math.min(W-140,650),left=(W-scale)/2,base=H-62;
+      ctx.strokeStyle='#14212e';ctx.lineWidth=1.5;ctx.beginPath();r.panels.forEach((p,i)=>{if(!i)ctx.moveTo(left+p.a[0]*scale,base-p.a[1]*scale);ctx.lineTo(left+p.b[0]*scale,base-p.b[1]*scale);});ctx.stroke();
+      if(showPanels){ctx.fillStyle='#14212e';for(const p of r.panels){ctx.beginPath();ctx.arc(left+p.a[0]*scale,base-p.a[1]*scale,1.7,0,2*Math.PI);ctx.fill();}}
+      ctx.font=`12px ${FONT}`;ctx.fillStyle='#4e5f71';ctx.fillText('LE',left-24,base);ctx.fillText('TE',left+scale+8,base);ctx.fillText('Section contour · unit chord · no spanwise flow',left,H-12);
+      for(const p of probes){const h=hits.find(h=>h.point.side===p.side&&h.point.i===p.i);if(h){ctx.strokeStyle='#14212e';ctx.beginPath();ctx.arc(...h.at,7,0,2*Math.PI);ctx.stroke();}}
+      if(interactive)canvas.setAttribute('aria-label','Independent 2D airfoil Cp: upper and lower surfaces, selected and half-density meshes. Click a selected-mesh point to read Cp and tangential speed.');
     }
     function drawSection(ctx, W, H, top, s, interactive) {
       const b = s.result.base, sec = b.chordwise[sectionJ], q = b.flow.dynamicPressure_Pa;
@@ -22933,14 +23053,21 @@ window.WingAeroStructResults = (() => {
       const values=series.flatMap(([k])=>rows.map(r=>r[k])).filter(Number.isFinite), lo=Math.min(0,...values), hi=Math.max(0,...values), pad=.08*((hi-lo)||1);
       const head=headRows(ctx,W,series.map(([,label,c,dash])=>[label,c,dash]),'Base-mesh strip midpoints; no values inferred outside the sampled span');
       const fr=chartFrame(ctx,W,H,top,[0,s.result.base.reference.span_mm/2],[lo-pad,hi+pad],'semi-span y (mm)',def[0]+(def[1]?` (${def[1]})`:''),head.count);
+      const tip=s.result.base.mesh?.roundedTip,tipStart=tip?.start_mm;
+      if(Number.isFinite(tipStart)){ctx.fillStyle='rgba(210,125,0,.13)';ctx.fillRect(fr.X(tipStart),fr.Y(hi+pad),fr.X(s.result.base.reference.span_mm/2)-fr.X(tipStart),fr.Y(lo-pad)-fr.Y(hi+pad));ctx.fillStyle='#8b4b00';ctx.font=`12px ${FONT}`;ctx.fillText('Amber: rounded tip · local values not certified',fr.L+8,fr.Y(hi+pad)+17);}
       hits=[];
-      for(const [key,label,c,dash] of series){ctx.strokeStyle=c;ctx.fillStyle=c;ctx.lineWidth=2;ctx.setLineDash(dash);ctx.beginPath();let started=false;for(const r of rows){if(!Number.isFinite(r[key])){started=false;continue;}if(started)ctx.lineTo(fr.X(r.y),fr.Y(r[key]));else ctx.moveTo(fr.X(r.y),fr.Y(r[key]));started=true;}ctx.stroke();ctx.setLineDash([]);rows.forEach((r,i)=>{if(!Number.isFinite(r[key]))return;const at=[fr.X(r.y),fr.Y(r[key])];ctx.beginPath();ctx.arc(...at,3,0,2*Math.PI);ctx.fill();hits.push({point:{kind:'metric',i,series:label,y:r.y,value:r[key],unit:def[1]},at});});}
+      for(const [key,label,c,dash] of series){
+        ctx.lineWidth=2;
+        for(let i=1;i<rows.length;i++){const a=rows[i-1],b=rows[i];if(!Number.isFinite(a[key])||!Number.isFinite(b[key]))continue;const uncertain=Number.isFinite(tipStart)&&b.y>=tipStart;ctx.strokeStyle=uncertain?'#a65b00':c;ctx.setLineDash(uncertain?[3,4]:dash);ctx.beginPath();ctx.moveTo(fr.X(a.y),fr.Y(a[key]));ctx.lineTo(fr.X(b.y),fr.Y(b[key]));ctx.stroke();}
+        ctx.setLineDash([]);rows.forEach((r,i)=>{if(!Number.isFinite(r[key]))return;const at=[fr.X(r.y),fr.Y(r[key])],uncertain=Number.isFinite(tipStart)&&r.y>=tipStart;ctx.fillStyle=uncertain?'#a65b00':c;ctx.beginPath();ctx.arc(...at,3,0,2*Math.PI);ctx.fill();hits.push({point:{kind:'metric',i,series:label,y:r.y,value:r[key],unit:def[1],uncertain},at});});
+      }
       drawHead(ctx,fr,head);drawn={rows};
       probes.forEach((p,n)=>{const h=hits.find(h=>h.point.i===p.i&&h.point.series===p.series);if(h){ctx.strokeStyle='#14212e';ctx.beginPath();ctx.arc(...h.at,8,0,2*Math.PI);ctx.stroke();ctx.fillStyle='#14212e';ctx.fillText(String(n+1),h.at[0]+10,h.at[1]-8);}});
       if(interactive)canvas.setAttribute('aria-label',`${def[0]} versus semi-span. Click a sample for its value.`);
     }
     function probeText(p, n) {
-      if(p.kind==='metric')return `${n}. ${p.series} · y ${sig(p.y)} mm · ${sig(p.value)} ${p.unit}`;
+      if(p.kind==='foil2d')return `${n}. 2D ${p.side} · x/c ${sig(p.xc)} · Cp ${sig(p.cp)} · Vt/V∞ ${sig(p.vt)}`;
+      if(p.kind==='metric')return `${n}. ${p.series} · y ${sig(p.y)} mm · ${sig(p.value)} ${p.unit}${p.uncertain?' · rounded-tip sample: local accuracy not certified':''}`;
       if (p.kind === 'strip') return `${n}. ${p.series || 'Delivered'} strip ${p.i + 1}: y ${sig(p.y0, 4)}–${sig(p.y1, 4)} mm · Fz ${sig(p.fz)} N · Fz/Δy ${sig(p.w)} N/mm`;
       const s = state(), b = s.result && s.result.base, eta = b ? p.y / (b.reference.span_mm / 2) : NaN;
       return `${n}. ${p.mirrored ? 'Mirrored ' : ''}${p.side === 'upper' ? 'Upper' : 'Lower'} surface · strip ${p.j + 1}, panel ${p.k + 1} of ${p.n} from the leading edge · y ${sig(p.y, 4)} mm (η ${sig(eta, 3)}) · x/c ${sig(p.xc, 3)}${Number.isFinite(p.x) ? ` · x ≈ ${sig(p.x, 4)} mm` : ''} · Cp ${sig(p.cp)} · p − p∞ ${sig(p.dp)} Pa`;
@@ -22993,7 +23120,7 @@ window.WingAeroStructResults = (() => {
     document.getElementById('wingFullSymmetric')?.addEventListener('change', () => { if (!overlay.hidden) render(); });
     pngBtn.addEventListener('click', () => {
       if (!kind) { exportStructureFigure?.(); return; }
-      const s = data(); if (!s || kind === 'coef') return;
+      const s = kind==='foil2d'?foilCurrent():data(); if (!s || kind === 'coef') return;
       const W = 1800, H = kind === 'section' || kind === 'span' ? 1000 : Math.round(1800 * Math.max(0.55, canvas.clientHeight / Math.max(1, canvas.clientWidth))) + 96;
       const off = document.createElement('canvas'); off.width = W; off.height = H; const ctx = off.getContext('2d');
       draw(off, s, { ctx, W, H, title: 'Wing AeroStruct · ' + title.textContent, source: source.textContent + (['cp', 'dp'].includes(kind) ? ' ' + scaleStatus.textContent : '') });
@@ -23001,6 +23128,11 @@ window.WingAeroStructResults = (() => {
       render();   // the probes list and the screen canvas are unchanged; redraw restores the screen hit areas
     });
     csvBtn.addEventListener('click', () => {
+      if(kind==='foil2d'){
+        if(!foilCurrent())return;
+        const r=foil2D,lines=[`# Independent 2D linear vortex panel solution; alpha relative to local chord ${r.alphaDeg} deg; eta ${r.section.eta}; chord ${r.section.chord_mm} mm.`, `# cl_pressure ${r.cl}; cl_circulation ${r.clCirculation}; cm_quarter_chord ${r.cm}; numerical_pressure_drag ${r.pressureDrag} (discretization residual, NOT profile drag); normal_velocity_residual ${r.maxResidual}.`, '# Two meshes are independent 2D solves. No 3D wing result is used.','mesh,surface,x_over_c,z_over_c,Cp,Vt_over_Vinf',...[['selected',r],['half_density',r.coarse]].flatMap(([name,r])=>r.panels.map(p=>[name,p.side,p.x,p.z,p.cp,p.vt].join(',')))];
+        download('airfoil-2d-panel.csv',new Blob([lines.join('\n')+'\n'],{type:'text/csv'}));return;
+      }
       const s = data(); if (!s) return;
       const r = s.result, b = r.base, head = [`# MIE 446 Wing AeroStruct (development) aerodynamic result: ${title.textContent}. Lines starting with # are comments.`, `# ${r.label}`, `# ${flowText(b)}; ${r.sequence} sequence (${r.levels.length} meshes)`];
       let lines = [], name = `wing-aero-${kind}.csv`;
@@ -23016,8 +23148,9 @@ window.WingAeroStructResults = (() => {
         name = `wing-aero-section-strip${sectionJ + 1}.csv`;
       } else if (['cl', 'gamma', 'cm', 'te'].includes(kind)) {
         lines = [...head, '# Local values of the base aerodynamic mesh; no extrapolation. Gamma in m2/s; cm about the strip quarter chord, body +y nose-up, normalized by q_inf*c^2*dy.',
-          'y0_mm,y1_mm,y_mid_mm,cl_pressure,cl_Kutta_Joukowski,Gamma_m2_per_s,cm_quarter_chord,Cp_upper_TE_minus_Cp_lower_TE',
-          ...spanQuantities(b).map(p => [p.y0,p.y1,p.y,p.cl,p.clKJ,p.gamma,p.cm,p.te].map(csvNum).join(','))];
+          `# Rounded aerodynamic tip begins at y ${b.mesh?.roundedTip?.start_mm??'not applicable'} mm. Flagged local values are not certified; all actual samples are retained.`,
+          'y0_mm,y1_mm,y_mid_mm,cl_pressure,cl_Kutta_Joukowski,Gamma_m2_per_s,cm_quarter_chord,Cp_upper_TE_minus_Cp_lower_TE,rounded_tip_sample',
+          ...spanQuantities(b).map(p => [...[p.y0,p.y1,p.y,p.cl,p.clKJ,p.gamma,p.cm,p.te].map(csvNum),Number.isFinite(b.mesh?.roundedTip?.start_mm)&&p.y>=b.mesh.roundedTip.start_mm?1:0].join(','))];
       } else if (kind === 'span') {
         lines = [...head, s.combined.structuralLoadAvailable === false ? '# Aerodynamic results only. base = base mesh; mesh_CxS = one solved mesh of the sequence. No structural strip load was generated.' : '# Spanwise strip loads. delivered = extrapolated load given to the structure; base = base mesh; mesh_CxS = one mesh of the sequence (chord panels per surface x span panels).', 'series,y0_mm,y1_mm,Fz_N,Fz_per_mm_N_per_mm',
           ...stepRows(s.combined.strips).map((v) => ['delivered', csvNum(v.y0), csvNum(v.y1), csvNum(v.fz), csvNum(v.w)].join(',')),
@@ -23056,7 +23189,7 @@ window.WingAeroStructResults = (() => {
     }
     if (window.ResizeObserver) new ResizeObserver(() => { if (!overlay.hidden && kind !== 'coef') render(); }).observe(canvas.parentElement);
     let lastRefresh = [];
-    return { refresh: () => { if (!overlay.hidden) { const s=state(), key=[s.status,s.why,s.result,s.combined,s.admission]; if(key.some((v,i)=>v!==lastRefresh[i])){lastRefresh=key;render();if(probes.length)showProbes();} } }, close, show, get kind() { return kind; }, element: overlay, selector: group, pngButton:pngBtn, csvButton:csvBtn };
+    return { refresh: () => { if (!overlay.hidden) { const s=state(), key=kind==='foil2d'?[foilInputKey()]:[s.status,s.why,s.result,s.combined,s.admission]; if(key.length!==lastRefresh.length||key.some((v,i)=>v!==lastRefresh[i])){lastRefresh=key;render();if(probes.length)showProbes();} } }, close, show, get kind() { return kind; }, element: overlay, selector: group, pngButton:pngBtn, csvButton:csvBtn };
   }
   return Object.freeze({ install, VIEWS, surfaceField, surfaceField3D, colour, displayScale, pressureMeshCheck, spanQuantities });
 })();
@@ -23185,7 +23318,32 @@ window.WingAeroStructResults = (() => {
     el('p',{text:'Cp < 0 is suction; Cp > 0 is pressure above the freestream. Red means positive pressure, not the largest suction. LE/TE and the flow arrow identify the edges. The Cp section graph puts negative values at the top. At the trailing edge, the upper and lower pressures should approach each other; neither is required to be zero.'}),
     el('p',{text:'Section cl, wake circulation, quarter-chord moment and trailing-edge Cp difference use the stored base-mesh strip samples. They do not trigger another solve. Surface Cp peaks near the tip can be mesh-sensitive even when integrated lift is converged. No viscous drag, separation or stall is predicted.'}),
     el('p',{},el('a',{href:'https://www.nasa.gov/reference/openvsp-vspaero-basics/',target:'_blank',rel:'noopener',text:'NASA VSPAERO results guide'}),' · ',el('a',{href:'https://flow5.tech/docs/flow5_doc/Post-processing/Cp3d.html',target:'_blank',rel:'noopener',text:'flow5: interpreting panel-method Cp'})));
-  helpBody.prepend(...[helpTop, where, aeroHelp, pressureHelp].filter(Boolean));
+  const algorithmHelp=el('details',{id:'wxPanelAlgorithm'},el('summary',{text:'Panel algorithm · equations and solution steps'}),el('div',{html:`
+    <h4>1. What is solved?</h4>
+    <p>Steady, incompressible, irrotational, attached flow around a rigid wing: ∇²φ = 0 and V = V∞ + ∇φ. The wall is impermeable: V · n = 0. This is a finite-thickness surface-panel method, not a viscous Navier–Stokes solution or a thin vortex-lattice model.</p>
+    <h4>2. Surface and wake</h4>
+    <p>The shared airfoil sections, taper, sweep, dihedral and incidence define quadrilateral panels on both surfaces. Chordwise points use cosine spacing. Only the right half is solved; a mirrored image supplies symmetric left-wing influences. The aerodynamic trailing edge is sharp, independently of the printable trailing-edge thickness. A finite-chord tip is rounded over a short zone to close the aerodynamic surface; the displayed strip coordinates identify this zone. This is a modelling difference from a flat printable end.</p>
+    <h4>3. Sources, doublets and the boundary equation</h4>
+    <p>Each panel carries a constant source σ and a constant doublet μ. Source strength is prescribed by σ = n · V∞. Green's boundary-integral formulation is evaluated at the panel centroids with zero interior perturbation potential (internal Dirichlet condition). The assembled influence matrix gives Aμ = b(σ). The doublet self term is −½ under this kernel convention. Surface doublet influences use the solid angles of the true quad's two triangles; source influences use the mean-plane polygon integral. Beyond six panel diameters the code uses point-singularity approximations.</p>
+    <h4>4. Kutta condition</h4>
+    <p>The Morino condition sets each wake-strip doublet to μwake = μupper,TE − μlower,TE. The wake consists of semi-infinite flat strips extending along body +x; it is prescribed, not relaxed or rolled up. Upper and lower pressure should approach each other at the trailing edge. The plotted ΔCp uses the last panel centroids, not the edge itself: it is a diagnostic, not a direct residual of the imposed doublet equation. A large mismatch deserves investigation; it must not be interpreted as extra lift.</p>
+    <h4>5. Linear solve and pressure</h4>
+    <p>Unit freestreams in body x and z are solved and combined for the requested angle and speed. Small systems use pivoted LU; larger systems use restarted GMRES(60), strip block-Jacobi preconditioning, and a checked relative residual of at most 10⁻⁹, with LU fallback. Caching avoids rebuilding unchanged influence systems. Surface velocity is Vt = (I − nnᵀ)V∞ + ∇sμ. Three-point Lagrange differences estimate the chordwise/spanwise surface derivatives, with one-sided stencils at boundaries. Then Cp = 1 − |Vt|²/V∞² and p − p∞ = ½ρV∞² Cp.</p>
+    <h4>6. Forces, moments and circulation</h4>
+    <p>Panel pressure gives Fpanel = −Cp q∞ Apanel n and Mpanel = (rpanel − rreference) × Fpanel. These sum to section and wing resultants. Section cl is lift/(q∞ c Δy); cm is the body-y moment about the strip quarter chord divided by q∞ c² Δy (positive nose-up). Wake circulation provides an independent lift calculation through Kutta–Joukowski and a Trefftz-plane induced-drag estimate. The CSV states units: geometry mm, forces N, moments N·mm; plotted circulation is converted to m²/s.</p>
+    <h4>7. Refinement and structural transfer</h4>
+    <p>Standard/Fine runs seven meshes with separate chordwise and spanwise refinement. The integrated quantities and delivered six-component strip loads use Richardson extrapolation and estimated uncertainty. Cp contours and local section graphs use the stored base mesh, not an extrapolated pressure field. Admission checks compare pressure/Trefftz lift and force/bending/torque uncertainty before loads are used structurally. Small linear residual does not prove mesh accuracy. Unresolved torque/twist is withheld. The structural engine is a beam approximation, not a local solid-stress solution.</p>
+    <p>References: <a target="_blank" rel="noopener" href="https://ntrs.nasa.gov/citations/19900004884">Maskew, NASA CR-4023: VSAERO theory</a>; Morino &amp; Kuo (1974), AIAA Journal 12(2), 191–197; <a target="_blank" rel="noopener" href="https://flow5.tech/docs/flow5_doc/Post-processing/Cp3d.html">flow5: surface-derivative and edge-pressure limitations</a>.</p>`}));
+  const accuracyHelp=el('details',{id:'wxPanelAccuracy'},el('summary',{text:'Accuracy · tip jumps and reference software'}),el('div',{html:`
+    <p>The family of equations is the established source/doublet potential-flow formulation used by APAME/VSAERO-type solvers. This program has its own implementation. Sharing a method family does not establish identical panel geometry, wake modelling, surface-velocity recovery or equal numerical accuracy. No bit-for-bit equivalence or direct validation against AirFrame's licensed APAME version is claimed.</p>
+    <p>Internal benchmarks include exact closed-body/conformal-map solutions, symmetry, lift-slope/thin-limit checks and conservative load transfer. These support those tested regimes, not every local pressure. Near the rounded tip, surface curvature, narrow panels and one-sided potential derivatives can produce large local Cp and cm changes. Local tip peaks have shown mesh sensitivity even while total lift is stable. Amber plotting identifies the rounded-tip samples and preserves their actual values; it is not a physical stall or separation boundary.</p>
+    <p>Use an inboard Cp section and inspect mesh refinement, pressure versus wake lift, and reported uncertainty. Do not use the displayed tip extremum as a certified design stress/load. This version has no boundary layer, skin-friction/profile drag, transition, separation, stall or vortex-lift model. Reynolds number and Mach are screens only; low-Re airfoils may differ substantially from inviscid predictions. A useful 2D comparison must use matching geometry, α and inviscid assumptions; a finite-wing section also has downwash and crossflow, so it need not equal an isolated 2D airfoil.</p>`}));
+  const foilHelp=el('details',{id:'wxFoilAlgorithm'},el('summary',{text:'Independent 2D airfoil solver · how to use it'}),el('div',{html:`
+    <p>Choose Aero results → 2D airfoil, or Aerodynamics → Independent 2D airfoil. Select η along the existing wing, the angle of attack relative to that section's own chord, and panels per side. Press Solve 2D airfoil. This uses the section profile, not the 3D pressure solution, and needs no wing solve. Enter α directly; the shown wing incidence is not silently added. Sweep, dihedral, finite-span downwash and the rounded aerodynamic tip are not part of the isolated 2D problem.</p>
+    <p>The contour has linearly varying vortex strength γ on straight panels. Analytic line integrals produce the influence coefficients. N midpoint no-penetration equations plus γ₀ + γN = 0 at the sharp trailing edge determine N+1 nodal strengths by pivoted LU. Exterior tangential velocity includes the vortex-sheet jump. Bernoulli gives Cp; pressure integration gives cl and cm¼, and −2Γ/(Vc) provides a circulation cross-check with this clockwise-contour convention.</p>
+    <p>The selected and half-density solutions are overlaid. Their difference is a sensitivity check, not a guaranteed error bound. Click a Cp point for its value and Vt/V∞; use Show panels to inspect contour nodes. File exports PNG and CSV. Any residual pressure drag is a discretization error, not physical profile drag. Unlike full XFOIL, this solver has no viscous boundary-layer coupling.</p>
+    <p>Independent formulation references: <a target="_blank" rel="noopener" href="https://www.engapplets.vt.edu/fluids/vpm/vpminfo.html">Virginia Tech: linear vortex-panel method</a>; <a target="_blank" rel="noopener" href="https://web.mit.edu/drela/Public/web/xfoil/xfoil_doc.txt">Drela &amp; Youngren: XFOIL formulation and viscous capabilities</a>.</p>`}));
+  helpBody.prepend(...[helpTop, where, aeroHelp, pressureHelp,algorithmHelp,accuracyHelp,foilHelp].filter(Boolean));
 
   // ---------------------------------------------------------------- result strip
   const results = el('section', { id: 'wxResults', 'aria-label': 'Displayed result and solver status' });
@@ -23581,6 +23739,8 @@ window.WingAeroStructResults = (() => {
     fileMenu.insertBefore(row(aeroResults.pngButton, aeroResults.csvButton), anchor);
     for(const b of [aeroResults.pngButton,aeroResults.csvButton]) b.addEventListener('click',closeMenus);
     for(const b of $$('[data-anatomy]',viewMenu)) b.addEventListener('click',()=>{aeroResults.close();closeMenus();},{capture:true});
+    const foilShortcut=el('button',{type:'button',class:'btn',id:'wxFoilShortcut',text:'Independent 2D airfoil…'});
+    foilShortcut.addEventListener('click',()=>{aeroResults.show('foil2d');closeMenus();});aeroHost.prepend(foilShortcut);
   }
   // Read the worker's real mesh-stage messages. This is a progress display, not a guessed solve percentage.
   const aeroBusyStep = el('p', { class: 'wx-aero-busy-step', text: 'Starting the aerodynamic mesh sequence…' });

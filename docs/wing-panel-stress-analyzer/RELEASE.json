@@ -1,11 +1,11 @@
 {
   "application": "Wing Panel Stress Analyzer (Wing AeroStruct)",
-  "version": "0.3.0-ui.7",
+  "version": "0.3.0-ui.8",
   "source_archive": "wing-aerostruct-0.3.0-dev-review.zip",
   "source_sha256": "bc6986c744568a516fd22bdd3b9508550625b82a77cd924adf52dfaa5156a54d",
   "original_base": "5ab2498",
   "independent_review": "validation/INDEPENDENT_REVIEW.md",
-  "scope": "Educational potential-flow panels coupled one-way to nominal spatial-beam stress. No viscous/stall or local solid stress. Unresolved torque/twist withheld; unsuitable cases refused.",
+  "scope": "Educational 3D potential-flow panels coupled one-way to nominal spatial-beam stress, plus independent inviscid 2D airfoil analysis. No viscous/stall or local solid stress. Unresolved torque/twist withheld; unsuitable cases refused.",
   "solver_version": "0.3.0",
   "ui_release": {
     "features": [
@@ -31,9 +31,13 @@
       "Signed sectional Cp with suction at the top",
       "Section lift coefficient, circulation, moment and trailing-edge Cp difference graphs",
       "Unified current-figure PNG and aerodynamic CSV commands in File",
-      "Lightweight anatomy switching and paused hidden structural rendering"
+      "Lightweight anatomy switching and paused hidden structural rendering",
+      "Independent 2D section panel solver with selected/half-density Cp curves, cl and quarter-chord cm",
+      "2D PNG/CSV exports and clickable Cp/tangential-speed probes",
+      "Explicit amber/dashed local tip-uncertainty samples without clipping values",
+      "Step-by-step panel algorithm, equations and accuracy Help"
     ],
-    "page_sha256": "7b4298f2c7ac6674401d6a7a4a075d6a93d3c381d6e6db910b28501e58fcf3b0",
+    "page_sha256": "1889cd403c797206b04f3d90b63c54d3dd0868633ea78d38d791e15270794e3a",
     "source_port": "ui/01-wing-aerostruct-ui-sources.patch",
     "independent_review": "validation/UI_RELEASE_REVIEW.json",
     "surface_review": "validation/UI_SURFACE_REVIEW.json",
@@ -47,6 +51,8 @@
     "closed_tip_review": "validation/CLOSED_TIP_AERO_REVIEW.json",
     "course_review": "validation/COURSE_UI_REVIEW.json",
     "pressure_review": "validation/PRESSURE_DISPLAY_REVIEW.json",
-    "results_review": "validation/AERO_RESULTS_REVIEW.json"
-  }
+    "results_review": "validation/AERO_RESULTS_REVIEW.json",
+    "airfoil_help_review": "validation/AIRFOIL_HELP_RELEASE_REVIEW.json"
+  },
+  "airfoil_2d_solver_version": "1.0.0"
 }

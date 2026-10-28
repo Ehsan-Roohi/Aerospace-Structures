@@ -70,6 +70,16 @@ with suction at the top. The 3D view labels the leading/trailing edges and flow 
 export for the displayed solver and the aerodynamic CSV export. Changing structural visibility closes the pressure
 overlay and avoids a new result mapping when only visibility changed. See `validation/AERO_RESULTS_REVIEW.json`.
 
+The independent 2D section solver is `window.WingAirfoilPanel2D` in `wx-aero-results.js`. It is a new numerical
+component (linear vortex sheets, analytic panel influences, midpoint impermeability and endpoint Kutta condition),
+not a wrapper around the 3D wing solver or XFOIL. The separate 2D result includes selected/half-density meshes,
+Cp, pressure/circulation lift, quarter-chord moment, residual checks and PNG/CSV exports. The existing three
+dimensional numerical modules and worker bundles are unchanged. `validation/test_airfoil_2d.cjs` compares it
+with an independent analytic Joukowski conformal-map solution; `AIRFOIL_2D_REVIEW.json` records measured errors.
+`TIP_SECTION_REVIEW.json` reproduces the reported rounded-tip local jump. Those samples remain present and
+are marked as locally unverified. Help contains the governing equations, discretization, Kutta condition,
+pressure recovery, refinement/transfer procedure and the distinction between algebraic residual and physical accuracy.
+
 ## If the FE work changed the template meanwhile
 
 The patch is small outside the three new files: 5 hooks (6 inserted lines, 2 edited lines) and 37 edited lines of

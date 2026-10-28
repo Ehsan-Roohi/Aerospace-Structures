@@ -1,0 +1,13 @@
+const fs=require('node:fs'),vm=require('node:vm'),path=require('node:path'),assert=require('node:assert/strict');
+const app=path.resolve(__dirname,'..'),ctx=vm.createContext({window:{},module:{exports:{}},console,performance});
+vm.runInContext(fs.readFileSync(path.join(app,'wing-aero/aero_bundle.js'),'utf8'),ctx);const A=ctx.module.exports,G=vm.runInContext('WingGeometry',ctx);
+vm.runInContext(fs.readFileSync(path.join(app,'ui/wx-aero-results.js'),'utf8'),ctx);const V=ctx.window.WingAeroStructResults;
+// Geometry/flow of the reported student case, without identity or structural-result data.
+const geometry={naca:'2412',semiSpan:900,rootChord:160,tipChord:100,planform:'linear',sweepDeg:10,dihedralDeg:10,sweepReferenceFraction:.25,twistReferenceFraction:.25,twistEnabled:false};
+const flow={speed:10,density:1.225,alphaDeg:4},g=A.aeroGeometry(geometry),seq=A.runSequence(g,flow,'fine'),b=seq.base;
+const cmFromRow=r=>{const y=(r[0]+r[1])/2,c=G.chordAt(g,y),qc=G.transformPoint(g,y,[.25*c,0]);return(r[6]-qc[2]*r[2]+qc[0]*r[4])/(b.flow.dynamicPressure_Pa*1e-6*c*c*(r[1]-r[0]));};
+const rows=seq.levels.map(l=>({chord:l.chordPanels,span:l.spanPanels,CL:l.coefficients.CL,Cm:l.coefficients.Cm,tip_start_mm:l.roundedTip?.start_mm,last_strip_cm:cmFromRow(l.strips.at(-1)),minCp:l.diagnostics.minCp,maxCp:l.diagnostics.maxCp,TE_mismatch_inboard90:l.diagnostics.trailingEdgeDeltaCpInboard90}));
+const metrics=V.spanQuantities(b),last=metrics.at(-1);assert.ok(Math.abs(last.cm-cmFromRow(seq.levels[0].strips.at(-1)))<1e-8);
+assert.ok(last.y>=b.mesh.roundedTip.start_mm);assert.ok(Math.abs(last.te)>.5,'Reproduce reported large local TE mismatch');
+const report={geometry,flow,rounded_tip:b.mesh.roundedTip,base_last_five_samples:metrics.slice(-5),levels:rows,verdict:'The abrupt local tip drop is not established as physical. It coincides with the 6 mm rounded aerodynamic tip and is not a resolved 2D section quantity. The last-strip cm and pressure extrema change with span refinement; integrated coefficients are much more stable. No values were smoothed, clipped, or repaired by changing signs.',reference_comparison:'AirFrame 0.0.20261017 ZIP has APAME executables, binary Python modules, API headers and examples, not its full numerical source. Shared potential-flow/source-doublet family is not proof of implementation equivalence or measured equal accuracy.',scope:'Existing 3D numerical solver unchanged. Display flags distinguish uncertain tip samples.'};
+fs.writeFileSync(path.join(app,'validation/TIP_SECTION_REVIEW.json'),JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify(report,null,2));

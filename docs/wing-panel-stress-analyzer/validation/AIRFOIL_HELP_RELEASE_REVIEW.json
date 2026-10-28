@@ -1,0 +1,53 @@
+{
+  "version": "0.3.0-ui.8",
+  "base_commit": "063c4bab63ff2673e0a809cf55be4d79f41e198b",
+  "scope": "New independent 2D inviscid airfoil solver, explicit local tip-quality flags and expanded algorithm Help. Existing 3D numerical solver and worker bundles are unchanged.",
+  "airfoil_solver": {
+    "method": "Linear vortex sheet; analytic straight-panel influence integrals; midpoint no-penetration plus endpoint Kutta; pivoted LU; exterior tangential sheet jump; Bernoulli Cp and pressure/circulation lift cross-check",
+    "version": "1.0.0",
+    "tests": "AIRFOIL_2D_REVIEW.json",
+    "independent_reference": "Exact Joukowski conformal mapping at 0 and 4 deg; 80, 160 and 320 total panels",
+    "coverage": "NACA symmetric/cambered, five-digit, DAT coordinate profile and spanwise blend; zero-chord section refused; angle and panel limits enforced",
+    "limits": "No viscosity/stall/transition/profile drag, no finite-wing induced effects. Half-density difference is a sensitivity indicator, not a guaranteed accuracy certificate."
+  },
+  "tip_review": "TIP_SECTION_REVIEW.json",
+  "tip_display": "Actual base-mesh samples are retained. Rounded-tip zone and segments are amber/dashed. CSV flags rounded-tip samples. Zero-axis ticks are formatted as zero rather than floating-point noise.",
+  "help_sections": [
+    "Panel algorithm: governing equation, geometry/symmetry, source/doublet matrix, Morino Kutta wake, linear solver, pressure gradient, loads, refinement and structural admission",
+    "Local tip uncertainty and reference-software equivalence limitations",
+    "Independent 2D algorithm, inputs, mesh cross-check, exports and 2D/3D distinction"
+  ],
+  "browser_checks": {
+    "file": "mie446-printed-wing-study-2026-10-28(1).json",
+    "passed": [
+      "Imported the actual 900 mm 10 deg sweep/10 deg dihedral case through Open JSON and Apply",
+      "2D ran without a wing aerodynamic solve",
+      "80 and 160 panels per side gave cl 0.73717 and 0.73943 at eta 0.5, alpha 4 deg",
+      "PNG downloaded and visually inspected",
+      "CSV downloaded and checked: selected/half-density Cp and tangential speed with cl, cm and residual metadata",
+      "Seven-mesh Fine 3D case solved in 15.8 s",
+      "Trailing-edge graph retained actual jump and marked rounded-tip samples amber/dashed",
+      "Help algorithm opened and was visually inspected",
+      "No error/warning console entries observed"
+    ],
+    "browser": "Real in-app browser; not a claim of independent Firefox/Chrome certification"
+  },
+  "regression_checks": [
+    "test_airfoil_2d.cjs",
+    "test_aero_result_charts.cjs",
+    "test_pressure_scale.cjs",
+    "test_surface_3d.cjs",
+    "test_anatomy_switch.cjs",
+    "test_activity_feedback.cjs",
+    "seven executable inline script syntax checks",
+    "source-port rebuild byte-identical"
+  ],
+  "source_rebuild_byte_identical": true,
+  "page_sha256": "1889cd403c797206b04f3d90b63c54d3dd0868633ea78d38d791e15270794e3a",
+  "reference_urls": [
+    "https://ntrs.nasa.gov/citations/19900004884",
+    "https://flow5.tech/docs/flow5_doc/Post-processing/Cp3d.html",
+    "https://www.engapplets.vt.edu/fluids/vpm/vpminfo.html",
+    "https://web.mit.edu/drela/Public/web/xfoil/xfoil_doc.txt"
+  ]
+}

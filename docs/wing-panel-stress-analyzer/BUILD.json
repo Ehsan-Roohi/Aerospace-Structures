@@ -1,10 +1,10 @@
 {
   "product": "MIE 446 Wing AeroStruct",
-  "version": "0.3.0-ui.4",
+  "version": "0.3.0-ui.5",
   "status": "Published educational application; separate from Wing Lab",
-  "builtAt": "2026-10-28T03:06:36.259378+00:00",
+  "builtAt": "2026-10-28T03:15:07.090827+00:00",
   "page": "index.html",
-  "pageSha256": "65076bb759c3af1e167942f30b51ac22ba9cbef03498f43bf3c18d1a96523b24",
+  "pageSha256": "7728852b744611d69d0e6a2a510d5e4c835321d9ef1b705219cd06a8eb306086",
   "workers": {
     "wing-aero": {
       "worker": "2ff1da57ee4c",
@@ -199,7 +199,8 @@
       "wing-aero-ui.js": "62bf281e5fb828925c6edf73aae5628c1b972689812d38680f9bf0673c41a627",
       "wx-aero-results.js": "1cb93a66dde05e504482d8feace6ca139bc84c222e392d4d0368492642798b6d",
       "wx-shell.css": "eba6cc25e6b6b765f40a9a54ff573fd68a3d4e4c8018c426c756a29b763e5324",
-      "wx-shell.js": "c96577ea0b861e3ca2a660f368aa850e7674912953d870b820cd539433103932"
+      "wx-shell.js": "c96577ea0b861e3ca2a660f368aa850e7674912953d870b820cd539433103932",
+      "04-geometry-first-context-menu.patch": "653987960c2a8999cb77a4d0c9a6318a086de4d2b935aa77e3ed643deac3f1b2"
     },
     "validation": "validation/UI_RELEASE_REVIEW.json",
     "surfaceReview": "validation/UI_SURFACE_REVIEW.json",

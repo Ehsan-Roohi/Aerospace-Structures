@@ -3681,11 +3681,11 @@ body { margin: 0; }
   }
   if(typeof WingWorkspaceUI!=='undefined'){
     printedWorkspace=WingWorkspaceUI.create({app:$('#app'),canvas,viewPanel:$('#wingViewPanel'),sample:samplePrintedSurface,onClose:node=>{if(node.id==='wingStudyFiles')studyFiles?.cancel();},actions:[
+      {id:'geometry',label:'Airfoils & planform',run:(p,a)=>openAdvancedGeometryPopup(a)},
       {id:'select-wing',label:'Select wing',run:()=>printedWorkspace?.close()},
       {id:'load',label:'+ Load',run:openWingLoadPopup},{id:'rib',label:'+ Rib',run:(p,a)=>openWingPartPopup('rib',p,a)},
       {id:'rod',label:'+ Rod',run:(p,a)=>openWingPartPopup('rod',p,a)},{id:'spar',label:'+ Spar',run:(p,a)=>openWingPartPopup('spar',p,a)},
       {id:'structure',label:'Structure dimensions',run:(p,a)=>openWingStructurePopup(a)},{id:'materials',label:'Materials',run:(p,a)=>openWingMaterialsPopup(a)},
-      {id:'geometry',label:'Airfoils & planform',run:(p,a)=>openAdvancedGeometryPopup(a)},
       {id:'inside',label:'Inside wing',run:()=>setAnatomy('inside')},
       {id:'open-json',label:'Open JSON',run:()=>{$('#wingStudyFiles .wio-open input').click();}},
       {id:'save-json',label:'Save JSON',run:()=>studyFiles?.save()},

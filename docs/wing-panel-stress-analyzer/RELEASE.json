@@ -1,6 +1,6 @@
 {
   "application": "Wing Panel Stress Analyzer (Wing AeroStruct)",
-  "version": "0.3.0-ui.4",
+  "version": "0.3.0-ui.5",
   "source_archive": "wing-aerostruct-0.3.0-dev-review.zip",
   "source_sha256": "bc6986c744568a516fd22bdd3b9508550625b82a77cd924adf52dfaa5156a54d",
   "original_base": "5ab2498",
@@ -22,16 +22,18 @@
       "Full wing mirror in the View menu",
       "Open and Save JSON in File",
       "Two-spar course example with bonded module seams",
-      "Structural solve and result-contour activity feedback"
+      "Structural solve and result-contour activity feedback",
+      "Airfoils & planform first in the wing context menu"
     ],
-    "page_sha256": "65076bb759c3af1e167942f30b51ac22ba9cbef03498f43bf3c18d1a96523b24",
+    "page_sha256": "7728852b744611d69d0e6a2a510d5e4c835321d9ef1b705219cd06a8eb306086",
     "source_port": "ui/01-wing-aerostruct-ui-sources.patch",
     "independent_review": "validation/UI_RELEASE_REVIEW.json",
     "surface_review": "validation/UI_SURFACE_REVIEW.json",
     "source_ports": [
       "ui/01-wing-aerostruct-ui-sources.patch",
       "ui/02-closed-tip-aero-results.patch",
-      "ui/03-course-example-activity.patch"
+      "ui/03-course-example-activity.patch",
+      "ui/04-geometry-first-context-menu.patch"
     ],
     "closed_tip_review": "validation/CLOSED_TIP_AERO_REVIEW.json",
     "course_review": "validation/COURSE_UI_REVIEW.json"

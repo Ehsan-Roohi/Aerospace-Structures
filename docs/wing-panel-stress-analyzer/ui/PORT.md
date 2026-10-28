@@ -26,6 +26,7 @@ git apply source-port/00-prerequisite-main-0bb76f3-on-template.patch   # only if
 git apply source-port/01-wing-aerostruct-ui-sources.patch
 git apply source-port/02-closed-tip-aero-results.patch
 git apply source-port/03-course-example-activity.patch
+git apply source-port/04-geometry-first-context-menu.patch
 python3 computational/printed-wing-solver/aerostruct/build_wing_aerostruct.py
 ```
 

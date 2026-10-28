@@ -1,0 +1,64 @@
+{
+  "version": "0.3.0-ui.6",
+  "base_commit": "bf3c050459d7986e9811d5dc3b6f7b568a7849a2",
+  "scope": "Pressure result display only. Aerodynamic and structural numerical solvers, loads and convergence admission are unchanged.",
+  "default": "Full actual range, signed square-root colour contrast; zero green, negative limit blue, positive limit red. The colour-bar gradient uses exactly the same mapping.",
+  "manual_range": "Signed limits include zero; same physical limits retained on switching Cp/Pa. Saturated panels are hatched and counted. True extrema, probes and CSV are not clipped.",
+  "Cp_mesh_check": "Reports each existing solved mesh min/max Cp and relative change of extrema on the last refinement in both directions. The 10% flag is a display sensitivity indicator, not a local convergence acceptance test or numerical admission criterion.",
+  "representative_browser_case": {
+    "geometry": {
+      "naca": "2412",
+      "semi_span_mm": 900,
+      "root_chord_mm": 160,
+      "tip_chord_mm": 100,
+      "sweep_deg": 0,
+      "dihedral_deg": 0
+    },
+    "flow": {
+      "speed_m_s": 10,
+      "density_kg_m3": 1.225,
+      "alpha_deg": 4,
+      "sequence": "fine"
+    },
+    "meshes": 7,
+    "panels_total": 17056,
+    "base_Cp_extrema_rounded": [
+      -3.676,
+      0.9973
+    ],
+    "span_refinement_Cp_min_rounded": {
+      "16": -3.676,
+      "24": -6.635,
+      "32": -10.8,
+      "48": -21.89
+    },
+    "interpretation": "The negative extreme is strongly span-mesh-sensitive; no claim of a converged local tip-pressure peak is made.",
+    "manual_limits_Cp": [
+      -0.8,
+      0.8
+    ],
+    "manual_limits_Pa": [
+      -49,
+      49
+    ],
+    "outside_range_panels_per_semi_wing": {
+      "below": 166,
+      "above": 29
+    },
+    "browser_checks": [
+      "3D full-wing mirror",
+      "2D upper and lower surface",
+      "invalid manual limits rejected",
+      "Cp to Pa limits and counts preserved",
+      "PNG downloaded and visually checked",
+      "mobile 390 x 844: pressure canvas 361 x 432 pixels",
+      "no browser console errors"
+    ]
+  },
+  "tests": [
+    "validation/test_pressure_scale.cjs",
+    "validation/test_surface_3d.cjs"
+  ],
+  "source_rebuild_byte_identical": true,
+  "page_sha256": "d27e15f9f9b0d64dd1c09a41b722919e80cf51e184a42870a7c5fe8ef43df6c9"
+}

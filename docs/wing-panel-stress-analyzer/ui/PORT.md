@@ -55,6 +55,12 @@ load transfer for zero-chord tips; Cp, pressure and integral aerodynamic quantit
 The same two patches were also applied with `git apply` to a fresh copy of the ZIP sources and rebuilt: identical again.
 `port_verification.txt` is the log of the last `port_sources.py` run.
 
+The current result-view module includes full-range square-root colour contrast by default, a linear full-range
+option, manual signed limits, out-of-range panel hatching, and an expandable mesh-extrema sensitivity check.
+The legend uses the same mapping as the panels; pressure probes and CSV keep the original values. These are
+display controls, not a change to the potential-flow solver or a certification of local tip-pressure convergence.
+`validation/test_pressure_scale.cjs` checks the mapping, signed limits, Cp/Pa conversion and immutable inputs.
+
 ## If the FE work changed the template meanwhile
 
 The patch is small outside the three new files: 5 hooks (6 inserted lines, 2 edited lines) and 37 edited lines of

@@ -1,6 +1,6 @@
 {
   "application": "Wing Panel Stress Analyzer (Wing AeroStruct)",
-  "version": "0.3.0-ui.5",
+  "version": "0.3.0-ui.6",
   "source_archive": "wing-aerostruct-0.3.0-dev-review.zip",
   "source_sha256": "bc6986c744568a516fd22bdd3b9508550625b82a77cd924adf52dfaa5156a54d",
   "original_base": "5ab2498",
@@ -23,9 +23,12 @@
       "Open and Save JSON in File",
       "Two-spar course example with bonded module seams",
       "Structural solve and result-contour activity feedback",
-      "Airfoils & planform first in the wing context menu"
+      "Airfoils & planform first in the wing context menu",
+      "Full-range pressure colour contrast with linear and manual range options",
+      "Explicit hatching and counts for pressure panels outside manual colour limits",
+      "Expandable per-mesh pressure-extrema sensitivity check"
     ],
-    "page_sha256": "7728852b744611d69d0e6a2a510d5e4c835321d9ef1b705219cd06a8eb306086",
+    "page_sha256": "d27e15f9f9b0d64dd1c09a41b722919e80cf51e184a42870a7c5fe8ef43df6c9",
     "source_port": "ui/01-wing-aerostruct-ui-sources.patch",
     "independent_review": "validation/UI_RELEASE_REVIEW.json",
     "surface_review": "validation/UI_SURFACE_REVIEW.json",
@@ -36,6 +39,7 @@
       "ui/04-geometry-first-context-menu.patch"
     ],
     "closed_tip_review": "validation/CLOSED_TIP_AERO_REVIEW.json",
-    "course_review": "validation/COURSE_UI_REVIEW.json"
+    "course_review": "validation/COURSE_UI_REVIEW.json",
+    "pressure_review": "validation/PRESSURE_DISPLAY_REVIEW.json"
   }
 }

@@ -480,7 +480,7 @@ diff --git a/computational/printed-wing-solver/aerostruct/wx-aero-results.js b/c
 new file mode 100644
 --- /dev/null
 +++ b/computational/printed-wing-solver/aerostruct/wx-aero-results.js
-@@ -0,0 +1,536 @@
+@@ -0,0 +1,622 @@
 +/* Wing AeroStruct aerodynamic result views. They draw the panel method's own stored output and nothing else:
 + *  - surface Cp and p − p∞ = q∞ Cp at the panel centroids of the BASE mesh (result.base.chordwise; one solved mesh of
 + *    the sequence, not extrapolated), placed on the planform from the strip edges, chords and quarter-chord points;
@@ -500,14 +500,14 @@ new file mode 100644
 +    ['coef', 'Coefficients & convergence'],
 +  ];
 +  const FONT = 'system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif';
-+  // Blue = minimum, green = zero, red = maximum. The signed values are never changed or clipped.
++  // Blue = negative limit, green = zero, red = positive limit. Only the colour mapping changes.
 +  const NEG = [[0, 255, 0], [0, 255, 255], [0, 0, 255]];
 +  const POS = [[0, 255, 0], [255, 255, 0], [255, 0, 0]];
 +  const esc = (v) => String(v).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 +  const sig = (v, d = 4) => (v == null || !Number.isFinite(v) ? '–' : Math.abs(v) >= 1e5 || (Math.abs(v) < 1e-3 && v !== 0) ? v.toExponential(2).replace('-', '−') : String(Number(v.toPrecision(d))).replace('-', '−'));
 +  const csvNum = (v) => (v == null || !Number.isFinite(v) ? '' : String(+v.toPrecision(10)));
-+  function colour(v, lo, hi) {
-+    const neg = v < 0, ramp = neg ? NEG : POS, t = neg ? (lo < 0 ? Math.min(1, v / lo) : 0) : (hi > 0 ? Math.min(1, v / hi) : 0);
++  function colour(v, lo, hi, exponent = 1) {
++    const neg = v < 0, ramp = neg ? NEG : POS, ratio = neg ? (lo < 0 ? Math.min(1, v / lo) : 1) : (hi > 0 ? Math.min(1, v / hi) : v > 0 ? 1 : 0), t = Math.max(0, ratio) ** exponent;
 +    const f = t * (ramp.length - 1), i = Math.min(ramp.length - 2, Math.floor(f)), u = f - i, c = ramp[i].map((x, k) => Math.round(x + u * (ramp[i + 1][k] - x)));
 +    return `rgb(${c[0]},${c[1]},${c[2]})`;
 +  }
@@ -564,6 +564,27 @@ new file mode 100644
 +    for (const p of panels) { if (!lo || p[key] < lo[key]) lo = p; if (!hi || p[key] > hi[key]) hi = p; }
 +    return { lo, hi };
 +  }
++  function displayScale(panels, key, mode = 'contrast', manualCp = null, q = 1) {
++    const ex = extremes(panels, key), factor = key === 'dp' ? q : 1;
++    let lo = Math.min(0, ex.lo[key]), hi = Math.max(0, ex.hi[key]);
++    if (mode === 'manual' && manualCp) [lo, hi] = manualCp.map(v => v * factor);
++    if (!Number.isFinite(lo) || !Number.isFinite(hi) || lo > 0 || hi < 0 || lo > hi || (mode === 'manual' && lo === hi)) throw new Error('Colour limits must be finite, increasing and include zero.');
++    if (lo === hi) hi = 1; // an all-zero field remains green, with a non-degenerate legend
++    return { lo, hi, min: ex.lo[key], max: ex.hi[key], exponent: mode === 'contrast' ? 0.5 : 1, mode,
++      below: panels.filter(p => p[key] < lo).length, above: panels.filter(p => p[key] > hi).length };
++  }
++  function pressureMeshCheck(result) {
++    const rows = (result.levels || []).filter(l => Number.isFinite(l.diagnostics?.minCp) && Number.isFinite(l.diagnostics?.maxCp));
++    const d = result.definition || {}, comparisons = [];
++    for (const [direction, fixed, key] of [['chord', 'spanPanels', 'chordPanels'], ['span', 'chordPanels', 'spanPanels']]) {
++      const fixedValue = direction === 'chord' ? d.baseSpan : d.baseChord;
++      const line = rows.filter(l => l[fixed] === fixedValue).sort((a, b) => a[key] - b[key]);
++      if (line.length < 2) continue;
++      const [a, b] = line.slice(-2), changes = ['minCp', 'maxCp'].map(k => Math.abs(b.diagnostics[k] - a.diagnostics[k]) / Math.max(0.1, Math.abs(a.diagnostics[k]), Math.abs(b.diagnostics[k])));
++      comparisons.push({ direction, from: a[key], to: b[key], change: Math.max(...changes) });
++    }
++    return { rows, comparisons, sensitive: comparisons.some(c => c.change > 0.1), certified: false };
++  }
 +  const niceStep = (span, n) => { const raw = span / n, mag = 10 ** Math.floor(Math.log10(raw)), r = raw / mag; return (r < 1.5 ? 1 : r < 3 ? 2 : r < 7 ? 5 : 10) * mag; };
 +
 +  function install(env) {
@@ -580,6 +601,21 @@ new file mode 100644
 +      el('option', { value: 'planform', text: '2D · both surfaces' }));
 +    const resetView = el('button', { type: 'button', class: 'btn', text: 'Reset 3D view' });
 +    const panelToggle = el('button', { type: 'button', class: 'btn', id: 'wxArPanels', text: 'Show panels', 'aria-pressed': 'false' });
++    const scaleMode = el('select', { id: 'wxArScale', 'aria-label': 'Pressure colour scale' },
++      el('option', { value: 'contrast', text: 'Colour: Auto · contrast' }),
++      el('option', { value: 'linear', text: 'Colour: Full range · linear' }),
++      el('option', { value: 'manual', text: 'Colour: Manual range' }));
++    const scaleMin = el('input', { id: 'wxArScaleMin', type: 'number', step: 'any', 'aria-label': 'Minimum pressure colour limit' });
++    const scaleMax = el('input', { id: 'wxArScaleMax', type: 'number', step: 'any', 'aria-label': 'Maximum pressure colour limit' });
++    const scaleApply = el('button', { type: 'button', class: 'btn', text: 'Apply range' });
++    const scaleUnit = el('span', { class: 'wx-ar-scale-unit' });
++    const scaleError = el('span', { class: 'wx-ar-scale-error', role: 'alert' });
++    const manualTools = el('span', { class: 'wx-ar-manual', hidden: true }, el('label', {}, 'Min ', scaleMin), el('label', {}, 'Max ', scaleMax), scaleUnit, scaleApply, scaleError);
++    const scaleStatus = el('div', { class: 'wx-ar-scale-status', role: 'status', 'aria-live': 'polite' });
++    const meshSummary = el('summary', { text: 'Cp mesh check' });
++    const meshBody = el('div', { class: 'wx-ar-mesh-body' });
++    const meshDetails = el('details', { class: 'wx-ar-mesh', id: 'wxArMeshCheck' }, meshSummary, meshBody);
++    const scaleInfo = el('div', { class: 'wx-ar-scale-info' }, scaleStatus, meshDetails);
 +    const clearBtn = el('button', { type: 'button', class: 'btn', id: 'wxArClear', text: 'Clear probes', hidden: true });
 +    const pngBtn = el('button', { type: 'button', class: 'btn', id: 'wxArPng', text: 'Save PNG' });
 +    const csvBtn = el('button', { type: 'button', class: 'btn', id: 'wxArCsv', text: 'Save CSV' });
@@ -589,13 +625,38 @@ new file mode 100644
 +    const notice = el('div', { id: 'wxArNotice', class: 'wx-ar-notice', hidden: true });
 +    const probeBox = el('div', { id: 'wxArProbe', class: 'wx-ar-probe', role: 'status', 'aria-live': 'polite' });
 +    const overlay = el('section', { id: 'wxAeroResult', class: 'wx-aero-result', hidden: true, 'aria-label': 'Aerodynamic result view' },
-+      el('header', { class: 'wx-ar-head' }, el('div', { class: 'wx-ar-titles' }, title, source), el('div', { class: 'wx-ar-tools' }, projection, resetView, panelToggle, station, clearBtn, pngBtn, csvBtn, backBtn)),
++      el('header', { class: 'wx-ar-head' }, el('div', { class: 'wx-ar-titles' }, title, source), el('div', { class: 'wx-ar-tools' }, projection, resetView, panelToggle, scaleMode, manualTools, station, clearBtn, pngBtn, csvBtn, backBtn), scaleInfo),
 +      el('div', { class: 'wx-ar-body' }, canvas, html, notice), probeBox);
 +    const loading = view.querySelector('#loading');
 +    view.insertBefore(overlay, loading || null);
 +    let kind = '', probes = [], hits = [], sectionJ = 0, drawn = null;
 +    let surfaceMode = '3d', yaw = -0.32, elevation = 0.72, zoom = 1, drag = null, dragged = false, drawFrame = 0;
 +    let showPanels = false;
++    let manualCp = null, activeScale = null;
++    const scaleCache = new WeakMap(), checkCache = new WeakMap();
++    function currentScale(b, key) {
++      let f = scaleCache.get(b); if (!f) { f = surfaceField(b); if (f) scaleCache.set(b, f); }
++      return f && displayScale(f.panels, key, scaleMode.value, manualCp, b.flow.dynamicPressure_Pa);
++    }
++    function syncManual(b) {
++      if (!manualCp) { const v = currentScale(b, 'cp'); manualCp = [v.lo, v.hi]; }
++      const factor = kind === 'dp' ? b.flow.dynamicPressure_Pa : 1;
++      scaleMin.value = String(+(manualCp[0] * factor).toPrecision(8)); scaleMax.value = String(+(manualCp[1] * factor).toPrecision(8));
++      scaleUnit.textContent = kind === 'dp' ? 'Pa' : 'Cp';
++    }
++    scaleMode.addEventListener('change', () => { scaleError.textContent = ''; const s = data(); if (s && scaleMode.value === 'manual') syncManual(s.result.base); render(); });
++    function applyRange() {
++      const s = data(); if (!s) return;
++      const lo = Number(scaleMin.value), hi = Number(scaleMax.value);
++      if (!scaleMin.value.trim() || !scaleMax.value.trim() || !Number.isFinite(lo) || !Number.isFinite(hi) || lo > 0 || hi < 0 || lo >= hi) {
++        scaleError.textContent = 'Enter Min < Max, with Min ≤ 0 and Max ≥ 0.'; return;
++      }
++      const factor = kind === 'dp' ? s.result.base.flow.dynamicPressure_Pa : 1;
++      if (!(factor > 0)) { scaleError.textContent = 'A positive dynamic pressure is needed for a range in Pa.'; return; }
++      manualCp = [lo / factor, hi / factor]; scaleError.textContent = ''; render();
++    }
++    scaleApply.addEventListener('click', applyRange);
++    for (const input of [scaleMin, scaleMax]) input.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); applyRange(); } });
 +    panelToggle.addEventListener('click', () => { showPanels = !showPanels; panelToggle.setAttribute('aria-pressed', String(showPanels)); panelToggle.textContent = showPanels ? 'Hide panels' : 'Show panels'; render(); });
 +    const meshCache = new WeakMap();
 +    const redrawSurface = () => { if (!drawFrame) drawFrame = requestAnimationFrame(() => { drawFrame = 0; const s = data(); if (s && !overlay.hidden && ['cp', 'dp'].includes(kind)) draw(canvas, s); }); };
@@ -635,7 +696,7 @@ new file mode 100644
 +    function setNotice(text, withButton) {
 +      canvas.hidden = true; html.hidden = true; notice.hidden = false; notice.replaceChildren(el('p', { text }));
 +      if (withButton) { const b = el('button', { type: 'button', class: 'btn primary', text: 'Open Aerodynamics' }); b.addEventListener('click', () => openAero()); notice.append(b); }
-+      for (const b of [pngBtn, csvBtn, clearBtn]) b.disabled = true; station.hidden = true; projection.hidden = true; resetView.hidden = true; panelToggle.hidden = true; probeBox.textContent = '';
++      for (const b of [pngBtn, csvBtn, clearBtn]) b.disabled = true; station.hidden = true; projection.hidden = true; resetView.hidden = true; panelToggle.hidden = true; scaleMode.hidden = true; manualTools.hidden = true; scaleInfo.hidden = true; probeBox.textContent = '';
 +    }
 +    function render() {
 +      if (!kind || overlay.hidden) return;
@@ -650,6 +711,16 @@ new file mode 100644
 +      station.hidden = kind !== 'section'; clearBtn.hidden = !['cp', 'dp', 'section', 'span'].includes(kind); clearBtn.disabled = !probes.length;
 +      projection.hidden = !['cp', 'dp'].includes(kind); resetView.hidden = projection.hidden || surfaceMode === 'planform';
 +      panelToggle.hidden = projection.hidden;
++      scaleMode.hidden = projection.hidden; manualTools.hidden = projection.hidden || scaleMode.value !== 'manual'; scaleInfo.hidden = projection.hidden;
++      if (!projection.hidden) {
++        const key = kind === 'dp' ? 'dp' : 'cp', unit = key === 'dp' ? 'Pa' : 'Cp';
++        activeScale = currentScale(b, key); if (!manualTools.hidden) syncManual(b);
++        const v = activeScale, clipped = v.below + v.above;
++        scaleStatus.textContent = `${v.exponent === 0.5 ? 'Auto contrast · √ colour mapping · full range' : v.mode === 'manual' ? 'Manual · linear colour mapping' : 'Full range · linear colour mapping'}. True min ${sig(v.min)}, max ${sig(v.max)} ${unit}.${clipped ? ` Hatched panels outside range: ${v.below} below, ${v.above} above (one semi-wing). Probes and CSV keep the actual values.` : ' No values clipped.'}`;
++        let check = checkCache.get(result); if (!check) { check = pressureMeshCheck(result); checkCache.set(result, check); }
++        meshSummary.textContent = check.sensitive ? 'Cp mesh check · peaks are mesh-sensitive' : 'Cp mesh check · local peaks not certified';
++        meshBody.innerHTML = `<p>Global lift convergence does not certify local pressure peaks. Extrema below are from each whole solved aerodynamic mesh; their panel locations can move with refinement.</p><div class="wae-scroll"><table><thead><tr><th>Chord × span setting</th><th>Min Cp</th><th>Max Cp</th></tr></thead><tbody>${check.rows.map(l => `<tr><td>${l.chordPanels} × ${l.spanPanels}</td><td>${sig(l.diagnostics.minCp)}</td><td>${sig(l.diagnostics.maxCp)}</td></tr>`).join('')}</tbody></table></div><p>${check.comparisons.map(c => `${c.direction}: ${c.from} → ${c.to}, extrema change ${sig(100 * c.change, 3)}%`).join('; ') || 'No comparable mesh refinements stored.'}. ${check.sensitive ? 'Changes exceed 10% on the last refinement in at least one direction; inspect the tip/edge peak with a finer sequence.' : 'This is an extrema sensitivity check, not a local Cp convergence certificate.'}</p>`;
++      }
 +      canvas.style.touchAction = !projection.hidden && surfaceMode !== 'planform' ? 'none' : 'auto';
 +      canvas.style.cursor = !projection.hidden && surfaceMode !== 'planform' ? 'grab' : 'crosshair';
 +      pngBtn.hidden = kind === 'coef';
@@ -681,7 +752,7 @@ new file mode 100644
 +      let top = 0;
 +      if (exportSize) {   // the image carries its own title, case and source
 +        ctx.fillStyle = '#14212e'; ctx.font = `700 22px ${FONT}`; ctx.fillText(exportSize.title, 24, 34);
-+        ctx.font = `14px ${FONT}`; ctx.fillStyle = '#4e5f71'; wrapText(ctx, exportSize.source, 24, 58, W - 48, 18); top = 96;
++        ctx.font = `14px ${FONT}`; ctx.fillStyle = '#4e5f71'; top = Math.max(96, wrapText(ctx, exportSize.source, 24, 58, W - 48, 18) + 12);
 +      }
 +      if (kind === 'cp' || kind === 'dp') {
 +        if (surfaceMode === 'planform') drawSurface(ctx, W, H, top, s, !exportSize);
@@ -694,13 +765,27 @@ new file mode 100644
 +      let line = '';
 +      for (const word of String(text).split(' ')) { const t = line ? line + ' ' + word : word; if (ctx.measureText(t).width > maxW && line) { ctx.fillText(line, x, y); line = word; y += lh; } else line = t; }
 +      if (line) ctx.fillText(line, x, y);
++      return y + lh;
 +    }
 +    // Colour-bar ticks: the two ends first (labelled min and max), then zero and the halves wherever they still fit.
 +    const tickOrder = (lo, hi) => [lo, hi, 0, lo / 2, hi / 2].filter((v, i, a) => a.indexOf(v) === i);
-+    const tickLabel = (v, lo, hi) => (v === hi ? 'max ' : v === lo ? 'min ' : '') + sig(v, 3);
++    const tickLabel = (v, lo, hi) => (v === hi ? (activeScale?.mode === 'manual' ? '≥ ' : 'max ') : v === lo ? (activeScale?.mode === 'manual' ? '≤ ' : 'min ') : '') + sig(v, 3);
++    const panelColour = (v, lo, hi) => colour(v, lo, hi, activeScale?.exponent || 1);
++    function hatchPanel(ctx, pts, v) {
++      if (!activeScale || (v >= activeScale.lo && v <= activeScale.hi)) return;
++      const xs = pts.map(p => p[0]), ys = pts.map(p => p[1]), x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
++      ctx.save(); ctx.beginPath(); pts.forEach(([x, y], i) => i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)); ctx.closePath(); ctx.clip();
++      ctx.strokeStyle = 'rgba(255,255,255,0.9)'; ctx.lineWidth = 1.4;
++      for (let x = x0 - (y1 - y0); x <= x1; x += 8) { ctx.beginPath(); ctx.moveTo(x, y0); ctx.lineTo(x + y1 - y0, y1); ctx.stroke(); }
++      ctx.restore();
++    }
++    function scaleCaption() {
++      const v = activeScale;
++      return `Blue: negative · green: zero · red: positive · ${v?.exponent === 0.5 ? '√ contrast, full range' : v?.mode === 'manual' ? 'manual range; hatching = outside limits' : 'linear, full range'}`;
++    }
 +    function colourbar(ctx, x, y, h, lo, hi, unit) {   // vertical, beside the maps
 +      const w = 16, steps = 120;
-+      for (let i = 0; i < steps; i++) { const v = hi - (hi - lo) * (i + 0.5) / steps; ctx.fillStyle = colour(v, lo, hi); ctx.fillRect(x, y + h * i / steps, w, h / steps + 0.6); }
++      for (let i = 0; i < steps; i++) { const v = hi - (hi - lo) * (i + 0.5) / steps; ctx.fillStyle = panelColour(v, lo, hi); ctx.fillRect(x, y + h * i / steps, w, h / steps + 0.6); }
 +      ctx.strokeStyle = '#7a8a9b'; ctx.lineWidth = 1; ctx.strokeRect(x + 0.5, y + 0.5, w, h);
 +      ctx.fillStyle = '#14212e'; ctx.font = `700 13px ${FONT}`; ctx.fillText(unit, x - 2, y - 10);
 +      ctx.font = `12px ${FONT}`;
@@ -713,7 +798,7 @@ new file mode 100644
 +    }
 +    function colourbarH(ctx, x, y, w, lo, hi, unit) {   // horizontal, under the maps on narrow screens (low values left)
 +      const h = 12, steps = 120;
-+      for (let i = 0; i < steps; i++) { const v = lo + (hi - lo) * (i + 0.5) / steps; ctx.fillStyle = colour(v, lo, hi); ctx.fillRect(x + w * i / steps, y, w / steps + 0.6, h); }
++      for (let i = 0; i < steps; i++) { const v = lo + (hi - lo) * (i + 0.5) / steps; ctx.fillStyle = panelColour(v, lo, hi); ctx.fillRect(x + w * i / steps, y, w / steps + 0.6, h); }
 +      ctx.strokeStyle = '#7a8a9b'; ctx.lineWidth = 1; ctx.strokeRect(x + 0.5, y + 0.5, w, h);
 +      ctx.fillStyle = '#14212e'; ctx.font = `700 12px ${FONT}`; ctx.fillText(unit, x, y - 6);
 +      ctx.font = `11px ${FONT}`;
@@ -733,9 +818,9 @@ new file mode 100644
 +    function drawSurface(ctx, W, H, top, s, interactive) {
 +      const b = s.result.base, f = surfaceField(b), key = kind === 'dp' ? 'dp' : 'cp', unit = kind === 'dp' ? 'p − p∞ (Pa)' : 'Cp';
 +      if (!f) { ctx.fillStyle = '#9a5800'; ctx.font = `14px ${FONT}`; ctx.fillText('This solution has no stored panel field to draw.', 20, top + 30); return; }
-+      const { lo, hi } = extremes(f.panels, key), vlo = Math.min(0, lo[key]), vhi = Math.max(0, hi[key]);
++      const { lo, hi } = extremes(f.panels, key); activeScale = currentScale(b, key); const vlo = activeScale.lo, vhi = activeScale.hi;
 +      const narrow = W < 560;   // narrow screens: the colour bar goes under the maps so the maps keep the width
-+      const left = narrow ? 34 : 54, right = narrow ? 12 : 120, titleH = 22, gap = 34, bottom = narrow ? 94 : 46, spanW = f.ymax - f.ymin, chordH = f.xmax - f.xmin;
++      const left = narrow ? 34 : 54, right = narrow ? 12 : 120, titleH = 22, gap = 34, bottom = narrow ? 112 : 70, spanW = f.ymax - f.ymin, chordH = f.xmax - f.xmin;
 +      const stacked = Math.min((W - left - right) / spanW, (H - top - 2 * titleH - gap - bottom - 10) / (2 * chordH));
 +      const beside = Math.min((W - left - right - gap) / (2 * spanW), (H - top - titleH - bottom - 10) / chordH);
 +      const sc = Math.max(stacked, beside), sideBySide = beside > stacked, mapH = chordH * sc, mapW = spanW * sc;
@@ -747,7 +832,7 @@ new file mode 100644
 +      for (const p of f.panels) {
 +        const pts = p.poly.map(([y, x]) => [X(y, p.side), Y(p.side, x)]);
 +        ctx.beginPath(); pts.forEach(([px, py], i) => (i ? ctx.lineTo(px, py) : ctx.moveTo(px, py))); ctx.closePath();
-+        const c = colour(p[key], vlo, vhi); ctx.fillStyle = c; ctx.strokeStyle = showPanels ? 'rgba(20,33,46,0.65)' : c; ctx.lineWidth = showPanels ? 0.65 : 0.6; ctx.fill(); ctx.stroke();
++        const c = panelColour(p[key], vlo, vhi); ctx.fillStyle = c; ctx.strokeStyle = showPanels ? 'rgba(20,33,46,0.65)' : c; ctx.lineWidth = showPanels ? 0.65 : 0.6; ctx.fill(); ctx.stroke(); hatchPanel(ctx, pts, p[key]);
 +        hits.push({ p, pts });
 +      }
 +      // titles: the longest wording that ends before the next map or the colour bar
@@ -767,6 +852,7 @@ new file mode 100644
 +      }
 +      if (narrow) colourbarH(ctx, left, maps.lower + mapH + 62, Math.min(W - left - 14, 420), vlo, vhi, unit);
 +      else colourbar(ctx, barX, maps.upper, Math.max(120, sideBySide ? mapH : maps.lower + mapH - maps.upper), vlo, vhi, unit);
++      ctx.fillStyle = '#4e5f71'; ctx.font = `11px ${FONT}`; ctx.fillText(fit(ctx, [scaleCaption()], W - 28), 14, H - 10);
 +      drawn = { f, key, unit };
 +      probes.forEach((pr, n) => {
 +        const h = hits.find((t) => t.p === pr) || hits.find((t) => t.p.side === pr.side && t.p.j === pr.j && t.p.k === pr.k); if (!h) return;
@@ -785,7 +871,7 @@ new file mode 100644
 +        wrapText(ctx, '3D surface unavailable: ' + error.message + ' Use the 2D view or solve the current geometry again.', 20, top + 35, W - 40, 20); return;
 +      }
 +      if (!f) { hits = []; return; }
-+      const ex = extremes(f.panels, key), lo = Math.min(0, ex.lo[key]), hi = Math.max(0, ex.hi[key]);
++      const ex = extremes(f.panels, key); activeScale = currentScale(b, key); const lo = activeScale.lo, hi = activeScale.hi;
 +      const mirror = !!document.getElementById('wingFullSymmetric')?.checked;
 +      const panels = [...f.panels];
 +      if (mirror) for (const p of f.panels) panels.push({ ...p, mirrored: true, y: -p.y, vertices: p.vertices.map(([x, y, z]) => [x, -y, z]) });
@@ -801,9 +887,9 @@ new file mode 100644
 +      hits = [];
 +      ctx.save(); ctx.beginPath(); ctx.rect(0, upper - 10, W - right + 10, H - upper - bottom + 20); ctx.clip();
 +      for (const face of faces) {
-+        const pts = face.pts.map((v) => [X(v[0]), Y(v[1])]), col = colour(face.p[key], lo, hi);
++        const pts = face.pts.map((v) => [X(v[0]), Y(v[1])]), col = panelColour(face.p[key], lo, hi);
 +        ctx.beginPath(); pts.forEach(([x, y], i) => i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)); ctx.closePath();
-+        ctx.fillStyle = col; ctx.strokeStyle = showPanels ? 'rgba(20,33,46,0.65)' : col; ctx.lineWidth = showPanels ? 0.65 : 0.5; ctx.fill(); ctx.stroke();
++        ctx.fillStyle = col; ctx.strokeStyle = showPanels ? 'rgba(20,33,46,0.65)' : col; ctx.lineWidth = showPanels ? 0.65 : 0.5; ctx.fill(); ctx.stroke(); hatchPanel(ctx, pts, face.p[key]);
 +        hits.push({ p: face.p, pts });
 +      }
 +      // Select only the last painted (frontmost) face. Draw probe numbers on visible panels only.
@@ -818,7 +904,7 @@ new file mode 100644
 +      ctx.fillStyle = '#14212e'; ctx.font = `600 13px ${FONT}`;
 +      ctx.fillText(fit(ctx, [mirror ? 'Full wing · symmetric Cp' : '3D aerodynamic surface', '3D surface'], W - right - 25), left, top + 22);
 +      ctx.font = `11px ${FONT}`; ctx.fillStyle = '#4e5f71';
-+      ctx.fillText(fit(ctx, ['Blue: minimum · green: zero · red: maximum', 'Blue: min · green: 0 · red: max'], W - 35), left, H - 12);
++      ctx.fillText(fit(ctx, [scaleCaption()], W - 35), left, H - 12);
 +      colourbar(ctx, W - right + 22, upper, Math.max(80, ah), lo, hi, unit);
 +      // Aircraft axes rotate with the surface; scale is graphical only.
 +      const ox = left + 28, oy = H - 56;
@@ -827,7 +913,7 @@ new file mode 100644
 +        ctx.fillStyle = col; ctx.font = `700 10px ${FONT}`; ctx.fillText(label, ox + 30 * a[0] - 4, oy + 30 * a[1] + 4);
 +      }
 +      drawn = { f, key, unit, threeDimensional: true };
-+      if (interactive) canvas.setAttribute('aria-label', `3D ${unit} on the actual aerodynamic base-mesh surface. Blue minimum ${sig(ex.lo[key])}, green zero, red maximum ${sig(ex.hi[key])}. Drag to rotate; click a surface panel for its signed value.`);
++      if (interactive) canvas.setAttribute('aria-label', `3D ${unit} on the actual aerodynamic base-mesh surface. True minimum ${sig(ex.lo[key])}, maximum ${sig(ex.hi[key])}. ${scaleCaption()}. Drag to rotate; click a surface panel for its signed value.`);
 +    }
 +    const FRAME = { L: 70, R: 24 };
 +    function chartFrame(ctx, W, H, top, xr, yr, xl, yl, head = 1) {   // head = text rows reserved above the frame
@@ -958,7 +1044,7 @@ new file mode 100644
 +      const s = data(); if (!s || kind === 'coef') return;
 +      const W = 1800, H = kind === 'section' || kind === 'span' ? 1000 : Math.round(1800 * Math.max(0.55, canvas.clientHeight / Math.max(1, canvas.clientWidth))) + 96;
 +      const off = document.createElement('canvas'); off.width = W; off.height = H; const ctx = off.getContext('2d');
-+      draw(off, s, { ctx, W, H, title: 'Wing AeroStruct · ' + title.textContent, source: source.textContent });
++      draw(off, s, { ctx, W, H, title: 'Wing AeroStruct · ' + title.textContent, source: source.textContent + (['cp', 'dp'].includes(kind) ? ' ' + scaleStatus.textContent : '') });
 +      off.toBlob((blob) => blob && download(`wing-aero-${kind}.png`, blob), 'image/png');
 +      render();   // the probes list and the screen canvas are unchanged; redraw restores the screen hit areas
 +    });
@@ -1015,13 +1101,13 @@ new file mode 100644
 +    if (window.ResizeObserver) new ResizeObserver(() => { if (!overlay.hidden && kind !== 'coef') render(); }).observe(canvas.parentElement);
 +    return { refresh: () => { if (!overlay.hidden) { render(); if (probes.length) showProbes(); } }, close, show, get kind() { return kind; }, element: overlay, selector: group };
 +  }
-+  return Object.freeze({ install, VIEWS, surfaceField, surfaceField3D, colour });
++  return Object.freeze({ install, VIEWS, surfaceField, surfaceField3D, colour, displayScale, pressureMeshCheck });
 +})();
 diff --git a/computational/printed-wing-solver/aerostruct/wx-shell.css b/computational/printed-wing-solver/aerostruct/wx-shell.css
 new file mode 100644
 --- /dev/null
 +++ b/computational/printed-wing-solver/aerostruct/wx-shell.css
-@@ -0,0 +1,310 @@
+@@ -0,0 +1,326 @@
 +/* Wing AeroStruct UI shell: compact command bar, one anchored input panel, slim result strip.
 +   Scoped to the wing workspace (body.wx-wing-on / #app.wx); the Beam, Truss and Full-scale wing workspaces keep their
 +   own look. White palette by default; an explicit data-theme="dark" keeps the existing dark palette. */
@@ -1306,6 +1392,22 @@ new file mode 100644
 +#app.wx .wx-ar-tools .btn { height: 34px; min-height: 34px; padding: 0 11px; background: var(--panel); }
 +#app.wx .wx-ar-tools .btn:disabled { opacity: 0.45; cursor: not-allowed; }
 +.wx-ar-tools select { height: 34px; max-width: 290px; padding: 0 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--fg); font: 13px var(--font-ui); }
++.wx-ar-manual { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 6px; }
++.wx-ar-manual[hidden], .wx-ar-scale-info[hidden] { display: none !important; }
++.wx-ar-manual label { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; }
++#app.wx .wx-ar-manual input { width: 86px; box-sizing: border-box; height: 34px; padding: 4px 6px; border: 1px solid var(--line); border-radius: 7px; background: #fff; color: var(--fg); font: 13px var(--font-data); }
++.wx-ar-scale-unit { font-size: 12px; }
++.wx-ar-scale-error { font-size: 12px; color: #b42318; }
++.wx-ar-scale-error:empty { display: none; }
++.wx-ar-scale-info { flex-basis: 100%; display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: #4e5f71; }
++.wx-ar-scale-status { flex: 1 1 320px; }
++.wx-ar-mesh { max-width: 100%; }
++.wx-ar-mesh > summary { cursor: pointer; color: #175cd3; font-weight: 600; }
++.wx-ar-mesh[open] { flex-basis: 100%; }
++.wx-ar-mesh-body { max-height: 230px; overflow: auto; margin-top: 6px; }
++.wx-ar-mesh-body p { margin: 5px 0; max-width: 960px; }
++.wx-ar-mesh-body table { border-collapse: collapse; font-size: 12px; }
++.wx-ar-mesh-body th, .wx-ar-mesh-body td { padding: 3px 14px 3px 0; text-align: right; }
 +.wx-ar-body { position: relative; flex: 1 1 auto; min-height: 0; }
 +.wx-ar-body > canvas { position: absolute; left: 0; top: 0; width: 100%; height: 100%; display: block; cursor: crosshair; }
 +.wx-ar-html { position: absolute; inset: 0; overflow: auto; padding: 10px 16px 16px; }

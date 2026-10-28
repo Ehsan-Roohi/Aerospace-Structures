@@ -1,0 +1,75 @@
+{
+  "version": "0.3.0-ui.3",
+  "base_commit": "60abc5160b30d034b0c3e8081d60b88a10df3537",
+  "page_sha256": "e58a3cae7db2cf2a77a7228274651ed36d2ca5989460a0f9a1a0bec52dab5f1d",
+  "scope": "Closed-tip aerodynamic result handling and Mirror placement. No numerical solver changes.",
+  "static_checks": {
+    "base": "60abc5160b30d034b0c3e8081d60b88a10df3537",
+    "inline_scripts_syntax_checked": 7,
+    "original_script_count": 9,
+    "new_script_count": 9,
+    "unchanged_solver_scripts": [
+      {
+        "module": "WingEngine",
+        "sha256": "943f24153312fb3a0f463e2ddeda6a1acb34478a1beba8ffe34f98feaf81aff3"
+      },
+      {
+        "module": "WingAeroPanel",
+        "sha256": "4cf31712ddba740d741fafe5058ab07202459c70bb4fc1d77d79b9d032358f49"
+      },
+      {
+        "module": "WingFrame3D",
+        "sha256": "b8fa7dfa5fb932abadb548baa5e69852b2d779b891364ec77a45855d802f456e"
+      }
+    ],
+    "page_sha256": "e58a3cae7db2cf2a77a7228274651ed36d2ca5989460a0f9a1a0bec52dab5f1d"
+  },
+  "regression": {
+    "test": "validation/test_aero_summary.cjs",
+    "global_estimates_identical_to_existing_combiner": true,
+    "aerodynamic_summary_has_no_delivered_strip_load": true,
+    "invalid_structural_transfer_refused": true,
+    "source_sequence_unchanged": true,
+    "tested_closed_tip_shapes": [
+      "elliptic",
+      "delta"
+    ]
+  },
+  "browser_case": {
+    "browser": "ChatGPT in-app Chromium browser",
+    "geometry": {
+      "airfoil": "NACA 2412",
+      "planform": "elliptic",
+      "semi_span_mm": 450,
+      "root_chord_mm": 160,
+      "tip_chord_mm": 0
+    },
+    "flow": {
+      "speed_m_s": 15,
+      "density_kg_m3": 1.225,
+      "alpha_deg": 4
+    },
+    "sequence": "standard",
+    "meshes": 7,
+    "total_panels": 6656,
+    "elapsed_s_observed": 42.1,
+    "CL_displayed": 0.5338,
+    "semi_wing_Fz_N_displayed": 4.157,
+    "cp_min_displayed": -1.517,
+    "cp_max_displayed": 0.9774,
+    "verified": [
+      "Aerodynamics Solved without structural-combination error",
+      "3D Cp on the exact closed elliptical outline",
+      "Panel boundaries visible",
+      "Spanwise lift graph and coefficients/convergence table",
+      "View menu contains the single Full wing mirror checkbox",
+      "Mirrored full-wing Cp surface",
+      "Apply aerodynamic loads to structure disabled"
+    ],
+    "limitations": [
+      "No new zero-chord-tip structural aerodynamic load transfer is implemented.",
+      "This is not a validation of local shell or solid stress.",
+      "Browser download event did not return; CSV content is covered by the regression test."
+    ]
+  }
+}

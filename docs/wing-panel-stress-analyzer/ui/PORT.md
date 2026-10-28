@@ -12,6 +12,7 @@ redesign as changes to those sources, so whoever owns the build (the FE work) ca
 |---|---|
 | `00-prerequisite-main-0bb76f3-on-template.patch` | **Not part of the redesign.** Main's commit 0bb76f3 edited the built page by hand (Aerodynamic solver button, `#wlAero` moved and open, stress opaque). This expresses that edit on `wing_aerostruct_template.html`, so the template reproduces main's page. Skip it if your template already has 0bb76f3. |
 | `01-wing-aerostruct-ui-sources.patch` | The redesign: hooks and wording in `wing_aerostruct_template.html` and `wing_aero_ui.js`; the three shell files as new `aerostruct/` files; three build tokens in `build_wing_aerostruct.py`; four test expectations in `test_aerostruct_aero_ui.mjs`, `test_aerostruct_page.mjs`, `test_aerostruct_browser.mjs` that addressed the old layout or the old button names. |
+| `02-closed-tip-aero-results.patch` | Apply after `01`: separates closed-tip aerodynamic results from unsupported spatial-beam load transfer in `wing_aero_ui.js`. The complete resulting UI module is also saved as `wing-aero-ui.js`. |
 | `wording_edits.md` | Every hook and wording edit: page line, source file, old → new. |
 
 No `web/` module (Wing Lab 1.3) is touched. No numerical source (`engine.js`, `wing_aero_panel.js`, `wing_aero_worker.js`,
@@ -22,6 +23,7 @@ No `web/` module (Wing Lab 1.3) is touched. No numerical source (`engine.js`, `w
 ```
 git apply source-port/00-prerequisite-main-0bb76f3-on-template.patch   # only if the template predates 0bb76f3
 git apply source-port/01-wing-aerostruct-ui-sources.patch
+git apply source-port/02-closed-tip-aero-results.patch
 python3 computational/printed-wing-solver/aerostruct/build_wing_aerostruct.py
 ```
 
@@ -41,6 +43,11 @@ just enough context to be unique) and rebuilds after each step:
 
 The rebuilt `wing-aero/` and `wing-print/` workers and bundles are byte-identical to the published ones (unchanged
 content hashes 2ff1da57ee4c, 13eb802302b6, a56bd8704a71).
+
+The hashes in the table describe the original redesign. Subsequent visualization and closed-tip UI revisions are
+recorded in `BUILD.json` and `validation/CLOSED_TIP_AERO_REVIEW.json`. The current `01` patch includes the current
+shell, including **View → Full wing · mirror**. `02` changes no numerical solver and does not enable structural
+load transfer for zero-chord tips; Cp, pressure and integral aerodynamic quantities remain available independently.
 
 The same two patches were also applied with `git apply` to a fresh copy of the ZIP sources and rebuilt: identical again.
 `port_verification.txt` is the log of the last `port_sources.py` run.

@@ -1,10 +1,10 @@
 {
   "product": "MIE 446 Wing AeroStruct",
-  "version": "0.3.0-ui.2",
+  "version": "0.3.0-ui.3",
   "status": "Published educational application; separate from Wing Lab",
-  "builtAt": "2026-10-28T01:44:23.095814+00:00",
+  "builtAt": "2026-10-28T02:19:25.156843+00:00",
   "page": "index.html",
-  "pageSha256": "2e222864c362108955ad17f2521ccc1d532569eec8de9f0840d7737991375741",
+  "pageSha256": "e58a3cae7db2cf2a77a7228274651ed36d2ca5989460a0f9a1a0bec52dab5f1d",
   "workers": {
     "wing-aero": {
       "worker": "2ff1da57ee4c",
@@ -193,12 +193,15 @@
     "baseCommit": "c7552df72c79d03aed0d46cc40b1a7fb34a9b162",
     "sources": {
       "00-prerequisite-main-0bb76f3-on-template.patch": "198422c3cdf0ef7d2cc159f1a7b22334a8c3012f2cca6e441a920c56489e50e7",
-      "01-wing-aerostruct-ui-sources.patch": "2ffa88db88dfae6f698a248766f75fe32944fb3fa12231867f61cb09378bd991",
-      "wx-aero-results.js": "7641429f756f5517d4c329bbbd20eb50652f27312ffeef43bf7e86ce4f525591",
-      "wx-shell.css": "ef3630d9d00aa1e83cf909f568117a3e4cec6d64330653a393ae4d587f090129",
-      "wx-shell.js": "97cee0bddc41ef0341af0ae9f6833b81298a3e0214786262ae9ea1012386c5fd"
+      "01-wing-aerostruct-ui-sources.patch": "104e727cacec988fa1aaf7924c6f8ac7d87b32ecd227e529ad83e0e8fce0e459",
+      "02-closed-tip-aero-results.patch": "4d5833dbf86ddd6f34bc421b10bcac8118a87c7c0a10debe40256fd2b46993b5",
+      "wing-aero-ui.js": "f2932ecd847a3969f138887fa58f8b4f34b9c085a11e8d4f0999196479458cf9",
+      "wx-aero-results.js": "1cb93a66dde05e504482d8feace6ca139bc84c222e392d4d0368492642798b6d",
+      "wx-shell.css": "8687a7bb31a1e2bc5602fb95c8392109efe5257d658391c55ed663d3e16250b6",
+      "wx-shell.js": "b4d698dfa51db30be2d425426e9cfc34706420e9ef51dc9f0753a3618a04e0b2"
     },
     "validation": "validation/UI_RELEASE_REVIEW.json",
-    "surfaceReview": "validation/UI_SURFACE_REVIEW.json"
+    "surfaceReview": "validation/UI_SURFACE_REVIEW.json",
+    "closedTipReview": "validation/CLOSED_TIP_AERO_REVIEW.json"
   }
 }

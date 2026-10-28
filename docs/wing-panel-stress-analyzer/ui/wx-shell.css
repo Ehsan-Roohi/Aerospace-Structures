@@ -73,7 +73,7 @@ body.wx-wing-on #wingNavigation .workspace-link { min-height: 32px; height: auto
 #app.wx .wx-menu .btn, #app.wx #wingSide .btn { height: auto; min-height: 36px; padding: 6px 12px; white-space: normal; text-align: left; line-height: 1.2; }
 #app.wx .wx-menu .wx-danger { color: var(--bad); border-color: color-mix(in srgb, var(--bad) 55%, var(--line)); }
 #app.wx .wx-menu .note { font-size: 12px; }
-#wxFileMenu .wing-print-symmetry { padding: 4px 0; font-weight: 600; }
+#wxViewMenu .wing-print-symmetry { padding: 4px 0; font-weight: 600; }
 #wxFileMenu #wingSymmetryNote { flex-basis: 100%; }
 #wxFileMenu .wl-acc { border: 1px solid var(--line); border-radius: 10px; }
 #wxFileMenu .wl-acc > summary { min-height: 40px; padding: 8px 12px; font: 700 13.5px/1.2 var(--font-ui); }

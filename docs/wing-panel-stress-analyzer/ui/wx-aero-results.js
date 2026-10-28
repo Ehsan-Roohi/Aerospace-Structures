@@ -178,12 +178,12 @@ window.WingAeroStructResults = (() => {
       }
       if (kind === 'span') {
         const fz = combined.rootWrench[2], cl = combined.coefficients.CL;
-        source.textContent = `Semi-wing lift ${sig(fz.value)} ± ${sig(fz.uncertainty, 2)} N extrapolated (finest meshes ${sig(fz.finest)} N, base mesh ${sig(fz.base)} N); both halves ${sig(2 * fz.value)} N; CL ${sig(cl.value)} ± ${sig(cl.uncertainty, 2)}. Solid: strip load delivered to the structure (extrapolated over all ${result.levels.length} meshes); dashed: base mesh; grey: the other meshes. ${flowText(b)}.`;
+        source.textContent = `Semi-wing lift ${sig(fz.value)} ± ${sig(fz.uncertainty, 2)} N extrapolated (finest meshes ${sig(fz.finest)} N, base mesh ${sig(fz.base)} N); both halves ${sig(2 * fz.value)} N; CL ${sig(cl.value)} ± ${sig(cl.uncertainty, 2)}. ${combined.structuralLoadAvailable === false ? 'Solid: base aerodynamic mesh; grey: the other meshes. No structural strip load has been generated for this zero-chord tip.' : `Solid: strip load delivered to the structure (extrapolated over all ${result.levels.length} meshes); dashed: base mesh; grey: the other meshes.`} ${flowText(b)}.`;
       } else if (kind === 'section') {
         source.textContent = `Cp at the panel centroids of one strip of the ${meshText(b)} (one solved mesh, not extrapolated). ${flowText(b)}.`;
       } else {
         const f = surfaceField(b), key = kind === 'dp' ? 'dp' : 'cp', ex = f ? extremes(f.panels, key) : null, at = (p) => `${p.side} surface, y ${sig(p.y, 4)} mm, x/c ${sig(p.xc, 3)}`;
-        source.textContent = `Panel-centroid values of the ${meshText(b)} (one solved mesh of the ${result.sequence} sequence, not extrapolated; the delivered structural load is extrapolated). ${ex ? `Minimum ${sig(ex.lo[key])} (${at(ex.lo)}); maximum ${sig(ex.hi[key])} (${at(ex.hi)}). ` : ''}${flowText(b)}.`;
+        source.textContent = `Panel-centroid values of the ${meshText(b)} (one solved mesh of the ${result.sequence} sequence, not extrapolated${combined.structuralLoadAvailable === false ? '; no structural load generated' : '; the delivered structural load is extrapolated'}). ${ex ? `Minimum ${sig(ex.lo[key])} (${at(ex.lo)}); maximum ${sig(ex.hi[key])} (${at(ex.hi)}). ` : ''}${flowText(b)}.`;
       }
       draw(canvas, s);
     }
@@ -404,24 +404,24 @@ window.WingAeroStructResults = (() => {
     }
     function stepRows(rows) { return rows.map((r) => ({ y0: r[0], y1: r[1], fz: r[4], w: r[4] / ((r[1] - r[0]) || 1) })); }
     function drawSpan(ctx, W, H, top, s, interactive) {
-      const r = s.result, c = s.combined, b = r.base, delivered = stepRows(c.strips), baseRows = stepRows(b.stripLoads), meshes = r.levels.map((l) => ({ l, rows: stepRows(l.strips) }));
-      const allW = [...delivered, ...baseRows, ...meshes.flatMap((m) => m.rows)].map((v) => v.w), ymax = Math.max(...delivered.map((v) => v.y1));
+      const r = s.result, c = s.combined, b = r.base, aeroOnly = c.structuralLoadAvailable === false, delivered = stepRows(c.strips), baseRows = stepRows(b.stripLoads), meshes = r.levels.map((l) => ({ l, rows: stepRows(l.strips) }));
+      const allW = [...delivered, ...baseRows, ...meshes.flatMap((m) => m.rows)].map((v) => v.w), ymax = Math.max(...(aeroOnly ? baseRows : delivered).map((v) => v.y1));
       const lo = Math.min(0, ...allW), hi = Math.max(0, ...allW), pad = 0.06 * ((hi - lo) || 1);
-      const head = headRows(ctx, W, [['delivered to the structure (extrapolated)', '#0a5fc2'], [`base mesh ${b.mesh.chordPanelsPerSurface} × ${b.mesh.spanPanels}`, '#14212e', [6, 4]], ['other meshes of the sequence', 'rgba(122,138,155,0.8)']], '');
+      const head = headRows(ctx, W, [...(aeroOnly ? [[`base aerodynamic mesh ${b.mesh.chordPanelsPerSurface} × ${b.mesh.spanPanels}`, '#0a5fc2']] : [['delivered to the structure (extrapolated)', '#0a5fc2'], [`base mesh ${b.mesh.chordPanelsPerSurface} × ${b.mesh.spanPanels}`, '#14212e', [6, 4]]]), ['other meshes of the sequence', 'rgba(122,138,155,0.8)']], '');
       const fr = chartFrame(ctx, W, H, top, [0, ymax], [lo - (lo < 0 ? pad : 0), hi + pad], 'span y (mm), root at left', 'lift per unit span Fz/Δy (N/mm)', head.count);
       const step = (rows, col, width, dash) => { ctx.strokeStyle = col; ctx.lineWidth = width; ctx.setLineDash(dash || []); ctx.beginPath(); rows.forEach((v, i) => { if (i === 0) ctx.moveTo(fr.X(v.y0), fr.Y(v.w)); else ctx.lineTo(fr.X(v.y0), fr.Y(v.w)); ctx.lineTo(fr.X(v.y1), fr.Y(v.w)); }); ctx.stroke(); ctx.setLineDash([]); };
       for (const m of meshes) step(m.rows, 'rgba(122,138,155,0.45)', 1);
-      step(baseRows, '#14212e', 1.6, [6, 4]);
-      step(delivered, '#0a5fc2', 2.6);
-      hits = delivered.map((v, i) => ({ point: { kind: 'strip', i, ...v }, at: [fr.X((v.y0 + v.y1) / 2), fr.Y(v.w)] }));
+      step(baseRows, aeroOnly ? '#0a5fc2' : '#14212e', aeroOnly ? 2.6 : 1.6, aeroOnly ? [] : [6, 4]);
+      if (!aeroOnly) step(delivered, '#0a5fc2', 2.6);
+      hits = (aeroOnly ? baseRows : delivered).map((v, i) => ({ point: { kind: 'strip', series: aeroOnly ? 'Base-mesh' : 'Delivered', i, ...v }, at: [fr.X((v.y0 + v.y1) / 2), fr.Y(v.w)] }));
       const fz = c.rootWrench[2], semi = fz.value;
       drawHead(ctx, fr, head);
       probes.forEach((pr, n) => { const h = hits.find((t) => t.point.i === pr.i); if (!h) return; ctx.beginPath(); ctx.arc(h.at[0], h.at[1], 8, 0, 2 * Math.PI); ctx.strokeStyle = '#14212e'; ctx.lineWidth = 1.5; ctx.stroke(); ctx.fillStyle = '#14212e'; ctx.font = `700 11px ${FONT}`; ctx.fillText(String(n + 1), h.at[0] + 9, h.at[1] - 8); });
       drawn = { delivered };
-      if (interactive) canvas.setAttribute('aria-label', `Spanwise lift per unit span: delivered extrapolated strip load, base mesh and the other meshes. Semi-wing lift ${sig(semi)} N.`);
+      if (interactive) canvas.setAttribute('aria-label', `Spanwise lift per unit span: ${aeroOnly ? 'base aerodynamic mesh and remaining meshes; no structural load generated' : 'delivered extrapolated strip load, base mesh and the other meshes'}. Semi-wing lift ${sig(semi)} N.`);
     }
     function probeText(p, n) {
-      if (p.kind === 'strip') return `${n}. Delivered strip ${p.i + 1}: y ${sig(p.y0, 4)}–${sig(p.y1, 4)} mm · Fz ${sig(p.fz)} N · Fz/Δy ${sig(p.w)} N/mm`;
+      if (p.kind === 'strip') return `${n}. ${p.series || 'Delivered'} strip ${p.i + 1}: y ${sig(p.y0, 4)}–${sig(p.y1, 4)} mm · Fz ${sig(p.fz)} N · Fz/Δy ${sig(p.w)} N/mm`;
       const s = state(), b = s.result && s.result.base, eta = b ? p.y / (b.reference.span_mm / 2) : NaN;
       return `${n}. ${p.mirrored ? 'Mirrored ' : ''}${p.side === 'upper' ? 'Upper' : 'Lower'} surface · strip ${p.j + 1}, panel ${p.k + 1} of ${p.n} from the leading edge · y ${sig(p.y, 4)} mm (η ${sig(eta, 3)}) · x/c ${sig(p.xc, 3)}${Number.isFinite(p.x) ? ` · x ≈ ${sig(p.x, 4)} mm` : ''} · Cp ${sig(p.cp)} · p − p∞ ${sig(p.dp)} Pa`;
     }
@@ -494,7 +494,7 @@ window.WingAeroStructResults = (() => {
           ...['upper', 'lower'].flatMap((side) => sec[side].slice().sort((a, c) => a[0] - c[0]).map((p, i) => [side, i + 1, csvNum(p[0]), csvNum(p[1]), csvNum(b.flow.dynamicPressure_Pa * p[1])].join(',')))];
         name = `wing-aero-section-strip${sectionJ + 1}.csv`;
       } else if (kind === 'span') {
-        lines = [...head, '# Spanwise strip loads. delivered = extrapolated load given to the structure; base = base mesh; mesh_CxS = one mesh of the sequence (chord panels per surface x span panels).', 'series,y0_mm,y1_mm,Fz_N,Fz_per_mm_N_per_mm',
+        lines = [...head, s.combined.structuralLoadAvailable === false ? '# Aerodynamic results only. base = base mesh; mesh_CxS = one solved mesh of the sequence. No structural strip load was generated.' : '# Spanwise strip loads. delivered = extrapolated load given to the structure; base = base mesh; mesh_CxS = one mesh of the sequence (chord panels per surface x span panels).', 'series,y0_mm,y1_mm,Fz_N,Fz_per_mm_N_per_mm',
           ...stepRows(s.combined.strips).map((v) => ['delivered', csvNum(v.y0), csvNum(v.y1), csvNum(v.fz), csvNum(v.w)].join(',')),
           ...stepRows(b.stripLoads).map((v) => ['base', csvNum(v.y0), csvNum(v.y1), csvNum(v.fz), csvNum(v.w)].join(',')),
           ...r.levels.flatMap((l) => stepRows(l.strips).map((v) => [`mesh_${l.chordPanels}x${l.spanPanels}`, csvNum(v.y0), csvNum(v.y1), csvNum(v.fz), csvNum(v.w)].join(',')))];
@@ -512,7 +512,8 @@ window.WingAeroStructResults = (() => {
       const lc = c.consistency.lift, dc = c.consistency.drag, adm = s.admission;
       const S = ui.state(), applied = S.aeroLoad;
       let admHtml = '<p class="note">This aerodynamic load is not applied to the structure. Use Apply aerodynamic loads to structure in Aerodynamics to run the admission test.</p>';
-      if (applied && adm && typeof WingAeroUI !== 'undefined') { const v = WingAeroUI.admissionVerdict(adm); admHtml = `<div class="wae-box ${v.ok ? 'ok' : 'no'}"><p class="${v.ok ? 'wae-ok' : 'wae-no'}">${v.html}</p>${WingAeroUI.admissionTable(adm)}</div>`; }
+      if (c.structuralLoadAvailable === false) admHtml = '<p class="note">Aerodynamic results are available. Transfer to the spatial-beam structural model is unavailable for an exact zero-chord tip; no structural load has been generated.</p>';
+      else if (applied && adm && typeof WingAeroUI !== 'undefined') { const v = WingAeroUI.admissionVerdict(adm); admHtml = `<div class="wae-box ${v.ok ? 'ok' : 'no'}"><p class="${v.ok ? 'wae-ok' : 'wae-no'}">${v.html}</p>${WingAeroUI.admissionTable(adm)}</div>`; }
       else if (applied) admHtml = '<p class="note">The load is applied; the admission test runs with the next Solve Structure / Stress.</p>';
       html.innerHTML = `<div class="wae">
         <h4>Extrapolated coefficients (both halves) with uncertainty U</h4>

@@ -85,7 +85,7 @@
   setLabel(wlFiles, 'Design parameters, paste & share link');
   add(fileMenu,
     cap('Study'), row(clearBtn, example),
-    printButtons.length ? cap('Export for 3-D printing') : null, printButtons.length ? row(...printButtons) : null, symmetry ? row(symmetry, symmetryNote) : null,
+    printButtons.length ? cap('Export for 3-D printing') : null, printButtons.length ? row(...printButtons) : null,
     openSTL ? cap('Reference geometry (view only)') : null, openSTL ? row(openSTL, stlInput) : null,
     openSTL ? el('p', { class: 'note', text: 'Shows an STL surface in the view for comparison. It does not change the study and computes no stress.' }) : null,
     wlFiles,
@@ -102,6 +102,7 @@
   const contour = $('#wingContourOptions');
   if (dimensions) setLabel(dimensions, 'Scale bar & dimensions');
   add(viewMenu,
+    cap('Wing symmetry'), symmetry ? row(symmetry, symmetryNote) : null,
     cap('Zoom'), zoomRow, cap('Show'), anatomyRow, cap('Display'), row($('#xrayBtn'), $('#shearCentreBtn')),
     cap('Explode & clip'), explodeRow, contour, dimensions,
   );

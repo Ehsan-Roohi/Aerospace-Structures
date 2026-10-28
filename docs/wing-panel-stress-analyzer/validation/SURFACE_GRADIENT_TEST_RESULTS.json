@@ -1,0 +1,257 @@
+{
+  "solver": "0.3.1",
+  "results": [
+    {
+      "kind": "LE",
+      "chord": 24,
+      "span": 16,
+      "sampleGroup": "nose",
+      "scheme": "legacy",
+      "relativeRms": 27.902128151414402,
+      "samples": 14
+    },
+    {
+      "kind": "LE",
+      "chord": 24,
+      "span": 16,
+      "sampleGroup": "nose",
+      "scheme": "unfolded",
+      "relativeRms": 0.5481983961118865,
+      "samples": 14
+    },
+    {
+      "kind": "LE",
+      "chord": 48,
+      "span": 16,
+      "sampleGroup": "nose",
+      "scheme": "legacy",
+      "relativeRms": 7.520136935897554,
+      "samples": 14
+    },
+    {
+      "kind": "LE",
+      "chord": 48,
+      "span": 16,
+      "sampleGroup": "nose",
+      "scheme": "unfolded",
+      "relativeRms": 0.6348738708777157,
+      "samples": 14
+    },
+    {
+      "kind": "LE",
+      "chord": 96,
+      "span": 16,
+      "sampleGroup": "nose",
+      "scheme": "legacy",
+      "relativeRms": 8.574819036356471,
+      "samples": 14
+    },
+    {
+      "kind": "LE",
+      "chord": 96,
+      "span": 16,
+      "sampleGroup": "nose",
+      "scheme": "unfolded",
+      "relativeRms": 3.8822888197249434,
+      "samples": 14
+    },
+    {
+      "kind": "LE",
+      "chord": 24,
+      "span": 16,
+      "sampleGroup": "inboard-chord-window",
+      "scheme": "legacy",
+      "relativeRms": 0.054045229616737245,
+      "samples": 98
+    },
+    {
+      "kind": "LE",
+      "chord": 24,
+      "span": 16,
+      "sampleGroup": "inboard-chord-window",
+      "scheme": "unfolded",
+      "relativeRms": 0.05394844475820899,
+      "samples": 98
+    },
+    {
+      "kind": "LE",
+      "chord": 48,
+      "span": 16,
+      "sampleGroup": "inboard-chord-window",
+      "scheme": "legacy",
+      "relativeRms": 0.01713540930052213,
+      "samples": 196
+    },
+    {
+      "kind": "LE",
+      "chord": 48,
+      "span": 16,
+      "sampleGroup": "inboard-chord-window",
+      "scheme": "unfolded",
+      "relativeRms": 0.017114769126321632,
+      "samples": 196
+    },
+    {
+      "kind": "LE",
+      "chord": 96,
+      "span": 16,
+      "sampleGroup": "inboard-chord-window",
+      "scheme": "legacy",
+      "relativeRms": 0.0050292568116412535,
+      "samples": 364
+    },
+    {
+      "kind": "LE",
+      "chord": 96,
+      "span": 16,
+      "sampleGroup": "inboard-chord-window",
+      "scheme": "unfolded",
+      "relativeRms": 0.005026056174856638,
+      "samples": 364
+    },
+    {
+      "kind": "TIP",
+      "chord": 32,
+      "span": 16,
+      "sampleGroup": "tip-2mm-window",
+      "scheme": "legacy",
+      "relativeRms": 0.17032201139650233,
+      "samples": 32
+    },
+    {
+      "kind": "TIP",
+      "chord": 32,
+      "span": 16,
+      "sampleGroup": "tip-2mm-window",
+      "scheme": "unfolded",
+      "relativeRms": 0.14762179040598883,
+      "samples": 32
+    },
+    {
+      "kind": "TIP",
+      "chord": 32,
+      "span": 24,
+      "sampleGroup": "tip-2mm-window",
+      "scheme": "legacy",
+      "relativeRms": 0.14475521414837103,
+      "samples": 64
+    },
+    {
+      "kind": "TIP",
+      "chord": 32,
+      "span": 24,
+      "sampleGroup": "tip-2mm-window",
+      "scheme": "unfolded",
+      "relativeRms": 0.08035749571135353,
+      "samples": 64
+    },
+    {
+      "kind": "TIP",
+      "chord": 32,
+      "span": 32,
+      "sampleGroup": "tip-2mm-window",
+      "scheme": "legacy",
+      "relativeRms": 0.12364280504749356,
+      "samples": 96
+    },
+    {
+      "kind": "TIP",
+      "chord": 32,
+      "span": 32,
+      "sampleGroup": "tip-2mm-window",
+      "scheme": "unfolded",
+      "relativeRms": 0.05068109132104023,
+      "samples": 96
+    },
+    {
+      "kind": "TIP",
+      "chord": 32,
+      "span": 48,
+      "sampleGroup": "tip-2mm-window",
+      "scheme": "legacy",
+      "relativeRms": 0.09734370020325578,
+      "samples": 128
+    },
+    {
+      "kind": "TIP",
+      "chord": 32,
+      "span": 48,
+      "sampleGroup": "tip-2mm-window",
+      "scheme": "unfolded",
+      "relativeRms": 0.033580914334672,
+      "samples": 128
+    },
+    {
+      "kind": "TIP",
+      "chord": 32,
+      "span": 16,
+      "sampleGroup": "tip-last-row",
+      "scheme": "legacy",
+      "relativeRms": 0.17032201139650233,
+      "samples": 32
+    },
+    {
+      "kind": "TIP",
+      "chord": 32,
+      "span": 16,
+      "sampleGroup": "tip-last-row",
+      "scheme": "unfolded",
+      "relativeRms": 0.14762179040598883,
+      "samples": 32
+    },
+    {
+      "kind": "TIP",
+      "chord": 32,
+      "span": 24,
+      "sampleGroup": "tip-last-row",
+      "scheme": "legacy",
+      "relativeRms": 0.16267501293859374,
+      "samples": 32
+    },
+    {
+      "kind": "TIP",
+      "chord": 32,
+      "span": 24,
+      "sampleGroup": "tip-last-row",
+      "scheme": "unfolded",
+      "relativeRms": 0.08926763965080044,
+      "samples": 32
+    },
+    {
+      "kind": "TIP",
+      "chord": 32,
+      "span": 32,
+      "sampleGroup": "tip-last-row",
+      "scheme": "legacy",
+      "relativeRms": 0.15117856006790578,
+      "samples": 32
+    },
+    {
+      "kind": "TIP",
+      "chord": 32,
+      "span": 32,
+      "sampleGroup": "tip-last-row",
+      "scheme": "unfolded",
+      "relativeRms": 0.055193840023395356,
+      "samples": 32
+    },
+    {
+      "kind": "TIP",
+      "chord": 32,
+      "span": 48,
+      "sampleGroup": "tip-last-row",
+      "scheme": "legacy",
+      "relativeRms": 0.12713334946489427,
+      "samples": 32
+    },
+    {
+      "kind": "TIP",
+      "chord": 32,
+      "span": 48,
+      "sampleGroup": "tip-last-row",
+      "scheme": "unfolded",
+      "relativeRms": 0.029572498110791955,
+      "samples": 32
+    }
+  ]
+}

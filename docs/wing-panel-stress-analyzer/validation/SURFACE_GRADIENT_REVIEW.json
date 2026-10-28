@@ -1,0 +1,109 @@
+{
+  "solver_version": "0.3.1",
+  "scope": "Surface-velocity consistency repair only. No certification of local rounded-tip/trailing-edge Cp, strip cm or sharp-wake side-edge pressures.",
+  "provenance": {
+    "candidate_bundle_sha256": "ba4c4c286dc45ce3fcb02f8b880c2c1effbf60dd9182045e4a1d9f18d166e9dd",
+    "integration_change": "Only solver version changed after the reviewed candidate; numerical source port 06 records the implementation."
+  },
+  "method_change": [
+    "Unfold adjacent centroids about shared panel edges before Lagrange surface differentiation.",
+    "Retain oblique surface-grid directions and metric.",
+    "Continue the final rounded-tip stencil across its closed shared seam.",
+    "Retain legacy reconstruction for comparison and small/unstructured patches."
+  ],
+  "unchanged": [
+    "Surface geometry and mesh",
+    "Source/doublet influence kernels",
+    "Boundary linear system",
+    "Morino Kutta equation",
+    "Prescribed flat, non-rolling wake",
+    "Raw Cp values and all tip samples",
+    "Admission criteria and old independent finer-reference data"
+  ],
+  "original_suites_passed": [
+    "test_wing_aero_kernels",
+    "test_wing_aero_closed_bodies",
+    "test_wing_aero_conformal",
+    "test_wing_aero_trefftz",
+    "test_wing_aero_vlm",
+    "test_wing_aero_wing",
+    "test_wing_aero_transfer"
+  ],
+  "additional_original_criteria": {
+    "admission": {
+      "evaluated": 260,
+      "failures": 3,
+      "failed_checks": "Only old base-mesh resultant identity pins for course4, dihedral6 and swept25. Recomputed force, bending and torque error/uncertainty checks pass against the unchanged old independent finer references.",
+      "largest_torque_error_over_uncertainty_standard": 0.51,
+      "largest_torque_error_over_uncertainty_fine": 0.49
+    },
+    "twist": {
+      "evaluated": 96,
+      "failures": 1,
+      "failed_check": "Literal old expected uncertainty 1.950 +/- 0.955 N mm changed to 1.948 +/- 0.924 N mm. Unresolved classification and withheld twist are unchanged. All physical coverage and admission-state checks pass.",
+      "largest_error_over_bound": 0.811
+    },
+    "test_method": "Non-throwing diagnostic copies evaluate the remaining original assertions without changing inequalities or independent reference data. These are not labelled as passing unmodified suites. Original identity pins are preserved."
+  },
+  "manufactured_tip_crossflow": {
+    "chord_panels_per_side": 32,
+    "span_panels": [
+      16,
+      24,
+      32,
+      48
+    ],
+    "last_row_relative_rms_legacy": [
+      0.17,
+      0.163,
+      0.151,
+      0.127
+    ],
+    "last_row_relative_rms_unfolded": [
+      0.148,
+      0.089,
+      0.055,
+      0.03
+    ],
+    "exact_field": "Harmonic square-root crossflow potential with branch point inside the closed tip, differentiated analytically and projected onto each panel tangent.",
+    "rerun": "node validation/test_surface_gradient.cjs"
+  },
+  "tradeoffs": [
+    "Both reconstructions retain second-order convergence on the tested smooth non-lifting bodies. Some error constants increase by up to 30%; the original absolute benchmark checks pass.",
+    "Exact lifting conformal-section tests improve; a very thin NACA0001 coarse-grid pressure/wake lift mismatch is much smaller. These checks do not imply resolved corner Cp."
+  ],
+  "remaining_tip_issue": {
+    "observation": "Fixed-distance off-body perturbation velocity grows toward the tip/trailing-edge corner and the downstream wake side edge, consistent with a sharp-edge singularity of this idealised model. Mid-chord tip crossflow is bounded.",
+    "derivative_check": "Fourth-order finite-difference step refinement from 0.002 to 0.00025 mm at eight fixed points changes normalised velocity by at most 3.51e-7. This uses the same BEM potential, so is a consistency diagnostic, not an independent physical reference.",
+    "pressure_status": "Surface Cp on the last rows near the trailing edge remains quantitatively unvalidated; finer meshes can increase its extrema.",
+    "display": "Amber/dashed local tip flags and raw values are retained. No clipping, fitted correction, smoothing or deletion."
+  },
+  "external_comparisons": {
+    "pyapm": "An independent pyapm 0.0.4 full-thickness implementation on the same surface also shows a local tip upturn. Its negative pressure drag on this mesh prevents using its local Cp as ground truth. Qualitative corroboration only.",
+    "AirFrame": "The supplied archive contains executable/binary interfaces rather than full numerical implementation; no direct equality of equations or accuracy is claimed."
+  },
+  "verification_results": "SURFACE_GRADIENT_TEST_RESULTS.json",
+  "browser_smoke": {
+    "browser": "Codex in-app Chromium",
+    "case": "NACA2412 half-span450 root160 tip100 mm, alpha4 deg V10 m/s rho1.225",
+    "sequence": "Standard, seven meshes,7888 total panels",
+    "aerodynamic_seconds": 5.6,
+    "structural_seconds": 2.93,
+    "load_admission": "Admitted with torque and twist withheld",
+    "stress_MPa": {
+      "max": 0.1769,
+      "min": -0.2153
+    },
+    "checks": [
+      "Mesh-stage progress visible",
+      "Aerodynamic solve completes",
+      "Structural solve completes",
+      "Stress contour and extrema visible",
+      "Quarter-chord cm graph includes explicit rounded-tip warning",
+      "Surface Cp view renders",
+      "Inside/complete anatomy switches finish without a new solve",
+      "No browser console errors captured"
+    ],
+    "screenshot": "browser_031_tip_graph.png"
+  }
+}

@@ -6825,7 +6825,7 @@ if(typeof module!=='undefined'&&module.exports)module.exports=WingGeometry;
  */
 const WingAeroPanel = (() => {
   'use strict';
-  const VERSION = '0.3.0-dev';
+  const VERSION = '0.3.1';
   // Browser/Worker: globals from the inlined or bundled scripts. Node: this directory first, then the
   // shared geometry sources in ../web/ (reused unchanged).
   const nodeLoad = name => {
@@ -7108,8 +7108,98 @@ const WingAeroPanel = (() => {
     return [0, 1, 2].map(c => det3(M.map((row, i) => row.map((v, j) => (j === c ? r[i] : v)))) / D);
   }
   // Tangential velocity of each panel for a freestream V and doublet mu (perturbation potential).
-  // Grid patches give the stencil; boundaries: 'wrap', 'open' (one-sided), 'mirror' (y = 0 image).
-  function surfaceVelocity(S, layout, mu, Vinf) {
+  // Default 'unfolded' scheme: the three-point line derivatives of the previous scheme, taken on the SURFACE. Each
+  // stencil neighbour's centroid is rotated into the plane of panel k about the edge(s) it shares with the chain
+  // towards k (the surface is unfolded flat), so the line through the stencil lies in k's tangent plane and the
+  // parameter is the surface distance. On a smooth, resolved surface this differs from the previous scheme only at
+  // second order; where the surface folds back within a panel width (a thin leading edge; the flattened leading- and
+  // trailing-edge parts of the rounded tip, where the section scale tau goes to zero; across the tip seam) the
+  // straight chord between centroids was much shorter than the surface path and pointed nearly along the panel
+  // normal, which inflated dmu/ds and made the 3 x 3 gradient system nearly singular.
+  // Patch panels are the quads (i, j), (i + 1, j), (i + 1, j + 1), (i, j + 1) of a structured grid: edge v3v0 / v1v2
+  // is shared with neighbour i - 1 / i + 1, edge v0v1 / v2v3 with j - 1 / j + 1 (checked; otherwise 'legacy').
+  // Boundaries: 'wrap', 'open' (one-sided), 'mirror' (y = 0 image) and, for the last row of a closed rounded tip,
+  // jEnd 'seam': the surface continues across the tip edge onto the opposite panel seam(i) of the same row, which
+  // shares that edge (no wake leaves the tip edge, so the doublet is continuous across it). The two stencil
+  // directions stay as the grid gives them (oblique with sweep, dihedral and taper); nothing is orthogonalised.
+  function surfaceVelocity(S, layout, mu, Vinf, options = {}) {
+    if ((options.scheme ?? 'unfolded') === 'legacy') return surfaceVelocityLegacy(S, layout, mu, Vinf);
+    const n = S.count, out = new Float64Array(3 * n), PV = S.PV, PN = S.PN, PC = S.PC;
+    const vtx = (k, q) => [PV[12 * k + 3 * q], PV[12 * k + 3 * q + 1], PV[12 * k + 3 * q + 2]];
+    const C = k => [PC[3 * k], PC[3 * k + 1], PC[3 * k + 2]], N = k => [PN[3 * k], PN[3 * k + 1], PN[3 * k + 2]];
+    const sub = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]], dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+    const crs = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+    // rotate X about the line (Ea, Eb) by the angle that turns plane normal nFrom into nTo
+    const hinge = (X, Ea, Eb, nFrom, nTo) => {
+      const d = sub(Eb, Ea), l = Math.sqrt(dot(d, d));
+      if (!(l > 0)) return X;
+      const e = [d[0] / l, d[1] / l, d[2] / l], ef = dot(e, nFrom), et = dot(e, nTo);
+      const phi = Math.atan2(dot(e, crs(nFrom, nTo)), dot(nFrom, nTo) - ef * et), c = Math.cos(phi), s = Math.sin(phi);
+      const v = sub(X, Ea), ev = dot(e, v), w = crs(e, v);
+      return [0, 1, 2].map(q => Ea[q] + v[q] * c + w[q] * s + e[q] * ev * (1 - c));
+    };
+    const edge = (k, e) => [vtx(k, e), vtx(k, (e + 1) & 3)];
+    const shares = (k, ek, m, em) => { const [a0, a1] = edge(k, ek), [b0, b1] = edge(m, em), tol = 1e-4 * (S.PD[k] + S.PD[m]);
+      const near = (p, q) => Math.hypot(p[0] - q[0], p[1] - q[1], p[2] - q[2]) <= tol;
+      return (near(a0, b1) && near(a1, b0)) || (near(a0, b0) && near(a1, b1)); };
+    // centroid of m, unfolded into the plane of k across k's edge ek (m adjacent to k)
+    const unfold1 = (k, ek, m, X = C(m), nm = N(m)) => { const [a, b] = edge(k, ek); return hinge(X, a, b, nm, N(k)); };
+    const toPlane = (k, X) => { const nk = N(k), h = dot(sub(X, C(k)), nk); return [X[0] - h * nk[0], X[1] - h * nk[1], X[2] - h * nk[2]]; };
+    for (const patch of layout.patches) {
+      const { ni, nj, index } = patch;
+      let structured = !patch.cross && ni >= 3 && nj >= 3;
+      if (structured) for (let j = 0; j < nj && structured; j++) for (let i = 0; i < ni && structured; i++) {
+        const k = index(i, j);
+        if ((i < ni - 1 || patch.iMode === 'wrap') && !shares(k, 1, index((i + 1) % ni, j), 3)) structured = false;
+        if (j < nj - 1 && !shares(k, 2, index(i, j + 1), 0)) structured = false;
+        if (j === nj - 1 && patch.jEnd === 'seam' && !shares(k, 2, index(patch.seam(i), j), 2)) structured = false;
+      }
+      if (!structured) { // tip-cap row, tiny or unstructured patches: previous scheme
+        const v = surfaceVelocityLegacy(S, { patches: [patch] }, mu, Vinf);
+        for (let j = 0; j < nj; j++) for (let i = 0; i < ni; i++) { const k = index(i, j); for (let c = 0; c < 3; c++) out[3 * k + c] = v[3 * k + c]; }
+        continue;
+      }
+      for (let j = 0; j < nj; j++) for (let i = 0; i < ni; i++) {
+        const k = index(i, j), Ck = C(k), nk = N(k);
+        // chordwise (i): neighbour i - 1 across k's edge 3, i + 1 across k's edge 1
+        let P, f, t;
+        if (patch.iMode === 'wrap' || (i > 0 && i < ni - 1)) {
+          const a = index((i - 1 + ni) % ni, j), b = index((i + 1) % ni, j);
+          P = [unfold1(k, 3, a), Ck, unfold1(k, 1, b)]; f = [mu[a], mu[k], mu[b]]; t = 1;
+        } else if (i === 0) { // one-sided: i + 2 unfolded into i + 1's plane, then both into k's
+          const b = index(1, j), c = index(2, j), cb = unfold1(b, 1, c);
+          P = [Ck, unfold1(k, 1, b), unfold1(k, 1, b, cb)]; f = [mu[k], mu[b], mu[c]]; t = 0;
+        } else {
+          const b = index(ni - 2, j), a = index(ni - 3, j), ab = unfold1(b, 3, a);
+          P = [unfold1(k, 3, b, ab), unfold1(k, 3, b), Ck]; f = [mu[a], mu[b], mu[k]]; t = 2;
+        }
+        const di = lineDerivative(P.map(X => toPlane(k, X)), f, t);
+        // spanwise (j): neighbour j - 1 across k's edge 0, j + 1 across k's edge 2
+        if (j > 0 && j < nj - 1) {
+          const a = index(i, j - 1), b = index(i, j + 1);
+          P = [unfold1(k, 0, a), Ck, unfold1(k, 2, b)]; f = [mu[a], mu[k], mu[b]]; t = 1;
+        } else if (j === 0 && patch.jMode === 'mirror') { // image about y = 0 shares the root edge; same doublet
+          const b = index(i, 1);
+          P = [unfold1(k, 0, -1, [Ck[0], -Ck[1], Ck[2]], [nk[0], -nk[1], nk[2]]), Ck, unfold1(k, 2, b)]; f = [mu[k], mu[k], mu[b]]; t = 1;
+        } else if (j === nj - 1 && patch.jEnd === 'seam') { // closed rounded tip: across the tip edge onto the other surface
+          const a = index(i, j - 1), b = index(patch.seam(i), j);
+          P = [unfold1(k, 0, a), Ck, unfold1(k, 2, b)]; f = [mu[a], mu[k], mu[b]]; t = 1;
+        } else if (j === 0) {
+          const b = index(i, 1), c = index(i, 2), cb = unfold1(b, 2, c);
+          P = [Ck, unfold1(k, 2, b), unfold1(k, 2, b, cb)]; f = [mu[k], mu[b], mu[c]]; t = 0;
+        } else {
+          const b = index(i, nj - 2), a = index(i, nj - 3), ab = unfold1(b, 0, a);
+          P = [unfold1(k, 0, b, ab), unfold1(k, 0, b), Ck]; f = [mu[a], mu[b], mu[k]]; t = 2;
+        }
+        const dj = lineDerivative(P.map(X => toPlane(k, X)), f, t);
+        const g = tangentialGradient(di.T, di.df, dj.T, dj.df, nk);
+        const vn = Vinf[0] * nk[0] + Vinf[1] * nk[1] + Vinf[2] * nk[2];
+        for (let c = 0; c < 3; c++) out[3 * k + c] = Vinf[c] - vn * nk[c] + g[c];
+      }
+    }
+    return out;
+  }
+  function surfaceVelocityLegacy(S, layout, mu, Vinf) {
     const n = S.count, out = new Float64Array(3 * n), C = k => [S.PC[3 * k], S.PC[3 * k + 1], S.PC[3 * k + 2]];
     const nrm = k => [S.PN[3 * k], S.PN[3 * k + 1], S.PN[3 * k + 2]];
     const stencil = (len, idx, mode, pos, val, at) => {
@@ -7250,7 +7340,8 @@ const WingAeroPanel = (() => {
     if (S.count > limits.maxPanels) throw new Error(`The panel mesh has ${S.count} panels; at most ${limits.maxPanels} are allowed in the browser.`);
     for (let k = wingPanels; k < S.count; k++) if (!(S.PN[3 * k + 1] > 0.99)) throw new Error('Tip-cap panel orientation check failed.');
     const index = (i, j) => j * ni + i;
-    const patches = [{ ni, nj: ns, index, iMode: 'open', jMode: 'mirror' }];
+    // a rounded tip closes the surface: the last row continues across the tip edge onto the opposite surface
+    const patches = [{ ni, nj: ns, index, iMode: 'open', jMode: 'mirror', ...(roundedTip ? { jEnd: 'seam', seam: i => ni - 1 - i } : {}) }];
     if (hasCap) patches.push({ ni: nHalf, nj: 1, index: i => wingPanels + i, iMode: 'open', jMode: 'open', cross: i => [index(i, ns - 1), index(ni - 1 - i, ns - 1)] });
     // Morino Kutta condition: wake doublet = upper minus lower trailing-edge panel doublet. (A linear
     // extrapolation of each surface doublet to the TE edge was tested on exact Karman-Trefftz wings and
@@ -7321,14 +7412,16 @@ const WingAeroPanel = (() => {
     const limits = options.referenceLimits ? { ...LIMITS, ...options.referenceLimits } : LIMITS;
     const g = aeroGeometry(rawGeometry), mesh = normalizeMesh(rawMesh, limits);
     if (options.sectionLoop && typeof options.sectionKey !== 'string') throw new Error('A custom section loop needs a sectionKey for caching.');
-    const key = JSON.stringify([GEOMETRY_KEYS.map(k => g[k] ?? null), mesh, options.sectionKey ?? null, options.solver ?? 'auto', options.wakeDirection ?? null]);
+    const key = JSON.stringify([GEOMETRY_KEYS.map(k => g[k] ?? null), mesh, options.sectionKey ?? null, options.solver ?? 'auto', options.wakeDirection ?? null, options.gradientScheme ?? 'unfolded']);
     const cache = options.cache;
     if (cache && cache.has(key)) { const hit = cache.get(key); hit.lastCacheHit = true; return hit; }
     const t0 = now(), wm = wingMesh(g, { ...mesh, sectionLoop: options.sectionLoop, wakeDirection: options.wakeDirection }, limits), t1 = now();
     options.progress?.(`Assembling ${wm.S.count} panels with the mirror image and ${wm.wake.count} wake strips...`);
     const sol = unitSolutions(wm.S, { image: true, wake: wm.wake, farField: mesh.farField, solver: options.solver, blocks: wm.blocks });
     // Unit-freestream tangential velocities: V_t(a) = V (cos a Ux + sin a Uz).
-    const Ux = surfaceVelocity(wm.S, wm.layout, sol.mux, [1, 0, 0]), Uz = surfaceVelocity(wm.S, wm.layout, sol.muz, [0, 0, 1]);
+    // options.gradientScheme: 'unfolded' (default) or 'legacy' (the previous straight-chord stencil, for comparison only)
+    const gs = { scheme: options.gradientScheme ?? 'unfolded' };
+    const Ux = surfaceVelocity(wm.S, wm.layout, sol.mux, [1, 0, 0], gs), Uz = surfaceVelocity(wm.S, wm.layout, sol.muz, [0, 0, 1], gs);
     const model = { version: VERSION, key, geometry: g, mesh, wm, sol, Ux, Uz, refs: references(g), timing: { meshMs: t1 - t0, ...sol.timing }, lastCacheHit: false };
     if (cache) { if (cache.size >= LIMITS.modelCache) cache.delete(cache.keys().next().value); cache.set(key, model); }
     return model;
@@ -16736,7 +16829,7 @@ if(typeof module!=='undefined'&&module.exports)module.exports=WingPrintUI;
       clearTimeout(runTimer);runStudy();
     },
     remove:()=>{if(running)throw Error('Wait for the structural solve to finish.');if(!S.aeroLoad)return;S.aeroLoad=null;changed();wingLoadKeeper?.editor?.refresh();},
-    workerURL:new URL('wing-aero/wing_aero_worker.js?v=2ff1da57ee4c',document.baseURI).href,
+    workerURL:new URL('wing-aero/wing_aero_worker.js?v=9a7382a95fcf',document.baseURI).href,
     download:(name,text,type)=>downloadText(name,text,type),
   }):null;
   function schrenkLesson(g) {
@@ -23328,7 +23421,7 @@ window.WingAeroStructResults = (() => {
     <h4>4. Kutta condition</h4>
     <p>The Morino condition sets each wake-strip doublet to μwake = μupper,TE − μlower,TE. The wake consists of semi-infinite flat strips extending along body +x; it is prescribed, not relaxed or rolled up. Upper and lower pressure should approach each other at the trailing edge. The plotted ΔCp uses the last panel centroids, not the edge itself: it is a diagnostic, not a direct residual of the imposed doublet equation. A large mismatch deserves investigation; it must not be interpreted as extra lift.</p>
     <h4>5. Linear solve and pressure</h4>
-    <p>Unit freestreams in body x and z are solved and combined for the requested angle and speed. Small systems use pivoted LU; larger systems use restarted GMRES(60), strip block-Jacobi preconditioning, and a checked relative residual of at most 10⁻⁹, with LU fallback. Caching avoids rebuilding unchanged influence systems. Surface velocity is Vt = (I − nnᵀ)V∞ + ∇sμ. Three-point Lagrange differences estimate the chordwise/spanwise surface derivatives, with one-sided stencils at boundaries. Then Cp = 1 − |Vt|²/V∞² and p − p∞ = ½ρV∞² Cp.</p>
+    <p>Unit freestreams in body x and z are solved and combined for the requested angle and speed. Small systems use pivoted LU; larger systems use restarted GMRES(60), strip block-Jacobi preconditioning, and a checked relative residual of at most 10⁻⁹, with LU fallback. Caching avoids rebuilding unchanged influence systems. Surface velocity is Vt = (I − nnᵀ)V∞ + ∇sμ. Three-point Lagrange differences recover chordwise/spanwise derivatives after neighbouring panel centroids are unfolded into the target tangent plane about their shared edges. The two possibly oblique grid directions retain their surface metric. At a closed rounded tip, the stencil continues across the shared tip edge to the opposite surface; open boundaries use one-sided differences. Small or unstructured patches retain the previous stencil. Then Cp = 1 − |Vt|²/V∞² and p − p∞ = ½ρV∞² Cp.</p>
     <h4>6. Forces, moments and circulation</h4>
     <p>Panel pressure gives Fpanel = −Cp q∞ Apanel n and Mpanel = (rpanel − rreference) × Fpanel. These sum to section and wing resultants. Section cl is lift/(q∞ c Δy); cm is the body-y moment about the strip quarter chord divided by q∞ c² Δy (positive nose-up). Wake circulation provides an independent lift calculation through Kutta–Joukowski and a Trefftz-plane induced-drag estimate. The CSV states units: geometry mm, forces N, moments N·mm; plotted circulation is converted to m²/s.</p>
     <h4>7. Refinement and structural transfer</h4>
@@ -23336,7 +23429,7 @@ window.WingAeroStructResults = (() => {
     <p>References: <a target="_blank" rel="noopener" href="https://ntrs.nasa.gov/citations/19900004884">Maskew, NASA CR-4023: VSAERO theory</a>; Morino &amp; Kuo (1974), AIAA Journal 12(2), 191–197; <a target="_blank" rel="noopener" href="https://flow5.tech/docs/flow5_doc/Post-processing/Cp3d.html">flow5: surface-derivative and edge-pressure limitations</a>.</p>`}));
   const accuracyHelp=el('details',{id:'wxPanelAccuracy'},el('summary',{text:'Accuracy · tip jumps and reference software'}),el('div',{html:`
     <p>The family of equations is the established source/doublet potential-flow formulation used by APAME/VSAERO-type solvers. This program has its own implementation. Sharing a method family does not establish identical panel geometry, wake modelling, surface-velocity recovery or equal numerical accuracy. No bit-for-bit equivalence or direct validation against AirFrame's licensed APAME version is claimed.</p>
-    <p>Internal benchmarks include exact closed-body/conformal-map solutions, symmetry, lift-slope/thin-limit checks and conservative load transfer. These support those tested regimes, not every local pressure. Near the rounded tip, surface curvature, narrow panels and one-sided potential derivatives can produce large local Cp and cm changes. Local tip peaks have shown mesh sensitivity even while total lift is stable. Amber plotting identifies the rounded-tip samples and preserves their actual values; it is not a physical stall or separation boundary.</p>
+    <p>Internal benchmarks include exact closed-body/conformal-map solutions, symmetry, lift-slope/thin-limit checks and conservative load transfer. Solver 0.3.1 corrects thin-leading-edge and closed-tip surface-gradient consistency. Exact manufactured tip-crossflow tests show decreasing gradient error under span refinement (12.7% to 3.0% at the finest tested mesh). This does not remove the sharp tip/trailing-edge and flat-wake side-edge singularity of this inviscid model. Local last-row Cp and normalised strip quantities are not quantitatively validated; a converged total lift does not certify them. These support those tested regimes, not every local pressure. Near the rounded tip, surface curvature, narrow panels and one-sided potential derivatives can produce large local Cp and cm changes. Local tip peaks have shown mesh sensitivity even while total lift is stable. Amber plotting identifies the rounded-tip samples and preserves their actual values; it is not a physical stall or separation boundary.</p>
     <p>Use an inboard Cp section and inspect mesh refinement, pressure versus wake lift, and reported uncertainty. Do not use the displayed tip extremum as a certified design stress/load. This version has no boundary layer, skin-friction/profile drag, transition, separation, stall or vortex-lift model. Reynolds number and Mach are screens only; low-Re airfoils may differ substantially from inviscid predictions. A useful 2D comparison must use matching geometry, α and inviscid assumptions; a finite-wing section also has downwash and crossflow, so it need not equal an isolated 2D airfoil.</p>`}));
   const foilHelp=el('details',{id:'wxFoilAlgorithm'},el('summary',{text:'Independent 2D airfoil solver · how to use it'}),el('div',{html:`
     <p>Choose Aero results → 2D airfoil, or Aerodynamics → Independent 2D airfoil. Select η along the existing wing, the angle of attack relative to that section's own chord, and panels per side. Press Solve 2D airfoil. This uses the section profile, not the 3D pressure solution, and needs no wing solve. Enter α directly; the shown wing incidence is not silently added. Sweep, dihedral, finite-span downwash and the rounded aerodynamic tip are not part of the isolated 2D problem.</p>

@@ -97,3 +97,7 @@ window.WingLabUI.shell.addStructureSubgroup({ id: 'wxAnalysisModel', title: 'Ana
 The subgroup appears in *Structure & Stress* right after *Mesh & analysis settings* and behaves like the others
 (one open at a time, Escape, outside click, keyboard). `#wxAnalysisModelSlot` is an empty, hidden slot reserved inside
 *Mesh & analysis settings* for a single selector, if that is preferred.
+
+## Solver 0.3.1 surface-gradient revision
+
+Apply `06-surface-gradient.patch` after the UI ports above. It changes the numerical surface-velocity reconstruction; it does not change the influence kernels, prescribed wake, boundary system, geometry or Kutta equation. The deployed stand-alone core is `wing-aero/wing_aero_panel.js`; the same core is embedded in both HTML pages and in `aero_bundle.js`. The worker and page references are content-versioned in BUILD.json. Earlier statements of unchanged numerical hashes in this document describe the preceding UI-only release. See `validation/SURFACE_GRADIENT_REVIEW.json` for tests, trade-offs and remaining local tip limitations.

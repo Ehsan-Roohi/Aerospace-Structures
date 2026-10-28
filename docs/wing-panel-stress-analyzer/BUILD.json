@@ -1,14 +1,14 @@
 {
   "product": "MIE 446 Wing AeroStruct",
-  "version": "0.3.0-ui.8",
+  "version": "0.3.1-ui.9",
   "status": "Published educational application; separate from Wing Lab",
-  "builtAt": "2026-10-28T16:59:00.450441+00:00",
+  "builtAt": "2026-10-28T21:20:03.299948+00:00",
   "page": "index.html",
-  "pageSha256": "1889cd403c797206b04f3d90b63c54d3dd0868633ea78d38d791e15270794e3a",
+  "pageSha256": "5c2989e5a5dd24bf794b647957225d05746b30a5177192352cd4e2b004dfd8b5",
   "workers": {
     "wing-aero": {
-      "worker": "2ff1da57ee4c",
-      "bundle": "13eb802302b6"
+      "worker": "9a7382a95fcf",
+      "bundle": "1b242ffe7126"
     },
     "wing-print": "a56bd8704a71"
   },
@@ -94,16 +94,16 @@
       "sha256": "6673d3336d7aa489131e4ff26bb91705ab0181020742c54f5cff2ebb07f5a5ca"
     },
     "wing_aero_panel.js": {
-      "path": "computational/printed-wing-solver/aerostruct/wing_aero_panel.js",
-      "sha256": "f9e13ab90adb8a69b17fb9d65e4cec16397fbc264682afdd77b7f9ab3eee1e72"
+      "path": "docs/wing-panel-stress-analyzer/wing-aero/wing_aero_panel.js",
+      "sha256": "de3ee835245f126517cdc41c73eb96c749927f05857bad3f89a69a6fa264f7cb"
     },
     "wing_aero_ui.js": {
       "path": "computational/printed-wing-solver/aerostruct/wing_aero_ui.js",
       "sha256": "e6b3fa34c7148109cd97e36e05372732b3efed42da5541dc709919e1aca71758"
     },
     "wing_aero_worker.js": {
-      "path": "computational/printed-wing-solver/aerostruct/wing_aero_worker.js",
-      "sha256": "8073f8cacd2a99ee2f63de2491ce46308e148ea7f1f13e9647864aee9b8dada6"
+      "path": "docs/wing-panel-stress-analyzer/wing-aero/wing_aero_worker.js",
+      "sha256": "9a7382a95fcf5c8ebf68d67e031ad96c958cb0e06c64836c25ffc91936725877"
     },
     "wing_aerostruct_template.html": {
       "path": "computational/printed-wing-solver/aerostruct/wing_aerostruct_template.html",
@@ -186,7 +186,7 @@
       "sha256": "5bf463a9bf8994f7ed93d6e919d70a9be564363ca0bc888eb64c8a8a61f60e31"
     }
   },
-  "solverVersion": "0.3.0",
+  "solverVersion": "0.3.1",
   "uiOverlay": {
     "author": "Claude compact interface; Codex 3D/RGB/panel visualization and progress display, independently checked",
     "packageSha256": "2c9a5147f287ceba41cdc43d8056efaebf31cc0dfef24b64e7a652adcc484b94",
@@ -199,9 +199,10 @@
       "wing-aero-ui.js": "62bf281e5fb828925c6edf73aae5628c1b972689812d38680f9bf0673c41a627",
       "wx-aero-results.js": "d22e6cb6131e6810b124d4942e466f497e14418c190b8e082194f419e8a15fb5",
       "wx-shell.css": "f2e09cc59ee67e0d9a544950280de2f1b0d292ee779efe65b95f33d7398a7663",
-      "wx-shell.js": "5854955fc87f4bd9819b1edbfc35dee6cd8197b9ba0b0f94bf29166563c0a8de",
+      "wx-shell.js": "c0dae117347746a8563aadb3af4364d1808c36ca34a8c2e32a4e2334a9beec95",
       "04-geometry-first-context-menu.patch": "653987960c2a8999cb77a4d0c9a6318a086de4d2b935aa77e3ed643deac3f1b2",
-      "05-lightweight-view-rendering.patch": "396248051b76b95cba7679141a5c7eeac3019e859da022f3bf0af8229eb9f60d"
+      "05-lightweight-view-rendering.patch": "396248051b76b95cba7679141a5c7eeac3019e859da022f3bf0af8229eb9f60d",
+      "06-surface-gradient.patch": "04f381d9937dc7ccd4c0bc40721a1070725a0a094f7c064da1248bdfa15ba678"
     },
     "validation": "validation/UI_RELEASE_REVIEW.json",
     "surfaceReview": "validation/UI_SURFACE_REVIEW.json",
@@ -211,5 +212,6 @@
     "resultsReview": "validation/AERO_RESULTS_REVIEW.json",
     "airfoilHelpReview": "validation/AIRFOIL_HELP_RELEASE_REVIEW.json"
   },
-  "airfoil2DSolverVersion": "1.0.0"
+  "airfoil2DSolverVersion": "1.0.0",
+  "surfaceGradientReview": "validation/SURFACE_GRADIENT_REVIEW.json"
 }

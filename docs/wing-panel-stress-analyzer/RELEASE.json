@@ -1,12 +1,12 @@
 {
   "application": "Wing Panel Stress Analyzer (Wing AeroStruct)",
-  "version": "0.3.0-ui.8",
+  "version": "0.3.1-ui.9",
   "source_archive": "wing-aerostruct-0.3.0-dev-review.zip",
   "source_sha256": "bc6986c744568a516fd22bdd3b9508550625b82a77cd924adf52dfaa5156a54d",
   "original_base": "5ab2498",
   "independent_review": "validation/INDEPENDENT_REVIEW.md",
   "scope": "Educational 3D potential-flow panels coupled one-way to nominal spatial-beam stress, plus independent inviscid 2D airfoil analysis. No viscous/stall or local solid stress. Unresolved torque/twist withheld; unsuitable cases refused.",
-  "solver_version": "0.3.0",
+  "solver_version": "0.3.1",
   "ui_release": {
     "features": [
       "Compact Aerodynamics and Structure & Stress input panels",
@@ -35,9 +35,10 @@
       "Independent 2D section panel solver with selected/half-density Cp curves, cl and quarter-chord cm",
       "2D PNG/CSV exports and clickable Cp/tangential-speed probes",
       "Explicit amber/dashed local tip-uncertainty samples without clipping values",
-      "Step-by-step panel algorithm, equations and accuracy Help"
+      "Step-by-step panel algorithm, equations and accuracy Help",
+      "Surface-metric gradient reconstruction across thin leading edges and closed rounded-tip seams; local sharp-tip/wake pressure remains unvalidated"
     ],
-    "page_sha256": "1889cd403c797206b04f3d90b63c54d3dd0868633ea78d38d791e15270794e3a",
+    "page_sha256": "5c2989e5a5dd24bf794b647957225d05746b30a5177192352cd4e2b004dfd8b5",
     "source_port": "ui/01-wing-aerostruct-ui-sources.patch",
     "independent_review": "validation/UI_RELEASE_REVIEW.json",
     "surface_review": "validation/UI_SURFACE_REVIEW.json",
@@ -46,7 +47,8 @@
       "ui/02-closed-tip-aero-results.patch",
       "ui/03-course-example-activity.patch",
       "ui/04-geometry-first-context-menu.patch",
-      "ui/05-lightweight-view-rendering.patch"
+      "ui/05-lightweight-view-rendering.patch",
+      "ui/06-surface-gradient.patch"
     ],
     "closed_tip_review": "validation/CLOSED_TIP_AERO_REVIEW.json",
     "course_review": "validation/COURSE_UI_REVIEW.json",
@@ -54,5 +56,6 @@
     "results_review": "validation/AERO_RESULTS_REVIEW.json",
     "airfoil_help_review": "validation/AIRFOIL_HELP_RELEASE_REVIEW.json"
   },
-  "airfoil_2d_solver_version": "1.0.0"
+  "airfoil_2d_solver_version": "1.0.0",
+  "numerical_review": "validation/SURFACE_GRADIENT_REVIEW.json"
 }

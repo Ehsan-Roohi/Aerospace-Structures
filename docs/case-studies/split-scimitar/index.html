@@ -1,0 +1,394 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Split Scimitar Winglets · MIE 446</title><style>
+body{margin:0;background:#f2f5f8;color:#203343;font:18px/1.65 system-ui,sans-serif}main{max-width:1080px;margin:auto;background:white;padding:clamp(20px,4vw,64px)}h1{font-size:clamp(30px,4vw,44px);line-height:1.2}h2{margin-top:2em;color:#164a68}h3{color:#164a68}a{color:#086ca8}img{max-width:100%;height:auto}table{border-collapse:collapse;display:block;overflow-x:auto;margin:1.5em 0}td,th{padding:12px;border:1px solid #cfdae1;text-align:left}th{background:#edf3f7}.equation{font-size:1.25em;overflow-x:auto;padding:12px 0}.inline-math{font-size:1.1em}.video{background:#edf3f7;padding:20px;border-radius:12px}.video h2{margin-top:0}video{display:block;width:min(100%,420px);max-height:70vh;background:#111;margin:auto}mjx-container{max-width:100%}@media print{body{background:white}main{padding:0}video{display:none}}
+</style><script>window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},options:{skipHtmlTags:['script','noscript','style','textarea','pre','code']}};</script><script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script></head><body><main><h1 id="boeing-737-800-split-scimitar-winglets-aerodynamics-structures-and-aeroelasticity">Boeing 737-800 Split Scimitar Winglets: Aerodynamics, Structures and Aeroelasticity</h1>
+<p><strong>MIE 446 · Aerospace Structures · University of Massachusetts Amherst</strong><br />
+Course case study · 28 October 2026 · Prepared with AI assistance and source checking</p>
+<p><a href="https://github.com/Ehsan-Roohi/Aerospace-Structures">Course home</a> · <a href="linkedin-video.mp4">Video supplied for this case study</a> · <a href="https://lnkd.in/p/erwyJSpp">Original LinkedIn post</a></p>
+<p><strong><a href="https://ehsan-roohi.github.io/Aerospace-Structures/case-studies/split-scimitar/">Open the reading page — larger equations and embedded video</a></strong></p>
+<section class="video" aria-label="Winglet workshop video"><h2>Inside the winglet — workshop video</h2><video controls playsinline preload="metadata" poster="workshop-winglet.jpg" aria-label="25-second workshop video of the winglet interior and exterior"><source src="linkedin-video.mp4" type="video/mp4"><a href="linkedin-video.mp4">Download the video</a></video><p>25 seconds · sound available · source: <a href="https://lnkd.in/p/erwyJSpp">Vladimir Gantovnik’s post</a>. <a href="linkedin-video.mp4">Download MP4</a>.</p></section><h2 id="overview">Overview</h2>
+<p>A winglet is a lifting surface attached to a flexible lifting surface. Its aerodynamic benefit and its structural cost must therefore be evaluated together. The Boeing 737-800 Split Scimitar Winglet (SSW) provides a useful example: a retrofit changes the three-dimensional wingtip loading while also requiring strengthened structural members, additional mass and aircraft-specific integration work.</p>
+<p>This report starts with Vladimir Gantovnik's 28 October 2026 post, <strong>“Inside the Boeing 737-800 Split Scimitar Winglet!”</strong> The accompanying approximately 25-second workshop video shows exposed internal structure, rows of fasteners and the external split-tip arrangement. It illustrates a real load-transfer problem, but it is not a dimensioned drawing or a structural substantiation record. Aircraft identity is taken from the post; no visible serial number independently establishes the installation's configuration. [1]</p>
+<p><strong>Central engineering result:</strong> a reduction in induced drag does not imply a reduction in wing-root bending, attachment load or flutter risk. The design objective is a favorable aircraft-level trade between mission fuel, structural mass, stiffness, life, operability and certification constraints.</p>
+<h3 id="learning-objectives">Learning objectives</h3>
+<p>After this reading, students should be able to:</p>
+<ol>
+<li>Explain why a nonplanar wingtip can reduce induced drag without eliminating the trailing wake.</li>
+<li>Resolve winglet forces and moments into a wing attachment and a wing-root free body.</li>
+<li>Explain the roles of skins, spar caps, webs, ribs and fastener groups.</li>
+<li>Distinguish static strength, buckling, fatigue, damage tolerance and aeroelastic stability.</li>
+<li>Audit fuel-saving percentages by identifying their reference configuration and mission.</li>
+<li>Design a reproducible aerodynamic–structural comparison without inventing proprietary geometry.</li>
+</ol>
+<h2 id="1-what-is-established-and-what-remains-unknown">1. What is established, and what remains unknown?</h2>
+<p>The evidence categories used below are <strong>observed</strong>, <strong>documented</strong>, <strong>engineering interpretation</strong>, and <strong>illustrative calculation</strong>. The last two are not claims about proprietary APB design details.</p>
+<table>
+<thead>
+<tr>
+<th>Question</th>
+<th>Evidence and conclusion</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Which winglet is discussed?</td>
+<td>The post identifies the Boeing 737-800 SSW developed by Aviation Partners Boeing (APB). [1]</td>
+</tr>
+<tr>
+<td>What can be seen?</td>
+<td>Repeated fasteners, internal load-carrying members, protective-looking surface finishes and the external upper/lower arrangement. Their appearance alone does not identify alloy, laminate, fastener specification or allowable loads.</td>
+</tr>
+<tr>
+<td>Is reinforcement merely inferred from the video?</td>
+<td>No. APB's 2014 certification announcement explicitly describes strengthened spars in a retrofit retaining the existing Blended Winglet structure. [2]</td>
+</tr>
+<tr>
+<td>Is the retrofit only a lower fin?</td>
+<td>No. Public descriptions identify scimitar tips, a ventral strake and, in API's overview, trailing-edge wedges. [2,3]</td>
+</tr>
+<tr>
+<td>Does this establish the exact joint in the footage?</td>
+<td>No. The public material does not locate every visible member or establish individual fastener functions.</td>
+</tr>
+<tr>
+<td>What engineering data are unavailable here?</td>
+<td>Approved drawings, exact airfoils, skin gauges, laminate schedules, material allowables, fastener preload, load envelopes, stiffness/mass matrices and certified inspection schedules.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Do not diagnose corrosion, looseness, cracking or workmanship from color and video compression.</strong> The markings and finishes are visible; their engineering significance needs inspection records and material identification.</p>
+<h2 id="2-geometry-development-and-comparison-with-other-tips">2. Geometry, development and comparison with other tips</h2>
+<p>The SSW is an evolution of the 737NG Blended Winglet. Its recognizable features are a curved upward member with a swept, pointed tip and an additional downward/outward ventral surface. “Scimitar” describes the swept tip form; it is not a different physical law of lift. The transition, airfoil loading, sweep, cant, toe and twist all matter.</p>
+<p>APB announced the 737-800 certification on 6 February 2014 after a program launched in 2013. The announcement describes reusing the Blended Winglet structure while adding strengthened spars, new tips and a ventral strake. United records the first commercial SSW flight on 18 February 2014. These dates describe certification announcement and service entry, respectively. [2,4]</p>
+<table>
+<thead>
+<tr>
+<th>Tip concept</th>
+<th>Aerodynamic design variable</th>
+<th>Structural/integration consequence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Bare planar tip</td>
+<td>Planform and spanwise circulation</td>
+<td>Reference wing; still has a trailing vortex system</td>
+</tr>
+<tr>
+<td>Planar tip extension</td>
+<td>Greater span and revised circulation</td>
+<td>Outboard loading has a long root lever arm; span/gate constraints matter</td>
+</tr>
+<tr>
+<td>Blended Winglet</td>
+<td>Nonplanar loading with a smooth transition</td>
+<td>Side force, vertical force, local bending/torsion and added inertia</td>
+</tr>
+<tr>
+<td>Split Scimitar</td>
+<td>Interacting upper and lower lifting surfaces</td>
+<td>Additional attachment loads and mass; whole-wing integration must be reassessed</td>
+</tr>
+<tr>
+<td>737 MAX Advanced Technology winglet</td>
+<td>Boeing's distinct dual-feather design</td>
+<td>A different installation; its data cannot be substituted for a 737NG SSW retrofit</td>
+</tr>
+</tbody>
+</table>
+<p>Boeing identifies the MAX tip as an Advanced Technology winglet. Visual resemblance does not make it interchangeable with the APB retrofit. [5]</p>
+<p><img alt="Actual Aeromexico Boeing 737-800 Split Scimitar Winglet" src="aeromexico-closeup.jpg" /></p>
+<p><em>Figure 1. Actual Split Scimitar Winglet on an Aeromexico 737-800. Photo: Mnts; crop/levels by Altair78, via <a href="https://commons.wikimedia.org/wiki/File:B737-800_Split_Winglet_WP_20141110_001.jpg">Wikimedia Commons</a>, <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>. Commons thumbnail reproduced without further edits.</em></p>
+<p><img alt="Actual split winglet on PH-HXC" src="transavia-inflight.jpg" /></p>
+<p><em>Photo: jounigripen, Boeing 737-8K2 PH-HXC, via <a href="https://commons.wikimedia.org/wiki/File:Split_Scimitar_Winglets_(51329381972).jpg">Commons</a>, <a href="https://creativecommons.org/licenses/by/2.0/">CC BY 2.0</a>. Thumbnail reproduced without further edits.</em></p>
+<p><img alt="United 737-800 with Split Scimitar winglets" src="united-aircraft.jpg" /></p>
+<p><em>Aircraft context: United N37293. Photo: Masakatsu Ukon, via <a href="https://commons.wikimedia.org/wiki/File:United_Airlines,_Boeing_737-800_N37293_w_Split_Scimitar_Winglet_NRT_(18596425018).jpg">Commons</a>, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC BY-SA 2.0</a>. Thumbnail reproduced without further edits.</em></p>
+<h2 id="3-aerodynamics-what-actually-reduces-drag">3. Aerodynamics: what actually reduces drag?</h2>
+<h3 id="31-circulation-downwash-and-the-trailing-wake">3.1 Circulation, downwash and the trailing wake</h3>
+<p>A finite wing supports a pressure difference and a spanwise-varying circulation. The resulting trailing vortex sheet rolls up downstream. Its induced velocity tilts the local aerodynamic force backward, giving induced drag. A winglet changes the circulation and induced-velocity field of the <strong>combined wing–winglet system</strong>. It does not simply block air from moving around the tip, and it does not remove all vortices. NASA's winglet and induced-drag explanations provide the introductory foundation. [6,7]</p>
+<p>For a planar-wing teaching approximation,</p>
+<div class="equation">\[q_\infty=\tfrac12\rho V^2,\qquad C_L=\frac{L}{q_\infty S},\qquad AR=\frac{b^2}{S},\]</div>
+<div class="equation">\[C_{D_i}=\frac{C_L^2}{\pi e AR},\qquad
+D_i=\frac{L^2}{\pi e q_\infty b^2}.\]</div>
+<p>Here <span class="inline-math">\(b\)</span> is span, <span class="inline-math">\(S\)</span> is the stated wing reference area, and <span class="inline-math">\(e\)</span> is a span-efficiency parameter. Keep the same reference area when comparing coefficients. An effective <span class="inline-math">\(e\)</span> fitted to a nonplanar system need not obey the planar-wing interpretation or its usual upper bound; it is not a complete SSW prediction.</p>
+<p>The second equation exposes the design opportunity: for prescribed lift, improving the induced-flow distribution can reduce drag even without a proportional increase in horizontal span. However, the winglet adds wetted area and can introduce interference, separation and transonic penalties.</p>
+<h3 id="32-why-two-surfaces">3.2 Why two surfaces?</h3>
+<p>The upper winglet and lower strake interact with the wing and with each other. Their positions and loading give more freedom to shape the wake than a single tip surface. This is an <strong>engineering interpretation of nonplanar lifting-system behavior</strong>; the public sources do not disclose the circulation distribution of the exact filmed installation.</p>
+<p>Changing cant alters the lateral/vertical force split. Changing toe and twist alters incidence relative to the local velocity, which includes wing-induced flow. Sweep and airfoil thickness also affect compressibility and separation. A favorable geometry at one lift coefficient may be less favorable at another. It is therefore misleading to assign one fixed portion of the saving to each visible surface without an isolated-component study.</p>
+<h3 id="33-is-the-winglet-producing-thrust">3.3 Is the winglet producing thrust?</h3>
+<p>In the locally inclined wingtip flow, a component of the winglet's aerodynamic force can point forward relative to the aircraft axis. That is a useful force-resolution picture. It is not propulsion or energy creation. Compute the force on the <strong>whole aircraft</strong> and the far-wake momentum/energy balance: the engine must still supply the positive net drag in steady level flight.</p>
+<h3 id="34-the-appropriate-comparison">3.4 The appropriate comparison</h3>
+<p>Compare aircraft at the same weight, altitude, Mach number and trim, with consistent reference area and fully converged force extraction. At the mission level, include the changed empty weight and climb/cruise/descent schedule. In transonic cruise, a lifting-line or vortex-lattice model cannot establish shock losses or viscous interference. It is a useful screening tool, followed by suitable viscous/compressible CFD, tunnel evidence and flight validation.</p>
+<p>Whitcomb's 1976 investigation explicitly compared winglets and tip extensions at approximately matched increases in root bending moment. That is the right kind of comparison for a structures course: aerodynamic gain under a structural constraint. It is historical evidence for the method, not a performance measurement of this SSW. [8]</p>
+<h2 id="4-a-quantitative-drag-example">4. A quantitative drag example</h2>
+<p><strong>All inputs in this section are assumed classroom values, not Boeing/APB data.</strong> Let <span class="inline-math">\(C_L=0.50\)</span>, <span class="inline-math">\(AR=9.5\)</span>, <span class="inline-math">\(C_{D,\mathrm{other}}=0.020\)</span>, and let effective <span class="inline-math">\(e\)</span> change from 0.80 to 0.86 while holding <span class="inline-math">\(C_L\)</span> and <span class="inline-math">\(AR\)</span> fixed.</p>
+<table>
+<thead>
+<tr>
+<th>Quantity</th>
+<th style="text-align: right;">Baseline</th>
+<th style="text-align: right;">Modified idealization</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><span class="inline-math">\(C_{D_i}\)</span></td>
+<td style="text-align: right;">0.010471</td>
+<td style="text-align: right;">0.009740</td>
+</tr>
+<tr>
+<td>Total <span class="inline-math">\(C_D\)</span>, before added parasitic drag</td>
+<td style="text-align: right;">0.030471</td>
+<td style="text-align: right;">0.029740</td>
+</tr>
+<tr>
+<td><span class="inline-math">\(L/D\)</span></td>
+<td style="text-align: right;">16.41</td>
+<td style="text-align: right;">16.81</td>
+</tr>
+</tbody>
+</table>
+<p>The induced component falls by <strong>6.98%</strong>, but total drag falls by only <strong>2.40%</strong>. If the added surface/interference contributes <span class="inline-math">\(\Delta C_{D,\mathrm{other}}=0.00025\)</span>, total drag becomes 0.029990 and the net reduction is <strong>1.58%</strong>. These are algebraic examples, not SSW fuel predictions.</p>
+<p>More generally, if induced drag is fraction <span class="inline-math">\(f_i\)</span> of baseline total drag and falls by fraction <span class="inline-math">\(r_i\)</span>,</p>
+<div class="equation">\[\frac{D_0-D_1}{D_0}=f_i r_i-\frac{\Delta D_{\mathrm{other}}}{D_0}\]</div>
+<p>at fixed lift and operating condition. The equation shows why “20% less induced drag” cannot be read as “20% less fuel.” Added mass also changes the required lift, so even this fixed-lift comparison is only one step in a mission analysis.</p>
+<h2 id="5-structural-mechanics-from-pressure-to-the-fuselage">5. Structural mechanics: from pressure to the fuselage</h2>
+<h3 id="51-a-consistent-free-body">5.1 A consistent free body</h3>
+<p>Use right-handed axes: <span class="inline-math">\(x\)</span> aft (downstream), <span class="inline-math">\(y\)</span> toward the right wingtip and <span class="inline-math">\(z\)</span> upward. In this convention a drag force has positive <span class="inline-math">\(F_x\)</span>. About a chosen attachment reference point <span class="inline-math">\(A\)</span>, integrate aerodynamic traction <span class="inline-math">\(\mathbf t\)</span> over the winglet surface:</p>
+<div class="equation">\[\mathbf F_A=\int_{S_w}\mathbf t\,dS,\qquad
+\mathbf M_A=\int_{S_w}(\mathbf r-\mathbf r_A)\times\mathbf t\,dS.\]</div>
+<p>For a resultant at <span class="inline-math">\(\mathbf r=(x,y,z)\)</span> relative to the reference,</p>
+<div class="equation">\[M_x=yF_z-zF_y,\quad M_y=zF_x-xF_z,\quad M_z=xF_y-yF_x.\]</div>
+<p>Add a free aerodynamic couple if the distributed traction is replaced by a point force. Include weight and acceleration loads consistently. The structural reaction balances these applied resultants; it has the opposite sign on the isolated component. Root loads also include the <strong>change in loading over the entire main wing</strong>, not just the added winglet force.</p>
+<p><img src="internal-attachment.jpg" alt="Exposed internal attachment in the supplied video" width="480"></p>
+<p><em>Figure 2. Actual internal members and fastener rows, extracted at 0.5 s from the supplied video linked in reference 1. The footage does not establish material specifications or individual fastener loads.</em></p>
+<p><img src="fastener-detail.jpg" alt="Close view of actual fasteners" width="480"></p>
+<p><em>Fastener detail at 5 s in the same video.</em></p>
+<p><img src="workshop-winglet.jpg" alt="Exterior winglet transition and lower strake in workshop" width="480"></p>
+<p><em>Workshop exterior at 23 s in the same video. These frames preserve the source appearance and are not manufacturer drawings.</em></p>
+<h3 id="52-why-the-root-can-be-highly-loaded">5.2 Why the root can be highly loaded</h3>
+<p>Take a hypothetical right-tip resultant at <span class="inline-math">\((x,y,z)=(0,17,1)\)</span> m with <span class="inline-math">\((F_x,F_y,F_z)=(0.8,2,4)\)</span> kN. The wing-root moment contribution is</p>
+<div class="equation">\[(M_x,M_y,M_z)=(66,0.8,-13.6)\ \mathrm{kN\,m}.\]</div>
+<p>For the same forces at a <strong>local attachment</strong> with offset <span class="inline-math">\((0,0,1)\)</span> m, the moment is <span class="inline-math">\((-2,0.8,0)\)</span> kN m. Different reference points answer different questions. The large <span class="inline-math">\(yF_z\)</span> root term and the local <span class="inline-math">\(-zF_y\)</span> term should never be conflated.</p>
+<p>Under maneuver or gust loading these resultants vary; the example is not a load case for a real aircraft. Left/right side forces may cancel in the whole-aircraft force sum while still loading both wing structures.</p>
+<h3 id="53-what-the-structural-members-do">5.3 What the structural members do</h3>
+<p>The following is a <strong>generic thin-walled airframe interpretation</strong>, not a bill of materials for the footage.</p>
+<table>
+<thead>
+<tr>
+<th>Element</th>
+<th>Typical mechanical role</th>
+<th>Checks that matter</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Skin or shell</td>
+<td>Carries pressure, membrane force and shear; contributes to torsional stiffness</td>
+<td>Local buckling, damage, discontinuities and load transfer</td>
+</tr>
+<tr>
+<td>Spar caps/flanges</td>
+<td>Separated axial-force paths resist bending</td>
+<td>Tension/compression, crippling, attachment and fatigue</td>
+</tr>
+<tr>
+<td>Spar webs</td>
+<td>Transfer transverse shear and participate in torsion</td>
+<td>Shear buckling, cutouts and end load introduction</td>
+</tr>
+<tr>
+<td>Ribs/diaphragms</td>
+<td>Preserve section shape and distribute concentrated loads</td>
+<td>Web stability, local joints and distortion</td>
+</tr>
+<tr>
+<td>Fittings/doublers</td>
+<td>Spread attachment loads into surrounding structure</td>
+<td>Bearing, net section, shear-out, prying and stiffness mismatch</td>
+</tr>
+<tr>
+<td>Fasteners</td>
+<td>Transfer load between components</td>
+<td>Combined shear/tension, bearing, slip, preload effects and fatigue</td>
+</tr>
+</tbody>
+</table>
+<p>For a separated-cap idealization, <span class="inline-math">\(N_{\mathrm{cap}}\simeq M/h\)</span>, where <span class="inline-math">\(h\)</span> is the distance between cap centroids. A smaller structural depth requires larger cap force for the same bending moment. For a single closed thin-walled cell, Bredt–Batho gives</p>
+<div class="equation">\[q_s=\frac{T}{2A_m},\qquad \tau=\frac{q_s}{t}.\]</div>
+<p>With assumed <span class="inline-math">\(T=2\)</span> kN m, enclosed median area <span class="inline-math">\(A_m=0.08\)</span> m² and wall thickness <span class="inline-math">\(t=2\)</span> mm, <span class="inline-math">\(q_s=12.5\)</span> kN/m and <span class="inline-math">\(\tau=6.25\)</span> MPa. This is uniform-cell torsion theory; an open access panel, multicell section or joint needs a different model. No stress margin follows without actual allowables and load cases.</p>
+<h2 id="6-what-do-the-rows-of-fasteners-accomplish">6. What do the rows of fasteners accomplish?</h2>
+<p>The post correctly draws attention to attachments. Many fasteners can distribute load and provide a broad moment-transfer region, but their individual loads are generally unequal. Connection stiffness, fit, friction, local flexibility and load eccentricity matter.</p>
+<p>For an <strong>ideal rigid, equal-stiffness fastener group in one plane</strong>, direct shear is <span class="inline-math">\(\mathbf V/n\)</span>. A moment <span class="inline-math">\(M\)</span> normal to the plane adds a tangential contribution,</p>
+<div class="equation">\[\mathbf f_i^{(M)}=\frac{M}{J_f}(-y_i,x_i),\qquad
+J_f=\sum_j(x_j^2+y_j^2),\]</div>
+<p>where coordinates are measured from the group centroid. Add direct and moment-induced vectors before finding the maximum load. Out-of-plane moments require a separate tension/compression and contact model; the in-plane formula cannot resolve prying.</p>
+<p>For a deliberately simple example, four fasteners at <span class="inline-math">\((\pm50,\pm40)\)</span> mm carry 20 kN shear in the <span class="inline-math">\(y\)</span> direction and 1 kN m in-plane moment. Then <span class="inline-math">\(J_f=16,400\)</span> mm² and each fastener's moment contribution has magnitude 3.90 kN. The most highly loaded fasteners carry <strong>8.41 kN</strong>, obtained from components <span class="inline-math">\((2.439,8.049)\)</span> kN. Dividing the total shear by four gives only 5 kN and misses the eccentric moment.</p>
+<p>If an assumed fastener diameter is 8 mm and plate thickness is 3 mm, the associated nominal bearing stress <span class="inline-math">\(F/(td)\)</span> is approximately <strong>350 MPa</strong>. This value is not an allowable or a pass/fail result. Actual joint design must also check net-section tension, shear-out, fastener strength, edge distance, countersinks, secondary bending and fatigue. The filmed fasteners have not been identified as 8 mm parts.</p>
+<h2 id="7-materials-manufacturing-and-the-weight-penalty">7. Materials, manufacturing and the weight penalty</h2>
+<p>A green finish is not proof of an aluminum alloy, and a curved outer surface does not prove a carbon-fiber laminate. A transport-aircraft tip assembly can combine different material systems and metallic fittings. Exact material identification requires drawings and specifications. For any composite–metal interface, engineers must consider anisotropy, bearing/bypass interaction, interlaminar damage, galvanic isolation and thermal-expansion mismatch. These are general design considerations, not verified features of this installation.</p>
+<p>The public APB 737-800 SSW page lists the following <strong>per-airplane installation weight impacts</strong>, separated by aircraft line number. Preserve its configuration labels when using these numbers. [9]</p>
+<table>
+<thead>
+<tr>
+<th>APB line-number category</th>
+<th style="text-align: right;">Listed total increase</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Before 778</td>
+<td style="text-align: right;">296.6 lb / 134.5 kg</td>
+</tr>
+<tr>
+<td>778–5063</td>
+<td style="text-align: right;">302.2 lb / 137.1 kg</td>
+</tr>
+<tr>
+<td>5064 onward</td>
+<td style="text-align: right;">329.2 lb / 149.3 kg</td>
+</tr>
+</tbody>
+</table>
+<p>The same table includes wing modifications and ballast, illustrating that the retrofit is more than exposed aerodynamic surface mass. Its first-kit “Winglet Mod” row contains <strong>47.6 lb and 8.0 kg</strong>, an inconsistent unit pair; the pound component sum also conflicts with the listed total. Do not silently repair that row or use it for detailed mass accounting. The totals above are transcribed as published, not independently validated measurements. [9]</p>
+<p>The presence of ballast makes mass distribution an important question. The public table alone does not establish its location or exact design purpose. Added tip mass can lower a structural frequency or change mode coupling even when static stresses remain acceptable.</p>
+<h2 id="8-aeroelasticity-stiffness-and-mass-are-part-of-the-aerodynamics">8. Aeroelasticity: stiffness and mass are part of the aerodynamics</h2>
+<p><strong>Static coupling:</strong> aerodynamic load bends and twists the structure; the deformed shape changes the aerodynamic load. A favorable unloaded tip angle is insufficient if the loaded structure twists unfavorably. Divergence is a static instability of this coupled system.</p>
+<p><strong>Dynamic coupling:</strong> flutter arises when aerodynamic energy input overcomes damping in a coupled motion. Relevant changes include tip inertia, bending/torsional stiffness, attachment flexibility and unsteady aerodynamic forces. “It is small” and “the bolts are strong” do not establish a flutter margin.</p>
+<p>A teaching representation is</p>
+<div class="equation">\[\mathbf M\ddot{\boldsymbol\eta}+\mathbf C\dot{\boldsymbol\eta}+\mathbf K\boldsymbol\eta
+=\mathbf Q_a(\boldsymbol\eta,\dot{\boldsymbol\eta};V,\rho,M_\infty).\]</div>
+<p>Here <span class="inline-math">\(\boldsymbol\eta\)</span> contains generalized structural coordinates and <span class="inline-math">\(M_\infty\)</span> is Mach number, distinct from mass matrix <span class="inline-math">\(\mathbf M\)</span>. Real unsteady aerodynamic models may require frequency dependence or additional aerodynamic states. A dry modal calculation determines natural frequencies and shapes, not flutter speed.</p>
+<p>For intuition only, <span class="inline-math">\(f\sim(2\pi)^{-1}\sqrt{k/m}\)</span>: increasing effective mass by 10% at fixed effective stiffness lowers this scalar frequency by 4.65%. A real distributed wing has multiple coupled modes, so this is not a flutter prediction. FAA AC 25.629-1C provides transport-airplane aeroelastic substantiation guidance; it is not evidence of the exact certification basis of every historical retrofit. [10]</p>
+<h2 id="9-fatigue-damage-tolerance-and-service-integration">9. Fatigue, damage tolerance and service integration</h2>
+<p>A static-strength check answers whether a specified load can be carried. Fatigue asks how repeated load histories initiate and grow damage. Damage tolerance asks whether damage can be detected and the remaining structure can safely carry the required loads until intervention.</p>
+<p>For an educational crack-growth model,</p>
+<div class="equation">\[\Delta K=Y\Delta\sigma\sqrt{\pi a},\qquad
+\frac{da}{dN}=C(\Delta K)^m.\]</div>
+<p>This Paris-law form is only a limited growth-regime approximation. Hole geometry, crack shape, residual stress, load sequence, threshold behavior, corrosion and small-crack effects can invalidate a naive use. Visible fastener count cannot establish inspectability or crack-arrest capability. FAA AC 25.571-1D is an appropriate starting reference. [11]</p>
+<h3 id="a-documented-integration-lesson-faa-ad-2019-22-06">A documented integration lesson: FAA AD 2019-22-06</h3>
+<p>The FAA documented inadequate clearance between an FQIS tank unit and a reinforcement angle introduced by a split-winglet modification. The stated applicability is specific: 737-800 line numbers <strong>4919–5063</strong>, modified under STC <strong>ST00830SE</strong> and listed in APB Service Bulletin <strong>AP737-57-020</strong>. The concern was a potential fuel-tank ignition source, and the directive required inspection and corrective action where needed. [12]</p>
+<p>This is a documented example of structural reinforcement interacting with an aircraft system. It does <strong>not</strong> establish a defect in all SSWs or in the filmed assembly. It shows why “stronger structure” is only one part of successful integration. This historical discussion is not an aircraft-specific determination of current AD compliance.</p>
+<h2 id="10-auditing-the-linkedin-performance-claims">10. Auditing the LinkedIn performance claims</h2>
+<table>
+<thead>
+<tr>
+<th>Claim in the starting post</th>
+<th>Assessment against primary evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Significant bending, shear and torsion must be transferred into the wing</td>
+<td>Mechanically sound; APB confirms strengthened spars. The video does not quantify load magnitude. [2]</td>
+</tr>
+<tr>
+<td>2013 launch and 2014 certification</td>
+<td>Supported by APB's 2014 announcement. [2]</td>
+</tr>
+<tr>
+<td>Roughly 5–5.5% saving versus roughly 3–3.5% for Blended Winglets</td>
+<td>Southwest's 9 April 2014 release states approximately 3.5% for Blended Winglets and 5–5.5% after upgrading. These are operator estimates, not universal measured results. [13]</td>
+</tr>
+<tr>
+<td>About 200,000 liters annually</td>
+<td>Plausible as an operator/utilization-dependent estimate. An APB-issued Alaska release estimated 58,000 US gal additional annual savings, approximately 219,554 L. It does not establish the saving for every aircraft. [14]</td>
+</tr>
+<tr>
+<td>More than 1,600 orders/options by late 2014</td>
+<td>The February 2014 APB release reports 1,461. The later 1,600 figure is not independently established by the specific primary documents used here. [2]</td>
+</tr>
+</tbody>
+</table>
+<h3 id="percentage-points-versus-incremental-saving">Percentage points versus incremental saving</h3>
+<p>Let <span class="inline-math">\(F_0\)</span> be annual fuel for the common reference aircraft and interpret 3.5% and 5.5% as savings relative to it. Then <span class="inline-math">\(F_B=0.965F_0\)</span> and <span class="inline-math">\(F_S=0.945F_0\)</span>. The upgrade gives <strong>2 percentage points</strong> against <span class="inline-math">\(F_0\)</span>, but</p>
+<div class="equation">\[\frac{F_B-F_S}{F_B}=\frac{0.020}{0.965}=2.073\%.\]</div>
+<p>For the 5.0% endpoint, the corresponding incremental saving is 1.554%. The common reference configuration must be checked in the underlying operator study before combining headline percentages. Do not call 5.5% the incremental SSW-over-Blended saving. API separately describes a roughly 2% or greater long-range aerodynamic benefit for the retrofit; mission range, drag and annual block fuel are different metrics. [3]</p>
+<p>At an <strong>assumed</strong> 10 million liters baseline annual consumption, a 2-percentage-point saving corresponds to 200,000 liters. Changing utilization changes that annual quantity. The assumption is illustrative and does not describe a measured 737 operating year.</p>
+<h2 id="11-a-defensible-aerodynamicstructural-analysis-workflow">11. A defensible aerodynamic–structural analysis workflow</h2>
+<table>
+<thead>
+<tr>
+<th>Step</th>
+<th>Method</th>
+<th>Evidence required before interpreting a benefit</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1. Define configurations</td>
+<td>Bare tip, blended tip and split tip; documented reference areas and mass accounting</td>
+<td>Same aircraft baseline and explicit geometry provenance</td>
+</tr>
+<tr>
+<td>2. Screen aerodynamics</td>
+<td>Nonplanar lifting-line or vortex-lattice model</td>
+<td>Discretization convergence; matched lift and trim; consistent far-wake drag</td>
+</tr>
+<tr>
+<td>3. Resolve real-flow effects</td>
+<td>Compressible viscous CFD where appropriate</td>
+<td>Mesh/domain convergence, turbulence sensitivity and validation</td>
+</tr>
+<tr>
+<td>4. Transfer loads</td>
+<td>Integrate surface tractions and conservatively map them to structure</td>
+<td>Force and moment conservation about the same reference point</td>
+</tr>
+<tr>
+<td>5. Analyze structure</td>
+<td>Wing beam/shell model plus detailed local joint model</td>
+<td>Appropriate boundary flexibility; member, buckling and attachment checks</td>
+</tr>
+<tr>
+<td>6. Couple deformation</td>
+<td>Iterate loads and deformation</td>
+<td>Convergence of twist, loads and aerodynamic benefit</td>
+</tr>
+<tr>
+<td>7. Evaluate dynamics/life</td>
+<td>Modal, aeroelastic and fatigue/damage analyses</td>
+<td>Correlated stiffness/mass and justified operating spectra</td>
+</tr>
+<tr>
+<td>8. Assess aircraft mission</td>
+<td>Weight-dependent performance with climb/cruise/descent and reserves defined</td>
+<td>Consistent dispatch assumptions and uncertainty</td>
+</tr>
+</tbody>
+</table>
+<p>For load mapping, verify <span class="inline-math">\(\sum\mathbf f_k=\mathbf F\)</span> and <span class="inline-math">\(\sum\mathbf r_k\times\mathbf f_k=\mathbf M\)</span> to stated tolerances. A visually smooth mapped load is insufficient if either balance fails. A model clamped at the winglet foot cannot establish whole-wing behavior unless that constraint represents the actual attachment flexibility.</p>
+<p>A useful optimization statement is: minimize mission fuel subject to strength, stability, fatigue, flutter, mass, span and clearance constraints. Aerodynamic benefit alone is not the objective function of the completed airplane. Report uncertainty and avoid presenting assumed geometry as reverse-engineered certified hardware.</p>
+<h2 id="12-classroom-activities-and-checkable-answers">12. Classroom activities and checkable answers</h2>
+<ol>
+<li><strong>Video observation:</strong> list five visible features and three unavailable quantities. Label every statement as observation or inference. Why is an alloy designation unavailable from finish color?</li>
+<li><strong>Drag accounting:</strong> reproduce Section 4. At what added <span class="inline-math">\(\Delta C_D\)</span> is the ideal induced-drag benefit completely lost? <strong>Answer:</strong> approximately 0.000731.</li>
+<li><strong>Force and moment:</strong> reproduce Section 5's cross product. Change <span class="inline-math">\(F_y\)</span> from +2 to −2 kN. <strong>Answer:</strong> <span class="inline-math">\(M_x\)</span> changes from 66 to 70 kN m; the other two components stay +0.8 and −13.6 kN m.</li>
+<li><strong>Fastener group:</strong> reproduce Section 6 and compare maximum load to the 5 kN equal-share estimate. <strong>Answer:</strong> approximately 8.41 kN, 68.2% above equal share.</li>
+<li><strong>Mass sensitivity:</strong> reproduce the scalar frequency estimate for +10% mass. <strong>Answer:</strong> <span class="inline-math">\(1/\sqrt{1.1}=0.95346\)</span>. Explain why that ratio does not give flutter margin.</li>
+<li><strong>Source audit:</strong> convert 58,000 US gallons using 3.785411784 L/US gal. <strong>Answer:</strong> 219,553.9 L. State which operator and type of estimate the source describes.</li>
+<li><strong>Design discussion:</strong> compare a tip extension and a winglet at equal additional root bending, rather than equal visible size. What additional stiffness and mission data are needed?</li>
+</ol>
+<p>The companion <a href="teaching_calculations.py">Python calculation file</a> reproduces the numerical examples using only the standard library. It is a teaching calculator, not an SSW design or certification tool.</p>
+<h2 id="13-conclusions-for-aerospace-structures">13. Conclusions for aerospace structures</h2>
+<p>The workshop footage connects an aerodynamic device to familiar structural mechanics: pressure becomes shear and bending; a finite joint must transfer moments; a long wing amplifies outboard vertical loads; and thin-walled closed sections carry torsion efficiently only when their load paths remain intact.</p>
+<p>The public record supports strengthened spars and aircraft-dependent installation weight. It also shows that performance claims need a mission and a reference configuration. A successful retrofit combines aerodynamic improvement with strength, stiffness, durability, system clearance and aeroelastic substantiation. The exact internal materials, margins and inspection life of the filmed unit cannot be recovered from the video.</p>
+<h2 id="references-and-source-notes">References and source notes</h2>
+<p>Links checked 28 October 2026. Product descriptions and operator releases are identified as such; headline benefits are not treated as independent experimental datasets. General derivations and assumed examples in this report are original teaching synthesis.</p>
+<ol>
+<li><strong>Vladimir Gantovnik</strong>, “Inside the Boeing 737-800 Split Scimitar Winglet!”, LinkedIn, 28 October 2026. <a href="https://lnkd.in/p/erwyJSpp">User's short link</a> · <a href="https://www.linkedin.com/posts/gantovnik_inside-the-boeing-737-800-split-scimitar-ugcPost-7521162503867990016-q7EY/">Resolved post</a>. Source of the starting narrative and footage context; not an approved engineering document.</li>
+<li><strong>Aviation Partners Boeing</strong>, “Aviation Partners Boeing Receives FAA Certification for Split Scimitar Winglets,” 6 February 2014. <a href="https://www.prnewswire.com/news-releases/aviation-partners-boeing-receives-faa-certification-for-split-scimitar-winglets-244007951.html">APB-issued release</a>. Structural modification description, launch chronology and contemporary orders/options.</li>
+<li><strong>Aviation Partners</strong>, <a href="https://www.aviationpartners.com/winglet-types/">Winglet types</a>. Retrofit elements and long-range performance description; manufacturer information.</li>
+<li><strong>United Airlines</strong>, “United Airlines is the First to Fly with New, Fuel-Efficient Split Scimitar Winglets,” 19 February 2014. <a href="https://united.mediaroom.com/2014-02-19-United-Airlines-is-the-First-to-Fly-with-New-Fuel-Efficient-Split-Scimitar-Winglets">Operator release</a>. Reports service entry the previous day.</li>
+<li><strong>Boeing</strong>, <a href="https://www.boeing.com/content/dam/boeing/boeingdotcom/commercial/airports/acaps/737MAX_RevE.pdf">737 MAX Airplane Characteristics for Airport Planning, Revision E</a>. Identifies the distinct Advanced Technology winglet; a historical revision, not the latest planning manual.</li>
+<li><strong>NASA Glenn Research Center</strong>, <a href="https://www1.grc.nasa.gov/beginners-guide-to-aeronautics/winglets/">Winglets</a>. Introductory aerodynamic explanation.</li>
+<li><strong>NASA Glenn Research Center</strong>, <a href="https://www1.grc.nasa.gov/beginners-guide-to-aeronautics/induced-drag-coefficient/">Induced drag coefficient</a>. Planar-wing drag relation and reference definitions.</li>
+<li><strong>R. T. Whitcomb</strong>, <em>A Design Approach and Selected Wind Tunnel Results at High Subsonic Speeds for Wing-Tip Mounted Winglets</em>, NASA TN D-8260, 1976. <a href="https://ntrs.nasa.gov/citations/19760019075">NTRS record and free PDF</a>. Historical aerodynamic/load comparison; not an SSW test.</li>
+<li><strong>Aviation Partners Boeing</strong>, <a href="https://www.aviationpartnersboeing.com/products_737_800SSW.php">737-800 SSW product page</a>. Configuration-dependent weight table; inconsistent first-kit row explicitly flagged in Section 7.</li>
+<li><strong>FAA</strong>, <a href="https://www.faa.gov/regulations_policies/advisory_circulars/index.cfm/go/document.information/documentID/1043057">AC 25.629-1C: Aeroelastic Stability Substantiation of Transport Category Airplanes</a>. General substantiation guidance.</li>
+<li><strong>FAA</strong>, <a href="https://www.faa.gov/regulations_policies/advisory_circulars/index.cfm/go/document.information/documentid/865446">AC 25.571-1D: Damage Tolerance and Fatigue Evaluation of Structure</a>. General durability/damage-tolerance guidance.</li>
+<li><strong>FAA</strong>, AD 2019-22-06, 84 FR 64723–64725, 25 November 2019. <a href="https://www.federalregister.gov/documents/2019/11/25/2019-25474/airworthiness-directives-the-boeing-company-airplanes">Published rule</a>. Aircraft-specific reinforcement/FQIS clearance example; exact applicability must be preserved.</li>
+<li><strong>Southwest Airlines</strong>, “Southwest Airlines Launches New Era of Fuel Savings and Emissions Reduction with Its First Aircraft Featuring Split Scimitar Winglets,” 9 April 2014. <a href="https://www.prnewswire.com/news-releases/southwest-airlines-launches-new-era-of-fuel-savings-and-emissions-reduction-with-its-first-aircraft-featuring-split-scimitar-winglets-254619541.html">Operator-issued release</a>. Source of the 3.5% and 5–5.5% annual estimates.</li>
+<li><strong>Aviation Partners Boeing</strong>, “Split Scimitar Winglets Will Save Alaska Airlines $20 Million in Annual Fuel Costs,” 28 October 2013. <a href="https://www.prnewswire.com/news-releases/split-scimitar-winglets-will-save-alaska-airlines-20-million-in-annual-fuel-costs-229493041.html">APB-issued release</a>. Source of the operator-specific 58,000-US-gallon incremental annual estimate.</li>
+</ol>
+<h3 id="media-and-reuse">Media and reuse</h3>
+<p>A compressed, full-length copy of the supplied video (with audio) is retained for the requested course case study with attribution to the linked post. The post may itself be a repost; original filming authorship and a redistribution license are not established. The video remains third-party material and is not represented as covered by the repository's code or teaching-material license. Photographs retain their individual licenses and credits above. Video frames are extracted from the supplied clip and retain its third-party status.</p></main></body></html>

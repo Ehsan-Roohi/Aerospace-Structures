@@ -134,6 +134,11 @@ The G-code is provided for inspection only. Do not send it directly to a printer
 
 **[Boeing 737-800 Split Scimitar Winglets: aerodynamics, structures and aeroelasticity](SPLIT_SCIMITAR_WINGLETS.md)** — a detailed case study based on the supplied workshop video: induced drag, nonplanar loading, wing-root moments, thin-walled torsion, fastener groups, reinforcement and mass, flutter, fatigue and an FAA integration example. Includes the [25-second video](docs/case-studies/split-scimitar/linkedin-video.mp4), six real photographs/video frames, reproducible Python calculations, a claim-by-claim fuel-saving audit and 14 linked references.
 
+[**Read the illustrated report and play the video on the page →**](https://ehsan-roohi.github.io/Aerospace-Structures/case-studies/split-scimitar/)
+
+[![Play the winglet workshop video](docs/case-studies/split-scimitar/workshop-winglet.jpg)](https://ehsan-roohi.github.io/Aerospace-Structures/case-studies/split-scimitar/)
+
+
 **[Fermat’s Last Theorem: from integer triangles to modularity and machine-checked proof](FERMATS_LAST_THEOREM.md)** — extended mathematical enrichment reading: a complete exponent-four descent proof, Frey curves, modular forms, the Wiles–Taylor–Wiles argument, a sourced assessment of the 2026 Lean formalization, and reproducible Python activities linking exact arithmetic with structural model verification. Includes exercises, a glossary and primary references; optional reading, not a syllabus change.
 
 **[Speed Tape and Aircraft Repairs](SPEED_TAPE_AND_AIRCRAFT_REPAIRS.md)** — [complete illustrated reading](https://ehsan-roohi.github.io/Aerospace-Structures/case-studies/speed-tape/): foil/adhesive construction, peel versus shear, aerodynamic loads, thermal mismatch, a documented rejected repair proposal, claim checks and classroom calculations. Explains why a surface cover is not a structural joint and catalogue data are not aircraft repair authorization.

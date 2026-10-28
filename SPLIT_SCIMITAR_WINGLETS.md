@@ -5,6 +5,8 @@ Course case study · 28 October 2026 · Prepared with AI assistance and source c
 
 [Course home](README.md) · [Video supplied for this case study](docs/case-studies/split-scimitar/linkedin-video.mp4) · [Original LinkedIn post](https://lnkd.in/p/erwyJSpp)
 
+**[Open the reading page — larger equations and embedded video](https://ehsan-roohi.github.io/Aerospace-Structures/case-studies/split-scimitar/)**
+
 ## Overview
 
 A winglet is a lifting surface attached to a flexible lifting surface. Its aerodynamic benefit and its structural cost must therefore be evaluated together. The Boeing 737-800 Split Scimitar Winglet (SSW) provides a useful example: a retrofit changes the three-dimensional wingtip loading while also requiring strengthened structural members, additional mass and aircraft-specific integration work.
@@ -76,10 +78,12 @@ A finite wing supports a pressure difference and a spanwise-varying circulation.
 For a planar-wing teaching approximation,
 
 $$
+\large
 q_\infty=\tfrac12\rho V^2,\qquad C_L=\frac{L}{q_\infty S},\qquad AR=\frac{b^2}{S},
 $$
 
 $$
+\large
 C_{D_i}=\frac{C_L^2}{\pi e AR},\qquad
 D_i=\frac{L^2}{\pi e q_\infty b^2}.
 $$
@@ -119,6 +123,7 @@ The induced component falls by **6.98%**, but total drag falls by only **2.40%**
 More generally, if induced drag is fraction $f_i$ of baseline total drag and falls by fraction $r_i$,
 
 $$
+\large
 \frac{D_0-D_1}{D_0}=f_i r_i-\frac{\Delta D_{\mathrm{other}}}{D_0}
 $$
 
@@ -131,6 +136,7 @@ at fixed lift and operating condition. The equation shows why “20% less induce
 Use right-handed axes: $x$ aft (downstream), $y$ toward the right wingtip and $z$ upward. In this convention a drag force has positive $F_x$. About a chosen attachment reference point $A$, integrate aerodynamic traction $\mathbf t$ over the winglet surface:
 
 $$
+\large
 \mathbf F_A=\int_{S_w}\mathbf t\,dS,\qquad
 \mathbf M_A=\int_{S_w}(\mathbf r-\mathbf r_A)\times\mathbf t\,dS.
 $$
@@ -138,6 +144,7 @@ $$
 For a resultant at $\mathbf r=(x,y,z)$ relative to the reference,
 
 $$
+\large
 M_x=yF_z-zF_y,\quad M_y=zF_x-xF_z,\quad M_z=xF_y-yF_x.
 $$
 
@@ -160,6 +167,7 @@ Add a free aerodynamic couple if the distributed traction is replaced by a point
 Take a hypothetical right-tip resultant at $(x,y,z)=(0,17,1)$ m with $(F_x,F_y,F_z)=(0.8,2,4)$ kN. The wing-root moment contribution is
 
 $$
+\large
 (M_x,M_y,M_z)=(66,0.8,-13.6)\ \mathrm{kN\,m}.
 $$
 
@@ -183,6 +191,7 @@ The following is a **generic thin-walled airframe interpretation**, not a bill o
 For a separated-cap idealization, $N_{\mathrm{cap}}\simeq M/h$, where $h$ is the distance between cap centroids. A smaller structural depth requires larger cap force for the same bending moment. For a single closed thin-walled cell, Bredt–Batho gives
 
 $$
+\large
 q_s=\frac{T}{2A_m},\qquad \tau=\frac{q_s}{t}.
 $$
 
@@ -195,6 +204,7 @@ The post correctly draws attention to attachments. Many fasteners can distribute
 For an **ideal rigid, equal-stiffness fastener group in one plane**, direct shear is $\mathbf V/n$. A moment $M$ normal to the plane adds a tangential contribution,
 
 $$
+\large
 \mathbf f_i^{(M)}=\frac{M}{J_f}(-y_i,x_i),\qquad
 J_f=\sum_j(x_j^2+y_j^2),
 $$
@@ -230,6 +240,7 @@ The presence of ballast makes mass distribution an important question. The publi
 A teaching representation is
 
 $$
+\large
 \mathbf M\ddot{\boldsymbol\eta}+\mathbf C\dot{\boldsymbol\eta}+\mathbf K\boldsymbol\eta
 =\mathbf Q_a(\boldsymbol\eta,\dot{\boldsymbol\eta};V,\rho,M_\infty).
 $$
@@ -245,6 +256,7 @@ A static-strength check answers whether a specified load can be carried. Fatigue
 For an educational crack-growth model,
 
 $$
+\large
 \Delta K=Y\Delta\sigma\sqrt{\pi a},\qquad
 \frac{da}{dN}=C(\Delta K)^m.
 $$
@@ -272,6 +284,7 @@ This is a documented example of structural reinforcement interacting with an air
 Let $F_0$ be annual fuel for the common reference aircraft and interpret 3.5% and 5.5% as savings relative to it. Then $F_B=0.965F_0$ and $F_S=0.945F_0$. The upgrade gives **2 percentage points** against $F_0$, but
 
 $$
+\large
 \frac{F_B-F_S}{F_B}=\frac{0.020}{0.965}=2.073\%.
 $$
 

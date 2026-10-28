@@ -505,6 +505,31 @@
   const view = $('#app > main.view');
   const aeroResults = window.WingAeroStructResults && view ? window.WingAeroStructResults.install({ el, ui, strip: results, view, state: aeroResultState, openAero: () => openMenu('aero') }) : null;
   if (aeroResults) results.insertBefore(aeroResults.selector, display);
+  // Read the worker's real mesh-stage messages. This is a progress display, not a guessed solve percentage.
+  const aeroBusyStep = el('p', { class: 'wx-aero-busy-step', text: 'Starting the aerodynamic mesh sequence…' });
+  const aeroBusyTime = el('span', { class: 'wx-aero-busy-time', 'aria-live': 'off' });
+  const aeroBusyProgress = el('progress', { 'aria-label': 'Completed aerodynamic meshes', max: '7' });
+  const aeroBusy = el('div', { class: 'wx-aero-busy', role: 'status', 'aria-live': 'polite', hidden: true },
+    el('div', { class: 'wx-aero-busy-title' }, el('span', { class: 'wx-aero-spinner', 'aria-hidden': 'true' }), el('strong', { text: 'Solving aerodynamic panels' })),
+    aeroBusyStep, aeroBusyProgress, aeroBusyTime);
+  document.body.append(aeroBusy);
+  let aeroBusyStart = 0, aeroBusyTimer = 0;
+  function syncAeroBusy(a) {
+    const running = !!(a && a.running);
+    aeroBusy.hidden = !running || app.hidden;
+    if (!running) { if (aeroBusyTimer) clearInterval(aeroBusyTimer); aeroBusyTimer = 0; aeroBusyStart = 0; return; }
+    if (!aeroBusyStart) aeroBusyStart = performance.now();
+    const tick = () => {
+      aeroBusyTime.textContent = `Elapsed ${((performance.now() - aeroBusyStart) / 1000).toFixed(1)} s`;
+      const message = ($('#aeroStatus')?.textContent || '').trim(), stage = /Mesh\s+(\d+)\s+of\s+(\d+)/i.exec(message);
+      const shown = message || 'Starting the aerodynamic mesh sequence…';
+      if (aeroBusyStep.textContent !== shown) aeroBusyStep.textContent = shown;
+      if (stage) { aeroBusyProgress.max = Number(stage[2]); aeroBusyProgress.value = Math.max(0, Number(stage[1]) - 1); }
+      else aeroBusyProgress.removeAttribute('value');
+    };
+    if (!aeroBusyTimer) aeroBusyTimer = setInterval(tick, 250);
+    tick();
+  }
   if (aeroRun) aeroRun.addEventListener('click', () => { pendingAero = 'solve'; }, true);
   if (aeroApply) aeroApply.addEventListener('click', () => { pendingAero = 'apply'; }, true);
   function renderPanelState() {
@@ -530,6 +555,7 @@
     const t = structState();
     structDot.dataset.s = t.dot; structDotText.textContent = ' (' + t.label + ')';
     const a = ui.aero && ui.aero();
+    syncAeroBusy(a);
     if (admG && resG) {   // write only real changes: an attribute write inside the observed host would re-trigger this update
       const setHidden = (n, v) => { if (n && n.hidden !== v) n.hidden = v; };
       setHidden(admG.d, !($('#aeroApplied').textContent.trim() || $('#aeroAdmission').textContent.trim()));
@@ -633,7 +659,7 @@
   };
   if (window.ResizeObserver) { const ro = new ResizeObserver(syncNav); if (nav) ro.observe(nav); ro.observe(bar); ro.observe(results); }
   window.addEventListener('resize', syncNav); syncNav();
-  const syncVisible = () => { document.body.classList.toggle('wx-wing-on', !app.hidden); if (app.hidden) { closeMenus(); toast.hidden = true; } else syncNav(); };
+  const syncVisible = () => { document.body.classList.toggle('wx-wing-on', !app.hidden); if (app.hidden) { closeMenus(); toast.hidden = true; } else syncNav(); syncAeroBusy(ui.aero && ui.aero()); };
   new MutationObserver(syncVisible).observe(app, { attributes: true, attributeFilter: ['hidden'] }); syncVisible();
   document.documentElement.dataset.wxShell = 'ready';
 })();

@@ -1,0 +1,61 @@
+{
+  "version": "0.3.0-ui.2",
+  "base_commit": "059e2cf8c491cdf27169eb1bb5e5f214abd5f4b6",
+  "date_utc": "2026-10-28T01:44:23.095814+00:00",
+  "scope": "3D visualization, RGB signed color scale, optional real panel edges, and visible aerodynamic solve progress. Numerical solvers unchanged.",
+  "independent_checks": {
+    "geometry_cases": 4,
+    "panels_verified_against_solver_vertices_and_values": 864,
+    "cases": [
+      "NACA 2412 linear planform",
+      "Swept, dihedral, twisted NACA 4415 to 0012 wing",
+      "Exact closed-tip delta",
+      "Exact closed-tip ellipse"
+    ],
+    "rgb_endpoints_and_zero": "blue at minimum; green at zero; red at maximum",
+    "mismatched_mesh": "Refused instead of coloring the wrong geometry",
+    "solver_data_immutable": true,
+    "unchanged_solver_modules": [
+      {
+        "module": "WingEngine",
+        "sha256": "943f24153312fb3a0f463e2ddeda6a1acb34478a1beba8ffe34f98feaf81aff3"
+      },
+      {
+        "module": "WingAeroPanel",
+        "sha256": "4cf31712ddba740d741fafe5058ab07202459c70bb4fc1d77d79b9d032358f49"
+      },
+      {
+        "module": "WingFrame3D",
+        "sha256": "b8fa7dfa5fb932abadb548baa5e69852b2d779b891364ec77a45855d802f456e"
+      }
+    ],
+    "inline_scripts_syntax_checked": 7,
+    "browser": [
+      "Actual sample solve at V=18 m/s, alpha=5 deg",
+      "3D Cp surface displayed",
+      "Lower-surface click reports its signed Cp and pressure",
+      "2D upper/lower view retained",
+      "Keyboard rotation changes the rendered view",
+      "Show panels toggles aerodynamic panel edges",
+      "Pressure view labels Pa",
+      "PNG export contains the 3D view and panel edges",
+      "Solve-progress card displays worker mesh stage and elapsed time",
+      "Progress card disappears when the aerodynamic solve completes"
+    ],
+    "surface_csv_rows": 1216,
+    "csv_numerical_values_unchanged": true,
+    "png_size_pixels": [
+      1800,
+      1086
+    ],
+    "png_bytes": 515220
+  },
+  "physics_note": "A positive trailing-edge Cp is not by itself a Kutta violation. Kutta requires the upper/lower trailing-edge pressures to match, not Cp=0. The RGB update does not replace or force the computed Cp values.",
+  "reference": "https://ntrs.nasa.gov/api/citations/19850004552/downloads/19850004552.pdf",
+  "source": "The 3D viewer reconstructs the base mesh with WingAeroPanel.wingMesh and places each stored Cp on its original panel. It does not run another aerodynamic solve.",
+  "limitations": [
+    "Cp is from the base mesh, not the extrapolated pressure field.",
+    "Potential flow has no viscous drag or stall/separation prediction.",
+    "This release does not add a shell or solid FE solver."
+  ]
+}

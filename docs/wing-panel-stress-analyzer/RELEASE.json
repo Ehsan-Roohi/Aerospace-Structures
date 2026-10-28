@@ -1,6 +1,6 @@
 {
   "application": "Wing Panel Stress Analyzer (Wing AeroStruct)",
-  "version": "0.3.0-ui.1",
+  "version": "0.3.0-ui.2",
   "source_archive": "wing-aerostruct-0.3.0-dev-review.zip",
   "source_sha256": "bc6986c744568a516fd22bdd3b9508550625b82a77cd924adf52dfaa5156a54d",
   "original_base": "5ab2498",
@@ -13,10 +13,15 @@
       "Upper/lower surface Cp and pressure contours",
       "Sectional Cp and spanwise lift curves",
       "Coefficient, convergence and admission tables",
-      "Aerodynamic CSV and PNG exports"
+      "Aerodynamic CSV and PNG exports",
+      "Rotatable 3D Cp and pressure on the actual aerodynamic panel surface",
+      "Optional visible panel boundaries in 3D and 2D",
+      "Signed blue-green-red scale with green at zero",
+      "On-screen aerodynamic mesh-stage progress and elapsed time"
     ],
-    "page_sha256": "cb8097945a3a3214029d8debc130abe9ce00270af68dae29d197165edb306e03",
+    "page_sha256": "2e222864c362108955ad17f2521ccc1d532569eec8de9f0840d7737991375741",
     "source_port": "ui/01-wing-aerostruct-ui-sources.patch",
-    "independent_review": "validation/UI_RELEASE_REVIEW.json"
+    "independent_review": "validation/UI_RELEASE_REVIEW.json",
+    "surface_review": "validation/UI_SURFACE_REVIEW.json"
   }
 }

@@ -17,8 +17,9 @@ window.WingAeroStructResults = (() => {
     ['coef', 'Coefficients & convergence'],
   ];
   const FONT = 'system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif';
-  const NEG = [[247, 247, 247], [146, 197, 222], [67, 147, 195], [33, 102, 172], [5, 48, 97]];      // suction (Cp < 0)
-  const POS = [[247, 247, 247], [244, 165, 130], [214, 96, 77], [178, 24, 43], [103, 0, 31]];       // pressure (Cp > 0)
+  // Blue = minimum, green = zero, red = maximum. The signed values are never changed or clipped.
+  const NEG = [[0, 255, 0], [0, 255, 255], [0, 0, 255]];
+  const POS = [[0, 255, 0], [255, 255, 0], [255, 0, 0]];
   const esc = (v) => String(v).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const sig = (v, d = 4) => (v == null || !Number.isFinite(v) ? '–' : Math.abs(v) >= 1e5 || (Math.abs(v) < 1e-3 && v !== 0) ? v.toExponential(2).replace('-', '−') : String(Number(v.toPrecision(d))).replace('-', '−'));
   const csvNum = (v) => (v == null || !Number.isFinite(v) ? '' : String(+v.toPrecision(10)));
@@ -49,11 +50,31 @@ window.WingAeroStructResults = (() => {
           const poly = [[s.y0, A.le + edges[k] * A.c], [s.y1, B.le + edges[k] * B.c], [s.y1, B.le + edges[k + 1] * B.c], [s.y0, A.le + edges[k + 1] * A.c]];
           for (const [y, x] of poly) { xmin = Math.min(xmin, x); xmax = Math.max(xmax, x); ymin = Math.min(ymin, y); ymax = Math.max(ymax, y); }
           const mid = at(s.yMid);
-          panels.push({ side, j, k, n: pts.length, xc: p.xc, cp: p.cp, dp: q * p.cp, y: s.yMid, y0: s.y0, y1: s.y1, chord: s.chord, x: mid.le + p.xc * mid.c, poly });
+          panels.push({ side, j, k, sourceIndex: p.i, n: pts.length, xc: p.xc, cp: p.cp, dp: q * p.cp, y: s.yMid, y0: s.y0, y1: s.y1, chord: s.chord, x: mid.le + p.xc * mid.c, poly });
         });
       }
     });
     return { panels, xmin, xmax, ymin, ymax, strips: strips.length, q };
+  }
+  // Recreate only the base mesh geometry, with the solver's own mesh builder. No aerodynamic solve, interpolation
+  // of Cp, fabricated velocities or structural surface is used. Preserve the original array index even when x/c is sorted.
+  function surfaceField3D(base, geometry) {
+    const f = surfaceField(base), m = base.mesh;
+    if (!f || typeof WingAeroPanel === 'undefined') return null;
+    const wm = WingAeroPanel.wingMesh(WingAeroPanel.aeroGeometry(geometry), {
+      chordPanels: m.chordPanelsPerSurface, spanPanels: m.spanPanels,
+      spanSpacing: m.spanSpacing || 'sine', tipClosure: m.tipClosure || (m.roundedTip ? 'rounded' : 'flat'),
+      roundingStrips: m.roundingStrips ?? 'auto'
+    });
+    if (wm.ns !== base.strips.length || wm.wingPanels !== f.panels.length) throw new Error('Stored Cp and reconstructed base mesh do not match.');
+    for (const p of f.panels) {
+      if (Math.abs(wm.ys[p.j] - p.y0) > 1e-7 || Math.abs(wm.ys[p.j + 1] - p.y1) > 1e-7) throw new Error('Stored Cp strip boundaries do not match the base mesh.');
+      const i = p.side === 'lower' ? wm.nHalf - 1 - p.sourceIndex : wm.nHalf + p.sourceIndex;
+      const k = wm.index(i, p.j), o = 12 * k;
+      p.vertices = Array.from({ length: 4 }, (_, v) => Array.from(wm.S.PV.slice(o + 3 * v, o + 3 * v + 3)));
+      p.panelIndex = k;
+    }
+    return f;
   }
   function extremes(panels, key) {
     let lo = null, hi = null;
@@ -69,20 +90,40 @@ window.WingAeroStructResults = (() => {
     const group = el('div', { class: 'wx-aero-sel', role: 'group', 'aria-label': 'Aerodynamic results' }, select);
     const title = el('h3', { id: 'wxArTitle' }), source = el('p', { class: 'wx-ar-src', id: 'wxArSource' });
     const station = el('select', { id: 'wxArStation', 'aria-label': 'Base-mesh strip for the sectional Cp', hidden: true });
+    const projection = el('select', { id: 'wxArProjection', 'aria-label': 'Pressure surface view' },
+      el('option', { value: '3d', text: '3D · drag to rotate' }),
+      el('option', { value: 'upper', text: 'Upper surface' }),
+      el('option', { value: 'lower', text: 'Lower surface' }),
+      el('option', { value: 'planform', text: '2D · both surfaces' }));
+    const resetView = el('button', { type: 'button', class: 'btn', text: 'Reset 3D view' });
+    const panelToggle = el('button', { type: 'button', class: 'btn', id: 'wxArPanels', text: 'Show panels', 'aria-pressed': 'false' });
     const clearBtn = el('button', { type: 'button', class: 'btn', id: 'wxArClear', text: 'Clear probes', hidden: true });
     const pngBtn = el('button', { type: 'button', class: 'btn', id: 'wxArPng', text: 'Save PNG' });
     const csvBtn = el('button', { type: 'button', class: 'btn', id: 'wxArCsv', text: 'Save CSV' });
     const backBtn = el('button', { type: 'button', class: 'btn', id: 'wxArBack', 'aria-label': 'Close the aerodynamic result and show the structural view' }, 'Back', el('span', { class: 'wx-long', text: ' to structure view' }));
-    const canvas = el('canvas', { id: 'wxArCanvas', role: 'img', 'aria-label': 'Aerodynamic result' });
+    const canvas = el('canvas', { id: 'wxArCanvas', role: 'img', tabindex: '0', 'aria-label': 'Aerodynamic result' });
     const html = el('div', { id: 'wxArHtml', class: 'wx-ar-html', hidden: true });
     const notice = el('div', { id: 'wxArNotice', class: 'wx-ar-notice', hidden: true });
     const probeBox = el('div', { id: 'wxArProbe', class: 'wx-ar-probe', role: 'status', 'aria-live': 'polite' });
     const overlay = el('section', { id: 'wxAeroResult', class: 'wx-aero-result', hidden: true, 'aria-label': 'Aerodynamic result view' },
-      el('header', { class: 'wx-ar-head' }, el('div', { class: 'wx-ar-titles' }, title, source), el('div', { class: 'wx-ar-tools' }, station, clearBtn, pngBtn, csvBtn, backBtn)),
+      el('header', { class: 'wx-ar-head' }, el('div', { class: 'wx-ar-titles' }, title, source), el('div', { class: 'wx-ar-tools' }, projection, resetView, panelToggle, station, clearBtn, pngBtn, csvBtn, backBtn)),
       el('div', { class: 'wx-ar-body' }, canvas, html, notice), probeBox);
     const loading = view.querySelector('#loading');
     view.insertBefore(overlay, loading || null);
     let kind = '', probes = [], hits = [], sectionJ = 0, drawn = null;
+    let surfaceMode = '3d', yaw = -0.32, elevation = 0.72, zoom = 1, drag = null, dragged = false, drawFrame = 0;
+    let showPanels = false;
+    panelToggle.addEventListener('click', () => { showPanels = !showPanels; panelToggle.setAttribute('aria-pressed', String(showPanels)); panelToggle.textContent = showPanels ? 'Hide panels' : 'Show panels'; render(); });
+    const meshCache = new WeakMap();
+    const redrawSurface = () => { if (!drawFrame) drawFrame = requestAnimationFrame(() => { drawFrame = 0; const s = data(); if (s && !overlay.hidden && ['cp', 'dp'].includes(kind)) draw(canvas, s); }); };
+    projection.addEventListener('change', () => {
+      surfaceMode = projection.value; zoom = 1; probes = []; probeBox.textContent = '';
+      if (surfaceMode === '3d') { yaw = -0.32; elevation = 0.72; }
+      if (surfaceMode === 'upper') { yaw = 0; elevation = Math.PI / 2; }
+      if (surfaceMode === 'lower') { yaw = 0; elevation = -Math.PI / 2; }
+      render();
+    });
+    resetView.addEventListener('click', () => { surfaceMode = projection.value = '3d'; yaw = -0.32; elevation = 0.72; zoom = 1; render(); });
 
     const download = (name, blob) => { const url = URL.createObjectURL(blob), a = document.createElement('a'); a.href = url; a.download = name; document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 2000); };
     const data = () => { const s = state(); return s.status === 'ok' ? s : null; };
@@ -111,7 +152,7 @@ window.WingAeroStructResults = (() => {
     function setNotice(text, withButton) {
       canvas.hidden = true; html.hidden = true; notice.hidden = false; notice.replaceChildren(el('p', { text }));
       if (withButton) { const b = el('button', { type: 'button', class: 'btn primary', text: 'Open Aerodynamics' }); b.addEventListener('click', () => openAero()); notice.append(b); }
-      for (const b of [pngBtn, csvBtn, clearBtn]) b.disabled = true; station.hidden = true; probeBox.textContent = '';
+      for (const b of [pngBtn, csvBtn, clearBtn]) b.disabled = true; station.hidden = true; projection.hidden = true; resetView.hidden = true; panelToggle.hidden = true; probeBox.textContent = '';
     }
     function render() {
       if (!kind || overlay.hidden) return;
@@ -124,6 +165,10 @@ window.WingAeroStructResults = (() => {
       const { result, combined } = s, b = result.base;
       notice.hidden = true; pngBtn.disabled = false; csvBtn.disabled = false;
       station.hidden = kind !== 'section'; clearBtn.hidden = !['cp', 'dp', 'section', 'span'].includes(kind); clearBtn.disabled = !probes.length;
+      projection.hidden = !['cp', 'dp'].includes(kind); resetView.hidden = projection.hidden || surfaceMode === 'planform';
+      panelToggle.hidden = projection.hidden;
+      canvas.style.touchAction = !projection.hidden && surfaceMode !== 'planform' ? 'none' : 'auto';
+      canvas.style.cursor = !projection.hidden && surfaceMode !== 'planform' ? 'grab' : 'crosshair';
       pngBtn.hidden = kind === 'coef';
       if (kind === 'coef') { canvas.hidden = true; html.hidden = false; source.textContent = `${result.label} · ${flowText(b)}`; renderCoefficients(s); probeBox.textContent = ''; return; }
       html.hidden = true; canvas.hidden = false;
@@ -155,7 +200,10 @@ window.WingAeroStructResults = (() => {
         ctx.fillStyle = '#14212e'; ctx.font = `700 22px ${FONT}`; ctx.fillText(exportSize.title, 24, 34);
         ctx.font = `14px ${FONT}`; ctx.fillStyle = '#4e5f71'; wrapText(ctx, exportSize.source, 24, 58, W - 48, 18); top = 96;
       }
-      if (kind === 'cp' || kind === 'dp') drawSurface(ctx, W, H, top, s, !exportSize);
+      if (kind === 'cp' || kind === 'dp') {
+        if (surfaceMode === 'planform') drawSurface(ctx, W, H, top, s, !exportSize);
+        else drawSurface3D(ctx, W, H, top, s, !exportSize);
+      }
       else if (kind === 'section') drawSection(ctx, W, H, top, s, !exportSize);
       else if (kind === 'span') drawSpan(ctx, W, H, top, s, !exportSize);
     }
@@ -216,7 +264,7 @@ window.WingAeroStructResults = (() => {
       for (const p of f.panels) {
         const pts = p.poly.map(([y, x]) => [X(y, p.side), Y(p.side, x)]);
         ctx.beginPath(); pts.forEach(([px, py], i) => (i ? ctx.lineTo(px, py) : ctx.moveTo(px, py))); ctx.closePath();
-        const c = colour(p[key], vlo, vhi); ctx.fillStyle = c; ctx.strokeStyle = c; ctx.lineWidth = 0.6; ctx.fill(); ctx.stroke();
+        const c = colour(p[key], vlo, vhi); ctx.fillStyle = c; ctx.strokeStyle = showPanels ? 'rgba(20,33,46,0.65)' : c; ctx.lineWidth = showPanels ? 0.65 : 0.6; ctx.fill(); ctx.stroke();
         hits.push({ p, pts });
       }
       // titles: the longest wording that ends before the next map or the colour bar
@@ -244,6 +292,59 @@ window.WingAeroStructResults = (() => {
         ctx.fillStyle = '#14212e'; ctx.font = `700 11px ${FONT}`; ctx.fillText(String(n + 1), cx - 3.5, cy + 4);
       });
       if (interactive) canvas.setAttribute('aria-label', `${unit} on the upper and lower surfaces, base mesh; minimum ${sig(lo[key])}, maximum ${sig(hi[key])}. Click a panel for its value.`);
+    }
+    function drawSurface3D(ctx, W, H, top, s, interactive) {
+      const b = s.result.base, key = kind === 'dp' ? 'dp' : 'cp', unit = kind === 'dp' ? 'p − p∞ (Pa)' : 'Cp';
+      let f = meshCache.get(b);
+      try { if (!f) { f = surfaceField3D(b, ui.state().geometry); if (f) meshCache.set(b, f); } }
+      catch (error) {
+        hits = []; ctx.fillStyle = '#b42318'; ctx.font = `14px ${FONT}`;
+        wrapText(ctx, '3D surface unavailable: ' + error.message + ' Use the 2D view or solve the current geometry again.', 20, top + 35, W - 40, 20); return;
+      }
+      if (!f) { hits = []; return; }
+      const ex = extremes(f.panels, key), lo = Math.min(0, ex.lo[key]), hi = Math.max(0, ex.hi[key]);
+      const mirror = !!document.getElementById('wingFullSymmetric')?.checked;
+      const panels = [...f.panels];
+      if (mirror) for (const p of f.panels) panels.push({ ...p, mirrored: true, y: -p.y, vertices: p.vertices.map(([x, y, z]) => [x, -y, z]) });
+      const cy = Math.cos(yaw), sy = Math.sin(yaw), ce = Math.cos(elevation), se = Math.sin(elevation);
+      const project = ([x, y, z]) => [y * cy - x * sy, (x * cy + y * sy) * se - z * ce, (x * cy + y * sy) * ce + z * se];
+      const faces = panels.map((p) => { const pts = p.vertices.map(project); return { p, pts, depth: pts.reduce((a, v) => a + v[2], 0) / 4 }; });
+      const all = faces.flatMap((f) => f.pts), xmin = Math.min(...all.map((v) => v[0])), xmax = Math.max(...all.map((v) => v[0])), ymin = Math.min(...all.map((v) => v[1])), ymax = Math.max(...all.map((v) => v[1]));
+      const narrow = W < 560, left = 24, right = narrow ? 90 : 125, upper = top + 42, bottom = 42;
+      const aw = Math.max(40, W - left - right), ah = Math.max(40, H - upper - bottom);
+      const scale = zoom * Math.min(aw / Math.max(1e-6, xmax - xmin), ah / Math.max(1e-6, ymax - ymin)) * 0.9;
+      const X = (v) => left + aw / 2 + (v - (xmin + xmax) / 2) * scale, Y = (v) => upper + ah / 2 + (v - (ymin + ymax) / 2) * scale;
+      faces.sort((a, b) => a.depth - b.depth);
+      hits = [];
+      ctx.save(); ctx.beginPath(); ctx.rect(0, upper - 10, W - right + 10, H - upper - bottom + 20); ctx.clip();
+      for (const face of faces) {
+        const pts = face.pts.map((v) => [X(v[0]), Y(v[1])]), col = colour(face.p[key], lo, hi);
+        ctx.beginPath(); pts.forEach(([x, y], i) => i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)); ctx.closePath();
+        ctx.fillStyle = col; ctx.strokeStyle = showPanels ? 'rgba(20,33,46,0.65)' : col; ctx.lineWidth = showPanels ? 0.65 : 0.5; ctx.fill(); ctx.stroke();
+        hits.push({ p: face.p, pts });
+      }
+      // Select only the last painted (frontmost) face. Draw probe numbers on visible panels only.
+      probes.forEach((pr, n) => {
+        const hit = hits.find((h) => h.p.side === pr.side && h.p.j === pr.j && h.p.k === pr.k && !!h.p.mirrored === !!pr.mirrored);
+        if (!hit) return;
+        const x = hit.pts.reduce((a, v) => a + v[0], 0) / 4, y = hit.pts.reduce((a, v) => a + v[1], 0) / 4;
+        ctx.beginPath(); ctx.arc(x, y, 8, 0, 2 * Math.PI); ctx.fillStyle = 'white'; ctx.fill(); ctx.strokeStyle = '#14212e'; ctx.lineWidth = 1.5; ctx.stroke();
+        ctx.fillStyle = '#14212e'; ctx.font = `700 11px ${FONT}`; ctx.fillText(String(n + 1), x - 3, y + 4);
+      });
+      ctx.restore();
+      ctx.fillStyle = '#14212e'; ctx.font = `600 13px ${FONT}`;
+      ctx.fillText(fit(ctx, [mirror ? 'Full wing · symmetric Cp' : '3D aerodynamic surface', '3D surface'], W - right - 25), left, top + 22);
+      ctx.font = `11px ${FONT}`; ctx.fillStyle = '#4e5f71';
+      ctx.fillText(fit(ctx, ['Blue: minimum · green: zero · red: maximum', 'Blue: min · green: 0 · red: max'], W - 35), left, H - 12);
+      colourbar(ctx, W - right + 22, upper, Math.max(80, ah), lo, hi, unit);
+      // Aircraft axes rotate with the surface; scale is graphical only.
+      const ox = left + 28, oy = H - 56;
+      for (const [P, label, col] of [[[1, 0, 0], '+x', '#b42318'], [[0, 1, 0], '+y', '#16834a'], [[0, 0, 1], '+z', '#175cd3']]) {
+        const a = project(P); ctx.strokeStyle = col; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.moveTo(ox, oy); ctx.lineTo(ox + 25 * a[0], oy + 25 * a[1]); ctx.stroke();
+        ctx.fillStyle = col; ctx.font = `700 10px ${FONT}`; ctx.fillText(label, ox + 30 * a[0] - 4, oy + 30 * a[1] + 4);
+      }
+      drawn = { f, key, unit, threeDimensional: true };
+      if (interactive) canvas.setAttribute('aria-label', `3D ${unit} on the actual aerodynamic base-mesh surface. Blue minimum ${sig(ex.lo[key])}, green zero, red maximum ${sig(ex.hi[key])}. Drag to rotate; click a surface panel for its signed value.`);
     }
     const FRAME = { L: 70, R: 24 };
     function chartFrame(ctx, W, H, top, xr, yr, xl, yl, head = 1) {   // head = text rows reserved above the frame
@@ -322,16 +423,17 @@ window.WingAeroStructResults = (() => {
     function probeText(p, n) {
       if (p.kind === 'strip') return `${n}. Delivered strip ${p.i + 1}: y ${sig(p.y0, 4)}–${sig(p.y1, 4)} mm · Fz ${sig(p.fz)} N · Fz/Δy ${sig(p.w)} N/mm`;
       const s = state(), b = s.result && s.result.base, eta = b ? p.y / (b.reference.span_mm / 2) : NaN;
-      return `${n}. ${p.side === 'upper' ? 'Upper' : 'Lower'} surface · strip ${p.j + 1}, panel ${p.k + 1} of ${p.n} from the leading edge · y ${sig(p.y, 4)} mm (η ${sig(eta, 3)}) · x/c ${sig(p.xc, 3)}${Number.isFinite(p.x) ? ` · x ≈ ${sig(p.x, 4)} mm` : ''} · Cp ${sig(p.cp)} · p − p∞ ${sig(p.dp)} Pa`;
+      return `${n}. ${p.mirrored ? 'Mirrored ' : ''}${p.side === 'upper' ? 'Upper' : 'Lower'} surface · strip ${p.j + 1}, panel ${p.k + 1} of ${p.n} from the leading edge · y ${sig(p.y, 4)} mm (η ${sig(eta, 3)}) · x/c ${sig(p.xc, 3)}${Number.isFinite(p.x) ? ` · x ≈ ${sig(p.x, 4)} mm` : ''} · Cp ${sig(p.cp)} · p − p∞ ${sig(p.dp)} Pa`;
     }
     function showProbes() { probeBox.replaceChildren(...probes.map((p, i) => el('div', { text: probeText(p, i + 1) }))); clearBtn.disabled = !probes.length; }
     canvas.addEventListener('click', (e) => {
+      if (dragged) { dragged = false; return; }
       if (!kind || !hits.length) return;
       const r = canvas.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
       let picked = null;
       if (kind === 'cp' || kind === 'dp') {
         const inside = (pts) => { let c = false; for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) { const [xi, yi] = pts[i], [xj, yj] = pts[j]; if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / ((yj - yi) || 1e-12) + xi) c = !c; } return c; };
-        const h = hits.find((t) => inside(t.pts)); picked = h && h.p;
+        const h = hits.slice().reverse().find((t) => inside(t.pts)); picked = h && h.p;
       } else {
         let best = null; for (const h of hits) { const d = Math.hypot(h.at[0] - x, h.at[1] - y); if (d < 18 && (!best || d < best.d)) best = { d, h }; }
         picked = best && best.h.point;
@@ -341,6 +443,34 @@ window.WingAeroStructResults = (() => {
       probes = [...probes.filter((p) => p !== picked), picked].slice(-8);
       render(); showProbes();
     });
+    canvas.addEventListener('pointerdown', (e) => {
+      if (!['cp', 'dp'].includes(kind) || surfaceMode === 'planform') return;
+      drag = { x: e.clientX, y: e.clientY, yaw, elevation }; dragged = false; canvas.setPointerCapture(e.pointerId);
+    });
+    canvas.addEventListener('pointermove', (e) => {
+      if (!drag) return;
+      const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+      if (Math.hypot(dx, dy) < 4 && !dragged) return;
+      dragged = true; surfaceMode = projection.value = '3d'; yaw = drag.yaw + dx * 0.006;
+      elevation = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, drag.elevation - dy * 0.006)); redrawSurface();
+    });
+    for (const name of ['pointerup', 'pointercancel']) canvas.addEventListener(name, () => { drag = null; });
+    canvas.addEventListener('wheel', (e) => {
+      if (!['cp', 'dp'].includes(kind) || surfaceMode === 'planform') return;
+      e.preventDefault(); zoom = Math.max(0.45, Math.min(4, zoom * Math.exp(-e.deltaY * 0.001))); redrawSurface();
+    }, { passive: false });
+    canvas.addEventListener('keydown', (e) => {
+      if (!['cp', 'dp'].includes(kind) || surfaceMode === 'planform') return;
+      if (e.key === 'ArrowLeft') yaw -= 0.12;
+      else if (e.key === 'ArrowRight') yaw += 0.12;
+      else if (e.key === 'ArrowUp') elevation = Math.min(Math.PI / 2, elevation + 0.12);
+      else if (e.key === 'ArrowDown') elevation = Math.max(-Math.PI / 2, elevation - 0.12);
+      else if (e.key === '+' || e.key === '=') zoom = Math.min(4, zoom * 1.15);
+      else if (e.key === '-') zoom = Math.max(0.45, zoom / 1.15);
+      else return;
+      e.preventDefault(); surfaceMode = projection.value = '3d'; redrawSurface();
+    });
+    document.getElementById('wingFullSymmetric')?.addEventListener('change', () => { if (!overlay.hidden) render(); });
     pngBtn.addEventListener('click', () => {
       const s = data(); if (!s || kind === 'coef') return;
       const W = 1800, H = kind === 'section' || kind === 'span' ? 1000 : Math.round(1800 * Math.max(0.55, canvas.clientHeight / Math.max(1, canvas.clientWidth))) + 96;
@@ -401,5 +531,5 @@ window.WingAeroStructResults = (() => {
     if (window.ResizeObserver) new ResizeObserver(() => { if (!overlay.hidden && kind !== 'coef') render(); }).observe(canvas.parentElement);
     return { refresh: () => { if (!overlay.hidden) { render(); if (probes.length) showProbes(); } }, close, show, get kind() { return kind; }, element: overlay, selector: group };
   }
-  return Object.freeze({ install, VIEWS, surfaceField, colour });
+  return Object.freeze({ install, VIEWS, surfaceField, surfaceField3D, colour });
 })();

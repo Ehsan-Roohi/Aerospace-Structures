@@ -132,7 +132,7 @@ The G-code is provided for inspection only. Do not send it directly to a printer
 
 ## Engineering readings and case studies
 
-**[Boeing 737-800 Split Scimitar Winglets: aerodynamics, structures and aeroelasticity](SPLIT_SCIMITAR_WINGLETS.md)** — a detailed case study based on the supplied workshop video: induced drag, nonplanar loading, wing-root moments, thin-walled torsion, fastener groups, reinforcement and mass, flutter, fatigue and an FAA integration example. Includes the [25-second video](docs/case-studies/split-scimitar/linkedin-video.mp4), two original diagrams, reproducible Python calculations, a claim-by-claim fuel-saving audit and 14 linked references.
+**[Boeing 737-800 Split Scimitar Winglets: aerodynamics, structures and aeroelasticity](SPLIT_SCIMITAR_WINGLETS.md)** — a detailed case study based on the supplied workshop video: induced drag, nonplanar loading, wing-root moments, thin-walled torsion, fastener groups, reinforcement and mass, flutter, fatigue and an FAA integration example. Includes the [25-second video](docs/case-studies/split-scimitar/linkedin-video.mp4), six real photographs/video frames, reproducible Python calculations, a claim-by-claim fuel-saving audit and 14 linked references.
 
 **[Fermat’s Last Theorem: from integer triangles to modularity and machine-checked proof](FERMATS_LAST_THEOREM.md)** — extended mathematical enrichment reading: a complete exponent-four descent proof, Frey curves, modular forms, the Wiles–Taylor–Wiles argument, a sourced assessment of the 2026 Lean formalization, and reproducible Python activities linking exact arithmetic with structural model verification. Includes exercises, a glossary and primary references; optional reading, not a syllabus change.
 

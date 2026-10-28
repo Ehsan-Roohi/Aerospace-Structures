@@ -55,9 +55,17 @@ APB announced the 737-800 certification on 6 February 2014 after a program launc
 
 Boeing identifies the MAX tip as an Advanced Technology winglet. Visual resemblance does not make it interchangeable with the APB retrofit. [5]
 
-![Original conceptual comparison of wingtip arrangements](docs/case-studies/split-scimitar/tip-concepts.svg)
+![Actual Aeromexico Boeing 737-800 Split Scimitar Winglet](docs/case-studies/split-scimitar/aeromexico-closeup.jpg)
 
-*Figure 1. Original teaching schematic; front-view concepts only, not APB geometry or scale. The flow direction is perpendicular to this view.*
+*Figure 1. Actual Split Scimitar Winglet on an Aeromexico 737-800. Photo: Mnts; crop/levels by Altair78, via [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:B737-800_Split_Winglet_WP_20141110_001.jpg), [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/). Commons thumbnail reproduced without further edits.*
+
+![Actual split winglet on PH-HXC](docs/case-studies/split-scimitar/transavia-inflight.jpg)
+
+*Photo: jounigripen, Boeing 737-8K2 PH-HXC, via [Commons](https://commons.wikimedia.org/wiki/File:Split_Scimitar_Winglets_(51329381972).jpg), [CC BY 2.0](https://creativecommons.org/licenses/by/2.0/). Thumbnail reproduced without further edits.*
+
+![United 737-800 with Split Scimitar winglets](docs/case-studies/split-scimitar/united-aircraft.jpg)
+
+*Aircraft context: United N37293. Photo: Masakatsu Ukon, via [Commons](https://commons.wikimedia.org/wiki/File:United_Airlines,_Boeing_737-800_N37293_w_Split_Scimitar_Winglet_NRT_(18596425018).jpg), [CC BY-SA 2.0](https://creativecommons.org/licenses/by-sa/2.0/). Thumbnail reproduced without further edits.*
 
 ## 3. Aerodynamics: what actually reduces drag?
 
@@ -120,7 +128,7 @@ at fixed lift and operating condition. The equation shows why “20% less induce
 
 ### 5.1 A consistent free body
 
-Use right-handed aircraft axes: $x$ forward, $y$ toward the right wingtip and $z$ upward. About a chosen attachment reference point $A$, integrate aerodynamic traction $\mathbf t$ over the winglet surface:
+Use right-handed axes: $x$ aft (downstream), $y$ toward the right wingtip and $z$ upward. In this convention a drag force has positive $F_x$. About a chosen attachment reference point $A$, integrate aerodynamic traction $\mathbf t$ over the winglet surface:
 
 $$
 \mathbf F_A=\int_{S_w}\mathbf t\,dS,\qquad
@@ -135,19 +143,27 @@ $$
 
 Add a free aerodynamic couple if the distributed traction is replaced by a point force. Include weight and acceleration loads consistently. The structural reaction balances these applied resultants; it has the opposite sign on the isolated component. Root loads also include the **change in loading over the entire main wing**, not just the added winglet force.
 
-![Original load-path schematic](docs/case-studies/split-scimitar/load-path.svg)
+<img src="docs/case-studies/split-scimitar/internal-attachment.jpg" alt="Exposed internal attachment in the supplied video" width="480">
 
-*Figure 2. Pressure enters the skin, reaches local members and the attachment, then the main-wing box. Arrows show load-transfer sequence, not a verified internal APB layout.*
+*Figure 2. Actual internal members and fastener rows, extracted at 0.5 s from the supplied video linked in reference 1. The footage does not establish material specifications or individual fastener loads.*
+
+<img src="docs/case-studies/split-scimitar/fastener-detail.jpg" alt="Close view of actual fasteners" width="480">
+
+*Fastener detail at 5 s in the same video.*
+
+<img src="docs/case-studies/split-scimitar/workshop-winglet.jpg" alt="Exterior winglet transition and lower strake in workshop" width="480">
+
+*Workshop exterior at 23 s in the same video. These frames preserve the source appearance and are not manufacturer drawings.*
 
 ### 5.2 Why the root can be highly loaded
 
-Take a hypothetical right-tip resultant at $(x,y,z)=(0,17,1)$ m with $(F_x,F_y,F_z)=(-0.8,2,4)$ kN. The wing-root moment contribution is
+Take a hypothetical right-tip resultant at $(x,y,z)=(0,17,1)$ m with $(F_x,F_y,F_z)=(0.8,2,4)$ kN. The wing-root moment contribution is
 
 $$
-(M_x,M_y,M_z)=(66,-0.8,13.6)\ \mathrm{kN\,m}.
+(M_x,M_y,M_z)=(66,0.8,-13.6)\ \mathrm{kN\,m}.
 $$
 
-For the same forces at a **local attachment** with offset $(0,0,1)$ m, the moment is $(-2,-0.8,0)$ kN m. Different reference points answer different questions. The large $yF_z$ root term and the local $-zF_y$ term should never be conflated.
+For the same forces at a **local attachment** with offset $(0,0,1)$ m, the moment is $(-2,0.8,0)$ kN m. Different reference points answer different questions. The large $yF_z$ root term and the local $-zF_y$ term should never be conflated.
 
 Under maneuver or gust loading these resultants vary; the example is not a load case for a real aircraft. Left/right side forces may cancel in the whole-aircraft force sum while still loading both wing structures.
 
@@ -284,7 +300,7 @@ A useful optimization statement is: minimize mission fuel subject to strength, s
 
 1. **Video observation:** list five visible features and three unavailable quantities. Label every statement as observation or inference. Why is an alloy designation unavailable from finish color?
 2. **Drag accounting:** reproduce Section 4. At what added $\Delta C_D$ is the ideal induced-drag benefit completely lost? **Answer:** approximately 0.000731.
-3. **Force and moment:** reproduce Section 5's cross product. Change $F_y$ from +2 to −2 kN. **Answer:** $M_x$ changes from 66 to 70 kN m; the other two components stay −0.8 and 13.6 kN m.
+3. **Force and moment:** reproduce Section 5's cross product. Change $F_y$ from +2 to −2 kN. **Answer:** $M_x$ changes from 66 to 70 kN m; the other two components stay +0.8 and −13.6 kN m.
 4. **Fastener group:** reproduce Section 6 and compare maximum load to the 5 kN equal-share estimate. **Answer:** approximately 8.41 kN, 68.2% above equal share.
 5. **Mass sensitivity:** reproduce the scalar frequency estimate for +10% mass. **Answer:** $1/\sqrt{1.1}=0.95346$. Explain why that ratio does not give flutter margin.
 6. **Source audit:** convert 58,000 US gallons using 3.785411784 L/US gal. **Answer:** 219,553.9 L. State which operator and type of estimate the source describes.
@@ -319,4 +335,4 @@ Links checked 28 October 2026. Product descriptions and operator releases are id
 
 ### Media and reuse
 
-The supplied video is retained for the requested course case study with attribution to the linked post. The post may itself be a repost; original filming authorship and a redistribution license are not established. The video remains third-party material and is not represented as covered by the repository's code or teaching-material license. Original diagrams in this case study are conceptual educational illustrations; they are not manufacturer drawings.
+A compressed, full-length copy of the supplied video (with audio) is retained for the requested course case study with attribution to the linked post. The post may itself be a repost; original filming authorship and a redistribution license are not established. The video remains third-party material and is not represented as covered by the repository's code or teaching-material license. Photographs retain their individual licenses and credits above. Video frames are extracted from the supplied clip and retain its third-party status.

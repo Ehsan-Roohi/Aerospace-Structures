@@ -1,0 +1,64 @@
+{
+  "original_case": {
+    "supported": false,
+    "reason": "Remove external rods: 3-D rod/sleeve slip and curved rod paths are not validated. Use one piece or explicitly fully bonded module seams; 3-D dry-joint compliance is not validated."
+  },
+  "corrected_case": {
+    "supported": true,
+    "spar_fractions": [
+      0.3,
+      0.6
+    ],
+    "bonded_seams": true,
+    "full_span_spars": true,
+    "imports_with_current_study_reader": true
+  },
+  "panel": {
+    "meshes": 7,
+    "flow": {
+      "speed": 15,
+      "density": 1.225,
+      "alphaDeg": 4,
+      "sequence": "standard"
+    },
+    "CL": 0.5208388404610537,
+    "semi_wing_Fz_N": 4.195872052986422
+  },
+  "structure": {
+    "admitted": true,
+    "claims": {
+      "torque": "withheld",
+      "twist": "withheld"
+    },
+    "failed": [],
+    "tip_displacement_mm": 1.2965817846033079,
+    "mass_g": 236.43494741195258,
+    "verification": {
+      "forceError": 0.0000012583918671589863,
+      "momentError": 0.0002150676444384358,
+      "freeResidual": 0.0000021344751466451095,
+      "energyError": 6.431691348085283e-7,
+      "totalForce": [
+        -0.1916365284015853,
+        0.07656450029033253,
+        4.195872052986444
+      ],
+      "totalMoment": [
+        814.2249487464884,
+        -197.01295496183997,
+        38.92513255341343
+      ],
+      "supportForce": [
+        0.19163654664135898,
+        -0.07656450144973061,
+        -4.195873311245582
+      ],
+      "supportMoment": [
+        -814.2251547327321,
+        197.01301678033667,
+        -38.92513404758555
+      ]
+    }
+  },
+  "elapsed_s": 14.070213399999998
+}

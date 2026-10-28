@@ -217,6 +217,7 @@ const WingAeroUI = (() => {
     function syncButtons() {
       const st = ad.structure?.() || { supported: true }, fresh = last && lastKey && ad.geometryKey && ad.geometryKey(ad.geometry()) === lastKey;
       $('#aeroApply').disabled = running || !fresh || !st.supported || lastCombined?.structuralLoadAvailable === false || !!ad.disabled?.();
+      $('#aeroApply').title = !st.supported ? st.message : lastCombined?.structuralLoadAvailable === false ? 'Structural load transfer is unavailable for an exact zero-chord tip.' : 'Transfer the aerodynamic load and run the structural admission checks.';
       $('#aeroRemove').hidden = !ad.applied?.();
     }
     async function compute() {
@@ -234,7 +235,8 @@ const WingAeroUI = (() => {
         lastCombined = result.base.mesh.closedTip ? aerodynamicSummary(A(), result) : A().combineSequence(req.geometry, result, { snapStations: ad.snapStations ? ad.snapStations() : [] });
         last = result; lastKey = key;
         if (last.trim) $('#aeroAlpha').value = +last.trim.alphaDeg.toFixed(4);
-        status(`Solved the ${result.sequence} sequence (${result.levels.length} meshes, ${result.levels.reduce((t, l) => t + l.panels, 0)} panels in total) in ${((Date.now() - t0) / 1000).toFixed(1)} s${result.levels.every(l => l.modelCacheHit) ? ' (influence systems reused)' : ''}. ${lastCombined.structuralLoadAvailable === false ? 'Aerodynamic results are available. Structural load transfer is unavailable for a zero-chord tip.' : ad.structure?.().supported === false ? 'This structure cannot take the load: see below.' : 'Press Apply aerodynamic loads to structure to run the admission test (it re-solves the structure).'}`);
+        const support = ad.structure?.();
+        status(`Solved the ${result.sequence} sequence (${result.levels.length} meshes, ${result.levels.reduce((t, l) => t + l.panels, 0)} panels in total) in ${((Date.now() - t0) / 1000).toFixed(1)} s${result.levels.every(l => l.modelCacheHit) ? ' (influence systems reused)' : ''}. ${lastCombined.structuralLoadAvailable === false ? 'Aerodynamic results are available. Structural load transfer is unavailable for a zero-chord tip.' : support?.supported === false ? support.message : 'Press Apply aerodynamic loads to structure to run the admission test (it re-solves the structure).'}`);
         render();
       } catch (e) { status(e.message, true); }
       finally { busy(false); }
@@ -303,6 +305,13 @@ const WingAeroUI = (() => {
       $('#aeroSequence').value = s.sequence === 'fine' ? 'fine' : 'standard';
       syncApplied();
     }
+    function reset() {
+      if (running) throw new Error('Wait for the aerodynamic solve to finish before opening the course example.');
+      last = null; lastCombined = null; lastKey = ''; lastAdmission = null;
+      $('#aeroResults').innerHTML = ''; $('#aeroAdmission').innerHTML = ''; $('#aeroTarget').value = '';
+      status('Set the flow conditions, then press Solve Aerodynamics.');
+      refresh();
+    }
     // Applied-load banner, stale-shape warning and buttons only (the flow fields keep what the user is typing).
     function syncApplied() {
       let rec = null, key = '';
@@ -313,7 +322,7 @@ const WingAeroUI = (() => {
       syncButtons();
     }
     refresh();
-    return { refresh, syncApplied, compute, apply, showAdmission, destroy: () => { worker?.terminate(); worker = null; host.innerHTML = ''; }, get result() { return last; }, get combined() { return lastCombined; }, get admission() { return lastAdmission; }, get solvedKey() { return lastKey; }, get running() { return running; } };
+    return { refresh, reset, syncApplied, compute, apply, showAdmission, destroy: () => { worker?.terminate(); worker = null; host.innerHTML = ''; }, get result() { return last; }, get combined() { return lastCombined; }, get admission() { return lastAdmission; }, get solvedKey() { return lastKey; }, get running() { return running; } };
   }
   return Object.freeze({ mount, DEFAULTS, SEQUENCE_TEXT, SEQUENCE_NOTE, spanwiseFigure, cpFigure, csv, runMainThread, recordFromSequence, sequenceOf, delivered, aerodynamicSummary, engineLoad, structuralCuts, structuralTorsion, admit, admissionTable, admissionVerdict });
 })();

@@ -1,10 +1,10 @@
 {
   "product": "MIE 446 Wing AeroStruct",
-  "version": "0.3.0-ui.3",
+  "version": "0.3.0-ui.4",
   "status": "Published educational application; separate from Wing Lab",
-  "builtAt": "2026-10-28T02:19:25.156843+00:00",
+  "builtAt": "2026-10-28T03:06:36.259378+00:00",
   "page": "index.html",
-  "pageSha256": "e58a3cae7db2cf2a77a7228274651ed36d2ca5989460a0f9a1a0bec52dab5f1d",
+  "pageSha256": "65076bb759c3af1e167942f30b51ac22ba9cbef03498f43bf3c18d1a96523b24",
   "workers": {
     "wing-aero": {
       "worker": "2ff1da57ee4c",
@@ -193,15 +193,17 @@
     "baseCommit": "c7552df72c79d03aed0d46cc40b1a7fb34a9b162",
     "sources": {
       "00-prerequisite-main-0bb76f3-on-template.patch": "198422c3cdf0ef7d2cc159f1a7b22334a8c3012f2cca6e441a920c56489e50e7",
-      "01-wing-aerostruct-ui-sources.patch": "104e727cacec988fa1aaf7924c6f8ac7d87b32ecd227e529ad83e0e8fce0e459",
-      "02-closed-tip-aero-results.patch": "4d5833dbf86ddd6f34bc421b10bcac8118a87c7c0a10debe40256fd2b46993b5",
-      "wing-aero-ui.js": "f2932ecd847a3969f138887fa58f8b4f34b9c085a11e8d4f0999196479458cf9",
+      "01-wing-aerostruct-ui-sources.patch": "1e36c085712fd65620a574d4815fe0e19136b01bd8e7072694f58c77c0d340a4",
+      "02-closed-tip-aero-results.patch": "e3419a45a99354d37219e9b1ed880ecea615133c540519c3e2d32c4f91509ca2",
+      "03-course-example-activity.patch": "197105dc7ff2665ccf439a38f81d23e113249021a807df33fed641e3a710cb77",
+      "wing-aero-ui.js": "051a96d5d0ee849b3c8d47b3703318fe934822ccda8a03fb446a7a665f925887",
       "wx-aero-results.js": "1cb93a66dde05e504482d8feace6ca139bc84c222e392d4d0368492642798b6d",
-      "wx-shell.css": "8687a7bb31a1e2bc5602fb95c8392109efe5257d658391c55ed663d3e16250b6",
-      "wx-shell.js": "b4d698dfa51db30be2d425426e9cfc34706420e9ef51dc9f0753a3618a04e0b2"
+      "wx-shell.css": "eba6cc25e6b6b765f40a9a54ff573fd68a3d4e4c8018c426c756a29b763e5324",
+      "wx-shell.js": "c96577ea0b861e3ca2a660f368aa850e7674912953d870b820cd539433103932"
     },
     "validation": "validation/UI_RELEASE_REVIEW.json",
     "surfaceReview": "validation/UI_SURFACE_REVIEW.json",
-    "closedTipReview": "validation/CLOSED_TIP_AERO_REVIEW.json"
+    "closedTipReview": "validation/CLOSED_TIP_AERO_REVIEW.json",
+    "courseReview": "validation/COURSE_UI_REVIEW.json"
   }
 }

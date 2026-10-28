@@ -1,0 +1,57 @@
+{
+  "version": "0.3.0-ui.4",
+  "base_commit": "da1f064c2abc9cc90ee2eefbd46490d6f767bfe2",
+  "page_sha256": "65076bb759c3af1e167942f30b51ac22ba9cbef03498f43bf3c18d1a96523b24",
+  "static_checks": {
+    "base": "da1f064c2abc9cc90ee2eefbd46490d6f767bfe2",
+    "inline_scripts_syntax_checked": 7,
+    "original_script_count": 9,
+    "new_script_count": 9,
+    "unchanged_solver_scripts": [
+      {
+        "module": "WingEngine",
+        "sha256": "943f24153312fb3a0f463e2ddeda6a1acb34478a1beba8ffe34f98feaf81aff3"
+      },
+      {
+        "module": "WingAeroPanel",
+        "sha256": "4cf31712ddba740d741fafe5058ab07202459c70bb4fc1d77d79b9d032358f49"
+      },
+      {
+        "module": "WingFrame3D",
+        "sha256": "b8fa7dfa5fb932abadb548baa5e69852b2d779b891364ec77a45855d802f456e"
+      }
+    ],
+    "page_sha256": "65076bb759c3af1e167942f30b51ac22ba9cbef03498f43bf3c18d1a96523b24"
+  },
+  "source_rebuild_byte_identical": true,
+  "source_patches": [
+    "ui/00-prerequisite-main-0bb76f3-on-template.patch",
+    "ui/01-wing-aerostruct-ui-sources.patch",
+    "ui/02-closed-tip-aero-results.patch",
+    "ui/03-course-example-activity.patch"
+  ],
+  "changes": [
+    "File contains the original Open JSON and Save JSON control nodes, once each",
+    "Course preset uses two full-span bonded PLA spars at 0.3c and 0.6c; no external rods; explicitly bonded module seams",
+    "Course preset resets aerodynamic fields and cached results; no load is silently applied",
+    "Structural and contour operations show an activity card before synchronous work, with stage and elapsed time",
+    "Structural capability refusal identifies unsupported model assumptions rather than claiming physical load failure"
+  ],
+  "numerical_validation": "COURSE_TWO_SPAR_RESULT.json",
+  "activity_tests": {
+    "yield_before_mapping": true,
+    "rapid_result_requests_coalesce": true,
+    "render_errors_clear_activity": true,
+    "obsolete_contour_cannot_hide_new_solve": true
+  },
+  "browser_validation": {
+    "initial_file_menu_open_save_visible": true,
+    "full_manual_regression_completed": false,
+    "reason": "A native browser confirmation interrupted the in-app test. Direct Firefox control was then stopped by the browser URL policy limitation of the tool. The course example now uses the existing in-page confirmation instead of a native browser confirm."
+  },
+  "limits": [
+    "No numerical solver or admission tolerance changed.",
+    "The example is a nominal bonded-beam educational model; bonded seams must reflect the intended assembly.",
+    "Panel load admission still withholds torque/twist when their uncertainty is unresolved."
+  ]
+}

@@ -1,0 +1,232 @@
+diff --git a/computational/printed-wing-solver/aerostruct/wing_aerostruct_template.html b/computational/printed-wing-solver/aerostruct/wing_aerostruct_template.html
+--- a/computational/printed-wing-solver/aerostruct/wing_aerostruct_template.html
++++ b/computational/printed-wing-solver/aerostruct/wing_aerostruct_template.html
+@@ -1149,8 +1149,9 @@
+     </div>
+     <div class="loading" id="loading" hidden>
+       <div class="card" role="status">
+-        <h3 id="loadTitle">Starting the solver</h3>
+-        <p id="loadStep">Building the NACA geometry</p>
++        <div class="wing-busy-heading"><span class="wx-aero-spinner" aria-hidden="true"></span><h3 id="loadTitle">Solving structure / stress</h3></div>
++        <p id="loadStep">Preparing the wing model</p>
++        <p id="loadElapsed" aria-live="off"></p>
+         <div class="progress"><div id="loadBar"></div></div>
+       </div>
+     </div>
+@@ -14982,7 +14983,7 @@
+     preview.textContent=customText?'See status details.':label==='Linear range exceeded'?'Illustrative only · reduce loads.':label==='Input error'?'Check input details.':label==='Solved · section stress'?'Nominal normal stress · tip unresolved.':label==='Analysis blocked'?'Confirm imported structure.':label==='Empty study'?'Choose Airfoil & planform.':label==='Out of date'?'Press Solve Structure / Stress.':label==='Solving'?'Computing…':/no load/i.test(full)?'No loads applied.':label==='Solved · 3-D beam'?(R?.analysis3D?.loadMapping?.endWrenches.length?'End-load approximation · see results warning.':'Nominal beam results.'):/, exceeded/.test(full)?'Strength check exceeded.':'Results match inputs.';
+     chip.title=full;
+   }
+-  function setStatus(text) { if(!running)$('#loading').hidden=true;renderStatus(text);syncCompactStatus(text); }
++  function setStatus(text) { if(!running&&!resultRendering)endWingActivity();renderStatus(text);syncCompactStatus(text); }
+   function renderStatus(text) {
+     syncWingHistory();
+     const chip = $("#stateChip"), t = $("#stateText"), btn = $("#runBtn");
+@@ -15017,8 +15018,29 @@
+     chip.className = "chip ok"; chip.textContent = "Solved";
+     t.textContent = text || `Results match the inputs · other-check U = ${nf(u, 2)} (${R.governing.name.replace(/ \(.*\)/, "")})${u > 1 ? ", exceeded" : ""} · buckling unresolved`;
+   }
+-  // Do not stall a study when the browser suspends animation in a background tab.
+-  const frame = () => new Promise((r) => setTimeout(r, 0));
++  // Yield through a paint before synchronous numerical or contour work; background tabs have a fallback.
++  const frame = () => new Promise(resolve => {
++    let done = false;
++    const finish = () => { if (!done) { done = true; clearTimeout(fallback); resolve(); } };
++    const fallback = setTimeout(finish, 120);
++    requestAnimationFrame(() => setTimeout(finish, 0));
++  });
++  let resultRendering = false, resultRenderGeneration = 0, activityTimer = null, activityStart = 0;
++  function beginWingActivity(title, step) {
++    $('#loadTitle').textContent = title;
++    $('#loadStep').textContent = step;
++    $('#loadBar').style.width = '0%';
++    $('#loading').hidden = false;
++    $('#app').setAttribute('aria-busy', 'true');
++    activityStart = performance.now();
++    const tick = () => { $('#loadElapsed').textContent = `Elapsed ${((performance.now()-activityStart)/1000).toFixed(1)} s · please keep this page open`; };
++    tick(); clearInterval(activityTimer); activityTimer = setInterval(tick, 250);
++  }
++  function endWingActivity() {
++    clearInterval(activityTimer); activityTimer = null;
++    $('#loading').hidden = true;
++    $('#app').removeAttribute('aria-busy');
++  }
+   async function runStudy() {
+     stlReference?.clear();
+     if(S.emptyStudy){clearTimeout(runTimer);showEmptyWing();setStatus();return;}
+@@ -15027,7 +15049,10 @@
+     // Outer geometry imported from a design-parameter file: no analysis until its structure is confirmed here.
+     if (gateOpen()) { clearTimeout(runTimer); stale = true; setStatus(); renderImportGate(); return; }
+     if (importGate) { importGate = null; renderImportGate(); }   // every item confirmed: analyse the imported wing
++    ++resultRenderGeneration; resultRendering = false;
+     running = true; stale = false;
++    beginWingActivity('Solving structure / stress', 'Preparing geometry, materials and applied loads');
++    await frame();
+     renderInputs();
+     const errorAtStart = inputError, fieldErrorsAtStart = fieldErrors;
+     setStatus();
+@@ -15041,7 +15066,7 @@
+       E.makeGeometry(input.geometry);
+       if (heavy) {
+         ld.hidden = false;
+-        $("#loadTitle").textContent = R ? "Re-meshing the wing" : "Starting the solver";
++        $("#loadTitle").textContent = "Solving structure / stress";
+         const ys = E.stations(input);
+         for (let k = 0; k < ys.length; k++) {
+           $("#loadStep").textContent = `Meshing section ${k + 1} of ${ys.length} at y = ${ys[k].toFixed(1)} mm · solving warping and shear functions`;
+@@ -15054,6 +15079,8 @@
+         $("#loadBar").style.width = `${Math.max(35,(100 * ys.length) / (ys.length + 2))}%`;
+         await frame();
+       }
++      $('#loadStep').textContent = 'Solving structural equilibrium and recovering stresses';
++      await frame();
+       const solved = E.solve(input);
+       if (input.aeroLoad) {
+         // Admission: the load enters the coupled result only if its force, bending and lift are resolved, and its
+@@ -15074,6 +15101,9 @@
+       if (fieldErrors === fieldErrorsAtStart) fieldErrors = {};
+       if (!designBaseline || saveDesignAfterRun) { designBaseline = R; saveDesignAfterRun = false; }
+       geometryPreview = false;
++      $('#loadStep').textContent = 'Preparing the wing view and result contours';
++      $('#loadBar').style.width = '95%';
++      await frame();
+       if (heavy) { buildModel(R); lastGeoKey = geoKey; frameView(heavy && !lastViewSet); }
+       applyResult();
+       renderAll();
+@@ -15085,7 +15115,7 @@
+       if (!err?.withheld) console.error(err);   // a withheld coupled result is a decision, not a failure
+       flash(err.message || String(err));
+     } finally {
+-      ld.hidden = true;
++      endWingActivity();
+       running = false;
+       setStatus();
+       renderTree();
+@@ -15898,6 +15928,23 @@
+     applyAnatomy();
+   }
+   function applyResult() {
++    if (running || !R || S.plot === 'model' || S.plot === 'mode') {
++      ++resultRenderGeneration; resultRendering = false;
++      if (!running) endWingActivity();
++      applyResultNow(); return;
++    }
++    const generation = ++resultRenderGeneration;
++    resultRendering = true;
++    const name = { stress:'stress', disp:'displacement', twist:'twist', bending:'bending moment', torque:'torque', fos:'factor of safety' }[S.plot] || S.plot;
++    beginWingActivity(`Preparing ${name} contour`, 'Mapping the solved result to the wing surface');
++    frame().then(() => {
++      if (generation !== resultRenderGeneration || running) return;
++      try { applyResultNow(); }
++      catch (error) { console.error(error); flash(error.message || String(error)); }
++      finally { if (generation === resultRenderGeneration) { resultRendering = false; endWingActivity(); } }
++    });
++  }
++  function applyResultNow() {
+     updateModel();
+     applyAnatomy();
+     renderPartEditor();
+@@ -16661,7 +16708,7 @@
+     saveSettings:v=>{if(JSON.stringify(v)!==JSON.stringify(S.aerodynamics)){S.aerodynamics=v;recordWingHistory();}},
+     geometryKey:g=>aeroGeometryKey(g),
+     snapStations:()=>aeroSnapStations(),
+-    structure:()=>{try{const g=E.makeGeometry(S.geometry),c=E.analysisCapability(g,{...engineInput(),load:{...noLoad(),selfWeight:!!S.load.selfWeight},aeroLoad:{kind:'aeroStrips',lineFraction:.25,strips:[[0,g.semiSpan,0,0,0,0,0,0]]}});return {supported:c.supported,message:c.supported?'':`This structure cannot take the aerodynamic load in the spatial beam: ${c.message}`};}catch(e){return {supported:false,message:e.message};}},
++    structure:()=>{try{const g=E.makeGeometry(S.geometry),c=E.analysisCapability(g,{...engineInput(),load:{...noLoad(),selfWeight:!!S.load.selfWeight},aeroLoad:{kind:'aeroStrips',lineFraction:.25,strips:[[0,g.semiSpan,0,0,0,0,0,0]]}});return {supported:c.supported,message:c.supported?'':`Structural model unsupported for this setup: ${c.message}`};}catch(e){return {supported:false,message:e.message};}},
+     applied:()=>S.aeroLoad,
+     apply:record=>{
+       if(running)throw Error('Wait for the structural solve to finish, then apply the aerodynamic load.');
+@@ -17302,7 +17349,13 @@
+ 
+     const historyHelp=el('details',{class:'wing-history-help'},'<summary>Undo / Redo</summary><p class="note">Undo/Redo restores up to 100 saved input states, including geometry, project name, materials, loads and the cleared canvas. A new edit clears Redo. Outside text fields use Ctrl/Cmd+Z, Ctrl/Cmd+Shift+Z or Ctrl+Y. Restored inputs need Solve unless automatic solving is enabled. History is kept for this page session, not saved in JSON.</p>');helpBody.append(historyHelp);
+     helpBody.append(el('details',{},'<summary>Selection &amp; clearing</summary><p class="note">Click visible parts to edit them. To select the entire wing, click Select wing, or use Ctrl/Cmd+A outside text fields. An outline and Delete selected button confirm the selection. You can also drag a rectangle around the whole wing. Delete selected or the Delete key opens Clear confirmation. Esc cancels selection. New / Clear is in the File menu; Undo restores your previous inputs. Normal dragging rotates the view.</p>'));
+-    const example=el('button',{class:'btn',type:'button',id:'wgCourseExample'},'Optional course wing example');example.onclick=()=>{if(confirm('Replace the current wing with the course example? Geometry, materials and connections will reset, and applied loads will be cleared.'))window.dispatchEvent(new CustomEvent('wing-learning-stage',{detail:'project'}));};helpBody.append(example);
++    const example=el('button',{class:'btn',type:'button',id:'wgCourseExample'},'Optional course wing example');example.onclick=()=>{
++      if(running||wingAero?.running){flash('Wait for the current solve to finish before opening the course example.');return;}
++      const form=el('form',{},'<p>Open the course wing with two bonded spars at 30% and 60% chord? Geometry, materials, bonded-seam assumptions and flow settings will reset; applied loads will be cleared.</p><div class="lesson-actions"><button class="btn primary" type="submit">Open two-spar example</button><button class="btn" type="button" data-example-cancel>Cancel</button></div>');
++      form.onsubmit=e=>{e.preventDefault();printedWorkspace.close();window.dispatchEvent(new CustomEvent('wing-learning-stage',{detail:'project'}));};
++      form.querySelector('[data-example-cancel]').onclick=()=>printedWorkspace.close();
++      printedWorkspace.open('Open course example?',form,example);
++    };helpBody.append(example);
+     printedWorkspace.tools.insertBefore(help,printedWorkspace.tools.querySelector('.wing-quick-hint'));
+     const usageHelp=el('details',{},'<summary>Mouse, touch &amp; browser backup</summary>'),quickHint=printedWorkspace.tools.querySelector('.wing-quick-hint');
+     quickHint.classList.remove('wing-quick-hint');usageHelp.append(quickHint,sessionStatus);helpBody.append(usageHelp);
+@@ -17359,6 +17412,17 @@
+     document.addEventListener('wing-load-applied',e=>{if(e.detail==='printed')printedWorkspace.close();});
+   }
+   requestAnimationFrame(loop);
++  function courseExampleInputs() {
++    const material = Object.fromEntries(['name','E','nu','rho','ft','fc','fs'].map(k => [k, E.MATERIALS.pla_upright[k]]));
++    return {
++      geometry: { ...E.DEFAULT_GEOMETRY, rodFractions: [], spars: [.3,.6].map(fraction => ({
++        fraction, length: E.DEFAULT_GEOMETRY.semiSpan, widthMode:'auto', topWidth:8, topThickness:.8,
++        bottomWidth:8, bottomThickness:.8, webThickness:.6, material:{...material}
++      })) },
++      assembly: { ...E.DEFAULT_ASSEMBLY, rodsBonded:false, seamsBonded:true, seamFreeLength:8 },
++      aerodynamics: { speed:15, density:1.225, alphaDeg:4, sequence:'standard' }
++    };
++  }
+   window.addEventListener('wing-learning-stage', event => {
+     if (event.detail === 'metal' || running) return;
+     if(event.detail==='wing'&&wingStudyOpened){
+@@ -17367,11 +17431,15 @@
+     }
+     partSelection=null;partUndo=null;partPick=false;
+     const stage=event.detail, project=stage==='project';
++    if (project && wingAero?.running) { flash('Wait for the aerodynamic solve to finish before opening the course example.'); return; }
+     S.emptyStudy=false;
+     importGate=null; renderImportGate();
+-    S.geometry={...E.DEFAULT_GEOMETRY, rodFractions:[...E.DEFAULT_GEOMETRY.rodFractions]};
+-    S.assembly={...E.DEFAULT_ASSEMBLY,seamFreeLength:8};
++    const course = project ? courseExampleInputs() : null;
++    S.geometry=course ? course.geometry : {...E.DEFAULT_GEOMETRY, rodFractions:[...E.DEFAULT_GEOMETRY.rodFractions]};
++    S.assembly=course ? course.assembly : {...E.DEFAULT_ASSEMBLY,seamFreeLength:8};
++    if (course) S.aerodynamics=course.aerodynamics;
+     S.load=noLoad(); S.aeroLoad=null; S.plaKey='pla_upright';S.rodKey='rod_hobby';S.plaOver={};S.rodOver={};
++    if (course) wingAero?.reset();
+     if (!project) {
+       S.geometry.modules=1; S.geometry.customInteriorRibs=stage==='ribs'?[112.5,146,154,225,296,304,337.5]:[];
+       if(stage==='shell'||stage==='wing')S.geometry.rodFractions=[];
+diff --git a/computational/printed-wing-solver/aerostruct/wing_aero_ui.js b/computational/printed-wing-solver/aerostruct/wing_aero_ui.js
+--- a/computational/printed-wing-solver/aerostruct/wing_aero_ui.js
++++ b/computational/printed-wing-solver/aerostruct/wing_aero_ui.js
+@@ -217,6 +217,7 @@
+     function syncButtons() {
+       const st = ad.structure?.() || { supported: true }, fresh = last && lastKey && ad.geometryKey && ad.geometryKey(ad.geometry()) === lastKey;
+       $('#aeroApply').disabled = running || !fresh || !st.supported || lastCombined?.structuralLoadAvailable === false || !!ad.disabled?.();
++      $('#aeroApply').title = !st.supported ? st.message : lastCombined?.structuralLoadAvailable === false ? 'Structural load transfer is unavailable for an exact zero-chord tip.' : 'Transfer the aerodynamic load and run the structural admission checks.';
+       $('#aeroRemove').hidden = !ad.applied?.();
+     }
+     async function compute() {
+@@ -234,7 +235,8 @@
+         lastCombined = result.base.mesh.closedTip ? aerodynamicSummary(A(), result) : A().combineSequence(req.geometry, result, { snapStations: ad.snapStations ? ad.snapStations() : [] });
+         last = result; lastKey = key;
+         if (last.trim) $('#aeroAlpha').value = +last.trim.alphaDeg.toFixed(4);
+-        status(`Solved the ${result.sequence} sequence (${result.levels.length} meshes, ${result.levels.reduce((t, l) => t + l.panels, 0)} panels in total) in ${((Date.now() - t0) / 1000).toFixed(1)} s${result.levels.every(l => l.modelCacheHit) ? ' (influence systems reused)' : ''}. ${lastCombined.structuralLoadAvailable === false ? 'Aerodynamic results are available. Structural load transfer is unavailable for a zero-chord tip.' : ad.structure?.().supported === false ? 'This structure cannot take the load: see below.' : 'Press Apply aerodynamic loads to structure to run the admission test (it re-solves the structure).'}`);
++        const support = ad.structure?.();
++        status(`Solved the ${result.sequence} sequence (${result.levels.length} meshes, ${result.levels.reduce((t, l) => t + l.panels, 0)} panels in total) in ${((Date.now() - t0) / 1000).toFixed(1)} s${result.levels.every(l => l.modelCacheHit) ? ' (influence systems reused)' : ''}. ${lastCombined.structuralLoadAvailable === false ? 'Aerodynamic results are available. Structural load transfer is unavailable for a zero-chord tip.' : support?.supported === false ? support.message : 'Press Apply aerodynamic loads to structure to run the admission test (it re-solves the structure).'}`);
+         render();
+       } catch (e) { status(e.message, true); }
+       finally { busy(false); }
+@@ -303,6 +305,13 @@
+       $('#aeroSequence').value = s.sequence === 'fine' ? 'fine' : 'standard';
+       syncApplied();
+     }
++    function reset() {
++      if (running) throw new Error('Wait for the aerodynamic solve to finish before opening the course example.');
++      last = null; lastCombined = null; lastKey = ''; lastAdmission = null;
++      $('#aeroResults').innerHTML = ''; $('#aeroAdmission').innerHTML = ''; $('#aeroTarget').value = '';
++      status('Set the flow conditions, then press Solve Aerodynamics.');
++      refresh();
++    }
+     // Applied-load banner, stale-shape warning and buttons only (the flow fields keep what the user is typing).
+     function syncApplied() {
+       let rec = null, key = '';
+@@ -313,7 +322,7 @@
+       syncButtons();
+     }
+     refresh();
+-    return { refresh, syncApplied, compute, apply, showAdmission, destroy: () => { worker?.terminate(); worker = null; host.innerHTML = ''; }, get result() { return last; }, get combined() { return lastCombined; }, get admission() { return lastAdmission; }, get solvedKey() { return lastKey; }, get running() { return running; } };
++    return { refresh, reset, syncApplied, compute, apply, showAdmission, destroy: () => { worker?.terminate(); worker = null; host.innerHTML = ''; }, get result() { return last; }, get combined() { return lastCombined; }, get admission() { return lastAdmission; }, get solvedKey() { return lastKey; }, get running() { return running; } };
+   }
+   return Object.freeze({ mount, DEFAULTS, SEQUENCE_TEXT, SEQUENCE_NOTE, spanwiseFigure, cpFigure, csv, runMainThread, recordFromSequence, sequenceOf, delivered, aerodynamicSummary, engineLoad, structuralCuts, structuralTorsion, admit, admissionTable, admissionVerdict });
+ })();

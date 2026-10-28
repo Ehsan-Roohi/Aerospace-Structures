@@ -1,6 +1,6 @@
 {
   "application": "Wing Panel Stress Analyzer (Wing AeroStruct)",
-  "version": "0.3.0-ui.3",
+  "version": "0.3.0-ui.4",
   "source_archive": "wing-aerostruct-0.3.0-dev-review.zip",
   "source_sha256": "bc6986c744568a516fd22bdd3b9508550625b82a77cd924adf52dfaa5156a54d",
   "original_base": "5ab2498",
@@ -19,16 +19,21 @@
       "Signed blue-green-red scale with green at zero",
       "On-screen aerodynamic mesh-stage progress and elapsed time",
       "Independent aerodynamic results for exact zero-chord elliptic and delta tips",
-      "Full wing mirror in the View menu"
+      "Full wing mirror in the View menu",
+      "Open and Save JSON in File",
+      "Two-spar course example with bonded module seams",
+      "Structural solve and result-contour activity feedback"
     ],
-    "page_sha256": "e58a3cae7db2cf2a77a7228274651ed36d2ca5989460a0f9a1a0bec52dab5f1d",
+    "page_sha256": "65076bb759c3af1e167942f30b51ac22ba9cbef03498f43bf3c18d1a96523b24",
     "source_port": "ui/01-wing-aerostruct-ui-sources.patch",
     "independent_review": "validation/UI_RELEASE_REVIEW.json",
     "surface_review": "validation/UI_SURFACE_REVIEW.json",
     "source_ports": [
       "ui/01-wing-aerostruct-ui-sources.patch",
-      "ui/02-closed-tip-aero-results.patch"
+      "ui/02-closed-tip-aero-results.patch",
+      "ui/03-course-example-activity.patch"
     ],
-    "closed_tip_review": "validation/CLOSED_TIP_AERO_REVIEW.json"
+    "closed_tip_review": "validation/CLOSED_TIP_AERO_REVIEW.json",
+    "course_review": "validation/COURSE_UI_REVIEW.json"
   }
 }

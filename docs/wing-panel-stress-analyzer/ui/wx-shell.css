@@ -267,7 +267,12 @@ body.wx-wing-on .wing-editor-pop.wx-below-bar > div { max-height: calc(100dvh - 
 #app.wx #wxResults #wxAeroView { max-width: 230px; padding: 0 8px; }
 #app.wx #wxResults.wx-aero-active .wx-plots .tool[aria-pressed="true"] { background: var(--panel); border-color: var(--line); color: var(--fg); }
 #app.wx #wxResults.wx-aero-active #wxAeroView { background: var(--accent); border-color: var(--accent); color: #ffffff; }
-#app.wx .view > #loading { z-index: 8; }
+#app.wx .view > #loading { position: fixed; inset: 0; z-index: 230; background: rgba(232,239,246,.48); backdrop-filter: none; pointer-events: none; }
+#app.wx #loading .card { box-sizing: border-box; width: min(440px, calc(100vw - 32px)); padding: 20px; border: 2px solid #0a5fc2; border-radius: 12px; background: #fff; color: #142130; box-shadow: 0 14px 48px rgba(20,45,75,.24); }
+#app.wx #loading .wing-busy-heading { display: flex; align-items: center; gap: 10px; }
+#app.wx #loading h3 { margin: 0; font: 700 18px/1.3 var(--font-ui); }
+#app.wx #loading p { margin: 10px 0; font-size: 14px; }
+#app.wx #loadElapsed { color: #4e5f71; font-variant-numeric: tabular-nums; }
 .wx-aero-result { position: absolute; inset: 0; z-index: 7; display: flex; flex-direction: column; background: #ffffff; color: var(--fg); }
 .wx-aero-result[hidden] { display: none !important; }
 .wx-ar-head { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 6px 12px; padding: 10px 14px 8px; border-bottom: 1px solid var(--line); flex: none; }

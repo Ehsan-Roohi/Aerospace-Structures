@@ -13,6 +13,7 @@ redesign as changes to those sources, so whoever owns the build (the FE work) ca
 | `00-prerequisite-main-0bb76f3-on-template.patch` | **Not part of the redesign.** Main's commit 0bb76f3 edited the built page by hand (Aerodynamic solver button, `#wlAero` moved and open, stress opaque). This expresses that edit on `wing_aerostruct_template.html`, so the template reproduces main's page. Skip it if your template already has 0bb76f3. |
 | `01-wing-aerostruct-ui-sources.patch` | The redesign: hooks and wording in `wing_aerostruct_template.html` and `wing_aero_ui.js`; the three shell files as new `aerostruct/` files; three build tokens in `build_wing_aerostruct.py`; four test expectations in `test_aerostruct_aero_ui.mjs`, `test_aerostruct_page.mjs`, `test_aerostruct_browser.mjs` that addressed the old layout or the old button names. |
 | `02-closed-tip-aero-results.patch` | Apply after `01`: separates closed-tip aerodynamic results from unsupported spatial-beam load transfer in `wing_aero_ui.js`. The complete resulting UI module is also saved as `wing-aero-ui.js`. |
+| `03-course-example-activity.patch` | Apply after `02`: the two-spar course preset, structural/contour activity feedback, clearer structural-capability messages and resetting the aerodynamic fields/results when the course example is opened. |
 | `wording_edits.md` | Every hook and wording edit: page line, source file, old → new. |
 
 No `web/` module (Wing Lab 1.3) is touched. No numerical source (`engine.js`, `wing_aero_panel.js`, `wing_aero_worker.js`,
@@ -24,6 +25,7 @@ No `web/` module (Wing Lab 1.3) is touched. No numerical source (`engine.js`, `w
 git apply source-port/00-prerequisite-main-0bb76f3-on-template.patch   # only if the template predates 0bb76f3
 git apply source-port/01-wing-aerostruct-ui-sources.patch
 git apply source-port/02-closed-tip-aero-results.patch
+git apply source-port/03-course-example-activity.patch
 python3 computational/printed-wing-solver/aerostruct/build_wing_aerostruct.py
 ```
 

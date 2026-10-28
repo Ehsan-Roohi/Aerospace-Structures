@@ -1,4 +1,4 @@
-/* Wing AeroStruct UI shell: compact command bar (File, Open/Save, Aerodynamics, Structure & Stress, View, Help), one
+/* Wing AeroStruct UI shell: compact command bar (File, Aerodynamics, Structure & Stress, View, Help), one
  * anchored input panel at a time, and a slim result strip (Model, Stress, Displacement, More results).
  * UI and interaction only. It moves the page's own controls, so their listeners, validation and confirmation dialogs are
  * unchanged; it never copies an input, never edits study data and never starts a solver except through the page's own
@@ -66,13 +66,13 @@
   saveBtn.className = 'wx-quick'; saveBtn.innerHTML = 'Save<span class="wx-long">JSON</span>'; saveBtn.setAttribute('aria-label', 'Save JSON');
   saveBtn.title = 'Save the inputs on screen as a study file (.json).';
   helpSummary.className = ''; helpSummary.textContent = 'Help'; helpSummary.setAttribute('aria-haspopup', 'dialog');
-  const menubar = el('div', { class: 'wx-menubar', role: 'group', 'aria-label': 'Main commands' }, fileBtn, openBtn, saveBtn, sep(), aeroBtn, structBtn, sep(), viewBtn, help);
+  const menubar = el('div', { class: 'wx-menubar', role: 'group', 'aria-label': 'Main commands' }, fileBtn, sep(), aeroBtn, structBtn, sep(), viewBtn, help);
   const historyTools = $('.wing-history-tools', tools);
   if (historyTools) historyTools.removeAttribute('style');
   const barEnd = el('div', { class: 'wx-bar-end' }, historyTools);
   bar.classList.add('wx-bar');
 
-  // ---------------------------------------------------------------- File menu (export location; Open/Save stay on the bar)
+  // ---------------------------------------------------------------- File menu (single location for study files and exports)
   const fileMenu = el('div', { id: 'wxFileMenu', class: 'wx-menu', role: 'dialog', 'aria-label': 'File', hidden: true });
   clearBtn.className = 'btn wx-danger'; clearBtn.removeAttribute('style'); clearBtn.textContent = 'New / Clear…';
   if (example) example.textContent = 'Open the course example wing…';
@@ -84,7 +84,7 @@
   if (openSTL) openSTL.textContent = 'Open STL reference…';
   setLabel(wlFiles, 'Design parameters, paste & share link');
   add(fileMenu,
-    cap('Study'), row(clearBtn, example),
+    cap('Study files'), row(openBtn, saveBtn), row(clearBtn, example),
     printButtons.length ? cap('Export for 3-D printing') : null, printButtons.length ? row(...printButtons) : null,
     openSTL ? cap('Reference geometry (view only)') : null, openSTL ? row(openSTL, stlInput) : null,
     openSTL ? el('p', { class: 'note', text: 'Shows an STL surface in the view for comparison. It does not change the study and computes no stress.' }) : null,
@@ -114,7 +114,7 @@
   const helpTop = el('div', { class: 'wx-help-top' }, learnBtn,
     lessonButtons.length ? cap('Experiments & theory') : null, lessonButtons.length ? row(...lessonButtons) : null);
   const where = el('details', { id: 'wxHelpWhere' }, el('summary', { text: 'Where the controls are' }),
-    el('p', { class: 'note', text: 'File holds New / Clear, the course example, STL/DXF/STEP export and design-parameter import; Open JSON and Save JSON sit beside it. Aerodynamics and Structure & Stress each open one input panel: set the inputs there, then press Solve Aerodynamics or Solve Structure / Stress. Apply aerodynamic loads to structure hands the aerodynamic load to the structure and re-solves it. The result buttons under the bar only change what is displayed; View changes zoom, visibility and colours only.' }));
+    el('p', { class: 'note', text: 'File holds Open JSON, Save JSON, New / Clear, the course example and STL/DXF/STEP export. Aerodynamics and Structure & Stress each open one input panel: set the inputs there, then press its Solve button. Apply aerodynamic loads to structure transfers the panel load and re-solves the structure. Result buttons change what is displayed; View holds symmetry, zoom, visibility and colours.' }));
   const aeroHelp = aeroIntro ? el('details', { id: 'wxHelpAero' }, el('summary', { text: 'Aerodynamics · panel method' }), aeroIntro) : null;
   helpBody.prepend(...[helpTop, where, aeroHelp].filter(Boolean));
 

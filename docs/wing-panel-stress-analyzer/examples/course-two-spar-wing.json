@@ -1,0 +1,112 @@
+{
+  "format": "mie446-wing-study",
+  "version": 3,
+  "workspace": "printed",
+  "savedAt": "2026-10-28T01:19:52.606Z",
+  "app": {
+    "name": "MIE 446 Wing AeroStruct",
+    "engine": "1.3.0+aerostruct.1",
+    "io": "2.0.0+aerostruct.1"
+  },
+  "study": {
+    "geometry": {
+      "naca": "2412",
+      "semiSpan": 450,
+      "rootChord": 160,
+      "tipChord": 100,
+      "skin": 1.2,
+      "ribThickness": 1.6,
+      "modules": 3,
+      "te": 1.2,
+      "interiorRibs": 3,
+      "customInteriorRibs": null,
+      "interfaceOffset": 4,
+      "cap": 2,
+      "cavityStart": 0.06,
+      "cavityEnd": 0.9,
+      "rodFractions": [],
+      "rodDiameter": 4,
+      "clearance": 0.25,
+      "sleeveWall": 1.2,
+      "spars": [
+        {
+          "fraction": 0.3,
+          "length": 450,
+          "widthMode": "auto",
+          "topWidth": 8,
+          "topThickness": 0.8,
+          "bottomWidth": 8,
+          "bottomThickness": 0.8,
+          "webThickness": 0.6,
+          "material": {
+            "name": "Printed PLA Pro — span along printer Z",
+            "E": 2000,
+            "nu": 0.35,
+            "rho": 1.24,
+            "ft": 15,
+            "fc": 50,
+            "fs": 10
+          }
+        },
+        {
+          "fraction": 0.6,
+          "length": 450,
+          "widthMode": "auto",
+          "topWidth": 8,
+          "topThickness": 0.8,
+          "bottomWidth": 8,
+          "bottomThickness": 0.8,
+          "webThickness": 0.6,
+          "material": {
+            "name": "Printed PLA Pro — span along printer Z",
+            "E": 2000,
+            "nu": 0.35,
+            "rho": 1.24,
+            "ft": 15,
+            "fc": 50,
+            "fs": 10
+          }
+        }
+      ]
+    },
+    "materials": {
+      "plaKey": "pla_upright",
+      "plaOver": {
+        "E": null,
+        "ft": null,
+        "fc": null,
+        "fs": null,
+        "rho": null,
+        "nu": null
+      },
+      "rodKey": "rod_hobby",
+      "rodOver": {
+        "E": null
+      }
+    },
+    "assembly": {
+      "rodsBonded": false,
+      "seamsBonded": true,
+      "seamFreeLength": 8,
+      "adhesiveTensile": 5
+    },
+    "load": {
+      "kind": "custom",
+      "selfWeight": false,
+      "items": [],
+      "fos": 1.5,
+      "tipMass": 0
+    },
+    "criteria": {
+      "maxTipDeflection": 45,
+      "maxTipTwist": 2
+    },
+    "aerodynamics": {
+      "speed": 15,
+      "density": 1.225,
+      "alphaDeg": 4,
+      "sequence": "standard"
+    }
+  },
+  "projectName": "Course wing - two bonded spars"
+}

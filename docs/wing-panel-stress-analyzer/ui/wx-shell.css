@@ -1,0 +1,296 @@
+/* Wing AeroStruct UI shell: compact command bar, one anchored input panel, slim result strip.
+   Scoped to the wing workspace (body.wx-wing-on / #app.wx); the Beam, Truss and Full-scale wing workspaces keep their
+   own look. White palette by default; an explicit data-theme="dark" keeps the existing dark palette. */
+:root:not([data-theme="dark"]) body.wx-wing-on {
+  --bg: #ffffff; --panel: #ffffff; --panel-2: #f3f6f9; --raise: #ffffff; --line: #d4dce5;
+  --fg: #142130; --muted: #4e5f71; --faint: #66788a; --accent: #0a5fc2; --accent-soft: rgba(10, 95, 194, 0.08);
+  --accent-ink: #ffffff; --good: #127146; --warn: #9a5800; --bad: #b8253a; --run-hover: brightness(0.92);
+  --vp-top: #d3dee8; --vp-bottom: #f6f8fa; --vp-ink: #1c2a38; --shadow: 0 12px 32px rgba(20, 45, 75, 0.16);
+  --wl-accent-text: #0a5fc2; --wl-good-text: #127146;
+  background: var(--bg);
+}
+body.wx-wing-on #wingNavigation { padding: 6px 12px; gap: 6px; border-bottom: 1px solid var(--line); box-shadow: none; }
+body.wx-wing-on #wingNavigation .workspace-link { min-height: 32px; height: auto; padding: 5px 12px; font-size: 13px; border-radius: 8px; }
+
+/* ---------- page grid: command bar, result strip, viewport, results dock ---------- */
+#app.wx {
+  --wx-view-h: clamp(380px, calc(100dvh - 200px), 1040px);
+  padding: 8px 12px 24px !important; gap: 8px !important;
+  grid-template-columns: minmax(0, 1fr) !important; grid-template-rows: auto auto auto auto !important;
+  grid-template-areas: "bar" "results" "view" "dock" !important;
+}
+#app.wx > .view { grid-area: view !important; height: var(--wx-view-h) !important; min-height: 300px; border-radius: 12px; }
+#app.wx > .dock { grid-area: dock !important; border-radius: 12px; }
+#app.wx > .wing-quick-tools, #app.wx > #wingInlineDisplay, #app.wx > .wing-display-drawer, #wxParking { display: none !important; }
+#app.wx .btn.primary:hover { color: var(--accent-ink); filter: var(--run-hover); }
+
+/* ---------- command bar ---------- */
+#app.wx > header.wx-bar {
+  grid-area: bar !important; position: sticky; top: var(--wx-nav-h, 0px); z-index: 60;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; padding: 6px 10px; min-height: 52px;
+  border: 1px solid var(--line); border-radius: 12px; background: var(--panel); box-shadow: 0 1px 3px rgba(20, 45, 75, 0.08);
+}
+#app.wx > header.wx-bar .brand { display: flex !important; align-items: center; gap: 8px; padding: 0 10px 0 2px; border-right: 1px solid var(--line) !important; flex: none; min-width: 0; }
+#app.wx > header.wx-bar .brand svg { width: 28px; height: 18px; color: var(--accent); }
+#app.wx > header.wx-bar .brand > div { display: flex !important; align-items: center; gap: 8px; min-width: 0; }
+#app.wx > header.wx-bar .brand small, #app.wx > header.wx-bar .wing-project-name > span { display: none !important; }
+#app.wx #wingProjectTitle { font: 700 16px/1.1 var(--font-label); max-width: 190px; }
+#app.wx > header.wx-bar .wing-project-name { margin: 0 !important; display: flex; }
+#app.wx > header.wx-bar .wing-project-name input { width: 150px; height: 32px; min-height: 32px; padding: 3px 8px; font-size: 13px; border: 1px solid var(--line); border-radius: 7px; background: var(--panel-2); }
+.wx-menubar { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; min-width: 0; }
+.wx-sep { width: 1px; height: 24px; background: var(--line); margin: 0 4px; flex: none; }
+#app.wx .wx-top, #app.wx .wx-quick, #app.wx #wingInputHelp > summary {
+  display: inline-flex; align-items: center; gap: 7px; height: 36px; min-height: 36px; padding: 0 12px; margin: 0;
+  border-radius: 8px; border: 1px solid transparent; background: transparent; color: var(--fg);
+  font: 600 14px/1 var(--font-ui); letter-spacing: 0; cursor: pointer; white-space: nowrap; list-style: none; box-shadow: none;
+}
+#app.wx #wingInputHelp > summary::-webkit-details-marker { display: none; }
+#app.wx .wx-top::after, #app.wx #wingInputHelp > summary::after {
+  content: ""; width: 6px; height: 6px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor;
+  transform: translateY(-2px) rotate(45deg); opacity: 0.65; flex: none;
+}
+#app.wx .wx-top:hover, #app.wx #wingInputHelp > summary:hover { background: var(--panel-2); border-color: var(--line); color: var(--fg); }
+#app.wx .wx-top[aria-expanded="true"], #app.wx #wingInputHelp[open] > summary { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+#app.wx .wx-quick { border-color: var(--line); background: var(--panel); gap: 0.3em; }
+#app.wx .wx-quick:hover { border-color: var(--accent); color: var(--accent); }
+#app.wx #wingInputHelp { position: relative !important; right: auto !important; margin: 0 !important; background: transparent !important; z-index: auto !important; }
+.wx-dot { width: 9px; height: 9px; border-radius: 50%; background: #9aa8b6; flex: none; }
+.wx-dot[data-s="ok"] { background: var(--good); } .wx-dot[data-s="warn"] { background: #c77700; } .wx-dot[data-s="bad"] { background: var(--bad); }
+.wx-dot[data-s="run"] { background: var(--accent); animation: wx-blink 1s ease-in-out infinite; }
+@keyframes wx-blink { 50% { opacity: 0.25; } }
+.wx-bar-end { margin-left: auto; display: flex; align-items: center; gap: 6px; }
+#app.wx .wx-bar-end .wing-history-tools { display: inline-flex !important; gap: 6px; margin: 0 !important; }
+#app.wx .wx-bar-end .btn { height: 34px; min-height: 34px; padding: 0 10px; background: var(--panel); }
+
+/* ---------- File, View and Help dropdowns (anchored to their command) ---------- */
+.wx-menu { position: fixed; z-index: 190; display: grid; gap: 8px; align-content: start; padding: 12px 14px 14px;
+  background: var(--panel); color: var(--fg); border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow);
+  overflow: auto; overscroll-behavior: contain; }
+.wx-menu[hidden] { display: none !important; }
+.wx-cap { margin: 6px 0 0; font: 700 11px/1.2 var(--font-label); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.wx-menu > .wx-cap:first-child { margin-top: 0; }
+.wx-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; min-width: 0; }
+#app.wx .wx-menu .btn, #app.wx #wingSide .btn { height: auto; min-height: 36px; padding: 6px 12px; white-space: normal; text-align: left; line-height: 1.2; }
+#app.wx .wx-menu .wx-danger { color: var(--bad); border-color: color-mix(in srgb, var(--bad) 55%, var(--line)); }
+#app.wx .wx-menu .note { font-size: 12px; }
+#wxFileMenu .wing-print-symmetry { padding: 4px 0; font-weight: 600; }
+#wxFileMenu #wingSymmetryNote { flex-basis: 100%; }
+#wxFileMenu .wl-acc { border: 1px solid var(--line); border-radius: 10px; }
+#wxFileMenu .wl-acc > summary { min-height: 40px; padding: 8px 12px; font: 700 13.5px/1.2 var(--font-ui); }
+#wxFileMenu .wio-root > .wio-title, #wxFileMenu .wio-actions > .wio-save, #wxFileMenu .wio-actions > .wio-open { display: none !important; }
+#wxViewMenu .hud-row, #wxViewMenu .wl-zoom { display: flex; flex-wrap: wrap; gap: 4px; padding: 0; margin: 0; border: 0; background: transparent; backdrop-filter: none; justify-content: flex-start; }
+#wxViewMenu .hud-row button, #wxViewMenu .wl-zoom .btn {
+  min-height: 36px; height: auto; padding: 6px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel);
+  color: var(--fg); font: 600 13px/1.1 var(--font-ui); letter-spacing: 0; cursor: pointer; }
+#wxViewMenu .wx-row > button:not(.btn) {
+  min-height: 36px; padding: 6px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--fg); font: 600 13px/1.1 var(--font-ui); cursor: pointer; }
+#wxViewMenu .hud-row button[aria-pressed="true"], #wxViewMenu .wx-row > button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+#wxViewMenu #shearCentreBtn { color: #7b3a99; }
+#wxViewMenu #shearCentreBtn[aria-pressed="true"] { color: #7b3a99; border-color: #7b3a99; background: rgba(123, 58, 153, 0.08); }
+#wxViewMenu .hud-row label { display: inline-flex; align-items: center; gap: 6px; font: 600 13px var(--font-ui); color: var(--muted); padding: 0 4px; }
+#wxViewMenu .hud-row input[type="range"] { width: 110px; accent-color: var(--accent); }
+#wxViewMenu #zoomLabel { display: none; }
+#wxViewMenu details { border: 1px solid var(--line); border-radius: 10px; }
+#wxViewMenu details > summary { cursor: pointer; padding: 8px 12px !important; font: 700 13.5px/1.2 var(--font-ui) !important; }
+#wxViewMenu details .hud-row { padding: 4px 10px 10px !important; }
+#wxViewMenu .wl-readout { padding: 0 12px 10px; }
+#app.wx #wingInputHelp > .wing-help-content {
+  position: fixed !important; left: var(--wx-help-left, 8px) !important; top: var(--wx-help-top, 110px) !important; right: auto !important;
+  width: min(460px, calc(100vw - 16px)) !important; max-height: var(--wx-help-maxh, 70dvh) !important; z-index: 190 !important;
+  border-radius: 12px !important; box-shadow: var(--shadow) !important; padding: 12px 14px !important; }
+.wx-help-top { display: grid; gap: 8px; padding-bottom: 10px; border-bottom: 1px solid var(--line); margin-bottom: 4px; }
+#app.wx .wx-help-top .btn { justify-content: flex-start; }
+
+/* ---------- the input panel (Aerodynamics or Structure & Stress, one at a time) ---------- */
+#app.wx > #wingSide.wx-panel {
+  position: fixed !important; z-index: 190; display: flex !important; flex-direction: column; padding: 0; margin: 0;
+  overflow: hidden !important; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); box-shadow: var(--shadow);
+  grid-area: auto; overscroll-behavior: contain;
+}
+#app.wx > #wingSide.wx-panel[hidden] { display: none !important; }
+#app.wx > #wingSide > * { flex-shrink: 0; }
+#app.wx > #wingSide > .wx-sec { display: none; flex: 1 1 auto !important; min-height: 0; flex-direction: column; flex-shrink: 1 !important; }
+#app.wx > #wingSide[data-mode="aero"] > .wx-sec-aero, #app.wx > #wingSide[data-mode="structure"] > .wx-sec-structure { display: flex; }
+#app.wx > #wingSide[data-mode="aero"] > #wingImportGate { display: none !important; }
+.wx-panel-head { display: flex; align-items: flex-start; gap: 10px; padding: 12px 12px 8px 16px; border-bottom: 1px solid var(--line); }
+.wx-panel-head h2 { margin: 0; font: 700 17px/1.2 var(--font-label); letter-spacing: 0.01em; outline-offset: 3px; }
+.wx-panel-sub { margin: 3px 0 0; font-size: 12.5px; line-height: 1.35; color: var(--muted); }
+.wx-x { margin-left: auto; width: 36px; height: 36px; flex: none; border-radius: 8px; border: 1px solid var(--line); background: var(--panel);
+  color: var(--fg); font-size: 22px; line-height: 1; cursor: pointer; }
+.wx-x:hover { border-color: var(--accent); color: var(--accent); }
+.wx-panel-state { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; padding: 7px 16px; border-bottom: 1px solid var(--line);
+  font-size: 12.5px; line-height: 1.35; color: var(--muted); background: var(--panel-2); }
+.wx-panel-state b { color: var(--fg); font-weight: 600; }
+.wx-sec-aero > #wingAeroPanel { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+#wingSide .wx-sec-aero .wae { flex: 1 1 auto; min-height: 0; display: flex !important; flex-direction: column; gap: 0 !important; }
+.wx-scroll { flex: 1 1 auto; min-height: 0; overflow: auto; overscroll-behavior: contain; padding: 2px 0 10px; }
+.wx-foot { flex: none; display: grid; gap: 8px; padding: 10px 16px 12px; border-top: 1px solid var(--line); background: var(--panel); }
+.wx-foot .lesson-actions, .wx-foot-main { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0; }
+#app.wx .wx-foot #runBtn { height: 40px; min-height: 40px; padding: 0 16px; font: 700 15px/1 var(--font-ui); letter-spacing: 0.01em; border-radius: 8px; }
+#app.wx .wx-foot #aeroRun { min-height: 40px; font: 700 14px/1.1 var(--font-ui); }
+#app.wx .wx-foot #aeroApply { min-height: 40px; font: 600 14px/1.1 var(--font-ui); border-color: var(--accent); color: var(--accent); background: var(--panel); }
+#app.wx .wx-foot #aeroApply:disabled { opacity: 0.5; cursor: not-allowed; }
+#app.wx .wx-foot .wl-auto { margin: 0; font-size: 13px; color: var(--fg); gap: 6px; grid-column: auto; }
+.wx-foot #aeroStatus { margin: 0; font-size: 12.5px; line-height: 1.4; }
+.wx-foot #aeroStatus:empty { display: none; }
+.wx-hint { margin: 0; font-size: 12px; line-height: 1.35; color: var(--muted); }
+.wx-warnline { margin: 0; font-size: 12.5px; line-height: 1.35; color: var(--warn); font-weight: 600; }
+.wx-warnline[hidden] { display: none !important; }
+.wx-foot-row { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
+#wingSide .wx-cap { padding: 12px 16px 4px; margin: 0; }
+#wingSide .wl-acc { border-bottom: 1px solid var(--line); }
+#wingSide .wl-acc:last-child { border-bottom: 1px solid var(--line); }
+#wingSide .wl-acc > summary { min-height: 44px; padding: 10px 16px; font: 700 14.5px/1.2 var(--font-ui); color: var(--fg); }
+#wingSide .wl-acc > summary:hover { background: var(--panel-2); }
+#wingSide .wl-acc[open] > summary { color: var(--accent); }
+#wingSide .wl-acc-body { padding: 4px 16px 14px; }
+#wingSide .wl-acc-body > .wl-acc-body { padding: 0; }
+#wingSide .wl-badge { margin-left: 2px; font: 500 11.5px var(--font-data); color: var(--muted); }
+#wingSide .wx-dirty { margin-left: 6px; padding: 2px 6px; border-radius: 999px; font: 700 10.5px/1.2 var(--font-ui); color: var(--warn); border: 1px solid currentColor; }
+#wingSide .wx-dirty[hidden] { display: none !important; }
+#wingSide .wae details.wl-acc { border-radius: 0; }
+#wingSide .wae .wae-grid { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+#wingSide .wae label { font-size: 13px; }
+#wingSide .wae input, #wingSide .wae select { min-height: 34px; padding: 4px 8px; border: 1px solid var(--line); border-radius: 7px; background: var(--panel-2); color: var(--fg); font: 14px var(--font-data); }
+#wingSide #wxAnalysis .wing-mesh-control, #wingSide #wxAnalysis label { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 13px; }
+#wingSide #wxAnalysis .wing-mesh-control input { width: 90px; min-height: 34px; padding: 4px 8px; border: 1px solid var(--line); border-radius: 7px; background: var(--panel-2); }
+#wingSide .wx-tabs { display: flex; flex-wrap: wrap; gap: 4px; }
+#wingSide .wx-tabs .btn[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+#wingSide aside.pm, #wingSide aside.tree { grid-area: auto !important; }
+#wingSide aside.pm { display: block; border: 0; background: transparent; box-shadow: none; height: auto; max-height: none; overflow: visible; }
+#wingSide aside.pm > .panel-head { padding: 6px 0; border: 0; }
+#wingSide aside.pm .pm-body { padding: 0; overflow: visible; }
+#wingSide #wlLoads aside.pm .pm-body > button.btn:first-of-type { display: none; }
+#wingSide .wl-treepm { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; }
+#wingSide .wl-treepm aside.tree { max-height: 320px; border: 1px solid var(--line); border-radius: 10px; }
+#wingSide #wingPartEditor { margin: 0 !important; padding: 0 !important; border: 0 !important; }
+#wingSide #wingPartEditor > b { display: none; }
+#wingSide #wingImportGate { max-height: 40%; overflow: auto; }
+/* Ribs, Rods & sleeves and Spars show their own part of the one structure form. */
+#wingSide #wingStructureForm[data-wx-view="ribs"] > [data-wx-part="rods"], #wingSide #wingStructureForm[data-wx-view="ribs"] > [data-wx-part="spars"],
+#wingSide #wingStructureForm[data-wx-view="rods"] > [data-wx-part="ribs"], #wingSide #wingStructureForm[data-wx-view="rods"] > [data-wx-part="spars"],
+#wingSide #wingStructureForm[data-wx-view="spars"] > [data-wx-part="ribs"], #wingSide #wingStructureForm[data-wx-view="spars"] > [data-wx-part="rods"] { display: none; }
+#wingSide .wx-sub > .wl-acc-body > #wingStructureForm { padding: 0; }
+
+/* ---------- result strip ---------- */
+#app.wx > #wxResults {
+  grid-area: results !important; position: relative; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px;
+  padding: 6px 10px; min-height: 48px; border: 1px solid var(--line); border-radius: 12px; background: var(--panel);
+}
+.wx-plots, .wx-disp { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
+.wx-strip-cap { font: 700 11px/1 var(--font-label); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-right: 4px; }
+#app.wx #wxResults .tool, #app.wx #wxResults #defBtn {
+  height: 34px; min-height: 34px; padding: 0 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel);
+  color: var(--fg); font: 600 13.5px/1 var(--font-ui); letter-spacing: 0; cursor: pointer; }
+#app.wx #wxResults .tool:hover, #app.wx #wxResults #defBtn:hover { border-color: var(--accent); color: var(--accent); }
+#app.wx #wxResults .tool[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #ffffff; }
+#app.wx #wxResults #defBtn[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+#app.wx #wxResults .tool:disabled, #app.wx #wxResults #defBtn:disabled { opacity: 0.45; cursor: not-allowed; }
+#app.wx #wxResults #wingMoreResults { max-width: 190px; padding: 0 8px; }
+#app.wx #wxResults .wx-disp label { display: inline-flex; align-items: center; gap: 6px; font: 600 13px var(--font-ui); color: var(--muted); }
+#app.wx #wxResults .wx-disp input[type="range"] { width: 96px; accent-color: var(--accent); }
+.wx-status { margin-left: auto; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; min-width: 0; }
+.wx-st-group { display: inline-flex; align-items: center; gap: 8px; min-width: 0; padding: 3px 10px 3px 4px; border: 1px solid var(--line); border-radius: 999px; background: var(--panel); }
+.wx-st { display: inline-flex; align-items: center; gap: 6px; min-height: 28px; padding: 0 6px; border: 0; border-radius: 999px; background: transparent;
+  color: var(--fg); font: 600 13px/1 var(--font-ui); cursor: pointer; }
+.wx-st:hover { color: var(--accent); text-decoration: underline; }
+.wx-st-text { font-size: 12.5px; color: var(--muted); max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wx-st-group .chip { font-size: 10.5px; padding: 3px 7px; }
+.chip.run { color: var(--accent); }
+#app.wx #wxResults .wl-status { display: flex; flex-direction: row; align-items: center; gap: 8px; font-size: 12.5px; min-width: 0; }
+#app.wx #wxResults .wl-status > div { display: flex; align-items: center; gap: 8px; min-width: 0; }
+#app.wx #wxResults .wing-status-line { gap: 6px; align-items: center; }
+#app.wx #wxResults #statePreview { max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#app.wx #wxResults .wing-selection-feedback { flex-basis: 100%; }
+
+/* ---------- transient file and session messages ---------- */
+/* the shared editor popup, when it belongs to a command of the bar, opens below the bar and fits under it */
+body.wx-wing-on .wing-editor-pop.wx-below-bar > div { max-height: calc(100dvh - var(--wx-pop-top, 120px) - 84px) !important; }
+.wx-toast { position: fixed; z-index: 200; right: 14px; top: var(--wx-toast-top, 120px); max-width: min(460px, calc(100vw - 28px));
+  padding: 10px 40px 10px 14px; border-radius: 10px; background: #14212e; color: #ffffff; font-size: 13px; line-height: 1.4; box-shadow: var(--shadow); }
+.wx-toast[hidden] { display: none !important; }
+.wx-toast-x { position: absolute; right: 6px; top: 6px; width: 30px; height: 30px; border: 0; border-radius: 6px; background: transparent; color: #ffffff; font-size: 18px; cursor: pointer; }
+.wx-toast-x:focus-visible { outline: 2px solid #ffffff; }
+.wx-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* ---------- narrow screens: the same commands wrap; panels use the full width under the bar ---------- */
+@media (max-width: 1599px) {
+  .wx-st-text, #app.wx #wxResults #statePreview, .wx-strip-cap { display: none; }
+}
+@media (max-width: 1100px) {
+  #app.wx #wingProjectTitle { display: none; }
+}
+@media (max-width: 700px) {
+  #app.wx { padding: 6px !important; gap: 6px !important; --wx-view-h: clamp(300px, 52dvh, 520px); }
+  #app.wx > header.wx-bar { padding: 6px; gap: 6px; }
+  #app.wx > header.wx-bar .brand { border-right: 0 !important; padding: 0; flex: 1 1 0; min-width: 0; }
+  #app.wx > header.wx-bar .brand svg { display: none; }
+  #app.wx > header.wx-bar .brand > div, #app.wx > header.wx-bar .wing-project-name { flex: 1 1 0; min-width: 0; }
+  #app.wx > header.wx-bar .wing-project-name input { width: 100%; min-width: 0; }
+  .wx-menubar { order: 3; flex: 1 1 100%; gap: 2px; }
+  .wx-sep { display: none; }
+  .wx-long { display: none; }
+  #app.wx .wx-top, #app.wx .wx-quick, #app.wx #wingInputHelp > summary { padding: 0 9px; font-size: 14px; gap: 5px; }
+  #app.wx > #wxResults { gap: 6px 8px; padding: 6px; }
+  #app.wx #wxResults .tool, #app.wx #wxResults #defBtn { padding: 0 9px; font-size: 13px; }
+  #app.wx #wxResults #wingMoreResults { max-width: 132px; }
+  .wx-strip-cap { display: none; }
+  .wx-status { margin-left: 0; flex: 1 1 100%; gap: 6px; }
+  .wx-st-group { padding: 2px 8px 2px 2px; }
+  .wx-st-text, #app.wx #wxResults #statePreview { display: none; }
+  .wx-name-long { display: none; }
+  #app.wx .view .infocol { top: 58px; max-width: calc(100% - 28px); }
+  /* result strip: one wrapping sequence; the two selects share a row, the two status pills share a row */
+  .wx-plots, .wx-disp, .wx-aero-sel, .wx-status { display: contents; }
+  #app.wx #wxResults #wingMoreResults, #app.wx #wxResults #wxAeroView { flex: 1 1 140px; max-width: none; }
+  #app.wx #wxResults .wx-disp label { flex: 1 1 120px; }
+  #app.wx #wxResults .wx-disp input[type="range"] { flex: 1 1 auto; width: auto; min-width: 70px; }
+  .wx-st-group { flex: 1 1 auto; justify-content: flex-start; }
+  /* input panel: keep the subgroup list visible above the actions */
+  .wx-panel-sub, .wx-foot .wx-hint { display: none; }
+  .wx-panel-state > span:not(.chip) { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .wx-foot { padding: 8px 12px 10px; gap: 6px; }
+  body.wx-wing-on #wingNavigation { flex-wrap: nowrap; overflow-x: auto; padding: 4px 6px; gap: 4px; scrollbar-width: thin; }
+  body.wx-wing-on #wingNavigation .workspace-link { flex: none; padding: 4px 9px; font-size: 12.5px; white-space: nowrap; }
+}
+@media (min-width: 701px) { .wx-name-short { display: none; } }
+@media (pointer: coarse) {
+  #app.wx .wx-top, #app.wx .wx-quick, #app.wx #wingInputHelp > summary, #app.wx #wxResults .tool, #app.wx #wxResults #defBtn,
+  #app.wx .wx-bar-end .btn, .wx-st { min-height: 44px; height: 44px; }
+  #wingSide .wl-acc > summary { min-height: 48px; }
+  #app.wx .wx-menu .btn, #app.wx #wingSide .btn, #wxViewMenu .hud-row button { min-height: 44px; }
+}
+@media (prefers-reduced-motion: reduce) { .wx-dot[data-s="run"] { animation: none; } }
+
+/* ---------- aerodynamic result views (selector in the result strip, view over the 3-D model) ---------- */
+.wx-aero-sel { display: flex; align-items: center; gap: 6px; }
+#app.wx #wxResults #wxAeroView { max-width: 230px; padding: 0 8px; }
+#app.wx #wxResults.wx-aero-active .wx-plots .tool[aria-pressed="true"] { background: var(--panel); border-color: var(--line); color: var(--fg); }
+#app.wx #wxResults.wx-aero-active #wxAeroView { background: var(--accent); border-color: var(--accent); color: #ffffff; }
+#app.wx .view > #loading { z-index: 8; }
+.wx-aero-result { position: absolute; inset: 0; z-index: 7; display: flex; flex-direction: column; background: #ffffff; color: var(--fg); }
+.wx-aero-result[hidden] { display: none !important; }
+.wx-ar-head { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 6px 12px; padding: 10px 14px 8px; border-bottom: 1px solid var(--line); flex: none; }
+.wx-ar-head h3 { margin: 0; font: 700 16px/1.2 var(--font-ui); }
+.wx-ar-src { margin: 3px 0 0; font-size: 12px; line-height: 1.35; color: var(--muted); max-width: 980px; }
+.wx-ar-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+#app.wx .wx-ar-tools .btn { height: 34px; min-height: 34px; padding: 0 11px; background: var(--panel); }
+#app.wx .wx-ar-tools .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.wx-ar-tools select { height: 34px; max-width: 290px; padding: 0 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--fg); font: 13px var(--font-ui); }
+.wx-ar-body { position: relative; flex: 1 1 auto; min-height: 0; }
+.wx-ar-body > canvas { position: absolute; left: 0; top: 0; width: 100%; height: 100%; display: block; cursor: crosshair; }
+.wx-ar-html { position: absolute; inset: 0; overflow: auto; padding: 10px 16px 16px; }
+.wx-ar-html h4 { margin: 12px 0 6px; font: 700 13.5px/1.2 var(--font-ui); }
+.wx-ar-html .wae table { font-size: 12.5px; }
+.wx-ar-notice { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; gap: 12px; padding: 24px; text-align: center; font-size: 14px; color: var(--muted); }
+.wx-ar-notice p { max-width: 540px; margin: 0; }
+.wx-ar-probe { flex: none; max-height: 28%; overflow: auto; padding: 6px 14px 8px; border-top: 1px solid var(--line); font: 12px/1.5 var(--font-data); color: var(--fg); }
+.wx-ar-probe:empty { display: none; }
+#app.wx .wx-linkbtn { height: auto; min-height: 28px; padding: 3px 9px; font-size: 12.5px; border-color: var(--accent); color: var(--accent); background: var(--panel); }
+@media (max-width: 700px) {
+  .wx-ar-head { padding: 8px; }
+  .wx-ar-src { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  #app.wx #wxResults #wxAeroView { max-width: 150px; }
+  /* the aerodynamic result view takes most of a phone screen; the page scrolls as before */
+  #app.wx > .view.wx-aero-on { height: clamp(560px, 88dvh, 760px) !important; }
+}

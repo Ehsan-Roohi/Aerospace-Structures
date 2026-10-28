@@ -1,0 +1,1836 @@
+diff --git a/computational/printed-wing-solver/aerostruct/build_wing_aerostruct.py b/computational/printed-wing-solver/aerostruct/build_wing_aerostruct.py
+index 595e743..65444d2 100644
+--- a/computational/printed-wing-solver/aerostruct/build_wing_aerostruct.py
++++ b/computational/printed-wing-solver/aerostruct/build_wing_aerostruct.py
+@@ -64,7 +64,9 @@ TOKENS = [("/*__LOAD_PROFILES__*/", "load_profiles.js"), ("/*__WING_SPARS__*/",
+           ("/*__BEAM_SOLUTION__*/", "beam_solution.js"), ("/*__COMPANION_TOOLS__*/", "companion_tools.js"), ("/*__FOUNDATIONS__*/", "foundations_ui.js"), ("/*__TEACHING_MODELS__*/", "teaching_models.js"),
+           ("/*__WING_LOADS_UI__*/", "wing_loads_ui.js"), ("/*__WING_WORKSPACE_UI__*/", "wing_workspace_ui.js"), ("/*__WING_STUDY_IO__*/", "wing_study_io.js"), ("/*__WING_STL_IMPORT__*/", "wing_stl_import.js"),
+           ("/*__WING_STL_REFERENCE_UI__*/", "wing_stl_reference_ui.js"), ("/*__WING_PRINT_UI__*/", "wing_print_ui.js"), ("/*__TEACHING_PANELS__*/", "teaching_panels.js"),
+-          ("/*__METAL_ENGINE__*/", "metal_wing_engine.js"), ("/*__METAL_REFERENCE__*/", "metal_wing_reference.json"), ("/*__METAL_UI__*/", "metal_wing_ui.js")]
++          ("/*__METAL_ENGINE__*/", "metal_wing_engine.js"), ("/*__METAL_REFERENCE__*/", "metal_wing_reference.json"), ("/*__METAL_UI__*/", "metal_wing_ui.js"),
++          # UI shell (command bar, input panels, result strip): appended to the page by the template, UI only
++          ("/*__WX_SHELL_CSS__*/", "wx-shell.css"), ("/*__WX_AERO_RESULTS__*/", "wx-aero-results.js"), ("/*__WX_SHELL__*/", "wx-shell.js")]
+ for token, filename in TOKENS:
+     assert page.count(token) == 1, token
+     text = read(filename)
+diff --git a/computational/printed-wing-solver/aerostruct/test_aerostruct_aero_ui.mjs b/computational/printed-wing-solver/aerostruct/test_aerostruct_aero_ui.mjs
+index 938a7cd..4fe27be 100644
+--- a/computational/printed-wing-solver/aerostruct/test_aerostruct_aero_ui.mjs
++++ b/computational/printed-wing-solver/aerostruct/test_aerostruct_aero_ui.mjs
+@@ -81,7 +81,7 @@ ok(/Aerodynamic load applied/.test($('#aeroStatus').textContent) && /Applied:/.t
+   ui.showAdmission(admSoft);
+   const boxSoft = $('#aeroAdmission').textContent;
+   log(`admission (Standard, low-GJ structure): ${admSoft.admitted ? 'admitted' : 'NOT admitted'}; twist bound lift effect ${(100 * admSoft.twist.liftEffect).toFixed(2)}%`);
+-  ok(!admSoft.admitted && admSoft.twist.status === 'unresolved' && /NOT admitted/.test(boxSoft) && /would change the lift by/.test(boxSoft) && /Run the Fine sequence/.test(boxSoft), 'low-GJ structure: the coupled result is withheld and the reason named');
++  ok(!admSoft.admitted && admSoft.twist.status === 'unresolved' && /NOT admitted/.test(boxSoft) && /would change the lift by/.test(boxSoft) && /Choose the Fine mesh sequence, press Solve Aerodynamics/.test(boxSoft), 'low-GJ structure: the coupled result is withheld and the reason named');
+   ok(/^Admission test \(standard sequence\): NOT admitted, the coupled result is withheld/.test($('#aeroStatus').textContent) && $('#aeroStatus .wae-err'), 'status line: NOT admitted, marked as an error');
+   ui.showAdmission(null, 'The admission test needs the spatial-beam result.');
+   ok(/needs the spatial-beam result/.test($('#aeroAdmission').textContent), 'an admission error is shown, not hidden');
+@@ -94,7 +94,7 @@ ok(csv.text.split('\n').filter(l => /^\d/.test(l)).length > 100 && !/NaN|undefin
+ // 5. the wing changes: the solved sequence cannot be applied; the applied load is reported stale
+ S.geometry = { ...S.geometry, dihedralDeg: 3 }; ui.refresh();
+ ok($('#aeroApply').disabled && /shape changed/.test($('#aeroStatus').textContent) && /wing shape changed after this load was solved/.test($('#aeroApplied').textContent), 'geometry change: Apply disabled, the applied load flagged stale');
+-ui.apply(); ok(/Run the mesh sequence again/.test($('#aeroStatus').textContent) && applied.length === 1, 'apply after a geometry change is refused');
++ui.apply(); ok(/Press Solve Aerodynamics again/.test($('#aeroStatus').textContent) && applied.length === 1, 'apply after a geometry change is refused');
+ S.geometry = { ...fixture.geometry }; ui.refresh(); ok(!$('#aeroApply').disabled, 'back to the solved shape: Apply offered again');
+ // 6. a structure the spatial beam cannot take (for example rods): Apply disabled with the reason
+ structureOk = false; ui.refresh();
+diff --git a/computational/printed-wing-solver/aerostruct/test_aerostruct_browser.mjs b/computational/printed-wing-solver/aerostruct/test_aerostruct_browser.mjs
+index 983b0da..471f44a 100644
+--- a/computational/printed-wing-solver/aerostruct/test_aerostruct_browser.mjs
++++ b/computational/printed-wing-solver/aerostruct/test_aerostruct_browser.mjs
+@@ -1,7 +1,7 @@
+ // Wing AeroStruct BUILT site in a REAL browser (Chromium via Playwright; WebGL by SwiftShader), served over HTTP so
+ // the aerodynamic Web Worker runs exactly as it would on the separate AeroStruct website.
+ // At 390, 768 and 1440 px, on the editable course study (bonded seams, spars, no rods): the page loads with no
+-// errors; the aerodynamics section opens inside the input column; the Standard mesh sequence runs in the Worker (one
++// errors; Aerodynamics on the command bar opens its input panel; the Standard mesh sequence runs in the Worker (one
+ // progress message per mesh, no main-thread fallback); results render without NaN and without horizontal overflow;
+ // a second angle reuses the seven cached influence systems; applying the Standard load runs the admission test, which
+ // does not resolve the near-zero torque about this structure's axis (no floor); its twist bound is negligible, so the
+@@ -93,11 +93,10 @@ for (const [width, height] of [[390, 844], [768, 1024], [1440, 900]]) {
+   await page.evaluate(() => [...document.querySelectorAll('#wingStudyFiles button')].find(b => /^Apply/.test(b.textContent)).click());
+   await page.waitForTimeout(100); await page.evaluate(() => window.WingLabUI.solve()); await solvedWing(page);
+   check(await page.evaluate(() => window.WingLabUI.state().assembly.seamsBonded && !window.WingLabUI.state().geometry.rodFractions.length), `${tag}: editable course study opened`);
+-  if (!await page.isVisible('#wingSide')) await page.click('#inputsBtn');
+-  check(await page.isVisible('#wingSide'), `${tag}: input column visible`);
+-  await page.$eval('#wlAero > summary', s => s.scrollIntoView({ block: 'start' }));
+-  await page.click('#wlAero > summary');
+-  check(await page.$eval('#wlAero', d => d.open && !!d.closest('#wingSide')) && await page.isVisible('#aeroRun'), `${tag}: aerodynamics section opens inside the input column`);
++  // Aerodynamics is a command of the top bar (UI shell): it opens the input panel in its aerodynamic mode
++  await page.click('#wxAeroBtn');
++  check(await page.isVisible('#wingSide') && await page.$eval('#wingSide', s => s.dataset.mode === 'aero' && !!s.querySelector('#wingAeroPanel .wae')), `${tag}: Aerodynamics panel open`);
++  check(await page.isVisible('#aeroRun') && (await page.textContent('#aeroRun')).trim() === 'Solve Aerodynamics' && await page.isVisible('#aeroV'), `${tag}: flow inputs and Solve Aerodynamics visible in the Aerodynamics panel`);
+   // record every status text, to see the Worker progress messages and catch a silent main-thread fallback
+   await page.evaluate(() => { window.__aeroStatus = []; const s = document.querySelector('#aeroStatus'); new MutationObserver(() => window.__aeroStatus.push(s.textContent)).observe(s, { childList: true, characterData: true, subtree: true }); });
+   await page.fill('#aeroV', '15'); await page.fill('#aeroAlpha', '4');
+@@ -110,16 +109,18 @@ for (const [width, height] of [[390, 844], [768, 1024], [1440, 900]]) {
+   check(workerUrls.some(u => /wing-aero\/wing_aero_worker\.js/.test(u)), `${tag}: the aerodynamic Worker is running (${workerUrls.join(', ') || 'no workers'})`);
+   check(!statuses.some(s => /Worker unavailable/.test(s)) && [1, 2, 3, 4, 5, 6, 7].every(k => statuses.some(s => new RegExp(`^Mesh ${k} of 7`).test(s))), `${tag}: the seven meshes were solved in the Worker with progress messages, no main-thread fallback`);
+   check(served.some(p => /^\/wing-aero\/aero_bundle\.js$/.test(p)), `${tag}: the Worker loaded wing-aero/aero_bundle.js from the AeroStruct site`);
++  await page.$eval('#wxAeroRes', d => { d.open = true; });   // the solver report subgroup of the Aerodynamics panel
+   const resultsText = await page.textContent('#aeroResults');
+   check(!/NaN|undefined|Infinity/.test(resultsText) && /±/.test(resultsText) && await page.$$eval('#aeroResults svg', s => s.length) >= 2 && await page.isVisible('#aeroResults table'), `${tag}: extrapolated results with uncertainty and two figures, no NaN/undefined`);
+-  // layout: no horizontal page scroll; nothing outside the viewport; the aerodynamic block stays inside the input column
++  // layout: no horizontal page scroll; nothing outside the viewport; the aerodynamic block stays inside the Aerodynamics panel
+   await page.$eval('#aeroResults', el => el.scrollIntoView({ block: 'start' }));
+   for (const d of await page.$$('#aeroResults details')) await d.evaluate(el => { el.open = true; });
+   const o = await page.evaluate(overflowProbe, { root: '#app' });
+   check(o.doc <= o.vw, `${tag}: page scrolls horizontally (${o.doc} > ${o.vw})`);
+   check(!o.bad.length, `${tag}: elements outside the viewport: ${o.bad.join('; ')}`);
+-  const col = await page.evaluate(overflowProbe, { root: '#wlAero', box: '#wingSide' });
+-  check(!col.bad.length, `${tag}: aerodynamic elements wider than the input column: ${col.bad.join('; ')}`);
++  const col = await page.evaluate(overflowProbe, { root: '#wingSide .wx-sec-aero', box: '#wingSide' });
++  check(!col.bad.length, `${tag}: aerodynamic elements wider than the Aerodynamics panel: ${col.bad.join('; ')}`);
++  await page.$eval('#wxAeroFlow', d => { d.open = true; });
+   // second angle: seven cached influence systems, no new linear solve
+   await page.fill('#aeroAlpha', '6');
+   const t1 = Date.now(); await page.click('#aeroRun');
+@@ -139,17 +140,18 @@ for (const [width, height] of [[390, 844], [768, 1024], [1440, 900]]) {
+   check(s1.admitted === true && !s1.stale && s1.claims.twist === 'withheld' && s1.claims.torque === 'withheld' && /admitted with torque and twist withheld/.test(s1.box) && s1.rows === 9, `${tag}: Standard load admitted with torque and twist withheld; admission table of 9 checks`);
+   check(s1.twistOption && s1.torqueOption && /torque and twist withheld/.test(s1.record), `${tag}: twist and torque views disabled; the results record says they are withheld`);
+   check(s1.reactionTorque && s1.cutMoment, `${tag}: root reactions and cut moments shown without their unresolved torque component (marked withheld)`);
+-  const col2 = await page.evaluate(overflowProbe, { root: '#wlAero', box: '#wingSide' });
+-  check(!col2.bad.length, `${tag}: admission table fits the input column: ${col2.bad.join('; ')}`);
+-  { // picture of the input column with the admission table (a tall viewport for the shot only)
++  const col2 = await page.evaluate(overflowProbe, { root: '#wingSide .wx-sec-aero', box: '#wingSide' });
++  check(!col2.bad.length, `${tag}: admission table fits the Aerodynamics panel: ${col2.bad.join('; ')}`);
++  { // picture of the Aerodynamics panel with the admission table (a tall viewport for the shot only)
+     await page.setViewportSize({ width, height: 2600 });
+-    await page.$eval('#wingSide', side => { side.scrollTop = document.querySelector('#wlAero').offsetTop - 8; });
++    await page.$eval('#wxAeroAdm', d => { d.open = true; d.scrollIntoView({ block: 'start' }); });
+     await page.waitForTimeout(250);
+     const box = await page.$eval('#wingSide', el => { const r = el.getBoundingClientRect(); return { x: Math.max(0, r.left), y: Math.max(0, r.top), width: Math.min(r.width, document.documentElement.clientWidth), height: Math.min(r.height, 2600 - Math.max(0, r.top)) }; });
+     await page.screenshot({ path: path.join(shots, `aerostruct_standard_${width}.png`), clip: box });
+     await page.setViewportSize({ width, height });
+   }
+   if (width === 1440) { // Fine sequence in the Worker: admitted, six-component load in the spatial beam
++    await page.$eval('#wxAeroMesh', d => { d.open = true; });   // the mesh-sequence subgroup of the Aerodynamics panel
+     await page.selectOption('#aeroSequence', 'fine');
+     const tf = Date.now(); await page.click('#aeroRun');
+     await aeroSolved(page, /^Solved the fine sequence/, 300000);
+@@ -161,7 +163,7 @@ for (const [width, height] of [[390, 844], [768, 1024], [1440, 900]]) {
+     check(s2.admitted === true && s2.dF < 1e-12 && s2.dM < 1e-9 && s2.record, `${tag}: Fine load admitted; the spatial beam carries all six components; results record shown`);
+     check(s2.claims.twist === 'withheld' && s2.torque.status === 'magnitude not resolved' && s2.note, `${tag}: Fine: root torque reported as not resolved, twist withheld in the results (bound stated)`);
+     await page.setViewportSize({ width, height: 2600 });
+-    await page.$eval('#wingSide', side => { side.scrollTop = document.querySelector('#wlAero').offsetTop - 8; });
++    await page.$eval('#wxAeroAdm', d => { d.open = true; d.scrollIntoView({ block: 'start' }); });
+     await page.waitForTimeout(250);
+     const box = await page.$eval('#wingSide', el => { const r = el.getBoundingClientRect(); return { x: Math.max(0, r.left), y: Math.max(0, r.top), width: Math.min(r.width, document.documentElement.clientWidth), height: Math.min(r.height, 2600 - Math.max(0, r.top)) }; });
+     await page.screenshot({ path: path.join(shots, `aerostruct_fine_${width}.png`), clip: box });
+diff --git a/computational/printed-wing-solver/aerostruct/test_aerostruct_page.mjs b/computational/printed-wing-solver/aerostruct/test_aerostruct_page.mjs
+index 262d327..3a10fce 100644
+--- a/computational/printed-wing-solver/aerostruct/test_aerostruct_page.mjs
++++ b/computational/printed-wing-solver/aerostruct/test_aerostruct_page.mjs
+@@ -80,7 +80,7 @@ const solved = async () => { await until(() => ui().result() && !ui().isRunning(
+ w.dispatchEvent(new w.CustomEvent('wing-learning-stage', { detail: 'project' }));
+ await solved();
+ ok(/Wing AeroStruct/.test(w.document.title) && $('#wingProjectTitle').textContent === 'Wing AeroStruct' && /separate from Wing Lab/.test($('#wingProjectTitle').parentElement.textContent), 'the page identifies itself as Wing AeroStruct, separate from Wing Lab');
+-ok($('#wingSide #wlAero #wingAeroPanel .wae') && $('#aeroRun') && $('#aeroSequence'), 'the aerodynamics and coupling section is mounted in the input column');
++ok(w.document.documentElement.dataset.wxShell === 'ready' && $('#wingSide .wx-sec-aero #wingAeroPanel .wae') && $('#aeroRun') && $('#aeroSequence') && $('#aeroRun').textContent === 'Solve Aerodynamics', 'UI shell applied: the aerodynamics and coupling section is mounted in the Aerodynamics panel');
+ // the course default (rods, dry seams) cannot take six-component loads: the sequence runs, Apply is refused with the reason
+ $('#aeroRun').click();
+ await until(() => /^Solved the standard sequence/.test($('#aeroStatus').textContent) || $('#aeroStatus .wae-err'), 'Standard sequence on the course wing');
+diff --git a/computational/printed-wing-solver/aerostruct/wing_aero_ui.js b/computational/printed-wing-solver/aerostruct/wing_aero_ui.js
+index 62c269c..3c4fd5e 100644
+--- a/computational/printed-wing-solver/aerostruct/wing_aero_ui.js
++++ b/computational/printed-wing-solver/aerostruct/wing_aero_ui.js
+@@ -149,7 +149,7 @@ const WingAeroUI = (() => {
+     if (adm.admitted && adm.claims.twist === 'shown') return { ok: true, html: 'Aerodynamic load admitted: the coupled structural result is shown, including torque and twist (resolved to 10%).' };
+     if (adm.admitted) return { ok: true, html: `Aerodynamic load admitted with ${torqueShown ? 'the twist' : 'torque and twist'} withheld: ${notResolved}. ${tw ? `The twist is only bounded, |θ| ≤ ${degText(tw.maxBound)}, which would change the lift by at most ${pct(tw.liftEffect)}% (limit 1%). ` : ''}${torqueShown ? 'Bending, shear force, normal stress, displacement and torque are shown; twist values are not.' : 'Bending, shear force, normal stress and displacement are shown; torque and twist values are not.'}` };
+     const twistFail = tw && tw.status === 'unresolved' ? ` ${torqueShown ? 'The twist is not resolved to 10% of itself' : 'The torque about the shear-centre axis is not resolved'} and its twist bound, |θ| ≤ ${degText(tw.maxBound)}, would change the lift by ${(100 * tw.liftEffect).toFixed(1)}% (limit 1%).` : '';
+-    return { ok: false, html: `Aerodynamic load NOT admitted: the coupled structural result is withheld (${esc(adm.failed.join('; '))}).${twistFail}${adm.sequence === 'standard' ? ' Run the Fine sequence and apply it again.' : ' The Fine sequence is the finest one offered in the browser, so this load is refused for this structure rather than shown with an unresolved twist.'}` };
++    return { ok: false, html: `Aerodynamic load NOT admitted: the coupled structural result is withheld (${esc(adm.failed.join('; '))}).${twistFail}${adm.sequence === 'standard' ? ' Choose the Fine mesh sequence, press Solve Aerodynamics and apply the loads again.' : ' The Fine sequence is the finest one offered in the browser, so this load is refused for this structure rather than shown with an unresolved twist.'}` };
+   }
+   // --------------------------------------------------------------- mount
+   function mount(host, ad) {
+@@ -162,7 +162,7 @@ const WingAeroUI = (() => {
+       <label for="aeroSequence">Mesh sequence<select id="aeroSequence"><option value="standard">${SEQUENCE_TEXT.standard}</option><option value="fine">${SEQUENCE_TEXT.fine}</option></select></label></div>
+       <p class="note">${SEQUENCE_NOTE}</p>
+       <details><summary>Air properties</summary><div class="wae-grid">${field('aeroMu', 'Dynamic viscosity μ (Pa·s)', saved.viscosity)}${field('aeroSound', 'Speed of sound a (m/s)', saved.speedOfSound, 'min="290" max="360"')}</div><p class="note">Used for the Reynolds-number and Mach screens only. The speed of sound must be that of air (290 to 360 m/s); Mach above 0.3 is refused.</p></details>
+-      <div class="lesson-actions"><button class="btn primary" type="button" id="aeroRun">Run mesh sequence</button><button class="btn" type="button" id="aeroApply" disabled>Apply to structure and solve</button><button class="btn" type="button" id="aeroRemove" hidden>Remove aerodynamic load</button></div>
++      <div class="lesson-actions"><button class="btn primary" type="button" id="aeroRun">Solve Aerodynamics</button><button class="btn" type="button" id="aeroApply" disabled>Apply aerodynamic loads to structure</button><button class="btn" type="button" id="aeroRemove" hidden>Remove aerodynamic load</button></div>
+       <p class="wae-status" id="aeroStatus" role="status" aria-live="polite"></p>
+       <div id="aeroApplied"></div><div id="aeroAdmission"></div><div id="aeroResults"></div></div>`;
+     const $ = s => host.querySelector(s), status = (t, bad = false) => { $('#aeroStatus').innerHTML = bad ? `<span class="wae-err">${esc(t)}</span>` : esc(t); };
+@@ -217,7 +217,7 @@ const WingAeroUI = (() => {
+         lastCombined = A().combineSequence(req.geometry, result, { snapStations: ad.snapStations ? ad.snapStations() : [] });
+         last = result; lastKey = key;
+         if (last.trim) $('#aeroAlpha').value = +last.trim.alphaDeg.toFixed(4);
+-        status(`Solved the ${result.sequence} sequence (${result.levels.length} meshes, ${result.levels.reduce((t, l) => t + l.panels, 0)} panels in total) in ${((Date.now() - t0) / 1000).toFixed(1)} s${result.levels.every(l => l.modelCacheHit) ? ' (influence systems reused)' : ''}. ${ad.structure?.().supported === false ? 'This structure cannot take the load: see below.' : 'Apply it to the structure to run the admission test.'}`);
++        status(`Solved the ${result.sequence} sequence (${result.levels.length} meshes, ${result.levels.reduce((t, l) => t + l.panels, 0)} panels in total) in ${((Date.now() - t0) / 1000).toFixed(1)} s${result.levels.every(l => l.modelCacheHit) ? ' (influence systems reused)' : ''}. ${ad.structure?.().supported === false ? 'This structure cannot take the load: see below.' : 'Press Apply aerodynamic loads to structure to run the admission test (it re-solves the structure).'}`);
+         render();
+       } catch (e) { status(e.message, true); }
+       finally { busy(false); }
+@@ -257,9 +257,9 @@ const WingAeroUI = (() => {
+     }
+     function apply() {
+       try {
+-        if (!last) throw new Error('Run the mesh sequence first.');
++        if (!last) throw new Error('Press Solve Aerodynamics first.');
+         const key = ad.geometryKey(ad.geometry());
+-        if (key !== lastKey) throw new Error('The wing shape changed after this aerodynamic solve. Run the mesh sequence again before applying the load.');
++        if (key !== lastKey) throw new Error('The wing shape changed after this aerodynamic solve. Press Solve Aerodynamics again before applying the load.');
+         const st = ad.structure?.(); if (st && !st.supported) throw new Error(st.message);
+         const record = recordFromSequence(last, lastKey);
+         // before the solve: showAdmission replaces this line with the outcome when the admission test has run
+@@ -289,13 +289,13 @@ const WingAeroUI = (() => {
+     function syncApplied() {
+       let rec = null, key = '';
+       try { rec = ad.applied?.(); key = ad.geometryKey ? ad.geometryKey(ad.geometry()) : ''; } catch (e) { rec = ad.applied?.() || null; key = ''; }
+-      $('#aeroApplied').innerHTML = rec ? `<div class="wae-box"><p><b>Applied:</b> ${esc(rec.label)}.</p>${rec.geometrySha256 !== key ? '<p class="wae-err">The wing shape changed after this load was solved: the structural solve refuses it until you run the mesh sequence again and apply it, or remove it.</p>' : ''}</div>` : '';
++      $('#aeroApplied').innerHTML = rec ? `<div class="wae-box"><p><b>Applied:</b> ${esc(rec.label)}.</p>${rec.geometrySha256 !== key ? '<p class="wae-err">The wing shape changed after this load was solved: the structural solve refuses it until you press Solve Aerodynamics again and apply the loads, or remove it.</p>' : ''}</div>` : '';
+       if (!rec) { lastAdmission = null; $('#aeroAdmission').innerHTML = ''; }
+-      if (last && key !== lastKey) status('The wing shape changed since the last aerodynamic solve: run the mesh sequence again before applying its load.');
++      if (last && key !== lastKey) status('The wing shape changed since the last aerodynamic solve: press Solve Aerodynamics again before applying its load.');
+       syncButtons();
+     }
+     refresh();
+-    return { refresh, syncApplied, compute, apply, showAdmission, destroy: () => { worker?.terminate(); worker = null; host.innerHTML = ''; }, get result() { return last; }, get combined() { return lastCombined; }, get admission() { return lastAdmission; } };
++    return { refresh, syncApplied, compute, apply, showAdmission, destroy: () => { worker?.terminate(); worker = null; host.innerHTML = ''; }, get result() { return last; }, get combined() { return lastCombined; }, get admission() { return lastAdmission; }, get solvedKey() { return lastKey; }, get running() { return running; } };
+   }
+   return Object.freeze({ mount, DEFAULTS, SEQUENCE_TEXT, SEQUENCE_NOTE, spanwiseFigure, cpFigure, csv, runMainThread, recordFromSequence, sequenceOf, delivered, engineLoad, structuralCuts, structuralTorsion, admit, admissionTable, admissionVerdict });
+ })();
+diff --git a/computational/printed-wing-solver/aerostruct/wing_aerostruct_template.html b/computational/printed-wing-solver/aerostruct/wing_aerostruct_template.html
+index bdb85ea..c0a3d49 100644
+--- a/computational/printed-wing-solver/aerostruct/wing_aerostruct_template.html
++++ b/computational/printed-wing-solver/aerostruct/wing_aerostruct_template.html
+@@ -537,8 +537,8 @@ body { margin: 0; }
+   <aside class="wl-side panel" id="wingSide" aria-label="Wing inputs">
+     <div class="wl-run">
+       <div class="wl-status"><div role="status" aria-live="polite"><span class="chip idle" id="stateChip">Starting</span><div class="wing-status-line"><span id="statePreview">Loading solver…</span><details class="wing-status-details" id="wingStatusDetails"><summary aria-label="Full solver status and warning details">Details</summary><div class="wing-status-popover"><span id="stateText">Loading the solver</span></div></details></div></div></div>
+-      <div class="wl-run-actions"><button class="run" id="runBtn" type="button"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M4 2 L14 8 L4 14 Z" fill="currentColor"/></svg>Solve</button></div>
+-      <label class="wl-auto" title="Solve automatically after each valid change"><input type="checkbox" id="wingAutoSolve"> Auto-solve</label>
++      <div class="wl-run-actions"><button class="run" id="runBtn" type="button"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M4 2 L14 8 L4 14 Z" fill="currentColor"/></svg>Solve Structure / Stress</button></div>
++      <label class="wl-auto" title="Run Solve Structure / Stress automatically after each valid change"><input type="checkbox" id="wingAutoSolve"> Auto-solve</label>
+     </div>
+     <div id="wingImportGate" class="wl-gate" role="region" aria-label="Imported outer geometry: structural inputs to confirm" hidden></div>
+     <p class="wl-modelnote" id="wingModelNote"><b>Generic browser study model.</b> Edits change this app's analysis and 3-D view. They do not update existing printable CAD/STL or the approved fabrication layout automatically. Use Download STL to generate and check fresh print geometry. Presets are historical / course starting points.</p>
+@@ -644,7 +644,7 @@ body { margin: 0; }
+         <p id="viewDims"><b>View zoom only.</b> Zooming never changes the size of the wing.</p>
+         <div class="wl-scale"><span class="wl-scalebar" id="viewScaleBar" style="width:60px"></span><span id="viewScaleText">–</span></div>
+         <p class="note" id="viewZoomText">Drag to rotate · right-drag or two fingers to pan · wheel or pinch to zoom.</p>
+-        <p class="note wl-viewstale" id="viewStale" hidden>Showing the last solved model. Press Solve to update the 3-D view.</p>
++        <p class="note wl-viewstale" id="viewStale" hidden>Showing the last solved model. Press Solve Structure / Stress to update the 3-D view.</p>
+       </div>
+       <section id="wingPartEditor" class="box" aria-label="Edit wing ribs and spars" style="padding:12px;border:2px solid var(--line);border-radius:10px;margin:10px 0">
+         <b>Ribs &amp; spars · select, move, remove</b>
+@@ -657,7 +657,7 @@ body { margin: 0; }
+         <p class="note" id="wpStatus" role="status" aria-live="polite"></p>
+         <div class="wl-row"><label for="wpPosition" id="wpPositionLabel">Position</label><input id="wpPosition" type="number" step="any" style="max-width:130px"><button class="btn" id="wpMove" type="button">Move selected</button><button class="btn" id="wpDuplicate" type="button">Duplicate at position</button><button class="btn" id="wpEdit" type="button">Edit dimensions / material</button></div>
+         <div class="wl-row"><label for="wpNewRib">New rib y (mm)</label><input id="wpNewRib" type="number" step="0.1" style="max-width:130px"><button class="btn" id="wpAddRib" type="button">+ Rib</button><button class="btn" id="wpAddSpar" type="button">+ Spar</button><button class="btn" id="wpUndo" type="button">Undo last part edit</button></div>
+-        <p class="note">Click or tap a visible rib, rod or spar to edit it. Use Inside wing above the model to reveal internal parts. Highlighting marks selection, not stress. Delete removes only the selected part (all caps/webs for a spar). Drag rotates the view, not the part. Seam ribs are locked; change module layout to remove a seam. Geometry updates immediately; results need Solve.</p>
++        <p class="note">Click or tap a visible rib, rod or spar to edit it. Use View → Inside wing to reveal internal parts. Highlighting marks selection, not stress. Delete removes only the selected part (all caps/webs for a spar). Drag rotates the view, not the part. Seam ribs are locked; change module layout to remove a seam. Geometry updates immediately; results need Solve.</p>
+       </section>
+       <details class="hud" id="hudControls" open aria-label="View and display">
+         <summary>View &amp; display controls</summary>
+@@ -771,7 +771,7 @@ body { margin: 0; }
+       <div class="predict">
+         <div class="callout">
+           <h3>Predict, then run</h3>
+-          <p>Write down your expectation before you press Solve. Change one input, predict, solve, compare.</p>
++          <p>Write down your expectation before you press Solve Structure / Stress. Change one input, predict, solve, compare.</p>
+           <div class="field"><label for="pDefl">Tip deflection <small>mm, limit load</small></label><input id="pDefl" type="number" step="0.1" placeholder="e.g. 12"></div>
+           <div class="field"><label for="pGov">Other governing check (buckling unresolved)</label><select id="pGov"></select></div>
+           <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" id="pLock" type="button">Lock prediction</button><span class="note" id="pState">No prediction locked.</span></div>
+@@ -911,7 +911,7 @@ body { margin: 0; }
+       fieldErrors={};inputError=null;partSelection=null;partUndo=null;partPick=false;
+       S.secY=Math.min(S.secY,S.geometry.semiSpan);S.clipY=Math.min(S.clipY,S.geometry.semiSpan);$('#secY').value=S.secY;$('#clipIn').value=S.clipY;
+       edited();renderImportGate();renderInputs(true);renderPM();editor?.refresh();wingAero?.refresh();
+-      $('#stateText').textContent=(delta<0?'Undo':'Redo')+' restored the wing inputs. '+(gateOpen()?'Confirm the imported structural inputs before solving.':autoSolve?'Automatic solving will update the results.':'Press Solve to update results.');
++      $('#stateText').textContent=(delta<0?'Undo':'Redo')+' restored the wing inputs. '+(gateOpen()?'Confirm the imported structural inputs before solving.':autoSolve?'Automatic solving will update the results.':'Press Solve Structure / Stress to update results.');
+       syncCompactStatus();
+     }finally{historySuspended--;syncWingHistory();saveWingSession();}
+   }
+@@ -949,7 +949,7 @@ body { margin: 0; }
+   function aeroLoadProblem(){
+     if(!S.aeroLoad)return '';
+     if(typeof WingAeroPanel==='undefined'||typeof WingAeroUI==='undefined')return 'This page has no aerodynamic module, so the applied aerodynamic load cannot be used.';
+-    if(aeroGeometryKey(E.makeGeometry(S.geometry))!==S.aeroLoad.geometrySha256)return 'The applied aerodynamic load was solved for a different wing shape. In Aerodynamics, run the mesh sequence again and apply it, or remove the aerodynamic load.';
++    if(aeroGeometryKey(E.makeGeometry(S.geometry))!==S.aeroLoad.geometrySha256)return 'The applied aerodynamic load was solved for a different wing shape. In Aerodynamics, press Solve Aerodynamics again and apply the loads, or remove the aerodynamic load.';
+     return '';
+   }
+   // The structural input of a Solve: the field inputs plus the applied aerodynamic load (if any).
+@@ -1126,7 +1126,7 @@ body { margin: 0; }
+       head("How the parts are joined", "Same printed parts, very different structures. A slip-fit rod only bends with the wing. Across a dry seam the shell is cut, and only the two rods carry the bending moment.");
+       pm.append(fs("Rods in sleeves", segField([[false, "Slip fit"], [true, "Epoxied"]], S.assembly.rodsBonded, (v) => (S.assembly.rodsBonded = v), "Rods")));
+       // A dry seam with no rods would disconnect the modules: reject that switch instead of failing at Solve.
+-      pm.append(fs("Module seams", segField([[false, "Dry"], [true, "Epoxied"]], S.assembly.seamsBonded, (v) => { if (!v && !g.rodFractions.length && E.seams(g).length) { flash("Dry seams need at least one rod across each seam (Structure → Rods); the wing would fall apart into modules. Not applied: seams stay epoxied."); return REJECT; } S.assembly.seamsBonded = v; }, "Seams"),
++      pm.append(fs("Module seams", segField([[false, "Dry"], [true, "Epoxied"]], S.assembly.seamsBonded, (v) => { if (!v && !g.rodFractions.length && E.seams(g).length) { flash("Dry seams need at least one rod across each seam (Structure & Stress → Rods & sleeves); the wing would fall apart into modules. Not applied: seams stay epoxied."); return REJECT; } S.assembly.seamsBonded = v; }, "Seams"),
+         numField("lf", "Rod free length at a dry seam", "mm (between the paired interface ribs)", S.assembly.seamFreeLength, 1, (v) => (S.assembly.seamFreeLength = v), positive),
+         numField("adh", "Epoxy butt-joint strength", "MPa", S.assembly.adhesiveTensile, 0.5, (v) => (S.assembly.adhesiveTensile = v), positive)));
+       if (R&&!R.analysis3D) pm.append(fs("Seam model", kv([["Seam spring k = n E I / L_f", `${nf(R.seam.kBend / 1000, 1)} N·m/rad`], ["Clearance dead band at tip", `${nf(R.seam.freePlay, 2)} mm`], ["Tip stiffness, this joint", `${nf(R.stiffness.tip, 3)} N/mm`], ["Tip stiffness, rigid seams", `${nf(R.stiffness.rigidSeams, 3)} N/mm`]])));
+@@ -1175,7 +1175,7 @@ body { margin: 0; }
+       errorDialog=document.createElement('dialog');errorDialog.id='wingErrorDialog';errorDialog.setAttribute('role','alertdialog');errorDialog.setAttribute('aria-labelledby','wingErrorTitle');errorDialog.setAttribute('aria-describedby','wingErrorMessage');
+       errorDialog.innerHTML='<h2 id="wingErrorTitle">Could not apply this change</h2><p id="wingErrorMessage"></p><div class="wing-error-actions"><button type="button" id="wingErrorClose">OK</button><button type="button" id="wingErrorGo">Go to the input</button></div>';document.body.append(errorDialog);
+       const close=()=>errorDialog.close();$('#wingErrorClose').onclick=close;
+-      $('#wingErrorGo').onclick=()=>{const target=errorTarget;if(target?.isConnected)errorReturnFocus=target;close();if(target?.isConnected){target.closest('details')?.setAttribute('open','');target.scrollIntoView({block:'center',behavior:'smooth'});target.focus({preventScroll:true});}};
++      $('#wingErrorGo').onclick=()=>{const target=errorTarget;if(target?.isConnected)errorReturnFocus=target;close();if(target?.isConnected){window.WingLabUI?.shell?.reveal?.(target.closest('details'),target);target.closest('details')?.setAttribute('open','');target.scrollIntoView({block:'center',behavior:'smooth'});target.focus({preventScroll:true});}};
+       errorDialog.addEventListener('close',()=>{if(errorReturnFocus?.isConnected)errorReturnFocus.focus({preventScroll:true});});
+       errorDialog.addEventListener('keydown',event=>{if(event.key==='Escape')event.stopPropagation();});
+     }
+@@ -1267,7 +1267,7 @@ body { margin: 0; }
+       const p = worst.pair[`${i},${j}`];
+       if (p.gap < -CONTACT_TOL) throw new Error(`Rods ${i + 1} and ${j + 1} (${nf(g.rodFractions[i], 2)}c and ${nf(g.rodFractions[j], 2)}c) overlap: their sleeves need centres at least ${mm(2 * Rs, 2)} apart, but they are ${mm(p.gap + 2 * Rs, 2)} apart at ${at(p.y)}.`);
+     }
+-    if (!n && !S.assembly.seamsBonded && E.seams(g).length) throw new Error(`With ${g.modules} modules and dry seams the rods are the only parts that carry load across a seam. Keep at least one rod, use 1 module, or choose epoxied seams (Study tree → Connections).`);
++    if (!n && !S.assembly.seamsBonded && E.seams(g).length) throw new Error(`With ${g.modules} modules and dry seams the rods are the only parts that carry load across a seam. Keep at least one rod, use 1 module, or choose epoxied seams (Structure & Stress → Joints & root support).`);
+     // Loads are read, never edited: a geometry change that would strand a load is refused.
+     if (S.load.kind === "custom" && Array.isArray(S.load.items)) {
+       const beyond = S.load.items.map((p, i) => [p, i]).filter(([p]) => loadReach(p) > g.semiSpan + 1e-9);
+@@ -1303,6 +1303,7 @@ body { margin: 0; }
+     const d = $("#" + id);
+     if (!d) return;
+     if ($("#app").classList.contains("learning-view")) showInputs(true);
++    window.WingLabUI?.shell?.reveal?.(d, focusId ? $("#" + focusId) : null);   // UI shell hook
+     d.open = true;
+     const f = focusId ? $("#" + focusId) : d.querySelector("input, select");
+     (f || d).scrollIntoView({ block: "nearest" });
+@@ -1464,13 +1465,13 @@ body { margin: 0; }
+     const box=$('#wingSparResults');if(!box)return;
+     if(R?.analysis3D){box.innerHTML=R.analysis3D.stressOnly?'<p class="note">Finite-length integral spars are included in the actual material union for nominal normal-stress equilibrium. Normal stresses are shown in the section record below the wing. Bending components are computed separately. Torsional displacement, transverse shear, local runout/bond stresses and buckling remain unresolved.</p>':'<p class="note">Projected bonded thin-wall spar sections are included in the spatial beam. Normal stresses are shown in the 3-D record below the wing; shear failure, bond failure and buckling are unresolved.</p>';return;}
+     const specs=S.geometry.spars||[];
+-    if(!specs.length){box.innerHTML='<h3>Spars</h3><p class="note">No spars in the current inputs. Add one in Structure → Bonded spars. Rods and spars are distinct alternatives.</p>';return;}
++    if(!specs.length){box.innerHTML='<h3>Spars</h3><p class="note">No spars in the current inputs. Add one in Structure &amp; Stress → Spars. Rods and spars are distinct alternatives.</p>';return;}
+     const pending=stale||running||!R||!R.sparModel;
+     const rows=pending?'':specs.flatMap((s,i)=>['top cap','bottom cap','web'].map(kind=>{
+       const a=R.stress.spars.filter(v=>v.index===i&&v.kind===kind),max=k=>Math.max(0,...a.map(v=>v[k]));
+       return `<tr><td>S${i+1} ${kind}</td><td>${nf(max('tension'),3)}</td><td>${nf(max('compression'),3)}</td><td>${nf(max('shear'),3)}</td></tr>`;
+     })).join('');
+-    box.innerHTML=`<h3>Bonded spar mechanics</h3><p>Caps: longitudinal tension/compression from bending. Web: transverse shear and cell shear flow under twist. Skin and ribs transfer force into the perfectly bonded spar.</p><p class="note">Bending: ε = −κ[(z − z̄) − (EIₓ𝓏/EIₓ)(x − x̄)], σ = Eε. The neutral axes use E-weighted areas; every material has its own σ. Shear: panel τ = q/t, with q from nodal force equilibrium, applied torque and minimum shear energy. Web height follows the bonded skin/cap geometry.</p><p><b>${pending?'Inputs changed: geometry preview only; Solve to calculate spar stresses.':'Limit-load section stresses · MPa (not adhesive or runout peaks)'}</b></p>${pending?'':`<div style="overflow:auto"><table><thead><tr><th>Member</th><th>Tension σ</th><th>Compression σ</th><th>Shear |τ|</th></tr></thead><tbody>${rows}</tbody></table></div><p>Spar mass ${nf(R.mass.spars,2)} g, counted once. Root EI ${nf(R.sections[0].EIf/1e6,3)} N·m²; GJ ${nf(R.sections[0].GJ/1e6,3)} N·m². Checks apply the chosen load factor of safety to these limit stresses.</p>`}<div class="lesson-actions"><button class="btn" type="button" id="wsInside">Reveal structure</button><button class="btn" type="button" id="wsStress" ${pending?'disabled':''}>Spar normal-stress colours</button><button class="btn" type="button" id="wsSection" ${pending?'disabled':''}>Section shear / stress</button></div><p class="note"><b>Thin-wall beam approximation, not 3-D FEA.</b> Perfect ties have no added material; caps and web are counted separately without overlap. No adhesive, cap/web buckling, crippling, debonding or runout failure prediction is available. Local open-cap torsion is neglected. A favourable strength ratio is not a complete structural clearance.</p>`;
++    box.innerHTML=`<h3>Bonded spar mechanics</h3><p>Caps: longitudinal tension/compression from bending. Web: transverse shear and cell shear flow under twist. Skin and ribs transfer force into the perfectly bonded spar.</p><p class="note">Bending: ε = −κ[(z − z̄) − (EIₓ𝓏/EIₓ)(x − x̄)], σ = Eε. The neutral axes use E-weighted areas; every material has its own σ. Shear: panel τ = q/t, with q from nodal force equilibrium, applied torque and minimum shear energy. Web height follows the bonded skin/cap geometry.</p><p><b>${pending?'Inputs changed: geometry preview only; press Solve Structure / Stress to calculate spar stresses.':'Limit-load section stresses · MPa (not adhesive or runout peaks)'}</b></p>${pending?'':`<div style="overflow:auto"><table><thead><tr><th>Member</th><th>Tension σ</th><th>Compression σ</th><th>Shear |τ|</th></tr></thead><tbody>${rows}</tbody></table></div><p>Spar mass ${nf(R.mass.spars,2)} g, counted once. Root EI ${nf(R.sections[0].EIf/1e6,3)} N·m²; GJ ${nf(R.sections[0].GJ/1e6,3)} N·m². Checks apply the chosen load factor of safety to these limit stresses.</p>`}<div class="lesson-actions"><button class="btn" type="button" id="wsInside">Reveal structure</button><button class="btn" type="button" id="wsStress" ${pending?'disabled':''}>Spar normal-stress colours</button><button class="btn" type="button" id="wsSection" ${pending?'disabled':''}>Section shear / stress</button></div><p class="note"><b>Thin-wall beam approximation, not 3-D FEA.</b> Perfect ties have no added material; caps and web are counted separately without overlap. No adhesive, cap/web buckling, crippling, debonding or runout failure prediction is available. Local open-cap torsion is neglected. A favourable strength ratio is not a complete structural clearance.</p>`;
+     $('#wsInside').onclick=()=>{setPlot('model');setAnatomy('inside');};
+     $('#wsStress').onclick=()=>{S.stressComponent='spars';setAnatomy('inside');setPlot('stress');};
+     $('#wsSection').onclick=()=>openTab('section');
+@@ -1518,7 +1519,7 @@ body { margin: 0; }
+     if(S.emptyStudy){$('#wingInventory').textContent='No wing created yet.';$('#wlInventoryBadge').textContent='Empty';return;}
+     const v = inventoryData(S.geometry), list = (a, d = 1) => a.map((x) => nf(x, d)).join(", ");
+     $("#wingInventory").innerHTML = `<div class="wl-inv">
+-      <p class="note">${stale && R ? "<b>Inputs on screen</b> — not solved yet; press Solve." : "<b>Inputs on screen</b>, counted with the solver's own geometry functions."} A generic browser study model: it does not update the printable CAD/STL or the approved fabrication layout.</p>
++      <p class="note">${stale && R ? "<b>Inputs on screen</b> — not solved yet; press Solve Structure / Stress." : "<b>Inputs on screen</b>, counted with the solver's own geometry functions."} A generic browser study model: it does not update the printable CAD/STL or the approved fabrication layout.</p>
+       <dl class="kv wl-kv">
+         <dt>Airfoil · planform</dt><dd>NACA <span data-inv="naca">${v.naca}</span> · <span data-inv="semiSpan">${nf(v.semiSpan, 1)}</span> × <span data-inv="rootChord">${nf(v.rootChord, 1)}</span>/<span data-inv="tipChord">${nf(v.tipChord, 1)}</span> mm</dd>
+         <dt>Modules</dt><dd><span data-inv="modules">${v.modules}</span> × ${mm(v.moduleLength)}</dd>
+@@ -1552,12 +1553,12 @@ body { margin: 0; }
+       updateModel(); frameView(false); renderViewReadout(true); renderPlotInfo();
+       renderSparResults();
+       $('#probe').hidden = true;
+-      $('#viewStale').textContent = WingGeometry.closedTip(g)?E.analysisCapability(g).message:'Geometry preview of current inputs; stress, deformation and load arrows are hidden. Press Solve to update analysis. Results below still belong to the last solved model.';
++      $('#viewStale').textContent = WingGeometry.closedTip(g)?E.analysisCapability(g).message:'Geometry preview of current inputs; stress, deformation and load arrows are hidden. Press Solve Structure / Stress to update analysis. Results below still belong to the last solved model.';
+     } catch (err) {
+       updateModel();
+       $('#probe').hidden = true;
+       $('#viewStale').textContent = 'Geometry preview unavailable: correct the geometry inputs. Previous geometry remains visible; analysis is not up to date.';
+-      $('#plotinfo').textContent = 'Invalid geometry inputs: previous geometry shown undeformed, without stress or load arrows. Correct inputs and press Solve.';
++      $('#plotinfo').textContent = 'Invalid geometry inputs: previous geometry shown undeformed, without stress or load arrows. Correct inputs and press Solve Structure / Stress.';
+     }
+   }
+   // Deliberate study actions (lesson experiments, presets, Design-lab buttons, adding or removing a load) solve at once.
+@@ -1588,7 +1589,7 @@ body { margin: 0; }
+   function syncCompactStatus(customText) {
+     const chip=$('#stateChip'),preview=$('#statePreview');if(!preview)return;
+     const label=chip.textContent,full=$('#stateText').textContent;
+-    preview.textContent=customText?'See status details.':label==='Linear range exceeded'?'Illustrative only · reduce loads.':label==='Input error'?'Check input details.':label==='Solved · section stress'?'Nominal normal stress · tip unresolved.':label==='Analysis blocked'?'Confirm imported structure.':label==='Empty study'?'Choose Airfoil & planform.':label==='Out of date'?'Press Solve to update.':label==='Solving'?'Computing…':/no load/i.test(full)?'No loads applied.':label==='Solved · 3-D beam'?(R?.analysis3D?.loadMapping?.endWrenches.length?'End-load approximation · see results warning.':'Nominal beam results.'):/, exceeded/.test(full)?'Strength check exceeded.':'Results match inputs.';
++    preview.textContent=customText?'See status details.':label==='Linear range exceeded'?'Illustrative only · reduce loads.':label==='Input error'?'Check input details.':label==='Solved · section stress'?'Nominal normal stress · tip unresolved.':label==='Analysis blocked'?'Confirm imported structure.':label==='Empty study'?'Choose Airfoil & planform.':label==='Out of date'?'Press Solve Structure / Stress.':label==='Solving'?'Computing…':/no load/i.test(full)?'No loads applied.':label==='Solved · 3-D beam'?(R?.analysis3D?.loadMapping?.endWrenches.length?'End-load approximation · see results warning.':'Nominal beam results.'):/, exceeded/.test(full)?'Strength check exceeded.':'Results match inputs.';
+     chip.title=full;
+   }
+   function setStatus(text) { if(!running)$('#loading').hidden=true;renderStatus(text);syncCompactStatus(text); }
+@@ -1603,17 +1604,17 @@ body { margin: 0; }
+     btn.dataset.pending = String(stale && !running);
+     $("#app").dataset.stale = String(out);
+     $("#wingStale").hidden = !out;
+-    $("#wingStale").innerHTML = out ? '<span aria-hidden="true">⚠</span><span><b>Not up to date.</b> These results belong to the last solved model, not to the inputs now on screen. Press <b>Solve</b> to update them.</span>' : "";
++    $("#wingStale").innerHTML = out ? '<span aria-hidden="true">⚠</span><span><b>Not up to date.</b> These results belong to the last solved model, not to the inputs now on screen. Press <b>Solve Structure / Stress</b> to update them.</span>' : "";
+     $("#viewStale").hidden = !out;
+     $("#copyBtn").disabled = out || !R;
+     if (out !== reportBlocked) { reportBlocked = out; $("#copyState").textContent = out ? "Copying is disabled until the inputs on screen are solved." : "Plain-text study summary for your engineering record."; }
+     if (stale && $("#wingShareBox") && !$("#wingShareBox").hidden) { $("#wingShareBox").hidden = true; $("#wingShareBox").value = ""; $("#wingShareMsg").textContent = ""; }
+     if (running) { chip.className = "chip idle"; chip.textContent = "Solving"; t.textContent = text || "Solving the inputs on screen"; return; }
+     if(S.emptyStudy){chip.className='chip idle';chip.textContent='Empty study';t.textContent='Choose an airfoil and dimensions, then Apply geometry to create your wing.';return;}
+-    if (gateOpen()) { chip.className = "chip warn"; chip.textContent = "Analysis blocked"; t.textContent = "Imported outer geometry: confirm its structural inputs (list at the top of this column) before solving."; return; }
++    if (gateOpen()) { chip.className = "chip warn"; chip.textContent = "Analysis blocked"; t.textContent = "Imported outer geometry: confirm its structural inputs (list at the top of Structure & Stress) before solving."; return; }
+     if(closed&&R?.analysis3D?.stressOnly&&!stale){const b=R.analysis3D.bending;chip.className='chip '+(b&&!b.validity.smallDisplacement?'warn':'ok');chip.textContent=b?'Solved · stress + bending':'Solved · section stress';t.textContent=b?`Bending components only; torsion excluded. ${b.tip.slopeFinite?'Finite tip slope.':'Exact-tip slope is unbounded; global small-rotation assumptions fail.'}`:'Nominal normal section stress; exact apex undefined.';return;}
+     if (inputError) { chip.className = "chip bad"; chip.textContent = "Input error"; t.textContent = inputError + (!R ? "" : stale ? " Results shown are for the last solved model." : " The results shown still match the inputs on screen."); return; }
+-    if (stale) { chip.className = "chip warn"; chip.textContent = "Out of date"; t.textContent = R ? "Inputs changed — press Solve. Results shown are for the last solved model." : "Press Solve to compute the first result."; return; }
++    if (stale) { chip.className = "chip warn"; chip.textContent = "Out of date"; t.textContent = R ? "Inputs changed — press Solve Structure / Stress. Results shown are for the last solved model." : "Press Solve Structure / Stress to compute the first result."; return; }
+     if (!R) return;
+     if(R.analysis3D){
+       const valid=R.analysis3D.validity.smallDisplacement;
+@@ -2479,8 +2480,8 @@ body { margin: 0; }
+     if(!massBox.hidden){massBox.textContent=geometryPreview?(WingGeometry.closedTip(model.g)?'Solve or download STL to update mass':'Wing mass — solve to update'):`${fullWingPrint?'Estimated full-wing mass '+nf(2*R.mass.total,1)+' g (2 × semi-wing)':'Estimated semi-wing mass '+nf(R.mass.total,1)+' g'} · includes spars ${nf((R.mass.spars||0)*(fullWingPrint?2:1),1)} g${R.load.gravitySummary?' · Applied '+nf(R.load.gravitySummary.appliedN*(fullWingPrint?2:1),3)+' N · Weight ↓ '+nf(R.load.gravitySummary.weightN*(fullWingPrint?2:1),3)+' N · Net '+nf(R.appliedForce*(fullWingPrint?2:1),3)+' N':''}${stale?' · previous solve':''}`;massBox.title='Estimated model mass including skin, ribs, end caps, spars, rods and any tip mass. Verify manufacturing mass in CAD and the slicer.';}
+     if (geometryPreview&&model) {
+       const g = model.g;
+-      $('#plotinfo').textContent = `UNSOLVED GEOMETRY PREVIEW · ${airfoilLabel(g)} · semi-span ${g.semiSpan} mm · ${model.ribs.length} ribs · ${model.rods.length} rods. ${WingGeometry.closedTip(g)?'Exact closed-tip shape. Solve for nominal normal stress; apex unresolved.':'Stress and deformation hidden; press Solve for analysis.'}`;
+-      $('#footline').textContent=WingGeometry.closedTip(g)?'Exact closed-tip geometry · Solve for nominal normal stress · exact apex unresolved.':'Geometry preview only · no structural result yet. Press Solve to analyse.';
++      $('#plotinfo').textContent = `UNSOLVED GEOMETRY PREVIEW · ${airfoilLabel(g)} · semi-span ${g.semiSpan} mm · ${model.ribs.length} ribs · ${model.rods.length} rods. ${WingGeometry.closedTip(g)?'Exact closed-tip shape. Press Solve Structure / Stress for nominal normal stress; apex unresolved.':'Stress and deformation hidden; press Solve Structure / Stress for analysis.'}`;
++      $('#footline').textContent=WingGeometry.closedTip(g)?'Exact closed-tip geometry · Solve Structure / Stress for nominal normal stress · exact apex unresolved.':'Geometry preview only · no structural result yet. Press Solve Structure / Stress to analyse.';
+       return;
+     }
+     if (!R) return;
+@@ -2950,7 +2951,7 @@ body { margin: 0; }
+     if (!isFinite(d)) { $("#pState").textContent = "Enter a tip deflection first."; return; }
+     prediction = { defl: d, gov: $("#pGov").value, after: false };
+     store.set("prediction", prediction);
+-    $("#pState").textContent = "Locked. Now change an input and press Solve.";
++    $("#pState").textContent = "Locked. Now change an input and press Solve Structure / Stress.";
+     $("#pResult").innerHTML = "";
+   });
+   function reportText() {
+@@ -3096,9 +3097,9 @@ body { margin: 0; }
+   const spatialLessonPanels=new Map();
+   function prepareSpatialLesson(name,panel){
+     const g=R.geometry,tip=R.deflection.at(-1),twistWithheld=aeroTwistWithheld(),twist=twistWithheld?null:R.twist.at(-1)*180/Math.PI,twistText=v=>v==null?(aeroTorqueWithheld()?'withheld (aerodynamic torque not resolved)':'withheld (twist not resolved to 10%)'):`${nf(v,3)}°`;
+-    const current=`<p>Current solved semi-wing: ${nf(R.mass.total,1)} g; tip displacement ${nf(tip,3)} mm; tip twist ${twistText(twist)}. ${stale?'Inputs changed: Solve before comparing results.':''}</p>`;
++    const current=`<p>Current solved semi-wing: ${nf(R.mass.total,1)} g; tip displacement ${nf(tip,3)} mm; tip twist ${twistText(twist)}. ${stale?'Inputs changed: press Solve Structure / Stress before comparing results.':''}</p>`;
+     if(name==='design'){
+-      panel.innerHTML='<h2>Compare one design change</h2>'+current+'<p>Save a baseline, change one rib, skin thickness or spar dimension, then Solve. Keep the loads and material cards unchanged. Ribs affect mass and bay spacing; this beam model does not predict local skin buckling.</p><button class="btn" data-spatial-baseline>Save solved baseline</button><button class="btn" data-spatial-structure>Edit structure</button><p data-spatial-comparison></p>';
++      panel.innerHTML='<h2>Compare one design change</h2>'+current+'<p>Save a baseline, change one rib, skin thickness or spar dimension, then press Solve Structure / Stress. Keep the loads and material cards unchanged. Ribs affect mass and bay spacing; this beam model does not predict local skin buckling.</p><button class="btn" data-spatial-baseline>Save solved baseline</button><button class="btn" data-spatial-structure>Edit structure</button><p data-spatial-comparison></p>';
+       const summary=()=>{panel.querySelector('[data-spatial-comparison]').textContent=spatialLessonBaseline?`Baseline → current: mass ${nf(spatialLessonBaseline.mass,1)} → ${nf(R.mass.total,1)} g; tip displacement ${nf(spatialLessonBaseline.tip,3)} → ${nf(tip,3)} mm; tip twist ${twistText(spatialLessonBaseline.twist)} → ${twistText(twist)}. ${spatialLessonBaseline.context===JSON.stringify([S.load,materials(),S.assembly])?'Loads, materials and joints unchanged.':'Loads, materials or joints also changed; this is not an isolated geometry comparison.'}`:'No baseline saved.';};summary();panel.querySelector('[data-spatial-baseline]').onclick=()=>{if(stale){flash('Solve the current inputs first.');return;}spatialLessonBaseline={mass:R.mass.total,tip,twist,context:JSON.stringify([S.load,materials(),S.assembly])};summary();};
+     }else if(name==='members'){
+       panel.innerHTML='<h2>Skin, ribs and spars</h2>'+current+`<p>${R.ribs.length} ribs and ${g.spars.length} bonded spars are included. Skin and spar caps resist bending; closed skin and bonded webs provide torsional stiffness. Ribs add mass and preserve the intended section, but their local plate stiffness and buckling are not resolved.</p><p>Change one member at a time, Solve, and compare mass, displacement, twist and numerical stress values. Coupled vibration modes are not available for this spatial model.</p><button class="btn" data-spatial-structure>Edit structure</button><button class="btn" data-spatial-shape>Show bending & twist</button>`;
+@@ -3367,7 +3368,7 @@ body { margin: 0; }
+     // atomically and wait for Solve (or automatic solving); this tab then compares the solved design with the baseline.
+     controls.innerHTML = `<h3>Edit the rib layout</h3>
+       <p><b>${R.ribs.length} ribs = ${interiors.length} editable interior + ${locked.length} locked interface.</b> Locked stations: ${locked.length ? locked.map(y => nf(y, 1)).join(", ") + " mm" : "none (one module)"}. Root/tip caps are separate.</p>
+-      <p>Add, move or remove ribs, set equal spacing, and change rib or skin thickness in <b>Structure</b> in the input column (below the 3-D view on a phone). Changes wait for <b>Solve</b> unless “Solve automatically” is ticked; this comparison then updates against your saved baseline. Positions that overlap a rib, an end cap or a protected seam zone are refused with a reason.</p>
++      <p>Add, move or remove ribs, set equal spacing, and change rib or skin thickness in <b>Structure &amp; Stress → Ribs</b>. Changes wait for <b>Solve Structure / Stress</b> unless <b>Auto-solve</b> is ticked; this comparison then updates against your saved baseline. Positions that overlap a rib, an end cap or a protected seam zone are refused with a reason.</p>
+       <div class="lesson-actions"><button class="btn primary" id="designEditRibs" type="button">Edit ribs in Structure</button><button class="btn" id="designEditSkin" type="button">Edit skin thickness</button></div>
+       <h3>Try another design variable</h3><p>Keep the load fixed and change only one thickness. Skin thickness affects the section stiffness and mass; rib thickness affects rib mass and the available layout space.</p>`;
+     $("#designEditRibs").addEventListener("click", () => openSection("wlStructure", "wgRibNew"));
+@@ -3488,7 +3489,7 @@ body { margin: 0; }
+     const fig = anatomy ? ribPlanFigure(g) : section ? sectionFigure(g) : beamFigure(S.lesson);
+     const caption = anatomy ? `Physical rib stations: ${ribs.length ? ribs.map((y,i)=>`R${i+1}: ${nf(y,1)} mm`).join("; ") : "none in this preset"}. Dashed lines show seams when present. Rod paths are blue when rods exist.` : section ? `Selected airfoil-section geometry: grey shell; ${g.rodFractions.length ? "orange sleeves and blue rods." : "no rods or sleeves."} ${g.spars.length ? `${g.spars.length} bonded thin-wall spar(s), with separate caps and webs.` : "No separate stringers or full-height spar webs."} Rib diaphragms are present only at the listed rib stations.` : "Isolated tip-force sketch; the general load case may include distributed and multiple point forces.";
+     $("#lessonFigure").innerHTML = fig + `<figcaption>${caption}</figcaption>`;
+-    $("#lessonReading").innerHTML = R ? `<h3>Read your current result</h3><p>${wingLoadName(R)} · ${g.modules===1 ? "continuous one-piece shell" : R.assembly.seamsBonded ? "bonded seams" : "dry seams"}</p><dl class="kv"><dt>Root shear magnitude</dt><dd>${nf(Math.abs(R.V[0]), 2)} N</dd><dt>Root bending moment magnitude</dt><dd>${nf(Math.abs(R.M[0]) / 1000, 3)} N·m</dd><dt>Signed tip deflection</dt><dd>${nf(R.deflection.at(-1), 3)} mm</dd><dt>Signed tip twist</dt><dd>${nf(R.twist.at(-1) * 180 / Math.PI, 3)}°</dd></dl><p>Solve recomputes this case; with identical inputs the numbers stay the same. Input edits wait for Solve unless “Solve automatically” is ticked; lesson buttons solve at once.</p>` : "<p>Preparing the first result. You can read the lesson while the solver starts.</p>";
++    $("#lessonReading").innerHTML = R ? `<h3>Read your current result</h3><p>${wingLoadName(R)} · ${g.modules===1 ? "continuous one-piece shell" : R.assembly.seamsBonded ? "bonded seams" : "dry seams"}</p><dl class="kv"><dt>Root shear magnitude</dt><dd>${nf(Math.abs(R.V[0]), 2)} N</dd><dt>Root bending moment magnitude</dt><dd>${nf(Math.abs(R.M[0]) / 1000, 3)} N·m</dd><dt>Signed tip deflection</dt><dd>${nf(R.deflection.at(-1), 3)} mm</dd><dt>Signed tip twist</dt><dd>${nf(R.twist.at(-1) * 180 / Math.PI, 3)}°</dd></dl><p>Solve recomputes this case; with identical inputs the numbers stay the same. Input edits wait for Solve Structure / Stress unless Auto-solve is ticked; lesson buttons solve at once.</p>` : "<p>Preparing the first result. You can read the lesson while the solver starts.</p>";
+   }
+ 
+   // The input column is shown by default (like the Beam Lab); "Hide inputs" folds it away for a lesson.
+@@ -3498,6 +3499,7 @@ body { margin: 0; }
+     $("#inputsBtn").textContent = "Inputs";
+     $("#inputsBtn").setAttribute("aria-expanded", String(show));
+     resize(); if (model) setView("iso");
++    window.WingLabUI?.shell?.onShowInputs?.(show);   // UI shell hook: show or hide the input panel
+   }
+   $("#inputsBtn").addEventListener("click", () => showInputs(window.innerWidth<=1100?!$('#app').classList.contains('tablet-inputs-open'):$("#app").classList.contains("learning-view")));
+   $('#wingAeroOpenBtn').addEventListener('click', () => {
+@@ -3605,15 +3607,15 @@ body { margin: 0; }
+     if (!importGate) { box.hidden = true; box.innerHTML = ""; return; }
+     const g = S.geometry, p = importGate.provenance || {}, all = !gateOpen();
+     box.hidden = false;
+-    box.innerHTML = `<p><b id="wingGateHead">${all ? "Structure confirmed." : "Analysis blocked."}</b> The design-parameter file supplied the outer shape (NACA ${esc(g.naca)}, semi-span ${nf(g.semiSpan, 1)} mm, chords ${nf(g.rootChord, 1)}/${nf(g.tipChord, 1)} mm) from <b>${esc(p.filename || "pasted text")}</b>${p.sha256 ? ` (SHA-256 ${esc(String(p.sha256).slice(0, 12))}…)` : ""}. It did not supply the items below: set each one in this column, then tick it. The study is not analysed until every item is ticked.</p>
++    box.innerHTML = `<p><b id="wingGateHead">${all ? "Structure confirmed." : "Analysis blocked."}</b> The design-parameter file supplied the outer shape (NACA ${esc(g.naca)}, semi-span ${nf(g.semiSpan, 1)} mm, chords ${nf(g.rootChord, 1)}/${nf(g.tipChord, 1)} mm) from <b>${esc(p.filename || "pasted text")}</b>${p.sha256 ? ` (SHA-256 ${esc(String(p.sha256).slice(0, 12))}…)` : ""}. It did not supply the items below: set each one in Structure &amp; Stress, then tick it. The study is not analysed until every item is ticked.</p>
+       <ul class="wl-gate-list">${importGate.required.map((r) => `<li><label><input type="checkbox" data-gate="${esc(r.id)}"${importGate.confirmed.has(r.id) ? " checked" : ""}> ${esc(r.label)} <span class="note">— now: ${esc(gateNow(r.id))}</span></label></li>`).join("")}</ul>
+       ${importGate.conflicts && importGate.conflicts.length ? `<p class="wle-err">Fix first: ${importGate.conflicts.map(esc).join(" · ")}</p>` : ""}
+       <div class="lesson-actions"><button class="btn" type="button" id="wingGateRestore">Discard the imported shape (restore the previous geometry)</button></div>`;
+     // Ticking updates the state in place (the list is not rebuilt, so keyboard focus stays on the box just ticked).
+-    box.querySelectorAll("[data-gate]").forEach((c) => { c.onchange = () => { c.checked ? importGate.confirmed.add(c.dataset.gate) : importGate.confirmed.delete(c.dataset.gate); $("#wingGateHead").textContent = gateOpen() ? "Analysis blocked." : "Structure confirmed: press Solve.";recordWingHistory();setStatus(); }; });
++    box.querySelectorAll("[data-gate]").forEach((c) => { c.onchange = () => { c.checked ? importGate.confirmed.add(c.dataset.gate) : importGate.confirmed.delete(c.dataset.gate); $("#wingGateHead").textContent = gateOpen() ? "Analysis blocked." : "Structure confirmed: press Solve Structure / Stress.";recordWingHistory();setStatus(); }; });
+     $("#wingGateRestore").onclick = () => { S.geometry = importGate.previous; importGate = null; fieldErrors = {}; renderImportGate(); edited(); renderInputs(true); filesNote("The imported outer shape was discarded; the previous geometry is back."); };
+   }
+-  const blockedText = "Confirm the structural inputs of the imported outer geometry first (list at the top of the input column).";
++  const blockedText = "Confirm the structural inputs of the imported outer geometry first (list at the top of Structure & Stress).";
+   // Messages about files and links (not input errors): shown in Study files, which is opened.
+   function filesNote(msg) { const n = $("#wingFilesNote"); if (n) n.textContent = msg; const d = $("#wlFiles"); if (d) d.open = true; }
+   function applyStudyState(state, info) {
+@@ -3653,7 +3655,7 @@ body { margin: 0; }
+     onApplied: (info) => {
+       if (printedWorkspace?.popup.classList.contains('wing-file-pop')) printedWorkspace.close(false);
+       setAnatomy('inside');
+-      sessionNote(`Opened ${info.provenance?.filename || 'wing JSON'}. ${S.emptyStudy?'Empty canvas restored; choose Airfoil & planform to create a wing.':'The imported wing is shown; press Solve to update its results.'}`);
++      sessionNote(`Opened ${info.provenance?.filename || 'wing JSON'}. ${S.emptyStudy?'Empty canvas restored; choose Airfoil & planform to create a wing.':'The imported wing is shown; press Solve Structure / Stress to update its results.'}`);
+     },
+   }) : null;
+   if(studyFiles)$('#wlFiles .wl-fallback').hidden=true;
+@@ -3710,6 +3712,10 @@ body { margin: 0; }
+     studyFiles: () => studyFiles, aero: () => wingAero,
+     view: () => (model ? { distance: camera.position.distanceTo(controls.target), resetDistance, solved: { semiSpan: model.g.semiSpan, rootChord: model.g.rootChord, tipChord: model.g.tipChord },preview:geometryPreview,members:{ribs:model.ribs.length,rods:model.rods.length,sparParts:(model.spars||[]).length} } : null),
+   };
++  // UI shell hooks (command bar and input panels at the end of this page): the shell moves these real editors and
++  // calls these page functions; it never solves or edits study data itself. The shell sets onShowInputs and reveal.
++  window.WingLabUI.shell = { workspace: () => printedWorkspace, select: (id) => select(id), renderPM: () => renderPM(), renderInputs: () => renderInputs(true),
++    discardGeometryDraft: () => advancedGeometryEditor?.refresh(), cancelLoadDraft: () => wingLoadKeeper?.editor?.cancelDraft(), gateOpen: () => gateOpen() };
+   const advancedGeometryPanel=el('div',{id:'wingAdvancedGeometry'});
+   $('#wingGeometryForm').append(advancedGeometryPanel);
+   advancedGeometryEditor=WingGeometryUI.mount(advancedGeometryPanel,{getGeometry:()=>S.geometry,applyGeometry,onApplied:()=>{printedWorkspace?.close();setAnatomy('inside');}});
+@@ -3846,7 +3852,7 @@ body { margin: 0; }
+     torsionHelp.querySelector('input').onchange=e=>{S.analysis={...(S.analysis||{}),finiteSectionTorsion:e.target.checked};edited();renderTree();};
+ 
+     const historyHelp=el('details',{class:'wing-history-help'},'<summary>Undo / Redo</summary><p class="note">Undo/Redo restores up to 100 saved input states, including geometry, project name, materials, loads and the cleared canvas. A new edit clears Redo. Outside text fields use Ctrl/Cmd+Z, Ctrl/Cmd+Shift+Z or Ctrl+Y. Restored inputs need Solve unless automatic solving is enabled. History is kept for this page session, not saved in JSON.</p>');helpBody.append(historyHelp);
+-    helpBody.append(el('details',{},'<summary>Selection &amp; clearing</summary><p class="note">Click visible parts to edit them. To select the entire wing, click Select wing, or use Ctrl/Cmd+A outside text fields. An outline and Delete selected button confirm the selection. You can also drag a rectangle around the whole wing. Delete selected or the Delete key opens Clear confirmation. Esc cancels selection. New / Clear is in the main toolbar; Undo restores your previous inputs. Normal dragging rotates the view.</p>'));
++    helpBody.append(el('details',{},'<summary>Selection &amp; clearing</summary><p class="note">Click visible parts to edit them. To select the entire wing, click Select wing, or use Ctrl/Cmd+A outside text fields. An outline and Delete selected button confirm the selection. You can also drag a rectangle around the whole wing. Delete selected or the Delete key opens Clear confirmation. Esc cancels selection. New / Clear is in the File menu; Undo restores your previous inputs. Normal dragging rotates the view.</p>'));
+     const example=el('button',{class:'btn',type:'button',id:'wgCourseExample'},'Optional course wing example');example.onclick=()=>{if(confirm('Replace the current wing with the course example? Geometry, materials and connections will reset, and applied loads will be cleared.'))window.dispatchEvent(new CustomEvent('wing-learning-stage',{detail:'project'}));};helpBody.append(example);
+     printedWorkspace.tools.insertBefore(help,printedWorkspace.tools.querySelector('.wing-quick-hint'));
+     const usageHelp=el('details',{},'<summary>Mouse, touch &amp; browser backup</summary>'),quickHint=printedWorkspace.tools.querySelector('.wing-quick-hint');
+@@ -3977,3 +3983,13 @@ body { margin: 0; }
+ const METAL_REFERENCE = /*__METAL_REFERENCE__*/;
+ /*__METAL_UI__*/
+ </script>
++
++<!-- BEGIN Wing AeroStruct UI shell (command bar, input panels, result strip; UI only) -->
++<style id="wxShellStyle">
++/*__WX_SHELL_CSS__*/
++</style>
++<script id="wxShellScript">
++/*__WX_AERO_RESULTS__*/
++/*__WX_SHELL__*/
++</script>
++<!-- END Wing AeroStruct UI shell -->
+diff --git a/computational/printed-wing-solver/aerostruct/wx-aero-results.js b/computational/printed-wing-solver/aerostruct/wx-aero-results.js
+new file mode 100644
+index 0000000..15fe792
+--- /dev/null
++++ b/computational/printed-wing-solver/aerostruct/wx-aero-results.js
+@@ -0,0 +1,405 @@
++/* Wing AeroStruct aerodynamic result views. They draw the panel method's own stored output and nothing else:
++ *  - surface Cp and p − p∞ = q∞ Cp at the panel centroids of the BASE mesh (result.base.chordwise; one solved mesh of
++ *    the sequence, not extrapolated), placed on the planform from the strip edges, chords and quarter-chord points;
++ *  - sectional Cp of one base-mesh strip;
++ *  - spanwise lift of the delivered (extrapolated) strip load, the base mesh and every other mesh of the sequence;
++ *  - extrapolated coefficients with their uncertainty, mesh convergence, consistency checks and the admission record.
++ * Shown without a structural solve and withheld when the wing shape or the flow inputs changed after the solve.
++ * The panel module computes no surface velocity field, viscous drag, stall, boundary layer or streamlines, so none
++ * is offered. Browser: global WingAeroStructResults.install(env). */
++window.WingAeroStructResults = (() => {
++  'use strict';
++  const VIEWS = [
++    ['cp', 'Surface Cp · upper & lower'],
++    ['dp', 'Surface p − p∞ (Pa)'],
++    ['section', 'Sectional Cp vs x/c'],
++    ['span', 'Spanwise lift'],
++    ['coef', 'Coefficients & convergence'],
++  ];
++  const FONT = 'system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif';
++  const NEG = [[247, 247, 247], [146, 197, 222], [67, 147, 195], [33, 102, 172], [5, 48, 97]];      // suction (Cp < 0)
++  const POS = [[247, 247, 247], [244, 165, 130], [214, 96, 77], [178, 24, 43], [103, 0, 31]];       // pressure (Cp > 0)
++  const esc = (v) => String(v).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
++  const sig = (v, d = 4) => (v == null || !Number.isFinite(v) ? '–' : Math.abs(v) >= 1e5 || (Math.abs(v) < 1e-3 && v !== 0) ? v.toExponential(2).replace('-', '−') : String(Number(v.toPrecision(d))).replace('-', '−'));
++  const csvNum = (v) => (v == null || !Number.isFinite(v) ? '' : String(+v.toPrecision(10)));
++  function colour(v, lo, hi) {
++    const neg = v < 0, ramp = neg ? NEG : POS, t = neg ? (lo < 0 ? Math.min(1, v / lo) : 0) : (hi > 0 ? Math.min(1, v / hi) : 0);
++    const f = t * (ramp.length - 1), i = Math.min(ramp.length - 2, Math.floor(f)), u = f - i, c = ramp[i].map((x, k) => Math.round(x + u * (ramp[i + 1][k] - x)));
++    return `rgb(${c[0]},${c[1]},${c[2]})`;
++  }
++  // Panels of the base mesh on the planform: span y (mm) and chordwise x (mm, leading edge up). Strip edges and Cp are
++  // the solver's; the leading edge and chord of a strip edge are interpolated between the strip midpoints.
++  function surfaceField(base) {
++    const strips = base.strips, field = base.chordwise;
++    if (!Array.isArray(strips) || !Array.isArray(field) || strips.length !== field.length || strips.length < 2) return null;
++    const mids = strips.map((s) => ({ y: s.yMid, le: s.quarterChordPoint_mm[0] - 0.25 * s.chord, c: s.chord }));
++    const at = (y) => {
++      let k = 0; while (k < mids.length - 2 && y > mids[k + 1].y) k++;
++      const A = mids[k], B = mids[k + 1], t = (y - A.y) / ((B.y - A.y) || 1);
++      return { le: A.le + t * (B.le - A.le), c: Math.max(0, A.c + t * (B.c - A.c)) };
++    };
++    const panels = [], q = base.flow.dynamicPressure_Pa;
++    let xmin = Infinity, xmax = -Infinity, ymin = Infinity, ymax = -Infinity;
++    strips.forEach((s, j) => {
++      const A = at(s.y0), B = at(s.y1);
++      for (const side of ['upper', 'lower']) {
++        const pts = field[j][side].map((p, i) => ({ i, xc: p[0], cp: p[1] })).sort((a, b) => a.xc - b.xc);
++        const edges = [0, ...pts.slice(1).map((p, k) => (pts[k].xc + p.xc) / 2), 1];
++        pts.forEach((p, k) => {
++          const poly = [[s.y0, A.le + edges[k] * A.c], [s.y1, B.le + edges[k] * B.c], [s.y1, B.le + edges[k + 1] * B.c], [s.y0, A.le + edges[k + 1] * A.c]];
++          for (const [y, x] of poly) { xmin = Math.min(xmin, x); xmax = Math.max(xmax, x); ymin = Math.min(ymin, y); ymax = Math.max(ymax, y); }
++          const mid = at(s.yMid);
++          panels.push({ side, j, k, n: pts.length, xc: p.xc, cp: p.cp, dp: q * p.cp, y: s.yMid, y0: s.y0, y1: s.y1, chord: s.chord, x: mid.le + p.xc * mid.c, poly });
++        });
++      }
++    });
++    return { panels, xmin, xmax, ymin, ymax, strips: strips.length, q };
++  }
++  function extremes(panels, key) {
++    let lo = null, hi = null;
++    for (const p of panels) { if (!lo || p[key] < lo[key]) lo = p; if (!hi || p[key] > hi[key]) hi = p; }
++    return { lo, hi };
++  }
++  const niceStep = (span, n) => { const raw = span / n, mag = 10 ** Math.floor(Math.log10(raw)), r = raw / mag; return (r < 1.5 ? 1 : r < 3 ? 2 : r < 7 ? 5 : 10) * mag; };
++
++  function install(env) {
++    const { el, ui, strip, view, state, openAero } = env;
++    const select = el('select', { id: 'wxAeroView', class: 'tool', 'aria-label': 'Aerodynamic results' },
++      el('option', { value: '', text: 'Aero results…' }), ...VIEWS.map(([v, t]) => el('option', { value: v, text: t })));
++    const group = el('div', { class: 'wx-aero-sel', role: 'group', 'aria-label': 'Aerodynamic results' }, select);
++    const title = el('h3', { id: 'wxArTitle' }), source = el('p', { class: 'wx-ar-src', id: 'wxArSource' });
++    const station = el('select', { id: 'wxArStation', 'aria-label': 'Base-mesh strip for the sectional Cp', hidden: true });
++    const clearBtn = el('button', { type: 'button', class: 'btn', id: 'wxArClear', text: 'Clear probes', hidden: true });
++    const pngBtn = el('button', { type: 'button', class: 'btn', id: 'wxArPng', text: 'Save PNG' });
++    const csvBtn = el('button', { type: 'button', class: 'btn', id: 'wxArCsv', text: 'Save CSV' });
++    const backBtn = el('button', { type: 'button', class: 'btn', id: 'wxArBack', 'aria-label': 'Close the aerodynamic result and show the structural view' }, 'Back', el('span', { class: 'wx-long', text: ' to structure view' }));
++    const canvas = el('canvas', { id: 'wxArCanvas', role: 'img', 'aria-label': 'Aerodynamic result' });
++    const html = el('div', { id: 'wxArHtml', class: 'wx-ar-html', hidden: true });
++    const notice = el('div', { id: 'wxArNotice', class: 'wx-ar-notice', hidden: true });
++    const probeBox = el('div', { id: 'wxArProbe', class: 'wx-ar-probe', role: 'status', 'aria-live': 'polite' });
++    const overlay = el('section', { id: 'wxAeroResult', class: 'wx-aero-result', hidden: true, 'aria-label': 'Aerodynamic result view' },
++      el('header', { class: 'wx-ar-head' }, el('div', { class: 'wx-ar-titles' }, title, source), el('div', { class: 'wx-ar-tools' }, station, clearBtn, pngBtn, csvBtn, backBtn)),
++      el('div', { class: 'wx-ar-body' }, canvas, html, notice), probeBox);
++    const loading = view.querySelector('#loading');
++    view.insertBefore(overlay, loading || null);
++    let kind = '', probes = [], hits = [], sectionJ = 0, drawn = null;
++
++    const download = (name, blob) => { const url = URL.createObjectURL(blob), a = document.createElement('a'); a.href = url; a.download = name; document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 2000); };
++    const data = () => { const s = state(); return s.status === 'ok' ? s : null; };
++    const flowText = (b) => `V ${sig(b.flow.speed)} m/s · ρ ${sig(b.flow.density)} kg/m³ · α ${sig(b.flow.alphaDeg)}° · q∞ = ½ρV² = ${sig(b.flow.dynamicPressure_Pa)} Pa`;
++    // The rounded tip replaces the outermost stations of the spanwise setting with its own strips, so the solved
++    // strip count (wakeStrips) is reported as it is, with the rounding strips named inside it.
++    const tipStrips = (b) => { const t = b.mesh && b.mesh.roundedTip; const n = t ? (Array.isArray(t.strips) ? t.strips.length : +t.strips) : 0; return Number.isFinite(n) ? n : 0; };
++    const meshText = (b) => {
++      const m = b.mesh, ns = m.wakeStrips || (b.chordwise ? b.chordwise.length : 0), t = tipStrips(b);
++      return `base mesh: ${m.chordPanelsPerSurface} panels per surface along the chord × ${ns} spanwise strips${t ? ` (the outer ${t} round the tip; spanwise setting ${m.spanPanels})` : ''} = ${m.wingPanels} panels`;
++    };
++
++    function show(next) {
++      kind = next; select.value = next; probes = []; probeBox.textContent = '';
++      overlay.hidden = !next; strip.classList.toggle('wx-aero-active', !!next); view.classList.toggle('wx-aero-on', !!next);   // phones give the result view more height
++      if (next) render();
++    }
++    const close = () => show('');
++    select.addEventListener('change', () => show(select.value));
++    backBtn.addEventListener('click', () => { close(); select.focus(); });
++    for (const b of strip.querySelectorAll('[data-plot]')) b.addEventListener('click', close, true);
++    const more = strip.querySelector('#wingMoreResults'); if (more) more.addEventListener('change', () => { if (more.value) close(); }, true);
++    clearBtn.addEventListener('click', () => { probes = []; probeBox.textContent = ''; render(); });
++    station.addEventListener('change', () => { sectionJ = +station.value; probes = []; render(); });
++
++    function setNotice(text, withButton) {
++      canvas.hidden = true; html.hidden = true; notice.hidden = false; notice.replaceChildren(el('p', { text }));
++      if (withButton) { const b = el('button', { type: 'button', class: 'btn primary', text: 'Open Aerodynamics' }); b.addEventListener('click', () => openAero()); notice.append(b); }
++      for (const b of [pngBtn, csvBtn, clearBtn]) b.disabled = true; station.hidden = true; probeBox.textContent = '';
++    }
++    function render() {
++      if (!kind || overlay.hidden) return;
++      const label = (VIEWS.find(([v]) => v === kind) || [, ''])[1];
++      title.textContent = label;
++      const s = state();
++      if (s.status === 'none') { source.textContent = 'No aerodynamic solution in this session.'; setNotice('Open Aerodynamics, set the flow conditions and press Solve Aerodynamics. These results do not need a structural solve.', true); return; }
++      if (s.status === 'running') { source.textContent = 'Solving the aerodynamic mesh sequence…'; setNotice('The aerodynamic solve is running; the result appears here when it finishes.', false); return; }
++      if (s.status === 'stale') { source.textContent = 'Out of date: ' + s.why + '.'; setNotice(`These aerodynamic results belong to an earlier ${/flow/.test(s.why) ? 'set of flow inputs' : 'wing shape'} and are withheld. Press Solve Aerodynamics to compute the current case.`, true); return; }
++      const { result, combined } = s, b = result.base;
++      notice.hidden = true; pngBtn.disabled = false; csvBtn.disabled = false;
++      station.hidden = kind !== 'section'; clearBtn.hidden = !['cp', 'dp', 'section', 'span'].includes(kind); clearBtn.disabled = !probes.length;
++      pngBtn.hidden = kind === 'coef';
++      if (kind === 'coef') { canvas.hidden = true; html.hidden = false; source.textContent = `${result.label} · ${flowText(b)}`; renderCoefficients(s); probeBox.textContent = ''; return; }
++      html.hidden = true; canvas.hidden = false;
++      if (kind === 'section') {
++        if (station.options.length !== b.chordwise.length) station.replaceChildren(...b.chordwise.map((c, j) => el('option', { value: String(j), text: `Strip ${j + 1} · y = ${sig(c.y_mm)} mm (η ${sig(c.y_mm / (b.reference.span_mm / 2), 3)})` })));
++        sectionJ = Math.min(sectionJ, b.chordwise.length - 1); station.value = String(sectionJ);
++      }
++      if (kind === 'span') {
++        const fz = combined.rootWrench[2], cl = combined.coefficients.CL;
++        source.textContent = `Semi-wing lift ${sig(fz.value)} ± ${sig(fz.uncertainty, 2)} N extrapolated (finest meshes ${sig(fz.finest)} N, base mesh ${sig(fz.base)} N); both halves ${sig(2 * fz.value)} N; CL ${sig(cl.value)} ± ${sig(cl.uncertainty, 2)}. Solid: strip load delivered to the structure (extrapolated over all ${result.levels.length} meshes); dashed: base mesh; grey: the other meshes. ${flowText(b)}.`;
++      } else if (kind === 'section') {
++        source.textContent = `Cp at the panel centroids of one strip of the ${meshText(b)} (one solved mesh, not extrapolated). ${flowText(b)}.`;
++      } else {
++        const f = surfaceField(b), key = kind === 'dp' ? 'dp' : 'cp', ex = f ? extremes(f.panels, key) : null, at = (p) => `${p.side} surface, y ${sig(p.y, 4)} mm, x/c ${sig(p.xc, 3)}`;
++        source.textContent = `Panel-centroid values of the ${meshText(b)} (one solved mesh of the ${result.sequence} sequence, not extrapolated; the delivered structural load is extrapolated). ${ex ? `Minimum ${sig(ex.lo[key])} (${at(ex.lo)}); maximum ${sig(ex.hi[key])} (${at(ex.hi)}). ` : ''}${flowText(b)}.`;
++      }
++      draw(canvas, s);
++    }
++    function sizeCanvas(c) {
++      const r = c.parentElement.getBoundingClientRect(), dpr = Math.min(2, window.devicePixelRatio || 1), W = Math.max(280, Math.floor(r.width)), H = Math.max(220, Math.floor(r.height));
++      c.width = Math.round(W * dpr); c.height = Math.round(H * dpr);   // CSS size follows the container (100%)
++      const ctx = c.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); return { ctx, W, H };
++    }
++    function draw(c, s, exportSize) {
++      const { ctx, W, H } = exportSize ? exportSize : sizeCanvas(c);
++      ctx.clearRect(0, 0, W, H); ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, W, H);
++      let top = 0;
++      if (exportSize) {   // the image carries its own title, case and source
++        ctx.fillStyle = '#14212e'; ctx.font = `700 22px ${FONT}`; ctx.fillText(exportSize.title, 24, 34);
++        ctx.font = `14px ${FONT}`; ctx.fillStyle = '#4e5f71'; wrapText(ctx, exportSize.source, 24, 58, W - 48, 18); top = 96;
++      }
++      if (kind === 'cp' || kind === 'dp') drawSurface(ctx, W, H, top, s, !exportSize);
++      else if (kind === 'section') drawSection(ctx, W, H, top, s, !exportSize);
++      else if (kind === 'span') drawSpan(ctx, W, H, top, s, !exportSize);
++    }
++    function wrapText(ctx, text, x, y, maxW, lh) {
++      let line = '';
++      for (const word of String(text).split(' ')) { const t = line ? line + ' ' + word : word; if (ctx.measureText(t).width > maxW && line) { ctx.fillText(line, x, y); line = word; y += lh; } else line = t; }
++      if (line) ctx.fillText(line, x, y);
++    }
++    // Colour-bar ticks: the two ends first (labelled min and max), then zero and the halves wherever they still fit.
++    const tickOrder = (lo, hi) => [lo, hi, 0, lo / 2, hi / 2].filter((v, i, a) => a.indexOf(v) === i);
++    const tickLabel = (v, lo, hi) => (v === hi ? 'max ' : v === lo ? 'min ' : '') + sig(v, 3);
++    function colourbar(ctx, x, y, h, lo, hi, unit) {   // vertical, beside the maps
++      const w = 16, steps = 120;
++      for (let i = 0; i < steps; i++) { const v = hi - (hi - lo) * (i + 0.5) / steps; ctx.fillStyle = colour(v, lo, hi); ctx.fillRect(x, y + h * i / steps, w, h / steps + 0.6); }
++      ctx.strokeStyle = '#7a8a9b'; ctx.lineWidth = 1; ctx.strokeRect(x + 0.5, y + 0.5, w, h);
++      ctx.fillStyle = '#14212e'; ctx.font = `700 13px ${FONT}`; ctx.fillText(unit, x - 2, y - 10);
++      ctx.font = `12px ${FONT}`;
++      const placed = [];
++      for (const v of tickOrder(lo, hi)) {
++        const ty = y + h * (hi - v) / ((hi - lo) || 1);
++        if (placed.some((p) => Math.abs(p - ty) < 15)) continue;
++        placed.push(ty); ctx.fillRect(x + w, ty, 4, 1); ctx.fillText(tickLabel(v, lo, hi), x + w + 7, ty + 4);
++      }
++    }
++    function colourbarH(ctx, x, y, w, lo, hi, unit) {   // horizontal, under the maps on narrow screens (low values left)
++      const h = 12, steps = 120;
++      for (let i = 0; i < steps; i++) { const v = lo + (hi - lo) * (i + 0.5) / steps; ctx.fillStyle = colour(v, lo, hi); ctx.fillRect(x + w * i / steps, y, w / steps + 0.6, h); }
++      ctx.strokeStyle = '#7a8a9b'; ctx.lineWidth = 1; ctx.strokeRect(x + 0.5, y + 0.5, w, h);
++      ctx.fillStyle = '#14212e'; ctx.font = `700 12px ${FONT}`; ctx.fillText(unit, x, y - 6);
++      ctx.font = `11px ${FONT}`;
++      const boxes = [];
++      for (const v of tickOrder(lo, hi)) {
++        const tx = x + w * (v - lo) / ((hi - lo) || 1), t = tickLabel(v, lo, hi), tw = ctx.measureText(t).width, bx = Math.min(x + w - tw, Math.max(x, tx - tw / 2));
++        if (boxes.some(([a, b]) => bx < b + 6 && bx + tw > a - 6)) continue;
++        boxes.push([bx, bx + tw]); ctx.fillRect(tx, y + h, 1, 4); ctx.fillText(t, bx, y + h + 15);
++      }
++    }
++    function fit(ctx, options, maxW) {   // the first wording that fits maxW, else the last one shortened with an ellipsis
++      for (const t of options) if (ctx.measureText(t).width <= maxW) return t;
++      let t = options[options.length - 1];
++      while (t.length > 1 && ctx.measureText(t + '…').width > maxW) t = t.slice(0, -1);
++      return t + '…';
++    }
++    function drawSurface(ctx, W, H, top, s, interactive) {
++      const b = s.result.base, f = surfaceField(b), key = kind === 'dp' ? 'dp' : 'cp', unit = kind === 'dp' ? 'p − p∞ (Pa)' : 'Cp';
++      if (!f) { ctx.fillStyle = '#9a5800'; ctx.font = `14px ${FONT}`; ctx.fillText('This solution has no stored panel field to draw.', 20, top + 30); return; }
++      const { lo, hi } = extremes(f.panels, key), vlo = Math.min(0, lo[key]), vhi = Math.max(0, hi[key]);
++      const narrow = W < 560;   // narrow screens: the colour bar goes under the maps so the maps keep the width
++      const left = narrow ? 34 : 54, right = narrow ? 12 : 120, titleH = 22, gap = 34, bottom = narrow ? 94 : 46, spanW = f.ymax - f.ymin, chordH = f.xmax - f.xmin;
++      const stacked = Math.min((W - left - right) / spanW, (H - top - 2 * titleH - gap - bottom - 10) / (2 * chordH));
++      const beside = Math.min((W - left - right - gap) / (2 * spanW), (H - top - titleH - bottom - 10) / chordH);
++      const sc = Math.max(stacked, beside), sideBySide = beside > stacked, mapH = chordH * sc, mapW = spanW * sc;
++      const used = sideBySide ? titleH + mapH + bottom : 2 * (titleH + mapH) + gap + bottom, y0 = top + 10 + Math.max(0, (H - top - 10 - used) / 2) + titleH;
++      const origin = sideBySide ? { upper: [left, y0], lower: [left + mapW + gap, y0] } : { upper: [left, y0], lower: [left, y0 + mapH + gap + titleH] };
++      const maps = { upper: origin.upper[1], lower: origin.lower[1] };
++      const X = (y, side = 'upper') => origin[side][0] + (y - f.ymin) * sc, Y = (side, x) => maps[side] + (x - f.xmin) * sc;
++      hits = [];
++      for (const p of f.panels) {
++        const pts = p.poly.map(([y, x]) => [X(y, p.side), Y(p.side, x)]);
++        ctx.beginPath(); pts.forEach(([px, py], i) => (i ? ctx.lineTo(px, py) : ctx.moveTo(px, py))); ctx.closePath();
++        const c = colour(p[key], vlo, vhi); ctx.fillStyle = c; ctx.strokeStyle = c; ctx.lineWidth = 0.6; ctx.fill(); ctx.stroke();
++        hits.push({ p, pts });
++      }
++      // titles: the longest wording that ends before the next map or the colour bar
++      const barX = W - right + 28, titleEnd = narrow ? W - 8 : barX - 12;
++      ctx.font = `700 13px ${FONT}`; ctx.fillStyle = '#14212e';
++      ctx.fillText(fit(ctx, ['Upper surface (suction side), top view', 'Upper surface (suction side)', 'Upper surface'], (sideBySide ? origin.lower[0] - 12 : titleEnd) - origin.upper[0]), origin.upper[0], maps.upper - 8);
++      ctx.fillText(fit(ctx, ['Lower surface, same top-view orientation', 'Lower surface, same orientation', 'Lower surface'], titleEnd - origin.lower[0]), origin.lower[0], maps.lower - 8);
++      ctx.font = `12px ${FONT}`; ctx.fillStyle = '#4e5f71';
++      for (const side of ['upper', 'lower']) {
++        const lx = origin[side][0] - (narrow ? 26 : 30);
++        if (side === 'upper' || !sideBySide) { ctx.fillText('LE', lx, maps[side] + 12); ctx.fillText('TE', lx, maps[side] + mapH); }
++        if (side === 'lower' || sideBySide) {
++          const edge = maps[side] + mapH, step = niceStep(spanW, sideBySide || narrow ? 4 : 6);
++          for (let y = 0; y <= f.ymax + 1e-9; y += step) { const px = X(y, side), t = sig(y, 4); ctx.fillRect(px, edge + 2, 1, 5); ctx.fillText(t, px - ctx.measureText(t).width / 2, edge + 20); }
++          ctx.fillText('span y (mm), root at left', X(f.ymin, side), edge + 36);
++        }
++      }
++      if (narrow) colourbarH(ctx, left, maps.lower + mapH + 62, Math.min(W - left - 14, 420), vlo, vhi, unit);
++      else colourbar(ctx, barX, maps.upper, Math.max(120, sideBySide ? mapH : maps.lower + mapH - maps.upper), vlo, vhi, unit);
++      drawn = { f, key, unit };
++      probes.forEach((pr, n) => {
++        const h = hits.find((t) => t.p === pr) || hits.find((t) => t.p.side === pr.side && t.p.j === pr.j && t.p.k === pr.k); if (!h) return;
++        const cx = h.pts.reduce((a, q) => a + q[0], 0) / 4, cy = h.pts.reduce((a, q) => a + q[1], 0) / 4;
++        ctx.beginPath(); ctx.arc(cx, cy, 8, 0, 2 * Math.PI); ctx.fillStyle = '#ffffff'; ctx.fill(); ctx.strokeStyle = '#14212e'; ctx.lineWidth = 1.5; ctx.stroke();
++        ctx.fillStyle = '#14212e'; ctx.font = `700 11px ${FONT}`; ctx.fillText(String(n + 1), cx - 3.5, cy + 4);
++      });
++      if (interactive) canvas.setAttribute('aria-label', `${unit} on the upper and lower surfaces, base mesh; minimum ${sig(lo[key])}, maximum ${sig(hi[key])}. Click a panel for its value.`);
++    }
++    const FRAME = { L: 70, R: 24 };
++    function chartFrame(ctx, W, H, top, xr, yr, xl, yl, head = 1) {   // head = text rows reserved above the frame
++      const L = FRAME.L, R = FRAME.R, T = top + 24 + 20 * head, B = 52, w = W - L - R, h = H - T - B;
++      const X = (v) => L + (v - xr[0]) / (xr[1] - xr[0]) * w, Y = (v) => T + (yr[1] - v) / (yr[1] - yr[0]) * h;
++      ctx.strokeStyle = '#d4dce5'; ctx.lineWidth = 1; ctx.fillStyle = '#4e5f71'; ctx.font = `12px ${FONT}`;
++      const sx = niceStep(xr[1] - xr[0], w < 360 ? 4 : 8), sy = niceStep(yr[1] - yr[0], 6);
++      for (let v = Math.ceil(xr[0] / sx) * sx; v <= xr[1] + 1e-9; v += sx) { const t = sig(v, 3); ctx.beginPath(); ctx.moveTo(X(v), T); ctx.lineTo(X(v), T + h); ctx.stroke(); ctx.fillText(t, X(v) - ctx.measureText(t).width / 2, T + h + 16); }
++      for (let v = Math.ceil(yr[0] / sy) * sy; v <= yr[1] + 1e-9; v += sy) { const t = sig(v, 3); ctx.beginPath(); ctx.moveTo(L, Y(v)); ctx.lineTo(L + w, Y(v)); ctx.stroke(); ctx.fillText(t, L - 8 - ctx.measureText(t).width, Y(v) + 4); }
++      ctx.strokeStyle = '#7a8a9b'; ctx.strokeRect(L + 0.5, T + 0.5, w, h);
++      if (yr[0] < 0 && yr[1] > 0) { ctx.strokeStyle = '#4e5f71'; ctx.beginPath(); ctx.moveTo(L, Y(0)); ctx.lineTo(L + w, Y(0)); ctx.stroke(); }
++      ctx.fillStyle = '#14212e'; ctx.font = `700 13px ${FONT}`; const xt = fit(ctx, [xl], w); ctx.fillText(xt, L + w / 2 - ctx.measureText(xt).width / 2, T + h + 38);
++      ctx.save(); ctx.translate(18, T + h / 2); ctx.rotate(-Math.PI / 2); const yt = fit(ctx, [yl], h); ctx.fillText(yt, -ctx.measureText(yt).width / 2, 0); ctx.restore();
++      return { X, Y, L, T, w, h };
++    }
++    // Legend and note above the plot frame, wrapped into as many rows as the width needs.
++    const itemWidth = (ctx, label) => 32 + ctx.measureText(label).width + 22;
++    function headRows(ctx, W, items, note) {
++      ctx.font = `12px ${FONT}`;
++      const maxW = W - FRAME.L - FRAME.R, rows = [[]]; let used = 0;
++      for (const it of items) { const iw = itemWidth(ctx, it[0]); if (used + iw > maxW && rows[rows.length - 1].length) { rows.push([]); used = 0; } rows[rows.length - 1].push(it); used += iw; }
++      const noteRow = note && used + 16 + ctx.measureText(note).width > maxW;   // the note gets its own row when it does not fit beside the legend
++      return { rows, note, noteRow: !!noteRow, count: rows.length + (noteRow ? 1 : 0) };
++    }
++    function drawHead(ctx, fr, head) {
++      ctx.font = `12px ${FONT}`;
++      const rowY = (i) => fr.T - 26 - 20 * (head.count - 1 - i);
++      head.rows.forEach((items, i) => {
++        let x = fr.L; const y = rowY(i);
++        for (const [label, colourValue, dash] of items) { ctx.strokeStyle = colourValue; ctx.lineWidth = 2.2; ctx.setLineDash(dash || []); ctx.beginPath(); ctx.moveTo(x, y - 4); ctx.lineTo(x + 26, y - 4); ctx.stroke(); ctx.setLineDash([]); ctx.fillStyle = '#14212e'; ctx.fillText(label, x + 32, y); x += itemWidth(ctx, label); }
++      });
++      if (head.note) {
++        ctx.fillStyle = '#4e5f71';
++        const y = head.noteRow ? rowY(head.count - 1) : rowY(head.rows.length - 1), t = head.noteRow ? fit(ctx, [head.note], fr.w) : head.note;
++        ctx.fillText(t, head.noteRow ? fr.L : fr.L + fr.w - ctx.measureText(t).width, y);
++      }
++    }
++    function drawSection(ctx, W, H, top, s, interactive) {
++      const b = s.result.base, sec = b.chordwise[sectionJ], q = b.flow.dynamicPressure_Pa;
++      const all = [...sec.upper, ...sec.lower].map((p) => -p[1]), lo = Math.min(...all), hi = Math.max(...all), pad = 0.06 * ((hi - lo) || 1);
++      const head = headRows(ctx, W, [['upper surface', '#2166ac'], ['lower surface', '#b2182b', [7, 5]]],
++        `Strip ${sectionJ + 1} of ${b.chordwise.length}: y = ${sig(sec.y_mm)} mm, local chord ${sig(sec.chord_mm)} mm; p − p∞ = q∞ Cp, q∞ = ${sig(q)} Pa`);
++      const fr = chartFrame(ctx, W, H, top, [0, 1], [lo - pad, hi + pad], 'x/c (0 = leading edge, 1 = trailing edge)', '−Cp (suction up)', head.count);
++      hits = [];
++      const series = [['upper', '#2166ac', []], ['lower', '#b2182b', [7, 5]]];
++      for (const [side, col, dash] of series) {
++        const pts = sec[side].slice().sort((a, c) => a[0] - c[0]);
++        ctx.strokeStyle = col; ctx.lineWidth = 2; ctx.setLineDash(dash); ctx.beginPath();
++        pts.forEach(([x, cp], i) => (i ? ctx.lineTo(fr.X(x), fr.Y(-cp)) : ctx.moveTo(fr.X(x), fr.Y(-cp)))); ctx.stroke(); ctx.setLineDash([]);
++        ctx.fillStyle = col;
++        pts.forEach(([x, cp], i) => { ctx.beginPath(); ctx.arc(fr.X(x), fr.Y(-cp), 2.6, 0, 2 * Math.PI); ctx.fill(); hits.push({ point: { side, j: sectionJ, k: i, n: pts.length, xc: x, cp, dp: q * cp, y: sec.y_mm, chord: sec.chord_mm }, at: [fr.X(x), fr.Y(-cp)] }); });
++      }
++      drawHead(ctx, fr, head);
++      probes.forEach((pr, n) => { const h = hits.find((t) => t.point.side === pr.side && t.point.k === pr.k && pr.j === sectionJ); if (!h) return; ctx.beginPath(); ctx.arc(h.at[0], h.at[1], 8, 0, 2 * Math.PI); ctx.strokeStyle = '#14212e'; ctx.lineWidth = 1.5; ctx.stroke(); ctx.fillStyle = '#14212e'; ctx.font = `700 11px ${FONT}`; ctx.fillText(String(n + 1), h.at[0] + 9, h.at[1] - 8); });
++      drawn = { section: sec };
++      if (interactive) canvas.setAttribute('aria-label', `Sectional pressure coefficient along the chord at y = ${sig(sec.y_mm)} mm, upper and lower surfaces.`);
++    }
++    function stepRows(rows) { return rows.map((r) => ({ y0: r[0], y1: r[1], fz: r[4], w: r[4] / ((r[1] - r[0]) || 1) })); }
++    function drawSpan(ctx, W, H, top, s, interactive) {
++      const r = s.result, c = s.combined, b = r.base, delivered = stepRows(c.strips), baseRows = stepRows(b.stripLoads), meshes = r.levels.map((l) => ({ l, rows: stepRows(l.strips) }));
++      const allW = [...delivered, ...baseRows, ...meshes.flatMap((m) => m.rows)].map((v) => v.w), ymax = Math.max(...delivered.map((v) => v.y1));
++      const lo = Math.min(0, ...allW), hi = Math.max(0, ...allW), pad = 0.06 * ((hi - lo) || 1);
++      const head = headRows(ctx, W, [['delivered to the structure (extrapolated)', '#0a5fc2'], [`base mesh ${b.mesh.chordPanelsPerSurface} × ${b.mesh.spanPanels}`, '#14212e', [6, 4]], ['other meshes of the sequence', 'rgba(122,138,155,0.8)']], '');
++      const fr = chartFrame(ctx, W, H, top, [0, ymax], [lo - (lo < 0 ? pad : 0), hi + pad], 'span y (mm), root at left', 'lift per unit span Fz/Δy (N/mm)', head.count);
++      const step = (rows, col, width, dash) => { ctx.strokeStyle = col; ctx.lineWidth = width; ctx.setLineDash(dash || []); ctx.beginPath(); rows.forEach((v, i) => { if (i === 0) ctx.moveTo(fr.X(v.y0), fr.Y(v.w)); else ctx.lineTo(fr.X(v.y0), fr.Y(v.w)); ctx.lineTo(fr.X(v.y1), fr.Y(v.w)); }); ctx.stroke(); ctx.setLineDash([]); };
++      for (const m of meshes) step(m.rows, 'rgba(122,138,155,0.45)', 1);
++      step(baseRows, '#14212e', 1.6, [6, 4]);
++      step(delivered, '#0a5fc2', 2.6);
++      hits = delivered.map((v, i) => ({ point: { kind: 'strip', i, ...v }, at: [fr.X((v.y0 + v.y1) / 2), fr.Y(v.w)] }));
++      const fz = c.rootWrench[2], semi = fz.value;
++      drawHead(ctx, fr, head);
++      probes.forEach((pr, n) => { const h = hits.find((t) => t.point.i === pr.i); if (!h) return; ctx.beginPath(); ctx.arc(h.at[0], h.at[1], 8, 0, 2 * Math.PI); ctx.strokeStyle = '#14212e'; ctx.lineWidth = 1.5; ctx.stroke(); ctx.fillStyle = '#14212e'; ctx.font = `700 11px ${FONT}`; ctx.fillText(String(n + 1), h.at[0] + 9, h.at[1] - 8); });
++      drawn = { delivered };
++      if (interactive) canvas.setAttribute('aria-label', `Spanwise lift per unit span: delivered extrapolated strip load, base mesh and the other meshes. Semi-wing lift ${sig(semi)} N.`);
++    }
++    function probeText(p, n) {
++      if (p.kind === 'strip') return `${n}. Delivered strip ${p.i + 1}: y ${sig(p.y0, 4)}–${sig(p.y1, 4)} mm · Fz ${sig(p.fz)} N · Fz/Δy ${sig(p.w)} N/mm`;
++      const s = state(), b = s.result && s.result.base, eta = b ? p.y / (b.reference.span_mm / 2) : NaN;
++      return `${n}. ${p.side === 'upper' ? 'Upper' : 'Lower'} surface · strip ${p.j + 1}, panel ${p.k + 1} of ${p.n} from the leading edge · y ${sig(p.y, 4)} mm (η ${sig(eta, 3)}) · x/c ${sig(p.xc, 3)}${Number.isFinite(p.x) ? ` · x ≈ ${sig(p.x, 4)} mm` : ''} · Cp ${sig(p.cp)} · p − p∞ ${sig(p.dp)} Pa`;
++    }
++    function showProbes() { probeBox.replaceChildren(...probes.map((p, i) => el('div', { text: probeText(p, i + 1) }))); clearBtn.disabled = !probes.length; }
++    canvas.addEventListener('click', (e) => {
++      if (!kind || !hits.length) return;
++      const r = canvas.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
++      let picked = null;
++      if (kind === 'cp' || kind === 'dp') {
++        const inside = (pts) => { let c = false; for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) { const [xi, yi] = pts[i], [xj, yj] = pts[j]; if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / ((yj - yi) || 1e-12) + xi) c = !c; } return c; };
++        const h = hits.find((t) => inside(t.pts)); picked = h && h.p;
++      } else {
++        let best = null; for (const h of hits) { const d = Math.hypot(h.at[0] - x, h.at[1] - y); if (d < 18 && (!best || d < best.d)) best = { d, h }; }
++        picked = best && best.h.point;
++      }
++      if (!picked) return;
++      if (kind !== 'span' && picked.j != null) sectionJ = picked.j;
++      probes = [...probes.filter((p) => p !== picked), picked].slice(-8);
++      render(); showProbes();
++    });
++    pngBtn.addEventListener('click', () => {
++      const s = data(); if (!s || kind === 'coef') return;
++      const W = 1800, H = kind === 'section' || kind === 'span' ? 1000 : Math.round(1800 * Math.max(0.55, canvas.clientHeight / Math.max(1, canvas.clientWidth))) + 96;
++      const off = document.createElement('canvas'); off.width = W; off.height = H; const ctx = off.getContext('2d');
++      draw(off, s, { ctx, W, H, title: 'Wing AeroStruct · ' + title.textContent, source: source.textContent });
++      off.toBlob((blob) => blob && download(`wing-aero-${kind}.png`, blob), 'image/png');
++      render();   // the probes list and the screen canvas are unchanged; redraw restores the screen hit areas
++    });
++    csvBtn.addEventListener('click', () => {
++      const s = data(); if (!s) return;
++      const r = s.result, b = r.base, head = [`# MIE 446 Wing AeroStruct (development) aerodynamic result: ${title.textContent}. Lines starting with # are comments.`, `# ${r.label}`, `# ${flowText(b)}; ${r.sequence} sequence (${r.levels.length} meshes)`];
++      let lines = [], name = `wing-aero-${kind}.csv`;
++      if (kind === 'cp' || kind === 'dp') {
++        const f = surfaceField(b);
++        lines = [...head, `# Cp at the panel centroids of the ${meshText(b)}; one solved mesh, not extrapolated. p - p_inf = q_inf * Cp. x_mm is the planform position of the centroid (leading edge plus x/c times the local chord).`,
++          'surface,strip,panel_from_LE,y0_mm,y1_mm,y_mid_mm,eta,x_over_c,x_mm,Cp,p_minus_pinf_Pa',
++          ...f.panels.map((p) => [p.side, p.j + 1, p.k + 1, csvNum(p.y0), csvNum(p.y1), csvNum(p.y), csvNum(p.y / (b.reference.span_mm / 2)), csvNum(p.xc), csvNum(p.x), csvNum(p.cp), csvNum(p.dp)].join(','))];
++      } else if (kind === 'section') {
++        const sec = b.chordwise[sectionJ];
++        lines = [...head, `# Strip ${sectionJ + 1} of ${b.chordwise.length} of the base mesh: y = ${csvNum(sec.y_mm)} mm, local chord ${csvNum(sec.chord_mm)} mm.`, 'surface,panel_from_LE,x_over_c,Cp,p_minus_pinf_Pa',
++          ...['upper', 'lower'].flatMap((side) => sec[side].slice().sort((a, c) => a[0] - c[0]).map((p, i) => [side, i + 1, csvNum(p[0]), csvNum(p[1]), csvNum(b.flow.dynamicPressure_Pa * p[1])].join(',')))];
++        name = `wing-aero-section-strip${sectionJ + 1}.csv`;
++      } else if (kind === 'span') {
++        lines = [...head, '# Spanwise strip loads. delivered = extrapolated load given to the structure; base = base mesh; mesh_CxS = one mesh of the sequence (chord panels per surface x span panels).', 'series,y0_mm,y1_mm,Fz_N,Fz_per_mm_N_per_mm',
++          ...stepRows(s.combined.strips).map((v) => ['delivered', csvNum(v.y0), csvNum(v.y1), csvNum(v.fz), csvNum(v.w)].join(',')),
++          ...stepRows(b.stripLoads).map((v) => ['base', csvNum(v.y0), csvNum(v.y1), csvNum(v.fz), csvNum(v.w)].join(',')),
++          ...r.levels.flatMap((l) => stepRows(l.strips).map((v) => [`mesh_${l.chordPanels}x${l.spanPanels}`, csvNum(v.y0), csvNum(v.y1), csvNum(v.fz), csvNum(v.w)].join(',')))];
++      } else if (kind === 'coef' && typeof WingAeroUI !== 'undefined') {
++        const a = ui.aero(); name = `wing-aerostruct-alpha${sig(b.flow.alphaDeg, 4)}-V${sig(b.flow.speed, 4)}.csv`.replace(/[^A-Za-z0-9_.-]/g, '_');
++        download(name, new Blob([WingAeroUI.csv(WingAeroUI.recordFromSequence(r, a.solvedKey), s.combined, s.admission || null)], { type: 'text/csv' })); return;
++      }
++      download(name, new Blob([lines.join('\n') + '\n'], { type: 'text/csv' }));
++    });
++    function renderCoefficients(s) {
++      const r = s.result, c = s.combined, b = r.base, cf = c.coefficients;
++      const row = (name, e, unit = '') => `<tr><td>${name}</td><td>${sig(e.value)} ± ${sig(e.uncertainty, 2)}${unit}</td><td>${sig(e.finest)}</td><td>${sig(e.base)}</td></tr>`;
++      const conv = (name, e) => `<tr><td>${name}</td><td>${e.chord.levels.map((n, i) => `${n}: ${sig(e.chord.values[i])}`).join('<br>')}</td><td>${e.span.levels.map((n, i) => `${n}: ${sig(e.span.values[i])}`).join('<br>')}</td><td>${sig(e.chord.observedOrder, 3)} / ${sig(e.span.observedOrder, 3)}</td></tr>`;
++      const meshRows = r.levels.map((l) => { const w = (c.weights.find((x) => x.chordPanels === l.chordPanels && x.spanPanels === l.spanPanels) || { weight: 0 }).weight, F = l.strips.reduce((t, v) => t + v[4], 0); return `<tr><td>${2 * l.chordPanels} × ${l.spanPanels}</td><td>${l.panels ?? '–'}</td><td>${sig(l.coefficients.CL)}</td><td>${sig(F)}</td><td>${sig(w, 3)}</td></tr>`; }).join('');
++      const lc = c.consistency.lift, dc = c.consistency.drag, adm = s.admission;
++      const S = ui.state(), applied = S.aeroLoad;
++      let admHtml = '<p class="note">This aerodynamic load is not applied to the structure. Use Apply aerodynamic loads to structure in Aerodynamics to run the admission test.</p>';
++      if (applied && adm && typeof WingAeroUI !== 'undefined') { const v = WingAeroUI.admissionVerdict(adm); admHtml = `<div class="wae-box ${v.ok ? 'ok' : 'no'}"><p class="${v.ok ? 'wae-ok' : 'wae-no'}">${v.html}</p>${WingAeroUI.admissionTable(adm)}</div>`; }
++      else if (applied) admHtml = '<p class="note">The load is applied; the admission test runs with the next Solve Structure / Stress.</p>';
++      html.innerHTML = `<div class="wae">
++        <h4>Extrapolated coefficients (both halves) with uncertainty U</h4>
++        <div class="wae-scroll"><table><thead><tr><th>Quantity</th><th>Extrapolated ± U</th><th>Finest meshes</th><th>Base mesh</th></tr></thead><tbody>
++          ${row('Lift coefficient C<sub>L</sub>, pressure integral', cf.CL)}${row('C<sub>L</sub>, Trefftz plane', cf.CLTrefftz)}${row('Induced drag C<sub>Di</sub>, Trefftz plane', cf.CDiTrefftz)}
++          ${row('Pressure drag C<sub>D,p</sub> (inviscid; equals C<sub>Di</sub> in exact potential flow)', cf.CDpressure)}${row('Pitching moment C<sub>m</sub> about ¼ MAC (nose-up +)', cf.Cm)}
++          ${row('Semi-wing lift F<sub>z</sub>', c.rootWrench[2], ' N')}</tbody></table></div>
++        <p class="note">No viscous (skin-friction) drag, stall or boundary layer is computed: attached, incompressible potential flow only.</p>
++        <h4>Mesh convergence</h4>
++        <div class="wae-scroll"><table><thead><tr><th>Quantity</th><th>Chordwise refinement (panels per surface: value)</th><th>Spanwise refinement (panels: value)</th><th>Observed order chord / span</th></tr></thead><tbody>${conv('C<sub>L</sub>', cf.CL)}${conv('C<sub>Di</sub> Trefftz', cf.CDiTrefftz)}${conv('C<sub>m</sub>', cf.Cm)}${conv('Semi-wing F<sub>z</sub> (N)', c.rootWrench[2])}</tbody></table></div>
++        <div class="wae-scroll"><table><thead><tr><th>Mesh (around × spanwise)</th><th>Panels</th><th>C<sub>L</sub></th><th>F<sub>z</sub> (N)</th><th>Extrapolation weight</th></tr></thead><tbody>${meshRows}</tbody></table></div>
++        <p class="note">Global consistency: pressure and Trefftz-plane lift differ by ${sig(100 * lc.relativeDifference, 3)} % (criterion 2 %); pressure and induced drag differ by ${sig(dc.difference, 2)} (combined U ${sig(dc.combinedUncertainty, 2)}). Re (MAC) ${sig(b.flow.reynoldsMac, 3)}, Mach ${sig(b.flow.mach, 3)}. Linear solver: ${esc(b.diagnostics.linearSolver || '')}, relative residual ${sig(b.diagnostics.linearRelativeResidual, 2)}.</p>
++        ${(b.warnings || []).map((w) => `<p class="wae-warn">${esc(w)}</p>`).join('')}
++        <h4>Structural load: admission</h4>${admHtml}</div>`;
++    }
++    if (window.ResizeObserver) new ResizeObserver(() => { if (!overlay.hidden && kind !== 'coef') render(); }).observe(canvas.parentElement);
++    return { refresh: () => { if (!overlay.hidden) { render(); if (probes.length) showProbes(); } }, close, show, get kind() { return kind; }, element: overlay, selector: group };
++  }
++  return Object.freeze({ install, VIEWS, surfaceField, colour });
++})();
+diff --git a/computational/printed-wing-solver/aerostruct/wx-shell.css b/computational/printed-wing-solver/aerostruct/wx-shell.css
+new file mode 100644
+index 0000000..2f3e77b
+--- /dev/null
++++ b/computational/printed-wing-solver/aerostruct/wx-shell.css
+@@ -0,0 +1,296 @@
++/* Wing AeroStruct UI shell: compact command bar, one anchored input panel, slim result strip.
++   Scoped to the wing workspace (body.wx-wing-on / #app.wx); the Beam, Truss and Full-scale wing workspaces keep their
++   own look. White palette by default; an explicit data-theme="dark" keeps the existing dark palette. */
++:root:not([data-theme="dark"]) body.wx-wing-on {
++  --bg: #ffffff; --panel: #ffffff; --panel-2: #f3f6f9; --raise: #ffffff; --line: #d4dce5;
++  --fg: #142130; --muted: #4e5f71; --faint: #66788a; --accent: #0a5fc2; --accent-soft: rgba(10, 95, 194, 0.08);
++  --accent-ink: #ffffff; --good: #127146; --warn: #9a5800; --bad: #b8253a; --run-hover: brightness(0.92);
++  --vp-top: #d3dee8; --vp-bottom: #f6f8fa; --vp-ink: #1c2a38; --shadow: 0 12px 32px rgba(20, 45, 75, 0.16);
++  --wl-accent-text: #0a5fc2; --wl-good-text: #127146;
++  background: var(--bg);
++}
++body.wx-wing-on #wingNavigation { padding: 6px 12px; gap: 6px; border-bottom: 1px solid var(--line); box-shadow: none; }
++body.wx-wing-on #wingNavigation .workspace-link { min-height: 32px; height: auto; padding: 5px 12px; font-size: 13px; border-radius: 8px; }
++
++/* ---------- page grid: command bar, result strip, viewport, results dock ---------- */
++#app.wx {
++  --wx-view-h: clamp(380px, calc(100dvh - 200px), 1040px);
++  padding: 8px 12px 24px !important; gap: 8px !important;
++  grid-template-columns: minmax(0, 1fr) !important; grid-template-rows: auto auto auto auto !important;
++  grid-template-areas: "bar" "results" "view" "dock" !important;
++}
++#app.wx > .view { grid-area: view !important; height: var(--wx-view-h) !important; min-height: 300px; border-radius: 12px; }
++#app.wx > .dock { grid-area: dock !important; border-radius: 12px; }
++#app.wx > .wing-quick-tools, #app.wx > #wingInlineDisplay, #app.wx > .wing-display-drawer, #wxParking { display: none !important; }
++#app.wx .btn.primary:hover { color: var(--accent-ink); filter: var(--run-hover); }
++
++/* ---------- command bar ---------- */
++#app.wx > header.wx-bar {
++  grid-area: bar !important; position: sticky; top: var(--wx-nav-h, 0px); z-index: 60;
++  display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; padding: 6px 10px; min-height: 52px;
++  border: 1px solid var(--line); border-radius: 12px; background: var(--panel); box-shadow: 0 1px 3px rgba(20, 45, 75, 0.08);
++}
++#app.wx > header.wx-bar .brand { display: flex !important; align-items: center; gap: 8px; padding: 0 10px 0 2px; border-right: 1px solid var(--line) !important; flex: none; min-width: 0; }
++#app.wx > header.wx-bar .brand svg { width: 28px; height: 18px; color: var(--accent); }
++#app.wx > header.wx-bar .brand > div { display: flex !important; align-items: center; gap: 8px; min-width: 0; }
++#app.wx > header.wx-bar .brand small, #app.wx > header.wx-bar .wing-project-name > span { display: none !important; }
++#app.wx #wingProjectTitle { font: 700 16px/1.1 var(--font-label); max-width: 190px; }
++#app.wx > header.wx-bar .wing-project-name { margin: 0 !important; display: flex; }
++#app.wx > header.wx-bar .wing-project-name input { width: 150px; height: 32px; min-height: 32px; padding: 3px 8px; font-size: 13px; border: 1px solid var(--line); border-radius: 7px; background: var(--panel-2); }
++.wx-menubar { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; min-width: 0; }
++.wx-sep { width: 1px; height: 24px; background: var(--line); margin: 0 4px; flex: none; }
++#app.wx .wx-top, #app.wx .wx-quick, #app.wx #wingInputHelp > summary {
++  display: inline-flex; align-items: center; gap: 7px; height: 36px; min-height: 36px; padding: 0 12px; margin: 0;
++  border-radius: 8px; border: 1px solid transparent; background: transparent; color: var(--fg);
++  font: 600 14px/1 var(--font-ui); letter-spacing: 0; cursor: pointer; white-space: nowrap; list-style: none; box-shadow: none;
++}
++#app.wx #wingInputHelp > summary::-webkit-details-marker { display: none; }
++#app.wx .wx-top::after, #app.wx #wingInputHelp > summary::after {
++  content: ""; width: 6px; height: 6px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor;
++  transform: translateY(-2px) rotate(45deg); opacity: 0.65; flex: none;
++}
++#app.wx .wx-top:hover, #app.wx #wingInputHelp > summary:hover { background: var(--panel-2); border-color: var(--line); color: var(--fg); }
++#app.wx .wx-top[aria-expanded="true"], #app.wx #wingInputHelp[open] > summary { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
++#app.wx .wx-quick { border-color: var(--line); background: var(--panel); gap: 0.3em; }
++#app.wx .wx-quick:hover { border-color: var(--accent); color: var(--accent); }
++#app.wx #wingInputHelp { position: relative !important; right: auto !important; margin: 0 !important; background: transparent !important; z-index: auto !important; }
++.wx-dot { width: 9px; height: 9px; border-radius: 50%; background: #9aa8b6; flex: none; }
++.wx-dot[data-s="ok"] { background: var(--good); } .wx-dot[data-s="warn"] { background: #c77700; } .wx-dot[data-s="bad"] { background: var(--bad); }
++.wx-dot[data-s="run"] { background: var(--accent); animation: wx-blink 1s ease-in-out infinite; }
++@keyframes wx-blink { 50% { opacity: 0.25; } }
++.wx-bar-end { margin-left: auto; display: flex; align-items: center; gap: 6px; }
++#app.wx .wx-bar-end .wing-history-tools { display: inline-flex !important; gap: 6px; margin: 0 !important; }
++#app.wx .wx-bar-end .btn { height: 34px; min-height: 34px; padding: 0 10px; background: var(--panel); }
++
++/* ---------- File, View and Help dropdowns (anchored to their command) ---------- */
++.wx-menu { position: fixed; z-index: 190; display: grid; gap: 8px; align-content: start; padding: 12px 14px 14px;
++  background: var(--panel); color: var(--fg); border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow);
++  overflow: auto; overscroll-behavior: contain; }
++.wx-menu[hidden] { display: none !important; }
++.wx-cap { margin: 6px 0 0; font: 700 11px/1.2 var(--font-label); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
++.wx-menu > .wx-cap:first-child { margin-top: 0; }
++.wx-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; min-width: 0; }
++#app.wx .wx-menu .btn, #app.wx #wingSide .btn { height: auto; min-height: 36px; padding: 6px 12px; white-space: normal; text-align: left; line-height: 1.2; }
++#app.wx .wx-menu .wx-danger { color: var(--bad); border-color: color-mix(in srgb, var(--bad) 55%, var(--line)); }
++#app.wx .wx-menu .note { font-size: 12px; }
++#wxFileMenu .wing-print-symmetry { padding: 4px 0; font-weight: 600; }
++#wxFileMenu #wingSymmetryNote { flex-basis: 100%; }
++#wxFileMenu .wl-acc { border: 1px solid var(--line); border-radius: 10px; }
++#wxFileMenu .wl-acc > summary { min-height: 40px; padding: 8px 12px; font: 700 13.5px/1.2 var(--font-ui); }
++#wxFileMenu .wio-root > .wio-title, #wxFileMenu .wio-actions > .wio-save, #wxFileMenu .wio-actions > .wio-open { display: none !important; }
++#wxViewMenu .hud-row, #wxViewMenu .wl-zoom { display: flex; flex-wrap: wrap; gap: 4px; padding: 0; margin: 0; border: 0; background: transparent; backdrop-filter: none; justify-content: flex-start; }
++#wxViewMenu .hud-row button, #wxViewMenu .wl-zoom .btn {
++  min-height: 36px; height: auto; padding: 6px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel);
++  color: var(--fg); font: 600 13px/1.1 var(--font-ui); letter-spacing: 0; cursor: pointer; }
++#wxViewMenu .wx-row > button:not(.btn) {
++  min-height: 36px; padding: 6px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--fg); font: 600 13px/1.1 var(--font-ui); cursor: pointer; }
++#wxViewMenu .hud-row button[aria-pressed="true"], #wxViewMenu .wx-row > button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
++#wxViewMenu #shearCentreBtn { color: #7b3a99; }
++#wxViewMenu #shearCentreBtn[aria-pressed="true"] { color: #7b3a99; border-color: #7b3a99; background: rgba(123, 58, 153, 0.08); }
++#wxViewMenu .hud-row label { display: inline-flex; align-items: center; gap: 6px; font: 600 13px var(--font-ui); color: var(--muted); padding: 0 4px; }
++#wxViewMenu .hud-row input[type="range"] { width: 110px; accent-color: var(--accent); }
++#wxViewMenu #zoomLabel { display: none; }
++#wxViewMenu details { border: 1px solid var(--line); border-radius: 10px; }
++#wxViewMenu details > summary { cursor: pointer; padding: 8px 12px !important; font: 700 13.5px/1.2 var(--font-ui) !important; }
++#wxViewMenu details .hud-row { padding: 4px 10px 10px !important; }
++#wxViewMenu .wl-readout { padding: 0 12px 10px; }
++#app.wx #wingInputHelp > .wing-help-content {
++  position: fixed !important; left: var(--wx-help-left, 8px) !important; top: var(--wx-help-top, 110px) !important; right: auto !important;
++  width: min(460px, calc(100vw - 16px)) !important; max-height: var(--wx-help-maxh, 70dvh) !important; z-index: 190 !important;
++  border-radius: 12px !important; box-shadow: var(--shadow) !important; padding: 12px 14px !important; }
++.wx-help-top { display: grid; gap: 8px; padding-bottom: 10px; border-bottom: 1px solid var(--line); margin-bottom: 4px; }
++#app.wx .wx-help-top .btn { justify-content: flex-start; }
++
++/* ---------- the input panel (Aerodynamics or Structure & Stress, one at a time) ---------- */
++#app.wx > #wingSide.wx-panel {
++  position: fixed !important; z-index: 190; display: flex !important; flex-direction: column; padding: 0; margin: 0;
++  overflow: hidden !important; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); box-shadow: var(--shadow);
++  grid-area: auto; overscroll-behavior: contain;
++}
++#app.wx > #wingSide.wx-panel[hidden] { display: none !important; }
++#app.wx > #wingSide > * { flex-shrink: 0; }
++#app.wx > #wingSide > .wx-sec { display: none; flex: 1 1 auto !important; min-height: 0; flex-direction: column; flex-shrink: 1 !important; }
++#app.wx > #wingSide[data-mode="aero"] > .wx-sec-aero, #app.wx > #wingSide[data-mode="structure"] > .wx-sec-structure { display: flex; }
++#app.wx > #wingSide[data-mode="aero"] > #wingImportGate { display: none !important; }
++.wx-panel-head { display: flex; align-items: flex-start; gap: 10px; padding: 12px 12px 8px 16px; border-bottom: 1px solid var(--line); }
++.wx-panel-head h2 { margin: 0; font: 700 17px/1.2 var(--font-label); letter-spacing: 0.01em; outline-offset: 3px; }
++.wx-panel-sub { margin: 3px 0 0; font-size: 12.5px; line-height: 1.35; color: var(--muted); }
++.wx-x { margin-left: auto; width: 36px; height: 36px; flex: none; border-radius: 8px; border: 1px solid var(--line); background: var(--panel);
++  color: var(--fg); font-size: 22px; line-height: 1; cursor: pointer; }
++.wx-x:hover { border-color: var(--accent); color: var(--accent); }
++.wx-panel-state { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; padding: 7px 16px; border-bottom: 1px solid var(--line);
++  font-size: 12.5px; line-height: 1.35; color: var(--muted); background: var(--panel-2); }
++.wx-panel-state b { color: var(--fg); font-weight: 600; }
++.wx-sec-aero > #wingAeroPanel { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
++#wingSide .wx-sec-aero .wae { flex: 1 1 auto; min-height: 0; display: flex !important; flex-direction: column; gap: 0 !important; }
++.wx-scroll { flex: 1 1 auto; min-height: 0; overflow: auto; overscroll-behavior: contain; padding: 2px 0 10px; }
++.wx-foot { flex: none; display: grid; gap: 8px; padding: 10px 16px 12px; border-top: 1px solid var(--line); background: var(--panel); }
++.wx-foot .lesson-actions, .wx-foot-main { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0; }
++#app.wx .wx-foot #runBtn { height: 40px; min-height: 40px; padding: 0 16px; font: 700 15px/1 var(--font-ui); letter-spacing: 0.01em; border-radius: 8px; }
++#app.wx .wx-foot #aeroRun { min-height: 40px; font: 700 14px/1.1 var(--font-ui); }
++#app.wx .wx-foot #aeroApply { min-height: 40px; font: 600 14px/1.1 var(--font-ui); border-color: var(--accent); color: var(--accent); background: var(--panel); }
++#app.wx .wx-foot #aeroApply:disabled { opacity: 0.5; cursor: not-allowed; }
++#app.wx .wx-foot .wl-auto { margin: 0; font-size: 13px; color: var(--fg); gap: 6px; grid-column: auto; }
++.wx-foot #aeroStatus { margin: 0; font-size: 12.5px; line-height: 1.4; }
++.wx-foot #aeroStatus:empty { display: none; }
++.wx-hint { margin: 0; font-size: 12px; line-height: 1.35; color: var(--muted); }
++.wx-warnline { margin: 0; font-size: 12.5px; line-height: 1.35; color: var(--warn); font-weight: 600; }
++.wx-warnline[hidden] { display: none !important; }
++.wx-foot-row { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
++#wingSide .wx-cap { padding: 12px 16px 4px; margin: 0; }
++#wingSide .wl-acc { border-bottom: 1px solid var(--line); }
++#wingSide .wl-acc:last-child { border-bottom: 1px solid var(--line); }
++#wingSide .wl-acc > summary { min-height: 44px; padding: 10px 16px; font: 700 14.5px/1.2 var(--font-ui); color: var(--fg); }
++#wingSide .wl-acc > summary:hover { background: var(--panel-2); }
++#wingSide .wl-acc[open] > summary { color: var(--accent); }
++#wingSide .wl-acc-body { padding: 4px 16px 14px; }
++#wingSide .wl-acc-body > .wl-acc-body { padding: 0; }
++#wingSide .wl-badge { margin-left: 2px; font: 500 11.5px var(--font-data); color: var(--muted); }
++#wingSide .wx-dirty { margin-left: 6px; padding: 2px 6px; border-radius: 999px; font: 700 10.5px/1.2 var(--font-ui); color: var(--warn); border: 1px solid currentColor; }
++#wingSide .wx-dirty[hidden] { display: none !important; }
++#wingSide .wae details.wl-acc { border-radius: 0; }
++#wingSide .wae .wae-grid { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
++#wingSide .wae label { font-size: 13px; }
++#wingSide .wae input, #wingSide .wae select { min-height: 34px; padding: 4px 8px; border: 1px solid var(--line); border-radius: 7px; background: var(--panel-2); color: var(--fg); font: 14px var(--font-data); }
++#wingSide #wxAnalysis .wing-mesh-control, #wingSide #wxAnalysis label { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 13px; }
++#wingSide #wxAnalysis .wing-mesh-control input { width: 90px; min-height: 34px; padding: 4px 8px; border: 1px solid var(--line); border-radius: 7px; background: var(--panel-2); }
++#wingSide .wx-tabs { display: flex; flex-wrap: wrap; gap: 4px; }
++#wingSide .wx-tabs .btn[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
++#wingSide aside.pm, #wingSide aside.tree { grid-area: auto !important; }
++#wingSide aside.pm { display: block; border: 0; background: transparent; box-shadow: none; height: auto; max-height: none; overflow: visible; }
++#wingSide aside.pm > .panel-head { padding: 6px 0; border: 0; }
++#wingSide aside.pm .pm-body { padding: 0; overflow: visible; }
++#wingSide #wlLoads aside.pm .pm-body > button.btn:first-of-type { display: none; }
++#wingSide .wl-treepm { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; }
++#wingSide .wl-treepm aside.tree { max-height: 320px; border: 1px solid var(--line); border-radius: 10px; }
++#wingSide #wingPartEditor { margin: 0 !important; padding: 0 !important; border: 0 !important; }
++#wingSide #wingPartEditor > b { display: none; }
++#wingSide #wingImportGate { max-height: 40%; overflow: auto; }
++/* Ribs, Rods & sleeves and Spars show their own part of the one structure form. */
++#wingSide #wingStructureForm[data-wx-view="ribs"] > [data-wx-part="rods"], #wingSide #wingStructureForm[data-wx-view="ribs"] > [data-wx-part="spars"],
++#wingSide #wingStructureForm[data-wx-view="rods"] > [data-wx-part="ribs"], #wingSide #wingStructureForm[data-wx-view="rods"] > [data-wx-part="spars"],
++#wingSide #wingStructureForm[data-wx-view="spars"] > [data-wx-part="ribs"], #wingSide #wingStructureForm[data-wx-view="spars"] > [data-wx-part="rods"] { display: none; }
++#wingSide .wx-sub > .wl-acc-body > #wingStructureForm { padding: 0; }
++
++/* ---------- result strip ---------- */
++#app.wx > #wxResults {
++  grid-area: results !important; position: relative; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px;
++  padding: 6px 10px; min-height: 48px; border: 1px solid var(--line); border-radius: 12px; background: var(--panel);
++}
++.wx-plots, .wx-disp { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
++.wx-strip-cap { font: 700 11px/1 var(--font-label); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-right: 4px; }
++#app.wx #wxResults .tool, #app.wx #wxResults #defBtn {
++  height: 34px; min-height: 34px; padding: 0 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel);
++  color: var(--fg); font: 600 13.5px/1 var(--font-ui); letter-spacing: 0; cursor: pointer; }
++#app.wx #wxResults .tool:hover, #app.wx #wxResults #defBtn:hover { border-color: var(--accent); color: var(--accent); }
++#app.wx #wxResults .tool[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #ffffff; }
++#app.wx #wxResults #defBtn[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
++#app.wx #wxResults .tool:disabled, #app.wx #wxResults #defBtn:disabled { opacity: 0.45; cursor: not-allowed; }
++#app.wx #wxResults #wingMoreResults { max-width: 190px; padding: 0 8px; }
++#app.wx #wxResults .wx-disp label { display: inline-flex; align-items: center; gap: 6px; font: 600 13px var(--font-ui); color: var(--muted); }
++#app.wx #wxResults .wx-disp input[type="range"] { width: 96px; accent-color: var(--accent); }
++.wx-status { margin-left: auto; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; min-width: 0; }
++.wx-st-group { display: inline-flex; align-items: center; gap: 8px; min-width: 0; padding: 3px 10px 3px 4px; border: 1px solid var(--line); border-radius: 999px; background: var(--panel); }
++.wx-st { display: inline-flex; align-items: center; gap: 6px; min-height: 28px; padding: 0 6px; border: 0; border-radius: 999px; background: transparent;
++  color: var(--fg); font: 600 13px/1 var(--font-ui); cursor: pointer; }
++.wx-st:hover { color: var(--accent); text-decoration: underline; }
++.wx-st-text { font-size: 12.5px; color: var(--muted); max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
++.wx-st-group .chip { font-size: 10.5px; padding: 3px 7px; }
++.chip.run { color: var(--accent); }
++#app.wx #wxResults .wl-status { display: flex; flex-direction: row; align-items: center; gap: 8px; font-size: 12.5px; min-width: 0; }
++#app.wx #wxResults .wl-status > div { display: flex; align-items: center; gap: 8px; min-width: 0; }
++#app.wx #wxResults .wing-status-line { gap: 6px; align-items: center; }
++#app.wx #wxResults #statePreview { max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
++#app.wx #wxResults .wing-selection-feedback { flex-basis: 100%; }
++
++/* ---------- transient file and session messages ---------- */
++/* the shared editor popup, when it belongs to a command of the bar, opens below the bar and fits under it */
++body.wx-wing-on .wing-editor-pop.wx-below-bar > div { max-height: calc(100dvh - var(--wx-pop-top, 120px) - 84px) !important; }
++.wx-toast { position: fixed; z-index: 200; right: 14px; top: var(--wx-toast-top, 120px); max-width: min(460px, calc(100vw - 28px));
++  padding: 10px 40px 10px 14px; border-radius: 10px; background: #14212e; color: #ffffff; font-size: 13px; line-height: 1.4; box-shadow: var(--shadow); }
++.wx-toast[hidden] { display: none !important; }
++.wx-toast-x { position: absolute; right: 6px; top: 6px; width: 30px; height: 30px; border: 0; border-radius: 6px; background: transparent; color: #ffffff; font-size: 18px; cursor: pointer; }
++.wx-toast-x:focus-visible { outline: 2px solid #ffffff; }
++.wx-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
++
++/* ---------- narrow screens: the same commands wrap; panels use the full width under the bar ---------- */
++@media (max-width: 1599px) {
++  .wx-st-text, #app.wx #wxResults #statePreview, .wx-strip-cap { display: none; }
++}
++@media (max-width: 1100px) {
++  #app.wx #wingProjectTitle { display: none; }
++}
++@media (max-width: 700px) {
++  #app.wx { padding: 6px !important; gap: 6px !important; --wx-view-h: clamp(300px, 52dvh, 520px); }
++  #app.wx > header.wx-bar { padding: 6px; gap: 6px; }
++  #app.wx > header.wx-bar .brand { border-right: 0 !important; padding: 0; flex: 1 1 0; min-width: 0; }
++  #app.wx > header.wx-bar .brand svg { display: none; }
++  #app.wx > header.wx-bar .brand > div, #app.wx > header.wx-bar .wing-project-name { flex: 1 1 0; min-width: 0; }
++  #app.wx > header.wx-bar .wing-project-name input { width: 100%; min-width: 0; }
++  .wx-menubar { order: 3; flex: 1 1 100%; gap: 2px; }
++  .wx-sep { display: none; }
++  .wx-long { display: none; }
++  #app.wx .wx-top, #app.wx .wx-quick, #app.wx #wingInputHelp > summary { padding: 0 9px; font-size: 14px; gap: 5px; }
++  #app.wx > #wxResults { gap: 6px 8px; padding: 6px; }
++  #app.wx #wxResults .tool, #app.wx #wxResults #defBtn { padding: 0 9px; font-size: 13px; }
++  #app.wx #wxResults #wingMoreResults { max-width: 132px; }
++  .wx-strip-cap { display: none; }
++  .wx-status { margin-left: 0; flex: 1 1 100%; gap: 6px; }
++  .wx-st-group { padding: 2px 8px 2px 2px; }
++  .wx-st-text, #app.wx #wxResults #statePreview { display: none; }
++  .wx-name-long { display: none; }
++  #app.wx .view .infocol { top: 58px; max-width: calc(100% - 28px); }
++  /* result strip: one wrapping sequence; the two selects share a row, the two status pills share a row */
++  .wx-plots, .wx-disp, .wx-aero-sel, .wx-status { display: contents; }
++  #app.wx #wxResults #wingMoreResults, #app.wx #wxResults #wxAeroView { flex: 1 1 140px; max-width: none; }
++  #app.wx #wxResults .wx-disp label { flex: 1 1 120px; }
++  #app.wx #wxResults .wx-disp input[type="range"] { flex: 1 1 auto; width: auto; min-width: 70px; }
++  .wx-st-group { flex: 1 1 auto; justify-content: flex-start; }
++  /* input panel: keep the subgroup list visible above the actions */
++  .wx-panel-sub, .wx-foot .wx-hint { display: none; }
++  .wx-panel-state > span:not(.chip) { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
++  .wx-foot { padding: 8px 12px 10px; gap: 6px; }
++  body.wx-wing-on #wingNavigation { flex-wrap: nowrap; overflow-x: auto; padding: 4px 6px; gap: 4px; scrollbar-width: thin; }
++  body.wx-wing-on #wingNavigation .workspace-link { flex: none; padding: 4px 9px; font-size: 12.5px; white-space: nowrap; }
++}
++@media (min-width: 701px) { .wx-name-short { display: none; } }
++@media (pointer: coarse) {
++  #app.wx .wx-top, #app.wx .wx-quick, #app.wx #wingInputHelp > summary, #app.wx #wxResults .tool, #app.wx #wxResults #defBtn,
++  #app.wx .wx-bar-end .btn, .wx-st { min-height: 44px; height: 44px; }
++  #wingSide .wl-acc > summary { min-height: 48px; }
++  #app.wx .wx-menu .btn, #app.wx #wingSide .btn, #wxViewMenu .hud-row button { min-height: 44px; }
++}
++@media (prefers-reduced-motion: reduce) { .wx-dot[data-s="run"] { animation: none; } }
++
++/* ---------- aerodynamic result views (selector in the result strip, view over the 3-D model) ---------- */
++.wx-aero-sel { display: flex; align-items: center; gap: 6px; }
++#app.wx #wxResults #wxAeroView { max-width: 230px; padding: 0 8px; }
++#app.wx #wxResults.wx-aero-active .wx-plots .tool[aria-pressed="true"] { background: var(--panel); border-color: var(--line); color: var(--fg); }
++#app.wx #wxResults.wx-aero-active #wxAeroView { background: var(--accent); border-color: var(--accent); color: #ffffff; }
++#app.wx .view > #loading { z-index: 8; }
++.wx-aero-result { position: absolute; inset: 0; z-index: 7; display: flex; flex-direction: column; background: #ffffff; color: var(--fg); }
++.wx-aero-result[hidden] { display: none !important; }
++.wx-ar-head { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 6px 12px; padding: 10px 14px 8px; border-bottom: 1px solid var(--line); flex: none; }
++.wx-ar-head h3 { margin: 0; font: 700 16px/1.2 var(--font-ui); }
++.wx-ar-src { margin: 3px 0 0; font-size: 12px; line-height: 1.35; color: var(--muted); max-width: 980px; }
++.wx-ar-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
++#app.wx .wx-ar-tools .btn { height: 34px; min-height: 34px; padding: 0 11px; background: var(--panel); }
++#app.wx .wx-ar-tools .btn:disabled { opacity: 0.45; cursor: not-allowed; }
++.wx-ar-tools select { height: 34px; max-width: 290px; padding: 0 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--fg); font: 13px var(--font-ui); }
++.wx-ar-body { position: relative; flex: 1 1 auto; min-height: 0; }
++.wx-ar-body > canvas { position: absolute; left: 0; top: 0; width: 100%; height: 100%; display: block; cursor: crosshair; }
++.wx-ar-html { position: absolute; inset: 0; overflow: auto; padding: 10px 16px 16px; }
++.wx-ar-html h4 { margin: 12px 0 6px; font: 700 13.5px/1.2 var(--font-ui); }
++.wx-ar-html .wae table { font-size: 12.5px; }
++.wx-ar-notice { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; gap: 12px; padding: 24px; text-align: center; font-size: 14px; color: var(--muted); }
++.wx-ar-notice p { max-width: 540px; margin: 0; }
++.wx-ar-probe { flex: none; max-height: 28%; overflow: auto; padding: 6px 14px 8px; border-top: 1px solid var(--line); font: 12px/1.5 var(--font-data); color: var(--fg); }
++.wx-ar-probe:empty { display: none; }
++#app.wx .wx-linkbtn { height: auto; min-height: 28px; padding: 3px 9px; font-size: 12.5px; border-color: var(--accent); color: var(--accent); background: var(--panel); }
++@media (max-width: 700px) {
++  .wx-ar-head { padding: 8px; }
++  .wx-ar-src { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
++  #app.wx #wxResults #wxAeroView { max-width: 150px; }
++  /* the aerodynamic result view takes most of a phone screen; the page scrolls as before */
++  #app.wx > .view.wx-aero-on { height: clamp(560px, 88dvh, 760px) !important; }
++}
+diff --git a/computational/printed-wing-solver/aerostruct/wx-shell.js b/computational/printed-wing-solver/aerostruct/wx-shell.js
+new file mode 100644
+index 0000000..f7a680a
+--- /dev/null
++++ b/computational/printed-wing-solver/aerostruct/wx-shell.js
+@@ -0,0 +1,639 @@
++/* Wing AeroStruct UI shell: compact command bar (File, Open/Save, Aerodynamics, Structure & Stress, View, Help), one
++ * anchored input panel at a time, and a slim result strip (Model, Stress, Displacement, More results).
++ * UI and interaction only. It moves the page's own controls, so their listeners, validation and confirmation dialogs are
++ * unchanged; it never copies an input, never edits study data and never starts a solver except through the page's own
++ * buttons (Solve Aerodynamics, Apply aerodynamic loads to structure, Solve Structure / Stress, Auto-solve).
++ * Hooks used: WingLabUI.shell (workspace, select, renderPM, renderInputs, discardGeometryDraft, cancelLoadDraft,
++ * gateOpen); this file sets WingLabUI.shell.onShowInputs, .reveal and .addStructureSubgroup. */
++(() => {
++  'use strict';
++  const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)];
++  const el = (tag, attrs = {}, ...kids) => {
++    const n = document.createElement(tag);
++    for (const [k, v] of Object.entries(attrs)) {
++      if (v == null || v === false) continue;
++      if (k === 'text') n.textContent = v; else if (k === 'html') n.innerHTML = v; else n.setAttribute(k, v === true ? '' : v);
++    }
++    for (const k of kids) if (k != null) n.append(k);
++    return n;
++  };
++  const app = $('#app'), ui = window.WingLabUI, hooks = ui && ui.shell;
++  const pw = hooks && hooks.workspace && hooks.workspace();
++  const bar = $('#app > header.bar'), side = $('#wingSide');
++  const tools = pw && pw.tools;
++  const need = {
++    app, ui, hooks, pw, bar, side, tools, brand: bar && $(':scope > .brand', bar), runBtn: $('#runBtn'), stateChip: $('#stateChip'),
++    wlStatus: $('.wl-status'), aeroHost: $('#wingAeroPanel'), wlGeometry: $('#wlGeometry'), wlStructure: $('#wlStructure'),
++    form: $('#wingStructureForm'), wlLoads: $('#wlLoads'), wlInventory: $('#wlInventory'), wlFiles: $('#wlFiles'), pm: $('#pm'), tree: $('#tree'),
++    viewBody: $('#wingViewPanel .wl-vbody'), help: $('#wingInputHelp'), openBtn: tools && $('[data-wing-action="open-json"]', tools),
++    saveBtn: tools && $('[data-wing-action="save-json"]', tools), clearBtn: tools && $('[data-wing-action="clear"]', tools),
++    autoLabel: $('#wingAutoSolve') && $('#wingAutoSolve').closest('label'), partEditor: $('#wingPartEditor'),
++  };
++  const missing = Object.entries(need).filter(([, v]) => !v).map(([k]) => k);
++  if (missing.length) { console.warn('Wing AeroStruct UI shell not applied (the previous layout stays); missing:', missing.join(', ')); return; }
++  const { brand, runBtn, wlStatus, aeroHost, wlGeometry, wlStructure, form, wlLoads, wlInventory, wlFiles, viewBody, help, openBtn, saveBtn, clearBtn, autoLabel, partEditor } = need;
++  const helpSummary = $(':scope > summary', help), helpBody = $(':scope > .wing-help-content', help);
++  if (!helpSummary || !helpBody) { console.warn('Wing AeroStruct UI shell not applied: Help menu not found.'); return; }
++  // Resolve every control before anything is re-parented: a node inside a detached container is invisible to queries.
++  const example = $('#wgCourseExample'), dimensions = $('.wing-view-dimensions', helpBody), refineInput = $('#wingRefineTorsion');
++
++  const parking = el('div', { id: 'wxParking', hidden: true, 'aria-hidden': 'true' });
++  app.append(parking);
++  const park = (...nodes) => nodes.forEach((n) => n && parking.append(n));
++  const add = (parent, ...kids) => { for (const k of kids) if (k) parent.append(k); return parent; };
++  const cap = (text) => el('p', { class: 'wx-cap', text });
++  const row = (...kids) => el('div', { class: 'wx-row' }, ...kids);
++  const sep = () => el('span', { class: 'wx-sep', 'aria-hidden': 'true' });
++  const setLabel = (details, text) => { const s = $(':scope > summary', details); if (!s) return; const t = [...s.childNodes].find((n) => n.nodeType === 3 && n.textContent.trim()); if (t) t.textContent = text + ' '; else s.prepend(document.createTextNode(text + ' ')); };
++  const subgroup = (id, title, badge = '') => {
++    const d = el('details', { class: 'wl-acc wx-sub', id }, el('summary', {}, title + ' ', badge ? el('span', { class: 'wl-badge', text: badge }) : null));
++    const body = el('div', { class: 'wl-acc-body' }); d.append(body); return { d, body };
++  };
++  const topButton = (id, label, controls) => el('button', { type: 'button', class: 'wx-top', id, 'aria-haspopup': 'dialog', 'aria-expanded': 'false', 'aria-controls': controls }, el('span', { text: label }));
++
++  // ---------------------------------------------------------------- command bar
++  const plotButtons = $$('[data-plot]', bar), moreSelect = $('#wingMoreResults');
++  const learnBtn = $('#learnBtn'), oldGroups = $$(':scope > .group', bar), wlRun = $(':scope > .wl-run', bar);
++  const fileBtn = topButton('wxFileBtn', 'File', 'wxFileMenu');
++  const aeroBtn = topButton('wxAeroBtn', 'Aerodynamics', 'wingSide'), structBtn = topButton('wxStructBtn', 'Structure & Stress', 'wingSide');
++  const aeroDot = el('span', { class: 'wx-dot', 'aria-hidden': 'true' }), structDot = el('span', { class: 'wx-dot', 'aria-hidden': 'true' });
++  aeroBtn.append(aeroDot); structBtn.append(structDot);
++  const aeroDotText = el('span', { class: 'wx-sr', id: 'wxAeroDotText' }), structDotText = el('span', { class: 'wx-sr', id: 'wxStructDotText' });
++  aeroBtn.append(aeroDotText); structBtn.append(structDotText);
++  const viewBtn = topButton('wxViewBtn', 'View', 'wxViewMenu');
++  openBtn.className = 'wx-quick'; openBtn.innerHTML = 'Open<span class="wx-long">JSON</span>'; openBtn.setAttribute('aria-label', 'Open JSON');
++  openBtn.title = 'Open a saved study file (.json). You review it before it replaces the inputs on screen.';
++  saveBtn.className = 'wx-quick'; saveBtn.innerHTML = 'Save<span class="wx-long">JSON</span>'; saveBtn.setAttribute('aria-label', 'Save JSON');
++  saveBtn.title = 'Save the inputs on screen as a study file (.json).';
++  helpSummary.className = ''; helpSummary.textContent = 'Help'; helpSummary.setAttribute('aria-haspopup', 'dialog');
++  const menubar = el('div', { class: 'wx-menubar', role: 'group', 'aria-label': 'Main commands' }, fileBtn, openBtn, saveBtn, sep(), aeroBtn, structBtn, sep(), viewBtn, help);
++  const historyTools = $('.wing-history-tools', tools);
++  if (historyTools) historyTools.removeAttribute('style');
++  const barEnd = el('div', { class: 'wx-bar-end' }, historyTools);
++  bar.classList.add('wx-bar');
++
++  // ---------------------------------------------------------------- File menu (export location; Open/Save stay on the bar)
++  const fileMenu = el('div', { id: 'wxFileMenu', class: 'wx-menu', role: 'dialog', 'aria-label': 'File', hidden: true });
++  clearBtn.className = 'btn wx-danger'; clearBtn.removeAttribute('style'); clearBtn.textContent = 'New / Clear…';
++  if (example) example.textContent = 'Open the course example wing…';
++  const printButtons = ['#wingDownloadSTL', '#wingDownloadDXF', '#wingDownloadSTEP'].map((s) => $(s)).filter(Boolean);
++  const symmetry = $('#wingFullSymmetric') && $('#wingFullSymmetric').closest('label'), symmetryNote = $('#wingSymmetryNote');
++  const openSTL = $('#wingOpenSTL'), stlInput = openSTL && $('input[type="file"][accept=".stl"]', openSTL.parentElement);
++  const stlPanel = openSTL && [...openSTL.parentElement.children].find((n) => n.tagName === 'DIV' && n.classList.contains('wing-print-dialog'));
++  if (stlPanel) document.body.append(stlPanel);   // a fixed dialog must not live inside a closed menu
++  if (openSTL) openSTL.textContent = 'Open STL reference…';
++  setLabel(wlFiles, 'Design parameters, paste & share link');
++  add(fileMenu,
++    cap('Study'), row(clearBtn, example),
++    printButtons.length ? cap('Export for 3-D printing') : null, printButtons.length ? row(...printButtons) : null, symmetry ? row(symmetry, symmetryNote) : null,
++    openSTL ? cap('Reference geometry (view only)') : null, openSTL ? row(openSTL, stlInput) : null,
++    openSTL ? el('p', { class: 'note', text: 'Shows an STL surface in the view for comparison. It does not change the study and computes no stress.' }) : null,
++    wlFiles,
++  );
++
++  // ---------------------------------------------------------------- View menu (display only; camera buttons stay on the model)
++  const viewMenu = el('div', { id: 'wxViewMenu', class: 'wx-menu', role: 'dialog', 'aria-label': 'View', hidden: true });
++  const zoomRow = $('#zoomLabel') && $('#zoomLabel').parentElement;
++  const anatomyRow = $('[data-anatomy="assembled"]', viewBody) && $('[data-anatomy="assembled"]', viewBody).closest('.hud-row');
++  const cameraRow = $$('.hud-row', viewBody).find((r) => r.querySelector('[data-view]'));   // duplicate of the camera buttons on the model
++  const explodeRow = $('#explodeIn') && $('#explodeIn').closest('.hud-row');
++  const resultRow = $('#defBtn') && $('#defBtn').closest('.hud-row');
++  const defBtn = $('#defBtn'), scaleLabel = $('#scaleIn') && $('#scaleIn').closest('label');
++  const contour = $('#wingContourOptions');
++  if (dimensions) setLabel(dimensions, 'Scale bar & dimensions');
++  add(viewMenu,
++    cap('Zoom'), zoomRow, cap('Show'), anatomyRow, cap('Display'), row($('#xrayBtn'), $('#shearCentreBtn')),
++    cap('Explode & clip'), explodeRow, contour, dimensions,
++  );
++
++  // ---------------------------------------------------------------- Help (teaching material; lessons open beside it)
++  const lessonButtons = $$('[data-wing-lesson]', tools);
++  if (learnBtn) { learnBtn.className = 'btn primary'; learnBtn.textContent = 'Guided lesson'; }
++  const aeroIntro = $(':scope > .wae > p.note', aeroHost);
++  const helpTop = el('div', { class: 'wx-help-top' }, learnBtn,
++    lessonButtons.length ? cap('Experiments & theory') : null, lessonButtons.length ? row(...lessonButtons) : null);
++  const where = el('details', { id: 'wxHelpWhere' }, el('summary', { text: 'Where the controls are' }),
++    el('p', { class: 'note', text: 'File holds New / Clear, the course example, STL/DXF/STEP export and design-parameter import; Open JSON and Save JSON sit beside it. Aerodynamics and Structure & Stress each open one input panel: set the inputs there, then press Solve Aerodynamics or Solve Structure / Stress. Apply aerodynamic loads to structure hands the aerodynamic load to the structure and re-solves it. The result buttons under the bar only change what is displayed; View changes zoom, visibility and colours only.' }));
++  const aeroHelp = aeroIntro ? el('details', { id: 'wxHelpAero' }, el('summary', { text: 'Aerodynamics · panel method' }), aeroIntro) : null;
++  helpBody.prepend(...[helpTop, where, aeroHelp].filter(Boolean));
++
++  // ---------------------------------------------------------------- result strip
++  const results = el('section', { id: 'wxResults', 'aria-label': 'Displayed result and solver status' });
++  const plots = el('div', { class: 'wx-plots', role: 'group', 'aria-label': 'Displayed result' }, el('span', { class: 'wx-strip-cap', 'aria-hidden': 'true', text: 'Results' }), ...plotButtons, moreSelect);
++  const display = el('div', { class: 'wx-disp', role: 'group', 'aria-label': 'Deformed shape' }, defBtn, scaleLabel);
++  const aeroStatusBtn = el('button', { type: 'button', class: 'wx-st', id: 'wxAeroStatus', 'aria-controls': 'wingSide', title: 'Open Aerodynamics', 'aria-label': 'Aerodynamics status: open Aerodynamics' },
++    el('span', { class: 'wx-name-long', text: 'Aerodynamics' }), el('span', { class: 'wx-name-short', text: 'Aero' }));
++  const aeroChip = el('span', { class: 'chip idle', id: 'wxAeroChip', text: 'Not solved' }), aeroText = el('span', { class: 'wx-st-text', id: 'wxAeroText' });
++  const aeroGroup = el('div', { class: 'wx-st-group', id: 'wxAeroGroup', role: 'status', 'aria-live': 'polite' }, aeroStatusBtn, aeroChip, aeroText);
++  const structStatusBtn = el('button', { type: 'button', class: 'wx-st', id: 'wxStructStatus', 'aria-controls': 'wingSide', title: 'Open Structure & Stress' }, 'Structure');
++  const structGroup = el('div', { class: 'wx-st-group', id: 'wxStructGroup' }, structStatusBtn, wlStatus);
++  const selection = $('.wing-selection-feedback', tools);
++  add(results, plots, display, el('div', { class: 'wx-status' }, aeroGroup, structGroup), selection);
++
++  // ---------------------------------------------------------------- the input panel: one element, two modes
++  const panelTitle = el('h2', { id: 'wxPanelTitle', tabindex: '-1' }), panelSub = el('p', { class: 'wx-panel-sub', id: 'wxPanelSub' });
++  const panelClose = el('button', { type: 'button', class: 'wx-x', 'aria-label': 'Close panel', text: '×' });
++  const panelHead = el('header', { class: 'wx-panel-head' }, el('div', {}, panelTitle, panelSub), panelClose);
++  const panelState = el('div', { class: 'wx-panel-state', id: 'wxPanelState' });
++  const footButtons = (label) => {
++    const discard = el('button', { type: 'button', class: 'btn wx-discard', text: 'Discard unapplied edits', title: 'Reset fields you have not applied yet to the inputs in use. Applied changes stay; Undo reverts them.' });
++    const done = el('button', { type: 'button', class: 'btn wx-done', text: 'Close', 'aria-label': 'Close ' + label });
++    return { discard, done, row: el('div', { class: 'wx-foot-row' }, discard, done) };
++  };
++  const geoSlotAero = el('div', { class: 'wx-geo-slot' }), geoSlotStruct = el('div', { class: 'wx-geo-slot' });
++  const geoDirtyBadge = el('span', { class: 'wx-dirty', hidden: true, text: 'unapplied edits' });
++  $(':scope > summary', wlGeometry).append(geoDirtyBadge);
++  setLabel(wlGeometry, 'Wing shape');
++  const geoWarn = () => el('p', { class: 'wx-warnline', hidden: true, text: 'Wing shape has unapplied edits: press Apply geometry inside Wing shape, or Discard unapplied edits.' });
++
++  // Aerodynamics mode: inputs, then explicit Solve Aerodynamics and Apply aerodynamic loads to structure.
++  const aeroSec = el('div', { class: 'wx-sec wx-sec-aero' });
++  const wae = $(':scope > .wae', aeroHost), aeroRun = $('#aeroRun', aeroHost), aeroApply = $('#aeroApply', aeroHost);
++  const aeroFoot = footButtons('Aerodynamics'), aeroWarn = geoWarn();
++  const groups = { aero: [], structure: [] }, prepares = new Map();
++  let flowG = null, resG = null, admG = null, outCap = null;
++  if (wae && aeroRun && aeroApply) {
++    const grid = $(':scope > .wae-grid', wae), seqLabel = $('#aeroSequence', aeroHost).closest('label');
++    const notes = $$(':scope > p.note', wae), seqNote = notes[0];
++    const air = $(':scope > details', wae), actions = aeroRun.parentElement;
++    const status = $('#aeroStatus', aeroHost), applied = $('#aeroApplied', aeroHost), admission = $('#aeroAdmission', aeroHost), out = $('#aeroResults', aeroHost);
++    flowG = subgroup('wxAeroFlow', 'Flow conditions', 'V, ρ, α');
++    const meshG = subgroup('wxAeroMesh', 'Panel mesh sequence', 'Standard or Fine');
++    admG = subgroup('wxAeroAdm', 'Applied load & admission check'); resG = subgroup('wxAeroRes', 'Solver report & load CSV');
++    flowG.body.append(grid); meshG.body.append(seqLabel, seqNote);
++    if (air) { air.classList.add('wl-acc', 'wx-sub'); air.id = 'wxAeroAir'; const body = el('div', { class: 'wl-acc-body' }); body.append(...[...air.children].filter((c) => c.tagName !== 'SUMMARY')); air.append(body); }
++    admG.body.append(applied, admission); resG.body.append(out);
++    admG.d.hidden = true; resG.d.hidden = true;
++    outCap = cap('Aerodynamic outputs'); outCap.hidden = true;
++    const scroll = el('div', { class: 'wx-scroll' }, cap('Shared wing shape'), geoSlotAero, cap('Aerodynamic inputs'), flowG.d, meshG.d, air, outCap, admG.d, resG.d);
++    scroll.append(...[...wae.children].filter((c) => c !== scroll));   // anything else the module renders stays visible
++    const hint = el('p', { class: 'wx-hint', text: 'Apply aerodynamic loads to structure replaces the prescribed loads (self-weight is kept) and re-solves the structure for the admission check.' });
++    wae.replaceChildren(scroll, el('div', { class: 'wx-foot' }, status, actions, hint, aeroWarn, aeroFoot.row));
++    aeroSec.append(aeroHost);
++    groups.aero.push(wlGeometry, flowG.d, meshG.d, ...(air ? [air] : []), admG.d, resG.d);
++  } else {
++    aeroSec.append(el('div', { class: 'wx-scroll' }, geoSlotAero, aeroHost), el('div', { class: 'wx-foot' }, aeroWarn, aeroFoot.row));
++    groups.aero.push(wlGeometry);
++  }
++
++  // Structure & Stress mode: every structural input, then Solve Structure / Stress.
++  const structSec = el('div', { class: 'wx-sec wx-sec-structure' });
++  setLabel(wlStructure, 'Ribs'); setLabel(wlLoads, 'Loads & self-weight'); setLabel(wlInventory, 'Model inventory');
++  const rodsG = subgroup('wxRods', 'Rods & sleeves'), sparsG = subgroup('wxSpars', 'Spars · caps & webs');
++  const matsG = subgroup('wxMaterials', 'Materials & printed thickness'), jointsG = subgroup('wxJoints', 'Joints & root support');
++  const anaG = subgroup('wxAnalysis', 'Mesh & analysis settings'), partsG = subgroup('wxParts', 'Select & edit parts on the model');
++  const treeG = subgroup('wxTree', 'Study tree (all inputs)'), moreG = subgroup('wxMore', 'More tools');
++  moreG.d.hidden = true;
++  const tabs = (items) => el('div', { class: 'wx-tabs', role: 'group' }, ...items.map(([id, label]) => el('button', { type: 'button', class: 'btn', 'data-wx-select': id, 'aria-pressed': 'false', text: label })));
++  const matTabs = tabs([['mat-pla', 'Shell / ribs'], ['mat-rod', 'Rods'], ['mat-spar', 'Spars']]);
++  const jointTabs = tabs([['con', 'Rods & seams'], ['fix', 'Root support']]);
++  matTabs.setAttribute('aria-label', 'Material'); jointTabs.setAttribute('aria-label', 'Joint or support');
++  matsG.body.append(matTabs); jointsG.body.append(jointTabs);
++  const meshLabel = $('#wingMeshElements') && $('#wingMeshElements').closest('label');
++  const refineLabel = refineInput && refineInput.closest('label');
++  const reserved = el('div', { id: 'wxAnalysisModelSlot', hidden: true });   // reserved for analysis options added later; empty and hidden now
++  add(anaG.body, reserved, meshLabel, refineLabel, refineLabel ? el('p', { class: 'note', text: 'Optional finer torsion for bonded spars; slower first solve. Details: Help → Torsion accuracy.' }) : null);
++  partsG.body.append(partEditor);
++  const pmAside = $('#pm').closest('aside'), treeAside = $('#tree').closest('aside'), treePm = treeAside && treeAside.parentElement;
++  const sScroll = el('div', { class: 'wx-scroll' },
++    cap('Shared wing shape'), geoSlotStruct, cap('Structure dimensions'), wlStructure, rodsG.d, sparsG.d,
++    cap('Materials & loads'), matsG.d, wlLoads, jointsG.d, cap('Analysis & tools'), anaG.d, partsG.d, treeG.d, wlInventory, moreG.d);
++  const structFoot = footButtons('Structure & Stress'), structWarn = geoWarn();
++  add(structSec, $('#wingImportGate'), sScroll, el('div', { class: 'wx-foot' },
++    el('div', { class: 'wx-foot-main' }, runBtn, autoLabel),
++    el('p', { class: 'wx-hint', text: 'Fields apply when you press Enter or leave them; forms with their own Apply button wait for it. Results update only with Solve Structure / Stress (or Auto-solve).' }),
++    structWarn, structFoot.row));
++  groups.structure.push(wlGeometry, wlStructure, rodsG.d, sparsG.d, matsG.d, wlLoads, jointsG.d, anaG.d, partsG.d, treeG.d, wlInventory, moreG.d);
++
++  // Previous side-column content that this layout replaces (kept, hidden, with listeners intact).
++  const keepInSide = [$('#wlTreeSection'), $('.wing-input-library', side)].filter(Boolean);
++  const sideOld = [...side.children];
++  const sideKnown = new Set([sideOld.find((n) => n.tagName === 'BUTTON' && /close inputs/i.test(n.textContent)), $('#wlAero'), $('#wingMaterialShortcuts')].filter(Boolean));
++  side.replaceChildren(panelHead, panelState, aeroSec, structSec, ...keepInSide);
++  side.classList.add('wx-panel'); side.hidden = true; side.dataset.mode = 'structure';
++  side.setAttribute('role', 'dialog'); side.setAttribute('aria-modal', 'false'); side.setAttribute('aria-labelledby', 'wxPanelTitle');
++  geoSlotStruct.append(wlGeometry);
++
++  // ---------------------------------------------------------------- assemble the page
++  bar.replaceChildren(brand, menubar, barEnd);
++  bar.after(results);
++  results.after(fileMenu, viewMenu);
++  park(...oldGroups, wlRun, $('#inputsBtn'), $('#wingAeroOpenBtn'), $('#wingShowBendingTwist'), $('#wingStudyTreeButton'), cameraRow, resultRow,
++    ...['geometry', 'structure', 'materials', 'rib', 'rod', 'spar', 'load'].map((id) => $(`[data-wing-action="${id}"]`, tools)));
++  const experiments = $('.wing-experiments', tools); park(experiments);
++  // Anything the previous containers still hold that this layout does not know stays reachable under More tools.
++  const interactive = 'button, input, select, textarea, a[href], summary';
++  const leftovers = [];
++  const sweep = (container, skip = () => false) => { if (!container) return; for (const c of [...container.children]) { if (skip(c) || c.hidden) continue; if (c.matches(interactive) || c.querySelector(interactive)) leftovers.push(c); } };
++  for (const r of $$(':scope > .wing-tool-row', tools)) sweep(r);
++  sweep(tools, (c) => c.classList.contains('wing-tool-row') || c.classList.contains('wing-quick-hint'));
++  sweep(viewBody, (c) => c.id === 'hudControls' || c.id === 'wingSparResults');
++  sweep($('#hudControls'), (c) => c.classList.contains('wl-vlabel'));
++  for (const node of sideOld) {
++    if (node.isConnected) continue;   // moved into the new layout
++    if (!sideKnown.has(node) && !node.hidden && (node.matches(interactive) || node.querySelector(interactive))) leftovers.push(node); else park(node);
++  }
++  if (leftovers.length) { moreG.d.hidden = false; moreG.body.append(...leftovers); console.info('Wing AeroStruct UI shell: controls kept under Structure & Stress → More tools:', leftovers.map((n) => n.id || n.textContent.trim().slice(0, 40))); }
++  park(tools, $('#wingInlineDisplay'));
++  app.classList.add('wx');
++  app.classList.remove('learning-view', 'tablet-inputs-open');
++
++  // ---------------------------------------------------------------- one structure form, three views (Ribs, Rods & sleeves, Spars)
++  const annotateForm = () => {
++    let part = 'ribs';
++    for (const c of form.children) {
++      if (c.matches('section.wl-spars')) { c.dataset.wxPart = 'spars'; continue; }
++      if (c.tagName === 'H4') { const t = c.textContent.toLowerCase(); part = /\brod/.test(t) ? 'rods' : /\brib/.test(t) ? 'ribs' : 'other'; }
++      c.dataset.wxPart = part;
++    }
++  };
++  new MutationObserver(annotateForm).observe(form, { childList: true }); annotateForm();
++  const showForm = (view) => { const host = view === 'rods' ? rodsG.body : view === 'spars' ? sparsG.body : wlStructure; if (form.parentElement !== host) host.append(form); form.dataset.wxView = view; };
++  showForm('ribs');
++
++  // ---------------------------------------------------------------- the property pane serves Materials, Loads, Joints, Mesh and the study tree
++  const sel = () => (ui.state() || {}).selected || '';
++  const placePM = (body) => { if (pmAside && pmAside.parentElement !== body) body.append(pmAside); };
++  const syncTabs = () => { const s = sel(); for (const b of $$('[data-wx-select]', side)) b.setAttribute('aria-pressed', String(b.dataset.wxSelect === s || (b.dataset.wxSelect === 'con' && s === 'con-seam'))); };
++  const family = (id) => (/^mat/.test(id) || id === 'materials' ? matsG.d : id === 'load' || id === 'loads' ? wlLoads : ['con', 'con-seam', 'connections', 'fix', 'fixtures'].includes(id) ? jointsG.d : id === 'mesh' ? anaG.d : null);
++  for (const b of $$('[data-wx-select]', side)) b.addEventListener('click', () => { hooks.select(b.dataset.wxSelect); syncTabs(); });
++  prepares.set(wlStructure, () => showForm('ribs'));
++  prepares.set(rodsG.d, () => showForm('rods'));
++  prepares.set(sparsG.d, () => showForm('spars'));
++  prepares.set(matsG.d, () => { placePM(matsG.body); if (!/^mat/.test(sel())) hooks.select('mat-pla'); syncTabs(); });
++  prepares.set(wlLoads, () => { placePM($(':scope > .wl-acc-body', wlLoads) || wlLoads); if (!['load', 'loads'].includes(sel())) hooks.select('load'); });
++  prepares.set(jointsG.d, () => { placePM(jointsG.body); if (family(sel()) !== jointsG.d) hooks.select('con'); syncTabs(); });
++  prepares.set(anaG.d, () => { placePM(anaG.body); if (sel() !== 'mesh') hooks.select('mesh'); });
++  prepares.set(treeG.d, () => { if (treePm) { if (treePm.parentElement !== treeG.body) treeG.body.append(treePm); if (pmAside.parentElement !== treePm) treePm.append(pmAside); } });
++  let routing = false;
++  new MutationObserver(() => { if (!routing) setTimeout(routePM, 0); }).observe($('#pm'), { childList: true });
++  function routePM() {
++    if (side.hidden || side.dataset.mode !== 'structure' || pw.popup.contains($('#pm'))) return;
++    const open = groups.structure.find((d) => d.open);
++    if (open === treeG.d) return;
++    const target = family(sel());
++    syncTabs();
++    if (!target || open === target) return;
++    routing = true; try { openSub(target); target.scrollIntoView({ block: 'nearest' }); } finally { routing = false; }
++  }
++
++  // ---------------------------------------------------------------- subgroups: open one at a time inside the same panel
++  const lastOpen = { aero: flowG ? flowG.d : null, structure: null };
++  const modeOf = () => side.dataset.mode;
++  function beforeOpen(d) { const f = prepares.get(d); if (f) f(); for (const o of groups[modeOf()]) if (o !== d && o.open) o.open = false; lastOpen[modeOf()] = d; }
++  function openSub(d) { if (!d) return; beforeOpen(d); d.open = true; }
++  function scrollSubIntoView(d) {
++    const sc = d.closest('.wx-scroll'); if (!sc || side.hidden) return;
++    const top = d.getBoundingClientRect().top - sc.getBoundingClientRect().top;
++    if (top < 0 || top > sc.clientHeight * 0.35) sc.scrollTop += top - 2;
++  }
++  const wired = new WeakSet();
++  function wire(d) {
++    if (wired.has(d)) return; wired.add(d);
++    const s = $(':scope > summary', d);
++    if (s) s.addEventListener('click', () => { if (!d.open) beforeOpen(d); });
++    d.addEventListener('toggle', () => { if (d.open && groups[modeOf()].includes(d)) { beforeOpen(d); scrollSubIntoView(d); } });
++  }
++  for (const d of [...groups.aero, ...groups.structure]) wire(d);
++  for (const d of [...groups.aero, ...groups.structure]) if (d.open && d !== (flowG && flowG.d)) d.open = false;
++  if (flowG) flowG.d.open = true;
++
++  // ---------------------------------------------------------------- menus: one open at a time, anchored to its command
++  const menus = {
++    file: { btn: fileBtn, panel: fileMenu, width: 420 },
++    view: { btn: viewBtn, panel: viewMenu, width: 460 },
++    aero: { btn: aeroBtn, panel: side, width: 528, mode: 'aero', title: 'Aerodynamics', sub: 'Potential-flow panel method on the shared wing shape. Solve it, then apply its loads to the structure.' },
++    structure: { btn: structBtn, panel: side, width: 528, mode: 'structure', title: 'Structure & Stress', sub: 'Spatial-beam structure and nominal stresses. Set the inputs, then press Solve Structure / Stress.' },
++    help: { btn: helpSummary, panel: helpBody },
++  };
++  let openKey = null;
++  const menuListeners = [];   // run after a menu opens or closes (the message toast moves beside it)
++  function setMode(mode) { side.dataset.mode = mode; const slot = mode === 'aero' ? geoSlotAero : geoSlotStruct; if (wlGeometry.parentElement !== slot) slot.append(wlGeometry); }
++  function place(key = openKey) {
++    if (!key) return;
++    if (key === 'help') { placeHelp(); return; }
++    const m = menus[key], vw = document.documentElement.clientWidth, vh = window.innerHeight;
++    const b = bar.getBoundingClientRect(), r = m.btn.getBoundingClientRect();
++    const top = Math.max(4, Math.round(b.bottom + 6)), narrow = vw < 700, width = narrow ? vw - 16 : Math.min(m.width, vw - 16);
++    const left = narrow ? 8 : Math.round(Math.max(8, Math.min(r.left, vw - width - 8)));
++    Object.assign(m.panel.style, { left: left + 'px', top: top + 'px', width: width + 'px', maxHeight: Math.max(220, vh - top - 10) + 'px' });
++  }
++  function placeHelp() {
++    const vw = document.documentElement.clientWidth, b = bar.getBoundingClientRect(), r = helpSummary.getBoundingClientRect(), width = Math.min(460, vw - 16);
++    const top = Math.round(b.bottom + 6), left = vw < 700 ? 8 : Math.round(Math.max(8, Math.min(r.left, vw - width - 8)));
++    help.style.setProperty('--wx-help-left', left + 'px'); help.style.setProperty('--wx-help-top', top + 'px');
++    help.style.setProperty('--wx-help-maxh', Math.max(220, window.innerHeight - top - 10) + 'px');
++  }
++  function openMenu(key, { focus = true } = {}) {
++    const m = menus[key]; if (!m) return;
++    if (openKey === key) { place(key); return; }
++    if (openKey) closeMenus();
++    if (!pw.popup.hidden) pw.close();
++    pw.menu.hidden = true;
++    if (key === 'help') { openKey = 'help'; help.open = true; placeHelp(); for (const f of menuListeners) f(); return; }
++    if (m.mode) {
++      setMode(m.mode); panelTitle.textContent = m.title; panelSub.textContent = m.sub;
++      panelClose.setAttribute('aria-label', 'Close ' + m.title);
++      const open = groups[m.mode].find((d) => d.open);
++      if (open) beforeOpen(open); else if (lastOpen[m.mode]) openSub(lastOpen[m.mode]);
++    }
++    m.panel.hidden = false; openKey = key; m.btn.setAttribute('aria-expanded', 'true');
++    renderPanelState(); place(key);
++    for (const f of menuListeners) f();
++    if (focus) { const target = m.mode ? panelTitle : m.panel.querySelector('button, select, input, summary, [tabindex]:not([tabindex="-1"])'); if (target) target.focus({ preventScroll: true }); }
++  }
++  function closeMenus({ returnFocus = false } = {}) {
++    const key = openKey; if (!key) return;
++    openKey = null;
++    const m = menus[key];
++    if (key === 'help') { if (help.open) help.open = false; }
++    else { m.panel.hidden = true; m.btn.setAttribute('aria-expanded', 'false'); }
++    if (returnFocus) m.btn.focus({ preventScroll: true });
++    for (const f of menuListeners) f();
++  }
++  const toggleMenu = (key) => (openKey === key ? closeMenus({ returnFocus: true }) : openMenu(key));
++  fileBtn.addEventListener('click', () => toggleMenu('file'));
++  viewBtn.addEventListener('click', () => toggleMenu('view'));
++  aeroBtn.addEventListener('click', () => toggleMenu('aero'));
++  structBtn.addEventListener('click', () => toggleMenu('structure'));
++  aeroStatusBtn.addEventListener('click', () => openMenu('aero'));
++  structStatusBtn.addEventListener('click', () => openMenu('structure'));
++  panelClose.addEventListener('click', () => closeMenus({ returnFocus: true }));
++  aeroFoot.done.addEventListener('click', () => closeMenus({ returnFocus: true }));
++  structFoot.done.addEventListener('click', () => closeMenus({ returnFocus: true }));
++  help.addEventListener('toggle', () => {
++    if (help.open) { if (openKey && openKey !== 'help') closeMenus(); if (!pw.popup.hidden) pw.close(); openKey = 'help'; placeHelp(); }
++    else if (openKey === 'help') openKey = null;
++    for (const f of menuListeners) f();
++  });
++  const overlay = (t) => !!(t && t.closest && t.closest('dialog, .wing-editor-pop, .wing-print-dialog, .wing-context-menu, .wx-toast'));
++  document.addEventListener('pointerdown', (e) => {
++    if (!openKey || openKey === 'help') return;
++    const m = menus[openKey];
++    if (m.panel.contains(e.target) || m.btn.contains(e.target) || overlay(e.target)) return;
++    closeMenus();
++  }, true);
++  document.addEventListener('keydown', (e) => {
++    if (e.key !== 'Escape' || !openKey || openKey === 'help' || e.defaultPrevented || $('dialog[open]')) return;
++    const m = menus[openKey], a = document.activeElement;
++    e.preventDefault();
++    closeMenus({ returnFocus: !a || a === document.body || m.panel.contains(a) || m.btn.contains(a) });
++  });
++  for (const panel of [fileMenu, viewMenu, side]) panel.addEventListener('focusout', (e) => {
++    const to = e.relatedTarget, m = openKey && menus[openKey];
++    if (!to || !m || m.panel !== panel || panel.contains(to) || m.btn.contains(to) || overlay(to)) return;
++    closeMenus();
++  });
++  menubar.addEventListener('keydown', (e) => {
++    const items = $$('.wx-top, .wx-quick, #wingInputHelp > summary', menubar).filter((n) => n.getClientRects().length);
++    const i = items.indexOf(document.activeElement); if (i < 0) return;
++    if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') { e.preventDefault(); items[(i + (e.key === 'ArrowRight' ? 1 : -1) + items.length) % items.length].focus(); }
++    else if (e.key === 'ArrowDown' && items[i].matches('.wx-top, summary')) {
++      e.preventDefault();
++      const key = Object.keys(menus).find((k) => menus[k].btn === items[i]); if (key) openMenu(key);
++    }
++  });
++  window.addEventListener('resize', () => place());
++  window.addEventListener('scroll', (e) => { if (openKey && !(e.target instanceof Element && menus[openKey].panel.contains(e.target))) place(); }, { capture: true, passive: true });
++  if (window.ResizeObserver) new ResizeObserver(() => place()).observe(bar);
++  for (const name of ['wing-learning-stage', 'beam-show', 'metal-wing-open']) window.addEventListener(name, () => closeMenus());
++
++  // The shared editor popup (canvas clicks, right-click actions, lessons, Open JSON preview) never overlaps a menu.
++  // An anchor inside a closed menu is replaced by that menu's command so the popup opens beside a visible control.
++  const originalOpen = pw.open;
++  const resolveAnchor = (at) => {
++    if (!(at instanceof Element)) return at;
++    if (side.contains(at)) return side.dataset.mode === 'aero' ? aeroBtn : structBtn;
++    if (fileMenu.contains(at)) return fileBtn;
++    if (viewMenu.contains(at)) return viewBtn;
++    if (helpBody.contains(at)) return helpSummary;
++    if (parking.contains(at) || !at.getClientRects().length) return structBtn;
++    return at;
++  };
++  // A popup that belongs to a command of the bar (Open JSON review, New / Clear, lessons from Help) opens below the bar,
++  // aligned with that command, instead of beside it where it would cover the bar; its scrolling body is shortened to
++  // fit the window under the bar. The workspace places its popup from anchor.getBoundingClientRect() only.
++  const belowBar = (cmd) => ({ getBoundingClientRect: () => {
++    const top = Math.round(bar.getBoundingClientRect().bottom + 8), x = cmd.getBoundingClientRect().left - 10;
++    pw.popup.style.setProperty('--wx-pop-top', top + 'px');   // read by the height limit in wx-shell.css
++    return { left: x, right: x, x, top, y: top, bottom: top, width: 0, height: 0 };
++  } });
++  pw.open = function (heading, node, at) {
++    let anchor = resolveAnchor(at);
++    const inBar = anchor instanceof Element && bar.contains(anchor);
++    pw.popup.classList.toggle('wx-below-bar', inBar);
++    if (inBar) anchor = belowBar(anchor);
++    if (openKey) closeMenus();
++    return originalOpen.call(this, heading, node, anchor);
++  };
++  // The exporter dialogs (STL/DXF/STEP, STL reference) open below the command bar and replace the menu that opened
++  // them; when one closes and its trigger sits in a closed menu, focus returns to that menu's command.
++  for (const dialog of $$('.wing-print-dialog')) new MutationObserver(() => {
++    if (!dialog.hidden) {
++      const top = Math.round(bar.getBoundingClientRect().bottom + 8);
++      dialog.style.top = top + 'px'; dialog.style.maxHeight = `calc(100dvh - ${top + 12}px)`;
++      if (openKey && openKey !== 'help') closeMenus();
++    } else {
++      const a = document.activeElement;
++      if (!a || a === document.body || !a.getClientRects().length) fileBtn.focus({ preventScroll: true });
++    }
++  }).observe(dialog, { attributes: true, attributeFilter: ['hidden'] });
++  fileMenu.addEventListener('click', (e) => {   // an export started again while its dialog is already open
++    if (!(e.target instanceof Element) || !e.target.closest('#wingDownloadSTL, #wingDownloadDXF, #wingDownloadSTEP, #wingOpenSTL')) return;
++    setTimeout(() => { if (openKey === 'file' && $$('.wing-print-dialog').some((d) => !d.hidden)) closeMenus(); }, 0);
++  });
++
++  // ---------------------------------------------------------------- status: which solver is current, stale or failed
++  let keyCache = { stamp: null, key: null };
++  function currentAeroKey(S) {
++    const stamp = JSON.stringify(S.geometry); if (stamp === keyCache.stamp) return keyCache.key;
++    let key = null; try { key = WingStudyIO.sha256(WingAeroPanel.geometryKey(WingEngine.makeGeometry(S.geometry))); } catch (e) { key = null; }
++    keyCache = { stamp, key }; return key;
++  }
++  const num = (id) => { const t = String(($('#' + id) || {}).value ?? '').trim(); return t === '' ? NaN : Number(t); };
++  const near = (x, y) => Number.isFinite(x) && Number.isFinite(y) && Math.abs(x - y) <= 1e-9 * Math.max(1, Math.abs(y));
++  function flowMatches(last) {
++    const f = last.flow || {}, target = String(($('#aeroTarget') || {}).value ?? '').trim();
++    return near(num('aeroV'), f.speed) && near(num('aeroRho'), f.density) && near(num('aeroMu'), f.viscosity) && near(num('aeroSound'), f.speedOfSound)
++      && ((($('#aeroSequence') || {}).value || 'standard') === last.sequence) && (target !== '' || near(num('aeroAlpha'), f.alphaDeg));
++  }
++  const fmt = (v) => String(Number(Number(v).toPrecision(4)));
++  function aeroState() {
++    const a = ui.aero && ui.aero(); const S = ui.state();
++    if (!a) return { cls: 'idle', label: 'Unavailable', detail: '', dot: 'idle', title: 'The aerodynamic panel module is not available in this build.' };
++    if (a.running) return { cls: 'run', label: 'Solving…', detail: 'aerodynamic mesh sequence', dot: 'run', title: ($('#aeroStatus') || {}).textContent || '' };
++    const last = a.result, key = currentAeroKey(S), errText = (($('#aeroStatus .wae-err') || {}).textContent || '').trim();
++    let load = '', loadCls = '';
++    if (S.aeroLoad) {
++      const R = ui.result(), adm = R && R.aeroAdmission;
++      if (S.aeroLoad.geometrySha256 !== key) { load = 'applied load is for an older wing shape'; loadCls = 'warn'; }
++      else if (ui.isRunning()) load = 'load applied · structure solving';
++      else if (!R || ui.isStale() || !adm) { load = 'load applied · structure not solved'; loadCls = 'warn'; }
++      else if (!adm.admitted) { load = 'load applied · NOT admitted (coupled result withheld)'; loadCls = 'bad'; }
++      else { load = adm.claims && adm.claims.twist === 'shown' ? 'load applied · admitted' : `load applied · admitted, ${adm.claims && adm.claims.torque === 'shown' ? 'twist' : 'torque & twist'} withheld`; loadCls = 'ok'; }
++    } else if (last) load = 'load not applied to structure';
++    if (!last) {
++      if (errText) return { cls: 'bad', label: 'Error', detail: errText, dot: 'bad', title: errText };
++      return S.aeroLoad ? { cls: loadCls || 'idle', label: 'Load applied', detail: load, dot: loadCls || 'idle', title: (S.aeroLoad.label || '') + ' · ' + load }
++        : { cls: 'idle', label: 'Not solved', detail: '', dot: 'idle', title: 'Set the flow conditions, then press Solve Aerodynamics.' };
++    }
++    const fresh = !!key && a.solvedKey === key, flow = flowMatches(last);
++    const what = `${last.sequence === 'fine' ? 'Fine' : 'Standard'} · α ${fmt(last.flow.alphaDeg)}° · V ${fmt(last.flow.speed)} m/s`;
++    if (errText) return { cls: 'bad', label: 'Error', detail: errText, dot: 'bad', title: errText };
++    if (!fresh || !flow) {
++      const why = !fresh ? 'wing shape changed since the solve' : 'flow inputs changed since the solve';
++      return { cls: 'warn', label: 'Out of date', detail: why, dot: 'warn', title: `Last solve: ${what}. ${why[0].toUpperCase() + why.slice(1)}: press Solve Aerodynamics. ${load}` };
++    }
++    return { cls: loadCls === 'bad' ? 'bad' : 'ok', label: 'Solved', detail: load ? `${what} · ${load}` : what, dot: loadCls === 'bad' ? 'bad' : loadCls === 'warn' ? 'warn' : 'ok', title: `${what}. ${load}` };
++  }
++  function structState() {
++    const chip = $('#stateChip'), label = chip.textContent.trim(), running = ui.isRunning() || /^Solving/i.test(label);
++    const cls = (chip.className.match(/\b(ok|warn|bad|idle)\b/) || [])[1] || 'idle';
++    return { label, running, dot: running ? 'run' : /^Solved/i.test(label) && cls === 'idle' ? 'ok' : cls, full: ($('#stateText') || {}).textContent || label };
++  }
++  let seenResult = null, seenAdmission = null, pendingAero = null, geoDirty = false, geoStamp = JSON.stringify(ui.state().geometry);
++  // Aerodynamic result views (separate from Model / Stress / Displacement): the stored panel solution only.
++  function aeroResultState() {
++    const a = ui.aero && ui.aero(); if (!a) return { status: 'none' };
++    if (a.running) return { status: 'running' };
++    const last = a.result; if (!last || !last.base) return { status: 'none' };
++    const key = currentAeroKey(ui.state());
++    if (!key || a.solvedKey !== key) return { status: 'stale', why: 'the wing shape changed after the aerodynamic solve' };
++    if (!flowMatches(last)) return { status: 'stale', why: 'the flow inputs changed after the aerodynamic solve' };
++    return { status: 'ok', result: last, combined: a.combined, admission: a.admission };
++  }
++  const view = $('#app > main.view');
++  const aeroResults = window.WingAeroStructResults && view ? window.WingAeroStructResults.install({ el, ui, strip: results, view, state: aeroResultState, openAero: () => openMenu('aero') }) : null;
++  if (aeroResults) results.insertBefore(aeroResults.selector, display);
++  if (aeroRun) aeroRun.addEventListener('click', () => { pendingAero = 'solve'; }, true);
++  if (aeroApply) aeroApply.addEventListener('click', () => { pendingAero = 'apply'; }, true);
++  function renderPanelState() {
++    if (side.hidden && openKey !== 'aero' && openKey !== 'structure') return;
++    panelState.replaceChildren();
++    if (modeOf() === 'aero') {
++      const s = aeroState();
++      panelState.append(el('span', { class: 'chip ' + s.cls, text: s.label }), el('span', { text: s.detail || s.title || '' }));
++      if (aeroResults && aeroResultState().status === 'ok') {
++        const go = el('button', { type: 'button', class: 'btn wx-linkbtn', id: 'wxShowAeroResults', text: 'Show aerodynamic results' });
++        go.addEventListener('click', () => { closeMenus(); aeroResults.show('cp'); });
++        panelState.append(go);
++      }
++    } else {
++      const s = structState(), chip = $('#stateChip');
++      panelState.append(el('span', { class: chip.className, text: s.label }), el('span', { text: s.full }));
++    }
++  }
++  function updateStatus() {
++    const s = aeroState();
++    aeroChip.className = 'chip ' + s.cls; aeroChip.textContent = s.label; aeroText.textContent = s.detail || '';
++    aeroGroup.title = s.title || s.detail || s.label; aeroDot.dataset.s = s.dot; aeroDotText.textContent = ' (' + s.label + ')';
++    const t = structState();
++    structDot.dataset.s = t.dot; structDotText.textContent = ' (' + t.label + ')';
++    const a = ui.aero && ui.aero();
++    if (admG && resG) {   // write only real changes: an attribute write inside the observed host would re-trigger this update
++      const setHidden = (n, v) => { if (n && n.hidden !== v) n.hidden = v; };
++      setHidden(admG.d, !($('#aeroApplied').textContent.trim() || $('#aeroAdmission').textContent.trim()));
++      setHidden(resG.d, !$('#aeroResults').textContent.trim());
++      setHidden(outCap, admG.d.hidden && resG.d.hidden);
++      if (a && !a.running && a.result && a.result !== seenResult) { seenResult = a.result; if (pendingAero === 'solve') pendingAero = null; }
++      if (a && a.admission && a.admission !== seenAdmission) { seenAdmission = a.admission; if (pendingAero === 'apply') { pendingAero = null; if (openKey === 'aero') openSub(admG.d); } }
++    }
++    const stamp = JSON.stringify(ui.state().geometry);
++    if (stamp !== geoStamp) { geoStamp = stamp; setGeoDirty(false); }
++    renderPanelState();
++    if (aeroResults) aeroResults.refresh();
++  }
++  let statusTimer = 0;
++  const queueStatus = () => { if (!statusTimer) statusTimer = setTimeout(() => { statusTimer = 0; updateStatus(); }, 0); };
++  const watch = (node, opts) => { if (node) new MutationObserver(queueStatus).observe(node, opts); };
++  watch($('#stateChip'), { attributes: true, childList: true, characterData: true, subtree: true });
++  watch($('#stateText'), { childList: true, characterData: true, subtree: true });
++  watch(aeroHost, { attributes: true, attributeFilter: ['disabled', 'hidden'], childList: true, characterData: true, subtree: true });
++  for (const id of ['aeroV', 'aeroRho', 'aeroAlpha', 'aeroTarget', 'aeroMu', 'aeroSound', 'aeroSequence']) { const n = $('#' + id); if (n) { n.addEventListener('input', queueStatus); n.addEventListener('change', queueStatus); } }
++  const gate = $('#wingImportGate');
++  if (gate) new MutationObserver(() => { if (!gate.hidden && openKey !== 'structure' && !app.hidden) openMenu('structure', { focus: false }); queueStatus(); }).observe(gate, { attributes: true, attributeFilter: ['hidden'] });
++  updateStatus();
++
++  // ---------------------------------------------------------------- drafts: Wing shape edits wait for Apply geometry
++  function setGeoDirty(v) { geoDirty = v; geoDirtyBadge.hidden = !v; aeroWarn.hidden = !v; structWarn.hidden = !v; }
++  const geoForm = $('#wingAdvancedGeometry form');
++  if (geoForm) for (const name of ['input', 'change']) geoForm.addEventListener(name, (e) => { if (e.isTrusted) setGeoDirty(true); });
++  structFoot.discard.addEventListener('click', () => {
++    hooks.discardGeometryDraft(); hooks.cancelLoadDraft(); hooks.renderInputs(); hooks.renderPM(); setGeoDirty(false); syncTabs();
++    showToast('Unapplied edits in Structure & Stress were discarded. Applied inputs are unchanged; Undo reverts applied edits.');
++  });
++  aeroFoot.discard.addEventListener('click', () => {
++    hooks.discardGeometryDraft(); const a = ui.aero && ui.aero(); if (a) a.refresh(); setGeoDirty(false); queueStatus();
++    showToast('Unapplied edits in Aerodynamics were discarded: the flow fields show the settings of the last Solve Aerodynamics again.');
++  });
++
++  // ---------------------------------------------------------------- file and session messages appear briefly under the bar
++  const toast = el('div', { class: 'wx-toast', id: 'wxToast', role: 'status', 'aria-live': 'polite', hidden: true },
++    el('span', { class: 'wx-toast-text' }), el('button', { type: 'button', class: 'wx-toast-x', 'aria-label': 'Dismiss message', text: '×' }));
++  document.body.append(toast);
++  let toastTimer = 0;
++  function showToast(text) {
++    $('.wx-toast-text', toast).textContent = text; toast.hidden = false; placeToast();
++    clearTimeout(toastTimer); toastTimer = setTimeout(() => { toast.hidden = true; }, 9000);
++  }
++  // Under the bar at the right; beside an open panel or menu instead of over it whenever the window leaves room.
++  function placeToast() {
++    if (toast.hidden) return;
++    const vw = document.documentElement.clientWidth, w = toast.getBoundingClientRect().width;
++    let right = 14;
++    const open = openKey === 'help' ? helpBody : openKey ? menus[openKey].panel : null;
++    if (open && vw >= 700) {
++      const r = open.getBoundingClientRect();
++      if (r.width && r.right > vw - 14 - w && r.left < vw - 14) {
++        if (r.left - 8 - w >= 8) right = vw - r.left + 8;
++        else if (vw - r.right - 8 - 14 >= w) right = 14;
++      }
++    }
++    toast.style.setProperty('--wx-toast-top', Math.round(bar.getBoundingClientRect().bottom + 8) + 'px');
++    toast.style.right = right + 'px';
++  }
++  $('.wx-toast-x', toast).addEventListener('click', () => { toast.hidden = true; });
++  menuListeners.push(placeToast); window.addEventListener('resize', placeToast);
++  const echo = (node, keep) => { if (!node) return; let last = node.textContent; new MutationObserver(() => { const t = node.textContent.trim(); if (t && t !== last && keep(t) && !app.hidden) showToast(t); last = t; }).observe(node, { childList: true, characterData: true, subtree: true }); };
++  echo($('#wingFilesNote'), () => true);
++  echo($('#wingSessionStatus'), (t) => !/^(Autosaved|Changes are saved in this browser)/.test(t));
++
++  // ---------------------------------------------------------------- page hooks
++  hooks.onShowInputs = (show) => { app.classList.remove('learning-view', 'tablet-inputs-open'); if (show) openMenu('structure', { focus: false }); else if (openKey === 'aero' || openKey === 'structure') closeMenus(); };
++  // Make a section (and the control in it) visible before the page focuses it: Go to the input, openSection.
++  hooks.reveal = (details, target) => {
++    const node = target || details; if (!node || !node.isConnected || pw.popup.contains(node)) return;
++    if (fileMenu.contains(node)) { openMenu('file', { focus: false }); if (details && fileMenu.contains(details)) details.open = true; return; }
++    if (viewMenu.contains(node)) { openMenu('view', { focus: false }); if (details && viewMenu.contains(details)) details.open = true; return; }
++    if (helpBody.contains(node)) { openMenu('help'); return; }
++    if (!side.contains(node)) return;
++    const mode = aeroSec.contains(node) && !wlGeometry.contains(node) ? 'aero' : wlGeometry.contains(node) && openKey === 'aero' ? 'aero' : 'structure';
++    openMenu(mode, { focus: false });
++    let group = null;
++    if (form.contains(node)) { const part = ([...form.children].find((c) => c.contains(node)) || {}).dataset?.wxPart; group = part === 'rods' ? rodsG.d : part === 'spars' ? sparsG.d : wlStructure; }
++    else if (node === wlStructure) group = wlStructure;
++    else group = groups[mode].find((d) => d.contains(node)) || null;
++    if (group) openSub(group);
++  };
++  hooks.addStructureSubgroup = ({ id, title, node, open = false } = {}) => {
++    const g = subgroup(id, title); if (node) g.body.append(node);
++    anaG.d.after(g.d); groups.structure.splice(groups.structure.indexOf(anaG.d) + 1, 0, g.d); wire(g.d);
++    if (open) { openMenu('structure', { focus: false }); openSub(g.d); }
++    return g.d;
++  };
++
++  // ---------------------------------------------------------------- page chrome: white workspace, sticky bar below the navigation
++  const nav = $('#wingNavigation');
++  const syncNav = () => {
++    app.style.setProperty('--wx-nav-h', (nav && !nav.hidden ? Math.round(nav.getBoundingClientRect().height) : 0) + 'px');
++    if (!view || app.hidden) return;
++    const top = view.getBoundingClientRect().top + window.scrollY, vh = window.innerHeight, narrow = document.documentElement.clientWidth < 700;
++    const h = Math.round(Math.max(narrow ? 300 : 380, Math.min(narrow ? vh * 0.62 : 1100, vh - top - 12)));
++    app.style.setProperty('--wx-view-h', h + 'px');
++  };
++  if (window.ResizeObserver) { const ro = new ResizeObserver(syncNav); if (nav) ro.observe(nav); ro.observe(bar); ro.observe(results); }
++  window.addEventListener('resize', syncNav); syncNav();
++  const syncVisible = () => { document.body.classList.toggle('wx-wing-on', !app.hidden); if (app.hidden) { closeMenus(); toast.hidden = true; } else syncNav(); };
++  new MutationObserver(syncVisible).observe(app, { attributes: true, attributeFilter: ['hidden'] }); syncVisible();
++  document.documentElement.dataset.wxShell = 'ready';
++})();

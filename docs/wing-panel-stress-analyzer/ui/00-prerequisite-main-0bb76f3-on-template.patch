@@ -1,0 +1,56 @@
+diff --git a/computational/printed-wing-solver/aerostruct/wing_aerostruct_template.html b/computational/printed-wing-solver/aerostruct/wing_aerostruct_template.html
+index fdedcac..bdb85ea 100644
+--- a/computational/printed-wing-solver/aerostruct/wing_aerostruct_template.html
++++ b/computational/printed-wing-solver/aerostruct/wing_aerostruct_template.html
+@@ -522,6 +522,7 @@ body { margin: 0; }
+     </div>
+     <div class="group"><span>Results</span>
+       <div class="row" role="group" aria-label="Plot">
++        <button class="run" id="wingAeroOpenBtn" type="button" aria-controls="wlAero">Aerodynamic solver</button>
+         <button class="tool" data-plot="model" type="button">Model</button>
+         <button class="tool" data-plot="stress" type="button">Stress</button>
+         <button class="tool" data-plot="disp" type="button">Displacement</button>
+@@ -541,6 +542,10 @@ body { margin: 0; }
+     </div>
+     <div id="wingImportGate" class="wl-gate" role="region" aria-label="Imported outer geometry: structural inputs to confirm" hidden></div>
+     <p class="wl-modelnote" id="wingModelNote"><b>Generic browser study model.</b> Edits change this app's analysis and 3-D view. They do not update existing printable CAD/STL or the approved fabrication layout automatically. Use Download STL to generate and check fresh print geometry. Presets are historical / course starting points.</p>
++    <details class="wl-acc" id="wlAero" open>
++      <summary>Aerodynamics <span class="wl-badge">panel method</span></summary>
++      <div class="wl-acc-body"><div id="wingAeroPanel"></div><p class="note wl-fallback">The aerodynamic panel module is not available in this build.</p></div>
++    </details>
+     <details class="wl-acc" id="wlGeometry" open>
+       <summary>Geometry <span class="wl-badge" id="wlGeometryBadge"></span></summary>
+       <div class="wl-acc-body" id="wingGeometryForm"></div>
+@@ -553,10 +558,6 @@ body { margin: 0; }
+       <summary>Loads</summary>
+       <div class="wl-acc-body"><div id="wingLoadEditor"></div><p class="note wl-fallback">Load case and factor of safety: <b>Study tree → External loads</b>. Use <b>+ Load</b> above the model for point and line loads.</p></div>
+     </details>
+-    <details class="wl-acc" id="wlAero">
+-      <summary>Aerodynamics <span class="wl-badge">panel method</span></summary>
+-      <div class="wl-acc-body"><div id="wingAeroPanel"></div><p class="note wl-fallback">The aerodynamic panel module is not available in this build.</p></div>
+-    </details>
+     <div class="wl-acc-body" id="wingMaterialShortcuts" aria-label="Material controls">
+       <b>Materials</b>
+       <button class="btn" type="button" id="wingShellMaterial">Shell / rib material &amp; E</button>
+@@ -3499,6 +3500,12 @@ body { margin: 0; }
+     resize(); if (model) setView("iso");
+   }
+   $("#inputsBtn").addEventListener("click", () => showInputs(window.innerWidth<=1100?!$('#app').classList.contains('tablet-inputs-open'):$("#app").classList.contains("learning-view")));
++  $('#wingAeroOpenBtn').addEventListener('click', () => {
++    showInputs(true);
++    const section=$('#wlAero'); section.open=true;
++    section.scrollIntoView({block:'nearest',behavior:'smooth'});
++    section.querySelector('summary').focus({preventScroll:true});
++  });
+   $("#learnBtn").addEventListener("click", () => openTab("learn"));
+   document.querySelectorAll("[data-anatomy]").forEach((b) => b.addEventListener("click", () => setAnatomy(b.dataset.anatomy)));
+   document.querySelectorAll("[data-lesson]").forEach((b) => b.addEventListener("click", () => {
+@@ -3514,7 +3521,7 @@ body { margin: 0; }
+     if(aeroViewWithheld(p)){flash(aeroWithheldMessage());return;}
+     if(WingGeometry.closedTip(S.geometry)&&!['model','stress','bending','torque',...(R?.analysis3D?.bending?['disp']:[])].includes(p)){$('#wingStatusDetails').open=true;return;}
+     if(R?.analysis3D&&(p==='mode'||p==='fos')){flash('Natural frequencies and an overall factor of safety are not computed by the spatial beam model. Use normal Stress, Displacement and the 3-D result record.');return;}
+-    if(sectionResultMeta[p]){S.stressComponent='skin';S.anatomy='assembled';S.xray=false;$('#xrayBtn').setAttribute('aria-pressed','false');applyXray();}
++    if(sectionResultMeta[p]||p==='stress'){S.stressComponent='skin';S.anatomy='assembled';S.xray=false;$('#xrayBtn').setAttribute('aria-pressed','false');applyXray();}
+     if(p==='fos')S.stressComponent='skin';
+     S.plot = p;
+     $("#wingMoreResults").value=["twist","bending","torque","fos","mode"].includes(p)?p:"";

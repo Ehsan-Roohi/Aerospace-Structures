@@ -1,10 +1,10 @@
 {
   "product": "MIE 446 Wing AeroStruct",
-  "version": "0.3.0-dev",
-  "status": "development build, not published; a separate application from Wing Lab",
-  "builtAt": "2026-10-27T13:19:00+00:00",
+  "version": "0.3.0-ui.1",
+  "status": "Published educational application; separate from Wing Lab",
+  "builtAt": "2026-10-28T00:57:28.040184+00:00",
   "page": "index.html",
-  "pageSha256": "f24efa963e0c760887f5997f77b480fb9e907cd91ed14ecc954455275fbbf0e1",
+  "pageSha256": "cb8097945a3a3214029d8debc130abe9ce00270af68dae29d197165edb306e03",
   "workers": {
     "wing-aero": {
       "worker": "2ff1da57ee4c",
@@ -185,5 +185,19 @@
       "path": "computational/printed-wing-solver/web/wing_workspace_ui.js",
       "sha256": "5bf463a9bf8994f7ed93d6e919d70a9be564363ca0bc888eb64c8a8a61f60e31"
     }
+  },
+  "solverVersion": "0.3.0",
+  "uiOverlay": {
+    "author": "Claude; independently reviewed for integration by Codex",
+    "packageSha256": "2c9a5147f287ceba41cdc43d8056efaebf31cc0dfef24b64e7a652adcc484b94",
+    "baseCommit": "c7552df72c79d03aed0d46cc40b1a7fb34a9b162",
+    "sources": {
+      "00-prerequisite-main-0bb76f3-on-template.patch": "198422c3cdf0ef7d2cc159f1a7b22334a8c3012f2cca6e441a920c56489e50e7",
+      "01-wing-aerostruct-ui-sources.patch": "1104bbde059b079d1eaca238b2b735f46228cf7aa5ed9f39977f4c960bcae627",
+      "wx-aero-results.js": "1b250d877d047715e5263cc607a28390d05e2483f336ca9d382df2616726bf96",
+      "wx-shell.css": "341a10af53dbb7a3c9676c974656ef9bd917041deaca11dd76f51a6acc50d002",
+      "wx-shell.js": "beb8a68b7b32b2cac8fba00e433a9e931765cb59cfac729325aa006d120d15f9"
+    },
+    "validation": "validation/UI_RELEASE_REVIEW.json"
   }
 }

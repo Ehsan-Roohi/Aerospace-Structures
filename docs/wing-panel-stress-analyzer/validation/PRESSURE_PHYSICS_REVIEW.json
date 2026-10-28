@@ -1,0 +1,137 @@
+{
+  "case": {
+    "geometry": {
+      "naca": "2412",
+      "semiSpan": 900,
+      "rootChord": 160,
+      "tipChord": 100,
+      "dihedralDeg": 10
+    },
+    "flow": {
+      "speed": 10,
+      "density": 1.225,
+      "alphaDeg": 4
+    },
+    "sequence": "fine"
+  },
+  "max_positive_Cp": {
+    "value": 0.9962080957397742,
+    "surface": "lower",
+    "x_over_c": 0.0016270411655088374,
+    "y_mm": 871.9765272609477
+  },
+  "min_Cp": {
+    "value": -4.036790860004695,
+    "surface": "upper",
+    "x_over_c": 0.928190273373763,
+    "y_mm": 899.7716826199745
+  },
+  "midspan": {
+    "eta": 0.5134834849227999,
+    "upper_LE": [
+      0.0007805954983926918,
+      -0.041860868604139734
+    ],
+    "lower_LE": [
+      0.0016270411655088786,
+      0.8938646987526293
+    ],
+    "upper_TE": [
+      0.9988077562267053,
+      0.3629195615161446
+    ],
+    "lower_TE": [
+      0.9987846071093925,
+      0.3401267935697374
+    ],
+    "upper_min": [
+      0.01360687097730154,
+      -1.1752080442922495
+    ]
+  },
+  "zero_alpha_symmetric_airfoil": {
+    "CL": -5.240967797913674e-13,
+    "upper_lower_Cp_max_difference": 9.556089253237587e-11
+  },
+  "mesh_extrema": {
+    "rows": [
+      {
+        "chordPanels": 32,
+        "spanPanels": 16,
+        "panels": 1216,
+        "minCp": -4.036790860004695,
+        "maxCp": 0.9962080957397742,
+        "CL": 0.5971421064094182
+      },
+      {
+        "chordPanels": 48,
+        "spanPanels": 16,
+        "panels": 1824,
+        "minCp": -4.10544519002257,
+        "maxCp": 0.9988235128185521,
+        "CL": 0.6021012499549923
+      },
+      {
+        "chordPanels": 64,
+        "spanPanels": 16,
+        "panels": 2432,
+        "minCp": -4.1340286643585165,
+        "maxCp": 0.9995951997899066,
+        "CL": 0.6046876717059668
+      },
+      {
+        "chordPanels": 96,
+        "spanPanels": 16,
+        "panels": 3648,
+        "minCp": -4.164293323664323,
+        "maxCp": 0.9996263628251542,
+        "CL": 0.6072729839392615
+      },
+      {
+        "chordPanels": 32,
+        "spanPanels": 24,
+        "panels": 1856,
+        "minCp": -7.395632463930365,
+        "maxCp": 0.9987707448079671,
+        "CL": 0.5958011699142582
+      },
+      {
+        "chordPanels": 32,
+        "spanPanels": 32,
+        "panels": 2432,
+        "minCp": -11.722904098464337,
+        "maxCp": 0.9987116381778761,
+        "CL": 0.5952627935624435
+      },
+      {
+        "chordPanels": 32,
+        "spanPanels": 48,
+        "panels": 3648,
+        "minCp": -24.359065906757483,
+        "maxCp": 0.9989787652128639,
+        "CL": 0.5948321258882934
+      }
+    ],
+    "comparisons": [
+      {
+        "direction": "chord",
+        "from": 64,
+        "to": 96,
+        "change": 0.007267657908203065
+      },
+      {
+        "direction": "span",
+        "from": 32,
+        "to": 48,
+        "change": 0.5187457456974051
+      }
+    ],
+    "sensitive": true,
+    "certified": false
+  },
+  "scope": "Internal physics and rendering consistency checks; this is not a quantitative validation against another finite-wing solver. Local tip Cp remains mesh-sensitive.",
+  "sources": [
+    "https://www.nasa.gov/reference/openvsp-vspaero-basics/",
+    "https://flow5.tech/docs/flow5_doc/Post-processing/Cp3d.html"
+  ]
+}

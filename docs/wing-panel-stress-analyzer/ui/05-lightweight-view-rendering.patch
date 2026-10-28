@@ -1,0 +1,67 @@
+--- a/computational/printed-wing-solver/aerostruct/wing_aerostruct_template.html
++++ b/computational/printed-wing-solver/aerostruct/wing_aerostruct_template.html
+@@ -15936,8 +15936,8 @@
+     model.rigid.filter((p) => p.userData.kind === "face").forEach((p) => { p.material.transparent = S.xray; p.material.opacity = S.xray ? 0.25 : 1; p.material.needsUpdate = true; });
+     applyAnatomy();
+   }
+-  function applyResult() {
+-    if (running || !R || S.plot === 'model' || S.plot === 'mode') {
++  function applyResult(deferModel = false) {
++    if (running || !R || (S.plot === 'model' && !deferModel) || S.plot === 'mode') {
+       ++resultRenderGeneration; resultRendering = false;
+       if (!running) endWingActivity();
+       applyResultNow(); return;
+@@ -15945,7 +15945,7 @@
+     const generation = ++resultRenderGeneration;
+     resultRendering = true;
+     const name = { stress:'stress', disp:'displacement', twist:'twist', bending:'bending moment', torque:'torque', fos:'factor of safety' }[S.plot] || S.plot;
+-    beginWingActivity(`Preparing ${name} contour`, 'Mapping the solved result to the wing surface');
++    beginWingActivity(S.plot === 'model' ? 'Updating wing display' : `Preparing ${name} contour`, 'Mapping the solved result to the wing surface');
+     frame().then(() => {
+       if (generation !== resultRenderGeneration || running) return;
+       try { applyResultNow(); }
+@@ -16159,7 +16159,7 @@
+   }
+   let lastT = performance.now();
+   function loop(t) {
+-    if ($("#app").hidden) { lastT=t; requestAnimationFrame(loop); return; }
++    if ($("#app").hidden || document.hidden || running || $("#app > main.view").classList.contains("wx-aero-on") || document.querySelector(".wx-aero-busy:not([hidden])")) { lastT=t; requestAnimationFrame(loop); return; }
+     resize();
+     controls.update();
+     renderAircraftAxes();
+@@ -16569,13 +16569,16 @@
+   }
+ 
+   function setAnatomy(kind) {
++    const remap = S.plot !== 'model' || S.deformed || S.explode !== 0;
+     S.anatomy = kind; S.deformed = false; S.clip = false; S.explode = 0;
+     S.xray = kind === "inside";
+     $("#defBtn").setAttribute("aria-pressed", "false");
+     $("#clipBtn").setAttribute("aria-pressed", "false");
+     $("#xrayBtn").setAttribute("aria-pressed", String(S.xray));
+     $("#explodeIn").value = 0;
+-    setPlot("model"); applyXray(); applyClip(); applyResult();
++    setPlot("model", false); applyXray(); applyClip();
++    if (remap) applyResult(true);
++    else renderPlotInfo(); // Visibility changes do not remesh or recolour an unchanged undeformed model.
+     if (model) setView("iso");
+   }
+ 
+@@ -17024,7 +17027,7 @@
+   }));
+ 
+   // ------------------------------------------------------------ wiring
+-  function setPlot(p) {
++  function setPlot(p, refresh = true) {
+     if(aeroViewWithheld(p)){flash(aeroWithheldMessage());return;}
+     if(WingGeometry.closedTip(S.geometry)&&!['model','stress','bending','torque',...(R?.analysis3D?.bending?['disp']:[])].includes(p)){$('#wingStatusDetails').open=true;return;}
+     if(R?.analysis3D&&(p==='mode'||p==='fos')){flash('Natural frequencies and an overall factor of safety are not computed by the spatial beam model. Use normal Stress, Displacement and the 3-D result record.');return;}
+@@ -17038,7 +17041,7 @@
+       applyXray();
+     }
+     document.querySelectorAll("[data-plot]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.plot === p)));
+-    if (R) applyResult();
++    if (R && refresh) applyResult();
+     if (S.selected.startsWith("res") || S.selected === "results") renderPM();
+   }
+   $("#wingMoreResults").addEventListener("change",e=>{if(e.target.value)setPlot(e.target.value);});

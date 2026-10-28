@@ -1,0 +1,59 @@
+{
+  "version": "0.3.0-ui.7",
+  "base_commit": "3e784fc8e38fe70dd907fe46a5dfa55a1a4e7acb",
+  "scope": "Result presentation, export placement and rendering performance. Numerical solvers, structural admission and pressure samples are unchanged.",
+  "physics_review": "PRESSURE_PHYSICS_REVIEW.json",
+  "new_graphs": [
+    "Section cl: pressure integral and 2 Gamma/(V c)",
+    "Wake circulation Gamma in m2/s",
+    "Body-y pitching moment coefficient about each strip quarter chord, normalized by q c^2 dy",
+    "Upper-minus-lower trailing-edge Cp at the last panel centroids"
+  ],
+  "sample_coverage": "Stored base-mesh strip midpoints only; no extrapolation to the unsampled root or tip. These local graphs are not extrapolated mesh-converged fields.",
+  "pressure_presentation": "Actual geometry LE/TE labels and flow arrow. Section Cp uses signed Cp with negative values at the top. Existing full-range signed RGB colour controls retained.",
+  "exports": "File > Export current figure (PNG) routes the active aerodynamic graph or structural exporter. Aerodynamic CSV is in the same File menu.",
+  "performance": [
+    "Visibility-only anatomy switches require no result remap",
+    "Switching from a coloured/deformed result queues one model remap with on-screen activity feedback",
+    "Covered structural scene is paused in aerodynamic result views, aerodynamic solve overlays, hidden documents and structural solves",
+    "Unchanged aerodynamic status does not redraw the result canvas"
+  ],
+  "automated_checks": {
+    "test_anatomy_switch.cjs": "passed: zero visibility remaps; one deferred result/deformation reset remap; covered rendering paused and resumed",
+    "test_activity_feedback.cjs": "passed: yield before work; latest request wins; cleanup and solve-generation isolation",
+    "test_surface_3d.cjs": "passed: 864 actual panels in four geometries; values immutable; mismatched mesh refused",
+    "test_pressure_scale.cjs": "passed: signed full range, manual limits, unit changes and tip-sensitivity flags",
+    "test_aero_result_charts.cjs": "passed: all four new graphs, section/span/surface component render; Gamma/cm units; File controls reset; unchanged refresh skipped (synthetic component fixture, not a flow benchmark)",
+    "review_pressure_physics.cjs": "passed: real seven-mesh fine case, LE positive pressure and inboard suction position; NACA 0012 zero-alpha symmetry; metric units",
+    "inline_script_syntax": "seven inline executable scripts checked",
+    "unchanged_numerical_modules": [
+      "WingEngine",
+      "WingAeroPanel",
+      "WingFrame3D"
+    ]
+  },
+  "browser_checks": {
+    "scope": "Candidate before the final hidden-render-loop pause and help-only edits",
+    "passed": [
+      "File figure/data commands visible",
+      "Two-spar example opened",
+      "Inside to Complete wing responded in approximately 589 ms including browser-tool interaction",
+      "Structural PNG downloaded",
+      "Standard aerodynamic sequence solved",
+      "Cp surface showed actual LE/TE and flow direction",
+      "No console errors observed"
+    ],
+    "limitation": "Final browser reattachment timed out after closing the local review tab. Final pause/resume and graph behaviour are covered by source/component tests, not a claimed final Chrome/Firefox session."
+  },
+  "limits": [
+    "No quantitative comparison with another finite-wing solver was performed in this UI release",
+    "Local tip-pressure peak remains span-mesh-sensitive",
+    "No viscous/stall model added; unsupported coupled zero-chord structural transfer remains unsupported"
+  ],
+  "source_rebuild_byte_identical": true,
+  "page_sha256": "7b4298f2c7ac6674401d6a7a4a075d6a93d3c381d6e6db910b28501e58fcf3b0",
+  "reference_documentation": [
+    "https://www.nasa.gov/reference/openvsp-vspaero-basics/",
+    "https://flow5.tech/docs/flow5_doc/Post-processing/Cp3d.html"
+  ]
+}

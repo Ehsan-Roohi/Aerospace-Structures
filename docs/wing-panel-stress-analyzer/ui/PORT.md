@@ -14,6 +14,8 @@ redesign as changes to those sources, so whoever owns the build (the FE work) ca
 | `01-wing-aerostruct-ui-sources.patch` | The redesign: hooks and wording in `wing_aerostruct_template.html` and `wing_aero_ui.js`; the three shell files as new `aerostruct/` files; three build tokens in `build_wing_aerostruct.py`; four test expectations in `test_aerostruct_aero_ui.mjs`, `test_aerostruct_page.mjs`, `test_aerostruct_browser.mjs` that addressed the old layout or the old button names. |
 | `02-closed-tip-aero-results.patch` | Apply after `01`: separates closed-tip aerodynamic results from unsupported spatial-beam load transfer in `wing_aero_ui.js`. The complete resulting UI module is also saved as `wing-aero-ui.js`. |
 | `03-course-example-activity.patch` | Apply after `02`: the two-spar course preset, structural/contour activity feedback, clearer structural-capability messages and resetting the aerodynamic fields/results when the course example is opened. |
+| `04-geometry-first-context-menu.patch` | Puts Airfoils & planform first in the wing context menu. |
+| `05-lightweight-view-rendering.patch` | Avoids duplicate anatomy remapping, defers necessary remapping behind activity feedback, and pauses the covered structural rendering loop during aerodynamic views and solves. |
 | `wording_edits.md` | Every hook and wording edit: page line, source file, old → new. |
 
 No `web/` module (Wing Lab 1.3) is touched. No numerical source (`engine.js`, `wing_aero_panel.js`, `wing_aero_worker.js`,
@@ -27,6 +29,7 @@ git apply source-port/01-wing-aerostruct-ui-sources.patch
 git apply source-port/02-closed-tip-aero-results.patch
 git apply source-port/03-course-example-activity.patch
 git apply source-port/04-geometry-first-context-menu.patch
+git apply source-port/05-lightweight-view-rendering.patch
 python3 computational/printed-wing-solver/aerostruct/build_wing_aerostruct.py
 ```
 
@@ -60,6 +63,12 @@ option, manual signed limits, out-of-range panel hatching, and an expandable mes
 The legend uses the same mapping as the panels; pressure probes and CSV keep the original values. These are
 display controls, not a change to the potential-flow solver or a certification of local tip-pressure convergence.
 `validation/test_pressure_scale.cjs` checks the mapping, signed limits, Cp/Pa conversion and immutable inputs.
+
+The result module also plots sectional lift coefficient (pressure and wake), circulation, quarter-chord moment and
+trailing-edge pressure difference from the actual stored base-mesh strip samples. Sectional Cp uses signed values
+with suction at the top. The 3D view labels the leading/trailing edges and flow direction. File provides the PNG
+export for the displayed solver and the aerodynamic CSV export. Changing structural visibility closes the pressure
+overlay and avoids a new result mapping when only visibility changed. See `validation/AERO_RESULTS_REVIEW.json`.
 
 ## If the FE work changed the template meanwhile
 

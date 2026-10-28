@@ -1,6 +1,6 @@
 {
   "application": "Wing Panel Stress Analyzer (Wing AeroStruct)",
-  "version": "0.3.0-ui.6",
+  "version": "0.3.0-ui.7",
   "source_archive": "wing-aerostruct-0.3.0-dev-review.zip",
   "source_sha256": "bc6986c744568a516fd22bdd3b9508550625b82a77cd924adf52dfaa5156a54d",
   "original_base": "5ab2498",
@@ -26,9 +26,14 @@
       "Airfoils & planform first in the wing context menu",
       "Full-range pressure colour contrast with linear and manual range options",
       "Explicit hatching and counts for pressure panels outside manual colour limits",
-      "Expandable per-mesh pressure-extrema sensitivity check"
+      "Expandable per-mesh pressure-extrema sensitivity check",
+      "LE/TE and flow markers on the 3D pressure surface",
+      "Signed sectional Cp with suction at the top",
+      "Section lift coefficient, circulation, moment and trailing-edge Cp difference graphs",
+      "Unified current-figure PNG and aerodynamic CSV commands in File",
+      "Lightweight anatomy switching and paused hidden structural rendering"
     ],
-    "page_sha256": "d27e15f9f9b0d64dd1c09a41b722919e80cf51e184a42870a7c5fe8ef43df6c9",
+    "page_sha256": "7b4298f2c7ac6674401d6a7a4a075d6a93d3c381d6e6db910b28501e58fcf3b0",
     "source_port": "ui/01-wing-aerostruct-ui-sources.patch",
     "independent_review": "validation/UI_RELEASE_REVIEW.json",
     "surface_review": "validation/UI_SURFACE_REVIEW.json",
@@ -36,10 +41,12 @@
       "ui/01-wing-aerostruct-ui-sources.patch",
       "ui/02-closed-tip-aero-results.patch",
       "ui/03-course-example-activity.patch",
-      "ui/04-geometry-first-context-menu.patch"
+      "ui/04-geometry-first-context-menu.patch",
+      "ui/05-lightweight-view-rendering.patch"
     ],
     "closed_tip_review": "validation/CLOSED_TIP_AERO_REVIEW.json",
     "course_review": "validation/COURSE_UI_REVIEW.json",
-    "pressure_review": "validation/PRESSURE_DISPLAY_REVIEW.json"
+    "pressure_review": "validation/PRESSURE_DISPLAY_REVIEW.json",
+    "results_review": "validation/AERO_RESULTS_REVIEW.json"
   }
 }

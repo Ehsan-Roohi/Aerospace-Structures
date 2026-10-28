@@ -14,6 +14,10 @@ window.WingAeroStructResults = (() => {
     ['dp', 'Surface p − p∞ (Pa)'],
     ['section', 'Sectional Cp vs x/c'],
     ['span', 'Spanwise lift'],
+    ['cl', 'Section lift coefficient cl(y)'],
+    ['gamma', 'Circulation Γ(y)'],
+    ['cm', 'Section pitching moment cm(y)'],
+    ['te', 'Trailing-edge Cp difference'],
     ['coef', 'Coefficients & convergence'],
   ];
   const FONT = 'system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif';
@@ -74,6 +78,8 @@ window.WingAeroStructResults = (() => {
       p.vertices = Array.from({ length: 4 }, (_, v) => Array.from(wm.S.PV.slice(o + 3 * v, o + 3 * v + 3)));
       p.panelIndex = k;
     }
+    const ag = WingAeroPanel.aeroGeometry(geometry), y = .35 * ag.semiSpan, c = WingGeometry.chordAt(ag, y);
+    f.edges = { le: WingGeometry.transformPoint(ag, y, [0, 0]), te: WingGeometry.transformPoint(ag, y, [c, 0]), chord: c };
     return f;
   }
   function extremes(panels, key) {
@@ -102,10 +108,16 @@ window.WingAeroStructResults = (() => {
     }
     return { rows, comparisons, sensitive: comparisons.some(c => c.change > 0.1), certified: false };
   }
+  function spanQuantities(base) {
+    const qmm = base.flow.dynamicPressure_Pa * 1e-6;
+    return base.strips.map(s => ({ y0:s.y0, y1:s.y1, y:s.yMid, cl:s.cl, clKJ:s.clKuttaJoukowski,
+      gamma:s.gamma * 1e-3, cm:qmm > 0 && s.chord > 0 ? s.momentAboutQuarterChord_Nmm[1] / (qmm * s.chord ** 2 * (s.y1-s.y0)) : null,
+      te:s.trailingEdgeDeltaCp })); // Γ: solver's (m/s)*mm -> m²/s; cm uses the projected strip reference c² Δy.
+  }
   const niceStep = (span, n) => { const raw = span / n, mag = 10 ** Math.floor(Math.log10(raw)), r = raw / mag; return (r < 1.5 ? 1 : r < 3 ? 2 : r < 7 ? 5 : 10) * mag; };
 
   function install(env) {
-    const { el, ui, strip, view, state, openAero } = env;
+    const { el, ui, strip, view, state, openAero, exportStructureFigure } = env;
     const select = el('select', { id: 'wxAeroView', class: 'tool', 'aria-label': 'Aerodynamic results' },
       el('option', { value: '', text: 'Aero results…' }), ...VIEWS.map(([v, t]) => el('option', { value: v, text: t })));
     const group = el('div', { class: 'wx-aero-sel', role: 'group', 'aria-label': 'Aerodynamic results' }, select);
@@ -134,15 +146,15 @@ window.WingAeroStructResults = (() => {
     const meshDetails = el('details', { class: 'wx-ar-mesh', id: 'wxArMeshCheck' }, meshSummary, meshBody);
     const scaleInfo = el('div', { class: 'wx-ar-scale-info' }, scaleStatus, meshDetails);
     const clearBtn = el('button', { type: 'button', class: 'btn', id: 'wxArClear', text: 'Clear probes', hidden: true });
-    const pngBtn = el('button', { type: 'button', class: 'btn', id: 'wxArPng', text: 'Save PNG' });
-    const csvBtn = el('button', { type: 'button', class: 'btn', id: 'wxArCsv', text: 'Save CSV' });
+    const pngBtn = el('button', { type: 'button', class: 'btn', id: 'wxArPng', text: 'Export current figure (PNG)' });
+    const csvBtn = el('button', { type: 'button', class: 'btn', id: 'wxArCsv', text: 'Export aerodynamic data (CSV)', disabled: true });
     const backBtn = el('button', { type: 'button', class: 'btn', id: 'wxArBack', 'aria-label': 'Close the aerodynamic result and show the structural view' }, 'Back', el('span', { class: 'wx-long', text: ' to structure view' }));
     const canvas = el('canvas', { id: 'wxArCanvas', role: 'img', tabindex: '0', 'aria-label': 'Aerodynamic result' });
     const html = el('div', { id: 'wxArHtml', class: 'wx-ar-html', hidden: true });
     const notice = el('div', { id: 'wxArNotice', class: 'wx-ar-notice', hidden: true });
     const probeBox = el('div', { id: 'wxArProbe', class: 'wx-ar-probe', role: 'status', 'aria-live': 'polite' });
     const overlay = el('section', { id: 'wxAeroResult', class: 'wx-aero-result', hidden: true, 'aria-label': 'Aerodynamic result view' },
-      el('header', { class: 'wx-ar-head' }, el('div', { class: 'wx-ar-titles' }, title, source), el('div', { class: 'wx-ar-tools' }, projection, resetView, panelToggle, scaleMode, manualTools, station, clearBtn, pngBtn, csvBtn, backBtn), scaleInfo),
+      el('header', { class: 'wx-ar-head' }, el('div', { class: 'wx-ar-titles' }, title, source), el('div', { class: 'wx-ar-tools' }, projection, resetView, panelToggle, scaleMode, manualTools, station, clearBtn, backBtn), scaleInfo),
       el('div', { class: 'wx-ar-body' }, canvas, html, notice), probeBox);
     const loading = view.querySelector('#loading');
     view.insertBefore(overlay, loading || null);
@@ -200,6 +212,7 @@ window.WingAeroStructResults = (() => {
     function show(next) {
       kind = next; select.value = next; probes = []; probeBox.textContent = '';
       overlay.hidden = !next; strip.classList.toggle('wx-aero-active', !!next); view.classList.toggle('wx-aero-on', !!next);   // phones give the result view more height
+      if (!next) { pngBtn.disabled = false; pngBtn.hidden = false; csvBtn.disabled = true; }
       if (next) render();
     }
     const close = () => show('');
@@ -225,7 +238,7 @@ window.WingAeroStructResults = (() => {
       if (s.status === 'stale') { source.textContent = 'Out of date: ' + s.why + '.'; setNotice(`These aerodynamic results belong to an earlier ${/flow/.test(s.why) ? 'set of flow inputs' : 'wing shape'} and are withheld. Press Solve Aerodynamics to compute the current case.`, true); return; }
       const { result, combined } = s, b = result.base;
       notice.hidden = true; pngBtn.disabled = false; csvBtn.disabled = false;
-      station.hidden = kind !== 'section'; clearBtn.hidden = !['cp', 'dp', 'section', 'span'].includes(kind); clearBtn.disabled = !probes.length;
+      station.hidden = kind !== 'section'; clearBtn.hidden = kind === 'coef'; clearBtn.disabled = !probes.length;
       projection.hidden = !['cp', 'dp'].includes(kind); resetView.hidden = projection.hidden || surfaceMode === 'planform';
       panelToggle.hidden = projection.hidden;
       scaleMode.hidden = projection.hidden; manualTools.hidden = projection.hidden || scaleMode.value !== 'manual'; scaleInfo.hidden = projection.hidden;
@@ -251,7 +264,9 @@ window.WingAeroStructResults = (() => {
         const fz = combined.rootWrench[2], cl = combined.coefficients.CL;
         source.textContent = `Semi-wing lift ${sig(fz.value)} ± ${sig(fz.uncertainty, 2)} N extrapolated (finest meshes ${sig(fz.finest)} N, base mesh ${sig(fz.base)} N); both halves ${sig(2 * fz.value)} N; CL ${sig(cl.value)} ± ${sig(cl.uncertainty, 2)}. ${combined.structuralLoadAvailable === false ? 'Solid: base aerodynamic mesh; grey: the other meshes. No structural strip load has been generated for this zero-chord tip.' : `Solid: strip load delivered to the structure (extrapolated over all ${result.levels.length} meshes); dashed: base mesh; grey: the other meshes.`} ${flowText(b)}.`;
       } else if (kind === 'section') {
-        source.textContent = `Cp at the panel centroids of one strip of the ${meshText(b)} (one solved mesh, not extrapolated). ${flowText(b)}.`;
+        source.textContent = `Upper and lower surface Cp at one base-mesh strip. Negative Cp (suction) is at the top; positive Cp is at the bottom. LE = x/c 0, TE = x/c 1. ${flowText(b)}.`;
+      } else if (['cl', 'gamma', 'cm', 'te'].includes(kind)) {
+        source.textContent = `Semi-wing strip samples of the ${meshText(b)}; these local values are not extrapolated. ${kind === 'te' ? 'Cp upper − Cp lower at the last panel centroids near the trailing edge; the Kutta condition requires equality at the edge, not Cp = 0.' : kind === 'gamma' ? 'Wake circulation from the solved doublet jump (m²/s).' : kind === 'cm' ? 'Pitching moment about each strip quarter chord; body +y moment is nose-up, divided by q∞ c² Δy.' : 'Pressure-integrated cl compared with 2Γ/(V c) from the solved wake.'} ${flowText(b)}.`;
       } else {
         const f = surfaceField(b), key = kind === 'dp' ? 'dp' : 'cp', ex = f ? extremes(f.panels, key) : null, at = (p) => `${p.side} surface, y ${sig(p.y, 4)} mm, x/c ${sig(p.xc, 3)}`;
         source.textContent = `Panel-centroid values of the ${meshText(b)} (one solved mesh of the ${result.sequence} sequence, not extrapolated${combined.structuralLoadAvailable === false ? '; no structural load generated' : '; the delivered structural load is extrapolated'}). ${ex ? `Minimum ${sig(ex.lo[key])} (${at(ex.lo)}); maximum ${sig(ex.hi[key])} (${at(ex.hi)}). ` : ''}${flowText(b)}.`;
@@ -277,6 +292,7 @@ window.WingAeroStructResults = (() => {
       }
       else if (kind === 'section') drawSection(ctx, W, H, top, s, !exportSize);
       else if (kind === 'span') drawSpan(ctx, W, H, top, s, !exportSize);
+      else if (['cl', 'gamma', 'cm', 'te'].includes(kind)) drawMetric(ctx, W, H, top, s, !exportSize);
     }
     function wrapText(ctx, text, x, y, maxW, lh) {
       let line = '';
@@ -423,6 +439,19 @@ window.WingAeroStructResults = (() => {
       ctx.font = `11px ${FONT}`; ctx.fillStyle = '#4e5f71';
       ctx.fillText(fit(ctx, [scaleCaption()], W - 35), left, H - 12);
       colourbar(ctx, W - right + 22, upper, Math.max(80, ah), lo, hi, unit);
+      if (f.edges) {
+        const tag = (P, text, dy) => {
+          const p = project(P), x = X(p[0]), y = Y(p[1]);
+          ctx.strokeStyle = '#14212e'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x+16,y+dy); ctx.stroke();
+          ctx.font = `700 12px ${FONT}`; const w = ctx.measureText(text).width;
+          ctx.fillStyle = 'rgba(255,255,255,.94)'; ctx.fillRect(x+17,y+dy-12,w+8,17); ctx.fillStyle='#14212e'; ctx.fillText(text,x+21,y+dy+1);
+        };
+        tag(f.edges.le,'LE · leading edge',-30); tag(f.edges.te,'TE · trailing edge',30);
+        const a = b.flow.alphaDeg * Math.PI/180, len = Math.max(.5*f.edges.chord, .07*b.reference.span_mm), P = f.edges.le;
+        const start = [P[0]-len*Math.cos(a),P[1],P[2]-len*Math.sin(a)], end = [P[0]-.15*len*Math.cos(a),P[1],P[2]-.15*len*Math.sin(a)];
+        const p=project(start), e=project(end), x=X(p[0]), y=Y(p[1]), ex=X(e[0]), ey=Y(e[1]), angle=Math.atan2(ey-y,ex-x);
+        ctx.strokeStyle='#14212e';ctx.fillStyle='#14212e';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(ex,ey);ctx.stroke();ctx.beginPath();ctx.moveTo(ex,ey);ctx.lineTo(ex-8*Math.cos(angle-.45),ey-8*Math.sin(angle-.45));ctx.lineTo(ex-8*Math.cos(angle+.45),ey-8*Math.sin(angle+.45));ctx.closePath();ctx.fill();ctx.font=`700 12px ${FONT}`;ctx.fillText('Flow →',x-15,y-9);
+      }
       // Aircraft axes rotate with the surface; scale is graphical only.
       const ox = left + 28, oy = H - 56;
       for (const [P, label, col] of [[[1, 0, 0], '+x', '#b42318'], [[0, 1, 0], '+y', '#16834a'], [[0, 0, 1], '+z', '#175cd3']]) {
@@ -433,9 +462,9 @@ window.WingAeroStructResults = (() => {
       if (interactive) canvas.setAttribute('aria-label', `3D ${unit} on the actual aerodynamic base-mesh surface. True minimum ${sig(ex.lo[key])}, maximum ${sig(ex.hi[key])}. ${scaleCaption()}. Drag to rotate; click a surface panel for its signed value.`);
     }
     const FRAME = { L: 70, R: 24 };
-    function chartFrame(ctx, W, H, top, xr, yr, xl, yl, head = 1) {   // head = text rows reserved above the frame
+    function chartFrame(ctx, W, H, top, xr, yr, xl, yl, head = 1, reverseY = false) {   // head = text rows reserved above the frame
       const L = FRAME.L, R = FRAME.R, T = top + 24 + 20 * head, B = 52, w = W - L - R, h = H - T - B;
-      const X = (v) => L + (v - xr[0]) / (xr[1] - xr[0]) * w, Y = (v) => T + (yr[1] - v) / (yr[1] - yr[0]) * h;
+      const X = (v) => L + (v - xr[0]) / (xr[1] - xr[0]) * w, Y = (v) => T + (reverseY ? v - yr[0] : yr[1] - v) / (yr[1] - yr[0]) * h;
       ctx.strokeStyle = '#d4dce5'; ctx.lineWidth = 1; ctx.fillStyle = '#4e5f71'; ctx.font = `12px ${FONT}`;
       const sx = niceStep(xr[1] - xr[0], w < 360 ? 4 : 8), sy = niceStep(yr[1] - yr[0], 6);
       for (let v = Math.ceil(xr[0] / sx) * sx; v <= xr[1] + 1e-9; v += sx) { const t = sig(v, 3); ctx.beginPath(); ctx.moveTo(X(v), T); ctx.lineTo(X(v), T + h); ctx.stroke(); ctx.fillText(t, X(v) - ctx.measureText(t).width / 2, T + h + 16); }
@@ -470,18 +499,18 @@ window.WingAeroStructResults = (() => {
     }
     function drawSection(ctx, W, H, top, s, interactive) {
       const b = s.result.base, sec = b.chordwise[sectionJ], q = b.flow.dynamicPressure_Pa;
-      const all = [...sec.upper, ...sec.lower].map((p) => -p[1]), lo = Math.min(...all), hi = Math.max(...all), pad = 0.06 * ((hi - lo) || 1);
+      const all = [...sec.upper, ...sec.lower].map((p) => p[1]), lo = Math.min(...all), hi = Math.max(...all), pad = 0.06 * ((hi - lo) || 1);
       const head = headRows(ctx, W, [['upper surface', '#2166ac'], ['lower surface', '#b2182b', [7, 5]]],
         `Strip ${sectionJ + 1} of ${b.chordwise.length}: y = ${sig(sec.y_mm)} mm, local chord ${sig(sec.chord_mm)} mm; p − p∞ = q∞ Cp, q∞ = ${sig(q)} Pa`);
-      const fr = chartFrame(ctx, W, H, top, [0, 1], [lo - pad, hi + pad], 'x/c (0 = leading edge, 1 = trailing edge)', '−Cp (suction up)', head.count);
+      const fr = chartFrame(ctx, W, H, top, [0, 1], [lo - pad, hi + pad], 'x/c (0 = leading edge, 1 = trailing edge)', 'Cp (negative / suction up)', head.count, true);
       hits = [];
       const series = [['upper', '#2166ac', []], ['lower', '#b2182b', [7, 5]]];
       for (const [side, col, dash] of series) {
         const pts = sec[side].slice().sort((a, c) => a[0] - c[0]);
         ctx.strokeStyle = col; ctx.lineWidth = 2; ctx.setLineDash(dash); ctx.beginPath();
-        pts.forEach(([x, cp], i) => (i ? ctx.lineTo(fr.X(x), fr.Y(-cp)) : ctx.moveTo(fr.X(x), fr.Y(-cp)))); ctx.stroke(); ctx.setLineDash([]);
+        pts.forEach(([x, cp], i) => (i ? ctx.lineTo(fr.X(x), fr.Y(cp)) : ctx.moveTo(fr.X(x), fr.Y(cp)))); ctx.stroke(); ctx.setLineDash([]);
         ctx.fillStyle = col;
-        pts.forEach(([x, cp], i) => { ctx.beginPath(); ctx.arc(fr.X(x), fr.Y(-cp), 2.6, 0, 2 * Math.PI); ctx.fill(); hits.push({ point: { side, j: sectionJ, k: i, n: pts.length, xc: x, cp, dp: q * cp, y: sec.y_mm, chord: sec.chord_mm }, at: [fr.X(x), fr.Y(-cp)] }); });
+        pts.forEach(([x, cp], i) => { ctx.beginPath(); ctx.arc(fr.X(x), fr.Y(cp), 2.6, 0, 2 * Math.PI); ctx.fill(); hits.push({ point: { side, j: sectionJ, k: i, n: pts.length, xc: x, cp, dp: q * cp, y: sec.y_mm, chord: sec.chord_mm }, at: [fr.X(x), fr.Y(cp)] }); });
       }
       drawHead(ctx, fr, head);
       probes.forEach((pr, n) => { const h = hits.find((t) => t.point.side === pr.side && t.point.k === pr.k && pr.j === sectionJ); if (!h) return; ctx.beginPath(); ctx.arc(h.at[0], h.at[1], 8, 0, 2 * Math.PI); ctx.strokeStyle = '#14212e'; ctx.lineWidth = 1.5; ctx.stroke(); ctx.fillStyle = '#14212e'; ctx.font = `700 11px ${FONT}`; ctx.fillText(String(n + 1), h.at[0] + 9, h.at[1] - 8); });
@@ -506,7 +535,20 @@ window.WingAeroStructResults = (() => {
       drawn = { delivered };
       if (interactive) canvas.setAttribute('aria-label', `Spanwise lift per unit span: ${aeroOnly ? 'base aerodynamic mesh and remaining meshes; no structural load generated' : 'delivered extrapolated strip load, base mesh and the other meshes'}. Semi-wing lift ${sig(semi)} N.`);
     }
+    function drawMetric(ctx,W,H,top,s,interactive) {
+      const rows=spanQuantities(s.result.base), def={cl:['Section lift coefficient cl',''],gamma:['Wake circulation Γ','m²/s'],cm:['Quarter-chord pitching moment coefficient cm',''],te:['Trailing-edge Cp upper − Cp lower','']}[kind];
+      const series=[[kind,def[0],'#175cd3',[]],...(kind==='cl'?[['clKJ','Wake: 2Γ/(V c)','#b54708',[6,4]]]:[])];
+      const values=series.flatMap(([k])=>rows.map(r=>r[k])).filter(Number.isFinite), lo=Math.min(0,...values), hi=Math.max(0,...values), pad=.08*((hi-lo)||1);
+      const head=headRows(ctx,W,series.map(([,label,c,dash])=>[label,c,dash]),'Base-mesh strip midpoints; no values inferred outside the sampled span');
+      const fr=chartFrame(ctx,W,H,top,[0,s.result.base.reference.span_mm/2],[lo-pad,hi+pad],'semi-span y (mm)',def[0]+(def[1]?` (${def[1]})`:''),head.count);
+      hits=[];
+      for(const [key,label,c,dash] of series){ctx.strokeStyle=c;ctx.fillStyle=c;ctx.lineWidth=2;ctx.setLineDash(dash);ctx.beginPath();let started=false;for(const r of rows){if(!Number.isFinite(r[key])){started=false;continue;}if(started)ctx.lineTo(fr.X(r.y),fr.Y(r[key]));else ctx.moveTo(fr.X(r.y),fr.Y(r[key]));started=true;}ctx.stroke();ctx.setLineDash([]);rows.forEach((r,i)=>{if(!Number.isFinite(r[key]))return;const at=[fr.X(r.y),fr.Y(r[key])];ctx.beginPath();ctx.arc(...at,3,0,2*Math.PI);ctx.fill();hits.push({point:{kind:'metric',i,series:label,y:r.y,value:r[key],unit:def[1]},at});});}
+      drawHead(ctx,fr,head);drawn={rows};
+      probes.forEach((p,n)=>{const h=hits.find(h=>h.point.i===p.i&&h.point.series===p.series);if(h){ctx.strokeStyle='#14212e';ctx.beginPath();ctx.arc(...h.at,8,0,2*Math.PI);ctx.stroke();ctx.fillStyle='#14212e';ctx.fillText(String(n+1),h.at[0]+10,h.at[1]-8);}});
+      if(interactive)canvas.setAttribute('aria-label',`${def[0]} versus semi-span. Click a sample for its value.`);
+    }
     function probeText(p, n) {
+      if(p.kind==='metric')return `${n}. ${p.series} · y ${sig(p.y)} mm · ${sig(p.value)} ${p.unit}`;
       if (p.kind === 'strip') return `${n}. ${p.series || 'Delivered'} strip ${p.i + 1}: y ${sig(p.y0, 4)}–${sig(p.y1, 4)} mm · Fz ${sig(p.fz)} N · Fz/Δy ${sig(p.w)} N/mm`;
       const s = state(), b = s.result && s.result.base, eta = b ? p.y / (b.reference.span_mm / 2) : NaN;
       return `${n}. ${p.mirrored ? 'Mirrored ' : ''}${p.side === 'upper' ? 'Upper' : 'Lower'} surface · strip ${p.j + 1}, panel ${p.k + 1} of ${p.n} from the leading edge · y ${sig(p.y, 4)} mm (η ${sig(eta, 3)}) · x/c ${sig(p.xc, 3)}${Number.isFinite(p.x) ? ` · x ≈ ${sig(p.x, 4)} mm` : ''} · Cp ${sig(p.cp)} · p − p∞ ${sig(p.dp)} Pa`;
@@ -558,6 +600,7 @@ window.WingAeroStructResults = (() => {
     });
     document.getElementById('wingFullSymmetric')?.addEventListener('change', () => { if (!overlay.hidden) render(); });
     pngBtn.addEventListener('click', () => {
+      if (!kind) { exportStructureFigure?.(); return; }
       const s = data(); if (!s || kind === 'coef') return;
       const W = 1800, H = kind === 'section' || kind === 'span' ? 1000 : Math.round(1800 * Math.max(0.55, canvas.clientHeight / Math.max(1, canvas.clientWidth))) + 96;
       const off = document.createElement('canvas'); off.width = W; off.height = H; const ctx = off.getContext('2d');
@@ -579,6 +622,10 @@ window.WingAeroStructResults = (() => {
         lines = [...head, `# Strip ${sectionJ + 1} of ${b.chordwise.length} of the base mesh: y = ${csvNum(sec.y_mm)} mm, local chord ${csvNum(sec.chord_mm)} mm.`, 'surface,panel_from_LE,x_over_c,Cp,p_minus_pinf_Pa',
           ...['upper', 'lower'].flatMap((side) => sec[side].slice().sort((a, c) => a[0] - c[0]).map((p, i) => [side, i + 1, csvNum(p[0]), csvNum(p[1]), csvNum(b.flow.dynamicPressure_Pa * p[1])].join(',')))];
         name = `wing-aero-section-strip${sectionJ + 1}.csv`;
+      } else if (['cl', 'gamma', 'cm', 'te'].includes(kind)) {
+        lines = [...head, '# Local values of the base aerodynamic mesh; no extrapolation. Gamma in m2/s; cm about the strip quarter chord, body +y nose-up, normalized by q_inf*c^2*dy.',
+          'y0_mm,y1_mm,y_mid_mm,cl_pressure,cl_Kutta_Joukowski,Gamma_m2_per_s,cm_quarter_chord,Cp_upper_TE_minus_Cp_lower_TE',
+          ...spanQuantities(b).map(p => [p.y0,p.y1,p.y,p.cl,p.clKJ,p.gamma,p.cm,p.te].map(csvNum).join(','))];
       } else if (kind === 'span') {
         lines = [...head, s.combined.structuralLoadAvailable === false ? '# Aerodynamic results only. base = base mesh; mesh_CxS = one solved mesh of the sequence. No structural strip load was generated.' : '# Spanwise strip loads. delivered = extrapolated load given to the structure; base = base mesh; mesh_CxS = one mesh of the sequence (chord panels per surface x span panels).', 'series,y0_mm,y1_mm,Fz_N,Fz_per_mm_N_per_mm',
           ...stepRows(s.combined.strips).map((v) => ['delivered', csvNum(v.y0), csvNum(v.y1), csvNum(v.fz), csvNum(v.w)].join(',')),
@@ -616,7 +663,8 @@ window.WingAeroStructResults = (() => {
         <h4>Structural load: admission</h4>${admHtml}</div>`;
     }
     if (window.ResizeObserver) new ResizeObserver(() => { if (!overlay.hidden && kind !== 'coef') render(); }).observe(canvas.parentElement);
-    return { refresh: () => { if (!overlay.hidden) { render(); if (probes.length) showProbes(); } }, close, show, get kind() { return kind; }, element: overlay, selector: group };
+    let lastRefresh = [];
+    return { refresh: () => { if (!overlay.hidden) { const s=state(), key=[s.status,s.why,s.result,s.combined,s.admission]; if(key.some((v,i)=>v!==lastRefresh[i])){lastRefresh=key;render();if(probes.length)showProbes();} } }, close, show, get kind() { return kind; }, element: overlay, selector: group, pngButton:pngBtn, csvButton:csvBtn };
   }
-  return Object.freeze({ install, VIEWS, surfaceField, surfaceField3D, colour, displayScale, pressureMeshCheck });
+  return Object.freeze({ install, VIEWS, surfaceField, surfaceField3D, colour, displayScale, pressureMeshCheck, spanQuantities });
 })();

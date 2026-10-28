@@ -100,6 +100,8 @@
   const resultRow = $('#defBtn') && $('#defBtn').closest('.hud-row');
   const defBtn = $('#defBtn'), scaleLabel = $('#scaleIn') && $('#scaleIn').closest('label');
   const contour = $('#wingContourOptions');
+  if (contour) setLabel(contour, 'Structural contours & probes');
+  if ($('#wrImage')) $('#wrImage').hidden = true; // The same exporter is routed through File for either displayed solver.
   if (dimensions) setLabel(dimensions, 'Scale bar & dimensions');
   add(viewMenu,
     cap('Wing symmetry'), symmetry ? row(symmetry, symmetryNote) : null,
@@ -114,9 +116,13 @@
   const helpTop = el('div', { class: 'wx-help-top' }, learnBtn,
     lessonButtons.length ? cap('Experiments & theory') : null, lessonButtons.length ? row(...lessonButtons) : null);
   const where = el('details', { id: 'wxHelpWhere' }, el('summary', { text: 'Where the controls are' }),
-    el('p', { class: 'note', text: 'File holds Open JSON, Save JSON, New / Clear, the course example and STL/DXF/STEP export. Aerodynamics and Structure & Stress each open one input panel: set the inputs there, then press its Solve button. Apply aerodynamic loads to structure transfers the panel load and re-solves the structure. Result buttons change what is displayed; View holds symmetry, zoom, visibility and colours.' }));
+    el('p', { class: 'note', text: 'File holds Open JSON, Save JSON, figure PNG, aerodynamic CSV, New / Clear, the course example and STL/DXF/STEP export. Aerodynamics and Structure & Stress each open one input panel: set the inputs there, then press its Solve button. Apply aerodynamic loads to structure transfers the panel load and re-solves the structure. Result buttons change what is displayed; View holds symmetry, zoom, visibility and colours.' }));
   const aeroHelp = aeroIntro ? el('details', { id: 'wxHelpAero' }, el('summary', { text: 'Aerodynamics · panel method' }), aeroIntro) : null;
-  helpBody.prepend(...[helpTop, where, aeroHelp].filter(Boolean));
+  const pressureHelp=el('details',{},el('summary',{text:'Pressure and aerodynamic graphs'}),
+    el('p',{text:'Cp < 0 is suction; Cp > 0 is pressure above the freestream. Red means positive pressure, not the largest suction. LE/TE and the flow arrow identify the edges. The Cp section graph puts negative values at the top. At the trailing edge, the upper and lower pressures should approach each other; neither is required to be zero.'}),
+    el('p',{text:'Section cl, wake circulation, quarter-chord moment and trailing-edge Cp difference use the stored base-mesh strip samples. They do not trigger another solve. Surface Cp peaks near the tip can be mesh-sensitive even when integrated lift is converged. No viscous drag, separation or stall is predicted.'}),
+    el('p',{},el('a',{href:'https://www.nasa.gov/reference/openvsp-vspaero-basics/',target:'_blank',rel:'noopener',text:'NASA VSPAERO results guide'}),' · ',el('a',{href:'https://flow5.tech/docs/flow5_doc/Post-processing/Cp3d.html',target:'_blank',rel:'noopener',text:'flow5: interpreting panel-method Cp'})));
+  helpBody.prepend(...[helpTop, where, aeroHelp, pressureHelp].filter(Boolean));
 
   // ---------------------------------------------------------------- result strip
   const results = el('section', { id: 'wxResults', 'aria-label': 'Displayed result and solver status' });
@@ -504,8 +510,15 @@
     return { status: 'ok', result: last, combined: a.combined, admission: a.admission };
   }
   const view = $('#app > main.view');
-  const aeroResults = window.WingAeroStructResults && view ? window.WingAeroStructResults.install({ el, ui, strip: results, view, state: aeroResultState, openAero: () => openMenu('aero') }) : null;
-  if (aeroResults) results.insertBefore(aeroResults.selector, display);
+  const aeroResults = window.WingAeroStructResults && view ? window.WingAeroStructResults.install({ el, ui, strip: results, view, state: aeroResultState, openAero: () => openMenu('aero'), exportStructureFigure: () => $('#wrImage')?.click() }) : null;
+  if (aeroResults) {
+    results.insertBefore(aeroResults.selector, display);
+    const anchor = printButtons[0]?.parentElement?.previousElementSibling || wlFiles;
+    fileMenu.insertBefore(cap('Figures & data'), anchor);
+    fileMenu.insertBefore(row(aeroResults.pngButton, aeroResults.csvButton), anchor);
+    for(const b of [aeroResults.pngButton,aeroResults.csvButton]) b.addEventListener('click',closeMenus);
+    for(const b of $$('[data-anatomy]',viewMenu)) b.addEventListener('click',()=>{aeroResults.close();closeMenus();},{capture:true});
+  }
   // Read the worker's real mesh-stage messages. This is a progress display, not a guessed solve percentage.
   const aeroBusyStep = el('p', { class: 'wx-aero-busy-step', text: 'Starting the aerodynamic mesh sequence…' });
   const aeroBusyTime = el('span', { class: 'wx-aero-busy-time', 'aria-live': 'off' });

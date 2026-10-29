@@ -1,12 +1,12 @@
 {
   "application": "Wing Panel Stress Analyzer (Wing AeroStruct)",
-  "version": "0.3.1-ui.9",
+  "version": "0.3.2-ui.11",
   "source_archive": "wing-aerostruct-0.3.0-dev-review.zip",
   "source_sha256": "bc6986c744568a516fd22bdd3b9508550625b82a77cd924adf52dfaa5156a54d",
   "original_base": "5ab2498",
   "independent_review": "validation/INDEPENDENT_REVIEW.md",
   "scope": "Educational 3D potential-flow panels coupled one-way to nominal spatial-beam stress, plus independent inviscid 2D airfoil analysis. No viscous/stall or local solid stress. Unresolved torque/twist withheld; unsuitable cases refused.",
-  "solver_version": "0.3.1",
+  "solver_version": "0.3.2-exp.4",
   "ui_release": {
     "features": [
       "Compact Aerodynamics and Structure & Stress input panels",
@@ -36,9 +36,10 @@
       "2D PNG/CSV exports and clickable Cp/tangential-speed probes",
       "Explicit amber/dashed local tip-uncertainty samples without clipping values",
       "Step-by-step panel algorithm, equations and accuracy Help",
-      "Surface-metric gradient reconstruction across thin leading edges and closed rounded-tip seams; local sharp-tip/wake pressure remains unvalidated"
+      "Surface-metric gradient reconstruction across thin leading edges and closed rounded-tip seams; local sharp-tip/wake pressure remains unvalidated",
+      "Rounded-tip sectional Cp entries explicitly labelled unvalidated; section labels refresh with the current geometry"
     ],
-    "page_sha256": "5c2989e5a5dd24bf794b647957225d05746b30a5177192352cd4e2b004dfd8b5",
+    "page_sha256": "a3215cced5707295e5dfa2dec2f9376043703f507f8618dcec766c010102e3db",
     "source_port": "ui/01-wing-aerostruct-ui-sources.patch",
     "independent_review": "validation/UI_RELEASE_REVIEW.json",
     "surface_review": "validation/UI_SURFACE_REVIEW.json",
@@ -56,6 +57,11 @@
     "results_review": "validation/AERO_RESULTS_REVIEW.json",
     "airfoil_help_review": "validation/AIRFOIL_HELP_RELEASE_REVIEW.json"
   },
-  "airfoil_2d_solver_version": "1.0.0",
-  "numerical_review": "validation/SURFACE_GRADIENT_REVIEW.json"
+  "airfoil_2d_solver_version": "1.1.0",
+  "numerical_review": "validation/2026-10-29/index.html",
+  "airfoil_2d_trailing_edge_review": "validation/2026-10-29/TE_RELEASE_REVIEW.json",
+  "three_dimensional_release_status": "Qualified educational tensor-quadratic release, source 17bdcbe. Deepest tip pressure remains unvalidated; U is empirical. Original failed gates are preserved in the numerical review.",
+  "numerical_source_archive": "wing-aerostruct-3d-0.3.2-reviewed-source.zip",
+  "numerical_source_sha256": "73283940a266b82d5154e8c880388138618ee976eaf2bb5af85da713bdd75607",
+  "three_dimensional_review": "validation/2026-10-29/THREED_RELEASE_REVIEW.json"
 }

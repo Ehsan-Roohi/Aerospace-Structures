@@ -1,0 +1,216 @@
+{
+  "zipSHA256": "995d468b6ae2f39fb0d06a7e29b2a6f09fe62f7b53ebe36deda501d6c72c04c1",
+  "manifestVerified": 33,
+  "coreNumericallyUnchanged": true,
+  "independentlyRecomputedNativeMeshes": 17,
+  "maxNativeTorqueDifference": 7.093086118459269e-10,
+  "nativeRows": [
+    {
+      "mesh": [
+        32,
+        16
+      ],
+      "nativeTlocal": 1.075984227965944,
+      "nativeTopus": 1.0759842279736915,
+      "difference": 7.747580355044192e-12
+    },
+    {
+      "mesh": [
+        32,
+        24
+      ],
+      "nativeTlocal": 1.05281190884491,
+      "nativeTopus": 1.0528119088448875,
+      "difference": -2.2426505097428162e-14
+    },
+    {
+      "mesh": [
+        32,
+        32
+      ],
+      "nativeTlocal": 1.0439922091043117,
+      "nativeTopus": 1.0439922091044593,
+      "difference": 1.4765966227514582e-13
+    },
+    {
+      "mesh": [
+        32,
+        48
+      ],
+      "nativeTlocal": 1.0382880847329905,
+      "nativeTopus": 1.0382880847117235,
+      "difference": -2.126698817050965e-11
+    },
+    {
+      "mesh": [
+        32,
+        64
+      ],
+      "nativeTlocal": 1.0374120725379823,
+      "nativeTopus": 1.0374120725936393,
+      "difference": 5.565703453669357e-11
+    },
+    {
+      "mesh": [
+        32,
+        96
+      ],
+      "nativeTlocal": 1.0383722499591135,
+      "nativeTopus": 1.0383722499919088,
+      "difference": 3.279532201361235e-11
+    },
+    {
+      "mesh": [
+        64,
+        32
+      ],
+      "nativeTlocal": 1.1086794853741657,
+      "nativeTopus": 1.1086794853821687,
+      "difference": 8.002931650707978e-12
+    },
+    {
+      "mesh": [
+        96,
+        48
+      ],
+      "nativeTlocal": 1.1163943836218477,
+      "nativeTopus": 1.1163943836437795,
+      "difference": 2.1931789717655192e-11
+    },
+    {
+      "mesh": [
+        48,
+        16
+      ],
+      "nativeTlocal": 1.1231354827239703,
+      "nativeTopus": 1.123135482739059,
+      "difference": 1.5088597038470652e-11
+    },
+    {
+      "mesh": [
+        64,
+        16
+      ],
+      "nativeTlocal": 1.1414440372524823,
+      "nativeTopus": 1.1414440372559227,
+      "difference": 3.440359108708435e-12
+    },
+    {
+      "mesh": [
+        96,
+        16
+      ],
+      "nativeTlocal": 1.156493808503045,
+      "nativeTopus": 1.1564938084471237,
+      "difference": -5.592126761655436e-11
+    },
+    {
+      "mesh": [
+        128,
+        16
+      ],
+      "nativeTlocal": 1.162846541504513,
+      "nativeTopus": 1.1628465415078608,
+      "difference": 3.347766508454697e-12
+    },
+    {
+      "mesh": [
+        192,
+        16
+      ],
+      "nativeTlocal": 1.1686877140498888,
+      "nativeTopus": 1.1686877135306588,
+      "difference": -5.192299923351129e-10
+    },
+    {
+      "mesh": [
+        48,
+        24
+      ],
+      "nativeTlocal": 1.0999638516547454,
+      "nativeTopus": 1.0999638516529444,
+      "difference": -1.801003790546929e-12
+    },
+    {
+      "mesh": [
+        32,
+        128
+      ],
+      "nativeTlocal": 1.0400715049715312,
+      "nativeTopus": 1.0400715050832048,
+      "difference": 1.1167355928876077e-10
+    },
+    {
+      "mesh": [
+        32,
+        192
+      ],
+      "nativeTlocal": 1.043011785549607,
+      "nativeTopus": 1.0430117862589157,
+      "difference": 7.093086118459269e-10
+    },
+    {
+      "mesh": [
+        64,
+        96
+      ],
+      "nativeTlocal": 1.0996102267332175,
+      "nativeTopus": 1.0996102267405945,
+      "difference": 7.376987909424315e-12
+    }
+  ],
+  "coreSHA256": "0b4e7a6165811cb13b69309edec45d5a7d54a0b6d479820aa408de44c10f1344",
+  "authorCommit": "17bdcbe",
+  "numericalBase": "7e6b7eb",
+  "releaseDecision": "Qualified educational update; unresolved local tip pressure and empirical-U limitations retained.",
+  "independentAnalyticChecks": {
+    "passed": 48,
+    "total": 48
+  },
+  "crossTermOriginalChecks": {
+    "passed": 58,
+    "total": 59,
+    "remaining": "One expected legacy U differs by 2.17e-18 on Windows / Node 24. Original assertion was not relaxed. Recombining actual published 0.3.1 and candidate on the same host gives identical legacy strips, coefficients and U."
+  },
+  "browser": {
+    "fine8MeshSeconds": 22.3,
+    "structuralSeconds": 1.79,
+    "actualLegacyUserJSONImported": true,
+    "new8MeshJSONSavedAndRead": true,
+    "independent2DVersion": "1.1.0",
+    "timingScope": "One Chromium run during other validation; not a universal benchmark."
+  },
+  "standaloneTiming": {
+    "geometry": "User 900mm, sweep10, dihedral10 case",
+    "node": "v24.19.0",
+    "results": [
+      {
+        "sequence": "standard",
+        "seconds": 7.8844624,
+        "meshes": 8,
+        "totalPanels": 9408,
+        "CL": 0.6070522618897997,
+        "CDi": 0.008756965485959922,
+        "Cm": -0.04514395872012747
+      },
+      {
+        "sequence": "fine",
+        "seconds": 25.554714500000003,
+        "meshes": 8,
+        "totalPanels": 19840,
+        "CL": 0.6072417541429279,
+        "CDi": 0.008774171063771551,
+        "Cm": -0.04497477542174744
+      }
+    ]
+  },
+  "knownLimits": [
+    "No pointwise validation at the deepest tip / trailing-edge corner or the collapsed final strip.",
+    "U is an empirical discretization estimate, not a mathematical bound. Strict-U reference misses outside swept25 were not re-adjudicated.",
+    "Original stored references and every failed original criterion are preserved; 252-row broad study is not relabelled as an all-pass result.",
+    "External same-node whole-flow code comparison covers the rectangular wing, not all course geometries.",
+    "The NASA finite-wing experiment is a secondary comparison with different tunnel / tip assumptions, not an experimental accuracy pass.",
+    "Steady symmetric incompressible inviscid attached flow, prescribed flat wake, rigid wing; no viscous drag, stall, separation or aeroelastic feedback.",
+    "The structural solver is a nominal spatial beam, not a local shell or solid stress solution."
+  ]
+}

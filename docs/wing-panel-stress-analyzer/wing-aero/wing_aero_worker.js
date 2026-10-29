@@ -1,4 +1,4 @@
-/* Wing AeroStruct aerodynamic panel solves in a Web Worker. Solver 0.3.1.
+/* Wing AeroStruct aerodynamic panel solves in a Web Worker. Development version, not published.
  * Loads aero_bundle.js (wing_airfoils.js + wing_geometry.js + wing_aero_panel.js, concatenated by
  * build_wing_aerostruct.py). Requests:
  *   {id, kind:'sequence', geometry, flow, sequence:'standard'|'fine', options:{targetLift_N}}: the executed
@@ -8,7 +8,7 @@
  * Prepared models (the solved unit-freestream doublet systems) are cached by geometry and mesh (eight
  * models, one whole sequence), so a new speed, density or angle of attack needs no new linear solve.
  */
-importScripts('./aero_bundle.js?v=1b242ffe7126');
+importScripts('./aero_bundle.js?v=a7da4dc7c72c');
 const aeroCache = new Map();
 function handleAeroRequest(msg, post) {
   const id = msg && msg.id;

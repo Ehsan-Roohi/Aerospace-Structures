@@ -1,14 +1,14 @@
 {
   "product": "MIE 446 Wing AeroStruct",
-  "version": "0.3.1-ui.10",
-  "status": "Published educational application; separate from Wing Lab",
-  "builtAt": "2026-10-29T15:13:43.124105+00:00",
+  "version": "0.3.2-ui.11",
+  "status": "Qualified educational 3D update; local tip pressure and empirical uncertainty limits documented",
+  "builtAt": "2026-10-29T19:56:53.629225+00:00",
   "page": "index.html",
-  "pageSha256": "8cd66d26367f3fd63f5867119479a2c19a48dfc40faa6c7918e76ff64e424e21",
+  "pageSha256": "a3215cced5707295e5dfa2dec2f9376043703f507f8618dcec766c010102e3db",
   "workers": {
     "wing-aero": {
-      "worker": "9a7382a95fcf",
-      "bundle": "1b242ffe7126"
+      "worker": "39297e560f20",
+      "bundle": "a7da4dc7c72c"
     },
     "wing-print": "a56bd8704a71"
   },
@@ -95,7 +95,7 @@
     },
     "wing_aero_panel.js": {
       "path": "docs/wing-panel-stress-analyzer/wing-aero/wing_aero_panel.js",
-      "sha256": "de3ee835245f126517cdc41c73eb96c749927f05857bad3f89a69a6fa264f7cb"
+      "sha256": "0b4e7a6165811cb13b69309edec45d5a7d54a0b6d479820aa408de44c10f1344"
     },
     "wing_aero_ui.js": {
       "path": "computational/printed-wing-solver/aerostruct/wing_aero_ui.js",
@@ -179,7 +179,7 @@
     },
     "wing_study_io.js": {
       "path": "computational/printed-wing-solver/aerostruct/wing_study_io.js",
-      "sha256": "618e8c9505ace62850b1e6452e61505437645b42956c38b887da46c0c0012ed2"
+      "sha256": "6f726259f7b69b7f0eb1394a97e9d0f064c05bbf1afb08f10b1e9a7efcfdb073"
     },
     "wing_workspace_ui.js": {
       "path": "computational/printed-wing-solver/web/wing_workspace_ui.js",
@@ -217,5 +217,14 @@
     "airfoilTEReview": "validation/2026-10-29/TE_RELEASE_REVIEW.json"
   },
   "airfoil2DSolverVersion": "1.1.0",
-  "surfaceGradientReview": "validation/SURFACE_GRADIENT_REVIEW.json"
+  "surfaceGradientReview": "validation/SURFACE_GRADIENT_REVIEW.json",
+  "reviewed3D": {
+    "sourceCommit": "17bdcbe",
+    "numericalBase": "7e6b7eb",
+    "coreVersion": "0.3.2-exp.4",
+    "coreSHA256": "0b4e7a6165811cb13b69309edec45d5a7d54a0b6d479820aa408de44c10f1344",
+    "sourceArchive": "wing-aerostruct-3d-0.3.2-reviewed-source.zip",
+    "sourceSHA256": "73283940a266b82d5154e8c880388138618ee976eaf2bb5af85da713bdd75607",
+    "review": "validation/2026-10-29/THREED_RELEASE_REVIEW.json"
+  }
 }

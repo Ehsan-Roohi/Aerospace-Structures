@@ -1,0 +1,68 @@
+1. Synthetic sequences with a known cross term
+   ok standard: quadratic-in-1/n errors in each direction plus 40 / (c s): estimate 7.00000000000000 = 7 (cross term 7.812e-2 restored)
+   ok standard: the additive combination alone misses exactly -k / (cb sb) = -7.813e-2 (got -7.813e-2)
+   ok standard: separable error: X = 0.000e+0, estimate and U identical to the additive combination
+   ok fine: quadratic-in-1/n errors in each direction plus 40 / (c s): estimate 7.00000000000001 = 7 (cross term 7.813e-2 restored)
+   ok fine: the additive combination alone misses exactly -k / (cb sb) = -7.813e-2 (got -7.813e-2)
+   ok fine: separable error: X = 0.000e+0, estimate and U identical to the additive combination
+2. Weights and U
+   ok standard: joint mesh 48 x 24 (around x spanwise), factor f = -9
+   ok standard: eight meshes (seven without the joint mesh); weights sum to 1
+   ok standard: the cross weights are f, -f, -f, f at J, (cJ, sb), (cb, sJ), base
+   ok standard: arbitrary level values: the estimate equals the weighted sum of the levels (one consistent, conservative load set)
+   ok standard: U = 1.25 (chord term + span term + 0.5 |X|)
+   ok fine: joint mesh 96 x 24 (around x spanwise), factor f = 8.999999999999998
+   ok fine: eight meshes (seven without the joint mesh); weights sum to 1
+   ok fine: the cross weights are f, -f, -f, f at J, (cJ, sb), (cb, sJ), base
+   ok fine: arbitrary level values: the estimate equals the weighted sum of the levels (one consistent, conservative load set)
+   ok fine: U = 1.25 (chord term + span term + 0.5 |X|)
+3. A sequence stored before the joint mesh existed
+   ok the solved sequence has eight meshes; without the joint mesh crossTerm.estimated is false
+   ok seven meshes: every coefficient is the additive combination (independent Lagrange weights here)
+   ok admission: torque estimates carry the cross term with the joint mesh and none without it
+   course wing, Standard: CL 0.520464 +- 1.643e-3 (additive 0.520532 +- 1.600e-3); Cm -5.407e-2 +- 2.864e-4 (additive -5.408e-2 +- 2.755e-4); 3.0 s
+4. Study files
+   ok an eight-mesh load is saved and read back exactly
+   ok a seven-mesh load (written before the joint mesh existed) is read and combined additively
+   ok seven meshes with the joint mesh but without a refinement level: study.aeroLoad.levels["6"]: 48 × 24 panels is not a mesh of the standard sequence
+   ok six meshes: study.aeroLoad.levels: must hold the 8 meshes of the standard sequence (or its first 7, as stored before the joint mesh existed), not 6
+   ok foreign joint mesh: study.aeroLoad.levels["7"]: 40 × 24 panels is not a mesh of the standard sequence
+5. Rectangular NACA 0012 AR 6, alpha 4 (the PANAIR wing): the joint grid
+   ok the stored grid belongs to this core: 64 x 16 re-solved, every coefficient within 1e-10
+   ok the stored grid belongs to this core: 96 x 24 re-solved, every coefficient within 1e-10
+   ok CL: cross-term coefficient k = -3.069e-2 over 12 joint meshes (largest deviation 13 %); X(32 x 16 base) = -5.995e-5
+   ok CL standard: 0.31523987 +- 1.093e-3; grid continuum 0.31519327 (+- 4.992e-6 between fit models): |error| + u 5.160e-5 <= U (additive alone: error 1.083e-4 against its U 1.054e-3)
+   ok CL fine: 0.31518521 +- 2.130e-4; grid continuum 0.31519327 (+- 4.992e-6 between fit models): |error| + u 1.305e-5 <= U (additive alone: error 5.940e-5 against its U 1.709e-4)
+   ok CLTrefftz: cross-term coefficient k = -3.005e-2 over 12 joint meshes (largest deviation 14 %); X(32 x 16 base) = -5.869e-5
+   ok CLTrefftz standard: 0.31691813 +- 4.123e-4; grid continuum 0.31690627 (+- 2.575e-6 between fit models): |error| + u 1.443e-5 <= U (additive alone: error 7.513e-5 against its U 3.728e-4)
+   ok CLTrefftz fine: 0.31689562 +- 1.132e-4; grid continuum 0.31690627 (+- 2.575e-6 between fit models): |error| + u 1.323e-5 <= U (additive alone: error 5.625e-5 against its U 7.139e-5)
+   ok CDpressure: cross-term coefficient k = 5.605e-3 over 12 joint meshes (largest deviation 15 %); X(32 x 16 base) = 1.095e-5
+   ok CDpressure standard: 0.0053733737 +- 6.458e-4; grid continuum 0.0053250064 (+- 1.164e-5 between fit models): |error| + u 6.001e-5 <= U (additive alone: error 3.484e-5 against its U 6.373e-4)
+   ok CDpressure fine: 0.0053222183 +- 8.690e-5; grid continuum 0.0053250064 (+- 1.164e-5 between fit models): |error| + u 1.443e-5 <= U (additive alone: error 1.387e-5 against its U 7.997e-5)
+   ok CDiTrefftz: cross-term coefficient k = -1.205e-3 over 12 joint meshes (largest deviation 5 %); X(32 x 16 base) = -2.354e-6
+   ok CDiTrefftz standard: 0.0054187152 +- 1.637e-5; grid continuum 0.0054181504 (+- 5.755e-8 between fit models): |error| + u 6.223e-7 <= U (additive alone: error 2.911e-6 against its U 1.491e-5)
+   ok CDiTrefftz fine: 0.0054181205 +- 6.825e-6; grid continuum 0.0054181504 (+- 5.755e-8 between fit models): |error| + u 8.745e-8 <= U (additive alone: error 2.422e-6 against its U 5.292e-6)
+   ok Cm: cross-term coefficient k = 9.263e-3 over 12 joint meshes (largest deviation 24 %); X(32 x 16 base) = 1.809e-5
+   ok Cm standard: -0.00014971250 +- 1.512e-4; grid continuum -0.00014849825 (+- 8.638e-7 between fit models): |error| + u 2.078e-6 <= U (additive alone: error 2.158e-5 against its U 1.385e-4)
+   ok Cm fine: -0.00014378448 +- 3.107e-5; grid continuum -0.00014849825 (+- 8.638e-7 between fit models): |error| + u 5.578e-6 <= U (additive alone: error 1.764e-5 against its U 1.710e-5)
+   ok Fine CDi 0.0054181205 +- 6.825e-6 covers the finer same-model mesh 96x64 (0.0054144744, itself -3.646e-6 from the estimate)
+   ok Fine CDi 0.0054181205 +- 6.825e-6 covers the finer same-model mesh 128x64 (0.0054142379, itself -3.883e-6 from the estimate)
+6. Study files written by earlier versions (seven meshes) and the built Worker
+   ok 0.3.1 file: version 4 with seven meshes is read, still seven meshes (no joint mesh added)
+   ok 0.3.1 file: combined additively and marked (crossTerm.estimated false: "stored sequence without the joint mesh: combined additively, cross term not estimated")
+   ok 0.3.1 file: delivered strips and weights equal, bit for bit, what 0.3.1 (WingAeroPanel 0.3.1) delivered for it
+   FAIL 0.3.1 file: every coefficient and its U equal the writer's
+   ok 0.3.1 file: the admission says so in its notes and method
+   ok 0.3.1 file: the admission torques and U equal the writer's
+   ok 6e30853 file: version 4 with seven meshes is read, still seven meshes (no joint mesh added)
+   ok 6e30853 file: combined additively and marked (crossTerm.estimated false: "stored sequence without the joint mesh: combined additively, cross term not estimated")
+   ok 6e30853 file: delivered strips and weights equal, bit for bit, what 6e30853 (WingAeroPanel 0.3.2-exp.3) delivered for it
+   ok 6e30853 file: every coefficient and its U equal the writer's
+   ok 6e30853 file: the admission says so in its notes and method
+   ok 6e30853 file: the admission torques and U equal the writer's
+   ok the built Worker bundle is exactly the current sources
+   ok Worker, Fine: one progress message per mesh (8) and the eight solved meshes, joint mesh 96 x 24
+   ok Worker levels and weights equal a direct call of the core
+   ok the page record of a Worker result keeps all eight meshes and is combined with the cross term
+
+cross term: 59 checks passed (67 s)

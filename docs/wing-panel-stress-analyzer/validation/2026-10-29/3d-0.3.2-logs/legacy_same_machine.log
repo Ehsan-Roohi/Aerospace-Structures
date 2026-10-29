@@ -1,0 +1,138 @@
+[
+  {
+    "tag": "0.3.1",
+    "imported": true,
+    "stripsIdentical": true,
+    "sameMachinePublishedComparison": "PASS: every strip, coefficient and U bit-identical to published 0.3.1 recombination",
+    "coefficients": {
+      "CL": {
+        "value": [
+          0.5205870345330331,
+          0.5205870345330331
+        ],
+        "valueDifference": 0,
+        "U": [
+          0.009699178071739187,
+          0.009699178071739187
+        ],
+        "UDifference": 0
+      },
+      "CLTrefftz": {
+        "value": [
+          0.5241078871223157,
+          0.5241078871223157
+        ],
+        "valueDifference": 0,
+        "U": [
+          0.00979366163151224,
+          0.00979366163151224
+        ],
+        "UDifference": 0
+      },
+      "CDpressure": {
+        "value": [
+          0.012638900653566992,
+          0.012638900653566992
+        ],
+        "valueDifference": 0,
+        "U": [
+          0.0010650041216402105,
+          0.0010650041216402084
+        ],
+        "UDifference": 2.168404344971009e-18
+      },
+      "CDiTrefftz": {
+        "value": [
+          0.012694621436592965,
+          0.012694621436592965
+        ],
+        "valueDifference": 0,
+        "U": [
+          0.0007114646652006315,
+          0.0007114646652006294
+        ],
+        "UDifference": 2.168404344971009e-18
+      },
+      "Cm": {
+        "value": [
+          -0.05465351396013273,
+          -0.05465351396013273
+        ],
+        "valueDifference": 0,
+        "U": [
+          0.002778745295355491,
+          0.002778745295355491
+        ],
+        "UDifference": 0
+      }
+    }
+  },
+  {
+    "tag": "6e30853",
+    "imported": true,
+    "stripsIdentical": true,
+    "sameMachinePublishedComparison": "PASS: every strip, coefficient and U bit-identical to published 0.3.1 recombination",
+    "coefficients": {
+      "CL": {
+        "value": [
+          0.5205317217666919,
+          0.5205317217666919
+        ],
+        "valueDifference": 0,
+        "U": [
+          0.001600392330053102,
+          0.001600392330053102
+        ],
+        "UDifference": 0
+      },
+      "CLTrefftz": {
+        "value": [
+          0.5240081104631424,
+          0.5240081104631424
+        ],
+        "valueDifference": 0,
+        "U": [
+          0.0010703718806386042,
+          0.0010703718806386042
+        ],
+        "UDifference": 0
+      },
+      "CDpressure": {
+        "value": [
+          0.01252206185505624,
+          0.01252206185505624
+        ],
+        "valueDifference": 0,
+        "U": [
+          0.0006363157983933169,
+          0.0006363157983933169
+        ],
+        "UDifference": 0
+      },
+      "CDiTrefftz": {
+        "value": [
+          0.012711465636551306,
+          0.012711465636551306
+        ],
+        "valueDifference": 0,
+        "U": [
+          0.00007218684932395114,
+          0.00007218684932395114
+        ],
+        "UDifference": 0
+      },
+      "Cm": {
+        "value": [
+          -0.054084119416428496,
+          -0.054084119416428496
+        ],
+        "valueDifference": 0,
+        "U": [
+          0.00027546307120169394,
+          0.00027546307120169394
+        ],
+        "UDifference": 0
+      }
+    }
+  }
+]

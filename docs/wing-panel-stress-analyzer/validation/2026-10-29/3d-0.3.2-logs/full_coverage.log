@@ -1,0 +1,657 @@
+LEVEL course4 48 16 0.8s
+LEVEL course4 64 16 1.2s
+LEVEL course4 96 16 4.4s
+LEVEL course4 128 16 9.2s
+LEVEL course4 192 16 20.3s
+LEVEL course4 32 24 1.2s
+LEVEL course4 32 32 1.8s
+LEVEL course4 32 48 3.3s
+LEVEL course4 32 64 5.9s
+LEVEL course4 32 96 12.4s
+LEVEL course4 32 16 0.6s
+LEVEL course4 48 24 2.2s
+LEVEL course4 64 32 5.9s
+LEVEL course4 96 48 25.4s
+  twist reference: course wing load on 53 strips of the editable fixture's Fine grid; root wrench -0.1923, 0.0772, 4.1923, 814.0045, -196.3728, 39.1355 (uncertainty 5.3e-6, 7.1e-5, 1.5e-5, 2.4e-2, 5.5e-3, 7.5e-3)
+course4: references and both sequences in 118 s; extrapolated CL pressure/Trefftz 0.5205/0.5239 (Standard), 0.5204/0.5239 (Fine); CDp/CDi 0.01253/0.01271 (Standard), 0.01249/0.01270 (Fine)
+  separability (mixed meshes 96 x 24 (2688 panels), 128 x 32 (4736 panels), 192 x 48 (10560 panels)): cross-term estimates X(32,16) of the root loads from 9 D, 4 D, 2.25 D:
+    torque about the 25/35/45% chord axes (N mm): 0.015 / 0.015 / 0.015;  0.011 / 0.010 / 0.010;  0.006 / 0.006 / 0.005
+    |force| (N): 0.0004 / 0.0004 / 0.0004;  |bending| about the 25% axis (N mm): 0.135 / 0.132 / 0.136
+LEVEL course8 48 16 1.4s
+LEVEL course8 64 16 2.2s
+LEVEL course8 96 16 5.0s
+LEVEL course8 128 16 9.2s
+LEVEL course8 192 16 19.3s
+LEVEL course8 32 24 1.1s
+LEVEL course8 32 32 1.7s
+LEVEL course8 32 48 3.3s
+LEVEL course8 32 64 5.5s
+LEVEL course8 32 96 11.3s
+LEVEL course8 32 16 0.7s
+LEVEL course8 48 24 2.2s
+LEVEL course8 64 32 5.6s
+LEVEL course8 96 48 24.9s
+course8: references and both sequences in 114 s; extrapolated CL pressure/Trefftz 0.8498/0.8588 (Standard), 0.8497/0.8587 (Fine); CDp/CDi 0.03323/0.03412 (Standard), 0.03317/0.03410 (Fine)
+  separability (mixed meshes 96 x 24 (2688 panels), 128 x 32 (4736 panels), 192 x 48 (10560 panels)): cross-term estimates X(32,16) of the root loads from 9 D, 4 D, 2.25 D:
+    torque about the 25/35/45% chord axes (N mm): 0.023 / 0.022 / 0.022;  0.016 / 0.015 / 0.015;  0.008 / 0.008 / 0.007
+    |force| (N): 0.0006 / 0.0006 / 0.0007;  |bending| about the 25% axis (N mm): 0.210 / 0.206 / 0.212
+LEVEL dihedral6 48 16 1.3s
+LEVEL dihedral6 64 16 2.2s
+LEVEL dihedral6 96 16 5.1s
+LEVEL dihedral6 128 16 8.9s
+LEVEL dihedral6 192 16 21.5s
+LEVEL dihedral6 32 24 1.1s
+LEVEL dihedral6 32 32 1.7s
+LEVEL dihedral6 32 48 3.1s
+LEVEL dihedral6 32 64 5.9s
+LEVEL dihedral6 32 96 13.0s
+LEVEL dihedral6 32 16 0.7s
+LEVEL dihedral6 48 24 2.3s
+LEVEL dihedral6 64 32 5.7s
+LEVEL dihedral6 96 48 26.3s
+dihedral6: references and both sequences in 121 s; extrapolated CL pressure/Trefftz 0.5238/0.5265 (Standard), 0.5236/0.5263 (Fine); CDp/CDi 0.01268/0.01281 (Standard), 0.01265/0.01280 (Fine)
+  separability (mixed meshes 96 x 24 (2688 panels), 128 x 32 (4736 panels), 192 x 48 (10560 panels)): cross-term estimates X(32,16) of the root loads from 9 D, 4 D, 2.25 D:
+    torque about the 25/35/45% chord axes (N mm): 0.012 / 0.013 / 0.014;  0.008 / 0.009 / 0.010;  0.005 / 0.006 / 0.005
+    |force| (N): 0.0003 / 0.0004 / 0.0004;  |bending| about the 25% axis (N mm): 0.109 / 0.128 / 0.142
+LEVEL swept25 48 16 1.3s
+LEVEL swept25 64 16 2.4s
+LEVEL swept25 96 16 5.2s
+LEVEL swept25 128 16 8.9s
+LEVEL swept25 192 16 23.3s
+LEVEL swept25 32 24 1.1s
+LEVEL swept25 32 32 1.5s
+LEVEL swept25 32 48 4.0s
+LEVEL swept25 32 64 5.8s
+LEVEL swept25 32 96 12.2s
+LEVEL swept25 32 16 0.7s
+LEVEL swept25 48 24 3.0s
+LEVEL swept25 64 32 6.7s
+LEVEL swept25 96 48 28.2s
+swept25: references and both sequences in 130 s; extrapolated CL pressure/Trefftz 0.5033/0.5050 (Standard), 0.5036/0.5052 (Fine); CDp/CDi 0.01230/0.01224 (Standard), 0.01219/0.01223 (Fine)
+  separability (mixed meshes 96 x 24 (2688 panels), 128 x 32 (4736 panels), 192 x 48 (10560 panels)): cross-term estimates X(32,16) of the root loads from 9 D, 4 D, 2.25 D:
+    torque about the 25/35/45% chord axes (N mm): 0.003 / -0.001 / -0.005;  0.005 / 0.001 / -0.002;  0.007 / 0.003 / 0.000
+    |force| (N): 0.0002 / 0.0002 / 0.0003;  |bending| about the 25% axis (N mm): 0.025 / 0.043 / 0.065
+LEVEL rect0012 48 16 1.6s
+LEVEL rect0012 64 16 2.9s
+LEVEL rect0012 96 16 5.4s
+LEVEL rect0012 128 16 10.1s
+LEVEL rect0012 192 16 29.3s
+LEVEL rect0012 32 24 1.1s
+LEVEL rect0012 32 32 1.9s
+LEVEL rect0012 32 48 3.6s
+LEVEL rect0012 32 64 5.9s
+LEVEL rect0012 32 96 14.5s
+LEVEL rect0012 32 16 0.7s
+LEVEL rect0012 48 24 2.4s
+LEVEL rect0012 64 32 6.2s
+LEVEL rect0012 96 48 28.9s
+rect0012: references and both sequences in 139 s; extrapolated CL pressure/Trefftz 0.3936/0.3960 (Standard), 0.3935/0.3959 (Fine); CDp/CDi 0.00835/0.00846 (Standard), 0.00829/0.00846 (Fine)
+  separability (mixed meshes 96 x 24 (2592 panels), 128 x 32 (4608 panels), 192 x 48 (10368 panels)): cross-term estimates X(32,16) of the root loads from 9 D, 4 D, 2.25 D:
+    torque about the 25/35/45% chord axes (N mm): 0.020 / 0.016 / 0.015;  0.014 / 0.011 / 0.010;  0.008 / 0.006 / 0.005
+    |force| (N): 0.0005 / 0.0005 / 0.0005;  |bending| about the 25% axis (N mm): 0.153 / 0.134 / 0.128
+LEVEL washout 48 16 1.8s
+LEVEL washout 64 16 3.3s
+LEVEL washout 96 16 7.7s
+LEVEL washout 128 16 14.2s
+LEVEL washout 192 16 29.3s
+LEVEL washout 32 24 1.7s
+LEVEL washout 32 32 3.3s
+LEVEL washout 32 48 5.1s
+LEVEL washout 32 64 5.2s
+LEVEL washout 32 96 12.0s
+LEVEL washout 32 16 0.5s
+LEVEL washout 48 24 1.8s
+LEVEL washout 64 32 6.0s
+LEVEL washout 96 48 28.1s
+washout: references and both sequences in 154 s; extrapolated CL pressure/Trefftz 0.5417/0.5453 (Standard), 0.5417/0.5454 (Fine); CDp/CDi 0.01380/0.01399 (Standard), 0.01377/0.01399 (Fine)
+  separability (mixed meshes 96 x 24 (2688 panels), 128 x 32 (4736 panels), 192 x 48 (10560 panels)): cross-term estimates X(32,16) of the root loads from 9 D, 4 D, 2.25 D:
+    torque about the 25/35/45% chord axes (N mm): -0.019 / -0.014 / -0.007;  -0.004 / -0.003 / -0.001;  0.010 / 0.007 / 0.004
+    |force| (N): 0.0011 / 0.0008 / 0.0004;  |bending| about the 25% axis (N mm): 0.229 / 0.180 / 0.116
+LEVEL combo 48 16 1.9s
+LEVEL combo 64 16 3.4s
+LEVEL combo 96 16 7.1s
+LEVEL combo 128 16 13.3s
+LEVEL combo 192 16 31.4s
+LEVEL combo 32 24 1.7s
+LEVEL combo 32 32 2.6s
+LEVEL combo 32 48 5.4s
+LEVEL combo 32 64 9.3s
+LEVEL combo 32 96 20.1s
+LEVEL combo 32 16 1.1s
+LEVEL combo 48 24 4.1s
+LEVEL combo 64 32 11.5s
+LEVEL combo 96 48 35.3s
+combo: references and both sequences in 183 s; extrapolated CL pressure/Trefftz 0.7674/0.7703 (Standard), 0.7679/0.7708 (Fine); CDp/CDi 0.02496/0.02489 (Standard), 0.02481/0.02493 (Fine)
+  separability (mixed meshes 96 x 24 (2688 panels), 128 x 32 (4864 panels), 192 x 48 (10752 panels)): cross-term estimates X(32,16) of the root loads from 9 D, 4 D, 2.25 D:
+    torque about the 25/35/45% chord axes (N mm): 1.181 / 1.294 / 1.433;  0.791 / 0.862 / 0.951;  0.397 / 0.426 / 0.463
+    |force| (N): 0.0320 / 0.0354 / 0.0397;  |bending| about the 25% axis (N mm): 5.692 / 6.319 / 7.109
+
+config    axis seq      quantity            estimate      U          reference (+-u)       |X|     |err|/U  strict strict+  e(est)  e(true) resolved
+course4   0.25 standard torque y=0           -55.7432    0.3071    -55.7845 (+-0.0063)  0.0154    0.13   0.15   0.20    0.6%    0.1% yes
+course4   0.25 standard torque y=113         -36.4259    0.7845    -36.4657 (+-0.0024)  0.0136    0.05   0.05   0.07    2.2%    0.1% yes
+course4   0.25 standard torque y=225         -20.1971    0.2086    -20.2457 (+-0.0176)  0.0132    0.23   0.32   0.38    1.0%    0.2% yes
+course4   0.25 standard torque y=338          -7.7305    0.0760     -7.7540 (+-0.0114)  0.0129    0.31   0.46   0.63    1.0%    0.3% yes
+course4   0.25 standard force                  4.1979    0.0141      4.1974 (+-0.0001)  0.0004    0.05   0.06   0.09    0.3%    0.0% yes
+course4   0.25 standard bending              813.2951    2.7162    813.3962 (+-0.0255)  0.1357    0.05   0.06   0.11    0.3%    0.0% yes
+course4   0.25 fine     torque y=0           -55.7691    0.0890    -55.7845 (+-0.0063)  0.0154    0.17   0.24   0.42    0.2%    0.0% yes
+course4   0.25 fine     torque y=113         -36.4475    0.1386    -36.4657 (+-0.0024)  0.0136    0.13   0.15   0.25    0.4%    0.0% yes
+course4   0.25 fine     torque y=225         -20.2393    0.0364    -20.2457 (+-0.0176)  0.0132    0.18   0.66   1.02    0.2%    0.0% yes
+course4   0.25 fine     torque y=338          -7.7384    0.0287     -7.7540 (+-0.0114)  0.0129    0.54   0.94   1.39    0.4%    0.2% yes
+course4   0.25 fine     force                  4.1973    0.0038      4.1974 (+-0.0001)  0.0004    0.07   0.09   0.20    0.1%    0.0% yes
+course4   0.25 fine     bending              813.2885    0.7038    813.3962 (+-0.0255)  0.1357    0.16   0.19   0.38    0.1%    0.0% yes
+course4   0.35 standard torque y=0             0.4584    0.1770      0.4117 (+-0.0017)  0.0106    0.26   0.27   0.33   38.6%   10.2% no
+course4   0.35 standard torque y=113          -0.1165    0.8456     -0.1733 (+-0.0100)  0.0100    0.07   0.08   0.09  725.8%   48.7% no (sign)
+course4   0.35 standard torque y=225          -0.4462    0.2049     -0.4988 (+-0.0050)  0.0102    0.26   0.28   0.33   45.9%   11.8% no
+course4   0.35 standard torque y=338          -0.5874    0.0512     -0.6142 (+-0.0071)  0.0105    0.52   0.66   0.87    8.7%    4.6% yes
+course4   0.35 standard force                  4.1979    0.0141      4.1974 (+-0.0001)  0.0004    0.05   0.06   0.09    0.3%    0.0% yes
+course4   0.35 standard bending              815.5523    2.7424    815.6527 (+-0.0247)  0.1358    0.05   0.06   0.11    0.3%    0.0% yes
+course4   0.35 fine     torque y=0             0.4229    0.0614      0.4117 (+-0.0017)  0.0106    0.18   0.21   0.38   14.5%    2.6% no
+course4   0.35 fine     torque y=113          -0.1550    0.1269     -0.1733 (+-0.0100)  0.0100    0.14   0.22   0.30   81.8%   11.8% no
+course4   0.35 fine     torque y=225          -0.4906    0.0305     -0.4988 (+-0.0050)  0.0102    0.27   0.43   0.77    6.2%    1.7% yes
+course4   0.35 fine     torque y=338          -0.5965    0.0204     -0.6142 (+-0.0071)  0.0105    0.87   1.21   1.73    3.4%    3.0% yes
+course4   0.35 fine     force                  4.1973    0.0038      4.1974 (+-0.0001)  0.0004    0.07   0.09   0.20    0.1%    0.0% yes
+course4   0.35 fine     bending              815.5449    0.7032    815.6527 (+-0.0247)  0.1358    0.16   0.19   0.38    0.1%    0.0% yes
+course4   0.45 standard torque y=0            56.5902    0.0704     56.5337 (+-0.0021)  0.0058    0.80   0.83   0.91    0.1%    0.1% yes
+course4   0.45 standard torque y=113          36.4399    0.9559     36.3580 (+-0.0050)  0.0065    0.09   0.09   0.10    2.6%    0.2% yes
+course4   0.45 standard torque y=225          19.4846    0.2142     19.4300 (+-0.0076)  0.0073    0.26   0.29   0.33    1.1%    0.3% yes
+course4   0.45 standard torque y=338           6.6752    0.0316      6.6503 (+-0.0026)  0.0084    0.79   0.87   1.13    0.5%    0.4% yes
+course4   0.45 standard force                  4.1979    0.0141      4.1974 (+-0.0001)  0.0004    0.05   0.06   0.09    0.3%    0.0% yes
+course4   0.45 standard bending              819.4489    2.7300    819.5484 (+-0.0245)  0.1361    0.05   0.06   0.11    0.3%    0.0% yes
+course4   0.45 fine     torque y=0            56.5452    0.0452     56.5337 (+-0.0021)  0.0058    0.26   0.30   0.43    0.1%    0.0% yes
+course4   0.45 fine     torque y=113          36.3763    0.1122     36.3580 (+-0.0050)  0.0065    0.16   0.21   0.27    0.3%    0.1% yes
+course4   0.45 fine     torque y=225          19.4390    0.0319     19.4300 (+-0.0076)  0.0073    0.28   0.52   0.75    0.2%    0.0% yes
+course4   0.45 fine     torque y=338           6.6651    0.0173      6.6503 (+-0.0026)  0.0084    0.86   1.01   1.49    0.3%    0.2% yes
+course4   0.45 fine     force                  4.1973    0.0038      4.1974 (+-0.0001)  0.0004    0.07   0.09   0.20    0.1%    0.0% yes
+course4   0.45 fine     bending              819.4406    0.7045    819.5484 (+-0.0245)  0.1361    0.16   0.19   0.39    0.1%    0.0% yes
+course8   0.25 standard torque y=0           -56.4322    0.3783    -56.5004 (+-0.0032)  0.0230    0.18   0.19   0.25    0.7%    0.1% yes
+course8   0.25 standard torque y=113         -36.7057    1.1508    -36.7803 (+-0.0114)  0.0211    0.06   0.07   0.09    3.1%    0.2% yes
+course8   0.25 standard torque y=225         -19.9199    0.2780    -20.0068 (+-0.0208)  0.0205    0.31   0.39   0.46    1.4%    0.4% yes
+course8   0.25 standard torque y=338          -7.2741    0.0915     -7.3195 (+-0.0199)  0.0200    0.50   0.71   0.93    1.3%    0.6% yes
+course8   0.25 standard force                  6.8576    0.0241      6.8569 (+-0.0002)  0.0007    0.07   0.07   0.10    0.4%    0.0% yes
+course8   0.25 standard bending             1328.7210    4.7158   1328.8784 (+-0.0430)  0.2118    0.04   0.05   0.09    0.4%    0.0% yes
+course8   0.25 fine     torque y=0           -56.4830    0.1073    -56.5004 (+-0.0032)  0.0230    0.16   0.19   0.41    0.2%    0.0% yes
+course8   0.25 fine     torque y=113         -36.7508    0.1979    -36.7803 (+-0.0114)  0.0211    0.15   0.21   0.31    0.5%    0.1% yes
+course8   0.25 fine     torque y=225         -19.9929    0.0457    -20.0068 (+-0.0208)  0.0205    0.30   0.76   1.21    0.2%    0.1% yes
+course8   0.25 fine     torque y=338          -7.2893    0.0396     -7.3195 (+-0.0199)  0.0200    0.76   1.27   1.77    0.5%    0.4% yes
+course8   0.25 fine     force                  6.8567    0.0062      6.8569 (+-0.0002)  0.0007    0.11   0.14   0.25    0.1%    0.0% yes
+course8   0.25 fine     bending             1328.6993    1.1449   1328.8784 (+-0.0430)  0.2118    0.16   0.19   0.38    0.1%    0.0% yes
+course8   0.35 standard torque y=0            34.9959    0.2110     34.9122 (+-0.0037)  0.0157    0.40   0.41   0.49    0.6%    0.2% yes
+course8   0.35 standard torque y=113          22.4342    1.2896     22.3293 (+-0.0071)  0.0156    0.08   0.09   0.10    5.7%    0.5% yes
+course8   0.35 standard torque y=225          12.2334    0.2935     12.1366 (+-0.0058)  0.0157    0.33   0.35   0.40    2.4%    0.8% yes
+course8   0.35 standard torque y=338           4.3344    0.0631      4.2889 (+-0.0059)  0.0163    0.72   0.81   1.07    1.5%    1.1% yes
+course8   0.35 standard force                  6.8576    0.0241      6.8569 (+-0.0002)  0.0007    0.07   0.07   0.10    0.4%    0.0% yes
+course8   0.35 standard bending             1332.6974    4.7562   1332.8553 (+-0.0423)  0.2121    0.04   0.05   0.09    0.4%    0.0% yes
+course8   0.35 fine     torque y=0            34.9305    0.0703     34.9122 (+-0.0037)  0.0157    0.26   0.31   0.54    0.2%    0.1% yes
+course8   0.35 fine     torque y=113          22.3614    0.1804     22.3293 (+-0.0071)  0.0156    0.18   0.22   0.30    0.8%    0.1% yes
+course8   0.35 fine     torque y=225          12.1565    0.0360     12.1366 (+-0.0058)  0.0157    0.55   0.72   1.15    0.3%    0.2% yes
+course8   0.35 fine     torque y=338           4.3165    0.0341      4.2889 (+-0.0059)  0.0163    0.81   0.98   1.46    0.8%    0.6% yes
+course8   0.35 fine     force                  6.8567    0.0062      6.8569 (+-0.0002)  0.0007    0.11   0.14   0.25    0.1%    0.0% yes
+course8   0.35 fine     bending             1332.6753    1.1373   1332.8553 (+-0.0423)  0.2121    0.16   0.20   0.38    0.1%    0.0% yes
+course8   0.45 standard torque y=0           126.3044    0.3404    126.2069 (+-0.0032)  0.0083    0.29   0.30   0.32    0.3%    0.1% yes
+course8   0.45 standard torque y=113          82.0088    1.6621     81.8757 (+-0.0146)  0.0100    0.08   0.09   0.09    2.0%    0.2% yes
+course8   0.45 standard torque y=225          44.7047    0.4258     44.6101 (+-0.0061)  0.0113    0.22   0.24   0.26    1.0%    0.2% yes
+course8   0.45 standard torque y=338          16.1546    0.0801     16.1106 (+-0.0055)  0.0128    0.55   0.62   0.78    0.5%    0.3% yes
+course8   0.45 standard force                  6.8576    0.0241      6.8569 (+-0.0002)  0.0007    0.07   0.07   0.10    0.4%    0.0% yes
+course8   0.45 standard bending             1339.3328    4.6980   1339.4909 (+-0.0421)  0.2126    0.04   0.05   0.10    0.4%    0.0% yes
+course8   0.45 fine     torque y=0           126.2243    0.0902    126.2069 (+-0.0032)  0.0083    0.19   0.23   0.32    0.1%    0.0% yes
+course8   0.45 fine     torque y=113          81.8949    0.1894     81.8757 (+-0.0146)  0.0100    0.10   0.18   0.23    0.2%    0.0% yes
+course8   0.45 fine     torque y=225          44.6253    0.0468     44.6101 (+-0.0061)  0.0113    0.32   0.45   0.70    0.1%    0.0% yes
+course8   0.45 fine     torque y=338          16.1343    0.0224     16.1106 (+-0.0055)  0.0128    1.06   1.30   1.88    0.1%    0.1% yes
+course8   0.45 fine     force                  6.8567    0.0062      6.8569 (+-0.0002)  0.0007    0.11   0.14   0.25    0.1%    0.0% yes
+course8   0.45 fine     bending             1339.3098    1.1358   1339.4909 (+-0.0421)  0.2126    0.16   0.20   0.38    0.1%    0.0% yes
+dihedral6 0.25 standard torque y=0           -56.6926    0.3241    -56.7078 (+-0.0102)  0.0144    0.05   0.08   0.12    0.6%    0.0% yes
+dihedral6 0.25 standard torque y=113         -36.4887    0.9772    -36.5636 (+-0.0087)  0.0135    0.08   0.09   0.10    2.7%    0.2% yes
+dihedral6 0.25 standard torque y=225         -20.1199    0.1788    -20.1534 (+-0.0205)  0.0131    0.19   0.30   0.38    0.9%    0.2% yes
+dihedral6 0.25 standard torque y=338          -7.5865    0.0818     -7.6112 (+-0.0197)  0.0128    0.30   0.54   0.70    1.1%    0.3% yes
+dihedral6 0.25 standard force                  4.2400    0.0166      4.2378 (+-0.0002)  0.0004    0.14   0.15   0.17    0.4%    0.1% yes
+dihedral6 0.25 standard bending              823.3685    2.7360    823.3171 (+-0.0318)  0.1417    0.03   0.04   0.09    0.3%    0.0% yes
+dihedral6 0.25 fine     torque y=0           -56.7128    0.1072    -56.7078 (+-0.0102)  0.0144    0.05   0.14   0.28    0.2%    0.0% yes
+dihedral6 0.25 fine     torque y=113         -36.5673    0.0631    -36.5636 (+-0.0087)  0.0135    0.06   0.20   0.41    0.2%    0.0% yes
+dihedral6 0.25 fine     torque y=225         -20.1526    0.0398    -20.1534 (+-0.0205)  0.0131    0.02   0.54   0.86    0.2%    0.0% yes
+dihedral6 0.25 fine     torque y=338          -7.5934    0.0278     -7.6112 (+-0.0197)  0.0128    0.64   1.35   1.81    0.4%    0.2% yes
+dihedral6 0.25 fine     force                  4.2386    0.0049      4.2378 (+-0.0002)  0.0004    0.16   0.19   0.27    0.1%    0.0% yes
+dihedral6 0.25 fine     bending              823.3077    0.7755    823.3171 (+-0.0318)  0.1417    0.02   0.06   0.25    0.1%    0.0% yes
+dihedral6 0.35 standard torque y=0             0.1088    0.1840      0.0632 (+-0.0089)  0.0099    0.25   0.30   0.35  169.1%   42.0% no (sign)
+dihedral6 0.35 standard torque y=113          -0.0505    1.0396     -0.1510 (+-0.0170)  0.0096    0.10   0.11   0.12 2058.3%  198.9% no (sign)
+dihedral6 0.35 standard torque y=225          -0.3689    0.1740     -0.4180 (+-0.0124)  0.0099    0.28   0.35   0.41   47.2%   13.3% no
+dihedral6 0.35 standard torque y=338          -0.4930    0.0578     -0.5186 (+-0.0027)  0.0102    0.44   0.49   0.67   11.7%    5.2% no
+dihedral6 0.35 standard force                  4.2400    0.0166      4.2378 (+-0.0002)  0.0004    0.14   0.15   0.17    0.4%    0.1% yes
+dihedral6 0.35 standard bending              825.6306    2.7678    825.5778 (+-0.0312)  0.1418    0.03   0.04   0.09    0.3%    0.0% yes
+dihedral6 0.35 fine     torque y=0             0.0664    0.0658      0.0632 (+-0.0089)  0.0099    0.05   0.18   0.33   99.2%    4.8% no (sign)
+dihedral6 0.35 fine     torque y=113          -0.1478    0.0519     -0.1510 (+-0.0170)  0.0096    0.06   0.39   0.57   35.1%    2.2% no
+dihedral6 0.35 fine     torque y=225          -0.4049    0.0323     -0.4180 (+-0.0124)  0.0099    0.41   0.79   1.10    8.0%    3.2% yes
+dihedral6 0.35 fine     torque y=338          -0.5009    0.0280     -0.5186 (+-0.0027)  0.0102    0.63   0.73   1.09    5.6%    3.5% yes
+dihedral6 0.35 fine     force                  4.2386    0.0049      4.2378 (+-0.0002)  0.0004    0.16   0.19   0.27    0.1%    0.0% yes
+dihedral6 0.35 fine     bending              825.5686    0.7756    825.5778 (+-0.0312)  0.1418    0.03   0.07   0.25    0.1%    0.0% yes
+dihedral6 0.45 standard torque y=0            56.8405    0.1246     56.7600 (+-0.0041)  0.0056    0.65   0.68   0.72    0.2%    0.1% yes
+dihedral6 0.45 standard torque y=113          36.6331    1.1407     36.5064 (+-0.0103)  0.0057    0.11   0.12   0.12    3.1%    0.3% yes
+dihedral6 0.45 standard torque y=225          19.5613    0.2080     19.5135 (+-0.0142)  0.0066    0.23   0.30   0.33    1.1%    0.2% yes
+dihedral6 0.45 standard torque y=338           6.7189    0.0447      6.6956 (+-0.0040)  0.0076    0.52   0.61   0.78    0.7%    0.3% yes
+dihedral6 0.45 standard force                  4.2400    0.0166      4.2378 (+-0.0002)  0.0004    0.14   0.15   0.17    0.4%    0.1% yes
+dihedral6 0.45 standard bending              829.5402    2.7650    829.4850 (+-0.0306)  0.1421    0.03   0.04   0.09    0.3%    0.0% yes
+dihedral6 0.45 fine     torque y=0            56.7759    0.0788     56.7600 (+-0.0041)  0.0056    0.20   0.25   0.33    0.1%    0.0% yes
+dihedral6 0.45 fine     torque y=113          36.5101    0.0507     36.5064 (+-0.0103)  0.0057    0.07   0.28   0.39    0.1%    0.0% yes
+dihedral6 0.45 fine     torque y=225          19.5227    0.0324     19.5135 (+-0.0142)  0.0066    0.28   0.72   0.93    0.2%    0.0% yes
+dihedral6 0.45 fine     torque y=338           6.7102    0.0206      6.6956 (+-0.0040)  0.0076    0.71   0.90   1.27    0.3%    0.2% yes
+dihedral6 0.45 fine     force                  4.2386    0.0049      4.2378 (+-0.0002)  0.0004    0.16   0.19   0.27    0.1%    0.0% yes
+dihedral6 0.45 fine     bending              829.4763    0.7778    829.4850 (+-0.0306)  0.1421    0.03   0.07   0.26    0.1%    0.0% yes
+swept25   0.25 standard torque y=0           -51.9606    0.5660    -51.7585 (+-0.0798)  0.0047    0.36   0.50   0.51    1.1%    0.4% yes
+swept25   0.25 standard torque y=113         -32.0861    3.8173    -31.8660 (+-0.0733)  0.0074    0.06   0.08   0.08   11.9%    0.7% no
+swept25   0.25 standard torque y=225         -17.4919    0.4680    -17.3716 (+-0.0719)  0.0067    0.26   0.41   0.43    2.7%    0.7% yes
+swept25   0.25 standard torque y=338          -6.3942    0.0869     -6.3829 (+-0.0366)  0.0065    0.13   0.55   0.63    1.4%    0.2% yes
+swept25   0.25 standard force                  4.0633    0.0191      4.0659 (+-0.0002)  0.0003    0.15   0.16   0.18    0.5%    0.1% yes
+swept25   0.25 standard bending              940.1974    3.4146    940.1594 (+-0.0819)  0.0648    0.01   0.04   0.05    0.4%    0.0% yes
+swept25   0.25 fine     torque y=0           -51.8081    0.2038    -51.7585 (+-0.0798)  0.0047    0.24   0.63   0.66    0.4%    0.1% yes
+swept25   0.25 fine     torque y=113         -31.9084    0.5146    -31.8660 (+-0.0733)  0.0074    0.08   0.22   0.24    1.6%    0.1% yes
+swept25   0.25 fine     torque y=225         -17.3705    0.0543    -17.3716 (+-0.0719)  0.0067    0.02   1.35   1.47    0.3%    0.0% yes
+swept25   0.25 fine     torque y=338          -6.3822    0.0240     -6.3829 (+-0.0366)  0.0065    0.03   1.55   1.82    0.4%    0.0% yes
+swept25   0.25 fine     force                  4.0650    0.0064      4.0659 (+-0.0002)  0.0003    0.14   0.17   0.21    0.2%    0.0% yes
+swept25   0.25 fine     bending              940.1516    1.0565    940.1594 (+-0.0819)  0.0648    0.02   0.09   0.16    0.1%    0.0% yes
+swept25   0.35 standard torque y=0            -3.1815    0.5318     -2.8923 (+-0.0277)  0.0049    0.54   0.60   0.61   16.7%    9.1% no
+swept25   0.35 standard torque y=113           1.1528    1.3258      1.2012 (+-0.1217)  0.0061    0.04   0.13   0.13  115.0%    4.2% no (sign)
+swept25   0.35 standard torque y=225           1.3136    0.2804      1.3464 (+-0.0428)  0.0057    0.12   0.27   0.29   21.3%    2.5% no
+swept25   0.35 standard torque y=338           0.7399    0.0726      0.7655 (+-0.0344)  0.0054    0.35   0.83   0.90    9.8%    3.5% yes
+swept25   0.35 standard force                  4.0633    0.0191      4.0659 (+-0.0002)  0.0003    0.15   0.16   0.18    0.5%    0.1% yes
+swept25   0.35 standard bending              912.6570    3.2917    912.5820 (+-0.0398)  0.0626    0.02   0.04   0.05    0.4%    0.0% yes
+swept25   0.35 fine     torque y=0            -3.0030    0.2145     -2.8923 (+-0.0277)  0.0049    0.52   0.65   0.67    7.1%    3.7% yes
+swept25   0.35 fine     torque y=113           1.1119    0.0676      1.2012 (+-0.1217)  0.0061    1.32   3.12   3.21    6.1%    8.0% yes
+swept25   0.35 fine     torque y=225           1.3515    0.0984      1.3464 (+-0.0428)  0.0057    0.05   0.49   0.55    7.3%    0.4% yes
+swept25   0.35 fine     torque y=338           0.7509    0.0328      0.7655 (+-0.0344)  0.0054    0.45   1.50   1.66    4.4%    1.9% yes
+swept25   0.35 fine     force                  4.0650    0.0064      4.0659 (+-0.0002)  0.0003    0.14   0.17   0.21    0.2%    0.0% yes
+swept25   0.35 fine     bending              912.6013    1.0147    912.5820 (+-0.0398)  0.0626    0.02   0.06   0.12    0.1%    0.0% yes
+swept25   0.45 standard torque y=0            46.0893    0.4851     46.3652 (+-0.1403)  0.0070    0.57   0.86   0.87    1.1%    0.6% yes
+swept25   0.45 standard torque y=113          33.1960    1.7044     33.0561 (+-0.0503)  0.0046    0.08   0.11   0.11    5.1%    0.4% yes
+swept25   0.45 standard torque y=225          19.2057    0.6013     19.1764 (+-0.0340)  0.0046    0.05   0.11   0.11    3.1%    0.2% yes
+swept25   0.45 standard torque y=338           7.2032    0.0878      7.2324 (+-0.0444)  0.0044    0.33   0.84   0.89    1.2%    0.4% yes
+swept25   0.45 standard force                  4.0633    0.0191      4.0659 (+-0.0002)  0.0003    0.15   0.16   0.18    0.5%    0.1% yes
+swept25   0.45 standard bending              886.3106    3.2137    886.2449 (+-0.1438)  0.0606    0.02   0.07   0.08    0.4%    0.0% yes
+swept25   0.45 fine     torque y=0            46.2940    0.2458     46.3652 (+-0.1403)  0.0070    0.29   0.86   0.89    0.5%    0.2% yes
+swept25   0.45 fine     torque y=113          33.0833    0.4076     33.0561 (+-0.0503)  0.0046    0.07   0.19   0.20    1.2%    0.1% yes
+swept25   0.45 fine     torque y=225          19.1662    0.0289     19.1764 (+-0.0340)  0.0046    0.35   1.53   1.69    0.2%    0.1% yes
+swept25   0.45 fine     torque y=338           7.2229    0.0308      7.2324 (+-0.0444)  0.0044    0.31   1.75   1.89    0.4%    0.1% yes
+swept25   0.45 fine     force                  4.0650    0.0064      4.0659 (+-0.0002)  0.0003    0.14   0.17   0.21    0.2%    0.0% yes
+swept25   0.45 fine     bending              886.2455    0.9746    886.2449 (+-0.1438)  0.0606    0.02   0.16   0.23    0.1%    0.0% yes
+rect0012  0.25 standard torque y=0            -0.1335    0.1348     -0.1478 (+-0.0023)  0.0199    0.11   0.12   0.27  101.0%   10.8% no (sign)
+rect0012  0.25 standard torque y=90            0.4100    0.1104      0.3932 (+-0.0074)  0.0198    0.15   0.22   0.40   26.9%    4.1% no
+rect0012  0.25 standard torque y=180           0.7801    0.1084      0.7625 (+-0.0011)  0.0195    0.16   0.17   0.35   13.9%    2.3% no
+rect0012  0.25 standard torque y=270           0.6093    0.0896      0.5998 (+-0.0020)  0.0188    0.11   0.13   0.34   14.7%    1.6% no
+rect0012  0.25 standard force                  2.3445    0.0093      2.3445 (+-0.0000)  0.0005    0.06   0.07   0.12    0.4%    0.0% yes
+rect0012  0.25 standard bending              374.1074    1.7200    374.1595 (+-0.0082)  0.1526    0.06   0.06   0.15    0.5%    0.0% yes
+rect0012  0.25 fine     torque y=0            -0.1282    0.0277     -0.1478 (+-0.0023)  0.0199    0.71   0.79   1.51   21.6%   15.3% no
+rect0012  0.25 fine     torque y=90            0.4174    0.0231      0.3932 (+-0.0074)  0.0198    1.05   1.37   2.22    5.5%    5.8% yes
+rect0012  0.25 fine     torque y=180           0.7864    0.0255      0.7625 (+-0.0011)  0.0195    0.94   0.98   1.75    3.2%    3.0% yes
+rect0012  0.25 fine     torque y=270           0.6224    0.0242      0.5998 (+-0.0020)  0.0188    0.93   1.02   1.80    3.9%    3.6% yes
+rect0012  0.25 fine     force                  2.3441    0.0019      2.3445 (+-0.0000)  0.0005    0.23   0.24   0.52    0.1%    0.0% yes
+rect0012  0.25 fine     bending              374.0212    0.3710    374.1595 (+-0.0082)  0.1526    0.38   0.40   0.82    0.1%    0.0% yes
+rect0012  0.35 standard torque y=0            27.9317    0.1703     27.9155 (+-0.0008)  0.0140    0.10   0.10   0.18    0.6%    0.1% yes
+rect0012  0.35 standard torque y=90           20.1868    0.1504     20.1721 (+-0.0007)  0.0142    0.10   0.10   0.20    0.7%    0.1% yes
+rect0012  0.35 standard torque y=180          12.5773    0.1233     12.5651 (+-0.0023)  0.0144    0.10   0.12   0.24    1.0%    0.1% yes
+rect0012  0.35 standard torque y=270           5.2854    0.0965      5.2752 (+-0.0022)  0.0145    0.11   0.13   0.28    1.8%    0.2% yes
+rect0012  0.35 standard force                  2.3445    0.0093      2.3445 (+-0.0000)  0.0005    0.06   0.07   0.12    0.4%    0.0% yes
+rect0012  0.35 standard bending              374.0645    1.7191    374.1168 (+-0.0080)  0.1520    0.06   0.07   0.15    0.5%    0.0% yes
+rect0012  0.35 fine     torque y=0            27.9318    0.0230     27.9155 (+-0.0008)  0.0140    0.71   0.74   1.35    0.1%    0.1% yes
+rect0012  0.35 fine     torque y=90           20.1889    0.0224     20.1721 (+-0.0007)  0.0142    0.75   0.78   1.42    0.1%    0.1% yes
+rect0012  0.35 fine     torque y=180          12.5828    0.0221     12.5651 (+-0.0023)  0.0144    0.80   0.91   1.56    0.2%    0.1% yes
+rect0012  0.35 fine     torque y=270           5.2933    0.0221      5.2752 (+-0.0022)  0.0145    0.82   0.92   1.58    0.4%    0.3% yes
+rect0012  0.35 fine     force                  2.3441    0.0019      2.3445 (+-0.0000)  0.0005    0.23   0.24   0.52    0.1%    0.0% yes
+rect0012  0.35 fine     bending              373.9785    0.3665    374.1168 (+-0.0080)  0.1520    0.39   0.41   0.82    0.1%    0.0% yes
+rect0012  0.45 standard torque y=0            55.9969    0.2606     55.9810 (+-0.0004)  0.0081    0.06   0.06   0.09    0.5%    0.0% yes
+rect0012  0.45 standard torque y=90           39.9635    0.2267     39.9493 (+-0.0007)  0.0087    0.06   0.07   0.10    0.6%    0.0% yes
+rect0012  0.45 standard torque y=180          24.3745    0.1599     24.3658 (+-0.0017)  0.0094    0.05   0.07   0.12    0.7%    0.0% yes
+rect0012  0.45 standard torque y=270           9.9615    0.1171      9.9502 (+-0.0065)  0.0102    0.10   0.15   0.24    1.2%    0.1% yes
+rect0012  0.45 standard force                  2.3445    0.0093      2.3445 (+-0.0000)  0.0005    0.06   0.07   0.12    0.4%    0.0% yes
+rect0012  0.45 standard bending              374.0227    1.7306    374.0752 (+-0.0081)  0.1516    0.06   0.07   0.16    0.5%    0.0% yes
+rect0012  0.45 fine     torque y=0            55.9918    0.0332     55.9810 (+-0.0004)  0.0081    0.33   0.34   0.58    0.1%    0.0% yes
+rect0012  0.45 fine     torque y=90           39.9604    0.0322     39.9493 (+-0.0007)  0.0087    0.35   0.37   0.64    0.1%    0.0% yes
+rect0012  0.45 fine     torque y=180          24.3793    0.0226     24.3658 (+-0.0017)  0.0094    0.59   0.67   1.09    0.1%    0.1% yes
+rect0012  0.45 fine     torque y=270           9.9641    0.0221      9.9502 (+-0.0065)  0.0102    0.63   0.93   1.39    0.2%    0.1% yes
+rect0012  0.45 fine     force                  2.3441    0.0019      2.3445 (+-0.0000)  0.0005    0.23   0.24   0.52    0.1%    0.0% yes
+rect0012  0.45 fine     bending              373.9370    0.3623    374.0752 (+-0.0081)  0.1516    0.39   0.41   0.83    0.1%    0.0% yes
+washout   0.25 standard torque y=0           -55.9094    0.3687    -55.9544 (+-0.0508)  0.0192    0.12   0.26   0.31    0.7%    0.1% yes
+washout   0.25 standard torque y=113         -37.2664    0.8079    -37.2906 (+-0.0105)  0.0173    0.03   0.04   0.06    2.2%    0.1% yes
+washout   0.25 standard torque y=225         -20.9880    0.1873    -21.0217 (+-0.0150)  0.0076    0.18   0.26   0.30    0.9%    0.2% yes
+washout   0.25 standard torque y=338          -8.2285    0.0628     -8.2435 (+-0.0093)  0.0053    0.24   0.39   0.47    0.8%    0.2% yes
+washout   0.25 standard force                  4.3688    0.0149      4.3689 (+-0.0001)  0.0011    0.02   0.03   0.11    0.3%    0.0% yes
+washout   0.25 standard bending              793.7745    2.7175    793.8240 (+-0.2746)  0.2288    0.03   0.13   0.22    0.3%    0.0% yes
+washout   0.25 fine     torque y=0           -55.9626    0.1253    -55.9544 (+-0.0508)  0.0192    0.06   0.47   0.62    0.2%    0.0% yes
+washout   0.25 fine     torque y=113         -37.3056    0.1286    -37.2906 (+-0.0105)  0.0173    0.12   0.20   0.33    0.3%    0.0% yes
+washout   0.25 fine     torque y=225         -21.0361    0.0354    -21.0217 (+-0.0150)  0.0076    0.41   0.83   1.05    0.2%    0.1% yes
+washout   0.25 fine     torque y=338          -8.2372    0.0181     -8.2435 (+-0.0093)  0.0053    0.35   0.87   1.16    0.2%    0.1% yes
+washout   0.25 fine     force                  4.3693    0.0051      4.3689 (+-0.0001)  0.0011    0.07   0.10   0.32    0.1%    0.0% yes
+washout   0.25 fine     bending              793.9479    0.8358    793.8240 (+-0.2746)  0.2288    0.15   0.48   0.75    0.1%    0.0% yes
+washout   0.35 standard torque y=0             3.2211    0.2082      3.1729 (+-0.0252)  0.0044    0.23   0.35   0.37    6.5%    1.5% yes
+washout   0.35 standard torque y=113          -1.0509    0.8612     -1.1047 (+-0.0079)  0.0050    0.06   0.07   0.08   81.9%    5.1% no
+washout   0.35 standard torque y=225          -2.5573    0.1978     -2.5996 (+-0.0070)  0.0010    0.21   0.25   0.25    7.7%    1.7% yes
+washout   0.35 standard torque y=338          -2.0210    0.0495     -2.0414 (+-0.0062)  0.0059    0.41   0.54   0.66    2.4%    1.0% yes
+washout   0.35 standard force                  4.3688    0.0149      4.3689 (+-0.0001)  0.0011    0.02   0.03   0.11    0.3%    0.0% yes
+washout   0.35 standard bending              796.1296    2.7041    796.1783 (+-0.2721)  0.2293    0.03   0.13   0.22    0.3%    0.0% yes
+washout   0.35 fine     torque y=0             3.1732    0.0728      3.1729 (+-0.0252)  0.0044    0.00   0.35   0.41    2.3%    0.0% yes
+washout   0.35 fine     torque y=113          -1.1008    0.1154     -1.1047 (+-0.0079)  0.0050    0.03   0.10   0.15   10.5%    0.4% no
+washout   0.35 fine     torque y=225          -2.5997    0.0213     -2.5996 (+-0.0070)  0.0010    0.00   0.33   0.37    0.8%    0.0% yes
+washout   0.35 fine     torque y=338          -2.0301    0.0142     -2.0414 (+-0.0062)  0.0059    0.80   1.24   1.65    0.7%    0.6% yes
+washout   0.35 fine     force                  4.3693    0.0051      4.3689 (+-0.0001)  0.0011    0.07   0.10   0.32    0.1%    0.0% yes
+washout   0.35 fine     bending              796.3027    0.8376    796.1783 (+-0.2721)  0.2293    0.15   0.47   0.75    0.1%    0.0% yes
+washout   0.45 standard torque y=0            62.2744    0.0821     62.2159 (+-0.0207)  0.0104    0.71   0.96   1.09    0.1%    0.1% yes
+washout   0.45 standard torque y=113          35.4507    0.9578     35.3612 (+-0.0239)  0.0075    0.09   0.12   0.13    2.7%    0.3% yes
+washout   0.45 standard torque y=225          16.0593    0.2095     16.0115 (+-0.0028)  0.0062    0.23   0.24   0.27    1.3%    0.3% yes
+washout   0.45 standard torque y=338           4.2907    0.0405      4.2663 (+-0.0040)  0.0071    0.60   0.70   0.88    0.9%    0.6% yes
+washout   0.45 standard force                  4.3688    0.0149      4.3689 (+-0.0001)  0.0011    0.02   0.03   0.11    0.3%    0.0% yes
+washout   0.45 standard bending              800.1841    2.6904    800.2314 (+-0.2723)  0.2303    0.03   0.13   0.22    0.3%    0.0% yes
+washout   0.45 fine     torque y=0            62.2317    0.0501     62.2159 (+-0.0207)  0.0104    0.32   0.73   0.94    0.1%    0.0% yes
+washout   0.45 fine     torque y=113          35.3820    0.1062     35.3612 (+-0.0239)  0.0075    0.20   0.42   0.49    0.3%    0.1% yes
+washout   0.45 fine     torque y=225          16.0233    0.0238     16.0115 (+-0.0028)  0.0062    0.49   0.61   0.87    0.1%    0.1% yes
+washout   0.45 fine     torque y=338           4.2817    0.0160      4.2663 (+-0.0040)  0.0071    0.96   1.21   1.66    0.4%    0.4% yes
+washout   0.45 fine     force                  4.3693    0.0051      4.3689 (+-0.0001)  0.0011    0.07   0.10   0.32    0.1%    0.0% yes
+washout   0.45 fine     bending              800.3569    0.8433    800.2314 (+-0.2723)  0.2303    0.15   0.47   0.75    0.1%    0.0% yes
+combo     0.25 standard torque y=0           -85.6340    2.9871    -87.0973 (+-0.5038)  1.4334    0.49   0.66   1.14    3.5%    1.7% yes
+combo     0.25 standard torque y=113         -37.9426    7.3179    -38.5562 (+-0.3011)  0.6893    0.08   0.13   0.22   19.3%    1.6% no
+combo     0.25 standard torque y=225         -12.7898    1.1862    -12.8350 (+-0.0809)  0.2594    0.04   0.11   0.32    9.3%    0.4% yes
+combo     0.25 standard torque y=338          -1.8112    0.1372     -1.8919 (+-0.0248)  0.0610    0.59   0.77   1.21    7.6%    4.5% yes
+combo     0.25 standard force                  7.8920    0.0910      7.9429 (+-0.0062)  0.0397    0.56   0.63   1.06    1.2%    0.6% yes
+combo     0.25 standard bending             1497.5926   15.4658   1506.4567 (+-1.2545)  7.1086    0.57   0.65   1.11    1.0%    0.6% yes
+combo     0.25 fine     torque y=0           -85.5143    2.1434    -87.0973 (+-0.5038)  1.4334    0.74   0.97   1.64    2.5%    1.9% yes
+combo     0.25 fine     torque y=113         -37.7444    1.9751    -38.5562 (+-0.3011)  0.6893    0.41   0.56   0.91    5.2%    2.2% yes
+combo     0.25 fine     torque y=225         -12.6411    0.3809    -12.8350 (+-0.0809)  0.2594    0.51   0.72   1.40    3.0%    1.5% yes
+combo     0.25 fine     torque y=338          -1.8472    0.1037     -1.8919 (+-0.0248)  0.0610    0.43   0.67   1.26    5.6%    2.4% yes
+combo     0.25 fine     force                  7.8969    0.0684      7.9429 (+-0.0062)  0.0397    0.67   0.76   1.34    0.9%    0.6% yes
+combo     0.25 fine     bending             1498.3344   10.8851   1506.4567 (+-1.2545)  7.1086    0.75   0.86   1.51    0.7%    0.5% yes
+combo     0.35 standard torque y=0             8.6019    1.9108      7.7537 (+-0.4141)  0.9506    0.44   0.66   1.16   22.2%    9.9% no
+combo     0.35 standard torque y=113          16.8943    3.6282     16.5245 (+-0.8556)  0.4201    0.10   0.34   0.45   21.5%    2.2% no
+combo     0.35 standard torque y=225          12.8904    0.4288     12.8189 (+-0.1845)  0.1469    0.17   0.60   0.94    3.3%    0.6% yes
+combo     0.35 standard torque y=338           5.9847    0.1420      5.9174 (+-0.0310)  0.0305    0.47   0.69   0.91    2.4%    1.1% yes
+combo     0.35 standard force                  7.8920    0.0910      7.9429 (+-0.0062)  0.0397    0.56   0.63   1.06    1.2%    0.6% yes
+combo     0.35 standard bending             1465.2832   14.6949   1473.9234 (+-1.2464)  6.9281    0.59   0.67   1.14    1.0%    0.6% yes
+combo     0.35 fine     torque y=0             8.7812    1.4908      7.7537 (+-0.4141)  0.9506    0.69   0.97   1.60   17.0%   11.7% no
+combo     0.35 fine     torque y=113          16.7641    1.1827     16.5245 (+-0.8556)  0.4201    0.20   0.93   1.28    7.1%    1.4% yes
+combo     0.35 fine     torque y=225          12.9702    0.2772     12.8189 (+-0.1845)  0.1469    0.55   1.21   1.74    2.1%    1.2% yes
+combo     0.35 fine     torque y=338           5.9501    0.0351      5.9174 (+-0.0310)  0.0305    0.93   1.81   2.68    0.6%    0.5% yes
+combo     0.35 fine     force                  7.8969    0.0684      7.9429 (+-0.0062)  0.0397    0.67   0.76   1.34    0.9%    0.6% yes
+combo     0.35 fine     bending             1466.0077   10.5185   1473.9234 (+-1.2464)  6.9281    0.75   0.87   1.53    0.7%    0.5% yes
+combo     0.45 standard torque y=0           103.7037    1.1741    103.4740 (+-0.3315)  0.4630    0.20   0.48   0.87    1.1%    0.2% yes
+combo     0.45 standard torque y=113          70.2593    1.3904     69.8649 (+-0.4170)  0.1602    0.28   0.58   0.70    2.0%    0.6% yes
+combo     0.45 standard torque y=225          37.8253    0.6128     37.7862 (+-0.0476)  0.0388    0.06   0.14   0.20    1.6%    0.1% yes
+combo     0.45 standard torque y=338          13.4186    0.1649     13.4035 (+-0.0228)  0.0025    0.09   0.23   0.24    1.2%    0.1% yes
+combo     0.45 standard force                  7.8920    0.0910      7.9429 (+-0.0062)  0.0397    0.56   0.63   1.06    1.2%    0.6% yes
+combo     0.45 standard bending             1437.0179   14.0012   1445.4609 (+-1.2427)  6.7680    0.60   0.69   1.18    1.0%    0.6% yes
+combo     0.45 fine     torque y=0           103.9432    0.7584    103.4740 (+-0.3315)  0.4630    0.62   1.06   1.67    0.7%    0.5% yes
+combo     0.45 fine     torque y=113          70.0346    0.3179     69.8649 (+-0.4170)  0.1602    0.53   1.85   2.35    0.5%    0.2% yes
+combo     0.45 fine     torque y=225          37.8476    0.1851     37.7862 (+-0.0476)  0.0388    0.33   0.59   0.80    0.5%    0.2% yes
+combo     0.45 fine     torque y=338          13.3923    0.0503     13.4035 (+-0.0228)  0.0025    0.22   0.68   0.73    0.4%    0.1% yes
+combo     0.45 fine     force                  7.8969    0.0684      7.9429 (+-0.0062)  0.0397    0.67   0.76   1.34    0.9%    0.6% yes
+combo     0.45 fine     bending             1437.7275   10.1906   1445.4609 (+-1.2427)  6.7680    0.76   0.88   1.55    0.7%    0.5% yes
+
+summary (coverage: |estimate - reference| <= U; strict adds the reference uncertainty; strict+ also adds the estimated cross-term error |X(32,16)|; torque tolerance is 10% of |T| itself):
+  standard/torque   84/84 covered (strict 84/84, strict+ 78/84, largest strict+ ratio 1.21), largest |err|/U 0.80 (course4 axis 0.45 y 0); resolved 65; resolved with error above tolerance: 0 (strict+ 0); sign resolved 79, of which wrong 0; estimates with the wrong sign 0, all flagged sign-unresolved: true; meshes disagree in sign at 1
+  standard/force    21/21 covered (strict 21/21, strict+ 18/21, largest strict+ ratio 1.06), largest |err|/U 0.56 (combo axis 0.25 y 0); resolved 21; resolved with error above tolerance: 0 (strict+ 0)
+  standard/bending  21/21 covered (strict 21/21, strict+ 18/21, largest strict+ ratio 1.18), largest |err|/U 0.60 (combo axis 0.45 y 0); resolved 21; resolved with error above tolerance: 0 (strict+ 0)
+  fine/torque       81/84 covered (strict 65/84, strict+ 42/84, largest strict+ ratio 3.21), largest |err|/U 1.32 (swept25 axis 0.35 y 112.5); resolved 77; resolved with error above tolerance: 0 (strict+ 2); sign resolved 83, of which wrong 0; estimates with the wrong sign 0, all flagged sign-unresolved: true; meshes disagree in sign at 1
+  fine/force        21/21 covered (strict 21/21, strict+ 18/21, largest strict+ ratio 1.34), largest |err|/U 0.67 (combo axis 0.25 y 0); resolved 21; resolved with error above tolerance: 0 (strict+ 0)
+  fine/bending      21/21 covered (strict 21/21, strict+ 18/21, largest strict+ ratio 1.55), largest |err|/U 0.76 (combo axis 0.45 y 0); resolved 21; resolved with error above tolerance: 0 (strict+ 0)
+  Standard and Fine torques of opposite sign: 0 cases, flagged sign-unresolved in both sequences: 0
+
+summary against the CROSS-CORRECTED references (reference + X(32,16) from the 96 x 48 mixed mesh; u + |X(96,48) - X(64,32)|):
+  standard/torque   84/84 within U (strict 83/84), largest |err|/U 0.73 (course4 axis 0.45 y 0); resolved 65, resolved with strict error above tolerance 0; resolved sign wrong 0
+  standard/force    21/21 within U (strict 21/21), largest |err|/U 0.16 (swept25 axis 0.25 y 0); resolved 21, resolved with strict error above tolerance 0
+  standard/bending  21/21 within U (strict 21/21), largest |err|/U 0.12 (combo axis 0.45 y 0); resolved 21, resolved with strict error above tolerance 0
+  fine/torque       83/84 within U (strict 75/84), largest |err|/U 1.23 (swept25 axis 0.35 y 112.5); resolved 77, resolved with strict error above tolerance 1; resolved sign wrong 0
+  fine/force        21/21 within U (strict 21/21), largest |err|/U 0.24 (dihedral6 axis 0.25 y 0); resolved 21, resolved with strict error above tolerance 0
+  fine/bending      21/21 within U (strict 21/21), largest |err|/U 0.17 (dihedral6 axis 0.45 y 0); resolved 21, resolved with strict error above tolerance 0
+
+rows against the cross-corrected references:
+X course4   0.25 standard torque y=0           -55.7432    0.3071    -55.7696 (+-0.0067)    0.09   0.11 resolved
+X course4   0.25 standard torque y=113         -36.4259    0.7845    -36.4520 (+-0.0026)    0.03   0.04 resolved
+X course4   0.25 standard torque y=225         -20.1971    0.2086    -20.2325 (+-0.0177)    0.17   0.25 resolved
+X course4   0.25 standard torque y=338          -7.7305    0.0760     -7.7411 (+-0.0116)    0.14   0.29 resolved
+X course4   0.25 standard force                  4.1979    0.0141      4.1970 (+-0.0001)    0.07   0.08 resolved
+X course4   0.25 standard bending              813.2951    2.7162    813.2622 (+-0.0303)    0.02   0.03 resolved
+X course4   0.25 fine     torque y=0           -55.7691    0.0890    -55.7696 (+-0.0067)    0.01   0.08 resolved
+X course4   0.25 fine     torque y=113         -36.4475    0.1386    -36.4520 (+-0.0026)    0.03   0.05 resolved
+X course4   0.25 fine     torque y=225         -20.2393    0.0364    -20.2325 (+-0.0177)    0.19   0.67 resolved
+X course4   0.25 fine     torque y=338          -7.7384    0.0287     -7.7411 (+-0.0116)    0.09   0.50 resolved
+X course4   0.25 fine     force                  4.1973    0.0038      4.1970 (+-0.0001)    0.10   0.12 resolved
+X course4   0.25 fine     bending              813.2885    0.7038    813.2622 (+-0.0303)    0.04   0.08 resolved
+X course4   0.35 standard torque y=0             0.4584    0.1770      0.4216 (+-0.0024)    0.21   0.22 
+X course4   0.35 standard torque y=113          -0.1165    0.8456     -0.1635 (+-0.0103)    0.06   0.07 
+X course4   0.35 standard torque y=225          -0.4462    0.2049     -0.4886 (+-0.0052)    0.21   0.23 
+X course4   0.35 standard torque y=338          -0.5874    0.0512     -0.6036 (+-0.0072)    0.32   0.46 resolved
+X course4   0.35 standard force                  4.1979    0.0141      4.1970 (+-0.0001)    0.07   0.08 resolved
+X course4   0.35 standard bending              815.5523    2.7424    815.5186 (+-0.0294)    0.02   0.03 resolved
+X course4   0.35 fine     torque y=0             0.4229    0.0614      0.4216 (+-0.0024)    0.02   0.06 
+X course4   0.35 fine     torque y=113          -0.1550    0.1269     -0.1635 (+-0.0103)    0.07   0.15 
+X course4   0.35 fine     torque y=225          -0.4906    0.0305     -0.4886 (+-0.0052)    0.07   0.23 resolved
+X course4   0.35 fine     torque y=338          -0.5965    0.0204     -0.6036 (+-0.0072)    0.35   0.70 resolved
+X course4   0.35 fine     force                  4.1973    0.0038      4.1970 (+-0.0001)    0.10   0.12 resolved
+X course4   0.35 fine     bending              815.5449    0.7032    815.5186 (+-0.0294)    0.04   0.08 resolved
+X course4   0.45 standard torque y=0            56.5902    0.0704     56.5387 (+-0.0031)    0.73   0.77 resolved
+X course4   0.45 standard torque y=113          36.4399    0.9559     36.3640 (+-0.0056)    0.08   0.09 resolved
+X course4   0.45 standard torque y=225          19.4846    0.2142     19.4370 (+-0.0080)    0.22   0.26 resolved
+X course4   0.45 standard torque y=338           6.6752    0.0316      6.6584 (+-0.0027)    0.53   0.61 resolved
+X course4   0.45 standard force                  4.1979    0.0141      4.1970 (+-0.0001)    0.07   0.08 resolved
+X course4   0.45 standard bending              819.4489    2.7300    819.4141 (+-0.0291)    0.03   0.04 resolved
+X course4   0.45 fine     torque y=0            56.5452    0.0452     56.5387 (+-0.0031)    0.14   0.21 resolved
+X course4   0.45 fine     torque y=113          36.3763    0.1122     36.3640 (+-0.0056)    0.11   0.16 resolved
+X course4   0.45 fine     torque y=225          19.4390    0.0319     19.4370 (+-0.0080)    0.06   0.31 resolved
+X course4   0.45 fine     torque y=338           6.6651    0.0173      6.6584 (+-0.0027)    0.39   0.54 resolved
+X course4   0.45 fine     force                  4.1973    0.0038      4.1970 (+-0.0001)    0.10   0.12 resolved
+X course4   0.45 fine     bending              819.4406    0.7045    819.4141 (+-0.0291)    0.04   0.08 resolved
+X course8   0.25 standard torque y=0           -56.4322    0.3783    -56.4781 (+-0.0036)    0.12   0.13 resolved
+X course8   0.25 standard torque y=113         -36.7057    1.1508    -36.7592 (+-0.0116)    0.05   0.06 resolved
+X course8   0.25 standard torque y=225         -19.9199    0.2780    -19.9863 (+-0.0210)    0.24   0.31 resolved
+X course8   0.25 standard torque y=338          -7.2741    0.0915     -7.2995 (+-0.0202)    0.28   0.50 resolved
+X course8   0.25 standard force                  6.8576    0.0241      6.8563 (+-0.0002)    0.08   0.09 resolved
+X course8   0.25 standard bending             1328.7210    4.7158   1328.6671 (+-0.0506)    0.02   0.03 resolved
+X course8   0.25 fine     torque y=0           -56.4830    0.1073    -56.4781 (+-0.0036)    0.05   0.08 resolved
+X course8   0.25 fine     torque y=113         -36.7508    0.1979    -36.7592 (+-0.0116)    0.04   0.10 resolved
+X course8   0.25 fine     torque y=225         -19.9929    0.0457    -19.9863 (+-0.0210)    0.15   0.60 resolved
+X course8   0.25 fine     torque y=338          -7.2893    0.0396     -7.2995 (+-0.0202)    0.26   0.77 resolved
+X course8   0.25 fine     force                  6.8567    0.0062      6.8563 (+-0.0002)    0.12   0.16 resolved
+X course8   0.25 fine     bending             1328.6993    1.1449   1328.6671 (+-0.0506)    0.03   0.08 resolved
+X course8   0.35 standard torque y=0            34.9959    0.2110     34.9269 (+-0.0047)    0.33   0.35 resolved
+X course8   0.35 standard torque y=113          22.4342    1.2896     22.3444 (+-0.0076)    0.07   0.08 resolved
+X course8   0.35 standard torque y=225          12.2334    0.2935     12.1523 (+-0.0060)    0.28   0.30 resolved
+X course8   0.35 standard torque y=338           4.3344    0.0631      4.3051 (+-0.0061)    0.46   0.56 resolved
+X course8   0.35 standard force                  6.8576    0.0241      6.8563 (+-0.0002)    0.08   0.09 resolved
+X course8   0.35 standard bending             1332.6974    4.7562   1332.6438 (+-0.0495)    0.02   0.03 resolved
+X course8   0.35 fine     torque y=0            34.9305    0.0703     34.9269 (+-0.0047)    0.05   0.12 resolved
+X course8   0.35 fine     torque y=113          22.3614    0.1804     22.3444 (+-0.0076)    0.09   0.14 resolved
+X course8   0.35 fine     torque y=225          12.1565    0.0360     12.1523 (+-0.0060)    0.12   0.28 resolved
+X course8   0.35 fine     torque y=338           4.3165    0.0341      4.3051 (+-0.0061)    0.33   0.51 resolved
+X course8   0.35 fine     force                  6.8567    0.0062      6.8563 (+-0.0002)    0.12   0.16 resolved
+X course8   0.35 fine     bending             1332.6753    1.1373   1332.6438 (+-0.0495)    0.03   0.07 resolved
+X course8   0.45 standard torque y=0           126.3044    0.3404    126.2140 (+-0.0048)    0.27   0.28 resolved
+X course8   0.45 standard torque y=113          82.0088    1.6621     81.8848 (+-0.0156)    0.07   0.08 resolved
+X course8   0.45 standard torque y=225          44.7047    0.4258     44.6209 (+-0.0065)    0.20   0.21 resolved
+X course8   0.45 standard torque y=338          16.1546    0.0801     16.1231 (+-0.0056)    0.39   0.46 resolved
+X course8   0.45 standard force                  6.8576    0.0241      6.8563 (+-0.0002)    0.08   0.09 resolved
+X course8   0.45 standard bending             1339.3328    4.6980   1339.2790 (+-0.0490)    0.03   0.04 resolved
+X course8   0.45 fine     torque y=0           126.2243    0.0902    126.2140 (+-0.0048)    0.11   0.17 resolved
+X course8   0.45 fine     torque y=113          81.8949    0.1894     81.8848 (+-0.0156)    0.05   0.14 resolved
+X course8   0.45 fine     torque y=225          44.6253    0.0468     44.6209 (+-0.0065)    0.09   0.23 resolved
+X course8   0.45 fine     torque y=338          16.1343    0.0224     16.1231 (+-0.0056)    0.50   0.75 resolved
+X course8   0.45 fine     force                  6.8567    0.0062      6.8563 (+-0.0002)    0.12   0.16 resolved
+X course8   0.45 fine     bending             1339.3098    1.1358   1339.2790 (+-0.0490)    0.03   0.07 resolved
+X dihedral6 0.25 standard torque y=0           -56.6926    0.3241    -56.6935 (+-0.0112)    0.00   0.04 resolved
+X dihedral6 0.25 standard torque y=113         -36.4887    0.9772    -36.5501 (+-0.0098)    0.06   0.07 resolved
+X dihedral6 0.25 standard torque y=225         -20.1199    0.1788    -20.1403 (+-0.0216)    0.11   0.23 resolved
+X dihedral6 0.25 standard torque y=338          -7.5865    0.0818     -7.5985 (+-0.0208)    0.15   0.40 resolved
+X dihedral6 0.25 standard force                  4.2400    0.0166      4.2375 (+-0.0002)    0.16   0.17 resolved
+X dihedral6 0.25 standard bending              823.3685    2.7360    823.1763 (+-0.0463)    0.07   0.09 resolved
+X dihedral6 0.25 fine     torque y=0           -56.7128    0.1072    -56.6935 (+-0.0112)    0.18   0.28 resolved
+X dihedral6 0.25 fine     torque y=113         -36.5673    0.0631    -36.5501 (+-0.0098)    0.27   0.43 resolved
+X dihedral6 0.25 fine     torque y=225         -20.1526    0.0398    -20.1403 (+-0.0216)    0.31   0.85 resolved
+X dihedral6 0.25 fine     torque y=338          -7.5934    0.0278     -7.5985 (+-0.0208)    0.18   0.93 resolved
+X dihedral6 0.25 fine     force                  4.2386    0.0049      4.2375 (+-0.0002)    0.24   0.28 resolved
+X dihedral6 0.25 fine     bending              823.3077    0.7755    823.1763 (+-0.0463)    0.17   0.23 resolved
+X dihedral6 0.35 standard torque y=0             0.1088    0.1840      0.0731 (+-0.0102)    0.19   0.25 
+X dihedral6 0.35 standard torque y=113          -0.0505    1.0396     -0.1414 (+-0.0177)    0.09   0.10 
+X dihedral6 0.35 standard torque y=225          -0.3689    0.1740     -0.4081 (+-0.0131)    0.23   0.30 
+X dihedral6 0.35 standard torque y=338          -0.4930    0.0578     -0.5084 (+-0.0035)    0.27   0.33 
+X dihedral6 0.35 standard force                  4.2400    0.0166      4.2375 (+-0.0002)    0.16   0.17 resolved
+X dihedral6 0.35 standard bending              825.6306    2.7678    825.4370 (+-0.0458)    0.07   0.09 resolved
+X dihedral6 0.35 fine     torque y=0             0.0664    0.0658      0.0731 (+-0.0102)    0.10   0.26 
+X dihedral6 0.35 fine     torque y=113          -0.1478    0.0519     -0.1414 (+-0.0177)    0.12   0.46 
+X dihedral6 0.35 fine     torque y=225          -0.4049    0.0323     -0.4081 (+-0.0131)    0.10   0.50 resolved
+X dihedral6 0.35 fine     torque y=338          -0.5009    0.0280     -0.5084 (+-0.0035)    0.27   0.39 resolved
+X dihedral6 0.35 fine     force                  4.2386    0.0049      4.2375 (+-0.0002)    0.24   0.28 resolved
+X dihedral6 0.35 fine     bending              825.5686    0.7756    825.4370 (+-0.0458)    0.17   0.23 resolved
+X dihedral6 0.45 standard torque y=0            56.8405    0.1246     56.7654 (+-0.0063)    0.60   0.65 resolved
+X dihedral6 0.45 standard torque y=113          36.6331    1.1407     36.5121 (+-0.0116)    0.11   0.12 resolved
+X dihedral6 0.45 standard torque y=225          19.5613    0.2080     19.5201 (+-0.0149)    0.20   0.27 resolved
+X dihedral6 0.45 standard torque y=338           6.7189    0.0447      6.7032 (+-0.0045)    0.35   0.45 resolved
+X dihedral6 0.45 standard force                  4.2400    0.0166      4.2375 (+-0.0002)    0.16   0.17 resolved
+X dihedral6 0.45 standard bending              829.5402    2.7650    829.3439 (+-0.0453)    0.07   0.09 resolved
+X dihedral6 0.45 fine     torque y=0            56.7759    0.0788     56.7654 (+-0.0063)    0.13   0.21 resolved
+X dihedral6 0.45 fine     torque y=113          36.5101    0.0507     36.5121 (+-0.0116)    0.04   0.27 resolved
+X dihedral6 0.45 fine     torque y=225          19.5227    0.0324     19.5201 (+-0.0149)    0.08   0.54 resolved
+X dihedral6 0.45 fine     torque y=338           6.7102    0.0206      6.7032 (+-0.0045)    0.34   0.55 resolved
+X dihedral6 0.45 fine     force                  4.2386    0.0049      4.2375 (+-0.0002)    0.24   0.28 resolved
+X dihedral6 0.45 fine     bending              829.4763    0.7778    829.3439 (+-0.0453)    0.17   0.23 resolved
+X swept25   0.25 standard torque y=0           -51.9606    0.5660    -51.7632 (+-0.0997)    0.35   0.52 resolved
+X swept25   0.25 standard torque y=113         -32.0861    3.8173    -31.8734 (+-0.0889)    0.06   0.08 
+X swept25   0.25 standard torque y=225         -17.4919    0.4680    -17.3783 (+-0.0836)    0.24   0.42 resolved
+X swept25   0.25 standard torque y=338          -6.3942    0.0869     -6.3894 (+-0.0435)    0.06   0.56 resolved
+X swept25   0.25 standard force                  4.0633    0.0191      4.0661 (+-0.0002)    0.16   0.17 resolved
+X swept25   0.25 standard bending              940.1974    3.4146    940.2189 (+-0.1020)    0.01   0.04 resolved
+X swept25   0.25 fine     torque y=0           -51.8081    0.2038    -51.7632 (+-0.0997)    0.22   0.71 resolved
+X swept25   0.25 fine     torque y=113         -31.9084    0.5146    -31.8734 (+-0.0889)    0.07   0.24 resolved
+X swept25   0.25 fine     torque y=225         -17.3705    0.0543    -17.3783 (+-0.0836)    0.14   1.68 resolved
+X swept25   0.25 fine     torque y=338          -6.3822    0.0240     -6.3894 (+-0.0435)    0.30   2.11 resolved
+X swept25   0.25 fine     force                  4.0650    0.0064      4.0661 (+-0.0002)    0.17   0.20 resolved
+X swept25   0.25 fine     bending              940.1516    1.0565    940.2189 (+-0.1020)    0.07   0.17 resolved
+X swept25   0.35 standard torque y=0            -3.1815    0.5318     -2.8945 (+-0.0472)    0.54   0.63 
+X swept25   0.35 standard torque y=113           1.1528    1.3258      1.1951 (+-0.1369)    0.03   0.14 
+X swept25   0.35 standard torque y=225           1.3136    0.2804      1.3407 (+-0.0537)    0.10   0.29 
+X swept25   0.35 standard torque y=338           0.7399    0.0726      0.7601 (+-0.0408)    0.28   0.84 resolved
+X swept25   0.35 standard force                  4.0633    0.0191      4.0661 (+-0.0002)    0.16   0.17 resolved
+X swept25   0.35 standard bending              912.6570    3.2917    912.6402 (+-0.0615)    0.01   0.02 resolved
+X swept25   0.35 fine     torque y=0            -3.0030    0.2145     -2.8945 (+-0.0472)    0.51   0.73 resolved
+X swept25   0.35 fine     torque y=113           1.1119    0.0676      1.1951 (+-0.1369)    1.23   3.25 resolved
+X swept25   0.35 fine     torque y=225           1.3515    0.0984      1.3407 (+-0.0537)    0.11   0.66 resolved
+X swept25   0.35 fine     torque y=338           0.7509    0.0328      0.7601 (+-0.0408)    0.28   1.53 resolved
+X swept25   0.35 fine     force                  4.0650    0.0064      4.0661 (+-0.0002)    0.17   0.20 resolved
+X swept25   0.35 fine     bending              912.6013    1.0147    912.6402 (+-0.0615)    0.05   0.11 resolved
+X swept25   0.45 standard torque y=0            46.0893    0.4851     46.3654 (+-0.1593)    0.57   0.90 resolved
+X swept25   0.45 standard torque y=113          33.1960    1.7044     33.0515 (+-0.0648)    0.08   0.12 resolved
+X swept25   0.45 standard torque y=225          19.2057    0.6013     19.1718 (+-0.0443)    0.06   0.13 resolved
+X swept25   0.45 standard torque y=338           7.2032    0.0878      7.2279 (+-0.0502)    0.28   0.85 resolved
+X swept25   0.45 standard force                  4.0633    0.0191      4.0661 (+-0.0002)    0.16   0.17 resolved
+X swept25   0.45 standard bending              886.3106    3.2137    886.3018 (+-0.1607)    0.00   0.05 resolved
+X swept25   0.45 fine     torque y=0            46.2940    0.2458     46.3654 (+-0.1593)    0.29   0.94 resolved
+X swept25   0.45 fine     torque y=113          33.0833    0.4076     33.0515 (+-0.0648)    0.08   0.24 resolved
+X swept25   0.45 fine     torque y=225          19.1662    0.0289     19.1718 (+-0.0443)    0.19   1.73 resolved
+X swept25   0.45 fine     torque y=338           7.2229    0.0308      7.2279 (+-0.0502)    0.16   1.79 resolved
+X swept25   0.45 fine     force                  4.0650    0.0064      4.0661 (+-0.0002)    0.17   0.20 resolved
+X swept25   0.45 fine     bending              886.2455    0.9746    886.3018 (+-0.1607)    0.07   0.23 resolved
+X rect0012  0.25 standard torque y=0            -0.1335    0.1348     -0.1326 (+-0.0035)    0.01   0.03 
+X rect0012  0.25 standard torque y=90            0.4100    0.1104      0.4083 (+-0.0087)    0.02   0.09 
+X rect0012  0.25 standard torque y=180           0.7801    0.1084      0.7774 (+-0.0024)    0.02   0.05 
+X rect0012  0.25 standard torque y=270           0.6093    0.0896      0.6143 (+-0.0031)    0.06   0.09 
+X rect0012  0.25 standard force                  2.3445    0.0093      2.3441 (+-0.0001)    0.09   0.09 resolved
+X rect0012  0.25 standard bending              374.1074    1.7200    374.0357 (+-0.0140)    0.05   0.06 resolved
+X rect0012  0.25 fine     torque y=0            -0.1282    0.0277     -0.1326 (+-0.0035)    0.16   0.29 
+X rect0012  0.25 fine     torque y=90            0.4174    0.0231      0.4083 (+-0.0087)    0.39   0.77 resolved
+X rect0012  0.25 fine     torque y=180           0.7864    0.0255      0.7774 (+-0.0024)    0.35   0.44 resolved
+X rect0012  0.25 fine     torque y=270           0.6224    0.0242      0.6143 (+-0.0031)    0.34   0.47 resolved
+X rect0012  0.25 fine     force                  2.3441    0.0019      2.3441 (+-0.0001)    0.11   0.14 resolved
+X rect0012  0.25 fine     bending              374.0212    0.3710    374.0357 (+-0.0140)    0.04   0.08 resolved
+X rect0012  0.35 standard torque y=0            27.9317    0.1703     27.9256 (+-0.0019)    0.04   0.05 resolved
+X rect0012  0.35 standard torque y=90           20.1868    0.1504     20.1825 (+-0.0018)    0.03   0.04 resolved
+X rect0012  0.35 standard torque y=180          12.5773    0.1233     12.5758 (+-0.0033)    0.01   0.04 resolved
+X rect0012  0.35 standard torque y=270           5.2854    0.0965      5.2861 (+-0.0031)    0.01   0.04 resolved
+X rect0012  0.35 standard force                  2.3445    0.0093      2.3441 (+-0.0001)    0.09   0.09 resolved
+X rect0012  0.35 standard bending              374.0645    1.7191    373.9932 (+-0.0138)    0.05   0.06 resolved
+X rect0012  0.35 fine     torque y=0            27.9318    0.0230     27.9256 (+-0.0019)    0.27   0.36 resolved
+X rect0012  0.35 fine     torque y=90           20.1889    0.0224     20.1825 (+-0.0018)    0.28   0.37 resolved
+X rect0012  0.35 fine     torque y=180          12.5828    0.0221     12.5758 (+-0.0033)    0.32   0.47 resolved
+X rect0012  0.35 fine     torque y=270           5.2933    0.0221      5.2861 (+-0.0031)    0.32   0.46 resolved
+X rect0012  0.35 fine     force                  2.3441    0.0019      2.3441 (+-0.0001)    0.11   0.14 resolved
+X rect0012  0.35 fine     bending              373.9785    0.3665    373.9932 (+-0.0138)    0.04   0.08 resolved
+X rect0012  0.45 standard torque y=0            55.9969    0.2606     55.9860 (+-0.0015)    0.04   0.05 resolved
+X rect0012  0.45 standard torque y=90           39.9635    0.2267     39.9550 (+-0.0016)    0.04   0.04 resolved
+X rect0012  0.45 standard torque y=180          24.3745    0.1599     24.3723 (+-0.0025)    0.01   0.03 resolved
+X rect0012  0.45 standard torque y=270           9.9615    0.1171      9.9576 (+-0.0071)    0.03   0.09 resolved
+X rect0012  0.45 standard force                  2.3445    0.0093      2.3441 (+-0.0001)    0.09   0.09 resolved
+X rect0012  0.45 standard bending              374.0227    1.7306    373.9518 (+-0.0140)    0.06   0.07 resolved
+X rect0012  0.45 fine     torque y=0            55.9918    0.0332     55.9860 (+-0.0015)    0.17   0.22 resolved
+X rect0012  0.45 fine     torque y=90           39.9604    0.0322     39.9550 (+-0.0016)    0.17   0.22 resolved
+X rect0012  0.45 fine     torque y=180          24.3793    0.0226     24.3723 (+-0.0025)    0.31   0.42 resolved
+X rect0012  0.45 fine     torque y=270           9.9641    0.0221      9.9576 (+-0.0071)    0.30   0.62 resolved
+X rect0012  0.45 fine     force                  2.3441    0.0019      2.3441 (+-0.0001)    0.11   0.14 resolved
+X rect0012  0.45 fine     bending              373.9370    0.3623    373.9518 (+-0.0140)    0.04   0.08 resolved
+X washout   0.25 standard torque y=0           -55.9094    0.3687    -55.9611 (+-0.0582)    0.14   0.30 resolved
+X washout   0.25 standard torque y=113         -37.2664    0.8079    -37.3020 (+-0.0141)    0.04   0.06 resolved
+X washout   0.25 standard torque y=225         -20.9880    0.1873    -21.0268 (+-0.0164)    0.21   0.29 resolved
+X washout   0.25 standard torque y=338          -8.2285    0.0628     -8.2382 (+-0.0096)    0.16   0.31 resolved
+X washout   0.25 standard force                  4.3688    0.0149      4.3694 (+-0.0005)    0.04   0.08 resolved
+X washout   0.25 standard bending              793.7745    2.7175    793.9394 (+-0.3389)    0.06   0.19 resolved
+X washout   0.25 fine     torque y=0           -55.9626    0.1253    -55.9611 (+-0.0582)    0.01   0.48 resolved
+X washout   0.25 fine     torque y=113         -37.3056    0.1286    -37.3020 (+-0.0141)    0.03   0.14 resolved
+X washout   0.25 fine     torque y=225         -21.0361    0.0354    -21.0268 (+-0.0164)    0.26   0.72 resolved
+X washout   0.25 fine     torque y=338          -8.2372    0.0181     -8.2382 (+-0.0096)    0.06   0.59 resolved
+X washout   0.25 fine     force                  4.3693    0.0051      4.3694 (+-0.0005)    0.03   0.13 resolved
+X washout   0.25 fine     bending              793.9479    0.8358    793.9394 (+-0.3389)    0.01   0.42 resolved
+X washout   0.35 standard torque y=0             3.2211    0.2082      3.1716 (+-0.0290)    0.24   0.38 resolved
+X washout   0.35 standard torque y=113          -1.0509    0.8612     -1.1093 (+-0.0103)    0.07   0.08 
+X washout   0.35 standard torque y=225          -2.5573    0.1978     -2.6006 (+-0.0080)    0.22   0.26 resolved
+X washout   0.35 standard torque y=338          -2.0210    0.0495     -2.0358 (+-0.0065)    0.30   0.43 resolved
+X washout   0.35 standard force                  4.3688    0.0149      4.3694 (+-0.0005)    0.04   0.08 resolved
+X washout   0.35 standard bending              796.1296    2.7041    796.2939 (+-0.3364)    0.06   0.19 resolved
+X washout   0.35 fine     torque y=0             3.1732    0.0728      3.1716 (+-0.0290)    0.02   0.42 resolved
+X washout   0.35 fine     torque y=113          -1.1008    0.1154     -1.1093 (+-0.0103)    0.07   0.16 
+X washout   0.35 fine     torque y=225          -2.5997    0.0213     -2.6006 (+-0.0080)    0.04   0.42 resolved
+X washout   0.35 fine     torque y=338          -2.0301    0.0142     -2.0358 (+-0.0065)    0.40   0.86 resolved
+X washout   0.35 fine     force                  4.3693    0.0051      4.3694 (+-0.0005)    0.03   0.13 resolved
+X washout   0.35 fine     bending              796.3027    0.8376    796.2939 (+-0.3364)    0.01   0.41 resolved
+X washout   0.45 standard torque y=0            62.2744    0.0821     62.2200 (+-0.0314)    0.66   1.04 resolved
+X washout   0.45 standard torque y=113          35.4507    0.9578     35.3635 (+-0.0302)    0.09   0.12 resolved
+X washout   0.45 standard torque y=225          16.0593    0.2095     16.0148 (+-0.0055)    0.21   0.24 resolved
+X washout   0.45 standard torque y=338           4.2907    0.0405      4.2722 (+-0.0048)    0.46   0.58 resolved
+X washout   0.45 standard force                  4.3688    0.0149      4.3694 (+-0.0005)    0.04   0.08 resolved
+X washout   0.45 standard bending              800.1841    2.6904    800.3475 (+-0.3367)    0.07   0.19 resolved
+X washout   0.45 fine     torque y=0            62.2317    0.0501     62.2200 (+-0.0314)    0.23   0.86 resolved
+X washout   0.45 fine     torque y=113          35.3820    0.1062     35.3635 (+-0.0302)    0.17   0.46 resolved
+X washout   0.45 fine     torque y=225          16.0233    0.0238     16.0148 (+-0.0055)    0.36   0.59 resolved
+X washout   0.45 fine     torque y=338           4.2817    0.0160      4.2722 (+-0.0048)    0.59   0.89 resolved
+X washout   0.45 fine     force                  4.3693    0.0051      4.3694 (+-0.0005)    0.03   0.13 resolved
+X washout   0.45 fine     bending              800.3569    0.8433    800.3475 (+-0.3367)    0.01   0.41 resolved
+X combo     0.25 standard torque y=0           -85.6340    2.9871    -85.6639 (+-1.0216)    0.01   0.35 resolved
+X combo     0.25 standard torque y=113         -37.9426    7.3179    -37.8669 (+-0.5477)    0.01   0.09 
+X combo     0.25 standard torque y=225         -12.7898    1.1862    -12.5756 (+-0.1675)    0.18   0.32 resolved
+X combo     0.25 standard torque y=338          -1.8112    0.1372     -1.8309 (+-0.0402)    0.14   0.44 resolved
+X combo     0.25 standard force                  7.8920    0.0910      7.9032 (+-0.0105)    0.12   0.24 resolved
+X combo     0.25 standard bending             1497.5926   15.4658   1499.3495 (+-2.0360)    0.11   0.25 resolved
+X combo     0.25 fine     torque y=0           -85.5143    2.1434    -85.6639 (+-1.0216)    0.07   0.55 resolved
+X combo     0.25 fine     torque y=113         -37.7444    1.9751    -37.8669 (+-0.5477)    0.06   0.34 resolved
+X combo     0.25 fine     torque y=225         -12.6411    0.3809    -12.5756 (+-0.1675)    0.17   0.61 resolved
+X combo     0.25 fine     torque y=338          -1.8472    0.1037     -1.8309 (+-0.0402)    0.16   0.54 resolved
+X combo     0.25 fine     force                  7.8969    0.0684      7.9032 (+-0.0105)    0.09   0.25 resolved
+X combo     0.25 fine     bending             1498.3344   10.8851   1499.3495 (+-2.0360)    0.09   0.28 resolved
+X combo     0.35 standard torque y=0             8.6019    1.9108      8.7043 (+-0.8549)    0.05   0.50 
+X combo     0.35 standard torque y=113          16.8943    3.6282     16.9446 (+-1.0607)    0.01   0.31 
+X combo     0.35 standard torque y=225          12.8904    0.4288     12.9658 (+-0.2539)    0.18   0.77 resolved
+X combo     0.35 standard torque y=338           5.9847    0.1420      5.9480 (+-0.0422)    0.26   0.56 resolved
+X combo     0.35 standard force                  7.8920    0.0910      7.9032 (+-0.0105)    0.12   0.24 resolved
+X combo     0.35 standard bending             1465.2832   14.6949   1466.9966 (+-2.0051)    0.12   0.25 resolved
+X combo     0.35 fine     torque y=0             8.7812    1.4908      8.7043 (+-0.8549)    0.05   0.63 
+X combo     0.35 fine     torque y=113          16.7641    1.1827     16.9446 (+-1.0607)    0.15   1.05 resolved
+X combo     0.35 fine     torque y=225          12.9702    0.2772     12.9658 (+-0.2539)    0.02   0.93 resolved
+X combo     0.35 fine     torque y=338           5.9501    0.0351      5.9480 (+-0.0422)    0.06   1.26 resolved
+X combo     0.35 fine     force                  7.8969    0.0684      7.9032 (+-0.0105)    0.09   0.25 resolved
+X combo     0.35 fine     bending             1466.0077   10.5185   1466.9966 (+-2.0051)    0.09   0.29 resolved
+X combo     0.45 standard torque y=0           103.7037    1.1741    103.9370 (+-0.6945)    0.20   0.79 resolved
+X combo     0.45 standard torque y=113          70.2593    1.3904     70.0250 (+-0.5812)    0.17   0.59 resolved
+X combo     0.45 standard torque y=225          37.8253    0.6128     37.8249 (+-0.1002)    0.00   0.16 resolved
+X combo     0.45 standard torque y=338          13.4186    0.1649     13.4053 (+-0.0301)    0.08   0.26 resolved
+X combo     0.45 standard force                  7.8920    0.0910      7.9032 (+-0.0105)    0.12   0.24 resolved
+X combo     0.45 standard bending             1437.0179   14.0012   1438.6941 (+-1.9846)    0.12   0.26 resolved
+X combo     0.45 fine     torque y=0           103.9432    0.7584    103.9370 (+-0.6945)    0.01   0.92 resolved
+X combo     0.45 fine     torque y=113          70.0346    0.3179     70.0250 (+-0.5812)    0.03   1.86 resolved
+X combo     0.45 fine     torque y=225          37.8476    0.1851     37.8249 (+-0.1002)    0.12   0.66 resolved
+X combo     0.45 fine     torque y=338          13.3923    0.0503     13.4053 (+-0.0301)    0.26   0.86 resolved
+X combo     0.45 fine     force                  7.8969    0.0684      7.9032 (+-0.0105)    0.09   0.25 resolved
+X combo     0.45 fine     bending             1437.7275   10.1906   1438.6941 (+-1.9846)    0.10   0.29 resolved
+
+reference levels farField default (6); core 0.3.2-exp.4
+
+reference_study: 252 quantity checks in 16.0 min
+VALIDATION FAILED

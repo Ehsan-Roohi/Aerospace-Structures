@@ -1,0 +1,163 @@
+swept25 cut: axis 0.35c root->tip, t = 0.25; P = (106.95961154243734, 112.5, 0); n = (0.4126165033013795, 0.9109048365242897, 0); y* = 117.92271300476912 mm (load-line crossing)
+native torque = exact clipped integral of the solved quadratic Cp over y >= y*, moment about P dotted n (N mm). 31 meshes.
+
+0. Per-level cut torque by rule (N mm): NATIVE | PCHIP of the cumulative strip wrench (app transfer) | uniform split of the strip containing y* (reference study)
+  32x8       640 panels  native  1.203681  pchip  1.800330 (+0.596649)  uniform  0.911917 (-0.291765)
+  32x12      896 panels  native  1.112674  pchip  1.139288 (+0.026614)  uniform  1.102845 (-0.009829)
+  16x16      608 panels  native  0.832546  pchip  0.827842 (-0.004704)  uniform  0.771442 (-0.061103)
+  24x16      912 panels  native  1.012972  pchip  1.008303 (-0.004669)  uniform  0.952686 (-0.060286)
+  32x16     1216 panels  native  1.075984  pchip  1.071329 (-0.004655)  uniform  1.015984 (-0.060000)
+  48x16     1824 panels  native  1.123135  pchip  1.118492 (-0.004643)  uniform  1.063339 (-0.059796)
+  64x16     2432 panels  native  1.141444  pchip  1.136807 (-0.004637)  uniform  1.081720 (-0.059724)
+  96x16     3648 panels  native  1.156494  pchip  1.151862 (-0.004632)  uniform  1.096822 (-0.059672)
+  128x16    4864 panels  native  1.162847  pchip  1.158216 (-0.004630)  uniform  1.103193 (-0.059653)
+  192x16    7296 panels  native  1.168688  pchip  1.164058 (-0.004630)  uniform  1.109043 (-0.059645)
+  24x24     1344 panels  native  0.990494  pchip  0.996293 (+0.005799)  uniform  0.984850 (-0.005644)
+  32x24     1792 panels  native  1.052812  pchip  1.058595 (+0.005783)  uniform  1.047195 (-0.005617)
+  48x24     2688 panels  native  1.099964  pchip  1.105735 (+0.005771)  uniform  1.094365 (-0.005599)
+  64x24     3584 panels  native  1.118071  pchip  1.123838 (+0.005767)  uniform  1.112479 (-0.005592)
+  96x24     5376 panels  native  1.133063  pchip  1.138827 (+0.005764)  uniform  1.127476 (-0.005587)
+  32x32     2368 panels  native  1.043992  pchip  1.048453 (+0.004460)  uniform  1.027192 (-0.016800)
+  48x32     3552 panels  native  1.090749  pchip  1.095199 (+0.004451)  uniform  1.074004 (-0.016745)
+  64x32     4736 panels  native  1.108679  pchip  1.113127 (+0.004447)  uniform  1.091954 (-0.016725)
+  96x32     7104 panels  native  1.123451  pchip  1.127897 (+0.004445)  uniform  1.106740 (-0.016711)
+  32x48     3520 panels  native  1.038288  pchip  1.039499 (+0.001211)  uniform  1.035497 (-0.002791)
+  48x48     5280 panels  native  1.084474  pchip  1.085681 (+0.001208)  uniform  1.081692 (-0.002782)
+  64x48     7040 panels  native  1.102073  pchip  1.103280 (+0.001207)  uniform  1.099294 (-0.002778)
+  96x48    10560 panels  native  1.116394  pchip  1.117601 (+0.001206)  uniform  1.113618 (-0.002776)
+  32x64     4736 panels  native  1.037412  pchip  1.036827 (-0.000585)  uniform  1.034549 (-0.002863)
+  48x64     7104 panels  native  1.082926  pchip  1.082341 (-0.000584)  uniform  1.080073 (-0.002853)
+  64x64     9472 panels  native  1.100247  pchip  1.099663 (-0.000584)  uniform  1.097397 (-0.002850)
+  96x64    14208 panels  native  1.114232  pchip  1.113649 (-0.000583)  uniform  1.111385 (-0.002847)
+  32x96     7040 panels  native  1.038372  pchip  1.038574 (+0.000202)  uniform  1.037108 (-0.001264)
+  64x96    14080 panels  native  1.099610  pchip  1.099811 (+0.000201)  uniform  1.098351 (-0.001259)
+  32x128    9408 panels  native  1.040072  pchip  1.040037 (-0.000035)  uniform  1.039010 (-0.001062)
+  32x192   14080 panels  native  1.043012  pchip  1.043024 (+0.000013)  uniform  1.042537 (-0.000475)
+  max |PCHIP - native| = 0.596649; max |uniform - native| = 0.291765 (meshes with c >= 32, s >= 16: 0.060000)
+
+1. Far-field check: same mesh with every influence exact (farField = Infinity) vs the default zones (exact < 4 d, 4th order < 6 d, 2nd order < 24 d)
+  32x16   native default  1.075984  all exact  1.076017  difference -3.23e-5
+  96x16   native default  1.156494  all exact  1.156535  difference -4.16e-5
+  192x16  native default  1.168688  all exact  1.168731  difference -4.37e-5
+  32x48   native default  1.038288  all exact  1.038389  difference -1.01e-4
+  32x96   native default  1.038372  all exact  1.038469  difference -9.68e-5
+
+2. One-parameter refinements (h = 1/c for chord and diagonals, 1/s for span):
+  chord at s=16: 16x16 0.83255, 24x16 1.01297, 32x16 1.07598, 48x16 1.12314, 64x16 1.14144, 96x16 1.15649, 128x16 1.16285, 192x16 1.16869
+     triplet 16x16 24x16 32x16: observed order 2.006, Richardson 1.15668, GCI_fine 0.10087
+     triplet 24x16 32x16 48x16: observed order 1.861, Richardson 1.16500, GCI_fine 0.05233
+     triplet 32x16 48x16 64x16: observed order 1.711, Richardson 1.17024, GCI_fine 0.03599
+     triplet 48x16 64x16 96x16: observed order 1.580, Richardson 1.17326, GCI_fine 0.02095
+     triplet 64x16 96x16 128x16: observed order 1.477, Richardson 1.17484, GCI_fine 0.01500
+     triplet 96x16 128x16 192x16: observed order 1.248, Richardson 1.17756, GCI_fine 0.01109
+  chord at s=24: 24x24 0.99049, 32x24 1.05281, 48x24 1.09996, 64x24 1.11807, 96x24 1.13306
+     triplet 24x24 32x24 48x24: observed order 1.827, Richardson 1.14291, GCI_fine 0.05368
+     triplet 32x24 48x24 64x24: observed order 1.742, Richardson 1.14591, GCI_fine 0.03480
+     triplet 48x24 64x24 96x24: observed order 1.559, Richardson 1.15008, GCI_fine 0.02127
+  chord at s=32: 32x32 1.04399, 48x32 1.09075, 64x32 1.10868, 96x32 1.12345
+     triplet 32x32 48x32 64x32: observed order 1.745, Richardson 1.13617, GCI_fine 0.03436
+     triplet 48x32 64x32 96x32: observed order 1.574, Richardson 1.14000, GCI_fine 0.02068
+  chord at s=48: 32x48 1.03829, 48x48 1.08447, 64x48 1.10207, 96x48 1.11639
+     triplet 32x48 48x48 64x48: observed order 1.763, Richardson 1.12871, GCI_fine 0.03329
+     triplet 48x48 64x48 96x48: observed order 1.610, Richardson 1.13194, GCI_fine 0.01944
+  chord at s=64: 32x64 1.03741, 48x64 1.08293, 64x64 1.10025, 96x64 1.11423
+     triplet 32x64 48x64 64x64: observed order 1.767, Richardson 1.12639, GCI_fine 0.03268
+     triplet 48x64 64x64 96x64: observed order 1.633, Richardson 1.12912, GCI_fine 0.01861
+  span at c=32: 32x8 1.20368, 32x12 1.11267, 32x16 1.07598, 32x24 1.05281, 32x32 1.04399, 32x48 1.03829, 32x64 1.03741, 32x96 1.03837, 32x128 1.04007, 32x192 1.04301
+     triplet 32x8 32x12 32x16: observed order 1.606, Richardson 1.01350, GCI_fine 0.07810
+     triplet 32x12 32x16 32x24: observed order 2.371, Richardson 1.03846, GCI_fine 0.01794
+     triplet 32x16 32x24 32x32: observed order 1.767, Richardson 1.03068, GCI_fine 0.01665
+     triplet 32x24 32x32 32x48: observed order 2.299, Richardson 1.03458, GCI_fine 0.00463
+     triplet 32x32 32x48 32x64: observed order 4.245, Richardson 1.03705, GCI_fine 0.00046
+     triplet 32x48 32x64 32x96: observed order oscillatory, Richardson -
+     triplet 32x64 32x96 32x128: observed order 4.255, Richardson 1.04078, GCI_fine 0.00088
+     triplet 32x96 32x128 32x192: observed order 0.440, Richardson 1.05805, GCI_fine 0.01880
+  span at c=48: 48x16 1.12314, 48x24 1.09996, 48x32 1.09075, 48x48 1.08447, 48x64 1.08293
+     triplet 48x16 48x24 48x32: observed order 1.644, Richardson 1.07551, GCI_fine 0.01905
+     triplet 48x24 48x32 48x48: observed order 2.144, Richardson 1.07994, GCI_fine 0.00566
+     triplet 48x32 48x48 48x64: observed order 2.964, Richardson 1.08178, GCI_fine 0.00144
+  span at c=64: 64x16 1.14144, 64x24 1.11807, 64x32 1.10868, 64x48 1.10207, 64x64 1.10025, 64x96 1.09961
+     triplet 64x16 64x24 64x32: observed order 1.615, Richardson 1.09280, GCI_fine 0.01985
+     triplet 64x24 64x32 64x48: observed order 2.046, Richardson 1.09696, GCI_fine 0.00639
+     triplet 64x32 64x48 64x64: observed order 2.652, Richardson 1.09865, GCI_fine 0.00199
+     triplet 64x48 64x64 64x96: observed order 4.198, Richardson 1.09947, GCI_fine 0.00018
+  span at c=96: 96x16 1.15649, 96x24 1.13306, 96x32 1.12345, 96x48 1.11639, 96x64 1.11423
+     triplet 96x16 96x24 96x32: observed order 1.557, Richardson 1.10644, GCI_fine 0.02126
+     triplet 96x24 96x32 96x48: observed order 1.918, Richardson 1.11039, GCI_fine 0.00750
+     triplet 96x32 96x48 96x64: observed order 2.368, Richardson 1.11202, GCI_fine 0.00277
+  diagonal c/s=2: 32x16 1.07598, 48x24 1.09996, 64x32 1.10868, 96x48 1.11639
+     triplet 32x16 48x24 64x32: observed order 1.895, Richardson 1.12070, GCI_fine 0.01503
+     triplet 48x24 64x32 96x48: observed order 1.360, Richardson 1.12688, GCI_fine 0.01310
+  diagonal c/s=1: 16x16 0.83255, 24x24 0.99049, 32x32 1.04399, 48x48 1.08447, 64x64 1.10025
+     triplet 16x16 24x24 32x32: observed order 2.091, Richardson 1.10884, GCI_fine 0.08106
+     triplet 24x24 32x32 48x48: observed order 1.827, Richardson 1.12135, GCI_fine 0.04609
+     triplet 32x32 48x48 64x64: observed order 1.701, Richardson 1.12523, GCI_fine 0.03123
+  diagonal c/s=3/2: 24x16 1.01297, 48x32 1.09075, 96x64 1.11423
+     triplet 24x16 48x32 96x64: observed order 1.728, Richardson 1.12439, GCI_fine 0.01270
+  diagonal c/s=2/3: 32x48 1.03829, 64x96 1.09961
+  diagonal c/s=4: 32x8 1.20368, 64x16 1.14144, 96x24 1.13306
+     triplet 32x8 64x16 96x24: observed order 2.526, Richardson 1.12837, GCI_fine 0.00587
+  diagonal c/s=3: 48x16 1.12314, 96x32 1.12345
+
+3. Tensor-product extrapolation to (1/c, 1/s) = (0, 0): degree (#c-1) in 1/c times degree (#s-1) in 1/s on a sub-block of the joint grid (contains every cross term h_c^i h_s^j of those degrees)
+  quadratic x quadratic  c {32,48,64} x s {16,24,32}:  1.121419
+  quadratic x quadratic  c {32,48,64} x s {24,32,48}:  1.123457
+  quadratic x quadratic  c {32,48,64} x s {32,48,64}:  1.129040
+  quadratic x quadratic  c {48,64,96} x s {16,24,32}:  1.118438
+  quadratic x quadratic  c {48,64,96} x s {24,32,48}:  1.124205
+  quadratic x quadratic  c {48,64,96} x s {32,48,64}:  1.127752
+  linear x linear (bilinear in 1/c, 1/s): {48,64}x{24,32} 1.13271; {48,64}x{32,48} 1.13967; {48,64}x{48,64} 1.14423; {48,64}x{32,64} 1.14195; {64,96}x{24,32} 1.12284; {64,96}x{32,48} 1.12912; {64,96}x{48,64} 1.13370; {64,96}x{32,64} 1.13141; {48,96}x{24,32} 1.12613; {48,96}x{32,48} 1.13264; {48,96}x{48,64} 1.13721; {48,96}x{32,64} 1.13492
+  linear x quadratic / quadratic x linear: {64,96}x{16,24,32} 1.12971; {64,96}x{24,32,48} 1.13541; {64,96}x{32,48,64} 1.13827; {48,96}x{16,24,32} 1.13347; {48,96}x{24,32,48} 1.13915; {48,96}x{32,48,64} 1.14178; {32,48,64}x{48,64} 1.12318; {32,48,64}x{32,64} 1.12025; {48,64,96}x{48,64} 1.12317; {48,64,96}x{32,64} 1.12087
+
+4. Least squares of the native torque over meshes (a = 1/c, b = 1/s); continuum = constant term
+  [joint 4x5 grid c 32..96 x s 16..64 (20)] [a a2 b b2 ab]  1.127386 (rms 4.0e-4, max 7.6e-4)
+  [joint 4x5 grid c 32..96 x s 16..64 (20)] [a a2 b b2 ab a2b ab2]  1.123808 (rms 3.3e-4, max 5.1e-4)
+  [joint 4x5 grid c 32..96 x s 16..64 (20)] [a a2 a3 b b2 b3 ab]  1.136086 (rms 2.3e-4, max 4.5e-4)
+  [joint 4x5 grid c 32..96 x s 16..64 (20)] [a a2 b b2 b3 ab a2b ab2 a2b2]  1.130149 (rms 8.0e-5, max 1.8e-4)
+  [joint 4x5 grid c 32..96 x s 16..64 (20)] [a a1.5 b b2 ab]  1.120221 (rms 4.2e-4, max 8.1e-4)
+  [joint grid + extensions (c >= 32, s >= 16)] [a a2 b b2 ab]  1.128916 (rms 1.2e-3, max 3.7e-3)
+  [joint grid + extensions (c >= 32, s >= 16)] [a a2 b b2 ab a2b ab2]  1.119986 (rms 8.8e-4, max 2.4e-3)
+  [joint grid + extensions (c >= 32, s >= 16)] [a a2 a3 b b2 b3 ab]  1.140399 (rms 5.5e-4, max 1.5e-3)
+  [joint grid + extensions (c >= 32, s >= 16)] [a a2 b b2 b3 ab a2b ab2 a2b2]  1.136768 (rms 3.5e-4, max 9.7e-4)
+  [joint grid + extensions (c >= 32, s >= 16)] [a a1.5 b b2 ab]  1.122671 (rms 1.2e-3, max 3.7e-3)
+  [finer block c 48..96 x s 24..64 (+ 128/192x16 excluded)] [a a2 b b2 ab]  1.129741 (rms 1.1e-4, max 2.0e-4)
+  [finer block c 48..96 x s 24..64 (+ 128/192x16 excluded)] [a a2 b b2 ab a2b ab2]  1.126523 (rms 8.9e-5, max 1.5e-4)
+  [finer block c 48..96 x s 24..64 (+ 128/192x16 excluded)] [a a2 a3 b b2 b3 ab]  0.986280 (rms 6.3e-5, max 1.0e-4)
+  [finer block c 48..96 x s 24..64 (+ 128/192x16 excluded)] [a a2 b b2 b3 ab a2b ab2 a2b2]  1.129875 (rms 6.6e-6, max 1.3e-5)
+  [finer block c 48..96 x s 24..64 (+ 128/192x16 excluded)] [a a1.5 b b2 ab]  1.125319 (rms 1.1e-4, max 2.0e-4)
+
+5. Reference-study procedure (observed-order Richardson, chord 96/128/192 @ s16, span 48/64/96 @ c32, base 32x16, cross 2.25 D(96x48)) applied per wrench component (as reference_study.mjs does) or to the scalar torque
+  cancellation at 96x48 (native, about P): n_x M_x = 180.042, n_y M_y = -178.925, n_z M_z = 0.000 -> T = 1.11639; (sum |n_i M_i|) / |T| = 322
+  the observed-order step is nonlinear in the data, so extrapolating the components and then dotting with n is not the extrapolated torque; any
+  component-level inconsistency is multiplied by that cancellation ratio. Observed chord / span orders of the moment components (native cuts):
+  M_x: chord 1.492, span 0.894; M_y: chord 1.449, span 0.662; M_z: chord 4.259, span 1.121
+  uniform split component-wise: additive  1.201219 +- 0.12167, cross-corrected  1.195105 +- 0.13687 | scalar torque: additive  1.144130 +- 0.01320 (chord limit 1.11789 order 1.252, span limit 1.04222 order osc), cross-corrected  1.138016 +- 0.01542
+  PCHIP         component-wise: additive  1.166387 +- 0.12321, cross-corrected  1.160917 +- 0.13874 | scalar torque: additive  1.143662 +- 0.01057 (chord limit 1.17292 order 1.248, span limit 1.04207 order osc), cross-corrected  1.138193 +- 0.01283
+  NATIVE        component-wise: additive  1.165386 +- 0.02363, cross-corrected  1.159978 +- 0.03893 | scalar torque: additive  1.141867 +- 0.00623 (chord limit 1.17756 order 1.248, span limit 1.04029 order osc), cross-corrected  1.136460 +- 0.00855
+
+6. Chord tail at s = 16 (the observed chord order falls with refinement at every s probed: 2.0 -> 1.25 from c 16 to 192 at s 16, about 1.8 -> 1.6 over c 24..96 at s 24..64; the joint grid stops at c = 96):
+  chord limit from 48/64/96: quadratic in 1/c 1.17682, observed order 1.17326, linear 64/96 1.18659; from 96/128/192: quadratic 1.17884, observed 1.17756, linear 128/192 1.18037
+  the finest data bracket the chord limit in [1.17756, 1.18037]; allowance for estimates built on c <= 96: max(finest bracket) - min(quadratic, observed from 48/64/96) = 0.007113 (upward only)
+
+7. Native continuum reference (torque-level estimates that refine BOTH directions):
+  finest-triplet diagonal Richardson: c/s=2 1.12688, c/s=1 1.12523, c/s=3/2 1.12439, c/s=4 1.12837; c/s = 2 triplet 48x24/64x32/96x48 observed order 1.360, GCI_fine 0.013105 (coarser triplet order 1.895)
+  tensor quadratic blocks with c {48,64,96}: 1.11844, 1.12421, 1.12775; finest bilinear blocks: 1.12912, 1.13370, 1.13141
+  least squares on the joint grids (10 fits): 1.11999 .. 1.14040; reference-study procedure on the scalar native torque: 1.14187 (additive), 1.13646 (cross-corrected)
+  ensemble 1.11844 .. 1.14187; reference interval [ensemble min - GCI_fine, ensemble max + chord-tail allowance + GCI_fine] = [1.10533, 1.16208]
+  NATIVE REFERENCE T_ref =  1.133709 +- 0.028376 N mm
+
+8. Delivered Fine cut torque (app; runSequence/combineSequence/admission, delivered.json): T  1.111941 +- U 0.067644 (sequence estimate  1.125809 +- 0.053776, delivered-strip interpolation 0.013868, resolved true); Standard T  1.152767 +- 1.325822 (resolved false)
+  app Fine estimator applied to PCHIP level torques:  1.125809 +- 0.053776
+  app Fine estimator applied to NATIVE level torques:  1.137066 +- 0.039787
+  criteria of the reference study: within U |err| <= U; strict |err| + uRef <= U; resolved cases also need strict relative (|err| + uRef)/|T| <= 0.10
+  ORIGINAL reference: uniform split, component-wise, additive     1.201219 +- 0.121668: err -0.089278; |err|/U 1.320 MISS; (|err|+uRef)/U 3.118 MISS; strict relative 0.1897 FAIL
+  ORIGINAL reference: uniform split, component-wise, cross-corr.  1.195105 +- 0.136865: err -0.083163; |err|/U 1.229 MISS; (|err|+uRef)/U 3.253 MISS; strict relative 0.1979 FAIL
+  PCHIP cuts, component-wise, cross-corrected                     1.160917 +- 0.138737: err -0.048976; |err|/U 0.724 ok; (|err|+uRef)/U 2.775 MISS; strict relative 0.1688 FAIL
+  uniform split, SCALAR torque, cross-corrected                   1.138016 +- 0.015421: err -0.026074; |err|/U 0.385 ok; (|err|+uRef)/U 0.613 ok; strict relative 0.0373 ok
+  PCHIP cuts, SCALAR torque, cross-corrected                      1.138193 +- 0.012827: err -0.026251; |err|/U 0.388 ok; (|err|+uRef)/U 0.578 ok; strict relative 0.0351 ok
+  NATIVE cuts, component-wise, additive                           1.165386 +- 0.023633: err -0.053445; |err|/U 0.790 ok; (|err|+uRef)/U 1.139 MISS; strict relative 0.0693 ok
+  NATIVE cuts, component-wise, cross-corrected                    1.159978 +- 0.038931: err -0.048037; |err|/U 0.710 ok; (|err|+uRef)/U 1.286 MISS; strict relative 0.0782 ok
+  NATIVE cuts, SCALAR torque, additive                            1.141867 +- 0.006234: err -0.029926; |err|/U 0.442 ok; (|err|+uRef)/U 0.535 ok; strict relative 0.0325 ok
+  NATIVE cuts, SCALAR torque, cross-corrected                     1.136460 +- 0.008551: err -0.024518; |err|/U 0.362 ok; (|err|+uRef)/U 0.489 ok; strict relative 0.0297 ok
+  NATIVE finest diagonal GCI (c/s = 2)                            1.126878 +- 0.013105: err -0.014937; |err|/U 0.221 ok; (|err|+uRef)/U 0.415 ok; strict relative 0.0252 ok
+  NATIVE REFERENCE (section 7)                                    1.133709 +- 0.028376: err -0.021768; |err|/U 0.322 ok; (|err|+uRef)/U 0.741 ok; strict relative 0.0451 ok

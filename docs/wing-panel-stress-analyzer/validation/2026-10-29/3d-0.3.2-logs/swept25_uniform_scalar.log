@@ -1,0 +1,101 @@
+swept25: references and both sequences in 221 s; extrapolated CL pressure/Trefftz 0.5033/0.5050 (Standard), 0.5036/0.5052 (Fine); CDp/CDi 0.01230/0.01224 (Standard), 0.01219/0.01223 (Fine)
+  separability (mixed meshes 96 x 24 (2688 panels), 128 x 32 (4736 panels), 192 x 48 (10560 panels)): cross-term estimates X(32,16) of the root loads from 9 D, 4 D, 2.25 D:
+    torque about the 25/35/45% chord axes (N mm): 0.003 / -0.001 / -0.005;  0.005 / 0.001 / -0.002;  0.007 / 0.003 / 0.000
+    |force| (N): 0.0002 / 0.0002 / 0.0003;  |bending| about the 25% axis (N mm): 0.025 / 0.043 / 0.065
+
+config    axis seq      quantity            estimate      U          reference (+-u)       |X|     |err|/U  strict strict+  e(est)  e(true) resolved
+swept25   0.25 standard torque y=0           -51.9606    0.5660    -51.8132 (+-0.0131)  0.0047    0.26   0.28   0.29    1.1%    0.3% yes
+swept25   0.25 standard torque y=113         -32.0861    3.8173    -31.8658 (+-0.0039)  0.0074    0.06   0.06   0.06   11.9%    0.7% no
+swept25   0.25 standard torque y=225         -17.4919    0.4680    -17.3773 (+-0.0125)  0.0067    0.25   0.27   0.29    2.7%    0.7% yes
+swept25   0.25 standard torque y=338          -6.3942    0.0869     -6.3792 (+-0.0101)  0.0065    0.17   0.29   0.36    1.4%    0.2% yes
+swept25   0.25 standard force                  4.0633    0.0191      4.0659 (+-0.0002)  0.0003    0.15   0.16   0.18    0.5%    0.1% yes
+swept25   0.25 standard bending              940.1974    3.4146    940.1594 (+-0.0819)  0.0648    0.01   0.04   0.05    0.4%    0.0% yes
+swept25   0.25 fine     torque y=0           -51.8081    0.2038    -51.8132 (+-0.0131)  0.0047    0.03   0.09   0.11    0.4%    0.0% yes
+swept25   0.25 fine     torque y=113         -31.9084    0.5146    -31.8658 (+-0.0039)  0.0074    0.08   0.09   0.10    1.6%    0.1% yes
+swept25   0.25 fine     torque y=225         -17.3705    0.0543    -17.3773 (+-0.0125)  0.0067    0.12   0.35   0.48    0.3%    0.0% yes
+swept25   0.25 fine     torque y=338          -6.3822    0.0240     -6.3792 (+-0.0101)  0.0065    0.13   0.55   0.82    0.4%    0.0% yes
+swept25   0.25 fine     force                  4.0650    0.0064      4.0659 (+-0.0002)  0.0003    0.14   0.17   0.21    0.2%    0.0% yes
+swept25   0.25 fine     bending              940.1516    1.0565    940.1594 (+-0.0819)  0.0648    0.02   0.09   0.16    0.1%    0.0% yes
+swept25   0.35 standard torque y=0            -3.1815    0.5318     -2.9884 (+-0.0080)  0.0049    0.36   0.38   0.39   16.7%    6.1% no
+swept25   0.35 standard torque y=113           1.1528    1.3258      1.1441 (+-0.0132)  0.0061    0.01   0.02   0.02  115.0%    0.7% no (sign)
+swept25   0.35 standard torque y=225           1.3136    0.2804      1.3562 (+-0.0051)  0.0057    0.15   0.17   0.19   21.3%    3.2% no
+swept25   0.35 standard torque y=338           0.7399    0.0726      0.7592 (+-0.0110)  0.0054    0.27   0.42   0.49    9.8%    2.6% yes
+swept25   0.35 standard force                  4.0633    0.0191      4.0659 (+-0.0002)  0.0003    0.15   0.16   0.18    0.5%    0.1% yes
+swept25   0.35 standard bending              912.6570    3.2917    912.5820 (+-0.0398)  0.0626    0.02   0.04   0.05    0.4%    0.0% yes
+swept25   0.35 fine     torque y=0            -3.0030    0.2145     -2.9884 (+-0.0080)  0.0049    0.07   0.11   0.13    7.1%    0.5% yes
+swept25   0.35 fine     torque y=113           1.1119    0.0676      1.1441 (+-0.0132)  0.0061    0.48   0.67   0.76    6.1%    2.9% yes
+swept25   0.35 fine     torque y=225           1.3515    0.0984      1.3562 (+-0.0051)  0.0057    0.05   0.10   0.16    7.3%    0.3% yes
+swept25   0.35 fine     torque y=338           0.7509    0.0328      0.7592 (+-0.0110)  0.0054    0.25   0.59   0.76    4.4%    1.1% yes
+swept25   0.35 fine     force                  4.0650    0.0064      4.0659 (+-0.0002)  0.0003    0.14   0.17   0.21    0.2%    0.0% yes
+swept25   0.35 fine     bending              912.6013    1.0147    912.5820 (+-0.0398)  0.0626    0.02   0.06   0.12    0.1%    0.0% yes
+swept25   0.45 standard torque y=0            46.0893    0.4851     46.3258 (+-0.0069)  0.0070    0.49   0.50   0.52    1.1%    0.5% yes
+swept25   0.45 standard torque y=113          33.1960    1.7044     33.0452 (+-0.0015)  0.0046    0.09   0.09   0.09    5.1%    0.5% yes
+swept25   0.45 standard torque y=225          19.2057    0.6013     19.1771 (+-0.0070)  0.0046    0.05   0.06   0.07    3.1%    0.1% yes
+swept25   0.45 standard torque y=338           7.2032    0.0878      7.2345 (+-0.0116)  0.0044    0.36   0.49   0.54    1.2%    0.4% yes
+swept25   0.45 standard force                  4.0633    0.0191      4.0659 (+-0.0002)  0.0003    0.15   0.16   0.18    0.5%    0.1% yes
+swept25   0.45 standard bending              886.3106    3.2137    886.2449 (+-0.1438)  0.0606    0.02   0.07   0.08    0.4%    0.0% yes
+swept25   0.45 fine     torque y=0            46.2940    0.2458     46.3258 (+-0.0069)  0.0070    0.13   0.16   0.19    0.5%    0.1% yes
+swept25   0.45 fine     torque y=113          33.0833    0.4076     33.0452 (+-0.0015)  0.0046    0.09   0.10   0.11    1.2%    0.1% yes
+swept25   0.45 fine     torque y=225          19.1662    0.0289     19.1771 (+-0.0070)  0.0046    0.37   0.62   0.78    0.2%    0.1% yes
+swept25   0.45 fine     torque y=338           7.2229    0.0308      7.2345 (+-0.0116)  0.0044    0.37   0.75   0.90    0.4%    0.2% yes
+swept25   0.45 fine     force                  4.0650    0.0064      4.0659 (+-0.0002)  0.0003    0.14   0.17   0.21    0.2%    0.0% yes
+swept25   0.45 fine     bending              886.2455    0.9746    886.2449 (+-0.1438)  0.0606    0.02   0.16   0.23    0.1%    0.0% yes
+
+summary (coverage: |estimate - reference| <= U; strict adds the reference uncertainty; strict+ also adds the estimated cross-term error |X(32,16)|; torque tolerance is 10% of |T| itself):
+  standard/torque   12/12 covered (strict 12/12, strict+ 12/12, largest strict+ ratio 0.54), largest |err|/U 0.49 (swept25 axis 0.45 y 0); resolved 8; resolved with error above tolerance: 0 (strict+ 0); sign resolved 11, of which wrong 0; estimates with the wrong sign 0, all flagged sign-unresolved: true; meshes disagree in sign at 0
+  standard/force    3/3 covered (strict 3/3, strict+ 3/3, largest strict+ ratio 0.18), largest |err|/U 0.15 (swept25 axis 0.25 y 0); resolved 3; resolved with error above tolerance: 0 (strict+ 0)
+  standard/bending  3/3 covered (strict 3/3, strict+ 3/3, largest strict+ ratio 0.08), largest |err|/U 0.02 (swept25 axis 0.35 y 0); resolved 3; resolved with error above tolerance: 0 (strict+ 0)
+  fine/torque       12/12 covered (strict 12/12, strict+ 12/12, largest strict+ ratio 0.90), largest |err|/U 0.48 (swept25 axis 0.35 y 112.5); resolved 12; resolved with error above tolerance: 0 (strict+ 0); sign resolved 12, of which wrong 0; estimates with the wrong sign 0, all flagged sign-unresolved: true; meshes disagree in sign at 0
+  fine/force        3/3 covered (strict 3/3, strict+ 3/3, largest strict+ ratio 0.21), largest |err|/U 0.14 (swept25 axis 0.25 y 0); resolved 3; resolved with error above tolerance: 0 (strict+ 0)
+  fine/bending      3/3 covered (strict 3/3, strict+ 3/3, largest strict+ ratio 0.23), largest |err|/U 0.02 (swept25 axis 0.35 y 0); resolved 3; resolved with error above tolerance: 0 (strict+ 0)
+  Standard and Fine torques of opposite sign: 0 cases, flagged sign-unresolved in both sequences: 0
+
+summary against the CROSS-CORRECTED references (reference + X(32,16) from the 96 x 48 mixed mesh; u + |X(96,48) - X(64,32)|):
+  standard/torque   12/12 within U (strict 12/12), largest |err|/U 0.49 (swept25 axis 0.45 y 0); resolved 8, resolved with strict error above tolerance 0; resolved sign wrong 0
+  standard/force    3/3 within U (strict 3/3), largest |err|/U 0.16 (swept25 axis 0.25 y 0); resolved 3, resolved with strict error above tolerance 0
+  standard/bending  3/3 within U (strict 3/3), largest |err|/U 0.01 (swept25 axis 0.25 y 0); resolved 3, resolved with strict error above tolerance 0
+  fine/torque       12/12 within U (strict 12/12), largest |err|/U 0.39 (swept25 axis 0.35 y 112.5); resolved 12, resolved with strict error above tolerance 0; resolved sign wrong 0
+  fine/force        3/3 within U (strict 3/3), largest |err|/U 0.17 (swept25 axis 0.25 y 0); resolved 3, resolved with strict error above tolerance 0
+  fine/bending      3/3 within U (strict 3/3), largest |err|/U 0.07 (swept25 axis 0.25 y 0); resolved 3, resolved with strict error above tolerance 0
+
+rows against the cross-corrected references:
+X swept25   0.25 standard torque y=0           -51.9606    0.5660    -51.8180 (+-0.0164)    0.25   0.28 resolved
+X swept25   0.25 standard torque y=113         -32.0861    3.8173    -31.8733 (+-0.0062)    0.06   0.06 
+X swept25   0.25 standard torque y=225         -17.4919    0.4680    -17.3840 (+-0.0151)    0.23   0.26 resolved
+X swept25   0.25 standard torque y=338          -6.3942    0.0869     -6.3857 (+-0.0126)    0.10   0.24 resolved
+X swept25   0.25 standard force                  4.0633    0.0191      4.0661 (+-0.0002)    0.16   0.17 resolved
+X swept25   0.25 standard bending              940.1974    3.4146    940.2189 (+-0.1020)    0.01   0.04 resolved
+X swept25   0.25 fine     torque y=0           -51.8081    0.2038    -51.8180 (+-0.0164)    0.05   0.13 resolved
+X swept25   0.25 fine     torque y=113         -31.9084    0.5146    -31.8733 (+-0.0062)    0.07   0.08 resolved
+X swept25   0.25 fine     torque y=225         -17.3705    0.0543    -17.3840 (+-0.0151)    0.25   0.53 resolved
+X swept25   0.25 fine     torque y=338          -6.3822    0.0240     -6.3857 (+-0.0126)    0.15   0.67 resolved
+X swept25   0.25 fine     force                  4.0650    0.0064      4.0661 (+-0.0002)    0.17   0.20 resolved
+X swept25   0.25 fine     bending              940.1516    1.0565    940.2189 (+-0.1020)    0.07   0.17 resolved
+X swept25   0.35 standard torque y=0            -3.1815    0.5318     -2.9907 (+-0.0113)    0.36   0.38 
+X swept25   0.35 standard torque y=113           1.1528    1.3258      1.1380 (+-0.0154)    0.01   0.02 
+X swept25   0.35 standard torque y=225           1.3136    0.2804      1.3505 (+-0.0072)    0.13   0.16 
+X swept25   0.35 standard torque y=338           0.7399    0.0726      0.7538 (+-0.0131)    0.19   0.37 resolved
+X swept25   0.35 standard force                  4.0633    0.0191      4.0661 (+-0.0002)    0.16   0.17 resolved
+X swept25   0.35 standard bending              912.6570    3.2917    912.6402 (+-0.0615)    0.01   0.02 resolved
+X swept25   0.35 fine     torque y=0            -3.0030    0.2145     -2.9907 (+-0.0113)    0.06   0.11 resolved
+X swept25   0.35 fine     torque y=113           1.1119    0.0676      1.1380 (+-0.0154)    0.39   0.61 resolved
+X swept25   0.35 fine     torque y=225           1.3515    0.0984      1.3505 (+-0.0072)    0.01   0.08 resolved
+X swept25   0.35 fine     torque y=338           0.7509    0.0328      0.7538 (+-0.0131)    0.09   0.49 resolved
+X swept25   0.35 fine     force                  4.0650    0.0064      4.0661 (+-0.0002)    0.17   0.20 resolved
+X swept25   0.35 fine     bending              912.6013    1.0147    912.6402 (+-0.0615)    0.05   0.11 resolved
+X swept25   0.45 standard torque y=0            46.0893    0.4851     46.3260 (+-0.0100)    0.49   0.51 resolved
+X swept25   0.45 standard torque y=113          33.1960    1.7044     33.0406 (+-0.0034)    0.09   0.09 resolved
+X swept25   0.45 standard torque y=225          19.2057    0.6013     19.1724 (+-0.0086)    0.06   0.07 resolved
+X swept25   0.45 standard torque y=338           7.2032    0.0878      7.2300 (+-0.0133)    0.31   0.46 resolved
+X swept25   0.45 standard force                  4.0633    0.0191      4.0661 (+-0.0002)    0.16   0.17 resolved
+X swept25   0.45 standard bending              886.3106    3.2137    886.3018 (+-0.1607)    0.00   0.05 resolved
+X swept25   0.45 fine     torque y=0            46.2940    0.2458     46.3260 (+-0.0100)    0.13   0.17 resolved
+X swept25   0.45 fine     torque y=113          33.0833    0.4076     33.0406 (+-0.0034)    0.10   0.11 resolved
+X swept25   0.45 fine     torque y=225          19.1662    0.0289     19.1724 (+-0.0086)    0.21   0.51 resolved
+X swept25   0.45 fine     torque y=338           7.2229    0.0308      7.2300 (+-0.0133)    0.23   0.66 resolved
+X swept25   0.45 fine     force                  4.0650    0.0064      4.0661 (+-0.0002)    0.17   0.20 resolved
+X swept25   0.45 fine     bending              886.2455    0.9746    886.3018 (+-0.1607)    0.07   0.23 resolved
+
+reference levels farField default (6); cut rule of the reference levels: uniform intensity inside the strip containing y* (cutOfLevel); torque reference extrapolated as the SCALAR torque (REF_EXTRAP=scalar); core 0.3.2-exp.4
+
+reference_study: 36 quantity checks in 3.7 min

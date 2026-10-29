@@ -1,0 +1,95 @@
+1. Exact ellipsoid 100 : 300 : 20 mm, flow along x (Lamb), tensor model on the production mesh path
+   16x8: control-point Cp error RMS 4.637e-2, inner 80 % of each chord (eta <= 0.9) max 1.822e-3, collapsed last strip max 1.444e-1; fixed points at mid-chord, eta 0.9 ... 0.995: max 1.503e-1; tip-region side force (y >= 290, 296): -2.062e-1, -2.776e-1 relative; doublet error / ((K-1) U a) max 2.317e-2 (inner region 1.794e-3); CDp 1.675e-3 (exact 0)
+   32x16: control-point Cp error RMS 2.424e-2, inner 80 % of each chord (eta <= 0.9) max 4.397e-4, collapsed last strip max 1.655e-1; fixed points at mid-chord, eta 0.9 ... 0.995: max 8.955e-2; tip-region side force (y >= 290, 296): -4.474e-2, -1.029e-1 relative; doublet error / ((K-1) U a) max 1.130e-2 (inner region 4.340e-4); CDp 2.264e-4 (exact 0)
+   ok ellipsoid 32x16: control-point Cp error 4.397e-4 < 1e-3 on the inner 80 % of each chord (eta <= 0.9)
+   ok ellipsoid: control-point Cp RMS error falls 16x8 -> 32x16 (4.637e-2 -> 2.424e-2, by at least 1/0.6)
+   ok ellipsoid tip: Cp at fixed points (mid-chord, eta 0.9 ... 0.995, both surfaces) converges (max error 1.503e-1 -> 8.955e-2)
+   ok ellipsoid tip: side force on the fixed tip regions converges to Lamb's (relative error -2.062e-1, -2.776e-1 -> -4.474e-2, -1.029e-1, at least halved)
+   NOT convergent (reported): collapsed last-strip control-point Cp error 1.444e-1 -> 1.655e-1; fixed points and fixed regions there converge (above)
+   ok ellipsoid: doublet = exact surface potential (K-1) U x: inner-region error 4.340e-4 of (K-1) U a (< 1e-3); whole-surface max 2.317e-2 -> 1.130e-2 (falls by > 1.7)
+   ok ellipsoid: d'Alembert, |CDp| 2.264e-4 < 1e-3 and falling (16x8: 1.675e-3)
+   ok ellipsoid: no lift at alpha 0 (|CL| 3.020e-13)
+   (1 s)
+2. Rectangular wings with exact Karman-Trefftz sections (t/c 0.13, 12 deg trailing edge), alpha 4
+   ok exact 2-D reference: contour integral cl 0.484578584 = Kutta-Joukowski 0.484578584, cd -5.474e-12 (exact 0)
+   AR 20, 16 chordwise: mid-span control-point Cp RMS error against exact 2-D (circulation-matched angle 3.7628 deg): 4.475e-2
+   AR 20, 32 chordwise: mid-span control-point Cp RMS error against exact 2-D (circulation-matched angle 3.7509 deg): 1.114e-2
+   ok KT mid-span Cp: RMS error 1.114e-2 < 1.5e-2 at 32 chordwise panels, order 2.01 >= 1.5 (16 -> 32)
+   AR 20, 64 chordwise x 16 spanwise (2560 panels, 3 s): mid-span cl 0.454397, cm -6.83228e-3; exact 2-D cm at this cl -6.95995e-3; difference 1.277e-4
+   AR 40, 64 chordwise x 32 spanwise (4992 panels, 9 s): mid-span cl 0.470368, cm -7.17934e-3; exact 2-D cm at this cl -7.20346e-3; difference 2.412e-5
+   AR 80, 64 chordwise x 64 spanwise (10112 panels, 26 s): mid-span cl 0.477832, cm -7.31461e-3; exact 2-D cm at this cl -7.31724e-3; difference 2.629e-6
+   finite-wing residual falls as 1/AR^2: (d20 - d40) / (d40 - d80) = 4.82 (pure 1/AR^2: 4); 2-D limit (4 d80 - d40) / 3 = -4.534e-6
+   ok KT section cm: the finite-wing residual is positive (nose up) and falls with aspect ratio as 1/AR^2 (ratio 4.82 >= 3)
+   ok KT section cm, AR 80: |cm - exact 2-D| 2.629e-6 < 1.5e-5 (finite-wing residual included)
+   ok KT section cm extrapolated to AR -> infinity: |cm - exact 2-D| 4.534e-6 < 1e-5 at 64 chordwise panels
+   (39 s)
+   rectangular NACA 0012 AR 6, 32x24 (1728 panels, 1 s): CL 0.315754 CL Trefftz 0.317034 CDi 0.0054116 CDp 0.0055221 Cm -1.8650e-4
+   rectangular NACA 0012 AR 6, 48x36 (3936 panels, 4 s): CL 0.315446 CL Trefftz 0.316962 CDi 0.0054128 CDp 0.0053950 Cm -1.6965e-4
+   rectangular NACA 0012 AR 6, 64x48 (6912 panels, 11 s): CL 0.315338 CL Trefftz 0.316937 CDi 0.0054138 CDp 0.0053567 Cm -1.6294e-4
+3. Tip trailing-edge corner of the rectangular NACA 0012 AR 6 wing (sharp edge of the continuous surface)
+   ok 32x24 lower corner panel (control point 0.316 mm from the corner): alpha 0 Cp 0.1034 in (0, 0.3) - no growth without lift
+   ok 32x24 lower corner panel: (Cp(4) - Cp(0)) / (Cp(2) - Cp(0)) = 4.226 in (3.6, 4.4): the growth is in the lift-dependent velocity (consistency only, not a validation of the corner value; Cp at alpha 4: -4.34)
+   ok 32x24 upper corner panel (control point 0.316 mm from the corner): alpha 0 Cp 0.1034 in (0, 0.3) - no growth without lift
+   ok 32x24 upper corner panel: (Cp(4) - Cp(0)) / (Cp(2) - Cp(0)) = 3.807 in (3.6, 4.4): the growth is in the lift-dependent velocity (consistency only, not a validation of the corner value; Cp at alpha 4: -4.83)
+   ok 48x36 lower corner panel (control point 0.141 mm from the corner): alpha 0 Cp 0.1106 in (0, 0.3) - no growth without lift
+   ok 48x36 lower corner panel: (Cp(4) - Cp(0)) / (Cp(2) - Cp(0)) = 4.111 in (3.6, 4.4): the growth is in the lift-dependent velocity (consistency only, not a validation of the corner value; Cp at alpha 4: -10.10)
+   ok 48x36 upper corner panel (control point 0.141 mm from the corner): alpha 0 Cp 0.1106 in (0, 0.3) - no growth without lift
+   ok 48x36 upper corner panel: (Cp(4) - Cp(0)) / (Cp(2) - Cp(0)) = 3.891 in (3.6, 4.4): the growth is in the lift-dependent velocity (consistency only, not a validation of the corner value; Cp at alpha 4: -10.68)
+   ok 64x48 lower corner panel (control point 0.079 mm from the corner): alpha 0 Cp 0.1140 in (0, 0.3) - no growth without lift
+   ok 64x48 lower corner panel: (Cp(4) - Cp(0)) / (Cp(2) - Cp(0)) = 4.068 in (3.6, 4.4): the growth is in the lift-dependent velocity (consistency only, not a validation of the corner value; Cp at alpha 4: -18.23)
+   ok 64x48 upper corner panel (control point 0.079 mm from the corner): alpha 0 Cp 0.1140 in (0, 0.3) - no growth without lift
+   ok 64x48 upper corner panel: (Cp(4) - Cp(0)) / (Cp(2) - Cp(0)) = 3.927 in (3.6, 4.4): the growth is in the lift-dependent velocity (consistency only, not a validation of the corner value; Cp at alpha 4: -18.89)
+   upper phi 15 d  2 mm: core 48x36 -0.2087 64x48 -0.2234 | PANAIR 32x24 -0.3494 64x48 -0.2353
+   upper phi 15 d  4 mm: core 48x36 -0.0360 64x48 -0.0284 | PANAIR 32x24 -0.0547 64x48 -0.0323
+   upper phi 15 d  8 mm: core 48x36 0.0755 64x48 0.0761 | PANAIR 32x24 0.0865 64x48 0.0782
+   upper phi 15 d 16 mm: core 48x36 0.1232 64x48 0.1235 | PANAIR 32x24 0.1265 64x48 0.1228
+   upper phi 45 d  2 mm: core 48x36 -0.4250 64x48 -0.4249 | PANAIR 32x24 -0.6022 64x48 -0.4533
+   upper phi 45 d  4 mm: core 48x36 -0.1807 64x48 -0.1890 | PANAIR 32x24 -0.2176 64x48 -0.1970
+   upper phi 45 d  8 mm: core 48x36 -0.0709 64x48 -0.0658 | PANAIR 32x24 -0.0722 64x48 -0.0663
+   upper phi 45 d 16 mm: core 48x36 0.0012 64x48 0.0029 | PANAIR 32x24 0.0035 64x48 0.0038
+   upper phi 75 d  4 mm: core 48x36 -0.6804 64x48 -0.6665 | PANAIR 32x24 -0.8140 64x48 -0.7708
+   upper phi 75 d  8 mm: core 48x36 -0.3870 64x48 -0.3813 | PANAIR 32x24 -0.4953 64x48 -0.3793
+   upper phi 75 d 16 mm: core 48x36 -0.2248 64x48 -0.2225 | PANAIR 32x24 -0.2427 64x48 -0.2220
+   lower phi 15 d  2 mm: core 48x36 -0.0018 64x48 -0.0125 | PANAIR 32x24 -0.0961 64x48 -0.0159
+   lower phi 15 d  4 mm: core 48x36 0.0981 64x48 0.1024 | PANAIR 32x24 0.0915 64x48 0.1059
+   lower phi 15 d  8 mm: core 48x36 0.1424 64x48 0.1427 | PANAIR 32x24 0.1522 64x48 0.1468
+   lower phi 15 d 16 mm: core 48x36 0.1397 64x48 0.1395 | PANAIR 32x24 0.1438 64x48 0.1401
+   lower phi 45 d  2 mm: core 48x36 -0.1292 64x48 -0.1287 | PANAIR 32x24 -0.2688 64x48 -0.1588
+   lower phi 45 d  4 mm: core 48x36 0.0090 64x48 0.0054 | PANAIR 32x24 -0.0139 64x48 0.0006
+   lower phi 45 d  8 mm: core 48x36 0.0442 64x48 0.0458 | PANAIR 32x24 0.0416 64x48 0.0456
+   lower phi 45 d 16 mm: core 48x36 0.0369 64x48 0.0371 | PANAIR 32x24 0.0375 64x48 0.0373
+   lower phi 75 d  4 mm: core 48x36 -0.2703 64x48 -0.2599 | PANAIR 32x24 -0.3726 64x48 -0.3390
+   lower phi 75 d  8 mm: core 48x36 -0.0905 64x48 -0.0874 | PANAIR 32x24 -0.1600 64x48 -0.0899
+   lower phi 75 d 16 mm: core 48x36 -0.0321 64x48 -0.0340 | PANAIR 32x24 -0.0436 64x48 -0.0341
+   ok fixed corner points: core 48x36 -> 64x48 change <= 0.0147 < 0.02 at all 22 points (largest: upper phi 15 d 2)
+   ok fixed corner points: PANAIR 64x48 is closer to the core's 64x48 value than PANAIR 32x24 is (or within 0.005) at 22 of 22 points
+   ok corner box R 1 mm: lift per unit q 0.3987 -> 0.4971 -> 0.5539 mm^2 (monotone, step ratio 0.577 < 0.7: converging; integrable singularity)
+   ok corner box R 8 mm: lift per unit q 13.4033 -> 13.9872 -> 14.2624 mm^2 (monotone, step ratio 0.471 < 0.7: converging; integrable singularity)
+   ok corner box R 32 mm: lift per unit q 73.6117 -> 74.8655 -> 75.2446 mm^2 (monotone, step ratio 0.302 < 0.7: converging; integrable singularity)
+   ok station eta 0.5: cl 48x36 0.34529, 64x48 0.34517 (change 0.037 % < 0.5 %); PANAIR 64x48 0.34482 (0.099 % < 1 %)
+   ok station eta 0.9: cl 48x36 0.20072, 64x48 0.20067 (change 0.021 % < 0.5 %); PANAIR 64x48 0.20038 (0.147 % < 1 %)
+   ok station eta 0.95: cl 48x36 0.14897, 64x48 0.14898 (change -0.005 % < 0.5 %); PANAIR 64x48 0.14875 (0.157 % < 1 %)
+   ok station eta 0.98: cl 48x36 0.11225, 64x48 0.11181 (change 0.397 % < 0.5 %); PANAIR 64x48 0.11230 (-0.435 % < 1 %)
+   ok station eta 0.99: cl 48x36 0.11721, 64x48 0.11736 (change -0.133 % < 0.5 %); PANAIR 64x48 0.11751 (-0.125 % < 1 %)
+   ok station eta 0.995: cl 48x36 0.12548, 64x48 0.12530 (change 0.140 % < 0.5 %); PANAIR 64x48 0.12497 (0.265 % < 1 %)
+   (56 s)
+4. Global coefficients against PANAIR on identical nodes; pitching moment by one rule for both codes
+   ok 64x48 CL (pressure): core 0.315338, PANAIR 0.315150 (0.060 %, < 0.2 %)
+   ok 64x48 CL Trefftz: core 0.316937, PANAIR 0.316693 (0.077 %, < 0.2 %)
+   ok 64x48 CDi Trefftz: core 0.00541381, PANAIR 0.00540999 (0.071 %, < 0.3 %)
+   ok 64x48 span efficiency: core 0.984334, PANAIR 0.983512 (0.084 %, < 0.3 %)
+   32x24: core own Cm -1.865e-4; common rule: core -3.129e-4, PANAIR -1.293e-4; integration rule (own - common) 1.264e-4; solutions (core - PANAIR, common rule) -1.837e-4
+   64x48: core own Cm -1.629e-4; common rule: core -1.940e-4, PANAIR -1.264e-4; integration rule (own - common) 3.101e-5; solutions (core - PANAIR, common rule) -6.756e-5
+   ok Cm: the two codes' solutions converge toward each other (common rule, |core - PANAIR| 1.837e-4 -> 6.756e-5, at least halved)
+   ok Cm: the common rule's own error is second order (core own - core common 1.264e-4 -> 3.101e-5, falls by > 3 for h / 2)
+   (56 s)
+5. Self-convergence of lift, drag and moment (uniform sequence); conservation of the six components
+   ok CL: 0.315754 -> 0.315446 -> 0.315338 (monotone, steps -3.086e-4 -> -1.078e-4: shrinking by more than 1/0.6)
+   ok CLTrefftz: 0.317034 -> 0.316962 -> 0.316937 (monotone, steps -7.234e-5 -> -2.471e-5: shrinking by more than 1/0.6)
+   ok CDpressure: 0.00552208 -> 0.00539495 -> 0.00535668 (monotone, steps -1.271e-4 -> -3.827e-5: shrinking by more than 1/0.6)
+   ok Cm: -0.000186500 -> -0.000169653 -> -0.000162943 (monotone, steps 1.685e-5 -> 6.710e-6: shrinking by more than 1/0.6)
+   ok CDi Trefftz: 0.00541160 -> 0.00541280 -> 0.00541381 (steps 1.193e-6, 1.013e-6 < 3e-6 = 0.06 %)
+   ok six components: the panel forces and couples sum to the semi-wing resultant (force 0.000e+0 N, moment 0.000e+0 N mm)
+   ok six components: the strip forces sum to the resultant (2.507e-16 N); the full transfer chain is tested in test_wing_aero_transfer.mjs
+
+external / analytic acceptance: 48 checks passed (56 s)

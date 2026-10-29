@@ -1,0 +1,288 @@
+{
+  "source": "Independent execution of test_wing_aero_external_acceptance.mjs, checkpoint 10 core 7e6b7eb",
+  "logSHA256": "4df70e2d1aaf6b44a3c91a204edcaf544108d749cbe918182ecbc3ad17ccdc62",
+  "precision": "Values retain the precision printed by the test log; raw PANAIR values and provenance are in validation/panair/.",
+  "scope": "Identical rounded-tip NACA 0012 AR 6 wing, chord 200 mm, semi-span 600 mm, alpha 4 deg. Fixed positions, no extrapolation.",
+  "rays": [
+    {
+      "side": "upper",
+      "phi": 15,
+      "distance_mm": 2,
+      "values": [
+        -0.2087,
+        -0.2234,
+        -0.3494,
+        -0.2353
+      ]
+    },
+    {
+      "side": "upper",
+      "phi": 15,
+      "distance_mm": 4,
+      "values": [
+        -0.036,
+        -0.0284,
+        -0.0547,
+        -0.0323
+      ]
+    },
+    {
+      "side": "upper",
+      "phi": 15,
+      "distance_mm": 8,
+      "values": [
+        0.0755,
+        0.0761,
+        0.0865,
+        0.0782
+      ]
+    },
+    {
+      "side": "upper",
+      "phi": 15,
+      "distance_mm": 16,
+      "values": [
+        0.1232,
+        0.1235,
+        0.1265,
+        0.1228
+      ]
+    },
+    {
+      "side": "upper",
+      "phi": 45,
+      "distance_mm": 2,
+      "values": [
+        -0.425,
+        -0.4249,
+        -0.6022,
+        -0.4533
+      ]
+    },
+    {
+      "side": "upper",
+      "phi": 45,
+      "distance_mm": 4,
+      "values": [
+        -0.1807,
+        -0.189,
+        -0.2176,
+        -0.197
+      ]
+    },
+    {
+      "side": "upper",
+      "phi": 45,
+      "distance_mm": 8,
+      "values": [
+        -0.0709,
+        -0.0658,
+        -0.0722,
+        -0.0663
+      ]
+    },
+    {
+      "side": "upper",
+      "phi": 45,
+      "distance_mm": 16,
+      "values": [
+        0.0012,
+        0.0029,
+        0.0035,
+        0.0038
+      ]
+    },
+    {
+      "side": "upper",
+      "phi": 75,
+      "distance_mm": 4,
+      "values": [
+        -0.6804,
+        -0.6665,
+        -0.814,
+        -0.7708
+      ]
+    },
+    {
+      "side": "upper",
+      "phi": 75,
+      "distance_mm": 8,
+      "values": [
+        -0.387,
+        -0.3813,
+        -0.4953,
+        -0.3793
+      ]
+    },
+    {
+      "side": "upper",
+      "phi": 75,
+      "distance_mm": 16,
+      "values": [
+        -0.2248,
+        -0.2225,
+        -0.2427,
+        -0.222
+      ]
+    },
+    {
+      "side": "lower",
+      "phi": 15,
+      "distance_mm": 2,
+      "values": [
+        -0.0018,
+        -0.0125,
+        -0.0961,
+        -0.0159
+      ]
+    },
+    {
+      "side": "lower",
+      "phi": 15,
+      "distance_mm": 4,
+      "values": [
+        0.0981,
+        0.1024,
+        0.0915,
+        0.1059
+      ]
+    },
+    {
+      "side": "lower",
+      "phi": 15,
+      "distance_mm": 8,
+      "values": [
+        0.1424,
+        0.1427,
+        0.1522,
+        0.1468
+      ]
+    },
+    {
+      "side": "lower",
+      "phi": 15,
+      "distance_mm": 16,
+      "values": [
+        0.1397,
+        0.1395,
+        0.1438,
+        0.1401
+      ]
+    },
+    {
+      "side": "lower",
+      "phi": 45,
+      "distance_mm": 2,
+      "values": [
+        -0.1292,
+        -0.1287,
+        -0.2688,
+        -0.1588
+      ]
+    },
+    {
+      "side": "lower",
+      "phi": 45,
+      "distance_mm": 4,
+      "values": [
+        0.009,
+        0.0054,
+        -0.0139,
+        0.0006
+      ]
+    },
+    {
+      "side": "lower",
+      "phi": 45,
+      "distance_mm": 8,
+      "values": [
+        0.0442,
+        0.0458,
+        0.0416,
+        0.0456
+      ]
+    },
+    {
+      "side": "lower",
+      "phi": 45,
+      "distance_mm": 16,
+      "values": [
+        0.0369,
+        0.0371,
+        0.0375,
+        0.0373
+      ]
+    },
+    {
+      "side": "lower",
+      "phi": 75,
+      "distance_mm": 4,
+      "values": [
+        -0.2703,
+        -0.2599,
+        -0.3726,
+        -0.339
+      ]
+    },
+    {
+      "side": "lower",
+      "phi": 75,
+      "distance_mm": 8,
+      "values": [
+        -0.0905,
+        -0.0874,
+        -0.16,
+        -0.0899
+      ]
+    },
+    {
+      "side": "lower",
+      "phi": 75,
+      "distance_mm": 16,
+      "values": [
+        -0.0321,
+        -0.034,
+        -0.0436,
+        -0.0341
+      ]
+    }
+  ],
+  "stations": [
+    {
+      "eta": 0.5,
+      "core48x36": 0.34529,
+      "core64x48": 0.34517,
+      "panair64x48": 0.34482
+    },
+    {
+      "eta": 0.9,
+      "core48x36": 0.20072,
+      "core64x48": 0.20067,
+      "panair64x48": 0.20038
+    },
+    {
+      "eta": 0.95,
+      "core48x36": 0.14897,
+      "core64x48": 0.14898,
+      "panair64x48": 0.14875
+    },
+    {
+      "eta": 0.98,
+      "core48x36": 0.11225,
+      "core64x48": 0.11181,
+      "panair64x48": 0.1123
+    },
+    {
+      "eta": 0.99,
+      "core48x36": 0.11721,
+      "core64x48": 0.11736,
+      "panair64x48": 0.11751
+    },
+    {
+      "eta": 0.995,
+      "core48x36": 0.12548,
+      "core64x48": 0.1253,
+      "panair64x48": 0.12497
+    }
+  ]
+}

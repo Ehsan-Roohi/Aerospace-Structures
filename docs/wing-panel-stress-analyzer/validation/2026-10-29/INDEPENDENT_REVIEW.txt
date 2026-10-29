@@ -1,0 +1,13 @@
+INDEPENDENT CHECKPOINT-7 REVIEW — 29 October 2026
+Public 3D core remains 0.3.1; experimental checkpoint 7 is not released.
+Downloaded archive SHA256 c08538bdfb849ad0cea2ca7ba4f23dfa9594296e152dec84ad6efc1c50564b65.
+All 153 supplied manifest entries independently match.
+The same P2 physical-triangle polynomial now supplies kernel influence and recovered gradient. Exact integrals of quadratic pressure include panel-centroid couples; strip and root moments retain these couples.
+Independent local focused test: tensor 39 checks passed (one optional previous-source check unavailable); span 23; kernel, closed-body, Trefftz, VLM and transfer suites passed. Original criteria retained: conformal 2 failures, wing 1, admission 82, twist 18. These remain failures, not a release pass.
+Windows-compatible IO: 51 AeroStruct and 1062 unchanged Wing Lab checks pass. Engine independent six-component equilibrium and equivalence checks pass; the final original Unix diff harness is unavailable on Windows.
+Actual fresh NACA0012 AR6, alpha4, 32x24: CL_Trefftz 0.3170198593 and CDi 0.0054111970 (unchanged from checkpoint6). Actual force-plus-couple Cm about quarter chord -0.0001896114, versus checkpoint6 -0.0003080374. PANAIR common-area centroid quadrature Cm -0.0000691183 is a different integration rule, not identical-point truth.
+PANAIR raw runs were performed externally; stored output independently reprocessed. Native Cp coordinates and reference diagnostics retained. Exact physical source integration is not proof that the solved discrete potential has converged near a sharp edge.
+The 3D last-tip-strip gate remains failed in the supplied raw logs. The report does not declare the tip spike repaired or proven physical. Torque uncertainty is not certified.
+Official MIT XFOIL6.99 ran locally on 16 contour/mesh/angle configurations. NACA2412 alpha4,320 panels: app cl .7394347 vs XFOIL .7412; cm -.0612878 vs -.0611. PCOP input coordinates retained. XFOIL nodal Cp and application midpoint Cp are kept at native locations. Joukowski cusp XFOIL has oscillatory or unreadable values and is not an exact reference; exact conformal flow is used there.
+The isolated 2D application has 0.279% lift error and .00272 interior Cp RMS for the exact Joukowski alpha4/320 case. All force/moment panels retained. Last-panel cusp pressure defect still pending repair.
+No clipping, smoothing, geometry trimming, weakened acceptance thresholds or replacement reference goldens used.

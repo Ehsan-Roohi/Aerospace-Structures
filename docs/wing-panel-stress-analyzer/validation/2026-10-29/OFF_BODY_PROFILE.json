@@ -1,0 +1,47 @@
+{
+  "scope": "JS systems 24x16; PANAIR references on16x12,24x16,32x24. Exact common off-body coordinates, normalized velocities; all JS panels exact. Not a pressure contour/recovery-stencil comparison. PANAIR warnings retained.",
+  "rows": [
+    {
+      "distance_mm": 0.25,
+      "PANAIR_32x24_Vz": 1.2959,
+      "production_24x16_Vz": 2.652167743798333,
+      "candidate_24x16_Vz": 1.2965537205404325
+    },
+    {
+      "distance_mm": 0.5,
+      "PANAIR_32x24_Vz": 0.9572,
+      "production_24x16_Vz": 1.5664443542092488,
+      "candidate_24x16_Vz": 0.9652514581427216
+    },
+    {
+      "distance_mm": 1,
+      "PANAIR_32x24_Vz": 0.6976,
+      "production_24x16_Vz": 0.9729374763615622,
+      "candidate_24x16_Vz": 0.7034074234179505
+    },
+    {
+      "distance_mm": 2,
+      "PANAIR_32x24_Vz": 0.5041,
+      "production_24x16_Vz": 0.6283613512610359,
+      "candidate_24x16_Vz": 0.5065395840734042
+    },
+    {
+      "distance_mm": 4,
+      "PANAIR_32x24_Vz": 0.3626,
+      "production_24x16_Vz": 0.41795618621473835,
+      "candidate_24x16_Vz": 0.36343280243538667
+    },
+    {
+      "distance_mm": 8,
+      "PANAIR_32x24_Vz": 0.2611,
+      "production_24x16_Vz": 0.2850429531174623,
+      "candidate_24x16_Vz": 0.2614776867397245
+    },
+    {
+      "distance_mm": 16,
+      "PANAIR_32x24_Vz": 0.1897,
+      "production_24x16_Vz": 0.1995325788936144,
+      "candidate_24x16_Vz": 0.19005165615205838
+    }
+  ]
+}

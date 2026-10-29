@@ -1,0 +1,19 @@
+{
+  "date": "2026-10-29",
+  "public_solver": "0.3.1",
+  "public_bundle_sha256": "1b242ffe7126ea9c568ea3c47636c3d65bc8366afe1ba5e13cacc9f0cd2c650f",
+  "candidate_status": "Experimental checkpoint 7; not released",
+  "candidate_core_sha256": "9a0d405ba35f4edb0e142ebd8dcb2f69c5627e9b0a93787f97a39f724776a695",
+  "reference_runs": {
+    "XFOIL": "Executed locally, official MIT 6.99, PCOP/inviscid/Mach0",
+    "PANAIR": "Executed externally; stored raw output independently reprocessed",
+    "MachLine": "Source formulation examined; no matched local execution claimed"
+  },
+  "xfoil_binary_provenance": {
+    "source": "https://web.mit.edu/drela/Public/web/xfoil/XFOIL6.99.zip",
+    "archive_sha256": "e13e8fe5cc38d8ac2626e9d3b17643bdcfaa63791619f042afdaa7cd103bcb08",
+    "exe_sha256": "c17342f84ae260c2b11a74cd0e2fb8189a5f8954c6bb7a8467a0f27055c7faea",
+    "scope": "Official MIT Windows binary, reference calculation only; no source code is copied into application."
+  },
+  "runtime_note": "LIVE_BROWSER_TIMING is independent checkpoint 6; AUTHOR_CHECKPOINT7_TIMING is a separate externally executed record."
+}

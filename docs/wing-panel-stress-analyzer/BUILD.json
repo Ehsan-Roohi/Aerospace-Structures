@@ -4,7 +4,7 @@
   "status": "Published educational application; separate from Wing Lab",
   "builtAt": "2026-10-28T21:20:03.299948+00:00",
   "page": "index.html",
-  "pageSha256": "5c2989e5a5dd24bf794b647957225d05746b30a5177192352cd4e2b004dfd8b5",
+  "pageSha256": "adcb459b2d6c0749ddd74795167c44d75b813654d2c5653aede9a14d68188e84",
   "workers": {
     "wing-aero": {
       "worker": "9a7382a95fcf",
@@ -199,7 +199,7 @@
       "wing-aero-ui.js": "62bf281e5fb828925c6edf73aae5628c1b972689812d38680f9bf0673c41a627",
       "wx-aero-results.js": "d22e6cb6131e6810b124d4942e466f497e14418c190b8e082194f419e8a15fb5",
       "wx-shell.css": "f2e09cc59ee67e0d9a544950280de2f1b0d292ee779efe65b95f33d7398a7663",
-      "wx-shell.js": "c0dae117347746a8563aadb3af4364d1808c36ca34a8c2e32a4e2334a9beec95",
+      "wx-shell.js": "c7c33bf1ebb1114e9a00939222d641c34fd65135301025042db840ca3ca53651",
       "04-geometry-first-context-menu.patch": "653987960c2a8999cb77a4d0c9a6318a086de4d2b935aa77e3ed643deac3f1b2",
       "05-lightweight-view-rendering.patch": "396248051b76b95cba7679141a5c7eeac3019e859da022f3bf0af8229eb9f60d",
       "06-surface-gradient.patch": "04f381d9937dc7ccd4c0bc40721a1070725a0a094f7c064da1248bdfa15ba678"
@@ -210,7 +210,8 @@
     "courseReview": "validation/COURSE_UI_REVIEW.json",
     "pressureReview": "validation/PRESSURE_DISPLAY_REVIEW.json",
     "resultsReview": "validation/AERO_RESULTS_REVIEW.json",
-    "airfoilHelpReview": "validation/AIRFOIL_HELP_RELEASE_REVIEW.json"
+    "airfoilHelpReview": "validation/AIRFOIL_HELP_RELEASE_REVIEW.json",
+    "numericalValidation": "validation/2026-10-29/index.html"
   },
   "airfoil2DSolverVersion": "1.0.0",
   "surfaceGradientReview": "validation/SURFACE_GRADIENT_REVIEW.json"

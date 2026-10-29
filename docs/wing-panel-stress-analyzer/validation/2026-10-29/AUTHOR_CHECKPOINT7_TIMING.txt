@@ -1,0 +1,12 @@
+node     fine     031_31a03ca        n=3 best  20.98 s (x1.000)  median  21.15 s (x1.000)  median assembly 11.79 solve  8.39 mesh 0.17 s  all: 21.22 21.15 20.98
+node     fine     8af185e            n=3 best  24.66 s (x1.176)  median  25.04 s (x1.184)  median assembly 19.10 solve  4.42 mesh 1.26 s  all: 26.09 25.04 24.66
+node     fine     a723bb5            n=3 best  22.31 s (x1.064)  median  23.47 s (x1.110)  median assembly 17.47 solve  4.19 mesh 1.34 s  all: 23.84 23.47 22.31
+node     standard 031_31a03ca        n=3 best   7.16 s (x1.000)  median   7.41 s (x1.000)  median assembly  3.72 solve  3.27 mesh 0.09 s  all: 7.41 7.16 7.66
+node     standard 8af185e            n=3 best   7.19 s (x1.004)  median   7.27 s (x0.981)  median assembly  5.23 solve  1.04 mesh 0.80 s  all: 7.27 8.08 7.19
+node     standard a723bb5            n=3 best   7.28 s (x1.017)  median   7.34 s (x0.991)  median assembly  5.29 solve  0.98 mesh 0.83 s  all: 7.28 7.49 7.34
+chromium fine     031_31a03ca        n=3 best  23.17 s (x1.000)  median  24.08 s (x1.000)  median assembly 15.82 solve  7.07 mesh 0.14 s  all: 24.35 24.08 23.17
+chromium fine     8af185e            n=3 best  23.10 s (x0.997)  median  24.33 s (x1.010)  median assembly 18.73 solve  4.34 mesh 0.96 s  all: 24.33 23.10 24.66
+chromium fine     a723bb5            n=3 best  24.01 s (x1.036)  median  26.03 s (x1.081)  median assembly 20.25 solve  4.44 mesh 1.13 s  all: 26.74 26.03 24.01
+chromium standard 031_31a03ca        n=3 best   8.03 s (x1.000)  median   8.36 s (x1.000)  median assembly  5.00 solve  2.81 mesh 0.08 s  all: 8.37 8.03 8.36
+chromium standard 8af185e            n=3 best   6.81 s (x0.848)  median   7.37 s (x0.882)  median assembly  5.68 solve  0.87 mesh 0.59 s  all: 7.37 6.81 7.43
+chromium standard a723bb5            n=3 best   7.25 s (x0.903)  median   7.26 s (x0.868)  median assembly  5.63 solve  0.97 mesh 0.59 s  all: 7.51 7.25 7.26

@@ -23436,7 +23436,11 @@ window.WingAeroStructResults = (() => {
     <p>The contour has linearly varying vortex strength γ on straight panels. Analytic line integrals produce the influence coefficients. N midpoint no-penetration equations plus γ₀ + γN = 0 at the sharp trailing edge determine N+1 nodal strengths by pivoted LU. Exterior tangential velocity includes the vortex-sheet jump. Bernoulli gives Cp; pressure integration gives cl and cm¼, and −2Γ/(Vc) provides a circulation cross-check with this clockwise-contour convention.</p>
     <p>The selected and half-density solutions are overlaid. Their difference is a sensitivity check, not a guaranteed error bound. Click a Cp point for its value and Vt/V∞; use Show panels to inspect contour nodes. File exports PNG and CSV. Any residual pressure drag is a discretization error, not physical profile drag. Unlike full XFOIL, this solver has no viscous boundary-layer coupling.</p>
     <p>Independent formulation references: <a target="_blank" rel="noopener" href="https://www.engapplets.vt.edu/fluids/vpm/vpminfo.html">Virginia Tech: linear vortex-panel method</a>; <a target="_blank" rel="noopener" href="https://web.mit.edu/drela/Public/web/xfoil/xfoil_doc.txt">Drela &amp; Youngren: XFOIL formulation and viscous capabilities</a>.</p>`}));
-  helpBody.prepend(...[helpTop, where, aeroHelp, pressureHelp,algorithmHelp,accuracyHelp,foilHelp].filter(Boolean));
+  const validationHelp = el('p', {id:'wxNumericalValidation'}, el('a', {
+    href:'validation/2026-10-29/index.html', target:'_blank', rel:'noopener',
+    text:'Numerical validation · Cp, lift, moment and reference software'
+  }));
+  helpBody.prepend(...[helpTop, validationHelp, where, aeroHelp, pressureHelp,algorithmHelp,accuracyHelp,foilHelp].filter(Boolean));
 
   // ---------------------------------------------------------------- result strip
   const results = el('section', { id: 'wxResults', 'aria-label': 'Displayed result and solver status' });

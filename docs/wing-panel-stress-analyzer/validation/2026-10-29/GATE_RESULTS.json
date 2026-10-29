@@ -1,0 +1,228 @@
+{
+  "core_sha256": "9a0d405ba35f4edb0e142ebd8dcb2f69c5627e9b0a93787f97a39f724776a695",
+  "published_bundle_sha256": "1b242ffe7126ea9c568ea3c47636c3d65bc8366afe1ba5e13cacc9f0cd2c650f",
+  "production_changed": false,
+  "results": [
+    {
+      "name": "test_wing_aero_tensor_doublet",
+      "exit_code": 0,
+      "seconds": 2.1034479000081774,
+      "test_sha256": "c6230a62585087b83db3486fe3044eecfc8d5a0470539b2b17580d80de39d26a"
+    },
+    {
+      "name": "test_wing_aero_span_doublet",
+      "exit_code": 0,
+      "seconds": 3.038752899999963,
+      "test_sha256": "6d60490407b903c70cd06be6c8be27935eccbd36a1790cb6b53fbe00139d65bb"
+    },
+    {
+      "name": "test_wing_aero_kernels",
+      "exit_code": 0,
+      "seconds": 1.3674852999974973,
+      "test_sha256": "878b63afc9632a710adfe51c5e3faf13a3c2351a3246a08230623299d39aa4bd"
+    },
+    {
+      "name": "test_wing_aero_closed_bodies",
+      "exit_code": 0,
+      "seconds": 5.833965199999511,
+      "test_sha256": "b799f9a0e32d813d714be385cd3c040df2487dcdd6b20776fb60d0806c373600"
+    },
+    {
+      "name": "test_wing_aero_vlm",
+      "exit_code": 0,
+      "seconds": 4.804993799989461,
+      "test_sha256": "7a041bd6686eb439f8d675b2048a8c8ec38324fa09a66e0dea0cf667067e4a5e"
+    },
+    {
+      "name": "test_wing_aero_trefftz",
+      "exit_code": 0,
+      "seconds": 0.33707710000453517,
+      "test_sha256": "826ae3733f2f25784a34a208e7a31395a23a8819149ee12ffc5b6a07e6e2d8ed"
+    },
+    {
+      "name": "test_wing_aero_transfer",
+      "exit_code": 0,
+      "seconds": 26.41312709999329,
+      "test_sha256": "a635b4e751d6421b2cb4b3e7190c190f70cbbb5ce09216462a15a1fcfacca4b9"
+    },
+    {
+      "name": "test_wing_aero_conformal",
+      "exit_code": 1,
+      "seconds": 10.780345899998792,
+      "test_sha256": "f6c0f892d88faf4d233c560dabcb31f3b97eaa9f34d71f0bb9c0ee72cee54240",
+      "nonstopping_audit": {
+        "exit_code": 1,
+        "seconds": 14.741755600000033,
+        "predicates_and_tolerances_unchanged": true,
+        "report": {
+          "checks": 28,
+          "failures": [
+            "Prandtl's induced-angle coefficient within 5%",
+            "Prandtl's induced-angle coefficient within 5%"
+          ]
+        }
+      }
+    },
+    {
+      "name": "test_wing_aero_wing",
+      "exit_code": 1,
+      "seconds": 0.5350897000025725,
+      "test_sha256": "5f837961f58c4540dbeefd3cdbd6f66c078fa43b078e19ffb1450841f2f46015",
+      "nonstopping_audit": {
+        "exit_code": 1,
+        "seconds": 23.635639100000844,
+        "predicates_and_tolerances_unchanged": true,
+        "report": {
+          "checks": 61,
+          "failures": [
+            "mirror image identical to the explicit full-span discretization"
+          ]
+        }
+      }
+    },
+    {
+      "name": "test_wing_aero_admission",
+      "exit_code": 1,
+      "seconds": 0.721700599999167,
+      "test_sha256": "d0c7f3f4c66541eaf994da62452c8a31b88ed313eac5005600231b5565c28784",
+      "nonstopping_audit": {
+        "exit_code": 1,
+        "seconds": 29.402980600003502,
+        "predicates_and_tolerances_unchanged": true,
+        "report": {
+          "checks": 281,
+          "failures": [
+            "course4: the stored references belong to this solver (base-mesh resultant reproduced)",
+            "course4, standard, 0.25c axis, torque at y = 0: |-55.7601 - -55.3574| + 0.1279 <= U 0.2936",
+            "course4, standard, 0.25c axis, torque at y = 225: |-20.2150 - -19.9938| + 0.2970 <= U 0.1971",
+            "course4, standard, 0.25c axis: root force 4.1978 vs reference 4.1754 within U 0.0142",
+            "course4, standard, 0.25c axis: root bending 813.3407 vs reference 810.2406 within U 2.6703",
+            "course4, standard, 0.35c axis, torque at y = 0: |0.4391 - 0.3349| + 0.0641 <= U 0.1617",
+            "course4, standard, 0.35c axis, torque at y = 337.5: |-0.6028 - -0.6432| + 0.1718 <= U 0.0418",
+            "course4, standard, 0.35c axis, y = 337.5: resolved torque's error (with the reference uncertainty and the cross term) within 10% of |T|",
+            "course4, standard, 0.35c axis: root force 4.1978 vs reference 4.1754 within U 0.0142",
+            "course4, standard, 0.35c axis: root bending 815.5975 vs reference 812.4777 within U 2.6844",
+            "course4, standard, 0.45c axis, torque at y = 0: |56.5684 - 56.3090| + 0.1148 <= U 0.0670",
+            "course4, standard, 0.45c axis, torque at y = 225: |19.4689 - 19.3029| + 0.0375 <= U 0.2028",
+            "course4, standard, 0.45c axis, torque at y = 337.5: |6.6621 - 6.6332| + 0.1091 <= U 0.0238",
+            "course4, standard, 0.45c axis: root force 4.1978 vs reference 4.1754 within U 0.0142",
+            "course4, standard, 0.45c axis: root bending 819.4938 vs reference 816.3612 within U 2.6873",
+            "course4, fine, 0.25c axis, torque at y = 0: |-55.7712 - -55.3574| <= U 0.0707",
+            "course4, fine, 0.25c axis, torque at y = 112.5: |-36.4523 - -36.1282| <= U 0.1405",
+            "course4, fine, 0.25c axis, torque at y = 225: |-20.2471 - -19.9938| <= U 0.0349",
+            "course4, fine, 0.25c axis: root force 4.1963 vs reference 4.1754 within U 0.0044",
+            "course4, fine, 0.25c axis: root bending 813.1356 vs reference 810.2406 within U 0.7816",
+            "course4, fine, 0.35c axis, torque at y = 0: |0.4063 - 0.3349| <= U 0.0560",
+            "course4, fine, 0.35c axis, torque at y = 225: |-0.5021 - -0.4461| <= U 0.0272",
+            "course4, fine, 0.35c axis, y = 225: resolved torque's error (with the reference uncertainty and the cross term) within 10% of |T|",
+            "course4, fine, 0.35c axis, torque at y = 337.5: |-0.6074 - -0.6432| <= U 0.0154",
+            "course4, fine, 0.35c axis, y = 337.5: resolved torque's error (with the reference uncertainty and the cross term) within 10% of |T|",
+            "course4, fine, 0.35c axis: root force 4.1963 vs reference 4.1754 within U 0.0044",
+            "course4, fine, 0.35c axis: root bending 815.3911 vs reference 812.4777 within U 0.7821",
+            "course4, fine, 0.45c axis, torque at y = 0: |56.5140 - 56.3090| <= U 0.0535",
+            "course4, fine, 0.45c axis, torque at y = 112.5: |36.3540 - 36.1907| <= U 0.0946",
+            "course4, fine, 0.45c axis, torque at y = 225: |19.4236 - 19.3029| <= U 0.0254",
+            "course4, fine, 0.45c axis, torque at y = 337.5: |6.6542 - 6.6332| <= U 0.0116",
+            "course4, fine, 0.45c axis: root force 4.1963 vs reference 4.1754 within U 0.0044",
+            "course4, fine, 0.45c axis: root bending 819.2856 vs reference 816.3612 within U 0.7845",
+            "dihedral6: the stored references belong to this solver (base-mesh resultant reproduced)",
+            "dihedral6, standard, 0.25c axis, torque at y = 0: |-56.7078 - -56.2802| + 0.0959 <= U 0.3231",
+            "dihedral6, standard, 0.25c axis, torque at y = 225: |-20.1319 - -19.9392| + 0.2368 <= U 0.1729",
+            "dihedral6, standard, 0.25c axis: root force 4.2398 vs reference 4.2141 within U 0.0162",
+            "dihedral6, standard, 0.25c axis: root bending 823.3649 vs reference 819.8251 within U 2.6940",
+            "dihedral6, standard, 0.35c axis, torque at y = 337.5: |-0.5028 - -0.5255| + 0.1412 <= U 0.0531",
+            "dihedral6, standard, 0.35c axis: root force 4.2398 vs reference 4.2141 within U 0.0162",
+            "dihedral6, standard, 0.35c axis: root bending 825.6266 vs reference 822.0709 within U 2.7096",
+            "dihedral6, standard, 0.45c axis, torque at y = 0: |56.8193 - 56.5323| + 0.0804 <= U 0.1159",
+            "dihedral6, standard, 0.45c axis, torque at y = 337.5: |6.7100 - 6.6755| + 0.0656 <= U 0.0373",
+            "dihedral6, standard, 0.45c axis: root force 4.2398 vs reference 4.2141 within U 0.0162",
+            "dihedral6, standard, 0.45c axis: root bending 829.5358 vs reference 825.9606 within U 2.7206",
+            "dihedral6, fine, 0.25c axis, torque at y = 0: |-56.7142 - -56.2802| <= U 0.0965",
+            "dihedral6, fine, 0.25c axis, torque at y = 112.5: |-36.5705 - -36.2085| <= U 0.0600",
+            "dihedral6, fine, 0.25c axis, torque at y = 225: |-20.1588 - -19.9392| <= U 0.0373",
+            "dihedral6, fine, 0.25c axis: root force 4.2375 vs reference 4.2141 within U 0.0055",
+            "dihedral6, fine, 0.25c axis: root bending 823.1387 vs reference 819.8251 within U 0.8053",
+            "dihedral6, fine, 0.35c axis, torque at y = 225: |-0.4152 - -0.3425| <= U 0.0309",
+            "dihedral6, fine, 0.35c axis, y = 225: resolved torque's error (with the reference uncertainty and the cross term) within 10% of |T|",
+            "dihedral6, fine, 0.35c axis, y = 337.5: resolved torque's error (with the reference uncertainty and the cross term) within 10% of |T|",
+            "dihedral6, fine, 0.35c axis: root force 4.2375 vs reference 4.2141 within U 0.0055",
+            "dihedral6, fine, 0.35c axis: root bending 825.3988 vs reference 822.0709 within U 0.8061",
+            "dihedral6, fine, 0.45c axis, torque at y = 0: |56.7440 - 56.5323| <= U 0.0910",
+            "dihedral6, fine, 0.45c axis, torque at y = 112.5: |36.4888 - 36.3619| <= U 0.0472",
+            "dihedral6, fine, 0.45c axis, torque at y = 225: |19.5082 - 19.4115| <= U 0.0256",
+            "dihedral6, fine, 0.45c axis, torque at y = 337.5: |6.7007 - 6.6755| <= U 0.0174",
+            "dihedral6, fine, 0.45c axis: root force 4.2375 vs reference 4.2141 within U 0.0055",
+            "dihedral6, fine, 0.45c axis: root bending 829.3053 vs reference 825.9606 within U 0.8091",
+            "swept25: the stored references belong to this solver (base-mesh resultant reproduced)",
+            "swept25, standard, 0.25c axis, torque at y = 337.5: |-6.3646 - -6.2647| + 0.0238 <= U 0.0800",
+            "swept25, standard, 0.35c axis, torque at y = 337.5: |0.7646 - 0.8190| + 0.0595 <= U 0.0793",
+            "swept25, fine, 0.25c axis, torque at y = 0: |-51.7955 - -51.4852| <= U 0.2071",
+            "swept25, fine, 0.25c axis, torque at y = 225: |-17.3605 - -17.1745| <= U 0.0484",
+            "swept25, fine, 0.25c axis, torque at y = 337.5: |-6.3742 - -6.2647| <= U 0.0304",
+            "swept25, fine, 0.25c axis: root force 4.0639 vs reference 4.0511 within U 0.0061",
+            "swept25, fine, 0.25c axis: root bending 939.8747 vs reference 936.2852 within U 1.1110",
+            "swept25, fine, 0.35c axis, torque at y = 112.5: |1.1163 - 1.2704| <= U 0.0649",
+            "swept25, fine, 0.35c axis, y = 112.5: resolved torque's error (with the reference uncertainty and the cross term) within 10% of |T|",
+            "swept25, fine, 0.35c axis, torque at y = 225: |1.3562 - 1.4529| <= U 0.0959",
+            "swept25, fine, 0.35c axis, y = 225: resolved torque's error (with the reference uncertainty and the cross term) within 10% of |T|",
+            "swept25, fine, 0.35c axis, torque at y = 337.5: |0.7564 - 0.8190| <= U 0.0314",
+            "swept25, fine, 0.35c axis, y = 337.5: resolved torque's error (with the reference uncertainty and the cross term) within 10% of |T|",
+            "swept25, fine, 0.35c axis: root force 4.0639 vs reference 4.0511 within U 0.0061",
+            "swept25, fine, 0.35c axis: root bending 912.3320 vs reference 908.8315 within U 1.0691",
+            "swept25, fine, 0.45c axis, torque at y = 225: |19.1658 - 19.1949| <= U 0.0218",
+            "swept25, fine, 0.45c axis, torque at y = 337.5: |7.2260 - 7.2550| <= U 0.0273",
+            "swept25, fine, 0.45c axis: root force 4.0639 vs reference 4.0511 within U 0.0061",
+            "swept25, fine, 0.45c axis: root bending 885.9835 vs reference 882.5682 within U 1.0288",
+            "the cross-term (separability) error estimates are small against U"
+          ]
+        }
+      }
+    },
+    {
+      "name": "test_aerostruct_twist",
+      "exit_code": 1,
+      "seconds": 0.15183029999025166,
+      "test_sha256": "01d599dc5b5001b31358f86acca7ea1c704fb15af12df69e9fda34aafb16d5bf",
+      "nonstopping_audit": {
+        "exit_code": 1,
+        "seconds": 0.1599518999864813,
+        "predicates_and_tolerances_unchanged": true,
+        "report": {
+          "checks": 97,
+          "failures": [
+            "editable fixture, standard: the delivered bound alone covers the error even with the reference's own bound counted as error, |theta - theta_ref| + dtheta_ref <= dtheta (largest ratio 1.579)",
+            "editable fixture, fine: the delivered bound alone covers the error even with the reference's own bound counted as error, |theta - theta_ref| + dtheta_ref <= dtheta (largest ratio 3.217)",
+            "low-GJ fixture (modulus 10 MPa), standard: the delivered bound alone covers the error even with the reference's own bound counted as error, |theta - theta_ref| + dtheta_ref <= dtheta (largest ratio 1.579)",
+            "low-GJ fixture (modulus 10 MPa), fine: the delivered bound alone covers the error even with the reference's own bound counted as error, |theta - theta_ref| + dtheta_ref <= dtheta (largest ratio 3.217)",
+            "forward spars, standard: withheld (got shown)",
+            "forward spars, standard: the delivered bound alone covers the error even with the reference's own bound counted as error, |theta - theta_ref| + dtheta_ref <= dtheta (largest ratio 1.700)",
+            "forward spars, fine: |theta - theta_ref| <= dtheta + dtheta_ref at 16 stations and the tip",
+            "forward spars, fine: the delivered bound alone covers the error even with the reference's own bound counted as error, |theta - theta_ref| + dtheta_ref <= dtheta (largest ratio 3.412)",
+            "forward spars, GJ / 4, standard: withheld (got shown)",
+            "forward spars, GJ / 4, standard: the delivered bound alone covers the error even with the reference's own bound counted as error, |theta - theta_ref| + dtheta_ref <= dtheta (largest ratio 1.700)",
+            "forward spars, GJ / 4, fine: |theta - theta_ref| <= dtheta + dtheta_ref at 16 stations and the tip",
+            "forward spars, GJ / 4, fine: the delivered bound alone covers the error even with the reference's own bound counted as error, |theta - theta_ref| + dtheta_ref <= dtheta (largest ratio 3.412)",
+            "forward spars, GJ / 40, standard: the delivered bound alone covers the error even with the reference's own bound counted as error, |theta - theta_ref| + dtheta_ref <= dtheta (largest ratio 1.700)",
+            "forward spars, GJ / 40, fine: |theta - theta_ref| <= dtheta + dtheta_ref at 16 stations and the tip",
+            "forward spars, GJ / 40, fine: the delivered bound alone covers the error even with the reference's own bound counted as error, |theta - theta_ref| + dtheta_ref <= dtheta (largest ratio 3.412)",
+            "editable fixture, Fine, root: 2.218 \u00c2\u00b1 0.083 N mm is reported as not resolved (49% of |T|), not admitted as a resolved torque",
+            "editable fixture, Fine: 50% and 75% torques have unresolved signs; at 75% the weighted meshes give torques of both signs",
+            "the root torque falls by several N mm under chordwise refinement: a slowly converging small difference"
+          ]
+        }
+      }
+    },
+    {
+      "name": "test_aerostruct_engine_fork",
+      "exit_code": 1,
+      "seconds": 0.17439530001138337,
+      "test_sha256": "80c69fca3f6241c42b94ea5b2199f6a91f6b8a83983b441477446e9fabe934a5"
+    },
+    {
+      "name": "test_aerostruct_study_io",
+      "exit_code": 1,
+      "seconds": 0.17631329999130685,
+      "test_sha256": "826321340c337762772d3051a7beba25d291190f24f2df1e3c75103ad95d5efe"
+    }
+  ]
+}

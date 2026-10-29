@@ -1,0 +1,65 @@
+{
+  "method": "Original analytic-influence linear vortex-sheet panel method with midpoint impermeability and endpoint Kutta condition",
+  "reference": "Exact Joukowski conformal-map flow, independent of the panel equations",
+  "rows": [
+    {
+      "alphaDeg": 0,
+      "panels": 80,
+      "cl": -5.5027651272437916e-14,
+      "exact_cl": 0,
+      "lift_absolute_error": 5.5027651272437916e-14,
+      "Cp_RMS_x_02_to_98": 0.0024491686625635794,
+      "normal_velocity_residual": 1.1694413324280322e-13
+    },
+    {
+      "alphaDeg": 0,
+      "panels": 160,
+      "cl": 3.146588214595833e-13,
+      "exact_cl": 0,
+      "lift_absolute_error": 3.146588214595833e-13,
+      "Cp_RMS_x_02_to_98": 0.0006591764783525254,
+      "normal_velocity_residual": 7.189553845245637e-14
+    },
+    {
+      "alphaDeg": 0,
+      "panels": 320,
+      "cl": -1.5377089114835749e-12,
+      "exact_cl": 0,
+      "lift_absolute_error": 1.5377089114835749e-12,
+      "Cp_RMS_x_02_to_98": 0.00020139822620285876,
+      "normal_velocity_residual": 1.543527718765696e-12
+    },
+    {
+      "alphaDeg": 4,
+      "panels": 80,
+      "cl": 0.4709341659229556,
+      "exact_cl": 0.47075898801417243,
+      "lift_absolute_error": 0.00017517790878318618,
+      "Cp_RMS_x_02_to_98": 0.002450844445165146,
+      "normal_velocity_residual": 1.5527851716886735e-14
+    },
+    {
+      "alphaDeg": 4,
+      "panels": 160,
+      "cl": 0.47080886663315075,
+      "exact_cl": 0.47075898801417243,
+      "lift_absolute_error": 0.00004987861897831625,
+      "Cp_RMS_x_02_to_98": 0.0006601603441860209,
+      "normal_velocity_residual": 8.28311910723048e-14
+    },
+    {
+      "alphaDeg": 4,
+      "panels": 320,
+      "cl": 0.47077205275225587,
+      "exact_cl": 0.47075898801417243,
+      "lift_absolute_error": 0.00001306473808343478,
+      "Cp_RMS_x_02_to_98": 0.00020131786103504641,
+      "normal_velocity_residual": 4.965278831433512e-13
+    }
+  ],
+  "NACA0012_zero_alpha_symmetry": true,
+  "NACA2412_pressure_circulation_refinement": true,
+  "coordinate_profile_and_five_digit_and_station_blend": true,
+  "zero_chord_tip_refused": true,
+  "limits": "Cp benchmark excludes x/c < 0.02 and > 0.98; integrated lift uses every panel. No viscous or experimental validation is claimed."
+}

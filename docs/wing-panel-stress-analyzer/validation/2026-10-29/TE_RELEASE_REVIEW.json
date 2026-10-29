@@ -1,0 +1,18 @@
+{
+  "date": "2026-10-29",
+  "solver2D": "1.1.0",
+  "core3D": "0.3.1 unchanged",
+  "candidate_zip_sha256": "e55458d6470d863cd18680f91bb3846c99dfff8e3ce661c0eca928c17aa1313a",
+  "candidate_manifest_entries_verified": 52,
+  "independent_tests": [
+    "original test_airfoil_2d.cjs unchanged: exit0",
+    "independent validate_airfoil.cjs: path-only adjustment, same predicates, exit0",
+    "focused exact cusp/wedge: all assertions passed",
+    "18 orientation-reversal pairs; closure fractions .25,.5,.75, no production pressure correction"
+  ],
+  "browser": "Actual application 2D NACA2412 alpha4 eta.5 320 total panels; cl .74166, cm -.061213; results visible within 650ms of click including UI observation. Not a repeated timing benchmark.",
+  "export": "Actual File > Export current figure PNG downloaded; image inspected (1800px wide).",
+  "source_sha256": "b48eece98ffc0fe3033563535c96bf6a559a34773f5a84991bfe7b07bb6d5e6d",
+  "residual_semantics": "maxResidual is system/mean panel flux; pointwise midpoint normal velocity is separately reported. The old test output labels that field normal_velocity_residual; its numerical assertions were not changed.",
+  "release_scope": "Independent 2D trailing-edge repair and experimental report only. Experimental 3D checkpoint7 still not released; original failed gates remain failed."
+}

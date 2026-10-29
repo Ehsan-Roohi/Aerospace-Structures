@@ -1,0 +1,1113 @@
+{
+ "method": "Linear-vorticity panel method with the interior at rest (stream function = constant at the nodes), Kutta gamma0 + gammaN = 0, interior-bisector trailing-edge closure; Cp from the sheet jump with the interior at rest",
+ "reference": "Exact Karman-Trefftz conformal-map flows (cusp tau = 0 and finite wedge tau = 12 deg), written in this test; Cp compared at the same physical point",
+ "rows": [
+  {
+   "airfoil": "joukowski (cusp)",
+   "alphaDeg": -4,
+   "panels": 80,
+   "cl": -0.470934165922533,
+   "cl_error": -0.00017517790836057978,
+   "cm": 0.0012972406233956694,
+   "cm_error": 0.00005658439166761667,
+   "integrated_cl_error": -0.000002482732184505565,
+   "integrated_cm_error": 0.0000019922494923500962,
+   "circulation_cl_error": 0.00014369289486765302,
+   "Cp_RMS_same_point_x_02_98": 0.002776736428755821,
+   "last_panel_max_abs_Cp_error": 0.0029295214257074598,
+   "last3_panels_max_abs_Cp_error": 0.016507242745689155,
+   "exact_Cp_at_last_panel_midpoint": 0.14306428910131797,
+   "edge_exact": {
+    "speed": 0.9236704169072446,
+    "cp": 0.14683296093039688,
+    "kind": "cusp: finite, non-stagnant edge speed"
+   },
+   "edge_node_speed": 0.93610996211536,
+   "edge_node_Cp": 0.12369813882837921,
+   "edge_angle_deg": 0.7190732341583493,
+   "residual": 8.540318444287704e-14,
+   "flux_residual": 8.540318444287704e-14,
+   "midpoint_normal_velocity": 0.02202872606689434,
+   "published": {
+    "cl_error": 0.005395574142211479,
+    "cm_error": 0.001011825933999269,
+    "Cp_RMS_same_point_x_02_98": 0.00973128450373006,
+    "last_panel_max_abs_Cp_error": 0.6428065455056017,
+    "last3_panels_max_abs_Cp_error": 0.6428065455056017,
+    "edge_gammas": [
+     -116.98180906821827,
+     116.98180906821827
+    ]
+   }
+  },
+  {
+   "airfoil": "joukowski (cusp)",
+   "alphaDeg": -4,
+   "panels": 160,
+   "cl": -0.4708088666333372,
+   "cl_error": -0.000049878619164778204,
+   "cm": 0.001252882827008984,
+   "cm_error": 0.000012226595280931266,
+   "integrated_cl_error": -0.000006716661384464917,
+   "integrated_cm_error": -0.0000015220736111082062,
+   "circulation_cl_error": 0.000036702576033387224,
+   "Cp_RMS_same_point_x_02_98": 0.0007391924336220897,
+   "last_panel_max_abs_Cp_error": 0.001352869351738728,
+   "last3_panels_max_abs_Cp_error": 0.010018026566357863,
+   "exact_Cp_at_last_panel_midpoint": 0.14506268424113666,
+   "edge_exact": {
+    "speed": 0.9236704169072446,
+    "cp": 0.14683296093039688,
+    "kind": "cusp: finite, non-stagnant edge speed"
+   },
+   "edge_node_speed": 0.9306764402814028,
+   "edge_node_Cp": 0.13384136350513642,
+   "edge_angle_deg": 0.35988409969984564,
+   "residual": 7.449008233590082e-13,
+   "flux_residual": 7.449008233590082e-13,
+   "midpoint_normal_velocity": 0.005528725380601921,
+   "published": {
+    "cl_error": 0.0026507310471213796,
+    "cm_error": 0.00047883386702375543,
+    "Cp_RMS_same_point_x_02_98": 0.004986582334014587,
+    "last_panel_max_abs_Cp_error": 0.8541196422260631,
+    "last3_panels_max_abs_Cp_error": 0.8541196422260631,
+    "edge_gammas": [
+     -451.0297367412721,
+     451.0297367412721
+    ]
+   }
+  },
+  {
+   "airfoil": "joukowski (cusp)",
+   "alphaDeg": -4,
+   "panels": 320,
+   "cl": -0.4707720527563522,
+   "cl_error": -0.000013064742179769162,
+   "cm": 0.0012434430446727266,
+   "cm_error": 0.000002786812944673882,
+   "integrated_cl_error": -0.000002269517503206142,
+   "integrated_cm_error": -6.562410238544411e-7,
+   "circulation_cl_error": 0.000009274087159338862,
+   "Cp_RMS_same_point_x_02_98": 0.00022005271901131098,
+   "last_panel_max_abs_Cp_error": 0.0006402296339499403,
+   "last3_panels_max_abs_Cp_error": 0.005865637405272794,
+   "exact_Cp_at_last_panel_midpoint": 0.14597626482384518,
+   "edge_exact": {
+    "speed": 0.9236704169072446,
+    "cp": 0.14683296093039688,
+    "kind": "cusp: finite, non-stagnant edge speed"
+   },
+   "edge_node_speed": 0.9275743531360365,
+   "edge_node_Cp": 0.13960581940426342,
+   "edge_angle_deg": 0.17998551075933683,
+   "residual": 2.2343754741450804e-12,
+   "flux_residual": 2.2343754741450804e-12,
+   "midpoint_normal_velocity": 0.0014192973029240354,
+   "published": {
+    "cl_error": 0.001313156874626742,
+    "cm_error": 0.00023243554302617548,
+    "Cp_RMS_same_point_x_02_98": 0.002693651678738858,
+    "last_panel_max_abs_Cp_error": 0.5306141371453834,
+    "last3_panels_max_abs_Cp_error": 0.5306141371453834,
+    "edge_gammas": [
+     -1498.2775407298557,
+     1498.2775407298557
+    ]
+   }
+  },
+  {
+   "airfoil": "joukowski (cusp)",
+   "alphaDeg": 0,
+   "panels": 80,
+   "cl": 2.1417427293474178e-13,
+   "cl_error": 2.1417427293474178e-13,
+   "cm": -5.0215311509643756e-14,
+   "cm_error": -5.039458123823587e-14,
+   "integrated_cl_error": 2.1405658278891848e-13,
+   "integrated_cm_error": -5.038685629775691e-14,
+   "circulation_cl_error": 2.1466118813040502e-13,
+   "Cp_RMS_same_point_x_02_98": 0.0024369526366475997,
+   "last_panel_max_abs_Cp_error": 0.0020616628828932226,
+   "last3_panels_max_abs_Cp_error": 0.016245156531181637,
+   "exact_Cp_at_last_panel_midpoint": 0.14220872086928704,
+   "edge_exact": {
+    "speed": 0.9259259259259259,
+    "cp": 0.14266117969821668,
+    "kind": "cusp: finite, non-stagnant edge speed"
+   },
+   "edge_node_speed": 0.9383958471953302,
+   "edge_node_Cp": 0.11941323396655845,
+   "edge_angle_deg": 0.7190732341583493,
+   "residual": 1.3107690453200091e-13,
+   "flux_residual": 1.3107690453200091e-13,
+   "midpoint_normal_velocity": 0.01542762215310373,
+   "published": {
+    "cl_error": -2.461947746362769e-13,
+    "cm_error": 2.536605133820785e-14,
+    "Cp_RMS_same_point_x_02_98": 0.008627646629109392,
+    "last_panel_max_abs_Cp_error": 0.643777110897682,
+    "last3_panels_max_abs_Cp_error": 0.643777110897682,
+    "edge_gammas": [
+     -117.26746672306551,
+     117.26746672306551
+    ]
+   }
+  },
+  {
+   "airfoil": "joukowski (cusp)",
+   "alphaDeg": 0,
+   "panels": 160,
+   "cl": 3.783366848975067e-14,
+   "cl_error": 3.783366848975067e-14,
+   "cm": -8.757602390670194e-15,
+   "cm_error": -8.936872119262307e-15,
+   "integrated_cl_error": 3.791151420573513e-14,
+   "integrated_cm_error": -8.952552393181879e-15,
+   "circulation_cl_error": 3.7544078089479793e-14,
+   "Cp_RMS_same_point_x_02_98": 0.0006569449973037608,
+   "last_panel_max_abs_Cp_error": 0.0009171294321730361,
+   "last3_panels_max_abs_Cp_error": 0.009908673073120489,
+   "exact_Cp_at_last_panel_midpoint": 0.142548020648943,
+   "edge_exact": {
+    "speed": 0.9259259259259259,
+    "cp": 0.14266117969821668,
+    "kind": "cusp: finite, non-stagnant edge speed"
+   },
+   "edge_node_speed": 0.9329490575322613,
+   "edge_node_Cp": 0.12960605604966535,
+   "edge_angle_deg": 0.35988409969984564,
+   "residual": 5.304266116854917e-13,
+   "flux_residual": 5.304266116854917e-13,
+   "midpoint_normal_velocity": 0.004554109136341216,
+   "published": {
+    "cl_error": -9.098967889906162e-12,
+    "cm_error": 7.089764461922474e-13,
+    "Cp_RMS_same_point_x_02_98": 0.00419910616505569,
+    "last_panel_max_abs_Cp_error": 0.8566658086869801,
+    "last3_panels_max_abs_Cp_error": 0.8566658086869801,
+    "edge_gammas": [
+     -452.13110540691764,
+     452.13110540691764
+    ]
+   }
+  },
+  {
+   "airfoil": "joukowski (cusp)",
+   "alphaDeg": 0,
+   "panels": 320,
+   "cl": -5.7222724957973e-13,
+   "cl_error": -5.7222724957973e-13,
+   "cm": 1.3300716627531132e-13,
+   "cm_error": 1.328278965467192e-13,
+   "integrated_cl_error": -5.722065819758169e-13,
+   "integrated_cm_error": 1.3281209768818702e-13,
+   "circulation_cl_error": -5.74752430978348e-13,
+   "Cp_RMS_same_point_x_02_98": 0.0002009260975188756,
+   "last_panel_max_abs_Cp_error": 0.0004219001502986375,
+   "last3_panels_max_abs_Cp_error": 0.005819460815767119,
+   "exact_Cp_at_last_panel_midpoint": 0.14263288716397748,
+   "edge_exact": {
+    "speed": 0.9259259259259259,
+    "cp": 0.14266117969821668,
+    "kind": "cusp: finite, non-stagnant edge speed"
+   },
+   "edge_node_speed": 0.9298393932736568,
+   "edge_node_Cp": 0.1353987027164777,
+   "edge_angle_deg": 0.17998551075933683,
+   "residual": 1.98950576614958e-12,
+   "flux_residual": 1.98950576614958e-12,
+   "midpoint_normal_velocity": 0.001185247732336128,
+   "published": {
+    "cl_error": 6.023258779762342e-11,
+    "cm_error": 7.312645649995721e-12,
+    "Cp_RMS_same_point_x_02_98": 0.002163343978524171,
+    "last_panel_max_abs_Cp_error": 0.5320193571511469,
+    "last3_panels_max_abs_Cp_error": 0.5320193571511469,
+    "edge_gammas": [
+     -1501.9361821448344,
+     1501.9361821448344
+    ]
+   }
+  },
+  {
+   "airfoil": "joukowski (cusp)",
+   "alphaDeg": 4,
+   "panels": 80,
+   "cl": 0.47093416592296333,
+   "cl_error": 0.00017517790879090223,
+   "cm": -0.001297240623498411,
+   "cm_error": -0.000056584391770449346,
+   "integrated_cl_error": 0.0000024827326148835205,
+   "integrated_cm_error": -0.0000019922495950847573,
+   "circulation_cl_error": -0.00014369289443810773,
+   "Cp_RMS_same_point_x_02_98": 0.0027767364293230226,
+   "last_panel_max_abs_Cp_error": 0.0029295214231468414,
+   "last3_panels_max_abs_Cp_error": 0.016507242663185706,
+   "exact_Cp_at_last_panel_midpoint": 0.1496946807822368,
+   "edge_exact": {
+    "speed": 0.9236704169072446,
+    "cp": 0.14683296093039688,
+    "kind": "cusp: finite, non-stagnant edge speed"
+   },
+   "edge_node_speed": 0.936109962035677,
+   "edge_node_Cp": 0.12369813897756343,
+   "edge_angle_deg": 0.7190732341583493,
+   "residual": 3.105570343377347e-14,
+   "flux_residual": 3.105570343377347e-14,
+   "midpoint_normal_velocity": 0.022028726066830446,
+   "published": {
+    "cl_error": -0.0053955741427023085,
+    "cm_error": -0.0010118259339482309,
+    "Cp_RMS_same_point_x_02_98": 0.009731284504478362,
+    "last_panel_max_abs_Cp_error": 0.642806545504278,
+    "last3_panels_max_abs_Cp_error": 0.642806545504278,
+    "edge_gammas": [
+     -116.98180906786007,
+     116.98180906786007
+    ]
+   }
+  },
+  {
+   "airfoil": "joukowski (cusp)",
+   "alphaDeg": 4,
+   "panels": 160,
+   "cl": 0.4708088666334091,
+   "cl_error": 0.000049878619236665145,
+   "cm": -0.0012528828270248517,
+   "cm_error": -0.000012226595296890071,
+   "integrated_cl_error": 0.000006716661456407369,
+   "integrated_cm_error": 0.0000015220735951036474,
+   "circulation_cl_error": -0.000036702575960056993,
+   "Cp_RMS_same_point_x_02_98": 0.0007391924338522648,
+   "last_panel_max_abs_Cp_error": 0.0013528693564568428,
+   "last3_panels_max_abs_Cp_error": 0.010018026958863224,
+   "exact_Cp_at_last_panel_midpoint": 0.14837641216143527,
+   "edge_exact": {
+    "speed": 0.9236704169072446,
+    "cp": 0.14683296093039688,
+    "kind": "cusp: finite, non-stagnant edge speed"
+   },
+   "edge_node_speed": 0.9306764407563908,
+   "edge_node_Cp": 0.1338413626210162,
+   "edge_angle_deg": 0.35988409969984564,
+   "residual": 1.5518767153304966e-13,
+   "flux_residual": 1.5518767153304966e-13,
+   "midpoint_normal_velocity": 0.005528725380489173,
+   "published": {
+    "cl_error": -0.0026507310652552074,
+    "cm_error": -0.0004788338656124618,
+    "Cp_RMS_same_point_x_02_98": 0.004986582337370953,
+    "last_panel_max_abs_Cp_error": 0.8541196422276389,
+    "last3_panels_max_abs_Cp_error": 0.8541196422276389,
+    "edge_gammas": [
+     -451.029736771141,
+     451.029736771141
+    ]
+   }
+  },
+  {
+   "airfoil": "joukowski (cusp)",
+   "alphaDeg": 4,
+   "panels": 320,
+   "cl": 0.4707720527552198,
+   "cl_error": 0.000013064741047397188,
+   "cm": -0.0012434430444120115,
+   "cm_error": -0.0000027868126840498945,
+   "integrated_cl_error": 0.0000022695163706676347,
+   "integrated_cm_error": 6.562412846100509e-7,
+   "circulation_cl_error": -0.00000927408829337617,
+   "Cp_RMS_same_point_x_02_98": 0.00022005271914398488,
+   "last_panel_max_abs_Cp_error": 0.0006402296339390601,
+   "last3_panels_max_abs_Cp_error": 0.005865633368032919,
+   "exact_Cp_at_last_panel_midpoint": 0.1476329452048406,
+   "edge_exact": {
+    "speed": 0.9236704169072446,
+    "cp": 0.14683296093039688,
+    "kind": "cusp: finite, non-stagnant edge speed"
+   },
+   "edge_node_speed": 0.9275743493133749,
+   "edge_node_Cp": 0.13960582649586917,
+   "edge_angle_deg": 0.17998551075933683,
+   "residual": 1.1171877370725402e-12,
+   "flux_residual": 1.1171877370725402e-12,
+   "midpoint_normal_velocity": 0.0014192973029650438,
+   "published": {
+    "cl_error": -0.001313156754915168,
+    "cm_error": -0.00023243552847156644,
+    "Cp_RMS_same_point_x_02_98": 0.0026936515437738346,
+    "last_panel_max_abs_Cp_error": 0.5306141362864735,
+    "last3_panels_max_abs_Cp_error": 0.5306141362864735,
+    "edge_gammas": [
+     -1498.2775414888908,
+     1498.2775414888908
+    ]
+   }
+  },
+  {
+   "airfoil": "joukowski (cusp)",
+   "alphaDeg": 8,
+   "panels": 80,
+   "cl": 0.9395254106148458,
+   "cl_error": 0.0003009250555781051,
+   "cm": -0.0025692319338022013,
+   "cm_error": -0.00011206743267045067,
+   "integrated_cl_error": 0.00000497776525165694,
+   "integrated_cm_error": -0.000003945722269450402,
+   "circulation_cl_error": -0.00028668573175594236,
+   "Cp_RMS_same_point_x_02_98": 0.0037585137760165707,
+   "last_panel_max_abs_Cp_error": 0.0037574535124589303,
+   "last3_panels_max_abs_Cp_error": 0.016608451472702623,
+   "exact_Cp_at_last_panel_midpoint": 0.1653764631456155,
+   "edge_exact": {
+    "speed": 0.9169148784644171,
+    "cp": 0.15926710565058322,
+    "kind": "cusp: finite, non-stagnant edge speed"
+   },
+   "edge_node_speed": 0.9292634432371389,
+   "edge_node_Cp": 0.1364694530630567,
+   "edge_angle_deg": 0.7190732341583493,
+   "residual": 3.105570343377347e-14,
+   "flux_residual": 3.105570343377347e-14,
+   "midpoint_normal_velocity": 0.028522508241553002,
+   "published": {
+    "cl_error": -0.011607668694196716,
+    "cm_error": -0.0020039578270517554,
+    "Cp_RMS_same_point_x_02_98": 0.012482985529256687,
+    "last_panel_max_abs_Cp_error": 0.6355929831665781,
+    "last3_panels_max_abs_Cp_error": 0.6355929831665781,
+    "edge_gammas": [
+     -116.12622779761305,
+     116.12622779761305
+    ]
+   }
+  },
+  {
+   "airfoil": "joukowski (cusp)",
+   "alphaDeg": 8,
+   "panels": 160,
+   "cl": 0.9393131356682447,
+   "cl_error": 0.00008865010897696202,
+   "cm": -0.0024813797149467643,
+   "cm_error": -0.00002421521381501361,
+   "integrated_cl_error": 0.000014221400643221749,
+   "integrated_cm_error": 0.0000030145217678385385,
+   "circulation_cl_error": -0.00007322634069539813,
+   "Cp_RMS_same_point_x_02_98": 0.0009842212205073858,
+   "last_panel_max_abs_Cp_error": 0.0017704599838889168,
+   "last3_panels_max_abs_Cp_error": 0.010029404143921505,
+   "exact_Cp_at_last_panel_midpoint": 0.16243441576751994,
+   "edge_exact": {
+    "speed": 0.9169148784644171,
+    "cp": 0.15926710565058322,
+    "kind": "cusp: finite, non-stagnant edge speed"
+   },
+   "edge_node_speed": 0.9238696618996239,
+   "edge_node_Cp": 0.1464648478214745,
+   "edge_angle_deg": 0.35988409969984564,
+   "residual": 3.1037534306625346e-13,
+   "flux_residual": 3.1037534306625346e-13,
+   "midpoint_normal_velocity": 0.007483799659965629,
+   "published": {
+    "cl_error": -0.0056957003615601964,
+    "cm_error": -0.000948347775397596,
+    "Cp_RMS_same_point_x_02_98": 0.0068736093627986125,
+    "last_panel_max_abs_Cp_error": 0.8432868497143187,
+    "last3_panels_max_abs_Cp_error": 0.8432868497143187,
+    "edge_gammas": [
+     -447.7309965918422,
+     447.7309965918422
+    ]
+   }
+  },
+  {
+   "airfoil": "joukowski (cusp)",
+   "alphaDeg": 8,
+   "panels": 320,
+   "cl": 0.939247906364912,
+   "cl_error": 0.000023420805644214227,
+   "cm": -0.0024626838844924257,
+   "cm_error": -0.000005519383360675072,
+   "integrated_cl_error": 0.0000047732466008643115,
+   "integrated_cm_error": 0.0000012997094475963346,
+   "circulation_cl_error": -0.000018502993590852057,
+   "Cp_RMS_same_point_x_02_98": 0.0002817564902206931,
+   "last_panel_max_abs_Cp_error": 0.0008500180066957075,
+   "last3_panels_max_abs_Cp_error": 0.005854418265605954,
+   "exact_Cp_at_last_panel_midpoint": 0.16087911850415038,
+   "edge_exact": {
+    "speed": 0.9169148784644171,
+    "cp": 0.15926710565058322,
+    "kind": "cusp: finite, non-stagnant edge speed"
+   },
+   "edge_node_speed": 0.9207902563447719,
+   "edge_node_Cp": 0.15214530382052938,
+   "edge_angle_deg": 0.17998551075933683,
+   "residual": 1.241319707858378e-12,
+   "flux_residual": 1.241319707858378e-12,
+   "midpoint_normal_velocity": 0.001883676929623837,
+   "published": {
+    "cl_error": -0.002819559207267841,
+    "cm_error": -0.0004603469710138782,
+    "Cp_RMS_same_point_x_02_98": 0.003923668222394915,
+    "last_panel_max_abs_Cp_error": 0.5240588979031641,
+    "last3_panels_max_abs_Cp_error": 0.5240588979031641,
+    "edge_gammas": [
+     -1487.319443323895,
+     1487.319443323895
+    ]
+   }
+  },
+  {
+   "airfoil": "karman-trefftz 12 deg (finite wedge)",
+   "alphaDeg": -4,
+   "panels": 80,
+   "cl": -0.4847587861957077,
+   "cl_error": -0.00018020209276542465,
+   "cm": 0.007500559958170166,
+   "cm_error": 0.00008051841109764542,
+   "integrated_cl_error": 0.000005583108465712083,
+   "integrated_cm_error": 0.00003157752662950007,
+   "circulation_cl_error": 0.000138731236550671,
+   "Cp_RMS_same_point_x_02_98": 0.001437959137537123,
+   "last_panel_max_abs_Cp_error": 0.0022678418387370725,
+   "last3_panels_max_abs_Cp_error": 0.010714829858240016,
+   "exact_Cp_at_last_panel_midpoint": 0.3802948379345089,
+   "edge_exact": {
+    "speed": 0,
+    "cp": 1,
+    "kind": "finite wedge: stagnation at the edge point"
+   },
+   "edge_node_speed": 0.7694934128221239,
+   "edge_node_Cp": 0.40787988762336036,
+   "edge_angle_deg": 12.625077826570674,
+   "residual": 3.175204808786017e-14,
+   "flux_residual": 3.175204808786017e-14,
+   "midpoint_normal_velocity": 0.020807360195644768,
+   "published": {
+    "cl_error": 0.005386454362783122,
+    "cm_error": 0.0008386402108502321,
+    "Cp_RMS_same_point_x_02_98": 0.009179118974725859,
+    "last_panel_max_abs_Cp_error": 0.0799724344593028,
+    "last3_panels_max_abs_Cp_error": 0.0799724344593028,
+    "edge_gammas": [
+     -0.18188921073170028,
+     0.18188921073170028
+    ]
+   }
+  },
+  {
+   "airfoil": "karman-trefftz 12 deg (finite wedge)",
+   "alphaDeg": -4,
+   "panels": 160,
+   "cl": -0.4846307063327061,
+   "cl_error": -0.00005212222976380687,
+   "cm": 0.007439048925619187,
+   "cm_error": 0.000019007378546666807,
+   "integrated_cl_error": -0.000005718561390699595,
+   "integrated_cm_error": 0.000006690302815197564,
+   "circulation_cl_error": 0.00003537661045699414,
+   "Cp_RMS_same_point_x_02_98": 0.00038770150001511764,
+   "last_panel_max_abs_Cp_error": 0.0009210558981395112,
+   "last3_panels_max_abs_Cp_error": 0.008323982370638472,
+   "exact_Cp_at_last_panel_midpoint": 0.4366316445063767,
+   "edge_exact": {
+    "speed": 0,
+    "cp": 1,
+    "kind": "finite wedge: stagnation at the edge point"
+   },
+   "edge_node_speed": 0.7323887250534016,
+   "edge_node_Cp": 0.4636067554146529,
+   "edge_angle_deg": 12.319205167035397,
+   "residual": 1.2116665214194415e-13,
+   "flux_residual": 1.2116665214194415e-13,
+   "midpoint_normal_velocity": 0.005255331490033029,
+   "published": {
+    "cl_error": 0.0026534985195320604,
+    "cm_error": 0.0003926708673435428,
+    "Cp_RMS_same_point_x_02_98": 0.005232918361264086,
+    "last_panel_max_abs_Cp_error": 0.07778486753804881,
+    "last3_panels_max_abs_Cp_error": 0.07778486753804881,
+    "edge_gammas": [
+     -0.2529090885074432,
+     0.2529090885074432
+    ]
+   }
+  },
+  {
+   "airfoil": "karman-trefftz 12 deg (finite wedge)",
+   "alphaDeg": -4,
+   "panels": 320,
+   "cl": -0.4845923920826287,
+   "cl_error": -0.000013807979686419891,
+   "cm": 0.0074246728074644,
+   "cm_error": 0.000004631260391879666,
+   "integrated_cl_error": -0.000002204612603473599,
+   "integrated_cm_error": 0.0000015484624814651043,
+   "circulation_cl_error": 0.000008930146322361221,
+   "Cp_RMS_same_point_x_02_98": 0.0000927423381368221,
+   "last_panel_max_abs_Cp_error": 0.0003280946895869441,
+   "last3_panels_max_abs_Cp_error": 0.006779492138859533,
+   "exact_Cp_at_last_panel_midpoint": 0.4870010476587223,
+   "edge_exact": {
+    "speed": 0,
+    "cp": 1,
+    "kind": "finite wedge: stagnation at the edge point"
+   },
+   "edge_node_speed": 0.6981105233909333,
+   "edge_node_Cp": 0.5126416971308372,
+   "edge_angle_deg": 12.161298822333725,
+   "residual": 9.253393751135606e-13,
+   "flux_residual": 9.253393751135606e-13,
+   "midpoint_normal_velocity": 0.0013493337778728565,
+   "published": {
+    "cl_error": 0.0013165686526803722,
+    "cm_error": 0.00018950797473933113,
+    "Cp_RMS_same_point_x_02_98": 0.002476293879117624,
+    "last_panel_max_abs_Cp_error": 0.07237890324843477,
+    "last3_panels_max_abs_Cp_error": 0.07237890324843477,
+    "edge_gammas": [
+     -0.2706003353083155,
+     0.2706003353083155
+    ]
+   }
+  },
+  {
+   "airfoil": "karman-trefftz 12 deg (finite wedge)",
+   "alphaDeg": 0,
+   "panels": 80,
+   "cl": -6.101553724074948e-14,
+   "cl_error": -6.101553724074948e-14,
+   "cm": 1.3829215550487106e-14,
+   "cm_error": 1.380696723228916e-14,
+   "integrated_cl_error": -6.091134541197363e-14,
+   "integrated_cm_error": 1.3819218716838245e-14,
+   "circulation_cl_error": -6.092739160412641e-14,
+   "Cp_RMS_same_point_x_02_98": 0.0009543946017079163,
+   "last_panel_max_abs_Cp_error": 0.001716650112760898,
+   "last3_panels_max_abs_Cp_error": 0.010531566345593824,
+   "exact_Cp_at_last_panel_midpoint": 0.37964728074431475,
+   "edge_exact": {
+    "speed": 0,
+    "cp": 1,
+    "kind": "finite wedge: stagnation at the edge point"
+   },
+   "edge_node_speed": 0.7713724373097726,
+   "edge_node_Cp": 0.40498456295878105,
+   "edge_angle_deg": 12.625077826570674,
+   "residual": 3.949160980927609e-14,
+   "flux_residual": 3.949160980927609e-14,
+   "midpoint_normal_velocity": 0.014245297708209951,
+   "published": {
+    "cl_error": -3.0015052943088705e-15,
+    "cm_error": 5.289600662936836e-16,
+    "Cp_RMS_same_point_x_02_98": 0.008253008639285445,
+    "last_panel_max_abs_Cp_error": 0.07963891382682575,
+    "last3_panels_max_abs_Cp_error": 0.07963891382682575,
+    "edge_gammas": [
+     -0.18233336564295005,
+     0.18233336564295005
+    ]
+   }
+  },
+  {
+   "airfoil": "karman-trefftz 12 deg (finite wedge)",
+   "alphaDeg": 0,
+   "panels": 160,
+   "cl": -7.224402825099785e-13,
+   "cl_error": -7.224402825099785e-13,
+   "cm": 1.684772113486055e-13,
+   "cm_error": 1.6845496303040755e-13,
+   "integrated_cl_error": -7.222381872250272e-13,
+   "integrated_cm_error": 1.6844734651014584e-13,
+   "circulation_cl_error": -7.199799567300658e-13,
+   "Cp_RMS_same_point_x_02_98": 0.00023431323996678176,
+   "last_panel_max_abs_Cp_error": 0.0006682188199542693,
+   "last3_panels_max_abs_Cp_error": 0.008259415198573317,
+   "exact_Cp_at_last_panel_midpoint": 0.4349615251506288,
+   "edge_exact": {
+    "speed": 0,
+    "cp": 1,
+    "kind": "finite wedge: stagnation at the edge point"
+   },
+   "edge_node_speed": 0.7341771436725193,
+   "edge_node_Cp": 0.46098392170886093,
+   "edge_angle_deg": 12.319205167035397,
+   "residual": 5.774348266139525e-14,
+   "flux_residual": 5.774348266139525e-14,
+   "midpoint_normal_velocity": 0.004262633647938516,
+   "published": {
+    "cl_error": -9.504441504659678e-15,
+    "cm_error": -1.8113814657569755e-16,
+    "Cp_RMS_same_point_x_02_98": 0.004348881618992912,
+    "last_panel_max_abs_Cp_error": 0.07783051986022116,
+    "last3_panels_max_abs_Cp_error": 0.07783051986022116,
+    "edge_gammas": [
+     -0.25352666669602686,
+     0.25352666669602686
+    ]
+   }
+  },
+  {
+   "airfoil": "karman-trefftz 12 deg (finite wedge)",
+   "alphaDeg": 0,
+   "panels": 320,
+   "cl": -4.3356309753321554e-13,
+   "cl_error": -4.3356309753321554e-13,
+   "cm": 1.0465780531706409e-13,
+   "cm_error": 1.0463555699886614e-13,
+   "integrated_cl_error": -4.336500098898674e-13,
+   "integrated_cm_error": 1.0463410010219687e-13,
+   "circulation_cl_error": -4.384948892703633e-13,
+   "Cp_RMS_same_point_x_02_98": 0.00005675615635533151,
+   "last_panel_max_abs_Cp_error": 0.00021217379884752585,
+   "last3_panels_max_abs_Cp_error": 0.006765390873170074,
+   "exact_Cp_at_last_panel_midpoint": 0.4849867896645971,
+   "edge_exact": {
+    "speed": 0,
+    "cp": 1,
+    "kind": "finite wedge: stagnation at the edge point"
+   },
+   "edge_node_speed": 0.69981523818307,
+   "edge_node_Cp": 0.510258632406773,
+   "edge_angle_deg": 12.161298822333725,
+   "residual": 5.955064923826528e-13,
+   "flux_residual": 5.955064923826528e-13,
+   "midpoint_normal_velocity": 0.001113514390770668,
+   "published": {
+    "cl_error": -6.717052586889538e-14,
+    "cm_error": -9.456090983952267e-16,
+    "Cp_RMS_same_point_x_02_98": 0.0020462062043546773,
+    "last_panel_max_abs_Cp_error": 0.0725795410571074,
+    "last3_panels_max_abs_Cp_error": 0.0725795410571074,
+    "edge_gammas": [
+     -0.27126111383441787,
+     0.27126111383441787
+    ]
+   }
+  },
+  {
+   "airfoil": "karman-trefftz 12 deg (finite wedge)",
+   "alphaDeg": 4,
+   "panels": 80,
+   "cl": 0.48475878619558616,
+   "cl_error": 0.00018020209264385523,
+   "cm": -0.007500559958142812,
+   "cm_error": -0.0000805184110704597,
+   "integrated_cl_error": -0.000005583108587114971,
+   "integrated_cm_error": -0.000031577526602287465,
+   "circulation_cl_error": -0.00013873123666957587,
+   "Cp_RMS_same_point_x_02_98": 0.0014379591372987487,
+   "last_panel_max_abs_Cp_error": 0.0022678418387832577,
+   "last3_panels_max_abs_Cp_error": 0.010714829857801145,
+   "exact_Cp_at_last_panel_midpoint": 0.38503240891593815,
+   "edge_exact": {
+    "speed": 0,
+    "cp": 1,
+    "kind": "finite wedge: stagnation at the edge point"
+   },
+   "edge_node_speed": 0.7694934128210006,
+   "edge_node_Cp": 0.4078798876250892,
+   "edge_angle_deg": 12.625077826570674,
+   "residual": 1.8192374929073435e-14,
+   "flux_residual": 1.8192374929073435e-14,
+   "midpoint_normal_velocity": 0.020807360195467483,
+   "published": {
+    "cl_error": -0.005386454362789506,
+    "cm_error": -0.0008386402108494671,
+    "Cp_RMS_same_point_x_02_98": 0.009179118975335082,
+    "last_panel_max_abs_Cp_error": 0.07997243445880631,
+    "last3_panels_max_abs_Cp_error": 0.07997243445880631,
+    "edge_gammas": [
+     -0.18188921072412814,
+     0.18188921072412814
+    ]
+   }
+  },
+  {
+   "airfoil": "karman-trefftz 12 deg (finite wedge)",
+   "alphaDeg": 4,
+   "panels": 160,
+   "cl": 0.48463070633126554,
+   "cl_error": 0.000052122228323236985,
+   "cm": -0.007439048925283942,
+   "cm_error": -0.000019007378211589356,
+   "integrated_cl_error": 0.000005718559950407265,
+   "integrated_cm_error": -0.000006690302480165215,
+   "circulation_cl_error": -0.00003537661189378927,
+   "Cp_RMS_same_point_x_02_98": 0.0003877014996043704,
+   "last_panel_max_abs_Cp_error": 0.000921055900329204,
+   "last3_panels_max_abs_Cp_error": 0.008323982375086691,
+   "exact_Cp_at_last_panel_midpoint": 0.438789286464786,
+   "edge_exact": {
+    "speed": 0,
+    "cp": 1,
+    "kind": "finite wedge: stagnation at the edge point"
+   },
+   "edge_node_speed": 0.7323887250469951,
+   "edge_node_Cp": 0.46360675542403695,
+   "edge_angle_deg": 12.319205167035397,
+   "residual": 7.489904073851863e-14,
+   "flux_residual": 7.489904073851863e-14,
+   "midpoint_normal_velocity": 0.005255331490143493,
+   "published": {
+    "cl_error": -0.0026534985195505456,
+    "cm_error": -0.00039267086734398344,
+    "Cp_RMS_same_point_x_02_98": 0.005232918361254844,
+    "last_panel_max_abs_Cp_error": 0.07778486753406721,
+    "last3_panels_max_abs_Cp_error": 0.07778486753406721,
+    "edge_gammas": [
+     -0.2529090884571675,
+     0.2529090884571675
+    ]
+   }
+  },
+  {
+   "airfoil": "karman-trefftz 12 deg (finite wedge)",
+   "alphaDeg": 4,
+   "panels": 320,
+   "cl": 0.48459239208177574,
+   "cl_error": 0.000013807978833435541,
+   "cm": -0.007424672807259464,
+   "cm_error": -0.000004631260187112039,
+   "integrated_cl_error": 0.0000022046117501006712,
+   "integrated_cm_error": -0.0000015484622767104883,
+   "circulation_cl_error": -0.000008930147187447002,
+   "Cp_RMS_same_point_x_02_98": 0.00009274233789878187,
+   "last_panel_max_abs_Cp_error": 0.00032809471162786874,
+   "last3_panels_max_abs_Cp_error": 0.006779492187944158,
+   "exact_Cp_at_last_panel_midpoint": 0.4879843689995841,
+   "edge_exact": {
+    "speed": 0,
+    "cp": 1,
+    "kind": "finite wedge: stagnation at the edge point"
+   },
+   "edge_node_speed": 0.698110523479732,
+   "edge_node_Cp": 0.5126416970068546,
+   "edge_angle_deg": 12.161298822333725,
+   "residual": 2.2981979065048453e-13,
+   "flux_residual": 2.2981979065048453e-13,
+   "midpoint_normal_velocity": 0.0013493337795700098,
+   "published": {
+    "cl_error": -0.0013165686528132658,
+    "cm_error": -0.00018950797474152296,
+    "Cp_RMS_same_point_x_02_98": 0.0024762938792333763,
+    "last_panel_max_abs_Cp_error": 0.07237890325972629,
+    "last3_panels_max_abs_Cp_error": 0.07237890325972629,
+    "edge_gammas": [
+     -0.2706003354671625,
+     0.2706003354671625
+    ]
+   }
+  },
+  {
+   "airfoil": "karman-trefftz 12 deg (finite wedge)",
+   "alphaDeg": 8,
+   "panels": 80,
+   "cl": 0.9671099760539038,
+   "cl_error": 0.00031362600009987585,
+   "cm": -0.014855130048476004,
+   "cm_error": -0.0001594696228722839,
+   "integrated_cl_error": -0.000008236592489718753,
+   "integrated_cm_error": -0.00006254043258268824,
+   "circulation_cl_error": -0.00027678658863417027,
+   "Cp_RMS_same_point_x_02_98": 0.0025161179510288442,
+   "last_panel_max_abs_Cp_error": 0.0027896953681493253,
+   "last3_panels_max_abs_Cp_error": 0.010793650107955077,
+   "exact_Cp_at_last_panel_midpoint": 0.39634540705500987,
+   "edge_exact": {
+    "speed": 0,
+    "cp": 1,
+    "kind": "finite wedge: stagnation at the edge point"
+   },
+   "edge_node_speed": 0.7638654937741648,
+   "edge_node_Cp": 0.41650950742115145,
+   "edge_angle_deg": 12.625077826570674,
+   "residual": 2.5401638470288137e-14,
+   "flux_residual": 2.5401638470288137e-14,
+   "midpoint_normal_velocity": 0.027268051315580445,
+   "published": {
+    "cl_error": -0.01154339016648065,
+    "cm_error": -0.0016609572439335255,
+    "Cp_RMS_same_point_x_02_98": 0.011527485837813219,
+    "last_panel_max_abs_Cp_error": 0.0795264417182393,
+    "last3_panels_max_abs_Cp_error": 0.0795264417182393,
+    "edge_gammas": [
+     -0.1805589098563758,
+     0.1805589098563758
+    ]
+   }
+  },
+  {
+   "airfoil": "karman-trefftz 12 deg (finite wedge)",
+   "alphaDeg": 8,
+   "panels": 160,
+   "cl": 0.9668900856140616,
+   "cl_error": 0.00009373556025771279,
+   "cm": -0.01473330522519823,
+   "cm_error": -0.00003764479959451027,
+   "integrated_cl_error": 0.000012893854730577914,
+   "integrated_cm_error": -0.000013250386000324826,
+   "circulation_cl_error": -0.0000705808717620382,
+   "Cp_RMS_same_point_x_02_98": 0.0007362856058275049,
+   "last_panel_max_abs_Cp_error": 0.0011620346855207853,
+   "last3_panels_max_abs_Cp_error": 0.008307284569786577,
+   "exact_Cp_at_last_panel_midpoint": 0.44804042542888256,
+   "edge_exact": {
+    "speed": 0,
+    "cp": 1,
+    "kind": "finite wedge: stagnation at the edge point"
+   },
+   "edge_node_speed": 0.7270321821721829,
+   "edge_node_Cp": 0.4714242060859538,
+   "edge_angle_deg": 12.319205167035397,
+   "residual": 1.4539998257030494e-13,
+   "flux_residual": 1.4539998257030494e-13,
+   "midpoint_normal_velocity": 0.00713840799377219,
+   "published": {
+    "cl_error": -0.0056787892334126955,
+    "cm_error": -0.0007776988429108352,
+    "Cp_RMS_same_point_x_02_98": 0.007341715842212362,
+    "last_panel_max_abs_Cp_error": 0.07698312354054793,
+    "last3_panels_max_abs_Cp_error": 0.07698312354054793,
+    "edge_gammas": [
+     -0.2510593625597381,
+     0.2510593625597381
+    ]
+   }
+  },
+  {
+   "airfoil": "karman-trefftz 12 deg (finite wedge)",
+   "alphaDeg": 8,
+   "panels": 320,
+   "cl": 0.9668213995644109,
+   "cl_error": 0.000025049510607000336,
+   "cm": -0.014704832803865192,
+   "cm_error": -0.000009172378261472491,
+   "integrated_cl_error": 0.000004803151331556066,
+   "integrated_cm_error": -0.0000030667855953486756,
+   "circulation_cl_error": -0.000017816787172164616,
+   "Cp_RMS_same_point_x_02_98": 0.00017222027009813445,
+   "last_panel_max_abs_Cp_error": 0.000439595550640548,
+   "last3_panels_max_abs_Cp_error": 0.006727563687238702,
+   "exact_Cp_at_last_panel_midpoint": 0.49593544119162436,
+   "edge_exact": {
+    "speed": 0,
+    "cp": 1,
+    "kind": "finite wedge: stagnation at the edge point"
+   },
+   "edge_node_speed": 0.6930046844809291,
+   "edge_node_Cp": 0.5197445072874879,
+   "edge_angle_deg": 12.161298822333725,
+   "residual": 3.939767839722592e-13,
+   "flux_residual": 3.939767839722592e-13,
+   "midpoint_normal_velocity": 0.0018050927882538633,
+   "published": {
+    "cl_error": -0.002815303672664471,
+    "cm_error": -0.0003753273923151664,
+    "Cp_RMS_same_point_x_02_98": 0.003501023679560753,
+    "last_panel_max_abs_Cp_error": 0.07147593672798225,
+    "last3_panels_max_abs_Cp_error": 0.07147593672798225,
+    "edge_gammas": [
+     -0.26862121947869294,
+     0.26862121947869294
+    ]
+   }
+  }
+ ],
+ "xfoil": [
+  {
+   "case": "naca0012_160_a0",
+   "xfoil_cl": -0.0001,
+   "xfoil_cm": 0,
+   "cl": 1.1216694890611723e-13,
+   "cm": -2.64663508123264e-14,
+   "integrated_cl": 1.1205438161555892e-13,
+   "integrated_cm": -2.647914439796173e-14,
+   "xfoil_output_complete": true,
+   "nodal_Cp_RMS_vs_xfoil": 0.0006164913076916208,
+   "nodal_Cp_max_vs_xfoil": 0.0029402104314343036
+  },
+  {
+   "case": "naca0012_160_a4",
+   "xfoil_cl": 0.4825,
+   "xfoil_cm": -0.0054,
+   "cl": 0.4826868855497395,
+   "cm": -0.005462100602778299,
+   "integrated_cl": 0.48264666768736825,
+   "integrated_cm": -0.005446941233840655,
+   "xfoil_output_complete": true,
+   "nodal_Cp_RMS_vs_xfoil": 0.0007175274760503412,
+   "nodal_Cp_max_vs_xfoil": 0.004119836686834466
+  },
+  {
+   "case": "naca0012_320_a0",
+   "xfoil_cl": -0.0001,
+   "xfoil_cm": 0,
+   "cl": -9.42776774346104e-13,
+   "cm": 2.2261598624619475e-13,
+   "integrated_cl": -9.427719767514907e-13,
+   "integrated_cm": 2.226060996776344e-13,
+   "xfoil_output_complete": true,
+   "nodal_Cp_RMS_vs_xfoil": 0.0026847710624318282,
+   "nodal_Cp_max_vs_xfoil": 0.010996843968057723
+  },
+  {
+   "case": "naca0012_320_a4",
+   "xfoil_cl": 0.4824,
+   "xfoil_cm": -0.0054,
+   "cl": 0.4826466247050271,
+   "cm": -0.005443531527750767,
+   "integrated_cl": 0.482636566147918,
+   "integrated_cm": -0.005439738788909255,
+   "xfoil_output_complete": true,
+   "nodal_Cp_RMS_vs_xfoil": 0.002973493871243142,
+   "nodal_Cp_max_vs_xfoil": 0.017702118997593663
+  },
+  {
+   "case": "naca2412_160_a0",
+   "xfoil_cl": 0.2593,
+   "xfoil_cm": -0.0554,
+   "cl": 0.25958418167467995,
+   "cm": -0.055468317020995236,
+   "integrated_cl": 0.25958467909190364,
+   "integrated_cm": -0.055467845285598845,
+   "xfoil_output_complete": true,
+   "nodal_Cp_RMS_vs_xfoil": 0.0006803232053144154,
+   "nodal_Cp_max_vs_xfoil": 0.0031794771946301315
+  },
+  {
+   "case": "naca2412_160_a4",
+   "xfoil_cl": 0.7413,
+   "xfoil_cm": -0.0612,
+   "cl": 0.7416760213004921,
+   "cm": -0.06122797025203921,
+   "integrated_cl": 0.7416341264997344,
+   "integrated_cm": -0.06121239220435564,
+   "xfoil_output_complete": true,
+   "nodal_Cp_RMS_vs_xfoil": 0.000779645767717185,
+   "nodal_Cp_max_vs_xfoil": 0.0036403212218046876
+  },
+  {
+   "case": "naca2412_320_a0",
+   "xfoil_cl": 0.2595,
+   "xfoil_cm": -0.0554,
+   "cl": 0.2596165795328264,
+   "cm": -0.05547169979035411,
+   "integrated_cl": 0.2596167262111039,
+   "integrated_cm": -0.05547157893132281,
+   "xfoil_output_complete": true,
+   "nodal_Cp_RMS_vs_xfoil": 0.006430148790747144,
+   "nodal_Cp_max_vs_xfoil": 0.03431529537419153
+  },
+  {
+   "case": "naca2412_320_a4",
+   "xfoil_cl": 0.7412,
+   "xfoil_cm": -0.0611,
+   "cl": 0.7416632612079287,
+   "cm": -0.06121284374654648,
+   "integrated_cl": 0.7416528103435879,
+   "integrated_cm": -0.06120894244105147,
+   "xfoil_output_complete": true,
+   "nodal_Cp_RMS_vs_xfoil": 0.006576131730586008,
+   "nodal_Cp_max_vs_xfoil": 0.05333136472414324
+  },
+  {
+   "case": "karman_trefftz_160_a0",
+   "xfoil_cl": -0.0001,
+   "xfoil_cm": 0,
+   "cl": 9.480168928523158e-13,
+   "cm": -2.2162176607776196e-13,
+   "integrated_cl": 9.479464739212129e-13,
+   "integrated_cm": -2.2157812694031942e-13,
+   "xfoil_output_complete": true,
+   "nodal_Cp_RMS_vs_xfoil": 0.0006131654544536564,
+   "nodal_Cp_max_vs_xfoil": 0.0025658612232727362
+  },
+  {
+   "case": "karman_trefftz_160_a4",
+   "xfoil_cl": 0.4844,
+   "xfoil_cm": -0.0074,
+   "cl": 0.48463070633295335,
+   "cm": -0.007439048925679229,
+   "integrated_cl": 0.4845843026645805,
+   "integrated_cm": -0.007426731849947765,
+   "xfoil_output_complete": true,
+   "nodal_Cp_RMS_vs_xfoil": 0.0008030285368554615,
+   "nodal_Cp_max_vs_xfoil": 0.00556371293787139
+  },
+  {
+   "case": "karman_trefftz_320_a0",
+   "xfoil_cl": -0.0001,
+   "xfoil_cm": 0,
+   "cl": 1.0160080242405112e-13,
+   "cm": -2.702707984714517e-14,
+   "integrated_cl": 1.0150344106896192e-13,
+   "integrated_cm": -2.7055228446048324e-14,
+   "xfoil_output_complete": true,
+   "nodal_Cp_RMS_vs_xfoil": 0.0025458387690073954,
+   "nodal_Cp_max_vs_xfoil": 0.011074448942346705
+  },
+  {
+   "case": "karman_trefftz_320_a4",
+   "xfoil_cl": 0.4849,
+   "xfoil_cm": -0.0075,
+   "cl": 0.4845923920826851,
+   "cm": -0.0074246728074859845,
+   "integrated_cl": 0.4845807887156027,
+   "integrated_cm": -0.007421590009575619,
+   "xfoil_output_complete": true,
+   "nodal_Cp_RMS_vs_xfoil": 0.003137724597178428,
+   "nodal_Cp_max_vs_xfoil": 0.020510738039520637
+  },
+  {
+   "case": "joukowski_160_a0",
+   "xfoil_cl": 0,
+   "xfoil_cm": 0,
+   "cl": 3.146588214595833e-13,
+   "cm": -7.277324901543147e-14,
+   "integrated_cl": 3.147701554701704e-13,
+   "integrated_cm": -7.276803806873997e-14,
+   "xfoil_output_complete": true,
+   "nodal_Cp_RMS_vs_xfoil": 0.003090406307555353,
+   "nodal_Cp_max_vs_xfoil": 0.021854076111725018
+  },
+  {
+   "case": "joukowski_160_a4",
+   "xfoil_cl": 0.4705,
+   "xfoil_cm": -0.0012,
+   "cl": 0.47080886663315075,
+   "cm": -0.0012528828269627484,
+   "integrated_cl": 0.47076570467537043,
+   "integrated_cm": -0.0012391341580707785,
+   "xfoil_output_complete": true,
+   "nodal_Cp_RMS_vs_xfoil": 0.0033549176302690325,
+   "nodal_Cp_max_vs_xfoil": 0.02506218361405252
+  },
+  {
+   "case": "joukowski_320_a0",
+   "xfoil_cl": 0.0011,
+   "xfoil_cm": -0.0004,
+   "cl": -1.5377089114835749e-12,
+   "cm": 3.5768597082147004e-13,
+   "integrated_cl": -1.5377030567918434e-12,
+   "integrated_cm": 3.5769185770045345e-13,
+   "xfoil_output_complete": false,
+   "nodal_Cp_RMS_vs_xfoil": null,
+   "nodal_Cp_max_vs_xfoil": null
+  },
+  {
+   "case": "joukowski_320_a4",
+   "xfoil_cl": 0.4721,
+   "xfoil_cm": -0.0015,
+   "cl": 0.47077205275225587,
+   "cm": -0.0012434430437177704,
+   "integrated_cl": 0.47076125752757936,
+   "integrated_cm": -0.001239999989749249,
+   "xfoil_output_complete": true,
+   "nodal_Cp_RMS_vs_xfoil": 0.15245098664158369,
+   "nodal_Cp_max_vs_xfoil": 0.68072263174184
+  }
+ ],
+ "limits": "Inviscid, incompressible; exact contours at uniform circle-angle steps. A finite wedge stagnates only at the edge point itself; panel-mid-point values are compared. XFOIL is a reference calculation, not truth for the cusp."
+}

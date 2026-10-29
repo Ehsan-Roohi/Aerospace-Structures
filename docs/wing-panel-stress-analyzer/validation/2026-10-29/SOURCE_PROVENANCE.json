@@ -15,5 +15,8 @@
     "exe_sha256": "c17342f84ae260c2b11a74cd0e2fb8189a5f8954c6bb7a8467a0f27055c7faea",
     "scope": "Official MIT Windows binary, reference calculation only; no source code is copied into application."
   },
-  "runtime_note": "LIVE_BROWSER_TIMING is independent checkpoint 6; AUTHOR_CHECKPOINT7_TIMING is a separate externally executed record."
+  "runtime_note": "LIVE_BROWSER_TIMING is independent checkpoint 6; AUTHOR_CHECKPOINT7_TIMING is a separate externally executed record.",
+  "airfoil2D_solver": "1.1.0",
+  "airfoil2D_source_sha256": "b48eece98ffc0fe3033563535c96bf6a559a34773f5a84991bfe7b07bb6d5e6d",
+  "airfoil2D_review": "Independent original test, independent analytic test, focused exact-edge test, orientation / closure sensitivity; source and thresholds retained."
 }

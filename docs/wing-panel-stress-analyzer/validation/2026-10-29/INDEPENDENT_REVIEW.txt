@@ -1,3 +1,6 @@
+CURRENT 2D UPDATE: v1.1.0 replaces the old last-panel defect. See TE_REPAIR_REVIEW.json and TE_PROFILES.csv. All original tests pass unchanged; maxResidual now means system / mean flux, with pointwise normal velocity reported separately. Experimental comparison is added, with visible model-form disagreement. 3D checkpoint7 is still not released.
+
+HISTORICAL REVIEW BELOW (before the 2D repair):
 INDEPENDENT CHECKPOINT-7 REVIEW — 29 October 2026
 Public 3D core remains 0.3.1; experimental checkpoint 7 is not released.
 Downloaded archive SHA256 c08538bdfb849ad0cea2ca7ba4f23dfa9594296e152dec84ad6efc1c50564b65.

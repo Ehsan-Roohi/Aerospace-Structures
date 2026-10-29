@@ -1,0 +1,144 @@
+--- a/computational/printed-wing-solver/aerostruct/wing_aerostruct_template.html
++++ b/computational/printed-wing-solver/aerostruct/wing_aerostruct_template.html
+@@ -16516,6 +16516,7 @@
+       setTimeout(() => renderInputs(true), 0);
+       return { ok: false, error: err.message, guidance:err.guidance||null };
+     }
++    resetWingPresentation();
+     S.geometry = { ...g, rodFractions: [...g.rodFractions], customInteriorRibs: g.customInteriorRibs == null ? null : [...g.customInteriorRibs] };
+     S.emptyStudy=false;
+     if(WingGeometry.closedTip(S.geometry)){S.plot='model';S.deformed=false;$('#defBtn').setAttribute('aria-pressed','false');}
+@@ -16896,7 +16897,7 @@
+     try { input = solveInput(); } catch (err) { running = false; stale = true; flash(err.message); setStatus(); renderTree(); return; }
+     const geoKey = JSON.stringify(input.geometry);
+     const t0 = performance.now();
+-    const heavy = geoKey !== lastGeoKey;
++    const heavy = !model || geoKey !== lastGeoKey;
+     const ld = $("#loading");
+     try {
+       E.makeGeometry(input.geometry);
+@@ -16990,7 +16991,7 @@
+       world.remove(model.root);
+       model.root.traverse(o => { o.geometry?.dispose(); for (const m of (Array.isArray(o.material) ? o.material : [o.material])) m?.dispose(); });
+     }
+-    model = null; lastViewSet = false; readoutKey = "";
++    model = null; lastGeoKey = null; lastViewSet = false; readoutKey = "";
+     for (const id of ['probe','anatomyKey']) $("#"+id).hidden = true;
+     for (const id of ['ribLabels','legend','legendTitle','footline','plotinfo','wingMassReadout','stressPeaks']) $("#"+id).innerHTML = "";
+     $("#viewDims").textContent = 'No wing loaded. Create a wing or open a project JSON.';
+@@ -17221,6 +17222,8 @@
+   }
+   function frameView(force) {
+     if (!model) return;
++    if (!canvas.clientWidth || !canvas.clientHeight) { lastViewSet = false; return; }
++    resize(); // Fit against the current visible viewport, not the previous panel layout.
+     const g = model.g;
+     if (force || !lastViewSet) { setView("iso"); lastViewSet = true; }
+     $("#clipIn").max = g.semiSpan; $("#secY").max = g.semiSpan;
+@@ -17977,6 +17980,7 @@
+   // ------------------------------------------------------------ render loop
+   function resize() {
+     const w = canvas.clientWidth, h = canvas.clientHeight;
++    if (!w || !h) return;
+     const ratio=displayPixelRatio();if(Math.abs(renderer.getPixelRatio()-ratio)>.01)renderer.setPixelRatio(ratio);
+     if (canvas.width !== Math.round(w * renderer.getPixelRatio()) || canvas.height !== Math.round(h * renderer.getPixelRatio())) {
+       renderer.setSize(w, h, false);
+@@ -17988,6 +17992,7 @@
+   function loop(t) {
+     if ($("#app").hidden || document.hidden || running || $("#app > main.view").classList.contains("wx-aero-on") || document.querySelector(".wx-aero-busy:not([hidden])")) { lastT=t; requestAnimationFrame(loop); return; }
+     resize();
++    if (model && !lastViewSet) frameView(false);
+     controls.update();
+     renderAircraftAxes();
+     renderViewReadout();
+@@ -18694,8 +18699,14 @@
+     return JSON.stringify({ load: r.load, pla: r.pla, rod: r.rod, assembly: r.assembly, criteria: r.criteria });
+   }
+ 
++  function canCompareDesign(r) {
++    return !!(r && !r.analysis3D && r.stress?.skinComp && r.stress?.sigFlat && r.fem?.fBending && r.deflection && r.twist);
++  }
+   function renderDesignLab() {
+-    if (!R) return;
++    if (!canCompareDesign(R)) return;
++    // A previous closed-tip / spatial result has no legacy buckling arrays.
++    // Replacing a study must not let that optional comparison abort a valid solve.
++    if (!canCompareDesign(designBaseline)) designBaseline = R;
+     const g = R.geometry, interiors = interiorStations(g);
+     const locked = R.ribs.filter(y => !interiors.includes(y));
+     const controls = $("#designControls");
+@@ -18964,6 +18975,7 @@
+       if (!res.ok) throw new Error(`The imported outer geometry does not fit the current structure: ${res.error}`);
+       importGate = { required: info.required.map((r) => ({ id: r.id, label: r.label })), confirmed: new Set(), provenance: info.provenance, conflicts: info.conflicts || [], previous };
+     } else {
++      resetWingPresentation();
+       S.geometry = { ...state.geometry, rodFractions: [...state.geometry.rodFractions], customInteriorRibs: state.geometry.customInteriorRibs == null ? null : [...state.geometry.customInteriorRibs] };
+       Object.assign(S, { plaKey: state.plaKey, plaOver: { ...state.plaOver }, rodKey: state.rodKey, rodOver: { ...state.rodOver }, assembly: { ...state.assembly }, criteria: { ...state.criteria }, analysis:state.analysis?{...state.analysis}:null,aerodynamics:state.aerodynamics?JSON.parse(JSON.stringify(state.aerodynamics)):null,aeroLoad:state.aeroLoad?JSON.parse(JSON.stringify(state.aeroLoad)):null,projectName:state.projectName||'',emptyStudy:!!state.emptyStudy,mirrorFullWing:!!state.mirrorFullWing });
+       syncMirrorState();
+@@ -18989,7 +19001,7 @@
+     onDismiss: () => { if (printedWorkspace?.popup.classList.contains('wing-file-pop')) printedWorkspace.close(false); },
+     onApplied: (info) => {
+       if (printedWorkspace?.popup.classList.contains('wing-file-pop')) printedWorkspace.close(false);
+-      setAnatomy('inside');
++      setAnatomy('assembled');
+       sessionNote(`Opened ${info.provenance?.filename || 'wing JSON'}. ${S.emptyStudy?'Empty canvas restored; choose Airfoil & planform to create a wing.':'The imported wing is shown; press Solve Structure / Stress to update its results.'}`);
+     },
+   }) : null;
+@@ -19053,9 +19065,10 @@
+     discardGeometryDraft: () => advancedGeometryEditor?.refresh(), cancelLoadDraft: () => wingLoadKeeper?.editor?.cancelDraft(), gateOpen: () => gateOpen() };
+   const advancedGeometryPanel=el('div',{id:'wingAdvancedGeometry'});
+   $('#wingGeometryForm').append(advancedGeometryPanel);
+-  advancedGeometryEditor=WingGeometryUI.mount(advancedGeometryPanel,{getGeometry:()=>S.geometry,applyGeometry,onApplied:()=>{printedWorkspace?.close();setAnatomy('inside');}});
++  advancedGeometryEditor=WingGeometryUI.mount(advancedGeometryPanel,{getGeometry:()=>S.geometry,applyGeometry,onApplied:()=>{printedWorkspace?.close();setAnatomy('assembled');window.dispatchEvent(new Event('wing-show-model'));}});
+   function openAdvancedGeometryPopup(anchor){if(!printedWorkspace)return;renderGeometryForm();printedWorkspace.open('Airfoils & planform · dimensions, taper, twist, sweep, dihedral',advancedGeometryPanel,anchor);printedWorkspace.popup.style.width='min(680px,calc(100vw - 16px))';printedWorkspace.position();}
+   function showEmptyWing(){
++    window.dispatchEvent(new Event('wing-show-model'));
+     $('#loading').hidden=true;
+     clearRenderedWing();wingSelection?.clear();R=null;stale=true;geometryPreview=true;lastGeoKey=null;
+     $('#app > .dock').hidden=true;$('#probe').hidden=true;$('#legend').hidden=true;$('#wingEmptyStart')?.removeAttribute('hidden');
+@@ -19262,6 +19275,17 @@
+       aerodynamics: { speed:15, density:1.225, alphaDeg:4, sequence:'standard' }
+     };
+   }
++  function resetWingPresentation() {
++    S.plot='model'; S.anatomy='assembled'; S.xray=false;
++    S.deformed=false; S.clip=false; S.explode=0;
++    designBaseline=null; saveDesignAfterRun=false; lastViewSet=false; lastGeoKey=null;
++    $('#defBtn').setAttribute('aria-pressed','false');
++    $('#xrayBtn').setAttribute('aria-pressed','false');
++    $('#clipBtn').setAttribute('aria-pressed','false');
++    $('#explodeIn').value=0;
++    setPlot('model', false);
++    window.dispatchEvent(new Event('wing-show-model'));
++  }
+   window.addEventListener('wing-learning-stage', event => {
+     if (event.detail === 'metal' || running) return;
+     if(event.detail==='wing'&&wingStudyOpened){
+@@ -19284,7 +19308,7 @@
+       if(stage==='shell'||stage==='wing')S.geometry.rodFractions=[];
+       S.assembly.seamsBonded=true;
+     }
+-    S.stressComponent='skin'; S.anatomy='inside';S.xray=true;S.deformed=false;
++    resetWingPresentation(); S.stressComponent='skin';
+     $('#foundations').hidden=true;$('#app').hidden=false;$('#wingNavigation').hidden=false;
+     $('#app').dataset.lessonStage=stage; wingStudyOpened=true;
+     setPlot('model'); openTab('diagrams'); resize();lastViewSet=false;runStudy();
+@@ -19322,7 +19346,7 @@
+         const restored=WingStudyIO.importPrintedStudy(saved,E);
+         if(restored.ok){
+           applyStudyState(restored.state,{kind:'study'});wingStudyOpened=true;
+-          S.anatomy='inside';S.xray=true;
++          S.anatomy='assembled';S.xray=false;
+           sessionNote('Previous wing restored from this browser, including loads, materials, ribs and spars. Results need a fresh Solve.');
+         }else sessionNote('The browser backup could not be validated and was not applied. Open a saved JSON to recover your wing.');
+       }
+--- a/computational/printed-wing-solver/aerostruct/wx-shell.js
++++ b/computational/printed-wing-solver/aerostruct/wx-shell.js
+@@ -541,6 +541,7 @@
+   }
+   const view = $('#app > main.view');
+   const aeroResults = window.WingAeroStructResults && view ? window.WingAeroStructResults.install({ el, ui, strip: results, view, state: aeroResultState, openAero: () => openMenu('aero'), exportStructureFigure: () => $('#wrImage')?.click() }) : null;
++  window.addEventListener('wing-show-model', () => aeroResults?.close());
+   if (aeroResults) {
+     results.insertBefore(aeroResults.selector, display);
+     const anchor = printButtons[0]?.parentElement?.previousElementSibling || wlFiles;

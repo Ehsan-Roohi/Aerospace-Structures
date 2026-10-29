@@ -1,0 +1,30 @@
+{
+  "release": "0.3.2-ui.12",
+  "date": "2026-10-29",
+  "pageSHA256": "98c727ae9f584e881473666e7b7fd16c6a5efdb82e09092d5a6c7cab779956c1",
+  "scope": "UI-only wing visibility and stale comparison repair. Numerical solvers, workers and reference data unchanged.",
+  "reproduced_failure": "Opening the course example after a closed-tip result called designMetrics on the incompatible previous comparison baseline, raising an undefined.map TypeError and reporting Input error after an otherwise completed solve.",
+  "fixes": [
+    "Guard comparison metrics by their supported result schema; reset baseline on replacing study/geometry",
+    "Reset hidden-member filters, transparency, clipping, explosion, deformation and selected result on new/imported/applied geometry",
+    "Close the covered aerodynamic result view on study replacement",
+    "Rebuild missing geometry even when geometry cache key matches",
+    "Fit visible viewport; defer fitting hidden/zero-size canvases until visible"
+  ],
+  "automated_review": {
+    "script": "scripts/validation/wing_display_state_regression.cjs",
+    "status": "PASS",
+    "checks": 20,
+    "inlineScriptsParsed": 7,
+    "fixtures": [
+      "mie446-printed-wing-study-2026-10-25(4).json",
+      "mie446-printed-wing-study-2026-10-28(1).json"
+    ],
+    "limits": "UI functions exercised with isolated renderer/DOM dependencies; importer output state is simulated from real fixture geometry/load. This is not a complete browser file-chooser/import test."
+  },
+  "browser_review": {
+    "public_before_fix": "TypeError reproduced when switching from closed-tip result to course example",
+    "local_firefox_after_fix": "Fresh page solved in 2.84 seconds and displayed the complete opaque semi-wing with Model selected.",
+    "not_completed": "Browser file-chooser/import and post-release browser verification: computer-use control stopped by Windows browser URL-policy support restriction."
+  }
+}

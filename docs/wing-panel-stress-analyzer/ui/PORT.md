@@ -101,3 +101,7 @@ The subgroup appears in *Structure & Stress* right after *Mesh & analysis settin
 ## Solver 0.3.1 surface-gradient revision
 
 Apply `06-surface-gradient.patch` after the UI ports above. It changes the numerical surface-velocity reconstruction; it does not change the influence kernels, prescribed wake, boundary system, geometry or Kutta equation. The deployed stand-alone core is `wing-aero/wing_aero_panel.js`; the same core is embedded in both HTML pages and in `aero_bundle.js`. The worker and page references are content-versioned in BUILD.json. Earlier statements of unchanged numerical hashes in this document describe the preceding UI-only release. See `validation/SURFACE_GRADIENT_REVIEW.json` for tests, trade-offs and remaining local tip limitations.
+
+## Wing display repair (0.3.2-ui.12)
+
+Apply `08-wing-model-visibility.patch` after the existing UI ports. It changes only the main template and `wx-shell.js`: new/imported geometry opens opaque and fitted, the aerodynamic overlay closes, and incompatible design-comparison baselines cannot abort a solve. Hidden canvases defer fitting until visible. The numerical modules and workers are unchanged. See `validation/WING_DISPLAY_REVIEW.json` for the reproduced error, regression scope and incomplete browser checks.

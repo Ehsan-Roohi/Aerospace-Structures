@@ -1,10 +1,10 @@
 {
   "product": "MIE 446 Wing AeroStruct",
-  "version": "0.3.2-ui.11",
+  "version": "0.3.2-ui.12",
   "status": "Qualified educational 3D update; local tip pressure and empirical uncertainty limits documented",
-  "builtAt": "2026-10-29T19:56:53.629225+00:00",
+  "builtAt": "2026-10-29T22:24:30.165078+00:00",
   "page": "index.html",
-  "pageSha256": "a3215cced5707295e5dfa2dec2f9376043703f507f8618dcec766c010102e3db",
+  "pageSha256": "98c727ae9f584e881473666e7b7fd16c6a5efdb82e09092d5a6c7cab779956c1",
   "workers": {
     "wing-aero": {
       "worker": "39297e560f20",
@@ -199,12 +199,13 @@
       "wing-aero-ui.js": "62bf281e5fb828925c6edf73aae5628c1b972689812d38680f9bf0673c41a627",
       "wx-aero-results.js": "b48eece98ffc0fe3033563535c96bf6a559a34773f5a84991bfe7b07bb6d5e6d",
       "wx-shell.css": "f2e09cc59ee67e0d9a544950280de2f1b0d292ee779efe65b95f33d7398a7663",
-      "wx-shell.js": "838437c4621d48549b5db8b848f500c75ec88a13f9c817f2d32552e39da432bb",
+      "wx-shell.js": "a263bbaba6a0b8970d80aa8611559d6e0456639f8111cae7c5593c48ca8684bc",
       "04-geometry-first-context-menu.patch": "653987960c2a8999cb77a4d0c9a6318a086de4d2b935aa77e3ed643deac3f1b2",
       "05-lightweight-view-rendering.patch": "396248051b76b95cba7679141a5c7eeac3019e859da022f3bf0af8229eb9f60d",
       "06-surface-gradient.patch": "04f381d9937dc7ccd4c0bc40721a1070725a0a094f7c064da1248bdfa15ba678",
       "THIRD_PARTY_NOTICES.md": "26d4289dd21fd64d24401d0fa66c73d066f6dce24e28f219a80db2d7b0801f23",
-      "07-airfoil-trailing-edge.patch": "d1d6e08a863fbe95e08d7a75484dfb25dbc21d5f8a4a3ee0eecc19735b336c1a"
+      "07-airfoil-trailing-edge.patch": "d1d6e08a863fbe95e08d7a75484dfb25dbc21d5f8a4a3ee0eecc19735b336c1a",
+      "08-wing-model-visibility.patch": "1b83b98b05fa75b208a78577c8a5e21276e667aaa288004076d05a5a7a29e208"
     },
     "validation": "validation/UI_RELEASE_REVIEW.json",
     "surfaceReview": "validation/UI_SURFACE_REVIEW.json",
@@ -214,7 +215,8 @@
     "resultsReview": "validation/AERO_RESULTS_REVIEW.json",
     "airfoilHelpReview": "validation/AIRFOIL_HELP_RELEASE_REVIEW.json",
     "numericalValidation": "validation/2026-10-29/index.html",
-    "airfoilTEReview": "validation/2026-10-29/TE_RELEASE_REVIEW.json"
+    "airfoilTEReview": "validation/2026-10-29/TE_RELEASE_REVIEW.json",
+    "wingDisplayReview": "validation/WING_DISPLAY_REVIEW.json"
   },
   "airfoil2DSolverVersion": "1.1.0",
   "surfaceGradientReview": "validation/SURFACE_GRADIENT_REVIEW.json",

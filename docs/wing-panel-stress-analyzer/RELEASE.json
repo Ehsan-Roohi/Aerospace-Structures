@@ -1,6 +1,6 @@
 {
   "application": "Wing Panel Stress Analyzer (Wing AeroStruct)",
-  "version": "0.3.2-ui.11",
+  "version": "0.3.2-ui.12",
   "source_archive": "wing-aerostruct-0.3.0-dev-review.zip",
   "source_sha256": "bc6986c744568a516fd22bdd3b9508550625b82a77cd924adf52dfaa5156a54d",
   "original_base": "5ab2498",
@@ -37,9 +37,12 @@
       "Explicit amber/dashed local tip-uncertainty samples without clipping values",
       "Step-by-step panel algorithm, equations and accuracy Help",
       "Surface-metric gradient reconstruction across thin leading edges and closed rounded-tip seams; local sharp-tip/wake pressure remains unvalidated",
-      "Rounded-tip sectional Cp entries explicitly labelled unvalidated; section labels refresh with the current geometry"
+      "Rounded-tip sectional Cp entries explicitly labelled unvalidated; section labels refresh with the current geometry",
+      "New and imported studies open as complete opaque geometry with reset camera fit and display filters",
+      "Aerodynamic result overlay closes when a study is created or imported",
+      "Closed-tip/spatial comparison state cannot abort a later classical-wing solve"
     ],
-    "page_sha256": "a3215cced5707295e5dfa2dec2f9376043703f507f8618dcec766c010102e3db",
+    "page_sha256": "98c727ae9f584e881473666e7b7fd16c6a5efdb82e09092d5a6c7cab779956c1",
     "source_port": "ui/01-wing-aerostruct-ui-sources.patch",
     "independent_review": "validation/UI_RELEASE_REVIEW.json",
     "surface_review": "validation/UI_SURFACE_REVIEW.json",
@@ -49,13 +52,15 @@
       "ui/03-course-example-activity.patch",
       "ui/04-geometry-first-context-menu.patch",
       "ui/05-lightweight-view-rendering.patch",
-      "ui/06-surface-gradient.patch"
+      "ui/06-surface-gradient.patch",
+      "ui/08-wing-model-visibility.patch"
     ],
     "closed_tip_review": "validation/CLOSED_TIP_AERO_REVIEW.json",
     "course_review": "validation/COURSE_UI_REVIEW.json",
     "pressure_review": "validation/PRESSURE_DISPLAY_REVIEW.json",
     "results_review": "validation/AERO_RESULTS_REVIEW.json",
-    "airfoil_help_review": "validation/AIRFOIL_HELP_RELEASE_REVIEW.json"
+    "airfoil_help_review": "validation/AIRFOIL_HELP_RELEASE_REVIEW.json",
+    "wing_display_review": "validation/WING_DISPLAY_REVIEW.json"
   },
   "airfoil_2d_solver_version": "1.1.0",
   "numerical_review": "validation/2026-10-29/index.html",

@@ -1,0 +1,185 @@
+--- a/docs/wing-panel-stress-analyzer/index.html
++++ b/docs/wing-panel-stress-analyzer/index.html
+@@ -13371,6 +13371,26 @@
+     return `${basis}<div class="wae-scroll"><table><thead><tr><th>Admission check (N, N·mm)</th><th>Computed value / comparison</th><th>Numerical ratio vs limit</th><th>Source / definition</th></tr></thead><tbody>${adm.rows.map(r => `<tr><td>${mark(r)} ${esc(r.label)}</td><td>${value(r)}</td><td>${error(r)}</td><td>${esc(admissionSource(r))}${['force','bending','torque'].includes(r.kind)?' · U/|Value|':''}</td></tr>`).join('')}</tbody></table></div>${provenanceHelp()}
+       <p class="note">✓ resolved; ! not resolved, value withheld; ✗ fails. A torque is resolved only if U ≤ 10% of |T| and every mesh that carries weight in the load gives the same sign; there is no absolute floor. ${tw ? `The twist uncertainty uses this structure's torsional compliance, Δθ(y) = ∫ U<sub>T</sub>/GJ ds. Twist is shown only if every torque is resolved and Δθ ≤ 10% of |θ|; otherwise only the bound on |θ| is reported, and the load is admitted only if that bound, applied as an incidence change with the thin-airfoil lift slope 2π, changes the lift by at most 1% (an area-weighted mean twist of ${degText(tw.meanTolerance)} would do that). One-way coupling: the load is computed on the rigid wing, so the computed twist itself may change the lift by at most 2% (same lift slope); a more flexible wing is refused.` : ''} Torques are about the structural shear-centre axis of the spatial beam. Pressure and Trefftz-plane drag of the extrapolated solution: ${fmt(adm.drag.pressure)} and ${fmt(adm.drag.trefftz)} (reported, not a criterion).</p>`;
+   }
++  // Explain a refused coupled result without calling valid geometry bad input.
++  // This is presentation only: no admission threshold or solved value changes.
++  function admissionFailure(adm, context = {}) {
++    const row = adm.rows?.find(r => r.kind === 'aeroelastic' && !r.admitted);
++    const lines = [], number = (v, digits = 3) => Number.isFinite(v) ? String(Number(v.toPrecision(digits))) : 'unavailable';
++    if (row) {
++      lines.push(`Structural result withheld: the rigid-wing load is not consistent with this flexible wing. The computed twist would change lift by ${number(100 * row.value)}%; the one-way coupling limit is ${number(100 * row.tolerance)}%.`);
++      if (Number.isFinite(adm.twist?.tipTheta)) lines.push(`Computed tip twist: ${number(adm.twist.tipTheta * 180 / Math.PI)} degrees. This is a flexibility/model-limit check, not a material-strength failure.`);
++      const speed = context.flow?.speed, lift = context.liftN;
++      if (Number.isFinite(speed)) lines.push(`Selected airspeed: ${number(speed)} m/s (${number(3.6 * speed)} km/h).${Number.isFinite(lift) ? ` Upward aerodynamic force on this semi-wing: ${number(lift)} N.` : ''}`);
++      const validity = context.validity;
++      if (validity && !validity.smallDisplacement) lines.push(`The linear structural screening is also exceeded: maximum translation ${number(validity.maxTranslation)} mm (${number(100 * validity.translationRatio)}% of span; limit 5%) and maximum rotation ${number(validity.maxRotation)} rad (limit 0.1 rad).`);
++      lines.push('Increase torsional stiffness (for example, thicker skin or a second bonded spar), shorten the span, or use a lower physically justified flight speed. After a change, solve Aerodynamics again and apply its loads. A finer panel mesh alone does not fix this flexibility limit.');
++    } else {
++      lines.push(`Structural result withheld: aerodynamic load admission failed (${(adm.failed || []).join('; ')}).`);
++      lines.push(adm.sequence === 'standard' ? 'Select the Fine panel sequence, solve Aerodynamics and try applying its loads again. Review the admission table for the failed quantity.' : 'Review the failed quantity and its uncertainty in the admission table. The finest browser sequence did not establish a reliable coupled result for this case.');
++    }
++    lines.push('Your inputs and wing geometry are unchanged. The geometry preview remains available; no unaccepted stress or displacement field is shown.');
++    return { kind: row ? 'coupling-model-limit' : 'load-admission', title: 'Structural result withheld', message: lines.join('\n\n'), failed: (adm.failed || []).slice() };
++  }
+   // Verdict sentence of an admission (HTML).
+   function admissionVerdict(adm) {
+     if(adm.mode==='closed-tip-rigid-load-sectional-response')return {ok:adm.admitted,html:adm.admitted?'Rigid-wing load admitted for nominal normal section stress and pure-bending components. Torsion and aeroelastic feedback are not assessed; exact-apex stress is undefined.':'Sectional load assessment failed: '+esc(adm.failed.join('; '))+'. Choose a finer aerodynamic sequence; no accepted structural field is substituted.'};
+@@ -13379,8 +13399,8 @@
+     const notResolved = torqueShown ? `every torque is resolved, but the twist is not resolved to 10% of itself (worst ${tw ? pct(tw.worstRelative) : '?'}% at the reported stations)` : `the torque about this structure's shear-centre axis is not resolved (${open.join('; ')})`;
+     if (adm.admitted && adm.claims.twist === 'shown') return { ok: true, html: 'Aerodynamic load admitted: the coupled structural result is shown, including torque and twist (resolved to 10%).' };
+     if (adm.admitted) return { ok: true, html: `Aerodynamic load admitted with ${torqueShown ? 'the twist' : 'torque and twist'} withheld: ${notResolved}. ${tw ? `The twist is only bounded, |θ| ≤ ${degText(tw.maxBound)}, which would change the lift by at most ${pct(tw.liftEffect)}% (limit 1%). ` : ''}${torqueShown ? 'Bending, shear force, normal stress, displacement and torque are shown; twist values are not.' : 'Bending, shear force, normal stress and displacement are shown; torque and twist values are not.'}` };
+-    const twistFail = tw && tw.status === 'unresolved' ? ` ${torqueShown ? 'The twist is not resolved to 10% of itself' : 'The torque about the shear-centre axis is not resolved'} and its twist bound, |θ| ≤ ${degText(tw.maxBound)}, would change the lift by ${(100 * tw.liftEffect).toFixed(1)}% (limit 1%).` : '';
+-    return { ok: false, html: `Aerodynamic load NOT admitted: the coupled structural result is withheld (${esc(adm.failed.join('; '))}).${twistFail}${adm.sequence === 'standard' ? ' Choose the Fine mesh sequence, press Solve Aerodynamics and apply the loads again.' : ' The Fine sequence is the finest one offered in the browser, so this load is refused for this structure rather than shown with an unresolved twist.'}` };
++    const failure = admissionFailure(adm);
++    return { ok: false, html: failure.message.split('\n\n').map(p => `<span>${esc(p)}</span>`).join('<br><br>') };
+   }
+   // --------------------------------------------------------------- mount
+   function mount(host, ad) {
+@@ -13513,7 +13533,7 @@
+       const v = admissionVerdict(adm);
+       box.innerHTML = `<div class="wae-box ${v.ok ? 'ok' : 'no'}"><p class="${v.ok ? 'wae-ok' : 'wae-no'}">${v.html}</p>${admissionTable(adm)}</div>`;
+       if(adm.mode==='closed-tip-rigid-load-sectional-response'){status(adm.admitted?'Sectional response solved: nominal normal stress and pure-bending components; torsion and aeroelastic feedback not assessed.':'Sectional load assessment failed; see the checks below.',!adm.admitted);return;}
+-      status(`Admission test (${adm.sequence} sequence): ${!adm.admitted ? 'NOT admitted, the coupled result is withheld' : adm.claims.twist === 'shown' ? 'admitted with torque and twist' : adm.claims.torque === 'shown' ? 'admitted with the twist withheld' : 'admitted with torque and twist withheld'}. See the table below.`, !adm.admitted);
++      status(`Admission test (${adm.sequence} sequence): ${!adm.admitted ? 'coupled structural result withheld; aerodynamic solution retained' : adm.claims.twist === 'shown' ? 'admitted with torque and twist' : adm.claims.torque === 'shown' ? 'admitted with the twist withheld' : 'admitted with torque and twist withheld'}. See the table below.`, false);
+     }
+     function refresh() {
+       const s = { ...DEFAULTS, ...(ad.settings?.() || {}) };
+@@ -13540,7 +13560,7 @@
+     refresh();
+     return { refresh, reset, syncApplied, compute, apply, showAdmission, destroy: () => { worker?.terminate(); worker = null; host.innerHTML = ''; }, get result() { return last; }, get combined() { return lastCombined; }, get admission() { return lastAdmission; }, get solvedKey() { return lastKey; }, get running() { return running; } };
+   }
+-  return Object.freeze({ mount, DEFAULTS, SEQUENCE_TEXT, SEQUENCE_NOTE, spanwiseFigure, cpFigure, csv, runMainThread, recordFromSequence, sequenceOf, delivered, aerodynamicSummary, engineLoad, structuralCuts, structuralTorsion, admit, provenanceHelp, admissionSource, admissionTable, admissionVerdict });
++  return Object.freeze({ mount, DEFAULTS, SEQUENCE_TEXT, SEQUENCE_NOTE, spanwiseFigure, cpFigure, csv, runMainThread, recordFromSequence, sequenceOf, delivered, aerodynamicSummary, engineLoad, structuralCuts, structuralTorsion, admit, provenanceHelp, admissionSource, admissionTable, admissionVerdict, admissionFailure });
+ })();
+ if (typeof module !== 'undefined' && module.exports) module.exports = WingAeroUI;
+ 
+@@ -16239,6 +16259,7 @@
+   // Explicit Solve, as in the Beam Lab: field edits stay pending until Solve (or "Solve automatically");
+   // a rejected edit leaves the previous valid inputs and the last solved result in place.
+   let autoSolve = false, inputError = null, fieldErrors = {};
++  let analysisRefusal = null; // Valid inputs, but a coupled-model admission check failed.
+   const historyFields=['geometry','plaKey','plaOver','rodKey','rodOver','assembly','load','criteria','analysis','aerodynamics','aeroLoad','projectName','emptyStudy','mirrorFullWing'];
+   let wingHistory=[],wingHistoryIndex=-1,historySuspended=0;
+   const wingSessionKey='wing-aerostruct:printed-study:v1';   // isolated from the Wing Lab autosave
+@@ -16530,7 +16551,7 @@
+   // An input error stays on screen (chip "Input error") until the next valid edit or a successful solve;
+   // the previous valid inputs and the last solved result are kept meanwhile.
+   let errorDialog=null,errorTarget=null,errorReturnFocus=null;
+-  function showErrorDialog(message,target=null){
++  function showErrorDialog(message,target=null,options={}){
+     if(!errorDialog){
+       const style=document.createElement('style');style.textContent='#wingErrorDialog{box-sizing:border-box;width:min(560px,calc(100vw - 28px));max-height:calc(100dvh - 28px);overflow:auto;padding:22px;border:2px solid #b42318;border-radius:14px;background:#fff;color:#172c40;box-shadow:0 18px 60px #0005}#wingErrorDialog::backdrop{background:#14253565}#wingErrorDialog h2{font-size:20px;margin:0 40px 14px 0;color:#b42318}#wingErrorMessage{font-size:16px;line-height:1.55;white-space:pre-wrap;overflow-wrap:anywhere}#wingErrorDialog .wing-error-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}#wingErrorDialog button{min-height:42px;padding:8px 16px;border:1px solid #bdcbd8;border-radius:8px;background:#edf3f8;color:#172c40}#wingErrorClose{background:#096dce!important;color:white!important;border-color:#096dce!important}';document.head.append(style);
+       errorDialog=document.createElement('dialog');errorDialog.id='wingErrorDialog';errorDialog.setAttribute('role','alertdialog');errorDialog.setAttribute('aria-labelledby','wingErrorTitle');errorDialog.setAttribute('aria-describedby','wingErrorMessage');
+@@ -16542,6 +16563,7 @@
+     }
+     if(!errorDialog.open)errorReturnFocus=document.activeElement;
+     errorTarget=target?.isConnected?target:document.activeElement?.closest('form,fieldset')?.querySelector('[aria-invalid="true"]')||null;
++    $('#wingErrorTitle').textContent=options.title||'Could not apply this change';
+     $('#wingErrorMessage').textContent=String(message);$('#wingErrorGo').hidden=!errorTarget;$('#wingErrorGo').textContent=errorTarget?.matches('input,select,textarea')?'Go to the input':'Show error in form';
+     if(!errorDialog.open)errorDialog.showModal();$('#wingErrorClose').focus();
+   }
+@@ -16919,14 +16941,14 @@
+     } catch (err) {
+       updateModel();
+       $('#probe').hidden = true;
+-      $('#viewStale').textContent = 'Geometry preview unavailable: correct the geometry inputs. Previous geometry remains visible; analysis is not up to date.';
++      $('#viewStale').textContent = 'Geometry preview unavailable: '+(err.message||String(err))+'. Previous geometry remains visible; analysis is not up to date.';
+       $('#plotinfo').textContent = 'Invalid geometry inputs: previous geometry shown undeformed, without stress or load arrows. Correct inputs and press Solve Structure / Stress.';
+     }
+   }
+   // Deliberate study actions (lesson experiments, presets, Design-lab buttons, adding or removing a load) solve at once.
+   function changed() {
+     recordWingHistory();
+-    stale = true; inputError = null;
++    stale = true; inputError = null; analysisRefusal = null;
+     wingAero?.syncApplied();
+     setStatus();
+     renderTree();
+@@ -16938,7 +16960,7 @@
+   // Field edits stay pending until Solve, unless "Solve automatically after each valid change" is ticked.
+   function edited() {
+     recordWingHistory();
+-    stale = true; inputError = null;
++    stale = true; inputError = null; analysisRefusal = null;
+     wingAero?.syncApplied();
+     setStatus();
+     renderTree();
+@@ -16951,7 +16973,7 @@
+   function syncCompactStatus(customText) {
+     const chip=$('#stateChip'),preview=$('#statePreview');if(!preview)return;
+     const label=chip.textContent,full=$('#stateText').textContent;
+-    preview.textContent=customText?'See status details.':label==='Linear range exceeded'?'Illustrative only · reduce loads.':label==='Input error'?'Check input details.':label==='Solved · section stress'?'Nominal normal stress · tip unresolved.':label==='Analysis blocked'?'Confirm imported structure.':label==='Empty study'?'Choose Airfoil & planform.':label==='Out of date'?'Press Solve Structure / Stress.':label==='Solving'?'Computing…':/no load/i.test(full)?'No loads applied.':label==='Solved · 3-D beam'?(R?.analysis3D?.loadMapping?.endWrenches.length?'End-load approximation · see results warning.':'Nominal beam results.'):/, exceeded/.test(full)?'Strength check exceeded.':'Results match inputs.';
++    preview.textContent=customText?'See status details.':label==='Linear range exceeded'?'Illustrative only · reduce loads.':label==='Structural result withheld'?'Model limit · review details.':label==='Input error'?'Check input details.':label==='Solved · section stress'?'Nominal normal stress · tip unresolved.':label==='Analysis blocked'?'Confirm imported structure.':label==='Empty study'?'Choose Airfoil & planform.':label==='Out of date'?'Press Solve Structure / Stress.':label==='Solving'?'Computing…':/no load/i.test(full)?'No loads applied.':label==='Solved · 3-D beam'?(R?.analysis3D?.loadMapping?.endWrenches.length?'End-load approximation · see results warning.':'Nominal beam results.'):/, exceeded/.test(full)?'Strength check exceeded.':'Results match inputs.';
+     chip.title=full;
+   }
+   function setStatus(text) { if(!running&&!resultRendering)endWingActivity();renderStatus(text);syncCompactStatus(text); }
+@@ -16975,6 +16997,7 @@
+     if(S.emptyStudy){chip.className='chip idle';chip.textContent='Empty study';t.textContent='Choose an airfoil and dimensions, then Apply geometry to create your wing.';return;}
+     if (gateOpen()) { chip.className = "chip warn"; chip.textContent = "Analysis blocked"; t.textContent = "Imported outer geometry: confirm its structural inputs (list at the top of Structure & Stress) before solving."; return; }
+     if(closed&&R?.analysis3D?.stressOnly&&!stale){const b=R.analysis3D.bending;chip.className='chip '+(b&&!b.validity.smallDisplacement?'warn':'ok');chip.textContent=b?'Solved · stress + bending':'Solved · section stress';t.textContent=b?`Bending components only; torsion excluded. ${b.tip.slopeStatus==='undetermined-leading-cancellation'?'Exact-tip slope is undetermined; global small-rotation validity is not established.':b.tip.slopeStatus==='undetermined-leading-cancellation'?'Exact-tip slope is undetermined; global small-rotation validity is not established.':b.tip.slopeFinite?'Finite tip slope.':'Exact-tip slope is unbounded; global small-rotation assumptions fail.'}`:'Nominal normal section stress; exact apex undefined.';return;}
++    if (analysisRefusal) { chip.className="chip warn"; chip.textContent="Structural result withheld"; t.textContent=analysisRefusal.message; return; }
+     if (inputError) { chip.className = "chip bad"; chip.textContent = "Input error"; t.textContent = inputError + (!R ? "" : stale ? " Results shown are for the last solved model." : " The results shown still match the inputs on screen."); return; }
+     if (stale) { chip.className = "chip warn"; chip.textContent = "Out of date"; t.textContent = R ? "Inputs changed — press Solve Structure / Stress. Results shown are for the last solved model." : "Press Solve Structure / Stress to compute the first result."; return; }
+     if (!R) return;
+@@ -17021,7 +17044,7 @@
+     if (gateOpen()) { clearTimeout(runTimer); stale = true; setStatus(); renderImportGate(); return; }
+     if (importGate) { importGate = null; renderImportGate(); }   // every item confirmed: analyse the imported wing
+     ++resultRenderGeneration; resultRendering = false;
+-    running = true; stale = false;
++    running = true; stale = false; analysisRefusal = null;
+     beginWingActivity('Solving structure / stress', 'Preparing geometry, materials and applied loads');
+     await frame();
+     renderInputs();
+@@ -17062,7 +17085,10 @@
+         try { adm = WingAeroUI.admit(WingAeroPanel, input.geometry, S.aeroLoad, aeroDelivered(), solved); }
+         catch (e) { wingAero?.showAdmission(null, e.message); throw e; }
+         wingAero?.showAdmission(adm); solved.aeroAdmission = adm;
+-        if (!adm.admitted) throw Object.assign(Error(`Coupled result withheld: the aerodynamic load is not admitted (${adm.failed.join('; ')}). See Aerodynamics for the admission table.`), { withheld: true });
++        if (!adm.admitted) {
++          const failure=WingAeroUI.admissionFailure(adm,{flow:S.aeroLoad.flow,liftN:solved.analysis3D?.aeroLoad?.appliedWrench?.force?.[2],validity:solved.analysis3D?.validity});
++          throw Object.assign(Error(failure.message),{withheld:true,refusal:failure});
++        }
+       } else wingAero?.showAdmission(null);
+       R = TeachingModels.studentResult(solved);
+       if(aeroViewWithheld(S.plot)){S.plot='model';document.querySelectorAll('#app [data-plot]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.plot==='model')));}
+@@ -17083,11 +17109,17 @@
+     } catch (err) {
+       stale = true;
+       saveDesignAfterRun = false;
+-      if (!err?.withheld) console.error(err);   // a withheld coupled result is a decision, not a failure
+-      flash(err.message || String(err));
++      if (err?.withheld) {
++        analysisRefusal=err.refusal; inputError=null;
++        showErrorDialog(analysisRefusal.message,null,{title:analysisRefusal.title});
++      } else {
++        console.error(err);
++        flash(err.message || String(err));
++      }
+     } finally {
+       endWingActivity();
+       running = false;
++      if(analysisRefusal)previewGeometry(); // Retain current valid geometry; never render a rejected field.
+       setStatus();
+       renderTree();
+       renderSparResults();
+@@ -19198,7 +19230,7 @@
+ 
+   // Read-only access for tests and for the study-file module; geometry goes through the same atomic validation.
+   window.WingLabUI = {
+-    state: () => S, result: () => R, isStale: () => stale, isRunning: () => running, inputError: () => inputError,
++    state: () => S, result: () => R, isStale: () => stale, isRunning: () => running, inputError: () => inputError, admissionRefusal: () => analysisRefusal,
+     showError:showErrorDialog, engineInput, inventory: () => inventoryData(S.geometry),
+     checkGeometry: (patch) => checkGeometry({ ...S.geometry, ...patch }),
+     applyGeometry: (patch) => applyGeometry(patch),
+@@ -25795,6 +25827,8 @@
+     const a = ui.aero && ui.aero(); const S = ui.state();
+     if (!a) return { cls: 'idle', label: 'Unavailable', detail: '', dot: 'idle', title: 'The aerodynamic panel module is not available in this build.' };
+     if (a.running) return { cls: 'run', label: 'Solving…', detail: 'aerodynamic mesh sequence', dot: 'run', title: ($('#aeroStatus') || {}).textContent || '' };
++    const refusal = ui.admissionRefusal?.();
++    if(refusal && S.aeroLoad?.geometrySha256 === currentAeroKey(S)) return {cls:'warn',label:a.result?'Solved':'Load stored',detail:'coupled structural result withheld · review Structure & Stress',dot:'warn',title:refusal.message};
+     const last = a.result, key = currentAeroKey(S), errText = (($('#aeroStatus .wae-err') || {}).textContent || '').trim();
+     let load = '', loadCls = '';
+     if (S.aeroLoad) {

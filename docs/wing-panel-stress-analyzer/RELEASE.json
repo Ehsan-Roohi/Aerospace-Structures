@@ -48,9 +48,12 @@
       "Measured-reference error distinguished from internal consistency and target-lift trimming",
       "Rib-to-independent-2D action with linked eta and millimetre section controls",
       "Deformation controls hidden for aerodynamic results; actual structural visual multiplier displayed",
-      "Per-result contour field caching and reduced unchanged GPU redraws without changing numerical fields"
+      "Per-result contour field caching and reduced unchanged GPU redraws without changing numerical fields",
+      "Valid-load coupling refusal is distinct from malformed input or aerodynamic solver failure",
+      "Actionable stiffness, speed and model-limit feedback with actual twist/lift values",
+      "Current geometry preview restored after coupled structural result is withheld"
     ],
-    "page_sha256": "7370f3f3d54ae85f30a76e09ff2fa606ea56930930d7fab8e5b2292cfccd3e94",
+    "page_sha256": "1c5f0571d3d497961a68fd5493bcc326f56165a27ef218945a9ac9f717e29127",
     "source_port": "ui/01-wing-aerostruct-ui-sources.patch",
     "independent_review": "validation/UI_RELEASE_REVIEW.json",
     "surface_review": "validation/UI_SURFACE_REVIEW.json",
@@ -63,7 +66,8 @@
       "ui/06-surface-gradient.patch",
       "ui/08-wing-model-visibility.patch",
       "ui/09-zero-tip-structural-transfer.patch",
-      "ui/10-student-feedback-display.patch"
+      "ui/10-student-feedback-display.patch",
+      "ui/11-load-admission-feedback.patch"
     ],
     "closed_tip_review": "validation/CLOSED_TIP_AERO_REVIEW.json",
     "course_review": "validation/COURSE_UI_REVIEW.json",
@@ -83,5 +87,6 @@
   "zero_tip_release_review": "validation/ZERO_TIP_RELEASE_REVIEW.json",
   "aerodynamic_pressure_solver_unchanged_in_this_release": true,
   "student_feedback_review": "validation/STUDENT_FEEDBACK_REVIEW.json",
-  "structural_numerical_solver_unchanged_in_this_release": true
+  "structural_numerical_solver_unchanged_in_this_release": true,
+  "load_admission_review": "validation/LOAD_ADMISSION_REVIEW.json"
 }

@@ -1,10 +1,10 @@
 {
   "product": "MIE 446 Wing AeroStruct",
   "version": "0.3.4",
-  "status": "Qualified educational solver; estimate provenance, section selection and display performance update",
-  "builtAt": "2026-10-30T13:08:48.759321+00:00",
+  "status": "Qualified educational solver; valid-load admission refusal and geometry-preview recovery update",
+  "builtAt": "2026-10-30T16:25:01.883262+00:00",
   "page": "index.html",
-  "pageSha256": "7370f3f3d54ae85f30a76e09ff2fa606ea56930930d7fab8e5b2292cfccd3e94",
+  "pageSha256": "1c5f0571d3d497961a68fd5493bcc326f56165a27ef218945a9ac9f717e29127",
   "workers": {
     "wing-aero": {
       "worker": "8e2d79fa0bfe",
@@ -102,7 +102,7 @@
     },
     "wing_aero_ui.js": {
       "path": "docs/wing-panel-stress-analyzer/ui/wing-aero-ui.js",
-      "sha256": "f7ae4ce073fd2b2f60e7b93c1134f149972526463bd8a033ca711df3934938d7",
+      "sha256": "c9d10df2415fc583801a431978a2f4c0e282af03e6c7d212e6ddab8b9311177c",
       "prior_archived_source_path": "computational/printed-wing-solver/aerostruct/wing_aero_ui.js",
       "sha256_scope": "Canonical LF source, as committed"
     },
@@ -203,7 +203,7 @@
     },
     "wx-shell.js": {
       "path": "docs/wing-panel-stress-analyzer/ui/wx-shell.js",
-      "sha256": "378419e158886ecdcbaa5005b2cc34ac3f7838c630ec2911d1a9d17ada6bfdd6",
+      "sha256": "3d78859feaa39b4fc03f0f8a0b5944a980b9b6e06ed0b8225bafa99c701c91c2",
       "sha256_scope": "Canonical LF source, as committed"
     },
     "wx-shell.css": {
@@ -222,16 +222,17 @@
       "01-wing-aerostruct-ui-sources.patch": "de90922634d63658d06b82afd57d6363c5fca49c637d4e0a786e3cd03ffb140b",
       "02-closed-tip-aero-results.patch": "4d5833dbf86ddd6f34bc421b10bcac8118a87c7c0a10debe40256fd2b46993b5",
       "03-course-example-activity.patch": "197105dc7ff2665ccf439a38f81d23e113249021a807df33fed641e3a710cb77",
-      "wing-aero-ui.js": "62bf281e5fb828925c6edf73aae5628c1b972689812d38680f9bf0673c41a627",
+      "wing-aero-ui.js": "c9d10df2415fc583801a431978a2f4c0e282af03e6c7d212e6ddab8b9311177c",
       "wx-aero-results.js": "b48eece98ffc0fe3033563535c96bf6a559a34773f5a84991bfe7b07bb6d5e6d",
       "wx-shell.css": "f2e09cc59ee67e0d9a544950280de2f1b0d292ee779efe65b95f33d7398a7663",
-      "wx-shell.js": "a263bbaba6a0b8970d80aa8611559d6e0456639f8111cae7c5593c48ca8684bc",
+      "wx-shell.js": "3d78859feaa39b4fc03f0f8a0b5944a980b9b6e06ed0b8225bafa99c701c91c2",
       "04-geometry-first-context-menu.patch": "653987960c2a8999cb77a4d0c9a6318a086de4d2b935aa77e3ed643deac3f1b2",
       "05-lightweight-view-rendering.patch": "396248051b76b95cba7679141a5c7eeac3019e859da022f3bf0af8229eb9f60d",
       "06-surface-gradient.patch": "04f381d9937dc7ccd4c0bc40721a1070725a0a094f7c064da1248bdfa15ba678",
       "THIRD_PARTY_NOTICES.md": "26d4289dd21fd64d24401d0fa66c73d066f6dce24e28f219a80db2d7b0801f23",
       "07-airfoil-trailing-edge.patch": "d1d6e08a863fbe95e08d7a75484dfb25dbc21d5f8a4a3ee0eecc19735b336c1a",
-      "08-wing-model-visibility.patch": "1b83b98b05fa75b208a78577c8a5e21276e667aaa288004076d05a5a7a29e208"
+      "08-wing-model-visibility.patch": "1b83b98b05fa75b208a78577c8a5e21276e667aaa288004076d05a5a7a29e208",
+      "11-load-admission-feedback.patch": "103f778236eb8aa4c94e842b539c63ba99db69a89ffe2b1e350c28bb5b0e3adc"
     },
     "validation": "validation/UI_RELEASE_REVIEW.json",
     "surfaceReview": "validation/UI_SURFACE_REVIEW.json",
@@ -266,5 +267,12 @@
     "path": "ui/10-student-feedback-display.patch",
     "sha256": "7118c21fc833144a20a3a9535d94857ef3c1554522ffe7c761522e9b467caf03",
     "scope": "Deployed page display-only delta; editable result/shell modules embedded verbatim; panel and structural numerical kernels unchanged"
+  },
+  "load_admission_feedback_port": {
+    "path": "ui/11-load-admission-feedback.patch",
+    "sha256": "103f778236eb8aa4c94e842b539c63ba99db69a89ffe2b1e350c28bb5b0e3adc",
+    "scope": "Presentation and refusal recovery only; scientific admission criteria and numerical kernels unchanged",
+    "review": "validation/LOAD_ADMISSION_REVIEW.json",
+    "regression": "validation/test_900mm_load_refusal.cjs"
   }
 }

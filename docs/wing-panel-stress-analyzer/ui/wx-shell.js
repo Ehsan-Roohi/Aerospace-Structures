@@ -508,6 +508,8 @@
     const a = ui.aero && ui.aero(); const S = ui.state();
     if (!a) return { cls: 'idle', label: 'Unavailable', detail: '', dot: 'idle', title: 'The aerodynamic panel module is not available in this build.' };
     if (a.running) return { cls: 'run', label: 'Solving…', detail: 'aerodynamic mesh sequence', dot: 'run', title: ($('#aeroStatus') || {}).textContent || '' };
+    const refusal = ui.admissionRefusal?.();
+    if(refusal && S.aeroLoad?.geometrySha256 === currentAeroKey(S)) return {cls:'warn',label:a.result?'Solved':'Load stored',detail:'coupled structural result withheld · review Structure & Stress',dot:'warn',title:refusal.message};
     const last = a.result, key = currentAeroKey(S), errText = (($('#aeroStatus .wae-err') || {}).textContent || '').trim();
     let load = '', loadCls = '';
     if (S.aeroLoad) {

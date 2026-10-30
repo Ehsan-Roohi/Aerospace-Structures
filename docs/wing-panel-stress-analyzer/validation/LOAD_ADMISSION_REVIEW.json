@@ -1,0 +1,95 @@
+{
+  "status": "passed",
+  "fixtureSha256": "d98c40b303f79e2383238c54ef30a9977ab8dc06cf512ef388de44d0e950fe1c",
+  "cause": "Rigid-wing one-way coupling exceeds twist-to-lift feedback limit; geometry and aerodynamic mesh uncertainty are valid",
+  "original": {
+    "speedMps": 50,
+    "admitted": false,
+    "failed": [
+      "One-way coupling: twist effect on lift"
+    ],
+    "semiWingForceN": [
+      -2.1670944746717913,
+      1.5919965540740346,
+      96.88413398215272
+    ],
+    "tipTwistDeg": -0.4008084871912705,
+    "liftChangeFraction": 0.05563302891324149,
+    "linearScreen": {
+      "smallDisplacement": false,
+      "maxTranslation": 63.581277782599486,
+      "maxRotation": 0.10591935679659041,
+      "translationRatio": 0.07064586420288832,
+      "message": "Outside the admitted small-displacement screening (translation/span > 5% or rotation > 0.1 rad). Linear results are illustrative only; reduce loads or use a geometrically nonlinear model."
+    },
+    "massG": 676.0407873968245,
+    "milliseconds": 5258.3979
+  },
+  "separateLowerSpeedAlternatives": [
+    {
+      "speedMps": 25,
+      "admitted": true,
+      "failed": [],
+      "semiWingForceN": [
+        -0.5417736186679478,
+        0.39799913851850865,
+        24.22103349553818
+      ],
+      "tipTwistDeg": -0.10020212122314455,
+      "liftChangeFraction": 0.013908257221647327,
+      "linearScreen": {
+        "smallDisplacement": true,
+        "maxTranslation": 15.895316179684592,
+        "maxRotation": 0.026479832480419338,
+        "translationRatio": 0.01766146242187177,
+        "message": "Small-displacement screening passed (translation/span \u2264 5%, rotation \u2264 0.1 rad); this is not a nonlinear validation."
+      },
+      "massG": 676.0407873968245,
+      "milliseconds": 5743.111400000001
+    },
+    {
+      "speedMps": 15,
+      "admitted": true,
+      "failed": [],
+      "semiWingForceN": [
+        -0.19503850272046055,
+        0.14327968986666334,
+        8.71957205839376
+      ],
+      "tipTwistDeg": -0.03607276356220428,
+      "liftChangeFraction": 0.0050069725938171675,
+      "linearScreen": {
+        "smallDisplacement": true,
+        "maxTranslation": 5.722313532395885,
+        "maxRotation": 0.009532739448327106,
+        "translationRatio": 0.006358126147106539,
+        "message": "Small-displacement screening passed (translation/span \u2264 5%, rotation \u2264 0.1 rad); this is not a nonlinear validation."
+      },
+      "massG": 676.0407873968245,
+      "milliseconds": 5469.770600000002
+    }
+  ],
+  "refusalMessage": "Structural result withheld: the rigid-wing load is not consistent with this flexible wing. The computed twist would change lift by 5.56%; the one-way coupling limit is 2%.\n\nComputed tip twist: -0.401 degrees. This is a flexibility/model-limit check, not a material-strength failure.\n\nSelected airspeed: 50 m/s (180 km/h). Upward aerodynamic force on this semi-wing: 96.9 N.\n\nThe linear structural screening is also exceeded: maximum translation 63.6 mm (7.06% of span; limit 5%) and maximum rotation 0.106 rad (limit 0.1 rad).\n\nIncrease torsional stiffness (for example, thicker skin or a second bonded spar), shorten the span, or use a lower physically justified flight speed. After a change, solve Aerodynamics again and apply its loads. A finer panel mesh alone does not fix this flexibility limit.\n\nYour inputs and wing geometry are unchanged. The geometry preview remains available; no unaccepted stress or displacement field is shown.",
+  "controller": {
+    "classifiedAsInputError": false,
+    "previousResultPreserved": true,
+    "currentGeometryPreview": true,
+    "busyOverlayCleared": true
+  },
+  "numericalKernelsChanged": false,
+  "independent_review": {
+    "numerical_regressions": [
+      "test_900mm_load_refusal.cjs",
+      "test_aero_summary.cjs",
+      "test_zero_tip_structure.cjs",
+      "test_activity_feedback.cjs"
+    ],
+    "browser": {
+      "method": "Actual UI interactions through in-app browser",
+      "original_50mps": "Imported original JSON; dedicated Structural result withheld dialog shows 5.56% lift feedback, 96.9N, and linear-screen exceedance; geometry and inputs preserved.",
+      "alternative_25mps": "Imported separate same-geometry case; solved actual structural UI, status SOLVED - 3-D BEAM, 104 elements, 3.82 s, force 24.221N, tip UZ15.8953mm, twist -0.1002deg.",
+      "limitation": "Blank user screenshot not reproduced in clean browser. Later screenshot capture interaction was interrupted by browser-control timeout; numerical and visible solved-result checks completed."
+    },
+    "scientific_gate_preserved": true
+  }
+}

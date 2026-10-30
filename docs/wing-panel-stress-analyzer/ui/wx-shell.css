@@ -267,6 +267,10 @@ body.wx-wing-on .wing-editor-pop.wx-below-bar > div { max-height: calc(100dvh - 
 #app.wx #wxResults #wxAeroView { max-width: 230px; padding: 0 8px; }
 #app.wx #wxResults.wx-aero-active .wx-plots .tool[aria-pressed="true"] { background: var(--panel); border-color: var(--line); color: var(--fg); }
 #app.wx #wxResults.wx-aero-active #wxAeroView { background: var(--accent); border-color: var(--accent); color: #ffffff; }
+#app.wx #wxResults.wx-aero-active .wx-disp { display: none; }
+#app.wx #wxResults .wx-def-factor { font-size: 12px; white-space: nowrap; color: var(--muted); }
+#wxFoilStation { flex-basis: 100%; }
+#wxFoilRib { max-width: 230px; }
 #app.wx .view > #loading { position: fixed; inset: 0; z-index: 230; background: rgba(232,239,246,.48); backdrop-filter: none; pointer-events: none; }
 #app.wx #loading .card { box-sizing: border-box; width: min(440px, calc(100vw - 32px)); padding: 20px; border: 2px solid #0a5fc2; border-radius: 12px; background: #fff; color: #142130; box-shadow: 0 14px 48px rgba(20,45,75,.24); }
 #app.wx #loading .wing-busy-heading { display: flex; align-items: center; gap: 10px; }

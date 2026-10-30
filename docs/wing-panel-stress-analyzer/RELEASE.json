@@ -1,6 +1,6 @@
 {
   "application": "Wing Panel Stress Analyzer (Wing AeroStruct)",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "source_archive": "wing-aerostruct-0.3.0-dev-review.zip",
   "source_sha256": "bc6986c744568a516fd22bdd3b9508550625b82a77cd924adf52dfaa5156a54d",
   "original_base": "5ab2498",
@@ -43,9 +43,14 @@
       "Closed-tip/spatial comparison state cannot abort a later classical-wing solve",
       "Conservative six-component aerodynamic load transfer to actual zero-chord delta/elliptic section studies",
       "Chord-weighted force and chord-squared restoring couple preserve each strip force and moment",
-      "Nominal normal stress and transverse pure bending, with exact-apex stress and torsional response withheld"
+      "Nominal normal stress and transverse pure bending, with exact-apex stress and torsional response withheld",
+      "Explicit provenance of extrapolated estimates, mesh uncertainty and numerical admission checks",
+      "Measured-reference error distinguished from internal consistency and target-lift trimming",
+      "Rib-to-independent-2D action with linked eta and millimetre section controls",
+      "Deformation controls hidden for aerodynamic results; actual structural visual multiplier displayed",
+      "Per-result contour field caching and reduced unchanged GPU redraws without changing numerical fields"
     ],
-    "page_sha256": "78b35ffb728f8adb8a4b9f211c6067f6594d2a68f75c6d0c5c45e2d9609c27ae",
+    "page_sha256": "7370f3f3d54ae85f30a76e09ff2fa606ea56930930d7fab8e5b2292cfccd3e94",
     "source_port": "ui/01-wing-aerostruct-ui-sources.patch",
     "independent_review": "validation/UI_RELEASE_REVIEW.json",
     "surface_review": "validation/UI_SURFACE_REVIEW.json",
@@ -57,7 +62,8 @@
       "ui/05-lightweight-view-rendering.patch",
       "ui/06-surface-gradient.patch",
       "ui/08-wing-model-visibility.patch",
-      "ui/09-zero-tip-structural-transfer.patch"
+      "ui/09-zero-tip-structural-transfer.patch",
+      "ui/10-student-feedback-display.patch"
     ],
     "closed_tip_review": "validation/CLOSED_TIP_AERO_REVIEW.json",
     "course_review": "validation/COURSE_UI_REVIEW.json",
@@ -75,5 +81,7 @@
   "three_dimensional_review": "validation/2026-10-29/THREED_RELEASE_REVIEW.json",
   "zero_tip_structural_review": "validation/ZERO_TIP_STRUCTURE_REVIEW.md",
   "zero_tip_release_review": "validation/ZERO_TIP_RELEASE_REVIEW.json",
-  "aerodynamic_pressure_solver_unchanged_in_this_release": true
+  "aerodynamic_pressure_solver_unchanged_in_this_release": true,
+  "student_feedback_review": "validation/STUDENT_FEEDBACK_REVIEW.json",
+  "structural_numerical_solver_unchanged_in_this_release": true
 }

@@ -276,10 +276,13 @@ window.WingAeroStructResults = (() => {
     const csvBtn = el('button', { type: 'button', class: 'btn', id: 'wxArCsv', text: 'Export aerodynamic data (CSV)', disabled: true });
     const backBtn = el('button', { type: 'button', class: 'btn', id: 'wxArBack', 'aria-label': 'Close the aerodynamic result and show the structural view' }, 'Back', el('span', { class: 'wx-long', text: ' to structure view' }));
     const foilEta=el('input',{id:'wxFoilEta',type:'number',min:'0',max:'1',step:'.05',value:'.5','aria-label':'2D section span fraction eta'});
+    const foilY=el('input',{id:'wxFoilY',type:'number',min:'0',step:'any','aria-label':'2D section distance from root in millimetres'});
+    const foilRib=el('select',{id:'wxFoilRib','aria-label':'Choose a rib or spanwise station for the independent 2D section'});
+    const foilStation=el('span',{id:'wxFoilStation',class:'note'});
     const foilAlpha=el('input',{id:'wxFoilAlpha',type:'number',min:'-15',max:'15',step:'.5',value:'4','aria-label':'2D angle of attack relative to section chord, degrees'});
     const foilN=el('select',{id:'wxFoilN','aria-label':'2D panels per surface'},...[40,80,160].map(n=>el('option',{value:String(n),text:String(n),selected:n===80})));
     const foilSolve=el('button',{type:'button',class:'btn primary',id:'wxFoilSolve',text:'Solve 2D airfoil'});
-    const foilControls=el('div',{class:'wx-ar-tools',id:'wxFoilControls',hidden:true},el('label',{},'Section η ',foilEta),el('label',{},'α to local chord (°) ',foilAlpha),el('label',{},'Panels / side ',foilN),foilSolve);
+    const foilControls=el('div',{class:'wx-ar-tools',id:'wxFoilControls',hidden:true},el('label',{},'Use rib / station ',foilRib),el('label',{},'Section η ',foilEta),el('label',{},'y from root (mm) ',foilY),el('label',{},'α to local chord (°) ',foilAlpha),el('label',{},'Panels / side ',foilN),foilSolve,foilStation);
     let foil2D=null,foilBusy=false,foilMessage='Choose a section and its 2D angle of attack, then press Solve 2D airfoil. A wing aerodynamic solve is not required.';
     const canvas = el('canvas', { id: 'wxArCanvas', role: 'img', tabindex: '0', 'aria-label': 'Aerodynamic result' });
     const html = el('div', { id: 'wxArHtml', class: 'wx-ar-html', hidden: true });
@@ -348,6 +351,25 @@ window.WingAeroStructResults = (() => {
       if (next) render();
     }
     const close = () => show('');
+    let foilRibKey='';
+    function syncSectionControls(){
+      const g=ui.state().geometry,L=+g.semiSpan,eta=+foilEta.value;
+      foilY.max=String(L);foilY.value=foilEta.value.trim()&&Number.isFinite(eta)?String(+(eta*L).toPrecision(10)):'';
+      foilStation.textContent=`η = y / semi-span · 0 root, 1 tip · semi-span ${sig(L)} mm. Independent 2D flow, not a slice of the 3D pressure result.`;
+      let ribs=[];
+      try{if(typeof WingEngine!=='undefined')ribs=WingEngine.ribStations(WingEngine.makeGeometry(g));}catch(_){/* Geometry validation belongs to the existing editor. */}
+      const key=JSON.stringify([L,ribs]);
+      if(key!==foilRibKey){foilRibKey=key;foilRib.replaceChildren(el('option',{value:'',text:'Custom section'}),...[['Root',0],['Mid-span',L/2],['Tip',L],...ribs.map((y,i)=>[`Rib R${i+1}`,y])].map(([label,y])=>el('option',{value:String(y),text:`${label} · y ${sig(y)} mm`})));
+      }
+      const match=[...foilRib.options].find(o=>o.value!==''&&Math.abs(+o.value-eta*L)<1e-7*Math.max(1,L));foilRib.value=match?match.value:'';
+    }
+    function chooseSection(y){
+      const L=+ui.state().geometry.semiSpan;if(!Number.isFinite(y)||!(L>0)||y<0||y>L)return;
+      foilEta.value=String(+(y/L).toPrecision(12));probes=[];show('foil2d');foilSolve.focus();
+    }
+    foilRib.addEventListener('change',()=>{if(foilRib.value!=='')chooseSection(+foilRib.value);});
+    foilY.addEventListener('change',()=>{if(foilY.value.trim())chooseSection(+foilY.value);});
+    window.addEventListener?.('wing-open-2d-section',e=>chooseSection(e.detail?.y));
     const foilInputKey=()=>JSON.stringify([ui.state().geometry,foilEta.value,foilAlpha.value,foilN.value]);
     const foilCurrent=()=>foil2D&&foil2D.key===foilInputKey();
     foilSolve.addEventListener('click',async()=>{
@@ -405,7 +427,7 @@ window.WingAeroStructResults = (() => {
       if (kind === 'coef') { canvas.hidden = true; html.hidden = false; source.textContent = `${result.label} · ${flowText(b)}`; renderCoefficients(s); probeBox.textContent = ''; return; }
       html.hidden = true; canvas.hidden = false;
       if (kind === 'section') {
-        if (station.options.length !== b.chordwise.length) station.replaceChildren(...b.chordwise.map((c, j) => el('option', { value: String(j), text: `Strip ${j + 1} · y = ${sig(c.y_mm)} mm (η ${sig(c.y_mm / (b.reference.span_mm / 2), 3)})` })));
+        station.replaceChildren(...b.chordwise.map((c, j) => el('option', { value: String(j), text: `Strip ${j + 1} · y = ${sig(c.y_mm)} mm (η ${sig(c.y_mm / (b.reference.span_mm / 2), 3)})${b.mesh?.roundedTip && c.y_mm >= b.mesh.roundedTip.start_mm ? ' · rounded tip: unvalidated Cp' : ''}` })));
         sectionJ = Math.min(sectionJ, b.chordwise.length - 1); station.value = String(sectionJ);
       }
       if (kind === 'span') {
@@ -413,6 +435,7 @@ window.WingAeroStructResults = (() => {
         source.textContent = `Semi-wing lift ${sig(fz.value)} ± ${sig(fz.uncertainty, 2)} N extrapolated (finest meshes ${sig(fz.finest)} N, base mesh ${sig(fz.base)} N); both halves ${sig(2 * fz.value)} N; CL ${sig(cl.value)} ± ${sig(cl.uncertainty, 2)}. ${combined.structuralLoadAvailable === false ? 'Solid: base aerodynamic mesh; grey: the other meshes. No structural strip load has been generated for this zero-chord tip.' : `Solid: strip load delivered to the structure (extrapolated over all ${result.levels.length} meshes); dashed: base mesh; grey: the other meshes.`} ${flowText(b)}.`;
       } else if (kind === 'section') {
         source.textContent = `Upper and lower surface Cp at one base-mesh strip. Negative Cp (suction) is at the top; positive Cp is at the bottom. LE = x/c 0, TE = x/c 1. ${flowText(b)}.`;
+        if (b.mesh?.roundedTip && b.chordwise[sectionJ]?.y_mm >= b.mesh.roundedTip.start_mm) source.textContent += ' Rounded-tip sample: local Cp and the trailing-edge peak are unvalidated. Values are preserved; inspect the mesh check and inboard sections.';
       } else if (['cl', 'gamma', 'cm', 'te'].includes(kind)) {
         source.textContent = `Semi-wing strip samples of the ${meshText(b)}; these local values are not extrapolated. ${kind === 'te' ? 'Cp upper − Cp lower at the last panel centroids near the trailing edge; the Kutta condition requires equality at the edge, not Cp = 0.' : kind === 'gamma' ? 'Wake circulation from the solved doublet jump (m²/s).' : kind === 'cm' ? 'Pitching moment about each strip quarter chord; body +y moment is nose-up, divided by q∞ c² Δy.' : 'Pressure-integrated cl compared with 2Γ/(V c) from the solved wake.'} ${flowText(b)}.`;
         if(b.mesh?.roundedTip)source.textContent+=` Rounded-tip zone: y ≥ ${sig(b.mesh.roundedTip.start_mm,5)} mm. Abrupt local Cp/cm changes there are not validated physical predictions; use the inboard sections and the mesh checks.`;
@@ -648,6 +671,7 @@ window.WingAeroStructResults = (() => {
       }
     }
     function renderFoil(){
+      syncSectionControls();
       for(const e of [station,projection,resetView,scaleMode,manualTools,scaleInfo])e.hidden=true;
       panelToggle.hidden=false;clearBtn.hidden=false;clearBtn.disabled=!probes.length;html.hidden=true;pngBtn.hidden=false;
       canvas.style.touchAction='auto';canvas.style.cursor='crosshair';
@@ -839,8 +863,10 @@ window.WingAeroStructResults = (() => {
       else if (applied && adm && typeof WingAeroUI !== 'undefined') { const v = WingAeroUI.admissionVerdict(adm); admHtml = `<div class="wae-box ${v.ok ? 'ok' : 'no'}"><p class="${v.ok ? 'wae-ok' : 'wae-no'}">${v.html}</p>${WingAeroUI.admissionTable(adm)}</div>`; }
       else if (applied) admHtml = '<p class="note">The load is applied; the admission test runs with the next Solve Structure / Stress.</p>';
       html.innerHTML = `<div class="wae">
-        <h4>Extrapolated coefficients (both halves) with uncertainty U</h4>
-        <div class="wae-scroll"><table><thead><tr><th>Quantity</th><th>Extrapolated ± U</th><th>Finest meshes</th><th>Base mesh</th></tr></thead><tbody>
+        <h4>Computed coefficients (both halves) · mesh-extrapolated estimates</h4>
+        <p class="note">U estimates mesh-discretization uncertainty. These are not measurements or error percentages against an external reference.</p>
+        ${typeof WingAeroUI!=='undefined'?WingAeroUI.provenanceHelp():''}
+        <div class="wae-scroll"><table><thead><tr><th>Quantity</th><th>Extrapolated ± U (mesh)</th><th>Finest-direction combination</th><th>Base mesh</th></tr></thead><tbody>
           ${row('Lift coefficient C<sub>L</sub>, pressure integral', cf.CL)}${row('C<sub>L</sub>, Trefftz plane', cf.CLTrefftz)}${row('Induced drag C<sub>Di</sub>, Trefftz plane', cf.CDiTrefftz)}
           ${row('Pressure drag C<sub>D,p</sub> (inviscid; equals C<sub>Di</sub> in exact potential flow)', cf.CDpressure)}${row('Pitching moment C<sub>m</sub> about ¼ MAC (nose-up +)', cf.Cm)}
           ${row('Semi-wing lift F<sub>z</sub>', c.rootWrench[2], ' N')}</tbody></table></div>
@@ -848,7 +874,7 @@ window.WingAeroStructResults = (() => {
         <h4>Mesh convergence</h4>
         <div class="wae-scroll"><table><thead><tr><th>Quantity</th><th>Chordwise refinement (panels per surface: value)</th><th>Spanwise refinement (panels: value)</th><th>Observed order chord / span</th></tr></thead><tbody>${conv('C<sub>L</sub>', cf.CL)}${conv('C<sub>Di</sub> Trefftz', cf.CDiTrefftz)}${conv('C<sub>m</sub>', cf.Cm)}${conv('Semi-wing F<sub>z</sub> (N)', c.rootWrench[2])}</tbody></table></div>
         <div class="wae-scroll"><table><thead><tr><th>Mesh (around × spanwise)</th><th>Panels</th><th>C<sub>L</sub></th><th>F<sub>z</sub> (N)</th><th>Extrapolation weight</th></tr></thead><tbody>${meshRows}</tbody></table></div>
-        <p class="note">Global consistency: pressure and Trefftz-plane lift differ by ${sig(100 * lc.relativeDifference, 3)} % (criterion 2 %); pressure and induced drag differ by ${sig(dc.difference, 2)} (combined U ${sig(dc.combinedUncertainty, 2)}). Re (MAC) ${sig(b.flow.reynoldsMac, 3)}, Mach ${sig(b.flow.mach, 3)}. Linear solver: ${esc(b.diagnostics.linearSolver || '')}, relative residual ${sig(b.diagnostics.linearRelativeResidual, 2)}.</p>
+        <p class="note">Internal consistency (same flow solution): pressure and Trefftz-plane lift differ by ${sig(100 * lc.relativeDifference, 3)} % (criterion 2 %); pressure and induced drag differ by ${sig(dc.difference, 2)} (combined mesh U ${sig(dc.combinedUncertainty, 2)}). These checks do not compare with experiment. Re (MAC) ${sig(b.flow.reynoldsMac, 3)} is reported, not used to calculate a viscous polar; Mach ${sig(b.flow.mach, 3)}. Linear solver: ${esc(b.diagnostics.linearSolver || '')}, relative residual ${sig(b.diagnostics.linearRelativeResidual, 2)} (equation solve, not aerodynamic accuracy).</p>
         ${(b.warnings || []).map((w) => `<p class="wae-warn">${esc(w)}</p>`).join('')}
         <h4>Structural load: admission</h4>${admHtml}</div>`;
     }

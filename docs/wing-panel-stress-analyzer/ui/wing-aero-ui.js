@@ -20,7 +20,7 @@ const WingAeroUI = (() => {
   'use strict';
   const DEFAULTS = Object.freeze({ speed: 15, density: 1.225, alphaDeg: 4, viscosity: 1.81e-5, speedOfSound: 340.29, sequence: 'standard' });
   const SEQUENCE_TEXT = Object.freeze({ standard: 'Standard', fine: 'Fine' });
-  const SEQUENCE_NOTE = 'Each sequence solves a refinement family. Standard: up to 96 × 16 and 64 × 24 panels (around × spanwise), a few seconds. Fine: up to 192 × 16 and 64 × 48 panels, about 20 s; use it when Standard is not admitted or withholds torque and twist.';
+  const SEQUENCE_NOTE = 'Each new sequence solves eight meshes, refining both chord and span. Standard: up to 96 × 16 and 64 × 24 panels (around × spanwise); Fine: up to 192 × 16 and 64 × 48, with a mixed-refinement mesh in each sequence. Fine costs more. Use the on-screen stage and elapsed time; runtime depends on geometry and device.';
   const esc = v => String(v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const fmt = (v, d = 4) => (v == null || !Number.isFinite(v) ? '–' : Math.abs(v) >= 1e5 || (Math.abs(v) < 1e-3 && v !== 0) ? v.toExponential(3).replace('-', '−') : String(Number(v.toPrecision(d))).replace('-', '−'));
   const pct = v => (Number.isFinite(v) ? `${(100 * v).toFixed(v < 0.1 ? 2 : 1)}&nbsp;%` : '–');
@@ -125,10 +125,12 @@ const WingAeroUI = (() => {
     lines.push(`# ${record.label}`, `# V = ${q(record.flow.speed)} m/s, rho = ${q(record.flow.density)} kg/m^3, alpha = ${q(record.flow.alphaDeg)} deg; ${record.sequence} mesh sequence (${record.levels.length} meshes)`);
     lines.push('# Axes: x aft, y right semi-span, z up; forces N, moments N mm about the aircraft origin, lengths mm.');
     const c = combined.coefficients;
-    lines.push(`# Extrapolated (Richardson) with uncertainty U: CL ${q(c.CL.value)} +- ${q(c.CL.uncertainty)}, CL_Trefftz ${q(c.CLTrefftz.value)} +- ${q(c.CLTrefftz.uncertainty)}, CDi_Trefftz ${q(c.CDiTrefftz.value)} +- ${q(c.CDiTrefftz.uncertainty)}, CD_pressure ${q(c.CDpressure.value)} +- ${q(c.CDpressure.uncertainty)}, Cm ${q(c.Cm.value)} +- ${q(c.Cm.uncertainty)}`);
+    lines.push('# Provenance: all values are computed for this geometry and flow. No Airfoil Tools polar, experimental target or external reference value is used in extrapolation or admission.');
+    lines.push('# U is an empirical mesh-discretization uncertainty estimate, not experimental error, a confidence interval or a guarantee of total accuracy. Cp contours use one solved base mesh, not extrapolated Cp.');
+    lines.push(`# Extrapolated (Richardson) with mesh uncertainty U: CL ${q(c.CL.value)} +- ${q(c.CL.uncertainty)}, CL_Trefftz ${q(c.CLTrefftz.value)} +- ${q(c.CLTrefftz.uncertainty)}, CDi_Trefftz ${q(c.CDiTrefftz.value)} +- ${q(c.CDiTrefftz.uncertainty)}, CD_pressure ${q(c.CDpressure.value)} +- ${q(c.CDpressure.uncertainty)}, Cm ${q(c.Cm.value)} +- ${q(c.Cm.uncertainty)}`);
     if (adm) {
       lines.push(`# Admission: ${adm.admitted ? 'ADMITTED' : 'NOT ADMITTED'}; torque ${adm.claims.torque}, twist ${adm.claims.twist}`);
-      for (const r of adm.rows) lines.push(r.kind === 'aeroelastic' ? `#   ${r.label}: ${q(r.value)} of the lift (limit ${q(r.tolerance)}): ${r.admitted ? 'consistent' : 'FAILS'}` : r.kind === 'twist' ? `#   ${r.label}: ${r.status}; tip twist ${q(r.value)} rad +- ${q(r.uncertainty)}, bound on |twist| ${q(r.bound)} rad, lift effect of the bound ${q(r.twist.liftEffect)} (limit ${q(r.twist.liftEffectTolerance)}), rigid-wing lift effect of the twist ${q(r.twist.rigidWingEffect)}` : `#   ${r.label}: ${q(r.value)} (U ${q(r.uncertainty)}), relative error ${q(r.measure)} vs limit ${q(r.tolerance)}: ${r.resolved ? 'resolved' : r.admitted ? `${r.status || 'not resolved'}, value withheld` : 'FAILS'}`);
+      for (const r of adm.rows) lines.push(r.kind === 'aeroelastic' ? `#   ${r.label}: ${q(r.value)} of the lift (limit ${q(r.tolerance)}): ${r.admitted ? 'consistent' : 'FAILS'}` : r.kind === 'twist' ? `#   ${r.label}: ${r.status}; tip twist ${q(r.value)} rad +- ${q(r.uncertainty)}, bound on |twist| ${q(r.bound)} rad, lift effect of the bound ${q(r.twist.liftEffect)} (limit ${q(r.twist.liftEffectTolerance)}), rigid-wing lift effect of the twist ${q(r.twist.rigidWingEffect)}` : `#   ${r.label}: ${q(r.value)}${r.reference != null ? ' vs '+q(r.reference) : ''} (U ${q(r.uncertainty)}), numerical check ratio ${q(r.measure)} vs limit ${q(r.tolerance)}: ${r.resolved ? 'resolved' : r.admitted ? `${r.status || 'not resolved'}, value withheld` : 'FAILS'}`);
       for (const n of adm.notes || []) lines.push(`# Note: ${n}`);
     }
     if (combined.structuralLoadAvailable === false) lines.push('', '# Aerodynamic results only. No structural strip load was generated for this zero-chord-tip wing.');
@@ -151,8 +153,22 @@ const WingAeroUI = (() => {
   }
   // --------------------------------------------------------------- admission table (pure HTML)
   const degText = v => `${fmt(v * 180 / Math.PI, 3)}°`;
+  function provenanceHelp() {
+    return `<details class="wae-provenance"><summary>Where do Value, Extrapolated and U come from?</summary>
+      <p>Every value is computed for your wing and flow inputs. No Airfoil Tools polar or measured reference value is read for these tables. Airfoil coordinates define shape, not a target lift or pressure curve.</p>
+      <p>At a fixed entered α, lift is a prediction of this model. If you explicitly enter <b>Target lift</b>, the solver instead adjusts α to meet that target; matching it is trimming, not an independent accuracy test. It does not fit the Cp curve to measured data.</p>
+      <p><b>Extrapolated</b> estimates the zero-panel-size limit of integrated forces and coefficients using separate chordwise and spanwise mesh sequences. Q<sub>ext</sub> = Q<sub>chord→0</sub> + Q<sub>span→0</sub> − Q<sub>base</sub> + X. X estimates their mixed refinement term when the joint mesh is stored; older files without it omit X. The table below exposes the actual solved meshes and weights; no expected curve is fitted.</p>
+      <p><b>U</b> is an empirical mesh-discretization uncertainty estimate: 1.25 × [sum in both directions of max(spread + stability, 0.5|correction|) + 0.5|X|]. Spread compares linear, quadratic and observed-order extrapolations; stability shifts the three-level window. It is not experimental error, a statistical confidence interval, or a bound on all modelling errors.</p>
+      <p><b>Admission</b> asks whether numerical load uncertainty and one-way coupling checks meet the stated limits. Force, bending and torque use U/|Value|; pressure versus Trefftz compares two calculations from the same flow solution. Passing does not validate every Cp point or approve structural strength.</p>
+      <p>Cp contours and sectional graphs show a solved <b>base mesh</b>, not an extrapolated pressure field. Reynolds number is reported for scope screening; this inviscid solver has no Reynolds-dependent boundary layer, skin-friction drag or stall prediction.</p>
+      <p><a href="validation/2026-10-29/index.html" target="_blank" rel="noopener">Independent reference tests and their limitations</a> · <a href="https://www.grc.nasa.gov/www/wind/valid/tutorial/spatconv.html" target="_blank" rel="noopener">NASA: mesh convergence</a>. External validation is documented separately; it is not recomputed against a reference for every new design.</p></details>`;
+  }
+  function admissionSource(r) {
+    return r.kind === 'liftConsistency' ? 'Pressure vs wake/Trefftz; same flow solution. |CLp − CLwake| / max(|CLp|, CL floor)' : r.kind === 'transfer' ? 'Aerodynamic wrench vs structural cut; transfer residual' : r.kind === 'twist' ? 'Structural twist and propagated mesh uncertainty' : r.kind === 'aeroelastic' ? 'Estimated lift change from structural twist; 2π lift slope' : 'Transferred aerodynamic load; U from mesh refinement and transfer interpolation';
+  }
   function admissionTable(adm) {
-    if(adm.mode==='closed-tip-rigid-load-sectional-response')return '<div class="wae-scroll"><table><thead><tr><th>Sectional load check</th><th>Value ± U</th><th>Relative error / limit</th></tr></thead><tbody>'+adm.rows.map(r=>'<tr><td>'+(r.admitted?'✓ ':'✗ ')+esc(r.label)+'</td><td>'+fmt(r.value)+' ± '+fmt(r.uncertainty||0)+'</td><td>'+pct(r.relative)+' / '+pct(r.tolerance)+'</td></tr>').join('')+'</tbody></table></div>'+adm.notes.map(n=>'<p class="note">'+esc(n)+'</p>').join('');
+    const basis = '<p class="note">Numerical load checks, not error against experiment. U = estimated mesh uncertainty; the source and check definition are shown per row. Passing is not strength approval.</p>';
+    if(adm.mode==='closed-tip-rigid-load-sectional-response')return basis+'<div class="wae-scroll"><table><thead><tr><th>Sectional load check</th><th>Computed value / comparison</th><th>Numerical ratio / limit</th><th>Source / definition</th></tr></thead><tbody>'+adm.rows.map(r=>'<tr><td>'+(r.admitted?'✓ ':'✗ ')+esc(r.label)+'</td><td>'+fmt(r.value)+(r.reference!=null?' vs '+fmt(r.reference):r.kind==='transfer'?'':' ± '+fmt(r.uncertainty||0))+'</td><td>'+pct(r.relative)+' / '+pct(r.tolerance)+'</td><td>'+esc(admissionSource(r))+(r.kind==='force'||r.kind==='bending'?' · U/|Value|':'')+'</td></tr>').join('')+'</tbody></table></div>'+provenanceHelp()+adm.notes.map(n=>'<p class="note">'+esc(n)+'</p>').join('');
     // percentages: whole numbers from 10%, one decimal from 1%, two significant digits below (a 0.011% lift effect is not "0.0%")
     const short = v => (!Number.isFinite(v) ? '∞' : `${v >= 0.1 ? (100 * v).toFixed(0) : v >= 0.01 ? (100 * v).toFixed(1) : Number((100 * v).toPrecision(2))}%`);
     const mark = r => (r.resolved ? '<span class="wae-ok" title="resolved">✓</span>' : r.admitted ? '<span class="wae-warnmark" title="not resolved: value withheld">!</span>' : '<span class="wae-no" title="fails">✗</span>');
@@ -164,7 +180,7 @@ const WingAeroUI = (() => {
       return `${short(r.measure)} (limit ${short(r.tolerance)})`;
     };
     const tw = adm.twist;
-    return `<div class="wae-scroll"><table><thead><tr><th>Admission check (N, N·mm)</th><th>Value ± U</th><th>Error vs limit</th></tr></thead><tbody>${adm.rows.map(r => `<tr><td>${mark(r)} ${esc(r.label)}</td><td>${value(r)}</td><td>${error(r)}</td></tr>`).join('')}</tbody></table></div>
+    return `${basis}<div class="wae-scroll"><table><thead><tr><th>Admission check (N, N·mm)</th><th>Computed value / comparison</th><th>Numerical ratio vs limit</th><th>Source / definition</th></tr></thead><tbody>${adm.rows.map(r => `<tr><td>${mark(r)} ${esc(r.label)}</td><td>${value(r)}</td><td>${error(r)}</td><td>${esc(admissionSource(r))}${['force','bending','torque'].includes(r.kind)?' · U/|Value|':''}</td></tr>`).join('')}</tbody></table></div>${provenanceHelp()}
       <p class="note">✓ resolved; ! not resolved, value withheld; ✗ fails. A torque is resolved only if U ≤ 10% of |T| and every mesh that carries weight in the load gives the same sign; there is no absolute floor. ${tw ? `The twist uncertainty uses this structure's torsional compliance, Δθ(y) = ∫ U<sub>T</sub>/GJ ds. Twist is shown only if every torque is resolved and Δθ ≤ 10% of |θ|; otherwise only the bound on |θ| is reported, and the load is admitted only if that bound, applied as an incidence change with the thin-airfoil lift slope 2π, changes the lift by at most 1% (an area-weighted mean twist of ${degText(tw.meanTolerance)} would do that). One-way coupling: the load is computed on the rigid wing, so the computed twist itself may change the lift by at most 2% (same lift slope); a more flexible wing is refused.` : ''} Torques are about the structural shear-centre axis of the spatial beam. Pressure and Trefftz-plane drag of the extrapolated solution: ${fmt(adm.drag.pressure)} and ${fmt(adm.drag.trefftz)} (reported, not a criterion).</p>`;
   }
   // Verdict sentence of an admission (HTML).
@@ -259,7 +275,8 @@ const WingAeroUI = (() => {
       const lc = c.consistency.lift, dc = c.consistency.drag;
       $('#aeroResults').innerHTML = `
         ${r.trim ? `<p class="note">Target lift reached at α = ${fmt(r.trim.alphaDeg, 5)}° on the extrapolated pressure lift (residual ${fmt(r.trim.residual_N, 2)} N).</p>` : ''}
-        <div class="wae-scroll"><table><thead><tr><th>Extrapolated result (both halves unless stated)</th><th>Value ± U</th><th>Finest meshes</th></tr></thead><tbody>
+        ${provenanceHelp()}
+        <div class="wae-scroll"><table><thead><tr><th>Computed result (both halves unless stated)</th><th>Extrapolated ± U (mesh)</th><th>Finest-direction combination</th></tr></thead><tbody>
         ${row('Lift coefficient C<sub>L</sub>, pressure integral', cf.CL)}
         ${row('C<sub>L</sub>, Trefftz plane', cf.CLTrefftz)}
         ${row('Induced drag C<sub>Di</sub>, Trefftz plane', cf.CDiTrefftz)}
@@ -277,7 +294,7 @@ const WingAeroUI = (() => {
         <label for="aeroStation">Chordwise Cp station (base mesh)<select id="aeroStation">${base.strips.map((s, j) => `<option value="${j}"${j === 0 ? ' selected' : ''}>y = ${fmt(s.yMid, 4)} mm (η = ${fmt(s.yMid / (base.reference.span_mm / 2), 3)})</option>`).join('')}</select></label>
         <figure id="aeroCp">${base.chordwise ? cpFigure(base.chordwise[0]) : ''}</figure>
         <details><summary>Meshes of the sequence</summary><div class="wae-scroll"><table><thead><tr><th>Mesh (around × spanwise)</th><th>Panels</th><th>C<sub>L</sub></th><th>F<sub>z</sub> (N)</th><th>M<sub>x</sub> (N·mm)</th><th>Weight</th></tr></thead><tbody>${levelRows}</tbody></table></div>
-          <p class="note">Chordwise refinement at ${r.definition.baseSpan} strips and spanwise refinement at ${r.definition.baseChord} panels per surface; 1/n in the ratios 6 : 4 : 3 : 2. The delivered load is the sum of the meshes times the weights (quadratic Richardson extrapolation in each direction, combined additively). U = 1.25 × the sum over both directions of the larger of (spread of linear, quadratic and observed-order extrapolations + one-level stability) and half the extrapolation correction. Validated against much finer reference meshes (see the documentation).</p></details>
+          <p class="note">Chordwise refinement at ${r.definition.baseSpan} strips and spanwise refinement at ${r.definition.baseChord} panels per surface. The delivered load uses the displayed fixed mesh weights: separate quadratic extrapolations plus a mixed refinement correction when its joint mesh is stored. U is an empirical mesh uncertainty estimate, not a measured error or a guarantee. See the provenance explanation and independent reference tests.</p></details>
         ${ad.download ? `<div class="lesson-actions"><button class="btn" type="button" id="aeroCsv">${c.structuralLoadAvailable === false ? 'Download aerodynamic results (CSV)' : 'Download aerodynamic load (CSV)'}</button></div>` : ''}
         <details><summary>Method and scope</summary><p class="note">${esc(base.scope.method)} ${esc(base.scope.flow)}</p><p class="note">Not modelled: ${esc(base.scope.excluded.join('; '))}.</p><p class="note">${esc(base.scope.claim)}</p></details>`;
       $('#aeroStation').onchange = () => { const j = +$('#aeroStation').value; $('#aeroCp').innerHTML = cpFigure(base.chordwise[j]); };
@@ -335,6 +352,6 @@ const WingAeroUI = (() => {
     refresh();
     return { refresh, reset, syncApplied, compute, apply, showAdmission, destroy: () => { worker?.terminate(); worker = null; host.innerHTML = ''; }, get result() { return last; }, get combined() { return lastCombined; }, get admission() { return lastAdmission; }, get solvedKey() { return lastKey; }, get running() { return running; } };
   }
-  return Object.freeze({ mount, DEFAULTS, SEQUENCE_TEXT, SEQUENCE_NOTE, spanwiseFigure, cpFigure, csv, runMainThread, recordFromSequence, sequenceOf, delivered, aerodynamicSummary, engineLoad, structuralCuts, structuralTorsion, admit, admissionTable, admissionVerdict });
+  return Object.freeze({ mount, DEFAULTS, SEQUENCE_TEXT, SEQUENCE_NOTE, spanwiseFigure, cpFigure, csv, runMainThread, recordFromSequence, sequenceOf, delivered, aerodynamicSummary, engineLoad, structuralCuts, structuralTorsion, admit, provenanceHelp, admissionSource, admissionTable, admissionVerdict });
 })();
 if (typeof module !== 'undefined' && module.exports) module.exports = WingAeroUI;

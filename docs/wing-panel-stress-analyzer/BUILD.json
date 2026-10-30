@@ -1,10 +1,10 @@
 {
   "product": "MIE 446 Wing AeroStruct",
-  "version": "0.3.3",
-  "status": "Qualified educational pressure solver with exact-zero-tip nominal sectional stress and pure transverse bending",
-  "builtAt": "2026-10-30T01:49:20.322683+00:00",
+  "version": "0.3.4",
+  "status": "Qualified educational solver; estimate provenance, section selection and display performance update",
+  "builtAt": "2026-10-30T13:08:48.759321+00:00",
   "page": "index.html",
-  "pageSha256": "78b35ffb728f8adb8a4b9f211c6067f6594d2a68f75c6d0c5c45e2d9609c27ae",
+  "pageSha256": "7370f3f3d54ae85f30a76e09ff2fa606ea56930930d7fab8e5b2292cfccd3e94",
   "workers": {
     "wing-aero": {
       "worker": "8e2d79fa0bfe",
@@ -102,13 +102,14 @@
     },
     "wing_aero_ui.js": {
       "path": "docs/wing-panel-stress-analyzer/ui/wing-aero-ui.js",
-      "sha256": "f8ac84e9e0fff092255753563e5d032c6553bf581ce345c98eb59a00e864ddfd",
+      "sha256": "f7ae4ce073fd2b2f60e7b93c1134f149972526463bd8a033ca711df3934938d7",
       "prior_archived_source_path": "computational/printed-wing-solver/aerostruct/wing_aero_ui.js",
       "sha256_scope": "Canonical LF source, as committed"
     },
     "wing_aero_worker.js": {
       "path": "docs/wing-panel-stress-analyzer/wing-aero/wing_aero_worker.js",
-      "sha256": "9a7382a95fcf5c8ebf68d67e031ad96c958cb0e06c64836c25ffc91936725877"
+      "sha256": "8e2d79fa0bfe2893b3812a9ce5e9f12d4cb82da85861a5a1177c32e601aa9d01",
+      "sha256_scope": "Canonical LF source, as committed"
     },
     "wing_aerostruct_template.html": {
       "path": "computational/printed-wing-solver/aerostruct/wing_aerostruct_template.html",
@@ -194,6 +195,21 @@
     "wing_workspace_ui.js": {
       "path": "computational/printed-wing-solver/web/wing_workspace_ui.js",
       "sha256": "5bf463a9bf8994f7ed93d6e919d70a9be564363ca0bc888eb64c8a8a61f60e31"
+    },
+    "wx-aero-results.js": {
+      "path": "docs/wing-panel-stress-analyzer/ui/wx-aero-results.js",
+      "sha256": "49b5eafa8ea2e4c1fccf614c6a99f6a03130e1177845c1cc1fee166a8fae4d58",
+      "sha256_scope": "Canonical LF source, as committed"
+    },
+    "wx-shell.js": {
+      "path": "docs/wing-panel-stress-analyzer/ui/wx-shell.js",
+      "sha256": "378419e158886ecdcbaa5005b2cc34ac3f7838c630ec2911d1a9d17ada6bfdd6",
+      "sha256_scope": "Canonical LF source, as committed"
+    },
+    "wx-shell.css": {
+      "path": "docs/wing-panel-stress-analyzer/ui/wx-shell.css",
+      "sha256": "45a76696109fb390335872bbf819a3b261c8ebb7d28f3105c08236fda102b74a",
+      "sha256_scope": "Canonical LF source, as committed"
     }
   },
   "solverVersion": "0.3.1",
@@ -245,5 +261,10 @@
     "engine_and_study_snapshots": "ui/zero-tip-source/",
     "pressure_solver_prefix_sha256": "a5eb0a322fe8cac8e9e3cb5963721372a6155096a401f0cf322d95f8b478a6ca",
     "pressure_solver_prefix_unchanged": true
+  },
+  "student_feedback_display_port": {
+    "path": "ui/10-student-feedback-display.patch",
+    "sha256": "7118c21fc833144a20a3a9535d94857ef3c1554522ffe7c761522e9b467caf03",
+    "scope": "Deployed page display-only delta; editable result/shell modules embedded verbatim; panel and structural numerical kernels unchanged"
   }
 }

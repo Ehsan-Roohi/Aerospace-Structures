@@ -1,0 +1,42 @@
+{
+  "case": "450 mm NACA2412 half-wing, 160/100 mm chords, five ribs, 1 N point force at y225mm and 0.25c",
+  "firstSolveMs": 1472,
+  "firstStressDisplayMs": 959,
+  "repeatAndDeformationKeepNumerics": true,
+  "sectionControls": {
+    "ribToEta": true,
+    "millimetresToEta": true,
+    "etaToMillimetres": true,
+    "twoDimensionalSolve": true,
+    "deformationHidden": true
+  },
+  "ribActionOpensCorrectSection": true,
+  "computedCoefficientExplanation": true,
+  "errors": [],
+  "version": "0.3.4",
+  "page_sha256": "7370f3f3d54ae85f30a76e09ff2fa606ea56930930d7fab8e5b2292cfccd3e94",
+  "numerical_base_commit": "d8841c3",
+  "scope": "UI and provenance regression, not new flow validation",
+  "kernel_sources_unchanged": [
+    "wing-aero/aero_bundle.js",
+    "wing-aero/wing_aero_panel.js",
+    "ui/zero-tip-source/engine.js",
+    "inline WingEngine",
+    "independent 2D panel kernel"
+  ],
+  "automated_checks": [
+    "manufactured non-separable extrapolation",
+    "admission percentage meanings",
+    "modules and alias synchronized",
+    "2D exact cusp and finite-wedge pressure regression",
+    "zero-tip six-component transfer and analytic bending regression",
+    "Chrome rib/eta/y selection, 2D solve and coefficient provenance",
+    "identical repeat solves and numerical invariance under deformation display"
+  ],
+  "limitations": [
+    "Chrome was tested in an isolated session with software WebGL; no Firefox or student-device reproduction is claimed.",
+    "Timings are one controlled case on this host, not a performance guarantee.",
+    "No new experimental or PANAIR comparison was run for this UI update; previous version-specific reference results remain linked.",
+    "Empirical U does not bound modelling errors or certify local tip Cp."
+  ]
+}

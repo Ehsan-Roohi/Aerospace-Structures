@@ -1,0 +1,138 @@
+--- a/docs/wing-panel-stress-analyzer/index.html
++++ b/docs/wing-panel-stress-analyzer/index.html
+@@ -17608,6 +17608,13 @@
+     }
+     return 0;
+   }
++  function meshFieldValues(mesh,kind){
++    const u=mesh.userData,key=kind+':'+S.stressComponent;
++    if(u.fieldResult!==R){u.fieldResult=R;u.fieldValues=new Map();}
++    if(!u.fieldValues.has(key)){const values=new Float64Array(u.by.length);for(let i=0;i<values.length;i++)values[i]=fieldValue(u.by[i],u.bx[i],u.bz[i],kind,u);u.fieldValues.set(key,values);}
++    return u.fieldValues.get(key);
++  }
++  function finishContour(mesh){const a=mesh.geometry.attributes;if(a.wingFraction){a.wingFraction.needsUpdate=true;a.wingValid.needsUpdate=true;}}
+   let range = { min: 0, max: 1 };
+   let stressExtrema = {min:null,max:null};
+   // Result colours encode numbers. Keep them independent of face lighting,
+@@ -17636,7 +17643,7 @@
+   function contourSample(mesh,i,value,selected){
+     const a=mesh.geometry.attributes,f=a.wingFraction,valid=a.wingValid;if(!f)return;
+     f.array[i]=selected&&Number.isFinite(value)?colourFraction(value):0;
+-    valid.array[i]=selected?(Number.isFinite(value)?1:0):-1;f.needsUpdate=true;valid.needsUpdate=true;
++    valid.array[i]=selected?(Number.isFinite(value)?1:0):-1;
+   }
+   function renderStressPeaks(kind) {
+     const box=$('#stressPeaks');box.hidden=kind!=='sigma'||geometryPreview;
+@@ -17657,7 +17664,7 @@
+     let mn = Infinity, mx = -Infinity;
+     stressExtrema={min:null,max:null};
+     const meshes = kind==='sigma'&&S.stressComponent==='rods'?model.rods:kind==='sigma'&&S.stressComponent==='spars'?(model.spars||[]):kind==='sigma'?model.skins.concat(model.sleeves):model.skins.concat(model.sleeves,model.spars||[]);
+-    for (const m of meshes) { const u = m.userData; for (let i = 0; i < u.by.length; i++) { const v = fieldValue(u.by[i], u.bx[i], u.bz[i], kind,u); const point={value:v,y:u.by[i],x:u.bx[i],z:u.bz[i],mesh:m,index:i}; if (v < mn){mn = v;stressExtrema.min=point;} if (v > mx){mx = v;stressExtrema.max=point;} } }
++    for (const m of meshes) { const u = m.userData,values=meshFieldValues(m,kind); for (let i = 0; i < u.by.length; i++) { const v = values[i]; const point={value:v,y:u.by[i],x:u.bx[i],z:u.bz[i],mesh:m,index:i}; if (v < mn){mn = v;stressExtrema.min=point;} if (v > mx){mx = v;stressExtrema.max=point;} } }
+     if (kind === "fos") { mn = 0; mx = Math.min(Math.max(mx, 1), 10); }
+     if (!isFinite(mx)||!isFinite(mn)) return {min:0,max:1};
+     if (mx - mn < 1e-12) mx = mn + 1;
+@@ -17694,16 +17701,16 @@
+     const base={skin:COLORS.pla,sleeve:COLORS.sleeve,rod:COLORS.rod,spar:0x9871dd};
+     for(const m of model.skins.concat(model.sleeves,model.rods,model.spars||[])){
+       resultMaterial(m,!!kind);
+-      const u=m.userData,pos=m.geometry.attributes.position.array,col=m.geometry.attributes.color.array;
++      const u=m.userData,pos=m.geometry.attributes.position.array,col=m.geometry.attributes.color.array,values=kind?meshFieldValues(m,kind):null;
+       for(let i=0;i<u.by.length;i++){
+         const p=place(u.by[i],u.bx[i],u.bz[i],u.module||0);pos.set(p,3*i);
+         const selected=!!sectionResultMeta[kind]||kind==='disp'||kind==='sigma'&&(S.stressComponent==='spars'?u.kind==='spar':u.kind!=='spar'&&u.kind!=='rod');
+-        const value=selected?fieldValue(u.by[i],u.bx[i],u.bz[i],kind,u):null;
++        const value=selected?values[i]:null;
+         contourSample(m,i,value,selected);
+         const c=selected?(Number.isFinite(value)?rainbow(colourFraction(value)):new THREE.Color(0x9ba7b4)):new THREE.Color(base[u.kind]);
+         col[3*i]=c.r;col[3*i+1]=c.g;col[3*i+2]=c.b;
+       }
+-      m.geometry.attributes.position.needsUpdate=true;m.geometry.attributes.color.needsUpdate=true;m.geometry.computeVertexNormals();m.geometry.computeBoundingSphere();
++      finishContour(m);m.geometry.attributes.position.needsUpdate=true;m.geometry.attributes.color.needsUpdate=true;m.geometry.computeVertexNormals();m.geometry.computeBoundingSphere();
+     }
+     for(const m of model.rigid){
+       const raw=m.userData.rawPositions;if(!raw)continue;
+@@ -17724,9 +17731,9 @@
+     const useField = !!kind && !geometryPreview;
+     if (useField) range = displayRange(kind,computeRange(kind));
+     const reqFos = R.load.fos;
+-    const colorOf = (y, x, z, base,member) => {
++    const visualScale=deformAmount().scale;
++    const colorOf = (v, base) => {
+       if (!useField) return base;
+-      const v = fieldValue(y, x, z, kind,member);
+       if (kind === "fos") return v < reqFos ? new THREE.Color(0xff1f3d) : rainbow(1 - (Math.min(v, range.max) - range.min) / (range.max - range.min));
+       return rainbow(colourFraction(v));
+     };
+@@ -17740,22 +17747,23 @@
+       const xs = xscAt(y), zs = zscAt(y), dx = x - xs, dz = z - zs, ca = Math.cos(a), sa = Math.sin(a);
+       out[0] = y + (mod || 0) * explode;
+       out[1] = zs + dz * ca - dx * sa + w;
+-      out[2] = xs + dz * sa + dx * ca+(S.plot!=='mode'&&R.chordwiseDeflection?deformAmount().scale*at(R.chordwiseDeflection,y):0);
++      out[2] = xs + dz * sa + dx * ca+(S.plot!=='mode'&&R.chordwiseDeflection?visualScale*at(R.chordwiseDeflection,y):0);
+     };
+     const tmp = [0, 0, 0];
+     const base = { skin: new THREE.Color(COLORS.pla), sleeve: new THREE.Color(COLORS.sleeve), rod: new THREE.Color(COLORS.rod),spar:new THREE.Color(0x9871dd) };
+     for (const m of model.skins.concat(model.sleeves, model.rods,model.spars||[])) {
+       resultMaterial(m,useField);
+       const u = m.userData, pos = m.geometry.attributes.position.array, col = m.geometry.attributes.color.array;
+-      const isRod = u.kind === "rod";
++      const isRod = u.kind === "rod",values=useField?meshFieldValues(m,kind):null;
+       for (let i = 0; i < u.by.length; i++) {
+         place(u.by[i], u.bx[i], u.bz[i], tmp, isRod ? 0 : u.module);
+         pos[3 * i] = tmp[0]; pos[3 * i + 1] = tmp[1]; pos[3 * i + 2] = tmp[2];
+         const selectedStress = !geometryPreview && S.plot==='stress' && (S.stressComponent==='rods'?isRod:S.stressComponent==='spars'?u.kind==='spar':!isRod&&u.kind!=='spar');
+-        contourSample(m,i,useField?fieldValue(u.by[i],u.bx[i],u.bz[i],kind,u):0,useField&&kind!=='fos'&&(S.plot!=='stress'||selectedStress));
+-        const c = geometryPreview ? base[u.kind] : selectedStress ? colorOf(u.by[i],u.bx[i],u.bz[i],base[u.kind],u) : S.plot==='stress'?new THREE.Color(0x7f8c98):isRod?base.rod:colorOf(u.by[i],u.bx[i],u.bz[i],base[u.kind],u);
++        contourSample(m,i,useField?values[i]:0,useField&&kind!=='fos'&&(S.plot!=='stress'||selectedStress));
++        const c = geometryPreview ? base[u.kind] : selectedStress ? colorOf(values[i],base[u.kind]) : S.plot==='stress'?new THREE.Color(0x7f8c98):isRod?base.rod:colorOf(values?.[i],base[u.kind]);
+         col[3 * i] = c.r; col[3 * i + 1] = c.g; col[3 * i + 2] = c.b;
+       }
++      finishContour(m);
+       m.geometry.attributes.position.needsUpdate = true;
+       m.geometry.attributes.color.needsUpdate = true;
+       m.geometry.computeVertexNormals();
+@@ -17917,6 +17925,7 @@
+     });
+   }
+   function applyResultNow() {
++    sceneDirty=true;
+     updateModel();
+     applyAnatomy();
+     renderPartEditor();
+@@ -17969,6 +17978,9 @@
+     ['wpAddRib','wpAddSpar'].forEach(id=>$('#'+id).disabled=running);
+     $('#wpPosition').disabled=!editable;$('#wpPositionLabel').textContent=spar?'Spar position x/c':rod?'Rod position x/c':'Rib station y (mm)';
+     $('#wpPosition').value=editable?(spar?S.geometry.spars[partSelection.index].fraction:rod?S.geometry.rodFractions[partSelection.index]:partSelection.station):'';
++    let sectionButton=$('#wpAnalyzeSection');
++    if(!sectionButton){sectionButton=el('button',{id:'wpAnalyzeSection',type:'button',class:'btn',text:'Analyze this section (2D)'});host.append(sectionButton);sectionButton.onclick=()=>{if(partSelection?.kind!=='rib')return;const y=partSelection.station;printedWorkspace?.close();window.dispatchEvent(new CustomEvent('wing-open-2d-section',{detail:{y}}));};}
++    sectionButton.hidden=partSelection?.kind!=='rib';sectionButton.disabled=running;
+     $('#wpPick').setAttribute('aria-pressed',String(partPick));
+     if(!$('#wpNewRib').value)$('#wpNewRib').value=suggestRib(E.makeGeometry(S.geometry),E.ribStations(E.makeGeometry(S.geometry)));
+     if(model)for(const m of [...model.ribs,...(model.spars||[]),...model.rods]){
+@@ -18121,12 +18133,14 @@
+       camera.updateProjectionMatrix();
+     }
+   }
+-  let lastT = performance.now();
++  let lastT = performance.now(),lastStaticPaint=0,sceneDirty=true;
+   function loop(t) {
+-    if ($("#app").hidden || document.hidden || running || $("#app > main.view").classList.contains("wx-aero-on") || document.querySelector(".wx-aero-busy:not([hidden])")) { lastT=t; requestAnimationFrame(loop); return; }
++    if ($("#app").hidden || document.hidden || running || resultRendering || $("#app > main.view").classList.contains("wx-aero-on") || document.querySelector(".wx-aero-busy:not([hidden])")) { lastT=t; requestAnimationFrame(loop); return; }
+     resize();
+     if (model && !lastViewSet) frameView(false);
+-    controls.update();
++    const cameraMoving=controls.update();
++    if(!sceneDirty&&!cameraMoving&&S.plot!=='mode'&&t-lastStaticPaint<250){lastT=t;requestAnimationFrame(loop);return;}
++    sceneDirty=false;lastStaticPaint=t;
+     renderAircraftAxes();
+     renderViewReadout();
+     positionRibLabels();
+@@ -19190,6 +19204,7 @@
+     solve: () => { clearTimeout(runTimer); return runStudy(); },
+     importGate: () => (importGate ? { required: importGate.required.map((r) => r.id), confirmed: [...importGate.confirmed], open: gateOpen() } : null),
+     studyFiles: () => studyFiles, aero: () => wingAero,
++    deformation: () => ({enabled:!!S.deformed,multiplier:R?(deformAmount().scale||0):0,visualOnly:true}),
+     view: () => (model ? { distance: camera.position.distanceTo(controls.target), resetDistance, solved: { semiSpan: model.g.semiSpan, rootChord: model.g.rootChord, tipChord: model.g.tipChord },preview:geometryPreview,members:{ribs:model.ribs.length,rods:model.rods.length,sparParts:(model.spars||[]).length} } : null),
+   };
+   // UI shell hooks (command bar and input panels at the end of this page): the shell moves these real editors and

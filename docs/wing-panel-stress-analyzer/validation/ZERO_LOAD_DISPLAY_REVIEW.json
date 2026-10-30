@@ -1,0 +1,63 @@
+{
+  "date": "2026-10-30",
+  "version": "0.3.6",
+  "scope": "Unloaded structural display and aerodynamic-load transfer clarity",
+  "pageSha256": "db8bbde838c2c58336b05a216cfab81ca538b94e1f295fdae1587eb0eef8e869",
+  "originalFixture": "fixtures/450mm-unapplied-aero-2026-10-30.json",
+  "originalSha256": "7f437f0d8f771e3e93fb0c28535124368837c2db67a4cee5636c405cbc8102d1",
+  "diagnosis": "The original study contains no custom force, no self-weight, and no applied panel-load record. Aerodynamic settings alone do not apply a structural load. All static response fields are correctly zero.",
+  "changes": [
+    "Neutral structural model and prominent no-load notice instead of a fabricated 0 to 1 MPa stress contour and zero extrema markers.",
+    "Direct actions open Aerodynamics or structural load setup. Solved aerodynamic fields without a transferred load are labelled Solved / not applied.",
+    "Constant fields retain their exact value; unresolved samples are distinct from zero. PNG exports omit unloaded colour bars and false extrema.",
+    "Opening a saved study clears the previous aerodynamic result and admission display while preserving the imported applied-load record; imports wait for an active solver to finish."
+  ],
+  "sameCaseNumericalCheck": {
+    "flow": {
+      "outerGeometry": true,
+      "speedMps": 15,
+      "alphaDeg": 1,
+      "densityKgM3": 1.225,
+      "sequence": "standard",
+      "selfWeight": false,
+      "customLoads": 0,
+      "admissionThresholds": true
+    },
+    "unloadedFields": {
+      "shearN": 0,
+      "bendingNmm": 0,
+      "torqueNmm": 0,
+      "verticalDisplacementMm": 0,
+      "chordwiseDisplacementMm": 0,
+      "twistRad": 0,
+      "topStressMpa": 0,
+      "bottomStressMpa": 0
+    },
+    "panelMeshes": 8,
+    "totalPanels": 8816,
+    "CL": 0.24948887049554153,
+    "semiWingLiftN": 2.4758111996458796,
+    "admitted": true,
+    "tipDisplacementMm": 0.6679740537063946,
+    "tipTwistDeg": -0.01810263695235449,
+    "sampledSectionStressTensionMpa": 0.24492836990322817,
+    "sampledSectionStressCompressionMagnitudeMpa": 0.296367993267929,
+    "editableAppliedLoadFileReimported": true
+  },
+  "checks": {
+    "test_zero_load_display.cjs": "passed, actual renderer/legend/import functions with Three.js r128",
+    "test_unapplied_aero_load.cjs": "passed, fresh eight-mesh panel solve, structural admission and v4 reload",
+    "test_geometry_preview_recovery.cjs": "passed with Three.js r128",
+    "test_activity_feedback.cjs": "passed",
+    "test_speed_units_guidance.cjs": "passed",
+    "test_section_result_context.cjs": "passed",
+    "test_aero_result_charts.cjs": "passed",
+    "allInlineScriptsParse": "passed",
+    "indexAndWingLabAliasIdentical": true,
+    "sourcePortReplay": "passed",
+    "browserQA": "Local Chromium: imported original JSON, solved unloaded structure, observed neutral no-load notice, opened Aerodynamics from the notice, solved the actual panel sequence, applied its loads, observed a nonzero mirrored stress contour, and reloaded the applied state successfully."
+  },
+  "numericalKernelsChanged": false,
+  "physicalInputsOrAdmissionThresholdsChanged": false,
+  "limitations": "Nominal one-way potential-flow panel and linear spatial-beam analysis. Numerical admission is not experimental validation, local solid stress or failure certification. Sampled section envelopes and rendered surface-vertex extrema have different sampling coverage."
+}

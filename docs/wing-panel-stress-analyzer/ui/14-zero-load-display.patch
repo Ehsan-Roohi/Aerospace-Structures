@@ -1,0 +1,82 @@
+--- a/docs/wing-panel-stress-analyzer/index.html
++++ b/docs/wing-panel-stress-analyzer/index.html
+@@ -1133,0 +1134 @@
++      <div id="wingNoLoadNotice" role="status" style="width:fit-content;max-width:min(450px,100%);background:#fff8e6;color:#684600;border:1px solid #d99a26;border-radius:6px;padding:8px 10px;pointer-events:auto" hidden><b>No structural load applied</b><div>Stress and static displacement are zero. Solve Aerodynamics, then apply its loads to the structure, or add a structural load.</div><div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px"><button type="button" class="btn" id="wingNoLoadAero">Open Aerodynamics</button><button type="button" class="btn" id="wingNoLoadForce">Add structural load</button></div></div>
+@@ -16998 +16999 @@
+-    preview.textContent=customText?'See status details.':label==='Linear range exceeded'?'Illustrative only · reduce loads.':label==='Structural result withheld'?'Model limit · review details.':label==='Input error'?'Check input details.':label==='Solved · section stress'?'Nominal normal stress · tip unresolved.':label==='Analysis blocked'?'Confirm imported structure.':label==='Empty study'?'Choose Airfoil & planform.':label==='Out of date'?'Press Solve Structure / Stress.':label==='Solving'?'Computing…':/no load/i.test(full)?'No loads applied.':label==='Solved · 3-D beam'?(R?.analysis3D?.loadMapping?.endWrenches.length?'End-load approximation · see results warning.':'Nominal beam results.'):/, exceeded/.test(full)?'Strength check exceeded.':'Results match inputs.';
++    preview.textContent=customText?'See status details.':label==='Linear range exceeded'?'Illustrative only · reduce loads.':label==='Structural result withheld'?'Model limit · review details.':label==='No structural load'?'Apply aerodynamic loads or add a force.':label==='Input error'?'Check input details.':label==='Solved · section stress'?'Nominal normal stress · tip unresolved.':label==='Analysis blocked'?'Confirm imported structure.':label==='Empty study'?'Choose Airfoil & planform.':label==='Out of date'?'Press Solve Structure / Stress.':label==='Solving'?'Computing…':/no load/i.test(full)?'No loads applied.':label==='Solved · 3-D beam'?(R?.analysis3D?.loadMapping?.endWrenches.length?'End-load approximation · see results warning.':'Nominal beam results.'):/, exceeded/.test(full)?'Strength check exceeded.':'Results match inputs.';
+@@ -17025,0 +17027 @@
++    if(noStructuralLoad(R)){chip.className='chip warn';chip.textContent='No structural load';t.textContent='No structural load is applied. Stress and static displacement are zero. Solve Aerodynamics, then Apply aerodynamic loads to structure, or add a structural load.';return;}
+@@ -17031,2 +17032,0 @@
+-    // Solved without a load (as in the Beam workspace): the chip reports the solve state, the text says why everything is zero.
+-    if (R.load.kind === "custom" && !R.load.items.length) { chip.className = "chip idle"; chip.textContent = "Solved"; t.textContent = text || "Solved with no load: no load defined. Add your own load, or apply a flight-like or tip case."; return; }
+@@ -17550,0 +17551,7 @@
++  // A solved aerodynamic field does not enter structural equilibrium until its
++  // loads have been explicitly transferred. Do not infer loading from net force:
++  // an equilibrated pair of real forces can have zero resultant and nonzero stress.
++  function noStructuralLoad(result){
++    const load=result?.load;
++    return !!load&&load.kind==='custom'&&!(load.items||[]).length&&!load.selfWeight&&!load.gravitySummary?.weightN&&!result.aeroAdmission&&!result.analysis3D?.aeroLoad;
++  }
+@@ -17553 +17560 @@
+-    if(resultDisplay.scaleMode==='auto')return actual;
++    if(resultDisplay.scaleMode==='auto'||actual.unresolved)return actual;
+@@ -17560 +17567 @@
+-  function colourFraction(value){const lo=colourTransform(range.min),hi=colourTransform(range.max);return (colourTransform(value)-lo)/(hi-lo);}
++  function colourFraction(value){const lo=colourTransform(range.min),hi=colourTransform(range.max);return hi===lo?.5:(colourTransform(value)-lo)/(hi-lo);}
+@@ -17569 +17576 @@
+-    if(!R||!model||geometryPreview||stale||S.plot!=='stress')return [];
++    if(!R||!model||geometryPreview||stale||S.plot!=='stress'||noStructuralLoad(R))return [];
+@@ -17620,2 +17627,2 @@
+-      ctx.font='14px Arial';ctx.fillText((R.analysis3D?.bending?'Bending-only translation illustration · ':'')+'Deformation scale '+(S.deformed?nf(deformAmount().scale,2):'0 (undeformed)')+' · '+resultDisplay.scaleMode+' colour scale · '+(signedLogColours()?'signed logarithmic contrast · ':'linear contrast · ')+(resultDisplay.bands?'12 bands':'continuous'),22,82,poster.width-44);
+-      if(['stress','disp','fos','twist','bending','torque'].includes(S.plot)){const x=22,y=top+12,bh=Math.min(350,h-30);for(let j=0;j<bh;j++){const c=rainbow(1-j/(bh-1));ctx.fillStyle='#'+c.getHexString();ctx.fillRect(x,y+j,28,1);}ctx.fillStyle='#111';ctx.font='14px Arial';for(let i=0;i<=6;i++)ctx.fillText(sig(colourValue(1-i/6),5),60,y+12+i*bh/6);}
++      ctx.font='14px Arial';ctx.fillText(noStructuralLoad(R)?'No structural load applied: stress = 0 MPa; static displacement = 0 mm.':(R.analysis3D?.bending?'Bending-only translation illustration · ':'')+'Deformation scale '+(S.deformed?nf(deformAmount().scale,2):'0 (undeformed)')+' · '+resultDisplay.scaleMode+' colour scale · '+(signedLogColours()?'signed logarithmic contrast · ':'linear contrast · ')+(resultDisplay.bands?'12 bands':'continuous'),22,82,poster.width-44);
++      if(!noStructuralLoad(R)&&['stress','disp','fos','twist','bending','torque'].includes(S.plot)){const x=22,y=top+12,bh=Math.min(350,h-30);if(range.unresolved){ctx.fillStyle='#111';ctx.fillText('No resolved field values',x,y+12);}else if(range.min===range.max){ctx.fillStyle='#111';ctx.fillText('Uniform value: '+sig(range.min,5),x,y+12);}else{for(let j=0;j<bh;j++){const c=rainbow(1-j/(bh-1));ctx.fillStyle='#'+c.getHexString();ctx.fillRect(x,y+j,28,1);}ctx.fillStyle='#111';ctx.font='14px Arial';for(let i=0;i<=6;i++)ctx.fillText(sig(colourValue(1-i/6),5),60,y+12+i*bh/6);}}
+@@ -17737 +17744 @@
+-    for (const m of meshes) { const u = m.userData,values=meshFieldValues(m,kind); for (let i = 0; i < u.by.length; i++) { const v = values[i]; const point={value:v,y:u.by[i],x:u.bx[i],z:u.bz[i],mesh:m,index:i}; if (v < mn){mn = v;stressExtrema.min=point;} if (v > mx){mx = v;stressExtrema.max=point;} } }
++    for (const m of meshes) { const u = m.userData,values=meshFieldValues(m,kind); for (let i = 0; i < u.by.length; i++) { const v = values[i]; if(!Number.isFinite(v))continue; const point={value:v,y:u.by[i],x:u.bx[i],z:u.bz[i],mesh:m,index:i}; if (v < mn){mn = v;stressExtrema.min=point;} if (v > mx){mx = v;stressExtrema.max=point;} } }
+@@ -17739,2 +17746 @@
+-    if (!isFinite(mx)||!isFinite(mn)) return {min:0,max:1};
+-    if (mx - mn < 1e-12) mx = mn + 1;
++    if (!isFinite(mx)||!isFinite(mn)) return {min:0,max:0,unresolved:true};
+@@ -17763 +17769 @@
+-    const g=model.g,spatial=!!R?.analysis3D&&!geometryPreview,kind=spatial?{stress:'sigma',disp:'disp',twist:'twist',bending:'bending',torque:'torque'}[S.plot]:null;
++    const g=model.g,spatial=!!R?.analysis3D&&!geometryPreview,kind=spatial&&!noStructuralLoad(R)?{stress:'sigma',disp:'disp',twist:'twist',bending:'bending',torque:'torque'}[S.plot]:null;
+@@ -17800 +17806 @@
+-    const kind = { stress: "sigma", disp: "disp", fos: "fos", twist:"twist", bending:"bending", torque:"torque" }[S.plot];
++    const kind = noStructuralLoad(R)?null:{ stress: "sigma", disp: "disp", fos: "fos", twist:"twist", bending:"bending", torque:"torque" }[S.plot];
+@@ -17831 +17837 @@
+-        const selectedStress = !geometryPreview && S.plot==='stress' && (S.stressComponent==='rods'?isRod:S.stressComponent==='spars'?u.kind==='spar':!isRod&&u.kind!=='spar');
++        const selectedStress = useField && !geometryPreview && S.plot==='stress' && (S.stressComponent==='rods'?isRod:S.stressComponent==='spars'?u.kind==='spar':!isRod&&u.kind!=='spar');
+@@ -17833 +17839 @@
+-        const c = geometryPreview ? base[u.kind] : selectedStress ? colorOf(values[i],base[u.kind]) : S.plot==='stress'?new THREE.Color(0x7f8c98):isRod?base.rod:colorOf(values?.[i],base[u.kind]);
++        const c = !useField ? base[u.kind] : selectedStress ? colorOf(values[i],base[u.kind]) : S.plot==='stress'?new THREE.Color(0x7f8c98):isRod?base.rod:colorOf(values?.[i],base[u.kind]);
+@@ -17930,2 +17936,2 @@
+-    if (!kind) { lg.innerHTML = ""; lt.textContent = ""; return; }
+-    const unit = { sigma: "MPa", disp: "mm", fos: "" }[kind];
++    if (!kind) { lg.hidden=true;lg.innerHTML = ""; lt.textContent = ""; return; }
++    const unit = { sigma: "MPa", disp: "mm", fos: "" }[kind] ?? (sectionResultMeta[kind]?sectionMeta(kind).unit:'');
+@@ -17937,0 +17944,3 @@
++    if(sectionResultMeta[kind])lt.textContent=sectionMeta(kind).label+' ('+sectionMeta(kind).unit+') · section value';
++    if(range.unresolved){lg.innerHTML='<span>No resolved field values for the selected parts.</span>';return;}
++    if(range.min===range.max){lg.innerHTML=`<span style="display:inline-block;width:14px;height:14px;background:#${rainbow(.5).getHexString()}"></span> <span>Uniform value: ${sig(range.min,4)}${unit?' '+unit:''}</span>`;return;}
+@@ -17947,0 +17957 @@
++    $('#wingNoLoadNotice').hidden=!R||stale||geometryPreview||S.emptyStudy||S.plot==='model'||S.plot==='mode'||!noStructuralLoad(R);
+@@ -19084,0 +19095,2 @@
++  $('#wingNoLoadAero').onclick=()=>window.dispatchEvent(new Event('wing-open-aerodynamics'));
++  $('#wingNoLoadForce').onclick=()=>window.dispatchEvent(new Event('wing-open-structural-loads'));
+@@ -19184,0 +19197 @@
++    if(wingAero?.running)throw new Error('Wait for the aerodynamic solve to finish before opening another study.');
+@@ -19202 +19215 @@
+-    renderImportGate(); renderInputs(true); renderTree(); renderPM(); setStatus(); wingAero?.refresh();
++    renderImportGate(); renderInputs(true); renderTree(); renderPM(); setStatus(); wingAero?.reset();
+@@ -19210 +19223 @@
+-    canApply: () => running ? 'The solver is still running. Wait for it to finish, then click Apply here; your file preview is kept.' : '',
++    canApply: () => running || wingAero?.running ? 'The solver is still running. Wait for it to finish, then click Apply here; your file preview is kept.' : '',
+@@ -19288,0 +19302 @@
++    $('#wingNoLoadNotice').hidden=true;
+@@ -25913,0 +25928 @@
++    if(!S.aeroLoad)return {cls:'warn',label:'Solved · not applied',detail:`${what} · apply aerodynamic loads to structure to compute its response`,dot:'warn',title:`${what}. The aerodynamic field is solved, but none of its forces has been applied to the structure.`};
+@@ -25935,0 +25951,2 @@
++  window.addEventListener('wing-open-aerodynamics', () => openMenu('aero'));
++  window.addEventListener('wing-open-structural-loads', () => {openMenu('structure');openSub(wlLoads);});

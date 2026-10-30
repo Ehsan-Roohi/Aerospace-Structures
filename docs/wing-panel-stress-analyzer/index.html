@@ -1131,6 +1131,7 @@ nav.workspace-nav .workspace-link:focus-visible { outline: 3px solid var(--accen
     <div id="wingResultLabels" aria-label="Stress probes" style="position:absolute;inset:0;pointer-events:none;overflow:hidden"></div>
     <div class="overlay infocol">
       <div id="wingMassReadout" role="status" style="width:fit-content;max-width:100%;font-weight:700;font-size:15px;background:var(--panel,#fff);padding:7px 10px;border-radius:6px" hidden></div>
+      <div id="wingNoLoadNotice" role="status" style="width:fit-content;max-width:min(450px,100%);background:#fff8e6;color:#684600;border:1px solid #d99a26;border-radius:6px;padding:8px 10px;pointer-events:auto" hidden><b>No structural load applied</b><div>Stress and static displacement are zero. Solve Aerodynamics, then apply its loads to the structure, or add a structural load.</div><div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px"><button type="button" class="btn" id="wingNoLoadAero">Open Aerodynamics</button><button type="button" class="btn" id="wingNoLoadForce">Add structural load</button></div></div>
       <div class="plotinfo" id="plotinfo"></div>
       <div class="legend-title" id="legendTitle"></div>
       <div class="legend" id="legend"></div>
@@ -16995,7 +16996,7 @@ if(typeof module!=='undefined'&&module.exports)module.exports=WingPrintUI;
   function syncCompactStatus(customText) {
     const chip=$('#stateChip'),preview=$('#statePreview');if(!preview)return;
     const label=chip.textContent,full=$('#stateText').textContent;
-    preview.textContent=customText?'See status details.':label==='Linear range exceeded'?'Illustrative only · reduce loads.':label==='Structural result withheld'?'Model limit · review details.':label==='Input error'?'Check input details.':label==='Solved · section stress'?'Nominal normal stress · tip unresolved.':label==='Analysis blocked'?'Confirm imported structure.':label==='Empty study'?'Choose Airfoil & planform.':label==='Out of date'?'Press Solve Structure / Stress.':label==='Solving'?'Computing…':/no load/i.test(full)?'No loads applied.':label==='Solved · 3-D beam'?(R?.analysis3D?.loadMapping?.endWrenches.length?'End-load approximation · see results warning.':'Nominal beam results.'):/, exceeded/.test(full)?'Strength check exceeded.':'Results match inputs.';
+    preview.textContent=customText?'See status details.':label==='Linear range exceeded'?'Illustrative only · reduce loads.':label==='Structural result withheld'?'Model limit · review details.':label==='No structural load'?'Apply aerodynamic loads or add a force.':label==='Input error'?'Check input details.':label==='Solved · section stress'?'Nominal normal stress · tip unresolved.':label==='Analysis blocked'?'Confirm imported structure.':label==='Empty study'?'Choose Airfoil & planform.':label==='Out of date'?'Press Solve Structure / Stress.':label==='Solving'?'Computing…':/no load/i.test(full)?'No loads applied.':label==='Solved · 3-D beam'?(R?.analysis3D?.loadMapping?.endWrenches.length?'End-load approximation · see results warning.':'Nominal beam results.'):/, exceeded/.test(full)?'Strength check exceeded.':'Results match inputs.';
     chip.title=full;
   }
   function setStatus(text) { if(!running&&!resultRendering)endWingActivity();renderStatus(text);syncCompactStatus(text); }
@@ -17023,13 +17024,12 @@ if(typeof module!=='undefined'&&module.exports)module.exports=WingPrintUI;
     if (inputError) { chip.className = "chip bad"; chip.textContent = "Input error"; t.textContent = inputError + (!R ? "" : stale ? " Results shown are for the last solved model." : " The results shown still match the inputs on screen."); return; }
     if (stale) { chip.className = "chip warn"; chip.textContent = "Out of date"; t.textContent = R ? "Inputs changed — press Solve Structure / Stress. Results shown are for the last solved model." : "Press Solve Structure / Stress to compute the first result."; return; }
     if (!R) return;
+    if(noStructuralLoad(R)){chip.className='chip warn';chip.textContent='No structural load';t.textContent='No structural load is applied. Stress and static displacement are zero. Solve Aerodynamics, then Apply aerodynamic loads to structure, or add a structural load.';return;}
     if(R.analysis3D){
       const valid=R.analysis3D.validity.smallDisplacement;
       chip.className=valid?'chip ok':'chip warn';chip.textContent=valid?'Solved · 3-D beam':'Linear range exceeded';
       t.textContent=text||(valid?'Spatial beam matches inputs · nominal prediction · see benchmark scope below; not a safety approval.':R.analysis3D.validity.message);return;
     }
-    // Solved without a load (as in the Beam workspace): the chip reports the solve state, the text says why everything is zero.
-    if (R.load.kind === "custom" && !R.load.items.length) { chip.className = "chip idle"; chip.textContent = "Solved"; t.textContent = text || "Solved with no load: no load defined. Add your own load, or apply a flight-like or tip case."; return; }
     const u = R.governing.U;
     chip.className = "chip ok"; chip.textContent = "Solved";
     t.textContent = text || `Results match the inputs · other-check U = ${nf(u, 2)} (${R.governing.name.replace(/ \(.*\)/, "")})${u > 1 ? ", exceeded" : ""} · buckling unresolved`;
@@ -17548,16 +17548,23 @@ if(typeof module!=='undefined'&&module.exports)module.exports=WingPrintUI;
   // ------------------------------------------------------------ results on the model
   // Display preferences never change the solver inputs or transfer JSON.
   const resultDisplay={bands:false,scaleMode:'auto',contrast:'auto',scales:{},reference:true,pinning:false,pins:[],pinResult:null};
+  // A solved aerodynamic field does not enter structural equilibrium until its
+  // loads have been explicitly transferred. Do not infer loading from net force:
+  // an equilibrated pair of real forces can have zero resultant and nonzero stress.
+  function noStructuralLoad(result){
+    const load=result?.load;
+    return !!load&&load.kind==='custom'&&!(load.items||[]).length&&!load.selfWeight&&!load.gravitySummary?.weightN&&!result.aeroAdmission&&!result.analysis3D?.aeroLoad;
+  }
   const resultScaleKey=kind=>kind+':'+(kind==='sigma'?S.stressComponent:'all');
   function displayRange(kind,actual){
-    if(resultDisplay.scaleMode==='auto')return actual;
+    if(resultDisplay.scaleMode==='auto'||actual.unresolved)return actual;
     const key=resultScaleKey(kind);
     if(!resultDisplay.scales[key])resultDisplay.scales[key]={...actual};
     return {...resultDisplay.scales[key]};
   }
   function signedLogColours(){return S.plot==='stress'&&(resultDisplay.contrast==='signed-log'||resultDisplay.contrast==='auto'&&R?.analysis3D?.stressOnly&&R.tipBehavior?.status==='divergent');}
   function colourTransform(value){if(!signedLogColours())return value;const threshold=Math.max(1e-15,Math.max(Math.abs(range.min),Math.abs(range.max))*.001);return Math.sign(value)*Math.log1p(Math.abs(value)/threshold);}
-  function colourFraction(value){const lo=colourTransform(range.min),hi=colourTransform(range.max);return (colourTransform(value)-lo)/(hi-lo);}
+  function colourFraction(value){const lo=colourTransform(range.min),hi=colourTransform(range.max);return hi===lo?.5:(colourTransform(value)-lo)/(hi-lo);}
   function colourValue(fraction){const v=colourTransform(range.min)+fraction*(colourTransform(range.max)-colourTransform(range.min));if(!signedLogColours())return v;const threshold=Math.max(1e-15,Math.max(Math.abs(range.min),Math.abs(range.max))*.001);return Math.sign(v)*threshold*Math.expm1(Math.abs(v));}
   function resultWorldPoint(p){
     const a=p.mesh.geometry.attributes.position,v=new THREE.Vector3();
@@ -17566,7 +17573,7 @@ if(typeof module!=='undefined'&&module.exports)module.exports=WingPrintUI;
     return p.mesh.localToWorld(v);
   }
   function resultLabels(){
-    if(!R||!model||geometryPreview||stale||S.plot!=='stress')return [];
+    if(!R||!model||geometryPreview||stale||S.plot!=='stress'||noStructuralLoad(R))return [];
     return [...['max','min'].map(key=>stressExtrema[key]?{...stressExtrema[key],label:key==='max'?'Max':'Min',color:key==='max'?'#b00000':'#0039a6'}:null).filter(Boolean),...resultDisplay.pins.map((p,i)=>({...p,label:'P'+(i+1),color:'#111111'}))];
   }
   function positionResultLabels(){
@@ -17617,8 +17624,8 @@ if(typeof module!=='undefined'&&module.exports)module.exports=WingPrintUI;
     const oldRatio=renderer.getPixelRatio(),oldSize=renderer.getSize(new THREE.Vector2()),oldAspect=camera.aspect;
     try{renderer.setPixelRatio(1);renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();renderer.render(scene,camera);ctx.drawImage(canvas,left,top,w,h);
       ctx.fillStyle='#111';ctx.font='bold 24px Arial';ctx.fillText(S.projectName||'Wing design',22,32,poster.width-44);ctx.font='16px Arial';const kind={stress:'Nominal normal beam stress (MPa)',disp:R.analysis3D?.bending?'Transverse bending component (mm), torsion excluded':'Resultant displacement (mm)',model:'Model geometry',fos:'Normal strength ratio',twist:'Elastic axis twist (degrees)',bending:'Resultant bending moment (N·m)',torque:R.analysis3D?.stressOnly?'Span-axis moment about section centroid (N·m), shear-centre torque unresolved':'Signed local torque (N·m)',mode:'Normalised mode shape'}[S.plot];ctx.fillText(kind+' · estimated '+(fullWingPrint?'full-wing':'semi-wing')+' mass '+nf(R.mass.total*(fullWingPrint?2:1),1)+' g',22,59,poster.width-44);
-      ctx.font='14px Arial';ctx.fillText((R.analysis3D?.bending?'Bending-only translation illustration · ':'')+'Deformation scale '+(S.deformed?nf(deformAmount().scale,2):'0 (undeformed)')+' · '+resultDisplay.scaleMode+' colour scale · '+(signedLogColours()?'signed logarithmic contrast · ':'linear contrast · ')+(resultDisplay.bands?'12 bands':'continuous'),22,82,poster.width-44);
-      if(['stress','disp','fos','twist','bending','torque'].includes(S.plot)){const x=22,y=top+12,bh=Math.min(350,h-30);for(let j=0;j<bh;j++){const c=rainbow(1-j/(bh-1));ctx.fillStyle='#'+c.getHexString();ctx.fillRect(x,y+j,28,1);}ctx.fillStyle='#111';ctx.font='14px Arial';for(let i=0;i<=6;i++)ctx.fillText(sig(colourValue(1-i/6),5),60,y+12+i*bh/6);}
+      ctx.font='14px Arial';ctx.fillText(noStructuralLoad(R)?'No structural load applied: stress = 0 MPa; static displacement = 0 mm.':(R.analysis3D?.bending?'Bending-only translation illustration · ':'')+'Deformation scale '+(S.deformed?nf(deformAmount().scale,2):'0 (undeformed)')+' · '+resultDisplay.scaleMode+' colour scale · '+(signedLogColours()?'signed logarithmic contrast · ':'linear contrast · ')+(resultDisplay.bands?'12 bands':'continuous'),22,82,poster.width-44);
+      if(!noStructuralLoad(R)&&['stress','disp','fos','twist','bending','torque'].includes(S.plot)){const x=22,y=top+12,bh=Math.min(350,h-30);if(range.unresolved){ctx.fillStyle='#111';ctx.fillText('No resolved field values',x,y+12);}else if(range.min===range.max){ctx.fillStyle='#111';ctx.fillText('Uniform value: '+sig(range.min,5),x,y+12);}else{for(let j=0;j<bh;j++){const c=rainbow(1-j/(bh-1));ctx.fillStyle='#'+c.getHexString();ctx.fillRect(x,y+j,28,1);}ctx.fillStyle='#111';ctx.font='14px Arial';for(let i=0;i<=6;i++)ctx.fillText(sig(colourValue(1-i/6),5),60,y+12+i*bh/6);}}
       for(const p of resultLabels()){if(!p.mesh.visible)continue;const v=resultWorldPoint(p);if(S.clip&&v.x>S.clipY)continue;v.project(camera);if(Math.abs(v.x)>1||Math.abs(v.y)>1||Math.abs(v.z)>1)continue;const x=left+(v.x+1)*w/2,y=top+(1-v.y)*h/2;ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(x,y,5,0,2*Math.PI);ctx.fill();ctx.font='bold 14px Arial';const txt=p.label+' '+sig(p.value,4)+' MPa';const tw=ctx.measureText(txt).width;const tx=Math.min(poster.width-tw-15,Math.max(left+5,x+10)),ty=Math.max(top+20,y-10);ctx.fillStyle='#fff';ctx.fillRect(tx-3,ty-16,tw+6,22);ctx.fillStyle=p.color;ctx.fillText(txt,tx,ty);}
       ctx.fillStyle='#111';ctx.font='14px Arial';ctx.fillText('Prescribed load · x aft, y spanwise, z up · grey = unresolved · nominal beam result, not local solid stress',22,top+h+30,poster.width-44);ctx.fillText(new Date().toISOString()+' · '+(stale?'stale':'solved')+' · original outline dashed when enabled',22,top+h+54,poster.width-44);
     }catch(error){flash('Image export failed: '+error.message);return;}finally{renderer.setPixelRatio(oldRatio);renderer.setSize(oldSize.x,oldSize.y,false);camera.aspect=oldAspect;camera.updateProjectionMatrix();renderer.render(scene,camera);}
@@ -17734,10 +17741,9 @@ if(typeof module!=='undefined'&&module.exports)module.exports=WingPrintUI;
     let mn = Infinity, mx = -Infinity;
     stressExtrema={min:null,max:null};
     const meshes = kind==='sigma'&&S.stressComponent==='rods'?model.rods:kind==='sigma'&&S.stressComponent==='spars'?(model.spars||[]):kind==='sigma'?model.skins.concat(model.sleeves):model.skins.concat(model.sleeves,model.spars||[]);
-    for (const m of meshes) { const u = m.userData,values=meshFieldValues(m,kind); for (let i = 0; i < u.by.length; i++) { const v = values[i]; const point={value:v,y:u.by[i],x:u.bx[i],z:u.bz[i],mesh:m,index:i}; if (v < mn){mn = v;stressExtrema.min=point;} if (v > mx){mx = v;stressExtrema.max=point;} } }
+    for (const m of meshes) { const u = m.userData,values=meshFieldValues(m,kind); for (let i = 0; i < u.by.length; i++) { const v = values[i]; if(!Number.isFinite(v))continue; const point={value:v,y:u.by[i],x:u.bx[i],z:u.bz[i],mesh:m,index:i}; if (v < mn){mn = v;stressExtrema.min=point;} if (v > mx){mx = v;stressExtrema.max=point;} } }
     if (kind === "fos") { mn = 0; mx = Math.min(Math.max(mx, 1), 10); }
-    if (!isFinite(mx)||!isFinite(mn)) return {min:0,max:1};
-    if (mx - mn < 1e-12) mx = mn + 1;
+    if (!isFinite(mx)||!isFinite(mn)) return {min:0,max:0,unresolved:true};
     return { min: mn, max: mx };
   }
   function deformAmount() {
@@ -17760,7 +17766,7 @@ if(typeof module!=='undefined'&&module.exports)module.exports=WingPrintUI;
     return [s * at(R.deflection, y), s * at(R.twist, y)];
   }
   function updateSpatialModel(){
-    const g=model.g,spatial=!!R?.analysis3D&&!geometryPreview,kind=spatial?{stress:'sigma',disp:'disp',twist:'twist',bending:'bending',torque:'torque'}[S.plot]:null;
+    const g=model.g,spatial=!!R?.analysis3D&&!geometryPreview,kind=spatial&&!noStructuralLoad(R)?{stress:'sigma',disp:'disp',twist:'twist',bending:'bending',torque:'torque'}[S.plot]:null;
     if(kind)range=displayRange(kind,computeRange(kind));
     const scale=spatial?deformAmount().scale:0;
     const place=(y,x,z,mod=0)=>{
@@ -17797,7 +17803,7 @@ if(typeof module!=='undefined'&&module.exports)module.exports=WingPrintUI;
     if(!model)return;
     if(geometryPreview||R?.analysis3D){updateSpatialModel();return;}
     if (!R) return;
-    const kind = { stress: "sigma", disp: "disp", fos: "fos", twist:"twist", bending:"bending", torque:"torque" }[S.plot];
+    const kind = noStructuralLoad(R)?null:{ stress: "sigma", disp: "disp", fos: "fos", twist:"twist", bending:"bending", torque:"torque" }[S.plot];
     const useField = !!kind && !geometryPreview;
     if (useField) range = displayRange(kind,computeRange(kind));
     const reqFos = R.load.fos;
@@ -17828,9 +17834,9 @@ if(typeof module!=='undefined'&&module.exports)module.exports=WingPrintUI;
       for (let i = 0; i < u.by.length; i++) {
         place(u.by[i], u.bx[i], u.bz[i], tmp, isRod ? 0 : u.module);
         pos[3 * i] = tmp[0]; pos[3 * i + 1] = tmp[1]; pos[3 * i + 2] = tmp[2];
-        const selectedStress = !geometryPreview && S.plot==='stress' && (S.stressComponent==='rods'?isRod:S.stressComponent==='spars'?u.kind==='spar':!isRod&&u.kind!=='spar');
+        const selectedStress = useField && !geometryPreview && S.plot==='stress' && (S.stressComponent==='rods'?isRod:S.stressComponent==='spars'?u.kind==='spar':!isRod&&u.kind!=='spar');
         contourSample(m,i,useField?values[i]:0,useField&&kind!=='fos'&&(S.plot!=='stress'||selectedStress));
-        const c = geometryPreview ? base[u.kind] : selectedStress ? colorOf(values[i],base[u.kind]) : S.plot==='stress'?new THREE.Color(0x7f8c98):isRod?base.rod:colorOf(values?.[i],base[u.kind]);
+        const c = !useField ? base[u.kind] : selectedStress ? colorOf(values[i],base[u.kind]) : S.plot==='stress'?new THREE.Color(0x7f8c98):isRod?base.rod:colorOf(values?.[i],base[u.kind]);
         col[3 * i] = c.r; col[3 * i + 1] = c.g; col[3 * i + 2] = c.b;
       }
       finishContour(m);
@@ -17927,14 +17933,17 @@ if(typeof module!=='undefined'&&module.exports)module.exports=WingPrintUI;
     const lg = $("#legend"), lt = $("#legendTitle");
     lg.hidden = false;
     if($('#wrMin')&&kind){if(document.activeElement!==$('#wrMin'))$('#wrMin').value=range.min;if(document.activeElement!==$('#wrMax'))$('#wrMax').value=range.max;$('#wrStatus').textContent=`${resultDisplay.scaleMode==='auto'?'Auto scale':'Fixed scale for '+resultScaleKey(kind)} · ${signedLogColours()?'Signed logarithmic colour contrast (actual MPa ticks); tip peaks otherwise hide the body variation.':'Linear colour contrast.'} Values and extrema are unchanged. Grey = unresolved.`;}
-    if (!kind) { lg.innerHTML = ""; lt.textContent = ""; return; }
-    const unit = { sigma: "MPa", disp: "mm", fos: "" }[kind];
+    if (!kind) { lg.hidden=true;lg.innerHTML = ""; lt.textContent = ""; return; }
+    const unit = { sigma: "MPa", disp: "mm", fos: "" }[kind] ?? (sectionResultMeta[kind]?sectionMeta(kind).unit:'');
     lt.textContent = { sigma: "Stress σ, span (MPa)", disp: "Displacement (mm)", fos: "Factor of safety" }[kind];
     if(kind==='sigma')lt.textContent=(S.stressComponent==='rods'?'Rod bending σ':S.stressComponent==='spars'?'Spar cap / web bending σ':'Skin / sleeve bending σ')+' (MPa)';
     if(kind==='sigma'&&R.analysis3D)lt.textContent=R.analysis3D.stressOnly?'Nominal σyy (MPa)':'Nominal σ · warping omitted (MPa)';
     if(kind==='disp'&&R.analysis3D?.bending)lt.textContent='Transverse bending component (mm) · torsion excluded';
     if(kind==='sigma'&&signedLogColours())lt.textContent+=' · signed log colours';
     if(kind==='fos'&&R.sparModel)lt.textContent='Normal-stress strength ratio only · see Checks for shear and unresolved failures';
+    if(sectionResultMeta[kind])lt.textContent=sectionMeta(kind).label+' ('+sectionMeta(kind).unit+') · section value';
+    if(range.unresolved){lg.innerHTML='<span>No resolved field values for the selected parts.</span>';return;}
+    if(range.min===range.max){lg.innerHTML=`<span style="display:inline-block;width:14px;height:14px;background:#${rainbow(.5).getHexString()}"></span> <span>Uniform value: ${sig(range.min,4)}${unit?' '+unit:''}</span>`;return;}
     const bands = Array.from({ length: 64 }, (_, i) => rainbow((63 - i) / 63));
     const ticks = kind === "fos"
       ? Array.from({ length: 7 }, (_, i) => range.min + ((range.max - range.min) * i) / 6)
@@ -17945,6 +17954,7 @@ if(typeof module!=='undefined'&&module.exports)module.exports=WingPrintUI;
     void unit;
   }
   function renderPlotInfo() {
+    $('#wingNoLoadNotice').hidden=!R||stale||geometryPreview||S.emptyStudy||S.plot==='model'||S.plot==='mode'||!noStructuralLoad(R);
     const massBox=$('#wingMassReadout');
     massBox.hidden=!R||S.emptyStudy;
     if(!massBox.hidden){massBox.textContent=geometryPreview?(WingGeometry.closedTip(model.g)?'Solve or download STL to update mass':'Wing mass — solve to update'):`${fullWingPrint?'Estimated full-wing mass '+nf(2*R.mass.total,1)+' g (2 × semi-wing)':'Estimated semi-wing mass '+nf(R.mass.total,1)+' g'} · includes spars ${nf((R.mass.spars||0)*(fullWingPrint?2:1),1)} g${R.load.gravitySummary?' · Applied '+nf(R.load.gravitySummary.appliedN*(fullWingPrint?2:1),3)+' N · Weight ↓ '+nf(R.load.gravitySummary.weightN*(fullWingPrint?2:1),3)+' N · Net '+nf(R.appliedForce*(fullWingPrint?2:1),3)+' N':''}${stale?' · previous solve':''}`;massBox.title='Estimated model mass including skin, ribs, end caps, spars, rods and any tip mass. Verify manufacturing mass in CAD and the slicer.';}
@@ -19082,6 +19092,8 @@ function renderObservations() {
   }));
 
   // ------------------------------------------------------------ wiring
+  $('#wingNoLoadAero').onclick=()=>window.dispatchEvent(new Event('wing-open-aerodynamics'));
+  $('#wingNoLoadForce').onclick=()=>window.dispatchEvent(new Event('wing-open-structural-loads'));
   function setPlot(p, refresh = true) {
     if(aeroViewWithheld(p)){flash(aeroWithheldMessage());return;}
     if(WingGeometry.closedTip(S.geometry)&&!['model','stress','bending','torque',...(R?.analysis3D?.bending?['disp']:[])].includes(p)){$('#wingStatusDetails').open=true;return;}
@@ -19182,6 +19194,7 @@ function renderObservations() {
   // Messages about files and links (not input errors): shown in Study files, which is opened.
   function filesNote(msg) { const n = $("#wingFilesNote"); if (n) n.textContent = msg; const d = $("#wlFiles"); if (d) d.open = true; }
   function applyStudyState(state, info) {
+    if(wingAero?.running)throw new Error('Wait for the aerodynamic solve to finish before opening another study.');
     stlReference?.clear();
     historySuspended++;
     try{
@@ -19199,7 +19212,7 @@ function renderObservations() {
       S.load = { ...E.DEFAULT_LOAD, ...JSON.parse(JSON.stringify(state.load)) };   // the page expects every load field; the file stores the active case
       importGate = null; fieldErrors = {}; edited();
     }
-    renderImportGate(); renderInputs(true); renderTree(); renderPM(); setStatus(); wingAero?.refresh();
+    renderImportGate(); renderInputs(true); renderTree(); renderPM(); setStatus(); wingAero?.reset();
     $("#wlFiles").open = true;
     }finally{historySuspended--;recordWingHistory();}
   }
@@ -19207,7 +19220,7 @@ function renderObservations() {
     workspace: "printed", engine: E, download: downloadText,
     getState: () => { if (gateOpen()) throw new Error(blockedText); return S; },
     applyState: applyStudyState,
-    canApply: () => running ? 'The solver is still running. Wait for it to finish, then click Apply here; your file preview is kept.' : '',
+    canApply: () => running || wingAero?.running ? 'The solver is still running. Wait for it to finish, then click Apply here; your file preview is kept.' : '',
     onPreview: (node) => {
       if (!printedWorkspace) return;
       const files = $('#wingStudyFiles');
@@ -19286,6 +19299,7 @@ function renderObservations() {
   advancedGeometryEditor=WingGeometryUI.mount(advancedGeometryPanel,{getGeometry:()=>S.geometry,applyGeometry,onApplied:()=>{printedWorkspace?.close();setAnatomy('assembled');window.dispatchEvent(new Event('wing-show-model'));}});
   function openAdvancedGeometryPopup(anchor){if(!printedWorkspace)return;renderGeometryForm();printedWorkspace.open('Airfoils & planform · dimensions, taper, twist, sweep, dihedral',advancedGeometryPanel,anchor);printedWorkspace.popup.style.width='min(680px,calc(100vw - 16px))';printedWorkspace.position();}
   function showEmptyWing(){
+    $('#wingNoLoadNotice').hidden=true;
     window.dispatchEvent(new Event('wing-show-model'));
     $('#loading').hidden=true;
     clearRenderedWing();wingSelection?.clear();R=null;stale=true;geometryPreview=true;lastGeoKey=null;
@@ -25911,6 +25925,7 @@ window.WingAeroStructResults = (() => {
       const why = !fresh ? 'wing shape changed since the solve' : 'flow inputs changed since the solve';
       return { cls: 'warn', label: 'Out of date', detail: why, dot: 'warn', title: `Last solve: ${what}. ${why[0].toUpperCase() + why.slice(1)}: press Solve Aerodynamics. ${load}` };
     }
+    if(!S.aeroLoad)return {cls:'warn',label:'Solved · not applied',detail:`${what} · apply aerodynamic loads to structure to compute its response`,dot:'warn',title:`${what}. The aerodynamic field is solved, but none of its forces has been applied to the structure.`};
     return { cls: loadCls === 'bad' ? 'bad' : 'ok', label: 'Solved', detail: load ? `${what} · ${load}` : what, dot: loadCls === 'bad' ? 'bad' : loadCls === 'warn' ? 'warn' : 'ok', title: `${what}. ${load}` };
   }
   function structState() {
@@ -25933,6 +25948,8 @@ window.WingAeroStructResults = (() => {
   const aeroResults = window.WingAeroStructResults && view ? window.WingAeroStructResults.install({ el, ui, strip: results, view, state: aeroResultState, openAero: () => openMenu('aero'), exportStructureFigure: () => $('#wrImage')?.click() }) : null;
   window.addEventListener('wing-show-model', () => aeroResults?.close());
   window.addEventListener('wing-preview-recovered', () => closeMenus());
+  window.addEventListener('wing-open-aerodynamics', () => openMenu('aero'));
+  window.addEventListener('wing-open-structural-loads', () => {openMenu('structure');openSub(wlLoads);});
   if (aeroResults) {
     results.insertBefore(aeroResults.selector, display);
     const anchor = printButtons[0]?.parentElement?.previousElementSibling || wlFiles;

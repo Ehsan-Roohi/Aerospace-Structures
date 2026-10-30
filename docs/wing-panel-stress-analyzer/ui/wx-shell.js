@@ -536,6 +536,7 @@
       const why = !fresh ? 'wing shape changed since the solve' : 'flow inputs changed since the solve';
       return { cls: 'warn', label: 'Out of date', detail: why, dot: 'warn', title: `Last solve: ${what}. ${why[0].toUpperCase() + why.slice(1)}: press Solve Aerodynamics. ${load}` };
     }
+    if(!S.aeroLoad)return {cls:'warn',label:'Solved · not applied',detail:`${what} · apply aerodynamic loads to structure to compute its response`,dot:'warn',title:`${what}. The aerodynamic field is solved, but none of its forces has been applied to the structure.`};
     return { cls: loadCls === 'bad' ? 'bad' : 'ok', label: 'Solved', detail: load ? `${what} · ${load}` : what, dot: loadCls === 'bad' ? 'bad' : loadCls === 'warn' ? 'warn' : 'ok', title: `${what}. ${load}` };
   }
   function structState() {
@@ -558,6 +559,8 @@
   const aeroResults = window.WingAeroStructResults && view ? window.WingAeroStructResults.install({ el, ui, strip: results, view, state: aeroResultState, openAero: () => openMenu('aero'), exportStructureFigure: () => $('#wrImage')?.click() }) : null;
   window.addEventListener('wing-show-model', () => aeroResults?.close());
   window.addEventListener('wing-preview-recovered', () => closeMenus());
+  window.addEventListener('wing-open-aerodynamics', () => openMenu('aero'));
+  window.addEventListener('wing-open-structural-loads', () => {openMenu('structure');openSub(wlLoads);});
   if (aeroResults) {
     results.insertBefore(aeroResults.selector, display);
     const anchor = printButtons[0]?.parentElement?.previousElementSibling || wlFiles;

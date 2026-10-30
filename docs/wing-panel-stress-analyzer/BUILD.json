@@ -1,10 +1,10 @@
 {
   "product": "MIE 446 Wing AeroStruct",
-  "version": "0.3.5",
+  "version": "0.3.6",
   "status": "Qualified educational solver; explicit 2D/3D section context and tested structural design guidance",
-  "builtAt": "2026-10-30T19:17:55.002272+00:00",
+  "builtAt": "2026-10-30T21:41:24.036400+00:00",
   "page": "index.html",
-  "pageSha256": "a897d834e87716ddfe6b7d9714f428c69e5094b1375b87a2d789a8fa42b01630",
+  "pageSha256": "db8bbde838c2c58336b05a216cfab81ca538b94e1f295fdae1587eb0eef8e869",
   "workers": {
     "wing-aero": {
       "worker": "8e2d79fa0bfe",
@@ -203,7 +203,7 @@
     },
     "wx-shell.js": {
       "path": "docs/wing-panel-stress-analyzer/ui/wx-shell.js",
-      "sha256": "a1b65acc6d3acf5ed624e947fcac77c1f41765a0b7dffc40a97860a2c90c7af8",
+      "sha256": "3169d398718f38624df26d6c9b6e273be3ee7b6087b7ae16e1b69b90edc9c837",
       "sha256_scope": "Canonical LF source, as committed"
     },
     "wx-shell.css": {
@@ -298,6 +298,18 @@
       "validation/test_geometry_preview_recovery.cjs",
       "validation/test_speed_units_guidance.cjs",
       "validation/test_900mm_load_refusal.cjs"
+    ]
+  },
+  "zero_load_display_port": {
+    "path": "ui/14-zero-load-display.patch",
+    "sha256": "dbcf39ee8a0f2f0022c3571a993e303924b4e744d0a5b90a5dd1086c89fcbbb3",
+    "baseCommit": "563d859527ac0baecbdb8e38a8b7cac345004948",
+    "scope": "Unloaded structural response distinguished from an applied panel load; neutral unloaded view, truthful constant/unresolved ranges and explicit transfer actions; kernels and limits unchanged",
+    "review": "validation/ZERO_LOAD_DISPLAY_REVIEW.json",
+    "regressions": [
+      "validation/test_zero_load_display.cjs",
+      "validation/test_unapplied_aero_load.cjs",
+      "validation/test_geometry_preview_recovery.cjs"
     ]
   }
 }

@@ -2792,6 +2792,11 @@ const WingAeroPanel = (() => {
   function stripRepresentation(g, rows, fraction = LOAD_LINE_FRACTION) {
     return rows.map(r => {
       const [y0, y1] = r, h = y1 - y0, F = r.slice(2, 5), M = r.slice(5, 8), f = F.map(v => v / h), c = cross3(lineIntegral(g, y0, y1, fraction), f);
+      if(Geometry.closedTip(g)){
+        const norms=adaptiveIntegral(y=>{const c=Geometry.chordAt(g,y);return [c,c*c];},y0,y1);
+        const density=F.map(v=>v/norms[0]),R=adaptiveIntegral(y=>loadLinePoint(g,y,fraction).map(v=>v*Geometry.chordAt(g,y)),y0,y1),arm=cross3(R,density);
+        return {y0,y1,F,M,f:density,m:M.map((v,d)=>(v-arm[d])/norms[1]),geometricTaper:true,norms};
+      }
       return { y0, y1, F, M, f, m: M.map((v, d) => (v - c[d]) / h) };
     });
   }
@@ -2801,6 +2806,12 @@ const WingAeroPanel = (() => {
     for (const s of rep) {
       if (s.y1 <= ystar) continue;
       if (s.y0 >= ystar) { for (let d = 0; d < 3; d++) { W[d] += s.F[d]; W[3 + d] += s.M[d]; } continue; }
+      if(s.geometricTaper){
+        const n=adaptiveIntegral(y=>{const c=Geometry.chordAt(g,y);return [c,c*c];},ystar,s.y1);
+        const R=adaptiveIntegral(y=>loadLinePoint(g,y,fraction).map(v=>v*Geometry.chordAt(g,y)),ystar,s.y1),arm=cross3(R,s.f);
+        for(let d=0;d<3;d++){W[d]+=s.f[d]*n[0];W[3+d]+=arm[d]+s.m[d]*n[1];}
+        continue;
+      }
       const h = s.y1 - ystar, c = cross3(lineIntegral(g, ystar, s.y1, fraction), s.f);
       for (let d = 0; d < 3; d++) { W[d] += s.f[d] * h; W[3 + d] += c[d] + s.m[d] * h; }
     }
@@ -2994,7 +3005,6 @@ const WingAeroPanel = (() => {
   // Combines a sequence into the delivered (extrapolated) six-component strip load. options.snapStations.
   function combineSequence(rawGeometry, seq, options = {}) {
     const g = aeroGeometry(rawGeometry), L = g.semiSpan, def = sequenceDefinition(seq?.sequence);
-    if (Geometry.closedTip(g)) throw new Error('Structural aerodynamic loads are not available for an exact zero-chord tip: the structural model of a closed tip is a section-stress study without the spatial beam.');
     // a flat tip cap closes the potential solution but its pressure is not integrated (non-convergent edge singularity),
     // so such a load would omit the tip side force: only the rounded tip (the default) is delivered to the structure
     if (seq?.tipClosure === 'flat' || (seq?.levels || []).some(l => l && l.tipCap)) throw new Error('A flat tip cap leaves its pressure out of the load, so this sequence cannot be applied to the structure: use the rounded tip (the default).');
@@ -3012,7 +3022,7 @@ const WingAeroPanel = (() => {
     const lift = { pressure: coefficients.CL.value, trefftz: coefficients.CLTrefftz.value, relativeDifference: Math.abs(coefficients.CL.value - coefficients.CLTrefftz.value) / Math.max(Math.abs(coefficients.CL.value), ADMISSION.liftConsistencyFloorCL) };
     const drag = { pressure: coefficients.CDpressure.value, trefftz: coefficients.CDiTrefftz.value, difference: coefficients.CDpressure.value - coefficients.CDiTrefftz.value, combinedUncertainty: coefficients.CDpressure.uncertainty + coefficients.CDiTrefftz.uncertainty };
     const crossTerm = joint ? { estimated: true, mesh: def.joint.slice(), factor: crossFactor(def) } : { estimated: false, mesh: null, factor: 0, note: 'stored sequence without the joint mesh: combined additively, cross term not estimated' };
-    return { version: VERSION, kind: 'aeroStrips', sequence: seq.sequence, lineFraction: LOAD_LINE_FRACTION, strips, stations: nodes, weights, crossTerm, coefficients, rootWrench,
+    return { version: VERSION, kind: 'aeroStrips', sequence: seq.sequence, lineFraction: LOAD_LINE_FRACTION, strips, stations: nodes, weights, crossTerm, coefficients, rootWrench,closedTip:Geometry.closedTip(g),reconstruction:Geometry.closedTip(g)?'Force density proportional to actual chord; residual couple density proportional to chord squared; six source-strip resultants preserved':'Uniform force plus restoring couple',
       deliveredRootWrench: strips.reduce((W, r) => W.map((v, d) => v + r[2 + d]), [0, 0, 0, 0, 0, 0]), consistency: { lift, drag } };
   }
   // Admission of a combined load against the structural axis. cuts: [{ y, reference: [x, y, z], normal: [..],
@@ -3021,11 +3031,40 @@ const WingAeroPanel = (() => {
   // { cuts: [cut at k L / n, k = 0 .. n - 1, root first], elements: [{ y0, y1, k }] (twist per unit torque per unit
   // projected span), twist: { y: [...], theta: [...] } (rad, the coupled solution) }. Returns rows, the twist claim and
   // an overall decision; it never changes the load.
+  function closedTipSectionAdmission(g,seq,combined,cuts,set){
+    const L=g.semiSpan,joint=sequenceHasJoint(seq),rep=stripRepresentation(g,combined.strips,combined.lineFraction),memo=new Map();
+    const level=(c,s)=>{const key=c+'x'+s;if(!memo.has(key)){const l=seq.levels.find(v=>v.chordPanels===c&&v.spanPanels===s);if(!l)throw Error('Missing aerodynamic mesh '+key);memo.set(key,stripRepresentation(g,l.strips,combined.lineFraction));}return memo.get(key);};
+    const about=(W,P)=>[...W.slice(0,3),W[3]-(P[1]*W[2]-P[2]*W[1]),W[4]-(P[2]*W[0]-P[0]*W[2]),W[5]-(P[0]*W[1]-P[1]*W[0])];
+    const rows=[];
+    for(const cut of cuts){
+      const y=cut.root?0:cut.y,P=cut.reference,W=about(outboardOfStation(g,rep,y,combined.lineFraction),P);
+      const estimates=Array.from({length:6},(_,d)=>sequenceEstimate(seq.sequence,(c,s)=>about(outboardOfStation(g,level(c,s),y,combined.lineFraction),P)[d],set,joint));
+      const U=estimates.map((e,d)=>e.uncertainty+Math.abs(e.value-W[d]));
+      for(const[k,label,ids,tol]of [['force','Force',[0,1,2],set.forceTolerance],['bending','Bending moment',[3,5],set.bendingTolerance]]){
+        const value=Math.hypot(...ids.map(d=>W[d])),uncertainty=Math.hypot(...ids.map(d=>U[d])),relative=value?uncertainty/value:uncertainty===0?0:Infinity;
+        rows.push({kind:k,label:(cut.root?'Root':Math.round(100*y/L)+'% span')+' '+label,y,value,uncertainty,relative,measure:relative,tolerance:tol,resolved:relative<=tol,admitted:relative<=tol,estimate:ids.map(d=>estimates[d])});
+      }
+      if(cut.structuralWrench){
+        const SW=[...cut.structuralWrench.force,...cut.structuralWrench.moment],res=Math.max(...W.map((v,d)=>Math.abs(v-SW[d])/Math.max(1,Math.abs(v))));
+        rows.push({kind:'transfer',label:(cut.root?'Root':Math.round(100*y/L)+'% span')+' six-component transfer',value:res,uncertainty:0,relative:res,measure:res,tolerance:1e-7,resolved:res<=1e-7,admitted:res<=1e-7});
+      }
+    }
+    const lc=combined.consistency.lift;
+    rows.push({kind:'liftConsistency',label:'Lift: pressure vs Trefftz plane',value:lc.pressure,reference:lc.trefftz,measure:lc.relativeDifference,relative:lc.relativeDifference,tolerance:set.liftConsistencyTolerance,resolved:lc.relativeDifference<=set.liftConsistencyTolerance,admitted:lc.relativeDifference<=set.liftConsistencyTolerance});
+    const failed=rows.filter(r=>!r.admitted).map(r=>r.label);
+    return {version:VERSION,sequence:seq.sequence,mode:'closed-tip-rigid-load-sectional-response',admitted:!failed.length,rows,failed,settings:set,twist:null,crossTerm:{estimated:joint},claims:{torque:'withheld',twist:'withheld',normalStress:'nominal-section',displacement:'pure-bending-components',aeroelastic:'not assessed'},drag:combined.consistency.drag,
+      notes:['Rigid-wing pressures are treated as prescribed loads for a sectional structural study. Admission here assesses numerical load transfer, not strength or full motion. This is not a full aeroelastic admission.','Actual zero tip chord is retained. Force density follows chord and residual free-couple density follows chord squared, conserving all source-strip forces and moments. Local recovery remains a sub-strip projection.','Torsion, shear-centre torque, shear deformation and local 3-D concentrations are not resolved. A delta may have finite formal bending translation and an unbounded tip slope; this does not establish small-rotation validity near the apex. Large inboard rotations require a nonlinear model. Exact-apex stress is undefined.'],
+      method:'Six-component conservative geometric projection; force and bending uncertainty at the root and 25/50/75% span <=5%, pressure/Trefftz lift agreement <=2%, exact transfer checked independently against the structural cuts. No torsional or aeroelastic claim.'};
+  }
   function admission(rawGeometry, seq, combined, cuts, options = {}) {
     const g = aeroGeometry(rawGeometry), L = g.semiSpan, set = { ...ADMISSION, ...(options.settings || {}) };
     sequenceDefinition(seq.sequence);
     if (!combined || combined.sequence !== seq.sequence) throw new Error('Combine this mesh sequence before the admission test.');
     if (!Array.isArray(cuts) || !cuts.length || !cuts[0].root) throw new Error('The admission test needs the structural root cut first.');
+    if(Geometry.closedTip(g)){
+      if(options.sectionOnly!==true)throw Error('Exact-tip structural response requires the explicitly scoped normal-section/bending assessment, not spatial-beam torsional admission.');
+      return closedTipSectionAdmission(g,seq,combined,cuts,set);
+    }
     const joint = sequenceHasJoint(seq), q = seq.flow.dynamicPressure_Pa * 1e-6, refs = seq.reference, weighted = sequenceWeights(seq.sequence, joint);
     const levelCum = new Map(), find = (c, s) => { const k = c + 'x' + s; if (!levelCum.has(k)) { const l = seq.levels.find(v => v.chordPanels === c && v.spanPanels === s); if (!l) throw new Error(`The mesh sequence has no ${2 * c} × ${s} level.`); levelCum.set(k, cumulativeWrench(l.strips)); } return levelCum.get(k); };
     const delivered = stripRepresentation(g, combined.strips, combined.lineFraction);

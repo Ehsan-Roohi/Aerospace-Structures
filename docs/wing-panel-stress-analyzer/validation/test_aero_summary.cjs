@@ -17,7 +17,7 @@ assert.equal(JSON.stringify(summary.consistency),JSON.stringify(combined.consist
 assert.equal(summary.strips.length,0);
 assert.throws(()=>U.engineLoad(summary),/no structural strip load/);
 for (const planform of ['elliptic','delta']) {
-  assert.throws(()=>A.combineSequence({...raw,tipChord:0,planform},seq),/zero-chord tip/);
+  const projected=A.combineSequence({...raw,tipChord:0,planform},seq);assert.ok(projected.closedTip);assert.ok(projected.strips.length);assert.ok(U.engineLoad(projected).strips.length);assert.equal(JSON.stringify(projected.rootWrench),JSON.stringify(combined.rootWrench));
   const c=U.aerodynamicSummary(A,seq);
   assert.equal(c.structuralLoadAvailable,false);
   assert.ok(Object.values(c.coefficients).every(e=>Number.isFinite(e.value)&&Number.isFinite(e.uncertainty)));
@@ -26,4 +26,4 @@ const csv=U.csv(U.recordFromSequence(seq,'test'),summary,null);
 assert.match(csv,/No structural strip load was generated/);
 assert.doesNotMatch(csv,/Delivered six-component strip load/);
 assert.equal(JSON.stringify(seq),before);
-console.log(JSON.stringify({coefficient_and_force_estimates_match_existing_combiner:true,closed_tip_aero_summary:true,invalid_structural_transfer_refused:true,source_data_unchanged:true},null,2));
+console.log(JSON.stringify({coefficient_and_force_estimates_match_existing_combiner:true,closed_tip_aero_summary:true,explicit_closed_tip_projection_available:true,source_data_unchanged:true},null,2));

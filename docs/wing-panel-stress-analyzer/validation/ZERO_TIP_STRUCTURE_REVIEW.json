@@ -1,0 +1,73 @@
+{
+  "status": "passed",
+  "independentUniformTriangularSurfaceTraction": [
+    {
+      "strips": 1,
+      "root_force": [
+        1.04,
+        2.08,
+        3.1199999999999997
+      ],
+      "root_moment": [
+        135.2,
+        -122.67579557053202,
+        36.71719704702136
+      ],
+      "normalStressRecovery": 3.096398131447701e-16
+    },
+    {
+      "strips": 4,
+      "root_force": [
+        1.04,
+        2.08,
+        3.1199999999999997
+      ],
+      "root_moment": [
+        135.2,
+        -122.67579557053203,
+        36.71719704702135
+      ],
+      "normalStressRecovery": 2.220446049250313e-16
+    },
+    {
+      "strips": 16,
+      "root_force": [
+        1.04,
+        2.08,
+        3.1199999999999997
+      ],
+      "root_moment": [
+        135.2,
+        -122.675795570532,
+        36.71719704702135
+      ],
+      "normalStressRecovery": 2.7632432030002484e-16
+    }
+  ],
+  "independentHomotheticDeltaBeam": [
+    {
+      "strips": 1,
+      "computedTipMm": 0.7142857142857143,
+      "exactTipMm": 0.7142857142857143,
+      "tipSlope": "unbounded-logarithmic"
+    },
+    {
+      "strips": 4,
+      "computedTipMm": 0.7142857142857145,
+      "exactTipMm": 0.7142857142857143,
+      "tipSlope": "unbounded-logarithmic"
+    },
+    {
+      "strips": 12,
+      "computedTipMm": 0.7142857142857133,
+      "exactTipMm": 0.7142857142857143,
+      "tipSlope": "unbounded-logarithmic"
+    }
+  ],
+  "scopedAdmission": "closed-tip-rigid-load-sectional-response",
+  "anglesRejected": true,
+  "exactZeroTipRetained": true,
+  "sourceInputImmutable": true,
+  "opposingAeroLeadingTermsCancel": "undetermined-leading-cancellation",
+  "customLoadsAndSelfWeightRetained": true
+}

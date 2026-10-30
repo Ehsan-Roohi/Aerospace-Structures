@@ -1,11 +1,11 @@
 {
   "application": "Wing Panel Stress Analyzer (Wing AeroStruct)",
-  "version": "0.3.2-ui.12",
+  "version": "0.3.3",
   "source_archive": "wing-aerostruct-0.3.0-dev-review.zip",
   "source_sha256": "bc6986c744568a516fd22bdd3b9508550625b82a77cd924adf52dfaa5156a54d",
   "original_base": "5ab2498",
   "independent_review": "validation/INDEPENDENT_REVIEW.md",
-  "scope": "Educational 3D potential-flow panels coupled one-way to nominal spatial-beam stress, plus independent inviscid 2D airfoil analysis. No viscous/stall or local solid stress. Unresolved torque/twist withheld; unsuitable cases refused.",
+  "scope": "Educational 3D potential-flow pressures coupled one way to nominal spatial-beam stress for finite tips, or homogeneous closed-tip section normal stress and transverse pure bending at zero user sweep/dihedral/incidence. No local solid-FE stress, strength approval, viscous/stall model or full zero-tip motion/torsion.",
   "solver_version": "0.3.2-exp.4",
   "ui_release": {
     "features": [
@@ -40,9 +40,12 @@
       "Rounded-tip sectional Cp entries explicitly labelled unvalidated; section labels refresh with the current geometry",
       "New and imported studies open as complete opaque geometry with reset camera fit and display filters",
       "Aerodynamic result overlay closes when a study is created or imported",
-      "Closed-tip/spatial comparison state cannot abort a later classical-wing solve"
+      "Closed-tip/spatial comparison state cannot abort a later classical-wing solve",
+      "Conservative six-component aerodynamic load transfer to actual zero-chord delta/elliptic section studies",
+      "Chord-weighted force and chord-squared restoring couple preserve each strip force and moment",
+      "Nominal normal stress and transverse pure bending, with exact-apex stress and torsional response withheld"
     ],
-    "page_sha256": "98c727ae9f584e881473666e7b7fd16c6a5efdb82e09092d5a6c7cab779956c1",
+    "page_sha256": "78b35ffb728f8adb8a4b9f211c6067f6594d2a68f75c6d0c5c45e2d9609c27ae",
     "source_port": "ui/01-wing-aerostruct-ui-sources.patch",
     "independent_review": "validation/UI_RELEASE_REVIEW.json",
     "surface_review": "validation/UI_SURFACE_REVIEW.json",
@@ -53,7 +56,8 @@
       "ui/04-geometry-first-context-menu.patch",
       "ui/05-lightweight-view-rendering.patch",
       "ui/06-surface-gradient.patch",
-      "ui/08-wing-model-visibility.patch"
+      "ui/08-wing-model-visibility.patch",
+      "ui/09-zero-tip-structural-transfer.patch"
     ],
     "closed_tip_review": "validation/CLOSED_TIP_AERO_REVIEW.json",
     "course_review": "validation/COURSE_UI_REVIEW.json",
@@ -68,5 +72,8 @@
   "three_dimensional_release_status": "Qualified educational tensor-quadratic release, source 17bdcbe. Deepest tip pressure remains unvalidated; U is empirical. Original failed gates are preserved in the numerical review.",
   "numerical_source_archive": "wing-aerostruct-3d-0.3.2-reviewed-source.zip",
   "numerical_source_sha256": "73283940a266b82d5154e8c880388138618ee976eaf2bb5af85da713bdd75607",
-  "three_dimensional_review": "validation/2026-10-29/THREED_RELEASE_REVIEW.json"
+  "three_dimensional_review": "validation/2026-10-29/THREED_RELEASE_REVIEW.json",
+  "zero_tip_structural_review": "validation/ZERO_TIP_STRUCTURE_REVIEW.md",
+  "zero_tip_release_review": "validation/ZERO_TIP_RELEASE_REVIEW.json",
+  "aerodynamic_pressure_solver_unchanged_in_this_release": true
 }

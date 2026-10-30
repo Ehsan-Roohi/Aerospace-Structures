@@ -8,7 +8,7 @@
  * Prepared models (the solved unit-freestream doublet systems) are cached by geometry and mesh (eight
  * models, one whole sequence), so a new speed, density or angle of attack needs no new linear solve.
  */
-importScripts('./aero_bundle.js?v=a7da4dc7c72c');
+importScripts('./aero_bundle.js?v=14d8c9a6df16');
 const aeroCache = new Map();
 function handleAeroRequest(msg, post) {
   const id = msg && msg.id;

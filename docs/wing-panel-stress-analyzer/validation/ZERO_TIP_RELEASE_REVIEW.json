@@ -1,0 +1,28 @@
+{
+  "version": "0.3.3",
+  "release_page_sha256": "78b35ffb728f8adb8a4b9f211c6067f6594d2a68f75c6d0c5c45e2d9609c27ae",
+  "browser_tested_page_sha256_before_cache_token_update": "b38c58627ad1f13a2bb49ffc9193fb68f17a33e7c076c9fdd7ce45fe1ec1a594",
+  "post_browser_changes": "Worker/bundle cache tokens and release metadata; no executable model or solver change after browser check",
+  "pressure_influence_prefix_unchanged": true,
+  "pressure_influence_prefix_sha256": "a5eb0a322fe8cac8e9e3cb5963721372a6155096a401f0cf322d95f8b478a6ca",
+  "independent_parent_checks": [
+    "closed-tip stress",
+    "closed-tip bending reference",
+    "closed-tip endpoint tails",
+    "closed-tip spars",
+    "new six-component triangular traction and analytic delta beam checks"
+  ],
+  "validation": "ZERO_TIP_STRUCTURE_REVIEW.md",
+  "browser_review": "ZERO_TIP_BROWSER_REVIEW.json",
+  "limits": [
+    "Nominal normal stress and transverse pure bending only",
+    "Zero user sweep, dihedral and incidence",
+    "Conservative sub-strip projection; original Cp is not recovered locally",
+    "Exact-apex stress undefined; delta tip slope may diverge or be undetermined",
+    "No torsional/full-motion/aeroelastic/strength certification"
+  ],
+  "workers": {
+    "worker": "8e2d79fa0bfe",
+    "bundle": "14d8c9a6df16"
+  }
+}

@@ -1,14 +1,14 @@
 {
   "product": "MIE 446 Wing AeroStruct",
-  "version": "0.3.2-ui.12",
-  "status": "Qualified educational 3D update; local tip pressure and empirical uncertainty limits documented",
-  "builtAt": "2026-10-29T22:24:30.165078+00:00",
+  "version": "0.3.3",
+  "status": "Qualified educational pressure solver with exact-zero-tip nominal sectional stress and pure transverse bending",
+  "builtAt": "2026-10-30T01:49:20.322683+00:00",
   "page": "index.html",
-  "pageSha256": "98c727ae9f584e881473666e7b7fd16c6a5efdb82e09092d5a6c7cab779956c1",
+  "pageSha256": "78b35ffb728f8adb8a4b9f211c6067f6594d2a68f75c6d0c5c45e2d9609c27ae",
   "workers": {
     "wing-aero": {
-      "worker": "39297e560f20",
-      "bundle": "a7da4dc7c72c"
+      "worker": "8e2d79fa0bfe",
+      "bundle": "14d8c9a6df16"
     },
     "wing-print": "a56bd8704a71"
   },
@@ -50,8 +50,9 @@
       "sha256": "cb58f5e2b40d711217bf9b6c2a982f0fb3f672efaf2fd43c7b2785a2c96f03ba"
     },
     "engine.js": {
-      "path": "computational/printed-wing-solver/aerostruct/engine.js",
-      "sha256": "0499c58c795d4297413f1cbdf64b0f5078561d34f87c97236a3afb5e3f41b6dd"
+      "path": "docs/wing-panel-stress-analyzer/ui/zero-tip-source/engine.js",
+      "sha256": "590f7b3d5e946abd9f5a10f5cb3a96b6775fa691a2143afa858706a6b42cffd0",
+      "prior_archived_source_path": "computational/printed-wing-solver/aerostruct/engine.js"
     },
     "foundations_ui.js": {
       "path": "computational/printed-wing-solver/web/foundations_ui.js",
@@ -95,11 +96,12 @@
     },
     "wing_aero_panel.js": {
       "path": "docs/wing-panel-stress-analyzer/wing-aero/wing_aero_panel.js",
-      "sha256": "0b4e7a6165811cb13b69309edec45d5a7d54a0b6d479820aa408de44c10f1344"
+      "sha256": "f99fd684eef882571c14949fc95940af22796fa6edc0137d325d6b2a9a5be07a"
     },
     "wing_aero_ui.js": {
-      "path": "computational/printed-wing-solver/aerostruct/wing_aero_ui.js",
-      "sha256": "e6b3fa34c7148109cd97e36e05372732b3efed42da5541dc709919e1aca71758"
+      "path": "docs/wing-panel-stress-analyzer/ui/wing-aero-ui.js",
+      "sha256": "32f1d8cd3f8c4ab7513bfe77206d2bfe193eff426fd37eea78f9331d8d404fd8",
+      "prior_archived_source_path": "computational/printed-wing-solver/aerostruct/wing_aero_ui.js"
     },
     "wing_aero_worker.js": {
       "path": "docs/wing-panel-stress-analyzer/wing-aero/wing_aero_worker.js",
@@ -107,7 +109,9 @@
     },
     "wing_aerostruct_template.html": {
       "path": "computational/printed-wing-solver/aerostruct/wing_aerostruct_template.html",
-      "sha256": "1067c11b45d3df749314c13686ea0d0f76e9e8794d1f8a567e2b42ac66594527"
+      "sha256": "1067c11b45d3df749314c13686ea0d0f76e9e8794d1f8a567e2b42ac66594527",
+      "sha256_scope": "Base archived template; apply the declared current source port",
+      "current_source_port": "docs/wing-panel-stress-analyzer/ui/09-zero-tip-structural-transfer.patch"
     },
     "wing_airfoils.js": {
       "path": "computational/printed-wing-solver/web/wing_airfoils.js",
@@ -123,7 +127,7 @@
     },
     "wing_closed_tip_stress.js": {
       "path": "computational/printed-wing-solver/web/wing_closed_tip_stress.js",
-      "sha256": "118a5792a236a803e69a708cb504a26d78cfa9ed90672edb121dc3e0e0eaa7bf"
+      "sha256": "f090a67b49e53313d53ea38dc75a0ced7c42345ce688c27efe764fea4d99867b"
     },
     "wing_finite_section.js": {
       "path": "computational/printed-wing-solver/web/wing_finite_section.js",
@@ -178,8 +182,9 @@
       "sha256": "ea97ef61ff94dad7912f2c13e6eef9e5f44f27dbbfa22a8239ead4326432aadd"
     },
     "wing_study_io.js": {
-      "path": "computational/printed-wing-solver/aerostruct/wing_study_io.js",
-      "sha256": "6f726259f7b69b7f0eb1394a97e9d0f064c05bbf1afb08f10b1e9a7efcfdb073"
+      "path": "docs/wing-panel-stress-analyzer/ui/zero-tip-source/wing_study_io.js",
+      "sha256": "441b39885282f002e1624c7504fa0c6984126d5f5a41f6e1602c28547331ec73",
+      "prior_archived_source_path": "computational/printed-wing-solver/aerostruct/wing_study_io.js"
     },
     "wing_workspace_ui.js": {
       "path": "computational/printed-wing-solver/web/wing_workspace_ui.js",
@@ -228,5 +233,12 @@
     "sourceArchive": "wing-aerostruct-3d-0.3.2-reviewed-source.zip",
     "sourceSHA256": "73283940a266b82d5154e8c880388138618ee976eaf2bb5af85da713bdd75607",
     "review": "validation/2026-10-29/THREED_RELEASE_REVIEW.json"
+  },
+  "zero_tip_source_port": {
+    "path": "ui/09-zero-tip-structural-transfer.patch",
+    "sha256": "04605c8a27cde3cc11002c5af3ded1f4f0c40aa9f62c16b66006ced9aac10132",
+    "engine_and_study_snapshots": "ui/zero-tip-source/",
+    "pressure_solver_prefix_sha256": "a5eb0a322fe8cac8e9e3cb5963721372a6155096a401f0cf322d95f8b478a6ca",
+    "pressure_solver_prefix_unchanged": true
   }
 }

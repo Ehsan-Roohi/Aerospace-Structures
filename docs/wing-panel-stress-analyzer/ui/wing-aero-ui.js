@@ -20,7 +20,7 @@ const WingAeroUI = (() => {
   'use strict';
   const DEFAULTS = Object.freeze({ speed: 15, density: 1.225, alphaDeg: 4, viscosity: 1.81e-5, speedOfSound: 340.29, sequence: 'standard' });
   const SEQUENCE_TEXT = Object.freeze({ standard: 'Standard', fine: 'Fine' });
-  const SEQUENCE_NOTE = 'Each sequence solves 7 meshes. Standard: up to 96 × 16 and 64 × 24 panels (around × spanwise), a few seconds. Fine: up to 192 × 16 and 64 × 48 panels, about 20 s; use it when Standard is not admitted or withholds torque and twist.';
+  const SEQUENCE_NOTE = 'Each sequence solves a refinement family. Standard: up to 96 × 16 and 64 × 24 panels (around × spanwise), a few seconds. Fine: up to 192 × 16 and 64 × 48 panels, about 20 s; use it when Standard is not admitted or withholds torque and twist.';
   const esc = v => String(v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const fmt = (v, d = 4) => (v == null || !Number.isFinite(v) ? '–' : Math.abs(v) >= 1e5 || (Math.abs(v) < 1e-3 && v !== 0) ? v.toExponential(3).replace('-', '−') : String(Number(v.toPrecision(d))).replace('-', '−'));
   const pct = v => (Number.isFinite(v) ? `${(100 * v).toFixed(v < 0.1 ? 2 : 1)}&nbsp;%` : '–');
@@ -41,7 +41,7 @@ const WingAeroUI = (() => {
   }
   function delivered(A, geometry, record, snapStations = []) { return A.combineSequence(geometry, sequenceOf(A, geometry, record), { snapStations }); }
   // Global aerodynamic results do not require a spatial-beam load or structural admission. Use the existing
-  // sequence estimator verbatim; do not invent a delivered strip load for a zero-chord structural tip.
+  // sequence estimator verbatim for callers requesting aerodynamic results without a structural transfer.
   function aerodynamicSummary(A, seq) {
     const find = (c, s) => { const l = seq.levels.find(v => v.chordPanels === c && v.spanPanels === s); if (!l) throw new Error(`Missing aerodynamic mesh ${c} x ${s}.`); return l; };
     const est = f => A.sequenceEstimate(seq.sequence, (c, s) => f(find(c, s)));
@@ -76,7 +76,15 @@ const WingAeroUI = (() => {
     const elements = a.elements.map(e => ({ y0: e.spanStart, y1: e.spanEnd, k: e.L / (e.spanEnd - e.spanStart) / e.GJ }));
     return { cuts, elements, twist: { y: Array.from(R.y), theta: Array.from(R.twist) } };
   }
-  function admit(A, geometry, record, combined, R) { return A.admission(geometry, sequenceOf(A, geometry, record), combined, structuralCuts(A, R), { torsion: structuralTorsion(A, R) }); }
+  function admit(A, geometry, record, combined, R) {
+    if(R?.analysis3D?.stressOnly){
+      const a=R.analysis3D,L=R.geometry.semiSpan;
+      if(!a.aeroLoad||typeof a.aeroLoad.cutAt!=='function')throw Error('The exact-tip structural result contains no transferred aerodynamic wrench.');
+      const cuts=[0,...A.ADMISSION.stations.map(f=>f*L)].map((y,i)=>{const c=a.cutAt(y);return {y,root:i===0,reference:c.reference.slice(),normal:[0,1,0],structuralWrench:a.aeroLoad.cutAt(y)};});
+      return A.admission(geometry,sequenceOf(A,geometry,record),combined,cuts,{sectionOnly:true});
+    }
+    return A.admission(geometry, sequenceOf(A, geometry, record), combined, structuralCuts(A, R), { torsion: structuralTorsion(A, R) });
+  }
 
   let styled = false;
   function injectStyles(doc) {
@@ -125,7 +133,7 @@ const WingAeroUI = (() => {
     }
     if (combined.structuralLoadAvailable === false) lines.push('', '# Aerodynamic results only. No structural strip load was generated for this zero-chord-tip wing.');
     else {
-      lines.push('', '# Delivered six-component strip load (extrapolated; carried by the spatial beam as a uniform force intensity on the quarter-chord line plus the couple that restores the strip moment)');
+      lines.push('', combined.closedTip ? '# Delivered six-component strip resultants. Conservative sub-strip projection: force density proportional to actual chord; restoring free-couple density proportional to chord squared. All original force and moment components preserved. This is not recovered local panel pressure; torsional response is not computed.' : '# Delivered six-component strip load (extrapolated; carried by the spatial beam as a uniform force intensity on the quarter-chord line plus the couple that restores the strip moment)');
       lines.push('y0_mm,y1_mm,Fx_N,Fy_N,Fz_N,Mx_Nmm,My_Nmm,Mz_Nmm');
       for (const r of combined.strips) lines.push(r.map(q).join(','));
     }
@@ -144,6 +152,7 @@ const WingAeroUI = (() => {
   // --------------------------------------------------------------- admission table (pure HTML)
   const degText = v => `${fmt(v * 180 / Math.PI, 3)}°`;
   function admissionTable(adm) {
+    if(adm.mode==='closed-tip-rigid-load-sectional-response')return '<div class="wae-scroll"><table><thead><tr><th>Sectional load check</th><th>Value ± U</th><th>Relative error / limit</th></tr></thead><tbody>'+adm.rows.map(r=>'<tr><td>'+(r.admitted?'✓ ':'✗ ')+esc(r.label)+'</td><td>'+fmt(r.value)+' ± '+fmt(r.uncertainty||0)+'</td><td>'+pct(r.relative)+' / '+pct(r.tolerance)+'</td></tr>').join('')+'</tbody></table></div>'+adm.notes.map(n=>'<p class="note">'+esc(n)+'</p>').join('');
     // percentages: whole numbers from 10%, one decimal from 1%, two significant digits below (a 0.011% lift effect is not "0.0%")
     const short = v => (!Number.isFinite(v) ? '∞' : `${v >= 0.1 ? (100 * v).toFixed(0) : v >= 0.01 ? (100 * v).toFixed(1) : Number((100 * v).toPrecision(2))}%`);
     const mark = r => (r.resolved ? '<span class="wae-ok" title="resolved">✓</span>' : r.admitted ? '<span class="wae-warnmark" title="not resolved: value withheld">!</span>' : '<span class="wae-no" title="fails">✗</span>');
@@ -160,6 +169,7 @@ const WingAeroUI = (() => {
   }
   // Verdict sentence of an admission (HTML).
   function admissionVerdict(adm) {
+    if(adm.mode==='closed-tip-rigid-load-sectional-response')return {ok:adm.admitted,html:adm.admitted?'Rigid-wing load admitted for nominal normal section stress and pure-bending components. Torsion and aeroelastic feedback are not assessed; exact-apex stress is undefined.':'Sectional load assessment failed: '+esc(adm.failed.join('; '))+'. Choose a finer aerodynamic sequence; no accepted structural field is substituted.'};
     const tw = adm.twist, open = adm.rows.filter(r => r.kind === 'torque' && !r.resolved).map(r => `${esc(r.label.replace(' (shear-centre axis)', ''))}: ${esc(r.status)}`);
     const torqueShown = adm.claims.torque === 'shown', pct = v => { const p = 100 * v; return !Number.isFinite(p) ? '∞' : p >= 100 ? p.toFixed(0) : p >= 1 ? p.toFixed(1) : String(Number(p.toPrecision(2))); };
     const notResolved = torqueShown ? `every torque is resolved, but the twist is not resolved to 10% of itself (worst ${tw ? pct(tw.worstRelative) : '?'}% at the reported stations)` : `the torque about this structure's shear-centre axis is not resolved (${open.join('; ')})`;
@@ -232,7 +242,7 @@ const WingAeroUI = (() => {
       const t0 = Date.now();
       try {
         const result = await solve(req), key = ad.geometryKey ? ad.geometryKey(req.geometry) : '';
-        lastCombined = result.base.mesh.closedTip ? aerodynamicSummary(A(), result) : A().combineSequence(req.geometry, result, { snapStations: ad.snapStations ? ad.snapStations() : [] });
+        lastCombined = A().combineSequence(req.geometry, result, { snapStations: ad.snapStations ? ad.snapStations() : [] });
         last = result; lastKey = key;
         if (last.trim) $('#aeroAlpha').value = +last.trim.alphaDeg.toFixed(4);
         const support = ad.structure?.();
@@ -261,9 +271,9 @@ const WingAeroUI = (() => {
         <p class="note">Global consistency of the extrapolated solution: pressure and Trefftz-plane lift differ by ${pct(lc.relativeDifference)} (criterion 2%); pressure and induced drag differ by ${fmt(dc.difference, 2)} (combined U ${fmt(dc.combinedUncertainty, 2)}). Reynolds number (MAC) ${fmt(base.flow.reynoldsMac, 3)}, Mach ${fmt(base.flow.mach, 3)}, q ${fmt(base.flow.dynamicPressure_Pa)} Pa.</p>
         ${base.warnings.map(w => `<p class="wae-warn">${esc(w)}</p>`).join('')}
         <div class="callout"><b>Use as structural load</b>
-          <p class="note">${c.structuralLoadAvailable === false ? 'Cp, pressure, lift and coefficients are available for this closed-tip wing. Transfer to the spatial-beam structural model is unavailable; no structural load has been generated.' : `The extrapolated load is ${c.strips.length} spanwise strips, each with its full force vector and moment (six components; nothing is dropped). The spatial beam carries a strip as a uniform force on the quarter-chord line plus the couple that restores the strip moment exactly.`}</p>
+          <p class="note">${c.structuralLoadAvailable === false ? 'Cp, pressure, lift and coefficients are available for this closed-tip wing. Transfer to the spatial-beam structural model is unavailable; no structural load has been generated.' : `The extrapolated load is ${c.strips.length} spanwise strips, each with its full force vector and moment (six components; nothing is dropped). ${c.closedTip ? 'The exact-tip model uses a conservative sub-strip projection: force density follows actual chord, and restoring couple density follows chord squared. Every force and moment resultant is preserved. This is not recovered local Cp. Nominal normal stress and pure-bending translation are assessed; torsion, full displacement and aeroelastic feedback are not assessed.' : 'The spatial beam carries a strip as a uniform force on the quarter-chord line plus the couple that restores the strip moment exactly.'}`}</p>
           ${st.supported ? '' : `<p class="wae-err">${esc(st.message)}</p>`}</div>
-        <figure>${spanwiseFigure(c.structuralLoadAvailable === false ? { ...c, strips: base.stripLoads } : c, base.stripLoads, base.reference.span_mm / 2)}<figcaption>Vertical force per unit span F<sub>z</sub>/Δy (N/mm): ${c.structuralLoadAvailable === false ? 'base aerodynamic mesh; no structural load generated' : 'delivered extrapolated strips (solid) and the base mesh (dashed)'}.</figcaption></figure>
+        <figure>${spanwiseFigure(c.structuralLoadAvailable === false ? { ...c, strips: base.stripLoads } : c, base.stripLoads, base.reference.span_mm / 2)}<figcaption>Strip-average vertical force per unit span F<sub>z</sub>/Δy (N/mm): ${c.structuralLoadAvailable === false ? 'base aerodynamic mesh; no structural load generated' : 'delivered extrapolated strips (solid) and the base mesh (dashed)'}.</figcaption></figure>
         <label for="aeroStation">Chordwise Cp station (base mesh)<select id="aeroStation">${base.strips.map((s, j) => `<option value="${j}"${j === 0 ? ' selected' : ''}>y = ${fmt(s.yMid, 4)} mm (η = ${fmt(s.yMid / (base.reference.span_mm / 2), 3)})</option>`).join('')}</select></label>
         <figure id="aeroCp">${base.chordwise ? cpFigure(base.chordwise[0]) : ''}</figure>
         <details><summary>Meshes of the sequence</summary><div class="wae-scroll"><table><thead><tr><th>Mesh (around × spanwise)</th><th>Panels</th><th>C<sub>L</sub></th><th>F<sub>z</sub> (N)</th><th>M<sub>x</sub> (N·mm)</th><th>Weight</th></tr></thead><tbody>${levelRows}</tbody></table></div>
@@ -283,7 +293,7 @@ const WingAeroUI = (() => {
         const st = ad.structure?.(); if (st && !st.supported) throw new Error(st.message);
         const record = recordFromSequence(last, lastKey);
         // before the solve: showAdmission replaces this line with the outcome when the admission test has run
-        status(`Aerodynamic load applied (α = ${fmt(last.flow.alphaDeg, 4)}°, V = ${fmt(last.flow.speed, 4)} m/s, ${last.sequence} sequence). The spatial beam is being solved; the admission test follows.`);
+        status(`Aerodynamic load applied (α = ${fmt(last.flow.alphaDeg, 4)}°, V = ${fmt(last.flow.speed, 4)} m/s, ${last.sequence} sequence). The structural response is being solved; the load assessment follows.`);
         ad.apply(record);
         refresh();
       } catch (e) { status(e.message, true); }
@@ -297,6 +307,7 @@ const WingAeroUI = (() => {
       if (!adm) { box.innerHTML = message ? `<div class="wae-box no"><p class="wae-err">${esc(message)}</p></div>` : ''; return; }
       const v = admissionVerdict(adm);
       box.innerHTML = `<div class="wae-box ${v.ok ? 'ok' : 'no'}"><p class="${v.ok ? 'wae-ok' : 'wae-no'}">${v.html}</p>${admissionTable(adm)}</div>`;
+      if(adm.mode==='closed-tip-rigid-load-sectional-response'){status(adm.admitted?'Sectional response solved: nominal normal stress and pure-bending components; torsion and aeroelastic feedback not assessed.':'Sectional load assessment failed; see the checks below.',!adm.admitted);return;}
       status(`Admission test (${adm.sequence} sequence): ${!adm.admitted ? 'NOT admitted, the coupled result is withheld' : adm.claims.twist === 'shown' ? 'admitted with torque and twist' : adm.claims.torque === 'shown' ? 'admitted with the twist withheld' : 'admitted with torque and twist withheld'}. See the table below.`, !adm.admitted);
     }
     function refresh() {

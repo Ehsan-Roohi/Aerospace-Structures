@@ -1,0 +1,236 @@
+{
+  "version": "0.3.7",
+  "status": "SCOPED_NUMERICAL_LAYOUT_COMPARISON",
+  "date": "2026-10-30",
+  "basePhysicsCommit": "47911135d4f21252a63ae61c00229da8a6bf0f77",
+  "algorithm": "Finite deterministic candidate search; no trained AI, global optimum, or full flight certification is claimed.",
+  "unchanged": {
+    "numericalKernelSha256": "ab2d0e39bcb533191561b87e94f767076be41ed49774cb2fb6b8bd4bac3ca534",
+    "normalSolveDoesNotStartAdvisor": true,
+    "geometryUnchangedUntilUserApplies": true,
+    "aerodynamicPressureRecordUnchanged": true,
+    "admissionCriteriaUnchanged": true,
+    "wingLabStudentPageUnchanged": true
+  },
+  "verification": {
+    "passed": true,
+    "exactDeltaBaselineMassG": 656.2073251926921,
+    "commonInboardStations": true,
+    "rootCapExitStressIncluded": true,
+    "actualAppliedFlightBasis": true,
+    "sixAerodynamicResultantsPreserved": true,
+    "embeddedSparRunoutReported": true,
+    "noFalseTipOrTwistPass": true,
+    "originalUnchanged": true,
+    "runoutRejectionsPreserved": true,
+    "ordinaryWingBothGoalsAssessed": true,
+    "massBudgetEnforced": true,
+    "noLoadRefused": true,
+    "stalePressureRefused": true,
+    "editableVariantReimported": true,
+    "normalSolverHasNoAdvisorCost": true,
+    "deltaMs": 37278.873,
+    "finiteTipMs": 17311.251599999996,
+    "inlineScriptSyntaxChecks": 8,
+    "aliasByteIdentical": true,
+    "pageHashMatchesBuild": true,
+    "regressionCandidateStartBudgetMs": 180000,
+    "interactiveCandidateStartBudgetMs": 45000,
+    "controllerDomChecks": [
+      "Both objectives and actual flight basis rendered",
+      "Snapshot-based worker and progress",
+      "Cancel terminates worker and late results are ignored",
+      "State or flow-draft change invalidates applying/exporting results",
+      "CSV preserves units, flight basis and runouts",
+      "Apply goes through existing geometry validation and normal solve"
+    ],
+    "regressionsPassed": [
+      "zero-load display",
+      "geometry preview recovery",
+      "activity feedback",
+      "speed unit guidance",
+      "2D/3D section context",
+      "aerodynamic result charts"
+    ],
+    "browserScope": "Numerical and DOM controller regressions are recorded separately from initial Chromium interaction checks. End-to-end Firefox testing was not performed for this feature."
+  },
+  "exactDeltaCase": {
+    "semiSpanMm": 600,
+    "rootChordMm": 250,
+    "tipChordMm": 0,
+    "flightBasis": {
+      "source": "Applied aerodynamic panel record",
+      "flow": {
+        "speed": 15,
+        "density": 1.225,
+        "alphaDeg": 4,
+        "viscosity": 0.0000181,
+        "speedOfSound": 340.29
+      },
+      "rootAerodynamicWrench": [
+        -0.28149414179084,
+        0.24768866620265792,
+        5.664843768508995,
+        1282.6675817761093,
+        -853.2435846871082,
+        113.7194533564462
+      ],
+      "upwardAerodynamicForcePerHalfN": 5.664843768508995,
+      "selfWeight": false,
+      "gravityMode": "Not included",
+      "wingWeightPerHalfN": 3.2186969300701547,
+      "aircraftMassKg": null,
+      "loadFactor": null,
+      "trimAssessed": false,
+      "aeroelasticRedistribution": false
+    },
+    "comparisonEta": 0.9,
+    "stressProbeCount": 101,
+    "bendingSamples": 25,
+    "stressSampling": "Common station union including root-cap exit, ribs, cavity and runout transitions; sampled inboard values, not global maxima",
+    "baselineFormalTipBendingMm": 2.0880580688249304,
+    "tipSlopeFinite": false,
+    "fullWingOptimum": null,
+    "rows": [
+      {
+        "id": "baseline",
+        "label": "Current layout",
+        "fullWingMassG": 656.2073251926921,
+        "inboardDisplacementMm": 1.4630681045174734,
+        "skinTensionMPa": 0.22795665348605162,
+        "skinCompressionMagnitudeMPa": 0.28275421435448395,
+        "error": null,
+        "eligibleForFullWingOptimum": false
+      },
+      {
+        "id": "add0.55",
+        "label": "Add spar at 0.55c, length 420 mm",
+        "fullWingMassG": 671.8481113560636,
+        "inboardDisplacementMm": 1.4323176842247691,
+        "skinTensionMPa": 0.22267317435046893,
+        "skinCompressionMagnitudeMPa": 0.27480274702617513,
+        "error": null,
+        "eligibleForFullWingOptimum": false
+      },
+      {
+        "id": "skin-0.2",
+        "label": "Skin 1 mm",
+        "fullWingMassG": 569.2487733096871,
+        "inboardDisplacementMm": 1.6878328751173939,
+        "skinTensionMPa": 0.261140357823858,
+        "skinCompressionMagnitudeMPa": 0.32760322889653865,
+        "error": null,
+        "eligibleForFullWingOptimum": false
+      },
+      {
+        "id": "move0.05",
+        "label": "Move spar 1 to 0.311c; keep its length",
+        "fullWingMassG": 656.2773521639238,
+        "inboardDisplacementMm": 1.4617142189815582,
+        "skinTensionMPa": 0.2278778903118673,
+        "skinCompressionMagnitudeMPa": 0.2822770257094696,
+        "error": null,
+        "eligibleForFullWingOptimum": false
+      },
+      {
+        "id": "width2",
+        "label": "All spar caps +2 mm width; keep runouts",
+        "fullWingMassG": 658.0802251684293,
+        "inboardDisplacementMm": 1.4546088051332324,
+        "skinTensionMPa": 0.22637278294381077,
+        "skinCompressionMagnitudeMPa": 0.28055007406920557,
+        "error": null,
+        "eligibleForFullWingOptimum": false
+      },
+      {
+        "id": "skin0.2",
+        "label": "Skin 1.4 mm",
+        "fullWingMassG": null,
+        "inboardDisplacementMm": null,
+        "skinTensionMPa": null,
+        "skinCompressionMagnitudeMPa": null,
+        "error": "Closed-tip spar length 458.90 mm exceeds its finite runout fit limit 450.88 mm. Reduce Length; auto-tapered widths retain finite cap/web thickness and cannot reach the zero-area tip.",
+        "eligibleForFullWingOptimum": false
+      },
+      {
+        "id": "skin0.4",
+        "label": "Skin 1.6 mm",
+        "fullWingMassG": null,
+        "inboardDisplacementMm": null,
+        "skinTensionMPa": null,
+        "skinCompressionMagnitudeMPa": null,
+        "error": "Closed-tip spar length 458.90 mm exceeds its finite runout fit limit 442.83 mm. Reduce Length; auto-tapered widths retain finite cap/web thickness and cannot reach the zero-area tip.",
+        "eligibleForFullWingOptimum": false
+      },
+      {
+        "id": "move-0.05",
+        "label": "Move spar 1 to 0.211c; keep its length",
+        "fullWingMassG": null,
+        "inboardDisplacementMm": null,
+        "skinTensionMPa": null,
+        "skinCompressionMagnitudeMPa": null,
+        "error": "Closed-tip spar length 458.90 mm exceeds its finite runout fit limit 454.30 mm. Reduce Length; auto-tapered widths retain finite cap/web thickness and cannot reach the zero-area tip.",
+        "eligibleForFullWingOptimum": false
+      },
+      {
+        "id": "caps0.2",
+        "label": "All spar caps +0.2 mm; keep runouts",
+        "fullWingMassG": null,
+        "inboardDisplacementMm": null,
+        "skinTensionMPa": null,
+        "skinCompressionMagnitudeMPa": null,
+        "error": "Closed-tip spar length 458.90 mm exceeds its finite runout fit limit 450.88 mm. Reduce Length; auto-tapered widths retain finite cap/web thickness and cannot reach the zero-area tip.",
+        "eligibleForFullWingOptimum": false
+      },
+      {
+        "id": "caps0.4",
+        "label": "All spar caps +0.4 mm; keep runouts",
+        "fullWingMassG": null,
+        "inboardDisplacementMm": null,
+        "skinTensionMPa": null,
+        "skinCompressionMagnitudeMPa": null,
+        "error": "Closed-tip spar length 458.90 mm exceeds its finite runout fit limit 442.82 mm. Reduce Length; auto-tapered widths retain finite cap/web thickness and cannot reach the zero-area tip.",
+        "eligibleForFullWingOptimum": false
+      },
+      {
+        "id": "ribs2",
+        "label": "Add two ribs in the largest bays",
+        "fullWingMassG": 675.3526078555765,
+        "inboardDisplacementMm": 1.455289846736618,
+        "skinTensionMPa": 0.22795665348605162,
+        "skinCompressionMagnitudeMPa": 0.28275421435448395,
+        "error": null,
+        "eligibleForFullWingOptimum": false
+      }
+    ]
+  },
+  "finiteTipControl": {
+    "semiSpanMm": 300,
+    "rootChordMm": 160,
+    "tipChordMm": 120,
+    "load": "1 N point force at y=300 mm, x/c=0.25; no self-weight",
+    "bothGoalsAssessed": true,
+    "ranking": {
+      "lightest": "skin-0.2",
+      "stiffest": "add0.55",
+      "exploratoryLightest": null,
+      "exploratoryStiffest": null,
+      "note": "Best among the tested layouts under the assessed beam limits only; this is not a global optimum or a strength certification."
+    }
+  },
+  "limitations": [
+    "One fixed rigid-wing flight/load case; changing the outer aerodynamic shape requires a new pressure solve.",
+    "Exact zero-area tip: full-tip slope validity, torsion, overall factor of safety and modes remain unassessed. Inboard comparisons are exploratory.",
+    "No local skin buckling, diaphragm stiffness, bond/runout failure, manufacturing approval, trim or aeroelastic optimisation.",
+    "Rib-removal candidates are prohibited and rib-count changes excluded from ranking.",
+    "Skin changes can alter cavity closure and the structural trailing-edge transition; geometry effects are reported and stress comparison can be withheld.",
+    "45 seconds is a budget for starting new candidates, not a hard termination of an individual solve. Cancel terminates the optional worker."
+  ],
+  "references": [
+    {
+      "title": "OpenAeroStruct aerostructural wingbox optimisation walkthrough",
+      "url": "https://mdolab-openaerostruct.readthedocs-hosted.com/en/latest/aerostructural_wingbox_walkthrough.html",
+      "role": "Formulation context only; not validation of this implementation."
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 {
   "application": "Wing Panel Stress Analyzer (Wing AeroStruct)",
-  "version": "0.3.6",
+  "version": "0.3.7",
   "source_archive": "wing-aerostruct-0.3.0-dev-review.zip",
   "source_sha256": "bc6986c744568a516fd22bdd3b9508550625b82a77cd924adf52dfaa5156a54d",
   "original_base": "5ab2498",
@@ -61,9 +61,10 @@
       "Live km/h equivalent beside m/s input; aerodynamic speed validity distinguished from structural coupling limits",
       "Unloaded structures show a neutral model and an explicit zero-response notice, with direct load setup actions",
       "Solved aerodynamic fields are clearly distinguished from loads actually applied to structural equilibrium",
-      "Constant and unresolved fields do not fabricate a unit contour range; unloaded PNGs contain no false legend or stress probes"
+      "Constant and unresolved fields do not fabricate a unit contour range; unloaded PNGs contain no false legend or stress probes",
+      "Optional background design advisor compares stiffness and mass with actual structural solves, retains all inputs and admission, and labels exact-tip inboard trials without a full-wing optimum"
     ],
-    "page_sha256": "db8bbde838c2c58336b05a216cfab81ca538b94e1f295fdae1587eb0eef8e869",
+    "page_sha256": "91835788fce0013ffaf6d21c49c6b25f153863c5960524a16bf80e2f097da4a3",
     "source_port": "ui/01-wing-aerostruct-ui-sources.patch",
     "independent_review": "validation/UI_RELEASE_REVIEW.json",
     "surface_review": "validation/UI_SURFACE_REVIEW.json",
@@ -80,7 +81,8 @@
       "ui/11-load-admission-feedback.patch",
       "ui/12-section-context-design-guidance.patch",
       "ui/13-preview-recovery-speed-units.patch",
-      "ui/14-zero-load-display.patch"
+      "ui/14-zero-load-display.patch",
+      "ui/15-design-advisor.patch"
     ],
     "closed_tip_review": "validation/CLOSED_TIP_AERO_REVIEW.json",
     "course_review": "validation/COURSE_UI_REVIEW.json",
@@ -104,5 +106,6 @@
   "load_admission_review": "validation/LOAD_ADMISSION_REVIEW.json",
   "section_context_review": "validation/2026-10-29/SECTION_CLARITY_REVIEW.json",
   "preview_recovery_review": "validation/PREVIEW_RECOVERY_REVIEW.json",
-  "zero_load_display_review": "validation/ZERO_LOAD_DISPLAY_REVIEW.json"
+  "zero_load_display_review": "validation/ZERO_LOAD_DISPLAY_REVIEW.json",
+  "design_advisor_review": "validation/DESIGN_ADVISOR_REVIEW.json"
 }

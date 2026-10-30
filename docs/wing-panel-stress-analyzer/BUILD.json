@@ -1,10 +1,10 @@
 {
   "product": "MIE 446 Wing AeroStruct",
-  "version": "0.3.6",
+  "version": "0.3.7",
   "status": "Qualified educational solver; explicit 2D/3D section context and tested structural design guidance",
-  "builtAt": "2026-10-30T21:41:24.036400+00:00",
+  "builtAt": "2026-10-30T23:49:43.911507+00:00",
   "page": "index.html",
-  "pageSha256": "db8bbde838c2c58336b05a216cfab81ca538b94e1f295fdae1587eb0eef8e869",
+  "pageSha256": "91835788fce0013ffaf6d21c49c6b25f153863c5960524a16bf80e2f097da4a3",
   "workers": {
     "wing-aero": {
       "worker": "8e2d79fa0bfe",
@@ -311,5 +311,15 @@
       "validation/test_unapplied_aero_load.cjs",
       "validation/test_geometry_preview_recovery.cjs"
     ]
+  },
+  "design_advisor": {
+    "baseCommit": "47911135d4f21252a63ae61c00229da8a6bf0f77",
+    "port": "ui/15-design-advisor.patch",
+    "coreSha256": "d7e1188933d19ddc1cc1cbc8e342702358ef6a3f8adeb7ea853e16071b38795e",
+    "workerSha256": "ec2212fd1f4ab05ec8fd7df8269bfb68d7d33270c9ac76435c22dcee7cf31bda",
+    "kernelSha256": "ab2d0e39bcb533191561b87e94f767076be41ed49774cb2fb6b8bd4bac3ca534",
+    "uiSha256": "03cf367077e279036593c6d554c1aed68a9250b2f66095be74f3f017f2fd110a",
+    "scope": "Bounded solver-driven comparison; both objectives; closed-tip results exploratory only; numerical kernels and admission unchanged",
+    "review": "validation/DESIGN_ADVISOR_REVIEW.json"
   }
 }

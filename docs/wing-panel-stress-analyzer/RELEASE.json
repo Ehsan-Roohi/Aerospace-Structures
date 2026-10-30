@@ -51,9 +51,13 @@
       "Per-result contour field caching and reduced unchanged GPU redraws without changing numerical fields",
       "Valid-load coupling refusal is distinct from malformed input or aerodynamic solver failure",
       "Actionable stiffness, speed and model-limit feedback with actual twist/lift values",
-      "Current geometry preview restored after coupled structural result is withheld"
+      "Current geometry preview restored after coupled structural result is withheld",
+      "Independent unit-chord 2D Cp distinguished from actual 3D wing sectional Cp; linked nearest solved strip",
+      "Section cl and whole-wing CL use explicit definitions and case labels",
+      "Second-spar guidance separates reduced twist from load admission and small-displacement validity",
+      "Readable exact-flow Cp and signed trailing-edge error figures retain every raw sample"
     ],
-    "page_sha256": "1c5f0571d3d497961a68fd5493bcc326f56165a27ef218945a9ac9f717e29127",
+    "page_sha256": "2bea8b5c58d40750ba32d56e12570948add6846847afd7dc9dcd8da6af374def",
     "source_port": "ui/01-wing-aerostruct-ui-sources.patch",
     "independent_review": "validation/UI_RELEASE_REVIEW.json",
     "surface_review": "validation/UI_SURFACE_REVIEW.json",
@@ -67,7 +71,8 @@
       "ui/08-wing-model-visibility.patch",
       "ui/09-zero-tip-structural-transfer.patch",
       "ui/10-student-feedback-display.patch",
-      "ui/11-load-admission-feedback.patch"
+      "ui/11-load-admission-feedback.patch",
+      "ui/12-section-context-design-guidance.patch"
     ],
     "closed_tip_review": "validation/CLOSED_TIP_AERO_REVIEW.json",
     "course_review": "validation/COURSE_UI_REVIEW.json",
@@ -88,5 +93,6 @@
   "aerodynamic_pressure_solver_unchanged_in_this_release": true,
   "student_feedback_review": "validation/STUDENT_FEEDBACK_REVIEW.json",
   "structural_numerical_solver_unchanged_in_this_release": true,
-  "load_admission_review": "validation/LOAD_ADMISSION_REVIEW.json"
+  "load_admission_review": "validation/LOAD_ADMISSION_REVIEW.json",
+  "section_context_review": "validation/2026-10-29/SECTION_CLARITY_REVIEW.json"
 }

@@ -1,0 +1,26 @@
+{
+  "sameNormalizedProfileAndAngle_identical2DCp": true,
+  "differentChordMm": [
+    252,
+    124
+  ],
+  "cl2D": 0.7416760213004921,
+  "ribsAndRodsDoNotEnterIsolatedFlow": true,
+  "enteredAngleChangesSolution": true,
+  "localProfileVariationChangesInput": true,
+  "threeDSelectsActualNearestStrip": true,
+  "retainedCuspError": [
+    {
+      "panels": 80,
+      "last3MaxAbsCpError": 0.016507242663185706
+    },
+    {
+      "panels": 160,
+      "last3MaxAbsCpError": 0.010018026958863224
+    },
+    {
+      "panels": 320,
+      "last3MaxAbsCpError": 0.005865633368032919
+    }
+  ]
+}

@@ -18,5 +18,18 @@
   "runtime_note": "LIVE_BROWSER_TIMING is independent checkpoint 6; AUTHOR_CHECKPOINT7_TIMING is a separate externally executed record.",
   "airfoil2D_solver": "1.1.0",
   "airfoil2D_source_sha256": "b48eece98ffc0fe3033563535c96bf6a559a34773f5a84991bfe7b07bb6d5e6d",
-  "airfoil2D_review": "Independent original test, independent analytic test, focused exact-edge test, orientation / closure sensitivity; source and thresholds retained."
+  "airfoil2D_review": "Independent original test, independent analytic test, focused exact-edge test, orientation / closure sensitivity; source and thresholds retained.",
+  "section_interpretation_update": {
+    "date": "2026-10-30",
+    "scope": "Clear 2D / finite-wing section / whole-wing labels; replot original signed Cp and actual same-point trailing-edge errors. Original dated run provenance above is retained.",
+    "numerical_kernel_unchanged": true,
+    "airfoil2D_kernel_sha256": "0fb6f585a1902d44e9b3b4c1ca448714aef80795760f3f593cec4db3d05c9939",
+    "raw_profile_data_unchanged": true,
+    "figure_generator": "scripts/validation/plot_airfoil_section_clarity.py",
+    "figure_receipt": "SECTION_CLARITY_REVIEW.json",
+    "isolated_section_invariance_test": "../test_section_result_context.cjs",
+    "test_receipt": "SECTION_CONTEXT_TEST.log",
+    "focused_exact_edge_test": "../test_airfoil_2d_te.cjs; all assertions passed on 2026-10-30; independent output in output/section-clarity-te-review, original reference data not overwritten",
+    "explanation_reference": "https://www1.grc.nasa.gov/beginners-guide-to-aeronautics/downwash-effects-on-lift/"
+  }
 }

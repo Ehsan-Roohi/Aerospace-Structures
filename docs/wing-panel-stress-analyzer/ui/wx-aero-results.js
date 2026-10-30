@@ -137,13 +137,13 @@ window.WingAeroStructResults = (() => {
   const VIEWS = [
     ['cp', 'Surface Cp · upper & lower'],
     ['dp', 'Surface p − p∞ (Pa)'],
-    ['section', 'Sectional Cp vs x/c'],
+    ['section', '3D wing · sectional Cp vs x/c'],
     ['span', 'Spanwise lift'],
     ['cl', 'Section lift coefficient cl(y)'],
     ['gamma', 'Circulation Γ(y)'],
     ['cm', 'Section pitching moment cm(y)'],
     ['te', 'Trailing-edge Cp difference'],
-    ['foil2d', '2D airfoil · independent panel solve'],
+    ['foil2d', '2D airfoil · independent Cp'],
     ['coef', 'Coefficients & convergence'],
   ];
   const FONT = 'system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif';
@@ -242,6 +242,14 @@ window.WingAeroStructResults = (() => {
   }
   const niceStep = (span, n) => { const raw = span / n, mag = 10 ** Math.floor(Math.log10(raw)), r = raw / mag; return (r < 1.5 ? 1 : r < 3 ? 2 : r < 7 ? 5 : 10) * mag; };
 
+  // Match a requested geometric station to an actually solved 3-D strip.
+  // No Cp is interpolated or substituted from an independent 2-D solution.
+  function nearestSectionIndex(sections, y) {
+    if(!Array.isArray(sections)||!sections.length||!Number.isFinite(y))return -1;
+    let best=-1, distance=Infinity;
+    sections.forEach((s,j)=>{const d=Math.abs(s.y_mm-y);if(Number.isFinite(d)&&d<distance){best=j;distance=d;}});
+    return best;
+  }
   function install(env) {
     const { el, ui, strip, view, state, openAero, exportStructureFigure } = env;
     const select = el('select', { id: 'wxAeroView', class: 'tool', 'aria-label': 'Aerodynamic results' },
@@ -282,14 +290,16 @@ window.WingAeroStructResults = (() => {
     const foilAlpha=el('input',{id:'wxFoilAlpha',type:'number',min:'-15',max:'15',step:'.5',value:'4','aria-label':'2D angle of attack relative to section chord, degrees'});
     const foilN=el('select',{id:'wxFoilN','aria-label':'2D panels per surface'},...[40,80,160].map(n=>el('option',{value:String(n),text:String(n),selected:n===80})));
     const foilSolve=el('button',{type:'button',class:'btn primary',id:'wxFoilSolve',text:'Solve 2D airfoil'});
-    const foilControls=el('div',{class:'wx-ar-tools',id:'wxFoilControls',hidden:true},el('label',{},'Use rib / station ',foilRib),el('label',{},'Section η ',foilEta),el('label',{},'y from root (mm) ',foilY),el('label',{},'α to local chord (°) ',foilAlpha),el('label',{},'Panels / side ',foilN),foilSolve,foilStation);
+    const foilCompare3D=el('button',{type:'button',class:'btn',id:'wxFoilCompare3D',text:'3D Cp near this station',title:'Compare with an actually solved finite-wing strip; a 3D aerodynamic solve is required.'});
+    const sectionCompare2D=el('button',{type:'button',class:'btn',id:'wxSectionCompare2D',text:'Independent 2D at this station',hidden:true});
+    const foilControls=el('div',{class:'wx-ar-tools',id:'wxFoilControls',hidden:true},el('label',{},'Use rib / station ',foilRib),el('label',{},'Section η ',foilEta),el('label',{},'y from root (mm) ',foilY),el('label',{},'α to local chord (°) ',foilAlpha),el('label',{},'Panels / side ',foilN),foilSolve,foilCompare3D,foilStation);
     let foil2D=null,foilBusy=false,foilMessage='Choose a section and its 2D angle of attack, then press Solve 2D airfoil. A wing aerodynamic solve is not required.';
     const canvas = el('canvas', { id: 'wxArCanvas', role: 'img', tabindex: '0', 'aria-label': 'Aerodynamic result' });
     const html = el('div', { id: 'wxArHtml', class: 'wx-ar-html', hidden: true });
     const notice = el('div', { id: 'wxArNotice', class: 'wx-ar-notice', hidden: true });
     const probeBox = el('div', { id: 'wxArProbe', class: 'wx-ar-probe', role: 'status', 'aria-live': 'polite' });
     const overlay = el('section', { id: 'wxAeroResult', class: 'wx-aero-result', hidden: true, 'aria-label': 'Aerodynamic result view' },
-      el('header', { class: 'wx-ar-head' }, el('div', { class: 'wx-ar-titles' }, title, source), el('div', { class: 'wx-ar-tools' }, projection, resetView, panelToggle, scaleMode, manualTools, station, clearBtn, backBtn), foilControls, scaleInfo),
+      el('header', { class: 'wx-ar-head' }, el('div', { class: 'wx-ar-titles' }, title, source), el('div', { class: 'wx-ar-tools' }, projection, resetView, panelToggle, scaleMode, manualTools, station, sectionCompare2D, clearBtn, backBtn), foilControls, scaleInfo),
       el('div', { class: 'wx-ar-body' }, canvas, html, notice), probeBox);
     const loading = view.querySelector('#loading');
     view.insertBefore(overlay, loading || null);
@@ -355,7 +365,7 @@ window.WingAeroStructResults = (() => {
     function syncSectionControls(){
       const g=ui.state().geometry,L=+g.semiSpan,eta=+foilEta.value;
       foilY.max=String(L);foilY.value=foilEta.value.trim()&&Number.isFinite(eta)?String(+(eta*L).toPrecision(10)):'';
-      foilStation.textContent=`η = y / semi-span · 0 root, 1 tip · semi-span ${sig(L)} mm. Independent 2D flow, not a slice of the 3D pressure result.`;
+      foilStation.textContent=`η = y / projected semi-span · 0 root, 1 tip · semi-span ${sig(L)} mm. Independent 2D flow, not a slice of the 3D pressure result.`;
       let ribs=[];
       try{if(typeof WingEngine!=='undefined')ribs=WingEngine.ribStations(WingEngine.makeGeometry(g));}catch(_){/* Geometry validation belongs to the existing editor. */}
       const key=JSON.stringify([L,ribs]);
@@ -367,6 +377,14 @@ window.WingAeroStructResults = (() => {
       const L=+ui.state().geometry.semiSpan;if(!Number.isFinite(y)||!(L>0)||y<0||y>L)return;
       foilEta.value=String(+(y/L).toPrecision(12));probes=[];show('foil2d');foilSolve.focus();
     }
+    foilCompare3D.addEventListener('click',()=>{
+      const s=data();if(!s||!foilEta.value.trim())return;const requested=+foilEta.value*+ui.state().geometry.semiSpan;
+      const j=nearestSectionIndex(s.result.base.chordwise,requested);if(j<0)return;
+      sectionJ=j;show('section');
+    });
+    sectionCompare2D.addEventListener('click',()=>{
+      const s=data(),section=s?.result.base.chordwise[sectionJ];if(section)chooseSection(section.y_mm);
+    });
     foilRib.addEventListener('change',()=>{if(foilRib.value!=='')chooseSection(+foilRib.value);});
     foilY.addEventListener('change',()=>{if(foilY.value.trim())chooseSection(+foilY.value);});
     window.addEventListener?.('wing-open-2d-section',e=>chooseSection(e.detail?.y));
@@ -394,13 +412,13 @@ window.WingAeroStructResults = (() => {
     function setNotice(text, withButton) {
       canvas.hidden = true; html.hidden = true; notice.hidden = false; notice.replaceChildren(el('p', { text }));
       if (withButton) { const b = el('button', { type: 'button', class: 'btn primary', text: 'Open Aerodynamics' }); b.addEventListener('click', () => openAero()); notice.append(b); }
-      for (const b of [pngBtn, csvBtn, clearBtn]) b.disabled = true; station.hidden = true; projection.hidden = true; resetView.hidden = true; panelToggle.hidden = true; scaleMode.hidden = true; manualTools.hidden = true; scaleInfo.hidden = true; probeBox.textContent = '';
+      sectionCompare2D.hidden=true;for (const b of [pngBtn, csvBtn, clearBtn]) b.disabled = true; station.hidden = true; projection.hidden = true; resetView.hidden = true; panelToggle.hidden = true; scaleMode.hidden = true; manualTools.hidden = true; scaleInfo.hidden = true; probeBox.textContent = '';
     }
     function render() {
       if (!kind || overlay.hidden) return;
       const label = (VIEWS.find(([v]) => v === kind) || [, ''])[1];
       title.textContent = label;
-      foilControls.hidden=kind!=='foil2d';
+      foilControls.hidden=kind!=='foil2d';sectionCompare2D.hidden=kind!=='section';
       if(kind==='foil2d'){renderFoil();return;}
       const s = state();
       if (s.status === 'none') { source.textContent = 'No aerodynamic solution in this session.'; setNotice('Open Aerodynamics, set the flow conditions and press Solve Aerodynamics. These results do not need a structural solve.', true); return; }
@@ -434,7 +452,7 @@ window.WingAeroStructResults = (() => {
         const fz = combined.rootWrench[2], cl = combined.coefficients.CL;
         source.textContent = `Semi-wing lift ${sig(fz.value)} ± ${sig(fz.uncertainty, 2)} N extrapolated (finest meshes ${sig(fz.finest)} N, base mesh ${sig(fz.base)} N); both halves ${sig(2 * fz.value)} N; CL ${sig(cl.value)} ± ${sig(cl.uncertainty, 2)}. ${combined.structuralLoadAvailable === false ? 'Solid: base aerodynamic mesh; grey: the other meshes. No structural strip load has been generated for this zero-chord tip.' : `Solid: strip load delivered to the structure (extrapolated over all ${result.levels.length} meshes); dashed: base mesh; grey: the other meshes.`} ${flowText(b)}.`;
       } else if (kind === 'section') {
-        source.textContent = `Upper and lower surface Cp at one base-mesh strip. Negative Cp (suction) is at the top; positive Cp is at the bottom. LE = x/c 0, TE = x/c 1. ${flowText(b)}.`;
+        source.textContent = `Finite-wing 3D pressure at solved strip y = ${sig(b.chordwise[sectionJ].y_mm)} mm; includes the model's downwash and spanwise interaction. This is not an isolated 2D airfoil solve. Cp < 0 is suction. ${flowText(b)}.`;
         if (b.mesh?.roundedTip && b.chordwise[sectionJ]?.y_mm >= b.mesh.roundedTip.start_mm) source.textContent += ' Rounded-tip sample: local Cp and the trailing-edge peak are unvalidated. Values are preserved; inspect the mesh check and inboard sections.';
       } else if (['cl', 'gamma', 'cm', 'te'].includes(kind)) {
         source.textContent = `Semi-wing strip samples of the ${meshText(b)}; these local values are not extrapolated. ${kind === 'te' ? 'Cp upper − Cp lower at the last panel centroids near the trailing edge; the Kutta condition requires equality at the edge, not Cp = 0.' : kind === 'gamma' ? 'Wake circulation from the solved doublet jump (m²/s).' : kind === 'cm' ? 'Pitching moment about each strip quarter chord; body +y moment is nose-up, divided by q∞ c² Δy.' : 'Pressure-integrated cl compared with 2Γ/(V c) from the solved wake.'} ${flowText(b)}.`;
@@ -636,9 +654,9 @@ window.WingAeroStructResults = (() => {
     }
     const FRAME = { L: 70, R: 24 };
     function chartFrame(ctx, W, H, top, xr, yr, xl, yl, head = 1, reverseY = false) {   // head = text rows reserved above the frame
-      const L = FRAME.L, R = FRAME.R, T = top + 24 + 20 * head, B = 52, w = W - L - R, h = H - T - B;
+      const L = FRAME.L, R = FRAME.R, T = top + 26 + 22 * head, B = 52, w = W - L - R, h = H - T - B;
       const X = (v) => L + (v - xr[0]) / (xr[1] - xr[0]) * w, Y = (v) => T + (reverseY ? v - yr[0] : yr[1] - v) / (yr[1] - yr[0]) * h;
-      ctx.strokeStyle = '#d4dce5'; ctx.lineWidth = 1; ctx.fillStyle = '#4e5f71'; ctx.font = `12px ${FONT}`;
+      ctx.strokeStyle = '#d4dce5'; ctx.lineWidth = 1; ctx.fillStyle = '#4e5f71'; ctx.font = `13px ${FONT}`;
       const sx = niceStep(xr[1] - xr[0], w < 360 ? 4 : 8), sy = niceStep(yr[1] - yr[0], 6);
       for (let v = Math.ceil(xr[0] / sx) * sx; v <= xr[1] + 1e-9; v += sx) { const t = sig(v, 3); ctx.beginPath(); ctx.moveTo(X(v), T); ctx.lineTo(X(v), T + h); ctx.stroke(); ctx.fillText(t, X(v) - ctx.measureText(t).width / 2, T + h + 16); }
       for (let v = Math.ceil(yr[0] / sy) * sy; v <= yr[1] + 1e-9; v += sy) { const t = sig(Math.abs(v)<1e-10*sy?0:v, 3); ctx.beginPath(); ctx.moveTo(L, Y(v)); ctx.lineTo(L + w, Y(v)); ctx.stroke(); ctx.fillText(t, L - 8 - ctx.measureText(t).width, Y(v) + 4); }
@@ -651,15 +669,15 @@ window.WingAeroStructResults = (() => {
     // Legend and note above the plot frame, wrapped into as many rows as the width needs.
     const itemWidth = (ctx, label) => 32 + ctx.measureText(label).width + 22;
     function headRows(ctx, W, items, note) {
-      ctx.font = `12px ${FONT}`;
+      ctx.font = `14px ${FONT}`;
       const maxW = W - FRAME.L - FRAME.R, rows = [[]]; let used = 0;
       for (const it of items) { const iw = itemWidth(ctx, it[0]); if (used + iw > maxW && rows[rows.length - 1].length) { rows.push([]); used = 0; } rows[rows.length - 1].push(it); used += iw; }
       const noteRow = note && used + 16 + ctx.measureText(note).width > maxW;   // the note gets its own row when it does not fit beside the legend
       return { rows, note, noteRow: !!noteRow, count: rows.length + (noteRow ? 1 : 0) };
     }
     function drawHead(ctx, fr, head) {
-      ctx.font = `12px ${FONT}`;
-      const rowY = (i) => fr.T - 26 - 20 * (head.count - 1 - i);
+      ctx.font = `14px ${FONT}`;
+      const rowY = (i) => fr.T - 26 - 22 * (head.count - 1 - i);
       head.rows.forEach((items, i) => {
         let x = fr.L; const y = rowY(i);
         for (const [label, colourValue, dash] of items) { ctx.strokeStyle = colourValue; ctx.lineWidth = 2.2; ctx.setLineDash(dash || []); ctx.beginPath(); ctx.moveTo(x, y - 4); ctx.lineTo(x + 26, y - 4); ctx.stroke(); ctx.setLineDash([]); ctx.fillStyle = '#14212e'; ctx.fillText(label, x + 32, y); x += itemWidth(ctx, label); }
@@ -672,6 +690,7 @@ window.WingAeroStructResults = (() => {
     }
     function renderFoil(){
       syncSectionControls();
+      foilCompare3D.disabled=!data()||!foilEta.value.trim()||!Number.isFinite(+foilEta.value);
       for(const e of [station,projection,resetView,scaleMode,manualTools,scaleInfo])e.hidden=true;
       panelToggle.hidden=false;clearBtn.hidden=false;clearBtn.disabled=!probes.length;html.hidden=true;pngBtn.hidden=false;
       canvas.style.touchAction='auto';canvas.style.cursor='crosshair';
@@ -679,12 +698,12 @@ window.WingAeroStructResults = (() => {
       pngBtn.disabled=csvBtn.disabled=!valid;
       if(!valid){canvas.hidden=true;notice.hidden=false;notice.replaceChildren(el('p',{text:foilBusy?foilMessage:foil2D?'Inputs changed. Press Solve 2D airfoil to update this independent section solution.':foilMessage}));source.textContent='Independent 2D inviscid airfoil analysis · no 3D downwash or finite-wing induced drag';return;}
       notice.hidden=true;canvas.hidden=false;const r=foil2D,delta=Math.abs(r.cl-r.coarse.cl);
-      source.textContent=`η ${sig(r.section.eta)} · chord ${sig(r.section.chord_mm)} mm · α2D ${sig(r.alphaDeg)}° relative to local chord (entered directly; wing incidence is ${sig(r.section.incidenceDeg)}°). cl = ${sig(r.cl,5)}, circulation cl = ${sig(r.clCirculation,5)}, cm¼ = ${sig(r.cm,5)}. ${2*r.n} contour panels; half-density change: Δcl ${sig(delta,3)}, Δcm ${sig(Math.abs(r.cm-r.coarse.cm),3)}. System / mean-flux residual ${sig(r.maxResidual,2)}; midpoint normal-velocity residual ${sig(r.midpointNormalVelocity,2)}. Inviscid, sharp TE; no viscosity/stall. The half-density change is not a certified error bound.`;
+      source.textContent=`η ${sig(r.section.eta)} · chord ${sig(r.section.chord_mm)} mm · α2D ${sig(r.alphaDeg)}° relative to local chord (entered directly; wing incidence is ${sig(r.section.incidenceDeg)}°). 2D cl = ${sig(r.cl,5)}, circulation cl = ${sig(r.clCirculation,5)}, 2D cm¼ = ${sig(r.cm,5)}. ${2*r.n} contour panels; half-density change: Δcl ${sig(delta,3)}, Δcm ${sig(Math.abs(r.cm-r.coarse.cm),3)}. System / mean-flux residual ${sig(r.maxResidual,2)}; midpoint normal-velocity residual ${sig(r.midpointNormalVelocity,2)}. Inviscid, sharp TE; no viscosity/stall. The half-density change is not a certified error bound.`;
       draw(canvas,null);
     }
     function drawFoil(ctx,W,H,top,interactive){
       const r=foil2D, values=r.panels.map(p=>p.cp),lo=Math.min(...values),hi=Math.max(...values),pad=.08*((hi-lo)||1);
-      const head=headRows(ctx,W,[['upper · selected mesh','#2166ac'],['lower · selected mesh','#b2182b',[7,5]],['half-density mesh','#8796a5',[2,3]]],'Independent 2D solution; negative Cp at the top');
+      const head=headRows(ctx,W,[['upper · selected mesh','#2166ac'],['lower · selected mesh','#b2182b',[7,5]],['half-density mesh','#8796a5',[2,3]]],'Isolated 2D · prescribed local α · no wing downwash');
       const fr=chartFrame(ctx,W,H-115,top,[0,1],[lo-pad,hi+pad],'x/c · leading edge 0 → trailing edge 1','Cp · suction up',head.count,true);hits=[];
       for(const [result,coarse] of [[r.coarse,true],[r,false]])for(const side of ['upper','lower']){
         const ps=result.panels.filter(p=>p.side===side).sort((a,b)=>a.x-b.x);ctx.strokeStyle=coarse?'#8796a5':side==='upper'?'#2166ac':'#b2182b';ctx.fillStyle=ctx.strokeStyle;ctx.lineWidth=coarse?1:2;ctx.setLineDash(coarse?[2,3]:side==='lower'?[7,5]:[]);ctx.beginPath();ps.forEach((p,i)=>i?ctx.lineTo(fr.X(p.x),fr.Y(p.cp)):ctx.moveTo(fr.X(p.x),fr.Y(p.cp)));ctx.stroke();ctx.setLineDash([]);
@@ -694,15 +713,15 @@ window.WingAeroStructResults = (() => {
       const scale=Math.min(W-140,650),left=(W-scale)/2,base=H-62;
       ctx.strokeStyle='#14212e';ctx.lineWidth=1.5;ctx.beginPath();r.panels.forEach((p,i)=>{if(!i)ctx.moveTo(left+p.a[0]*scale,base-p.a[1]*scale);ctx.lineTo(left+p.b[0]*scale,base-p.b[1]*scale);});ctx.stroke();
       if(showPanels){ctx.fillStyle='#14212e';for(const p of r.panels){ctx.beginPath();ctx.arc(left+p.a[0]*scale,base-p.a[1]*scale,1.7,0,2*Math.PI);ctx.fill();}}
-      ctx.font=`12px ${FONT}`;ctx.fillStyle='#4e5f71';ctx.fillText('LE',left-24,base);ctx.fillText('TE',left+scale+8,base);ctx.fillText('Section contour · unit chord · no spanwise flow',left,H-12);
+      ctx.font=`12px ${FONT}`;ctx.fillStyle='#4e5f71';ctx.fillText('LE',left-24,base);ctx.fillText('TE',left+scale+8,base);ctx.fillText('Unit chord · same shape + α → same isolated 2D Cp',left,H-12);
       for(const p of probes){const h=hits.find(h=>h.point.side===p.side&&h.point.i===p.i);if(h){ctx.strokeStyle='#14212e';ctx.beginPath();ctx.arc(...h.at,7,0,2*Math.PI);ctx.stroke();}}
-      if(interactive)canvas.setAttribute('aria-label','Independent 2D airfoil Cp: upper and lower surfaces, selected and half-density meshes. Click a selected-mesh point to read Cp and tangential speed.');
+      if(interactive)canvas.setAttribute('aria-label','Independent 2D airfoil Cp: same normalized profile and entered angle give the same Cp at different wing stations; no finite-wing downwash. Upper and lower surfaces, selected and half-density meshes. Click a selected-mesh point to read Cp and tangential speed.');
     }
     function drawSection(ctx, W, H, top, s, interactive) {
       const b = s.result.base, sec = b.chordwise[sectionJ], q = b.flow.dynamicPressure_Pa;
       const all = [...sec.upper, ...sec.lower].map((p) => p[1]), lo = Math.min(...all), hi = Math.max(...all), pad = 0.06 * ((hi - lo) || 1);
       const head = headRows(ctx, W, [['upper surface', '#2166ac'], ['lower surface', '#b2182b', [7, 5]]],
-        `Strip ${sectionJ + 1} of ${b.chordwise.length}: y = ${sig(sec.y_mm)} mm, local chord ${sig(sec.chord_mm)} mm; p − p∞ = q∞ Cp, q∞ = ${sig(q)} Pa`);
+        `3D strip ${sectionJ + 1} of ${b.chordwise.length}: y = ${sig(sec.y_mm)} mm, local chord ${sig(sec.chord_mm)} mm; p − p∞ = q∞ Cp, q∞ = ${sig(q)} Pa`);
       const fr = chartFrame(ctx, W, H, top, [0, 1], [lo - pad, hi + pad], 'x/c (0 = leading edge, 1 = trailing edge)', 'Cp (negative / suction up)', head.count, true);
       hits = [];
       const series = [['upper', '#2166ac', []], ['lower', '#b2182b', [7, 5]]];
@@ -716,7 +735,7 @@ window.WingAeroStructResults = (() => {
       drawHead(ctx, fr, head);
       probes.forEach((pr, n) => { const h = hits.find((t) => t.point.side === pr.side && t.point.k === pr.k && pr.j === sectionJ); if (!h) return; ctx.beginPath(); ctx.arc(h.at[0], h.at[1], 8, 0, 2 * Math.PI); ctx.strokeStyle = '#14212e'; ctx.lineWidth = 1.5; ctx.stroke(); ctx.fillStyle = '#14212e'; ctx.font = `700 11px ${FONT}`; ctx.fillText(String(n + 1), h.at[0] + 9, h.at[1] - 8); });
       drawn = { section: sec };
-      if (interactive) canvas.setAttribute('aria-label', `Sectional pressure coefficient along the chord at y = ${sig(sec.y_mm)} mm, upper and lower surfaces.`);
+      if (interactive) canvas.setAttribute('aria-label', `Finite-wing 3D sectional pressure coefficient at solved strip y = ${sig(sec.y_mm)} mm; includes spanwise flow interaction; upper and lower surfaces.`);
     }
     function stepRows(rows) { return rows.map((r) => ({ y0: r[0], y1: r[1], fz: r[4], w: r[4] / ((r[1] - r[0]) || 1) })); }
     function drawSpan(ctx, W, H, top, s, interactive) {
@@ -882,5 +901,5 @@ window.WingAeroStructResults = (() => {
     let lastRefresh = [];
     return { refresh: () => { if (!overlay.hidden) { const s=state(), key=kind==='foil2d'?[foilInputKey()]:[s.status,s.why,s.result,s.combined,s.admission]; if(key.length!==lastRefresh.length||key.some((v,i)=>v!==lastRefresh[i])){lastRefresh=key;render();if(probes.length)showProbes();} } }, close, show, get kind() { return kind; }, element: overlay, selector: group, pngButton:pngBtn, csvButton:csvBtn };
   }
-  return Object.freeze({ install, VIEWS, surfaceField, surfaceField3D, colour, displayScale, pressureMeshCheck, spanQuantities });
+  return Object.freeze({ install, VIEWS, surfaceField, surfaceField3D, colour, displayScale, pressureMeshCheck, spanQuantities, nearestSectionIndex });
 })();

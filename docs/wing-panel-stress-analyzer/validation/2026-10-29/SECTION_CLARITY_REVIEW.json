@@ -1,0 +1,61 @@
+{
+  "date": "2026-10-30",
+  "scope": "Display and interpretation only; numerical solver unchanged",
+  "plot_generator": "scripts/validation/plot_airfoil_section_clarity.py",
+  "raw_profile_file": "TE_PROFILES.csv",
+  "raw_review_file": "TE_REPAIR_REVIEW.json",
+  "raw_sha256": {
+    "TE_PROFILES.csv": "54cf1a7d99e194bf986d9b3213f273f62dd8f5fe423f3f84422beab4f3c500cf",
+    "TE_REPAIR_REVIEW.json": "54e6cbad7d6337b12c29d9206fb551da4845b4dd1a6e7ce485fea8684561d456"
+  },
+  "angleDeg": 4,
+  "signedErrorFigure": "Airfoil_edge_error.svg",
+  "actualTrailingEdgeErrors": [
+    {
+      "airfoil": "joukowski (cusp)",
+      "alphaDeg": 4,
+      "panels": 80,
+      "last3_max_abs_Cp_error": 0.016507242663185706,
+      "last_panel_max_abs_Cp_error": 0.0029295214231468414
+    },
+    {
+      "airfoil": "joukowski (cusp)",
+      "alphaDeg": 4,
+      "panels": 160,
+      "last3_max_abs_Cp_error": 0.010018026958863224,
+      "last_panel_max_abs_Cp_error": 0.0013528693564568428
+    },
+    {
+      "airfoil": "joukowski (cusp)",
+      "alphaDeg": 4,
+      "panels": 320,
+      "last3_max_abs_Cp_error": 0.005865633368032919,
+      "last_panel_max_abs_Cp_error": 0.0006402296339390601
+    },
+    {
+      "airfoil": "karman-trefftz 12 deg (finite wedge)",
+      "alphaDeg": 4,
+      "panels": 80,
+      "last3_max_abs_Cp_error": 0.010714829857801145,
+      "last_panel_max_abs_Cp_error": 0.0022678418387832577
+    },
+    {
+      "airfoil": "karman-trefftz 12 deg (finite wedge)",
+      "alphaDeg": 4,
+      "panels": 160,
+      "last3_max_abs_Cp_error": 0.008323982375086691,
+      "last_panel_max_abs_Cp_error": 0.000921055900329204
+    },
+    {
+      "airfoil": "karman-trefftz 12 deg (finite wedge)",
+      "alphaDeg": 4,
+      "panels": 320,
+      "last3_max_abs_Cp_error": 0.006779492187944158,
+      "last_panel_max_abs_Cp_error": 0.00032809471162786874
+    }
+  ],
+  "preserved_all_raw_samples": true,
+  "clipping_or_smoothing": false,
+  "interpretation_test": "../test_section_result_context.cjs",
+  "interpretation_scope": "Independent 2D cl = lift per span / (q c); finite-wing CL = lift / (q S). Same normalized airfoil, entered angle and mesh give identical isolated inviscid Cp; 3D wing sectional Cp is a different result."
+}

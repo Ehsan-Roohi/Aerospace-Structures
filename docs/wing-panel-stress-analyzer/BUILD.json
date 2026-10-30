@@ -1,10 +1,10 @@
 {
   "product": "MIE 446 Wing AeroStruct",
   "version": "0.3.4",
-  "status": "Qualified educational solver; valid-load admission refusal and geometry-preview recovery update",
-  "builtAt": "2026-10-30T16:25:01.883262+00:00",
+  "status": "Qualified educational solver; explicit 2D/3D section context and tested structural design guidance",
+  "builtAt": "2026-10-30T17:52:01.954432+00:00",
   "page": "index.html",
-  "pageSha256": "1c5f0571d3d497961a68fd5493bcc326f56165a27ef218945a9ac9f717e29127",
+  "pageSha256": "2bea8b5c58d40750ba32d56e12570948add6846847afd7dc9dcd8da6af374def",
   "workers": {
     "wing-aero": {
       "worker": "8e2d79fa0bfe",
@@ -102,7 +102,7 @@
     },
     "wing_aero_ui.js": {
       "path": "docs/wing-panel-stress-analyzer/ui/wing-aero-ui.js",
-      "sha256": "c9d10df2415fc583801a431978a2f4c0e282af03e6c7d212e6ddab8b9311177c",
+      "sha256": "f56ce622bbf7c94586773ce1f93be8fabd241db61e0823be3b2539aebec8553a",
       "prior_archived_source_path": "computational/printed-wing-solver/aerostruct/wing_aero_ui.js",
       "sha256_scope": "Canonical LF source, as committed"
     },
@@ -198,12 +198,12 @@
     },
     "wx-aero-results.js": {
       "path": "docs/wing-panel-stress-analyzer/ui/wx-aero-results.js",
-      "sha256": "49b5eafa8ea2e4c1fccf614c6a99f6a03130e1177845c1cc1fee166a8fae4d58",
+      "sha256": "1ed502d20345783c401074cc6531bb09fbe880b404b02433355cdd2b6b910841",
       "sha256_scope": "Canonical LF source, as committed"
     },
     "wx-shell.js": {
       "path": "docs/wing-panel-stress-analyzer/ui/wx-shell.js",
-      "sha256": "3d78859feaa39b4fc03f0f8a0b5944a980b9b6e06ed0b8225bafa99c701c91c2",
+      "sha256": "76b4d80d2cbb6c847e770888e5bddf0d902a7079e22caa7ffc0fcbc45cf95952",
       "sha256_scope": "Canonical LF source, as committed"
     },
     "wx-shell.css": {
@@ -274,5 +274,18 @@
     "scope": "Presentation and refusal recovery only; scientific admission criteria and numerical kernels unchanged",
     "review": "validation/LOAD_ADMISSION_REVIEW.json",
     "regression": "validation/test_900mm_load_refusal.cjs"
+  },
+  "section_context_design_guidance_port": {
+    "path": "ui/12-section-context-design-guidance.patch",
+    "sha256": "bee6ad6061ee8996c919eca06ca11c2e1abb09dad802f6ae0b8cb6e7838395ef",
+    "scope": "UI context, navigation and actionable design guidance; numerical kernels and admission limits unchanged",
+    "reviews": [
+      "validation/2026-10-29/SECTION_CLARITY_REVIEW.json",
+      "validation/DESIGN_GUIDANCE_REVIEW.json"
+    ],
+    "regressions": [
+      "validation/test_section_result_context.cjs",
+      "validation/test_900mm_design_remedies.cjs"
+    ]
   }
 }

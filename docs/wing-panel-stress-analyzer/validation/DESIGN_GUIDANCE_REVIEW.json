@@ -1,0 +1,276 @@
+{
+  "date": "2026-10-30",
+  "scope": "Tested guidance and result-context display; numerical kernels and limits unchanged",
+  "control": "Identical outer geometry, 50 m/s, alpha 2 degrees, density 1.225 kg/m3, same solved pressure sequence and self-weight OFF; only named internal skin/spar geometry varies",
+  "fixtureSha256": "d98c40b303f79e2383238c54ef30a9977ab8dc06cf512ef388de44d0e950fe1c",
+  "identicalAerodynamicKey": true,
+  "identicalAppliedWrenches": true,
+  "results": [
+    {
+      "id": "original_one_spar_skin1p2",
+      "label": "Original: one spar; skin 1.2 mm",
+      "geometryValid": true,
+      "admitted": false,
+      "failed": [
+        "One-way coupling: twist effect on lift"
+      ],
+      "smallDisplacement": false,
+      "massG": 676.0407873968245,
+      "tipTwistDeg": -0.4008084871912705,
+      "liftChangeFraction": 0.05563302891324149,
+      "linearScreen": {
+        "smallDisplacement": false,
+        "maxTranslation": 63.581277782599486,
+        "maxRotation": 0.10591935679659041,
+        "translationRatio": 0.07064586420288832,
+        "message": "Outside the admitted small-displacement screening (translation/span > 5% or rotation > 0.1 rad). Linear results are illustrative only; reduce loads or use a geometrically nonlinear model."
+      },
+      "rootGJNmm2": 210679067.63316736,
+      "rootShearCentreMm": [
+        71.51364448185824,
+        6.605219575817141
+      ],
+      "rootTorqueNmm": -2008.8397610947172
+    },
+    {
+      "id": "two_spars_0p25_0p65_skin1p2",
+      "label": "Two spars: 0.25c / 0.65c; skin 1.2 mm",
+      "geometryValid": true,
+      "admitted": false,
+      "failed": [
+        "One-way coupling: twist effect on lift"
+      ],
+      "smallDisplacement": false,
+      "massG": 693.1572115925916,
+      "tipTwistDeg": -0.16096988766556053,
+      "liftChangeFraction": 0.021921102259712312,
+      "linearScreen": {
+        "smallDisplacement": false,
+        "maxTranslation": 62.856242068793186,
+        "maxRotation": 0.10453746821443939,
+        "translationRatio": 0.06984026896532576,
+        "message": "Outside the admitted small-displacement screening (translation/span > 5% or rotation > 0.1 rad). Linear results are illustrative only; reduce loads or use a geometrically nonlinear model."
+      },
+      "rootGJNmm2": 223459298.52634013,
+      "rootShearCentreMm": [
+        86.88810127520465,
+        6.583134026601287
+      ],
+      "rootTorqueNmm": -847.2161551148009
+    },
+    {
+      "id": "two_spars_0p25_0p70_skin1p2",
+      "label": "Two spars: 0.25c / 0.70c; skin 1.2 mm",
+      "geometryValid": true,
+      "admitted": false,
+      "failed": [
+        "One-way coupling: twist effect on lift"
+      ],
+      "smallDisplacement": false,
+      "massG": 692.0766740088646,
+      "tipTwistDeg": -0.17668279135090378,
+      "liftChangeFraction": 0.024202410899710435,
+      "linearScreen": {
+        "smallDisplacement": false,
+        "maxTranslation": 63.09967202517165,
+        "maxRotation": 0.1049474556771902,
+        "translationRatio": 0.07011074669463517,
+        "message": "Outside the admitted small-displacement screening (translation/span > 5% or rotation > 0.1 rad). Linear results are illustrative only; reduce loads or use a geometrically nonlinear model."
+      },
+      "rootGJNmm2": 223083888.88997945,
+      "rootShearCentreMm": [
+        85.6266447909385,
+        6.583542639426072
+      ],
+      "rootTorqueNmm": -936.3872692012557
+    },
+    {
+      "id": "one_spar_skin1p3",
+      "label": "One spar; skin 1.3 mm",
+      "geometryValid": true,
+      "admitted": false,
+      "failed": [
+        "One-way coupling: twist effect on lift"
+      ],
+      "smallDisplacement": false,
+      "massG": 709.0648484810896,
+      "tipTwistDeg": -0.37905657393536846,
+      "liftChangeFraction": 0.05253116228276786,
+      "linearScreen": {
+        "smallDisplacement": false,
+        "maxTranslation": 59.76590107609583,
+        "maxRotation": 0.09960843081999105,
+        "translationRatio": 0.0664065567512176,
+        "message": "Outside the admitted small-displacement screening (translation/span > 5% or rotation > 0.1 rad). Linear results are illustrative only; reduce loads or use a geometrically nonlinear model."
+      },
+      "rootGJNmm2": 225334227.00047302,
+      "rootShearCentreMm": [
+        71.4707580133631,
+        6.549618797832981
+      ],
+      "rootTorqueNmm": -2021.1421208837369
+    },
+    {
+      "id": "one_spar_skin1p4",
+      "label": "One spar; skin 1.4 mm",
+      "geometryValid": false,
+      "geometryErrors": [
+        "study.geometry.skin: The cavity collapses at chord 100.0 mm: skin too thick for this airfoil. (WingEngine section at y = 900 mm)"
+      ]
+    },
+    {
+      "id": "one_spar_skin1p6",
+      "label": "One spar; skin 1.6 mm",
+      "geometryValid": false,
+      "geometryErrors": [
+        "study.geometry.skin: The cavity collapses at chord 108.0 mm: skin too thick for this airfoil. (WingEngine section at y = 855 mm)"
+      ]
+    },
+    {
+      "id": "one_spar_skin2",
+      "label": "One spar; skin 2 mm",
+      "geometryValid": false,
+      "geometryErrors": [
+        "study.geometry.skin: The cavity collapses at chord 133.3 mm: skin too thick for this airfoil. (WingEngine section at y = 712.5 mm)"
+      ]
+    },
+    {
+      "id": "one_spar_skin2p4",
+      "label": "One spar; skin 2.4 mm",
+      "geometryValid": false,
+      "geometryErrors": [
+        "study.geometry.skin: The cavity collapses at chord 158.7 mm: skin too thick for this airfoil. (WingEngine section at y = 570 mm)"
+      ]
+    },
+    {
+      "id": "one_spar_skin2p8",
+      "label": "One spar; skin 2.8 mm",
+      "geometryValid": false,
+      "geometryErrors": [
+        "study.geometry.skin: The cavity collapses at chord 184.0 mm: skin too thick for this airfoil. (WingEngine section at y = 427.5 mm)"
+      ]
+    },
+    {
+      "id": "one_spar_skin3p2",
+      "label": "One spar; skin 3.2 mm",
+      "geometryValid": false,
+      "geometryErrors": [
+        "study.geometry.skin: The cavity collapses at chord 234.7 mm: skin too thick for this airfoil. (WingEngine section at y = 142.5 mm)"
+      ]
+    },
+    {
+      "id": "two_spars_0p25_0p65_skin1p3",
+      "label": "Two spars: 0.25c / 0.65c; skin 1.3 mm",
+      "geometryValid": true,
+      "admitted": false,
+      "failed": [
+        "One-way coupling: twist effect on lift"
+      ],
+      "smallDisplacement": false,
+      "massG": 726.0496144368574,
+      "tipTwistDeg": -0.15225876802706367,
+      "liftChangeFraction": 0.02077793131536598,
+      "linearScreen": {
+        "smallDisplacement": false,
+        "maxTranslation": 59.162888284827204,
+        "maxRotation": 0.09843840255364561,
+        "translationRatio": 0.06573654253869689,
+        "message": "Outside the admitted small-displacement screening (translation/span > 5% or rotation > 0.1 rad). Linear results are illustrative only; reduce loads or use a geometrically nonlinear model."
+      },
+      "rootGJNmm2": 238897101.92814317,
+      "rootShearCentreMm": [
+        86.8141909949296,
+        6.530686365294618
+      ],
+      "rootTorqueNmm": -858.0193272497634
+    },
+    {
+      "id": "two_spars_0p25_0p55_skin1p3_caps20t1p2",
+      "label": "Two spars: 0.25c / 0.55c; skin 1.3 mm; caps 20 x 1.2 mm",
+      "geometryValid": true,
+      "admitted": false,
+      "failed": [
+        "One-way coupling: twist effect on lift"
+      ],
+      "smallDisplacement": false,
+      "massG": 780.0091340995136,
+      "tipTwistDeg": -0.14911068135242223,
+      "liftChangeFraction": 0.020565400194204275,
+      "linearScreen": {
+        "smallDisplacement": false,
+        "maxTranslation": 52.919013522554025,
+        "maxRotation": 0.08821236360910936,
+        "translationRatio": 0.058798903913948916,
+        "message": "Outside the admitted small-displacement screening (translation/span > 5% or rotation > 0.1 rad). Linear results are illustrative only; reduce loads or use a geometrically nonlinear model."
+      },
+      "rootGJNmm2": 251138085.65633285,
+      "rootShearCentreMm": [
+        86.39108520661607,
+        6.526644018562299
+      ],
+      "rootTorqueNmm": -897.2057817868382
+    },
+    {
+      "id": "two_spars_0p25_0p45_skin1p3_caps32t1p2",
+      "label": "Two spars: 0.25c / 0.45c; skin 1.3 mm; caps 32 x 1.2 mm",
+      "geometryValid": true,
+      "solverRefused": true,
+      "solverError": "The 3-D beam normal-cut/shear-centre iteration did not converge to 0.00001 mm. Reduce geometric gradients or increase section resolution; no unconverged structural result is returned."
+    },
+    {
+      "id": "two_spars_0p25_0p65_skin1p6",
+      "label": "Two spars: 0.25c / 0.65c; skin 1.6 mm",
+      "geometryValid": false,
+      "geometryErrors": [
+        "study.geometry.skin: The cavity collapses at chord 108.0 mm: skin too thick for this airfoil. (WingEngine section at y = 855 mm)"
+      ]
+    },
+    {
+      "id": "two_spars_0p25_0p55_skin2p0",
+      "label": "Two spars: 0.25c / 0.55c; skin 2.0 mm",
+      "geometryValid": false,
+      "geometryErrors": [
+        "study.geometry.skin: The cavity collapses at chord 133.3 mm: skin too thick for this airfoil. (WingEngine section at y = 712.5 mm)"
+      ]
+    },
+    {
+      "id": "two_spars_0p25_0p50_skin2p8",
+      "label": "Two spars: 0.25c / 0.50c; skin 2.8 mm",
+      "geometryValid": false,
+      "geometryErrors": [
+        "study.geometry.skin: The cavity collapses at chord 184.0 mm: skin too thick for this airfoil. (WingEngine section at y = 427.5 mm)"
+      ]
+    },
+    {
+      "id": "two_spars_0p25_0p65_cavityEnd0p85_skin2",
+      "label": "Two spars: 0.25c / 0.65c; cavity end 0.85c; skin 2 mm",
+      "geometryValid": false,
+      "geometryErrors": [
+        "study: Spar 2: web thickness must be at most one fifth of the web height across its full width at y=885.9 mm. (WingEngine check)"
+      ]
+    },
+    {
+      "id": "two_spars_0p25_0p65_cavityEnd0p85_skin2p4",
+      "label": "Two spars: 0.25c / 0.65c; cavity end 0.85c; skin 2.4 mm",
+      "geometryValid": false,
+      "geometryErrors": [
+        "study: Spar 2: positive web height and web thickness \u00e2\u2030\u00a4 height/5 required at y=836.7 mm. (WingEngine check)"
+      ]
+    }
+  ],
+  "independentRepeatedDesigns": [
+    "original_one_spar_skin1p2",
+    "two_spars_0p25_0p65_skin1p2",
+    "one_spar_skin1p4"
+  ],
+  "interpretation": "A rear spar reduces this case's twist but does not establish admissible one-way coupling, small displacement or strength. Rejected designs remain rejected; no expected answer or limit was substituted.",
+  "checks": {
+    "sectionContextInvariance": true,
+    "actualSectionNavigationHandlers": true,
+    "admissionRefusalController": true,
+    "inlineSyntax": true,
+    "sourceModulesEmbeddedOnce": true,
+    "aliasIdentical": true
+  },
+  "browserAcceptance": "Not completed for this revision: in-app browser/CDP stopped responding. Component render and event-handler tests passed; no new visual browser result is claimed."
+}

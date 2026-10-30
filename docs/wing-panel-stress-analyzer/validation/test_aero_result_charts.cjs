@@ -13,11 +13,21 @@ for(let i=0;i<3;i++){const y0=100*i,y1=y0+100,yMid=y0+50;b.strips.push({y0,y1,yM
 const result={base:b,sequence:'unit-fixture',levels:[],definition:{baseChord:3,baseSpan:3}},combined={strips:b.stripLoads,rootWrench:[0,0,{value:.6,uncertainty:.01,finest:.6,base:.6}],coefficients:{CL:{value:.5,uncertainty:.01}},structuralLoadAvailable:true};
 const ctx=vm.createContext({window:{devicePixelRatio:1},document:{getElementById(){return null;}},console,requestAnimationFrame:()=>1,URL,Blob,setTimeout});
 vm.runInContext(fs.readFileSync(path.join(app,'ui/wx-aero-results.js'),'utf8'),ctx);
-const V=ctx.window.WingAeroStructResults,widget=V.install({el,ui:{state:()=>({geometry:{}})},strip:new E('section'),view:new E('main'),state:()=>({status:'ok',result,combined}),openAero(){}});
+const V=ctx.window.WingAeroStructResults,widget=V.install({el,ui:{state:()=>({geometry:{semiSpan:300}})},strip:new E('section'),view:new E('main'),state:()=>({status:'ok',result,combined}),openAero(){}});
 for(const kind of ['cl','gamma','cm','te','section','span']){labels.length=0;widget.show(kind);const c=nodes.find(n=>n.id==='wxArCanvas');assert.ok(c.attrs['aria-label'],kind+' must render an accessible plot');assert.ok(labels.length>5,kind+' must draw axes and values');}
 widget.show('cp');const projection=nodes.find(n=>n.id==='wxArProjection');projection.value='planform';projection.fire('change');
 assert.ok(nodes.find(n=>n.id==='wxArCanvas').attrs['aria-label'].includes('upper and lower'));
 const c=V.spanQuantities(b);assert.ok(Math.abs(c[0].gamma-.36)<1e-15);assert.ok(Math.abs(c[0].cm-(-1/(60e-6*120**2*100)))<1e-12);
 widget.refresh();labels.length=0;widget.refresh();assert.equal(labels.length,0,'Unchanged solver status must not redraw the active result');
 widget.close();assert.equal(widget.pngButton.disabled,false);assert.equal(widget.csvButton.disabled,true);
-console.log(JSON.stringify({plots_rendered:['cl','gamma','cm','te','section','span','Cp_2D'],units_checked:true,export_controls_reset:true,fixture:'synthetic component test, not a flow benchmark'}));
+// Exercise the actual navigation handlers, including an off-centre requested
+// station. Selection must use the closest stored 3D strip, never fake 2D Cp.
+widget.show('foil2d');
+const eta=nodes.find(n=>n.id==='wxFoilEta'),to3D=nodes.find(n=>n.id==='wxFoilCompare3D'),to2D=nodes.find(n=>n.id==='wxSectionCompare2D');
+eta.value=String(190/300);to3D.fire('click');assert.equal(widget.kind,'section');
+const source=nodes.find(n=>n.class==='wx-ar-source');
+assert.ok(labels.some(t=>t.includes('y = 150 mm')),'nearest actual solved strip is labelled');
+assert.equal(to2D.hidden,false);to2D.fire('click');assert.equal(widget.kind,'foil2d');
+assert.equal(+eta.value,.5,'return action selects actual strip y, not the former request');
+assert.equal(to2D.hidden,true);assert.equal(to3D.disabled,false);
+console.log(JSON.stringify({plots_rendered:['cl','gamma','cm','te','section','span'],units_checked:true,export_controls_reset:true,section_navigation_handlers:true,nearest_solved_strip_mm:150,fixture:'synthetic component test, not a flow benchmark'}));

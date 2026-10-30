@@ -52,7 +52,8 @@
     "engine.js": {
       "path": "docs/wing-panel-stress-analyzer/ui/zero-tip-source/engine.js",
       "sha256": "590f7b3d5e946abd9f5a10f5cb3a96b6775fa691a2143afa858706a6b42cffd0",
-      "prior_archived_source_path": "computational/printed-wing-solver/aerostruct/engine.js"
+      "prior_archived_source_path": "computational/printed-wing-solver/aerostruct/engine.js",
+      "sha256_scope": "Canonical LF source, as committed"
     },
     "foundations_ui.js": {
       "path": "computational/printed-wing-solver/web/foundations_ui.js",
@@ -96,12 +97,14 @@
     },
     "wing_aero_panel.js": {
       "path": "docs/wing-panel-stress-analyzer/wing-aero/wing_aero_panel.js",
-      "sha256": "f99fd684eef882571c14949fc95940af22796fa6edc0137d325d6b2a9a5be07a"
+      "sha256": "70bdf2d093327262f17c786eff44232316fda2bd2860a7900c258e29d5e7d948",
+      "sha256_scope": "Canonical LF source, as committed"
     },
     "wing_aero_ui.js": {
       "path": "docs/wing-panel-stress-analyzer/ui/wing-aero-ui.js",
-      "sha256": "32f1d8cd3f8c4ab7513bfe77206d2bfe193eff426fd37eea78f9331d8d404fd8",
-      "prior_archived_source_path": "computational/printed-wing-solver/aerostruct/wing_aero_ui.js"
+      "sha256": "f8ac84e9e0fff092255753563e5d032c6553bf581ce345c98eb59a00e864ddfd",
+      "prior_archived_source_path": "computational/printed-wing-solver/aerostruct/wing_aero_ui.js",
+      "sha256_scope": "Canonical LF source, as committed"
     },
     "wing_aero_worker.js": {
       "path": "docs/wing-panel-stress-analyzer/wing-aero/wing_aero_worker.js",
@@ -127,7 +130,8 @@
     },
     "wing_closed_tip_stress.js": {
       "path": "computational/printed-wing-solver/web/wing_closed_tip_stress.js",
-      "sha256": "f090a67b49e53313d53ea38dc75a0ced7c42345ce688c27efe764fea4d99867b"
+      "sha256": "f48504931ea002a27a300cb14251231fdfd5ad83b48b8c400598e730efbe0a16",
+      "sha256_scope": "Canonical LF source, as committed"
     },
     "wing_finite_section.js": {
       "path": "computational/printed-wing-solver/web/wing_finite_section.js",
@@ -184,7 +188,8 @@
     "wing_study_io.js": {
       "path": "docs/wing-panel-stress-analyzer/ui/zero-tip-source/wing_study_io.js",
       "sha256": "441b39885282f002e1624c7504fa0c6984126d5f5a41f6e1602c28547331ec73",
-      "prior_archived_source_path": "computational/printed-wing-solver/aerostruct/wing_study_io.js"
+      "prior_archived_source_path": "computational/printed-wing-solver/aerostruct/wing_study_io.js",
+      "sha256_scope": "Canonical LF source, as committed"
     },
     "wing_workspace_ui.js": {
       "path": "computational/printed-wing-solver/web/wing_workspace_ui.js",

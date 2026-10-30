@@ -557,6 +557,7 @@
   const view = $('#app > main.view');
   const aeroResults = window.WingAeroStructResults && view ? window.WingAeroStructResults.install({ el, ui, strip: results, view, state: aeroResultState, openAero: () => openMenu('aero'), exportStructureFigure: () => $('#wrImage')?.click() }) : null;
   window.addEventListener('wing-show-model', () => aeroResults?.close());
+  window.addEventListener('wing-preview-recovered', () => closeMenus());
   if (aeroResults) {
     results.insertBefore(aeroResults.selector, display);
     const anchor = printButtons[0]?.parentElement?.previousElementSibling || wlFiles;

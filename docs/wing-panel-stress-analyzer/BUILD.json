@@ -1,10 +1,10 @@
 {
   "product": "MIE 446 Wing AeroStruct",
-  "version": "0.3.4",
+  "version": "0.3.5",
   "status": "Qualified educational solver; explicit 2D/3D section context and tested structural design guidance",
-  "builtAt": "2026-10-30T17:52:01.954432+00:00",
+  "builtAt": "2026-10-30T19:17:55.002272+00:00",
   "page": "index.html",
-  "pageSha256": "2bea8b5c58d40750ba32d56e12570948add6846847afd7dc9dcd8da6af374def",
+  "pageSha256": "a897d834e87716ddfe6b7d9714f428c69e5094b1375b87a2d789a8fa42b01630",
   "workers": {
     "wing-aero": {
       "worker": "8e2d79fa0bfe",
@@ -102,7 +102,7 @@
     },
     "wing_aero_ui.js": {
       "path": "docs/wing-panel-stress-analyzer/ui/wing-aero-ui.js",
-      "sha256": "f56ce622bbf7c94586773ce1f93be8fabd241db61e0823be3b2539aebec8553a",
+      "sha256": "328e10b8e5ab6dab5804e96d3721a37feb6505293bfe25abcf5e56b6f886cccc",
       "prior_archived_source_path": "computational/printed-wing-solver/aerostruct/wing_aero_ui.js",
       "sha256_scope": "Canonical LF source, as committed"
     },
@@ -203,7 +203,7 @@
     },
     "wx-shell.js": {
       "path": "docs/wing-panel-stress-analyzer/ui/wx-shell.js",
-      "sha256": "76b4d80d2cbb6c847e770888e5bddf0d902a7079e22caa7ffc0fcbc45cf95952",
+      "sha256": "a1b65acc6d3acf5ed624e947fcac77c1f41765a0b7dffc40a97860a2c90c7af8",
       "sha256_scope": "Canonical LF source, as committed"
     },
     "wx-shell.css": {
@@ -286,6 +286,18 @@
     "regressions": [
       "validation/test_section_result_context.cjs",
       "validation/test_900mm_design_remedies.cjs"
+    ]
+  },
+  "preview_recovery_port": {
+    "path": "ui/13-preview-recovery-speed-units.patch",
+    "sha256": "293474571e3ec180acf969313f28f8388b6cb520554d249b1665e24b601cc300",
+    "baseCommit": "213d5f04c4ddfb73f61b4bd9ee6e881e2c2fff20",
+    "scope": "Atomic render replacement, complete geometry recovery after admission refusal, m/s and km/h UI; numerical kernels and admission thresholds unchanged",
+    "review": "validation/PREVIEW_RECOVERY_REVIEW.json",
+    "regressions": [
+      "validation/test_geometry_preview_recovery.cjs",
+      "validation/test_speed_units_guidance.cjs",
+      "validation/test_900mm_load_refusal.cjs"
     ]
   }
 }

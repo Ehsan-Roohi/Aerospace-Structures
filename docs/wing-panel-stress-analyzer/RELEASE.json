@@ -1,6 +1,6 @@
 {
   "application": "Wing Panel Stress Analyzer (Wing AeroStruct)",
-  "version": "0.3.4",
+  "version": "0.3.5",
   "source_archive": "wing-aerostruct-0.3.0-dev-review.zip",
   "source_sha256": "bc6986c744568a516fd22bdd3b9508550625b82a77cd924adf52dfaa5156a54d",
   "original_base": "5ab2498",
@@ -55,9 +55,12 @@
       "Independent unit-chord 2D Cp distinguished from actual 3D wing sectional Cp; linked nearest solved strip",
       "Section cl and whole-wing CL use explicit definitions and case labels",
       "Second-spar guidance separates reduced twist from load admission and small-displacement validity",
-      "Readable exact-flow Cp and signed trailing-edge error figures retain every raw sample"
+      "Readable exact-flow Cp and signed trailing-edge error figures retain every raw sample",
+      "Failed geometry construction retains the last visible model and releases only the rejected candidate",
+      "Admission refusal restores a complete opaque undeformed geometry preview with fitted camera",
+      "Live km/h equivalent beside m/s input; aerodynamic speed validity distinguished from structural coupling limits"
     ],
-    "page_sha256": "2bea8b5c58d40750ba32d56e12570948add6846847afd7dc9dcd8da6af374def",
+    "page_sha256": "a897d834e87716ddfe6b7d9714f428c69e5094b1375b87a2d789a8fa42b01630",
     "source_port": "ui/01-wing-aerostruct-ui-sources.patch",
     "independent_review": "validation/UI_RELEASE_REVIEW.json",
     "surface_review": "validation/UI_SURFACE_REVIEW.json",
@@ -72,7 +75,8 @@
       "ui/09-zero-tip-structural-transfer.patch",
       "ui/10-student-feedback-display.patch",
       "ui/11-load-admission-feedback.patch",
-      "ui/12-section-context-design-guidance.patch"
+      "ui/12-section-context-design-guidance.patch",
+      "ui/13-preview-recovery-speed-units.patch"
     ],
     "closed_tip_review": "validation/CLOSED_TIP_AERO_REVIEW.json",
     "course_review": "validation/COURSE_UI_REVIEW.json",
@@ -94,5 +98,6 @@
   "student_feedback_review": "validation/STUDENT_FEEDBACK_REVIEW.json",
   "structural_numerical_solver_unchanged_in_this_release": true,
   "load_admission_review": "validation/LOAD_ADMISSION_REVIEW.json",
-  "section_context_review": "validation/2026-10-29/SECTION_CLARITY_REVIEW.json"
+  "section_context_review": "validation/2026-10-29/SECTION_CLARITY_REVIEW.json",
+  "preview_recovery_review": "validation/PREVIEW_RECOVERY_REVIEW.json"
 }

@@ -13373,6 +13373,12 @@ const WingAeroUI = (() => {
   }
   // Explain a refused coupled result without calling valid geometry bad input.
   // This is presentation only: no admission threshold or solved value changes.
+  function speedUnits(value) {
+    const raw = String(value ?? '').trim(), speed = raw === '' ? NaN : Number(raw);
+    return Number.isFinite(speed) && speed > 0
+      ? `${Number((3.6 * speed).toPrecision(4))} km/h · input is in m/s`
+      : 'Enter speed in m/s; divide km/h by 3.6.';
+  }
   function admissionFailure(adm, context = {}) {
     const row = adm.rows?.find(r => r.kind === 'aeroelastic' && !r.admitted);
     const lines = [], number = (v, digits = 3) => Number.isFinite(v) ? String(Number(v.toPrecision(digits))) : 'unavailable';
@@ -13381,6 +13387,7 @@ const WingAeroUI = (() => {
       if (Number.isFinite(adm.twist?.tipTheta)) lines.push(`Computed tip twist: ${number(adm.twist.tipTheta * 180 / Math.PI)} degrees. This is a flexibility/model-limit check, not a material-strength failure.`);
       const speed = context.flow?.speed, lift = context.liftN;
       if (Number.isFinite(speed)) lines.push(`Selected airspeed: ${number(speed)} m/s (${number(3.6 * speed)} km/h).${Number.isFinite(lift) ? ` Upward aerodynamic force on this semi-wing: ${number(lift)} N.` : ''}`);
+      lines.push('This is not a fixed speed limit: the aerodynamic solution is retained, but this design is too flexible for the one-way structural model under that load. At fixed shape, angle of attack and air density, forces scale with speed squared. For steady level flight, use target lift equal to the actual total aircraft weight to find the required angle of attack; changing speed alone is not a design verification.');
       const validity = context.validity;
       if (validity && !validity.smallDisplacement) lines.push(`The linear structural screening is also exceeded: maximum translation ${number(validity.maxTranslation)} mm (${number(100 * validity.translationRatio)}% of span; limit 5%) and maximum rotation ${number(validity.maxRotation)} rad (limit 0.1 rad).`);
       lines.push('Stiffen the wing, shorten the span, or choose a lower physically justified flight speed. A second bonded spar may help but is not a guaranteed fix: its position also changes the shear-centre torque. The closed skin carries much of the torsion; thicker skin must still leave a valid cavity. After a change, solve Aerodynamics again, apply its loads and review both the coupling and linear screens. A finer panel mesh alone does not fix flexibility.');
@@ -13409,7 +13416,7 @@ const WingAeroUI = (() => {
     const field = (id, label, value, extra = '') => `<label for="${id}">${label}<input id="${id}" type="number" step="any" value="${value}" ${extra}></label>`;
     host.innerHTML = `<div class="wae">
       <p class="note">Attached, incompressible potential flow on the actual wing surface (source and doublet panels, Kutta-condition wake, rounded tip). A sequence of seven meshes is solved and extrapolated; the resulting six-component load is admitted to the structure only if its estimated discretization error is within tolerance.</p>
-      <div class="wae-grid">${field('aeroV', 'Speed V (m/s)', saved.speed, 'min="0"')}${field('aeroRho', 'Air density ρ (kg/m³)', saved.density, 'min="0"')}${field('aeroAlpha', 'Angle of attack α (°)', saved.alphaDeg)}${field('aeroTarget', 'or target lift, both halves (N)', '', 'placeholder="optional"')}
+      <div class="wae-grid">${field('aeroV', 'Speed V (m/s)', saved.speed, 'min="0" aria-describedby="aeroSpeedUnits"').replace('</label>', '<small id="aeroSpeedUnits" aria-live="polite"></small></label>')}${field('aeroRho', 'Air density ρ (kg/m³)', saved.density, 'min="0"')}${field('aeroAlpha', 'Angle of attack α (°)', saved.alphaDeg)}${field('aeroTarget', 'or target lift, both halves (N)', '', 'placeholder="optional"')}
       <label for="aeroSequence">Mesh sequence<select id="aeroSequence"><option value="standard">${SEQUENCE_TEXT.standard}</option><option value="fine">${SEQUENCE_TEXT.fine}</option></select></label></div>
       <p class="note">${SEQUENCE_NOTE}</p>
       <details><summary>Air properties</summary><div class="wae-grid">${field('aeroMu', 'Dynamic viscosity μ (Pa·s)', saved.viscosity)}${field('aeroSound', 'Speed of sound a (m/s)', saved.speedOfSound, 'min="290" max="360"')}</div><p class="note">Used for the Reynolds-number and Mach screens only. The speed of sound must be that of air (290 to 360 m/s); Mach above 0.3 is refused.</p></details>
@@ -13417,6 +13424,9 @@ const WingAeroUI = (() => {
       <p class="wae-status" id="aeroStatus" role="status" aria-live="polite"></p>
       <div id="aeroApplied"></div><div id="aeroAdmission"></div><div id="aeroResults"></div></div>`;
     const $ = s => host.querySelector(s), status = (t, bad = false) => { $('#aeroStatus').innerHTML = bad ? `<span class="wae-err">${esc(t)}</span>` : esc(t); };
+    const updateSpeedUnits = () => { $('#aeroSpeedUnits').textContent = speedUnits($('#aeroV').value); };
+    $('#aeroV').addEventListener('input', updateSpeedUnits);
+    updateSpeedUnits();
     $('#aeroSequence').value = saved.sequence === 'fine' ? 'fine' : 'standard';
     let worker = null, workerFailed = !ad.workerURL || typeof Worker === 'undefined', seq = 0, last = null, lastCombined = null, lastKey = '', running = false, lastAdmission = null;
     const pending = new Map();
@@ -13538,6 +13548,7 @@ const WingAeroUI = (() => {
     function refresh() {
       const s = { ...DEFAULTS, ...(ad.settings?.() || {}) };
       $('#aeroV').value = s.speed; $('#aeroRho').value = s.density; $('#aeroAlpha').value = s.alphaDeg; $('#aeroMu').value = s.viscosity; $('#aeroSound').value = s.speedOfSound;
+      updateSpeedUnits();
       $('#aeroSequence').value = s.sequence === 'fine' ? 'fine' : 'standard';
       syncApplied();
     }
@@ -13560,7 +13571,7 @@ const WingAeroUI = (() => {
     refresh();
     return { refresh, reset, syncApplied, compute, apply, showAdmission, destroy: () => { worker?.terminate(); worker = null; host.innerHTML = ''; }, get result() { return last; }, get combined() { return lastCombined; }, get admission() { return lastAdmission; }, get solvedKey() { return lastKey; }, get running() { return running; } };
   }
-  return Object.freeze({ mount, DEFAULTS, SEQUENCE_TEXT, SEQUENCE_NOTE, spanwiseFigure, cpFigure, csv, runMainThread, recordFromSequence, sequenceOf, delivered, aerodynamicSummary, engineLoad, structuralCuts, structuralTorsion, admit, provenanceHelp, admissionSource, admissionTable, admissionVerdict, admissionFailure });
+  return Object.freeze({ mount, DEFAULTS, SEQUENCE_TEXT, SEQUENCE_NOTE, spanwiseFigure, cpFigure, csv, runMainThread, recordFromSequence, sequenceOf, delivered, aerodynamicSummary, engineLoad, structuralCuts, structuralTorsion, admit, provenanceHelp, admissionSource, admissionTable, admissionVerdict, admissionFailure, speedUnits });
 })();
 if (typeof module !== 'undefined' && module.exports) module.exports = WingAeroUI;
 
@@ -16925,24 +16936,35 @@ if(typeof module!=='undefined'&&module.exports)module.exports=WingPrintUI;
   let runTimer;
   let geometryPreview = false;
   // Geometry only: no section analysis, stress or deformation is calculated here.
-  function previewGeometry() {
+  function previewGeometry(options = {}) {
     if (running) return;
     if(S.emptyStudy){showEmptyWing();return;}
+    if(options.recoverView){
+      // Recovery after a refused solve must reveal the physical wing, even if
+      // the previous view selected an empty member family or clipped it away.
+      // Normal field edits keep the user's view and camera choices.
+      S.anatomy='assembled';S.xray=false;S.deformed=false;S.clip=false;S.explode=0;lastViewSet=false;
+      $('#defBtn').setAttribute('aria-pressed','false');$('#xrayBtn').setAttribute('aria-pressed','false');$('#clipBtn').setAttribute('aria-pressed','false');$('#explodeIn').value=0;
+      setPlot('model',false);
+      window.dispatchEvent(new Event('wing-show-model'));
+      window.dispatchEvent(new Event('wing-preview-recovered'));
+    }
     geometryPreview = true;
     lastGeoKey = null;
     try {
       const g = E.makeGeometry(engineInput().geometry);
-      buildModel({ geometry: g });
+      buildModel({ geometry: g },()=>updateModel());
       lastGeoKey = null; // Rebuild solved geometry even if edits return to the old dimensions.
-      updateModel(); frameView(false); renderViewReadout(true); renderPlotInfo();
+      frameView(options.recoverView===true); renderViewReadout(true); renderPlotInfo();
       renderSparResults();
       $('#probe').hidden = true;
       $('#viewStale').textContent = WingGeometry.closedTip(g)?E.analysisCapability(g).message:'Geometry preview of current inputs; stress, deformation and load arrows are hidden. Press Solve Structure / Stress to update analysis. Results below still belong to the last solved model.';
     } catch (err) {
-      updateModel();
+      try{updateModel();}catch(error){console.error('Could not update the retained wing preview:',error);}
       $('#probe').hidden = true;
-      $('#viewStale').textContent = 'Geometry preview unavailable: '+(err.message||String(err))+'. Previous geometry remains visible; analysis is not up to date.';
-      $('#plotinfo').textContent = 'Invalid geometry inputs: previous geometry shown undeformed, without stress or load arrows. Correct inputs and press Solve Structure / Stress.';
+      const retained=!!model&&model.root.parent===world;
+      $('#viewStale').textContent = 'Geometry preview unavailable: '+(err.message||String(err))+(retained?'. Previous geometry remains visible; analysis is not up to date.':'. No previous wing geometry is available.');
+      $('#plotinfo').textContent = retained?'Previous geometry shown undeformed, without stress or load arrows. Correct the reported issue before solving.':'No wing geometry could be displayed. Correct the reported issue before solving.';
     }
   }
   // Deliberate study actions (lesson experiments, presets, Design-lab buttons, adding or removing a load) solve at once.
@@ -17119,7 +17141,7 @@ if(typeof module!=='undefined'&&module.exports)module.exports=WingPrintUI;
     } finally {
       endWingActivity();
       running = false;
-      if(analysisRefusal)previewGeometry(); // Retain current valid geometry; never render a rejected field.
+      if(analysisRefusal)previewGeometry({recoverView:true}); // Show valid geometry, never a rejected result field.
       setStatus();
       renderTree();
       renderSparResults();
@@ -17246,10 +17268,20 @@ if(typeof module!=='undefined'&&module.exports)module.exports=WingPrintUI;
     return m;
   }
 
-  function buildModel(res) {
-    if (model) { world.remove(model.root); model.root.traverse((o) => { if (o.geometry) o.geometry.dispose(); if (o.material) o.material.dispose(); }); }
+  function disposeWingRoot(root){
+    const geometries=new Set(),materials=new Set();
+    root.traverse(o=>{
+      if(o.geometry)geometries.add(o.geometry);
+      for(const m of [...(Array.isArray(o.material)?o.material:[o.material]),o.userData?.litMaterial,o.userData?.fieldMaterial])if(typeof m?.dispose==='function')materials.add(m);
+    });
+    // Mirror objects share these resources; each is owned and released once.
+    for(const geometry of geometries)geometry.dispose();
+    for(const material of materials)material.dispose();
+  }
+  function buildModel(res,prepare=null) {
+    const previous=model,root=new THREE.Group();
+    try{
     const g = res.geometry, L = g.semiSpan;
-    const root = new THREE.Group();
     const bounds = E.moduleBounds(g);
     const modules = [], skins = [], sleeves = [], rigid = [];
     const outerAt = (y) => E.outerContour(g, y, 49);
@@ -17336,12 +17368,17 @@ if(typeof module!=='undefined'&&module.exports)module.exports=WingPrintUI;
     const shearCentre = new THREE.Group();root.add(shearCentre);
     const marker = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ color: COLORS.seam, transparent: true, opacity: 0.18, side: THREE.DoubleSide, depthWrite: false }));
     marker.visible = false; root.add(marker);
-    world.add(root);
     model = { g, root, modules, skins, sleeves, rods, ribs, rigid, loads, shearCentre, marker, fix,spars:sparMeshes };
     applyClip();
     applyXray();
     $("#ribLabels").innerHTML = ribs.map((_, i) => `<span class="rib-label">R${i + 1}</span>`).join("");
     applyAnatomy();
+    if(prepare)prepare(); // Populate preview positions before replacing the visible root.
+    world.add(root);
+    }catch(error){
+      world.remove(root);model=previous;disposeWingRoot(root);throw error;
+    }
+    if(previous){world.remove(previous.root);disposeWingRoot(previous.root);}
   }
 
   // Symmetric result extension: reflect the solved semi-wing geometry and vector motion.
@@ -25895,6 +25932,7 @@ window.WingAeroStructResults = (() => {
   const view = $('#app > main.view');
   const aeroResults = window.WingAeroStructResults && view ? window.WingAeroStructResults.install({ el, ui, strip: results, view, state: aeroResultState, openAero: () => openMenu('aero'), exportStructureFigure: () => $('#wrImage')?.click() }) : null;
   window.addEventListener('wing-show-model', () => aeroResults?.close());
+  window.addEventListener('wing-preview-recovered', () => closeMenus());
   if (aeroResults) {
     results.insertBefore(aeroResults.selector, display);
     const anchor = printButtons[0]?.parentElement?.previousElementSibling || wlFiles;

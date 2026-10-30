@@ -1,0 +1,45 @@
+{
+  "date": "2026-10-30",
+  "scope": "Geometry display recovery and flow-unit guidance; numerical kernels and admission criteria unchanged",
+  "pageSha256": "a897d834e87716ddfe6b7d9714f428c69e5094b1375b87a2d789a8fa42b01630",
+  "fixture": "fixtures/900mm-panel-load-2026-10-30.json",
+  "fixtureSha256": "d98c40b303f79e2383238c54ef30a9977ab8dc06cf512ef388de44d0e950fe1c",
+  "renderFailure": {
+    "demonstratedMechanism": "A construction exception after pre-disposal removed the old root while leaving the model pointer and axes active",
+    "qualification": "Demonstrated by fault injection with the actual geometry and real Three.js; speed 50 m/s itself has not been established as the original browser rendering trigger",
+    "repair": "Construct and prepare a detached candidate; retain previous root until success, release rejected candidate resources, and commit replacement atomically",
+    "refusalRecovery": "Show complete opaque undeformed geometry, clear member filters, clipping and explosion, fit the camera and close overlaid input menus",
+    "ordinaryEdits": "Keep intentional view and camera settings"
+  },
+  "testsPassed": [
+    "test_geometry_preview_recovery.cjs (deployed Three.js revision 128; construction/preparation exceptions, shared resources, empty member family, clipping, camera and immutable numerical inputs)",
+    "test_speed_units_guidance.cjs (50 m/s = 180 km/h; 25 m/s = 90 km/h; no invented 50 m/s cutoff)",
+    "test_activity_feedback.cjs",
+    "test_900mm_load_refusal.cjs (actual 50, 25 and 15 m/s cases; accepted results not substituted for refused fields)",
+    "test_section_result_context.cjs",
+    "test_aero_result_charts.cjs",
+    "All seven inline JavaScript blocks parse; HTML alias identical; embedded structural kernel byte-for-byte unchanged"
+  ],
+  "browserVerification": {
+    "surface": "ChatGPT in-app Chromium browser, local served release candidate",
+    "exactFixtureImported": true,
+    "structuralSolveRun": true,
+    "validRefusalShown": true,
+    "afterDismissal": "Complete mirrored wing visibly present, fitted and opaque; no input panel obscuring it; no rejected stress or displacement contour",
+    "reload": "The same refusal recurs and geometry remains visibly present",
+    "liveUnitConversion": "Changing the speed field 50 -> 25 updates 180 -> 90 km/h; restored to 50 without applying altered loads",
+    "nativeFirefoxTested": false
+  },
+  "originalCase": {
+    "speedMps": 50,
+    "speedKmh": 180,
+    "upwardForcePerSemiWingN": 96.88413398215272,
+    "computedTipTwistDeg": -0.4008084871912705,
+    "liftFeedbackFraction": 0.05563302891324149,
+    "oneWayCouplingLimit": 0.02,
+    "maxTranslationMm": 63.581277782599486,
+    "translationRatio": 0.07064586420288832,
+    "translationRatioLimit": 0.05,
+    "interpretation": "Aerodynamic computation succeeds; this flexible structure under that fixed-angle load exceeds the existing one-way and small-displacement model screens. This is not a hard speed limit or a material-strength verdict."
+  }
+}

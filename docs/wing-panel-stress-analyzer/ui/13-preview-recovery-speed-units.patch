@@ -1,0 +1,84 @@
+--- a/docs/wing-panel-stress-analyzer/index.html
++++ b/docs/wing-panel-stress-analyzer/index.html
+@@ -13375,0 +13376,6 @@
++  function speedUnits(value) {
++    const raw = String(value ?? '').trim(), speed = raw === '' ? NaN : Number(raw);
++    return Number.isFinite(speed) && speed > 0
++      ? `${Number((3.6 * speed).toPrecision(4))} km/h · input is in m/s`
++      : 'Enter speed in m/s; divide km/h by 3.6.';
++  }
+@@ -13383,0 +13390 @@
++      lines.push('This is not a fixed speed limit: the aerodynamic solution is retained, but this design is too flexible for the one-way structural model under that load. At fixed shape, angle of attack and air density, forces scale with speed squared. For steady level flight, use target lift equal to the actual total aircraft weight to find the required angle of attack; changing speed alone is not a design verification.');
+@@ -13412 +13419 @@
+-      <div class="wae-grid">${field('aeroV', 'Speed V (m/s)', saved.speed, 'min="0"')}${field('aeroRho', 'Air density ρ (kg/m³)', saved.density, 'min="0"')}${field('aeroAlpha', 'Angle of attack α (°)', saved.alphaDeg)}${field('aeroTarget', 'or target lift, both halves (N)', '', 'placeholder="optional"')}
++      <div class="wae-grid">${field('aeroV', 'Speed V (m/s)', saved.speed, 'min="0" aria-describedby="aeroSpeedUnits"').replace('</label>', '<small id="aeroSpeedUnits" aria-live="polite"></small></label>')}${field('aeroRho', 'Air density ρ (kg/m³)', saved.density, 'min="0"')}${field('aeroAlpha', 'Angle of attack α (°)', saved.alphaDeg)}${field('aeroTarget', 'or target lift, both halves (N)', '', 'placeholder="optional"')}
+@@ -13419,0 +13427,3 @@
++    const updateSpeedUnits = () => { $('#aeroSpeedUnits').textContent = speedUnits($('#aeroV').value); };
++    $('#aeroV').addEventListener('input', updateSpeedUnits);
++    updateSpeedUnits();
+@@ -13540,0 +13551 @@
++      updateSpeedUnits();
+@@ -13563 +13574 @@
+-  return Object.freeze({ mount, DEFAULTS, SEQUENCE_TEXT, SEQUENCE_NOTE, spanwiseFigure, cpFigure, csv, runMainThread, recordFromSequence, sequenceOf, delivered, aerodynamicSummary, engineLoad, structuralCuts, structuralTorsion, admit, provenanceHelp, admissionSource, admissionTable, admissionVerdict, admissionFailure });
++  return Object.freeze({ mount, DEFAULTS, SEQUENCE_TEXT, SEQUENCE_NOTE, spanwiseFigure, cpFigure, csv, runMainThread, recordFromSequence, sequenceOf, delivered, aerodynamicSummary, engineLoad, structuralCuts, structuralTorsion, admit, provenanceHelp, admissionSource, admissionTable, admissionVerdict, admissionFailure, speedUnits });
+@@ -16928 +16939 @@
+-  function previewGeometry() {
++  function previewGeometry(options = {}) {
+@@ -16930,0 +16942,10 @@
++    if(options.recoverView){
++      // Recovery after a refused solve must reveal the physical wing, even if
++      // the previous view selected an empty member family or clipped it away.
++      // Normal field edits keep the user's view and camera choices.
++      S.anatomy='assembled';S.xray=false;S.deformed=false;S.clip=false;S.explode=0;lastViewSet=false;
++      $('#defBtn').setAttribute('aria-pressed','false');$('#xrayBtn').setAttribute('aria-pressed','false');$('#clipBtn').setAttribute('aria-pressed','false');$('#explodeIn').value=0;
++      setPlot('model',false);
++      window.dispatchEvent(new Event('wing-show-model'));
++      window.dispatchEvent(new Event('wing-preview-recovered'));
++    }
+@@ -16935 +16956 @@
+-      buildModel({ geometry: g });
++      buildModel({ geometry: g },()=>updateModel());
+@@ -16937 +16958 @@
+-      updateModel(); frameView(false); renderViewReadout(true); renderPlotInfo();
++      frameView(options.recoverView===true); renderViewReadout(true); renderPlotInfo();
+@@ -16942 +16963 @@
+-      updateModel();
++      try{updateModel();}catch(error){console.error('Could not update the retained wing preview:',error);}
+@@ -16944,2 +16965,3 @@
+-      $('#viewStale').textContent = 'Geometry preview unavailable: '+(err.message||String(err))+'. Previous geometry remains visible; analysis is not up to date.';
+-      $('#plotinfo').textContent = 'Invalid geometry inputs: previous geometry shown undeformed, without stress or load arrows. Correct inputs and press Solve Structure / Stress.';
++      const retained=!!model&&model.root.parent===world;
++      $('#viewStale').textContent = 'Geometry preview unavailable: '+(err.message||String(err))+(retained?'. Previous geometry remains visible; analysis is not up to date.':'. No previous wing geometry is available.');
++      $('#plotinfo').textContent = retained?'Previous geometry shown undeformed, without stress or load arrows. Correct the reported issue before solving.':'No wing geometry could be displayed. Correct the reported issue before solving.';
+@@ -17122 +17144 @@
+-      if(analysisRefusal)previewGeometry(); // Retain current valid geometry; never render a rejected field.
++      if(analysisRefusal)previewGeometry({recoverView:true}); // Show valid geometry, never a rejected result field.
+@@ -17249,2 +17271,13 @@
+-  function buildModel(res) {
+-    if (model) { world.remove(model.root); model.root.traverse((o) => { if (o.geometry) o.geometry.dispose(); if (o.material) o.material.dispose(); }); }
++  function disposeWingRoot(root){
++    const geometries=new Set(),materials=new Set();
++    root.traverse(o=>{
++      if(o.geometry)geometries.add(o.geometry);
++      for(const m of [...(Array.isArray(o.material)?o.material:[o.material]),o.userData?.litMaterial,o.userData?.fieldMaterial])if(typeof m?.dispose==='function')materials.add(m);
++    });
++    // Mirror objects share these resources; each is owned and released once.
++    for(const geometry of geometries)geometry.dispose();
++    for(const material of materials)material.dispose();
++  }
++  function buildModel(res,prepare=null) {
++    const previous=model,root=new THREE.Group();
++    try{
+@@ -17252 +17284,0 @@
+-    const root = new THREE.Group();
+@@ -17339 +17370,0 @@
+-    world.add(root);
+@@ -17344,0 +17376,6 @@
++    if(prepare)prepare(); // Populate preview positions before replacing the visible root.
++    world.add(root);
++    }catch(error){
++      world.remove(root);model=previous;disposeWingRoot(root);throw error;
++    }
++    if(previous){world.remove(previous.root);disposeWingRoot(previous.root);}
+@@ -25897,0 +25935 @@
++  window.addEventListener('wing-preview-recovered', () => closeMenus());

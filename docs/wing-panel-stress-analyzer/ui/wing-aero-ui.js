@@ -185,6 +185,12 @@ const WingAeroUI = (() => {
   }
   // Explain a refused coupled result without calling valid geometry bad input.
   // This is presentation only: no admission threshold or solved value changes.
+  function speedUnits(value) {
+    const raw = String(value ?? '').trim(), speed = raw === '' ? NaN : Number(raw);
+    return Number.isFinite(speed) && speed > 0
+      ? `${Number((3.6 * speed).toPrecision(4))} km/h · input is in m/s`
+      : 'Enter speed in m/s; divide km/h by 3.6.';
+  }
   function admissionFailure(adm, context = {}) {
     const row = adm.rows?.find(r => r.kind === 'aeroelastic' && !r.admitted);
     const lines = [], number = (v, digits = 3) => Number.isFinite(v) ? String(Number(v.toPrecision(digits))) : 'unavailable';
@@ -193,6 +199,7 @@ const WingAeroUI = (() => {
       if (Number.isFinite(adm.twist?.tipTheta)) lines.push(`Computed tip twist: ${number(adm.twist.tipTheta * 180 / Math.PI)} degrees. This is a flexibility/model-limit check, not a material-strength failure.`);
       const speed = context.flow?.speed, lift = context.liftN;
       if (Number.isFinite(speed)) lines.push(`Selected airspeed: ${number(speed)} m/s (${number(3.6 * speed)} km/h).${Number.isFinite(lift) ? ` Upward aerodynamic force on this semi-wing: ${number(lift)} N.` : ''}`);
+      lines.push('This is not a fixed speed limit: the aerodynamic solution is retained, but this design is too flexible for the one-way structural model under that load. At fixed shape, angle of attack and air density, forces scale with speed squared. For steady level flight, use target lift equal to the actual total aircraft weight to find the required angle of attack; changing speed alone is not a design verification.');
       const validity = context.validity;
       if (validity && !validity.smallDisplacement) lines.push(`The linear structural screening is also exceeded: maximum translation ${number(validity.maxTranslation)} mm (${number(100 * validity.translationRatio)}% of span; limit 5%) and maximum rotation ${number(validity.maxRotation)} rad (limit 0.1 rad).`);
       lines.push('Stiffen the wing, shorten the span, or choose a lower physically justified flight speed. A second bonded spar may help but is not a guaranteed fix: its position also changes the shear-centre torque. The closed skin carries much of the torsion; thicker skin must still leave a valid cavity. After a change, solve Aerodynamics again, apply its loads and review both the coupling and linear screens. A finer panel mesh alone does not fix flexibility.');
@@ -221,7 +228,7 @@ const WingAeroUI = (() => {
     const field = (id, label, value, extra = '') => `<label for="${id}">${label}<input id="${id}" type="number" step="any" value="${value}" ${extra}></label>`;
     host.innerHTML = `<div class="wae">
       <p class="note">Attached, incompressible potential flow on the actual wing surface (source and doublet panels, Kutta-condition wake, rounded tip). A sequence of seven meshes is solved and extrapolated; the resulting six-component load is admitted to the structure only if its estimated discretization error is within tolerance.</p>
-      <div class="wae-grid">${field('aeroV', 'Speed V (m/s)', saved.speed, 'min="0"')}${field('aeroRho', 'Air density ρ (kg/m³)', saved.density, 'min="0"')}${field('aeroAlpha', 'Angle of attack α (°)', saved.alphaDeg)}${field('aeroTarget', 'or target lift, both halves (N)', '', 'placeholder="optional"')}
+      <div class="wae-grid">${field('aeroV', 'Speed V (m/s)', saved.speed, 'min="0" aria-describedby="aeroSpeedUnits"').replace('</label>', '<small id="aeroSpeedUnits" aria-live="polite"></small></label>')}${field('aeroRho', 'Air density ρ (kg/m³)', saved.density, 'min="0"')}${field('aeroAlpha', 'Angle of attack α (°)', saved.alphaDeg)}${field('aeroTarget', 'or target lift, both halves (N)', '', 'placeholder="optional"')}
       <label for="aeroSequence">Mesh sequence<select id="aeroSequence"><option value="standard">${SEQUENCE_TEXT.standard}</option><option value="fine">${SEQUENCE_TEXT.fine}</option></select></label></div>
       <p class="note">${SEQUENCE_NOTE}</p>
       <details><summary>Air properties</summary><div class="wae-grid">${field('aeroMu', 'Dynamic viscosity μ (Pa·s)', saved.viscosity)}${field('aeroSound', 'Speed of sound a (m/s)', saved.speedOfSound, 'min="290" max="360"')}</div><p class="note">Used for the Reynolds-number and Mach screens only. The speed of sound must be that of air (290 to 360 m/s); Mach above 0.3 is refused.</p></details>
@@ -229,6 +236,9 @@ const WingAeroUI = (() => {
       <p class="wae-status" id="aeroStatus" role="status" aria-live="polite"></p>
       <div id="aeroApplied"></div><div id="aeroAdmission"></div><div id="aeroResults"></div></div>`;
     const $ = s => host.querySelector(s), status = (t, bad = false) => { $('#aeroStatus').innerHTML = bad ? `<span class="wae-err">${esc(t)}</span>` : esc(t); };
+    const updateSpeedUnits = () => { $('#aeroSpeedUnits').textContent = speedUnits($('#aeroV').value); };
+    $('#aeroV').addEventListener('input', updateSpeedUnits);
+    updateSpeedUnits();
     $('#aeroSequence').value = saved.sequence === 'fine' ? 'fine' : 'standard';
     let worker = null, workerFailed = !ad.workerURL || typeof Worker === 'undefined', seq = 0, last = null, lastCombined = null, lastKey = '', running = false, lastAdmission = null;
     const pending = new Map();
@@ -350,6 +360,7 @@ const WingAeroUI = (() => {
     function refresh() {
       const s = { ...DEFAULTS, ...(ad.settings?.() || {}) };
       $('#aeroV').value = s.speed; $('#aeroRho').value = s.density; $('#aeroAlpha').value = s.alphaDeg; $('#aeroMu').value = s.viscosity; $('#aeroSound').value = s.speedOfSound;
+      updateSpeedUnits();
       $('#aeroSequence').value = s.sequence === 'fine' ? 'fine' : 'standard';
       syncApplied();
     }
@@ -372,6 +383,6 @@ const WingAeroUI = (() => {
     refresh();
     return { refresh, reset, syncApplied, compute, apply, showAdmission, destroy: () => { worker?.terminate(); worker = null; host.innerHTML = ''; }, get result() { return last; }, get combined() { return lastCombined; }, get admission() { return lastAdmission; }, get solvedKey() { return lastKey; }, get running() { return running; } };
   }
-  return Object.freeze({ mount, DEFAULTS, SEQUENCE_TEXT, SEQUENCE_NOTE, spanwiseFigure, cpFigure, csv, runMainThread, recordFromSequence, sequenceOf, delivered, aerodynamicSummary, engineLoad, structuralCuts, structuralTorsion, admit, provenanceHelp, admissionSource, admissionTable, admissionVerdict, admissionFailure });
+  return Object.freeze({ mount, DEFAULTS, SEQUENCE_TEXT, SEQUENCE_NOTE, spanwiseFigure, cpFigure, csv, runMainThread, recordFromSequence, sequenceOf, delivered, aerodynamicSummary, engineLoad, structuralCuts, structuralTorsion, admit, provenanceHelp, admissionSource, admissionTable, admissionVerdict, admissionFailure, speedUnits });
 })();
 if (typeof module !== 'undefined' && module.exports) module.exports = WingAeroUI;

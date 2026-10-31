@@ -11,7 +11,8 @@ try{
  assert.equal(toolbar.contains($('#solve')),false);assert.equal(toolbar.contains($('#clear')),false);
  const rows=[...toolbar.children].filter(e=>!e.matches('input[type="hidden"]'));assert.equal(rows.length,3);assert.equal(rows[0],$('.geometry-row'));assert.equal(rows[1],$('.load-row'));assert.equal(rows[2],$('.truss-file-tools'));
  assert.equal(rows[2].getAttribute('aria-label'),'Truss study files');assert.deepEqual([...rows[2].querySelectorAll('button')].map(e=>e.id),['trussOpenJson','trussSaveJson']);assert.equal($('#trussJsonFile').type,'file');assert.equal($('#trussJsonFile').hidden,true);assert.equal($('#trussFileStatus').getAttribute('role'),'status');
- assert.deepEqual([...$('.geometry-row').children].map(e=>e.dataset.tool||e.className),['node','member','select','tools support-tools']);
+ assert.deepEqual([...$('.geometry-row').children].map(e=>e.dataset.tool||e.className),['node','member','member-type-control','select','batch','tools support-tools']);
+ assert.equal($('#newType').closest('.geometry-row'),$('.geometry-row'));
  assert.deepEqual([...$('.support-tools').children].map(e=>e.querySelector('button')?.dataset.tool||e.textContent.trim()),['SUPPORTS','pin','roller','Clear all supports']);
  assert.deepEqual([...$('.load-row').children].map(e=>e.id||e.dataset.tool||e.className),['tools load-start','line','clearLoads','tools history-tools','selectionHelp']);
  assert.equal($('#drawingHelp'),null);assert.match($('#selectionHelp').textContent,/bilateral/);assert.match($('#selectionHelp').textContent,/Grid Off/);

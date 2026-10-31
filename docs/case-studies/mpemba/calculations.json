@@ -1,0 +1,101 @@
+{
+  "scope": "Original classroom calculations, not measurements or water-model validation",
+  "water": {
+    "hot": {
+      "initial_C": 80,
+      "assumed_nucleation_C": -2,
+      "zero_crossing_s": 965.6627474604602,
+      "nucleation_onset_s": 1028.879056855156
+    },
+    "warm": {
+      "initial_C": 35,
+      "assumed_nucleation_C": -15,
+      "zero_crossing_s": 606.9605470070879,
+      "nucleation_onset_s": 1438.7371636790224
+    }
+  },
+  "markov": {
+    "energies": [
+      0.0,
+      0.3,
+      8.3
+    ],
+    "bath_temperature": 1.0,
+    "generator_column_convention": "dp/dt = R p; R_ij is rate from j to i",
+    "generator": [
+      [
+        -0.4273601490697835,
+        0.5740353321967361,
+        8.467497705676644
+      ],
+      [
+        0.42525583340642475,
+        -0.574548789066253,
+        1.5305933561873202
+      ],
+      [
+        0.0021043156633586213,
+        0.0005134568695167234,
+        -9.998091061863963
+      ]
+    ],
+    "eigenvalues": [
+      -10.0,
+      -1.0,
+      0.0
+    ],
+    "equilibrium": [
+      0.5743605218894895,
+      0.42549673985599445,
+      0.00014273825451604325
+    ],
+    "preparations": {
+      "warm": {
+        "initial_temperature": 2.0,
+        "initial_distribution": [
+          0.5329148479766678,
+          0.45868406040886506,
+          0.008401091614467105
+        ],
+        "initial_TV": 0.04144567391282172,
+        "slow_mode_coefficient": -0.06917716626438362,
+        "time_to_TV_1e-4": 5.834877781200942
+      },
+      "hot": {
+        "initial_temperature": 10.0,
+        "initial_distribution": [
+          0.4155421369467158,
+          0.4032610108011429,
+          0.18119685225214124
+        ],
+        "initial_TV": 0.18105411399762522,
+        "slow_mode_coefficient": -6.372510057351972e-18,
+        "time_to_TV_1e-4": 0.7501381051939642
+      }
+    },
+    "checks": [
+      "nonnegative transition rates",
+      "zero column sums",
+      "stationarity",
+      "detailed balance",
+      "normalized positive probabilities",
+      "independent matrix exponential agreement",
+      "TV and KL contraction",
+      "farther hot initial state reaches the same tolerance first"
+    ],
+    "scope": "Deliberately constructed synthetic model; no experimental data fitted"
+  },
+  "energy": {
+    "water_mass_kg": 0.25,
+    "assumed_cp_J_kgK": 4180,
+    "extra_energy_80_vs_35_J": 47025.0,
+    "assumed_fusion_heat_J_kg": 334000,
+    "fusion_energy_J": 83500.0
+  },
+  "restrained_bar": {
+    "assumed_E_Pa": 70000000000.0,
+    "assumed_alpha_1_K": 2.3e-05,
+    "temperature_rise_K": 50,
+    "stress_Pa_tension_positive": -80500000.0
+  }
+}

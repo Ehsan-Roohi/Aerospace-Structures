@@ -132,6 +132,10 @@ The G-code is provided for inspection only. Do not send it directly to a printer
 
 ## Engineering readings and case studies
 
+**[The Mpemba effect: freezing water, nonequilibrium relaxation and thermal history](MPEMBA_EFFECT.md)** — an expanded reading inspired by the supplied Zoomit article, with 15 linked sources including 2026 water experiments and a recent research review. Distinguishes cooling, nucleation, solidification and equilibration; includes three original synthetic figures, checked Python calculations, colloidal/quantum/granular examples, polymer crystallization and a thermal-stress exercise. Optional interdisciplinary enrichment, with a Persian summary.
+
+[**Open the illustrated reading with larger equations →**](https://ehsan-roohi.github.io/Aerospace-Structures/case-studies/mpemba/)
+
 **[Boeing 737-800 Split Scimitar Winglets: aerodynamics, structures and aeroelasticity](SPLIT_SCIMITAR_WINGLETS.md)** — a detailed case study based on the supplied workshop video: induced drag, nonplanar loading, wing-root moments, thin-walled torsion, fastener groups, reinforcement and mass, flutter, fatigue and an FAA integration example. Includes the [25-second video](docs/case-studies/split-scimitar/linkedin-video.mp4), six real photographs/video frames, reproducible Python calculations, a claim-by-claim fuel-saving audit and 14 linked references.
 
 [**Read the illustrated report and play the video on the page →**](https://ehsan-roohi.github.io/Aerospace-Structures/case-studies/split-scimitar/)

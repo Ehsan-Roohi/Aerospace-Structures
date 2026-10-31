@@ -132,6 +132,8 @@ The G-code is provided for inspection only. Do not send it directly to a printer
 
 ## Engineering readings and case studies
 
+**[Monty Hall: conditional probability, selection and engineering judgment](MONTY_HALL.md)** — an expanded reading inspired by Zoomit, with exact and Bayesian solutions, host-policy variants, pigeon-learning research, a structural-inspection example and reproducible Python simulation. [Open the illustrated reading](https://ehsan-roohi.github.io/Aerospace-Structures/case-studies/monty-hall/). Optional enrichment with a Persian summary.
+
 **[The Mpemba effect: freezing water, nonequilibrium relaxation and thermal history](MPEMBA_EFFECT.md)** — an expanded reading inspired by the supplied Zoomit article, with 15 linked sources including 2026 water experiments and a recent research review. Distinguishes cooling, nucleation, solidification and equilibration; includes three original synthetic figures, checked Python calculations, colloidal/quantum/granular examples, polymer crystallization and a thermal-stress exercise. Optional interdisciplinary enrichment, with a Persian summary.
 
 [**Open the illustrated reading with larger equations →**](https://ehsan-roohi.github.io/Aerospace-Structures/case-studies/mpemba/)

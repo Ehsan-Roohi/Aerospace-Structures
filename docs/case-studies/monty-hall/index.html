@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Evidence, equations and reproducible examples for the Monty Hall problem, conditional probability and engineering judgment. MIE 446, UMass Amherst.">
+<title>Monty Hall · MIE 446 Aerospace Structures</title><style>
+:root{color-scheme:light;--ink:#183345;--blue:#176d9e;--line:#d6e2e9}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:#edf2f6;color:var(--ink);font:18px/1.75 system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
+main{max-width:1100px;margin:0 auto;background:#fff;padding:clamp(22px,5vw,72px)}.page-nav{font-size:15px;display:flex;flex-wrap:wrap;gap:10px 24px;border-bottom:1px solid var(--line);padding-bottom:20px;margin-bottom:35px}
+h1{font-size:clamp(30px,4.3vw,46px);line-height:1.18;letter-spacing:-.025em;margin:0 0 28px}h2{font-size:clamp(24px,3vw,31px);line-height:1.3;color:#164a68;margin-top:2em;scroll-margin-top:20px}h3{font-size:23px;color:#164a68;margin-top:1.6em}
+p,li{max-width:82ch}a{color:#086ca8;text-underline-offset:3px}a:hover{color:#124864}a:focus-visible{outline:3px solid #d28934;outline-offset:3px}img{display:block;max-width:100%;height:auto;margin:25px auto 12px}figure{margin:24px 0}figcaption{font-size:16px}
+table{border-collapse:collapse;display:block;max-width:100%;overflow-x:auto;margin:24px 0;font-size:16px;line-height:1.6}th,td{border:1px solid var(--line);padding:12px 14px;vertical-align:top;text-align:left;min-width:100px}th{background:#edf4f8;color:#164a68}tr:nth-child(even){background:#f8fafc}
+.math.display{display:block;max-width:100%;overflow-x:auto;padding:12px 2px;font-size:1.18em}.math.inline{font-size:1.05em}mjx-container{max-width:100%}.math.display mjx-container{margin:.5em 0!important}
+code{font-size:.88em;background:#edf3f7;padding:.12em .3em;border-radius:4px}pre{overflow-x:auto;background:#152d3f;color:#f1f6f9;border-radius:9px;padding:20px;font-size:15px}pre code{background:none;padding:0;color:inherit}
+div[lang=fa]{background:#f0f6fa;border-inline-start:4px solid #2a7ea6;padding:12px 25px 18px;margin:30px 0;text-align:right}div[lang=fa] p{max-width:none;line-height:2}div[lang=fa] h3{margin-top:8px}
+blockquote{border-left:4px solid var(--blue);margin-left:0;padding-left:20px}footer{border-top:1px solid var(--line);margin-top:48px;padding-top:20px;font-size:15px;color:#536977}
+@media(max-width:650px){body{font-size:17px}main{padding:26px 20px}th,td{font-size:14px;padding:9px;min-width:110px}.math.display{font-size:1.05em}h1{font-size:32px}}
+@media print{body{background:#fff;font-size:11pt}main{padding:0;max-width:none}.page-nav{display:none}h2,h3{break-after:avoid}img,table{break-inside:avoid}a{color:inherit}pre{white-space:pre-wrap}}
+</style>
+<script>window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},options:{skipHtmlTags:['script','noscript','style','textarea','pre','code']}};</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+</head><body><main><nav class="page-nav" aria-label="Course navigation">
+<a href="https://github.com/Ehsan-Roohi/Aerospace-Structures">MIE 446 course home</a>
+<a href="https://github.com/Ehsan-Roohi/Aerospace-Structures/blob/main/MONTY_HALL.md">Report on GitHub</a>
+<a href="simulation.py">Calculation source</a><a href="results.json">Numerical record</a>
+</nav><h1
+id="monty-hall-conditional-probability-selection-and-engineering-judgment">Monty
+Hall: conditional probability, selection and engineering judgment</h1>
+<p>MIE 446 · Aerospace Structures · Optional mathematical enrichment ·
+31 October 2026</p>
+<p><a href="https://github.com/Ehsan-Roohi/Aerospace-Structures">Course
+home</a> · <a
+href="https://ehsan-roohi.github.io/Aerospace-Structures/case-studies/monty-hall/">Illustrated
+reading</a> · <a href="simulation.py">Python simulation</a></p>
+<div lang="fa" dir="rtl">
+
+<h3 id="خلاصهٔ-فارسی">خلاصهٔ فارسی</h3>
+<p>در مسئلهٔ استاندارد مونتی هال، جایزه با احتمال برابر پشت یکی از سه در
+است. شما یک در انتخاب می‌کنید؛ مجری جایزه را می‌داند، همیشه یک در
+انتخاب‌نشدهٔ بدون جایزه را باز می‌کند و همیشه اجازهٔ تعویض می‌دهد. ماندن با
+احتمال یک‌سوم و تعویض با احتمال دوسوم می‌برد. دلیل اصلی این است که تعویض
+دقیقاً وقتی برنده است که انتخاب اول اشتباه بوده باشد.</p>
+<p>اگر مجری تصادفی و بدون اطلاع دری را باز کند، یا فقط در بعضی وضعیت‌ها
+پیشنهاد تعویض بدهد، پاسخ تغییر می‌کند. در مهندسی نیز نتیجهٔ آزمایش را باید
+همراه با روش انتخاب نمونه و گزارش داده‌ها تفسیر کرد. این متن، توضیح و
+محاسبات مستقلی با الهام از مقالهٔ زومیت است؛ ترجمهٔ کامل آن نیست. مطالعهٔ
+تکمیلی نشان می‌دهد برتری کبوترها بر انسان‌ها در یک آزمایش را نمی‌توان به
+هوش عمومی تعمیم داد.</p>
+</div>
+
+<h2 id="1-define-the-experiment-before-calculating">1. Define the
+experiment before calculating</h2>
+<p>The supplied Zoomit feature [1] introduces the puzzle and its
+psychological appeal. This reading develops the probability model and
+adds reproducible calculations and a structural-inspection analogy.
+Selvin's 1975 letter [2] explicitly discusses the host's knowledge and
+choice rule; a television show's actual bargaining rules need not match
+this idealized experiment.</p>
+<p>Assume one prize is uniformly assigned to three doors, independently
+of the player's first choice. The host knows its location, never opens
+the chosen door or the prize door, always opens one losing door, and
+always offers a switch. For calculations conditioned on <strong>which
+particular door</strong> is opened, additionally specify that the host
+selects equally between the two losing doors when the player initially
+chose the prize.</p>
+<p>The last assumption is unnecessary for the overall success rate of
+always switching. It is necessary for the familiar symmetric posterior
+after observing a named door. Distinguishing these two questions
+prevents a common hidden modeling error.</p>
+<h2 id="2-an-exact-proof-in-three-rows">2. An exact proof in three
+rows</h2>
+<p>Without loss of generality choose door 1. Prize positions are equally
+likely.</p>
+<table>
+<thead>
+<tr class="header">
+<th>Prize</th>
+<th>Host opens</th>
+<th>Stay</th>
+<th>Switch</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Door 1</td>
+<td>Door 2 or 3</td>
+<td>Win</td>
+<td>Lose</td>
+</tr>
+<tr class="even">
+<td>Door 2</td>
+<td>Door 3</td>
+<td>Lose</td>
+<td>Win</td>
+</tr>
+<tr class="odd">
+<td>Door 3</td>
+<td>Door 2</td>
+<td>Lose</td>
+<td>Win</td>
+</tr>
+</tbody>
+</table>
+<p>Switching wins if and only if the first choice was wrong.
+Therefore</p>
+<p><span class="math display">\[P(\mathrm{stay\ wins})=\frac13,\qquad
+P(\mathrm{switch\ wins})=1-\frac13=\frac23.\]</span></p>
+<p>This is a proof about the experiment, not an estimate from repeated
+play. One unlucky switch cannot refute it; even an optimal strategy
+loses one third of its games.</p>
+<h2 id="3-bayes-theorem-account-for-how-evidence-is-produced">3. Bayes'
+theorem: account for how evidence is produced</h2>
+<p>Let <span class="math inline">\(C_i\)</span> mean the prize is behind
+door <span class="math inline">\(i\)</span>, and <span
+class="math inline">\(H_3\)</span> mean the host opens door 3, after the
+player picks door 1. Under fair tie breaking,</p>
+<p><span class="math display">\[P(H_3\mid C_1)=\tfrac12,\quad P(H_3\mid
+C_2)=1,\quad P(H_3\mid C_3)=0.\]</span></p>
+<p>Thus <span class="math inline">\(P(H_3)=1/2\)</span> and</p>
+<p><span class="math display">\[P(C_1\mid
+H_3)=\frac{(1/2)(1/3)}{1/2}=\frac13,\qquad P(C_2\mid
+H_3)=\frac{1(1/3)}{1/2}=\frac23.\]</span></p>
+<p>Two closed doors do not imply equal probabilities: the host
+deliberately protected the prize. For a biased host define <span
+class="math inline">\(q=P(H_3\mid C_1)\)</span>. Then</p>
+<p><span class="math display">\[P(C_1\mid H_3)=\frac{q}{1+q},\qquad
+P(C_2\mid H_3)=\frac{1}{1+q}.\]</span></p>
+<p>For <span class="math inline">\(q=1\)</span>, this particular
+observation gives equal probabilities; for <span
+class="math inline">\(q=0\)</span>, door 2 is certain. Nevertheless, the
+unconditional always-switch strategy still wins two thirds of games. A
+posterior conditional on a named observation and a strategy's average
+success are different quantities.</p>
+<h2 id="4-change-the-host-change-the-answer">4. Change the host, change
+the answer</h2>
+<table>
+<thead>
+<tr class="header">
+<th>Protocol</th>
+<th>Conditioning event</th>
+<th style="text-align: right;">Stay wins</th>
+<th style="text-align: right;">Switch wins</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Informed, always offers</td>
+<td>A losing door is opened</td>
+<td style="text-align: right;">1/3</td>
+<td style="text-align: right;">2/3</td>
+</tr>
+<tr class="even">
+<td>Uninformed, uniformly opens an unchosen door</td>
+<td>Opened door happens to be losing</td>
+<td style="text-align: right;">1/2</td>
+<td style="text-align: right;">1/2</td>
+</tr>
+<tr class="odd">
+<td>Offers only when first choice is correct</td>
+<td>A switch is offered</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0</td>
+</tr>
+<tr class="even">
+<td>Offers only when first choice is wrong</td>
+<td>A switch is offered</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+</tr>
+</tbody>
+</table>
+<p>In the uninformed case, exposing the prize ends the game; those
+trials must be counted and then excluded from the conditional
+denominator. Initially correct choices survive with probability 1,
+initially wrong choices survive with probability 1/2. Each contributes
+probability 1/3 to the surviving sample, giving equal posteriors.</p>
+<p>More generally let <span class="math inline">\(a\)</span> be the
+probability of offering a switch when the first choice is correct, and
+<span class="math inline">\(b\)</span> its probability when the first
+choice is wrong. Assume an informed host reveals a losing door and that
+these offer rates depend only on initial correctness. Averaging over
+opened-door identities,</p>
+<p><span class="math display">\[P(\mathrm{switch\
+wins}\mid\mathrm{offer})=\frac{2b}{a+2b},\qquad a+2b&gt;0.\]</span></p>
+<p>For <span class="math inline">\(a=1,b=0.1\)</span>, switching wins
+only <span class="math inline">\(1/6\)</span> of offered games.
+Observing an offer is itself selected evidence. With an unknown
+protocol, a unique numerical answer may be unjustified.</p>
+<h2 id="5-many-doors-and-expected-value">5. Many doors and expected
+value</h2>
+<p>With <span class="math inline">\(n\)</span> equally likely doors, if
+the informed host always reveals <span
+class="math inline">\(n-2\)</span> losing doors, always switching to the
+single remaining unchosen door wins with probability <span
+class="math inline">\((n-1)/n\)</span>. At 100 doors that is 99%, versus
+1% for staying. If more than one alternative stays closed, this formula
+does not directly give the success rate for switching to just one of
+them.</p>
+<p>For prize value <span class="math inline">\(V\)</span> and a fee
+<span class="math inline">\(c\)</span> charged every time the player
+switches, with zero payoff for losing, the standard game's expected net
+values are</p>
+<p><span class="math display">\[E_{\rm stay}=V/3,\qquad E_{\rm
+switch}=2V/3-c.\]</span></p>
+<p>A risk-neutral player prefers switching when <span
+class="math inline">\(c&lt;V/3\)</span>. Maximizing win probability and
+maximizing net value coincide only when the costs and payoffs support
+that objective.</p>
+<h2 id="6-what-do-the-pigeon-studies-establish">6. What do the pigeon
+studies establish?</h2>
+<p>Herbranson and Schroeder [3] used repeated, rewarded key choices in
+pigeons and a corresponding human task. Their birds learned near-optimal
+strategies, whereas human participants did not consistently do so. This
+demonstrates learning under a particular reinforcement procedure; it
+does not establish that birds understand Bayes' theorem or possess
+greater general intelligence.</p>
+<p>Mazur and Kahlbaugh [4] subsequently compared pigeons, college
+students and preschoolers. College students began switching on a
+majority of trials sooner than pigeons, and most individuals did not
+reach the optimal strategy in the standard condition. When switching
+paid off 90% of the time, all students and all but one pigeon learned
+nearly always to switch. Protocol and reward discriminability matter. A
+broad headline about pigeons defeating mathematicians is therefore
+stronger than the combined evidence supports.</p>
+<p>There is also a distinction between <strong>probability
+matching</strong> and maximizing reward. If a player independently
+switches with probability <span class="math inline">\(s\)</span>, the
+standard game's win probability is</p>
+<p><span
+class="math display">\[P(\mathrm{win})=s\frac23+(1-s)\frac13=\frac{1+s}{3}.\]</span></p>
+<p>Choosing <span class="math inline">\(s=2/3\)</span> wins <span
+class="math inline">\(5/9\)</span> of games, below <span
+class="math inline">\(2/3\)</span> for <span
+class="math inline">\(s=1\)</span>. Matching the action frequencies to
+reward probabilities is not the same as selecting the better action
+every time. These calculations describe an idealized fixed strategy, not
+a fitted model of every experimental participant.</p>
+<h2
+id="7-connection-to-aerospace-structures-inspection-is-selected-evidence">7.
+Connection to aerospace structures: inspection is selected evidence</h2>
+<p>The lesson for structures is conditional reasoning, not a literal
+mapping from doors to aircraft. Consider a hypothetical fleet of coupons
+with prior crack prevalence 1%, inspection sensitivity 90%, and
+false-positive rate 5%. These are assumed classroom values, not measured
+aircraft inspection performance or approval criteria. Let <span
+class="math inline">\(D\)</span> denote a crack and <span
+class="math inline">\(+\)</span> a positive indication.</p>
+<p><span class="math display">\[P(D\mid
++)=\frac{0.90(0.01)}{0.90(0.01)+0.05(0.99)}=\frac{2}{13}\approx15.38\%.\]</span></p>
+<p>Among 10,000 expected inspections, 100 coupons have cracks, producing
+90 true positive indications; 9,900 uncracked coupons produce 495 false
+positives. The positive sample contains 585 coupons, of which 90 are
+cracked. Sensitivity <span class="math inline">\(P(+\mid D)\)</span> is
+not the posterior <span class="math inline">\(P(D\mid +)\)</span>.</p>
+<p>This low posterior does not justify ignoring indications.
+Consequences, confirmatory inspection, crack growth and applicable
+maintenance procedures govern action. If coupons were deliberately
+selected for suspicious features, the original 1% prior may no longer
+apply. Likewise, reporting only specimens that passed a screening test
+changes the population behind an apparently favorable strength
+result.</p>
+<p>Before interpreting any experiment ask: What population was sampled?
+What was screened out? Could the measurement process depend on the
+underlying state? Were all outcomes reported? These questions complement
+equilibrium, compatibility and material modeling rather than replacing
+them.</p>
+<h2 id="8-reproduce-and-audit-the-calculation">8. Reproduce and audit
+the calculation</h2>
+<p>Run the standard-library-only source:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> docs/case-studies/monty-hall/simulation.py</span></code></pre></div>
+<p>The fixed seed is 446 and there are 100,000 trials per protocol. The
+source explicitly chooses a prize, first door, host action and remaining
+alternative. It records discarded prize-revealing trials for the
+uninformed host. An independent exact enumeration uses rational
+arithmetic to verify both protocols and the biased-host posterior.
+Output is saved to <a href="results.json">results.json</a>. Synthetic
+simulation results are not animal-behavior observations.</p>
+<p>Figure 1 compares simulated win rates with exact predictions;
+sampling error explains small differences. Staying and switching are
+evaluated on the same rounds and are complementary, so their errors are
+not independent.</p>
+<p><img src="probabilities.svg"
+alt="Figure 1. Simulated versus exact conditional win rates for informed and uninformed host protocols." /></p>
+<p><strong>Figure 1.</strong> Original visualization generated by the
+supplied Python program. The uninformed results use only rounds where
+the host revealed a losing door; the retained count is in the numerical
+record.</p>
+<h3 id="classroom-activities">Classroom activities</h3>
+<ol type="1">
+<li>Predict both protocols before running the source. Explain why their
+denominators differ.</li>
+<li>Derive the biased-host posterior at <span
+class="math inline">\(q=0.2\)</span>, then explain why overall switching
+still wins two thirds.</li>
+<li>Compute the offered-game switching success for <span
+class="math inline">\(a=0.8,b=0.2\)</span> and explain the selection
+mechanism.</li>
+<li>Repeat the inspection example at 10% prevalence. Keep sensitivity
+and false-positive rate fixed.</li>
+<li>Explain why a correct simulation of the wrong host protocol fails to
+validate the intended mathematical model.</li>
+</ol>
+<p><strong>Answer checks:</strong> 2: staying <span
+class="math inline">\(1/6\)</span>, switching <span
+class="math inline">\(5/6\)</span> after observing <span
+class="math inline">\(H_3\)</span>; 3: <span
+class="math inline">\(1/3\)</span>; 4: <span
+class="math inline">\(2/3\)</span>. For item 5, distinguish
+implementation verification from validation of assumptions.</p>
+<h2 id="references">References</h2>
+<p>All entries are cited above. The starting feature is credited; the
+mathematics, simulation and engineering example are independently
+developed here. No article images or full translated text are
+reproduced.</p>
+<ol type="1">
+<li>Pooyesh Pourmohammad, <a
+href="https://www.zoomit.ir/human-science/470231-monty-hall-problem-explained-featured/">Zoomit
+feature on the Monty Hall problem</a>, 31 October 2026. Starting
+reading.</li>
+<li>Steve Selvin, “On the Monty Hall Problem,” <em>The American
+Statistician</em> <strong>29</strong>(3), 134 (1975). <a
+href="https://www.montyhallproblem.com/as.html">Public transcription of
+the original letter</a>. Historical statement and host assumptions.</li>
+<li>Walter T. Herbranson and Julia Schroeder, “Are Birds Smarter Than
+Mathematicians? Pigeons (Columba livia) Perform Optimally on a Version
+of the Monty Hall Dilemma,” <em>Journal of Comparative Psychology</em>
+<strong>124</strong>(1), 1–13 (2010). <a
+href="https://doi.org/10.1037/a0017703">doi:10.1037/a0017703</a>; <a
+href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3086893/">full author
+manuscript</a>.</li>
+<li>James E. Mazur and Patricia E. Kahlbaugh, “Choice Behavior of
+Pigeons (Columba livia), College Students, and Preschool Children (Homo
+sapiens) in the Monty Hall Dilemma,” <em>Journal of Comparative
+Psychology</em> <strong>126</strong>(4), 407–420 (2012). <a
+href="https://doi.org/10.1037/a0028273">doi:10.1037/a0028273</a>; <a
+href="https://pmc.ncbi.nlm.nih.gov/articles/PMC3435463/">full author
+manuscript</a>.</li>
+</ol>
+<footer>Optional interdisciplinary reading. Original synthetic figures; no experimental measurements are presented as new results. Updated 31 October 2026.</footer></main></body></html>

@@ -1,0 +1,27 @@
+{
+  "seed": 446,
+  "trials_per_protocol": 100000,
+  "synthetic": true,
+  "protocols": {
+    "informed": {
+      "retained": 100000,
+      "discarded": 0,
+      "stay_wins": 33165,
+      "switch_wins": 66835,
+      "stay_rate": 0.33165,
+      "switch_rate": 0.66835,
+      "exact_stay": "1/3",
+      "exact_switch": "2/3"
+    },
+    "uninformed": {
+      "retained": 66798,
+      "discarded": 33202,
+      "stay_wins": 33477,
+      "switch_wins": 33321,
+      "stay_rate": 0.5011676996317255,
+      "switch_rate": 0.4988323003682745,
+      "exact_stay": "1/2",
+      "exact_switch": "1/2"
+    }
+  }
+}

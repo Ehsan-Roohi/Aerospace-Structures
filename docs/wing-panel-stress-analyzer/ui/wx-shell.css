@@ -50,6 +50,7 @@ body.wx-wing-on #wingNavigation .workspace-link { min-height: 32px; height: auto
   transform: translateY(-2px) rotate(45deg); opacity: 0.65; flex: none;
 }
 #app.wx .wx-top:hover, #app.wx #wingInputHelp > summary:hover { background: var(--panel-2); border-color: var(--line); color: var(--fg); }
+#app.wx #wxAeroBtn.wx-aero-command { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
 #app.wx .wx-top[aria-expanded="true"], #app.wx #wingInputHelp[open] > summary { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
 #app.wx .wx-quick { border-color: var(--line); background: var(--panel); gap: 0.3em; }
 #app.wx .wx-quick:hover { border-color: var(--accent); color: var(--accent); }

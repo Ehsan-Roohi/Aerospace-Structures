@@ -58,6 +58,8 @@
   const geometryBtn = topButton('wxGeometryBtn', 'Wing shape', 'wingSide');
   geometryBtn.title = 'Airfoils & planform: the one shared geometry for both solvers';
   const aeroBtn = topButton('wxAeroBtn', 'Aerodynamics', 'wingSide'), structBtn = topButton('wxStructBtn', 'Structure & Stress', 'wingSide');
+  aeroBtn.classList.add('wx-aero-command');
+  aeroBtn.setAttribute('aria-label', 'Aerodynamics · open aerodynamic solver');
   const aeroDot = el('span', { class: 'wx-dot', 'aria-hidden': 'true' }), structDot = el('span', { class: 'wx-dot', 'aria-hidden': 'true' });
   aeroBtn.append(aeroDot); structBtn.append(structDot);
   const aeroDotText = el('span', { class: 'wx-sr', id: 'wxAeroDotText' }), structDotText = el('span', { class: 'wx-sr', id: 'wxStructDotText' });

@@ -24199,6 +24199,7 @@ body.wx-wing-on #wingNavigation .workspace-link { min-height: 32px; height: auto
   transform: translateY(-2px) rotate(45deg); opacity: 0.65; flex: none;
 }
 #app.wx .wx-top:hover, #app.wx #wingInputHelp > summary:hover { background: var(--panel-2); border-color: var(--line); color: var(--fg); }
+#app.wx #wxAeroBtn.wx-aero-command { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
 #app.wx .wx-top[aria-expanded="true"], #app.wx #wingInputHelp[open] > summary { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
 #app.wx .wx-quick { border-color: var(--line); background: var(--panel); gap: 0.3em; }
 #app.wx .wx-quick:hover { border-color: var(--accent); color: var(--accent); }
@@ -25514,6 +25515,8 @@ window.WingAeroStructResults = (() => {
   const geometryBtn = topButton('wxGeometryBtn', 'Wing shape', 'wingSide');
   geometryBtn.title = 'Airfoils & planform: the one shared geometry for both solvers';
   const aeroBtn = topButton('wxAeroBtn', 'Aerodynamics', 'wingSide'), structBtn = topButton('wxStructBtn', 'Structure & Stress', 'wingSide');
+  aeroBtn.classList.add('wx-aero-command');
+  aeroBtn.setAttribute('aria-label', 'Aerodynamics · open aerodynamic solver');
   const aeroDot = el('span', { class: 'wx-dot', 'aria-hidden': 'true' }), structDot = el('span', { class: 'wx-dot', 'aria-hidden': 'true' });
   aeroBtn.append(aeroDot); structBtn.append(structDot);
   const aeroDotText = el('span', { class: 'wx-sr', id: 'wxAeroDotText' }), structDotText = el('span', { class: 'wx-sr', id: 'wxStructDotText' });

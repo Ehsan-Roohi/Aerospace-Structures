@@ -1,6 +1,6 @@
 {
   "application": "Wing Panel Stress Analyzer (Wing AeroStruct)",
-  "version": "0.3.8",
+  "version": "0.3.9",
   "source_archive": "wing-aerostruct-0.3.0-dev-review.zip",
   "source_sha256": "bc6986c744568a516fd22bdd3b9508550625b82a77cd924adf52dfaa5156a54d",
   "original_base": "5ab2498",
@@ -65,7 +65,7 @@
       "Optional background design advisor compares stiffness and mass with actual structural solves, retains all inputs and admission, and labels exact-tip inboard trials without a full-wing optimum",
       "One shared Wing shape editor before both solver menus; results share the first command row; no permanent left input column; Study tree cannot overlap its properties"
     ],
-    "page_sha256": "752004a9edefb871820e680223ecef26246dd7173313c429f62eb8818cd569f3",
+    "page_sha256": "6325bf310ecdea70461fc1ddb3dfab688996199720dc2e8f6e465177b9e3c3cc",
     "source_port": "ui/01-wing-aerostruct-ui-sources.patch",
     "independent_review": "validation/UI_RELEASE_REVIEW.json",
     "surface_review": "validation/UI_SURFACE_REVIEW.json",
@@ -84,7 +84,8 @@
       "ui/13-preview-recovery-speed-units.patch",
       "ui/14-zero-load-display.patch",
       "ui/15-design-advisor.patch",
-      "ui/16-compact-single-geometry.patch"
+      "ui/16-compact-single-geometry.patch",
+      "ui/17-member-aero-access.patch"
     ],
     "closed_tip_review": "validation/CLOSED_TIP_AERO_REVIEW.json",
     "course_review": "validation/COURSE_UI_REVIEW.json",
@@ -110,5 +111,6 @@
   "preview_recovery_review": "validation/PREVIEW_RECOVERY_REVIEW.json",
   "zero_load_display_review": "validation/ZERO_LOAD_DISPLAY_REVIEW.json",
   "design_advisor_review": "validation/DESIGN_ADVISOR_REVIEW.json",
-  "compact_single_geometry_review": "validation/COMPACT_SINGLE_GEOMETRY_REVIEW.json"
+  "compact_single_geometry_review": "validation/COMPACT_SINGLE_GEOMETRY_REVIEW.json",
+  "member_aero_access_review": "validation/MEMBER_AERO_ACCESS_REVIEW.json"
 }

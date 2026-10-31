@@ -1,10 +1,10 @@
 {
   "product": "MIE 446 Wing AeroStruct",
-  "version": "0.3.8",
+  "version": "0.3.9",
   "status": "Qualified educational solver; explicit 2D/3D section context and tested structural design guidance",
-  "builtAt": "2026-10-31T13:53:26.699921+00:00",
+  "builtAt": "2026-10-31T17:14:26.209736+00:00",
   "page": "index.html",
-  "pageSha256": "752004a9edefb871820e680223ecef26246dd7173313c429f62eb8818cd569f3",
+  "pageSha256": "6325bf310ecdea70461fc1ddb3dfab688996199720dc2e8f6e465177b9e3c3cc",
   "workers": {
     "wing-aero": {
       "worker": "8e2d79fa0bfe",
@@ -203,12 +203,12 @@
     },
     "wx-shell.js": {
       "path": "docs/wing-panel-stress-analyzer/ui/wx-shell.js",
-      "sha256": "0eeacef0086e0b276d77d687b486705f72914e4ba7e2f1b82d8cc292d4e21180",
+      "sha256": "7835e320050a2272e59e8324622f2407b1255668485ea01308c7d98bcc879dad",
       "sha256_scope": "Canonical LF source, as committed"
     },
     "wx-shell.css": {
       "path": "docs/wing-panel-stress-analyzer/ui/wx-shell.css",
-      "sha256": "22e78ffadd71277ed2d61f04bbb2a4dc2882a708c8781de5433f3430ea10e7ef",
+      "sha256": "fa3821ed64d0a61880ddd8311acccdf49f9edbb86667ca001ccbbf5f052b6da7",
       "sha256_scope": "Canonical LF source, as committed"
     },
     "wing-aero-ui.js": {
@@ -229,8 +229,8 @@
       "03-course-example-activity.patch": "197105dc7ff2665ccf439a38f81d23e113249021a807df33fed641e3a710cb77",
       "wing-aero-ui.js": "55e80aada5e49b12cdabf12a72ace7c133b8095fd9758d22cc148e75320a38d3",
       "wx-aero-results.js": "bd67f270947b49d6be5edbd81d471679c939012045f79bc780c992d2c9c9fce5",
-      "wx-shell.css": "22e78ffadd71277ed2d61f04bbb2a4dc2882a708c8781de5433f3430ea10e7ef",
-      "wx-shell.js": "0eeacef0086e0b276d77d687b486705f72914e4ba7e2f1b82d8cc292d4e21180",
+      "wx-shell.css": "fa3821ed64d0a61880ddd8311acccdf49f9edbb86667ca001ccbbf5f052b6da7",
+      "wx-shell.js": "7835e320050a2272e59e8324622f2407b1255668485ea01308c7d98bcc879dad",
       "04-geometry-first-context-menu.patch": "653987960c2a8999cb77a4d0c9a6318a086de4d2b935aa77e3ed643deac3f1b2",
       "05-lightweight-view-rendering.patch": "396248051b76b95cba7679141a5c7eeac3019e859da022f3bf0af8229eb9f60d",
       "06-surface-gradient.patch": "04f381d9937dc7ccd4c0bc40721a1070725a0a094f7c064da1248bdfa15ba678",
@@ -349,5 +349,26 @@
     "structuralAndPanelKernelSha256": "391aa52cb287f0d837f54e0a6c8fd6489f9215a8be6b841acdd75a5e18c01795",
     "regression": "validation/test_compact_single_geometry.cjs",
     "review": "validation/COMPACT_SINGLE_GEOMETRY_REVIEW.json"
+  },
+  "member_aero_access_port": {
+    "path": "ui/17-member-aero-access.patch",
+    "baseCommit": "bf4523b",
+    "sha256": "5da21dd80093eda9fc0cccf412a257b9823119988ecd966b15e462fbbd3c3ef6",
+    "scope": "UI only: prominent Aerodynamics command; Truss Wing navigation returns to AeroStruct; Select multiple belongs to Member menu",
+    "review": "validation/MEMBER_AERO_ACCESS_REVIEW.json",
+    "regression": "validation/test_member_aero_access.cjs",
+    "unchangedInlineScripts": 9,
+    "baselineInlineScriptSha256": [
+      "7d96c42bd67aa7fb3dab77e29335dfb9cde8c047aa620be72d13a8b62cfeebc5",
+      "1065c923eb0cb1fe44478a79738a97c3eaefff30616b406dc1fe5916075d8f09",
+      "f6dea9bf6c08c28595d55830fecc03b4f13a8c73c555f70dd6d318e548012f87",
+      "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "8ae4d272b870ea4b5ae285155e2b70a5a95531b2bbd73c8b246d05430ee59d81",
+      "817ae4785bc9f3ac0e567c05b801b57f5dd91946cdd68ae27fe25fbf62d6ab67",
+      "d07bdbe242c36b2c2e0e65c1fd39e7d26d4538126fa2971304fac068351edf2d",
+      "8894c74ad9f4ebdc05c4a39bd62ebfa8d60678d595cc7b1211947f81c755f258",
+      "6202d7af8229ed6e34081d7585d7e6331f64bf9660a94d32a58daf9bceec11fb"
+    ]
   }
 }

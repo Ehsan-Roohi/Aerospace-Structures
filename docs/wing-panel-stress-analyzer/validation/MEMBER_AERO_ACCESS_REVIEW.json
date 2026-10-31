@@ -1,0 +1,34 @@
+{
+  "version": "0.3.9",
+  "date": "2026-10-31",
+  "scope": "UI navigation only",
+  "passed": true,
+  "pageSha256": "6325bf310ecdea70461fc1ddb3dfab688996199720dc2e8f6e465177b9e3c3cc",
+  "changes": [
+    "Truss Select multiple is inside the Member dropdown, with Bar/Cable and member drawing; normal Select / move stays on the main toolbar",
+    "Truss Wing links resolve to Wing AeroStruct from both the root and nested Truss pages",
+    "The existing Aerodynamics menu remains before Structure & Stress and has a clearer highlighted command and accessible solver label"
+  ],
+  "navigationFinding": "The old root Truss Wing link resolved to the classic wing-lab.html, which has no aerodynamic solver. The new nested Truss route was already capable of returning to AeroStruct. Both generated pages now target AeroStruct explicitly.",
+  "checks": {
+    "memberMenu": "PASS: choose Bar/Cable, draw tool, group edit, atomic Undo, Escape and outside-click dismissal",
+    "trussRegressionSuites": "PASS: all test_truss*.mjs suites including batch, new member menu, solver, toolbar, imports/settings exercised by existing tests, editor, cable, load and label controls",
+    "rootAndNestedWingLinks": "PASS: both resolve to /Aerospace-Structures/wing-panel-stress-analyzer/#wing",
+    "aeroAccessSourceRegression": "PASS: same Aerodynamics menu click handler, explicit accessible label and visual emphasis",
+    "compactGeometryAndReport": "PASS: one shared geometry editor, no permanent sidebar, moved original report/CSV identity, actual mount/render/reset after reparenting",
+    "existingAeroResults": "PASS: chart units, section handlers, original coefficient combiner and source data unchanged",
+    "solverEquations": "Unchanged; all inline script blocks except UI shell are byte-identical to bf4523b"
+  },
+  "browser": {
+    "attempted": true,
+    "newVisualAcceptance": false,
+    "limitation": "One bounded in-app browser attempt timed out waiting for webview attachment. No new browser, Firefox or phone layout success is claimed."
+  },
+  "regressions": [
+    "computational/printed-wing-solver/web/test_truss_member_menu.mjs",
+    "validation/test_member_aero_access.cjs",
+    "validation/test_compact_single_geometry.cjs",
+    "validation/test_aero_result_charts.cjs",
+    "validation/test_aero_summary.cjs"
+  ]
+}

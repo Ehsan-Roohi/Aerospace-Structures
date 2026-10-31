@@ -1,10 +1,14 @@
-# Hydrofoil Cavitation Lab 0.3.1
+# Hydrofoil Cavitation Lab 0.3.2
 
 An isolated **research prototype** for steady, two-dimensional partial-sheet cavitation. It does not change the published Wing AeroStruct solver. [Evidence and figures](validation/index.html).
 
 Version 0.3.0 adds normal-offset cambered NACA4 geometry and a **separate true 3-D axisymmetric ring BEM**. [Open axisymmetric body mode](axisymmetric.html). That mode computes fully wetted flow around a sphere or prolate spheroid and the Bernoulli inception indicator only; it does **not** solve a developed axisymmetric cavity. Its equations, self-panel integration, independent controls and recorded failed coarse-mesh gates are in [axisymmetric-method.md](validation/axisymmetric-method.md).
 
 Version 0.3.1 fixes rejected-trial presentation: failed cavity values are diagnostics, accepted-result exports are disabled, and saved JSON keeps the rejected trial separately. The scientific qualification and numerical equations are unchanged.
+
+Version 0.3.2 adds a separate equilibrium-pressure screen: every wetted centroid must satisfy Cp + σ ≥ 0. The default cavity equations converge but fail this screen. No equation, pressure sample, closure input or numerical tolerance was altered to force acceptance. [Pressure evidence and reproduction](validation/cavity-2d-admission-method.md).
+
+A separate [developed disk-cavity module](axisymmetric-cavity.html) now solves the sharp-disk/Riabouchinsky-image inverse problem. Its off-grid accuracy gate has **NOT PASSED** at the recorded resolutions; trial values are diagnostic and experimental validation is **NOT PERFORMED**. [Complete refinement profiles](validation/axisymmetric-cavity-method.md).
 
 ## Run and reproduce
 
@@ -19,6 +23,9 @@ node validation/test-velocity-kutta.cjs
 node validation/ui-smoke.cjs
 node validation/test-cambered-section.cjs
 node validation/axisymmetric-verify.cjs
+node validation/cavity-2d-admission-test.cjs
+node validation/axisymmetric-cavity-verify.cjs
+node validation/axisymmetric-cavity-ui-smoke.cjs
 python validation/cambered-independent.py
 ```
 
@@ -34,7 +41,7 @@ Cambered sections use the standard piecewise mean camber line and **normal** thi
 
 At 640 boundary panels, fully wetted NACA2412/4412 at alpha0/4 degrees agree with an independent analytic-velocity Hess–Smith discretization to at most **0.001076 absolute CL** and **0.001681 all-panel Cp RMS**. The largest pointwise Cp discrepancy is about0.0262 at a TE-adjacent panel; every endpoint is retained. This is cross-discretization verification, not experimental or cavitating-flow validation. The raw first trial that failed a coarse-to-fine CL gate is retained; refinement to 640 met the unchanged gate. See [cambered-independent.json](validation/cambered-independent.json).
 
-The NACA2412 smooth-contact cavity at alpha4, detachment0.01 and length0.40 is numerically admitted at 80/107/160 panels. NACA4412 at those same inputs is rejected because its cavity crosses the original foil; the negative gap remains in [cambered-section-verification.json](validation/cambered-section-verification.json). Profile availability is not a guarantee of an admitted closure branch.
+The historical NACA2412 smooth-contact case at alpha4, detachment0.01 and length0.40 converged numerically at 80/107/160 panels; these checks predate the added wetted-pressure screen and do not establish physical admission. NACA4412 at those same inputs is rejected because its cavity crosses the original foil; the negative gap remains in [cambered-section-verification.json](validation/cambered-section-verification.json). Profile availability is not a guarantee of an admitted closure branch.
 
 The current GUI defaults to **smooth contact + velocity Kutta**. The API's omitted closure mode preserves the old fixed-A/Morino calculation. Case files without explicit mode/TE settings preserve that old physics; all imported cases need a fresh solve. Schema version 2 records both choices and the actual solved attenuation.
 

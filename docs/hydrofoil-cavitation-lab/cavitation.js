@@ -1,4 +1,4 @@
-/* Hydrofoil Cavitation Lab 0.3.0 — research prototype, not experimental validation.
+/* Hydrofoil Cavitation Lab 0.3.2 — research prototype, not experimental validation.
  * Original implementation of the potential mixed-boundary formulation described in:
  * Kinnas & Fine (1993), doi:10.1017/S0022112093002071;
  * Kinnas (2010), chapter 9, eqs. 9.9–9.16;
@@ -9,7 +9,7 @@
  */
 (function(root){
 'use strict';
-const TWO_PI=2*Math.PI, VERSION='0.3.0';
+const TWO_PI=2*Math.PI, VERSION='0.3.2';
 const dot=(a,b)=>a[0]*b[0]+a[1]*b[1];
 const maxabs=a=>Math.max(...Array.from(a,Math.abs));
 const sum=a=>a.reduce((s,v)=>s+v,0);
@@ -87,6 +87,34 @@ function integrate(p,cp,alpha){
   let fx=0,fy=0,cm=0;
   for(let i=0;i<p.length;i++){const x=-cp[i]*p[i].n[0]*p[i].length,y=-cp[i]*p[i].n[1]*p[i].length;fx+=x;fy+=y;cm+=(p[i].x-.25)*y-p[i].y*x;}
   const U=flow(alpha);return {cl:fy*U[0]-fx*U[1],pressureDrag:fx*U[0]+fy*U[1],cm,fx,fy};
+}
+// Numerical convergence alone does not admit an equilibrium sheet cavity.
+// The liquid still labelled wetted must satisfy p >= pv, equivalently
+// Cp + sigma >= 0. Keep this screen separate from the nonlinear status and
+// retain all computed values. Junction samples are resolution-sensitive; a
+// passing screen is neither a mesh-convergence study nor experimental evidence.
+function physicalAdmissibility(panels,sigma,{equationsConverged=false,geometryValid=false}={}){
+  const wet=panels.map((p,index)=>({p,index})).filter(v=>!v.p.cavity);
+  const finite=Number.isFinite(sigma)&&wet.length>0&&wet.every(v=>Number.isFinite(v.p.cp));
+  const scale=finite?Math.max(1,Math.abs(sigma),...wet.map(v=>Math.abs(v.p.cp))):1;
+  // This allowance covers floating-point summation only; it is not a
+  // discretisation-error budget and cannot turn a resolved violation positive.
+  const roundoffAllowance=64*Number.EPSILON*scale;
+  const minimum=finite?wet.reduce((a,b)=>a.p.cp<b.p.cp?a:b):null;
+  const margin=minimum?minimum.p.cp+sigma:null;
+  const below=finite?wet.filter(v=>v.p.cp+sigma< -roundoffAllowance):[];
+  const pressurePass=finite&&below.length===0,screenPassed=!!equationsConverged&&!!geometryValid&&pressurePass;
+  const status=!finite?'UNRESOLVED_PRESSURE':!pressurePass?'FAILED_WETTED_PRESSURE':!equationsConverged||!geometryValid?'UNRESOLVED_CAVITY':'PASSED_REPORTED_CHECKS';
+  const reason=!finite?'The wetted-pressure consistency check has no finite solution to assess.':!pressurePass?
+    'The computed wetted liquid falls below vapour pressure. The prescribed detachment and closure do not resolve that additional cavitation region; this branch is numerical only. Pressure has not been clipped and the cavity has not been moved.':
+    !equationsConverged||!geometryValid?'The cavity equations or gap geometry did not converge; the pressure check cannot admit the result.':
+    'The reported geometry and wetted-pressure checks pass at this mesh. This is not proof of a unique physical cavity or experimental validation.';
+  return {status,screenPassed,numericalConverged:!!equationsConverged,geometryValid:!!geometryValid,wettedPressurePass:pressurePass,
+    minimumWettedCp:minimum?.p.cp??null,minimumWettedPressureMargin:margin,wettedBelowVapourPanels:below.length,
+    wettedMinimumLocation:minimum?{panel:minimum.index,x:minimum.p.x,y:minimum.p.y}:null,roundoffAllowance,reason,
+    criterion:'Cp + sigma = (p - pv)/qInfinity >= 0 on every sampled wetted panel; cavity BC panels are excluded.',
+    scope:'Equilibrium partial-sheet model consistency screen. Sensitive to discretisation near detachment and closure; not an experiment, accuracy estimate or empirical calibration.',
+    experimentalValidation:false};
 }
 function wetted(points,alpha=0,wake=true){
   const {p,S,K,te}=matrices(points,wake),U=flow(alpha),q=p.map(v=>-dot(v.n,U));
@@ -303,7 +331,9 @@ function* iterateFixed(input={},scope='standard'){
     maximumPressureReconstructionError:maxabs(pressureError),discreteConverged:converged,innerEquationsConverged,geometryValid,
     velocityKuttaResidual:vt[0]+vt.at(-1),wakePotentialJump:r.circulation,
     pressureNote:'Pressure residual uses a local five-point derivative of solved total potential within each boundary region (fewer points if needed), with one-sided stencils at detachment and closure. It compares to an imposed BC, not an experiment.'};
-  return {version:VERSION,status:converged?'converged-prototype':'rejected',reason,options:o,points,original,panels:r.p.map((p,i)=>({...p,cp:cp[i],potential:r.phi[i],normalDerivative:r.q[i],tangentialSpeed:vt[i],normalVelocity:vnAll[i],fullyWettedCp:fullyWetted.cp[i],cavity:targetByPanel[i]!==undefined,targetCp:targetByPanel[i]??null})),
+  const panels=r.p.map((p,i)=>({...p,cp:cp[i],potential:r.phi[i],normalDerivative:r.q[i],tangentialSpeed:vt[i],normalVelocity:vnAll[i],fullyWettedCp:fullyWetted.cp[i],cavity:targetByPanel[i]!==undefined,targetCp:targetByPanel[i]??null}));
+  return {version:VERSION,status:converged?'converged-prototype':'rejected',reason,options:o,points,original,panels,
+    physicalAdmissibility:physicalAdmissibility(panels,r.sigma,{equationsConverged:converged,geometryValid}),
     sigma:r.sigma,cavitySpeedRatio:r.qc,height,history,metrics,coefficients:integrate(r.p,cp,o.alpha),fullyWetted:{cl:fullyWetted.cl,cm:fullyWetted.cm,cpMin:Math.min(...fullyWetted.cp),panels:fullyWetted.panels.map((p,i)=>({x:p.x,y:p.y,cp:fullyWetted.cp[i]}))},
     calculationMode:scope,scope:'Steady 2-D inviscid potential flow; prescribed upper partial-cavity length and detachment; algebraic pressure recovery; no re-entrant jet, viscosity, shedding, erosion or 3-D wing solution. Numerically verified prototype; cavitation predictions not experimentally validated.',
     provenance:{formulation:`Constant source/doublet mixed-potential BIE; cubic upstream detachment potential; ${o.kuttaCondition==='velocity'?'independent wake jump and five-point total-velocity Kutta condition at adjacent TE collocation points':'legacy extrapolated Morino TE potential jump'}; fixed-x nonlinear cavity updates.`,closure:'q(s)=qc[1-A((sf-sT)/(sL-sT))^nu] in the recovery zone; sf is the original foil arclength. A, lambda and nu are model inputs, not fitted benchmark data.'}};
@@ -376,6 +406,7 @@ function* iterateSmooth(input={},scope='standard'){
   const reason=accepted?'Cavity equations and physical-gap endpoint regularity converged.':bracket?'No nonintersecting endpoint-regular branch met the specified tolerance within the closure-search budget.':'No resolved sign-changing endpoint-slope bracket was found; no smooth-contact result is accepted.';
   const baselineRecord=baseline?{attenuation:baseline.A,status:baseline.result.status,endpointGapSlope:baseline.slope,sigma:baseline.result.sigma,metrics:baseline.result.metrics,coefficients:baseline.result.coefficients,height:baseline.result.height,pressure:baseline.result.panels.map(p=>({x:p.x,y:p.y,cp:p.cp,cavity:p.cavity}))}:null;
   return {...r,status:accepted?'converged-prototype':'rejected',reason,options:o,
+    physicalAdmissibility:physicalAdmissibility(r.panels,r.sigma,{equationsConverged:accepted,geometryValid:r.metrics.geometryValid}),
     metrics:{...r.metrics,discreteConverged:accepted,closureRegularityConverged:accepted,endpointGapSlope:chosen.slope,endpointGapSlopeFivePoint:endpointGapSlope(r.height,5),closureEvaluations:trace.length,totalInnerIterations:totalIterations},
     closure:{mode:'smooth-contact',selectedAttenuation:chosen.A,initialAttenuation:o.attenuation,regularityTolerance:o.regularityTolerance,innerTolerances:{normal:inner.normalTolerance,shape:inner.shapeTolerance},converged:accepted,trace,baseline:baselineRecord,
       equationCount:`${r.panels.length+2+(o.kuttaCondition==='velocity'?1:0)} mixed-boundary unknowns/rows for each A; one additional A and the equation h_x(end)=0 in the outer solve`,
@@ -393,7 +424,7 @@ function liquid(input={}){
   const dynamicPressure=.5*o.rho*o.speed**2;
   return {...o,dynamicPressure,sigma:(o.pressureAbsolute-o.vapourPressure)/dynamicPressure};
 }
-const api={VERSION,solve,iterate,iterateFixed,iterateSmooth,endpointGapSlope,wetted,wettedVelocity,geometry,influences,liquid,options,ordinate,parseNaca,nacaCode,meanLine,sectionPoint,upperAtX,buildFoil,mixedBoundaryDiagnostic,surfaceTangentialSpeed,solveBenchmark:input=>solve(input,'thin-foil-benchmark')};
+const api={VERSION,solve,iterate,iterateFixed,iterateSmooth,endpointGapSlope,physicalAdmissibility,wetted,wettedVelocity,geometry,influences,liquid,options,ordinate,parseNaca,nacaCode,meanLine,sectionPoint,upperAtX,buildFoil,mixedBoundaryDiagnostic,surfaceTangentialSpeed,solveBenchmark:input=>solve(input,'thin-foil-benchmark')};
 if(typeof module!=='undefined'&&module.exports)module.exports=api;
 root.HydrofoilCavitation=Object.freeze(api);
 })(typeof window!=='undefined'?window:globalThis);

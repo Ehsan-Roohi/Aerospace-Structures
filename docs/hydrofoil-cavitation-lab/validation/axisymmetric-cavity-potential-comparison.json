@@ -1,0 +1,42 @@
+[
+  {
+    "n": 16,
+    "sourceSigma": 0.3009944984953683,
+    "potentialMeanFreeSigma": 0.3360150394938526,
+    "potentialDynamicCpMax": 0.22310123974280027,
+    "sourceDiskCd": 1.075901095846094,
+    "potentialDiskCd": 1.055901121794541,
+    "potentialLinearResidual": 8.777512669373313e-16,
+    "quadratureDepthHit": false
+  },
+  {
+    "n": 32,
+    "sourceSigma": 0.3088608847505885,
+    "potentialMeanFreeSigma": 0.32408290430719233,
+    "potentialDynamicCpMax": 0.156282473793254,
+    "sourceDiskCd": 1.0927535876859993,
+    "potentialDiskCd": 1.0698887058990023,
+    "potentialLinearResidual": 1.5779733284609074e-15,
+    "quadratureDepthHit": false
+  },
+  {
+    "n": 64,
+    "sourceSigma": 0.3128106661441459,
+    "potentialMeanFreeSigma": 0.32168430075139454,
+    "potentialDynamicCpMax": 0.14777991221246167,
+    "sourceDiskCd": 1.094762807305114,
+    "potentialDiskCd": 1.0840681606419098,
+    "potentialLinearResidual": 1.7590842713151534e-15,
+    "quadratureDepthHit": false
+  },
+  {
+    "n": 128,
+    "sourceSigma": 0.31500004976408347,
+    "potentialMeanFreeSigma": 0.31983323199225033,
+    "potentialDynamicCpMax": 0.12766460623523979,
+    "sourceDiskCd": 1.0964596852466604,
+    "potentialDiskCd": 1.092033515377957,
+    "potentialLinearResidual": 2.7055724874671777e-15,
+    "quadratureDepthHit": false
+  }
+]

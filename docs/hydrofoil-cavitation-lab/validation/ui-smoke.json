@@ -1,16 +1,71 @@
 {
   "date": "2026-10-31",
+  "version": "0.3.2",
   "scope": "Code-level controller/DOM harness; no real browser or rendered-layout verification",
+  "status": "PASS_UI_INTEGRATION_ONLY",
   "checks": [
-    "default smooth-contact worker solve and visible metrics/plots",
-    "selected A, baseline/complete-gap chart and endpoint diagnostics visible",
-    "CSV, version-2 JSON and SVG exports",
-    "nonpreset resolution import without data loss",
-    "tolerance roundtrip and version-1 fixed-A physics preserved",
-    "cambered2412 worker solve and JSONgeometry roundtrip",
-    "wrong-schema import leaves inputs unchanged and opens error dialog",
-    "invalid solve refused before worker launch",
-    "NACA2414 alpha0.1 rejected trial has no accepted KPIs or CSV/figure export",
-    "raw rejected trial is preserved separately in JSON and reopened only as inputs"
-  ]
+    "default solve separates numerical convergence from failed wetted-pressure physical screen",
+    "complete default diagnostic profiles and new physical screen table retained",
+    "numerically converged raw trial is saved under rejectedTrial with result:null and separate numericalConverged",
+    "synthetic passing-screen fixture exercises enabled CSV/figure export plumbing only, never experimental validation",
+    "legacy numerical result without physical screening cannot advertise accepted KPIs or accepted exports",
+    "nonpreset resolution/tolerance roundtrip; imported results not trusted",
+    "version1 fixed-A/Morino and default tolerances preserved",
+    "actual cambered2412 geometry roundtrip retains numerically converged diagnostics but refuses failing physical screen",
+    "wrong-schema import leaves inputs unchanged and opens separate error dialog",
+    "Example restores only input values and promises no accepted physical reference",
+    "invalid input is refused before worker creation",
+    "user screenshot 2414/.1deg retains intersecting failed branch with no accepted KPIs/exports",
+    "running solve progress visible and inputs locked while cancel available",
+    "cancel releases controls and stale worker callback cannot restore an accepted result"
+  ],
+  "actualDefault": {
+    "numericalStatus": "converged-prototype",
+    "numericalConverged": true,
+    "physicalAdmissibility": {
+      "status": "FAILED_WETTED_PRESSURE",
+      "screenPassed": false,
+      "numericalConverged": true,
+      "geometryValid": true,
+      "wettedPressurePass": false,
+      "minimumWettedCp": -1.135902707835271,
+      "minimumWettedPressureMargin": -0.07316978386706774,
+      "wettedBelowVapourPanels": 6,
+      "wettedMinimumLocation": {
+        "panel": 67,
+        "x": 0.007675689367367929,
+        "y": 0.015002429049088512
+      },
+      "roundoffAllowance": 1.6142148351651585e-14,
+      "reason": "The computed wetted liquid falls below vapour pressure. The prescribed detachment and closure do not resolve that additional cavitation region; this branch is numerical only. Pressure has not been clipped and the cavity has not been moved.",
+      "criterion": "Cp + sigma = (p - pv)/qInfinity >= 0 on every sampled wetted panel; cavity BC panels are excluded.",
+      "scope": "Equilibrium partial-sheet model consistency screen. Sensitive to discretisation near detachment and closure; not an experiment, accuracy estimate or empirical calibration.",
+      "experimentalValidation": false
+    }
+  },
+  "actualCambered": {
+    "numericalConverged": true,
+    "physicalAdmissibility": {
+      "status": "FAILED_WETTED_PRESSURE",
+      "screenPassed": false,
+      "numericalConverged": true,
+      "geometryValid": true,
+      "wettedPressurePass": false,
+      "minimumWettedCp": -1.183029565047014,
+      "minimumWettedPressureMargin": -0.01841193456690604,
+      "wettedBelowVapourPanels": 4,
+      "wettedMinimumLocation": {
+        "panel": 65,
+        "x": 0.009453458314925663,
+        "y": 0.018990525634527362
+      },
+      "roundoffAllowance": 1.6811861272671734e-14,
+      "reason": "The computed wetted liquid falls below vapour pressure. The prescribed detachment and closure do not resolve that additional cavitation region; this branch is numerical only. Pressure has not been clipped and the cavity has not been moved.",
+      "criterion": "Cp + sigma = (p - pv)/qInfinity >= 0 on every sampled wetted panel; cavity BC panels are excluded.",
+      "scope": "Equilibrium partial-sheet model consistency screen. Sensitive to discretisation near detachment and closure; not an experiment, accuracy estimate or empirical calibration.",
+      "experimentalValidation": false
+    }
+  },
+  "syntheticFixture": "Passing-screen export plumbing only; wet Cp prescribed zero in test; not a solver result or physical validation",
+  "experimentalValidation": "NOT_PERFORMED"
 }

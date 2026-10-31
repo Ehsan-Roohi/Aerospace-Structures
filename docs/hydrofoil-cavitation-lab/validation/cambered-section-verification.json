@@ -1,5 +1,5 @@
 {
-  "version": "0.3.0",
+  "version": "0.3.2",
   "status": "PASS_GEOMETRY_AND_CAMBERED_NUMERICAL_REGRESSION",
   "scope": "NACA4 geometry and numerical consistency; no experimental cavitating-flow validation",
   "legacy": [
@@ -33,7 +33,7 @@
       "minimumGap": 0,
       "cornerDeg": 0.8052155489701488,
       "slope": 1.5969042477248507e-9,
-      "seconds": 0.3211159
+      "seconds": 0.5483979999999997
     },
     {
       "code": "2412",
@@ -46,7 +46,7 @@
       "minimumGap": 0,
       "cornerDeg": 0.624530798221126,
       "slope": 1.4174752505438648e-8,
-      "seconds": 0.6121814999999999
+      "seconds": 1.0253135000000002
     },
     {
       "code": "2412",
@@ -59,7 +59,7 @@
       "minimumGap": 0,
       "cornerDeg": 0.4284264129066659,
       "slope": -0.0000034957952418073618,
-      "seconds": 1.9354259999999999
+      "seconds": 3.0690812000000007
     },
     {
       "code": "4412",
@@ -72,7 +72,7 @@
       "minimumGap": -0.0026486884983960846,
       "cornerDeg": 37.153448610202986,
       "slope": 0.8656960895033214,
-      "seconds": 0.7962938999999997
+      "seconds": 1.3942928999999995
     },
     {
       "code": "4412",
@@ -85,7 +85,7 @@
       "minimumGap": -0.0025798211922211794,
       "cornerDeg": 45.03386458858271,
       "slope": 1.1227485952584273,
-      "seconds": 1.1543131999999996
+      "seconds": 2.5391018999999995
     },
     {
       "code": "4412",
@@ -98,7 +98,7 @@
       "minimumGap": -0.002521452137713223,
       "cornerDeg": 56.620889876786585,
       "slope": 1.661858685382144,
-      "seconds": 2.7065287
+      "seconds": 6.0107487
     }
   ],
   "dry": [

@@ -1,0 +1,75 @@
+{
+  "passed": true,
+  "equationsAndSolutionsUnchanged": true,
+  "physicalValidation": false,
+  "rows": [
+    {
+      "input": {
+        "resolution": 24,
+        "alpha": 4,
+        "thickness": 0.12,
+        "detachment": 0.01,
+        "length": 0.4,
+        "closureMode": "smooth-contact",
+        "kuttaCondition": "velocity"
+      },
+      "numericalStatus": "converged-prototype",
+      "sigma": 1.063157312248101,
+      "physicalAdmissibility": {
+        "status": "FAILED_WETTED_PRESSURE",
+        "screenPassed": false,
+        "numericalConverged": true,
+        "geometryValid": true,
+        "wettedPressurePass": false,
+        "minimumWettedCp": -1.1395324056728424,
+        "minimumWettedPressureMargin": -0.07637509342474136,
+        "wettedBelowVapourPanels": 4,
+        "wettedMinimumLocation": {
+          "panel": 50,
+          "x": 0.0077244755338790935,
+          "y": 0.01503827923390246
+        },
+        "roundoffAllowance": 1.6193729460281395e-14,
+        "reason": "The computed wetted liquid falls below vapour pressure. The prescribed detachment and closure do not resolve that additional cavitation region; this branch is numerical only. Pressure has not been clipped and the cavity has not been moved.",
+        "criterion": "Cp + sigma = (p - pv)/qInfinity >= 0 on every sampled wetted panel; cavity BC panels are excluded.",
+        "scope": "Equilibrium partial-sheet model consistency screen. Sensitive to discretisation near detachment and closure; not an experiment, accuracy estimate or empirical calibration.",
+        "experimentalValidation": false
+      }
+    },
+    {
+      "input": {
+        "resolution": 32,
+        "alpha": 0.1,
+        "thickness": 0.14,
+        "camber": 0.02,
+        "camberPosition": 0.4,
+        "detachment": 0.01,
+        "length": 0.4,
+        "closureMode": "smooth-contact",
+        "kuttaCondition": "velocity"
+      },
+      "numericalStatus": "rejected",
+      "sigma": 0.45497115829924417,
+      "physicalAdmissibility": {
+        "status": "FAILED_WETTED_PRESSURE",
+        "screenPassed": false,
+        "numericalConverged": false,
+        "geometryValid": false,
+        "wettedPressurePass": false,
+        "minimumWettedCp": -2.6650520352009037,
+        "minimumWettedPressureMargin": -2.2100808769016593,
+        "wettedBelowVapourPanels": 10,
+        "wettedMinimumLocation": {
+          "panel": 31,
+          "x": 0.410710252815851,
+          "y": 0.08717169593399851
+        },
+        "roundoffAllowance": 3.787266728069346e-14,
+        "reason": "The computed wetted liquid falls below vapour pressure. The prescribed detachment and closure do not resolve that additional cavitation region; this branch is numerical only. Pressure has not been clipped and the cavity has not been moved.",
+        "criterion": "Cp + sigma = (p - pv)/qInfinity >= 0 on every sampled wetted panel; cavity BC panels are excluded.",
+        "scope": "Equilibrium partial-sheet model consistency screen. Sensitive to discretisation near detachment and closure; not an experiment, accuracy estimate or empirical calibration.",
+        "experimentalValidation": false
+      }
+    }
+  ]
+}

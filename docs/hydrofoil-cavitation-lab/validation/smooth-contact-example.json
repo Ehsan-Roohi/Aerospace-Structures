@@ -1,5 +1,5 @@
 {
-  "version": "0.3.0",
+  "version": "0.3.2",
   "status": "converged-prototype",
   "reason": "Cavity equations and physical-gap endpoint regularity converged.",
   "options": {
@@ -3995,6 +3995,26 @@
       "targetCp": null
     }
   ],
+  "physicalAdmissibility": {
+    "status": "FAILED_WETTED_PRESSURE",
+    "screenPassed": false,
+    "numericalConverged": true,
+    "geometryValid": true,
+    "wettedPressurePass": false,
+    "minimumWettedCp": -1.135902707835271,
+    "minimumWettedPressureMargin": -0.07316978386706774,
+    "wettedBelowVapourPanels": 6,
+    "wettedMinimumLocation": {
+      "panel": 67,
+      "x": 0.007675689367367929,
+      "y": 0.015002429049088512
+    },
+    "roundoffAllowance": 1.6142148351651585e-14,
+    "reason": "The computed wetted liquid falls below vapour pressure. The prescribed detachment and closure do not resolve that additional cavitation region; this branch is numerical only. Pressure has not been clipped and the cavity has not been moved.",
+    "criterion": "Cp + sigma = (p - pv)/qInfinity >= 0 on every sampled wetted panel; cavity BC panels are excluded.",
+    "scope": "Equilibrium partial-sheet model consistency screen. Sensitive to discretisation near detachment and closure; not an experiment, accuracy estimate or empirical calibration.",
+    "experimentalValidation": false
+  },
   "sigma": 1.0627329239682033,
   "cavitySpeedRatio": 1.4362217530619021,
   "height": [

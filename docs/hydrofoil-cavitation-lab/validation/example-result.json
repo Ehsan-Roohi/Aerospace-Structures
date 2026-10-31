@@ -1,5 +1,5 @@
 {
-  "version": "0.3.0",
+  "version": "0.3.2",
   "status": "converged-prototype",
   "reason": "Discrete cavity equations converged.",
   "options": {
@@ -5956,6 +5956,26 @@
       "targetCp": null
     }
   ],
+  "physicalAdmissibility": {
+    "status": "FAILED_WETTED_PRESSURE",
+    "screenPassed": false,
+    "numericalConverged": true,
+    "geometryValid": true,
+    "wettedPressurePass": false,
+    "minimumWettedCp": -1.0810613567567717,
+    "minimumWettedPressureMargin": -0.05520136592860547,
+    "wettedBelowVapourPanels": 8,
+    "wettedMinimumLocation": {
+      "panel": 100,
+      "x": 0.008156692535515373,
+      "y": 0.015453648841862337
+    },
+    "roundoffAllowance": 1.5362805879089645e-14,
+    "reason": "The computed wetted liquid falls below vapour pressure. The prescribed detachment and closure do not resolve that additional cavitation region; this branch is numerical only. Pressure has not been clipped and the cavity has not been moved.",
+    "criterion": "Cp + sigma = (p - pv)/qInfinity >= 0 on every sampled wetted panel; cavity BC panels are excluded.",
+    "scope": "Equilibrium partial-sheet model consistency screen. Sensitive to discretisation near detachment and closure; not an experiment, accuracy estimate or empirical calibration.",
+    "experimentalValidation": false
+  },
   "sigma": 1.0258599908281663,
   "cavitySpeedRatio": 1.4233270849766635,
   "height": [

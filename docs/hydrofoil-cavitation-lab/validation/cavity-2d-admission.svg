@@ -1,0 +1,123 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="910" viewBox="0 0 1100 910">
+<rect width="1100" height="910" fill="white"/>
+<style>text{font-family:Arial,sans-serif;fill:#17293b} .tick{font-size:15px}.axis{font-size:18px}.title{font-size:23px;font-weight:700}.note{font-size:15px}</style>
+<text x="85" y="34" class="title">2-D cavity: numerical convergence and physical admission are different</text>
+<text x="85" y="61" class="axis">NACA 0012 · α = 4° · xD/c = 0.01 · l/c = 0.40 · smooth-contact closure</text>
+<path d="M85,87h50" stroke="#1e61b8" stroke-width="2.5"/>
+<text x="148" y="92" class="note">Production potential BIE: 80 panels</text>
+<path d="M85,112h50" stroke="#0c8058" stroke-width="2.5"/>
+<text x="148" y="117" class="note">Production potential BIE: 213 panels</text>
+<path d="M85,137h50" stroke="#9d3f8f" stroke-width="2.5" stroke-dasharray="7 4"/>
+<text x="148" y="142" class="note">Independent Hess–Smith replay: same 213-panel shape</text>
+<text x="90" y="172" class="title">Computed positive cavity gap</text>
+<path d="M90.0,190v245" stroke="#e3e8ef"/>
+<text x="90.0" y="460" class="tick" text-anchor="middle">0</text>
+<path d="M316.1904761904762,190v245" stroke="#e3e8ef"/>
+<text x="316.1904761904762" y="460" class="tick" text-anchor="middle">0.1</text>
+<path d="M542.3809523809524,190v245" stroke="#e3e8ef"/>
+<text x="542.3809523809524" y="460" class="tick" text-anchor="middle">0.2</text>
+<path d="M768.5714285714286,190v245" stroke="#e3e8ef"/>
+<text x="768.5714285714286" y="460" class="tick" text-anchor="middle">0.3</text>
+<path d="M994.7619047619048,190v245" stroke="#e3e8ef"/>
+<text x="994.7619047619048" y="460" class="tick" text-anchor="middle">0.4</text>
+<path d="M90,435.0h950" stroke="#e3e8ef"/>
+<text x="78" y="440.0" class="tick" text-anchor="end">0</text>
+<path d="M90,379.3181818181818h950" stroke="#e3e8ef"/>
+<text x="78" y="384.3181818181818" class="tick" text-anchor="end">0.005</text>
+<path d="M90,323.6363636363636h950" stroke="#e3e8ef"/>
+<text x="78" y="328.6363636363636" class="tick" text-anchor="end">0.01</text>
+<path d="M90,267.95454545454544h950" stroke="#e3e8ef"/>
+<text x="78" y="272.95454545454544" class="tick" text-anchor="end">0.015</text>
+<path d="M90,212.27272727272725h950" stroke="#e3e8ef"/>
+<text x="78" y="217.27272727272725" class="tick" text-anchor="end">0.02</text>
+<rect x="90" y="190" width="950" height="245" fill="none" stroke="#63798e"/>
+<text x="565.0" y="489" class="axis" text-anchor="middle">Chord position x/c</text>
+<text class="axis" transform="translate(30,312.5) rotate(-90)" text-anchor="middle">Physical gap h/c</text>
+<polyline points="112.619,435.000 116.489,434.491 128.034,431.368 147.054,423.763 173.227,411.271 206.102,394.478 245.118,374.394 289.608,352.157 338.810,328.931 391.881,305.875 447.915,284.133 505.952,264.827 565.000,249.040 624.048,237.802 682.085,232.076 738.119,232.771 791.190,240.816 840.392,257.420 884.882,286.395 923.898,332.258 956.773,375.801 982.946,408.357 1001.966,427.316 1013.511,434.516 1017.381,435.000" fill="none" stroke="#1e61b8" stroke-width="2.4"/>
+<polyline points="112.619,435.000 113.164,434.975 114.797,434.811 117.515,434.366 121.311,433.501 126.176,432.097 132.098,430.063 139.063,427.343 147.054,423.914 156.052,419.781 166.036,414.967 176.980,409.509 188.859,403.455 201.644,396.858 215.305,389.776 229.808,382.267 245.118,374.393 261.200,366.216 278.013,357.797 295.517,349.198 313.671,340.480 332.430,331.706 351.749,322.936 371.582,314.232 391.881,305.654 412.597,297.261 433.681,289.115 455.080,281.274 476.745,273.796 498.622,266.740 520.659,260.163 542.803,254.119 565.000,248.664 587.197,243.852 609.341,239.734 631.378,236.361 653.255,233.783 674.920,232.047 696.319,231.202 717.403,231.294 738.119,232.372 758.418,234.487 778.251,237.693 797.570,242.056 816.329,247.655 834.483,254.601 851.987,263.062 868.800,273.335 884.882,286.445 900.192,302.771 914.695,320.095 928.356,337.471 941.141,354.239 953.020,369.906 963.964,384.110 973.948,396.600 982.946,407.229 990.937,415.942 997.902,422.775 1003.824,427.842 1008.689,431.328 1012.485,433.478 1015.203,434.583 1016.836,434.974 1017.381,435.000" fill="none" stroke="#0c8058" stroke-width="2.4"/>
+<text x="90" y="514" class="title">Upstream liquid-pressure check: all upper wetted samples before detachment</text>
+<text x="90" y="532" class="title"></text>
+<path d="M90.0,550v230" stroke="#e3e8ef"/>
+<text x="90.0" y="805" class="tick" text-anchor="middle">0</text>
+<path d="M280.0,550v230" stroke="#e3e8ef"/>
+<text x="280.0" y="805" class="tick" text-anchor="middle">0.002</text>
+<path d="M470.0,550v230" stroke="#e3e8ef"/>
+<text x="470.0" y="805" class="tick" text-anchor="middle">0.004</text>
+<path d="M660.0,550v230" stroke="#e3e8ef"/>
+<text x="660.0" y="805" class="tick" text-anchor="middle">0.006</text>
+<path d="M850.0,550v230" stroke="#e3e8ef"/>
+<text x="850.0" y="805" class="tick" text-anchor="middle">0.008</text>
+<path d="M1040.0,550v230" stroke="#e3e8ef"/>
+<text x="1040.0" y="805" class="tick" text-anchor="middle">0.01</text>
+<path d="M90,780.0h950" stroke="#e3e8ef"/>
+<text x="78" y="785.0" class="tick" text-anchor="end">-0.2</text>
+<path d="M90,752.9411764705883h950" stroke="#e3e8ef"/>
+<text x="78" y="757.9411764705883" class="tick" text-anchor="end">0</text>
+<path d="M90,685.2941176470588h950" stroke="#e3e8ef"/>
+<text x="78" y="690.2941176470588" class="tick" text-anchor="end">0.5</text>
+<path d="M90,617.6470588235294h950" stroke="#e3e8ef"/>
+<text x="78" y="622.6470588235294" class="tick" text-anchor="end">1</text>
+<path d="M90,550.0h950" stroke="#e3e8ef"/>
+<text x="78" y="555.0" class="tick" text-anchor="end">1.5</text>
+<rect x="90" y="550" width="950" height="230" fill="none" stroke="#63798e"/>
+<text x="565.0" y="834" class="axis" text-anchor="middle">Chord position x/c (onset detail)</text>
+<text class="axis" transform="translate(30,665.0) rotate(-90)" text-anchor="middle">Cp + σ = (p − pv) / q∞</text>
+<rect x="90" y="752.9411764705883" width="950" height="27.05882352941171" fill="#c9202a" fill-opacity=".08"/>
+<path d="M90,752.9411764705883h950" stroke="#a51222" stroke-width="1.6" stroke-dasharray="5 4"/>
+<polyline points="108.079,603.190 177.641,668.672 306.175,720.216 474.113,747.875 655.887,760.125 823.825,763.274 952.359,761.560 1021.921,759.114" fill="none" stroke="#1e61b8" stroke-width="2.4"/>
+<circle cx="108.0786110285694" cy="603.1896960581917" r="3.3" fill="white" stroke="#1e61b8" stroke-width="1.8"/>
+<circle cx="177.64075049676435" cy="668.6724588587042" r="3.3" fill="white" stroke="#1e61b8" stroke-width="1.8"/>
+<circle cx="306.17482428148617" cy="720.2159237403894" r="3.3" fill="white" stroke="#1e61b8" stroke-width="1.8"/>
+<circle cx="474.11268481329114" cy="747.8745448987819" r="3.3" fill="white" stroke="#1e61b8" stroke-width="1.8"/>
+<circle cx="655.8873151867087" cy="760.1250114656796" r="3.3" fill="white" stroke="#1e61b8" stroke-width="1.8"/>
+<circle cx="823.825175718514" cy="763.2742773457003" r="3.3" fill="white" stroke="#1e61b8" stroke-width="1.8"/>
+<circle cx="952.3592495032357" cy="761.5597649231235" r="3.3" fill="white" stroke="#1e61b8" stroke-width="1.8"/>
+<circle cx="1021.9213889714305" cy="759.1143388959632" r="3.3" fill="white" stroke="#1e61b8" stroke-width="1.8"/>
+<polyline points="92.653,586.163 103.204,612.487 124.071,638.841 154.788,663.184 194.668,685.181 242.821,704.230 298.171,720.108 359.482,732.877 425.383,742.788 494.403,750.196 565.000,755.488 635.597,759.041 704.617,761.192 770.518,762.235 831.829,762.414 887.179,761.931 935.332,760.950 975.212,759.612 1005.929,758.037 1026.796,756.153 1037.347,754.748" fill="none" stroke="#0c8058" stroke-width="2.4"/>
+<circle cx="92.65267877153198" cy="586.1634252873381" r="3.3" fill="white" stroke="#0c8058" stroke-width="1.8"/>
+<circle cx="103.20413739732354" cy="612.4872760965936" r="3.3" fill="white" stroke="#0c8058" stroke-width="1.8"/>
+<circle cx="124.07135249896703" cy="638.8407296030787" r="3.3" fill="white" stroke="#0c8058" stroke-width="1.8"/>
+<circle cx="154.78818497312665" cy="663.1836164710664" r="3.3" fill="white" stroke="#0c8058" stroke-width="1.8"/>
+<circle cx="194.66847154036745" cy="685.1810649366781" r="3.3" fill="white" stroke="#0c8058" stroke-width="1.8"/>
+<circle cx="242.82135249896703" cy="704.2300458243363" r="3.3" fill="white" stroke="#0c8058" stroke-width="1.8"/>
+<circle cx="298.1711720585507" cy="720.108197442991" r="3.3" fill="white" stroke="#0c8058" stroke-width="1.8"/>
+<circle cx="359.4815067129812" cy="732.876755636178" r="3.3" fill="white" stroke="#0c8058" stroke-width="1.8"/>
+<circle cx="425.38278489835653" cy="742.787919146954" r="3.3" fill="white" stroke="#0c8058" stroke-width="1.8"/>
+<circle cx="494.40288095859955" cy="750.1959761516648" r="3.3" fill="white" stroke="#0c8058" stroke-width="1.8"/>
+<circle cx="564.9999999999999" cy="755.4884332093307" r="3.3" fill="white" stroke="#0c8058" stroke-width="1.8"/>
+<circle cx="635.5971190414003" cy="759.0409106445633" r="3.3" fill="white" stroke="#0c8058" stroke-width="1.8"/>
+<circle cx="704.6172151016435" cy="761.1924211143318" r="3.3" fill="white" stroke="#0c8058" stroke-width="1.8"/>
+<circle cx="770.5184932870188" cy="762.2352803446148" r="3.3" fill="white" stroke="#0c8058" stroke-width="1.8"/>
+<circle cx="831.828827941449" cy="762.4142342917095" r="3.3" fill="white" stroke="#0c8058" stroke-width="1.8"/>
+<circle cx="887.1786475010329" cy="761.9307796091375" r="3.3" fill="white" stroke="#0c8058" stroke-width="1.8"/>
+<circle cx="935.3315284596325" cy="760.9503155300853" r="3.3" fill="white" stroke="#0c8058" stroke-width="1.8"/>
+<circle cx="975.2118150268732" cy="759.6117477695366" r="3.3" fill="white" stroke="#0c8058" stroke-width="1.8"/>
+<circle cx="1005.928647501033" cy="758.0371223674827" r="3.3" fill="white" stroke="#0c8058" stroke-width="1.8"/>
+<circle cx="1026.7958626026762" cy="756.153227527498" r="3.3" fill="white" stroke="#0c8058" stroke-width="1.8"/>
+<circle cx="1037.347321228468" cy="754.748132115875" r="3.3" fill="white" stroke="#0c8058" stroke-width="1.8"/>
+<polyline points="92.652,602.138 103.203,622.209 124.070,646.723 154.787,670.486 194.668,692.109 242.820,710.886 298.170,726.543 359.481,739.122 425.382,748.865 494.402,756.123 564.999,761.284 635.596,764.723 704.617,766.781 770.518,767.750 831.828,767.875 887.178,767.358 935.331,766.362 975.211,765.021 1005.928,763.443 1026.795,761.718 1037.347,759.933" fill="none" stroke="#9d3f8f" stroke-width="2.4" stroke-dasharray="7 4"/>
+<circle cx="92.6517296116588" cy="602.1383738243003" r="3.3" fill="white" stroke="#9d3f8f" stroke-width="1.8"/>
+<circle cx="103.20319494611694" cy="622.2087903537467" r="3.3" fill="white" stroke="#9d3f8f" stroke-width="1.8"/>
+<circle cx="124.07042314007904" cy="646.7228501083757" r="3.3" fill="white" stroke="#9d3f8f" stroke-width="1.8"/>
+<circle cx="154.78727426955047" cy="670.4859012818259" r="3.3" fill="white" stroke="#9d3f8f" stroke-width="1.8"/>
+<circle cx="194.66758387857573" cy="692.1088702421036" r="3.3" fill="white" stroke="#9d3f8f" stroke-width="1.8"/>
+<circle cx="242.8204909266065" cy="710.8857314215371" r="3.3" fill="white" stroke="#9d3f8f" stroke-width="1.8"/>
+<circle cx="298.1703383019369" cy="726.5433176111982" r="3.3" fill="white" stroke="#9d3f8f" stroke-width="1.8"/>
+<circle cx="359.48070132326893" cy="739.1217761113427" r="3.3" fill="white" stroke="#9d3f8f" stroke-width="1.8"/>
+<circle cx="425.3820074649236" cy="748.8646186383205" r="3.3" fill="white" stroke="#9d3f8f" stroke-width="1.8"/>
+<circle cx="494.40213033782743" cy="756.1230118557098" r="3.3" fill="white" stroke="#9d3f8f" stroke-width="1.8"/>
+<circle cx="564.9992745255181" cy="761.283872142025" r="3.3" fill="white" stroke="#9d3f8f" stroke-width="1.8"/>
+<circle cx="635.596416699021" cy="764.7232775279365" r="3.3" fill="white" stroke="#9d3f8f" stroke-width="1.8"/>
+<circle cx="704.6165336645872" cy="766.78098916113" r="3.3" fill="white" stroke="#9d3f8f" stroke-width="1.8"/>
+<circle cx="770.5178304141987" cy="767.7499708011692" r="3.3" fill="white" stroke="#9d3f8f" stroke-width="1.8"/>
+<circle cx="831.8281812447582" cy="767.8752801719266" r="3.3" fill="white" stroke="#9d3f8f" stroke-width="1.8"/>
+<circle cx="887.178014588291" cy="767.3581061779817" r="3.3" fill="white" stroke="#9d3f8f" stroke-width="1.8"/>
+<circle cx="935.3309069592873" cy="766.3621685097656" r="3.3" fill="white" stroke="#9d3f8f" stroke-width="1.8"/>
+<circle cx="975.2112025995042" cy="765.0207936474087" r="3.3" fill="white" stroke="#9d3f8f" stroke-width="1.8"/>
+<circle cx="1005.9280418416026" cy="763.4433794609663" r="3.3" fill="white" stroke="#9d3f8f" stroke-width="1.8"/>
+<circle cx="1026.795261436493" cy="761.717747931055" r="3.3" fill="white" stroke="#9d3f8f" stroke-width="1.8"/>
+<circle cx="1037.3467223030689" cy="759.9330947151166" r="3.3" fill="white" stroke="#9d3f8f" stroke-width="1.8"/>
+<text x="1028" y="721.8235294117648" class="note" text-anchor="end" style="fill:#a51222">Below dashed zero line: pressure below vapour</text>
+<text x="90" y="856" class="note">A positive gap and small equation residual do not resolve this upstream pressure violation.</text>
+<text x="90" y="880" class="note">No pressure clipping or automatic movement of detachment. Full sampled data remain in the JSON reports.</text>
+</svg>

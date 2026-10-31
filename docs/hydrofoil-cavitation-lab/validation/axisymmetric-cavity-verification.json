@@ -1,0 +1,137 @@
+{
+  "date": "2026-10-31",
+  "version": "0.1.0-research",
+  "status": "PASS_IMPLEMENTATION_REGRESSION_ONLY",
+  "scope": "Developed cavity equations implemented. Off-grid accuracy and external cavity validation do NOT pass.",
+  "gates": [
+    {
+      "name": "inverse problem does not silently overwrite independently prescribed pressure or sigma",
+      "passed": true
+    },
+    {
+      "name": "no guessed sphere separation, off-axis flow or invalid discretization",
+      "passed": true
+    },
+    {
+      "name": "forced-pivot dense solve",
+      "passed": true
+    },
+    {
+      "name": "N16: finite closed positive nonintersecting source/cavity/image solution",
+      "passed": true
+    },
+    {
+      "name": "N16: all collocation equations solved, all off-grid samples retained",
+      "passed": true
+    },
+    {
+      "name": "N16: unresolved off-grid error is not labelled validated or qualified",
+      "passed": true
+    },
+    {
+      "name": "N32: finite closed positive nonintersecting source/cavity/image solution",
+      "passed": true
+    },
+    {
+      "name": "N32: all collocation equations solved, all off-grid samples retained",
+      "passed": true
+    },
+    {
+      "name": "N32: unresolved off-grid error is not labelled validated or qualified",
+      "passed": true
+    },
+    {
+      "name": "N64: finite closed positive nonintersecting source/cavity/image solution",
+      "passed": true
+    },
+    {
+      "name": "N64: all collocation equations solved, all off-grid samples retained",
+      "passed": true
+    },
+    {
+      "name": "N64: unresolved off-grid error is not labelled validated or qualified",
+      "passed": true
+    },
+    {
+      "name": "off-collocation boundary residual decreases under refinement without endpoint deletion",
+      "passed": true
+    },
+    {
+      "name": "independent Python source-ring implementation parity on fixed prescribed-length case",
+      "passed": true
+    },
+    {
+      "name": "dimensionless solution invariance and dimensional pressure scaling",
+      "passed": true
+    },
+    {
+      "name": "progress yields and exhausted nonlinear iterations are not accepted as a converged result",
+      "passed": true
+    }
+  ],
+  "records": [
+    {
+      "panels": 16,
+      "sigma": 0.3009944984953683,
+      "maximumRadiusRatio": 1.9371535108992783,
+      "physicalDiskDragCoefficient": 1.075901095846094,
+      "diagnostics": {
+        "collocationConverged": true,
+        "accuracyQualified": false,
+        "externalValidation": "NOT_PERFORMED",
+        "maxNormalResidual": 7.771561172376096e-16,
+        "maxCavitySpeedResidual": 1.6459742457897164e-9,
+        "minimumPhysicalGapRatio": 0.10940639138031227,
+        "netSourceFluxRatio": 1.60763531536069e-17,
+        "offCentroidNormalMaximum": 0.09261929475048948,
+        "offCentroidDynamicCpMaximum": 0.1322122645330755,
+        "offCentroidSampleCount": 32,
+        "seconds": 0.112
+      }
+    },
+    {
+      "panels": 32,
+      "sigma": 0.3088608847505885,
+      "maximumRadiusRatio": 1.954595624510639,
+      "physicalDiskDragCoefficient": 1.0927535876859993,
+      "diagnostics": {
+        "collocationConverged": true,
+        "accuracyQualified": false,
+        "externalValidation": "NOT_PERFORMED",
+        "maxNormalResidual": 8.881784197001252e-16,
+        "maxCavitySpeedResidual": 5.384492851590039e-11,
+        "minimumPhysicalGapRatio": 0.0447040504419105,
+        "netSourceFluxRatio": 7.772390733471831e-18,
+        "offCentroidNormalMaximum": 0.060077800238338294,
+        "offCentroidDynamicCpMaximum": 0.11542421667238811,
+        "offCentroidSampleCount": 64,
+        "seconds": 0.255
+      }
+    },
+    {
+      "panels": 64,
+      "sigma": 0.3128106661441459,
+      "maximumRadiusRatio": 1.9629667302601044,
+      "physicalDiskDragCoefficient": 1.094762807305114,
+      "diagnostics": {
+        "collocationConverged": true,
+        "accuracyQualified": false,
+        "externalValidation": "NOT_PERFORMED",
+        "maxNormalResidual": 1.7763568394002505e-15,
+        "maxCavitySpeedResidual": 1.1010523603971478e-9,
+        "minimumPhysicalGapRatio": 0.0178572121949494,
+        "netSourceFluxRatio": 5.616956181687325e-17,
+        "offCentroidNormalMaximum": 0.03711091425977024,
+        "offCentroidDynamicCpMaximum": 0.08630321910421812,
+        "offCentroidSampleCount": 128,
+        "seconds": 1.574
+      }
+    }
+  ],
+  "scientificAdmission": {
+    "offGridAccuracy": "NOT_PASSED",
+    "matchedExternalNumerical": "NOT_PERFORMED",
+    "experimental": "NOT_PERFORMED"
+  },
+  "noEndpointRemoval": true
+}

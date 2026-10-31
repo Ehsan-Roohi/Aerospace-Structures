@@ -1,0 +1,79 @@
+{
+  "date": "2026-10-31",
+  "status": "PASS_UI_INTEGRATION_ONLY",
+  "scope": "DOM/controller plus actual source-ring worker protocol; not interactive browser visual acceptance and not physical validation",
+  "checks": [
+    {
+      "name": "default inverse problem: 32 bands, full L/R 8, radius .05m, speed 5m/s; sigma and ambient not inputs",
+      "passed": true
+    },
+    {
+      "name": "actual worker gives visible progress and permits cancel",
+      "passed": true
+    },
+    {
+      "name": "actual source-ring default result remains offgrid-unresolved, not accepted or validated",
+      "passed": true
+    },
+    {
+      "name": "true SI geometry and physical/image distinctions, Cp plus all quarter-band residuals are plotted",
+      "passed": true
+    },
+    {
+      "name": "saved JSON preserves inputs and explicit diagnostic result/evidence status",
+      "passed": true
+    },
+    {
+      "name": "diagnostic CSV includes every offgrid point in metres, and computation/external status",
+      "passed": true
+    },
+    {
+      "name": "exported figures carry unresolved/offgrid/experimental status and all five profile SVGs",
+      "passed": true
+    },
+    {
+      "name": "import restores only inputs; saved diagnostic result never becomes fresh accepted prediction",
+      "passed": true
+    },
+    {
+      "name": "cancel terminates worker and late callbacks cannot revive a result",
+      "passed": true
+    },
+    {
+      "name": "overconstrained sigma import is rejected visibly and cannot reuse prior result",
+      "passed": true
+    },
+    {
+      "name": "iteration-rejected case has diagnostic-only profiles and collapsed trial numbers",
+      "passed": true
+    },
+    {
+      "name": "any changed input hides all previous profiles and disables diagnostic figure/CSV exports",
+      "passed": true
+    },
+    {
+      "name": "unrelated fullywet or 2D case is refused with separate-mode guidance",
+      "passed": true
+    },
+    {
+      "name": "separate mode navigation exists in fullywet page and validation index",
+      "passed": true
+    }
+  ],
+  "defaultComputationStatus": "collocation-converged-offgrid-unresolved",
+  "defaultDiagnostics": {
+    "collocationConverged": true,
+    "accuracyQualified": false,
+    "externalValidation": "NOT_PERFORMED",
+    "maxNormalResidual": 1.4432899320127035e-15,
+    "maxCavitySpeedResidual": 5.384448442669054e-11,
+    "minimumPhysicalGapRatio": 0.04470405067462524,
+    "netSourceFluxRatio": 7.115575255376868e-17,
+    "offCentroidNormalMaximum": 0.06007779744268333,
+    "offCentroidDynamicCpMaximum": 0.11542420316055241,
+    "offCentroidSampleCount": 64,
+    "seconds": 10.024
+  },
+  "browserVisualReview": "NOT_PERFORMED",
+  "experimentalValidation": "NOT_PERFORMED"
+}

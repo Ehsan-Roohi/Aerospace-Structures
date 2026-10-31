@@ -1,7 +1,7 @@
 {
-  "version": "0.3.1",
+  "version": "0.3.2",
   "date": "2026-10-31",
-  "scope": "Controller/DOM integration, not experimental cavity validation",
+  "scope": "Code-level controller/DOM harness; no real browser or rendered-layout verification",
   "case": {
     "naca": "2414",
     "alphaDeg": 0.1,
@@ -9,13 +9,35 @@
     "length": 0.4,
     "resolution": 32
   },
-  "accepted": false,
+  "acceptedPhysicalCavity": false,
+  "numericalStatus": "rejected",
+  "numericalConverged": false,
+  "physicalAdmissibility": {
+    "status": "FAILED_WETTED_PRESSURE",
+    "screenPassed": false,
+    "numericalConverged": false,
+    "geometryValid": false,
+    "wettedPressurePass": false,
+    "minimumWettedCp": -2.6650520352009037,
+    "minimumWettedPressureMargin": -2.2100808769016593,
+    "wettedBelowVapourPanels": 10,
+    "wettedMinimumLocation": {
+      "panel": 31,
+      "x": 0.410710252815851,
+      "y": 0.08717169593399851
+    },
+    "roundoffAllowance": 3.787266728069346e-14,
+    "reason": "The computed wetted liquid falls below vapour pressure. The prescribed detachment and closure do not resolve that additional cavitation region; this branch is numerical only. Pressure has not been clipped and the cavity has not been moved.",
+    "criterion": "Cp + sigma = (p - pv)/qInfinity >= 0 on every sampled wetted panel; cavity BC panels are excluded.",
+    "scope": "Equilibrium partial-sheet model consistency screen. Sensitive to discretisation near detachment and closure; not an experiment, accuracy estimate or empirical calibration.",
+    "experimentalValidation": false
+  },
   "checks": [
     "no sigma/lift/height predictions in accepted KPI cards",
-    "raw failed values under rejected diagnostics",
-    "pressure CSV/figure exports disabled",
-    "Save JSON has result:null and rejectedTrial with complete raw evidence",
-    "reopening restores inputs, clears old diagnostics and needs fresh solve"
+    "complete raw failed trial kept under rejectedTrial in JSON",
+    "new physical pressure minimum/location/count shown in error and diagnostics",
+    "accepted pressure CSV/figure exports disabled",
+    "reopening restores inputs only; fresh solve required"
   ],
   "solverEquationsChanged": false
 }

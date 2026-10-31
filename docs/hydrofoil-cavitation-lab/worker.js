@@ -1,4 +1,4 @@
-importScripts('cavitation.js?v=0.3.1');
+importScripts('cavitation.js?v=0.3.2');
 self.onmessage=function(e){
   try{
     const iterator=HydrofoilCavitation.iterate(e.data);let step;

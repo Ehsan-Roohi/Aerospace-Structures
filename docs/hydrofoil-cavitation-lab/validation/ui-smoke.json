@@ -1,5 +1,5 @@
 {
-  "date": "2026-10-30",
+  "date": "2026-10-31",
   "scope": "Code-level controller/DOM harness; no real browser or rendered-layout verification",
   "checks": [
     "default smooth-contact worker solve and visible metrics/plots",
@@ -9,6 +9,8 @@
     "tolerance roundtrip and version-1 fixed-A physics preserved",
     "cambered2412 worker solve and JSONgeometry roundtrip",
     "wrong-schema import leaves inputs unchanged and opens error dialog",
-    "invalid solve refused before worker launch"
+    "invalid solve refused before worker launch",
+    "NACA2414 alpha0.1 rejected trial has no accepted KPIs or CSV/figure export",
+    "raw rejected trial is preserved separately in JSON and reopened only as inputs"
   ]
 }

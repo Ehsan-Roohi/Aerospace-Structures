@@ -1,8 +1,10 @@
-# Hydrofoil Cavitation Lab 0.3.0
+# Hydrofoil Cavitation Lab 0.3.1
 
 An isolated **research prototype** for steady, two-dimensional partial-sheet cavitation. It does not change the published Wing AeroStruct solver. [Evidence and figures](validation/index.html).
 
 Version 0.3.0 adds normal-offset cambered NACA4 geometry and a **separate true 3-D axisymmetric ring BEM**. [Open axisymmetric body mode](axisymmetric.html). That mode computes fully wetted flow around a sphere or prolate spheroid and the Bernoulli inception indicator only; it does **not** solve a developed axisymmetric cavity. Its equations, self-panel integration, independent controls and recorded failed coarse-mesh gates are in [axisymmetric-method.md](validation/axisymmetric-method.md).
+
+Version 0.3.1 fixes rejected-trial presentation: failed cavity values are diagnostics, accepted-result exports are disabled, and saved JSON keeps the rejected trial separately. The scientific qualification and numerical equations are unchanged.
 
 ## Run and reproduce
 

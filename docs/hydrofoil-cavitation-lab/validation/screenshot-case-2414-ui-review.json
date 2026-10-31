@@ -1,0 +1,21 @@
+{
+  "version": "0.3.1",
+  "date": "2026-10-31",
+  "scope": "Controller/DOM integration, not experimental cavity validation",
+  "case": {
+    "naca": "2414",
+    "alphaDeg": 0.1,
+    "detachment": 0.01,
+    "length": 0.4,
+    "resolution": 32
+  },
+  "accepted": false,
+  "checks": [
+    "no sigma/lift/height predictions in accepted KPI cards",
+    "raw failed values under rejected diagnostics",
+    "pressure CSV/figure exports disabled",
+    "Save JSON has result:null and rejectedTrial with complete raw evidence",
+    "reopening restores inputs, clears old diagnostics and needs fresh solve"
+  ],
+  "solverEquationsChanged": false
+}

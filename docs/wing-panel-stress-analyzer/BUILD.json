@@ -1,10 +1,10 @@
 {
   "product": "MIE 446 Wing AeroStruct",
-  "version": "0.3.7",
+  "version": "0.3.8",
   "status": "Qualified educational solver; explicit 2D/3D section context and tested structural design guidance",
-  "builtAt": "2026-10-30T23:49:43.911507+00:00",
+  "builtAt": "2026-10-31T13:53:26.699921+00:00",
   "page": "index.html",
-  "pageSha256": "91835788fce0013ffaf6d21c49c6b25f153863c5960524a16bf80e2f097da4a3",
+  "pageSha256": "752004a9edefb871820e680223ecef26246dd7173313c429f62eb8818cd569f3",
   "workers": {
     "wing-aero": {
       "worker": "8e2d79fa0bfe",
@@ -198,18 +198,23 @@
     },
     "wx-aero-results.js": {
       "path": "docs/wing-panel-stress-analyzer/ui/wx-aero-results.js",
-      "sha256": "1ed502d20345783c401074cc6531bb09fbe880b404b02433355cdd2b6b910841",
+      "sha256": "bd67f270947b49d6be5edbd81d471679c939012045f79bc780c992d2c9c9fce5",
       "sha256_scope": "Canonical LF source, as committed"
     },
     "wx-shell.js": {
       "path": "docs/wing-panel-stress-analyzer/ui/wx-shell.js",
-      "sha256": "3169d398718f38624df26d6c9b6e273be3ee7b6087b7ae16e1b69b90edc9c837",
+      "sha256": "0eeacef0086e0b276d77d687b486705f72914e4ba7e2f1b82d8cc292d4e21180",
       "sha256_scope": "Canonical LF source, as committed"
     },
     "wx-shell.css": {
       "path": "docs/wing-panel-stress-analyzer/ui/wx-shell.css",
-      "sha256": "45a76696109fb390335872bbf819a3b261c8ebb7d28f3105c08236fda102b74a",
+      "sha256": "22e78ffadd71277ed2d61f04bbb2a4dc2882a708c8781de5433f3430ea10e7ef",
       "sha256_scope": "Canonical LF source, as committed"
+    },
+    "wing-aero-ui.js": {
+      "path": "docs/wing-panel-stress-analyzer/ui/wing-aero-ui.js",
+      "sha256_scope": "Canonical LF source",
+      "sha256": "55e80aada5e49b12cdabf12a72ace7c133b8095fd9758d22cc148e75320a38d3"
     }
   },
   "solverVersion": "0.3.1",
@@ -222,10 +227,10 @@
       "01-wing-aerostruct-ui-sources.patch": "de90922634d63658d06b82afd57d6363c5fca49c637d4e0a786e3cd03ffb140b",
       "02-closed-tip-aero-results.patch": "4d5833dbf86ddd6f34bc421b10bcac8118a87c7c0a10debe40256fd2b46993b5",
       "03-course-example-activity.patch": "197105dc7ff2665ccf439a38f81d23e113249021a807df33fed641e3a710cb77",
-      "wing-aero-ui.js": "c9d10df2415fc583801a431978a2f4c0e282af03e6c7d212e6ddab8b9311177c",
-      "wx-aero-results.js": "b48eece98ffc0fe3033563535c96bf6a559a34773f5a84991bfe7b07bb6d5e6d",
-      "wx-shell.css": "f2e09cc59ee67e0d9a544950280de2f1b0d292ee779efe65b95f33d7398a7663",
-      "wx-shell.js": "3d78859feaa39b4fc03f0f8a0b5944a980b9b6e06ed0b8225bafa99c701c91c2",
+      "wing-aero-ui.js": "55e80aada5e49b12cdabf12a72ace7c133b8095fd9758d22cc148e75320a38d3",
+      "wx-aero-results.js": "bd67f270947b49d6be5edbd81d471679c939012045f79bc780c992d2c9c9fce5",
+      "wx-shell.css": "22e78ffadd71277ed2d61f04bbb2a4dc2882a708c8781de5433f3430ea10e7ef",
+      "wx-shell.js": "0eeacef0086e0b276d77d687b486705f72914e4ba7e2f1b82d8cc292d4e21180",
       "04-geometry-first-context-menu.patch": "653987960c2a8999cb77a4d0c9a6318a086de4d2b935aa77e3ed643deac3f1b2",
       "05-lightweight-view-rendering.patch": "396248051b76b95cba7679141a5c7eeac3019e859da022f3bf0af8229eb9f60d",
       "06-surface-gradient.patch": "04f381d9937dc7ccd4c0bc40721a1070725a0a094f7c064da1248bdfa15ba678",
@@ -321,5 +326,28 @@
     "uiSha256": "03cf367077e279036593c6d554c1aed68a9250b2f66095be74f3f017f2fd110a",
     "scope": "Bounded solver-driven comparison; both objectives; closed-tip results exploratory only; numerical kernels and admission unchanged",
     "review": "validation/DESIGN_ADVISOR_REVIEW.json"
+  },
+  "compact_single_geometry_port": {
+    "path": "ui/16-compact-single-geometry.patch",
+    "baseCommit": "546a71c3a3a400f9694d7e5d95759792d3a54d77",
+    "sha256": "1e606ac7e85c90f92a982b50ba711a9b6985a076d9d7ef0d0d9306781c07542a",
+    "scope": "UI only: one shared Wing shape editor, no permanent left input panel, results in the first header row, contained Study tree scrolling",
+    "unchangedInlineScripts": 8,
+    "baselineInlineScriptSha256": [
+      "7d96c42bd67aa7fb3dab77e29335dfb9cde8c047aa620be72d13a8b62cfeebc5",
+      "1065c923eb0cb1fe44478a79738a97c3eaefff30616b406dc1fe5916075d8f09",
+      "f6dea9bf6c08c28595d55830fecc03b4f13a8c73c555f70dd6d318e548012f87",
+      "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "7ce523d34e639b4b2af23687e5d34e61ba6bbf23034088bf6585940124152efc",
+      "817ae4785bc9f3ac0e567c05b801b57f5dd91946cdd68ae27fe25fbf62d6ab67",
+      "d07bdbe242c36b2c2e0e65c1fd39e7d26d4538126fa2971304fac068351edf2d",
+      "1317acb69efa5d5e648b1da18d839a66e6ef23f88112b52197ff9962911abc13",
+      "6202d7af8229ed6e34081d7585d7e6331f64bf9660a94d32a58daf9bceec11fb"
+    ],
+    "independent2DSourceSha256": "739681cab65caaf91ccc9a9decf40a4ca2870ce8bc14be0f770c1a1b8d63eca8",
+    "structuralAndPanelKernelSha256": "391aa52cb287f0d837f54e0a6c8fd6489f9215a8be6b841acdd75a5e18c01795",
+    "regression": "validation/test_compact_single_geometry.cjs",
+    "review": "validation/COMPACT_SINGLE_GEOMETRY_REVIEW.json"
   }
 }

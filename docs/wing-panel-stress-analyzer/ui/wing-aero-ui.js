@@ -235,7 +235,10 @@ const WingAeroUI = (() => {
       <div class="lesson-actions"><button class="btn primary" type="button" id="aeroRun">Solve Aerodynamics</button><button class="btn" type="button" id="aeroApply" disabled>Apply aerodynamic loads to structure</button><button class="btn" type="button" id="aeroRemove" hidden>Remove aerodynamic load</button></div>
       <p class="wae-status" id="aeroStatus" role="status" aria-live="polite"></p>
       <div id="aeroApplied"></div><div id="aeroAdmission"></div><div id="aeroResults"></div></div>`;
-    const $ = s => host.querySelector(s), status = (t, bad = false) => { $('#aeroStatus').innerHTML = bad ? `<span class="wae-err">${esc(t)}</span>` : esc(t); };
+    // The UI shell may move the one live report into Aero results. Retain its root;
+    // controls and render targets keep their identity when outside the input menu.
+    const reportRoot = host.querySelector('#aeroResults');
+    const $ = s => host.querySelector(s) || (reportRoot && (reportRoot.matches(s) ? reportRoot : reportRoot.querySelector(s))), status = (t, bad = false) => { $('#aeroStatus').innerHTML = bad ? `<span class="wae-err">${esc(t)}</span>` : esc(t); };
     const updateSpeedUnits = () => { $('#aeroSpeedUnits').textContent = speedUnits($('#aeroV').value); };
     $('#aeroV').addEventListener('input', updateSpeedUnits);
     updateSpeedUnits();

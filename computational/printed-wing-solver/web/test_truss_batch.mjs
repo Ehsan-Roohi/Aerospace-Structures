@@ -22,6 +22,7 @@ try{
  click('[data-node="1"] circle');click('[data-node="2"] circle');
  assert.match($('#trussBatchSummary').textContent,/2 nodes selected · 1 member/);
  assert.equal($('#selectionDialog').open,false);
+ w.TrussLab.redo(); // No forward history: the current group selection must remain available.
  $('#batchA').value='55';$('#batchE').value='70000';submit();
  let after=w.TrussLab.state();assert.equal(after.model.members[0].A,55);assert.equal(after.model.members[0].E,70000);assert.equal(after.model.members[0].type,'cable');assert.equal(after.model.members[1].A,before.model.members[1].A);assert.deepEqual(after.model.nodes,before.model.nodes);
  assert.equal(after.historyIndex,before.historyIndex+1,'batch is one undoable edit');

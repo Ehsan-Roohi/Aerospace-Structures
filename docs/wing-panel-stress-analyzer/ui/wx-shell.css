@@ -1,4 +1,4 @@
-/* Wing AeroStruct UI shell: compact command bar, one anchored input panel, slim result strip.
+/* Wing AeroStruct UI shell: one compact header, one shared geometry editor, no left input column.
    Scoped to the wing workspace (body.wx-wing-on / #app.wx); the Beam, Truss and Full-scale wing workspaces keep their
    own look. White palette by default; an explicit data-theme="dark" keeps the existing dark palette. */
 :root:not([data-theme="dark"]) body.wx-wing-on {
@@ -12,12 +12,12 @@
 body.wx-wing-on #wingNavigation { padding: 6px 12px; gap: 6px; border-bottom: 1px solid var(--line); box-shadow: none; }
 body.wx-wing-on #wingNavigation .workspace-link { min-height: 32px; height: auto; padding: 5px 12px; font-size: 13px; border-radius: 8px; }
 
-/* ---------- page grid: command bar, result strip, viewport, results dock ---------- */
+/* ---------- page grid: command/results header, full-width viewport, results dock ---------- */
 #app.wx {
   --wx-view-h: clamp(380px, calc(100dvh - 200px), 1040px);
   padding: 8px 12px 24px !important; gap: 8px !important;
-  grid-template-columns: minmax(0, 1fr) !important; grid-template-rows: auto auto auto auto !important;
-  grid-template-areas: "bar" "results" "view" "dock" !important;
+  grid-template-columns: minmax(0, 1fr) !important; grid-template-rows: auto auto auto !important;
+  grid-template-areas: "bar" "view" "dock" !important;
 }
 #app.wx > .view { grid-area: view !important; height: var(--wx-view-h) !important; min-height: 300px; border-radius: 12px; }
 #app.wx > .dock { grid-area: dock !important; border-radius: 12px; }
@@ -27,22 +27,22 @@ body.wx-wing-on #wingNavigation .workspace-link { min-height: 32px; height: auto
 /* ---------- command bar ---------- */
 #app.wx > header.wx-bar {
   grid-area: bar !important; position: sticky; top: var(--wx-nav-h, 0px); z-index: 60;
-  display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; padding: 6px 10px; min-height: 52px;
+  display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 6px 8px; padding: 6px 8px; min-height: 48px;
   border: 1px solid var(--line); border-radius: 12px; background: var(--panel); box-shadow: 0 1px 3px rgba(20, 45, 75, 0.08);
 }
 #app.wx > header.wx-bar .brand { display: flex !important; align-items: center; gap: 8px; padding: 0 10px 0 2px; border-right: 1px solid var(--line) !important; flex: none; min-width: 0; }
 #app.wx > header.wx-bar .brand svg { width: 28px; height: 18px; color: var(--accent); }
 #app.wx > header.wx-bar .brand > div { display: flex !important; align-items: center; gap: 8px; min-width: 0; }
 #app.wx > header.wx-bar .brand small, #app.wx > header.wx-bar .wing-project-name > span { display: none !important; }
-#app.wx #wingProjectTitle { font: 700 16px/1.1 var(--font-label); max-width: 190px; }
+#app.wx #wingProjectTitle { font: 700 14px/1.1 var(--font-label); max-width: 150px; }
 #app.wx > header.wx-bar .wing-project-name { margin: 0 !important; display: flex; }
-#app.wx > header.wx-bar .wing-project-name input { width: 150px; height: 32px; min-height: 32px; padding: 3px 8px; font-size: 13px; border: 1px solid var(--line); border-radius: 7px; background: var(--panel-2); }
-.wx-menubar { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; min-width: 0; }
+#app.wx > header.wx-bar .wing-project-name input { width: 110px; height: 32px; min-height: 32px; padding: 3px 8px; font-size: 13px; border: 1px solid var(--line); border-radius: 7px; background: var(--panel-2); }
+.wx-menubar { display: flex; align-items: center; gap: 2px; flex-wrap: nowrap; min-width: 0; }
 .wx-sep { width: 1px; height: 24px; background: var(--line); margin: 0 4px; flex: none; }
 #app.wx .wx-top, #app.wx .wx-quick, #app.wx #wingInputHelp > summary {
-  display: inline-flex; align-items: center; gap: 7px; height: 36px; min-height: 36px; padding: 0 12px; margin: 0;
+  display: inline-flex; align-items: center; gap: 5px; height: 34px; min-height: 34px; padding: 0 8px; margin: 0;
   border-radius: 8px; border: 1px solid transparent; background: transparent; color: var(--fg);
-  font: 600 14px/1 var(--font-ui); letter-spacing: 0; cursor: pointer; white-space: nowrap; list-style: none; box-shadow: none;
+  font: 600 13px/1 var(--font-ui); letter-spacing: 0; cursor: pointer; white-space: nowrap; list-style: none; box-shadow: none;
 }
 #app.wx #wingInputHelp > summary::-webkit-details-marker { display: none; }
 #app.wx .wx-top::after, #app.wx #wingInputHelp > summary::after {
@@ -101,7 +101,7 @@ body.wx-wing-on #wingNavigation .workspace-link { min-height: 32px; height: auto
 .wx-help-top { display: grid; gap: 8px; padding-bottom: 10px; border-bottom: 1px solid var(--line); margin-bottom: 4px; }
 #app.wx .wx-help-top .btn { justify-content: flex-start; }
 
-/* ---------- the input panel (Aerodynamics or Structure & Stress, one at a time) ---------- */
+/* ---------- one anchored dropdown (Wing shape, Aerodynamics or Structure & Stress) ---------- */
 #app.wx > #wingSide.wx-panel {
   position: fixed !important; z-index: 190; display: flex !important; flex-direction: column; padding: 0; margin: 0;
   overflow: hidden !important; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); box-shadow: var(--shadow);
@@ -110,6 +110,7 @@ body.wx-wing-on #wingNavigation .workspace-link { min-height: 32px; height: auto
 #app.wx > #wingSide.wx-panel[hidden] { display: none !important; }
 #app.wx > #wingSide > * { flex-shrink: 0; }
 #app.wx > #wingSide > .wx-sec { display: none; flex: 1 1 auto !important; min-height: 0; flex-direction: column; flex-shrink: 1 !important; }
+#app.wx > #wingSide[data-mode="geometry"] > .wx-sec-geometry,
 #app.wx > #wingSide[data-mode="aero"] > .wx-sec-aero, #app.wx > #wingSide[data-mode="structure"] > .wx-sec-structure { display: flex; }
 #app.wx > #wingSide[data-mode="aero"] > #wingImportGate { display: none !important; }
 .wx-panel-head { display: flex; align-items: flex-start; gap: 10px; padding: 12px 12px 8px 16px; border-bottom: 1px solid var(--line); }
@@ -161,8 +162,11 @@ body.wx-wing-on #wingNavigation .workspace-link { min-height: 32px; height: auto
 #wingSide aside.pm > .panel-head { padding: 6px 0; border: 0; }
 #wingSide aside.pm .pm-body { padding: 0; overflow: visible; }
 #wingSide #wlLoads aside.pm .pm-body > button.btn:first-of-type { display: none; }
-#wingSide .wl-treepm { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; }
-#wingSide .wl-treepm aside.tree { max-height: 320px; border: 1px solid var(--line); border-radius: 10px; }
+#wingSide .wl-treepm { display: grid; grid-template-columns: minmax(0, 1fr); grid-auto-rows: max-content; align-items: start; gap: 12px; min-height: 0; }
+#wingSide .wl-treepm aside.tree { position: static; height: auto; min-height: 0; max-height: 320px; overflow: auto; overscroll-behavior: contain; border: 1px solid var(--line); border-radius: 10px; }
+#wingSide .wl-treepm #tree { height: auto; max-height: none; overflow: visible; flex: none; }
+#wingSide .wl-treepm aside.pm { min-height: 0; align-self: start; }
+#wingSide > #wlTreeSection, #wingSide > .wing-input-library { display: none !important; }
 #wingSide #wingPartEditor { margin: 0 !important; padding: 0 !important; border: 0 !important; }
 #wingSide #wingPartEditor > b { display: none; }
 #wingSide #wingImportGate { max-height: 40%; overflow: auto; }
@@ -172,23 +176,30 @@ body.wx-wing-on #wingNavigation .workspace-link { min-height: 32px; height: auto
 #wingSide #wingStructureForm[data-wx-view="spars"] > [data-wx-part="ribs"], #wingSide #wingStructureForm[data-wx-view="spars"] > [data-wx-part="rods"] { display: none; }
 #wingSide .wx-sub > .wl-acc-body > #wingStructureForm { padding: 0; }
 
-/* ---------- result strip ---------- */
-#app.wx > #wxResults {
-  grid-area: results !important; position: relative; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px;
-  padding: 6px 10px; min-height: 48px; border: 1px solid var(--line); border-radius: 12px; background: var(--panel);
+/* ---------- results stay inside the first header row; overflow remains keyboard-scrollable ---------- */
+#app.wx header.wx-bar > #wxResults {
+  position: relative; display: flex; flex-wrap: nowrap; align-items: center; gap: 6px; min-width: 0;
+  padding: 2px 0; min-height: 34px; border: 0; border-radius: 0; background: transparent;
+  overflow-x: auto; overflow-y: hidden; scrollbar-width: thin; overscroll-behavior-x: contain;
 }
+#app.wx #wxResults > *, #app.wx #wxResults .wx-plots > *, #app.wx #wxResults .wx-disp > * { flex-shrink: 0; }
+#app.wx #wxResults .wx-plots, #app.wx #wxResults .wx-disp { flex-wrap: nowrap; }
+#app.wx #wxResults .wx-strip-cap { display: none; }
+#app.wx .wx-unapplied { border-color: var(--warn); }
+#app.wx .view > .wx-selection { position: absolute; left: 12px; bottom: 12px; z-index: 8; max-width: min(600px, calc(100% - 24px)); padding: 6px 10px; border-radius: 7px; background: var(--panel); font-size: 12px; }
+#app.wx .view > .wx-selection:empty { display: none; }
 .wx-plots, .wx-disp { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
 .wx-strip-cap { font: 700 11px/1 var(--font-label); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-right: 4px; }
 #app.wx #wxResults .tool, #app.wx #wxResults #defBtn {
-  height: 34px; min-height: 34px; padding: 0 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel);
+  height: 32px; min-height: 32px; padding: 0 9px; border-radius: 7px; border: 1px solid var(--line); background: var(--panel);
   color: var(--fg); font: 600 13.5px/1 var(--font-ui); letter-spacing: 0; cursor: pointer; }
 #app.wx #wxResults .tool:hover, #app.wx #wxResults #defBtn:hover { border-color: var(--accent); color: var(--accent); }
 #app.wx #wxResults .tool[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #ffffff; }
 #app.wx #wxResults #defBtn[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
 #app.wx #wxResults .tool:disabled, #app.wx #wxResults #defBtn:disabled { opacity: 0.45; cursor: not-allowed; }
-#app.wx #wxResults #wingMoreResults { max-width: 190px; padding: 0 8px; }
+#app.wx #wxResults #wingMoreResults { max-width: 130px; padding: 0 7px; }
 #app.wx #wxResults .wx-disp label { display: inline-flex; align-items: center; gap: 6px; font: 600 13px var(--font-ui); color: var(--muted); }
-#app.wx #wxResults .wx-disp input[type="range"] { width: 96px; accent-color: var(--accent); }
+#app.wx #wxResults .wx-disp input[type="range"] { width: 70px; accent-color: var(--accent); }
 .wx-status { margin-left: auto; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; min-width: 0; }
 .wx-st-group { display: inline-flex; align-items: center; gap: 8px; min-width: 0; padding: 3px 10px 3px 4px; border: 1px solid var(--line); border-radius: 999px; background: var(--panel); }
 .wx-st { display: inline-flex; align-items: center; gap: 6px; min-height: 28px; padding: 0 6px; border: 0; border-radius: 999px; background: transparent;
@@ -264,7 +275,7 @@ body.wx-wing-on .wing-editor-pop.wx-below-bar > div { max-height: calc(100dvh - 
 
 /* ---------- aerodynamic result views (selector in the result strip, view over the 3-D model) ---------- */
 .wx-aero-sel { display: flex; align-items: center; gap: 6px; }
-#app.wx #wxResults #wxAeroView { max-width: 230px; padding: 0 8px; }
+#app.wx #wxResults #wxAeroView { max-width: 165px; padding: 0 8px; }
 #app.wx #wxResults.wx-aero-active .wx-plots .tool[aria-pressed="true"] { background: var(--panel); border-color: var(--line); color: var(--fg); }
 #app.wx #wxResults.wx-aero-active #wxAeroView { background: var(--accent); border-color: var(--accent); color: #ffffff; }
 #app.wx #wxResults.wx-aero-active .wx-disp { display: none; }
@@ -331,4 +342,45 @@ body.wx-wing-on .wing-editor-pop.wx-below-bar > div { max-height: calc(100dvh - 
   #app.wx #wxResults #wxAeroView { max-width: 150px; }
   /* the aerodynamic result view takes most of a phone screen; the page scrolls as before */
   #app.wx > .view.wx-aero-on { height: clamp(560px, 88dvh, 760px) !important; }
+}
+
+/* Status detail belongs to its solver menu; top-command dots and accessible titles expose status in the header. */
+#wingSide .wx-foot .wx-st-group { display: flex; flex-wrap: wrap; border: 0; border-radius: 0; padding: 0; gap: 6px; }
+#wingSide .wx-foot .wx-st { display: none; }
+#wingSide .wx-foot .wl-status { display: block; min-width: 0; }
+#wingSide .wx-foot .wing-status-line { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+#wingSide .wx-foot #statePreview { display: none; }
+@media (max-width: 1799px) {
+  #app.wx #wingProjectTitle { display: none; }
+  #app.wx > header.wx-bar .brand svg { display: none; }
+}
+@media (max-width: 1000px) and (min-width: 701px) {
+  #app.wx > header.wx-bar { grid-template-columns: auto minmax(0, 1fr); }
+  #app.wx > header.wx-bar .brand { display: none !important; }
+  #app.wx .wx-top, #app.wx #wingInputHelp > summary { padding-inline: 6px; font-size: 12px; }
+}
+@media (max-width: 700px) {
+  #app.wx > header.wx-bar { display: flex; flex-wrap: wrap; }
+  #app.wx > header.wx-bar .brand { flex: 1 1 95px; }
+  #app.wx > header.wx-bar .wx-menubar { order: 0; flex: 1 1 auto; overflow-x: auto; scrollbar-width: thin; }
+  #app.wx header.wx-bar > #wxResults { flex: 1 1 100%; min-width: 0; gap: 5px; padding: 1px 0; }
+  #app.wx #wxResults .wx-plots, #app.wx #wxResults .wx-disp, #app.wx #wxResults .wx-aero-sel { display: flex; flex-wrap: nowrap; }
+  #app.wx #wxResults #wingMoreResults, #app.wx #wxResults #wxAeroView { flex: 0 0 auto; width: 145px; max-width: 145px; }
+  #app.wx #wxResults .wx-disp label, #app.wx #wxResults .wx-disp input[type="range"] { flex: 0 0 auto; }
+  #app.wx #wxResults .wx-disp input[type="range"] { width: 65px; }
+}
+
+/* Project identity and history remain in File, leaving the first row for commands and results. */
+#wxFileMenu > .wx-file-brand { display: flex; align-items: center; padding-bottom: 10px; border-bottom: 1px solid var(--line); }
+#wxFileMenu > .wx-file-brand small, #wxFileMenu > .wx-file-brand svg { display: none; }
+#wxFileMenu > .wx-file-brand > div { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+#wxFileMenu #wingProjectTitle { display: block; font-size: 15px; }
+#wxFileMenu .wing-project-name { display: flex; align-items: center; gap: 6px; margin: 0; }
+#wxFileMenu .wing-project-name input { width: 180px; min-height: 34px; }
+#wxArReport > #wxReportCsv { margin-bottom: 8px; }
+#wxArReport > .wl-acc { margin-top: 12px; border: 1px solid var(--line); border-radius: 8px; }
+#wxArReport > .wl-acc > summary { padding: 10px; cursor: pointer; }
+#wxArReport .wl-acc-body { padding: 0 10px 10px; }
+@media (max-width: 700px) {
+  #app.wx > header.wx-bar .wx-menubar { flex: 1 1 100%; }
 }

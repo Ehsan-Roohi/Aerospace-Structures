@@ -1,0 +1,59 @@
+{
+  "version": "0.3.8",
+  "date": "2026-10-31T13:59:03.045396+00:00",
+  "scope": "UI navigation and layout only",
+  "pageSha256": "752004a9edefb871820e680223ecef26246dd7173313c429f62eb8818cd569f3",
+  "passed": true,
+  "changes": [
+    "One shared Wing shape editor precedes Aerodynamics and Structure & Stress; same original geometry controls, no copied drafts",
+    "No permanent left input column; original controls remain accessible through top menus",
+    "Model, Stress, Displacement, More results, Aero results, Deformed and visual scale share the first header row; narrow widths retain a horizontal result strip",
+    "Project name and Undo/Redo remain accessible in File",
+    "Study tree uses a bounded scrolling container and properties follow it in normal grid flow",
+    "Solver report & load CSV moved to Aero results; original detailed report and CSV nodes retained once"
+  ],
+  "verification": {
+    "regression": "test_compact_single_geometry.cjs",
+    "jsdom": [
+      "Pre-solve and stale report empty states disable report CSV",
+      "Current report retains coefficients, convergence and admission diagnostics",
+      "Original report/CSV IDs and object identity retained",
+      "CSV uses current solver record; no solve on navigation",
+      "Actual WingAeroUI.mount/compute/render reaches original report after it is moved; CSV handler bound; reset/refresh after moving succeeds"
+    ],
+    "otherPassedSuites": [
+      "test_aero_result_charts.cjs",
+      "test_aero_summary.cjs"
+    ],
+    "browser": {
+      "engine": "ChatGPT in-app Chromium",
+      "widthPx": 1265,
+      "oneGeometryEditor": true,
+      "noVisibleLeftPanel": true,
+      "firstHeaderRow": true,
+      "realAerodynamicSolve": {
+        "sequence": "Standard",
+        "meshes": 8,
+        "panels": 9232,
+        "elapsedSeconds": 9.6,
+        "status": "Solved, not applied"
+      },
+      "reportViewOpened": true,
+      "csvButtonClicked": true,
+      "singleOriginalReportAndCsvIds": true,
+      "limitations": [
+        "Subsequent browser automation on the Study tree timed out; containment is covered by CSS/source invariants but no tree-specific screenshot is claimed",
+        "Firefox and phone viewport were not exercised in this UI port"
+      ]
+    },
+    "proof": "compact-ui-report.png"
+  },
+  "unchanged": {
+    "structuralAnd3DPanelKernelSha256": "391aa52cb287f0d837f54e0a6c8fd6489f9215a8be6b841acdd75a5e18c01795",
+    "independent2DSourceSha256": "739681cab65caaf91ccc9a9decf40a4ca2870ce8bc14be0f770c1a1b8d63eca8",
+    "scientificAdmissionCriteria": true,
+    "studySchema": true,
+    "solverEquations": true,
+    "unrelatedTrussAndCavitationFiles": true
+  }
+}

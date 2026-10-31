@@ -144,7 +144,7 @@ window.WingAeroStructResults = (() => {
     ['cm', 'Section pitching moment cm(y)'],
     ['te', 'Trailing-edge Cp difference'],
     ['foil2d', '2D airfoil · independent Cp'],
-    ['coef', 'Coefficients & convergence'],
+    ['coef', 'Solver report & load CSV'],
   ];
   const FONT = 'system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif';
   // Blue = negative limit, green = zero, red = positive limit. Only the colour mapping changes.
@@ -251,7 +251,7 @@ window.WingAeroStructResults = (() => {
     return best;
   }
   function install(env) {
-    const { el, ui, strip, view, state, openAero, exportStructureFigure } = env;
+    const { el, ui, strip, view, state, openAero, exportStructureFigure, reportNode } = env;
     const select = el('select', { id: 'wxAeroView', class: 'tool', 'aria-label': 'Aerodynamic results' },
       el('option', { value: '', text: 'Aero results…' }), ...VIEWS.map(([v, t]) => el('option', { value: v, text: t })));
     const group = el('div', { class: 'wx-aero-sel', role: 'group', 'aria-label': 'Aerodynamic results' }, select);
@@ -296,11 +296,22 @@ window.WingAeroStructResults = (() => {
     let foil2D=null,foilBusy=false,foilMessage='Choose a section and its 2D angle of attack, then press Solve 2D airfoil. A wing aerodynamic solve is not required.';
     const canvas = el('canvas', { id: 'wxArCanvas', role: 'img', tabindex: '0', 'aria-label': 'Aerodynamic result' });
     const html = el('div', { id: 'wxArHtml', class: 'wx-ar-html', hidden: true });
+    // The legacy live report is moved here once. Its original IDs, station selection and CSV handler
+    // stay connected even when another result is selected; it never appears in an input dropdown.
+    const coefficientReport = el('div', { id: 'wxCoefficientReport' });
+    const reportExport = el('button', { type: 'button', class: 'btn primary', id: 'wxReportCsv', text: 'Download aerodynamic load (CSV)' });
+    reportExport.addEventListener('click', () => csvBtn.click());
+    const reportHost = el('div', { id: 'wxArReport', class: 'wx-ar-html', hidden: true }, reportExport, coefficientReport);
+    if (reportNode) {
+      reportNode.open = false; reportNode.hidden = true;
+      reportNode.querySelector('summary').textContent = 'Detailed solver output · section plots & load CSV';
+      reportHost.append(reportNode);
+    }
     const notice = el('div', { id: 'wxArNotice', class: 'wx-ar-notice', hidden: true });
     const probeBox = el('div', { id: 'wxArProbe', class: 'wx-ar-probe', role: 'status', 'aria-live': 'polite' });
     const overlay = el('section', { id: 'wxAeroResult', class: 'wx-aero-result', hidden: true, 'aria-label': 'Aerodynamic result view' },
       el('header', { class: 'wx-ar-head' }, el('div', { class: 'wx-ar-titles' }, title, source), el('div', { class: 'wx-ar-tools' }, projection, resetView, panelToggle, scaleMode, manualTools, station, sectionCompare2D, clearBtn, backBtn), foilControls, scaleInfo),
-      el('div', { class: 'wx-ar-body' }, canvas, html, notice), probeBox);
+      el('div', { class: 'wx-ar-body' }, canvas, html, reportHost, notice), probeBox);
     const loading = view.querySelector('#loading');
     view.insertBefore(overlay, loading || null);
     let kind = '', probes = [], hits = [], sectionJ = 0, drawn = null;
@@ -418,6 +429,7 @@ window.WingAeroStructResults = (() => {
       if (!kind || overlay.hidden) return;
       const label = (VIEWS.find(([v]) => v === kind) || [, ''])[1];
       title.textContent = label;
+      reportHost.hidden = true; reportExport.disabled = true;
       foilControls.hidden=kind!=='foil2d';sectionCompare2D.hidden=kind!=='section';
       if(kind==='foil2d'){renderFoil();return;}
       const s = state();
@@ -442,7 +454,7 @@ window.WingAeroStructResults = (() => {
       canvas.style.touchAction = !projection.hidden && surfaceMode !== 'planform' ? 'none' : 'auto';
       canvas.style.cursor = !projection.hidden && surfaceMode !== 'planform' ? 'grab' : 'crosshair';
       pngBtn.hidden = kind === 'coef';
-      if (kind === 'coef') { canvas.hidden = true; html.hidden = false; source.textContent = `${result.label} · ${flowText(b)}`; renderCoefficients(s); probeBox.textContent = ''; return; }
+      if (kind === 'coef') { canvas.hidden = true; html.hidden = true; reportHost.hidden = false; reportExport.disabled = csvBtn.disabled; source.textContent = `${result.label} · ${flowText(b)}`; renderCoefficients(s); probeBox.textContent = ''; return; }
       html.hidden = true; canvas.hidden = false;
       if (kind === 'section') {
         station.replaceChildren(...b.chordwise.map((c, j) => el('option', { value: String(j), text: `Strip ${j + 1} · y = ${sig(c.y_mm)} mm (η ${sig(c.y_mm / (b.reference.span_mm / 2), 3)})${b.mesh?.roundedTip && c.y_mm >= b.mesh.roundedTip.start_mm ? ' · rounded tip: unvalidated Cp' : ''}` })));
@@ -881,7 +893,7 @@ window.WingAeroStructResults = (() => {
       if (c.structuralLoadAvailable === false) admHtml = '<p class="note">Aerodynamic results are available. Transfer to the spatial-beam structural model is unavailable for an exact zero-chord tip; no structural load has been generated.</p>';
       else if (applied && adm && typeof WingAeroUI !== 'undefined') { const v = WingAeroUI.admissionVerdict(adm); admHtml = `<div class="wae-box ${v.ok ? 'ok' : 'no'}"><p class="${v.ok ? 'wae-ok' : 'wae-no'}">${v.html}</p>${WingAeroUI.admissionTable(adm)}</div>`; }
       else if (applied) admHtml = '<p class="note">The load is applied; the admission test runs with the next Solve Structure / Stress.</p>';
-      html.innerHTML = `<div class="wae">
+      coefficientReport.innerHTML = `<div class="wae">
         <h4>Computed coefficients (both halves) · mesh-extrapolated estimates</h4>
         <p class="note">U estimates mesh-discretization uncertainty. These are not measurements or error percentages against an external reference.</p>
         ${typeof WingAeroUI!=='undefined'?WingAeroUI.provenanceHelp():''}

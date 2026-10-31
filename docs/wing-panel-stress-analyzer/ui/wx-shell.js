@@ -1,5 +1,5 @@
-/* Wing AeroStruct UI shell: compact command bar (File, Aerodynamics, Structure & Stress, View, Help), one
- * anchored input panel at a time, and a slim result strip (Model, Stress, Displacement, More results).
+/* Wing AeroStruct UI shell: shared Wing shape, solver menus and results in one compact header.
+ * The former left input column is an anchored dropdown only; all controls retain their original nodes.
  * UI and interaction only. It moves the page's own controls, so their listeners, validation and confirmation dialogs are
  * unchanged; it never copies an input, never edits study data and never starts a solver except through the page's own
  * buttons (Solve Aerodynamics, Apply aerodynamic loads to structure, Solve Structure / Stress, Auto-solve).
@@ -55,6 +55,8 @@
   const plotButtons = $$('[data-plot]', bar), moreSelect = $('#wingMoreResults');
   const learnBtn = $('#learnBtn'), oldGroups = $$(':scope > .group', bar), wlRun = $(':scope > .wl-run', bar);
   const fileBtn = topButton('wxFileBtn', 'File', 'wxFileMenu');
+  const geometryBtn = topButton('wxGeometryBtn', 'Wing shape', 'wingSide');
+  geometryBtn.title = 'Airfoils & planform: the one shared geometry for both solvers';
   const aeroBtn = topButton('wxAeroBtn', 'Aerodynamics', 'wingSide'), structBtn = topButton('wxStructBtn', 'Structure & Stress', 'wingSide');
   const aeroDot = el('span', { class: 'wx-dot', 'aria-hidden': 'true' }), structDot = el('span', { class: 'wx-dot', 'aria-hidden': 'true' });
   aeroBtn.append(aeroDot); structBtn.append(structDot);
@@ -66,10 +68,11 @@
   saveBtn.className = 'wx-quick'; saveBtn.innerHTML = 'Save<span class="wx-long">JSON</span>'; saveBtn.setAttribute('aria-label', 'Save JSON');
   saveBtn.title = 'Save the inputs on screen as a study file (.json).';
   helpSummary.className = ''; helpSummary.textContent = 'Help'; helpSummary.setAttribute('aria-haspopup', 'dialog');
-  const menubar = el('div', { class: 'wx-menubar', role: 'group', 'aria-label': 'Main commands' }, fileBtn, sep(), aeroBtn, structBtn, sep(), viewBtn, help);
+  const menubar = el('div', { class: 'wx-menubar', role: 'group', 'aria-label': 'Main commands' }, fileBtn, geometryBtn, aeroBtn, structBtn, viewBtn, help);
   const historyTools = $('.wing-history-tools', tools);
   if (historyTools) historyTools.removeAttribute('style');
   const barEnd = el('div', { class: 'wx-bar-end' }, historyTools);
+  brand.classList.add('wx-file-brand');
   bar.classList.add('wx-bar');
 
   // ---------------------------------------------------------------- File menu (single location for study files and exports)
@@ -116,7 +119,7 @@
   const helpTop = el('div', { class: 'wx-help-top' }, learnBtn,
     lessonButtons.length ? cap('Experiments & theory') : null, lessonButtons.length ? row(...lessonButtons) : null);
   const where = el('details', { id: 'wxHelpWhere' }, el('summary', { text: 'Where the controls are' }),
-    el('p', { class: 'note', text: 'File holds Open JSON, Save JSON, figure PNG, aerodynamic CSV, New / Clear, the course example and STL/DXF/STEP export. Aerodynamics and Structure & Stress each open one input panel: set the inputs there, then press its Solve button. Apply aerodynamic loads to structure transfers the panel load and re-solves the structure. Result buttons change what is displayed; View holds symmetry, zoom, visibility and colours.' }));
+    el('p', { class: 'note', text: 'File holds Open JSON, Save JSON, figure PNG, aerodynamic CSV, New / Clear, the course example and STL/DXF/STEP export. Wing shape is the one shared airfoil and planform editor. Aerodynamics and Structure & Stress contain their own inputs and Solve buttons. Solver report & load CSV is in Aero results. Apply aerodynamic loads to structure transfers the panel load and re-solves the structure. Result buttons change what is displayed; View holds symmetry, zoom, visibility and colours.' }));
   const aeroHelp = aeroIntro ? el('details', { id: 'wxHelpAero' }, el('summary', { text: 'Aerodynamics · panel method' }), aeroIntro) : null;
   const pressureHelp=el('details',{},el('summary',{text:'Pressure and aerodynamic graphs'}),
     el('p',{text:'Cp < 0 is suction; Cp > 0 is pressure above the freestream. Red means positive pressure, not the largest suction. LE/TE and the flow arrow identify the edges. The Cp section graph puts negative values at the top. At the trailing edge, the upper and lower pressures should approach each other; neither is required to be zero.'}),
@@ -178,9 +181,13 @@
   const structStatusBtn = el('button', { type: 'button', class: 'wx-st', id: 'wxStructStatus', 'aria-controls': 'wingSide', title: 'Open Structure & Stress' }, 'Structure');
   const structGroup = el('div', { class: 'wx-st-group', id: 'wxStructGroup' }, structStatusBtn, wlStatus);
   const selection = $('.wing-selection-feedback', tools);
-  add(results, plots, display, el('div', { class: 'wx-status' }, aeroGroup, structGroup), selection);
+  add(results, plots, display);
+  // Solver status remains visible on each top command's dot/title and inside its own menu.
+  // Keep the original structural Details control with the structural solver, not in a second header row.
+  aeroGroup.hidden = true; park(aeroGroup);
+  if (selection) { selection.classList.add('wx-selection'); $('#app > main.view').append(selection); }
 
-  // ---------------------------------------------------------------- the input panel: one element, two modes
+  // ---------------------------------------------------------------- the input panel: one element, three mutually exclusive modes
   const panelTitle = el('h2', { id: 'wxPanelTitle', tabindex: '-1' }), panelSub = el('p', { class: 'wx-panel-sub', id: 'wxPanelSub' });
   const panelClose = el('button', { type: 'button', class: 'wx-x', 'aria-label': 'Close panel', text: '×' });
   const panelHead = el('header', { class: 'wx-panel-head' }, el('div', {}, panelTitle, panelSub), panelClose);
@@ -190,7 +197,10 @@
     const done = el('button', { type: 'button', class: 'btn wx-done', text: 'Close', 'aria-label': 'Close ' + label });
     return { discard, done, row: el('div', { class: 'wx-foot-row' }, discard, done) };
   };
-  const geoSlotAero = el('div', { class: 'wx-geo-slot' }), geoSlotStruct = el('div', { class: 'wx-geo-slot' });
+  const geometrySec = el('div', { class: 'wx-sec wx-sec-geometry' });
+  const geometryFoot = footButtons('Wing shape');
+  const geometryScroll = el('div', { class: 'wx-scroll' }, wlGeometry);
+  geometrySec.append(geometryScroll, el('div', { class: 'wx-foot' }, geometryFoot.row));
   const geoDirtyBadge = el('span', { class: 'wx-dirty', hidden: true, text: 'unapplied edits' });
   $(':scope > summary', wlGeometry).append(geoDirtyBadge);
   setLabel(wlGeometry, 'Wing shape');
@@ -200,7 +210,7 @@
   const aeroSec = el('div', { class: 'wx-sec wx-sec-aero' });
   const wae = $(':scope > .wae', aeroHost), aeroRun = $('#aeroRun', aeroHost), aeroApply = $('#aeroApply', aeroHost);
   const aeroFoot = footButtons('Aerodynamics'), aeroWarn = geoWarn();
-  const groups = { aero: [], structure: [] }, prepares = new Map();
+  const groups = { geometry: [wlGeometry], aero: [], structure: [] }, prepares = new Map();
   let flowG = null, resG = null, admG = null, outCap = null;
   if (wae && aeroRun && aeroApply) {
     const grid = $(':scope > .wae-grid', wae), seqLabel = $('#aeroSequence', aeroHost).closest('label');
@@ -215,15 +225,15 @@
     admG.body.append(applied, admission); resG.body.append(out);
     admG.d.hidden = true; resG.d.hidden = true;
     outCap = cap('Aerodynamic outputs'); outCap.hidden = true;
-    const scroll = el('div', { class: 'wx-scroll' }, cap('Shared wing shape'), geoSlotAero, cap('Aerodynamic inputs'), flowG.d, meshG.d, air, outCap, admG.d, resG.d);
+    const scroll = el('div', { class: 'wx-scroll' }, cap('Aerodynamic inputs'), flowG.d, meshG.d, air, outCap, admG.d);
     scroll.append(...[...wae.children].filter((c) => c !== scroll));   // anything else the module renders stays visible
     const hint = el('p', { class: 'wx-hint', text: 'Apply aerodynamic loads to structure replaces the prescribed loads (self-weight is kept) and re-solves the structure for the admission check.' });
     wae.replaceChildren(scroll, el('div', { class: 'wx-foot' }, status, actions, hint, aeroWarn, aeroFoot.row));
     aeroSec.append(aeroHost);
-    groups.aero.push(wlGeometry, flowG.d, meshG.d, ...(air ? [air] : []), admG.d, resG.d);
+    groups.aero.push(flowG.d, meshG.d, ...(air ? [air] : []), admG.d);
   } else {
-    aeroSec.append(el('div', { class: 'wx-scroll' }, geoSlotAero, aeroHost), el('div', { class: 'wx-foot' }, aeroWarn, aeroFoot.row));
-    groups.aero.push(wlGeometry);
+    aeroSec.append(el('div', { class: 'wx-scroll' }, aeroHost), el('div', { class: 'wx-foot' }, aeroWarn, aeroFoot.row));
+    // No geometry copy: Wing shape is the shared top-level editor.
   }
 
   // Structure & Stress mode: every structural input, then Solve Structure / Stress.
@@ -246,28 +256,32 @@
   partsG.body.append(partEditor);
   const pmAside = $('#pm').closest('aside'), treeAside = $('#tree').closest('aside'), treePm = treeAside && treeAside.parentElement;
   const sScroll = el('div', { class: 'wx-scroll' },
-    cap('Shared wing shape'), geoSlotStruct, cap('Structure dimensions'), wlStructure, rodsG.d, sparsG.d,
+    cap('Structure dimensions'), wlStructure, rodsG.d, sparsG.d,
     cap('Materials & loads'), matsG.d, wlLoads, jointsG.d, cap('Analysis & tools'), anaG.d, partsG.d, treeG.d, wlInventory, moreG.d);
   const structFoot = footButtons('Structure & Stress'), structWarn = geoWarn();
   add(structSec, $('#wingImportGate'), sScroll, el('div', { class: 'wx-foot' },
-    el('div', { class: 'wx-foot-main' }, runBtn, autoLabel),
+    structGroup, el('div', { class: 'wx-foot-main' }, runBtn, autoLabel),
     el('p', { class: 'wx-hint', text: 'Fields apply when you press Enter or leave them; forms with their own Apply button wait for it. Results update only with Solve Structure / Stress (or Auto-solve).' }),
     structWarn, structFoot.row));
-  groups.structure.push(wlGeometry, wlStructure, rodsG.d, sparsG.d, matsG.d, wlLoads, jointsG.d, anaG.d, partsG.d, treeG.d, wlInventory, moreG.d);
+  groups.structure.push(wlStructure, rodsG.d, sparsG.d, matsG.d, wlLoads, jointsG.d, anaG.d, partsG.d, treeG.d, wlInventory, moreG.d);
 
   // Previous side-column content that this layout replaces (kept, hidden, with listeners intact).
-  const keepInSide = [$('#wlTreeSection'), $('.wing-input-library', side)].filter(Boolean);
+  const replacedSideWrappers = [$('#wlTreeSection'), $('.wing-input-library', side)].filter(Boolean);
   const sideOld = [...side.children];
-  const sideKnown = new Set([sideOld.find((n) => n.tagName === 'BUTTON' && /close inputs/i.test(n.textContent)), $('#wlAero'), $('#wingMaterialShortcuts')].filter(Boolean));
-  side.replaceChildren(panelHead, panelState, aeroSec, structSec, ...keepInSide);
+  const sideKnown = new Set([sideOld.find((n) => n.tagName === 'BUTTON' && /close inputs/i.test(n.textContent)), $('#wlAero'), $('#wingMaterialShortcuts'), ...replacedSideWrappers].filter(Boolean));
+  side.replaceChildren(panelHead, panelState, geometrySec, aeroSec, structSec);
+  // Old wrappers must not leak beneath the active dropdown's scroll area. Their real controls
+  // are reparented into the matching subgroup on demand; no permanent left column is retained.
+  park(...replacedSideWrappers);
   side.classList.add('wx-panel'); side.hidden = true; side.dataset.mode = 'structure';
   side.setAttribute('role', 'dialog'); side.setAttribute('aria-modal', 'false'); side.setAttribute('aria-labelledby', 'wxPanelTitle');
-  geoSlotStruct.append(wlGeometry);
+  wlGeometry.open = true;
 
   // ---------------------------------------------------------------- assemble the page
-  bar.replaceChildren(brand, menubar, barEnd);
-  bar.after(results);
-  results.after(fileMenu, viewMenu);
+  bar.replaceChildren(menubar, results);
+  fileMenu.prepend(brand);
+  fileMenu.append(cap('Edit history'), barEnd);
+  bar.after(fileMenu, viewMenu);
   park(...oldGroups, wlRun, $('#inputsBtn'), $('#wingAeroOpenBtn'), $('#wingShowBendingTwist'), $('#wingStudyTreeButton'), cameraRow, resultRow,
     ...['geometry', 'structure', 'materials', 'rib', 'rod', 'spar', 'load'].map((id) => $(`[data-wing-action="${id}"]`, tools)));
   const experiments = $('.wing-experiments', tools); park(experiments);
@@ -328,7 +342,7 @@
   }
 
   // ---------------------------------------------------------------- subgroups: open one at a time inside the same panel
-  const lastOpen = { aero: flowG ? flowG.d : null, structure: null };
+  const lastOpen = { geometry: wlGeometry, aero: flowG ? flowG.d : null, structure: null };
   const modeOf = () => side.dataset.mode;
   function beforeOpen(d) { const f = prepares.get(d); if (f) f(); for (const o of groups[modeOf()]) if (o !== d && o.open) o.open = false; lastOpen[modeOf()] = d; }
   function openSub(d) { if (!d) return; beforeOpen(d); d.open = true; }
@@ -344,7 +358,7 @@
     if (s) s.addEventListener('click', () => { if (!d.open) beforeOpen(d); });
     d.addEventListener('toggle', () => { if (d.open && groups[modeOf()].includes(d)) { beforeOpen(d); scrollSubIntoView(d); } });
   }
-  for (const d of [...groups.aero, ...groups.structure]) wire(d);
+  for (const d of [...groups.geometry, ...groups.aero, ...groups.structure]) wire(d);
   for (const d of [...groups.aero, ...groups.structure]) if (d.open && d !== (flowG && flowG.d)) d.open = false;
   if (flowG) flowG.d.open = true;
 
@@ -352,13 +366,14 @@
   const menus = {
     file: { btn: fileBtn, panel: fileMenu, width: 420 },
     view: { btn: viewBtn, panel: viewMenu, width: 460 },
+    geometry: { btn: geometryBtn, panel: side, width: 600, mode: 'geometry', title: 'Wing shape', sub: 'Airfoils & planform shared by Aerodynamics and Structure & Stress.' },
     aero: { btn: aeroBtn, panel: side, width: 528, mode: 'aero', title: 'Aerodynamics', sub: 'Potential-flow panel method on the shared wing shape. Solve it, then apply its loads to the structure.' },
     structure: { btn: structBtn, panel: side, width: 528, mode: 'structure', title: 'Structure & Stress', sub: 'Spatial-beam structure and nominal stresses. Set the inputs, then press Solve Structure / Stress.' },
     help: { btn: helpSummary, panel: helpBody },
   };
   let openKey = null;
   const menuListeners = [];   // run after a menu opens or closes (the message toast moves beside it)
-  function setMode(mode) { side.dataset.mode = mode; const slot = mode === 'aero' ? geoSlotAero : geoSlotStruct; if (wlGeometry.parentElement !== slot) slot.append(wlGeometry); }
+  function setMode(mode) { side.dataset.mode = mode; }
   function place(key = openKey) {
     if (!key) return;
     if (key === 'help') { placeHelp(); return; }
@@ -401,14 +416,18 @@
     if (returnFocus) m.btn.focus({ preventScroll: true });
     for (const f of menuListeners) f();
   }
+  results.addEventListener('change', () => closeMenus());
+  results.addEventListener('click', e => { if (e.target.closest('[data-plot]')) closeMenus(); });
   const toggleMenu = (key) => (openKey === key ? closeMenus({ returnFocus: true }) : openMenu(key));
   fileBtn.addEventListener('click', () => toggleMenu('file'));
   viewBtn.addEventListener('click', () => toggleMenu('view'));
+  geometryBtn.addEventListener('click', () => toggleMenu('geometry'));
   aeroBtn.addEventListener('click', () => toggleMenu('aero'));
   structBtn.addEventListener('click', () => toggleMenu('structure'));
   aeroStatusBtn.addEventListener('click', () => openMenu('aero'));
   structStatusBtn.addEventListener('click', () => openMenu('structure'));
   panelClose.addEventListener('click', () => closeMenus({ returnFocus: true }));
+  geometryFoot.done.addEventListener('click', () => closeMenus({ returnFocus: true }));
   aeroFoot.done.addEventListener('click', () => closeMenus({ returnFocus: true }));
   structFoot.done.addEventListener('click', () => closeMenus({ returnFocus: true }));
   help.addEventListener('toggle', () => {
@@ -453,7 +472,7 @@
   const originalOpen = pw.open;
   const resolveAnchor = (at) => {
     if (!(at instanceof Element)) return at;
-    if (side.contains(at)) return side.dataset.mode === 'aero' ? aeroBtn : structBtn;
+    if (side.contains(at)) return side.dataset.mode === 'geometry' ? geometryBtn : side.dataset.mode === 'aero' ? aeroBtn : structBtn;
     if (fileMenu.contains(at)) return fileBtn;
     if (viewMenu.contains(at)) return viewBtn;
     if (helpBody.contains(at)) return helpSummary;
@@ -556,7 +575,7 @@
     return { status: 'ok', result: last, combined: a.combined, admission: a.admission };
   }
   const view = $('#app > main.view');
-  const aeroResults = window.WingAeroStructResults && view ? window.WingAeroStructResults.install({ el, ui, strip: results, view, state: aeroResultState, openAero: () => openMenu('aero'), exportStructureFigure: () => $('#wrImage')?.click() }) : null;
+  const aeroResults = window.WingAeroStructResults && view ? window.WingAeroStructResults.install({ el, ui, strip: results, view, state: aeroResultState, reportNode: resG?.d, openAero: () => openMenu('aero'), exportStructureFigure: () => $('#wrImage')?.click() }) : null;
   window.addEventListener('wing-show-model', () => aeroResults?.close());
   window.addEventListener('wing-preview-recovered', () => closeMenus());
   window.addEventListener('wing-open-aerodynamics', () => openMenu('aero'));
@@ -599,9 +618,11 @@
   if (aeroRun) aeroRun.addEventListener('click', () => { pendingAero = 'solve'; }, true);
   if (aeroApply) aeroApply.addEventListener('click', () => { pendingAero = 'apply'; }, true);
   function renderPanelState() {
-    if (side.hidden && openKey !== 'aero' && openKey !== 'structure') return;
+    if (side.hidden) return;
     panelState.replaceChildren();
-    if (modeOf() === 'aero') {
+    if (modeOf() === 'geometry') {
+      panelState.append(el('span', { class: 'chip ' + (geoDirty ? 'warn' : 'idle'), text: geoDirty ? 'Unapplied edits' : 'Shared geometry' }));
+    } else if (modeOf() === 'aero') {
       const s = aeroState();
       panelState.append(el('span', { class: 'chip ' + s.cls, text: s.label }), el('span', { text: s.detail || s.title || '' }));
       if (aeroResults && aeroResultState().status === 'ok') {
@@ -617,16 +638,16 @@
   function updateStatus() {
     const s = aeroState();
     aeroChip.className = 'chip ' + s.cls; aeroChip.textContent = s.label; aeroText.textContent = s.detail || '';
-    aeroGroup.title = s.title || s.detail || s.label; aeroDot.dataset.s = s.dot; aeroDotText.textContent = ' (' + s.label + ')';
+    aeroGroup.title = s.title || s.detail || s.label; aeroBtn.title = 'Aerodynamics: ' + (s.title || s.detail || s.label); aeroDot.dataset.s = s.dot; aeroDotText.textContent = ' (' + s.label + ')';
     const t = structState();
-    structDot.dataset.s = t.dot; structDotText.textContent = ' (' + t.label + ')';
+    structBtn.title = 'Structure & Stress: ' + t.label + '. ' + t.full; structDot.dataset.s = t.dot; structDotText.textContent = ' (' + t.label + ')';
     const a = ui.aero && ui.aero();
     syncAeroBusy(a);
     if (admG && resG) {   // write only real changes: an attribute write inside the observed host would re-trigger this update
       const setHidden = (n, v) => { if (n && n.hidden !== v) n.hidden = v; };
       setHidden(admG.d, !($('#aeroApplied').textContent.trim() || $('#aeroAdmission').textContent.trim()));
       setHidden(resG.d, !$('#aeroResults').textContent.trim());
-      setHidden(outCap, admG.d.hidden && resG.d.hidden);
+      setHidden(outCap, admG.d.hidden);
       if (a && !a.running && a.result && a.result !== seenResult) { seenResult = a.result; if (pendingAero === 'solve') pendingAero = null; }
       if (a && a.admission && a.admission !== seenAdmission) { seenAdmission = a.admission; if (pendingAero === 'apply') { pendingAero = null; if (openKey === 'aero') openSub(admG.d); } }
     }
@@ -640,6 +661,7 @@
   const watch = (node, opts) => { if (node) new MutationObserver(queueStatus).observe(node, opts); };
   watch($('#stateChip'), { attributes: true, childList: true, characterData: true, subtree: true });
   watch($('#stateText'), { childList: true, characterData: true, subtree: true });
+  watch($('#aeroResults'), { childList: true, characterData: true, subtree: true });
   watch(aeroHost, { attributes: true, attributeFilter: ['disabled', 'hidden'], childList: true, characterData: true, subtree: true });
   for (const id of ['aeroV', 'aeroRho', 'aeroAlpha', 'aeroTarget', 'aeroMu', 'aeroSound', 'aeroSequence']) { const n = $('#' + id); if (n) { n.addEventListener('input', queueStatus); n.addEventListener('change', queueStatus); } }
   const gate = $('#wingImportGate');
@@ -647,9 +669,13 @@
   updateStatus();
 
   // ---------------------------------------------------------------- drafts: Wing shape edits wait for Apply geometry
-  function setGeoDirty(v) { geoDirty = v; geoDirtyBadge.hidden = !v; aeroWarn.hidden = !v; structWarn.hidden = !v; }
+  function setGeoDirty(v) { geoDirty = v; geoDirtyBadge.hidden = !v; aeroWarn.hidden = !v; structWarn.hidden = !v; geometryBtn.classList.toggle('wx-unapplied', v); }
   const geoForm = $('#wingAdvancedGeometry form');
   if (geoForm) for (const name of ['input', 'change']) geoForm.addEventListener(name, (e) => { if (e.isTrusted) setGeoDirty(true); });
+  geometryFoot.discard.addEventListener('click', () => {
+    hooks.discardGeometryDraft(); hooks.renderInputs(); setGeoDirty(false); renderPanelState();
+    showToast('Unapplied Wing shape edits were discarded. Applied geometry is unchanged.');
+  });
   structFoot.discard.addEventListener('click', () => {
     hooks.discardGeometryDraft(); hooks.cancelLoadDraft(); hooks.renderInputs(); hooks.renderPM(); setGeoDirty(false); syncTabs();
     showToast('Unapplied edits in Structure & Stress were discarded. Applied inputs are unchanged; Undo reverts applied edits.');
@@ -691,7 +717,7 @@
   echo($('#wingSessionStatus'), (t) => !/^(Autosaved|Changes are saved in this browser)/.test(t));
 
   // ---------------------------------------------------------------- page hooks
-  hooks.onShowInputs = (show) => { app.classList.remove('learning-view', 'tablet-inputs-open'); if (show) openMenu('structure', { focus: false }); else if (openKey === 'aero' || openKey === 'structure') closeMenus(); };
+  hooks.onShowInputs = (show) => { app.classList.remove('learning-view', 'tablet-inputs-open'); if (show) openMenu('structure', { focus: false }); else if (['geometry', 'aero', 'structure'].includes(openKey)) closeMenus(); };
   // Make a section (and the control in it) visible before the page focuses it: Go to the input, openSection.
   hooks.reveal = (details, target) => {
     const node = target || details; if (!node || !node.isConnected || pw.popup.contains(node)) return;
@@ -699,7 +725,7 @@
     if (viewMenu.contains(node)) { openMenu('view', { focus: false }); if (details && viewMenu.contains(details)) details.open = true; return; }
     if (helpBody.contains(node)) { openMenu('help'); return; }
     if (!side.contains(node)) return;
-    const mode = aeroSec.contains(node) && !wlGeometry.contains(node) ? 'aero' : wlGeometry.contains(node) && openKey === 'aero' ? 'aero' : 'structure';
+    const mode = wlGeometry.contains(node) ? 'geometry' : aeroSec.contains(node) ? 'aero' : 'structure';
     openMenu(mode, { focus: false });
     let group = null;
     if (form.contains(node)) { const part = ([...form.children].find((c) => c.contains(node)) || {}).dataset?.wxPart; group = part === 'rods' ? rodsG.d : part === 'spars' ? sparsG.d : wlStructure; }

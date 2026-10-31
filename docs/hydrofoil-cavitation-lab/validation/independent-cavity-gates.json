@@ -1,0 +1,55 @@
+{
+  "baseSolver": "0.1.1 frozen potential-BIE research core",
+  "closureSelection": "A unknown with endpoint physical-gap derivative = 0",
+  "exactFullyWettedControls": {
+    "status": "PASSED_FOR_INDEPENDENT_HESS_SMITH_IMPLEMENTATION",
+    "cylinderCpRmsAt160": 3.1746967646957256e-15,
+    "joukowskiClAbsoluteThreshold": 0.005,
+    "joukowskiClAbsoluteErrorAt2560": 0.004272378534362964,
+    "caution": "Cusp control converges slowly; it does not establish this accuracy on the 80-213-panel cavity meshes."
+  },
+  "identicalCompoundContourComparison": {
+    "status": "DIAGNOSTIC_DISCRETISATION_DIFFERENCES_REMAIN",
+    "allCavitySpeedTargetRmsAt213": 0.012848058098638709,
+    "allCavitySpeedTargetMaxAt213": 0.03326463803013646,
+    "hsClAt213": 0.5056442435583368,
+    "productionClAt213": 0.47327006809227706,
+    "maximumSpeedDiscrepancyLocation": "First cavity panel near prescribed detachment, x/c=0.0101204544; no endpoint exclusion."
+  },
+  "fullyFreeBoundaryMatchedComparison": {
+    "status": "NOT_PASSED",
+    "genericSeedAttempts": 4,
+    "productionShapeInitialGuessAttempts": 4,
+    "acceptedSolutions": 0,
+    "caution": "Both Newton basins produced negative gaps or stalled residuals; no cavity accuracy percentage is claimed."
+  },
+  "lessRestrictedIntermediateNewtonProbe": {
+    "status": "REJECTED_PHYSICAL_BRANCH_AND_INCOMPLETE_NONLINEAR_CONVERGENCE",
+    "N": 213,
+    "A": 0.037437888892285935,
+    "sigma": 0.686063335640184,
+    "maxResidual": 9.337550691768115e-6,
+    "minimumGap": -0.015510850044146193,
+    "evaluations": 2445,
+    "seconds": 46.05180859999382,
+    "provenance": "Actual process stdout. Writing the full long-named JSON failed with Windows FileNotFoundError after calculation; this partial diagnostic record preserves the observed rejected result. No admitted result was lost."
+  },
+  "independentAcostaGate": "NOT_PASSED_UNMATCHED_CLOSURE",
+  "experimentalGate": "NOT_PERFORMED",
+  "claudeFollowup": "NOT_DELIVERED_BROWSER_CONTROL_TIMEOUT",
+  "velocityKuttaResearchFollowup": {
+    "scopedVerdict": "REASONABLE_EXPLICIT_RESEARCH_OPTION_NOT_PHYSICALLY_VALIDATED",
+    "N": 213,
+    "independentSameContourClDifference": 0.0047430041646781,
+    "allCavityTargetSpeedRms": 0.006640714563755127,
+    "allCavityTargetSpeedMax": 0.01847530345253512,
+    "boundedFreeBoundaryAttempt": {
+      "N": 107,
+      "nonlinearResidual": 6.420860065858847e-9,
+      "minimumGap": -0.016405251846915825,
+      "status": "REJECTED_PHYSICAL_BRANCH",
+      "independentFreeBoundaryGate": "NOT_PASSED"
+    },
+    "domainAt107Panels": {"oneFactorCases": 13, "admitted": 10, "rejected": 3, "alpha3AdmittedUnlikeMorino": true}
+  }
+}

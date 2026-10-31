@@ -1,0 +1,186 @@
+{
+  "version": "0.1.1",
+  "status": "INDEPENDENT_CAVITATION_BENCHMARK_NOT_PASSED",
+  "reference": {
+    "author": "A. J. Acosta",
+    "year": 1955,
+    "title": "A Note on Partial Cavitation of Flat Plate Hydrofoils",
+    "url": "https://authors.library.caltech.edu/records/p5ya1-44321",
+    "equations": "Printed p.5 Eq.(9) and p.6 Eq.(12), visually checked in primary report",
+    "scope": "Sharp-leading-edge zero-thickness flat plate, leading-edge detachment, linearized flow. Author cautions accuracy beyond l/c about 0.5; lower branch l/c < about 0.74."
+  },
+  "interpretation": "These finite-thickness/fixed-detachment nonlinear probes do not establish a matched flat-plate limit: the vanishing-thickness/zero-recovery sequence encounters rejected or folded branches. Do not quote an accuracy percentage or claim Acosta validation for the GUI NACA/recovery cases.",
+  "cases": [
+    {
+      "inputs": {
+        "thickness": 0.002,
+        "alpha": 0.25,
+        "detachment": 0.0001,
+        "length": 0.4,
+        "resolution": 64,
+        "recovery": 0,
+        "attenuation": 0,
+        "relaxation": 0.3,
+        "maxIterations": 180,
+        "normalTolerance": 0.000001,
+        "shapeTolerance": 1e-7
+      },
+      "reference": {
+        "sigmaBy2Alpha": 6.428263983879284,
+        "clByPiAlpha": 2.2909944487358054,
+        "sigma": 0.0560971858530306,
+        "cl": 0.031404456797380825
+      },
+      "computed": {
+        "status": "rejected",
+        "reason": "The computed cavity intersects the foil. This branch is rejected; change detachment or closure settings.",
+        "sigma": 0.0758430119091813,
+        "cl": 0.025837503170981338,
+        "minimumGap": -0.00001407913191128515,
+        "maximumHeight": 0.0042593140521008715,
+        "closureTurningAngleDeg": 59.80213949566029
+      },
+      "matchedFlatPlate": false
+    },
+    {
+      "inputs": {
+        "thickness": 0.002,
+        "alpha": 0.5,
+        "detachment": 0.0001,
+        "length": 0.4,
+        "resolution": 64,
+        "recovery": 0,
+        "attenuation": 0,
+        "relaxation": 0.3,
+        "maxIterations": 180,
+        "normalTolerance": 0.000001,
+        "shapeTolerance": 1e-7
+      },
+      "reference": {
+        "sigmaBy2Alpha": 6.428263983879284,
+        "clByPiAlpha": 2.2909944487358054,
+        "sigma": 0.1121943717060612,
+        "cl": 0.06280891359476165
+      },
+      "computed": {
+        "status": "rejected",
+        "reason": "The computed cavity intersects the foil. This branch is rejected; change detachment or closure settings.",
+        "sigma": 0.12792931088292292,
+        "cl": 0.03176703339941167,
+        "minimumGap": -0.000013458403200991182,
+        "maximumHeight": 0.007382112815709006,
+        "closureTurningAngleDeg": 77.86504311179839
+      },
+      "matchedFlatPlate": false
+    },
+    {
+      "inputs": {
+        "thickness": 0.002,
+        "alpha": 1,
+        "detachment": 0.0001,
+        "length": 0.4,
+        "resolution": 64,
+        "recovery": 0,
+        "attenuation": 0,
+        "relaxation": 0.3,
+        "maxIterations": 180,
+        "normalTolerance": 0.000001,
+        "shapeTolerance": 1e-7
+      },
+      "reference": {
+        "sigmaBy2Alpha": 6.428263983879284,
+        "clByPiAlpha": 2.2909944487358054,
+        "sigma": 0.2243887434121224,
+        "cl": 0.1256178271895233
+      },
+      "computed": {
+        "status": "rejected",
+        "reason": "The computed cavity intersects the foil. This branch is rejected; change detachment or closure settings.",
+        "sigma": 0.23366777529434235,
+        "cl": 0.02348326359291027,
+        "minimumGap": -0.000011732493121353324,
+        "maximumHeight": 0.013469019434691873,
+        "closureTurningAngleDeg": 85.94498993201034
+      },
+      "matchedFlatPlate": false
+    },
+    {
+      "inputs": {
+        "thickness": 0.0001,
+        "alpha": 0.25,
+        "detachment": 0.0001,
+        "length": 0.4,
+        "resolution": 64,
+        "recovery": 0,
+        "attenuation": 0,
+        "relaxation": 0.3,
+        "maxIterations": 180,
+        "normalTolerance": 0.000001,
+        "shapeTolerance": 1e-7
+      },
+      "reference": {
+        "sigmaBy2Alpha": 6.428263983879284,
+        "clByPiAlpha": 2.2909944487358054,
+        "sigma": 0.0560971858530306,
+        "cl": 0.031404456797380825
+      },
+      "computed": {
+        "status": "rejected",
+        "reason": "The cavity folds over; this graph-surface prototype cannot continue."
+      },
+      "matchedFlatPlate": false
+    },
+    {
+      "inputs": {
+        "thickness": 0.0001,
+        "alpha": 0.5,
+        "detachment": 0.0001,
+        "length": 0.4,
+        "resolution": 64,
+        "recovery": 0,
+        "attenuation": 0,
+        "relaxation": 0.3,
+        "maxIterations": 180,
+        "normalTolerance": 0.000001,
+        "shapeTolerance": 1e-7
+      },
+      "reference": {
+        "sigmaBy2Alpha": 6.428263983879284,
+        "clByPiAlpha": 2.2909944487358054,
+        "sigma": 0.1121943717060612,
+        "cl": 0.06280891359476165
+      },
+      "computed": {
+        "status": "rejected",
+        "reason": "The cavity folds over; this graph-surface prototype cannot continue."
+      },
+      "matchedFlatPlate": false
+    },
+    {
+      "inputs": {
+        "thickness": 0.0001,
+        "alpha": 1,
+        "detachment": 0.0001,
+        "length": 0.4,
+        "resolution": 64,
+        "recovery": 0,
+        "attenuation": 0,
+        "relaxation": 0.3,
+        "maxIterations": 180,
+        "normalTolerance": 0.000001,
+        "shapeTolerance": 1e-7
+      },
+      "reference": {
+        "sigmaBy2Alpha": 6.428263983879284,
+        "clByPiAlpha": 2.2909944487358054,
+        "sigma": 0.2243887434121224,
+        "cl": 0.1256178271895233
+      },
+      "computed": {
+        "status": "rejected",
+        "reason": "The cavity update left the small-correction range. Change the detachment/closure parameters."
+      },
+      "matchedFlatPlate": false
+    }
+  ]
+}

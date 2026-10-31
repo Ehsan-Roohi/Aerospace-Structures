@@ -1,0 +1,40 @@
+{
+  "date": "2026-10-30",
+  "solverVersion": "0.1.0",
+  "browser": "Codex in-app browser (Chromium)",
+  "method": "Visible UI controlled and inspected through CUA by the parent agent",
+  "scope": "Default UI solve and progress/result display, not scientific validation or cross-browser certification",
+  "url": "http://127.0.0.1:8782/docs/hydrofoil-cavitation-lab/",
+  "reviewPackageScreenshot": "application-preview.jpg",
+  "case": {
+    "section": "NACA 0012",
+    "alphaDeg": 4,
+    "detachment": 0.01,
+    "cavityLength": 0.4,
+    "resolution": 32,
+    "chordM": 0.16,
+    "speedMps": 15,
+    "rhoKgM3": 998.2,
+    "vapourPressurePa": 2339
+  },
+  "observed": {
+    "status": "Discrete equations converged",
+    "progressVisible": true,
+    "progressIteration": 25,
+    "progressNormalResidual": 0.00010987,
+    "sigmaDisplayed": 1.0134,
+    "maximumCavityHeightMmDisplayed": 2.8257,
+    "absolutePressureKPaDisplayed": 116.14,
+    "equivalentContourClDisplayed": 0.454,
+    "foilPanelsDisplayed": 107,
+    "cavityPanelsDisplayed": 32,
+    "iterationsDisplayed": 32,
+    "secondsDisplayed": 0.24,
+    "exportControlsEnabled": true
+  },
+  "notClaimed": [
+    "Experimental cavitation validation",
+    "Firefox or standalone Chrome testing",
+    "Real-browser export roundtrip; exports are covered by the controller harness separately"
+  ]
+}

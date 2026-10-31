@@ -1,0 +1,300 @@
+{
+  "version": "0.2.1",
+  "date": "2026-10-30",
+  "status": "numerical-prototype-verification-only",
+  "checks": [
+    "manufactured curved-contour total-potential gradient: exact constant tangential speed; no BC-target substitution",
+    "nonlinear manufactured total potential sin(1.3s)+0.2s^3: three-/five-point refinement with ALL endpoint samples retained",
+    "non-lifting analytic cylinder: convergent Cp refinement",
+    "lifting analytic Joukowski pressure/lift and wake sign",
+    "mixed Dirichlet/Neumann assembly recovers fully-wetted discrete solution; an internal consistency test",
+    "nonlinear default cavity: mixed BC, source flux, closure, nonintersecting shape, refinement",
+    "iteration exhaustion / foil intersection / invalid inputs rejected; absolute pressure and sigma units"
+  ],
+  "manufacturedGradientStudy": [
+    {
+      "panels": 20,
+      "stencil": 3,
+      "rms": 0.004855003359294053,
+      "maxAllPoints": 0.016637319251088467
+    },
+    {
+      "panels": 20,
+      "stencil": 5,
+      "rms": 0.00005525324051416295,
+      "maxAllPoints": 0.0001985108279756176
+    },
+    {
+      "panels": 40,
+      "stencil": 3,
+      "rms": 0.0011165003149143575,
+      "maxAllPoints": 0.004584930184426295
+    },
+    {
+      "panels": 40,
+      "stencil": 5,
+      "rms": 0.0000032727100693774112,
+      "maxAllPoints": 0.000015446167944466183
+    },
+    {
+      "panels": 80,
+      "stencil": 3,
+      "rms": 0.0002568881473943663,
+      "maxAllPoints": 0.0011871126694387168
+    },
+    {
+      "panels": 80,
+      "stencil": 5,
+      "rms": 1.6466368360905363e-7,
+      "maxAllPoints": 0.0000010227303246512776
+    },
+    {
+      "panels": 160,
+      "stencil": 3,
+      "rms": 0.000060749040650720126,
+      "maxAllPoints": 0.00030094159093208006
+    },
+    {
+      "panels": 160,
+      "stencil": 5,
+      "rms": 8.133871518720737e-9,
+      "maxAllPoints": 6.486170378572353e-8
+    }
+  ],
+  "analytic": [
+    {
+      "reference": "exact circular-cylinder potential flow",
+      "panels": 40,
+      "Cp_RMS": 0.005084513835561981,
+      "linearResidual": 4.215378046623641e-16
+    },
+    {
+      "reference": "exact circular-cylinder potential flow",
+      "panels": 80,
+      "Cp_RMS": 0.0012654662160509465,
+      "linearResidual": 6.054184931159057e-16
+    },
+    {
+      "reference": "exact circular-cylinder potential flow",
+      "panels": 160,
+      "Cp_RMS": 0.00031560750188643386,
+      "linearResidual": 8.734332701543224e-16
+    },
+    {
+      "reference": "exact Joukowski conformal-map flow",
+      "alphaDeg": 0,
+      "panels": 80,
+      "Cp_RMS_x_02_to_98": 0.00037432724719081516,
+      "cl": -6.647992703209815e-13,
+      "exactCl": 0,
+      "liftAbsoluteError": 6.647992703209815e-13,
+      "linearResidual": 3.449118161219511e-17
+    },
+    {
+      "reference": "exact Joukowski conformal-map flow",
+      "alphaDeg": 0,
+      "panels": 160,
+      "Cp_RMS_x_02_to_98": 0.00009595770746692222,
+      "cl": 7.364130599806298e-13,
+      "exactCl": 0,
+      "liftAbsoluteError": 7.364130599806298e-13,
+      "linearResidual": 6.342582709040201e-17
+    },
+    {
+      "reference": "exact Joukowski conformal-map flow",
+      "alphaDeg": 0,
+      "panels": 320,
+      "Cp_RMS_x_02_to_98": 0.00002461967616889406,
+      "cl": -4.5894933937507074e-11,
+      "exactCl": 0,
+      "liftAbsoluteError": 4.5894933937507074e-11,
+      "linearResidual": 1.0377508856580786e-16
+    },
+    {
+      "reference": "exact Joukowski conformal-map flow",
+      "alphaDeg": 4,
+      "panels": 80,
+      "Cp_RMS_x_02_to_98": 0.0025497092581319445,
+      "cl": 0.46695716318457525,
+      "exactCl": 0.47075898801417243,
+      "liftAbsoluteError": 0.003801824829597178,
+      "linearResidual": 6.451002926288751e-17
+    },
+    {
+      "reference": "exact Joukowski conformal-map flow",
+      "alphaDeg": 4,
+      "panels": 160,
+      "Cp_RMS_x_02_to_98": 0.0010302227700231138,
+      "cl": 0.46883208086631334,
+      "exactCl": 0.47075898801417243,
+      "liftAbsoluteError": 0.0019269071478590916,
+      "linearResidual": 7.632783294297951e-17
+    },
+    {
+      "reference": "exact Joukowski conformal-map flow",
+      "alphaDeg": 4,
+      "panels": 320,
+      "Cp_RMS_x_02_to_98": 0.0004452532591366215,
+      "cl": 0.4699231773676271,
+      "exactCl": 0.47075898801417243,
+      "liftAbsoluteError": 0.0008358106465453097,
+      "linearResidual": 1.227316859253591e-16
+    }
+  ],
+  "mixedBoundaryAssembly": [
+    {
+      "alphaDeg": 0,
+      "boundaryPanels": 160,
+      "dirichletPanels": 40,
+      "potentialError": 1.5002235564942623e-13,
+      "normalDerivativeError": 1.3751499938763345e-12,
+      "linearResidual": 4.098284211995207e-17
+    },
+    {
+      "alphaDeg": 4,
+      "boundaryPanels": 160,
+      "dirichletPanels": 40,
+      "potentialError": 1.3339329640871256e-13,
+      "normalDerivativeError": 1.2412570971065406e-12,
+      "linearResidual": 1.2016348202928406e-16
+    }
+  ],
+  "cavityMeshStudy": [
+    {
+      "resolution": 24,
+      "actualBoundaryPanels": 80,
+      "cavityPanels": 24,
+      "sigma": 1.0020432904992305,
+      "maximumHeight": 0.01737106424578587,
+      "cl": 0.4415240062236154,
+      "pressureDragDiagnostic": 0.0005834503182406553,
+      "metrics": {
+        "iteration": 29,
+        "sigma": 1.0020432904992305,
+        "maxNormalVelocity": 0.000008573490847374465,
+        "maxShapeCorrection": 4.2999636683326795e-8,
+        "linearResidual": 2.3592239273284576e-16,
+        "closureError": 5.911346985936706e-18,
+        "minimumHeight": 0,
+        "maximumHeight": 0.01737106424578587,
+        "fluxError": 9.769608835352543e-9,
+        "pressureReconstructionRMS": 0.001625933100988403,
+        "closureTurningAngleDeg": 21.925233177335784,
+        "closurePanelNormalY": 0.9116089424313985,
+        "maximumPressureReconstructionError": 0.006703893915563253,
+        "discreteConverged": true,
+        "innerEquationsConverged": true,
+        "geometryValid": true,
+        "velocityKuttaResidual": 0.15179328260303948,
+        "wakePotentialJump": 0.22172518796222912,
+        "pressureNote": "Pressure residual uses a local five-point derivative of solved total potential within each boundary region (fewer points if needed), with one-sided stencils at detachment and closure. It compares to an imposed BC, not an experiment."
+      },
+      "seconds": 0.06645000000000005
+    },
+    {
+      "resolution": 32,
+      "actualBoundaryPanels": 107,
+      "cavityPanels": 32,
+      "sigma": 1.0134103201455438,
+      "maximumHeight": 0.017660566828768452,
+      "cl": 0.45366934697912525,
+      "pressureDragDiagnostic": 0.0005619856246256473,
+      "metrics": {
+        "iteration": 32,
+        "sigma": 1.0134103201455438,
+        "maxNormalVelocity": 0.000007306590226741072,
+        "maxShapeCorrection": 1.1100396825682369e-8,
+        "linearResidual": 2.220446049250313e-16,
+        "closureError": 1.2491684564081798e-18,
+        "minimumHeight": 0,
+        "maximumHeight": 0.017660566828768452,
+        "fluxError": 2.7746040658440958e-9,
+        "pressureReconstructionRMS": 0.0011872944377601012,
+        "closureTurningAngleDeg": 30.48307743039399,
+        "closurePanelNormalY": 0.8403788376970395,
+        "maximumPressureReconstructionError": 0.006942356932462257,
+        "discreteConverged": true,
+        "innerEquationsConverged": true,
+        "geometryValid": true,
+        "velocityKuttaResidual": 0.15880305461112787,
+        "wakePotentialJump": 0.22717036182696781,
+        "pressureNote": "Pressure residual uses a local five-point derivative of solved total potential within each boundary region (fewer points if needed), with one-sided stencils at detachment and closure. It compares to an imposed BC, not an experiment."
+      },
+      "seconds": 0.11212000000000001
+    },
+    {
+      "resolution": 48,
+      "actualBoundaryPanels": 160,
+      "cavityPanels": 48,
+      "sigma": 1.0258599908281663,
+      "maximumHeight": 0.017963340711387298,
+      "cl": 0.46674787449183336,
+      "pressureDragDiagnostic": 0.0004081161394893368,
+      "metrics": {
+        "iteration": 36,
+        "sigma": 1.0258599908281663,
+        "maxNormalVelocity": 0.000008509211148366447,
+        "maxShapeCorrection": 5.589995871811827e-9,
+        "linearResidual": 2.7755575615628914e-16,
+        "closureError": 3.055431474842248e-19,
+        "minimumHeight": 0,
+        "maximumHeight": 0.017963340711387298,
+        "fluxError": 6.917732043259074e-10,
+        "pressureReconstructionRMS": 0.0008008620426084419,
+        "closureTurningAngleDeg": 46.88237919958934,
+        "closurePanelNormalY": 0.6532559165843593,
+        "maximumPressureReconstructionError": 0.010005741779775423,
+        "discreteConverged": true,
+        "innerEquationsConverged": true,
+        "geometryValid": true,
+        "velocityKuttaResidual": 0.1683197485538841,
+        "wakePotentialJump": 0.23345738805245686,
+        "pressureNote": "Pressure residual uses a local five-point derivative of solved total potential within each boundary region (fewer points if needed), with one-sided stencils at detachment and closure. It compares to an imposed BC, not an experiment."
+      },
+      "seconds": 0.270285
+    },
+    {
+      "resolution": 64,
+      "actualBoundaryPanels": 213,
+      "cavityPanels": 64,
+      "sigma": 1.032771311690063,
+      "maximumHeight": 0.01810972334996412,
+      "cl": 0.4740414653466531,
+      "pressureDragDiagnostic": 0.0003259197816242801,
+      "metrics": {
+        "iteration": 39,
+        "sigma": 1.032771311690063,
+        "maxNormalVelocity": 0.000007658870152971176,
+        "maxShapeCorrection": 4.247712484427981e-9,
+        "linearResidual": 4.440892098500626e-16,
+        "closureError": 2.121535547001203e-17,
+        "minimumHeight": 0,
+        "maximumHeight": 0.01810972334996412,
+        "fluxError": 3.454664442562776e-10,
+        "pressureReconstructionRMS": 0.0006331168634640678,
+        "closureTurningAngleDeg": 59.65398984515069,
+        "closurePanelNormalY": 0.4697531205465141,
+        "maximumPressureReconstructionError": 0.01229509856181732,
+        "discreteConverged": true,
+        "innerEquationsConverged": true,
+        "geometryValid": true,
+        "velocityKuttaResidual": 0.1747986376324544,
+        "wakePotentialJump": 0.2370707076448974,
+        "pressureNote": "Pressure residual uses a local five-point derivative of solved total potential within each boundary region (fewer points if needed), with one-sided stencils at detachment and closure. It compares to an imposed BC, not an experiment."
+      },
+      "seconds": 0.4751898
+    }
+  ],
+  "evidenceDistinction": {
+    "analytic": "Independent exact fully wetted potential-flow solutions.",
+    "cavity": "Internal residual and mesh checks, not independent cavitating-flow validation.",
+    "experimental": "Not performed. No experimental points or accuracy percentages are fabricated."
+  },
+  "limitations": [
+    "Cavity length and detachment are prescribed; sigma is computed.",
+    "Closure parameters are explicit example inputs, not calibrated to experiment.",
+    "Pressure derivatives near mixed-boundary/recovery junctions remain mesh-sensitive.",
+    "Combined-contour pressure drag is diagnostic, not physical cavitation/profile drag.",
+    "No re-entrant jet, cloud shedding, 3-D cavity, liquid free surface or structural load transfer."
+  ]
+}

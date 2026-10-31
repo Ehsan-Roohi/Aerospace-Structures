@@ -1,0 +1,28 @@
+{
+  "schema": "hydrofoil-cavitation-case",
+  "version": 1,
+  "solverVersion": "0.2.1",
+  "inputs": {
+    "thickness": 0.12,
+    "alpha": 4,
+    "detachment": 0.01,
+    "length": 0.4,
+    "resolution": 48,
+    "recovery": 0.15,
+    "attenuation": 0.3,
+    "exponent": 1,
+    "relaxation": 0.4,
+    "maxIterations": 100,
+    "normalTolerance": 0.00001,
+    "shapeTolerance": 0.000001,
+    "closureMode": "fixed-recovery",
+    "regularityTolerance": 0.00001,
+    "maxClosureEvaluations": 24,
+    "kuttaCondition": "morino",
+    "chord": 0.16,
+    "speed": 15,
+    "rho": 998.2,
+    "vapourPressure": 2339
+  },
+  "result": null
+}

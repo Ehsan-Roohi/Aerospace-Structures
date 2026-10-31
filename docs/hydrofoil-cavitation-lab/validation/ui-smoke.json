@@ -1,0 +1,13 @@
+{
+  "date": "2026-10-30",
+  "scope": "Code-level controller/DOM harness; no real browser or rendered-layout verification",
+  "checks": [
+    "default smooth-contact worker solve and visible metrics/plots",
+    "selected A, baseline/complete-gap chart and endpoint diagnostics visible",
+    "CSV, version-2 JSON and SVG exports",
+    "nonpreset resolution import without data loss",
+    "tolerance roundtrip and version-1 fixed-A physics preserved",
+    "wrong-schema import leaves inputs unchanged and opens error dialog",
+    "invalid solve refused before worker launch"
+  ]
+}

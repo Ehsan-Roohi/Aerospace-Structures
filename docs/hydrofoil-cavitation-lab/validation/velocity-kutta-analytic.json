@@ -1,0 +1,102 @@
+{
+  "status": "PASS_ANALYTIC_FULLY_WETTED_ONLY",
+  "rows": [
+    {
+      "alpha": 0,
+      "n": 80,
+      "cl": 1.1791565987517849e-14,
+      "exactCl": 0,
+      "clAbsoluteError": 1.1791565987517849e-14,
+      "cpRMSAll": 0.0035180569237257906,
+      "cpRMSInterior": 0.000686613874449296,
+      "maxAll": 0.016398515026627702,
+      "velocityKuttaResidual": 6.838973831690964e-14,
+      "linearResidual": 3.3399533680994166e-17
+    },
+    {
+      "alpha": 0,
+      "n": 160,
+      "cl": -2.880534271396465e-12,
+      "exactCl": 0,
+      "clAbsoluteError": 2.880534271396465e-12,
+      "cpRMSAll": 0.0003211109023306829,
+      "cpRMSInterior": 0.00007020318585376833,
+      "maxAll": 0.0014880944992514689,
+      "velocityKuttaResidual": -1.2168044349891716e-12,
+      "linearResidual": 7.105427357601002e-15
+    },
+    {
+      "alpha": 0,
+      "n": 320,
+      "cl": 1.8223738849616842e-11,
+      "exactCl": 0,
+      "clAbsoluteError": 1.8223738849616842e-11,
+      "cpRMSAll": 0.000051166781350091586,
+      "cpRMSInterior": 0.00001586827381112784,
+      "maxAll": 0.00018726606741703566,
+      "velocityKuttaResidual": 2.3874235921539366e-12,
+      "linearResidual": 2.842170943040401e-14
+    },
+    {
+      "alpha": 0,
+      "n": 640,
+      "cl": 1.0470574111807004e-10,
+      "exactCl": 0,
+      "clAbsoluteError": 1.0470574111807004e-10,
+      "cpRMSAll": 0.00001617872215194067,
+      "cpRMSInterior": 0.000003375529643183544,
+      "maxAll": 0.00006331403167517125,
+      "velocityKuttaResidual": 6.30961949354969e-12,
+      "linearResidual": 1.194777183538837e-16
+    },
+    {
+      "alpha": 4,
+      "n": 80,
+      "cl": 0.4636934335943992,
+      "exactCl": 0.47075898801417243,
+      "clAbsoluteError": 0.007065554419773246,
+      "cpRMSAll": 0.008885394223674596,
+      "cpRMSInterior": 0.004329235536174249,
+      "maxAll": 0.06389961113878162,
+      "velocityKuttaResidual": -1.6298074001497298e-13,
+      "linearResidual": 5.767955557622884e-17
+    },
+    {
+      "alpha": 4,
+      "n": 160,
+      "cl": 0.46800201624375043,
+      "exactCl": 0.47075898801417243,
+      "clAbsoluteError": 0.002756971770422001,
+      "cpRMSAll": 0.0018481332463993244,
+      "cpRMSInterior": 0.00162041795336004,
+      "maxAll": 0.0055417420807652995,
+      "velocityKuttaResidual": -2.0250467969162855e-13,
+      "linearResidual": 8.543513119185775e-17
+    },
+    {
+      "alpha": 4,
+      "n": 320,
+      "cl": 0.46971433957907005,
+      "exactCl": 0.47075898801417243,
+      "clAbsoluteError": 0.00104464843510238,
+      "cpRMSAll": 0.0007378225896679759,
+      "cpRMSInterior": 0.0006205044726145804,
+      "maxAll": 0.0024740228257709163,
+      "velocityKuttaResidual": 1.1368683772161603e-12,
+      "linearResidual": 1.8935590942459335e-16
+    },
+    {
+      "alpha": 4,
+      "n": 640,
+      "cl": 0.47037118231850217,
+      "exactCl": 0.47075898801417243,
+      "clAbsoluteError": 0.00038780569567026246,
+      "cpRMSAll": 0.00028911091848117683,
+      "cpRMSInterior": 0.00022827657092912778,
+      "maxAll": 0.0009981197073678505,
+      "velocityKuttaResidual": 1.4949819160392508e-11,
+      "linearResidual": 4.547473508864641e-13
+    }
+  ],
+  "coverage": "All endpoint samples retained in cpRMSAll/maxAll; separately labelled interior RMS uses .02<x/c<.98. Not independent free-boundary cavitation validation."
+}

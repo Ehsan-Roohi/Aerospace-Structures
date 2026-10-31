@@ -1,0 +1,57 @@
+{
+  "status": "RESEARCH_ONLY_NOT_ADOPTED",
+  "rows": [
+    {
+      "resolution": 24,
+      "N": 80,
+      "status": "converged-prototype",
+      "A": 0.37168546214766374,
+      "sigma": 1.063157312248101,
+      "cl": 0.5013297648927992,
+      "cm": 0.0009181614158694524,
+      "corner": 1.4162960645324976,
+      "pressureResidual": 0.00854268120767454,
+      "kuttaResidual": -1.865174681370263e-14,
+      "seconds": 0.6251696
+    },
+    {
+      "resolution": 32,
+      "N": 107,
+      "status": "converged-prototype",
+      "A": 0.3704537588348891,
+      "sigma": 1.0627329239682033,
+      "cl": 0.5016409179804919,
+      "cm": 0.000801662671203681,
+      "corner": 1.0805284043414516,
+      "pressureResidual": 0.008799609978565326,
+      "kuttaResidual": -1.2878587085651816e-13,
+      "seconds": 0.9533185
+    },
+    {
+      "resolution": 48,
+      "N": 160,
+      "status": "converged-prototype",
+      "A": 0.36963802137954527,
+      "sigma": 1.0623399596918106,
+      "cl": 0.5015547864522285,
+      "cm": 0.0008042710251137088,
+      "corner": 0.7300947102743608,
+      "pressureResidual": 0.01263404098640275,
+      "kuttaResidual": -5.3290705182007514e-14,
+      "seconds": 2.7490833
+    },
+    {
+      "resolution": 64,
+      "N": 213,
+      "status": "converged-prototype",
+      "A": 0.3693891491509991,
+      "sigma": 1.062286579700543,
+      "cl": 0.5015903779808498,
+      "cm": 0.0008562221740815762,
+      "corner": 0.5505769701393584,
+      "pressureResidual": 0.015396968366900854,
+      "kuttaResidual": -8.615330671091215e-13,
+      "seconds": 4.0159415
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "scope": "Mixed versus fully Neumann solution on identical contour using SAME potential BIE. This isolates assembly/anchor effects; it is not independent cavitation validation.",
+  "rows": [
+    {
+      "N": 80,
+      "potentialMaxDifferenceAfterGauge": 2.236385523905033e-9,
+      "sameStencilSpeedRmsDifference": 1.129330000723188e-8,
+      "sourceMaxDifference": 9.483843890767396e-8
+    },
+    {
+      "N": 107,
+      "potentialMaxDifferenceAfterGauge": 1.718452738641551e-9,
+      "sameStencilSpeedRmsDifference": 9.193604496776508e-9,
+      "sourceMaxDifference": 9.960875368975053e-8
+    },
+    {
+      "N": 160,
+      "potentialMaxDifferenceAfterGauge": 9.487665266464827e-10,
+      "sameStencilSpeedRmsDifference": 5.567657910001101e-9,
+      "sourceMaxDifference": 8.576949926675237e-8
+    },
+    {
+      "N": 213,
+      "potentialMaxDifferenceAfterGauge": 7.044916954896116e-10,
+      "sameStencilSpeedRmsDifference": 4.468141886879727e-9,
+      "sourceMaxDifference": 8.704241788448641e-8
+    },
+    {
+      "N": 320,
+      "potentialMaxDifferenceAfterGauge": 5.246915932330439e-10,
+      "sameStencilSpeedRmsDifference": 3.7628352752465225e-9,
+      "sourceMaxDifference": 9.948600906972693e-8
+    }
+  ]
+}

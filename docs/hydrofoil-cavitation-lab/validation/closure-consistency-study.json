@@ -1,0 +1,71 @@
+{
+  "version": "0.1.1",
+  "status": "INTERNAL_C1_RESEARCH_DIAGNOSTICS_ONLY",
+  "scope": "The three-point gap derivative defines the candidate equation. A separate five-point derivative measures its stencil sensitivity. Pressure-integrated lift is checked against circulation via Kutta-Joukowski; this is a conservation identity, not a cavitating reference benchmark.",
+  "joukowskiSignAndUnitsControl": {
+    "panels": 320,
+    "alphaDeg": 4,
+    "exactCirculation": 0.23537949400708622,
+    "numericalCirculation": 0.2349140252568895,
+    "absoluteError": 0.00046546875019670697
+  },
+  "rows": [
+    {
+      "N": 80,
+      "A": 0.3558547344764419,
+      "endpointGapSlopeThreePoint": 1.2248671452108617e-9,
+      "endpointGapSlopeFivePoint": 0.009651544059705731,
+      "pressureIntegratedCl": 0.44024568257437857,
+      "circulation": 0.22145733349798116,
+      "kuttaJoukowskiCl": 0.4429146669959623,
+      "clIdentityDifference": -0.0026689844215837533,
+      "clIdentityRelativeDifference": 0.006025956285633874
+    },
+    {
+      "N": 107,
+      "A": 0.35799699155372305,
+      "endpointGapSlopeThreePoint": 0.0000024278915896139286,
+      "endpointGapSlopeFivePoint": 0.007039834006743104,
+      "pressureIntegratedCl": 0.4525699991091662,
+      "circulation": 0.22688456855550396,
+      "kuttaJoukowskiCl": 0.4537691371110079,
+      "clIdentityDifference": -0.0011991380018417375,
+      "clIdentityRelativeDifference": 0.0026426169251532548
+    },
+    {
+      "N": 160,
+      "A": 0.36074337609351426,
+      "endpointGapSlopeThreePoint": 8.007862101581942e-7,
+      "endpointGapSlopeFivePoint": 0.004624710374766257,
+      "pressureIntegratedCl": 0.4658596443621792,
+      "circulation": 0.23315061840763726,
+      "kuttaJoukowskiCl": 0.4663012368152745,
+      "clIdentityDifference": -0.0004415924530953297,
+      "clIdentityRelativeDifference": 0.0009470111126260357
+    },
+    {
+      "N": 213,
+      "A": 0.362391958435743,
+      "endpointGapSlopeThreePoint": 1.9995816412723966e-7,
+      "endpointGapSlopeFivePoint": 0.003461937523368276,
+      "pressureIntegratedCl": 0.47327006809227706,
+      "circulation": 0.23675194098228414,
+      "kuttaJoukowskiCl": 0.4735038819645683,
+      "clIdentityDifference": -0.00023381387229121087,
+      "clIdentityRelativeDifference": 0.0004937950483554998
+    },
+    {
+      "N": 320,
+      "A": 0.3643003481883373,
+      "endpointGapSlopeThreePoint": 0.0000058040834893923615,
+      "endpointGapSlopeFivePoint": 0.0023191043200830493,
+      "pressureIntegratedCl": 0.48156340046178775,
+      "circulation": 0.24083272099506614,
+      "kuttaJoukowskiCl": 0.4816654419901323,
+      "clIdentityDifference": -0.00010204152834453195,
+      "clIdentityRelativeDifference": 0.0002118514625481943
+    }
+  ],
+  "independentAcostaGate": "NOT_PASSED",
+  "experimentalValidation": false
+}

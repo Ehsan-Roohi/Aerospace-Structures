@@ -1,6 +1,6 @@
 {
   "date": "2026-10-31",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "scope": "Code-level controller/DOM harness; no real browser or rendered-layout verification",
   "status": "PASS_UI_INTEGRATION_ONLY",
   "checks": [
@@ -10,14 +10,21 @@
     "synthetic passing-screen fixture exercises enabled CSV/figure export plumbing only, never experimental validation",
     "legacy numerical result without physical screening cannot advertise accepted KPIs or accepted exports",
     "nonpreset resolution/tolerance roundtrip; imported results not trusted",
-    "version1 fixed-A/Morino and default tolerances preserved",
+    "version1 fixed-A/Morino/default tolerances and prescribed detachment preserved",
     "actual cambered2412 geometry roundtrip retains numerically converged diagnostics but refuses failing physical screen",
     "wrong-schema import leaves inputs unchanged and opens separate error dialog",
     "Example restores only input values and promises no accepted physical reference",
     "invalid input is refused before worker creation",
     "user screenshot 2414/.1deg retains intersecting failed branch with no accepted KPIs/exports",
     "running solve progress visible and inputs locked while cancel available",
-    "cancel releases controls and stale worker callback cannot restore an accepted result"
+    "cancel releases controls and stale worker callback cannot restore an accepted result",
+    "automatic detachment mode saves without altering original numerical options",
+    "automatic detachment import restores mode only and never trusts stored results",
+    "automatic detachment below48 is refused before creating a worker",
+    "automatic detachment requires smooth-contact closure before worker creation",
+    "BV worker dispatch and detachment progress lock inputs while exposing Cancel",
+    "BV cancel terminates worker and ignores a late success callback",
+    "unknown imported detachment method leaves active mode unchanged and shows error"
   ],
   "actualDefault": {
     "numericalStatus": "converged-prototype",
@@ -66,6 +73,7 @@
       "experimentalValidation": false
     }
   },
+  "automaticDetachment": "Opt-in mode save/import, >=48 and closure guards, correct worker route, progress, cancellation and stale-callback checks; fresh solver verification is separate",
   "syntheticFixture": "Passing-screen export plumbing only; wet Cp prescribed zero in test; not a solver result or physical validation",
   "experimentalValidation": "NOT_PERFORMED"
 }

@@ -1,0 +1,30 @@
+{
+  "date": "2026-10-31",
+  "release": "2D UI0.3.3; axisymmetric developed cavity0.2.0 research",
+  "status": "RESEARCH_UPDATE_NOT_PHYSICALLY_VALIDATED",
+  "checks": {
+    "twoDimensionalImplementation": 10,
+    "twoDimensionalController": 21,
+    "axisymmetricControls": 16,
+    "axisymmetricController": 19,
+    "axisymmetricNonlinearPythonParityMeshes": [
+      32,
+      64
+    ]
+  },
+  "coreUnchanged": true,
+  "physicalQualification": {
+    "twoDimensionalDefault": "FAILED_WETTED_PRESSURE",
+    "axisymmetricDirectField": "UNQUALIFIED",
+    "experimental": "NOT_PERFORMED"
+  },
+  "evidence": [
+    "smooth-detachment-verification.json",
+    "ui-smoke.json",
+    "nodal-cavity-verification.json",
+    "nodal-cavity-ui-smoke.json",
+    "browser-0.3.3.json",
+    "bem-source-provenance.json"
+  ],
+  "limitations": "Numerical root/trace agreement is separate from physical admission. Full residuals, failed branches and endpoint samples are retained."
+}

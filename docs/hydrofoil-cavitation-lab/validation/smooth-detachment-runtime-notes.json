@@ -1,0 +1,9 @@
+{
+  "status": "RESOLVED_TOOLING_LIMIT",
+  "date": "2026-10-31",
+  "initialAttempt": "Nested Node spawnSync was denied by the local sandbox with EPERM before the fresh solver started. This was not a numerical solver failure.",
+  "resolution": "Run the unchanged production generator directly, checking a 59-second wall-clock budget at each yielded progress step.",
+  "freshRunSeconds": 14.323,
+  "freshProgressYields": 2091,
+  "result": "Numerical candidate converged; strict wetted-pressure screen failed as reproduced from the actual original samples. No failed numerical calculation or pressure sample was hidden."
+}

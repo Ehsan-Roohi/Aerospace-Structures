@@ -1,4 +1,8 @@
-# Hydrofoil Cavitation Lab 0.3.2
+# Hydrofoil Cavitation Lab 0.3.3
+
+Version 0.3.3 adds **Automatic smooth detachment · research**, with a mandatory unchanged wetted-pressure screen. It improves the default detachment defect but still rejects its physical pressure inconsistency. The developed-disk page now uses a continuous linear-vortex browser solver, independently matched to a Python reference, with nodal reconstruction and direct field diagnostics both visible. Field accuracy remains unqualified. [New complete comparison](validation/index.html#smooth-detachment) · [Method and reproduction](validation/bem-upgrade-method.md).
+
+Current added checks: `node validation/smooth-detachment-verify.cjs`, `node validation/nodal-cavity-verify.cjs`, `node validation/nodal-cavity-ui-smoke.cjs`. Earlier constant-source tests remain historical checks of that retained implementation; its previous UI harness describes the previous controller.
 
 An isolated **research prototype** for steady, two-dimensional partial-sheet cavitation. It does not change the published Wing AeroStruct solver. [Evidence and figures](validation/index.html).
 
@@ -25,7 +29,7 @@ node validation/test-cambered-section.cjs
 node validation/axisymmetric-verify.cjs
 node validation/cavity-2d-admission-test.cjs
 node validation/axisymmetric-cavity-verify.cjs
-node validation/axisymmetric-cavity-ui-smoke.cjs
+node validation/nodal-cavity-ui-smoke.cjs
 python validation/cambered-independent.py
 ```
 
@@ -87,7 +91,7 @@ Excluded: viscosity, cloud shedding, re-entrant jet dynamics, collapse/erosion, 
 ## Primary sources
 
 - Kinnas & Fine(1993), nonlinear partially cavitating hydrofoils: <https://doi.org/10.1017/S0022112093002071>.
-- Kinnas(2010), chapter9: <https://cavity.caee.utexas.edu/kinnas/COURSES/bem/kinnas_ch09.pdf>.
+- Kinnas(2010), chapter 9: <https://cavity.caee.utexas.edu/kinnas/COURSES/bem/kinnas_ch09.pdf>.
 - Krishnaswamy thesis(2000/2001), velocity Kutta section2.3 and recovery closure chapter3: <https://backend.orbit.dtu.dk/ws/portalfiles/portal/5446239/Padma.pdf>.
 - Nouroozi, Pasandidehfard & Djavareshkian(2016), simple/re-entrant closure comparison, **not implemented here**: <https://doi.org/10.1155/2016/1593849>.
 - Acosta(1955), sharp-leading-edge flat-plate reference: <https://authors.library.caltech.edu/records/p5ya1-44321>.

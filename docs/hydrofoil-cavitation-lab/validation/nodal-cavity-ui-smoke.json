@@ -1,0 +1,101 @@
+{
+  "date": "2026-10-31",
+  "status": "PASS_UI_INTEGRATION_ONLY",
+  "scope": "Current DOM/controller and actual Nc32 nodal worker protocol; exact CSV data/coverage checks, imports, stale-result/cancel controls. Not interactive Chrome/Firefox visual acceptance or physical/experimental validation.",
+  "checks": [
+    {
+      "name": "HTML loads current nodal solver/controller, not old constant-source library",
+      "passed": true
+    },
+    {
+      "name": "default inverse inputs and empty initial output",
+      "passed": true
+    },
+    {
+      "name": "real worker produces immediate visible progress and enables cancellation",
+      "passed": true
+    },
+    {
+      "name": "actual Nc32 result stays research/field-unqualified",
+      "passed": true
+    },
+    {
+      "name": "actual profile contract retains five samples on every panel",
+      "passed": true
+    },
+    {
+      "name": "plots include true SI meridian, reconstruction/direct pressure and signed boundary residuals",
+      "passed": true
+    },
+    {
+      "name": "JSON saves current method, inputs and honest diagnostic status",
+      "passed": true
+    },
+    {
+      "name": "CSV has actual newline-separated rows and every direct/nodal sample",
+      "passed": true
+    },
+    {
+      "name": "CSV direct Cp/velocity and metre coordinates match the actual solver samples",
+      "passed": true
+    },
+    {
+      "name": "figure export contains five SVGs and explicit unqualified/nonexperimental labels",
+      "passed": true
+    },
+    {
+      "name": "saved case import restores inputs only; no stale result/exports",
+      "passed": true
+    },
+    {
+      "name": "legacy diagnostic/shape payload cannot become a fresh solution",
+      "passed": true
+    },
+    {
+      "name": "cancel terminates and ignores a late result callback",
+      "passed": true
+    },
+    {
+      "name": "imported explicit disk discretization is passed to the worker",
+      "passed": true
+    },
+    {
+      "name": "new standard import does not inherit hidden diskPanels from the previous case",
+      "passed": true
+    },
+    {
+      "name": "changed input invalidates prior plots and disables exports",
+      "passed": true
+    },
+    {
+      "name": "wrong case schema is refused visibly",
+      "passed": true
+    },
+    {
+      "name": "invalid JSON reports error and cannot revive any result",
+      "passed": true
+    },
+    {
+      "name": "invalid imported geometry is rejected before any worker starts",
+      "passed": true
+    }
+  ],
+  "failures": 0,
+  "actualDefault": {
+    "version": "0.2.0-research",
+    "status": "nodal-converged-field-unresolved",
+    "Nc": 32,
+    "Nf": 16,
+    "sigma": 0.32133883542723285,
+    "Rmax": 1.9748842493458698,
+    "CD": 1.1043049499579054,
+    "nodalResidual": 6.699019117206717e-11,
+    "fieldAudit": {
+      "fieldsFinite": true,
+      "maxNormal_U": 0.06419029622115652,
+      "maxCavityDynamicCpResidual": 0.10823637975156886
+    }
+  },
+  "browserVisualReview": "NOT_PERFORMED",
+  "experimentalValidation": "NOT_PERFORMED"
+}

@@ -1,0 +1,37 @@
+{
+  "date": "2026-10-31",
+  "scope": "Externally supplied reference implementations independently rerun and reviewed. Numerical cross-verification only; not experimental validation.",
+  "suppliedArchiveSha256": "7eaf13c29d120069a1123dc58fd1ebe616cacdd34be9dcee4a4553d00cfed849",
+  "originalSourceSha256": {
+    "axisym/ringpanel.js": "380803df783ecfb8ca795de37c01924bcfbc39052a77e0f5996e6407319fdc17",
+    "axisym/axi_cavity.py": "a0b8fa5da27e6da09b5c18a09f37a00267f10a2d31a1df85feab38e488bfbc55",
+    "axisym/axi_ring.py": "23a441f8075af04e50b956f1c64f4d649d38936f68a0ea7fea180d86abfc6b47",
+    "axisym/axi_bem.py": "54b3c6605313fecf338f148d87b6769195c727b253c82b13d49ae4bb57caf254",
+    "2d/ind2d.py": "21a14787464351ffb81cd05ab9b655599ffbbd6285d18f5e369ba736d0ad2a0e",
+    "2d/smooth-detachment.js": "fea5443a33318e770fca3027f7cfa13babf0a9f8ac01c8b91f43534c8eed77f9"
+  },
+  "publishedImplementationSha256": {
+    "cavitation.js": "990fdab5b4d3cfcba5d829c3960f94ee11d053b4625b8d65b4c40f4ae9a61005",
+    "smooth-detachment.js": "eaeb86e7eb44c2adf7a72216b84f33cce29fb93681d8a1c1e694793cace619c1",
+    "smooth-detachment-adapter.js": "4a3fdab99f143c55e2b57cccabc7e548c1a75b20f49e5294e2d4d91d25f05d3d",
+    "axisymmetric-cavity-nodal.js": "5b864488d07caf3896f47484264b2a284d5a986e6045c49ddfba681fb4208e20"
+  },
+  "adaptations": {
+    "twoDimensional": "Original root equations and samples retained; pressure checking made mandatory with zero allowance, separate strict admission adapter, UI progress/cancel and compatibility. Core0.3.2 bytes unchanged.",
+    "axisymmetric": "JavaScript port of continuous linear-vortex Python equations; finite input/resource bounds, geometry guards, explicit convergence flags, progress/cancel and independent direct-field diagnostics. Nodal reconstruction is labelled.",
+    "noQualificationRelaxation": "Unchanged physical pressure screen and prior off-grid thresholds; unresolved local errors and stalled iterations retained."
+  },
+  "experimentalValidation": "NOT_PERFORMED",
+  "references": [
+    "https://media.library.caltech.edu/CaltechBOOK:1995.001/chap8.htm",
+    "https://cavity.caee.utexas.edu/kinnas/COURSES/bem/kinnas_ch09.pdf",
+    "https://doi.org/10.1017/S0022112093002071",
+    "https://doi.org/10.2495/MB930161"
+  ],
+  "publishedReferenceSha256": {
+    "reference/nodal-cavity/python/axi_bem.py": "54b3c6605313fecf338f148d87b6769195c727b253c82b13d49ae4bb57caf254",
+    "reference/nodal-cavity/python/axi_cavity.py": "a0b8fa5da27e6da09b5c18a09f37a00267f10a2d31a1df85feab38e488bfbc55",
+    "reference/nodal-cavity/python/axi_ring.py": "23a441f8075af04e50b956f1c64f4d649d38936f68a0ea7fea180d86abfc6b47"
+  },
+  "releaseTextEncoding": "UTF-8, LF. Immutable received archive is separately retained with original hashes."
+}

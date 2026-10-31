@@ -1,0 +1,117 @@
+{
+  "version": "0.3.3",
+  "date": "2026-10-31",
+  "status": "PASS_NUMERICAL_VERIFICATION_ONLY",
+  "scope": "Production adapter, worker routing and numerical reproduction; no experimental validation",
+  "checks": [
+    "current core is byte-identical to the independently reproduced0.3.2 core",
+    "raw production wrapper forbids null, positive and nonfinite pressure allowances before a solve",
+    "actualN48 pressure-violating candidate cannot inherit the original ADMITTED label",
+    "actualN48 rejects stale pass, bad geometry and unbracketed regularity",
+    "actualN64 pressure-violating candidate cannot inherit the original ADMITTED label",
+    "actualN64 rejects stale pass, bad geometry and unbracketed regularity",
+    "adapter forces zero allowance even if a caller requests null or a positive value",
+    "production worker strips UI mode, routes BV and fixed modes, and enforces48/smooth guards",
+    "fresh productionN48 solve completes below60s, reports progress and remains numerically-only under strict pressure screen",
+    "legacy fixed-detachment JSON remains bit-identical after all adapter operations"
+  ],
+  "hashes": {
+    "core": "990fdab5b4d3cfcba5d829c3960f94ee11d053b4625b8d65b4c40f4ae9a61005",
+    "sourceWrapper": "eaeb86e7eb44c2adf7a72216b84f33cce29fb93681d8a1c1e694793cace619c1",
+    "adapter": "4a3fdab99f143c55e2b57cccabc7e548c1a75b20f49e5294e2d4d91d25f05d3d",
+    "fixtures": "81410335f85126771b2abc1a2355103a5fb04ce21406c1a17015f1d90dc05c28"
+  },
+  "recordedActualCases": [
+    {
+      "resolution": 48,
+      "numericalStatus": "converged-prototype",
+      "code": "WETTED_PRESSURE_BELOW_VAPOUR",
+      "selectedDetachment": 0.00616242130062486,
+      "sigma": 1.069733129527486,
+      "physicalAdmissibility": {
+        "status": "FAILED_WETTED_PRESSURE",
+        "screenPassed": false,
+        "numericalConverged": true,
+        "geometryValid": true,
+        "wettedPressurePass": false,
+        "minimumWettedCp": -1.0809340225270017,
+        "minimumWettedPressureMargin": -0.011200892999515766,
+        "wettedBelowVapourPanels": 3,
+        "wettedMinimumLocation": {
+          "panel": 96,
+          "x": 0.006132819001292693,
+          "y": 0.013478978974542824
+        },
+        "roundoffAllowance": 1.536099635085011e-14,
+        "reason": "At the automatically selected detachment station, computed liquid still labelled wetted falls below vapour pressure. The numerical root is retained, but it is not a physically accepted cavity. No pressure or gap samples have been clipped.",
+        "criterion": "Cp + sigma = (p - pv)/qInfinity >= 0 on every sampled wetted panel; cavity BC panels are excluded.",
+        "scope": "Equilibrium partial-sheet model consistency screen. Sensitive to discretisation near detachment and closure; not an experiment, accuracy estimate or empirical calibration.",
+        "experimentalValidation": false
+      }
+    },
+    {
+      "resolution": 64,
+      "numericalStatus": "converged-prototype",
+      "code": "WETTED_PRESSURE_BELOW_VAPOUR",
+      "selectedDetachment": 0.006337096103341353,
+      "sigma": 1.0696760641423433,
+      "physicalAdmissibility": {
+        "status": "FAILED_WETTED_PRESSURE",
+        "screenPassed": false,
+        "numericalConverged": true,
+        "geometryValid": true,
+        "wettedPressurePass": false,
+        "minimumWettedCp": -1.0766378715443952,
+        "minimumWettedPressureMargin": -0.006961807402051878,
+        "wettedBelowVapourPanels": 4,
+        "wettedMinimumLocation": {
+          "panel": 128,
+          "x": 0.0063194010714397834,
+          "y": 0.013675036480011022
+        },
+        "roundoffAllowance": 1.5299944373401717e-14,
+        "reason": "At the automatically selected detachment station, computed liquid still labelled wetted falls below vapour pressure. The numerical root is retained, but it is not a physically accepted cavity. No pressure or gap samples have been clipped.",
+        "criterion": "Cp + sigma = (p - pv)/qInfinity >= 0 on every sampled wetted panel; cavity BC panels are excluded.",
+        "scope": "Equilibrium partial-sheet model consistency screen. Sensitive to discretisation near detachment and closure; not an experiment, accuracy estimate or empirical calibration.",
+        "experimentalValidation": false
+      }
+    }
+  ],
+  "fresh": {
+    "input": {
+      "thickness": 0.12,
+      "alpha": 4,
+      "detachment": 0.01,
+      "length": 0.4,
+      "recovery": 0.15,
+      "exponent": 1,
+      "resolution": 48,
+      "attenuation": 0.37
+    },
+    "seconds": 18.081,
+    "progressYields": 2091,
+    "selectedDetachment": 0.00616242130062486,
+    "sigma": 1.069733129527486,
+    "physicalAdmissibility": {
+      "status": "FAILED_WETTED_PRESSURE",
+      "screenPassed": false,
+      "numericalConverged": true,
+      "geometryValid": true,
+      "wettedPressurePass": false,
+      "minimumWettedCp": -1.0809340225270017,
+      "minimumWettedPressureMargin": -0.011200892999515766,
+      "wettedBelowVapourPanels": 3,
+      "wettedMinimumLocation": {
+        "panel": 96,
+        "x": 0.006132819001292693,
+        "y": 0.013478978974542824
+      },
+      "roundoffAllowance": 1.536099635085011e-14,
+      "reason": "At the automatically selected detachment station, computed liquid still labelled wetted falls below vapour pressure. The numerical root is retained, but it is not a physically accepted cavity. No pressure or gap samples have been clipped.",
+      "criterion": "Cp + sigma = (p - pv)/qInfinity >= 0 on every sampled wetted panel; cavity BC panels are excluded.",
+      "scope": "Equilibrium partial-sheet model consistency screen. Sensitive to discretisation near detachment and closure; not an experiment, accuracy estimate or empirical calibration.",
+      "experimentalValidation": false
+    }
+  },
+  "experimentalValidation": false
+}

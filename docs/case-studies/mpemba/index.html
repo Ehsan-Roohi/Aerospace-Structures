@@ -1,0 +1,766 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Evidence, equations and reproducible examples for the Mpemba effect, freezing water, nonequilibrium relaxation and thermal history. MIE 446, UMass Amherst.">
+<title>The Mpemba Effect · MIE 446 Aerospace Structures</title><style>
+:root{color-scheme:light;--ink:#183345;--blue:#176d9e;--line:#d6e2e9}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:#edf2f6;color:var(--ink);font:18px/1.75 system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
+main{max-width:1100px;margin:0 auto;background:#fff;padding:clamp(22px,5vw,72px)}.page-nav{font-size:15px;display:flex;flex-wrap:wrap;gap:10px 24px;border-bottom:1px solid var(--line);padding-bottom:20px;margin-bottom:35px}
+h1{font-size:clamp(30px,4.3vw,46px);line-height:1.18;letter-spacing:-.025em;margin:0 0 28px}h2{font-size:clamp(24px,3vw,31px);line-height:1.3;color:#164a68;margin-top:2em;scroll-margin-top:20px}h3{font-size:23px;color:#164a68;margin-top:1.6em}
+p,li{max-width:82ch}a{color:#086ca8;text-underline-offset:3px}a:hover{color:#124864}a:focus-visible{outline:3px solid #d28934;outline-offset:3px}img{display:block;max-width:100%;height:auto;margin:25px auto 12px}figure{margin:24px 0}figcaption{font-size:16px}
+table{border-collapse:collapse;display:block;max-width:100%;overflow-x:auto;margin:24px 0;font-size:16px;line-height:1.6}th,td{border:1px solid var(--line);padding:12px 14px;vertical-align:top;text-align:left;min-width:100px}th{background:#edf4f8;color:#164a68}tr:nth-child(even){background:#f8fafc}
+.math.display{display:block;max-width:100%;overflow-x:auto;padding:12px 2px;font-size:1.18em}.math.inline{font-size:1.05em}mjx-container{max-width:100%}.math.display mjx-container{margin:.5em 0!important}
+code{font-size:.88em;background:#edf3f7;padding:.12em .3em;border-radius:4px}pre{overflow-x:auto;background:#152d3f;color:#f1f6f9;border-radius:9px;padding:20px;font-size:15px}pre code{background:none;padding:0;color:inherit}
+div[lang=fa]{background:#f0f6fa;border-inline-start:4px solid #2a7ea6;padding:12px 25px 18px;margin:30px 0;text-align:right}div[lang=fa] p{max-width:none;line-height:2}div[lang=fa] h3{margin-top:8px}
+blockquote{border-left:4px solid var(--blue);margin-left:0;padding-left:20px}footer{border-top:1px solid var(--line);margin-top:48px;padding-top:20px;font-size:15px;color:#536977}
+@media(max-width:650px){body{font-size:17px}main{padding:26px 20px}th,td{font-size:14px;padding:9px;min-width:110px}.math.display{font-size:1.05em}h1{font-size:32px}}
+@media print{body{background:#fff;font-size:11pt}main{padding:0;max-width:none}.page-nav{display:none}h2,h3{break-after:avoid}img,table{break-inside:avoid}a{color:inherit}pre{white-space:pre-wrap}}
+</style>
+<script>window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},options:{skipHtmlTags:['script','noscript','style','textarea','pre','code']}};</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+</head><body><main><nav class="page-nav" aria-label="Course navigation">
+<a href="https://github.com/Ehsan-Roohi/Aerospace-Structures">MIE 446 course home</a>
+<a href="https://github.com/Ehsan-Roohi/Aerospace-Structures/blob/main/MPEMBA_EFFECT.md">Report on GitHub</a>
+<a href="teaching_calculations.py">Calculation source</a><a href="calculations.json">Numerical record</a>
+</nav><h1
+id="the-mpemba-effect-freezing-water-nonequilibrium-relaxation-and-thermal-history">The
+Mpemba Effect: Freezing Water, Nonequilibrium Relaxation and Thermal
+History</h1>
+<p><strong>MIE 446 · Aerospace Structures · University of Massachusetts
+Amherst</strong><br />
+Optional interdisciplinary reading · 30 October 2026 · Original
+synthesis prepared with AI assistance and primary-source checking</p>
+<p><a href="https://github.com/Ehsan-Roohi/Aerospace-Structures">Course
+home</a> · <strong><a
+href="https://ehsan-roohi.github.io/Aerospace-Structures/case-studies/mpemba/">Illustrated
+reading page</a></strong> · <a
+href="teaching_calculations.py">Reproducible calculations</a></p>
+<h2 id="the-engineering-question">The engineering question</h2>
+<p>Can a system that starts farther from its final state arrive sooner?
+Sometimes it can, but the answer depends on the complete initial state,
+the subsequent dynamics and what counts as arrival. This reading
+develops that question from freezing water to stochastic dynamics,
+kinetic theory and material processing.</p>
+<p>The starting point is Pouyesh Pourmohammad's Persian <a
+href="https://www.zoomit.ir/fundamental-science/470176-mpemba-effect-mysteries-featured/">Zoomit
+feature</a>, published on 30 October 2026. It introduces Mpemba's story
+and the distinction between water experiments and modern relaxation
+studies. The account below is an independent, expanded analysis, rather
+than a translation of that article. Research claims are linked to the
+original papers. <a href="#ref-1">1</a></p>
+<p><strong>What the evidence supports:</strong> anomalous relaxation is
+reproducible in particular controlled systems. Water-freezing outcomes
+remain sensitive to the apparatus, preparation and endpoint. There is no
+general rule that a hotter cup always freezes first. A mechanism
+established for a colloidal particle or a qubit is not automatically an
+explanation for a household freezer.</p>
+<div lang="fa" dir="rtl">
+
+<h3 id="چکیدهٔ-فارسی">چکیدهٔ فارسی</h3>
+<p>اثر امپمبا به این معنا نیست که آب داغ همیشه زودتر از آب سرد یخ می‌زند.
+باید بین «رسیدن به صفر درجه»، «آغاز تشکیل یخ»، «انجماد کامل» و «رسیدن یک
+سامانه به تعادل» تفاوت گذاشت. آزمایش‌های آب به همرفت، تبخیر، تماس ظرف،
+ابرسرمایش و نوسان شرایط محیط حساس‌اند. در بعضی سامانه‌های کنترل‌شده، حالت
+اولیهٔ دورتر از تعادل می‌تواند سهم کمتری از کندترین مُد واهلش داشته باشد و
+زودتر به تعادل برسد. برای درس سازه، نکتهٔ مهم نقش تاریخچهٔ حرارتی،
+متغیرهای حالت، تبلور و تنش حرارتی است. نمودارهای این گزارش محاسبات
+آموزشی‌اند؛ دادهٔ آزمایشگاهی نیستند و دستورالعملی برای سامانهٔ ضدیخ هواپیما
+ارائه نمی‌کنند.</p>
+</div>
+
+<h3 id="learning-objectives">Learning objectives</h3>
+<p>After this reading, students should be able to:</p>
+<ol type="1">
+<li>Separate cooling, nucleation, solidification and distributional
+equilibration.</li>
+<li>Prove why identical scalar cooling models cannot produce a
+temperature crossing.</li>
+<li>Identify the additional state variables and boundary conditions a
+water experiment needs.</li>
+<li>Explain slow-mode suppression without invoking a violation of
+thermodynamics.</li>
+<li>Connect thermal history to crystallization and constrained thermal
+strain.</li>
+<li>Design a comparison with a declared endpoint, uncertainty and
+reproducible calculations.</li>
+</ol>
+<h2 id="1-from-an-observation-to-a-testable-claim">1. From an
+observation to a testable claim</h2>
+<p>In their 1969 paper, <strong>Erasto B. Mpemba and Denis G.
+Osborne</strong> described the observations that made Mpemba's name
+associated with anomalous freezing. The paper includes Mpemba's account
+of preparing an ice-cream mixture and subsequent water investigations,
+alongside Osborne's experimental discussion. The useful scientific
+legacy is the question and the attempt to test it, not a universal
+instruction to preheat water. An ice-cream mixture and pure water are
+also different material systems. <a href="#ref-2">2</a></p>
+<p>The title <em>Cool?</em> is memorable; the experimental specification
+matters more. A useful modern statement must identify sample mass,
+initial preparation, container, thermal environment, measurement
+location and the event being timed. A shorter observed time is not
+meaningful until those quantities are controlled or reported.</p>
+<h2 id="2-four-different-finish-lines">2. Four different finish
+lines</h2>
+<table>
+<thead>
+<tr class="header">
+<th>Quantity being compared</th>
+<th>Operational definition</th>
+<th>What it does not establish</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Cooling to a target</td>
+<td>First time a declared temperature measure reaches, for example,
+<span class="math inline">\(0\,^{\circ}\mathrm C\)</span></td>
+<td>That ice has nucleated, or that the entire sample is at that
+temperature</td>
+</tr>
+<tr class="even">
+<td>Onset of freezing</td>
+<td>First detected nucleation or a specified recalescence/optical
+signature</td>
+<td>Complete solidification</td>
+</tr>
+<tr class="odd">
+<td>Progress or completion of freezing</td>
+<td>Time to a stated ice fraction or enthalpy threshold</td>
+<td>Necessarily the same ranking as first nucleation</td>
+</tr>
+<tr class="even">
+<td>Relaxation to equilibrium</td>
+<td>Time for the full state or distribution to enter a stated tolerance
+around equilibrium</td>
+<td>A literal water-freezing process</td>
+</tr>
+</tbody>
+</table>
+<p>Recalescence is the temperature rise associated with latent heat
+released after nucleation in a supercooled liquid. A probe's first <span
+class="math inline">\(0\,^{\circ}\mathrm C\)</span> crossing can occur
+before nucleation; a later return toward zero can occur after
+nucleation. These events must not be interchanged. Brownridge's freezing
+experiments and Burridge and Linden's cooling study address different
+parts of this distinction. <a href="#ref-3">3</a> <a
+href="#ref-4">4</a></p>
+<p>For two preparations with <span
+class="math inline">\(T_h&gt;T_w&gt;T_b\)</span>, define a common
+endpoint and compare</p>
+<p><span class="math display">\[
+\Delta t=t_h-t_w.
+\]</span></p>
+<p>A negative value means that the initially hotter preparation arrives
+first <strong>for that protocol and endpoint</strong>. In a spatially
+nonuniform sample, specify whether temperature means a local
+measurement, a volume average or an enthalpy-equivalent value. A
+crossing of two local probe records is weaker evidence than a controlled
+reversal of a clearly defined bulk endpoint.</p>
+<h2 id="3-what-newton-cooling-provesand-what-it-assumes">3. What Newton
+cooling proves—and what it assumes</h2>
+<p>For a single well-mixed temperature, constant bath temperature and
+identical thermal time constant,</p>
+<p><span class="math display">\[
+\frac{dT}{dt}=-\frac{T-T_b}{\tau},\qquad
+T(t)=T_b+(T_i-T_b)e^{-t/\tau}.
+\]</span></p>
+<p>The difference between initially hot and warm solutions is</p>
+<p><span class="math display">\[
+T_h(t)-T_w(t)=(T_h-T_w)e^{-t/\tau}&gt;0.
+\]</span></p>
+<p>Thus the curves cannot cross. For the same target <span
+class="math inline">\(T_*&gt;T_b\)</span>,</p>
+<p><span class="math display">\[
+t(T_i\rightarrow
+T_*)=\tau\ln\!\left(\frac{T_i-T_b}{T_*-T_b}\right),\qquad
+t_h-t_w=\tau\ln\!\left(\frac{T_h-T_b}{T_w-T_b}\right)&gt;0.
+\]</span></p>
+<p><strong>A larger instantaneous heat-loss rate is not enough to make
+the hotter sample win.</strong> It also starts with more energy to
+remove. Figure 1 illustrates this ordering with identical model
+parameters.</p>
+<p><img src="01-newton-cooling.svg"
+alt="Figure 1. Synthetic Newton cooling curves remain ordered for identical thermal time constants." /></p>
+<p><em>Figure 1. Original classroom calculation, not measured water
+data. Initial temperatures are 80 and 35 °C, the bath is −20 °C and
+<span class="math inline">\(\tau=600\)</span> s. The curves extend as a
+mathematical liquid-only model; no freezing process is
+simulated.</em></p>
+<p>The restriction is broader than constant-coefficient Newton cooling.
+If both samples follow the same autonomous scalar law <span
+class="math inline">\(\dot T=-g(T)\)</span> with positive <span
+class="math inline">\(g\)</span> on the relevant interval and unique
+solutions, their target-time difference is</p>
+<p><span class="math display">\[
+t_h-t_w=\int_{T_w}^{T_h}\frac{dT}{g(T)}&gt;0.
+\]</span></p>
+<p>Simply making a heat-transfer coefficient depend on instantaneous
+temperature does not evade this result. A reversal requires a missing
+state variable, different forcing or parameters, a different endpoint,
+or a failure of the scalar-model assumptions. In real water, the missing
+variables can include temperature gradients, fluid motion, composition,
+contact conditions and nucleation state.</p>
+<h2 id="4-an-energy-balance-with-room-for-the-missing-physics">4. An
+energy balance with room for the missing physics</h2>
+<p>An illustrative, well-mixed open-container balance is</p>
+<p><span class="math display">\[
+m c_p\frac{dT}{dt}
+=-hA(T-T_\infty)
+-\epsilon\sigma A_r(T^4-T_{\rm sur}^4)
+-L_v\dot m_e+\dot Q_{\rm support}.
+\]</span></p>
+<p>Here <span class="math inline">\(\dot m_e\geq0\)</span> is
+evaporative mass loss; <span class="math inline">\(L_v\)</span> is the
+vaporization enthalpy at the liquid temperature; and <span
+class="math inline">\(\dot Q_{\rm support}\)</span> is positive when the
+support transfers heat into the sample. Radiation temperatures are in
+kelvin. The expression assumes a consistent mass/enthalpy balance and
+neglects several effects; it is not a calibrated freezer model. During
+freezing, a phase-fraction or enthalpy description is needed as
+well.</p>
+<p>For an <strong>assumed</strong> 0.25 kg sample with constant <span
+class="math inline">\(c_p=4180\)</span> J kg<span
+class="math inline">\(^{-1}\)</span> K<span
+class="math inline">\(^{-1}\)</span>, starting at 80 rather than 35 °C
+adds</p>
+<p><span class="math display">\[
+\Delta Q=0.25(4180)(80-35)=47{,}025\ \mathrm J.
+\]</span></p>
+<p>With an assumed fusion enthalpy of 334 kJ kg<span
+class="math inline">\(^{-1}\)</span>, freezing that mass requires
+another 83.5 kJ after reaching the phase-change condition. These are
+energy-accounting examples. Faster arrival remains possible if the
+heat-transfer history or the event definition changes; no energy has
+disappeared.</p>
+<p>For a spatial model, temperature alone becomes a field rather than
+one number. A conjugate heat-transfer calculation may need liquid
+convection, container conduction, external airflow, evaporation and
+moving phase boundaries. Reproducing a temperature trace by adjusting
+<span class="math inline">\(h\)</span> does not independently identify
+which of those mechanisms caused it.</p>
+<h2 id="5-competing-mechanisms-in-water">5. Competing mechanisms in
+water</h2>
+<table>
+<thead>
+<tr class="header">
+<th>Mechanism</th>
+<th>Why it can matter</th>
+<th>Measurement needed to distinguish it</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Evaporation</td>
+<td>Removes latent heat and changes the remaining mass</td>
+<td>Weigh each sample before and after; record lids, humidity and
+exposed area</td>
+</tr>
+<tr class="even">
+<td>Natural convection and stratification</td>
+<td>Change surface temperatures and internal transport</td>
+<td>Multiple probe locations or a resolved temperature field; controlled
+geometry</td>
+</tr>
+<tr class="odd">
+<td>Container/support contact</td>
+<td>A hot container can change an icy or imperfect contact</td>
+<td>Characterize the support and contact resistance; avoid uncontrolled
+frost</td>
+</tr>
+<tr class="even">
+<td>Supercooling and nucleation</td>
+<td>Liquid can remain below zero before ice appears</td>
+<td>Record subzero history and independently detect ice onset</td>
+</tr>
+<tr class="odd">
+<td>Dissolved species, particles and surface condition</td>
+<td>Can change interfacial processes and nucleation</td>
+<td>Water preparation, chemistry, container cleaning and repeatability
+records</td>
+</tr>
+<tr class="even">
+<td>Fluctuating external airflow</td>
+<td>Changes the effective heat-transfer coefficient between runs</td>
+<td>Local bath/air measurements, randomized positions and blocked
+repeats</td>
+</tr>
+</tbody>
+</table>
+<p>These mechanisms can interact. None should be promoted to the single
+explanation for every reported observation. Brownridge provides evidence
+for a supercooling route in a selected protocol; Burridge and Linden
+emphasize cooling definitions and measurement sensitivity; Janni and
+colleagues identify fluctuating cooling rates and variable supercooling
+in their experiments. <a href="#ref-3">3</a> <a href="#ref-4">4</a> <a
+href="#ref-5">5</a></p>
+<p>The word <strong>memory</strong> means that the variables retained in
+a simplified description are insufficient to determine the future. It
+does not establish a mysterious permanent molecular memory of water. A
+model with a full state can remain Markovian even when its
+temperature-only projection appears history-dependent.</p>
+<h2 id="6-what-the-water-experiments-establish">6. What the water
+experiments establish</h2>
+<table>
+<thead>
+<tr class="header">
+<th>Primary study</th>
+<th>Reported result</th>
+<th>Scope of the conclusion</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Brownridge, 2011 <a href="#ref-3">3</a></td>
+<td>In selected conditions with substantially deeper supercooling of the
+initially cold sample, hot-first freezing was observed in 28 of 28
+attempts</td>
+<td>Supports a controlled nucleation/supercooling route; not universal
+hot-first cooling to zero</td>
+</tr>
+<tr class="even">
+<td>Burridge and Linden, 2016 <a href="#ref-4">4</a></td>
+<td>Did not find convincing hot-first cooling under their definition;
+demonstrated sensitivity to experimental comparison and
+temperature-measurement position</td>
+<td>A strong critique of cooling claims, not a proof excluding every
+nucleation-based outcome</td>
+</tr>
+<tr class="odd">
+<td>Janni, Botero Ampudia and Dahlberg, 2026 <a href="#ref-5">5</a></td>
+<td>Reported 46 instances under a cooling-to-zero definition and 58
+under a definition accounting for freezing onset, across 176
+measurements</td>
+<td>A protocol-dependent set of observations; the two counts are neither
+identical endpoints nor a universal occurrence probability</td>
+</tr>
+</tbody>
+</table>
+<p>The 2026 paper was first published on <strong>16 January
+2026</strong> in <em>RSC Applied Interfaces</em>. The authors connect
+observations to variability in effective cooling rates and supercooling.
+Their counts span different sample/container conditions. Treating 46/176
+or 58/176 as the probability that an arbitrary hot cup beats a cold cup
+would overstate the result. <a href="#ref-5">5</a></p>
+<p>The difference between the endpoints can be demonstrated without
+inventing an anomalous cooling law. In Figure 2, both samples follow the
+same Newton law. The initially hot liquid reaches zero
+<strong>later</strong>, yet begins nucleation <strong>earlier</strong>,
+because different nucleation temperatures have been imposed.</p>
+<p><img src="02-supercooling-endpoints.svg"
+alt="Figure 2. Synthetic liquid cooling with different assumed nucleation thresholds reverses the ranking of freezing onset." /></p>
+<p><em>Figure 2. The assumed nucleation thresholds are −2 °C for the hot
+preparation and −15 °C for the warm preparation. Circles mark zero
+crossings; stars mark onset. Curves stop at nucleation: recalescence and
+complete freezing are not simulated. The thresholds are teaching inputs,
+not measured values or a prediction that heating necessarily changes
+nucleation this way.</em></p>
+<table>
+<thead>
+<tr class="header">
+<th>Synthetic calculation</th>
+<th style="text-align: right;">Initially 80 °C</th>
+<th style="text-align: right;">Initially 35 °C</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Time to zero</td>
+<td style="text-align: right;">16.09 min</td>
+<td style="text-align: right;">10.12 min</td>
+</tr>
+<tr class="even">
+<td>Time to assumed nucleation</td>
+<td style="text-align: right;">17.15 min</td>
+<td style="text-align: right;">23.98 min</td>
+</tr>
+</tbody>
+</table>
+<h2 id="7-the-modern-statistical-mechanics-question">7. The modern
+statistical-mechanics question</h2>
+<p>Lu and Raz formulated a Markovian version of anomalous relaxation: a
+system initially prepared at a higher equilibrium temperature can
+approach the same colder equilibrium faster. Their theory explicitly
+distinguishes its general mechanism from an established microscopic
+explanation of freezing water. It also predicts an inverse heating
+effect. <a href="#ref-6">6</a></p>
+<p>Let <span class="math inline">\(\mathbf p\)</span> be a column
+probability vector over configurations and let <span
+class="math inline">\(R\)</span> be the common post-quench
+generator:</p>
+<p><span class="math display">\[
+\dot{\mathbf p}=R\mathbf p,\qquad
+R_{ij}\geq0\ (i\ne j),\qquad \sum_iR_{ij}=0,\qquad R\boldsymbol\pi=0.
+\]</span></p>
+<p>Here <span class="math inline">\(R_{ij}\)</span> is the transition
+rate from <span class="math inline">\(j\)</span> to <span
+class="math inline">\(i\)</span>; <span
+class="math inline">\(\boldsymbol\pi\)</span> is equilibrium at bath
+temperature <span class="math inline">\(T_b\)</span>. For reversible
+dynamics,</p>
+<p><span class="math display">\[
+R_{ij}\pi_j=R_{ji}\pi_i.
+\]</span></p>
+<p>With decaying modes <span
+class="math inline">\(\lambda_2&gt;\lambda_3&gt;\cdots\)</span> below
+the stationary eigenvalue zero,</p>
+<p><span class="math display">\[
+\mathbf p(t)-\boldsymbol\pi
+=\sum_{k\geq2}c_k(T_i)\mathbf v_k e^{\lambda_k t}.
+\]</span></p>
+<p>The important quantity is the initial projection onto each mode. A
+farther initial distribution can have a smaller coefficient of the
+slowest mode. If <span class="math inline">\(c_2(T_i)=0\)</span> while
+the initial state is still different from equilibrium, the long-time
+decay begins with a faster mode: the <strong>strong Mpemba
+effect</strong>. The eigenvalues of the shared generator have not
+changed; its slow mode was not excited by that preparation. The spectral
+picture and strong-effect classification are developed in <a
+href="#ref-6">6</a> and <a href="#ref-7">7</a>.</p>
+<p>This resembles modal analysis in structures: a large initial
+displacement need not imply a large amplitude in the slowest relevant
+mode. The analogy concerns state projection, not an identity between
+overdamped thermal relaxation and oscillatory beam dynamics.</p>
+<p>To make arrival quantitative, this reading uses total variation
+distance,</p>
+<p><span class="math display">\[
+D_{\rm TV}(\mathbf p,\boldsymbol\pi)=\frac12\sum_i|p_i-\pi_i|,
+\qquad t_\varepsilon=\inf\{t:D_{\rm TV}(t)\leq\varepsilon\}.
+\]</span></p>
+<p>Specify the distance, tolerance and preparation protocol. Mean energy
+alone need not reveal how probability is distributed among slow-relaxing
+configurations.</p>
+<h2 id="8-a-fully-reproducible-three-state-example">8. A fully
+reproducible three-state example</h2>
+<p>Figure 3 is an original teaching construction with <span
+class="math inline">\(k_B=1\)</span>, bath temperature 1 and energy
+levels <span class="math inline">\((0,0.3,8.3)\)</span>. Both
+preparations subsequently evolve under <strong>exactly the same</strong>
+reversible generator. The warm preparation has <span
+class="math inline">\(T_i=2\)</span>; the hot one has <span
+class="math inline">\(T_i=10\)</span>. The generator is deliberately
+constructed so that the latter has zero slow-mode coefficient.</p>
+<p>For the common tolerance <span class="math inline">\(D_{\rm
+TV}=10^{-4}\)</span>, the dimensionless arrival times are <strong>0.7501
+for the hot preparation</strong> and <strong>5.8349 for the warm
+one</strong>, although their initial distances are 0.18105 and 0.04145,
+respectively.</p>
+<p><img src="03-markov-relaxation.svg"
+alt="Figure 3. A constructed reversible three-state model shows faster equilibration of the initially farther hot preparation and cancellation of its slow mode." /></p>
+<p><em>Figure 3. Synthetic probability dynamics, not water data and not
+a reproduction of a published experiment. The nonstationary eigenvalues
+are −1 and −10 in dimensionless time. Left: distance to the same
+equilibrium. Right: signed slow-mode amplitude versus preparation
+temperature. The zero at <span class="math inline">\(T_i=1\)</span> is
+equilibrium; the zero at <span class="math inline">\(T_i=10\)</span> is
+a nontrivial strong-effect preparation.</em></p>
+<p>The accompanying <a href="teaching_calculations.py">script</a>
+records the complete generator, initial distributions, mode amplitudes
+and target times in <a href="calculations.json">calculations.json</a>.
+It checks positive transition rates, column sums, stationarity, detailed
+balance, probability normalization, agreement with an independent matrix
+exponential, and contraction of both total variation and relative
+entropy. No parameters are fitted to measurements.</p>
+<p><strong>Thermodynamic consistency:</strong> faster relaxation does
+not mean spontaneous heat flow from a cold bath into a hotter sample. In
+this detailed-balance model, the relative entropy <span
+class="math inline">\(\sum_i p_i\ln(p_i/\pi_i)\)</span> decreases for
+each evolving probability distribution. Ordering two different
+preparations by their arrival times is a separate question from whether
+each satisfies the relaxation constraints.</p>
+<h2 id="9-experimental-and-theoretical-evidence-beyond-water">9.
+Experimental and theoretical evidence beyond water</h2>
+<h3
+id="a-colloidal-particle-controlled-preparation-and-controlled-dynamics">A
+colloidal particle: controlled preparation and controlled dynamics</h3>
+<p>Kumar and Bechhoefer demonstrated reproducible anomalous relaxation
+in 2020 using a colloidal particle in an engineered potential. The
+surrounding water served as a bath; the evolving object of interest was
+the particle's position distribution. Preparing that distribution at
+different effective temperatures allowed a quantitative comparison with
+theory, including the strong effect. This did not involve two cups of
+water freezing. <a href="#ref-8">8</a></p>
+<h3
+id="granular-fluids-temperature-is-not-the-whole-velocity-distribution">Granular
+fluids: temperature is not the whole velocity distribution</h3>
+<p>Lasanta and colleagues predicted Mpemba behavior in homogeneous
+granular fluids and checked it with molecular dynamics and Monte Carlo
+simulations. Their examples do not require spatial convection or a
+freezing transition. Granular temperature measures fluctuation energy,
+while additional features of the velocity distribution affect its
+subsequent relaxation. Inelastic collisions and any driving must be
+included in the energy balance. <a href="#ref-9">9</a></p>
+<p>This is a useful kinetic-theory lesson: two distributions with
+similar second moments need not share higher moments or relaxation
+paths. A temperature-only closure can omit precisely the information
+needed to predict the ordering.</p>
+<h3 id="quantum-systems-keep-the-measured-quantity-explicit">Quantum
+systems: keep the measured quantity explicit</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Study</th>
+<th>What was observed</th>
+<th>Interpretation boundary</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Joshi et al., 2024 <a href="#ref-10">10</a></td>
+<td>Faster symmetry restoration from a more symmetry-broken preparation
+in a trapped-ion quantum simulator</td>
+<td>The diagnostic includes entanglement asymmetry; it is not simply
+hotter water losing heat</td>
+</tr>
+<tr class="even">
+<td>Aharony Shapira et al., 2024 <a href="#ref-11">11</a></td>
+<td>An inverse effect in a single trapped strontium-ion qubit, including
+accelerated heating under suitable coherence</td>
+<td>An engineered quantum relaxation experiment, not a generic statement
+about every cold object</td>
+</tr>
+<tr class="odd">
+<td>Zhang et al., 2025 <a href="#ref-12">12</a></td>
+<td>Strong-effect relaxation in a single trapped-ion system by preparing
+a state without the slowest decaying mode</td>
+<td>A state-engineering result within its open-system dynamics</td>
+</tr>
+</tbody>
+</table>
+<p>The common thread is preparation and relaxation pathways. The words
+<em>hotter</em>, <em>farther</em>, <em>more asymmetric</em> and <em>more
+coherent</em> describe different comparisons and should not be
+substituted without specifying the experiment.</p>
+<h3 id="a-more-demanding-way-to-compare-states">A more demanding way to
+compare states</h3>
+<p>Vu and Hayakawa's 2025 <strong>thermomajorization Mpemba
+effect</strong> addresses the ambiguity associated with selecting a
+particular distance measure. It compares relaxation through
+thermomajorization, linking the ordering to a family of monotone
+measures rather than one convenient curve. This is a stronger
+theoretical criterion, not a proof that any chosen water experiment must
+exhibit an effect. <a href="#ref-13">13</a></p>
+<p>For a broad map of the theory, experiments and open questions, Teza
+and colleagues' review appeared as a preprint in 2025 and in <em>Physics
+Reports</em> in 2026. It treats Markovian, kinetic, phase-transition and
+quantum settings as related but distinct problems. It also separates
+demonstrated relaxation effects from proposed applications. <a
+href="#ref-14">14</a></p>
+<h2 id="10-why-this-belongs-in-an-aerospace-structures-course">10. Why
+this belongs in an aerospace structures course</h2>
+<h3 id="101-thermal-history-and-material-state">10.1 Thermal history and
+material state</h3>
+<p>Temperature is often only one coordinate of a material's state.
+Crystallinity, degree of cure, residual strain, moisture and
+microstructure can affect later response. Equal current temperatures
+therefore need not imply equal stiffness, stress-free configuration or
+future evolution. This is an engineering connection, not a claim that
+all such effects are Mpemba effects.</p>
+<p>A relevant materials example is Liu and colleagues' 2023 study of
+<strong>polybutene-1 crystallization</strong>. They used calorimetry and
+X-ray scattering to study preparation-dependent crystallization and
+reported Mpemba behavior in specified polymer states, proposing
+differences in chain conformation and relaxation as an explanation. The
+result should not be transferred directly to PLA printing or an
+aerospace composite without material-specific evidence. <a
+href="#ref-15">15</a></p>
+<p>For a printed wing or a thermoplastic component, the useful question
+is: which thermal and structural variables must be retained to predict
+the final shape and properties? A single surface-temperature reading
+cannot supply that complete state.</p>
+<h3
+id="102-free-thermal-expansion-versus-constrained-thermal-stress">10.2
+Free thermal expansion versus constrained thermal stress</h3>
+<p>For a uniform, linear elastic bar with tension-positive
+convention,</p>
+<p><span class="math display">\[
+\varepsilon_{\rm total}=\frac{\sigma}{E}+\alpha\Delta T.
+\]</span></p>
+<p>A freely expanding bar has <span
+class="math inline">\(\sigma=0\)</span> and <span
+class="math inline">\(\varepsilon=\alpha\Delta T\)</span>. An ideally,
+completely restrained bar has zero total strain and</p>
+<p><span class="math display">\[
+\sigma=-E\alpha\Delta T.
+\]</span></p>
+<p>With <strong>assumed classroom constants</strong> <span
+class="math inline">\(E=70\)</span> GPa, <span
+class="math inline">\(\alpha=23\times10^{-6}\)</span> K<span
+class="math inline">\(^{-1}\)</span> and heating by 50 K, the ideal
+restraint stress is <strong>−80.5 MPa</strong>, i.e. compression. These
+values are not a material allowable or a component stress prediction. A
+temperature gradient can additionally create bending; real joints,
+yielding and viscoelastic relaxation alter the constraint response.</p>
+<p>The lesson shared with the Mpemba problem is model completeness:
+geometry, boundary conditions and state history determine the result.
+“Hotter” alone cannot determine freezing order, and “a 50 K change”
+alone cannot determine structural stress.</p>
+<h3 id="103-icing-and-thermal-protection">10.3 Icing and thermal
+protection</h3>
+<p>Aircraft icing involves droplet collection, convection, evaporation,
+latent heat, surface conduction and often runback water. A
+container-freezing result does not specify how those coupled processes
+behave on an airfoil. The useful transfer is the discipline of declaring
+a phase-change endpoint and resolving the relevant heat and mass
+balances. No performance improvement for an aircraft anti-icing system
+is established by this reading.</p>
+<h2
+id="11-a-classroom-investigation-that-could-distinguish-mechanisms">11.
+A classroom investigation that could distinguish mechanisms</h2>
+<p>Treat this as a proposed supervised experiment, not a report of
+measurements.</p>
+<ol type="1">
+<li><strong>Declare two outcomes separately:</strong> time to a
+specified temperature measure and independently detected nucleation. Add
+a solidification-fraction endpoint only if the instrumentation can
+measure it.</li>
+<li>Use matched containers and <strong>initial mass</strong>, document
+water preparation, probe positions and mounting, and measure evaporative
+mass loss. Equal volume is not identical mass at different
+temperatures.</li>
+<li>Log the local environment and several sample temperatures. Record
+how rapidly samples are inserted and whether the freezer cycles or
+changes with load.</li>
+<li>Randomize or exchange container positions within repeated blocks.
+Neighboring samples can influence each other's airflows and thermal
+environment; placing both in one freezer does not guarantee identical
+boundary conditions.</li>
+<li>Separate comparisons with and without lids or with controlled
+contact as additional protocols. Change one intended factor while
+recording the others.</li>
+<li>Retain every run, including failures to nucleate within the
+observation window. Report paired <span class="math inline">\(\Delta
+t\)</span> values, their spread and measurement uncertainty; choose
+replication after a pilot-based precision assessment.</li>
+<li>State whether the temperature difference between preparations
+exceeds probe uncertainty and within-protocol variability. Fit cooling
+coefficients as diagnostics, without treating a fitted coefficient as
+proof of a unique mechanism.</li>
+</ol>
+<p>A repeatable ranking under matched conditions is stronger evidence
+than a single dramatic video. A model should predict a change of
+protocol that discriminates between explanations, rather than merely
+reproduce the trace used to tune it.</p>
+<h2 id="12-short-exercises-and-reproducibility">12. Short exercises and
+reproducibility</h2>
+<ol type="1">
+<li><strong>Scalar ordering.</strong> Derive the target-time difference
+for any common autonomous <span
+class="math inline">\(g(T)&gt;0\)</span>. Explain why a steeper initial
+slope alone cannot establish a crossing.</li>
+<li><strong>Endpoint audit.</strong> Use the Figure 2 inputs to recover
+both rankings. Which additional observation would be needed to compare
+complete freezing?</li>
+<li><strong>Mode audit.</strong> Run the three-state calculation. Change
+the hot preparation from 10 to 8 while keeping the generator fixed. Does
+the slow-mode coefficient still vanish? Avoid rebuilding the generator
+when testing a different preparation.</li>
+<li><strong>Structural analogy.</strong> Compare a free bar, a fully
+restrained bar and a bar with one compliant support. Which assumptions
+produced −80.5 MPa, and which would fail for a thermally graded wing
+skin?</li>
+<li><strong>Evidence audit.</strong> Choose one source and list its
+system, preparation, dynamics, measured observable and endpoint.
+Identify an application that its results do not yet establish.</li>
+</ol>
+<p>Run the calculations from the repository root:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> <span class="at">-m</span> pip install numpy scipy matplotlib</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> docs/case-studies/mpemba/teaching_calculations.py</span></code></pre></div>
+<p>The script generates three SVG figures and the numerical record
+beside it. All plotted curves are original synthetic calculations. No
+experimental curves have been digitized, no paper figures have been
+copied, and no new laboratory experiment has been performed. The HTML
+reading page presents the same report with larger display equations.</p>
+<h2 id="references-and-further-reading">References and further
+reading</h2>
+<p><a id="ref-1"></a> <strong>[1]</strong> Pourmohammad, P. (30 October
+2026). Persian feature on the Mpemba effect. <em>Zoomit</em>. <a
+href="https://www.zoomit.ir/fundamental-science/470176-mpemba-effect-mysteries-featured/">Starting
+article</a>. Journalistic starting point; research claims above use the
+primary papers below.</p>
+<p><a id="ref-2"></a> <strong>[2]</strong> Mpemba, E. B. &amp; Osborne,
+D. G. (1969). <em>Cool?</em> <strong>Physics Education 4</strong>, 172.
+<a href="https://doi.org/10.1088/0031-9120/4/3/312">DOI:
+10.1088/0031-9120/4/3/312</a>. <a
+href="https://edu.rsc.org/download?ac=13093">Text hosted by the Royal
+Society of Chemistry</a>.</p>
+<p><a id="ref-3"></a> <strong>[3]</strong> Brownridge, J. D. (2011).
+<em>When does hot water freeze faster then cold water? A search for the
+Mpemba effect.</em> <strong>American Journal of Physics 79</strong>,
+78–84. <a href="https://doi.org/10.1119/1.3490015">DOI:
+10.1119/1.3490015</a>. The spelling “then” is retained from the
+published title.</p>
+<p><a id="ref-4"></a> <strong>[4]</strong> Burridge, H. C. &amp; Linden,
+P. F. (2016). <em>Questioning the Mpemba effect: hot water does not cool
+more quickly than cold.</em> <strong>Scientific Reports 6</strong>,
+37665. <a href="https://doi.org/10.1038/srep37665">DOI:
+10.1038/srep37665</a>.</p>
+<p><a id="ref-5"></a> <strong>[5]</strong> Janni, A., Botero Ampudia, S.
+&amp; Dahlberg, E. D. (2026). <em>An experimental investigation of the
+Mpemba effect.</em> <strong>RSC Applied Interfaces 3</strong>, 442–449.
+First published 16 January 2026. <a
+href="https://doi.org/10.1039/D5LF00296F">DOI: 10.1039/D5LF00296F</a>.
+<a
+href="https://experts.umn.edu/en/publications/an-experimental-investigation-of-the-mpemba-effect/">Authors'
+institutional publication record</a>.</p>
+<p><a id="ref-6"></a> <strong>[6]</strong> Lu, Z. &amp; Raz, O. (2017).
+<em>Nonequilibrium thermodynamics of the Markovian Mpemba effect and its
+inverse.</em> <strong>PNAS 114</strong>, 5083–5088. <a
+href="https://doi.org/10.1073/pnas.1701264114">DOI:
+10.1073/pnas.1701264114</a>. <a
+href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5441807/">Open full
+text</a>.</p>
+<p><a id="ref-7"></a> <strong>[7]</strong> Klich, I., Raz, O.,
+Hirschberg, O. &amp; Vucelja, M. (2019). <em>Mpemba Index and Anomalous
+Relaxation.</em> <strong>Physical Review X 9</strong>, 021060. <a
+href="https://doi.org/10.1103/PhysRevX.9.021060">DOI:
+10.1103/PhysRevX.9.021060</a>.</p>
+<p><a id="ref-8"></a> <strong>[8]</strong> Kumar, A. &amp; Bechhoefer,
+J. (2020). <em>Exponentially faster cooling in a colloidal system.</em>
+<strong>Nature 584</strong>, 64–68. <a
+href="https://doi.org/10.1038/s41586-020-2560-x">DOI:
+10.1038/s41586-020-2560-x</a>. <a
+href="https://doi.org/10.6084/m9.figshare.12203021.v1">Public
+experimental dataset</a>.</p>
+<p><a id="ref-9"></a> <strong>[9]</strong> Lasanta, A., Vega Reyes, F.,
+Prados, A. &amp; Santos, A. (2017). <em>When the Hotter Cools More
+Quickly: Mpemba Effect in Granular Fluids.</em> <strong>Physical Review
+Letters 119</strong>, 148001. <a
+href="https://doi.org/10.1103/PhysRevLett.119.148001">DOI:
+10.1103/PhysRevLett.119.148001</a>.</p>
+<p><a id="ref-10"></a> <strong>[10]</strong> Joshi, L. Kh. et al.
+(2024). <em>Observing the Quantum Mpemba Effect in Quantum
+Simulations.</em> <strong>Physical Review Letters 133</strong>, 010402.
+<a href="https://doi.org/10.1103/PhysRevLett.133.010402">DOI:
+10.1103/PhysRevLett.133.010402</a>. <a
+href="https://arxiv.org/abs/2401.04270">Author manuscript</a>.</p>
+<p><a id="ref-11"></a> <strong>[11]</strong> Aharony Shapira, S. et al.
+(2024). <em>Inverse Mpemba Effect Demonstrated on a Single Trapped Ion
+Qubit.</em> <strong>Physical Review Letters 133</strong>, 010403. <a
+href="https://doi.org/10.1103/PhysRevLett.133.010403">DOI:
+10.1103/PhysRevLett.133.010403</a>.</p>
+<p><a id="ref-12"></a> <strong>[12]</strong> Zhang, J. et al. (2025).
+<em>Observation of quantum strong Mpemba effect.</em> <strong>Nature
+Communications 16</strong>, 301. Published 6 January 2025. <a
+href="https://doi.org/10.1038/s41467-024-54303-0">DOI:
+10.1038/s41467-024-54303-0</a>.</p>
+<p><a id="ref-13"></a> <strong>[13]</strong> Vu, T. V. &amp; Hayakawa,
+H. (2025). <em>Thermomajorization Mpemba Effect.</em> <strong>Physical
+Review Letters 134</strong>, 107101. <a
+href="https://doi.org/10.1103/PhysRevLett.134.107101">DOI:
+10.1103/PhysRevLett.134.107101</a>. <a
+href="https://arxiv.org/abs/2410.06686">Author manuscript</a>.</p>
+<p><a id="ref-14"></a> <strong>[14]</strong> Teza, G., Bechhoefer, J.,
+Lasanta, A., Raz, O. &amp; Vucelja, M. (2026). <em>Speedups in
+nonequilibrium thermal relaxation: Mpemba and related effects.</em>
+<strong>Physics Reports 1164</strong>, 1–97. <a
+href="https://doi.org/10.1016/j.physrep.2025.10.009">DOI:
+10.1016/j.physrep.2025.10.009</a>. <a
+href="https://arxiv.org/abs/2502.01758">Open preprint, first posted in
+2025</a>.</p>
+<p><a id="ref-15"></a> <strong>[15]</strong> Liu, J., Li, J., Liu, B.,
+Hamley, I. W. &amp; Jiang, S. (2023). <em>Mpemba effect in
+crystallization of polybutene-1.</em> <strong>Soft Matter 19</strong>,
+3337–3347. <a href="https://doi.org/10.1039/D3SM00309D">DOI:
+10.1039/D3SM00309D</a>. <a
+href="https://arxiv.org/abs/2211.07827">Author manuscript</a>.</p>
+<footer>Optional interdisciplinary reading. Original synthetic figures; no experimental measurements are presented as new results. Updated 30 October 2026.</footer></main></body></html>

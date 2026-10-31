@@ -201,7 +201,7 @@ For the common tolerance $D_{\rm TV}=10^{-4}$, the dimensionless arrival times a
 
 The accompanying [script](docs/case-studies/mpemba/teaching_calculations.py) records the complete generator, initial distributions, mode amplitudes and target times in [calculations.json](docs/case-studies/mpemba/calculations.json). It checks positive transition rates, column sums, stationarity, detailed balance, probability normalization, agreement with an independent matrix exponential, and contraction of both total variation and relative entropy. No parameters are fitted to measurements.
 
-**Thermodynamic consistency:** faster relaxation does not mean spontaneous heat flow from a cold bath into a hotter sample. In this detailed-balance model, the relative entropy $\sum_i p_i\ln(p_i/\pi_i)$ decreases for each trajectory. Ordering two different preparations by their arrival times is a separate question from whether each satisfies the relaxation constraints.
+**Thermodynamic consistency:** faster relaxation does not mean spontaneous heat flow from a cold bath into a hotter sample. In this detailed-balance model, the relative entropy $\sum_i p_i\ln(p_i/\pi_i)$ decreases for each evolving probability distribution. Ordering two different preparations by their arrival times is a separate question from whether each satisfies the relaxation constraints.
 
 ## 9. Experimental and theoretical evidence beyond water
 

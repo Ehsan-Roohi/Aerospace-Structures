@@ -1,9 +1,11 @@
 {
-  "version": "0.2.1",
+  "version": "0.3.0",
   "status": "converged-prototype",
   "reason": "Cavity equations and physical-gap endpoint regularity converged.",
   "options": {
     "thickness": 0.12,
+    "camber": 0,
+    "camberPosition": 0.4,
     "alpha": 4,
     "detachment": 0.01,
     "length": 0.4,

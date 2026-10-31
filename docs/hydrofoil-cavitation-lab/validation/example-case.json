@@ -1,9 +1,11 @@
 {
   "schema": "hydrofoil-cavitation-case",
   "version": 1,
-  "solverVersion": "0.2.1",
+  "solverVersion": "0.3.0",
   "inputs": {
     "thickness": 0.12,
+    "camber": 0,
+    "camberPosition": 0.4,
     "alpha": 4,
     "detachment": 0.01,
     "length": 0.4,

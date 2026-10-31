@@ -1,6 +1,8 @@
-# Hydrofoil Cavitation Lab 0.2.1
+# Hydrofoil Cavitation Lab 0.3.0
 
 An isolated **research prototype** for steady, two-dimensional partial-sheet cavitation. It does not change the published Wing AeroStruct solver. [Evidence and figures](validation/index.html).
+
+Version 0.3.0 adds normal-offset cambered NACA4 geometry and a **separate true 3-D axisymmetric ring BEM**. [Open axisymmetric body mode](axisymmetric.html). That mode computes fully wetted flow around a sphere or prolate spheroid and the Bernoulli inception indicator only; it does **not** solve a developed axisymmetric cavity. Its equations, self-panel integration, independent controls and recorded failed coarse-mesh gates are in [axisymmetric-method.md](validation/axisymmetric-method.md).
 
 ## Run and reproduce
 
@@ -13,15 +15,24 @@ node validation/verify.cjs
 node validation/test-smooth-closure.cjs
 node validation/test-velocity-kutta.cjs
 node validation/ui-smoke.cjs
+node validation/test-cambered-section.cjs
+node validation/axisymmetric-verify.cjs
+python validation/cambered-independent.py
 ```
 
-Run these commands from this module's directory. The first preserves the original analytic/fixed-A regression; the next two test the new numerical conditions. UI smoke is a controller/DOM harness, **not** interactive browser acceptance. Current visible-browser acceptance remains outstanding because the browser-control connection did not respond. Earlier browser evidence is historical and version-labelled.
+Run these commands from this module's directory. Python requires NumPy. The first preserves the original analytic/fixed-A regression; the next two test the closure and TE conditions. UI smoke is a controller/DOM harness, **not** interactive browser acceptance. A separate browser run on 31 October 2026 checked the actual worker for NACA2412 and the sphere/prolate UI; see `validation/browser-0.3.0.json` for exact coverage. It does not imply native Firefox acceptance.
 
 `python validation/plot_smooth_contact.py` regenerates the current figures from recorded results (NumPy/Matplotlib environment required; `--deps PATH` accepts a dependency directory). No reference data are fabricated.
 
 ## What is solved
 
-The symmetric NACA 00xx section, angle of attack, cavity detachment and cavity length are inputs. The solver computes cavity geometry and `sigma = (qc/U)^2 - 1`. The required absolute pressure is `p_infinity = p_vapour + sigma*rho*U^2/2`. Ambient pressure is **not** an independently imposed constraint. Speed, density and chord change dimensional quantities; this gravity-free inverse potential-flow solution is dimensionless.
+The symmetric or cambered four-digit NACA section, angle of attack, cavity detachment and cavity length are inputs. The solver computes cavity geometry and `sigma = (qc/U)^2 - 1`. The required absolute pressure is `p_infinity = p_vapour + sigma*rho*U^2/2`. Ambient pressure is **not** an independently imposed constraint. Speed, density and chord change dimensional quantities; this gravity-free inverse potential-flow solution is dimensionless.
+
+Cambered sections use the standard piecewise mean camber line and **normal** thickness offsets. Physical positive-x stations are inverted on the upper surface; the small leading-edge overhang is retained. The physical cavity gap uses the stored original upper surface at the same physical x. It never subtracts the symmetric thickness formula. The m=0 path retains the previous geometry and numerical solution exactly. Old numeric case files default to zero camber and remain readable.
+
+At 640 boundary panels, fully wetted NACA2412/4412 at alpha0/4 degrees agree with an independent analytic-velocity Hess–Smith discretization to at most **0.001076 absolute CL** and **0.001681 all-panel Cp RMS**. The largest pointwise Cp discrepancy is about0.0262 at a TE-adjacent panel; every endpoint is retained. This is cross-discretization verification, not experimental or cavitating-flow validation. The raw first trial that failed a coarse-to-fine CL gate is retained; refinement to 640 met the unchanged gate. See [cambered-independent.json](validation/cambered-independent.json).
+
+The NACA2412 smooth-contact cavity at alpha4, detachment0.01 and length0.40 is numerically admitted at 80/107/160 panels. NACA4412 at those same inputs is rejected because its cavity crosses the original foil; the negative gap remains in [cambered-section-verification.json](validation/cambered-section-verification.json). Profile availability is not a guarantee of an admitted closure branch.
 
 The current GUI defaults to **smooth contact + velocity Kutta**. The API's omitted closure mode preserves the old fixed-A/Morino calculation. Case files without explicit mode/TE settings preserve that old physics; all imported cases need a fresh solve. Schema version 2 records both choices and the actual solved attenuation.
 

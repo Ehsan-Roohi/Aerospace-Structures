@@ -1,5 +1,5 @@
 {
-  "version": "0.2.1",
+  "version": "0.3.0",
   "date": "2026-10-30",
   "status": "numerical-prototype-verification-only",
   "checks": [
@@ -189,7 +189,7 @@
         "wakePotentialJump": 0.22172518796222912,
         "pressureNote": "Pressure residual uses a local five-point derivative of solved total potential within each boundary region (fewer points if needed), with one-sided stencils at detachment and closure. It compares to an imposed BC, not an experiment."
       },
-      "seconds": 0.06645000000000005
+      "seconds": 0.05342410000000001
     },
     {
       "resolution": 32,
@@ -220,7 +220,7 @@
         "wakePotentialJump": 0.22717036182696781,
         "pressureNote": "Pressure residual uses a local five-point derivative of solved total potential within each boundary region (fewer points if needed), with one-sided stencils at detachment and closure. It compares to an imposed BC, not an experiment."
       },
-      "seconds": 0.11212000000000001
+      "seconds": 0.1015856
     },
     {
       "resolution": 48,
@@ -251,7 +251,7 @@
         "wakePotentialJump": 0.23345738805245686,
         "pressureNote": "Pressure residual uses a local five-point derivative of solved total potential within each boundary region (fewer points if needed), with one-sided stencils at detachment and closure. It compares to an imposed BC, not an experiment."
       },
-      "seconds": 0.270285
+      "seconds": 0.2368427
     },
     {
       "resolution": 64,
@@ -282,7 +282,7 @@
         "wakePotentialJump": 0.2370707076448974,
         "pressureNote": "Pressure residual uses a local five-point derivative of solved total potential within each boundary region (fewer points if needed), with one-sided stencils at detachment and closure. It compares to an imposed BC, not an experiment."
       },
-      "seconds": 0.4751898
+      "seconds": 0.5278070000000001
     }
   ],
   "evidenceDistinction": {

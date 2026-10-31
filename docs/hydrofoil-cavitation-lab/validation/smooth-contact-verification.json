@@ -1,6 +1,6 @@
 {
   "status": "PASS_NUMERICAL_CLOSURE_REGRESSION",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "scope": "Numerical/model correction; not experimental or independently matched cavitating-flow validation",
   "fixedACompatibility": true,
   "noEndpointMasking": true,
@@ -20,7 +20,7 @@
       "slope5": 0.010289802234283142,
       "minimumGap": 0,
       "evaluations": 8,
-      "seconds": 0.5223380999999999
+      "seconds": 0.5000654000000001
     },
     {
       "resolution": 32,
@@ -35,7 +35,7 @@
       "slope5": 0.007398680964248623,
       "minimumGap": 0,
       "evaluations": 7,
-      "seconds": 0.7422124999999999
+      "seconds": 0.8188991000000001
     },
     {
       "resolution": 48,
@@ -50,7 +50,7 @@
       "slope5": 0.004791612364977167,
       "minimumGap": 0,
       "evaluations": 9,
-      "seconds": 2.7440221999999994
+      "seconds": 1.912406
     },
     {
       "resolution": 64,
@@ -65,7 +65,7 @@
       "slope5": 0.0035617086432058985,
       "minimumGap": 0,
       "evaluations": 8,
-      "seconds": 5.651916399999999
+      "seconds": 2.7280633
     },
     {
       "resolution": 96,
@@ -80,7 +80,7 @@
       "slope5": 0.0023589756751042114,
       "minimumGap": 0,
       "evaluations": 12,
-      "seconds": 27.9505065
+      "seconds": 13.855882399999999
     }
   ]
 }

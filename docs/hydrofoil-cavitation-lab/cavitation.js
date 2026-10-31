@@ -1,4 +1,4 @@
-/* Hydrofoil Cavitation Lab 0.2.1 — research prototype, not experimental validation.
+/* Hydrofoil Cavitation Lab 0.3.0 — research prototype, not experimental validation.
  * Original implementation of the potential mixed-boundary formulation described in:
  * Kinnas & Fine (1993), doi:10.1017/S0022112093002071;
  * Kinnas (2010), chapter 9, eqs. 9.9–9.16;
@@ -9,7 +9,7 @@
  */
 (function(root){
 'use strict';
-const TWO_PI=2*Math.PI, VERSION='0.2.1';
+const TWO_PI=2*Math.PI, VERSION='0.3.0';
 const dot=(a,b)=>a[0]*b[0]+a[1]*b[1];
 const maxabs=a=>Math.max(...Array.from(a,Math.abs));
 const sum=a=>a.reduce((s,v)=>s+v,0);
@@ -132,10 +132,52 @@ function mixedBoundaryDiagnostic(points,alpha=0,indices=[]){
 }
 const cosine=(a,b,n)=>Array.from({length:n+1},(_,i)=>a+(b-a)*(1-Math.cos(Math.PI*i/n))/2);
 function ordinate(x,t){return 5*t*(.2969*Math.sqrt(x)-.126*x-.3516*x*x+.2843*x*x*x-.1036*x*x*x*x);}
+function parseNaca(code){
+  code=String(code).trim();if(!/^\d{4}$/.test(code))fail('Enter a four-digit NACA section, for example 0012, 2412 or 4415.');
+  const camber=Number(code[0])/100,camberPosition=Number(code[1])/10,thickness=Number(code.slice(2))/100;
+  if(camber>0&&camberPosition===0)fail('A cambered NACA section needs a nonzero second digit (camber location).');
+  if(camber===0&&camberPosition!==0)fail('For a symmetric section, use 00 followed by thickness, for example 0012.');
+  if(thickness<.04||thickness>.20)fail('This hydrofoil model supports NACA thicknesses from 04 to 20 percent.');
+  return {thickness,camber,camberPosition:camber?camberPosition:.4};
+}
+function nacaCode(o){
+  const m=o.camber??0,p=o.camberPosition??.4,t=o.thickness;
+  if(Math.abs(m*100-Math.round(m*100))>1e-9||Math.abs(t*100-Math.round(t*100))>1e-9||(m&&Math.abs(p*10-Math.round(p*10))>1e-9))fail('The case geometry is not a four-digit NACA section. No geometry has been rounded.');
+  return `${Math.round(m*100)}${m?Math.round(p*10):0}${String(Math.round(t*100)).padStart(2,'0')}`;
+}
+function meanLine(u,o){
+  const m=o.camber??0,p=o.camberPosition??.4;
+  if(!m)return {y:0,slope:0};
+  return u<p?{y:m*(2*p*u-u*u)/(p*p),slope:2*m*(p-u)/(p*p)}:{y:m*(1-2*p+2*p*u-u*u)/((1-p)**2),slope:2*m*(p-u)/((1-p)**2)};
+}
+function sectionPoint(u,o,side=1){
+  if(u===0)return [0,0];if(u===1)return [1,0];
+  const c=meanLine(u,o),theta=Math.atan(c.slope),yt=ordinate(u,o.thickness);
+  return [u-side*yt*Math.sin(theta),c.y+side*yt*Math.cos(theta)];
+}
+function upperAtX(x,o){
+  if(x===0)return {u:0,point:[0,0]};if(x===1)return {u:1,point:[1,0]};
+  // Positive chord stations lie beyond the small cambered-nose overhang.
+  // Solve the normal-offset upper geometry for its PHYSICAL x coordinate.
+  let lo=0,hi=1;for(let k=0;k<58;k++){const u=(lo+hi)/2;if(sectionPoint(u,o)[0]<x)lo=u;else hi=u;}
+  const u=(lo+hi)/2,p=sectionPoint(u,o);if(Math.abs(p[0]-x)>1e-10)fail('Could not locate the upper surface at the requested chord station.');
+  return {u,point:[x,p[1]]};
+}
 function buildFoil(o){
   const n=o.resolution,xd=o.detachment,xe=xd+o.length,nc=n,nu=Math.max(8,Math.round(n/3));
   const xs=[...cosine(0,xd,nu).slice(0,-1),...cosine(xd,xe,nc).slice(0,-1),...cosine(xe,1,n)];
-  const up=xs.map(x=>[x,ordinate(x,o.thickness)]).reverse(),lo=cosine(0,1,n).map(x=>[x,-ordinate(x,o.thickness)]);
+  let up,lo;
+  if(!(o.camber>0)){
+    // Keep the original symmetric mesh bit-for-bit, including its nose.
+    up=xs.map(x=>[x,ordinate(x,o.thickness)]).reverse();lo=cosine(0,1,n).map(x=>[x,-ordinate(x,o.thickness)]);
+  }else{
+    const ud=upperAtX(xd,o).u;
+    // Retain the true parametric nose, including x<0 if normal offsets create
+    // a small overhang. Cavity and aft stations use actual physical x/c.
+    const nose=cosine(0,ud,nu).slice(0,-1).map(u=>sectionPoint(u,o));
+    const rest=[...cosine(xd,xe,nc).slice(0,-1),...cosine(xe,1,n)].map(x=>upperAtX(x,o).point);
+    up=[...nose,...rest].reverse();lo=cosine(0,1,n).map(u=>sectionPoint(u,o,-1));
+  }
   up[0][1]=0;lo[lo.length-1][1]=0;
   const points=[...up,...lo.slice(1)],p=geometry(points),ids=[];
   for(let i=p.length-1;i>=0;i--)if(i<up.length-1&&p[i].x>xd&&p[i].x<xe)ids.push(i);
@@ -198,13 +240,14 @@ function mixed(points,ids,foilS,o){
 function options(input={},scope='standard'){
   // The API's omitted mode preserves existing fixed-A calculations. The GUI
   // explicitly selects smooth-contact for a new case; old JSON keeps fixed-A.
-  const o={thickness:.12,alpha:4,detachment:.01,length:.4,resolution:32,recovery:.15,attenuation:.3,exponent:1,relaxation:.4,maxIterations:100,normalTolerance:1e-5,shapeTolerance:1e-6,closureMode:'fixed-recovery',regularityTolerance:1e-5,maxClosureEvaluations:24,...input};
+  const o={thickness:.12,camber:0,camberPosition:.4,alpha:4,detachment:.01,length:.4,resolution:32,recovery:.15,attenuation:.3,exponent:1,relaxation:.4,maxIterations:100,normalTolerance:1e-5,shapeTolerance:1e-6,closureMode:'fixed-recovery',regularityTolerance:1e-5,maxClosureEvaluations:24,...input};
   o.kuttaCondition=input.kuttaCondition??(o.closureMode==='smooth-contact'?'velocity':'morino');
   const benchmark=scope==='thin-foil-benchmark';
   if(!['fixed-recovery','smooth-contact'].includes(o.closureMode))fail('Select fixed-recovery or smooth-contact closure.');
   if(!['velocity','morino'].includes(o.kuttaCondition))fail('Select velocity or morino for the trailing-edge condition.');
   for(const k of Object.keys(o))if(!['closureMode','kuttaCondition'].includes(k)&&!Number.isFinite(o[k]))fail('Every numerical solver setting must be a finite number.');
   if(o.thickness<(benchmark?.0001:.04)||o.thickness>.2)fail('The thickness ratio is outside this calculation mode. The GUI supports 0.04–0.20.');
+  if(o.camber<0||o.camber>.09||o.camberPosition<.1||o.camberPosition>.9)fail('Use camber 0–0.09 chord and a camber position from 0.1 to 0.9 chord.');
   if(o.alpha<=0||o.alpha>10)fail('Upper-surface partial-cavity mode currently requires 0 < angle of attack ≤ 10 degrees.');
   if(o.detachment<(benchmark?1e-4:.002)||o.detachment>.15||o.length<.06||o.detachment+o.length>.85)fail('Use detachment 0.002–0.15 and a partial cavity ending before x/c = 0.85.');
   if(!Number.isInteger(o.resolution)||o.resolution<16||o.resolution>(benchmark?192:96))fail('Resolution must be an integer from 16 to 96 in the GUI (192 in the asymptotic benchmark).');
@@ -235,7 +278,7 @@ function* iterateFixed(input={},scope='standard'){
     }
   }
   const innerEquationsConverged=converged;
-  const height=mesh.nodes.map(i=>({x:points[i][0],h:points[i][1]-ordinate(points[i][0],o.thickness),y:points[i][1]}));
+  const height=mesh.nodes.map((i,k)=>({x:points[i][0],h:points[i][1]-mesh.base[k][1],y:points[i][1]}));
   const minimumHeight=Math.min(...height.map(v=>v.h));
   const geometryValid=minimumHeight>=-1e-8&&height.every(v=>v.h<.25)&&r.sigma>0;
   if(!geometryValid){converged=false;reason=minimumHeight< -1e-8?'The computed cavity intersects the foil. This branch is rejected; change detachment or closure settings.':'The computed branch has no positive cavitation number or an excessive cavity height.';}
@@ -350,7 +393,7 @@ function liquid(input={}){
   const dynamicPressure=.5*o.rho*o.speed**2;
   return {...o,dynamicPressure,sigma:(o.pressureAbsolute-o.vapourPressure)/dynamicPressure};
 }
-const api={VERSION,solve,iterate,iterateFixed,iterateSmooth,endpointGapSlope,wetted,wettedVelocity,geometry,influences,liquid,options,ordinate,buildFoil,mixedBoundaryDiagnostic,surfaceTangentialSpeed,solveBenchmark:input=>solve(input,'thin-foil-benchmark')};
+const api={VERSION,solve,iterate,iterateFixed,iterateSmooth,endpointGapSlope,wetted,wettedVelocity,geometry,influences,liquid,options,ordinate,parseNaca,nacaCode,meanLine,sectionPoint,upperAtX,buildFoil,mixedBoundaryDiagnostic,surfaceTangentialSpeed,solveBenchmark:input=>solve(input,'thin-foil-benchmark')};
 if(typeof module!=='undefined'&&module.exports)module.exports=api;
 root.HydrofoilCavitation=Object.freeze(api);
 })(typeof window!=='undefined'?window:globalThis);

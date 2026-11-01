@@ -234,9 +234,11 @@ function interp(xs,ys,x){if(x<=xs[0])return ys[0];if(x>=xs.at(-1))return ys.at(-
 function gradient(y,x){return y.map((v,i)=>{if(i===0)return(y[1]-v)/(x[1]-x[0]);if(i===y.length-1)return(v-y[i-1])/(x[i]-x[i-1]);const hs=x[i]-x[i-1],hd=x[i+1]-x[i];return-hd*y[i-1]/(hs*(hs+hd))+(hd-hs)*v/(hs*hd)+hs*y[i+1]/(hd*(hs+hd));});}
 function reference(L,Rm){const m=40001,x=new Array(m),r=new Array(m),s=new Array(m);s[0]=0;for(let i=0;i<m;i++){x[i]=L*(1-Math.cos(PI*i/(m-1)))/2;r[i]=1+(Rm-1)*Math.max(0,4*x[i]*(L-x[i])/(L*L))**(2/3);if(i)s[i]=s[i-1]+Math.hypot(x[i]-x[i-1],r[i]-r[i-1]);}let tx=gradient(x,s),tr=gradient(r,s);const nx=[],nr=[];for(let i=0;i<m;i++){const h=Math.hypot(tx[i],tr[i]);nx[i]=-tr[i]/h;nr[i]=tx[i]/h;}nx[0]=-1;nr[0]=0;nx[m-1]=1;nr[m-1]=0;return{x,r,u:s.map(v=>v/s.at(-1)),nx,nr};}
 
-function setup({L=8,Nc=32,Nf=Nc/2,Rm=1.95,nNear=24,nFar=12,mColl=3}={}){
+function setup({L=8,Nc=32,Nf=Nc/2,Rm=1.95,nNear=24,nFar=12,mColl=3,researchLengthExtension=false}={}){
  for(const[k,v]of Object.entries({L,Nc,Nf,Rm,nNear,nFar,mColl}))if(typeof v!=='number'||!Number.isFinite(v))throw Error(k+' must be a finite number.');
- if(L<2||L>24||Rm<=1||Rm>20)throw Error('Research domain: L/R 2–24 and reference radius ratio >1 through 20.');
+ if(typeof researchLengthExtension!=='boolean')throw Error('researchLengthExtension must be an explicit boolean.');
+ const maximumLength=researchLengthExtension?80:24;
+ if(L<2||L>maximumLength||Rm<=1||Rm>20)throw Error(researchLengthExtension?'Opt-in unqualified research domain: L/R 2–80 and reference radius ratio >1 through 20.':'Research domain: L/R 2–24 and reference radius ratio >1 through 20.');
  for(const[k,v,lo,hi]of[['Nc',Nc,8,512],['Nf',Nf,4,256],['nNear',nNear,4,64],['nFar',nFar,4,32],['mColl',mColl,1,6]])if(!Number.isInteger(v)||v<lo||v>hi)throw Error(k+' outside supported integer range '+lo+'–'+hi+'.');
  if(2*Nf+Nc>1024)throw Error('At most 1024 meridian panels in this research implementation.');
  if(Nc%2!==0)throw Error('Even cavity panel count required.');
@@ -249,7 +251,7 @@ function setup({L=8,Nc=32,Nf=Nc/2,Rm=1.95,nNear=24,nFar=12,mColl=3}={}){
  const N=2*Nf+Nc,h=Nf+Nc/2;
  const Dface=splineSlopeOperator(Nf,'natural','notaknot');     // gamma odd at the axis; free at the rim
  const Dcav=splineSlopeOperator(Nc/2,'clamped','clamped');      // gamma even at the rim and at the mid-plane
- const s={L,Nc,Nf,N,h,Rm,nNear,nFar,mColl,cav,normal,front,Dface,Dcav,kind:'disk-cavity'};
+ const s={L,Nc,Nf,N,h,Rm,nNear,nFar,mColl,cav,normal,front,Dface,Dcav,kind:'disk-cavity',domain:{lengthInterval:[2,maximumLength],researchLengthExtension,meshAccuracyQualified:false,experimentalAccuracyQualified:false,label:researchLengthExtension?'Opt-in long-cavity research domain; no accuracy qualification.':'Default research domain.'}};
  const sr=slopeRows(s);s.srows=sr;s.fA=sr.rowA.map(r=>foldRow(s,r));s.fB=sr.rowB.map(r=>foldRow(s,r));
  return s;
 }
@@ -544,6 +546,7 @@ async function solve(options={},hooks={}){
  }
  cur=residual(s,z);const out=outputs(s,z,cur);
  out.version=VERSION;out.method='C1 Hermite meridian in graded tau, C2 spline sheet, weighted least-squares Gauss collocation';
+ out.domain=s.domain;
  out.history=history;out.stopReason=reason;out.requestedNodalTolerance=tol;
  out.geometry=validGeometry(s,cur.nodes);out.physicalBranch=out.geometry.admissible&&Number.isFinite(out.qc)&&out.qc>1&&Number.isFinite(out.sigma)&&out.sigma>0;
  out.nodalConverged=out.physicalBranch&&Number.isFinite(out.maxDynamicResidual)&&out.maxDynamicResidual<=tol;

@@ -5,7 +5,7 @@ const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),asse
 const root=path.resolve(__dirname,'..'),repo=path.resolve(root,'../..');
 const {JSDOM}=require(process.env.MIE446_JSDOM_MODULE||path.join(repo,'.review-js/node_modules/jsdom'));
 const C=require('../axisymmetric-cavity-c1.js');
-const html=fs.readFileSync(path.join(root,'axisymmetric-cavity.html'),'utf8');
+const html=fs.readFileSync(path.join(root,'axisymmetric-inverse.html'),'utf8');
 const dom=new JSDOM(html,{url:'https://example.test/axisymmetric-cavity.html',runScripts:'outside-only'});
 const w=dom.window,$=id=>w.document.getElementById(id),checks=[],downloads=[],blobs=new Map(),workers=[];
 function check(name,fn){try{fn();checks.push({name,passed:true});}catch(e){checks.push({name,passed:false,error:e.message});}}

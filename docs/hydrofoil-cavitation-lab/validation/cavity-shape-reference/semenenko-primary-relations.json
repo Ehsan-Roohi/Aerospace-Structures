@@ -1,0 +1,284 @@
+{
+  "source": {
+    "title": "Artificial Supercavitation. Physics and Calculation",
+    "author": "Vladimir N. Semenenko",
+    "year": 2001,
+    "report": "ADP012080; RTO-EN-010 chapter 11",
+    "official_url": "https://apps.dtic.mil/sti/tr/pdf/ADP012080.pdf",
+    "retrieved_mirror": "https://archive.org/download/DTIC_ADP012080/DTIC_ADP012080.pdf",
+    "pdf_sha256": "74c80c61579c268ec547d8b2ea078739996667873f715b1649d9d79026b3523f",
+    "definitions": {
+      "sigma": "2*(p_infinity-p_cavity)/(rho*U_infinity**2)",
+      "Rn": "physical disk cavitator radius = Dn/2",
+      "xbar": "physical downstream coordinate x / Rn, origin at disk plane",
+      "Rbar": "physical cavity radius R(x) / Rn",
+      "cx": "Fx/(0.5*rho*U_infinity**2*pi*Rn**2)",
+      "Lc": "reported approximate total physical cavity length; not C1 disk-image separation by definition",
+      "Rc": "maximum cavity radius"
+    },
+    "evidence_kind": "Primary author lecture; semiempirical correlations based partly on experiments; not raw measured samples and not an exact numerical solution"
+  },
+  "relations": [
+    {
+      "id": "eq20-and-eq21-cylinder-closure",
+      "pdf_page": 10,
+      "printed_page": "11-9",
+      "equations": [
+        "Sj = (cx/4)*(pi*Dn**2/4)",
+        "Qdot = k2*U_infinity*Sj*(1-Db**2/Dc**2)"
+      ],
+      "definitions": {
+        "Sj": "reentrant liquid jet section area",
+        "Db": "body diameter at closure",
+        "Dc": "maximum cavity diameter",
+        "k2": "unspecified empirical gas-leakage coefficient"
+      },
+      "validity": "Closure/gas-leakage approximation for a cavity closing on an afterbody with Db<=Dc. No universal k2 is supplied. Not a cylinder surface-flow solution and not a basis for invented gas-leakage data."
+    },
+    {
+      "id": "eq27-garabedian",
+      "pdf_page": 14,
+      "printed_page": "11-13",
+      "equations": [
+        "Dc/Dn = sqrt(cx/sigma)",
+        "Lc/Dn = A*sqrt(cx)/sigma",
+        "A = sqrt(log(1/sigma))",
+        "cx = 0.827*(1+sigma)"
+      ],
+      "validity": "Disk asymptotic relation as sigma tends to zero; not a finite-sigma exact result."
+    },
+    {
+      "id": "eq28-main-dimensions",
+      "pdf_page": 14,
+      "printed_page": "11-13",
+      "equations": [
+        "Dc/Dn = sqrt(cx/(k*sigma))",
+        "Lc/Dn = A*sqrt(cx)/sigma"
+      ],
+      "parameters": {
+        "k_range": [
+          0.9,
+          1.0
+        ],
+        "A_typical": 2
+      },
+      "validity": "Small cavitation number and negligible gravity. For other blunt cavitators Dn means separation-line diameter. A about 2 when sigma is not very small; no universal exact A is supplied."
+    },
+    {
+      "id": "eq29-reichardt-drag",
+      "pdf_page": 14,
+      "printed_page": "11-13",
+      "equations": [
+        "cx(sigma) = cx0*(1+sigma)"
+      ],
+      "disk_cx0": 0.82,
+      "sigma_open_interval": [
+        0,
+        1.2
+      ],
+      "validity": "Approximate empirical drag correlation for blunt cavitators; disk coefficient about 0.82. No fit to the current BEM."
+    },
+    {
+      "id": "eq30-blunt-cone",
+      "pdf_page": 14,
+      "printed_page": "11-13",
+      "equations": [
+        "cx0 = 0.13 + sqrt(0.0036*beta_deg - 0.1719)"
+      ],
+      "cone_angle_deg_closed_interval": [
+        120,
+        180
+      ],
+      "validity": "Blunt-cone approximation. This is not an arbitrary-cylinder coefficient."
+    },
+    {
+      "id": "eq31-disk-front",
+      "pdf_page": 15,
+      "printed_page": "11-14",
+      "equations": [
+        "Rbar = (1+3*xbar)**(1/3)"
+      ],
+      "source_xbar_condition": "xbar < 3 to 5; empirical front law",
+      "composed_profile_front_interval": [
+        0,
+        2
+      ],
+      "validity": "Near-front disk-cavity approximation, independent of sigma; common join chosen at xbar=2 in source Eq32 and Eq52."
+    },
+    {
+      "id": "eq32-natural-profile",
+      "pdf_page": 15,
+      "printed_page": "11-14",
+      "equations": [
+        "Rbar**2 = 3.659 + 0.847*(xbar-2) - 0.236*sigma*(xbar-2)**2"
+      ],
+      "coefficients": {
+        "constant": 3.659,
+        "linear": 0.847,
+        "sigma_quadratic": -0.236
+      },
+      "sigma_fit_closed_interval": [
+        0.012,
+        0.057
+      ],
+      "xbar_source_condition": "xbar >= 2",
+      "validity": "Semiempirical fit to natural vapor supercavities behind disks. Source Fig13 shows closure on an afterbody/nozzle jet. Root of the polynomial is not a separately verified physical closure condition."
+    },
+    {
+      "id": "eq33-maximum-radius",
+      "pdf_page": 15,
+      "printed_page": "11-14",
+      "equations": [
+        "Rc/Rn = sqrt(3.659+0.761/sigma)"
+      ],
+      "validity": "Rounded correlation derived from Eq32; same source data range. Coefficient from literal Eq32 extremum is 0.847**2/(4*0.236) = 0.759967..., so the two are not algebraically identical."
+    },
+    {
+      "id": "eq34-reported-length",
+      "pdf_page": 15,
+      "printed_page": "11-14",
+      "equations": [
+        "Lc/Rn = 4+3.595/sigma"
+      ],
+      "validity": "Reported approximate length; not the positive zero of literal Eq32. Source plots Eq33/34 over sigma .01-.06, while profile-fit data range is .012-.057."
+    },
+    {
+      "id": "eq48-independence-principle",
+      "pdf_page": 19,
+      "printed_page": "11-18",
+      "equations": [
+        "mu * d2S(tau,t)/dt2 = -2*pi*(p_infinity-p_cavity)/rho"
+      ],
+      "definitions": {
+        "S": "pi*R**2",
+        "mu": "radial fluid-layer logarithmic inertia parameter; approximately constant in slender-cavity main region"
+      },
+      "validity": "Section-expansion approximation. This does not supply arbitrary detached bubble dynamics or cylinder wetting by itself."
+    },
+    {
+      "id": "eq51-and-eq52-composed-profile",
+      "pdf_pages": [
+        19,
+        20
+      ],
+      "printed_pages": [
+        "11-18",
+        "11-19"
+      ],
+      "equations": [
+        "Eq51: R = Rc*sqrt(1-(1-Rn**2/Rc**2)*(1-2*x/Lc)**(2/kappa))",
+        "Eq52 front: R = Rn*(1+3*x/Rn)**(1/3)",
+        "Eq52 main: R = Rc*sqrt(1-(1-R1**2/Rc**2)*(1-2*(x-x1)/(Lc-2*x1))**(2/kappa))"
+      ],
+      "parameters": {
+        "kappa_empirical": 0.85,
+        "kappa_ellipsoidal": 1,
+        "x1_typical": "Dn = 2*Rn",
+        "R1_over_Rn": 1.912931182772389
+      },
+      "ambiguity": "The scanned primary prints no absolute-value bars around the fractional-power base. kappa=1 is unambiguous and is used by source Fig12. A general downstream kappa=.85 implementation needs a separately sourced absolute-value continuation; do not silently invent one.",
+      "validity": "Matched front/main approximate profile, not a model for the unsteady frothy tail. Distinct from the direct semiempirical polynomial Eq32."
+    },
+    {
+      "id": "serebriakov1973-eq7",
+      "source": "V.V. Serebriakov, Asymptotic Solution of the Problem for a Thin Axisymmetric Cavern; NASA translation of Dopovidi Akad. Nauk UkrSSR Ser.A No12 (1973),1120-1122",
+      "url": "https://ntrs.nasa.gov/api/citations/19740012812/downloads/19740012812.pdf",
+      "pdf_page": 2,
+      "image": "serebriakov-nasa-p02.png",
+      "equations": [
+        "R**2/Rk**2 = (1-X**2) + ((log(4))*X**2 - ((1-X)*log(1-X)+(1+X)*log(1+X)))/log(lambda**2)",
+        "sigma = 2*lambda**(-2)*log(lambda/sqrt(e))",
+        "X = x/lk; lk=lambda*Rk; origin at cavity middle",
+        "Eq8: Rk**2 = W0/(k*pi*(p_infinity-p_cavity))"
+      ],
+      "validity": "Two-term slender-axisymmetric-cavity asymptotic profile for constant sigma, large lambda. Main-region idealization, not the literal disk-front relation. Rk remains undetermined until separate drag relation is supplied. No exact finite-sigma or cylinder wetting claim."
+    }
+  ],
+  "visual_verification": {
+    "review_table6_pdf_page": 19,
+    "primary_pdf_pages": [
+      14,
+      15,
+      19,
+      20
+    ],
+    "review_table6_printed_error": "The printed Logvinovich Rk relation omits a square root; primary Eq28 has sqrt(cx/(k*sigma)). Review table must not be used as code authority for that expression."
+  },
+  "join": {
+    "x_over_Rn": 2,
+    "eq31_R_over_Rn": 1.912931182772389,
+    "eq32_R_over_Rn": 1.9128512749296531,
+    "main_minus_front_R_over_Rn": -7.990784273581575e-05,
+    "changed_or_matched": false
+  },
+  "endpoint_diagnostics": [
+    {
+      "sigma": 0.012,
+      "eq34_Lc_over_Rn": 303.58333333333337,
+      "eq32_R_at_eq34_length_over_Rn": 1.2339301709037924,
+      "eq32_positive_zero_x_over_Rn": 305.34121606591054,
+      "zero_minus_reported_length_over_Rn": 1.7578827325771726,
+      "eq32_peak_x_over_Rn": 151.5409604519774,
+      "eq32_peak_R_over_Rn": 8.184717267652708,
+      "eq33_Rmax_over_Rn": 8.189973544930817
+    },
+    {
+      "sigma": 0.021,
+      "eq34_Lc_over_Rn": 175.19047619047618,
+      "eq32_R_at_eq34_length_over_Rn": 1.3024613329421788,
+      "eq32_positive_zero_x_over_Rn": 177.11990620225686,
+      "zero_minus_reported_length_over_Rn": 1.9294300117806813,
+      "eq32_peak_x_over_Rn": 87.45197740112994,
+      "eq32_peak_R_over_Rn": 6.3125202914033105,
+      "eq33_Rmax_over_Rn": 6.316414745573254
+    },
+    {
+      "sigma": 0.037,
+      "eq34_Lc_over_Rn": 101.16216216216218,
+      "eq32_R_at_eq34_length_over_Rn": 1.3365708846633435,
+      "eq32_positive_zero_x_over_Rn": 103.14254086115558,
+      "zero_minus_reported_length_over_Rn": 1.9803786989934054,
+      "eq32_peak_x_over_Rn": 50.499770957398084,
+      "eq32_peak_R_over_Rn": 4.919212640297031,
+      "eq33_Rmax_over_Rn": 4.922049122831625
+    },
+    {
+      "sigma": 0.044,
+      "eq34_Lc_over_Rn": 85.70454545454547,
+      "eq32_R_at_eq34_length_over_Rn": 1.3422978601839959,
+      "eq32_positive_zero_x_over_Rn": 87.6803947188953,
+      "zero_minus_reported_length_over_Rn": 1.9758492643498329,
+      "eq32_peak_x_over_Rn": 42.78389830508475,
+      "eq32_peak_R_over_Rn": 4.575038899528986,
+      "eq33_Rmax_over_Rn": 4.577603581073239
+    },
+    {
+      "sigma": 0.054,
+      "eq34_Lc_over_Rn": 70.57407407407408,
+      "eq32_R_at_eq34_length_over_Rn": 1.346777195684134,
+      "eq32_positive_zero_x_over_Rn": 72.5332874468981,
+      "zero_minus_reported_length_over_Rn": 1.9592133728240242,
+      "eq32_peak_x_over_Rn": 35.23132454488387,
+      "eq32_peak_R_over_Rn": 4.210993462920397,
+      "eq33_Rmax_over_Rn": 4.213263888316586
+    },
+    {
+      "sigma": 0.057,
+      "eq34_Lc_over_Rn": 67.0701754385965,
+      "eq32_R_at_eq34_length_over_Rn": 1.347572762739431,
+      "eq32_positive_zero_x_over_Rn": 69.02298621596672,
+      "zero_minus_reported_length_over_Rn": 1.9528107773702317,
+      "eq32_peak_x_over_Rn": 33.48230746357419,
+      "eq32_peak_R_over_Rn": 4.1221059194086305,
+      "eq33_Rmax_over_Rn": 4.124303237273232
+    }
+  ],
+  "profile_sample_policy": "Raw equation evaluations. Front and main join values both retained. Finite radius at independently reported Eq34 length is retained; a separately labelled algebraic continuation proceeds to just before the positive polynomial root. Root is recorded separately, never advertised as physical closure or substituted for Eq34 length.",
+  "experimental_samples_digitized": false,
+  "cylinder_scope": "Disk-headed dry cylindrical afterbody can be checked for containment in an explicit approximate cavity envelope. This does not solve wetted flow around an arbitrary cylinder or determine reattachment/gas leakage.",
+  "closure_primary_pdf_pages": [
+    10,
+    13
+  ],
+  "closure_distinction": "Riabouchinsky artificial solid closer, Joukowski-Roshko cylinder at maximum cavity diameter, and Gilbarg-Efros closure on smaller cylinder with annular reentrant jet are separate primary schemes. A free detached bubble is another problem."
+}

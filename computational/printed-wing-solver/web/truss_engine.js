@@ -22,7 +22,9 @@
    const Imin=m.Imin==null?null:finite(m.Imin,'Imin'),Kfactor=m.Kfactor??1;
    finite(Kfactor,'Effective length factor');if(Kfactor<=0||(Imin!==null&&Imin<=0))throw Error('Imin and effective length factor must be positive.');
    const material=m.material??'custom';if(!['custom','aluminium','steel'].includes(material))throw Error('Unknown member material preset.');
-   return {a:m.a,b:m.b,E,A,type,Imin,Kfactor,material};
+   if(m.name!==undefined&&(typeof m.name!=='string'||/[\u0000-\u001f\u007f]/.test(m.name)))throw Error('Member names must be plain single-line text.');
+   const name=(m.name??'').trim();if(name.length>40)throw Error('Member name must be at most 40 characters.');
+   return {a:m.a,b:m.b,...(name?{name}:{}),E,A,type,Imin,Kfactor,material};
   });
   const lineLoads=raw.lineLoads??[];if(!Array.isArray(lineLoads)||lineLoads.length>30)throw Error('At most 30 nodal-transfer line loads.');
   const loads=lineLoads.map(v=>{if(!Array.isArray(v.nodes)||v.nodes.length<2||v.nodes.length>60||new Set(v.nodes).size!==v.nodes.length||v.nodes.some(id=>!ids.has(id)))throw Error('A line load needs an ordered path of at least two distinct existing nodes.');return {nodes:[...v.nodes],qStart:finite(v.qStart,'Start intensity'),qEnd:finite(v.qEnd,'End intensity'),angle:finite(v.angle,'Load angle')};});

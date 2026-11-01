@@ -1,0 +1,222 @@
+{
+  "disk": [
+    {
+      "case": "physical sigma .5",
+      "input": {
+        "mode": "physical",
+        "pInf": 101325,
+        "pc": 2339,
+        "rho": 1000,
+        "U": 19.898341639443224,
+        "diskRn": 0.01,
+        "dynamicPressure": 197972.00000000003,
+        "physicalSigma": 0.49999999999999994,
+        "sigma": 0.49999999999999994,
+        "Nc": 128,
+        "extendedResearchDomain": false,
+        "maxEvaluations": 10,
+        "sigmaTolerance": 1e-05,
+        "maxSeconds": 300,
+        "body": {
+          "radius": 0.008,
+          "length": 0.01
+        },
+        "closure": "symmetric-artificial-image-disk"
+      },
+      "status": "FORWARD_RESEARCH_FIELD_PASSED",
+      "sigmaTarget": 0.49999999999999994,
+      "sigmaAchieved": 0.5000030314229442,
+      "sigmaResidual": 3.0314229442773843e-06,
+      "dimensions": {
+        "imageSeparationOverRn": 4.613791039273133,
+        "imageSeparation": 0.04613791039273133,
+        "firstHalfLength": 0.023068955196365665,
+        "RmaxOverRn": 1.6852099823392226,
+        "Rmax": 0.016852099823392225
+      },
+      "scalarCalls": 6,
+      "separateFinalAuditedSolve": true,
+      "maxNormalOverU": 6.0162661373444615e-05,
+      "maxAbsCpDefect": 0.00011995412969723063,
+      "all15AuditFractions": [
+        0.001,
+        0.005,
+        0.01,
+        0.02,
+        0.05,
+        0.1,
+        0.25,
+        0.5,
+        0.75,
+        0.9,
+        0.95,
+        0.98,
+        0.99,
+        0.995,
+        0.999
+      ],
+      "directFieldPassed": true,
+      "meshAccuracyQualified": false,
+      "experimentalAccuracyQualified": false
+    },
+    {
+      "case": "explicit sigma .05",
+      "input": {
+        "mode": "sigma",
+        "pInf": 101325,
+        "pc": 2339,
+        "rho": 1000,
+        "U": 19.898341639443224,
+        "diskRn": 0.01,
+        "dynamicPressure": 197972.00000000003,
+        "physicalSigma": 0.49999999999999994,
+        "sigma": 0.05,
+        "Nc": 128,
+        "extendedResearchDomain": true,
+        "maxEvaluations": 10,
+        "sigmaTolerance": 1e-05,
+        "maxSeconds": 600,
+        "body": {
+          "radius": 0.008,
+          "length": 0.2
+        },
+        "closure": "symmetric-artificial-image-disk"
+      },
+      "status": "FORWARD_RESEARCH_FIELD_PASSED",
+      "sigmaTarget": 0.05,
+      "sigmaAchieved": 0.05000000117481429,
+      "sigmaResidual": 1.174814287518977e-09,
+      "dimensions": {
+        "imageSeparationOverRn": 70.93257559492069,
+        "imageSeparation": 0.7093257559492069,
+        "firstHalfLength": 0.35466287797460344,
+        "RmaxOverRn": 4.362632450849018,
+        "Rmax": 0.04362632450849018
+      },
+      "scalarCalls": 6,
+      "separateFinalAuditedSolve": true,
+      "maxNormalOverU": 0.0025647063693444026,
+      "maxAbsCpDefect": 0.0041963674881762,
+      "all15AuditFractions": [
+        0.001,
+        0.005,
+        0.01,
+        0.02,
+        0.05,
+        0.1,
+        0.25,
+        0.5,
+        0.75,
+        0.9,
+        0.95,
+        0.98,
+        0.99,
+        0.995,
+        0.999
+      ],
+      "directFieldPassed": true,
+      "meshAccuracyQualified": false,
+      "experimentalAccuracyQualified": false
+    }
+  ],
+  "hydrofoilRoot": {
+    "converged": true,
+    "length": 0.4,
+    "sigma": 1.069725564751935,
+    "residual": 3.74333797736881e-05,
+    "bracket": null
+  },
+  "hydrofoilAccepted": false,
+  "hydrofoilPressureScreen": {
+    "status": "FAILED_WETTED_PRESSURE",
+    "screenPassed": false,
+    "numericalConverged": true,
+    "geometryValid": true,
+    "wettedPressurePass": false,
+    "minimumWettedCp": -1.0809474082303594,
+    "minimumWettedPressureMargin": -0.011259276858198053,
+    "wettedBelowVapourPanels": 3,
+    "wettedMinimumLocation": {
+      "panel": 96,
+      "x": 0.006142770588284168,
+      "y": 0.013489515059525095
+    },
+    "roundoffAllowance": 1.5361186573135788e-14,
+    "reason": "The computed wetted liquid falls below vapour pressure. The prescribed detachment and closure do not resolve that additional cavitation region; this branch is numerical only. Pressure has not been clipped and the cavity has not been moved.",
+    "criterion": "Cp + sigma = (p - pv)/qInfinity >= 0 on every sampled wetted panel; cavity BC panels are excluded.",
+    "scope": "Equilibrium partial-sheet model consistency screen. Sensitive to discretisation near detachment and closure; not an experiment, accuracy estimate or empirical calibration.",
+    "experimentalValidation": false
+  },
+  "wetCases": {
+    "symmetric": {
+      "target": {
+        "mode": "sigma",
+        "sigma": 5,
+        "chord": 0.16,
+        "dimensional": false
+      },
+      "geometry": {
+        "thickness": 0.12,
+        "camber": 0,
+        "camberPosition": 0.4,
+        "alpha": 0,
+        "naca": "0012"
+      },
+      "coarseMinimum": {
+        "cp": -0.412977852502427,
+        "margin": 4.5870221474975725,
+        "x": 0.12997069136267886,
+        "y": -0.05101883873555683,
+        "surface": "lower",
+        "panel": 39
+      },
+      "fineMinimum": {
+        "cp": -0.4137538098997917,
+        "margin": 4.5862461901002085,
+        "x": 0.12150960532057595,
+        "y": -0.050044332838626,
+        "surface": "lower",
+        "panel": 78
+      }
+    },
+    "cambered": {
+      "target": {
+        "mode": "physical",
+        "U": 5,
+        "pInf": 101325,
+        "rho": 998.2,
+        "pc": 2339,
+        "vapourPressure": 2339,
+        "chord": 0.16,
+        "dynamicPressure": 12477.5,
+        "sigma": 7.933159687437387,
+        "temperatureC": null,
+        "dimensional": true,
+        "source": "Explicit liquid density and cavity pressure supplied by caller."
+      },
+      "geometry": {
+        "thickness": 0.12,
+        "camber": 0.02,
+        "camberPosition": 0.4,
+        "alpha": 2,
+        "naca": "2412"
+      },
+      "coarseMinimum": {
+        "cp": -0.8246939711123875,
+        "margin": 7.108465716324999,
+        "x": 0.06830459954368534,
+        "y": 0.047397578025748226,
+        "surface": "upper",
+        "panel": 26
+      },
+      "fineMinimum": {
+        "cp": -0.8317605757384898,
+        "margin": 7.101399111698897,
+        "x": 0.07428662505245101,
+        "y": 0.049406958025893205,
+        "surface": "upper",
+        "panel": 52
+      }
+    }
+  }
+}

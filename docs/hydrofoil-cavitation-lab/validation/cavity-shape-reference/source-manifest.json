@@ -1,0 +1,40 @@
+{
+  "date": "2026-11-01",
+  "filesRead": [
+    {
+      "repositoryPath": "output/opus-bem/axisymmetric-long-cavity-study-20261101/comparison-summary.json",
+      "sha256": "53c39d05e72dc952fb4acd47ad974ac732cb743c4ff4c8042081dfcfd8cf0f5c",
+      "bytes": 12426
+    },
+    {
+      "repositoryPath": "output/opus-bem/axisymmetric-semenenko-review-20261101/verified-relations.json",
+      "sha256": "1d3d671e964d0aa2ef9ce456b1de2a83c1c697f7b6f204bf0a7c1973a49115ae",
+      "bytes": 11945
+    },
+    {
+      "repositoryPath": "output/opus-bem/axisymmetric-long-cavity-study-20261101/additional-L64-Nc128.json",
+      "sha256": "779d624914b5db3946840ea2b70c9b63cbc5f79b41d0a2ceaf2bfcfec8bdb4e0",
+      "bytes": 744922
+    },
+    {
+      "repositoryPath": "output/opus-bem/axisymmetric-long-cavity-study-20261101/additional-L80-Nc128.json",
+      "sha256": "ba12c7a684719bd71812768e1e5ae517efc37f738badbc8aa84192be5aa09ac9",
+      "bytes": 743481
+    },
+    {
+      "repositoryPath": "docs/hydrofoil-cavitation-lab/validation/bem-detachment-comparison.json",
+      "sha256": "129929e7fa4c2cd2cdf1e54eb36bc5ef78e6a337d0d7e74e54805ba71cf7d272",
+      "bytes": 968370
+    },
+    {
+      "repositoryPath": "docs/hydrofoil-cavitation-lab/validation/reference/hydrofoil-experimental-benchmark/uhlman-alpha4-all-markers.json",
+      "sha256": "e72304925f1f7a0898e40fbcc13b78156f9f051b9a6df62233322c288c8a5c64",
+      "bytes": 12175
+    }
+  ],
+  "publicFigures": "Original plots of preserved numerical nodes, source equations and previously audited digitized markers. No paper page or figure is redistributed.",
+  "noSolverModified": true,
+  "noExperimentalShapeInvented": true,
+  "hydrofoilShapeComparisonAccepted": false,
+  "diskComparisonExperimentalValidation": false
+}

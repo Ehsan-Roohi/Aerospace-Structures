@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>Recent cavitation methods · 2021–2025</title>
+<style>
+body{font:17px/1.55 Georgia,'Times New Roman',serif;color:#172536;background:#fff;margin:0}
+main{max-width:1150px;margin:auto;padding:28px 22px}h1{font-size:31px;line-height:1.2}h2{font-size:23px;margin-top:30px}
+a{color:#075eb7}nav{display:flex;gap:20px;flex-wrap:wrap}p{max-width:100ch}.scope{border-left:5px solid #075e85;background:#f2f8fb;padding:12px 16px}
+.table-scroll{overflow-x:auto}table{border-collapse:collapse;width:100%;min-width:830px;font-size:16px}caption{text-align:left;font-weight:bold;margin-bottom:10px}
+th,td{border-bottom:1px solid #cbd5df;text-align:left;vertical-align:top;padding:12px}th{background:#f2f5f8}td:first-child{width:36%}
+.citation{display:block;font-size:14px;margin-top:5px}.access{display:block;color:#394b5d;font-size:14px;margin-top:7px}li{margin:12px 0}
+code{font-size:.9em}footer{border-top:1px solid #cbd5df;margin-top:28px;padding-top:12px;font-size:14px}
+@media(max-width:650px){main{padding:18px 12px}h1{font-size:27px}table{font-size:15px}th,td{padding:9px}}
+</style>
+</head>
+<body><main>
+<nav aria-label="Related pages"><a href="../">Cavitation lab</a><a href="index.html">Numerical evidence</a><a href="c1-cavity.html">C1 disk BEM</a><a href="experimental-review.html">Experimental evidence</a></nav>
+<h1>Recent cavitation methods</h1>
+<p>Selected work from 2021–2025 gives concrete directions beyond the original 1993 panel formulation: smoother cavity geometry, adjoint optimization, three-dimensional cavity models and viscous coupling. Each addresses a particular physical problem and needs its own matched verification.</p>
+<div class="scope">
+<p><strong>Implemented in this lab:</strong> potential-flow BEM with separate convergence and admission checks, including a pressure-target disk solver under a declared symmetric artificial-image closure. The <a href="cavity-2d-admission-method.md">2D hydrofoil admission record</a> separately checks the pressure on surfaces still labelled wetted.</p>
+<p><strong>Proposed research:</strong> the paper-specific algorithms below have not been established as implemented by this page. A pressure-controlled disk/image solution does not supply the detachment and natural closure of a smooth hydrofoil.</p>
+</div>
+
+<h2>What the newer work contributes</h2>
+<div class="table-scroll"><table>
+<caption>Published method, relevance and review depth</caption>
+<thead><tr><th scope="col">Primary source</th><th scope="col">Contribution</th><th scope="col">Implication for this lab</th></tr></thead>
+<tbody>
+<tr>
+<td><a href="https://doi.org/10.3390/jmse9090976">An Adjoint Optimization Prediction Method for Partially Cavitating Hydrofoils</a><span class="citation">D. Anevlavi &amp; K. Belibassakis (2021), <i>JMSE</i> 9(9), 976.</span><span class="access">Selected publisher full-text sections reviewed, including the objective and boundary conditions.</span></td>
+<td>An inverse source-vorticity BEM adjusts B-spline cavity controls and cavitation number using continuous-adjoint sensitivities. The reported NACA 16-series comparisons prescribe cavity length.</td>
+<td>A direct candidate for smoother shape updates and efficient gradients. It remains a given-length inverse problem; a pressure-input solver also needs length selection and an admitted detachment/closure model.</td>
+</tr>
+<tr>
+<td><a href="https://doi.org/10.1016/j.enganabound.2024.105912">A quick 3D BEM iterative algorithm for partially cavitating flows over cylindrical bodies at angles of attack</a><span class="citation">M. Norouzi &amp; M. Pasandidehfard (2024), <i>Engineering Analysis with Boundary Elements</i> 168, 105912.</span><span class="access">Publisher and DOI metadata verified. Full method and primary abstract were not reviewed.</span></td>
+<td>The verified title identifies a three-dimensional iterative BEM for cylindrical bodies at incidence. No unseen update equation, closure prescription or accuracy result is inferred here.</td>
+<td>Relevant to the requested cylinder geometry and non-axisymmetric flow. Obtain and verify the full formulation before porting it; the current axisymmetric ring model does not cover a cylinder at nonzero incidence.</td>
+</tr>
+<tr>
+<td><a href="https://doi.org/10.1063/5.0180184">A panel method for the hydrodynamic analysis of a cavitating propeller with sheet and developed tip vortex cavitation</a><span class="citation">S. Kim &amp; S. A. Kinnas (2023), <i>Physics of Fluids</i> 35(12), 127118.</span><span class="access">Publisher-deposited abstract and DOI metadata reviewed; full algorithm not reviewed.</span></td>
+<td>A potential-flow panel model includes sheet and developed tip-vortex cavities together on a propeller. The reported study is steady.</td>
+<td>A route toward coupled three-dimensional cavity types. It supplies neither an implemented tip-vortex model in this lab nor a demonstrated repair of the present hydrofoil detachment problem.</td>
+</tr>
+<tr>
+<td><a href="https://doi.org/10.1016/j.oceaneng.2025.120396">Propeller performance prediction via 3D coupling of BEM with boundary layer solver</a><span class="citation">T. S. Wu &amp; S. A. Kinnas (2025), <i>Ocean Engineering</i> 321, 120396.</span><span class="access">Publisher abstract and method summary reviewed; full coupling recipe not reviewed.</span></td>
+<td>A three-dimensional potential BEM interacts with the primarily two-dimensional XFOIL boundary-layer solver to include viscous effects on propeller pressures and performance.</td>
+<td>A concrete viscous–inviscid coupling direction. Transfer to a cavitating hydrofoil requires a separate treatment of separation, cavity boundaries and closure, with new verification.</td>
+</tr>
+<tr>
+<td><a href="https://doi.org/10.1016/j.oceaneng.2024.118521">A viscous vorticity method for predicting 2-D turbulent cavitating flows</a><span class="citation">R. You &amp; S. A. Kinnas (2024), <i>Ocean Engineering</i> 309, 118521.</span><span class="access">Publisher abstract and introductory method excerpts reviewed.</span></td>
+<td>VISVE combines viscous vorticity transport, turbulent flow and mixture/cavitation modelling using a finite-volume method. An explicit scheme reconstructs pressure.</td>
+<td><strong>This is FVM, not BEM.</strong> It is a different governing-model route for viscous cavitation. Its mixture and compressibility assumptions must be checked for any intended shedding or shock comparison.</td>
+</tr>
+<tr>
+<td><a href="https://doi.org/10.3390/jmse9111253">Cavity Detachment from a Wedge with Rounded Edges and the Surface Tension Effect</a><span class="citation">Y. N. Savchenko, G. Y. Savchenko &amp; Y. A. Semenov (2021), <i>JMSE</i> 9(11), 1253.</span><span class="access">Selected publisher full-text sections reviewed, especially §2.3–2.4.</span></td>
+<td>A hodograph/integral-equation formulation uses the Brillouin–Villat condition: the free-surface curvature at detachment is finite and matches the body curvature. Surface tension enters the dynamic condition.</td>
+<td>A useful rounded-edge detachment benchmark, rather than a BEM implementation. Match edge radius and Weber number before transferring the condition; finite capillarity changes the boundary-value problem.</td>
+</tr>
+<tr>
+<td><a href="https://doi.org/10.1017/jfm.2022.999">Partial cavity shedding on a hydrofoil resulting from re-entrant flow and bubbly shock waves</a><span class="citation">A. Bhatt, H. Ganesh &amp; S. L. Ceccio (2023), <i>Journal of Fluid Mechanics</i> 957, A28.</span><span class="access">Publisher abstract and selected experimental text reviewed.</span></td>
+<td>High-speed imaging and time-resolved X-ray measurements on NACA0015 identify re-entrant-flow and bubbly-shock routes to cavity pinch-off and shedding.</td>
+<td>Experiments identify physics that a shedding model must reproduce. A steady attached-cavity solve or an isolated-bubble calculation does not establish those mechanisms.</td>
+</tr>
+</tbody></table></div>
+
+<h2>Proposed implementation sequence</h2>
+<p>The following is a research plan for this lab, not a claim that the cited papers use every added constraint.</p>
+<ol>
+<li><strong>Reproduce a matched inverse benchmark first.</strong> Use the 2021 hydrofoil geometry, incidence, prescribed cavity length and transition/closure assumptions. Compare the complete cavity gap and signed pressure profiles, then perform mesh and independent off-node field checks.</li>
+<li><strong>Test smooth geometry and its derivatives.</strong> Introduce cavity controls such as B-splines and minimize the cavity-pressure defect. Verify gradient components against finite differences before using an adjoint. Retain nonintersection and the lab's wetted-pressure condition <code>Cp + σ ≥ 0</code>; a small objective cannot replace these admission checks.</li>
+<li><strong>Make the accepted branch pressure-controlled.</strong> Derive σ from pressure, speed and temperature-dependent fluid properties. Solve for cavity length and the detachment position under an explicit closure/selection model. Require an actual bracket or admitted continuation; reject unsupported targets. Use the rounded-wedge detachment problem as a separate, matched test before generalizing to a smooth hydrofoil.</li>
+<li><strong>Add viscosity or full 3D geometry as separate stages.</strong> Verify a boundary-layer coupling on matched wetted cases before adding cavitation. Review the complete cylindrical-body and propeller algorithms before a true 3D implementation. Preserve the distinction between a dry-cylinder containment check and wetted flow around the cylinder.</li>
+<li><strong>Choose an unsteady model for cloud shedding.</strong> Specify the re-entrant, mass-transfer and mixture-compressibility physics required by the experimental regime, then compare time-resolved quantities. This is a separate validation target from steady sheet geometry.</li>
+</ol>
+<footer>Source check: 1 November 2026. Titles, authors, publication years and identifiers were checked against publisher-deposited DOI records. Review depth is stated for each source; no full-text review is implied by an abstract or metadata-only entry. This is a selected methods map, not an exhaustive survey or an experimental accuracy qualification.</footer>
+</main></body></html>

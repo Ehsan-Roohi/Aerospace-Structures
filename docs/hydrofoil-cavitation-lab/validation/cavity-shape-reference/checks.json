@@ -1,0 +1,24 @@
+{
+  "checks": [
+    {
+      "name": "Both disk profiles are in the published Eq32 sigma range",
+      "passed": true
+    },
+    {
+      "name": "Full disk profile nodes retained in exported data",
+      "passed": true
+    },
+    {
+      "name": "All hydrofoil shape branches retain failed pressure admission",
+      "passed": true
+    },
+    {
+      "name": "Five measured-Pc hydrofoil points retained",
+      "passed": true
+    },
+    {
+      "name": "No length or radius fit and no natural-tail match claimed",
+      "passed": true
+    }
+  ]
+}

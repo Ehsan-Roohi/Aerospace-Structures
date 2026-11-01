@@ -1,0 +1,47 @@
+{
+  "passed": true,
+  "checks": [
+    {
+      "name": "Six raw case files retain exact original bytes and hashes",
+      "passed": true
+    },
+    {
+      "name": "Both disk cases retain separate final field passes with all 15 audit fractions",
+      "passed": true
+    },
+    {
+      "name": "Actual complete and first-half contour sample coverage retained",
+      "passed": true
+    },
+    {
+      "name": "Experimental and mesh qualification flags remain false",
+      "passed": true
+    },
+    {
+      "name": "Hydrofoil root retains all three negative panels and remains unaccepted",
+      "passed": true
+    },
+    {
+      "name": "Both actual wet hydrofoils retain passes on both meshes",
+      "passed": true
+    },
+    {
+      "name": "Reference uses achieved sigma and identical physical disk radius",
+      "passed": true
+    },
+    {
+      "name": "Six rendered figure files are present",
+      "passed": true
+    },
+    {
+      "name": "No personal C drive paths in public page or exact raw files",
+      "passed": true
+    },
+    {
+      "name": "Every local page/data/figure link resolves",
+      "passed": true
+    }
+  ],
+  "missingLinks": [],
+  "newBEMSolves": 0
+}

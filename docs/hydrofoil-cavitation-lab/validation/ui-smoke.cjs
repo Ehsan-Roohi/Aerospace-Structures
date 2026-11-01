@@ -4,7 +4,7 @@
 const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),assert=require('node:assert/strict');
 const C=require('../cavitation.js'),root=path.join(__dirname,'..');
 const BV=require('../smooth-detachment-adapter.js');
-const html=fs.readFileSync(path.join(root,'index.html'),'utf8'),elements={},downloads=[];
+const html=fs.readFileSync(path.join(root,'inverse-hydrofoil.html'),'utf8'),elements={},downloads=[];
 class Element {
  constructor(id,tag='div'){this.id=id;this.tag=tag;this._value='';this.options=[];this.disabled=false;this.open=false;this.dataset={};this.innerHTML='';this.textContent='';this.listeners={};this.files=[];}
  get value(){return this._value;}

@@ -1,3 +1,21 @@
+# Direct cavitation inputs and evidence
+
+The default pages now accept either cavitation number sigma, or speed, absolute ambient pressure and fresh-water temperature. Hydrofoil geometry/incidence and disk/cylindrical-afterbody dimensions are inputs; a cavity length is not requested in this mode. Fresh-water saturation properties use IAPWS SR1-86(1992).
+
+- [Direct hydrofoil / disk interface](index.html)
+- [Disk and dry cylindrical afterbody](axisymmetric-cavity.html)
+- [Actual direct-solver checks and complete shape evidence](validation/forward-problems.html)
+- [Published cavity-shape comparisons](validation/cavity-shape-comparison.html)
+- [Recent BEM and cavitation methods](validation/recent-methods.html)
+
+The disk BEM solves separation to a mathematical Riabouchinsky image disk; that endpoint is not a validated natural closure. A cylindrical afterbody must remain entirely inside the gas envelope. The separate Semenenko option is explicitly a semiempirical disk reference, not a new BEM solve. No general partly wetted cylinder or nonzero-incidence axisymmetric solution is inferred.
+
+The hydrofoil driver includes a two-mesh fully wetted check and automatic partial-sheet endpoint search. Its recorded cavity root still fails the wetted-pressure condition and remains rejected; no admitted cavitating hydrofoil prediction or cloud-shedding validation is claimed. Successful root convergence, sampled field checks, mesh accuracy and experimental validation are separate.
+
+Existing inverse case files remain supported at [hydrofoil inverse](inverse-hydrofoil.html) and [disk inverse](axisymmetric-inverse.html); they keep their original prescribed-length definition. Stored results are never treated as fresh calculations.
+
+---
+
 ## Current axisymmetric C1 update (2026-10-31)
 
 The developed-disk application now uses `axisymmetric-cavity-c1.js` with a C1 curved meridian, C2 spline sheet and oversampled no-penetration equations. [Current numerical verification and matched Brennen Cp](validation/c1-cavity.html) include full signed fields, Nc32–256 refinement, exact sphere and direct Biot–Savart controls, separately executed SciPy parity, whole-panel geometry guards and declared-trace checks. No experimental validation is claimed. Individual cases still require their field screens and refinement; the separate 2D cavity branch remains unqualified. Old polygon and constant-source implementations/results remain available as historical baselines.

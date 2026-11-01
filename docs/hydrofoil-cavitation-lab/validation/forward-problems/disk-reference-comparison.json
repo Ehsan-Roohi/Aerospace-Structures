@@ -1,0 +1,28 @@
+{
+  "sigma_used": 0.05000000117481429,
+  "target_sigma": 0.05,
+  "disk_radius_m": 0.01,
+  "BEM_coverage_x_m": [
+    0,
+    0.35466287797460344
+  ],
+  "reference_equations": "Semenenko 2001, PDF p15 Eqs31/32, literal rounded coefficients",
+  "reference_sigma_range": [
+    0.012,
+    0.057
+  ],
+  "within_reference_sigma_range": true,
+  "reference_kind": "semiempirical correlation, not raw measured profile points",
+  "largest_sampled_abs_radius_difference_m": 0.0017747502293322804,
+  "radius_RMSE_m": 0.00121472021286289,
+  "BEM_maximum_x_m": 0.35466287797460344,
+  "BEM_maximum_radius_m": 0.04362632450849018,
+  "reference_eq32_maximum_x_m": 0.3788982966519688,
+  "reference_eq32_maximum_radius_m": 0.043426193550909896,
+  "reference_eq34_reported_natural_length_m": 0.7589999831061709,
+  "rear_closure_matched": false,
+  "experimental_validation": false,
+  "shape_parameter_fitted": false,
+  "difference_interpolation": "Linear interpolation of all 513 saved actual curved-profile samples; no BEM evaluation or rescaling",
+  "source_join_radius_difference_m": -7.990784273581575e-07
+}

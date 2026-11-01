@@ -1,0 +1,53 @@
+{
+  "date": "2026-11-01",
+  "rawFiles": [
+    {
+      "file": "disk-physical-sigma-0p5.json",
+      "sourceRepositoryPath": "output/opus-bem/axisymmetric-forward-20261101/physical-target-sigma-0p5.json",
+      "bytes": 869227,
+      "sha256": "e457e7b3d3dba70d9e7d18c6553dc01d13537443c67acb8ae874a60f1d2534d4",
+      "copy": "exact bytes"
+    },
+    {
+      "file": "disk-explicit-sigma-0p05.json",
+      "sourceRepositoryPath": "output/opus-bem/axisymmetric-forward-20261101/explicit-sigma-0p05-extended.json",
+      "bytes": 860776,
+      "sha256": "762347d538d54a96c96ae9968770f13394c8cfaec5245f9963357ce494ea5215",
+      "copy": "exact bytes"
+    },
+    {
+      "file": "hydrofoil-rejected-roundtrip.json",
+      "sourceRepositoryPath": "output/opus-bem/forward-hydrofoil-20261101/actual-inverse-forward-roundtrip.json",
+      "bytes": 352415,
+      "sha256": "f5dd9055ba4f02443e8965f04b07b17f91baaaa30a7d5d2b846051abeb457654",
+      "copy": "exact bytes"
+    },
+    {
+      "file": "hydrofoil-controls-and-wet-cases.json",
+      "sourceRepositoryPath": "output/opus-bem/forward-hydrofoil-20261101/control-and-wet-tests.json",
+      "bytes": 119251,
+      "sha256": "c32d4e0f9aaaf0c179fe1540ad9c7c6f47b0d9f2c0b6a955cdad7f0bb8da8345",
+      "copy": "exact bytes"
+    },
+    {
+      "file": "disk-unsupported-default-domain.json",
+      "sourceRepositoryPath": "output/opus-bem/axisymmetric-forward-20261101/unsupported-default-domain-sigma-0p05.json",
+      "bytes": 9621,
+      "sha256": "d40ce5d771889104cfa36736c77e9c38fddceebe6d93c568d6eb808070e8978b",
+      "copy": "exact bytes"
+    },
+    {
+      "file": "disk-interrupted-300-second-attempt.json",
+      "sourceRepositoryPath": "output/opus-bem/axisymmetric-forward-20261101/explicit-sigma-0p05-extended-attempt300.json",
+      "bytes": 29371,
+      "sha256": "8563f6b4ec979bc5ae4d1485a5c4ffa0cdd3f755b4a11918d4ba48d7f9bbc75f",
+      "copy": "exact bytes"
+    }
+  ],
+  "plotInputs": "Exact stored profile/pressure arrays, no new BEM solves",
+  "referenceURL": "https://apps.dtic.mil/sti/tr/pdf/ADP012080.pdf",
+  "referenceRetrievedCopy": "https://archive.org/download/DTIC_ADP012080/DTIC_ADP012080.pdf",
+  "referencePdfSha256": "74c80c61579c268ec547d8b2ea078739996667873f715b1649d9d79026b3523f",
+  "referencePages": "PDF p15, printed 11-14, Eqs31-34",
+  "noExperimentalShapePointsInvented": true
+}

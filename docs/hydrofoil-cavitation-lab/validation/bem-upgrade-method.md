@@ -46,3 +46,11 @@ The independent Python reference sources are in `reference/nodal-cavity/python/`
 Matched experiments, viscosity, inception/nuclei physics, tunnel blockage, natural smooth-body detachment, re-entrant-jet closure, unsteady collapse and cavitating-wing structural coupling remain outside this release. The zero-recovery Kinnas benchmark has not been reproduced with converged meshes; changing closure and trailing-edge geometry prevents assigning its discrepancy to one cause alone.
 
 References: [Brennen, chapter 8, especially 8.3](https://media.library.caltech.edu/CaltechBOOK:1995.001/chap8.htm); [Kinnas, chapter 9](https://cavity.caee.utexas.edu/kinnas/COURSES/bem/kinnas_ch09.pdf); [Kinnas and Fine 1993](https://doi.org/10.1017/S0022112093002071); [Yas’ko 1993](https://doi.org/10.2495/MB930161).
+
+## Stable numerical kernel update (axisymmetric 0.2.1)
+
+The ring-minus-planar remainder is now evaluated through a cancellation-free identity. Near complementary parameter q = k-prime squared equal to zero, K and E-minus-one use the convergent expansion through q cubed from NIST DLMF 19.12. The change solves the same BIE and nodal equations. Independent 400-digit original-expression fixtures verify the identity, including extreme separations; the truncation error of E-minus-one is retained in the test tolerance.
+
+A declared surface trace is allowed only at a known panel interior within a coordinate-roundoff bound. Arbitrary off-surface evaluation is unchanged. Malformed indices, false declarations, panel extensions and endpoints are rejected. This fixes a false interior-side evaluation on very short panels, rather than changing the pressure target.
+
+Strict Newton convergence now passes at 256 cavity panels, but nine-fraction sampling still finds maxima 0.01260374 U normal velocity and 0.04151791 Cp. The 0.01/0.02 limits are unchanged. The default field audit uses all nine fractions, retaining every previous point. No physical or experimental pass is inferred. See stable-kernel-verification.json and stable-kernel-repair-profiles.json for full evidence.

@@ -1,0 +1,27 @@
+{
+  "date": "2026-10-31",
+  "release": "2D UI0.3.3 unchanged; axisymmetric cavity0.2.1 stable numerical kernel",
+  "status": "RESEARCH_UPDATE_NOT_PHYSICALLY_VALIDATED",
+  "changes": [
+    "Cancellation-free elliptic ring remainder",
+    "Guarded mathematical liquid/interior traces on declared boundary panels",
+    "Nine-fraction direct-field audit retaining all previous samples"
+  ],
+  "evidence": [
+    "stable-kernel-verification.json",
+    "nodal-cavity-verification.json",
+    "nodal-cavity-ui-smoke.json",
+    "stable-kernel-repair-profiles.json"
+  ],
+  "unchangedLimits": {
+    "nodalTolerance": 1e-10,
+    "normalVelocity_U": 0.01,
+    "dynamicCp": 0.02
+  },
+  "remainingDefects": {
+    "twoDimensionalWettedPressure": "NOT_PASSED",
+    "axisymmetric256DenseNormal_U": 0.01260374,
+    "axisymmetric256DenseDynamicCp": 0.04151791,
+    "experimentalValidation": "NOT_PERFORMED"
+  }
+}

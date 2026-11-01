@@ -14,11 +14,11 @@
     "cavitation.js": "990fdab5b4d3cfcba5d829c3960f94ee11d053b4625b8d65b4c40f4ae9a61005",
     "smooth-detachment.js": "eaeb86e7eb44c2adf7a72216b84f33cce29fb93681d8a1c1e694793cace619c1",
     "smooth-detachment-adapter.js": "4a3fdab99f143c55e2b57cccabc7e548c1a75b20f49e5294e2d4d91d25f05d3d",
-    "axisymmetric-cavity-nodal.js": "5b864488d07caf3896f47484264b2a284d5a986e6045c49ddfba681fb4208e20"
+    "axisymmetric-cavity-nodal.js": "b3d8ee5e35d97f3224cfbf325b8ae9090406c077d6a1c4c31cf3ab4b702704da"
   },
   "adaptations": {
     "twoDimensional": "Original root equations and samples retained; pressure checking made mandatory with zero allowance, separate strict admission adapter, UI progress/cancel and compatibility. Core0.3.2 bytes unchanged.",
-    "axisymmetric": "JavaScript port of continuous linear-vortex Python equations; finite input/resource bounds, geometry guards, explicit convergence flags, progress/cancel and independent direct-field diagnostics. Nodal reconstruction is labelled.",
+    "axisymmetric": "Continuous linear-vortex Python equations ported with finite input/resource guards, cancellation-free elliptic remainder, declared liquid/interior traces, progress/cancel and nine-fraction independent direct-field diagnostics. Nodal reconstruction is labelled; field accuracy remains unqualified.",
     "noQualificationRelaxation": "Unchanged physical pressure screen and prior off-grid thresholds; unresolved local errors and stalled iterations retained."
   },
   "experimentalValidation": "NOT_PERFORMED",
@@ -33,5 +33,25 @@
     "reference/nodal-cavity/python/axi_cavity.py": "a0b8fa5da27e6da09b5c18a09f37a00267f10a2d31a1df85feab38e488bfbc55",
     "reference/nodal-cavity/python/axi_ring.py": "23a441f8075af04e50b956f1c64f4d649d38936f68a0ea7fea180d86abfc6b47"
   },
-  "releaseTextEncoding": "UTF-8, LF. Immutable received archive is separately retained with original hashes."
+  "releaseTextEncoding": "UTF-8, LF. Immutable received archive is separately retained with original hashes.",
+  "stableKernelUpdate": {
+    "version": "0.2.1-research-stable-kernel",
+    "source": "axisymmetric-cavity-nodal.js",
+    "sha256": "b3d8ee5e35d97f3224cfbf325b8ae9090406c077d6a1c4c31cf3ab4b702704da",
+    "mathematicalReference": "https://dlmf.nist.gov/19.12",
+    "independentReferenceDigits": 400,
+    "samePhysicalEquations": true,
+    "fieldQualified": false,
+    "sampleFractions": [
+      0.02,
+      0.05,
+      0.1,
+      0.25,
+      0.5,
+      0.75,
+      0.9,
+      0.95,
+      0.98
+    ]
+  }
 }

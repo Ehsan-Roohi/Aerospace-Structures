@@ -20,7 +20,7 @@
       "passed": true
     },
     {
-      "name": "actual profile contract retains five samples on every panel",
+      "name": "actual profile contract retains nine samples on every panel",
       "passed": true
     },
     {
@@ -82,18 +82,18 @@
   ],
   "failures": 0,
   "actualDefault": {
-    "version": "0.2.0-research",
+    "version": "0.2.1-research-stable-kernel",
     "status": "nodal-converged-field-unresolved",
     "Nc": 32,
     "Nf": 16,
-    "sigma": 0.32133883542723285,
-    "Rmax": 1.9748842493458698,
-    "CD": 1.1043049499579054,
-    "nodalResidual": 6.699019117206717e-11,
+    "sigma": 0.3213388354787978,
+    "Rmax": 1.9748842494279069,
+    "CD": 1.1043049501246205,
+    "nodalResidual": 3.774758283725532e-15,
     "fieldAudit": {
       "fieldsFinite": true,
-      "maxNormal_U": 0.06419029622115652,
-      "maxCavityDynamicCpResidual": 0.10823637975156886
+      "maxNormal_U": 0.08954847514693531,
+      "maxCavityDynamicCpResidual": 0.28292911413407107
     }
   },
   "browserVisualReview": "NOT_PERFORMED",

@@ -132,6 +132,9 @@ The G-code is provided for inspection only. Do not send it directly to a printer
 
 ## Engineering readings and case studies
 
+**[Air launch to the edge of space: Apeiron and VMS Eve](AIR_LAUNCH_APEIRON.md)** — illustrated historical and engineering case study: X-1/X-15/Pegasus/SpaceShipOne lineage; atmospheric release, rocket ascent and feathered return; carrier load paths, pressure-vessel stresses, fatigue and the NTSB 2014 safety lessons. Four figures, 16 references, reproducible calculations and Persian summary. [Open the full report](https://ehsan-roohi.github.io/Aerospace-Structures/case-studies/apeiron/).
+
+
 **[Demis Hassabis and AI for science: from games to validated discovery](DEMIS_HASSABIS_AI_FOR_SCIENCE.md)** — extensive illustrated reading connecting Bellman equations, policy/value/search, molecular geometry, attention and diffusion to scientific verification and aerospace surrogates. Six figures including a licensed Nobel-week portrait; analytical beam examples, uncertainty calculations and worked activities. [Open the illustrated reading](https://ehsan-roohi.github.io/Aerospace-Structures/case-studies/hassabis/). Persian summary and ten linked references.
 
 **[Monty Hall: conditional probability, selection and engineering judgment](MONTY_HALL.md)** — expanded mathematical reading with more than four times the original text, seven figures including two historical photographs, weighted probability trees, Bayesian host models, entropy, selective offers, exact checks and 100,000-round simulations. Includes inspection decisions and worked exercises. [Open the illustrated reading](https://ehsan-roohi.github.io/Aerospace-Structures/case-studies/monty-hall/). Persian summary; optional enrichment.

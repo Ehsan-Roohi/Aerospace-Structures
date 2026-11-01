@@ -23,5 +23,18 @@
       "exact_stay": "1/2",
       "exact_switch": "1/2"
     }
+  },
+  "extended": {
+    "informed_standard_error": 0.0014907119849998597,
+    "observed_standardized_deviation": 1.1292143286374186,
+    "entropy_prior_bits": 1.584962500721156,
+    "entropy_posterior_bits": 0.9182958340544896,
+    "mutual_information_bits": 0.6666666666666665,
+    "hoeffding_sufficient_rounds_1pct_95pct": 18445,
+    "selective_offer_a1_b01_switch": "1/6",
+    "coupon_positive_crack_probability": "2/13",
+    "perfect_confirmation_expected_cost": 35.38461538461539,
+    "free_perfect_information_value": 84.61538461538461,
+    "beta_posterior_predictive_switch_after_H3": "4/7"
   }
 }

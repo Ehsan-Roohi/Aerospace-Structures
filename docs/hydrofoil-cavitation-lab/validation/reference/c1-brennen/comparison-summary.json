@@ -1,0 +1,62 @@
+{
+  "scope": "Current C1 kernel compared with published theoretical Cp, not experiments. L/R solves prescribed sigma; Cp is never fitted.",
+  "readingBounds": {
+    "r_R": 0.006,
+    "Cp": 0.012
+  },
+  "referenceCoverage": "Only visible digitized samples; no extrapolated reference points.",
+  "rows": [
+    {
+      "targetSigma": 0.3,
+      "Nc": 64,
+      "N": 128,
+      "L_R": 8.567661157864194,
+      "sigma": 0.29999999951746714,
+      "CD": 1.0854046792843426,
+      "readingRmsCp": 0.03224281576608034,
+      "maxNormal_U": 0.0006019489298649261,
+      "maxDynamicCpDefect": 0.0009714325651377642,
+      "referenceKind": "Brennen1969 digitized theoretical disk pressure",
+      "experimentalValidation": false
+    },
+    {
+      "targetSigma": 0.3,
+      "Nc": 128,
+      "N": 256,
+      "L_R": 8.567612730780189,
+      "sigma": 0.29999999951766254,
+      "CD": 1.085392364648751,
+      "readingRmsCp": 0.032236548787026365,
+      "maxNormal_U": 4.432014512339988e-05,
+      "maxDynamicCpDefect": 7.61935466753183e-05,
+      "referenceKind": "Brennen1969 digitized theoretical disk pressure",
+      "experimentalValidation": false
+    },
+    {
+      "targetSigma": 0.7,
+      "Nc": 64,
+      "N": 128,
+      "L_R": 3.0670058513994873,
+      "sigma": 0.6999999977196154,
+      "CD": 1.4378769821425748,
+      "readingRmsCp": 0.01496671154750586,
+      "maxNormal_U": 0.00026922046920432874,
+      "maxDynamicCpDefect": 0.0006050262502717008,
+      "referenceKind": "Brennen1969 digitized theoretical disk pressure",
+      "experimentalValidation": false
+    },
+    {
+      "targetSigma": 0.7,
+      "Nc": 128,
+      "N": 256,
+      "L_R": 3.06700134451266,
+      "sigma": 0.699999997719712,
+      "CD": 1.4378727443619403,
+      "readingRmsCp": 0.014998306852896503,
+      "maxNormal_U": 3.6259124091317374e-05,
+      "maxDynamicCpDefect": 7.958350981551732e-05,
+      "referenceKind": "Brennen1969 digitized theoretical disk pressure",
+      "experimentalValidation": false
+    }
+  ]
+}

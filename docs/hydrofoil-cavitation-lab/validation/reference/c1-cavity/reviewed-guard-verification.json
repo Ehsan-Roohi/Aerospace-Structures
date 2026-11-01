@@ -1,0 +1,145 @@
+{
+  "version": "0.3.0-c1-reviewed-guards",
+  "originalSha": "fa5474176a7e3466b154536c8fd85b10c8acf41cf90908aae56fabf477fb01ce",
+  "status": "GUARD_TESTS_PASS_NUMERICAL_FIELDS_UNCHANGED",
+  "checks": [
+    {
+      "name": "reachable between-node axial reversal rejected before solve",
+      "pass": true,
+      "error": "Invalid initial cavity: curved cavity panel0 reverses its axial direction between nodes; curved cavity panel7 reverses its axial direction between nodes"
+    },
+    {
+      "name": "finite extreme seed cannot pass with overflowed curve coefficients",
+      "pass": true,
+      "error": "Invalid initial cavity: curved cavity panel2 has non-finite polynomial coefficients; curved cavity panel3 has non-finite polynomial coefficients; curved cavity panel4 has non-finite polynomial coefficients; curved cavity panel5 has non-finite polynomial coefficients"
+    },
+    {
+      "name": "off-surface point is never coerced into a declared boundary trace",
+      "pass": true,
+      "error": "Declared boundary coordinates do not match the named panel parameter; off-surface points must not be declared as boundary traces."
+    },
+    {
+      "name": "invalid declared zeta",
+      "pass": true,
+      "error": "Declared traces require an existing panel, an interior parameter0<zeta<1 and side+1 or−1."
+    },
+    {
+      "name": "invalid declared side",
+      "pass": true,
+      "error": "Declared traces require an existing panel, an interior parameter0<zeta<1 and side+1 or−1."
+    },
+    {
+      "name": "declared panel outside mesh",
+      "pass": true,
+      "error": "Declared traces require an existing panel, an interior parameter0<zeta<1 and side+1 or−1."
+    },
+    {
+      "name": "trace-array length mismatch",
+      "pass": true,
+      "error": "Field points and declared trace arrays must have matching lengths."
+    },
+    {
+      "name": "nonfinite field point",
+      "pass": true,
+      "error": "A field point must contain finite axial/radial coordinates with nonnegative radius."
+    },
+    {
+      "name": "invalid field quadrature",
+      "pass": true,
+      "error": "nNear outside supported integer range 4–64."
+    },
+    {
+      "name": "same off-surface point is valid without a false trace declaration",
+      "pass": true
+    },
+    {
+      "name": "clustering exponent 0",
+      "pass": true,
+      "error": "Clustering exponent must be an integer1–5."
+    },
+    {
+      "name": "clustering exponent NaN",
+      "pass": true,
+      "error": "Clustering exponent must be an integer1–5."
+    },
+    {
+      "name": "clustering exponent Infinity",
+      "pass": true,
+      "error": "Clustering exponent must be an integer1–5."
+    },
+    {
+      "name": "clustering exponent 3",
+      "pass": true,
+      "error": "Clustering exponent must be an integer1–5."
+    },
+    {
+      "name": "clustering exponent 1.5",
+      "pass": true,
+      "error": "Clustering exponent must be an integer1–5."
+    },
+    {
+      "name": "clustering exponent 6",
+      "pass": true,
+      "error": "Clustering exponent must be an integer1–5."
+    },
+    {
+      "name": "malformed optional audit fractions ",
+      "pass": true,
+      "error": "Audit fractions must be a nonempty array of finite numbers strictly between zero and one (at most256)."
+    },
+    {
+      "name": "malformed optional audit fractions 0",
+      "pass": true,
+      "error": "Audit fractions must be a nonempty array of finite numbers strictly between zero and one (at most256)."
+    },
+    {
+      "name": "malformed optional audit fractions 1",
+      "pass": true,
+      "error": "Audit fractions must be a nonempty array of finite numbers strictly between zero and one (at most256)."
+    },
+    {
+      "name": "malformed optional audit fractions NaN",
+      "pass": true,
+      "error": "Audit fractions must be a nonempty array of finite numbers strictly between zero and one (at most256)."
+    },
+    {
+      "name": "malformed optional audit fractions 0.5,0.5",
+      "pass": true,
+      "error": "Duplicate audit fractions are not supported."
+    },
+    {
+      "name": "malformed optional audit fractions all",
+      "pass": true,
+      "error": "Audit fractions must be a nonempty array of finite numbers strictly between zero and one (at most256)."
+    },
+    {
+      "name": "optional sparse audit cannot remove any mandatory fraction",
+      "pass": true
+    },
+    {
+      "name": "fresh default Nc32 numerical outputs bit-identical after guard-only changes",
+      "pass": true
+    },
+    {
+      "name": "all fifteen dense audit fractions .001.. .999 bit-identical after guard-only changes",
+      "pass": true
+    }
+  ],
+  "geometry": {
+    "admissible": true,
+    "issues": [],
+    "curve": {
+      "admissible": true,
+      "issues": [],
+      "minimumRadius": 1,
+      "minimumAxialDerivative": 0,
+      "method": "Polynomial extrema over every cubic/quintic panel; no finite sampling used for admission."
+    }
+  },
+  "defaultRuntime": 1.923,
+  "dense": {
+    "normal": 0.0006222379381280174,
+    "cp": 0.0009844564672589762,
+    "samples": 1920
+  }
+}

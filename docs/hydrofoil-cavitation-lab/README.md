@@ -1,3 +1,9 @@
+## Current axisymmetric C1 update (2026-10-31)
+
+The developed-disk application now uses `axisymmetric-cavity-c1.js` with a C1 curved meridian, C2 spline sheet and oversampled no-penetration equations. [Current numerical verification and matched Brennen Cp](validation/c1-cavity.html) include full signed fields, Nc32–256 refinement, exact sphere and direct Biot–Savart controls, separately executed SciPy parity, whole-panel geometry guards and declared-trace checks. No experimental validation is claimed. Individual cases still require their field screens and refinement; the separate 2D cavity branch remains unqualified. Old polygon and constant-source implementations/results remain available as historical baselines.
+
+Reproduce the current implementation with `node validation/c1-cavity-verify.cjs --full`, `node validation/c1-reviewed-verify.cjs` and `node validation/curved-cavity-ui-smoke.cjs`. The older UI harnesses below describe their historical controllers.
+
 # Hydrofoil Cavitation Lab 0.3.3
 
 Version 0.3.3 adds **Automatic smooth detachment · research**, with a mandatory unchanged wetted-pressure screen. It improves the default detachment defect but still rejects its physical pressure inconsistency. The developed-disk page now uses a continuous linear-vortex browser solver, independently matched to a Python reference, with nodal reconstruction and direct field diagnostics both visible. Field accuracy remains unqualified. [New complete comparison](validation/index.html#smooth-detachment) · [Method and reproduction](validation/bem-upgrade-method.md).

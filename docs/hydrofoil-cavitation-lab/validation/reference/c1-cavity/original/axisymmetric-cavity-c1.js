@@ -1,0 +1,507 @@
+/* Axisymmetric Riabouchinsky disk cavity: C1 curved meridian, C2 spline vortex sheet,
+ * least-squares (oversampled Gauss) Neumann collocation.      Version 0.3.0-c1-research
+ *
+ * Independent accuracy repair of the continuous linear nodal vortex formulation
+ * (axisymmetric-cavity-nodal.js 0.2.1). Same physical model: unbounded steady
+ * incompressible potential flow past a sharp disk of radius R at x=0 with a
+ * Riabouchinsky image disk at x=L (L/R is the full separation), free surface from
+ * rim to image rim, interior at rest. Same unknowns: nodal normal displacements of a
+ * reference curve carrying the sharp-edge exponent, nodal vortex strengths gamma,
+ * and one cavity speed qc; same dynamic rows -gamma_k = qc at cavity nodes 0..Nc/2;
+ * same node placement; same front-disk drag normalization CD = 2 int_0^1 (qc^2-V^2) r dr.
+ *
+ * Why the polygon version cannot pass a direct-field audit sampled near nodes: on a
+ * C0 polygon with nodal strengths the exact velocity of the sheet is logarithmically
+ * singular at every vertex, with amplitude gamma*dtheta/(2 pi) in the tangential
+ * component (dtheta = turning angle) and O(dtheta^2) in the normal component, so a
+ * sample at 2% of a panel is worse than one at 10% at every resolution.
+ *
+ * Repair implemented here:
+ *  - geometry: the cavity meridian between nodes is a C1 cubic Hermite curve in the
+ *    graded parameter tau (node k at tau = pi k/Nc; cosine clustering in reference
+ *    arclength), slopes from fourth-order centered differences with the exact rim
+ *    parities x odd / r even in tau; the two rim panels use the exact parity form
+ *    x = B w^3 + E w^5, r - R = A w^2 + C w^4 (w from the rim), so the free surface leaves
+ *    the rim tangent to the face with x ~ (r-R)^(3/2) and no kink exists anywhere; in
+ *    tau the sharp-edge curvature singularity is analytic. The faces are exact.
+ *  - density: C2 cubic spline in the piece parameter (phi on the faces with r = sin phi,
+ *    tau on the free surface) through the same nodal gamma values, with end conditions
+ *    exact for the local edge solution: gamma odd at the stagnation axis (natural), free
+ *    (not-a-knot) at the rim on the wetted face, zero slope at the rim and the mid-plane
+ *    on the free surface.
+ *  - kernels: elliptic-integral ring kernels; near and self panels subtract the planar
+ *    kernel on the tangent line through the nearest point, parametrized by the TRUE
+ *    arclength of the curve (so only curvature terms remain), with a cubic density proxy
+ *    matching value and slope at the foot (analytic principal value and side jump);
+ *    the ring-minus-planar remainder is evaluated without cancellation (rationalized
+ *    sqrt(D)-S, DLMF 19.12 expansion of E-1); position differences are evaluated by
+ *    exact algebraic factorization; quadrature nodes cluster as u^3 toward the foot.
+ *  - Neumann condition: weighted least squares at mColl Gauss points per panel with
+ *    meridian arclength weights. Minimizing the L2 norm of the normal velocity for the
+ *    invertible Cauchy-type sheet operator is a stable variational statement; mColl = 1
+ *    reproduces midpoint collocation on the curved sheet.
+ * Nodal -gamma is the reconstructed trace. The direct exterior field is evaluated
+ * independently (auditField, directDrag) and is never relabelled. Thresholds 0.01 U
+ * and 0.02 Cp are unchanged and applied to the nine-fraction sample set
+ * 0.02 ... 0.98 of every panel, both rims included. Not an experimentally validated
+ * cavitation solver. Verification: validation/c1-cavity-verify.cjs.
+ */
+(function(root,factory){const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;else root.CurvedVortexCavity=api;})(typeof globalThis!=='undefined'?globalThis:this,function(){
+'use strict';
+const PI=Math.PI,TWO_PI=2*Math.PI,GL=new Map(),VERSION='0.3.0-c1-research';let CLP=3;   // clustering exponent z = zs + span u^CLP toward the foot (u^3: endpoint log behaves as u^2 log u)
+const dot=(a,b)=>a[0]*b[0]+a[1]*b[1],norm=a=>Math.hypot(a[0],a[1]);
+const maxabs=a=>{let m=0;for(const v of a)m=Math.max(m,Math.abs(v));return m;};
+
+/* ------------------------------------------------------------------ quadrature */
+function gauss(n){
+ if(GL.has(n))return GL.get(n);
+ const x=new Float64Array(n),w=new Float64Array(n);
+ for(let i=0;i<Math.ceil(n/2);i++){
+  let z=Math.cos(PI*(i+.75)/(n+.5)),pp=1;
+  for(let k=0;k<100;k++){let p=1,p0=0;for(let j=1;j<=n;j++){const p1=p0;p0=p;p=((2*j-1)*z*p0-(j-1)*p1)/j;}pp=n*(z*p-p0)/(z*z-1);const dz=p/pp;z-=dz;if(Math.abs(dz)<1e-16)break;}
+  x[i]=-z;x[n-1-i]=z;w[i]=w[n-1-i]=2/((1-z*z)*pp*pp);
+ }
+ const out={x,w};GL.set(n,out);return out;
+}
+
+/* ------------------------------------------------------------------ elliptic integrals */
+/* K(m), E(m) with q = 1 - m = B/D, by the arithmetic-geometric mean. */
+function KE(q){
+ q=Math.max(1e-300,Math.min(1,q));
+ let a=1,b=Math.sqrt(q),sum=(1-q)/2,p=1;
+ for(let k=0;k<60;k++){const c=(a-b)/2;sum+=p*c*c;const aa=(a+b)/2;b=Math.sqrt(a*b);a=aa;p*=2;if(Math.abs(c)<1e-17*a)break;}
+ const K=PI/(2*a);return[K,K*(1-sum)];
+}
+/* E - 1 without cancellation: DLMF 19.12 expansion for small q (checked against mpmath:
+ * relative error 1e-13 at q = 2e-3 with four terms). */
+function Em1(q,E){
+ if(q<2e-3){const Lg=Math.log(4/Math.sqrt(q));return q*(.5*(Lg-.5)+q*(3/16*(Lg-13/12)+q*(15/128*(Lg-1.2)+q*175/2048*(Lg-1051/840))));}
+ return E-1;
+}
+
+/* ------------------------------------------------------------------ ring kernels */
+/* Velocity at (x,r) of a unit vortex ring at (xs,rs): unit circulation per unit meridian
+ * length, counter-clockwise in the (x,r) half plane. */
+function ringKernel(x,r,xs,rs){
+ const dx=x-xs;
+ if(r<=0)return[rs*rs/(2*Math.pow(dx*dx+rs*rs,1.5)),0];
+ const D=dx*dx+(r+rs)**2,B=dx*dx+(r-rs)**2;
+ if(!(B>0))throw Error('Ring evaluation lies on the singular ring.');
+ const[K,E]=KE(B/D),sd=Math.sqrt(D);
+ return[(K+(rs*rs-r*r-dx*dx)*E/B)/(TWO_PI*sd),dx*(-K+(rs*rs+r*r+dx*dx)*E/B)/(TWO_PI*r*sd)];
+}
+/* ring kernel minus the planar point-vortex kernel (-dr, dx)/(2 pi rho^2), without
+ * cancellation of the 1/rho parts (only log(rho)/r and bounded terms remain). */
+function ringMinusPlanar(x,r,xs,rs,dx,dr){
+ if(dx===undefined){dx=x-xs;dr=r-rs;}
+ const B=dx*dx+dr*dr,S=r+rs,D=dx*dx+S*S,q=B/D;
+ const[K,E]=KE(q),sd=Math.sqrt(D),em1=Em1(q,E);
+ const sdmS=dx*dx/(sd+S);                       // sqrt(D) - S, rationalized
+ const oneMinusSEoverSd=-em1+E*sdmS/sd;        // 1 - S E/sqrt(D)
+ const ux=(K/sd-dx*dx*E/(B*sd)+dr/B*oneMinusSEoverSd)/TWO_PI;
+ const g=sd/r-2*rs/sd,h=(-rs*dr+dx*dx*(sd+rs)/(sd+S))/(r*sd);   // (sd/r - 2 rs/sd) E - 1 = g (E-1) + h
+ const ur=dx/TWO_PI*(-K/(r*sd)+(g*em1+h)/B);
+ return[ux,ur];
+}
+/* planar point vortex at Q evaluated at P */
+function planarKernel(P,Q){const dx=P[0]-Q[0],dr=P[1]-Q[1],rho2=dx*dx+dr*dr;return[-dr/(TWO_PI*rho2),dx/(TWO_PI*rho2)];}
+function planarKernelD(dx,dr){const rho2=dx*dx+dr*dr;return[-dr/(TWO_PI*rho2),dx/(TWO_PI*rho2)];}
+
+/* ------------------------------------------------------------------ planar straight segment, cubic Hermite density */
+/* Segment of length L; field point at local (X along, Y along the left normal). Returns the
+ * local velocity [u along, v normal] for the four cubic Hermite basis functions of
+ * zeta = xi/L. side = +1 selects the left limit for points on the segment, -1 the right. */
+const HERM=[[1,0,-3,2],[0,1,-2,1],[0,0,3,-2],[0,0,-1,1]];   // zeta^0..3 coefficients of h00,h10,h01,h11
+function planarHermite(X,Y,L,side){
+ const on=Math.abs(Y)<=1e-12*L&&X>0&&X<L;if(on)Y=0;
+ let beta=Math.atan2(Y*L,X*(X-L)+Y*Y);if(on)beta=side*PI;
+ const I=[.5*Math.log(Math.max(X*X+Y*Y,1e-300)/Math.max((X-L)**2+Y*Y,1e-300))],J=[beta];
+ let Lm=1;
+ for(let m=1;m<=3;m++){Lm*=L;I.push(X*I[m-1]-Lm/m+Y*J[m-1]);J.push(X*J[m-1]-Y*I[m-1]);}
+ const P=[I[0],I[1]/L,I[2]/(L*L),I[3]/(L*L*L)],Q=[J[0],J[1]/L,J[2]/(L*L),J[3]/(L*L*L)];
+ return HERM.map(c=>{let u=0,v=0;for(let m=0;m<4;m++){u-=c[m]*Q[m];v+=c[m]*P[m];}return[u/TWO_PI,v/TWO_PI];});
+}
+
+/* ------------------------------------------------------------------ Hermite helpers */
+function H(z,out){const z2=z*z,z3=z2*z;out[0]=1-3*z2+2*z3;out[1]=z-2*z2+z3;out[2]=3*z2-2*z3;out[3]=-z2+z3;return out;}
+function dH(z,out){const z2=z*z;out[0]=-6*z+6*z2;out[1]=1-4*z+3*z2;out[2]=6*z-6*z2;out[3]=-2*z+3*z2;return out;}
+/* fourth-order centered slope (per unit index) on data with an extension rule */
+function slopes4(get,n){const m=[];for(let k=0;k<=n;k++){const a=get(k-2),b=get(k-1),c=get(k+1),d=get(k+2);m.push([(a[0]-8*b[0]+8*c[0]-d[0])/12,(a[1]-8*b[1]+8*c[1]-d[1])/12]);}return m;}
+
+/* ------------------------------------------------------------------ dense linear algebra */
+function solveMulti(A,R){
+ const n=A.length,M=A.map((r,i)=>Float64Array.from([...r,...R[i]])),w=M[0].length;
+ for(let k=0;k<n;k++){let p=k;for(let i=k+1;i<n;i++)if(Math.abs(M[i][k])>Math.abs(M[p][k]))p=i;[M[k],M[p]]=[M[p],M[k]];
+  const pv=M[k][k];if(!(Math.abs(pv)>1e-14)||!Number.isFinite(pv))throw Error('Singular or non-finite matrix.');
+  for(let i=k+1;i<n;i++){const f=M[i][k]/pv;if(f===0)continue;for(let j=k;j<w;j++)M[i][j]-=f*M[k][j];}}
+ const X=Array.from({length:n},()=>new Float64Array(w-n));
+ for(let c=0;c<w-n;c++)for(let i=n-1;i>=0;i--){let y=M[i][n+c];for(let j=i+1;j<n;j++)y-=M[i][j]*X[j][c];X[i][c]=y/M[i][i];}
+ return X;
+}
+function solveLinear(A,b){const x=solveMulti(A,b.map(v=>[v])).map(r=>r[0]);if(!x.every(Number.isFinite))throw Error('Non-finite linear solution.');return x;}
+/* Householder QR least squares: minimize ||sqrt(W)(F x - b)||. Returns x and R (F^T W F = R^T R). */
+function lsqr(F,b,w){
+ const m=F.length,n=F[0].length,A=F.map((r,i)=>{const s=Math.sqrt(w[i]);return Float64Array.from(r,v=>v*s);}),y=Float64Array.from(b,(v,i)=>v*Math.sqrt(w[i]));
+ for(let k=0;k<n;k++){
+  let nrm=0;for(let i=k;i<m;i++)nrm+=A[i][k]*A[i][k];nrm=Math.sqrt(nrm);if(!(nrm>0))throw Error('Rank-deficient least-squares system.');
+  const alpha=A[k][k]>0?-nrm:nrm;A[k][k]-=alpha;let vn=0;for(let i=k;i<m;i++)vn+=A[i][k]*A[i][k];const beta=2/vn;
+  for(let j=k+1;j<n;j++){let sd=0;for(let i=k;i<m;i++)sd+=A[i][k]*A[i][j];sd*=beta;if(sd!==0)for(let i=k;i<m;i++)A[i][j]-=sd*A[i][k];}
+  let sd=0;for(let i=k;i<m;i++)sd+=A[i][k]*y[i];sd*=beta;for(let i=k;i<m;i++)y[i]-=sd*A[i][k];
+  A[k][k]=alpha;
+ }
+ const x=new Float64Array(n);for(let i=n-1;i>=0;i--){let v=y[i];for(let j=i+1;j<n;j++)v-=A[i][j]*x[j];x[i]=v/A[i][i];}
+ if(!x.every(Number.isFinite))throw Error('Non-finite least-squares solution.');
+ const R=Array.from({length:n},(_,i)=>{const r=new Float64Array(n);for(let j=i;j<n;j++)r[j]=A[i][j];return r;});
+ return{x:Array.from(x),R};
+}
+function solveNormal(R,rhs){   // (R^T R) x = rhs
+ const n=rhs.length,y=new Float64Array(n);
+ for(let i=0;i<n;i++){let v=rhs[i];for(let j=0;j<i;j++)v-=R[j][i]*y[j];y[i]=v/R[i][i];}
+ const x=new Float64Array(n);for(let i=n-1;i>=0;i--){let v=y[i];for(let j=i+1;j<n;j++)v-=R[i][j]*x[j];x[i]=v/R[i][i];}
+ return x;
+}
+/* D[k][g] = d(slope at node k)/d(f_g) for a cubic spline on nodes 0..n (unit spacing) with end
+ * conditions 'natural' (f''=0) | 'clamped' (f'=0) | 'notaknot'. */
+function splineSlopeOperator(n,left,right){
+ const M=Array.from({length:n+1},()=>new Float64Array(n+1)),Rhs=Array.from({length:n+1},()=>new Float64Array(n+1));
+ for(let k=1;k<n;k++){M[k][k-1]=1;M[k][k]=4;M[k][k+1]=1;Rhs[k][k+1]=3;Rhs[k][k-1]=-3;}
+ if(left==='natural'){M[0][0]=2;M[0][1]=1;Rhs[0][1]=3;Rhs[0][0]=-3;}
+ else if(left==='clamped'){M[0][0]=1;}
+ else{M[0][0]=1;M[0][2]=-1;Rhs[0][0]=-2;Rhs[0][1]=4;Rhs[0][2]=-2;}            // m0 = m2 - 2 (f0 - 2 f1 + f2)
+ if(right==='natural'){M[n][n-1]=1;M[n][n]=2;Rhs[n][n]=3;Rhs[n][n-1]=-3;}
+ else if(right==='clamped'){M[n][n]=1;}
+ else{M[n][n]=1;M[n][n-2]=-1;Rhs[n][n-2]=2;Rhs[n][n-1]=-4;Rhs[n][n]=2;}        // mn = m(n-2) + 2 (f(n-2) - 2 f(n-1) + fn)
+ return solveMulti(M,Rhs);
+}
+
+/* ------------------------------------------------------------------ reference curve and setup (geometry unchanged) */
+function interp(xs,ys,x){if(x<=xs[0])return ys[0];if(x>=xs.at(-1))return ys.at(-1);let lo=0,hi=xs.length-1;while(hi-lo>1){const k=(lo+hi)>>1;if(xs[k]<=x)lo=k;else hi=k;}const f=(x-xs[lo])/(xs[hi]-xs[lo]);return ys[lo]+f*(ys[hi]-ys[lo]);}
+function gradient(y,x){return y.map((v,i)=>{if(i===0)return(y[1]-v)/(x[1]-x[0]);if(i===y.length-1)return(v-y[i-1])/(x[i]-x[i-1]);const hs=x[i]-x[i-1],hd=x[i+1]-x[i];return-hd*y[i-1]/(hs*(hs+hd))+(hd-hs)*v/(hs*hd)+hs*y[i+1]/(hd*(hs+hd));});}
+function reference(L,Rm){const m=40001,x=new Array(m),r=new Array(m),s=new Array(m);s[0]=0;for(let i=0;i<m;i++){x[i]=L*(1-Math.cos(PI*i/(m-1)))/2;r[i]=1+(Rm-1)*Math.max(0,4*x[i]*(L-x[i])/(L*L))**(2/3);if(i)s[i]=s[i-1]+Math.hypot(x[i]-x[i-1],r[i]-r[i-1]);}let tx=gradient(x,s),tr=gradient(r,s);const nx=[],nr=[];for(let i=0;i<m;i++){const h=Math.hypot(tx[i],tr[i]);nx[i]=-tr[i]/h;nr[i]=tx[i]/h;}nx[0]=-1;nr[0]=0;nx[m-1]=1;nr[m-1]=0;return{x,r,u:s.map(v=>v/s.at(-1)),nx,nr};}
+
+function setup({L=8,Nc=32,Nf=Nc/2,Rm=1.95,nNear=24,nFar=12,mColl=3}={}){
+ for(const[k,v]of Object.entries({L,Nc,Nf,Rm,nNear,nFar,mColl}))if(typeof v!=='number'||!Number.isFinite(v))throw Error(k+' must be a finite number.');
+ if(L<2||L>24||Rm<=1||Rm>20)throw Error('Research domain: L/R 2–24 and reference radius ratio >1 through 20.');
+ for(const[k,v,lo,hi]of[['Nc',Nc,8,512],['Nf',Nf,4,256],['nNear',nNear,4,64],['nFar',nFar,4,32],['mColl',mColl,1,6]])if(!Number.isInteger(v)||v<lo||v>hi)throw Error(k+' outside supported integer range '+lo+'–'+hi+'.');
+ if(2*Nf+Nc>1024)throw Error('At most 1024 meridian panels in this research implementation.');
+ if(Nc%2!==0)throw Error('Even cavity panel count required.');
+ const ref=reference(L,Rm),cav=[],normal=[];
+ for(let k=0;k<=Nc;k++){const u=(1-Math.cos(PI*k/Nc))/2;cav.push([interp(ref.u,ref.x,u),interp(ref.u,ref.r,u)]);const n=[interp(ref.u,ref.nx,u),interp(ref.u,ref.nr,u)],h=norm(n);normal.push(n.map(v=>v/h));}
+ for(let k=0;k<=Nc/2;k++){const x=.5*(cav[k][0]+L-cav[Nc-k][0]),r=.5*(cav[k][1]+cav[Nc-k][1]);cav[k]=[x,r];cav[Nc-k]=[L-x,r];}
+ cav[0]=[0,1];cav[Nc]=[L,1];
+ for(let k=Nc/2+1;k<=Nc;k++)normal[k]=[-normal[Nc-k][0],normal[Nc-k][1]];normal[Nc/2]=[0,1];
+ const front=Array.from({length:Nf+1},(_,k)=>[0,Math.sin(.5*PI*k/Nf)]);
+ const N=2*Nf+Nc,h=Nf+Nc/2;
+ const Dface=splineSlopeOperator(Nf,'natural','notaknot');     // gamma odd at the axis; free at the rim
+ const Dcav=splineSlopeOperator(Nc/2,'clamped','clamped');      // gamma even at the rim and at the mid-plane
+ const s={L,Nc,Nf,N,h,Rm,nNear,nFar,mColl,cav,normal,front,Dface,Dcav,kind:'disk-cavity'};
+ const sr=slopeRows(s);s.srows=sr;s.fA=sr.rowA.map(r=>foldRow(s,r));s.fB=sr.rowB.map(r=>foldRow(s,r));
+ return s;
+}
+function nodesFrom(s,z){
+ const d=new Array(s.Nc+1).fill(0);for(let k=1;k<=s.Nc/2;k++)d[k]=z[k-1];for(let k=s.Nc/2;k<=s.Nc;k++)d[k]=d[s.Nc-k];
+ const cav=s.cav.map((p,k)=>[p[0]+d[k]*s.normal[k][0],p[1]+d[k]*s.normal[k][1]]);cav[0]=[0,1];cav[s.Nc]=[s.L,1];
+ const back=s.front.slice().reverse().map(p=>[s.L,p[1]]);
+ return[...s.front,...cav.slice(1,-1),...back];
+}
+function validGeometry(s,nodes){
+ const cav=nodes.slice(s.Nf,s.Nf+s.Nc+1),issues=[];
+ if(!nodes.every(p=>p.every(Number.isFinite)))issues.push('non-finite coordinates');
+ if(cav.some(p=>p[1]<1-1e-10))issues.push('cavity enters the disk-radius cylinder');
+ if(cav.some((p,k)=>k&&p[0]<=cav[k-1][0]))issues.push('cavity x is not strictly monotonic');
+ if(nodes.some((p,k)=>k&&Math.hypot(p[0]-nodes[k-1][0],p[1]-nodes[k-1][1])<=1e-13))issues.push('zero-length panel');
+ return{admissible:issues.length===0,issues};
+}
+
+/* ------------------------------------------------------------------ curved panels */
+/* panel: pos(z), der(z) for z in [0,1] (parameter-space derivative), chord data, graded end
+ * (-1 none; 0 or 1 = end where the parametrization speed vanishes, i.e. a rim). */
+function buildPanels(s,nodes){
+ const{Nf,Nc,N,L}=s,panels=[],dphi=.5*PI/Nf,cav=nodes.slice(Nf,Nf+Nc+1);
+ const ext=k=>k<0?[-cav[-k][0],cav[-k][1]]:k>Nc?[2*L-cav[2*Nc-k][0],cav[2*Nc-k][1]]:cav[k];
+ const m=slopes4(ext,Nc),hw=[0,0,0,0];
+ /* the parametrization speed vanishes at both rims (x odd, r even in tau): the slope is exactly
+  * zero there, which makes the departure direction 3(z1-z0)-m1, radial up to O(h^3), i.e. tangent
+  * to the face as the sharp-edge solution requires; a finite-difference estimate would instead
+  * give a tiny axial slope and hence a 90-degree kink. */
+ m[0]=[0,0];m[Nc]=[0,0];
+ for(let j=0;j<N;j++){
+  const a=nodes[j],b=nodes[j+1];let pos,der,graded=-1,piece;
+  let diff;
+  if(j<Nf){piece='front';const p0=j*dphi;pos=z=>[0,Math.sin(p0+z*dphi)];der=z=>[0,dphi*Math.cos(p0+z*dphi)];diff=(z,zs)=>[0,2*Math.cos(p0+.5*(z+zs)*dphi)*Math.sin(.5*(z-zs)*dphi)];if(j===Nf-1)graded=1;}
+  else if(j<Nf+Nc){piece='cavity';const k=j-Nf,za=cav[k],zb=cav[k+1],ma=m[k],mb=m[k+1];
+   if(k===0||k===Nc-1){
+    /* rim panels: exact parity representation in the graded parameter, x odd and r even about the
+     * rim (x = B w^3 + E w^5, r - 1 = A w^2 + C w^4, w measured from the rim), C1 with the neighbour.
+     * The departure is then exactly radial, i.e. tangent to the face, with x ~ (r-1)^(3/2). */
+    const front=k===0,xo=front?0:L,n1=front?zb:za,m1=front?mb:ma;
+    const x1=front?n1[0]:L-n1[0],mx=m1[0],r1=n1[1],mr=front?m1[1]:-m1[1];
+    const E=(mx-3*x1)/2,B=x1-E,Cc=(mr-2*(r1-1))/2,A=r1-1-Cc;
+    const px=w=>w*w*w*(B+E*w*w),dpx=w=>w*w*(3*B+5*E*w*w),pr=w=>1+w*w*(A+Cc*w*w),dpr=w=>w*(2*A+4*Cc*w*w);
+    const dpxw=(w,ws)=>(w-ws)*(B*(w*w+w*ws+ws*ws)+E*(w*w*w*w+w*w*w*ws+w*w*ws*ws+w*ws*ws*ws+ws*ws*ws*ws)),dprw=(w,ws)=>(w-ws)*(A*(w+ws)+Cc*(w*w*w+w*w*ws+w*ws*ws+ws*ws*ws));
+    if(front){pos=z=>[px(z),pr(z)];der=z=>[dpx(z),dpr(z)];diff=(z,zs)=>[dpxw(z,zs),dprw(z,zs)];graded=0;}
+    else{pos=z=>[L-px(1-z),pr(1-z)];der=z=>[dpx(1-z),-dpr(1-z)];diff=(z,zs)=>[-dpxw(1-z,1-zs),dprw(1-z,1-zs)];graded=1;}
+   }else{
+   pos=z=>{const w=H(z,hw);return[w[0]*za[0]+w[1]*ma[0]+w[2]*zb[0]+w[3]*mb[0],w[0]*za[1]+w[1]*ma[1]+w[2]*zb[1]+w[3]*mb[1]];};
+   der=z=>{const w=dH(z,hw);return[w[0]*za[0]+w[1]*ma[0]+w[2]*zb[0]+w[3]*mb[0],w[0]*za[1]+w[1]*ma[1]+w[2]*zb[1]+w[3]*mb[1]];};
+   /* monomial coefficients for the exact difference Q(z)-Q(zs) = (z-zs)[c1 + c2 (z+zs) + c3 (z^2+z zs+zs^2)] */
+   const c1=ma,c2=[-3*za[0]-2*ma[0]+3*zb[0]-mb[0],-3*za[1]-2*ma[1]+3*zb[1]-mb[1]],c3=[2*za[0]+ma[0]-2*zb[0]+mb[0],2*za[1]+ma[1]-2*zb[1]+mb[1]];
+   diff=(z,zs)=>{const d=z-zs,p=z+zs,q2=z*z+z*zs+zs*zs;return[d*(c1[0]+c2[0]*p+c3[0]*q2),d*(c1[1]+c2[1]*p+c3[1]*q2)];};
+   }}
+  else{piece='rear';const k=j-Nf-Nc,p0=(Nf-k)*dphi;pos=z=>[L,Math.sin(p0-z*dphi)];der=z=>[0,-dphi*Math.cos(p0-z*dphi)];diff=(z,zs)=>[0,-2*Math.cos(p0-.5*(z+zs)*dphi)*Math.sin(.5*(z-zs)*dphi)];if(k===0)graded=0;}
+  const d=[b[0]-a[0],b[1]-a[1]],Lc=norm(d),t=[d[0]/Lc,d[1]/Lc];
+  panels.push({index:j,piece,a,b,pos,der,diff,Lc,t,n:[-t[1],t[0]],graded});
+ }
+ return panels;
+}
+/* slope dependence rows (geometry independent): for panel j, slope at end a / b per unit node
+ * index in the direction of travel, as dense functions of the global nodal gamma. */
+function slopeRows(s){
+ const{Nf,Nc,N}=s,rowA=[],rowB=[];
+ const faceRow=(k,sign)=>{const r=new Float64Array(N+1);for(let g=0;g<=Nf;g++)r[g]=sign*s.Dface[k][g];return r;};
+ const cavRow=k=>{const r=new Float64Array(N+1);if(k<=Nc/2){for(let g=0;g<=Nc/2;g++)r[Nf+g]=s.Dcav[k][g];}else{for(let g=0;g<=Nc/2;g++)r[Nf+g]=-s.Dcav[Nc-k][g];}return r;};
+ for(let j=0;j<N;j++){
+  if(j<Nf){rowA.push(faceRow(j,1));rowB.push(faceRow(j+1,1));}
+  else if(j<Nf+Nc){const k=j-Nf;rowA.push(cavRow(k));rowB.push(cavRow(k+1));}
+  else{const k=j-Nf-Nc;rowA.push(faceRow(Nf-k,-1));rowB.push(faceRow(Nf-k-1,-1));}
+ }
+ return{rowA,rowB};
+}
+/* symmetric unknowns gamma_1..gamma_h; gamma_0 = 0, gamma_{N-k} = gamma_k */
+function foldIndex(s,g){const k=g<=s.h?g:s.N-g;return k-1;}
+function foldRow(s,row){const f=new Float64Array(s.h);for(let g=0;g<=s.N;g++){const k=foldIndex(s,g);if(k>=0)f[k]+=row[g];}return f;}
+function unfold(s,half){const gam=new Array(s.N+1).fill(0);for(let k=1;k<=s.h;k++)gam[k]=half[k-1];for(let k=s.h;k<=s.N;k++)gam[k]=gam[s.N-k];return gam;}
+
+/* ------------------------------------------------------------------ panel influence */
+/* Velocity at P induced by panel 'pan' carrying the four unit Hermite densities (per unit
+ * meridian length). where = null (off-surface point) or {panel, zeta, side} for a point on the
+ * surface. Returns [[ux,ur] for h00, h10, h01, h11]. */
+/* planar straight segment of length L, field point at local (X, Y): I_m = int xi^m (X-xi)/rho^2,
+ * J_m = int xi^m Y/rho^2 for m = 0..3 (velocity of density xi^m: u = -J_m/2pi, v = I_m/2pi). */
+function planarMonomials(X,Y,L,side){
+ const on=Math.abs(Y)<=1e-12*L&&X>0&&X<L;if(on)Y=0;
+ let beta=Math.atan2(Y*L,X*(X-L)+Y*Y);if(on)beta=side*PI;
+ const I=[.5*Math.log(Math.max(X*X+Y*Y,1e-300)/Math.max((X-L)**2+Y*Y,1e-300))],J=[beta];
+ let Lm=1;for(let m=1;m<=3;m++){Lm*=L;I.push(X*I[m-1]-Lm/m+Y*J[m-1]);J.push(X*J[m-1]-Y*I[m-1]);}
+ return{I,J};
+}
+/* parameter of the point of the curved panel nearest to P (Newton from the chord foot, clamped) */
+function nearestParameter(pan,P){
+ /* |P-Q(z)|^2 is not convex near a graded rim end, so bracket by sampling, refine by golden section,
+  * then polish by safeguarded Newton. */
+ const g=z=>{const Q=pan.pos(z);return(P[0]-Q[0])**2+(P[1]-Q[1])**2;};
+ const M=24;let kb=0,gb=Infinity;for(let k=0;k<=M;k++){const v=g(k/M);if(v<gb){gb=v;kb=k;}}
+ let lo=Math.max(0,(kb-1)/M),hi=Math.min(1,(kb+1)/M);
+ const gr=(Math.sqrt(5)-1)/2;let c=hi-gr*(hi-lo),d=lo+gr*(hi-lo),gc=g(c),gd=g(d);
+ for(let it=0;it<45;it++){if(gc<gd){hi=d;d=c;gd=gc;c=hi-gr*(hi-lo);gc=g(c);}else{lo=c;c=d;gc=gd;d=lo+gr*(hi-lo);gd=g(d);}}
+ let z=.5*(lo+hi);
+ for(let it=0;it<4;it++){const Q=pan.pos(z),dq=pan.der(z),e=[P[0]-Q[0],P[1]-Q[1]],zp=Math.min(1,z+1e-5),zm=Math.max(0,z-1e-5),dp=pan.der(zp),dm=pan.der(zm);
+  const Qpp=[(dp[0]-dm[0])/(zp-zm),(dp[1]-dm[1])/(zp-zm)],g1=-2*dot(e,dq),g2=2*(dot(dq,dq)-dot(e,Qpp));if(!(g2>0))break;
+  const zn=Math.max(0,Math.min(1,z-g1/g2));if(g(zn)>g(z))break;if(Math.abs(zn-z)<1e-15){z=zn;break;}z=zn;}
+ return z;
+}
+const GARC=6;
+/* signed arclength from za to zb along the panel (Gauss-6) */
+function arcBetween(pan,za,zb){const q=gauss(GARC);let a=0;for(let k=0;k<GARC;k++){const z=za+(zb-za)*(q.x[k]+1)/2;a+=(zb-za)/2*q.w[k]*norm(pan.der(z));}return a;}
+/* Velocity at P induced by panel 'pan' carrying the four unit Hermite densities (per unit meridian
+ * length). where = null (off-surface point) or {panel, zeta, side} for a point on the surface.
+ * Returns [[ux,ur] for h00, h10, h01, h11].
+ * Near and self panels subtract the planar kernel on the tangent line through the nearest point,
+ * parametrized by the TRUE arclength sigma(z) of the curve, so that the remainder contains only
+ * curvature terms (bounded) and the ring log; the density on the proxy is a cubic in sigma that
+ * matches value and slope at the foot (analytic), the difference is integrated numerically. */
+function influence(pan,P,where,{nNear=16,nFar=8}={}){
+ const out=[[0,0],[0,0],[0,0],[0,0]],hz=[0,0,0,0],self=!!(where&&where.panel===pan.index);
+ let zs,sub,side=1;
+ if(self){zs=where.zeta;sub=true;side=where.side||1;}
+ else{
+  const rel=[P[0]-pan.a[0],P[1]-pan.a[1]],X=dot(rel,pan.t),Y=dot(rel,pan.n),f=Math.max(0,Math.min(pan.Lc,X)),dist=Math.hypot(X-f,Y);
+  if(dist>=3*pan.Lc){
+   const q=gauss(nFar);
+   for(let k=0;k<nFar;k++){const z=.5*(q.x[k]+1),w=.5*q.w[k],Q=pan.pos(z),J=norm(pan.der(z)),kk=ringKernel(P[0],P[1],Q[0],Q[1]);H(z,hz);for(let b=0;b<4;b++){out[b][0]+=w*J*hz[b]*kk[0];out[b][1]+=w*J*hz[b]*kk[1];}}
+   return out;
+  }
+  zs=nearestParameter(pan,P);
+  sub=P[1]>0&&dist<.5*P[1]&&norm(pan.der(zs))>.1*pan.Lc;   // toward a vanishing-speed rim end the kernel is already regular
+ }
+ const q=gauss(nNear);
+ if(!sub){
+  for(const hi of[0,1]){const span=hi-zs;if(Math.abs(span)<1e-15)continue;
+   for(let k=0;k<nNear;k++){const u=.5*(q.x[k]+1),up=Math.pow(u,CLP-1),z=zs+span*up*u,w=Math.abs(span)*CLP*up*q.w[k]/2,Q=pan.pos(z),J=norm(pan.der(z)),kk=ringKernel(P[0],P[1],Q[0],Q[1]);H(z,hz);for(let b=0;b<4;b++){out[b][0]+=w*J*hz[b]*kk[0];out[b][1]+=w*J*hz[b]*kk[1];}}}
+  return out;
+ }
+ /* nodes, weights and arclengths on both sides of the foot */
+ const Qs=pan.pos(zs),dQ=pan.der(zs),Js=norm(dQ),tt=[dQ[0]/Js,dQ[1]/Js],nn=[-tt[1],tt[0]];
+ const zn=[],wn=[],sg=[];let sig0=0,sig1=0;
+ for(const hi of[0,1]){const span=hi-zs;if(Math.abs(span)<1e-15){if(hi===0)sig0=0;else sig1=0;continue;}
+  let zprev=zs,sprev=0;
+  for(let k=0;k<nNear;k++){const u=.5*(q.x[k]+1),up=Math.pow(u,CLP-1),z=zs+span*up*u;sprev+=arcBetween(pan,zprev,z);zprev=z;zn.push(z);wn.push(Math.abs(span)*CLP*up*q.w[k]/2);sg.push(sprev);}
+  const send=sprev+arcBetween(pan,zprev,hi);if(hi===0)sig0=send;else sig1=send;}
+ /* cubic density proxies in sigma: value and slope at the foot, values at two far points */
+ const Ltot=sig1-sig0,dh=[0,0,0,0];H(zs,hz);dH(zs,dh);
+ let sa=sig0,za=0,sb=sig1,zb=1;
+ if(Math.abs(sa)<.02*Ltot){za=.5;sa=zs<.5?arcBetween(pan,zs,.5):-arcBetween(pan,.5,zs);}
+ if(Math.abs(sb)<.02*Ltot){zb=.5;sb=zs<.5?arcBetween(pan,zs,.5):-arcBetween(pan,.5,zs);}
+ const ha=H(za,[0,0,0,0]),hb=H(zb,[0,0,0,0]),det=sa*sa*sb*sb*(sb-sa),coef=[];
+ for(let b=0;b<4;b++){const c0=hz[b],c1=dh[b]/Js,ra=ha[b]-c0-c1*sa,rb=hb[b]-c0-c1*sb;coef.push([c0,c1,(ra*sb*sb*sb-rb*sa*sa*sa)/det,(sa*sa*rb-sb*sb*ra)/det]);}
+ const gt=(c,s)=>c[0]+s*(c[1]+s*(c[2]+s*c[3]));
+ /* numerical remainder: [ring h_b - planar(T(sigma)) gtilde_b] J */
+ const e0=[P[0]-Qs[0],P[1]-Qs[1]],dfn=pan.diff||((z,zs)=>{const A=pan.pos(z),B=pan.pos(zs);return[A[0]-B[0],A[1]-B[1]];});
+ for(let i=0;i<zn.length;i++){const z=zn[i],w=wn[i],s=sg[i],Q=pan.pos(z),J=norm(pan.der(z)),dd=dfn(z,zs),dx=e0[0]-dd[0],dr=e0[1]-dd[1];H(z,hz);
+  const rm=ringMinusPlanar(P[0],P[1],Q[0],Q[1],dx,dr),pq=planarKernelD(dx,dr),pt=planarKernelD(e0[0]-tt[0]*s,e0[1]-tt[1]*s);
+  for(let b=0;b<4;b++){const g=gt(coef[b],s);out[b][0]+=w*J*((rm[0]+pq[0])*hz[b]-pt[0]*g);out[b][1]+=w*J*((rm[1]+pq[1])*hz[b]-pt[1]*g);}}
+ /* analytic planar integral of the cubic proxies over the straight segment [sig0, sig1] */
+ const e=[P[0]-Qs[0],P[1]-Qs[1]],X=dot(e,tt)-sig0,Y=self?0:dot(e,nn),{I,J:Jm}=planarMonomials(X,Y,Ltot,side);
+ for(let b=0;b<4;b++){const c=coef[b],s0=sig0,d0=c[0]+s0*(c[1]+s0*(c[2]+s0*c[3])),d1=c[1]+s0*(2*c[2]+3*s0*c[3]),d2=c[2]+3*c[3]*s0,d3=c[3];
+  const u=-(d0*Jm[0]+d1*Jm[1]+d2*Jm[2]+d3*Jm[3])/TWO_PI,v=(d0*I[0]+d1*I[1]+d2*I[2]+d3*I[3])/TWO_PI;
+  out[b][0]+=u*tt[0]+v*nn[0];out[b][1]+=u*tt[1]+v*nn[1];}
+ return out;
+}
+
+/* ------------------------------------------------------------------ density */
+function dot1(row,v){let a=0;for(let g=0;g<row.length;g++)a+=row[g]*v[g];return a;}
+function hermiteCoeffs(s,gam,j){return[gam[j],dot1(s.srows.rowA[j],gam),gam[j+1],dot1(s.srows.rowB[j],gam)];}
+function densityAt(coef,z){const w=H(z,[0,0,0,0]);return w[0]*coef[0]+w[1]*coef[1]+w[2]*coef[2]+w[3]*coef[3];}
+/* velocity (freestream + sheet) at points; wheres[i] = null or {panel, zeta, side} */
+function velocity(st,points,wheres,opts){
+ const{s,panels,gam}=st,o={nNear:opts?.nNear??32,nFar:opts?.nFar??12},coef=panels.map((_,j)=>hermiteCoeffs(s,gam,j));
+ return points.map((P,i)=>{const v=[1,0],wh=wheres?wheres[i]:null;for(let j=0;j<panels.length;j++){const inf=influence(panels[j],P,wh,o),c=coef[j];for(let b=0;b<4;b++){v[0]+=c[b]*inf[b][0];v[1]+=c[b]*inf[b][1];}}return v;});
+}
+
+/* ------------------------------------------------------------------ least-squares Neumann system */
+function collocation(s,panels){
+ const q=gauss(s.mColl),rows=[];
+ for(let j=0;j<s.h;j++)for(let k=0;k<s.mColl;k++){const z=.5*(q.x[k]+1),P=panels[j].pos(z),d=panels[j].der(z),J=norm(d),t=[d[0]/J,d[1]/J];rows.push({panel:j,zeta:z,P,n:[-t[1],t[0]],w:.5*q.w[k]*J});}
+ return rows;
+}
+/* C[4j+b] = normal-velocity influence at the row of Hermite basis b of panel j */
+function rowCoefficients(s,panels,row,C,list){
+ const wh={panel:row.panel,zeta:row.zeta,side:1};
+ for(const pan of(list||panels)){const inf=influence(pan,row.P,wh,s);for(let b=0;b<4;b++)C[4*pan.index+b]=dot(inf[b],row.n);}
+}
+/* folded system row from C (optionally restricted to a list of panel indices) */
+function assembleRow(s,C,F,list){
+ const js=list||null,n=js?js.length:s.N;
+ for(let q=0;q<n;q++){const j=js?js[q]:q,c0=C[4*j],c1=C[4*j+1],c2=C[4*j+2],c3=C[4*j+3];
+  const ka=foldIndex(s,j),kb=foldIndex(s,j+1);if(ka>=0)F[ka]+=c0;if(kb>=0)F[kb]+=c2;
+  if(c1!==0){const r=s.fA[j];for(let k=0;k<s.h;k++)F[k]+=c1*r[k];}
+  if(c3!==0){const r=s.fB[j];for(let k=0;k<s.h;k++)F[k]+=c3*r[k];}}
+ return F;
+}
+function neumann(s,nodes){
+ const panels=(s.buildPanels||buildPanels)(s,nodes),colloc=collocation(s,panels),C=colloc.map(()=>new Float64Array(4*s.N));
+ colloc.forEach((row,i)=>rowCoefficients(s,panels,row,C[i]));
+ const F=C.map(c=>assembleRow(s,c,new Float64Array(s.h))),b=colloc.map(r=>-r.n[0]),w=colloc.map(r=>r.w);
+ const{x,R}=lsqr(F,b,w);
+ return{s,nodes,panels,colloc,C,F,b,w,Rqr:R,half:x,gam:unfold(s,x)};
+}
+function collocationResidual(st){let mx=0,ss=0,sw=0;for(let i=0;i<st.colloc.length;i++){let v=-st.b[i];for(let k=0;k<st.half.length;k++)v+=st.F[i][k]*st.half[k];mx=Math.max(mx,Math.abs(v));ss+=st.w[i]*v*v;sw+=st.w[i];}return{max:mx,rms:Math.sqrt(ss/sw)};}
+function dynamic(s,gam,qc){return gam.slice(s.Nf,s.Nf+s.Nc/2+1).map(v=>-v-qc);}
+function residual(s,z){const st=neumann(s,nodesFrom(s,z));st.R=dynamic(s,st.gam,z.at(-1));return st;}
+
+/* perturbed Neumann solution by one least-squares correction step with the unperturbed
+ * factor (exact to first order in the perturbation) */
+function perturbedGamma(s,st,nodesNew,changed){
+ const panels=(s.buildPanels||buildPanels)(s,nodesNew),colloc=collocation(s,panels),ch=new Set(changed),chPanels=changed.map(j=>panels[j]);
+ const n=s.h,rhs=new Float64Array(n),Fi=new Float64Array(n),C=new Float64Array(4*s.N);
+ for(let i=0;i<colloc.length;i++){
+  const row=colloc[i];let bi,wi;
+  if(ch.has(row.panel)){C.fill(0);rowCoefficients(s,panels,row,C);Fi.fill(0);assembleRow(s,C,Fi);bi=-row.n[0];wi=row.w;}
+  else{C.fill(0);rowCoefficients(s,panels,row,C,chPanels);for(const j of changed)for(let bb=0;bb<4;bb++)C[4*j+bb]-=st.C[i][4*j+bb];
+   Fi.set(st.F[i]);assembleRow(s,C,Fi,changed);bi=st.b[i];wi=st.w[i];}
+  let r=bi;for(let k=0;k<n;k++)r-=Fi[k]*st.half[k];r*=wi;for(let k=0;k<n;k++)rhs[k]+=Fi[k]*r;
+ }
+ const d=solveNormal(st.Rqr,rhs);return unfold(s,st.half.map((v,k)=>v+d[k]));
+}
+
+/* ------------------------------------------------------------------ direct-field audit */
+function auditField(s,z,st,{fracs=[.02,.05,.1,.25,.5,.75,.9,.95,.98],nNear=32,nFar=12}={}){
+ const{panels,gam}=st,qc=z.at(-1),P=[],whE=[],whI=[],pan=[],ff=[];
+ for(let j=0;j<s.N;j++)for(const f of fracs){P.push(panels[j].pos(f));whE.push({panel:j,zeta:f,side:1});whI.push({panel:j,zeta:f,side:-1});pan.push(j);ff.push(f);}
+ const ve=velocity(st,P,whE,{nNear,nFar}),vi=velocity(st,P,whI,{nNear,nFar}),coef=panels.map((_,j)=>hermiteCoeffs(s,gam,j));
+ const vn=[],vt=[],density=[],cp=[],interior=[],jump=[];
+ for(let i=0;i<P.length;i++){const j=pan[i],d=panels[j].der(ff[i]),J=norm(d),t=[d[0]/J,d[1]/J],n=[-t[1],t[0]],gi=densityAt(coef[j],ff[i]);
+  vn.push(dot(ve[i],n));vt.push(dot(ve[i],t));density.push(-gi);interior.push(norm(vi[i]));jump.push(vt[i]-dot(vi[i],t)+gi);
+  if(j>=s.Nf&&j<s.Nf+s.Nc)cp.push(dot(ve[i],ve[i])-qc*qc);}
+ const q=gauss(8),QP=[],qw=[],qwh=[],qn=[];
+ for(let j=0;j<s.N;j++)for(let k=0;k<8;k++){const f=(q.x[k]+1)/2,p=panels[j].pos(f),d=panels[j].der(f),J=norm(d);QP.push(p);qwh.push({panel:j,zeta:f,side:1});qn.push([-d[1]/J,d[0]/J]);qw.push(q.w[k]/2*J*TWO_PI*p[1]);}
+ const qv=velocity(st,QP,qwh,{nNear,nFar});let flux=0,absoluteFlux=0,area=0;
+ for(let i=0;i<QP.length;i++){const un=dot(qv[i],qn[i]);flux+=qw[i]*un;absoluteFlux+=qw[i]*Math.abs(un);area+=qw[i];}
+ /* cumulative true arclength of the curved meridian at the samples */
+ const q16=gauss(16),arcOf=(j,f)=>{let a=0;for(let k=0;k<16;k++){const z=f*(q16.x[k]+1)/2;a+=f/2*q16.w[k]*norm(panels[j].der(z));}return a;},start=[0];
+ for(let j=0;j<s.N;j++)start.push(start[j]+arcOf(j,1));
+ const arclength=P.map((_,i)=>start[pan[i]]+arcOf(pan[i],ff[i]));
+ const fieldsFinite=[...vn,...vt,...density,...cp,...interior,...jump,flux,absoluteFlux,area].every(Number.isFinite);
+ return{fractions:fracs,allSamplesRetained:true,fieldsFinite,maxNormal_U:maxabs(vn),rmsNormal_U:Math.sqrt(vn.reduce((a,v)=>a+v*v,0)/vn.length),maxCavityDynamicCpResidual:maxabs(cp),maxTraceSpeedMismatch_U:maxabs(vt.map((v,i)=>v-density[i])),maxInteriorBoundarySpeed_U:Math.max(...interior),maxJumpError_U:maxabs(jump),surfaceFlux_U_R2:flux,meanAbsoluteNormal_U:absoluteFlux/area,profiles:{points:P,panel:pan,fraction:ff,arclength_R:arclength,normal_U:vn,tangent_U:vt,negativeGamma_U:density,interiorSpeed_U:interior,cavityCpPlusSigmaDefect:cp}};
+}
+/* front-disk drag from the directly evaluated exterior field: CD = 2 int_0^1 (qc^2 - |v|^2) r dr */
+function directDrag(s,z,st,{nNear=32,nFar=12,nq=8}={}){
+ const qc=z.at(-1),q=gauss(nq),P=[],wh=[],wt=[];
+ for(let j=0;j<s.Nf;j++)for(let k=0;k<nq;k++){const f=(q.x[k]+1)/2,p=st.panels[j].pos(f),d=st.panels[j].der(f);P.push(p);wh.push({panel:j,zeta:f,side:1});wt.push(q.w[k]/2*d[1]*p[1]);}
+ const v=velocity(st,P,wh,{nNear,nFar});let CD=0;for(let i=0;i<P.length;i++)CD+=wt[i]*2*(qc*qc-dot(v[i],v[i]));return CD;
+}
+function outputs(s,z,st){
+ const{nodes,gam}=st,qc=z.at(-1),q=gauss(6);let CD=0,vol=0;const face=[];
+ for(let j=0;j<=s.Nf;j++)face.push({r_R:nodes[j][1],speedTrace_U:-gam[j],CpTrace:1-gam[j]*gam[j]});
+ for(let k=0;k<s.Nf;k++){const coef=hermiteCoeffs(s,gam,k),pan=st.panels[k];for(let i=0;i<6;i++){const f=(q.x[i]+1)/2,p=pan.pos(f),d=pan.der(f),v=-densityAt(coef,f);CD+=q.w[i]/2*d[1]*2*(qc*qc-v*v)*p[1];}}
+ for(let k=0;k<s.Nc;k++){const pan=st.panels[s.Nf+k];for(let i=0;i<6;i++){const f=(q.x[i]+1)/2,p=pan.pos(f),d=pan.der(f);vol+=q.w[i]/2*PI*p[1]*p[1]*d[0];}}
+ const cav=nodes.slice(s.Nf,s.Nf+s.Nc+1);
+ return{L:s.L,Nf:s.Nf,Nc:s.Nc,N:s.N,mColl:s.mColl,nNear:s.nNear,nFar:s.nFar,sigma:qc*qc-1,qc,Rmax:cav[s.Nc/2][1],CD,volume:vol,maxDynamicResidual:maxabs(st.R),nodes,gamma:gam,face};
+}
+
+/* ------------------------------------------------------------------ Newton solve */
+async function solve(options={},hooks={}){
+ const s=setup(options),tol=options.tolerance??1e-10,maxit=options.maxIterations??20;
+ let z=options.initialState?Array.from(options.initialState):[...new Array(s.Nc/2).fill(0),1.14];
+ if(z.length!==s.Nc/2+1)throw Error('Initial state has the wrong size.');
+ if(typeof tol!=='number'||!Number.isFinite(tol)||tol<1e-13||tol>1e-6)throw Error('Nodal tolerance must be a finite number from 1e-13 through 1e-6.');
+ if(typeof maxit!=='number'||!Number.isInteger(maxit)||maxit<1||maxit>40)throw Error('Maximum iterations must be an integer 1–40.');
+ if(!z.every(Number.isFinite)||!(z.at(-1)>1))throw Error('Initial state must be finite, with cavity speed > freestream speed.');
+ const initialGeometry=validGeometry(s,nodesFrom(s,z));if(!initialGeometry.admissible)throw Error('Invalid initial cavity: '+initialGeometry.issues.join('; '));
+ const history=[],start=Date.now();let reason='iteration limit',cur;
+ const notify=p=>{if(hooks.isCancelled?.())throw Error('Cancelled');hooks.onProgress?.({...p,elapsedSeconds:(Date.now()-start)/1000});};
+ const yieldNow=hooks.yieldControl||(()=>new Promise(r=>setTimeout(r,0)));
+ for(let it=0;it<maxit;it++){
+  notify({stage:'normal system',iteration:it,iterations:maxit});
+  cur=residual(s,z);const nr=maxabs(cur.R);history.push(nr);
+  hooks.onCheckpoint?.({z:Array.from(z),residual:nr,iteration:it});
+  notify({stage:'nodal free-surface iteration',iteration:it,residual:nr,sigma:z.at(-1)**2-1});
+  if(nr<=tol){reason='nodal tolerance';break;}
+  const J=Array.from({length:z.length},()=>new Array(z.length).fill(0)),dz=1e-7;
+  for(let k=0;k<z.length-1;k++){
+   const zz=Array.from(z);zz[k]+=dz;const nn=nodesFrom(s,zz),kc=k+1,ch=new Set();
+   for(let d=-3;d<=2;d++){const p=kc+d,mm=s.Nc-1-p;if(p>=0&&p<s.Nc)ch.add(s.Nf+p);if(mm>=0&&mm<s.Nc)ch.add(s.Nf+mm);}
+   const g=perturbedGamma(s,cur,nn,[...ch].sort((a,b)=>a-b)),R=dynamic(s,g,zz.at(-1));
+   for(let i=0;i<R.length;i++)J[i][k]=(R[i]-cur.R[i])/dz;
+   notify({stage:'Newton shape Jacobian',iteration:it,column:k+1,columns:z.length-1});if(k%4===3)await yieldNow();
+  }
+  for(let i=0;i<J.length;i++)J[i][z.length-1]=-1;
+  const step=solveLinear(J,cur.R.map(v=>-v));let accepted=false;
+  for(let lam=1;lam>1e-3;lam*=.5){const trial=z.map((v,k)=>v+lam*step[k]),nn=nodesFrom(s,trial);if(!(trial.at(-1)>1)||!validGeometry(s,nn).admissible)continue;
+   const r=residual(s,trial);if(maxabs(r.R)<(1-1e-4*lam)*nr){z=trial;accepted=true;break;}}
+  if(!accepted){reason='line search stalled';break;}
+  await yieldNow();
+ }
+ cur=residual(s,z);const out=outputs(s,z,cur);
+ out.version=VERSION;out.method='C1 Hermite meridian in graded tau, C2 spline sheet, weighted least-squares Gauss collocation';
+ out.history=history;out.stopReason=reason;out.requestedNodalTolerance=tol;
+ out.geometry=validGeometry(s,cur.nodes);out.physicalBranch=out.geometry.admissible&&Number.isFinite(out.qc)&&out.qc>1&&Number.isFinite(out.sigma)&&out.sigma>0;
+ out.nodalConverged=out.physicalBranch&&Number.isFinite(out.maxDynamicResidual)&&out.maxDynamicResidual<=tol;
+ out.collocationResidual=collocationResidual(cur);out.solutionState=z;
+ out.accuracyStatus='Research result: nodal -gamma is the reconstructed trace; the direct exterior field is audited separately. No experimental validation.';
+ if(options.audit!==false){
+  notify({stage:'independent off-node field audit'});await yieldNow();
+  out.fieldAudit=auditField(s,z,cur,{fracs:options.auditFractions});out.fieldAudit.thresholds={maxNormal_U:.01,maxCavityDynamicCpResidual:.02};
+  out.fieldAudit.withinPriorOffgridThresholds=out.fieldAudit.fieldsFinite&&out.fieldAudit.maxNormal_U<=.01&&out.fieldAudit.maxCavityDynamicCpResidual<=.02;
+  out.CD_directField=directDrag(s,z,cur);
+ }
+ out.accuracyQualified=false;   // assigned only by the mesh-refinement gate in the verification script, never by one run
+ out.status=!out.physicalBranch?'rejected-geometry':!out.nodalConverged?'rejected-nodal-iteration':(out.fieldAudit&&out.fieldAudit.withinPriorOffgridThresholds?'nodal-converged-field-within-thresholds':'nodal-converged-field-unresolved');
+ out.seconds=(Date.now()-start)/1000;
+ return out;
+}
+/* state for a given solution vector (external audits) */
+function stateFor(options,z){const s=setup(options);return residual(s,z);}
+
+return{VERSION,setClustering:p=>{CLP=p;},solve,setup,stateFor,nodesFrom,validGeometry,buildPanels,slopeRows,influence,velocity,auditField,directDrag,outputs,collocationResidual,ringKernel,ringMinusPlanar,planarKernel,planarHermite,splineSlopeOperator,KE,Em1,gauss,lsqr,solveLinear,neumann,residual,foldRow,unfold,hermiteCoeffs,densityAt};
+});

@@ -1,0 +1,153 @@
+{
+  "status": "PASS_REVIEWED_GUARDS_AND_FRESH_PYTHON_PARITY",
+  "checks": [
+    {
+      "name": "between-node curved reversal rejected before iteration",
+      "passed": true,
+      "error": "Invalid initial cavity: curved cavity panel0 reverses its axial direction between nodes; curved cavity panel7 reverses its axial direction between nodes"
+    },
+    {
+      "name": "off-surface point falsely declared as trace",
+      "passed": true,
+      "error": "Declared boundary coordinates do not match the named panel parameter; off-surface points must not be declared as boundary traces."
+    },
+    {
+      "name": "invalid trace parameter",
+      "passed": true,
+      "error": "Declared traces require an existing panel, an interior parameter0<zeta<1 and side+1 or−1."
+    },
+    {
+      "name": "invalid trace side",
+      "passed": true,
+      "error": "Declared traces require an existing panel, an interior parameter0<zeta<1 and side+1 or−1."
+    },
+    {
+      "name": "nonexistent trace panel",
+      "passed": true,
+      "error": "Declared traces require an existing panel, an interior parameter0<zeta<1 and side+1 or−1."
+    },
+    {
+      "name": "trace length mismatch",
+      "passed": true,
+      "error": "Field points and declared trace arrays must have matching lengths."
+    },
+    {
+      "name": "nonfinite point",
+      "passed": true,
+      "error": "A field point must contain finite axial/radial coordinates with nonnegative radius."
+    },
+    {
+      "name": "invalid quadrature",
+      "passed": true,
+      "error": "nNear outside supported integer range 4–64."
+    },
+    {
+      "name": "invalid clustering 0",
+      "passed": true,
+      "error": "Clustering exponent must be an integer1–5."
+    },
+    {
+      "name": "invalid clustering NaN",
+      "passed": true,
+      "error": "Clustering exponent must be an integer1–5."
+    },
+    {
+      "name": "invalid clustering Infinity",
+      "passed": true,
+      "error": "Clustering exponent must be an integer1–5."
+    },
+    {
+      "name": "invalid clustering 3",
+      "passed": true,
+      "error": "Clustering exponent must be an integer1–5."
+    },
+    {
+      "name": "invalid clustering 1.5",
+      "passed": true,
+      "error": "Clustering exponent must be an integer1–5."
+    },
+    {
+      "name": "invalid clustering 6",
+      "passed": true,
+      "error": "Clustering exponent must be an integer1–5."
+    },
+    {
+      "name": "invalid audit fractions ",
+      "passed": true,
+      "error": "Audit fractions must be a nonempty array of finite numbers strictly between zero and one (at most256)."
+    },
+    {
+      "name": "invalid audit fractions 0",
+      "passed": true,
+      "error": "Audit fractions must be a nonempty array of finite numbers strictly between zero and one (at most256)."
+    },
+    {
+      "name": "invalid audit fractions 1",
+      "passed": true,
+      "error": "Audit fractions must be a nonempty array of finite numbers strictly between zero and one (at most256)."
+    },
+    {
+      "name": "invalid audit fractions NaN",
+      "passed": true,
+      "error": "Audit fractions must be a nonempty array of finite numbers strictly between zero and one (at most256)."
+    },
+    {
+      "name": "invalid audit fractions 0.5,0.5",
+      "passed": true,
+      "error": "Duplicate audit fractions are not supported."
+    },
+    {
+      "name": "invalid audit fractions all",
+      "passed": true,
+      "error": "Audit fractions must be a nonempty array of finite numbers strictly between zero and one (at most256)."
+    },
+    {
+      "name": "optional audit cannot remove mandatory samples",
+      "passed": true
+    },
+    {
+      "name": "extreme finite seed cannot evade geometry checks",
+      "passed": true,
+      "error": "Invalid initial cavity: cavity x is not strictly monotonic"
+    },
+    {
+      "name": "fresh Nc32 physics bit-identical after guard-only changes",
+      "passed": true
+    },
+    {
+      "name": "all fifteen .001.. .999 fractions unchanged, including both rims",
+      "passed": true,
+      "normal": 0.0006222379381280174,
+      "Cp": 0.0009844564672589762,
+      "samples": 1920
+    }
+  ],
+  "pythonParity": [
+    {
+      "Nc": 32,
+      "delta": {
+        "sigma": 3.9968028886505635e-15,
+        "Rmax": -1.1102230246251565e-14,
+        "CD": 5.995204332975845e-15
+      },
+      "maxGammaDifference": 4.2299497238218464e-14,
+      "maxNodeDifference": 6.967531851904307e-14,
+      "passed": true
+    },
+    {
+      "Nc": 64,
+      "delta": {
+        "sigma": 7.105427357601002e-15,
+        "Rmax": -1.3322676295501878e-15,
+        "CD": 1.2434497875801753e-14
+      },
+      "maxGammaDifference": 6.838973831690964e-14,
+      "maxNodeDifference": 6.837279450297678e-14,
+      "passed": true
+    }
+  ],
+  "sourceSha256": "9bfb67177b372128a26c0893f7df35fc3bfadae5ea6e30a2770d6b71905bfc7c",
+  "originalSha256": "fa5474176a7e3466b154536c8fd85b10c8acf41cf90908aae56fabf477fb01ce",
+  "experimentalValidation": "NOT_PERFORMED",
+  "accuracyScope": "Numerical research controls only; arbitrary cases retain separate per-case field screens."
+}

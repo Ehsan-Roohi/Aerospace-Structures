@@ -1,0 +1,182 @@
+{
+  "date": "2026-10-31",
+  "experimentalValidation": "NOT_PERFORMED",
+  "files": {
+    "../README.md": {
+      "bytes": 13047,
+      "sha256": "50c646a5da7e1d94d6cbcf8c94c8b24e61b0c3ecf4fafa30a5d5b3671739196a"
+    },
+    "../axisymmetric-cavity-c1.js": {
+      "bytes": 44907,
+      "sha256": "9bfb67177b372128a26c0893f7df35fc3bfadae5ea6e30a2770d6b71905bfc7c"
+    },
+    "../axisymmetric-cavity-app.js": {
+      "bytes": 14673,
+      "sha256": "7791f09d419de330f64f95d446fb4f3c5bb99ba41bde680584ee9f44305dbeb2"
+    },
+    "../axisymmetric-cavity-worker.js": {
+      "bytes": 363,
+      "sha256": "f5e96c1e76c6402003d32943ecfe5c195a34758a4b1a36e1e2bd41135c7e7599"
+    },
+    "../axisymmetric-cavity.html": {
+      "bytes": 8994,
+      "sha256": "1fc4ff4c3a3d89b6cb2dcf80cefff7c860f567d839fef667d98632f75be9598a"
+    },
+    "index.html": {
+      "bytes": 29835,
+      "sha256": "6005da95e3f20efd2efb4ce1a73ee50edba8cb2a0be2126c849b96d2371798ba"
+    },
+    "c1-cavity.html": {
+      "bytes": 8431,
+      "sha256": "f3c62a4925b89e264cdb0d8c3c6485041c8fd4f25db7cc56c782a3d120aaa6c0"
+    },
+    "c1-cavity-method.md": {
+      "bytes": 14956,
+      "sha256": "e860242ad25ee5adbd01c9ddcbc5727b99a80c4eee61e37d6b12dfc9e3656e3a"
+    },
+    "c1-cavity-verify.cjs": {
+      "bytes": 19719,
+      "sha256": "913009af28ede52fc6931e991cef53469bad92e8921238469512a79ec6f123f8"
+    },
+    "c1-cavity-mesh-study.json": {
+      "bytes": 1394703,
+      "sha256": "0f52c62a939c9c2a908aaf83c12486278613b6da3cdd9139ba02100d69846e2e"
+    },
+    "c1-cavity-verification.json": {
+      "bytes": 16238,
+      "sha256": "179643abf9416d3cf114a30b895d4601bb6bd85ca032bccd372d9950d1b9870c"
+    },
+    "c1-reviewed-verify.cjs": {
+      "bytes": 4799,
+      "sha256": "76e1ea61c7f7a9b8cf3f70be8888a69c7295f87d0fe2eeb4c474412c9044dd22"
+    },
+    "c1-reviewed-verification.json": {
+      "bytes": 5114,
+      "sha256": "56b9b2b2d10017120ce43926e916a2103c6ec4e477be9df45f7cba32e2637348"
+    },
+    "c1-release-review.json": {
+      "bytes": 870,
+      "sha256": "e2ba381741089b4c73b8d745f11a04e2bcd2c13810d0cd8e002ef6301190159e"
+    },
+    "c1-evidence-verify.cjs": {
+      "bytes": 2000,
+      "sha256": "3053bb2c01c02e194c31d40a8787f30feef8e9acdd3c44b34f5471fcbd6494ff"
+    },
+    "curved-cavity-ui-smoke.cjs": {
+      "bytes": 11381,
+      "sha256": "c18a2e8bdfb4d1727135d4a190cab89336834e1c601839d87915158fc22e9dde"
+    },
+    "curved-cavity-ui-smoke.json": {
+      "bytes": 3067,
+      "sha256": "6021758a38fb864e88d1b8652acc2d4d913a29fb334b39f75f51515d33c02950"
+    },
+    "plot-c1-cavity.py": {
+      "bytes": 11648,
+      "sha256": "5918bdb850d8aa446752a25adb60b453344307d1b5ad915ab73cd00f81640070"
+    },
+    "plot-c1-brennen.py": {
+      "bytes": 3725,
+      "sha256": "10cbc257890d792539c0d8aa4daa6c72157e999552b6ec524503d841c89412e3"
+    },
+    "c1-cavity-profiles.png": {
+      "bytes": 548901,
+      "sha256": "cbfc06213de3f9beb023011e79fb70a6ce9ba38f8948dca7e16819afe9ad1924"
+    },
+    "c1-cavity-profiles.svg": {
+      "bytes": 3086437,
+      "sha256": "c2043acfe6c30f662fb773255c0b4f707c915bbe8b312426d250582ee190875a"
+    },
+    "c1-cavity-mesh-study.png": {
+      "bytes": 368913,
+      "sha256": "65be4f3115ae09c5d8ba05b42bdd5686824eaaa4749243232500ca54f281234d"
+    },
+    "c1-cavity-mesh-study.svg": {
+      "bytes": 207348,
+      "sha256": "9edc8687ceecf2aa4a4d81f2463eea343680d7f0ec048b2655d910e87bb0d015"
+    },
+    "c1-cavity-geometry.png": {
+      "bytes": 133890,
+      "sha256": "2e51c26534d1e5c8b488a0134107b7e3a823ea60961f25dfd4f420a6b624dd48"
+    },
+    "c1-cavity-geometry.svg": {
+      "bytes": 119093,
+      "sha256": "cc3d990e0d4eaca0b440f228891089ef7d7daf92ed9232389b46446f323a7cac"
+    },
+    "c1-brennen-cp.png": {
+      "bytes": 174921,
+      "sha256": "4c58ccbc2bb005247183d1de0f9932a5c62318637361693ed341a06ce88f4d8c"
+    },
+    "c1-brennen-cp.svg": {
+      "bytes": 150730,
+      "sha256": "463d859594ffc54e0a33cf4c63648d19ffd464541ed0769d22218f5f1e3aa7f6"
+    },
+    "reference/c1-cavity/domain-controls.json": {
+      "bytes": 3741,
+      "sha256": "43a5104ced0f84a71a32643089bb1ba58042ea2992c8a46e60347eab03c7b782"
+    },
+    "reference/c1-cavity/py-c1-Nc32.json": {
+      "bytes": 66745,
+      "sha256": "38311888ac3a3657e55154f8634a4929ef23d2415b5537251b00f7a0611c1c11"
+    },
+    "reference/c1-cavity/py-c1-Nc64.json": {
+      "bytes": 133208,
+      "sha256": "254e90b4666183597cfe4da4391fd3d723c8d67eeeebce03b0a321711ad05f18"
+    },
+    "reference/c1-cavity/reachable-geometry-guard.json": {
+      "bytes": 1556,
+      "sha256": "e721e42b11657daf50e9119227e41e3069c10b965fc0050d0e4aad226ec2a174"
+    },
+    "reference/c1-cavity/reviewed-copy-provenance.json": {
+      "bytes": 229,
+      "sha256": "0195e56ad9af55ff94be44fd8e8e307e1c1212ba9fcd3846f3d20b5a8d9df341"
+    },
+    "reference/c1-cavity/reviewed-guard-verification.json": {
+      "bytes": 5095,
+      "sha256": "dc4bd9c3029322944518ceae7c8281000c04ea45d5a6b3544d9a56fcc87fb8eb"
+    },
+    "reference/c1-cavity/original/axisymmetric-cavity-c1.js": {
+      "bytes": 38793,
+      "sha256": "fa5474176a7e3466b154536c8fd85b10c8acf41cf90908aae56fabf477fb01ce"
+    },
+    "reference/c1-cavity/python/axi_c1.py": {
+      "bytes": 22547,
+      "sha256": "ff2f2cc02fce17c8d958f5e373695554b77f43aae2868c8e18468f365ac7ad42"
+    },
+    "reference/c1-brennen/comparison-summary.json": {
+      "bytes": 2054,
+      "sha256": "8c70c36f8edfde16866f12915fd82674ea3fa7d01f147b32cd80e6692abaf342"
+    },
+    "reference/c1-brennen/matched-disk-index.json": {
+      "bytes": 350,
+      "sha256": "70dd93f0d10d66ad1017a5b767809972c89763875674180166566be2fc1e7f21"
+    },
+    "reference/c1-brennen/run-matched-disk.cjs": {
+      "bytes": 3129,
+      "sha256": "006497129fafb244bc24ca634a965c11f27ac7394fce74741698524c65bc87b4"
+    },
+    "reference/c1-brennen/sigma-0.3-Nc128.json": {
+      "bytes": 385408,
+      "sha256": "71608f23186a03decc169a5302bf32adef1e350318095a9c52aefa9d04b78705"
+    },
+    "reference/c1-brennen/sigma-0.3-Nc32.json": {
+      "bytes": 100721,
+      "sha256": "24a6fe879ea7d1792a88fd9fc8c12768361a7e517eeb3634ca37974e3cbca7c9"
+    },
+    "reference/c1-brennen/sigma-0.3-Nc64.json": {
+      "bytes": 194961,
+      "sha256": "89af157a5cc717bfb8ffe2c6b7d4397839c6128255e1177666570cd49a40a857"
+    },
+    "reference/c1-brennen/sigma-0.7-Nc128.json": {
+      "bytes": 386071,
+      "sha256": "76d04100df4da0891fe4e943026b1557de075325aed7cbb164cb5f40e86bc2c7"
+    },
+    "reference/c1-brennen/sigma-0.7-Nc32.json": {
+      "bytes": 100788,
+      "sha256": "05e666cbcfb0bc570f5163a249e24231520e95fb9eec78a6d589517e1e77c343"
+    },
+    "reference/c1-brennen/sigma-0.7-Nc64.json": {
+      "bytes": 196644,
+      "sha256": "fa0a8b657654ae3cb4ed432544328ff3b6beaa045719832ca6a51a3bac2946e6"
+    }
+  }
+}

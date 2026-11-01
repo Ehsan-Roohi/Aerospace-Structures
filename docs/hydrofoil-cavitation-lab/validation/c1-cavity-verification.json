@@ -1,0 +1,647 @@
+{
+ "date": "2026-11-01",
+ "version": "0.3.0-c1-reviewed-guards",
+ "status": "PASS_NUMERICAL_VERIFICATION_ONLY",
+ "scope": "Exact-solution, brute-force, limit, cross-implementation and mesh-refinement verification of the C1 curved-sheet solver. No experimental validation. Field accuracy gates are the unchanged 0.01 U and 0.02 Cp limits on the nine-fraction grid including both rims.",
+ "mode": "full",
+ "checks": [
+  {
+   "name": "Curved-panel influence agrees with brute-force 3-D Biot-Savart (8 configurations incl. rims and near-node)",
+   "passed": true,
+   "maxRelativeError": 5.527625064381149e-9,
+   "cases": [
+    {
+     "case": "far point",
+     "relativeError": 1.2979769399865219e-14
+    },
+    {
+     "case": "near mid cavity panel (subtracted)",
+     "relativeError": 2.0093235284121045e-14
+    },
+    {
+     "case": "rim cavity panel, graded end (no subtraction)",
+     "relativeError": 9.020513289086554e-15
+    },
+    {
+     "case": "face panel near axis",
+     "relativeError": 4.744317680064806e-15
+    },
+    {
+     "case": "near a node",
+     "relativeError": 4.761323053796924e-12
+    },
+    {
+     "case": "1e-3 off rim cavity panel at zeta .03",
+     "relativeError": 5.527625064381149e-9
+    },
+    {
+     "case": "1e-3 off rim face panel at zeta .97",
+     "relativeError": 5.206263623270881e-10
+    },
+    {
+     "case": "1e-4 off rim cavity panel at zeta .1",
+     "relativeError": 3.4411785748763723e-9
+    }
+   ]
+  },
+  {
+   "name": "On-surface exterior limit is the limit of off-surface values at every location incl. both rims (ratio ~0.5 per halving)",
+   "passed": true,
+   "locations": [
+    {
+     "location": "cavity mid",
+     "ratios": [
+      0.516,
+      0.508,
+      0.504,
+      0.502
+     ]
+    },
+    {
+     "location": "cavity near node",
+     "ratios": [
+      0.501,
+      0.5,
+      0.5,
+      0.5
+     ]
+    },
+    {
+     "location": "rim cavity panel near rim",
+     "ratios": [
+      0.507,
+      0.502,
+      0.501,
+      0.5
+     ]
+    },
+    {
+     "location": "face panel near rim",
+     "ratios": [
+      0.504,
+      0.501,
+      0.5,
+      0.5
+     ]
+    },
+    {
+     "location": "face near axis",
+     "ratios": [
+      0.501,
+      0.501,
+      0.5,
+      0.5
+     ]
+    },
+    {
+     "location": "rear face near rim",
+     "ratios": [
+      0.504,
+      0.501,
+      0.5,
+      0.5
+     ]
+    },
+    {
+     "location": "second cavity panel near rim node",
+     "ratios": [
+      0.505,
+      0.502,
+      0.501,
+      0.501
+     ]
+    }
+   ]
+  },
+  {
+   "name": "Analytic cubic-density planar segment: matches Gauss-64 off the segment and carries the exact jump on it",
+   "passed": true,
+   "offSegmentError": 1.1102230246251565e-16,
+   "jumpError": 1.1102230246251565e-16
+  },
+  {
+   "name": "Cubic spline slope operator reproduces cubic data exactly",
+   "passed": true,
+   "maxError": 5.995204332975845e-15
+  },
+  {
+   "name": "Cancellation-free ring remainder: equals naive subtraction at moderate rho and the independently derived 0.2.1 vortexRemainder at all tested separations",
+   "passed": true,
+   "naiveAgreement": 2.8025735149414038e-14,
+   "agreementWith021": 4.344294464594638e-16
+  },
+  {
+   "name": "Sphere exact solution: complete field (surface normal velocity, surface speed, exterior and interior points) converges at >= third order and is < 1e-6 at N=64",
+   "passed": true,
+   "rows": [
+    {
+     "N": 16,
+     "gammaErr": 0.000003116853771967243,
+     "maxNormal_U": 0.00004332671841354718,
+     "maxSurfaceFieldErr": 0.00005764107299787903,
+     "maxInteriorBoundarySpeed_U": 0.00005445849558985787,
+     "exteriorFieldErr": 0.000008616160803588003,
+     "interiorFieldErr": 0.000003749258408370522
+    },
+    {
+     "N": 32,
+     "gammaErr": 1.939492513258756e-7,
+     "maxNormal_U": 0.000005404278242963911,
+     "maxSurfaceFieldErr": 0.000006910914686977466,
+     "maxInteriorBoundarySpeed_U": 0.000006713006493258261,
+     "exteriorFieldErr": 3.136946260624587e-7,
+     "interiorFieldErr": 3.4066543165584035e-8
+    },
+    {
+     "N": 64,
+     "gammaErr": 1.2216624378780239e-8,
+     "maxNormal_U": 6.81795069738117e-7,
+     "maxSurfaceFieldErr": 8.544200524432357e-7,
+     "maxInteriorBoundarySpeed_U": 8.41959125985826e-7,
+     "exteriorFieldErr": 1.9544068284830215e-8,
+     "interiorFieldErr": 9.734523141015091e-11
+    },
+    {
+     "N": 128,
+     "gammaErr": 8.167233556122255e-10,
+     "maxNormal_U": 8.584763770518034e-8,
+     "maxSurfaceFieldErr": 1.0651766385863665e-7,
+     "maxInteriorBoundarySpeed_U": 1.0568639676449978e-7,
+     "exteriorFieldErr": 1.1902581731328009e-9,
+     "interiorFieldErr": 4.042406012755336e-11
+    }
+   ],
+   "orders": {
+    "gamma": [
+     4.01,
+     3.99,
+     3.9
+    ],
+    "normal": [
+     3,
+     2.99,
+     2.99
+    ],
+    "surfaceField": [
+     3.06,
+     3.02,
+     3
+    ],
+    "exteriorField": [
+     4.78,
+     4,
+     4.04
+    ]
+   }
+  },
+  {
+   "name": "Nc=32: fresh solve reproduces the recorded mesh-study result",
+   "passed": true,
+   "sigma": 0,
+   "Rmax": 0,
+   "CD": 0
+  },
+  {
+   "name": "Nc=32: Newton reaches the unchanged 1e-10 nodal tolerance quadratically",
+   "passed": true,
+   "residual": 3.952393967665557e-14,
+   "history": [
+    0.24571219117191023,
+    0.015231443751341,
+    0.00008678383253823974,
+    2.387330333419868e-9,
+    3.952393967665557e-14
+   ]
+  },
+  {
+   "name": "Nc=32: nine-fraction direct-field audit (all near-rim samples retained) within the unchanged 0.01 U / 0.02 Cp gates",
+   "passed": true,
+   "maxNormal_U": 0.0036089324419039115,
+   "maxCavityDynamicCpResidual": 0.009735020979657172,
+   "maxTraceSpeedMismatch_U": 0.004250825694696259,
+   "maxInteriorBoundarySpeed_U": 0.004891727703769922,
+   "maxJumpError_U": 2.220446049250313e-15
+  },
+  {
+   "name": "Nc=32: front-disk drag from the direct exterior field agrees with the trace drag",
+   "passed": true,
+   "CD_trace": 1.1009378950762228,
+   "CD_direct": 1.1009455561173365,
+   "difference": -0.000007661041113715683
+  },
+  {
+   "name": "Nc=64: fresh solve reproduces the recorded mesh-study result",
+   "passed": true,
+   "sigma": 0,
+   "Rmax": 0,
+   "CD": 0
+  },
+  {
+   "name": "Nc=64: Newton reaches the unchanged 1e-10 nodal tolerance quadratically",
+   "passed": true,
+   "residual": 3.352873534367973e-14,
+   "history": [
+    0.24102260517791607,
+    0.014155525001313007,
+    0.0000665942085604776,
+    1.5075380943585515e-9,
+    3.352873534367973e-14
+   ]
+  },
+  {
+   "name": "Nc=64: nine-fraction direct-field audit (all near-rim samples retained) within the unchanged 0.01 U / 0.02 Cp gates",
+   "passed": true,
+   "maxNormal_U": 0.0005533736591882277,
+   "maxCavityDynamicCpResidual": 0.0009839158907234413,
+   "maxTraceSpeedMismatch_U": 0.00042869772971543263,
+   "maxInteriorBoundarySpeed_U": 0.0005735220002595105,
+   "maxJumpError_U": 2.886579864025407e-15
+  },
+  {
+   "name": "Nc=64: front-disk drag from the direct exterior field agrees with the trace drag",
+   "passed": true,
+   "CD_trace": 1.1006615207293993,
+   "CD_direct": 1.100661705904648,
+   "difference": -1.8517524869032798e-7
+  },
+  {
+   "name": "Nc=128: fresh solve reproduces the recorded mesh-study result",
+   "passed": true,
+   "sigma": 0,
+   "Rmax": 0,
+   "CD": 0
+  },
+  {
+   "name": "Nc=128: Newton reaches the unchanged 1e-10 nodal tolerance quadratically",
+   "passed": true,
+   "residual": 1.4011014570769476e-13,
+   "history": [
+    0.23905216671438634,
+    0.013897414857301671,
+    0.00006414591203829367,
+    2.111306240948352e-9,
+    1.4011014570769476e-13
+   ]
+  },
+  {
+   "name": "Nc=128: nine-fraction direct-field audit (all near-rim samples retained) within the unchanged 0.01 U / 0.02 Cp gates",
+   "passed": true,
+   "maxNormal_U": 0.0000447664931190056,
+   "maxCavityDynamicCpResidual": 0.00007030139305874705,
+   "maxTraceSpeedMismatch_U": 0.000030624206474039184,
+   "maxInteriorBoundarySpeed_U": 0.000046626942084320647,
+   "maxJumpError_U": 4.440892098500626e-15
+  },
+  {
+   "name": "Nc=128: front-disk drag from the direct exterior field agrees with the trace drag",
+   "passed": true,
+   "CD_trace": 1.100648298935231,
+   "CD_direct": 1.1006483020252749,
+   "difference": -3.0900437764103117e-9
+  },
+  {
+   "name": "Nc=256: fresh solve reproduces the recorded mesh-study result",
+   "passed": true,
+   "sigma": 0,
+   "Rmax": 0,
+   "CD": 0
+  },
+  {
+   "name": "Nc=256: Newton reaches the unchanged 1e-10 nodal tolerance quadratically",
+   "passed": true,
+   "residual": 1.6500134591979077e-12,
+   "history": [
+    0.2387482147025497,
+    0.013864678854128343,
+    0.00006425011834743088,
+    4.2320700277542755e-9,
+    1.6500134591979077e-12
+   ]
+  },
+  {
+   "name": "Nc=256: nine-fraction direct-field audit (all near-rim samples retained) within the unchanged 0.01 U / 0.02 Cp gates",
+   "passed": true,
+   "maxNormal_U": 0.000003635893121189948,
+   "maxCavityDynamicCpResidual": 0.000006344397441404581,
+   "maxTraceSpeedMismatch_U": 0.0000027636519046581043,
+   "maxInteriorBoundarySpeed_U": 0.0000037784237102379633,
+   "maxJumpError_U": 7.105427357601002e-15
+  },
+  {
+   "name": "Nc=256: front-disk drag from the direct exterior field agrees with the trace drag",
+   "passed": true,
+   "CD_trace": 1.1006478661911752,
+   "CD_direct": 1.1006478662597132,
+   "difference": -6.853806411299956e-11
+  },
+  {
+   "name": "Mesh study: sigma, Rmax and CD converge at observed order >= 3.5 between consecutive meshes",
+   "passed": true,
+   "meshes": [
+    32,
+    64,
+    128,
+    256
+   ],
+   "orders": {
+    "sigma": [
+     4.36,
+     4.93
+    ],
+    "Rmax": [
+     4.38,
+     4.93
+    ],
+    "CD": [
+     4.39,
+     4.93
+    ]
+   }
+  },
+  {
+   "name": "Mesh study: direct-field defects decrease at observed order >= 2.5 and every mesh passes the unchanged gates",
+   "passed": true,
+   "maxNormal_U": {
+    "values": [
+     0.0036089324419039115,
+     0.0005533736591882277,
+     0.0000447664931190056,
+     0.000003635893121189948
+    ],
+    "observedOrders": [
+     2.705246258861385,
+     3.6277627615960037,
+     3.622037609441427
+    ]
+   },
+   "maxCavityDynamicCpResidual": {
+    "values": [
+     0.009735020979657172,
+     0.0009839158907234413,
+     0.00007030139305874705,
+     0.000006344397441404581
+    ],
+    "observedOrders": [
+     3.3065771897620118,
+     3.8069098107359776,
+     3.469998221486025
+    ]
+   }
+  },
+  {
+   "name": "At Nc=64 the curved sheet reduces the 0.2.1 polygon direct-field defects by more than 50x on the identical nine-fraction grid",
+   "passed": true,
+   "Nc64": {
+    "sigma": 0.3186098032126403,
+    "Rmax": 1.9742281315696797,
+    "CD": 1.101846906166023,
+    "maxNormal_U": 0.04901293415750396,
+    "maxCavityDynamicCpResidual": 0.15885772469492054,
+    "maxTraceSpeedMismatch_U": 0.06702118173796956,
+    "c1": {
+     "sigma": 0.31751433053662215,
+     "Rmax": 1.9737533051121376,
+     "CD": 1.1006615207293993,
+     "maxNormal_U": 0.0005533736591882277,
+     "maxCavityDynamicCpResidual": 0.0009839158907234413
+    },
+    "defectRatio": {
+     "normal": 88.57113695907312,
+     "cp": 161.4545777669244
+    }
+   }
+  },
+  {
+   "name": "Public input guards reject malformed inputs",
+   "passed": true,
+   "controls": 12
+  },
+  {
+   "name": "Iteration limit is reported honestly as not converged",
+   "passed": true,
+   "stopReason": "iteration limit",
+   "residual": 0.01395003478637813
+  },
+  {
+   "name": "Cancellation hook stops the solve",
+   "passed": true,
+   "error": "Cancelled"
+  },
+  {
+   "name": "Solver is deterministic",
+   "passed": true
+  }
+ ],
+ "meshConvergence": {
+  "sigma": {
+   "values": [
+    0.3175436678082444,
+    0.31751433053662215,
+    0.3175129056981312,
+    0.3175128588786824
+   ],
+   "differences": [
+    -0.000029337271622242866,
+    -0.00000142483849097097,
+    -4.681944876239186e-8
+   ],
+   "observedOrders": [
+    4.363864405501902,
+    4.9275466364981195
+   ],
+   "richardson": 0.3175128572879491,
+   "uncertaintyEstimate": 1.5907333028584121e-9
+  },
+  "Rmax": {
+   "values": [
+    1.9739081179570908,
+    1.9737533051121376,
+    1.9737458510247998,
+    1.9737456065425525
+   ],
+   "differences": [
+    -0.00015481284495311165,
+    -0.000007454087337821491,
+    -2.444822473357533e-7
+   ],
+   "observedOrders": [
+    4.376349644964212,
+    4.930230107653838
+   ],
+   "richardson": 1.9737455982520056,
+   "uncertaintyEstimate": 8.29054691791911e-9
+  },
+  "CD": {
+   "values": [
+    1.1009378950762228,
+    1.1006615207293993,
+    1.100648298935231,
+    1.1006478661911752
+   ],
+   "differences": [
+    -0.0002763743468234825,
+    -0.000013221794168183365,
+    -4.327440559226403e-7
+   ],
+   "observedOrders": [
+    4.385633844650748,
+    4.933260147240317
+   ],
+   "richardson": 1.1006478515483817,
+   "uncertaintyEstimate": 1.4642793349980386e-8
+  },
+  "volume": {
+   "values": [
+    77.52210453532287,
+    77.50934261367597,
+    77.5087300806973,
+    77.5087100289384
+   ],
+   "differences": [
+    -0.0127619216468986,
+    -0.0006125329786641487,
+    -0.000020051758909289674
+   ],
+   "observedOrders": [
+    4.380914250718161,
+    4.932986822322806
+   ],
+   "richardson": 77.5087093503126,
+   "uncertaintyEstimate": 6.786257892235586e-7
+  },
+  "maxNormal_U": {
+   "values": [
+    0.0036089324419039115,
+    0.0005533736591882277,
+    0.0000447664931190056,
+    0.000003635893121189948
+   ],
+   "observedOrders": [
+    2.705246258861385,
+    3.6277627615960037,
+    3.622037609441427
+   ]
+  },
+  "maxCavityDynamicCpResidual": {
+   "values": [
+    0.009735020979657172,
+    0.0009839158907234413,
+    0.00007030139305874705,
+    0.000006344397441404581
+   ],
+   "observedOrders": [
+    3.3065771897620118,
+    3.8069098107359776,
+    3.469998221486025
+   ]
+  },
+  "maxTraceSpeedMismatch_U": {
+   "values": [
+    0.004250825694696259,
+    0.00042869772971543263,
+    0.000030624206474039184,
+    0.0000027636519046581043
+   ],
+   "observedOrders": [
+    3.3097104203065553,
+    3.8072164099964008,
+    3.4700246440306795
+   ]
+  },
+  "rmsNormal_U": {
+   "values": [
+    0.0006361704305134672,
+    0.00006409746760044643,
+    0.000004950295198120185,
+    3.9269737798960927e-7
+   ],
+   "observedOrders": [
+    3.3110740520656075,
+    3.6946808948681666,
+    3.6560246887805685
+   ]
+  }
+ },
+ "baseline021": {
+  "64": {
+   "sigma": 0.3186098032126403,
+   "Rmax": 1.9742281315696797,
+   "CD": 1.101846906166023,
+   "maxNormal_U": 0.04901293415750396,
+   "maxCavityDynamicCpResidual": 0.15885772469492054,
+   "maxTraceSpeedMismatch_U": 0.06702118173796956,
+   "c1": {
+    "sigma": 0.31751433053662215,
+    "Rmax": 1.9737533051121376,
+    "CD": 1.1006615207293993,
+    "maxNormal_U": 0.0005533736591882277,
+    "maxCavityDynamicCpResidual": 0.0009839158907234413
+   },
+   "defectRatio": {
+    "normal": 88.57113695907312,
+    "cp": 161.4545777669244
+   }
+  },
+  "192": {
+   "sigma": 0.3176475900227309,
+   "Rmax": 1.973819719699353,
+   "CD": 1.1008094745893402,
+   "maxNormal_U": 0.016793057260344593,
+   "maxCavityDynamicCpResidual": 0.05518053712744586,
+   "maxTraceSpeedMismatch_U": 0.023755559905050738
+  },
+  "256": {
+   "sigma": 0.31758966075220996,
+   "Rmax": 1.9737890935819926,
+   "CD": 1.100741233492558,
+   "maxNormal_U": 0.012603738547729622,
+   "maxCavityDynamicCpResidual": 0.04151791346968792,
+   "maxTraceSpeedMismatch_U": 0.01792602358463835,
+   "c1": {
+    "sigma": 0.3175128588786824,
+    "Rmax": 1.9737456065425525,
+    "CD": 1.1006478661911752,
+    "maxNormal_U": 0.000003635893121189948,
+    "maxCavityDynamicCpResidual": 0.000006344397441404581
+   },
+   "defectRatio": {
+    "normal": 3466.4766338358963,
+    "cp": 6544.027837653295
+   }
+  }
+ },
+ "case": {
+  "L_over_R": 8,
+  "referenceRmax": 1.95,
+  "mColl": 3,
+  "nNear": 24,
+  "nFar": 12,
+  "clustering": "u^3",
+  "tolerance": 1e-10,
+  "auditFractions": [
+   0.02,
+   0.05,
+   0.1,
+   0.25,
+   0.5,
+   0.75,
+   0.9,
+   0.95,
+   0.98
+  ],
+  "auditQuadrature": {
+   "nNear": 32,
+   "nFar": 12
+  }
+ },
+ "sourceSha256": {
+  "axisymmetric-cavity-c1.js": "9bfb67177b372128a26c0893f7df35fc3bfadae5ea6e30a2770d6b71905bfc7c",
+  "reference/c1-cavity/python/axi_c1.py": "ff2f2cc02fce17c8d958f5e373695554b77f43aae2868c8e18468f365ac7ad42",
+  "axisymmetric-cavity-nodal.js": "b3d8ee5e35d97f3224cfbf325b8ae9090406c077d6a1c4c31cf3ab4b702704da"
+ },
+ "accuracyQualified": {
+  "numerical": true,
+  "experimental": "NOT_PERFORMED"
+ },
+ "seconds": 83.583
+}

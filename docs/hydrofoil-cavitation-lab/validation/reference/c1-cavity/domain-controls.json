@@ -1,0 +1,134 @@
+{
+  "version": "0.3.0-c1-reviewed-guards",
+  "unchangedLimits": {
+    "normal": 0.01,
+    "cp": 0.02
+  },
+  "cases": [
+    {
+      "L": 2,
+      "Nc": 32,
+      "total": 64,
+      "sigma": 0.9969749363300189,
+      "nodal": 7.751577157932843e-13,
+      "nodalConverged": true,
+      "geometry": {
+        "admissible": true,
+        "issues": [],
+        "curve": {
+          "admissible": true,
+          "issues": [],
+          "minimumRadius": 1,
+          "minimumAxialDerivative": 0,
+          "method": "Polynomial extrema over every cubic/quintic panel; no finite sampling used for admission."
+        }
+      },
+      "normal": 0.0010321041150556098,
+      "cp": 0.002273110311280746,
+      "fieldPassed": true,
+      "status": "nodal-converged-field-within-thresholds",
+      "accuracyQualified": false,
+      "runtime": 3.481
+    },
+    {
+      "L": 3,
+      "Nc": 32,
+      "total": 64,
+      "sigma": 0.7128833871528424,
+      "nodal": 8.202771795140507e-12,
+      "nodalConverged": true,
+      "geometry": {
+        "admissible": true,
+        "issues": [],
+        "curve": {
+          "admissible": true,
+          "issues": [],
+          "minimumRadius": 1,
+          "minimumAxialDerivative": 0,
+          "method": "Polynomial extrema over every cubic/quintic panel; no finite sampling used for admission."
+        }
+      },
+      "normal": 0.0016438962330738716,
+      "cp": 0.00402923905965058,
+      "fieldPassed": true,
+      "status": "nodal-converged-field-within-thresholds",
+      "accuracyQualified": false,
+      "runtime": 2.788
+    },
+    {
+      "L": 12,
+      "Nc": 32,
+      "total": 64,
+      "sigma": 0.22685156255375327,
+      "nodal": 2.295341694491526e-11,
+      "nodalConverged": true,
+      "geometry": {
+        "admissible": true,
+        "issues": [],
+        "curve": {
+          "admissible": true,
+          "issues": [],
+          "minimumRadius": 1,
+          "minimumAxialDerivative": 0,
+          "method": "Polynomial extrema over every cubic/quintic panel; no finite sampling used for admission."
+        }
+      },
+      "normal": 0.007363049578355278,
+      "cp": 0.020650099268797684,
+      "fieldPassed": false,
+      "status": "nodal-converged-field-unresolved",
+      "accuracyQualified": false,
+      "runtime": 2.335
+    },
+    {
+      "L": 12,
+      "Nc": 64,
+      "total": 128,
+      "sigma": 0.2267896710859496,
+      "nodal": 1.7335466395707044e-11,
+      "nodalConverged": true,
+      "geometry": {
+        "admissible": true,
+        "issues": [],
+        "curve": {
+          "admissible": true,
+          "issues": [],
+          "minimumRadius": 1,
+          "minimumAxialDerivative": 0,
+          "method": "Polynomial extrema over every cubic/quintic panel; no finite sampling used for admission."
+        }
+      },
+      "normal": 0.001543435007484023,
+      "cp": 0.002455005625058071,
+      "fieldPassed": true,
+      "status": "nodal-converged-field-within-thresholds",
+      "accuracyQualified": false,
+      "runtime": 9.936
+    },
+    {
+      "L": 24,
+      "Nc": 32,
+      "total": 64,
+      "sigma": 0.12679626173387937,
+      "nodal": 1.2212453270876722e-13,
+      "nodalConverged": true,
+      "geometry": {
+        "admissible": true,
+        "issues": [],
+        "curve": {
+          "admissible": true,
+          "issues": [],
+          "minimumRadius": 1,
+          "minimumAxialDerivative": 0,
+          "method": "Polynomial extrema over every cubic/quintic panel; no finite sampling used for admission."
+        }
+      },
+      "normal": 0.006627981720309049,
+      "cp": 0.013228645218787305,
+      "fieldPassed": true,
+      "status": "nodal-converged-field-within-thresholds",
+      "accuracyQualified": false,
+      "runtime": 3.281
+    }
+  ]
+}

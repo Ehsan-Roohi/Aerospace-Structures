@@ -1,0 +1,19 @@
+{
+  "date": "2026-10-31",
+  "currentVersion": "0.3.0-c1-reviewed-guards",
+  "currentSource": "9bfb67177b372128a26c0893f7df35fc3bfadae5ea6e30a2770d6b71905bfc7c",
+  "receivedEquationSource": "fa5474176a7e3466b154536c8fd85b10c8acf41cf90908aae56fabf477fb01ce",
+  "changesToReceivedSource": "Polynomial-extrema geometry admission, declared-trace/point/quadrature input checks and mandatory-audit-sample protection only; physics outputs regression-tested.",
+  "fullVerification": {
+    "status": "PASS_NUMERICAL_VERIFICATION_ONLY",
+    "checks": 29,
+    "failed": 0
+  },
+  "guardVerification": {
+    "status": "PASS_REVIEWED_GUARDS_AND_FRESH_PYTHON_PARITY",
+    "checks": 24,
+    "pythonParityChecks": 2
+  },
+  "matchedExternalReference": "Brennen1969 theoretical disk pressure at sigma0.3/0.7; not experiments",
+  "experimentalValidation": "NOT_PERFORMED"
+}

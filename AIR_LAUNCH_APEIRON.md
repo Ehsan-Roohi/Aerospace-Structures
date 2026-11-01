@@ -8,7 +8,16 @@
 
 [HTML source](docs/case-studies/apeiron/index.html) · [Reproducible calculations](docs/case-studies/apeiron/calculations.py)
 
-This approximately 2,900-word course reading includes a Persian summary, 16 linked references, an official carrier photograph, three original figures, and worked examples.
+This expanded second edition contains approximately 5,400 words, 20 linked references, an official carrier photograph, four original figures, extended Persian explanations, and worked examples.
+
+## New in the expanded edition
+
+- Mechanical-energy budget: release altitude and speed versus a 90-km suborbital benchmark and a 200-km circular orbit; explicit distinction from fuel savings.
+- Air-launch versus ground-launch comparison and the carrier altitude/lift tradeoff.
+- Maximum-dynamic-pressure condition, composite laminate coupling, buckling, load sharing and separation transients.
+- Structural verification evidence and the distinction between licensing and passenger-safety certification.
+- Expanded historical interpretation and a longer Persian explanation.
+- [Rebuild the new energy chart](docs/case-studies/apeiron/plot_energy.py) (Matplotlib required).
 
 ## Coverage
 

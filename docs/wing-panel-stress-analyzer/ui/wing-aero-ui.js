@@ -111,12 +111,38 @@ const WingAeroUI = (() => {
     const line = (pts, cls) => `<polyline class="${cls}" points="${pts.map(([p, v]) => `${X(p).toFixed(1)},${Y(v).toFixed(1)}`).join(' ')}"/>`;
     return `<svg class="waefig" viewBox="0 0 ${W} ${H}" role="img" aria-label="Vertical aerodynamic force per unit span versus span station"><path class="ax" d="M${L} ${T}V${H - B}H${W - R}M${L} ${Y(0).toFixed(1)}H${W - R}"/>${line(b, 's2')}${line(a, 's1')}<text x="${L - 4}" y="${T + 8}" text-anchor="end">${fmt(ymax, 3)}</text><text x="${L - 4}" y="${(Y(0) + 4).toFixed(1)}" text-anchor="end">0</text><text x="${L}" y="${H - 6}">root</text><text x="${W - R}" y="${H - 6}" text-anchor="end">tip, y = ${fmt(span, 4)} mm</text></svg>`;
   }
-  function cpFigure(section) {
+  function cpFigure(section, meshLabel = '64 × 16 base mesh') {
     const W = 300, H = 180, L = 36, R = 8, T = 10, B = 20, all = [...section.lower, ...section.upper].map(v => v[1]).filter(Number.isFinite);
     const top = Math.max(1, ...all.map(v => -v)), bot = Math.min(-1, ...all.map(v => -v)); // plotted: -Cp up
     const X = x => L + (W - L - R) * x, Y = v => T + (H - T - B) * (top - v) / (top - bot);
     const line = (pts, cls) => `<polyline class="${cls}" points="${pts.map(([x, cp]) => `${X(x).toFixed(1)},${Y(-cp).toFixed(1)}`).join(' ')}"/>`;
-    return `<svg class="waefig" viewBox="0 0 ${W} ${H}" role="img" aria-label="Pressure coefficient along the chord at the selected station, upper and lower surfaces"><path class="ax" d="M${L} ${T}V${H - B}H${W - R}M${L} ${Y(0).toFixed(1)}H${W - R}"/>${line(section.upper, 's1')}${line(section.lower, 's2')}<text x="${L - 4}" y="${(Y(top) + 9).toFixed(1)}" text-anchor="end">${fmt(top, 3)}</text><text x="${L - 4}" y="${(Y(0) + 4).toFixed(1)}" text-anchor="end">0</text><text x="${L - 4}" y="${(Y(bot) - 2).toFixed(1)}" text-anchor="end">${fmt(bot, 3)}</text><text x="${L}" y="${H - 6}">LE</text><text x="${W - R}" y="${H - 6}" text-anchor="end">TE</text></svg><figcaption>−C<sub>p</sub> versus x/c at y = ${fmt(section.y_mm, 4)} mm (local chord ${fmt(section.chord_mm, 4)} mm) on the 64 × 16 base mesh: upper surface solid, lower surface dashed.</figcaption>`;
+    return `<svg class="waefig" viewBox="0 0 ${W} ${H}" role="img" aria-label="Pressure coefficient along the chord at the selected station, upper and lower surfaces"><path class="ax" d="M${L} ${T}V${H - B}H${W - R}M${L} ${Y(0).toFixed(1)}H${W - R}"/>${line(section.upper, 's1')}${line(section.lower, 's2')}<text x="${L - 4}" y="${(Y(top) + 9).toFixed(1)}" text-anchor="end">${fmt(top, 3)}</text><text x="${L - 4}" y="${(Y(0) + 4).toFixed(1)}" text-anchor="end">0</text><text x="${L - 4}" y="${(Y(bot) - 2).toFixed(1)}" text-anchor="end">${fmt(bot, 3)}</text><text x="${L}" y="${H - 6}">LE</text><text x="${W - R}" y="${H - 6}" text-anchor="end">TE</text></svg><figcaption>−C<sub>p</sub> versus x/c at y = ${fmt(section.y_mm, 4)} mm (local chord ${fmt(section.chord_mm, 4)} mm) on the ${esc(meshLabel)}: upper surface solid, lower surface dashed.</figcaption>`;
+  }
+  // Custom meshes are diagnostic solves of the unchanged panel equations. They never substitute
+  // an arbitrary single grid for the independently checked Standard/Fine structural load sequences.
+  function customMeshPlan(A, geometry, mesh, check = false) {
+    const m = A.normalizeMesh(mesh), g = A.aeroGeometry(geometry), out = [];
+    const levels = (n, lo) => { const a = [Math.max(lo, Math.round(n / 2)), Math.max(lo + 1, Math.round(3 * n / 4)), n];
+      if (new Set(a).size !== 3 || a.some(v => v > n)) throw Error(`For a three-level mesh check, choose at least ${lo + 2} panels in each direction.`); return a; };
+    const add = (c, sp, direction) => { if (out.some(q => q.chordPanels === c && q.spanPanels === sp)) return;
+      const w = A.wingMesh(g, { ...m, chordPanels: c, spanPanels: sp });
+      if (w.S.count > A.LIMITS.maxPanels) throw Error(`This geometry creates ${w.S.count} actual surface panels; the browser solver limit is ${A.LIMITS.maxPanels}. Reduce chord or span panels.`);
+      out.push({ chordPanels: c, spanPanels: sp, direction, panels: w.S.count }); };
+    if (check) { levels(m.chordPanels, A.LIMITS.chordPanels[0]).forEach(c => add(c, m.spanPanels, 'chord')); levels(m.spanPanels, A.LIMITS.spanPanels[0]).forEach(sp => add(m.chordPanels, sp, 'span')); }
+    else add(m.chordPanels, m.spanPanels, 'selected');
+    return out;
+  }
+  function meshCheckFigure(levels, direction, metric = 'CL') {
+    const rows = levels.filter(l => direction === 'chord' ? l.spanPanels === levels[0].spanPanels : l.chordPanels === levels[levels.length - 1].chordPanels)
+      .map(l => [direction === 'chord' ? l.chordPanels : l.spanPanels, l.coefficients[metric]]).sort((a,b)=>a[0]-b[0]);
+    if (!rows.length) return '';
+    const W=360,H=190,L=60,R=12,T=22,B=36,ns=rows.map(p=>p[0]),vs=rows.map(p=>p[1]),lo=Math.min(...vs),hi=Math.max(...vs),pad=Math.max((hi-lo)*.15,Math.abs(hi)*.005,1e-6),xmin=Math.min(...ns),xmax=Math.max(...ns),X=n=>L+(W-L-R)*(n-xmin)/Math.max(1,xmax-xmin),Y=v=>T+(H-T-B)*(hi+pad-v)/(hi-lo+2*pad);
+    return `<svg class="waefig" viewBox="0 0 ${W} ${H}" role="img" aria-label="Computed ${esc(metric)} versus ${direction} panel count; all solved mesh levels"><path class="ax" d="M${L} ${T}V${H-B}H${W-R}"/><polyline class="s1" points="${rows.map(([n,v])=>`${X(n)},${Y(v)}`).join(' ')}"/>${rows.map(([n,v])=>`<circle cx="${X(n)}" cy="${Y(v)}" r="3" fill="var(--accent)"/><text x="${X(n)}" y="${H-B+16}" text-anchor="middle">${n}</text>`).join('')}<text x="8" y="16">${esc(metric)}</text><text x="${L-4}" y="${T+8}" text-anchor="end">${fmt(hi+pad,5)}</text><text x="${L-4}" y="${H-B}" text-anchor="end">${fmt(lo-pad,5)}</text><text x="${(L+W-R)/2}" y="${H-4}" text-anchor="middle">${direction==='chord'?'Panels per surface (chord)':'Requested spanwise strips'}</text></svg>`;
+  }
+  function customMeshCsv(levels) {
+    const lines=['# Custom mesh diagnostics. Same entered angle, speed and geometry on every grid. No extrapolation, structural admission or experimental error is inferred.','chord_panels_per_surface,span_setting,actual_panels,CL_pressure,CL_Trefftz,CD_pressure,CDi_Trefftz,Cm'];
+    for(const l of levels)lines.push([l.chordPanels,l.spanPanels,l.panels,...['CL','CLTrefftz','CDpressure','CDiTrefftz','Cm'].map(k=>l.coefficients[k])].join(','));
+    return lines.join('\n')+'\n';
   }
   // --------------------------------------------------------------- CSV export (pure)
   function csv(record, combined, adm) {
@@ -231,7 +257,13 @@ const WingAeroUI = (() => {
       <div class="wae-grid">${field('aeroV', 'Speed V (m/s)', saved.speed, 'min="0" aria-describedby="aeroSpeedUnits"').replace('</label>', '<small id="aeroSpeedUnits" aria-live="polite"></small></label>')}${field('aeroRho', 'Air density ρ (kg/m³)', saved.density, 'min="0"')}${field('aeroAlpha', 'Angle of attack α (°)', saved.alphaDeg)}${field('aeroTarget', 'or target lift, both halves (N)', '', 'placeholder="optional"')}
       <label for="aeroSequence">Mesh sequence<select id="aeroSequence"><option value="standard">${SEQUENCE_TEXT.standard}</option><option value="fine">${SEQUENCE_TEXT.fine}</option></select></label></div>
       <p class="note">${SEQUENCE_NOTE}</p>
-      <details><summary>Air properties</summary><div class="wae-grid">${field('aeroMu', 'Dynamic viscosity μ (Pa·s)', saved.viscosity)}${field('aeroSound', 'Speed of sound a (m/s)', saved.speedOfSound, 'min="290" max="360"')}</div><p class="note">Used for the Reynolds-number and Mach screens only. The speed of sound must be that of air (290 to 360 m/s); Mach above 0.3 is refused.</p></details>
+      <details id="aeroCustomMesh"><summary>Custom mesh &amp; mesh check</summary>
+        <div class="wae-grid">${field('aeroCustomChord', 'Chord panels / surface', saved.mesh?.chordPanels ?? 32, 'min="6" max="96" step="1"')}${field('aeroCustomSpan', 'Spanwise strips', saved.mesh?.spanPanels ?? 16, 'min="4" max="48" step="1"')}</div>
+        <p class="note" id="aeroCustomCost">Choose counts and run a custom grid, or check three levels in each direction at the entered α. Structural loading uses Standard / Fine.</p>
+        <div class="lesson-actions"><button class="btn" type="button" id="aeroCustomRun">Solve custom mesh</button><button class="btn" type="button" id="aeroCustomCheck">Mesh check</button><button class="btn" type="button" id="aeroCustomCancel" hidden>Cancel mesh solve</button></div>
+        <p id="aeroCustomStatus" role="status" aria-live="polite" class="wae-status"></p><div id="aeroCustomResults"></div>
+      </details>
+      <details id="aeroAirProperties"><summary>Air properties</summary><div class="wae-grid">${field('aeroMu', 'Dynamic viscosity μ (Pa·s)', saved.viscosity)}${field('aeroSound', 'Speed of sound a (m/s)', saved.speedOfSound, 'min="290" max="360"')}</div><p class="note">Used for the Reynolds-number and Mach screens only. The speed of sound must be that of air (290 to 360 m/s); Mach above 0.3 is refused.</p></details>
       <div class="lesson-actions"><button class="btn primary" type="button" id="aeroRun">Solve Aerodynamics</button><button class="btn" type="button" id="aeroApply" disabled>Apply aerodynamic loads to structure</button><button class="btn" type="button" id="aeroRemove" hidden>Remove aerodynamic load</button></div>
       <p class="wae-status" id="aeroStatus" role="status" aria-live="polite"></p>
       <div id="aeroApplied"></div><div id="aeroAdmission"></div><div id="aeroResults"></div></div>`;
@@ -245,6 +277,7 @@ const WingAeroUI = (() => {
     $('#aeroSequence').value = saved.sequence === 'fine' ? 'fine' : 'standard';
     let worker = null, workerFailed = !ad.workerURL || typeof Worker === 'undefined', seq = 0, last = null, lastCombined = null, lastKey = '', running = false, lastAdmission = null;
     const pending = new Map();
+    let customWorker = null, customGeneration = 0, customRunning = false, customLevels = null, customKey = '', customReject = null;
     const A = () => (typeof WingAeroPanel !== 'undefined' ? WingAeroPanel : null);
     function getWorker() {
       if (workerFailed) return null;
@@ -272,18 +305,68 @@ const WingAeroUI = (() => {
         w.postMessage({ id, kind: 'sequence', geometry: JSON.parse(JSON.stringify(req.geometry)), flow: req.flow, sequence: req.sequence, options: req.options });
       });
     }
-    const busy = on => { running = on; $('#aeroRun').disabled = on; syncButtons(); };
+    const busy = on => { running = on; $('#aeroRun').disabled = on; $('#aeroCustomRun').disabled = on; $('#aeroCustomCheck').disabled = on; syncButtons(); };
     function syncButtons() {
       const st = ad.structure?.() || { supported: true }, fresh = last && lastKey && ad.geometryKey && ad.geometryKey(ad.geometry()) === lastKey;
       $('#aeroApply').disabled = running || !fresh || !st.supported || lastCombined?.structuralLoadAvailable === false || !!ad.disabled?.();
       $('#aeroApply').title = !st.supported ? st.message : lastCombined?.structuralLoadAvailable === false ? 'Structural load transfer is unavailable for an exact zero-chord tip.' : 'Transfer the aerodynamic load and run the structural admission checks.';
       $('#aeroRemove').hidden = !ad.applied?.();
     }
+    const customStamp = () => JSON.stringify([ad.geometryKey?.(ad.geometry()) || ad.geometry(), ['aeroV','aeroRho','aeroAlpha','aeroMu','aeroSound','aeroTarget','aeroCustomChord','aeroCustomSpan'].map(id=>$('#'+id).value)]);
+    function invalidateCustom() {
+      let fresh=false;try{fresh=customKey===customStamp();}catch(e){}
+      if(customLevels && !fresh) {customLevels=null;$('#aeroCustomResults').replaceChildren();$('#aeroCustomStatus').textContent='Inputs changed. Run the custom mesh again.';}
+    }
+    for(const id of ['aeroV','aeroRho','aeroAlpha','aeroMu','aeroSound','aeroTarget','aeroCustomChord','aeroCustomSpan'])$('#'+id).addEventListener('input',invalidateCustom);
+    function renderCustom(levels, check) {
+      const c=+$('#aeroCustomChord').value,sp=+$('#aeroCustomSpan').value,end=levels.find(l=>l.chordPanels===c&&l.spanPanels===sp);
+      const directionRows=direction=>levels.filter(l=>direction==='chord'?l.spanPanels===sp:l.chordPanels===c).sort((a,b)=>(direction==='chord'?a.chordPanels-b.chordPanels:a.spanPanels-b.spanPanels));
+      const change=direction=>{const ls=directionRows(direction);if(ls.length<2)return 'not checked';const a=ls[ls.length-2],b=ls[ls.length-1];return ['CL','Cm','CDiTrefftz'].map(k=>`${k}: Δ ${fmt(b.coefficients[k]-a.coefficients[k],5)}`).join('; ');};
+      $('#aeroCustomResults').innerHTML=`<p class="note"><b>Custom grid diagnostics</b> · α ${fmt(end.flow.alphaDeg)}° · V ${fmt(end.flow.speed)} m/s. Original solver predictions; no loads applied to the structure.</p>
+        <div class="wae-scroll"><table><thead><tr><th>Chord / surface</th><th>Span setting</th><th>Actual panels</th><th>CL</th><th>Cm (¼ MAC)</th><th>CDi (Trefftz)</th></tr></thead><tbody>${levels.map(l=>`<tr><td>${l.chordPanels}</td><td>${l.spanPanels}</td><td>${l.panels}</td><td>${fmt(l.coefficients.CL,6)}</td><td>${fmt(l.coefficients.Cm,6)}</td><td>${fmt(l.coefficients.CDiTrefftz,6)}</td></tr>`).join('')}</tbody></table></div>
+        ${check?`<p class="note">Last two chord levels: ${esc(change('chord'))}.<br>Last two span levels: ${esc(change('span'))}. These are signed mesh changes, not experimental errors, and do not establish convergence by themselves.</p>${meshCheckFigure(levels,'chord')}${meshCheckFigure(levels,'span')}`:''}
+        <label>Sectional Cp on selected custom grid<select id="aeroCustomStation">${end.chordwise.map((v,j)=>`<option value="${j}">y ${fmt(v.y_mm)} mm</option>`).join('')}</select></label><figure id="aeroCustomCp">${cpFigure(end.chordwise[0],`${c} chord panels/surface (${2*c} around contour) × ${sp} requested spanwise strips (${end.panels} actual panels)`)}</figure>
+        ${ad.download?'<button class="btn" type="button" id="aeroCustomCsv">Save custom mesh CSV</button>':''}`;
+      $('#aeroCustomStation').onchange=()=>{$('#aeroCustomCp').innerHTML=cpFigure(end.chordwise[+$('#aeroCustomStation').value],`${c} chord panels/surface (${2*c} around contour) × ${sp} requested spanwise strips (${end.panels} actual panels)`);};
+      if($('#aeroCustomCsv'))$('#aeroCustomCsv').onclick=()=>{if(customKey!==customStamp()){invalidateCustom();return;}ad.download('wing-custom-mesh-check.csv',customMeshCsv(levels),'text/csv');};
+    }
+    function cancelCustom() {
+      if(!customRunning)return;++customGeneration;customWorker?.terminate();customWorker=null;
+      const reject=customReject;customReject=null;reject?.(new Error('Custom mesh solve cancelled.'));customRunning=false;busy(false);$('#aeroCustomCancel').hidden=true;
+      $('#aeroCustomStatus').textContent='Custom mesh solve cancelled. Previous structural loads are unchanged.';status('Custom mesh solve cancelled.');
+    }
+    async function computeCustom(check=false) {
+      if(running)return;const blocked=ad.disabled?.();if(blocked){status(blocked,true);return;}
+      let req,plan,mesh,stamp;
+      try {
+        if(typeof Worker==='undefined'||!ad.workerURL)throw Error('Custom mesh diagnostics need Web Workers so progress and Cancel remain available. Use a browser with Web Workers enabled.');
+        req=request();if(req.options.targetLift_N!=null)throw Error('Clear Target lift for a mesh check: every grid must use the same entered angle of attack.');
+        const number=id=>{const raw=$('#'+id).value.trim();return raw===''?NaN:Number(raw);};mesh={chordPanels:number('aeroCustomChord'),spanPanels:number('aeroCustomSpan')};
+        plan=customMeshPlan(A(),req.geometry,mesh,check);stamp=customStamp();
+      }catch(e){$('#aeroCustomStatus').textContent=e.message;status(e.message,true);return;}
+      const peak=Math.max(...plan.map(p=>p.panels));$('#aeroCustomCost').textContent=`${plan.length} grids; largest ${peak} actual surface panels. A dense N×N array alone is about ${(peak*peak*8/1048576).toFixed(1)} MiB; total memory is higher. Runtime depends on geometry and device.`;
+      ad.saveSettings?.({...req.flow,sequence:req.sequence,mesh});const generation=++customGeneration;customRunning=true;busy(true);$('#aeroCustomCancel').hidden=false;$('#aeroCustomResults').replaceChildren();customLevels=null;
+      const t0=Date.now(),levels=[];
+      try {
+        customWorker=new Worker(ad.workerURL);
+        for(let i=0;i<plan.length;i++){
+          if(generation!==customGeneration)return;const p=plan[i],prefix=`Mesh ${i+1} of ${plan.length}: custom ${2*p.chordPanels} × ${p.spanPanels}…`;
+          status(prefix);$('#aeroCustomStatus').textContent=prefix;
+          const value=await new Promise((resolve,reject)=>{customReject=reject;customWorker.onmessage=ev=>{if(generation!==customGeneration)return;const m=ev.data||{};if(m.id!==i+1)return;if(m.kind==='progress'){status(prefix+' '+m.text);$('#aeroCustomStatus').textContent=m.text;return;}customReject=null;if(m.kind==='complete')resolve(m.result);else reject(Error(m.text||'Custom mesh solve failed.'));};customWorker.onerror=ev=>{ev.preventDefault?.();reject(Error('Custom mesh worker failed; reduce mesh size and try again.'));};customWorker.postMessage({id:i+1,kind:'solve',geometry:JSON.parse(JSON.stringify(req.geometry)),flow:req.flow,mesh:{chordPanels:p.chordPanels,spanPanels:p.spanPanels},options:{}});});
+          levels.push({...value,chordPanels:p.chordPanels,spanPanels:p.spanPanels,panels:value.mesh.panels});
+        }
+        if(generation!==customGeneration)return;if(stamp!==customStamp())throw Error('Inputs changed during the custom solve. Run it again; the old result is withheld.');
+        customKey=stamp;customLevels=levels;renderCustom(levels,check);const message=`Completed ${levels.length} custom mesh${levels.length===1?'':'es'} in ${((Date.now()-t0)/1000).toFixed(1)} s. ${check?'Mesh changes are shown below; no external reference or extrapolated accuracy is implied.':'No convergence claim from a single grid.'}`;$('#aeroCustomStatus').textContent=message;status(message);
+      }catch(e){if(generation===customGeneration){$('#aeroCustomStatus').textContent=e.message;status(e.message,true);}}
+      finally{if(generation===customGeneration){customWorker?.terminate();customWorker=null;customReject=null;customRunning=false;busy(false);$('#aeroCustomCancel').hidden=true;}}
+    }
+    $('#aeroCustomRun').onclick=()=>computeCustom(false);$('#aeroCustomCheck').onclick=()=>computeCustom(true);$('#aeroCustomCancel').onclick=cancelCustom;
     async function compute() {
       if (running) return;
       const blocked = ad.disabled?.(); if (blocked) { status(blocked, true); return; }
       let req; try { req = request(); } catch (e) { status(e.message, true); return; }
       const setting = { speed: req.flow.speed, density: req.flow.density, alphaDeg: req.flow.alphaDeg, sequence: req.sequence };
+      if (ad.settings?.()?.mesh) setting.mesh = { ...ad.settings().mesh };
       if (req.flow.viscosity !== DEFAULTS.viscosity) setting.viscosity = req.flow.viscosity;
       if (req.flow.speedOfSound !== DEFAULTS.speedOfSound) setting.speedOfSound = req.flow.speedOfSound;
       ad.saveSettings?.(setting);
@@ -365,17 +448,19 @@ const WingAeroUI = (() => {
       $('#aeroV').value = s.speed; $('#aeroRho').value = s.density; $('#aeroAlpha').value = s.alphaDeg; $('#aeroMu').value = s.viscosity; $('#aeroSound').value = s.speedOfSound;
       updateSpeedUnits();
       $('#aeroSequence').value = s.sequence === 'fine' ? 'fine' : 'standard';
+      $('#aeroCustomChord').value=s.mesh?.chordPanels??32;$('#aeroCustomSpan').value=s.mesh?.spanPanels??16;
       syncApplied();
     }
     function reset() {
       if (running) throw new Error('Wait for the aerodynamic solve to finish before opening the course example.');
-      last = null; lastCombined = null; lastKey = ''; lastAdmission = null;
+      last = null; lastCombined = null; lastKey = ''; lastAdmission = null;customLevels=null;$('#aeroCustomResults').replaceChildren();$('#aeroCustomStatus').textContent='';
       $('#aeroResults').innerHTML = ''; $('#aeroAdmission').innerHTML = ''; $('#aeroTarget').value = '';
       status('Set the flow conditions, then press Solve Aerodynamics.');
       refresh();
     }
     // Applied-load banner, stale-shape warning and buttons only (the flow fields keep what the user is typing).
     function syncApplied() {
+      invalidateCustom();
       let rec = null, key = '';
       try { rec = ad.applied?.(); key = ad.geometryKey ? ad.geometryKey(ad.geometry()) : ''; } catch (e) { rec = ad.applied?.() || null; key = ''; }
       $('#aeroApplied').innerHTML = rec ? `<div class="wae-box"><p><b>Applied:</b> ${esc(rec.label)}.</p>${rec.geometrySha256 !== key ? '<p class="wae-err">The wing shape changed after this load was solved: the structural solve refuses it until you press Solve Aerodynamics again and apply the loads, or remove it.</p>' : ''}</div>` : '';
@@ -384,8 +469,8 @@ const WingAeroUI = (() => {
       syncButtons();
     }
     refresh();
-    return { refresh, reset, syncApplied, compute, apply, showAdmission, destroy: () => { worker?.terminate(); worker = null; host.innerHTML = ''; }, get result() { return last; }, get combined() { return lastCombined; }, get admission() { return lastAdmission; }, get solvedKey() { return lastKey; }, get running() { return running; } };
+    return { refresh, reset, syncApplied, compute, apply, showAdmission, destroy: () => { cancelCustom();worker?.terminate(); worker = null; host.innerHTML = ''; }, cancelCustom, get customRunning(){return customRunning;}, get customResult(){return customLevels;}, get result() { return last; }, get combined() { return lastCombined; }, get admission() { return lastAdmission; }, get solvedKey() { return lastKey; }, get running() { return running; } };
   }
-  return Object.freeze({ mount, DEFAULTS, SEQUENCE_TEXT, SEQUENCE_NOTE, spanwiseFigure, cpFigure, csv, runMainThread, recordFromSequence, sequenceOf, delivered, aerodynamicSummary, engineLoad, structuralCuts, structuralTorsion, admit, provenanceHelp, admissionSource, admissionTable, admissionVerdict, admissionFailure, speedUnits });
+  return Object.freeze({ mount, DEFAULTS, SEQUENCE_TEXT, SEQUENCE_NOTE, spanwiseFigure, cpFigure, csv, runMainThread, recordFromSequence, sequenceOf, delivered, aerodynamicSummary, customMeshPlan, meshCheckFigure, customMeshCsv, engineLoad, structuralCuts, structuralTorsion, admit, provenanceHelp, admissionSource, admissionTable, admissionVerdict, admissionFailure, speedUnits });
 })();
 if (typeof module !== 'undefined' && module.exports) module.exports = WingAeroUI;

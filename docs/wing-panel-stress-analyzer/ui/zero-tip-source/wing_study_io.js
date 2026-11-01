@@ -1085,12 +1085,12 @@
       else {
         checkKeys(issues, raw.mesh, mp, ['chordPanels', 'spanPanels']);
         const mesh = {};
-        const c = num(issues, raw.mesh, 'chordPanels', mp, { integer: true, ge: 6, le: 48, label: 'panels per surface' });
-        const sp = num(issues, raw.mesh, 'spanPanels', mp, { integer: true, ge: 4, le: 40, label: 'spanwise panels' });
+        const c = num(issues, raw.mesh, 'chordPanels', mp, { integer: true, ge: 6, le: 96, label: 'panels per surface' });
+        const sp = num(issues, raw.mesh, 'spanPanels', mp, { integer: true, ge: 4, le: 48, label: 'spanwise panels' });
         if (c !== undefined) mesh.chordPanels = c;
         if (sp !== undefined) mesh.spanPanels = sp;
         // same panel limit as the solver (2 c s wing panels plus c tip-cap panels; geometry stations can add strips)
-        if (isNum(c) && isNum(sp) && 2 * c * sp + c > 2600) issues.err(mp, `gives ${2 * c * sp + c} panels; the browser panel solver allows at most 2600`);
+        if (isNum(c) && isNum(sp) && 2 * c * sp > 4800) issues.err(mp, `gives at least ${2 * c * sp} wing panels; the browser panel solver allows at most 4800; tip and geometry-station panels can add more`);
         out.mesh = mesh;
       }
     }

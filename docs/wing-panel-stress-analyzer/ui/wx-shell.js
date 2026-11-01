@@ -148,7 +148,7 @@
     <p>The reviewed tensor-quadratic revision is checked against exact ellipsoid potential flow and exact Karman–Trefftz section wings. Native PANAIR comparisons on an identical-node rectangular NACA 0012 wing cover lift, induced drag, pressure profiles and moment integration. Seven wing configurations were also compared with refined same-model references. These checks do not establish sub-percent accuracy on every planform or make the empirical uncertainty a guaranteed bound. The deepest tip/trailing-edge corner and collapsed last-strip Cp are not quantitatively validated. Fixed-position pressure and integrated-region convergence are distinct from a mesh-dependent extremum. Amber plotting preserves and identifies uncertain rounded-tip samples; it is not a physical stall or separation boundary.</p>
     <p>Use an inboard Cp section and inspect mesh refinement, pressure versus wake lift, and reported uncertainty. Do not use the displayed tip extremum as a certified design stress/load. This version has no boundary layer, skin-friction/profile drag, transition, separation, stall or vortex-lift model. Reynolds number and Mach are screens only; low-Re airfoils may differ substantially from inviscid predictions. A useful 2D comparison must use matching geometry, α and inviscid assumptions; a finite-wing section also has downwash and crossflow, so it need not equal an isolated 2D airfoil.</p>`}));
   const foilHelp=el('details',{id:'wxFoilAlgorithm'},el('summary',{text:'Independent 2D airfoil solver · how to use it'}),el('div',{html:`
-    <p>Choose Aero results → 2D airfoil, or select a rib and press Analyze this section (2D). Choose a rib/station, enter y in mm, or enter η = y / projected semi-span (0 root, 1 tip). For a 450 mm semi-wing, η = 0.5 means y = 225 mm. Ribs are structural parts; they do not create the airfoil or change its 2D pressure. An exact zero-chord tip has no airfoil section; choose an inboard station.</p>
+    <p>Choose Aero results → 2D airfoil. Use Independent airfoil to enter a NACA code, choose a library profile or upload DAT / TXT coordinates without creating or changing a wing. Use Section from current wing to choose a rib/station, enter y in mm, or enter η = y / projected semi-span (0 root, 1 tip). Selecting a rib and Analyze this section (2D) opens this second mode directly. For a 450 mm semi-wing, η = 0.5 means y = 225 mm. Ribs are structural parts; they do not create the airfoil or change its 2D pressure. An exact zero-chord tip has no airfoil section; choose an inboard station.</p>
     <p><b>Why two stations can show the same 2D Cp.</b> The local profile is extracted from the wing and normalized to a unit chord, then solved again as an isolated airfoil. At the same normalized profile, entered α and panel count, this inviscid 2D problem is identical at the root and near the tip: changing chord, rib or rod position does not create wing downwash in a 2D calculation. Different local profiles or entered α do change the answer. Real Reynolds-number effects are excluded.</p>
     <p><b>To include the finite wing:</b> solve Aerodynamics, then choose <b>3D wing · sectional Cp</b> or press <b>3D Cp near this station</b>. That view reads the closest actually solved 3D strip and displays its y coordinate; it does not substitute or interpolate an isolated 2D result. Spanwise interaction, downwash and tip geometry can make its Cp vary with y. See <a href="https://www1.grc.nasa.gov/beginners-guide-to-aeronautics/downwash-effects-on-lift/" target="_blank" rel="noopener">NASA: finite-wing downwash</a>.</p>
     <p>Enter angle of attack relative to that section's own chord and panels per side, then press Solve 2D airfoil. This uses the local profile, not the 3D pressure solution, and needs no wing solve. Enter α directly; wing incidence is not silently added. Sweep, dihedral, finite-span downwash and the rounded aerodynamic tip are not part of the isolated 2D problem. For pressure from the finite wing's 3D solution instead, choose 3D wing · sectional Cp vs x/c and its solved strip. The two results need not agree.</p>
@@ -217,12 +217,12 @@
   if (wae && aeroRun && aeroApply) {
     const grid = $(':scope > .wae-grid', wae), seqLabel = $('#aeroSequence', aeroHost).closest('label');
     const notes = $$(':scope > p.note', wae), seqNote = notes[0];
-    const air = $(':scope > details', wae), actions = aeroRun.parentElement;
+    const air = $('#aeroAirProperties', wae), customMesh = $('#aeroCustomMesh', wae), actions = aeroRun.parentElement;
     const status = $('#aeroStatus', aeroHost), applied = $('#aeroApplied', aeroHost), admission = $('#aeroAdmission', aeroHost), out = $('#aeroResults', aeroHost);
     flowG = subgroup('wxAeroFlow', 'Flow conditions', 'V, ρ, α');
-    const meshG = subgroup('wxAeroMesh', 'Panel mesh sequence', 'Standard or Fine');
+    const meshG = subgroup('wxAeroMesh', 'Panel mesh & check', 'Standard, Fine or custom diagnostics');
     admG = subgroup('wxAeroAdm', 'Applied load & admission check'); resG = subgroup('wxAeroRes', 'Solver report & load CSV');
-    flowG.body.append(grid); meshG.body.append(seqLabel, seqNote);
+    flowG.body.append(grid); meshG.body.append(seqLabel, seqNote);if(customMesh)meshG.body.append(customMesh);
     if (air) { air.classList.add('wl-acc', 'wx-sub'); air.id = 'wxAeroAir'; const body = el('div', { class: 'wl-acc-body' }); body.append(...[...air.children].filter((c) => c.tagName !== 'SUMMARY')); air.append(body); }
     admG.body.append(applied, admission); resG.body.append(out);
     admG.d.hidden = true; resG.d.hidden = true;
@@ -596,13 +596,14 @@
   const aeroBusyStep = el('p', { class: 'wx-aero-busy-step', text: 'Starting the aerodynamic mesh sequence…' });
   const aeroBusyTime = el('span', { class: 'wx-aero-busy-time', 'aria-live': 'off' });
   const aeroBusyProgress = el('progress', { 'aria-label': 'Completed aerodynamic meshes', max: '7' });
+  const customCancelBusy=el('button',{type:'button',class:'btn',text:'Cancel custom mesh solve',hidden:true});customCancelBusy.addEventListener('click',()=>ui.aero?.()?.cancelCustom?.());
   const aeroBusy = el('div', { class: 'wx-aero-busy', role: 'status', 'aria-live': 'polite', hidden: true },
     el('div', { class: 'wx-aero-busy-title' }, el('span', { class: 'wx-aero-spinner', 'aria-hidden': 'true' }), el('strong', { text: 'Solving aerodynamic panels' })),
-    aeroBusyStep, aeroBusyProgress, aeroBusyTime);
+    aeroBusyStep, aeroBusyProgress, aeroBusyTime, customCancelBusy);
   document.body.append(aeroBusy);
   let aeroBusyStart = 0, aeroBusyTimer = 0;
   function syncAeroBusy(a) {
-    const running = !!(a && a.running);
+    const running = !!(a && a.running);customCancelBusy.hidden=!a?.customRunning;
     aeroBusy.hidden = !running || app.hidden;
     if (!running) { if (aeroBusyTimer) clearInterval(aeroBusyTimer); aeroBusyTimer = 0; aeroBusyStart = 0; return; }
     if (!aeroBusyStart) aeroBusyStart = performance.now();

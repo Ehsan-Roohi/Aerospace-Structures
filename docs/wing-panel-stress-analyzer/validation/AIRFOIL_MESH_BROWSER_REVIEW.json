@@ -1,0 +1,35 @@
+{
+  "date": "2026-10-31",
+  "browser": "Interactive in-app Chromium",
+  "build": "Independent airfoil and custom mesh update",
+  "checks": [
+    {
+      "action": "Select independent2D and solve NACA23012 alpha4 with80panels/surface",
+      "cl": 0.6244,
+      "circulationCl": 0.62431,
+      "cmQuarter": -0.015692,
+      "actualContourPanels": 160,
+      "observed": true
+    },
+    {
+      "action": "Mesh check with12chordpanels/surface and8spanwise strips",
+      "actualGridPanels": [
+        120,
+        180,
+        240,
+        144,
+        192
+      ],
+      "CL": [
+        0.555896,
+        0.536166,
+        0.528549,
+        0.526822,
+        0.528016
+      ],
+      "observed": true,
+      "secondsDisplayed": 1.0
+    }
+  ],
+  "scope": "Real browser UI and numerical actions; not user Firefox certification or experimental validation."
+}

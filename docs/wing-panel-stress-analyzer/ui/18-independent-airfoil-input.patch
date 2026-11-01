@@ -1,0 +1,126 @@
+--- a/docs/wing-panel-stress-analyzer/ui/wx-aero-results.js
++++ b/docs/wing-panel-stress-analyzer/ui/wx-aero-results.js
+@@ -283,6 +283,15 @@
+     const pngBtn = el('button', { type: 'button', class: 'btn', id: 'wxArPng', text: 'Export current figure (PNG)' });
+     const csvBtn = el('button', { type: 'button', class: 'btn', id: 'wxArCsv', text: 'Export aerodynamic data (CSV)', disabled: true });
+     const backBtn = el('button', { type: 'button', class: 'btn', id: 'wxArBack', 'aria-label': 'Close the aerodynamic result and show the structural view' }, 'Back', el('span', { class: 'wx-long', text: ' to structure view' }));
++    // Independent geometry lives only in this result controller. No wing model input is changed.
++    const foilMode=el('select',{id:'wxFoilMode','aria-label':'2D airfoil geometry source'},el('option',{value:'independent',text:'Independent airfoil'}),el('option',{value:'wing',text:'Section from current wing'}));
++    const foilLibrary=el('select',{id:'wxFoilLibrary','aria-label':'Independent airfoil family or library'},el('option',{value:'naca',text:'NACA · enter 4- or 5-digit code'}),...(typeof WingAirfoils==='undefined'?[]:WingAirfoils.catalog.map(p=>el('option',{value:p.id,text:p.name+' · '+p.family}))));
++    const foilCode=el('input',{id:'wxFoilCode',type:'text',value:'2412',maxlength:'5',inputmode:'numeric','aria-label':'Independent NACA airfoil code'});
++    const foilFile=el('input',{id:'wxFoilDat',type:'file',accept:'.dat,.txt,text/plain','aria-label':'Upload independent airfoil DAT coordinates'});
++    const foilImport=el('label',{class:'btn'},'Upload DAT / TXT ',foilFile);
++    const foilError=el('span',{id:'wxFoilError',role:'alert',class:'wx-ar-scale-error'});
++    const foilIndependent=el('span',{id:'wxFoilIndependent',class:'wx-ar-tools'},el('label',{},'Airfoil ',foilLibrary),el('label',{},'NACA ',foilCode),foilImport,foilError);
++    let independentProfile=null,uploadedProfile=null,foilFileRead=0,foilReadPending=false;
+     const foilEta=el('input',{id:'wxFoilEta',type:'number',min:'0',max:'1',step:'.05',value:'.5','aria-label':'2D section span fraction eta'});
+     const foilY=el('input',{id:'wxFoilY',type:'number',min:'0',step:'any','aria-label':'2D section distance from root in millimetres'});
+     const foilRib=el('select',{id:'wxFoilRib','aria-label':'Choose a rib or spanwise station for the independent 2D section'});
+@@ -292,8 +301,9 @@
+     const foilSolve=el('button',{type:'button',class:'btn primary',id:'wxFoilSolve',text:'Solve 2D airfoil'});
+     const foilCompare3D=el('button',{type:'button',class:'btn',id:'wxFoilCompare3D',text:'3D Cp near this station',title:'Compare with an actually solved finite-wing strip; a 3D aerodynamic solve is required.'});
+     const sectionCompare2D=el('button',{type:'button',class:'btn',id:'wxSectionCompare2D',text:'Independent 2D at this station',hidden:true});
+-    const foilControls=el('div',{class:'wx-ar-tools',id:'wxFoilControls',hidden:true},el('label',{},'Use rib / station ',foilRib),el('label',{},'Section η ',foilEta),el('label',{},'y from root (mm) ',foilY),el('label',{},'α to local chord (°) ',foilAlpha),el('label',{},'Panels / side ',foilN),foilSolve,foilCompare3D,foilStation);
+-    let foil2D=null,foilBusy=false,foilMessage='Choose a section and its 2D angle of attack, then press Solve 2D airfoil. A wing aerodynamic solve is not required.';
++    const foilWing=el('span',{id:'wxFoilWing',class:'wx-ar-tools',hidden:true},el('label',{},'Use rib / station ',foilRib),el('label',{},'Section η ',foilEta),el('label',{},'y from root (mm) ',foilY),foilCompare3D);
++    const foilControls=el('div',{class:'wx-ar-tools',id:'wxFoilControls',hidden:true},el('label',{},'Geometry ',foilMode),foilIndependent,foilWing,el('label',{},'α to chord (°) ',foilAlpha),el('label',{},'Panels / side ',foilN),foilSolve,foilStation);
++    let foil2D=null,foilBusy=false,foilMessage='Choose an airfoil or upload DAT coordinates, enter α and press Solve 2D airfoil. No wing is required.';
+     const canvas = el('canvas', { id: 'wxArCanvas', role: 'img', tabindex: '0', 'aria-label': 'Aerodynamic result' });
+     const html = el('div', { id: 'wxArHtml', class: 'wx-ar-html', hidden: true });
+     // The legacy live report is moved here once. Its original IDs, station selection and CSV handler
+@@ -374,6 +384,10 @@
+     const close = () => show('');
+     let foilRibKey='';
+     function syncSectionControls(){
++      const independent=foilMode.value==='independent';
++      foilIndependent.hidden=!independent;foilWing.hidden=independent;
++      foilCode.disabled=foilLibrary.value!=='naca';
++      if(independent){foilStation.textContent='Isolated 2D flow · unit chord · independent of the wing and its loads.';return;}
+       const g=ui.state().geometry,L=+g.semiSpan,eta=+foilEta.value;
+       foilY.max=String(L);foilY.value=foilEta.value.trim()&&Number.isFinite(eta)?String(+(eta*L).toPrecision(10)):'';
+       foilStation.textContent=`η = y / projected semi-span · 0 root, 1 tip · semi-span ${sig(L)} mm. Independent 2D flow, not a slice of the 3D pressure result.`;
+@@ -386,7 +400,7 @@
+     }
+     function chooseSection(y){
+       const L=+ui.state().geometry.semiSpan;if(!Number.isFinite(y)||!(L>0)||y<0||y>L)return;
+-      foilEta.value=String(+(y/L).toPrecision(12));probes=[];show('foil2d');foilSolve.focus();
++      foilMode.value='wing';foilEta.value=String(+(y/L).toPrecision(12));probes=[];show('foil2d');foilSolve.focus();
+     }
+     foilCompare3D.addEventListener('click',()=>{
+       const s=data();if(!s||!foilEta.value.trim())return;const requested=+foilEta.value*+ui.state().geometry.semiSpan;
+@@ -399,14 +413,42 @@
+     foilRib.addEventListener('change',()=>{if(foilRib.value!=='')chooseSection(+foilRib.value);});
+     foilY.addEventListener('change',()=>{if(foilY.value.trim())chooseSection(+foilY.value);});
+     window.addEventListener?.('wing-open-2d-section',e=>chooseSection(e.detail?.y));
+-    const foilInputKey=()=>JSON.stringify([ui.state().geometry,foilEta.value,foilAlpha.value,foilN.value]);
++    const independentName=p=>p.kind==='naca4'||p.kind==='naca5'?'NACA '+p.code:(p.name||'Imported airfoil');
++    function independentSection(n){
++      const code=foilCode.value.trim(),profile=foilLibrary.value==='naca'?WingAirfoils.normalizeProfile({kind:code.length===5?'naca5':'naca4',code}):WingAirfoils.normalizeProfile(independentProfile);
++      const q=WingAirfoils.surfaces(profile,1,0,n+1),points=[];
++      for(let i=n;i>=0;i--)points.push([q.xl[i],q.zl[i]]);for(let i=1;i<=n;i++)points.push([q.xu[i],q.zu[i]]);
++      return {points,profile,mode:'independent',name:independentName(profile),chord_mm:null,eta:null,incidenceDeg:null};
++    }
++    foilMode.addEventListener('change',()=>{probes=[];render();});
++    foilLibrary.addEventListener('change',()=>{
++      ++foilFileRead;foilReadPending=false;foilSolve.disabled=foilBusy;foilError.textContent='';
++      try{independentProfile=foilLibrary.value==='naca'?null:foilLibrary.value==='uploaded'?uploadedProfile:WingAirfoils.preset(foilLibrary.value);if(independentProfile?.code)foilCode.value=independentProfile.code;}catch(e){foilError.textContent=e.message;}
++      probes=[];render();
++    });
++    foilCode.addEventListener('input',()=>{foilError.textContent='';probes=[];render();});
++    foilFile.addEventListener('change',async()=>{
++      const file=foilFile.files?.[0],read=++foilFileRead;if(!file)return;
++      foilError.textContent='Reading airfoil…';foilReadPending=true;foilSolve.disabled=true;
++      try{
++        if(file.size>262144)throw Error('Choose a DAT / TXT file smaller than 256 KiB.');
++        const parsed=WingAirfoils.parseDat(await file.text(),{filename:file.name});if(read!==foilFileRead)return;
++        independentProfile=uploadedProfile=parsed;
++        let uploaded=[...foilLibrary.options].find(o=>o.value==='uploaded');if(!uploaded){uploaded=el('option',{value:'uploaded'});foilLibrary.append(uploaded);}uploaded.textContent=independentName(parsed)+' · uploaded';foilLibrary.value='uploaded';foilMode.value='independent';foilError.textContent='';
++      }catch(e){if(read===foilFileRead){foil2D=null;foilError.textContent=e.message;}}
++      finally{if(read===foilFileRead){foilReadPending=false;foilSolve.disabled=foilBusy;probes=[];render();}}
++    });
++    const foilInputKey=()=>JSON.stringify(foilMode.value==='independent'?['independent',foilLibrary.value,foilCode.value,independentProfile,foilAlpha.value,foilN.value]:['wing',ui.state().geometry,foilEta.value,foilAlpha.value,foilN.value]);
+     const foilCurrent=()=>foil2D&&foil2D.key===foilInputKey();
+     foilSolve.addEventListener('click',async()=>{
+-      if(foilBusy)return;foilBusy=true;foilSolve.disabled=true;foilMessage='Solving the 2D section and its half-density mesh…';render();
++      if(foilBusy||foilReadPending)return;foilBusy=true;foilSolve.disabled=true;foilMessage='Solving the 2D section and its half-density mesh…';render();
+       await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+       try{
+-        if(!foilEta.value.trim()||!foilAlpha.value.trim())throw Error('Enter section η and a 2D angle of attack.');
+-        const key=foilInputKey(),n=+foilN.value,sec=window.WingAirfoilPanel2D.section(ui.state().geometry,+foilEta.value,n),coarse=window.WingAirfoilPanel2D.section(ui.state().geometry,+foilEta.value,n/2);
++        const independent=foilMode.value==='independent';
++        if((!independent&&!foilEta.value.trim())||!foilAlpha.value.trim())throw Error('Enter a 2D angle of attack'+(independent?'.':' and section η.'));
++        const key=foilInputKey(),n=+foilN.value;
++        const fromWing=m=>{const sec=window.WingAirfoilPanel2D.section(ui.state().geometry,+foilEta.value,m);return {...sec,mode:'wing',name:independentName(sec.profile)};};
++        const sec=independent?independentSection(n):fromWing(n),coarse=independent?independentSection(n/2):fromWing(n/2);
+         const r=window.WingAirfoilPanel2D.solveCoordinates(sec.points,+foilAlpha.value),old=window.WingAirfoilPanel2D.solveCoordinates(coarse.points,+foilAlpha.value);
+         foil2D={...r,section:sec,coarse:old,key,n};foilMessage='';probes=[];
+       }catch(e){foil2D=null;foilMessage=e.message;}
+@@ -702,7 +744,7 @@
+     }
+     function renderFoil(){
+       syncSectionControls();
+-      foilCompare3D.disabled=!data()||!foilEta.value.trim()||!Number.isFinite(+foilEta.value);
++      foilCompare3D.disabled=foilMode.value!=='wing'||!data()||!foilEta.value.trim()||!Number.isFinite(+foilEta.value);
+       for(const e of [station,projection,resetView,scaleMode,manualTools,scaleInfo])e.hidden=true;
+       panelToggle.hidden=false;clearBtn.hidden=false;clearBtn.disabled=!probes.length;html.hidden=true;pngBtn.hidden=false;
+       canvas.style.touchAction='auto';canvas.style.cursor='crosshair';
+@@ -710,7 +752,9 @@
+       pngBtn.disabled=csvBtn.disabled=!valid;
+       if(!valid){canvas.hidden=true;notice.hidden=false;notice.replaceChildren(el('p',{text:foilBusy?foilMessage:foil2D?'Inputs changed. Press Solve 2D airfoil to update this independent section solution.':foilMessage}));source.textContent='Independent 2D inviscid airfoil analysis · no 3D downwash or finite-wing induced drag';return;}
+       notice.hidden=true;canvas.hidden=false;const r=foil2D,delta=Math.abs(r.cl-r.coarse.cl);
+-      source.textContent=`η ${sig(r.section.eta)} · chord ${sig(r.section.chord_mm)} mm · α2D ${sig(r.alphaDeg)}° relative to local chord (entered directly; wing incidence is ${sig(r.section.incidenceDeg)}°). 2D cl = ${sig(r.cl,5)}, circulation cl = ${sig(r.clCirculation,5)}, 2D cm¼ = ${sig(r.cm,5)}. ${2*r.n} contour panels; half-density change: Δcl ${sig(delta,3)}, Δcm ${sig(Math.abs(r.cm-r.coarse.cm),3)}. System / mean-flux residual ${sig(r.maxResidual,2)}; midpoint normal-velocity residual ${sig(r.midpointNormalVelocity,2)}. Inviscid, sharp TE; no viscosity/stall. The half-density change is not a certified error bound.`;
++      title.textContent=`2D airfoil · ${r.section.name} · α ${sig(r.alphaDeg)}° · ${r.section.mode==='independent'?'independent geometry':'wing section'}`;
++      const context=r.section.mode==='independent'?'Independent geometry · unit chord · wing unchanged':`Wing section η ${sig(r.section.eta)} · chord ${sig(r.section.chord_mm)} mm · wing incidence ${sig(r.section.incidenceDeg)}° is not added`;
++      source.textContent=`${context} · α2D ${sig(r.alphaDeg)}° relative to chord. 2D cl = ${sig(r.cl,5)}, circulation cl = ${sig(r.clCirculation,5)}, 2D cm¼ = ${sig(r.cm,5)}. ${2*r.n} contour panels; half-density change: Δcl ${sig(delta,3)}, Δcm ${sig(Math.abs(r.cm-r.coarse.cm),3)}. System / mean-flux residual ${sig(r.maxResidual,2)}; midpoint normal-velocity residual ${sig(r.midpointNormalVelocity,2)}. Inviscid, sharp TE; no viscosity/stall. The half-density change is not a certified error bound.`;
+       draw(canvas,null);
+     }
+     function drawFoil(ctx,W,H,top,interactive){
+@@ -850,7 +894,7 @@
+     csvBtn.addEventListener('click', () => {
+       if(kind==='foil2d'){
+         if(!foilCurrent())return;
+-        const r=foil2D,lines=[`# Independent 2D linear vortex panel solution (interior at rest); alpha relative to local chord ${r.alphaDeg} deg; eta ${r.section.eta}; chord ${r.section.chord_mm} mm.`, `# cl_pressure ${r.cl}; cl_circulation ${r.clCirculation}; cm_quarter_chord ${r.cm}; numerical_pressure_drag ${r.pressureDrag} (discretization residual, NOT profile drag); cl_cm_exact_quadratic_integral ${r.integrated.cl} ${r.integrated.cm}; residual_panel_mean_normal_velocity_and_system ${r.maxResidual}; midpoint_normal_velocity_max ${r.midpointNormalVelocity}; trailing_edge_angle_deg ${r.trailingEdge.includedAngleDeg}.`, '# Two meshes are independent 2D solves. No 3D wing result is used.','mesh,surface,x_over_c,z_over_c,Cp,Vt_over_Vinf',...[['selected',r],['half_density',r.coarse]].flatMap(([name,r])=>r.panels.map(p=>[name,p.side,p.x,p.z,p.cp,p.vt].join(',')))];
++        const r=foil2D,lines=[`# Independent 2D linear vortex panel solution (interior at rest); geometry source ${r.section.mode}; airfoil ${r.section.name}; alpha relative to chord ${r.alphaDeg} deg; ${r.section.mode==='wing'?`eta ${r.section.eta}; chord ${r.section.chord_mm} mm`:'unit chord; no wing geometry used'}.`, `# cl_pressure ${r.cl}; cl_circulation ${r.clCirculation}; cm_quarter_chord ${r.cm}; numerical_pressure_drag ${r.pressureDrag} (discretization residual, NOT profile drag); cl_cm_exact_quadratic_integral ${r.integrated.cl} ${r.integrated.cm}; residual_panel_mean_normal_velocity_and_system ${r.maxResidual}; midpoint_normal_velocity_max ${r.midpointNormalVelocity}; trailing_edge_angle_deg ${r.trailingEdge.includedAngleDeg}.`, '# Two meshes are independent 2D solves. No 3D wing result is used.','mesh,surface,x_over_c,z_over_c,Cp,Vt_over_Vinf',...[['selected',r],['half_density',r.coarse]].flatMap(([name,r])=>r.panels.map(p=>[name,p.side,p.x,p.z,p.cp,p.vt].join(',')))];
+         download('airfoil-2d-panel.csv',new Blob([lines.join('\n')+'\n'],{type:'text/csv'}));return;
+       }
+       const s = data(); if (!s) return;

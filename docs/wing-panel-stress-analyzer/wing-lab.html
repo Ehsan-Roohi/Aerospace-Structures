@@ -13300,12 +13300,38 @@ const WingAeroUI = (() => {
     const line = (pts, cls) => `<polyline class="${cls}" points="${pts.map(([p, v]) => `${X(p).toFixed(1)},${Y(v).toFixed(1)}`).join(' ')}"/>`;
     return `<svg class="waefig" viewBox="0 0 ${W} ${H}" role="img" aria-label="Vertical aerodynamic force per unit span versus span station"><path class="ax" d="M${L} ${T}V${H - B}H${W - R}M${L} ${Y(0).toFixed(1)}H${W - R}"/>${line(b, 's2')}${line(a, 's1')}<text x="${L - 4}" y="${T + 8}" text-anchor="end">${fmt(ymax, 3)}</text><text x="${L - 4}" y="${(Y(0) + 4).toFixed(1)}" text-anchor="end">0</text><text x="${L}" y="${H - 6}">root</text><text x="${W - R}" y="${H - 6}" text-anchor="end">tip, y = ${fmt(span, 4)} mm</text></svg>`;
   }
-  function cpFigure(section) {
+  function cpFigure(section, meshLabel = '64 × 16 base mesh') {
     const W = 300, H = 180, L = 36, R = 8, T = 10, B = 20, all = [...section.lower, ...section.upper].map(v => v[1]).filter(Number.isFinite);
     const top = Math.max(1, ...all.map(v => -v)), bot = Math.min(-1, ...all.map(v => -v)); // plotted: -Cp up
     const X = x => L + (W - L - R) * x, Y = v => T + (H - T - B) * (top - v) / (top - bot);
     const line = (pts, cls) => `<polyline class="${cls}" points="${pts.map(([x, cp]) => `${X(x).toFixed(1)},${Y(-cp).toFixed(1)}`).join(' ')}"/>`;
-    return `<svg class="waefig" viewBox="0 0 ${W} ${H}" role="img" aria-label="Pressure coefficient along the chord at the selected station, upper and lower surfaces"><path class="ax" d="M${L} ${T}V${H - B}H${W - R}M${L} ${Y(0).toFixed(1)}H${W - R}"/>${line(section.upper, 's1')}${line(section.lower, 's2')}<text x="${L - 4}" y="${(Y(top) + 9).toFixed(1)}" text-anchor="end">${fmt(top, 3)}</text><text x="${L - 4}" y="${(Y(0) + 4).toFixed(1)}" text-anchor="end">0</text><text x="${L - 4}" y="${(Y(bot) - 2).toFixed(1)}" text-anchor="end">${fmt(bot, 3)}</text><text x="${L}" y="${H - 6}">LE</text><text x="${W - R}" y="${H - 6}" text-anchor="end">TE</text></svg><figcaption>−C<sub>p</sub> versus x/c at y = ${fmt(section.y_mm, 4)} mm (local chord ${fmt(section.chord_mm, 4)} mm) on the 64 × 16 base mesh: upper surface solid, lower surface dashed.</figcaption>`;
+    return `<svg class="waefig" viewBox="0 0 ${W} ${H}" role="img" aria-label="Pressure coefficient along the chord at the selected station, upper and lower surfaces"><path class="ax" d="M${L} ${T}V${H - B}H${W - R}M${L} ${Y(0).toFixed(1)}H${W - R}"/>${line(section.upper, 's1')}${line(section.lower, 's2')}<text x="${L - 4}" y="${(Y(top) + 9).toFixed(1)}" text-anchor="end">${fmt(top, 3)}</text><text x="${L - 4}" y="${(Y(0) + 4).toFixed(1)}" text-anchor="end">0</text><text x="${L - 4}" y="${(Y(bot) - 2).toFixed(1)}" text-anchor="end">${fmt(bot, 3)}</text><text x="${L}" y="${H - 6}">LE</text><text x="${W - R}" y="${H - 6}" text-anchor="end">TE</text></svg><figcaption>−C<sub>p</sub> versus x/c at y = ${fmt(section.y_mm, 4)} mm (local chord ${fmt(section.chord_mm, 4)} mm) on the ${esc(meshLabel)}: upper surface solid, lower surface dashed.</figcaption>`;
+  }
+  // Custom meshes are diagnostic solves of the unchanged panel equations. They never substitute
+  // an arbitrary single grid for the independently checked Standard/Fine structural load sequences.
+  function customMeshPlan(A, geometry, mesh, check = false) {
+    const m = A.normalizeMesh(mesh), g = A.aeroGeometry(geometry), out = [];
+    const levels = (n, lo) => { const a = [Math.max(lo, Math.round(n / 2)), Math.max(lo + 1, Math.round(3 * n / 4)), n];
+      if (new Set(a).size !== 3 || a.some(v => v > n)) throw Error(`For a three-level mesh check, choose at least ${lo + 2} panels in each direction.`); return a; };
+    const add = (c, sp, direction) => { if (out.some(q => q.chordPanels === c && q.spanPanels === sp)) return;
+      const w = A.wingMesh(g, { ...m, chordPanels: c, spanPanels: sp });
+      if (w.S.count > A.LIMITS.maxPanels) throw Error(`This geometry creates ${w.S.count} actual surface panels; the browser solver limit is ${A.LIMITS.maxPanels}. Reduce chord or span panels.`);
+      out.push({ chordPanels: c, spanPanels: sp, direction, panels: w.S.count }); };
+    if (check) { levels(m.chordPanels, A.LIMITS.chordPanels[0]).forEach(c => add(c, m.spanPanels, 'chord')); levels(m.spanPanels, A.LIMITS.spanPanels[0]).forEach(sp => add(m.chordPanels, sp, 'span')); }
+    else add(m.chordPanels, m.spanPanels, 'selected');
+    return out;
+  }
+  function meshCheckFigure(levels, direction, metric = 'CL') {
+    const rows = levels.filter(l => direction === 'chord' ? l.spanPanels === levels[0].spanPanels : l.chordPanels === levels[levels.length - 1].chordPanels)
+      .map(l => [direction === 'chord' ? l.chordPanels : l.spanPanels, l.coefficients[metric]]).sort((a,b)=>a[0]-b[0]);
+    if (!rows.length) return '';
+    const W=360,H=190,L=60,R=12,T=22,B=36,ns=rows.map(p=>p[0]),vs=rows.map(p=>p[1]),lo=Math.min(...vs),hi=Math.max(...vs),pad=Math.max((hi-lo)*.15,Math.abs(hi)*.005,1e-6),xmin=Math.min(...ns),xmax=Math.max(...ns),X=n=>L+(W-L-R)*(n-xmin)/Math.max(1,xmax-xmin),Y=v=>T+(H-T-B)*(hi+pad-v)/(hi-lo+2*pad);
+    return `<svg class="waefig" viewBox="0 0 ${W} ${H}" role="img" aria-label="Computed ${esc(metric)} versus ${direction} panel count; all solved mesh levels"><path class="ax" d="M${L} ${T}V${H-B}H${W-R}"/><polyline class="s1" points="${rows.map(([n,v])=>`${X(n)},${Y(v)}`).join(' ')}"/>${rows.map(([n,v])=>`<circle cx="${X(n)}" cy="${Y(v)}" r="3" fill="var(--accent)"/><text x="${X(n)}" y="${H-B+16}" text-anchor="middle">${n}</text>`).join('')}<text x="8" y="16">${esc(metric)}</text><text x="${L-4}" y="${T+8}" text-anchor="end">${fmt(hi+pad,5)}</text><text x="${L-4}" y="${H-B}" text-anchor="end">${fmt(lo-pad,5)}</text><text x="${(L+W-R)/2}" y="${H-4}" text-anchor="middle">${direction==='chord'?'Panels per surface (chord)':'Requested spanwise strips'}</text></svg>`;
+  }
+  function customMeshCsv(levels) {
+    const lines=['# Custom mesh diagnostics. Same entered angle, speed and geometry on every grid. No extrapolation, structural admission or experimental error is inferred.','chord_panels_per_surface,span_setting,actual_panels,CL_pressure,CL_Trefftz,CD_pressure,CDi_Trefftz,Cm'];
+    for(const l of levels)lines.push([l.chordPanels,l.spanPanels,l.panels,...['CL','CLTrefftz','CDpressure','CDiTrefftz','Cm'].map(k=>l.coefficients[k])].join(','));
+    return lines.join('\n')+'\n';
   }
   // --------------------------------------------------------------- CSV export (pure)
   function csv(record, combined, adm) {
@@ -13420,7 +13446,13 @@ const WingAeroUI = (() => {
       <div class="wae-grid">${field('aeroV', 'Speed V (m/s)', saved.speed, 'min="0" aria-describedby="aeroSpeedUnits"').replace('</label>', '<small id="aeroSpeedUnits" aria-live="polite"></small></label>')}${field('aeroRho', 'Air density ρ (kg/m³)', saved.density, 'min="0"')}${field('aeroAlpha', 'Angle of attack α (°)', saved.alphaDeg)}${field('aeroTarget', 'or target lift, both halves (N)', '', 'placeholder="optional"')}
       <label for="aeroSequence">Mesh sequence<select id="aeroSequence"><option value="standard">${SEQUENCE_TEXT.standard}</option><option value="fine">${SEQUENCE_TEXT.fine}</option></select></label></div>
       <p class="note">${SEQUENCE_NOTE}</p>
-      <details><summary>Air properties</summary><div class="wae-grid">${field('aeroMu', 'Dynamic viscosity μ (Pa·s)', saved.viscosity)}${field('aeroSound', 'Speed of sound a (m/s)', saved.speedOfSound, 'min="290" max="360"')}</div><p class="note">Used for the Reynolds-number and Mach screens only. The speed of sound must be that of air (290 to 360 m/s); Mach above 0.3 is refused.</p></details>
+      <details id="aeroCustomMesh"><summary>Custom mesh &amp; mesh check</summary>
+        <div class="wae-grid">${field('aeroCustomChord', 'Chord panels / surface', saved.mesh?.chordPanels ?? 32, 'min="6" max="96" step="1"')}${field('aeroCustomSpan', 'Spanwise strips', saved.mesh?.spanPanels ?? 16, 'min="4" max="48" step="1"')}</div>
+        <p class="note" id="aeroCustomCost">Choose counts and run a custom grid, or check three levels in each direction at the entered α. Structural loading uses Standard / Fine.</p>
+        <div class="lesson-actions"><button class="btn" type="button" id="aeroCustomRun">Solve custom mesh</button><button class="btn" type="button" id="aeroCustomCheck">Mesh check</button><button class="btn" type="button" id="aeroCustomCancel" hidden>Cancel mesh solve</button></div>
+        <p id="aeroCustomStatus" role="status" aria-live="polite" class="wae-status"></p><div id="aeroCustomResults"></div>
+      </details>
+      <details id="aeroAirProperties"><summary>Air properties</summary><div class="wae-grid">${field('aeroMu', 'Dynamic viscosity μ (Pa·s)', saved.viscosity)}${field('aeroSound', 'Speed of sound a (m/s)', saved.speedOfSound, 'min="290" max="360"')}</div><p class="note">Used for the Reynolds-number and Mach screens only. The speed of sound must be that of air (290 to 360 m/s); Mach above 0.3 is refused.</p></details>
       <div class="lesson-actions"><button class="btn primary" type="button" id="aeroRun">Solve Aerodynamics</button><button class="btn" type="button" id="aeroApply" disabled>Apply aerodynamic loads to structure</button><button class="btn" type="button" id="aeroRemove" hidden>Remove aerodynamic load</button></div>
       <p class="wae-status" id="aeroStatus" role="status" aria-live="polite"></p>
       <div id="aeroApplied"></div><div id="aeroAdmission"></div><div id="aeroResults"></div></div>`;
@@ -13434,6 +13466,7 @@ const WingAeroUI = (() => {
     $('#aeroSequence').value = saved.sequence === 'fine' ? 'fine' : 'standard';
     let worker = null, workerFailed = !ad.workerURL || typeof Worker === 'undefined', seq = 0, last = null, lastCombined = null, lastKey = '', running = false, lastAdmission = null;
     const pending = new Map();
+    let customWorker = null, customGeneration = 0, customRunning = false, customLevels = null, customKey = '', customReject = null;
     const A = () => (typeof WingAeroPanel !== 'undefined' ? WingAeroPanel : null);
     function getWorker() {
       if (workerFailed) return null;
@@ -13461,18 +13494,68 @@ const WingAeroUI = (() => {
         w.postMessage({ id, kind: 'sequence', geometry: JSON.parse(JSON.stringify(req.geometry)), flow: req.flow, sequence: req.sequence, options: req.options });
       });
     }
-    const busy = on => { running = on; $('#aeroRun').disabled = on; syncButtons(); };
+    const busy = on => { running = on; $('#aeroRun').disabled = on; $('#aeroCustomRun').disabled = on; $('#aeroCustomCheck').disabled = on; syncButtons(); };
     function syncButtons() {
       const st = ad.structure?.() || { supported: true }, fresh = last && lastKey && ad.geometryKey && ad.geometryKey(ad.geometry()) === lastKey;
       $('#aeroApply').disabled = running || !fresh || !st.supported || lastCombined?.structuralLoadAvailable === false || !!ad.disabled?.();
       $('#aeroApply').title = !st.supported ? st.message : lastCombined?.structuralLoadAvailable === false ? 'Structural load transfer is unavailable for an exact zero-chord tip.' : 'Transfer the aerodynamic load and run the structural admission checks.';
       $('#aeroRemove').hidden = !ad.applied?.();
     }
+    const customStamp = () => JSON.stringify([ad.geometryKey?.(ad.geometry()) || ad.geometry(), ['aeroV','aeroRho','aeroAlpha','aeroMu','aeroSound','aeroTarget','aeroCustomChord','aeroCustomSpan'].map(id=>$('#'+id).value)]);
+    function invalidateCustom() {
+      let fresh=false;try{fresh=customKey===customStamp();}catch(e){}
+      if(customLevels && !fresh) {customLevels=null;$('#aeroCustomResults').replaceChildren();$('#aeroCustomStatus').textContent='Inputs changed. Run the custom mesh again.';}
+    }
+    for(const id of ['aeroV','aeroRho','aeroAlpha','aeroMu','aeroSound','aeroTarget','aeroCustomChord','aeroCustomSpan'])$('#'+id).addEventListener('input',invalidateCustom);
+    function renderCustom(levels, check) {
+      const c=+$('#aeroCustomChord').value,sp=+$('#aeroCustomSpan').value,end=levels.find(l=>l.chordPanels===c&&l.spanPanels===sp);
+      const directionRows=direction=>levels.filter(l=>direction==='chord'?l.spanPanels===sp:l.chordPanels===c).sort((a,b)=>(direction==='chord'?a.chordPanels-b.chordPanels:a.spanPanels-b.spanPanels));
+      const change=direction=>{const ls=directionRows(direction);if(ls.length<2)return 'not checked';const a=ls[ls.length-2],b=ls[ls.length-1];return ['CL','Cm','CDiTrefftz'].map(k=>`${k}: Δ ${fmt(b.coefficients[k]-a.coefficients[k],5)}`).join('; ');};
+      $('#aeroCustomResults').innerHTML=`<p class="note"><b>Custom grid diagnostics</b> · α ${fmt(end.flow.alphaDeg)}° · V ${fmt(end.flow.speed)} m/s. Original solver predictions; no loads applied to the structure.</p>
+        <div class="wae-scroll"><table><thead><tr><th>Chord / surface</th><th>Span setting</th><th>Actual panels</th><th>CL</th><th>Cm (¼ MAC)</th><th>CDi (Trefftz)</th></tr></thead><tbody>${levels.map(l=>`<tr><td>${l.chordPanels}</td><td>${l.spanPanels}</td><td>${l.panels}</td><td>${fmt(l.coefficients.CL,6)}</td><td>${fmt(l.coefficients.Cm,6)}</td><td>${fmt(l.coefficients.CDiTrefftz,6)}</td></tr>`).join('')}</tbody></table></div>
+        ${check?`<p class="note">Last two chord levels: ${esc(change('chord'))}.<br>Last two span levels: ${esc(change('span'))}. These are signed mesh changes, not experimental errors, and do not establish convergence by themselves.</p>${meshCheckFigure(levels,'chord')}${meshCheckFigure(levels,'span')}`:''}
+        <label>Sectional Cp on selected custom grid<select id="aeroCustomStation">${end.chordwise.map((v,j)=>`<option value="${j}">y ${fmt(v.y_mm)} mm</option>`).join('')}</select></label><figure id="aeroCustomCp">${cpFigure(end.chordwise[0],`${c} chord panels/surface (${2*c} around contour) × ${sp} requested spanwise strips (${end.panels} actual panels)`)}</figure>
+        ${ad.download?'<button class="btn" type="button" id="aeroCustomCsv">Save custom mesh CSV</button>':''}`;
+      $('#aeroCustomStation').onchange=()=>{$('#aeroCustomCp').innerHTML=cpFigure(end.chordwise[+$('#aeroCustomStation').value],`${c} chord panels/surface (${2*c} around contour) × ${sp} requested spanwise strips (${end.panels} actual panels)`);};
+      if($('#aeroCustomCsv'))$('#aeroCustomCsv').onclick=()=>{if(customKey!==customStamp()){invalidateCustom();return;}ad.download('wing-custom-mesh-check.csv',customMeshCsv(levels),'text/csv');};
+    }
+    function cancelCustom() {
+      if(!customRunning)return;++customGeneration;customWorker?.terminate();customWorker=null;
+      const reject=customReject;customReject=null;reject?.(new Error('Custom mesh solve cancelled.'));customRunning=false;busy(false);$('#aeroCustomCancel').hidden=true;
+      $('#aeroCustomStatus').textContent='Custom mesh solve cancelled. Previous structural loads are unchanged.';status('Custom mesh solve cancelled.');
+    }
+    async function computeCustom(check=false) {
+      if(running)return;const blocked=ad.disabled?.();if(blocked){status(blocked,true);return;}
+      let req,plan,mesh,stamp;
+      try {
+        if(typeof Worker==='undefined'||!ad.workerURL)throw Error('Custom mesh diagnostics need Web Workers so progress and Cancel remain available. Use a browser with Web Workers enabled.');
+        req=request();if(req.options.targetLift_N!=null)throw Error('Clear Target lift for a mesh check: every grid must use the same entered angle of attack.');
+        const number=id=>{const raw=$('#'+id).value.trim();return raw===''?NaN:Number(raw);};mesh={chordPanels:number('aeroCustomChord'),spanPanels:number('aeroCustomSpan')};
+        plan=customMeshPlan(A(),req.geometry,mesh,check);stamp=customStamp();
+      }catch(e){$('#aeroCustomStatus').textContent=e.message;status(e.message,true);return;}
+      const peak=Math.max(...plan.map(p=>p.panels));$('#aeroCustomCost').textContent=`${plan.length} grids; largest ${peak} actual surface panels. A dense N×N array alone is about ${(peak*peak*8/1048576).toFixed(1)} MiB; total memory is higher. Runtime depends on geometry and device.`;
+      ad.saveSettings?.({...req.flow,sequence:req.sequence,mesh});const generation=++customGeneration;customRunning=true;busy(true);$('#aeroCustomCancel').hidden=false;$('#aeroCustomResults').replaceChildren();customLevels=null;
+      const t0=Date.now(),levels=[];
+      try {
+        customWorker=new Worker(ad.workerURL);
+        for(let i=0;i<plan.length;i++){
+          if(generation!==customGeneration)return;const p=plan[i],prefix=`Mesh ${i+1} of ${plan.length}: custom ${2*p.chordPanels} × ${p.spanPanels}…`;
+          status(prefix);$('#aeroCustomStatus').textContent=prefix;
+          const value=await new Promise((resolve,reject)=>{customReject=reject;customWorker.onmessage=ev=>{if(generation!==customGeneration)return;const m=ev.data||{};if(m.id!==i+1)return;if(m.kind==='progress'){status(prefix+' '+m.text);$('#aeroCustomStatus').textContent=m.text;return;}customReject=null;if(m.kind==='complete')resolve(m.result);else reject(Error(m.text||'Custom mesh solve failed.'));};customWorker.onerror=ev=>{ev.preventDefault?.();reject(Error('Custom mesh worker failed; reduce mesh size and try again.'));};customWorker.postMessage({id:i+1,kind:'solve',geometry:JSON.parse(JSON.stringify(req.geometry)),flow:req.flow,mesh:{chordPanels:p.chordPanels,spanPanels:p.spanPanels},options:{}});});
+          levels.push({...value,chordPanels:p.chordPanels,spanPanels:p.spanPanels,panels:value.mesh.panels});
+        }
+        if(generation!==customGeneration)return;if(stamp!==customStamp())throw Error('Inputs changed during the custom solve. Run it again; the old result is withheld.');
+        customKey=stamp;customLevels=levels;renderCustom(levels,check);const message=`Completed ${levels.length} custom mesh${levels.length===1?'':'es'} in ${((Date.now()-t0)/1000).toFixed(1)} s. ${check?'Mesh changes are shown below; no external reference or extrapolated accuracy is implied.':'No convergence claim from a single grid.'}`;$('#aeroCustomStatus').textContent=message;status(message);
+      }catch(e){if(generation===customGeneration){$('#aeroCustomStatus').textContent=e.message;status(e.message,true);}}
+      finally{if(generation===customGeneration){customWorker?.terminate();customWorker=null;customReject=null;customRunning=false;busy(false);$('#aeroCustomCancel').hidden=true;}}
+    }
+    $('#aeroCustomRun').onclick=()=>computeCustom(false);$('#aeroCustomCheck').onclick=()=>computeCustom(true);$('#aeroCustomCancel').onclick=cancelCustom;
     async function compute() {
       if (running) return;
       const blocked = ad.disabled?.(); if (blocked) { status(blocked, true); return; }
       let req; try { req = request(); } catch (e) { status(e.message, true); return; }
       const setting = { speed: req.flow.speed, density: req.flow.density, alphaDeg: req.flow.alphaDeg, sequence: req.sequence };
+      if (ad.settings?.()?.mesh) setting.mesh = { ...ad.settings().mesh };
       if (req.flow.viscosity !== DEFAULTS.viscosity) setting.viscosity = req.flow.viscosity;
       if (req.flow.speedOfSound !== DEFAULTS.speedOfSound) setting.speedOfSound = req.flow.speedOfSound;
       ad.saveSettings?.(setting);
@@ -13554,17 +13637,19 @@ const WingAeroUI = (() => {
       $('#aeroV').value = s.speed; $('#aeroRho').value = s.density; $('#aeroAlpha').value = s.alphaDeg; $('#aeroMu').value = s.viscosity; $('#aeroSound').value = s.speedOfSound;
       updateSpeedUnits();
       $('#aeroSequence').value = s.sequence === 'fine' ? 'fine' : 'standard';
+      $('#aeroCustomChord').value=s.mesh?.chordPanels??32;$('#aeroCustomSpan').value=s.mesh?.spanPanels??16;
       syncApplied();
     }
     function reset() {
       if (running) throw new Error('Wait for the aerodynamic solve to finish before opening the course example.');
-      last = null; lastCombined = null; lastKey = ''; lastAdmission = null;
+      last = null; lastCombined = null; lastKey = ''; lastAdmission = null;customLevels=null;$('#aeroCustomResults').replaceChildren();$('#aeroCustomStatus').textContent='';
       $('#aeroResults').innerHTML = ''; $('#aeroAdmission').innerHTML = ''; $('#aeroTarget').value = '';
       status('Set the flow conditions, then press Solve Aerodynamics.');
       refresh();
     }
     // Applied-load banner, stale-shape warning and buttons only (the flow fields keep what the user is typing).
     function syncApplied() {
+      invalidateCustom();
       let rec = null, key = '';
       try { rec = ad.applied?.(); key = ad.geometryKey ? ad.geometryKey(ad.geometry()) : ''; } catch (e) { rec = ad.applied?.() || null; key = ''; }
       $('#aeroApplied').innerHTML = rec ? `<div class="wae-box"><p><b>Applied:</b> ${esc(rec.label)}.</p>${rec.geometrySha256 !== key ? '<p class="wae-err">The wing shape changed after this load was solved: the structural solve refuses it until you press Solve Aerodynamics again and apply the loads, or remove it.</p>' : ''}</div>` : '';
@@ -13573,9 +13658,9 @@ const WingAeroUI = (() => {
       syncButtons();
     }
     refresh();
-    return { refresh, reset, syncApplied, compute, apply, showAdmission, destroy: () => { worker?.terminate(); worker = null; host.innerHTML = ''; }, get result() { return last; }, get combined() { return lastCombined; }, get admission() { return lastAdmission; }, get solvedKey() { return lastKey; }, get running() { return running; } };
+    return { refresh, reset, syncApplied, compute, apply, showAdmission, destroy: () => { cancelCustom();worker?.terminate(); worker = null; host.innerHTML = ''; }, cancelCustom, get customRunning(){return customRunning;}, get customResult(){return customLevels;}, get result() { return last; }, get combined() { return lastCombined; }, get admission() { return lastAdmission; }, get solvedKey() { return lastKey; }, get running() { return running; } };
   }
-  return Object.freeze({ mount, DEFAULTS, SEQUENCE_TEXT, SEQUENCE_NOTE, spanwiseFigure, cpFigure, csv, runMainThread, recordFromSequence, sequenceOf, delivered, aerodynamicSummary, engineLoad, structuralCuts, structuralTorsion, admit, provenanceHelp, admissionSource, admissionTable, admissionVerdict, admissionFailure, speedUnits });
+  return Object.freeze({ mount, DEFAULTS, SEQUENCE_TEXT, SEQUENCE_NOTE, spanwiseFigure, cpFigure, csv, runMainThread, recordFromSequence, sequenceOf, delivered, aerodynamicSummary, customMeshPlan, meshCheckFigure, customMeshCsv, engineLoad, structuralCuts, structuralTorsion, admit, provenanceHelp, admissionSource, admissionTable, admissionVerdict, admissionFailure, speedUnits });
 })();
 if (typeof module !== 'undefined' && module.exports) module.exports = WingAeroUI;
 
@@ -14775,12 +14860,12 @@ if(typeof module!=='undefined')module.exports=WingWorkspaceUI;
       else {
         checkKeys(issues, raw.mesh, mp, ['chordPanels', 'spanPanels']);
         const mesh = {};
-        const c = num(issues, raw.mesh, 'chordPanels', mp, { integer: true, ge: 6, le: 48, label: 'panels per surface' });
-        const sp = num(issues, raw.mesh, 'spanPanels', mp, { integer: true, ge: 4, le: 40, label: 'spanwise panels' });
+        const c = num(issues, raw.mesh, 'chordPanels', mp, { integer: true, ge: 6, le: 96, label: 'panels per surface' });
+        const sp = num(issues, raw.mesh, 'spanPanels', mp, { integer: true, ge: 4, le: 48, label: 'spanwise panels' });
         if (c !== undefined) mesh.chordPanels = c;
         if (sp !== undefined) mesh.spanPanels = sp;
         // same panel limit as the solver (2 c s wing panels plus c tip-cap panels; geometry stations can add strips)
-        if (isNum(c) && isNum(sp) && 2 * c * sp + c > 2600) issues.err(mp, `gives ${2 * c * sp + c} panels; the browser panel solver allows at most 2600`);
+        if (isNum(c) && isNum(sp) && 2 * c * sp > 4800) issues.err(mp, `gives at least ${2 * c * sp} wing panels; the browser panel solver allows at most 4800; tip and geometry-station panels can add more`);
         out.mesh = mesh;
       }
     }
@@ -24822,6 +24907,15 @@ window.WingAeroStructResults = (() => {
     const pngBtn = el('button', { type: 'button', class: 'btn', id: 'wxArPng', text: 'Export current figure (PNG)' });
     const csvBtn = el('button', { type: 'button', class: 'btn', id: 'wxArCsv', text: 'Export aerodynamic data (CSV)', disabled: true });
     const backBtn = el('button', { type: 'button', class: 'btn', id: 'wxArBack', 'aria-label': 'Close the aerodynamic result and show the structural view' }, 'Back', el('span', { class: 'wx-long', text: ' to structure view' }));
+    // Independent geometry lives only in this result controller. No wing model input is changed.
+    const foilMode=el('select',{id:'wxFoilMode','aria-label':'2D airfoil geometry source'},el('option',{value:'independent',text:'Independent airfoil'}),el('option',{value:'wing',text:'Section from current wing'}));
+    const foilLibrary=el('select',{id:'wxFoilLibrary','aria-label':'Independent airfoil family or library'},el('option',{value:'naca',text:'NACA · enter 4- or 5-digit code'}),...(typeof WingAirfoils==='undefined'?[]:WingAirfoils.catalog.map(p=>el('option',{value:p.id,text:p.name+' · '+p.family}))));
+    const foilCode=el('input',{id:'wxFoilCode',type:'text',value:'2412',maxlength:'5',inputmode:'numeric','aria-label':'Independent NACA airfoil code'});
+    const foilFile=el('input',{id:'wxFoilDat',type:'file',accept:'.dat,.txt,text/plain','aria-label':'Upload independent airfoil DAT coordinates'});
+    const foilImport=el('label',{class:'btn'},'Upload DAT / TXT ',foilFile);
+    const foilError=el('span',{id:'wxFoilError',role:'alert',class:'wx-ar-scale-error'});
+    const foilIndependent=el('span',{id:'wxFoilIndependent',class:'wx-ar-tools'},el('label',{},'Airfoil ',foilLibrary),el('label',{},'NACA ',foilCode),foilImport,foilError);
+    let independentProfile=null,uploadedProfile=null,foilFileRead=0,foilReadPending=false;
     const foilEta=el('input',{id:'wxFoilEta',type:'number',min:'0',max:'1',step:'.05',value:'.5','aria-label':'2D section span fraction eta'});
     const foilY=el('input',{id:'wxFoilY',type:'number',min:'0',step:'any','aria-label':'2D section distance from root in millimetres'});
     const foilRib=el('select',{id:'wxFoilRib','aria-label':'Choose a rib or spanwise station for the independent 2D section'});
@@ -24831,8 +24925,9 @@ window.WingAeroStructResults = (() => {
     const foilSolve=el('button',{type:'button',class:'btn primary',id:'wxFoilSolve',text:'Solve 2D airfoil'});
     const foilCompare3D=el('button',{type:'button',class:'btn',id:'wxFoilCompare3D',text:'3D Cp near this station',title:'Compare with an actually solved finite-wing strip; a 3D aerodynamic solve is required.'});
     const sectionCompare2D=el('button',{type:'button',class:'btn',id:'wxSectionCompare2D',text:'Independent 2D at this station',hidden:true});
-    const foilControls=el('div',{class:'wx-ar-tools',id:'wxFoilControls',hidden:true},el('label',{},'Use rib / station ',foilRib),el('label',{},'Section η ',foilEta),el('label',{},'y from root (mm) ',foilY),el('label',{},'α to local chord (°) ',foilAlpha),el('label',{},'Panels / side ',foilN),foilSolve,foilCompare3D,foilStation);
-    let foil2D=null,foilBusy=false,foilMessage='Choose a section and its 2D angle of attack, then press Solve 2D airfoil. A wing aerodynamic solve is not required.';
+    const foilWing=el('span',{id:'wxFoilWing',class:'wx-ar-tools',hidden:true},el('label',{},'Use rib / station ',foilRib),el('label',{},'Section η ',foilEta),el('label',{},'y from root (mm) ',foilY),foilCompare3D);
+    const foilControls=el('div',{class:'wx-ar-tools',id:'wxFoilControls',hidden:true},el('label',{},'Geometry ',foilMode),foilIndependent,foilWing,el('label',{},'α to chord (°) ',foilAlpha),el('label',{},'Panels / side ',foilN),foilSolve,foilStation);
+    let foil2D=null,foilBusy=false,foilMessage='Choose an airfoil or upload DAT coordinates, enter α and press Solve 2D airfoil. No wing is required.';
     const canvas = el('canvas', { id: 'wxArCanvas', role: 'img', tabindex: '0', 'aria-label': 'Aerodynamic result' });
     const html = el('div', { id: 'wxArHtml', class: 'wx-ar-html', hidden: true });
     // The legacy live report is moved here once. Its original IDs, station selection and CSV handler
@@ -24913,6 +25008,10 @@ window.WingAeroStructResults = (() => {
     const close = () => show('');
     let foilRibKey='';
     function syncSectionControls(){
+      const independent=foilMode.value==='independent';
+      foilIndependent.hidden=!independent;foilWing.hidden=independent;
+      foilCode.disabled=foilLibrary.value!=='naca';
+      if(independent){foilStation.textContent='Isolated 2D flow · unit chord · independent of the wing and its loads.';return;}
       const g=ui.state().geometry,L=+g.semiSpan,eta=+foilEta.value;
       foilY.max=String(L);foilY.value=foilEta.value.trim()&&Number.isFinite(eta)?String(+(eta*L).toPrecision(10)):'';
       foilStation.textContent=`η = y / projected semi-span · 0 root, 1 tip · semi-span ${sig(L)} mm. Independent 2D flow, not a slice of the 3D pressure result.`;
@@ -24925,7 +25024,7 @@ window.WingAeroStructResults = (() => {
     }
     function chooseSection(y){
       const L=+ui.state().geometry.semiSpan;if(!Number.isFinite(y)||!(L>0)||y<0||y>L)return;
-      foilEta.value=String(+(y/L).toPrecision(12));probes=[];show('foil2d');foilSolve.focus();
+      foilMode.value='wing';foilEta.value=String(+(y/L).toPrecision(12));probes=[];show('foil2d');foilSolve.focus();
     }
     foilCompare3D.addEventListener('click',()=>{
       const s=data();if(!s||!foilEta.value.trim())return;const requested=+foilEta.value*+ui.state().geometry.semiSpan;
@@ -24938,14 +25037,42 @@ window.WingAeroStructResults = (() => {
     foilRib.addEventListener('change',()=>{if(foilRib.value!=='')chooseSection(+foilRib.value);});
     foilY.addEventListener('change',()=>{if(foilY.value.trim())chooseSection(+foilY.value);});
     window.addEventListener?.('wing-open-2d-section',e=>chooseSection(e.detail?.y));
-    const foilInputKey=()=>JSON.stringify([ui.state().geometry,foilEta.value,foilAlpha.value,foilN.value]);
+    const independentName=p=>p.kind==='naca4'||p.kind==='naca5'?'NACA '+p.code:(p.name||'Imported airfoil');
+    function independentSection(n){
+      const code=foilCode.value.trim(),profile=foilLibrary.value==='naca'?WingAirfoils.normalizeProfile({kind:code.length===5?'naca5':'naca4',code}):WingAirfoils.normalizeProfile(independentProfile);
+      const q=WingAirfoils.surfaces(profile,1,0,n+1),points=[];
+      for(let i=n;i>=0;i--)points.push([q.xl[i],q.zl[i]]);for(let i=1;i<=n;i++)points.push([q.xu[i],q.zu[i]]);
+      return {points,profile,mode:'independent',name:independentName(profile),chord_mm:null,eta:null,incidenceDeg:null};
+    }
+    foilMode.addEventListener('change',()=>{probes=[];render();});
+    foilLibrary.addEventListener('change',()=>{
+      ++foilFileRead;foilReadPending=false;foilSolve.disabled=foilBusy;foilError.textContent='';
+      try{independentProfile=foilLibrary.value==='naca'?null:foilLibrary.value==='uploaded'?uploadedProfile:WingAirfoils.preset(foilLibrary.value);if(independentProfile?.code)foilCode.value=independentProfile.code;}catch(e){foilError.textContent=e.message;}
+      probes=[];render();
+    });
+    foilCode.addEventListener('input',()=>{foilError.textContent='';probes=[];render();});
+    foilFile.addEventListener('change',async()=>{
+      const file=foilFile.files?.[0],read=++foilFileRead;if(!file)return;
+      foilError.textContent='Reading airfoil…';foilReadPending=true;foilSolve.disabled=true;
+      try{
+        if(file.size>262144)throw Error('Choose a DAT / TXT file smaller than 256 KiB.');
+        const parsed=WingAirfoils.parseDat(await file.text(),{filename:file.name});if(read!==foilFileRead)return;
+        independentProfile=uploadedProfile=parsed;
+        let uploaded=[...foilLibrary.options].find(o=>o.value==='uploaded');if(!uploaded){uploaded=el('option',{value:'uploaded'});foilLibrary.append(uploaded);}uploaded.textContent=independentName(parsed)+' · uploaded';foilLibrary.value='uploaded';foilMode.value='independent';foilError.textContent='';
+      }catch(e){if(read===foilFileRead){foil2D=null;foilError.textContent=e.message;}}
+      finally{if(read===foilFileRead){foilReadPending=false;foilSolve.disabled=foilBusy;probes=[];render();}}
+    });
+    const foilInputKey=()=>JSON.stringify(foilMode.value==='independent'?['independent',foilLibrary.value,foilCode.value,independentProfile,foilAlpha.value,foilN.value]:['wing',ui.state().geometry,foilEta.value,foilAlpha.value,foilN.value]);
     const foilCurrent=()=>foil2D&&foil2D.key===foilInputKey();
     foilSolve.addEventListener('click',async()=>{
-      if(foilBusy)return;foilBusy=true;foilSolve.disabled=true;foilMessage='Solving the 2D section and its half-density mesh…';render();
+      if(foilBusy||foilReadPending)return;foilBusy=true;foilSolve.disabled=true;foilMessage='Solving the 2D section and its half-density mesh…';render();
       await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
       try{
-        if(!foilEta.value.trim()||!foilAlpha.value.trim())throw Error('Enter section η and a 2D angle of attack.');
-        const key=foilInputKey(),n=+foilN.value,sec=window.WingAirfoilPanel2D.section(ui.state().geometry,+foilEta.value,n),coarse=window.WingAirfoilPanel2D.section(ui.state().geometry,+foilEta.value,n/2);
+        const independent=foilMode.value==='independent';
+        if((!independent&&!foilEta.value.trim())||!foilAlpha.value.trim())throw Error('Enter a 2D angle of attack'+(independent?'.':' and section η.'));
+        const key=foilInputKey(),n=+foilN.value;
+        const fromWing=m=>{const sec=window.WingAirfoilPanel2D.section(ui.state().geometry,+foilEta.value,m);return {...sec,mode:'wing',name:independentName(sec.profile)};};
+        const sec=independent?independentSection(n):fromWing(n),coarse=independent?independentSection(n/2):fromWing(n/2);
         const r=window.WingAirfoilPanel2D.solveCoordinates(sec.points,+foilAlpha.value),old=window.WingAirfoilPanel2D.solveCoordinates(coarse.points,+foilAlpha.value);
         foil2D={...r,section:sec,coarse:old,key,n};foilMessage='';probes=[];
       }catch(e){foil2D=null;foilMessage=e.message;}
@@ -25241,7 +25368,7 @@ window.WingAeroStructResults = (() => {
     }
     function renderFoil(){
       syncSectionControls();
-      foilCompare3D.disabled=!data()||!foilEta.value.trim()||!Number.isFinite(+foilEta.value);
+      foilCompare3D.disabled=foilMode.value!=='wing'||!data()||!foilEta.value.trim()||!Number.isFinite(+foilEta.value);
       for(const e of [station,projection,resetView,scaleMode,manualTools,scaleInfo])e.hidden=true;
       panelToggle.hidden=false;clearBtn.hidden=false;clearBtn.disabled=!probes.length;html.hidden=true;pngBtn.hidden=false;
       canvas.style.touchAction='auto';canvas.style.cursor='crosshair';
@@ -25249,7 +25376,9 @@ window.WingAeroStructResults = (() => {
       pngBtn.disabled=csvBtn.disabled=!valid;
       if(!valid){canvas.hidden=true;notice.hidden=false;notice.replaceChildren(el('p',{text:foilBusy?foilMessage:foil2D?'Inputs changed. Press Solve 2D airfoil to update this independent section solution.':foilMessage}));source.textContent='Independent 2D inviscid airfoil analysis · no 3D downwash or finite-wing induced drag';return;}
       notice.hidden=true;canvas.hidden=false;const r=foil2D,delta=Math.abs(r.cl-r.coarse.cl);
-      source.textContent=`η ${sig(r.section.eta)} · chord ${sig(r.section.chord_mm)} mm · α2D ${sig(r.alphaDeg)}° relative to local chord (entered directly; wing incidence is ${sig(r.section.incidenceDeg)}°). 2D cl = ${sig(r.cl,5)}, circulation cl = ${sig(r.clCirculation,5)}, 2D cm¼ = ${sig(r.cm,5)}. ${2*r.n} contour panels; half-density change: Δcl ${sig(delta,3)}, Δcm ${sig(Math.abs(r.cm-r.coarse.cm),3)}. System / mean-flux residual ${sig(r.maxResidual,2)}; midpoint normal-velocity residual ${sig(r.midpointNormalVelocity,2)}. Inviscid, sharp TE; no viscosity/stall. The half-density change is not a certified error bound.`;
+      title.textContent=`2D airfoil · ${r.section.name} · α ${sig(r.alphaDeg)}° · ${r.section.mode==='independent'?'independent geometry':'wing section'}`;
+      const context=r.section.mode==='independent'?'Independent geometry · unit chord · wing unchanged':`Wing section η ${sig(r.section.eta)} · chord ${sig(r.section.chord_mm)} mm · wing incidence ${sig(r.section.incidenceDeg)}° is not added`;
+      source.textContent=`${context} · α2D ${sig(r.alphaDeg)}° relative to chord. 2D cl = ${sig(r.cl,5)}, circulation cl = ${sig(r.clCirculation,5)}, 2D cm¼ = ${sig(r.cm,5)}. ${2*r.n} contour panels; half-density change: Δcl ${sig(delta,3)}, Δcm ${sig(Math.abs(r.cm-r.coarse.cm),3)}. System / mean-flux residual ${sig(r.maxResidual,2)}; midpoint normal-velocity residual ${sig(r.midpointNormalVelocity,2)}. Inviscid, sharp TE; no viscosity/stall. The half-density change is not a certified error bound.`;
       draw(canvas,null);
     }
     function drawFoil(ctx,W,H,top,interactive){
@@ -25389,7 +25518,7 @@ window.WingAeroStructResults = (() => {
     csvBtn.addEventListener('click', () => {
       if(kind==='foil2d'){
         if(!foilCurrent())return;
-        const r=foil2D,lines=[`# Independent 2D linear vortex panel solution (interior at rest); alpha relative to local chord ${r.alphaDeg} deg; eta ${r.section.eta}; chord ${r.section.chord_mm} mm.`, `# cl_pressure ${r.cl}; cl_circulation ${r.clCirculation}; cm_quarter_chord ${r.cm}; numerical_pressure_drag ${r.pressureDrag} (discretization residual, NOT profile drag); cl_cm_exact_quadratic_integral ${r.integrated.cl} ${r.integrated.cm}; residual_panel_mean_normal_velocity_and_system ${r.maxResidual}; midpoint_normal_velocity_max ${r.midpointNormalVelocity}; trailing_edge_angle_deg ${r.trailingEdge.includedAngleDeg}.`, '# Two meshes are independent 2D solves. No 3D wing result is used.','mesh,surface,x_over_c,z_over_c,Cp,Vt_over_Vinf',...[['selected',r],['half_density',r.coarse]].flatMap(([name,r])=>r.panels.map(p=>[name,p.side,p.x,p.z,p.cp,p.vt].join(',')))];
+        const r=foil2D,lines=[`# Independent 2D linear vortex panel solution (interior at rest); geometry source ${r.section.mode}; airfoil ${r.section.name}; alpha relative to chord ${r.alphaDeg} deg; ${r.section.mode==='wing'?`eta ${r.section.eta}; chord ${r.section.chord_mm} mm`:'unit chord; no wing geometry used'}.`, `# cl_pressure ${r.cl}; cl_circulation ${r.clCirculation}; cm_quarter_chord ${r.cm}; numerical_pressure_drag ${r.pressureDrag} (discretization residual, NOT profile drag); cl_cm_exact_quadratic_integral ${r.integrated.cl} ${r.integrated.cm}; residual_panel_mean_normal_velocity_and_system ${r.maxResidual}; midpoint_normal_velocity_max ${r.midpointNormalVelocity}; trailing_edge_angle_deg ${r.trailingEdge.includedAngleDeg}.`, '# Two meshes are independent 2D solves. No 3D wing result is used.','mesh,surface,x_over_c,z_over_c,Cp,Vt_over_Vinf',...[['selected',r],['half_density',r.coarse]].flatMap(([name,r])=>r.panels.map(p=>[name,p.side,p.x,p.z,p.cp,p.vt].join(',')))];
         download('airfoil-2d-panel.csv',new Blob([lines.join('\n')+'\n'],{type:'text/csv'}));return;
       }
       const s = data(); if (!s) return;
@@ -25605,7 +25734,7 @@ window.WingAeroStructResults = (() => {
     <p>The reviewed tensor-quadratic revision is checked against exact ellipsoid potential flow and exact Karman–Trefftz section wings. Native PANAIR comparisons on an identical-node rectangular NACA 0012 wing cover lift, induced drag, pressure profiles and moment integration. Seven wing configurations were also compared with refined same-model references. These checks do not establish sub-percent accuracy on every planform or make the empirical uncertainty a guaranteed bound. The deepest tip/trailing-edge corner and collapsed last-strip Cp are not quantitatively validated. Fixed-position pressure and integrated-region convergence are distinct from a mesh-dependent extremum. Amber plotting preserves and identifies uncertain rounded-tip samples; it is not a physical stall or separation boundary.</p>
     <p>Use an inboard Cp section and inspect mesh refinement, pressure versus wake lift, and reported uncertainty. Do not use the displayed tip extremum as a certified design stress/load. This version has no boundary layer, skin-friction/profile drag, transition, separation, stall or vortex-lift model. Reynolds number and Mach are screens only; low-Re airfoils may differ substantially from inviscid predictions. A useful 2D comparison must use matching geometry, α and inviscid assumptions; a finite-wing section also has downwash and crossflow, so it need not equal an isolated 2D airfoil.</p>`}));
   const foilHelp=el('details',{id:'wxFoilAlgorithm'},el('summary',{text:'Independent 2D airfoil solver · how to use it'}),el('div',{html:`
-    <p>Choose Aero results → 2D airfoil, or select a rib and press Analyze this section (2D). Choose a rib/station, enter y in mm, or enter η = y / projected semi-span (0 root, 1 tip). For a 450 mm semi-wing, η = 0.5 means y = 225 mm. Ribs are structural parts; they do not create the airfoil or change its 2D pressure. An exact zero-chord tip has no airfoil section; choose an inboard station.</p>
+    <p>Choose Aero results → 2D airfoil. Use Independent airfoil to enter a NACA code, choose a library profile or upload DAT / TXT coordinates without creating or changing a wing. Use Section from current wing to choose a rib/station, enter y in mm, or enter η = y / projected semi-span (0 root, 1 tip). Selecting a rib and Analyze this section (2D) opens this second mode directly. For a 450 mm semi-wing, η = 0.5 means y = 225 mm. Ribs are structural parts; they do not create the airfoil or change its 2D pressure. An exact zero-chord tip has no airfoil section; choose an inboard station.</p>
     <p><b>Why two stations can show the same 2D Cp.</b> The local profile is extracted from the wing and normalized to a unit chord, then solved again as an isolated airfoil. At the same normalized profile, entered α and panel count, this inviscid 2D problem is identical at the root and near the tip: changing chord, rib or rod position does not create wing downwash in a 2D calculation. Different local profiles or entered α do change the answer. Real Reynolds-number effects are excluded.</p>
     <p><b>To include the finite wing:</b> solve Aerodynamics, then choose <b>3D wing · sectional Cp</b> or press <b>3D Cp near this station</b>. That view reads the closest actually solved 3D strip and displays its y coordinate; it does not substitute or interpolate an isolated 2D result. Spanwise interaction, downwash and tip geometry can make its Cp vary with y. See <a href="https://www1.grc.nasa.gov/beginners-guide-to-aeronautics/downwash-effects-on-lift/" target="_blank" rel="noopener">NASA: finite-wing downwash</a>.</p>
     <p>Enter angle of attack relative to that section's own chord and panels per side, then press Solve 2D airfoil. This uses the local profile, not the 3D pressure solution, and needs no wing solve. Enter α directly; wing incidence is not silently added. Sweep, dihedral, finite-span downwash and the rounded aerodynamic tip are not part of the isolated 2D problem. For pressure from the finite wing's 3D solution instead, choose 3D wing · sectional Cp vs x/c and its solved strip. The two results need not agree.</p>
@@ -25674,12 +25803,12 @@ window.WingAeroStructResults = (() => {
   if (wae && aeroRun && aeroApply) {
     const grid = $(':scope > .wae-grid', wae), seqLabel = $('#aeroSequence', aeroHost).closest('label');
     const notes = $$(':scope > p.note', wae), seqNote = notes[0];
-    const air = $(':scope > details', wae), actions = aeroRun.parentElement;
+    const air = $('#aeroAirProperties', wae), customMesh = $('#aeroCustomMesh', wae), actions = aeroRun.parentElement;
     const status = $('#aeroStatus', aeroHost), applied = $('#aeroApplied', aeroHost), admission = $('#aeroAdmission', aeroHost), out = $('#aeroResults', aeroHost);
     flowG = subgroup('wxAeroFlow', 'Flow conditions', 'V, ρ, α');
-    const meshG = subgroup('wxAeroMesh', 'Panel mesh sequence', 'Standard or Fine');
+    const meshG = subgroup('wxAeroMesh', 'Panel mesh & check', 'Standard, Fine or custom diagnostics');
     admG = subgroup('wxAeroAdm', 'Applied load & admission check'); resG = subgroup('wxAeroRes', 'Solver report & load CSV');
-    flowG.body.append(grid); meshG.body.append(seqLabel, seqNote);
+    flowG.body.append(grid); meshG.body.append(seqLabel, seqNote);if(customMesh)meshG.body.append(customMesh);
     if (air) { air.classList.add('wl-acc', 'wx-sub'); air.id = 'wxAeroAir'; const body = el('div', { class: 'wl-acc-body' }); body.append(...[...air.children].filter((c) => c.tagName !== 'SUMMARY')); air.append(body); }
     admG.body.append(applied, admission); resG.body.append(out);
     admG.d.hidden = true; resG.d.hidden = true;
@@ -26053,13 +26182,14 @@ window.WingAeroStructResults = (() => {
   const aeroBusyStep = el('p', { class: 'wx-aero-busy-step', text: 'Starting the aerodynamic mesh sequence…' });
   const aeroBusyTime = el('span', { class: 'wx-aero-busy-time', 'aria-live': 'off' });
   const aeroBusyProgress = el('progress', { 'aria-label': 'Completed aerodynamic meshes', max: '7' });
+  const customCancelBusy=el('button',{type:'button',class:'btn',text:'Cancel custom mesh solve',hidden:true});customCancelBusy.addEventListener('click',()=>ui.aero?.()?.cancelCustom?.());
   const aeroBusy = el('div', { class: 'wx-aero-busy', role: 'status', 'aria-live': 'polite', hidden: true },
     el('div', { class: 'wx-aero-busy-title' }, el('span', { class: 'wx-aero-spinner', 'aria-hidden': 'true' }), el('strong', { text: 'Solving aerodynamic panels' })),
-    aeroBusyStep, aeroBusyProgress, aeroBusyTime);
+    aeroBusyStep, aeroBusyProgress, aeroBusyTime, customCancelBusy);
   document.body.append(aeroBusy);
   let aeroBusyStart = 0, aeroBusyTimer = 0;
   function syncAeroBusy(a) {
-    const running = !!(a && a.running);
+    const running = !!(a && a.running);customCancelBusy.hidden=!a?.customRunning;
     aeroBusy.hidden = !running || app.hidden;
     if (!running) { if (aeroBusyTimer) clearInterval(aeroBusyTimer); aeroBusyTimer = 0; aeroBusyStart = 0; return; }
     if (!aeroBusyStart) aeroBusyStart = performance.now();

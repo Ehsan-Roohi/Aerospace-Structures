@@ -1,0 +1,25 @@
+{
+  "checks": [
+    "Custom counts generate separate three-level chord/span grids with actual geometry panel counts",
+    "Noninteger/nonfinite, unresolved three-level and oversized grids are refused by the actual solver bounds",
+    "Selected custom mesh runs the existing worker solve path, shows progress and computed Cp",
+    "Custom counts are saved under the existing aerodynamic mesh study field",
+    "Diagnostic CSV records actual grid counts and original coefficients without an accuracy claim",
+    "Directional mesh check computes five real grids and shows both convergence profiles plus selected-grid Cp",
+    "Cp is from the requested grid; per-surface, contour and actual panel counts are explicit",
+    "Custom diagnostics do not replace wing, applied loads, Standard/Fine result or structural admission",
+    "Flow edits withhold stale custom plots and export",
+    "Mesh comparisons require identical entered alpha instead of trimming each grid to a target",
+    "Cancel terminates the custom worker and ignores late replies",
+    "Worker constructor failure clears busy state with a visible error",
+    "Mid-solve edits cannot publish or export an obsolete custom result",
+    "Blank mesh input does not alter saved study settings",
+    "Canonical controls and expanded JSON mesh bounds are embedded in both shipped pages",
+    "Saved custom mesh imports and exports through the production study reader at the expanded solver bounds",
+    "Study JSON refuses the oversized custom panel budget instead of restoring unsafe counts"
+  ],
+  "count": 17,
+  "numericalEquationsChanged": false,
+  "structuralAdmissionChanged": false,
+  "scope": "Real panel geometry/solves, fake asynchronous worker transport, SVG output; browser visual QA remains separate"
+}

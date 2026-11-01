@@ -1,0 +1,23 @@
+{
+  "checks": [
+    "Independent geometry is directly available without a wing solve",
+    "NACA independent solve labels geometry, angle and CSV provenance",
+    "Changing NACA invalidates and changes the actual 2D pressure solution",
+    "Curated coordinate airfoil uses the real library and solver",
+    "Five-digit NACA airfoil is available independently",
+    "Invalid airfoil code cannot export a stale solution",
+    "DAT upload is parsed and solved with its own independent profile",
+    "Uploaded airfoil survives switching to another family and back",
+    "Late DAT read cannot replace a newer airfoil choice or leave Solve disabled",
+    "Failed DAT import has a visible error and withholds stale export",
+    "All independent selections, solves and imports leave wing/load/structural/3D state unchanged",
+    "Wing-only edits do not stale an independent airfoil solution",
+    "Existing section-from-wing workflow remains separate and labelled",
+    "Wing section result invalidates when its parent geometry changes",
+    "Rib shortcut explicitly selects wing-section mode",
+    "Independent result is not coupled to the last selected wing station"
+  ],
+  "count": 16,
+  "numericalEquationsChanged": false,
+  "test": "Real NACA/library/DAT geometry and existing linear-vortex solver, with a no-op canvas only"
+}

@@ -2,9 +2,9 @@
   "product": "MIE 446 Wing AeroStruct",
   "version": "0.3.9",
   "status": "Qualified educational solver; explicit 2D/3D section context and tested structural design guidance",
-  "builtAt": "2026-10-31T17:14:26.209736+00:00",
+  "builtAt": "2026-10-31T23:48:02.547751+00:00",
   "page": "index.html",
-  "pageSha256": "6325bf310ecdea70461fc1ddb3dfab688996199720dc2e8f6e465177b9e3c3cc",
+  "pageSha256": "ba5699cd33572430c6777af5d752d82947b54d9197d016208b876d6bd8b09d2e",
   "workers": {
     "wing-aero": {
       "worker": "8e2d79fa0bfe",
@@ -188,7 +188,7 @@
     },
     "wing_study_io.js": {
       "path": "docs/wing-panel-stress-analyzer/ui/zero-tip-source/wing_study_io.js",
-      "sha256": "441b39885282f002e1624c7504fa0c6984126d5f5a41f6e1602c28547331ec73",
+      "sha256": "b23a2ef38ef14950ba091c1804670c29909490652de97e77fc4abac165ca2e0d",
       "prior_archived_source_path": "computational/printed-wing-solver/aerostruct/wing_study_io.js",
       "sha256_scope": "Canonical LF source, as committed"
     },
@@ -198,12 +198,12 @@
     },
     "wx-aero-results.js": {
       "path": "docs/wing-panel-stress-analyzer/ui/wx-aero-results.js",
-      "sha256": "bd67f270947b49d6be5edbd81d471679c939012045f79bc780c992d2c9c9fce5",
+      "sha256": "6310eb5fb5a3a484ba9e184339d7856d5634eada3a2c6aa83dd1eca1b60ac929",
       "sha256_scope": "Canonical LF source, as committed"
     },
     "wx-shell.js": {
       "path": "docs/wing-panel-stress-analyzer/ui/wx-shell.js",
-      "sha256": "7835e320050a2272e59e8324622f2407b1255668485ea01308c7d98bcc879dad",
+      "sha256": "b043258496568f57c4e2fa3e8404eee338e9886f15b92779fe3a8db951df7b7e",
       "sha256_scope": "Canonical LF source, as committed"
     },
     "wx-shell.css": {
@@ -214,7 +214,7 @@
     "wing-aero-ui.js": {
       "path": "docs/wing-panel-stress-analyzer/ui/wing-aero-ui.js",
       "sha256_scope": "Canonical LF source",
-      "sha256": "55e80aada5e49b12cdabf12a72ace7c133b8095fd9758d22cc148e75320a38d3"
+      "sha256": "dbf565c4f00a093b12ebc8d982674795dda2a5c9c408a12e47e18e05675b21bf"
     }
   },
   "solverVersion": "0.3.1",
@@ -227,10 +227,10 @@
       "01-wing-aerostruct-ui-sources.patch": "de90922634d63658d06b82afd57d6363c5fca49c637d4e0a786e3cd03ffb140b",
       "02-closed-tip-aero-results.patch": "4d5833dbf86ddd6f34bc421b10bcac8118a87c7c0a10debe40256fd2b46993b5",
       "03-course-example-activity.patch": "197105dc7ff2665ccf439a38f81d23e113249021a807df33fed641e3a710cb77",
-      "wing-aero-ui.js": "55e80aada5e49b12cdabf12a72ace7c133b8095fd9758d22cc148e75320a38d3",
-      "wx-aero-results.js": "bd67f270947b49d6be5edbd81d471679c939012045f79bc780c992d2c9c9fce5",
+      "wing-aero-ui.js": "dbf565c4f00a093b12ebc8d982674795dda2a5c9c408a12e47e18e05675b21bf",
+      "wx-aero-results.js": "6310eb5fb5a3a484ba9e184339d7856d5634eada3a2c6aa83dd1eca1b60ac929",
       "wx-shell.css": "fa3821ed64d0a61880ddd8311acccdf49f9edbb86667ca001ccbbf5f052b6da7",
-      "wx-shell.js": "7835e320050a2272e59e8324622f2407b1255668485ea01308c7d98bcc879dad",
+      "wx-shell.js": "b043258496568f57c4e2fa3e8404eee338e9886f15b92779fe3a8db951df7b7e",
       "04-geometry-first-context-menu.patch": "653987960c2a8999cb77a4d0c9a6318a086de4d2b935aa77e3ed643deac3f1b2",
       "05-lightweight-view-rendering.patch": "396248051b76b95cba7679141a5c7eeac3019e859da022f3bf0af8229eb9f60d",
       "06-surface-gradient.patch": "04f381d9937dc7ccd4c0bc40721a1070725a0a094f7c064da1248bdfa15ba678",
@@ -370,5 +370,20 @@
       "8894c74ad9f4ebdc05c4a39bd62ebfa8d60678d595cc7b1211947f81c755f258",
       "6202d7af8229ed6e34081d7585d7e6331f64bf9660a94d32a58daf9bceec11fb"
     ]
+  },
+  "independentAirfoilInput": {
+    "sourcePort": "ui/18-independent-airfoil-input.patch",
+    "numerical2DKernelUnchanged": true,
+    "defaultGeometry": "independent NACA2412",
+    "test": "validation/test_independent_airfoil_input.cjs",
+    "review": "validation/INDEPENDENT_AIRFOIL_INPUT_REVIEW.json"
+  },
+  "customAerodynamicMesh": {
+    "sourcePort": "ui/19-custom-aero-mesh.patch",
+    "numericalEquationsChanged": false,
+    "scope": "Custom single-grid and separate chord/span three-level diagnostics; Standard/Fine structural-delivery and admission unchanged",
+    "test": "validation/test_custom_aero_mesh.cjs",
+    "review": "validation/CUSTOM_AERO_MESH_REVIEW.json",
+    "sourcePortSha256": "7262c930a168aaec5cbd64be1e75d5d7e0a10dc24a2c7527586acd3bb1904e95"
   }
 }

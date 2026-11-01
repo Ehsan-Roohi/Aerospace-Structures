@@ -63,9 +63,11 @@
       "Solved aerodynamic fields are clearly distinguished from loads actually applied to structural equilibrium",
       "Constant and unresolved fields do not fabricate a unit contour range; unloaded PNGs contain no false legend or stress probes",
       "Optional background design advisor compares stiffness and mass with actual structural solves, retains all inputs and admission, and labels exact-tip inboard trials without a full-wing optimum",
-      "One shared Wing shape editor before both solver menus; results share the first command row; no permanent left input column; Study tree cannot overlap its properties"
+      "One shared Wing shape editor before both solver menus; results share the first command row; no permanent left input column; Study tree cannot overlap its properties",
+      "Independent 2D airfoil geometry: NACA, library and DAT upload, isolated from the wing and its 3D or structural results",
+      "User-defined aerodynamic chord/span meshes and directional mesh checks; actual counts, signed changes, progress and cancellation; structural admission remains Standard/Fine"
     ],
-    "page_sha256": "6325bf310ecdea70461fc1ddb3dfab688996199720dc2e8f6e465177b9e3c3cc",
+    "page_sha256": "ba5699cd33572430c6777af5d752d82947b54d9197d016208b876d6bd8b09d2e",
     "source_port": "ui/01-wing-aerostruct-ui-sources.patch",
     "independent_review": "validation/UI_RELEASE_REVIEW.json",
     "surface_review": "validation/UI_SURFACE_REVIEW.json",
@@ -85,7 +87,9 @@
       "ui/14-zero-load-display.patch",
       "ui/15-design-advisor.patch",
       "ui/16-compact-single-geometry.patch",
-      "ui/17-member-aero-access.patch"
+      "ui/17-member-aero-access.patch",
+      "ui/18-independent-airfoil-input.patch",
+      "ui/19-custom-aero-mesh.patch"
     ],
     "closed_tip_review": "validation/CLOSED_TIP_AERO_REVIEW.json",
     "course_review": "validation/COURSE_UI_REVIEW.json",

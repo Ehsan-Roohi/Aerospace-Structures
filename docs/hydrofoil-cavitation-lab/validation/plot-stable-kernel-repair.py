@@ -33,7 +33,7 @@ for k,limit in [(1,.01),(2,.02)]:
     ax[k].axhline(0,color='black',lw=.7)
     ax[k].axhline(limit,color='grey',ls='--',lw=.8,label='Unchanged numerical limits')
     ax[k].axhline(-limit,color='grey',ls='--',lw=.8)
-    ax[k].set_xlim(0,1);ax[k].grid(alpha=.25);ax[k].legend(loc='upper center',ncol=4,frameon=True,fontsize=10)
+    ax[k].set_xlim(-.02,1.02);ax[k].set_xticks(np.linspace(0,1,6));ax[k].grid(alpha=.25);ax[k].legend(loc='upper center',ncol=4,frameon=True,fontsize=10)
 ax[1].set(xlabel='Cavity axial position x / L',ylabel='Direct normal velocity / U',title='Every retained near-rim sample; no endpoint bands removed')
 ax[2].set(xlabel='Cavity axial position x / L',ylabel='Direct Cp + sigma',title='Pressure consistency is still unqualified on the denser sample grid')
 fig.suptitle('Axisymmetric disk cavity, L/R = 8 · numerical kernel repair',fontsize=18)

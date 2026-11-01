@@ -1,0 +1,192 @@
+{
+  "created": "2026-11-01T01:40:24.940Z",
+  "reference": "Brennen1969 p680 Figure3, theoretical disk curves",
+  "experimental": false,
+  "kernelVersion": "0.2.1-research-stable-kernel",
+  "kernelSha256": "b3d8ee5e35d97f3224cfbf325b8ae9090406c077d6a1c4c31cf3ab4b702704da",
+  "meshDefinition": "Nc cavity bands; Nf=Nc/2 each face; total N=2Nc",
+  "sigmaRootTolerance": 5e-8,
+  "unchangedFieldLimits": {
+    "normal_U": 0.01,
+    "dynamicCp": 0.02
+  },
+  "allCasesRemainUnqualified": true,
+  "checks": [
+    "32 digitized theoretical points; measurements not claimed",
+    "sigma-0.3-Nc32.json: source hash, matched sigma, all face nodes, nine-fraction data and unchanged failed screens",
+    "sigma-0.3-Nc64.json: source hash, matched sigma, all face nodes, nine-fraction data and unchanged failed screens",
+    "sigma-0.3-Nc128.json: source hash, matched sigma, all face nodes, nine-fraction data and unchanged failed screens",
+    "sigma-0.7-Nc32.json: source hash, matched sigma, all face nodes, nine-fraction data and unchanged failed screens",
+    "sigma-0.7-Nc64.json: source hash, matched sigma, all face nodes, nine-fraction data and unchanged failed screens",
+    "sigma-0.7-Nc128.json: source hash, matched sigma, all face nodes, nine-fraction data and unchanged failed screens",
+    "No source PDF or source screenshots in public evidence"
+  ],
+  "results": [
+    {
+      "file": "sigma-0.3-Nc32.json",
+      "sigma": 0.2999999990600455,
+      "L_R": 8.705295929384933,
+      "Nc": 32,
+      "total": 64,
+      "fieldSamples": 576,
+      "accuracyQualified": false
+    },
+    {
+      "file": "sigma-0.3-Nc64.json",
+      "sigma": 0.2999999994050897,
+      "L_R": 8.606549634612003,
+      "Nc": 64,
+      "total": 128,
+      "fieldSamples": 1152,
+      "accuracyQualified": false
+    },
+    {
+      "file": "sigma-0.3-Nc128.json",
+      "sigma": 0.29999999948876366,
+      "L_R": 8.57805700738006,
+      "Nc": 128,
+      "total": 256,
+      "fieldSamples": 2304,
+      "accuracyQualified": false
+    },
+    {
+      "file": "sigma-0.7-Nc32.json",
+      "sigma": 0.699999997316441,
+      "L_R": 3.0830709545992847,
+      "Nc": 32,
+      "total": 64,
+      "fieldSamples": 576,
+      "accuracyQualified": false
+    },
+    {
+      "file": "sigma-0.7-Nc64.json",
+      "sigma": 0.69999999760336,
+      "L_R": 3.0717500051433304,
+      "Nc": 64,
+      "total": 128,
+      "fieldSamples": 1152,
+      "accuracyQualified": false
+    },
+    {
+      "file": "sigma-0.7-Nc128.json",
+      "sigma": 0.699999997688256,
+      "L_R": 3.068295750061983,
+      "Nc": 128,
+      "total": 256,
+      "fieldSamples": 2304,
+      "accuracyQualified": false
+    }
+  ],
+  "files": [
+    {
+      "file": "METHOD.md",
+      "bytes": 9977,
+      "sha256": "998cced59e92fa7f4e1032903d643d7c9b73caedf08017ce5deea43fdd400513"
+    },
+    {
+      "file": "brennen-1969-theory-cp.csv",
+      "bytes": 2127,
+      "sha256": "e7b99da2a0530ad1abaef0fe9cdb4ea273131a2b9d92e3cd5c12a444bb64920c"
+    },
+    {
+      "file": "brennen-1969-theory-cp.json",
+      "bytes": 8696,
+      "sha256": "9b8f43d54c143f6d01abdb01dc2ccf561f1d690c0c655e51c181af81b988f797"
+    },
+    {
+      "file": "digitize-reference.py",
+      "bytes": 3388,
+      "sha256": "e6bdac5c0a043741c3503ef890f26fccb0f7cb4a7032323167381b7a97531851"
+    },
+    {
+      "file": "matched-disk-cp.png",
+      "bytes": 429919,
+      "sha256": "a5202d0ada903280654aaf17fa857c678d24919af3402b46f3628155c87e3cde"
+    },
+    {
+      "file": "matched-disk-cp.svg",
+      "bytes": 121241,
+      "sha256": "a433812bf5a1dca87b90e370b62ac1830e2fcd3189065bcf466469547e5ff255"
+    },
+    {
+      "file": "matched-disk-field-samples.csv",
+      "bytes": 1304143,
+      "sha256": "28c346a226a9b7ffff58cc801bdbfbc465bf798c67125b28ff9657b19366cca3"
+    },
+    {
+      "file": "matched-disk-field.png",
+      "bytes": 831466,
+      "sha256": "0ce3d40af735b663b4dc9131a19baface1fc24bde8d7ca76c535a7937b422173"
+    },
+    {
+      "file": "matched-disk-field.svg",
+      "bytes": 1537455,
+      "sha256": "98a3d009ec76739bc772efa27af39a557246fbdabc9d7a6aefc315507baa7b74"
+    },
+    {
+      "file": "matched-disk-index.json",
+      "bytes": 361,
+      "sha256": "047000b7ce823653afae271b52c2a210afe8c3a3982ab3a2dd7a0252a8b07b10"
+    },
+    {
+      "file": "matched-disk-profiles.json",
+      "bytes": 881157,
+      "sha256": "34095ba13c4cd99775d56d76cd70572149aeec41611dae495d4e2a65fa4aeb55"
+    },
+    {
+      "file": "matched-disk-summary.csv",
+      "bytes": 2035,
+      "sha256": "6792cbe273a2325ffe61121f68e3c30e85654d06db134acbe98cdb9aed0eef1c"
+    },
+    {
+      "file": "matched-disk-summary.json",
+      "bytes": 5032,
+      "sha256": "459ce7c11346ac66d59b6ba54b273e1bc71b9b7bd6cbbf625bda85f2853987e8"
+    },
+    {
+      "file": "plot-matched-disk.py",
+      "bytes": 8178,
+      "sha256": "b4f4836d124ff72bfc8f09be40dc3e5c29b31e8ffb79f3a72b19d986562d00b4"
+    },
+    {
+      "file": "run-matched-disk.cjs",
+      "bytes": 3091,
+      "sha256": "01512064883aa664b22b29e501de42eb6ded22c31e5a9dc9e5301065f4718d46"
+    },
+    {
+      "file": "sigma-0.3-Nc128.json",
+      "bytes": 254826,
+      "sha256": "f1a4ba62ca030e064ab6a6687e7f1232b8cb50b1c74f1e2f56c5569729746b5b"
+    },
+    {
+      "file": "sigma-0.3-Nc32.json",
+      "bytes": 66212,
+      "sha256": "f956ace87cd13cf52a9e9ae167b1e52cc56d0dfd87bae5e6f085f504806a27a9"
+    },
+    {
+      "file": "sigma-0.3-Nc64.json",
+      "bytes": 128940,
+      "sha256": "62485ed859a40a59a842eb0b476f993873f738527ad48d3ce1c8f4a29c1a531b"
+    },
+    {
+      "file": "sigma-0.7-Nc128.json",
+      "bytes": 255850,
+      "sha256": "1a55a1f3d5c7631df2307a78a9dac163c67c139380c2c964cd6f4b7b31586821"
+    },
+    {
+      "file": "sigma-0.7-Nc32.json",
+      "bytes": 66555,
+      "sha256": "f89801d02ceb13b0c5ec3b3c8a280f80f1e62f17aa0f78d4873989d310da3531"
+    },
+    {
+      "file": "sigma-0.7-Nc64.json",
+      "bytes": 129575,
+      "sha256": "2bada85639640076da04d6e911025ecc2d1c88c0d06c15c1af32154ceae1d42d"
+    },
+    {
+      "file": "verify-evidence.cjs",
+      "bytes": 2949,
+      "sha256": "63b0e1624465e84b2aaa1583e85c0f7a6d7e3a15bc5b5fed123c58a08b9966f8"
+    }
+  ]
+}

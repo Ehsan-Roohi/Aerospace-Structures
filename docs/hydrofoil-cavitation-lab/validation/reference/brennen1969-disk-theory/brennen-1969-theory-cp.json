@@ -1,0 +1,339 @@
+{
+  "source": {
+    "author": "C. Brennen",
+    "year": 1969,
+    "title": "A Numerical Solution of Axisymmetric Cavity Flows",
+    "doi": "10.1017/S0022112069000802",
+    "url": "https://authors.library.caltech.edu/records/46gc9-rw507",
+    "page": 680,
+    "figure": 3,
+    "pdfPageOneBased": 10,
+    "pdfSha256": "c6b24e4e8137b7becb58b774226aa363b133f1baa26b23f931614c6c55725858"
+  },
+  "referenceType": "published numerical theory, manually digitized; not experimental measurements",
+  "model": "axisymmetric Riabouchinsky disk cavity",
+  "wallQualification": "Page 679 section 9 states that disk Cp at each sigma was indistinguishable for different H/C on the scale of Figure 3. The present solver is unbounded.",
+  "pixelCalibration": {
+    "image": "brennen-p680-hires.png",
+    "imageSize": [
+      1950,
+      3120
+    ],
+    "renderScale": 5,
+    "r0_x": 686,
+    "r1_x": 1433,
+    "Cp0_y": 1076,
+    "Cp1_y": 330,
+    "rFormula": "(pixel_x - 686) / 747",
+    "CpFormula": "(1076 - pixel_y) / 746"
+  },
+  "readingBounds": {
+    "r_R": 0.006,
+    "Cp": 0.012,
+    "meaning": "Conservative scan/manual-reading bounds, not statistical or experimental uncertainty. Pixel upsampling adds no source information."
+  },
+  "sampling": "Sixteen visibly resolved curve samples per sigma. No samples inferred where curves merge with the frame or experimental symbols. The first and last digitized samples are retained.",
+  "rimLimits": [
+    {
+      "sigma": 0.3,
+      "r_R": 1.0,
+      "Cp": -0.3
+    },
+    {
+      "sigma": 0.7,
+      "r_R": 1.0,
+      "Cp": -0.7
+    }
+  ],
+  "rimLimitMeaning": "Exact imposed free-surface pressure boundary-condition limits, not independent reference samples.",
+  "points": [
+    {
+      "sigma": 0.3,
+      "r_R": 0.5729585006693441,
+      "Cp": 0.9249329758713136,
+      "pixel_x": 1114,
+      "pixel_y": 386,
+      "readingBound_r_R": 0.006,
+      "readingBound_Cp": 0.012
+    },
+    {
+      "sigma": 0.7,
+      "r_R": 0.5448460508701473,
+      "Cp": 0.9249329758713136,
+      "pixel_x": 1093,
+      "pixel_y": 386,
+      "readingBound_r_R": 0.006,
+      "readingBound_Cp": 0.012
+    },
+    {
+      "sigma": 0.3,
+      "r_R": 0.6372155287817939,
+      "Cp": 0.8994638069705094,
+      "pixel_x": 1162,
+      "pixel_y": 405,
+      "readingBound_r_R": 0.006,
+      "readingBound_Cp": 0.012
+    },
+    {
+      "sigma": 0.7,
+      "r_R": 0.6044176706827309,
+      "Cp": 0.8994638069705094,
+      "pixel_x": 1137.5,
+      "pixel_y": 405,
+      "readingBound_r_R": 0.006,
+      "readingBound_Cp": 0.012
+    },
+    {
+      "sigma": 0.3,
+      "r_R": 0.6854082998661312,
+      "Cp": 0.8753351206434317,
+      "pixel_x": 1198,
+      "pixel_y": 423,
+      "readingBound_r_R": 0.006,
+      "readingBound_Cp": 0.012
+    },
+    {
+      "sigma": 0.7,
+      "r_R": 0.6526104417670683,
+      "Cp": 0.8753351206434317,
+      "pixel_x": 1173.5,
+      "pixel_y": 423,
+      "readingBound_r_R": 0.006,
+      "readingBound_Cp": 0.012
+    },
+    {
+      "sigma": 0.3,
+      "r_R": 0.8326639892904953,
+      "Cp": 0.7506702412868632,
+      "pixel_x": 1308,
+      "pixel_y": 516,
+      "readingBound_r_R": 0.006,
+      "readingBound_Cp": 0.012
+    },
+    {
+      "sigma": 0.7,
+      "r_R": 0.7958500669344043,
+      "Cp": 0.7506702412868632,
+      "pixel_x": 1280.5,
+      "pixel_y": 516,
+      "readingBound_r_R": 0.006,
+      "readingBound_Cp": 0.012
+    },
+    {
+      "sigma": 0.3,
+      "r_R": 0.8688085676037484,
+      "Cp": 0.6997319034852547,
+      "pixel_x": 1335,
+      "pixel_y": 554,
+      "readingBound_r_R": 0.006,
+      "readingBound_Cp": 0.012
+    },
+    {
+      "sigma": 0.7,
+      "r_R": 0.8319946452476573,
+      "Cp": 0.6997319034852547,
+      "pixel_x": 1307.5,
+      "pixel_y": 554,
+      "readingBound_r_R": 0.006,
+      "readingBound_Cp": 0.012
+    },
+    {
+      "sigma": 0.3,
+      "r_R": 0.8955823293172691,
+      "Cp": 0.6501340482573726,
+      "pixel_x": 1355,
+      "pixel_y": 591,
+      "readingBound_r_R": 0.006,
+      "readingBound_Cp": 0.012
+    },
+    {
+      "sigma": 0.7,
+      "r_R": 0.8607764390896921,
+      "Cp": 0.6501340482573726,
+      "pixel_x": 1329,
+      "pixel_y": 591,
+      "readingBound_r_R": 0.006,
+      "readingBound_Cp": 0.012
+    },
+    {
+      "sigma": 0.3,
+      "r_R": 0.9136546184738956,
+      "Cp": 0.6005361930294906,
+      "pixel_x": 1368.5,
+      "pixel_y": 628,
+      "readingBound_r_R": 0.006,
+      "readingBound_Cp": 0.012
+    },
+    {
+      "sigma": 0.7,
+      "r_R": 0.8848728246318608,
+      "Cp": 0.6005361930294906,
+      "pixel_x": 1347,
+      "pixel_y": 628,
+      "readingBound_r_R": 0.006,
+      "readingBound_Cp": 0.012
+    },
+    {
+      "sigma": 0.3,
+      "r_R": 0.9310575635876841,
+      "Cp": 0.5495978552278821,
+      "pixel_x": 1381.5,
+      "pixel_y": 666,
+      "readingBound_r_R": 0.006,
+      "readingBound_Cp": 0.012
+    },
+    {
+      "sigma": 0.7,
+      "r_R": 0.9049531459170014,
+      "Cp": 0.5495978552278821,
+      "pixel_x": 1362,
+      "pixel_y": 666,
+      "readingBound_r_R": 0.006,
+      "readingBound_Cp": 0.012
+    },
+    {
+      "sigma": 0.3,
+      "r_R": 0.9464524765729585,
+      "Cp": 0.5,
+      "pixel_x": 1393,
+      "pixel_y": 703,
+      "readingBound_r_R": 0.006,
+      "readingBound_Cp": 0.012
+    },
+    {
+      "sigma": 0.7,
+      "r_R": 0.9190093708165997,
+      "Cp": 0.5,
+      "pixel_x": 1372.5,
+      "pixel_y": 703,
+      "readingBound_r_R": 0.006,
+      "readingBound_Cp": 0.012
+    },
+    {
+      "sigma": 0.3,
+      "r_R": 0.9578313253012049,
+      "Cp": 0.450402144772118,
+      "pixel_x": 1401.5,
+      "pixel_y": 740,
+      "readingBound_r_R": 0.006,
+      "readingBound_Cp": 0.012
+    },
+    {
+      "sigma": 0.7,
+      "r_R": 0.9310575635876841,
+      "Cp": 0.450402144772118,
+      "pixel_x": 1381.5,
+      "pixel_y": 740,
+      "readingBound_r_R": 0.006,
+      "readingBound_Cp": 0.012
+    },
+    {
+      "sigma": 0.3,
+      "r_R": 0.9712182061579652,
+      "Cp": 0.34986595174262736,
+      "pixel_x": 1411.5,
+      "pixel_y": 815,
+      "readingBound_r_R": 0.006,
+      "readingBound_Cp": 0.012
+    },
+    {
+      "sigma": 0.7,
+      "r_R": 0.9504685408299867,
+      "Cp": 0.34986595174262736,
+      "pixel_x": 1396,
+      "pixel_y": 815,
+      "readingBound_r_R": 0.006,
+      "readingBound_Cp": 0.012
+    },
+    {
+      "sigma": 0.3,
+      "r_R": 0.9772423025435074,
+      "Cp": 0.3002680965147453,
+      "pixel_x": 1416,
+      "pixel_y": 852,
+      "readingBound_r_R": 0.006,
+      "readingBound_Cp": 0.012
+    },
+    {
+      "sigma": 0.7,
+      "r_R": 0.9578313253012049,
+      "Cp": 0.3002680965147453,
+      "pixel_x": 1401.5,
+      "pixel_y": 852,
+      "readingBound_r_R": 0.006,
+      "readingBound_Cp": 0.012
+    },
+    {
+      "sigma": 0.3,
+      "r_R": 0.9819277108433735,
+      "Cp": 0.24932975871313673,
+      "pixel_x": 1419.5,
+      "pixel_y": 890,
+      "readingBound_r_R": 0.006,
+      "readingBound_Cp": 0.012
+    },
+    {
+      "sigma": 0.7,
+      "r_R": 0.9658634538152611,
+      "Cp": 0.24932975871313673,
+      "pixel_x": 1407.5,
+      "pixel_y": 890,
+      "readingBound_r_R": 0.006,
+      "readingBound_Cp": 0.012
+    },
+    {
+      "sigma": 0.3,
+      "r_R": 0.9852744310575636,
+      "Cp": 0.15013404825737264,
+      "pixel_x": 1422,
+      "pixel_y": 964,
+      "readingBound_r_R": 0.006,
+      "readingBound_Cp": 0.012
+    },
+    {
+      "sigma": 0.7,
+      "r_R": 0.9738955823293173,
+      "Cp": 0.15013404825737264,
+      "pixel_x": 1413.5,
+      "pixel_y": 964,
+      "readingBound_r_R": 0.006,
+      "readingBound_Cp": 0.012
+    },
+    {
+      "sigma": 0.3,
+      "r_R": 0.9886211512717537,
+      "Cp": 0.10053619302949061,
+      "pixel_x": 1424.5,
+      "pixel_y": 1001,
+      "readingBound_r_R": 0.006,
+      "readingBound_Cp": 0.012
+    },
+    {
+      "sigma": 0.7,
+      "r_R": 0.9772423025435074,
+      "Cp": 0.10053619302949061,
+      "pixel_x": 1416,
+      "pixel_y": 1001,
+      "readingBound_r_R": 0.006,
+      "readingBound_Cp": 0.012
+    },
+    {
+      "sigma": 0.3,
+      "r_R": 0.9912985274431058,
+      "Cp": 0.049597855227882036,
+      "pixel_x": 1426.5,
+      "pixel_y": 1039,
+      "readingBound_r_R": 0.006,
+      "readingBound_Cp": 0.012
+    },
+    {
+      "sigma": 0.7,
+      "r_R": 0.9799196787148594,
+      "Cp": 0.049597855227882036,
+      "pixel_x": 1418,
+      "pixel_y": 1039,
+      "readingBound_r_R": 0.006,
+      "readingBound_Cp": 0.012
+    }
+  ]
+}

@@ -5,13 +5,18 @@
   "changes": [
     "Cancellation-free elliptic ring remainder",
     "Guarded mathematical liquid/interior traces on declared boundary panels",
-    "Nine-fraction direct-field audit retaining all previous samples"
+    "Nine-fraction direct-field audit retaining all previous samples",
+    "Matched prescribed-sigma disk Cp comparison against digitized Brennen1969 numerical theory at Nc32,64,128; no experimental or complete-field pass"
   ],
   "evidence": [
     "stable-kernel-verification.json",
     "nodal-cavity-verification.json",
     "nodal-cavity-ui-smoke.json",
-    "stable-kernel-repair-profiles.json"
+    "stable-kernel-repair-profiles.json",
+    "reference/brennen1969-disk-theory/manifest.json",
+    "reference/brennen1969-disk-theory/matched-disk-profiles.json",
+    "reference/brennen1969-disk-theory/matched-disk-summary.json",
+    "reference/brennen1969-disk-theory/METHOD.md"
   ],
   "unchangedLimits": {
     "nodalTolerance": 1e-10,

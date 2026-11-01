@@ -1,0 +1,12 @@
+'use strict';
+const assert=require('node:assert/strict'),G=require('../cavity-geometry.js');
+const h=[{x:.1,y:.2,h:0},{x:.3,y:.24,h:.04},{x:.5,y:.18,h:0}];
+let m=G.measure(h,2);assert.ok(Math.abs(m.signedAreaPerSpan-.032)<1e-15);assert.equal(m.extrudedVolume,null);assert.equal(m.nodes.length,h.length);
+assert.ok(Math.abs(m.nodes[1].foilY-.2)<1e-15);assert.equal(G.measure(h,4).signedAreaPerSpan/m.signedAreaPerSpan,4);
+assert.equal(G.measure(h,4).maximumGap/m.maximumGap,2);assert.equal(G.measure(h,2,3).extrudedVolume,3*m.signedAreaPerSpan);
+const bad=h.map(p=>({...p}));bad[1].h=-.04;assert.equal(G.measure(bad,2,3).extrudedVolume,null);assert.ok(G.measure(bad,2).signedAreaPerSpan<0);
+assert.throws(()=>G.measure(h,2,0));assert.throws(()=>G.measure([...h].reverse(),2));assert.throws(()=>G.measure([{...h[0],h:NaN},h[1]],2));
+assert.ok(!G.extrusionSvg(h,2,3,{accepted:false}).includes('<svg'));
+assert.ok(G.extrusionSvg(h,2,3,{accepted:true}).includes('no spanwise flow solved'));
+assert.ok(!G.extrusionSvg(bad,2,3,{accepted:true}).includes('<svg'));
+console.log('Cavity geometry: area, units, original cambered upper surface, explicit span, signed failures and acceptance gates passed. No flow validation inferred.');

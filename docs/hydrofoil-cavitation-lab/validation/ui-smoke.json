@@ -6,6 +6,7 @@
   "checks": [
     "default solve separates numerical convergence from failed wetted-pressure physical screen",
     "complete default diagnostic profiles and new physical screen table retained",
+    "physical-rejected trial cannot display a cavity volume; every sampled strip remains in the section",
     "numerically converged raw trial is saved under rejectedTrial with result:null and separate numericalConverged",
     "synthetic passing-screen fixture exercises enabled CSV/figure export plumbing only, never experimental validation",
     "legacy numerical result without physical screening cannot advertise accepted KPIs or accepted exports",

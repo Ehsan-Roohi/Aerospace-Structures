@@ -1,0 +1,344 @@
+{
+  "version": "0.1.0-private-prototype",
+  "scope": "single axisymmetric detached bubble; numerical verification, no experiment or bubble cloud",
+  "tests": [
+    {
+      "name": "elliptic kernel independent known constants",
+      "pass": true,
+      "milliseconds": 0.30760000000000787
+    },
+    {
+      "name": "sphere harmonics l=0,1,2 converge without radial flux substitution",
+      "pass": true,
+      "milliseconds": 62.13459999999998
+    },
+    {
+      "name": "off-surface Green representation converges to exact sphere potential",
+      "pass": true,
+      "milliseconds": 10.657900000000012
+    },
+    {
+      "name": "non-spherical ellipsoid with offset interior-source manufactured potential",
+      "pass": true,
+      "milliseconds": 32.038899999999984
+    },
+    {
+      "name": "independent RP reference itself converges",
+      "pass": true,
+      "milliseconds": 13.062999999999988
+    },
+    {
+      "name": "actual BEM node/time convergence against independent RP",
+      "pass": true,
+      "milliseconds": 11633.821399999999
+    },
+    {
+      "name": "empty gas-free cavity contracts with Rayleigh reference",
+      "pass": true,
+      "milliseconds": 471.60939999999937
+    },
+    {
+      "name": "actual contracting BEM node/time convergence; symmetry is measured, not enforced",
+      "pass": true,
+      "milliseconds": 168093.5435
+    },
+    {
+      "name": "axisymmetric curvature and capillary equilibrium converge",
+      "pass": true,
+      "milliseconds": 65.71799999999348
+    },
+    {
+      "name": "non-spherical free-interface step has finite flow and actual shape change",
+      "pass": true,
+      "milliseconds": 158.4100000000035
+    },
+    {
+      "name": "geometry and finite-value screens reject invalid states",
+      "pass": true,
+      "milliseconds": 12.809500000003027
+    },
+    {
+      "name": "too-large step and capillary stability stop fail closed",
+      "pass": true,
+      "milliseconds": 8.25030000001425
+    },
+    {
+      "name": "finite physics, snapshot interval and corrected-time gas diagnostic",
+      "pass": true,
+      "milliseconds": 3.383399999991525
+    }
+  ],
+  "harmonics": [
+    {
+      "n": 16,
+      "l": 0,
+      "maxFluxError": 0.0011635780674710272,
+      "maxBoundaryResidual": 2.2204460492503126e-16
+    },
+    {
+      "n": 32,
+      "l": 0,
+      "maxFluxError": 0.0002793714196338559,
+      "maxBoundaryResidual": 4.440892098500624e-16
+    },
+    {
+      "n": 64,
+      "l": 0,
+      "maxFluxError": 6.82752501901529e-05,
+      "maxBoundaryResidual": 6.661338147750932e-16
+    },
+    {
+      "n": 16,
+      "l": 1,
+      "maxFluxError": 0.005068261964359166,
+      "maxBoundaryResidual": 3.363806106813731e-16
+    },
+    {
+      "n": 32,
+      "l": 1,
+      "maxFluxError": 0.0013539614814161993,
+      "maxBoundaryResidual": 6.677951654554545e-16
+    },
+    {
+      "n": 64,
+      "l": 1,
+      "maxFluxError": 0.00034792505457192924,
+      "maxBoundaryResidual": 8.331878542083497e-16
+    },
+    {
+      "n": 16,
+      "l": 2,
+      "maxFluxError": 0.016658238771633638,
+      "maxBoundaryResidual": 2.841007265986757e-16
+    },
+    {
+      "n": 32,
+      "l": 2,
+      "maxFluxError": 0.004068365064566315,
+      "maxBoundaryResidual": 5.583909025306566e-16
+    },
+    {
+      "n": 64,
+      "l": 2,
+      "maxFluxError": 0.001004811566395425,
+      "maxBoundaryResidual": 7.412454828194475e-16
+    }
+  ],
+  "nonSpherical": [
+    {
+      "n": 16,
+      "maxFluxError": 0.011752154318836139,
+      "maxBoundaryResidual": 2.8522405038078734e-16
+    },
+    {
+      "n": 32,
+      "maxFluxError": 0.0025195319443740427,
+      "maxBoundaryResidual": 3.8045244584424057e-16
+    },
+    {
+      "n": 64,
+      "maxFluxError": 0.0006361282482372221,
+      "maxBoundaryResidual": 8.560817146639225e-16
+    }
+  ],
+  "timeConvergence": [
+    {
+      "n": 16,
+      "dt": 0.008,
+      "normalizedRadius": 1.0074598458969946,
+      "referenceError": 2.64219781189734e-05,
+      "maxBoundaryResidual": 5.175933389572242e-16
+    },
+    {
+      "n": 16,
+      "dt": 0.004,
+      "normalizedRadius": 1.00745934487369,
+      "referenceError": 2.6923001423595494e-05,
+      "maxBoundaryResidual": 5.808944232142101e-16
+    },
+    {
+      "n": 16,
+      "dt": 0.002,
+      "normalizedRadius": 1.00745921880706,
+      "referenceError": 2.7049068053619507e-05,
+      "maxBoundaryResidual": 5.798727428318611e-16
+    },
+    {
+      "n": 32,
+      "dt": 0.008,
+      "normalizedRadius": 1.0074800409073363,
+      "referenceError": 6.226967777189785e-06,
+      "maxBoundaryResidual": 8.123617382323021e-16
+    },
+    {
+      "n": 32,
+      "dt": 0.004,
+      "normalizedRadius": 1.0074795371773924,
+      "referenceError": 6.730697721168966e-06,
+      "maxBoundaryResidual": 7.592539188317976e-16
+    },
+    {
+      "n": 32,
+      "dt": 0.002,
+      "normalizedRadius": 1.0074794104306557,
+      "referenceError": 6.857444457830653e-06,
+      "maxBoundaryResidual": 8.505360029669045e-16
+    },
+    {
+      "n": 64,
+      "dt": 0.008,
+      "normalizedRadius": 1.007485202870266,
+      "referenceError": 1.065004847422557e-06,
+      "maxBoundaryResidual": 1.0980674148400078e-15
+    },
+    {
+      "n": 64,
+      "dt": 0.004,
+      "normalizedRadius": 1.0074846984473043,
+      "referenceError": 1.5694278092670544e-06,
+      "maxBoundaryResidual": 1.3987248562788403e-15
+    },
+    {
+      "n": 64,
+      "dt": 0.002,
+      "normalizedRadius": 1.007484571526431,
+      "referenceError": 1.696348682633797e-06,
+      "maxBoundaryResidual": 1.2997881689016988e-15
+    }
+  ],
+  "spatialConvergence": [
+    {
+      "n": 16,
+      "dt": 0.002,
+      "normalizedRadius": 1.00745921880706,
+      "referenceError": 2.7049068053619507e-05,
+      "maxBoundaryResidual": 5.798727428318611e-16
+    },
+    {
+      "n": 32,
+      "dt": 0.002,
+      "normalizedRadius": 1.0074794104306557,
+      "referenceError": 6.857444457830653e-06,
+      "maxBoundaryResidual": 8.505360029669045e-16
+    },
+    {
+      "n": 64,
+      "dt": 0.002,
+      "normalizedRadius": 1.007484571526431,
+      "referenceError": 1.696348682633797e-06,
+      "maxBoundaryResidual": 1.2997881689016988e-15
+    }
+  ],
+  "exteriorPotentialErrors": [
+    0.0019624369277299047,
+    0.0004965953950502588,
+    0.00012494862328238376
+  ],
+  "reference": {
+    "radius": 1.0074862678751135,
+    "velocity": 0.03496666021495803,
+    "dt": 1e-05,
+    "coarseDifference": 1.554312234475219e-14
+  },
+  "rayleigh": {
+    "normalizedRadius": 0.9797469785078384,
+    "referenceRadius": 0.979726360501246,
+    "error": 2.061800659247659e-05
+  },
+  "contraction": {
+    "referenceRadius": 0.819021738730209,
+    "rows": [
+      {
+        "n": 16,
+        "dt": 0.006,
+        "normalizedRadius": 0.8199076797128463,
+        "referenceError": 0.0008859409826372788,
+        "shapeRadiusSpread": 0.0009367982526752305,
+        "maxBoundaryResidual": 5.919332650705716e-16
+      },
+      {
+        "n": 16,
+        "dt": 0.003,
+        "normalizedRadius": 0.8199080355455343,
+        "referenceError": 0.0008862968153252604,
+        "shapeRadiusSpread": 0.0009368192717637003,
+        "maxBoundaryResidual": 5.557631675100356e-16
+      },
+      {
+        "n": 16,
+        "dt": 0.0015,
+        "normalizedRadius": 0.8199081284043575,
+        "referenceError": 0.0008863896741484467,
+        "shapeRadiusSpread": 0.0009368245289705923,
+        "maxBoundaryResidual": 5.827064095596326e-16
+      },
+      {
+        "n": 32,
+        "dt": 0.006,
+        "normalizedRadius": 0.8192466958837662,
+        "referenceError": 0.0002249571535571926,
+        "shapeRadiusSpread": 0.0002050391698893428,
+        "maxBoundaryResidual": 9.177095058659363e-16
+      },
+      {
+        "n": 32,
+        "dt": 0.003,
+        "normalizedRadius": 0.8192470455483699,
+        "referenceError": 0.00022530681816090858,
+        "shapeRadiusSpread": 0.0002050467170705561,
+        "maxBoundaryResidual": 8.850703721428294e-16
+      },
+      {
+        "n": 32,
+        "dt": 0.0015,
+        "normalizedRadius": 0.8192471369013404,
+        "referenceError": 0.00022539817113143013,
+        "shapeRadiusSpread": 0.00020504860133696567,
+        "maxBoundaryResidual": 9.88416213918578e-16
+      },
+      {
+        "n": 64,
+        "dt": 0.006,
+        "normalizedRadius": 0.8190780353531273,
+        "referenceError": 5.6296622918283745e-05,
+        "shapeRadiusSpread": 4.061794600906943e-05,
+        "maxBoundaryResidual": 1.2061877855727187e-15
+      },
+      {
+        "n": 64,
+        "dt": 0.003,
+        "normalizedRadius": 0.8190783834158661,
+        "referenceError": 5.664468565713676e-05,
+        "shapeRadiusSpread": 4.06195387959718e-05,
+        "maxBoundaryResidual": 1.2820521960238943e-15
+      },
+      {
+        "n": 64,
+        "dt": 0.0015,
+        "normalizedRadius": 0.8190784743775101,
+        "referenceError": 5.6735647301131564e-05,
+        "shapeRadiusSpread": 4.061992956816418e-05,
+        "maxBoundaryResidual": 1.2281311325667166e-15
+      }
+    ]
+  },
+  "curvature": [
+    {
+      "n": 16,
+      "error": 0.006446761460288997
+    },
+    {
+      "n": 32,
+      "error": 0.0016077046253655247
+    },
+    {
+      "n": 64,
+      "error": 0.0004016779055175945
+    }
+  ],
+  "passed": 13,
+  "total": 13,
+  "reviewedSourceVersion": "0.1.0-private-prototype",
+  "publishedCoreVersion": "0.1.0-research",
+  "publicationChange": "Only the version label changed in the identical numerical kernel."
+}

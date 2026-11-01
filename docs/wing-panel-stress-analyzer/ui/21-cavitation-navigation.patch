@@ -1,0 +1,26 @@
+--- a/docs/wing-panel-stress-analyzer/index.html
++++ b/docs/wing-panel-stress-analyzer/index.html
+@@ -1037,6 +1037,7 @@
+   <button class="workspace-link" type="button" aria-current="page" id="currentPrintedWing">Wing</button>
+   <button class="workspace-link" type="button" id="toMetalWing">Full-scale wing</button>
+   <a class="workspace-link" href="https://vinco-rc.com/?generator=wing" target="_blank" rel="noopener noreferrer">Wing geometry tool</a>
++  <a class="workspace-link" href="../hydrofoil-cavitation-lab/" target="_blank" rel="noopener noreferrer">Cavitation</a>
+ </nav>
+ <div id="app" hidden>
+   <header class="bar panel" aria-label="Commands">
+@@ -4469,6 +4470,7 @@
+       <button class="workspace-link" type="button" data-stage="wing" aria-pressed="false">Wing</button>
+       <button class="workspace-link" type="button" data-stage="metal" aria-pressed="false">Full-scale wing</button>
+       <details class="bl-companion"><summary class="workspace-link">Wing geometry tool</summary><div class="bl-companion-pop" data-companion="vinco"></div></details>
++      <a class="workspace-link" href="../hydrofoil-cavitation-lab/" target="_blank" rel="noopener noreferrer">Cavitation</a>
+     </nav>
+     <div class="bl-start-guide"><button type="button" class="bl-btn bl-btn-primary" id="beamGuideOpen">User manual · Start here</button><span>1 · Length, material &amp; mesh → 2 · Section shape &amp; dimensions → 3 · Supports → 4 · Loads &amp; values → 5 · Solve</span></div>
+     <p class="bl-intro">Results belong to the last <b>solved</b> model. Changes remain pending until you press <b>Solve</b>.</p>
+@@ -22889,6 +22891,7 @@
+     <button class="workspace-link" type="button" id="mBackWing">Wing</button>
+     <button class="workspace-link" type="button" aria-current="page" id="mCurrentWing">Full-scale wing</button>
+     <a class="workspace-link" href="https://vinco-rc.com/?generator=wing" target="_blank" rel="noopener noreferrer">Wing geometry tool</a>
++    <a class="workspace-link" href="../hydrofoil-cavitation-lab/" target="_blank" rel="noopener noreferrer">Cavitation</a>
+     <a class="workspace-link" href="${MODEL3D}" target="_blank" rel="noopener">Aircraft 3-D ↗</a>
+     <a class="workspace-link" href="${REPO}" target="_blank" rel="noopener">CAD &amp; reference files ↗</a>
+   </nav>

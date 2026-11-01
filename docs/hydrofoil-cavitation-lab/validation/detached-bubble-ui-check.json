@@ -1,0 +1,16 @@
+{
+  "status": "PASS_CONTROLLER_AND_ACTUAL_WORKER",
+  "checks": [
+    "actual 32-panel,200-step contraction",
+    "progress and cancel",
+    "stale result ignored",
+    "computed frame selection",
+    "true-axis section and revolved mesh SVG",
+    "SI time/volume/pressure exports",
+    "invalid pressure rejected before worker"
+  ],
+  "runtimeSeconds": 0.924,
+  "finalEquivalentRadiusRatio": 0.8185889424951985,
+  "maximumStageLinearResidual": 8.220177926326945e-16,
+  "scope": "Code-level DOM/controller harness, not a browser rendering or experimental validation"
+}

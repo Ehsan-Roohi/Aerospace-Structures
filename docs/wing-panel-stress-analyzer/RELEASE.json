@@ -66,9 +66,10 @@
       "One shared Wing shape editor before both solver menus; results share the first command row; no permanent left input column; Study tree cannot overlap its properties",
       "Independent 2D airfoil geometry: NACA, library and DAT upload, isolated from the wing and its 3D or structural results",
       "User-defined aerodynamic chord/span meshes and directional mesh checks; actual counts, signed changes, progress and cancellation; structural admission remains Standard/Fine",
-      "Separate structural validation page: independent CalculiX comparison, signed displacement/rotation and raw stress profiles, matched sample CSV and reproducible decks"
+      "Separate structural validation page: independent CalculiX comparison, signed displacement/rotation and raw stress profiles, matched sample CSV and reproducible decks",
+      "Top-level Cavitation link opens the separate 2D research application from the Wing, Beam and Full-scale wing workspace menus"
     ],
-    "page_sha256": "46825c42beb74eeabaeaea071d727c786275096269e29cd2f227b7b39697d3ce",
+    "page_sha256": "11b8d6411574cfb3b2146ccd4b279585ce631a1fb75055ce8239e730254491dc",
     "source_port": "ui/01-wing-aerostruct-ui-sources.patch",
     "independent_review": "validation/UI_RELEASE_REVIEW.json",
     "surface_review": "validation/UI_SURFACE_REVIEW.json",
@@ -90,7 +91,8 @@
       "ui/16-compact-single-geometry.patch",
       "ui/17-member-aero-access.patch",
       "ui/18-independent-airfoil-input.patch",
-      "ui/19-custom-aero-mesh.patch"
+      "ui/19-custom-aero-mesh.patch",
+      "ui/21-cavitation-navigation.patch"
     ],
     "closed_tip_review": "validation/CLOSED_TIP_AERO_REVIEW.json",
     "course_review": "validation/COURSE_UI_REVIEW.json",
@@ -125,5 +127,19 @@
     "entry": "Help \u2192 Structural validation",
     "sourcePort": "ui/20-structural-validation.patch",
     "scope": "Independent CalculiX 2.23 C3D10 comparison of one finite-tip swept wing; current beam matched-point rerun; no general local-stress or experimental validation pass"
+  },
+  "cavitation_navigation": {
+    "sourcePort": "ui/21-cavitation-navigation.patch",
+    "sourcePortSha256": "83f66190c74a0181aa6f35a67489b9b20a823fdc50f15816ecbc8382d36ba655",
+    "baseCommit": "687f92186fcc4c9b4eab10e788f8de72cae5e6cd",
+    "basePageSha256": "46825c42beb74eeabaeaea071d727c786275096269e29cd2f227b7b39697d3ce",
+    "destination": "../hydrofoil-cavitation-lab/",
+    "opensInNewTab": true,
+    "workspaceMenus": [
+      "Wing",
+      "Beam",
+      "Full-scale wing"
+    ],
+    "scope": "Navigation only; generated-page overlay opens the separate 2D research application. Numerical solver sources and the original Wing Lab page are unchanged."
   }
 }

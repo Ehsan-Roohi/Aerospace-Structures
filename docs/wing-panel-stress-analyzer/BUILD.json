@@ -2,9 +2,9 @@
   "product": "MIE 446 Wing AeroStruct",
   "version": "0.3.9",
   "status": "Qualified educational solver; explicit 2D/3D section context and tested structural design guidance",
-  "builtAt": "2026-11-01T00:39:03.669071+00:00",
+  "builtAt": "2026-11-01T17:25:04.295206+00:00",
   "page": "index.html",
-  "pageSha256": "46825c42beb74eeabaeaea071d727c786275096269e29cd2f227b7b39697d3ce",
+  "pageSha256": "11b8d6411574cfb3b2146ccd4b279585ce631a1fb75055ce8239e730254491dc",
   "workers": {
     "wing-aero": {
       "worker": "8e2d79fa0bfe",
@@ -238,7 +238,8 @@
       "07-airfoil-trailing-edge.patch": "d1d6e08a863fbe95e08d7a75484dfb25dbc21d5f8a4a3ee0eecc19735b336c1a",
       "08-wing-model-visibility.patch": "1b83b98b05fa75b208a78577c8a5e21276e667aaa288004076d05a5a7a29e208",
       "11-load-admission-feedback.patch": "103f778236eb8aa4c94e842b539c63ba99db69a89ffe2b1e350c28bb5b0e3adc",
-      "20-structural-validation.patch": "ed2dff65259b35a242a702a98d4c0e8dd972cce31acbf004c224d1ae4bb1e3ea"
+      "20-structural-validation.patch": "ed2dff65259b35a242a702a98d4c0e8dd972cce31acbf004c224d1ae4bb1e3ea",
+      "21-cavitation-navigation.patch": "83f66190c74a0181aa6f35a67489b9b20a823fdc50f15816ecbc8382d36ba655"
     },
     "validation": "validation/UI_RELEASE_REVIEW.json",
     "surfaceReview": "validation/UI_SURFACE_REVIEW.json",
@@ -391,8 +392,22 @@
     "page": "validation/structure/index.html",
     "summary": "validation/structure/comparison.json",
     "review": "validation/STRUCTURAL_VALIDATION_REVIEW.json",
-    "entry": "Help → Structural validation",
+    "entry": "Help \u2192 Structural validation",
     "sourcePort": "ui/20-structural-validation.patch",
     "scope": "Independent CalculiX 2.23 C3D10 comparison of one finite-tip swept wing; current beam matched-point rerun; no general local-stress or experimental validation pass"
+  },
+  "cavitationNavigation": {
+    "sourcePort": "ui/21-cavitation-navigation.patch",
+    "sourcePortSha256": "83f66190c74a0181aa6f35a67489b9b20a823fdc50f15816ecbc8382d36ba655",
+    "baseCommit": "687f92186fcc4c9b4eab10e788f8de72cae5e6cd",
+    "basePageSha256": "46825c42beb74eeabaeaea071d727c786275096269e29cd2f227b7b39697d3ce",
+    "destination": "../hydrofoil-cavitation-lab/",
+    "opensInNewTab": true,
+    "workspaceMenus": [
+      "Wing",
+      "Beam",
+      "Full-scale wing"
+    ],
+    "scope": "Navigation only; generated-page overlay opens the separate 2D research application. Numerical solver sources and the original Wing Lab page are unchanged."
   }
 }

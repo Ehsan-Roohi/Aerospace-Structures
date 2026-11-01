@@ -1,0 +1,1077 @@
+{
+  "format": "mie446-spatial-beam-solid-reference",
+  "version": 1,
+  "scope": "Nominal locally-prismatic spatial beam. Physical tip traction is replaced by a same-global-wrench point force/couple; detailed traction and physical oblique-end boundary layers are not resolved. Outside-axis normal feet are explicit equivalent-end-wrench approximations. thetaWork is energetic work/My, NOT the solid least-squares tip or ring rotation. No solid mesh/volume/algebra admission or beam/solid agreement is claimed by this helper.",
+  "geometry": {
+    "naca": "2412",
+    "semiSpan": 240,
+    "rootChord": 60,
+    "tipChord": 48,
+    "skin": 1.2,
+    "ribThickness": 1.6,
+    "modules": 1,
+    "te": 1.2,
+    "interiorRibs": 3,
+    "customInteriorRibs": [
+      80,
+      160
+    ],
+    "interfaceOffset": 4,
+    "cap": 2,
+    "cavityStart": 0.1,
+    "cavityEnd": 0.78,
+    "rodFractions": [],
+    "rodDiameter": 4,
+    "clearance": 0.25,
+    "sleeveWall": 1.2,
+    "spars": [
+      {
+        "fraction": 0.35,
+        "length": 240,
+        "topWidth": 4,
+        "topThickness": 0.8,
+        "bottomWidth": 4,
+        "bottomThickness": 0.8,
+        "webThickness": 0.6,
+        "material": {
+          "name": "Printed PLA · teaching input",
+          "E": 2000,
+          "nu": 0.35,
+          "rho": 1.24,
+          "ft": 15,
+          "fc": 50,
+          "fs": 10
+        }
+      }
+    ],
+    "airfoil": {
+      "kind": "naca5",
+      "code": "23018"
+    },
+    "sweepDeg": 12,
+    "dihedralDeg": 6,
+    "sweepReferenceFraction": 0.25,
+    "twistReferenceFraction": 0.25,
+    "twistEnabled": true,
+    "stations": [
+      {
+        "eta": 0,
+        "airfoil": {
+          "kind": "naca5",
+          "code": "23018"
+        },
+        "incidenceDeg": 2
+      },
+      {
+        "eta": 1,
+        "airfoil": {
+          "kind": "naca4",
+          "code": "0018"
+        },
+        "incidenceDeg": -2
+      }
+    ]
+  },
+  "shellMaterial": {
+    "key": "pla_upright",
+    "kind": "pla",
+    "name": "Printed PLA Pro — span along printer Z",
+    "short": "PLA upright",
+    "E": 2000,
+    "nu": 0.35,
+    "rho": 1.24,
+    "ft": 15,
+    "fc": 50,
+    "fs": 10,
+    "G": null,
+    "source": "Illustrative PLA Pro upright card, not a measured material or validated allowable. The 15 MPa tensile entry is a teaching assumption, not a result from your class filament. Gonabadi, Yadav & Bull (2020) is background on print anisotropy, not validation of these numbers. Replace E and strengths with mechanical coupon data; a rod-clearance coupon tests fit only."
+  },
+  "nSections": 15,
+  "solidLoadReports": {
+    "uniform": "uniform_tip_2N",
+    "torque": "pure_tip_My_50Nmm"
+  },
+  "targets": {
+    "uniform": {
+      "tipCentroid": [
+        74.84883030733732,
+        239.99999999999991,
+        25.533550384714726
+      ],
+      "force": [
+        0,
+        0,
+        2
+      ],
+      "momentAboutOrigin": [
+        479.99999999999983,
+        -149.69766061467465,
+        0
+      ]
+    },
+    "torque": {
+      "force": [
+        0,
+        0,
+        0
+      ],
+      "momentAboutOrigin": [
+        0,
+        50,
+        0
+      ],
+      "forceCoupleArmGlobalX": 28.78245581814997,
+      "forceMagnitude": 1.7371693477410093
+    }
+  },
+  "convergence": {
+    "verticalGeneralizedDisplacementRelative": 0.000060334337901758523,
+    "torqueThetaWorkRelative": 0.00001726655505472726,
+    "criteria": {
+      "meshRelative": 0.02,
+      "rotationFloorRad": 1e-7,
+      "displacementFloorMm": 0.00001
+    },
+    "passed": true
+  },
+  "runs": [
+    {
+      "requestedElements": 40,
+      "vertical": {
+        "loadChannel": "uniform_tip_2N",
+        "requestedElements": 40,
+        "actualElements": 54,
+        "energyNmm": 3.2140124310629536,
+        "workNmm": 6.428024827647386,
+        "globalTipRotationRad": [
+          0.020352009712545884,
+          -0.004871687156186785,
+          -0.0009073104643946893
+        ],
+        "globalThetaYRad": -0.004871687156186785,
+        "tipReference": [
+          70.09841471771561,
+          240,
+          25.35481182748885
+        ],
+        "tipRigidCGDisplacementMm": [
+          0.08610447521101322,
+          -0.3550284464875177,
+          3.214012413823692
+        ],
+        "ringAt85Percent": {
+          "stationY": 204,
+          "reference": [
+            62.59260381614442,
+            204,
+            21.647340207033768
+          ],
+          "globalAxisDisplacementMm": [
+            0.07210667363827503,
+            -0.2657790539202446,
+            2.431184424722994
+          ],
+          "globalRotationRad": [
+            0.019651774994944634,
+            -0.004580124778119497,
+            -0.0008964851698070599
+          ],
+          "globalThetaYRad": -0.004580124778119497,
+          "scope": "Equivalent beam reference-axis motion at aircraft y=0.85L. This is not an area-weighted rigid fit to the physical oblique ring and does not include a resolved section-warping field."
+        },
+        "physicalLoadPoints": [
+          {
+            "point": [
+              74.84883030733732,
+              240,
+              25.53355038470665
+            ],
+            "force": [
+              0,
+              0,
+              2
+            ]
+          }
+        ],
+        "appliedWrench": {
+          "force": [
+            0,
+            2.7755575615628914e-17,
+            2
+          ],
+          "momentAboutGlobalOrigin": [
+            480,
+            -149.69766061467465,
+            1.7235772453082391e-15
+          ]
+        },
+        "loadMapping": {
+          "method": "Physical loads projected to normal-axis feet; consistent work integrated per original aircraft-y coordinate",
+          "endWrenches": [
+            {
+              "load": 1,
+              "end": "tip",
+              "sourceStation": 240,
+              "normalFootStation": 240.9570738533743,
+              "reason": "Normal foot lies outside the finite beam; an equivalent end wrench preserves the full global force and moment, but local end-zone response is nominal."
+            }
+          ],
+          "monotonicity": {
+            "method": "Conservative analytic interval bounds of physical-path and C1-normal-family derivatives; no endpoint-sampling certificate",
+            "certifiedSourcePanels": 0,
+            "intervalBoxes": 0
+          }
+        },
+        "verification": {
+          "forceError": 6.3052669186567e-9,
+          "momentError": 0.0000010028694414152125,
+          "freeResidual": 2.0605511963367462e-8,
+          "energyError": 5.363781611886344e-9,
+          "totalForce": [
+            0,
+            2.7755575615628914e-17,
+            2
+          ],
+          "totalMoment": [
+            480,
+            -149.69766061467465,
+            1.7235772453082391e-15
+          ],
+          "supportForce": [
+            4.3164618546143174e-9,
+            2.7144722025695955e-9,
+            -2.0000000037089336
+          ],
+          "supportMoment": [
+            -480.00000083597735,
+            149.69766091979955,
+            -4.623719181917779e-7
+          ]
+        },
+        "validity": {
+          "smallDisplacement": true,
+          "maxTranslation": 3.210869077592533,
+          "maxRotation": 0.020946618996060373,
+          "translationRatio": 0.013378621156635554,
+          "message": "Small-displacement screening passed (translation/span ≤ 5%, rotation ≤ 0.1 rad); this is not a nonlinear validation."
+        },
+        "normalSectionAxisIterationChangeMm": 2.906810672700553e-7,
+        "limitations": [
+          "Linear small-displacement Euler–Bernoulli beam; no shear deformation, geometric nonlinearity or section distortion",
+          "Locally prismatic projected normal sections; taper, twist and curved reference axis are beam approximations, not a 3-D solid mesh",
+          "A continuous C1 reference normal family maps physical loads and surface points; straight frame elements approximate that reference curve",
+          "The six-DOF equivalent axis clamp is not a resolved physical oblique root face. Geometrically truncated end cuts are masked; this is only a minimum exclusion, not a validated Saint-Venant decay length",
+          "Prescribed aircraft-global +z loads per projected y; no aerodynamic lift, zero-lift angle, stall or aeroelastic redistribution prediction",
+          "Perfectly bonded skin/ribs/spars and module seams; external rods and dry/slipping joints not modeled",
+          "Reported skin/spar stresses are nominal axial + biaxial normal beam stresses; shear failure, local buckling, bond stress and stress concentrations are unresolved",
+          "Natural frequencies, flutter and an overall certified factor of safety are unavailable",
+          "Non-affine torsional warping normal stress is not recovered; nominal affine stress is not a validated local strength field."
+        ],
+        "generalizedDisplacementMm": 3.214012413823693,
+        "complianceMmPerN": 1.6070062069118465
+      },
+      "torque": {
+        "loadChannel": "pure_tip_My_50Nmm",
+        "requestedElements": 40,
+        "actualElements": 55,
+        "energyNmm": 0.09456196056996018,
+        "workNmm": 0.1891239211047307,
+        "globalTipRotationRad": [
+          -0.000204371633484442,
+          0.0037875443938446924,
+          0.0003758786353978909
+        ],
+        "globalThetaYRad": 0.0037875443938446924,
+        "tipReference": [
+          70.09841471771561,
+          240,
+          25.35481182748885
+        ],
+        "tipRigidCGDisplacementMm": [
+          0.0005222485167598667,
+          0.012662585339187625,
+          -0.12176071848774656
+        ],
+        "ringAt85Percent": {
+          "stationY": 204,
+          "reference": [
+            62.59260381614442,
+            204,
+            21.647340207033768
+          ],
+          "globalAxisDisplacementMm": [
+            -0.0005001652903753753,
+            0.007594869059948482,
+            -0.07172271818001762
+          ],
+          "globalRotationRad": [
+            -0.00016009012597150763,
+            0.0030202735538058956,
+            0.00030573065330457986
+          ],
+          "globalThetaYRad": 0.0030202735538058956,
+          "scope": "Equivalent beam reference-axis motion at aircraft y=0.85L. This is not an area-weighted rigid fit to the physical oblique ring and does not include a resolved section-warping field."
+        },
+        "physicalLoadPoints": [
+          {
+            "point": [
+              63.615036815959485,
+              240,
+              25.14125767167635
+            ],
+            "force": [
+              0,
+              0,
+              1.7371693477410093
+            ]
+          },
+          {
+            "point": [
+              92.39749263410945,
+              240,
+              26.146363176708377
+            ],
+            "force": [
+              0,
+              0,
+              -1.7371693477410093
+            ]
+          }
+        ],
+        "appliedWrench": {
+          "force": [
+            -6.938893903907228e-18,
+            2.7755575615628914e-17,
+            0
+          ],
+          "momentAboutGlobalOrigin": [
+            0,
+            49.999999999999986,
+            1.156419726823235e-15
+          ]
+        },
+        "loadMapping": {
+          "method": "Physical loads projected to normal-axis feet; consistent work integrated per original aircraft-y coordinate",
+          "endWrenches": [
+            {
+              "load": 2,
+              "end": "tip",
+              "sourceStation": 240,
+              "normalFootStation": 244.4879906733406,
+              "reason": "Normal foot lies outside the finite beam; an equivalent end wrench preserves the full global force and moment, but local end-zone response is nominal."
+            }
+          ],
+          "monotonicity": {
+            "method": "Conservative analytic interval bounds of physical-path and C1-normal-family derivatives; no endpoint-sampling certificate",
+            "certifiedSourcePanels": 0,
+            "intervalBoxes": 0
+          }
+        },
+        "verification": {
+          "forceError": 2.0532508798123475e-10,
+          "momentError": 4.568147943466979e-8,
+          "freeResidual": 3.8676262192893773e-10,
+          "energyError": 1.8606666221036993e-10,
+          "totalForce": [
+            -6.938893903907228e-18,
+            2.7755575615628914e-17,
+            0
+          ],
+          "totalMoment": [
+            0,
+            49.999999999999986,
+            1.156419726823235e-15
+          ],
+          "supportForce": [
+            2.013678113144124e-10,
+            2.107114482896577e-11,
+            3.4138025739594013e-11
+          ],
+          "supportMoment": [
+            1.581008924114031e-8,
+            -49.99999999938997,
+            -4.28540152396385e-8
+          ]
+        },
+        "validity": {
+          "smallDisplacement": true,
+          "maxTranslation": 0.1043331286455765,
+          "maxRotation": 0.0038116328585615436,
+          "translationRatio": 0.00043472136935656877,
+          "message": "Small-displacement screening passed (translation/span ≤ 5%, rotation ≤ 0.1 rad); this is not a nonlinear validation."
+        },
+        "normalSectionAxisIterationChangeMm": 2.906810672700553e-7,
+        "limitations": [
+          "Linear small-displacement Euler–Bernoulli beam; no shear deformation, geometric nonlinearity or section distortion",
+          "Locally prismatic projected normal sections; taper, twist and curved reference axis are beam approximations, not a 3-D solid mesh",
+          "A continuous C1 reference normal family maps physical loads and surface points; straight frame elements approximate that reference curve",
+          "The six-DOF equivalent axis clamp is not a resolved physical oblique root face. Geometrically truncated end cuts are masked; this is only a minimum exclusion, not a validated Saint-Venant decay length",
+          "Prescribed aircraft-global +z loads per projected y; no aerodynamic lift, zero-lift angle, stall or aeroelastic redistribution prediction",
+          "Perfectly bonded skin/ribs/spars and module seams; external rods and dry/slipping joints not modeled",
+          "Reported skin/spar stresses are nominal axial + biaxial normal beam stresses; shear failure, local buckling, bond stress and stress concentrations are unresolved",
+          "Natural frequencies, flutter and an overall certified factor of safety are unavailable",
+          "Non-affine torsional warping normal stress is not recovered; nominal affine stress is not a validated local strength field."
+        ],
+        "thetaWorkRad": 0.0037824784220946137,
+        "complianceRadPerNmm": 0.00007564956844189228
+      },
+      "cuts": [
+        {
+          "y": 110,
+          "reference": [
+            42.991287400687995,
+            110,
+            11.994183030277483
+          ],
+          "R": [
+            [
+              0.20314881289190936,
+              0.9740469115521297,
+              0.09981569974891553
+            ],
+            [
+              0.9791435988735606,
+              -0.2017883537997004,
+              -0.023648954643678347
+            ],
+            [
+              -0.002893545496412457,
+              0.10253816053823378,
+              -0.9947248629786509
+            ]
+          ],
+          "endZone": null,
+          "vertical": {
+            "strain": [
+              -0.000004550708051336512,
+              0.00009870509846539695,
+              9.420436473191768e-7,
+              -0.0000026719997838596463
+            ],
+            "localForce": [
+              0.19963139949783107,
+              -0.04729790928735669,
+              -1.9894497259573019
+            ],
+            "localMoment": [
+              -9.242791203826037,
+              267.43429798559794,
+              -7.285549526898598
+            ]
+          },
+          "torque": {
+            "strain": [
+              6.083152022412662e-7,
+              -0.000003705541404212048,
+              2.4674890181855005e-8,
+              0.000014079367799951398
+            ],
+            "localForce": [
+              0,
+              0,
+              0
+            ],
+            "localMoment": [
+              48.702345577606486,
+              -10.08941768998502,
+              5.126908026911689
+            ]
+          }
+        },
+        {
+          "y": 130,
+          "reference": [
+            47.162338810878964,
+            130,
+            14.04463199063586
+          ],
+          "R": [
+            [
+              0.20312973824017014,
+              0.9740415461895812,
+              0.09990683529714144
+            ],
+            [
+              0.9791475552414757,
+              -0.2023702632089686,
+              -0.017785995428263437
+            ],
+            [
+              0.0028938740679910445,
+              0.10143639812879282,
+              -0.9948378172483874
+            ]
+          ],
+          "endZone": null,
+          "vertical": {
+            "strain": [
+              -0.0000028587999037949623,
+              0.00008897638773982305,
+              7.373042970032429e-7,
+              -0.0000028459527478840586
+            ],
+            "localForce": [
+              0.19981367059428287,
+              -0.035571990856526875,
+              -1.9896756344967748
+            ],
+            "localMoment": [
+              -9.247043558712555,
+              226.61830729606694,
+              -4.980183653490345
+            ]
+          },
+          "torque": {
+            "strain": [
+              5.909489124816852e-7,
+              -0.000003956124605763319,
+              3.154376942315606e-8,
+              0.000014988986465407252
+            ],
+            "localForce": [
+              0,
+              0,
+              0
+            ],
+            "localMoment": [
+              48.702077309479066,
+              -10.118513160448432,
+              5.071819906439642
+            ]
+          }
+        },
+        {
+          "y": 190,
+          "reference": [
+            59.673601429908906,
+            190.00000000000003,
+            20.20709126449247
+          ],
+          "R": [
+            [
+              0.20308562019076537,
+              0.974023500310893,
+              0.1001721104591877
+            ],
+            [
+              0.9789513061001625,
+              -0.20409386415743988,
+              -0.00018681025307284172
+            ],
+            [
+              0.02026255552782955,
+              0.09810155684493486,
+              -0.9949701067811445
+            ]
+          ],
+          "endZone": null,
+          "vertical": {
+            "strain": [
+              4.868729490672698e-7,
+              0.00004955625084087478,
+              2.2358515469801545e-7,
+              -0.000003461449070210879
+            ],
+            "localForce": [
+              0.2003442209183754,
+              -0.00037362050614568343,
+              -1.989940213562289
+            ],
+            "localMoment": [
+              -9.253497079347014,
+              104.08947281215207,
+              -0.9511716039249283
+            ]
+          },
+          "torque": {
+            "strain": [
+              5.289244416427806e-7,
+              -0.000004848333978055885,
+              5.790010676141786e-8,
+              0.00001821761389561385
+            ],
+            "localForce": [
+              0,
+              0,
+              0
+            ],
+            "localMoment": [
+              48.70117501554465,
+              -10.204693207871994,
+              4.905077842246743
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "requestedElements": 80,
+      "vertical": {
+        "loadChannel": "uniform_tip_2N",
+        "requestedElements": 80,
+        "actualElements": 94,
+        "energyNmm": 3.2138187860453304,
+        "workNmm": 6.427637020423486,
+        "globalTipRotationRad": [
+          0.02035114044948764,
+          -0.004871511633613559,
+          -0.0009073796589270762
+        ],
+        "globalThetaYRad": -0.004871511633613559,
+        "tipReference": [
+          70.09841471771561,
+          240,
+          25.35481182748885
+        ],
+        "tipRigidCGDisplacementMm": [
+          0.08612119648049583,
+          -0.3550123697210118,
+          3.2138185102117416
+        ],
+        "ringAt85Percent": {
+          "stationY": 204,
+          "reference": [
+            62.59260381614442,
+            204,
+            21.647340207033768
+          ],
+          "globalAxisDisplacementMm": [
+            0.07212030663306626,
+            -0.2657654347033311,
+            2.431023461820112
+          ],
+          "globalRotationRad": [
+            0.0196511636984876,
+            -0.004580002479567435,
+            -0.0008965250858579363
+          ],
+          "globalThetaYRad": -0.004580002479567435,
+          "scope": "Equivalent beam reference-axis motion at aircraft y=0.85L. This is not an area-weighted rigid fit to the physical oblique ring and does not include a resolved section-warping field."
+        },
+        "physicalLoadPoints": [
+          {
+            "point": [
+              74.84883030733732,
+              240,
+              25.53355038470665
+            ],
+            "force": [
+              0,
+              0,
+              2
+            ]
+          }
+        ],
+        "appliedWrench": {
+          "force": [
+            1.3877787807814457e-17,
+            -2.7755575615628914e-17,
+            1.9999999999999998
+          ],
+          "momentAboutGlobalOrigin": [
+            479.99999999999994,
+            -149.69766061467462,
+            -4.9432240167211935e-15
+          ]
+        },
+        "loadMapping": {
+          "method": "Physical loads projected to normal-axis feet; consistent work integrated per original aircraft-y coordinate",
+          "endWrenches": [
+            {
+              "load": 1,
+              "end": "tip",
+              "sourceStation": 240,
+              "normalFootStation": 240.9570738533743,
+              "reason": "Normal foot lies outside the finite beam; an equivalent end wrench preserves the full global force and moment, but local end-zone response is nominal."
+            }
+          ],
+          "monotonicity": {
+            "method": "Conservative analytic interval bounds of physical-path and C1-normal-family derivatives; no endpoint-sampling certificate",
+            "certifiedSourcePanels": 0,
+            "intervalBoxes": 0
+          }
+        },
+        "verification": {
+          "forceError": 8.003192325134808e-8,
+          "momentError": 0.00002207150220680971,
+          "freeResidual": 2.1060259314253926e-7,
+          "energyError": 8.582736910933738e-8,
+          "totalForce": [
+            1.3877787807814457e-17,
+            -2.7755575615628914e-17,
+            1.9999999999999998
+          ],
+          "totalMoment": [
+            479.99999999999994,
+            -149.69766061467462,
+            -4.9432240167211935e-15
+          ],
+          "supportForce": [
+            7.565722626168281e-8,
+            -1.4898489553161198e-8,
+            -2.000000021427269
+          ],
+          "supportMoment": [
+            -479.9999996231759,
+            149.69766324464433,
+            -0.000021911012582226474
+          ]
+        },
+        "validity": {
+          "smallDisplacement": true,
+          "maxTranslation": 3.2106759059462275,
+          "maxRotation": 0.02094573658376899,
+          "translationRatio": 0.013377816274775947,
+          "message": "Small-displacement screening passed (translation/span ≤ 5%, rotation ≤ 0.1 rad); this is not a nonlinear validation."
+        },
+        "normalSectionAxisIterationChangeMm": 2.906810672700553e-7,
+        "limitations": [
+          "Linear small-displacement Euler–Bernoulli beam; no shear deformation, geometric nonlinearity or section distortion",
+          "Locally prismatic projected normal sections; taper, twist and curved reference axis are beam approximations, not a 3-D solid mesh",
+          "A continuous C1 reference normal family maps physical loads and surface points; straight frame elements approximate that reference curve",
+          "The six-DOF equivalent axis clamp is not a resolved physical oblique root face. Geometrically truncated end cuts are masked; this is only a minimum exclusion, not a validated Saint-Venant decay length",
+          "Prescribed aircraft-global +z loads per projected y; no aerodynamic lift, zero-lift angle, stall or aeroelastic redistribution prediction",
+          "Perfectly bonded skin/ribs/spars and module seams; external rods and dry/slipping joints not modeled",
+          "Reported skin/spar stresses are nominal axial + biaxial normal beam stresses; shear failure, local buckling, bond stress and stress concentrations are unresolved",
+          "Natural frequencies, flutter and an overall certified factor of safety are unavailable",
+          "Non-affine torsional warping normal stress is not recovered; nominal affine stress is not a validated local strength field."
+        ],
+        "generalizedDisplacementMm": 3.213818510211743,
+        "complianceMmPerN": 1.6069092551058715
+      },
+      "torque": {
+        "loadChannel": "pure_tip_My_50Nmm",
+        "requestedElements": 80,
+        "actualElements": 95,
+        "energyNmm": 0.09456359328235113,
+        "workNmm": 0.18912718667971185,
+        "globalTipRotationRad": [
+          -0.0002043698753466829,
+          0.0037876097053443146,
+          0.0003758832147082956
+        ],
+        "globalThetaYRad": 0.0037876097053443146,
+        "tipReference": [
+          70.09841471771561,
+          240,
+          25.35481182748885
+        ],
+        "tipRigidCGDisplacementMm": [
+          0.0005218280357703111,
+          0.012662225755243691,
+          -0.12175648268506598
+        ],
+        "ringAt85Percent": {
+          "stationY": 204,
+          "reference": [
+            62.59260381614442,
+            204,
+            21.647340207033768
+          ],
+          "globalAxisDisplacementMm": [
+            -0.0005004881323929854,
+            0.0075945626009358705,
+            -0.07171910740844446
+          ],
+          "globalRotationRad": [
+            -0.00016008883568147396,
+            0.0030203223809285983,
+            0.000305734113006911
+          ],
+          "globalThetaYRad": 0.0030203223809285983,
+          "scope": "Equivalent beam reference-axis motion at aircraft y=0.85L. This is not an area-weighted rigid fit to the physical oblique ring and does not include a resolved section-warping field."
+        },
+        "physicalLoadPoints": [
+          {
+            "point": [
+              63.615036815959485,
+              240,
+              25.14125767167635
+            ],
+            "force": [
+              0,
+              0,
+              1.7371693477410093
+            ]
+          },
+          {
+            "point": [
+              92.39749263410945,
+              240,
+              26.146363176708377
+            ],
+            "force": [
+              0,
+              0,
+              -1.7371693477410093
+            ]
+          }
+        ],
+        "appliedWrench": {
+          "force": [
+            6.938893903907228e-18,
+            5.551115123125783e-17,
+            0
+          ],
+          "momentAboutGlobalOrigin": [
+            0,
+            49.999999999999986,
+            4.480508548924178e-16
+          ]
+        },
+        "loadMapping": {
+          "method": "Physical loads projected to normal-axis feet; consistent work integrated per original aircraft-y coordinate",
+          "endWrenches": [
+            {
+              "load": 2,
+              "end": "tip",
+              "sourceStation": 240,
+              "normalFootStation": 244.4879906733406,
+              "reason": "Normal foot lies outside the finite beam; an equivalent end wrench preserves the full global force and moment, but local end-zone response is nominal."
+            }
+          ],
+          "monotonicity": {
+            "method": "Conservative analytic interval bounds of physical-path and C1-normal-family derivatives; no endpoint-sampling certificate",
+            "certifiedSourcePanels": 0,
+            "intervalBoxes": 0
+          }
+        },
+        "verification": {
+          "forceError": 1.619326898027341e-9,
+          "momentError": 2.853568822737762e-7,
+          "freeResidual": 6.696321719346088e-9,
+          "energyError": 6.081071008765099e-10,
+          "totalForce": [
+            6.938893903907228e-18,
+            5.551115123125783e-17,
+            0
+          ],
+          "totalMoment": [
+            0,
+            49.999999999999986,
+            4.480508548924178e-16
+          ],
+          "supportForce": [
+            1.2302621144044679e-9,
+            6.752003400833928e-10,
+            -8.079474866917735e-10
+          ],
+          "supportMoment": [
+            -2.743568197197412e-7,
+            -49.99999992302779,
+            -1.523700383186508e-8
+          ]
+        },
+        "validity": {
+          "smallDisplacement": true,
+          "maxTranslation": 0.10432856824936096,
+          "maxRotation": 0.003811698114629111,
+          "translationRatio": 0.0004347023677056707,
+          "message": "Small-displacement screening passed (translation/span ≤ 5%, rotation ≤ 0.1 rad); this is not a nonlinear validation."
+        },
+        "normalSectionAxisIterationChangeMm": 2.906810672700553e-7,
+        "limitations": [
+          "Linear small-displacement Euler–Bernoulli beam; no shear deformation, geometric nonlinearity or section distortion",
+          "Locally prismatic projected normal sections; taper, twist and curved reference axis are beam approximations, not a 3-D solid mesh",
+          "A continuous C1 reference normal family maps physical loads and surface points; straight frame elements approximate that reference curve",
+          "The six-DOF equivalent axis clamp is not a resolved physical oblique root face. Geometrically truncated end cuts are masked; this is only a minimum exclusion, not a validated Saint-Venant decay length",
+          "Prescribed aircraft-global +z loads per projected y; no aerodynamic lift, zero-lift angle, stall or aeroelastic redistribution prediction",
+          "Perfectly bonded skin/ribs/spars and module seams; external rods and dry/slipping joints not modeled",
+          "Reported skin/spar stresses are nominal axial + biaxial normal beam stresses; shear failure, local buckling, bond stress and stress concentrations are unresolved",
+          "Natural frequencies, flutter and an overall certified factor of safety are unavailable",
+          "Non-affine torsional warping normal stress is not recovered; nominal affine stress is not a validated local strength field."
+        ],
+        "thetaWorkRad": 0.0037825437335942368,
+        "complianceRadPerNmm": 0.00007565087467188473
+      },
+      "cuts": [
+        {
+          "y": 110,
+          "reference": [
+            42.991287400687995,
+            110,
+            11.994183030277483
+          ],
+          "R": [
+            [
+              0.20314881289190936,
+              0.9740469115521297,
+              0.09981569974891553
+            ],
+            [
+              0.9791435988735606,
+              -0.2017883537997004,
+              -0.023648954643678347
+            ],
+            [
+              -0.002893545496412457,
+              0.10253816053823378,
+              -0.9947248629786509
+            ]
+          ],
+          "endZone": null,
+          "vertical": {
+            "strain": [
+              -0.000004550708051336512,
+              0.00009870509846539695,
+              9.420436473191768e-7,
+              -0.0000026719997838596463
+            ],
+            "localForce": [
+              0.19963139949783107,
+              -0.04729790928735669,
+              -1.9894497259573019
+            ],
+            "localMoment": [
+              -9.242791203826037,
+              267.43429798559794,
+              -7.285549526898598
+            ]
+          },
+          "torque": {
+            "strain": [
+              6.083152022412662e-7,
+              -0.000003705541404212048,
+              2.4674890181855005e-8,
+              0.000014079367799951398
+            ],
+            "localForce": [
+              0,
+              0,
+              0
+            ],
+            "localMoment": [
+              48.702345577606486,
+              -10.08941768998502,
+              5.126908026911689
+            ]
+          }
+        },
+        {
+          "y": 130,
+          "reference": [
+            47.162338810878964,
+            130,
+            14.04463199063586
+          ],
+          "R": [
+            [
+              0.20312973824017014,
+              0.9740415461895812,
+              0.09990683529714144
+            ],
+            [
+              0.9791475552414757,
+              -0.2023702632089686,
+              -0.017785995428263437
+            ],
+            [
+              0.0028938740679910445,
+              0.10143639812879282,
+              -0.9948378172483874
+            ]
+          ],
+          "endZone": null,
+          "vertical": {
+            "strain": [
+              -0.0000028587999037949623,
+              0.00008897638773982305,
+              7.373042970032429e-7,
+              -0.0000028459527478840586
+            ],
+            "localForce": [
+              0.19981367059428287,
+              -0.035571990856526875,
+              -1.9896756344967748
+            ],
+            "localMoment": [
+              -9.247043558712555,
+              226.61830729606694,
+              -4.980183653490345
+            ]
+          },
+          "torque": {
+            "strain": [
+              5.909489124816852e-7,
+              -0.000003956124605763319,
+              3.154376942315606e-8,
+              0.000014988986465407252
+            ],
+            "localForce": [
+              0,
+              0,
+              0
+            ],
+            "localMoment": [
+              48.702077309479066,
+              -10.118513160448432,
+              5.071819906439642
+            ]
+          }
+        },
+        {
+          "y": 190,
+          "reference": [
+            59.673601429908906,
+            190.00000000000003,
+            20.20709126449247
+          ],
+          "R": [
+            [
+              0.20308562019076537,
+              0.974023500310893,
+              0.1001721104591877
+            ],
+            [
+              0.9789513061001625,
+              -0.20409386415743988,
+              -0.00018681025307284172
+            ],
+            [
+              0.02026255552782955,
+              0.09810155684493486,
+              -0.9949701067811445
+            ]
+          ],
+          "endZone": null,
+          "vertical": {
+            "strain": [
+              4.868729490672698e-7,
+              0.00004955625084087478,
+              2.2358515469801545e-7,
+              -0.000003461449070210879
+            ],
+            "localForce": [
+              0.2003442209183754,
+              -0.00037362050614568343,
+              -1.989940213562289
+            ],
+            "localMoment": [
+              -9.253497079347014,
+              104.08947281215207,
+              -0.9511716039249283
+            ]
+          },
+          "torque": {
+            "strain": [
+              5.289244416427806e-7,
+              -0.000004848333978055885,
+              5.790010676141786e-8,
+              0.00001821761389561385
+            ],
+            "localForce": [
+              0,
+              0,
+              0
+            ],
+            "localMoment": [
+              48.70117501554465,
+              -10.204693207871994,
+              4.905077842246743
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

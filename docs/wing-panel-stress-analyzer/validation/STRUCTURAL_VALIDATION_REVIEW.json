@@ -1,0 +1,18 @@
+{
+  "status": "passed",
+  "localEvidenceLinks": 25,
+  "checks": [
+    "Separate Help entry and crosslinked evidence page",
+    "Both page aliases and editable shell agree",
+    "Every local evidence link exists",
+    "Full matched-point counts including unresolved samples retained",
+    "Raw torque stress discrepancy remains visible",
+    "Work-conjugate rotation is distinguished from nodal-band fit",
+    "Current exact embedded engine rerun matches archived finite-tip benchmark",
+    "Benchmark ZIP and BUILD/source hashes verified"
+  ],
+  "limits": [
+    "No browser interaction or experimental validation is inferred by this static integrity test",
+    "No exact-zero-tip or general local stress validation pass"
+  ]
+}

@@ -105,3 +105,7 @@ Apply `06-surface-gradient.patch` after the UI ports above. It changes the numer
 ## Wing display repair (0.3.2-ui.12)
 
 Apply `08-wing-model-visibility.patch` after the existing UI ports. It changes only the main template and `wx-shell.js`: new/imported geometry opens opaque and fitted, the aerodynamic overlay closes, and incompatible design-comparison baselines cannot abort a solve. Hidden canvases defer fitting until visible. The numerical modules and workers are unchanged. See `validation/WING_DISPLAY_REVIEW.json` for the reproduced error, regression scope and incomplete browser checks.
+
+## Separate structural validation section
+
+Apply `20-structural-validation.patch` after the earlier UI ports. It adds Help → Structural validation, linked to `validation/structure/index.html`. The page publishes the archived independently executed CalculiX 2.23 C3D10 benchmark, current-production beam reruns, signed displacement/rotation diagnostics, raw normal-stress profiles, matched samples and input/output/source archive. It distinguishes global response agreement from the larger local torque stress discrepancy; no experimental, general local-stress, or exact-zero-tip validation is claimed. This entry does not alter numerical kernels.

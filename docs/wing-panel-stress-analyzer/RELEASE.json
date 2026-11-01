@@ -65,9 +65,10 @@
       "Optional background design advisor compares stiffness and mass with actual structural solves, retains all inputs and admission, and labels exact-tip inboard trials without a full-wing optimum",
       "One shared Wing shape editor before both solver menus; results share the first command row; no permanent left input column; Study tree cannot overlap its properties",
       "Independent 2D airfoil geometry: NACA, library and DAT upload, isolated from the wing and its 3D or structural results",
-      "User-defined aerodynamic chord/span meshes and directional mesh checks; actual counts, signed changes, progress and cancellation; structural admission remains Standard/Fine"
+      "User-defined aerodynamic chord/span meshes and directional mesh checks; actual counts, signed changes, progress and cancellation; structural admission remains Standard/Fine",
+      "Separate structural validation page: independent CalculiX comparison, signed displacement/rotation and raw stress profiles, matched sample CSV and reproducible decks"
     ],
-    "page_sha256": "ba5699cd33572430c6777af5d752d82947b54d9197d016208b876d6bd8b09d2e",
+    "page_sha256": "46825c42beb74eeabaeaea071d727c786275096269e29cd2f227b7b39697d3ce",
     "source_port": "ui/01-wing-aerostruct-ui-sources.patch",
     "independent_review": "validation/UI_RELEASE_REVIEW.json",
     "surface_review": "validation/UI_SURFACE_REVIEW.json",
@@ -116,5 +117,13 @@
   "zero_load_display_review": "validation/ZERO_LOAD_DISPLAY_REVIEW.json",
   "design_advisor_review": "validation/DESIGN_ADVISOR_REVIEW.json",
   "compact_single_geometry_review": "validation/COMPACT_SINGLE_GEOMETRY_REVIEW.json",
-  "member_aero_access_review": "validation/MEMBER_AERO_ACCESS_REVIEW.json"
+  "member_aero_access_review": "validation/MEMBER_AERO_ACCESS_REVIEW.json",
+  "structural_validation": {
+    "page": "validation/structure/index.html",
+    "summary": "validation/structure/comparison.json",
+    "review": "validation/STRUCTURAL_VALIDATION_REVIEW.json",
+    "entry": "Help \u2192 Structural validation",
+    "sourcePort": "ui/20-structural-validation.patch",
+    "scope": "Independent CalculiX 2.23 C3D10 comparison of one finite-tip swept wing; current beam matched-point rerun; no general local-stress or experimental validation pass"
+  }
 }

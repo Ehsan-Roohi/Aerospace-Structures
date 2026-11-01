@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Structural validation | Wing AeroStruct</title>
+<style>
+:root{color-scheme:light}*{box-sizing:border-box}body{margin:0;background:#f5f7fa;color:#171717;font:19px/1.5 "Times New Roman",serif}main{max-width:1180px;margin:0 auto;padding:25px 24px 55px}a{color:#0758a9;text-underline-offset:3px}header{border-bottom:1px solid #c8d3de;padding-bottom:18px}h1{font-size:34px;line-height:1.15;margin:15px 0 10px}h2{font-size:27px;margin:29px 0 10px}p{margin:11px 0}.status{border-left:5px solid #ac6a00;background:#fff5dd;padding:13px 17px}.summary{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:20px 0}.card{background:white;border:1px solid #c8d3de;border-radius:7px;padding:16px}.card strong{display:block;font-size:27px}figure{margin:15px 0;background:white;border:1px solid #c8d3de;padding:12px}figure img{width:100%;height:auto}figcaption{font-size:17px;padding:9px 5px}.links{display:flex;gap:10px 22px;flex-wrap:wrap}.table{overflow-x:auto}table{border-collapse:collapse;background:white;width:100%;font-size:18px}th,td{text-align:left;padding:9px 13px;border-bottom:1px solid #d7dfe7}th{background:#eaf0f5}td.num{text-align:right;white-space:nowrap}details{background:white;border:1px solid #c8d3de;border-radius:6px;padding:11px 15px;margin-top:16px}summary{cursor:pointer;font-weight:bold}code{font:15px Consolas,monospace;overflow-wrap:anywhere}.small{font-size:17px;color:#3c4651}@media(max-width:650px){main{padding:16px 13px}.summary{grid-template-columns:1fr}body{font-size:18px}h1{font-size:29px}}
+</style>
+</head>
+<body><main>
+<header><nav class="links"><a href="../../index.html#wing">Open Wing AeroStruct</a><a href="../2026-10-29/index.html">Aerodynamic validation</a></nav>
+<h1>Structural validation</h1>
+<p>Independent comparison of the fast spatial-beam model with a three-dimensional CalculiX solid model.</p></header>
+<p class="status"><strong>Case-specific numerical evidence.</strong> Global deformation agrees closely for this benchmark. Local normal stress differs substantially under the torque load and near ribs, the clamp and the tip. This is not experimental validation, a failure prediction, or validation of every wing.</p>
+
+<div class="summary"><div class="card">Uniform upward tip traction, total 2 N<strong>1.866% response difference</strong>Current solver: 3.21382 mm<br>CalculiX fine solid mesh: 3.15495 mm</div><div class="card">Pure global moment, My = 50 N mm<strong>2.100% response difference</strong>Current solver: 0.00378254 rad<br>CalculiX fine solid mesh: 0.00370475 rad</div></div>
+<p>The first response is the traction-weighted mean vertical tip displacement. The second is external work divided by the applied moment, <i>W/My</i>: a work-conjugate generalized rotation, <strong>not</strong> a measured or fitted physical tip twist. Global My also produces bending in the swept beam's local frame.</p>
+
+<h2>Matched geometry, material and loads</h2>
+<div class="table"><table><tbody>
+<tr><th>Wing</th><td>Semi-span 240 mm; root/tip chords 60/48 mm; NACA 23018 → NACA 0018.</td></tr>
+<tr><th>Orientation</th><td>Sweep 12° at quarter chord; dihedral 6°; root/tip incidence +2°/−2° at quarter chord.</td></tr>
+<tr><th>Structure</th><td>Skin 1.2 mm; ribs 1.6 mm at y = 80 and 160 mm; end caps 2 mm. One bonded spar at x/c = 0.35, upper/lower cap width 4 mm, cap thickness 0.8 mm, web thickness 0.6 mm.</td></tr>
+<tr><th>Material</th><td>Homogeneous isotropic linear elasticity: E = 2,000 MPa, ν = 0.35. No self-weight. These are teaching inputs, not measured printed-PLA properties.</td></tr>
+<tr><th>Boundary condition</th><td>Solid: all three translations fixed on the actual root material face. Beam: six degrees of freedom fixed on its equivalent root axis. The different local restraint models remain part of the comparison.</td></tr>
+<tr><th>Loads</th><td>Case 1: uniform upward traction over the actual tip material face, total 2 N. Case 2: chordwise-varying vertical tip traction, zero net force and My = 50 N mm. The beam receives each load's same global resultant force and moment.</td></tr>
+<tr><th>Independent solver</th><td>CalculiX 2.23, C3D10 quadratic tetrahedra. Coarse/fine meshes: 16,648 / 24,112 elements and 31,630 / 45,790 nodes. Gmsh 4.15.2 meshes preserve the CAD geometry.</td></tr>
+<tr><th>Beam mesh</th><td>15 section samples; 40/80 requested elements become 54/94 actual elements after geometry and load stations are inserted. The reported response uses 94 elements.</td></tr>
+</tbody></table></div>
+<p class="small">CalculiX was executed on 26 October 2026. The current production beam was re-run on the same benchmark: both responses and all 7,188 resolved matched stress values in each fine-mesh case reproduce the archived beam values exactly. The independent solid calculations are retained from the original run; they have not been relabelled as new runs.</p>
+
+<h2>Signed displacement and rotation</h2>
+<figure><a href="motion-profiles.svg" target="_blank" rel="noopener"><img src="motion-profiles.svg" alt="Signed vertical displacement at matched solid material nodes, followed by interior-band section-rotation diagnostics for the force and moment cases"></a>
+<div class="links"><a href="motion-profiles.svg" target="_blank" rel="noopener">Open full-size SVG</a><a href="motion-profiles.png">PNG</a><a href="motion-profiles.pdf">PDF</a></div>
+<figcaption>Top: CalculiX signed vertical displacement and the current beam's rigid-section displacement at the same physical material nodes. All 5,805 resolved selected nodes per case are shown; 218 outside the supported beam normal-foot range remain in the CSV as unresolved. The variation at a span station includes cross-section rotation.</figcaption></figure>
+<p>The lower plots compare the beam's local span-axis rotation with an <strong>unweighted rigid-motion fit</strong> to CalculiX displacements in interior aircraft-y bands ±0.75 mm wide. The fit solves u ≈ d + ω × (p − r); the plotted value is ω projected along the local beam axis. Each actual band, node count and fitting residual is in the <a href="uniform-twist.csv">force</a> / <a href="torque-twist.csv">moment</a> CSV. These fits are diagnostics, not area-weighted exact cut rotations, pure torsion, or physical tip twist. No values are extrapolated to the endpoints.</p>
+<p><strong>Rotation agreement is weaker than global work agreement.</strong> In the force case, the two rotation diagnostics even have different signs near the root. The 2.100% work/My result must not be read as a 2.100% error bound on the physical twist profile.</p>
+
+<h2>Signed stress across the wing</h2>
+<figure><a href="stress-profiles.svg" target="_blank" rel="noopener"><img src="stress-profiles.svg" alt="Two load cases: CalculiX and current solver signed normal stress at matching integration points across the span, with the raw differences beneath"></a>
+<div class="links"><a href="stress-profiles.svg" target="_blank" rel="noopener">Open full-size SVG</a><a href="stress-profiles.png">PNG</a><a href="stress-profiles.pdf">PDF</a></div>
+<figcaption>Black: CalculiX stress projected along the local beam normal. Blue: current beam stress at the same physical integration points and with the same normal. Lower plots: raw beam-minus-solid difference. Every resolved matched fine-mesh sample is shown; no affine stress fitting or smoothing removes differences. The spread at a span station comes from different positions across its material section. Dotted lines mark the ribs.</figcaption></figure>
+<p>The comparison uses <i>σss = sᵀσs</i> from the full CalculiX stress tensor. It compares this with the beam's nominal axial-plus-bending normal stress. It does not compare the full stress tensor, von Mises stress, or a certified maximum stress.</p>
+<div class="table"><table><thead><tr><th>Fine-mesh sampled region</th><th>Force case: relative RMS difference</th><th>Torque case: relative RMS difference</th></tr></thead><tbody>
+<tr><td>Interior, 20–220 mm, excluding within 3 mm of ribs</td><td class="num">3.603%</td><td class="num">24.063%</td></tr>
+<tr><td>Root region, 0–20 mm</td><td class="num">9.170%</td><td class="num">91.011%</td></tr>
+<tr><td>Within 3 mm of either rib</td><td class="num">23.488%</td><td class="num">33.790%</td></tr>
+<tr><td>Tip region, 220–240 mm</td><td class="num">13.940%</td><td class="num">46.395%</td></tr>
+</tbody></table></div>
+<p>Relative RMS difference = √[Σw(σbeam − σsolid)² / Σwσsolid²], using actual integration-point volume weights. Region statistics use the original full-span subsample, without enriching the quiet interior bands. They are sampled volume-region norms, not complete cross-section cuts or pointwise percentage errors.</p>
+
+<details><summary>Refinement and sample coverage</summary>
+<p>Coarse-to-fine CalculiX global response changes are 0.185% under force and 0.428% under moment. Beam 54→94-element changes are 0.00603% and 0.00173%. Two mesh levels are a sensitivity check, not a guaranteed error bound or proof of local peak convergence.</p>
+<p>The fine solid has 96,448 integration points. The predetermined comparison selects 7,395; 7,188 have supported beam normal-foot locations and 207 remain unresolved near the boundary. The resolved range is approximately y = 7.77–236.73 mm. These are not exact root/tip stress values. Both resolved and unresolved records are retained in the CSV files.</p>
+<p>Sampling includes all integration points in the declared y = 110/130/190 ± 2 mm bands and one rotating integration point from every eighth element across the full wing. The meshes have different point sets; sampled band RMS changes must not be called same-point local convergence.</p>
+<p>Independent stress–strain energy integration agrees with half the external work to about 9 × 10⁻¹⁰ relative using printed solver precision. This checks the result adapter and integration; it does not establish physical model accuracy.</p></details>
+
+<h2>What this supports</h2>
+<p>This benchmark supports using the fast beam for global deformation and nominal bending trends in the matched finite-tip wing. It also demonstrates why local stresses near attachments and under torque need caution: warping, cross-section distortion, finite rib stiffness, clamp effects and detailed load introduction are not resolved by its nominal beam field.</p>
+<p>Exact zero-chord delta/elliptical tips, printed anisotropy, mixed materials, adhesive failure, buckling, fracture, shell/solid analysis inside the browser, and general full-wing local stress accuracy are <strong>not validated by this benchmark</strong>. The original complete-cut stress gate was not established; no overall validation pass is declared.</p>
+
+<h2>Data and reproduction</h2>
+<p class="links"><a href="benchmark-study.json">Wing study JSON</a><a href="beam-reference.json">Current beam responses and loads</a><a href="uniform-stress.csv">Force-case matched stress</a><a href="torque-stress.csv">Moment-case matched stress</a><a href="uniform-motion.csv">Force-case matched displacement</a><a href="torque-motion.csv">Moment-case matched displacement</a><a href="comparison.json">Numerical summary and source hashes</a><a href="benchmark.zip">CalculiX decks, raw outputs and source package</a></p>
+<p>The package includes all four input decks, original stress/displacement output, solver logs, CAD, mesh-admission records and comparison scripts. Run an input deck with <code>ccx_static -i ccx-h5-uniform</code> (omit the <code>.inp</code> suffix). Its <code>source/</code> directory includes the beam-reference helper and matched-point comparison; the package README explains their repository placement and dependencies. No reference stress values are supplied as targets to the beam solver.</p>
+<p>The publication check evaluates the exact <code>WingEngine</code> block embedded in Wing AeroStruct, rather than assuming its older shared beam helper is identical. The editable source mapping, embedded-block hash and execution details are in <a href="comparison.json">the numerical record</a>.</p>
+<p><a href="check-current.cjs">Published-engine response recheck</a> runs with Node: <code>node check-current.cjs REPOSITORY EXTRACTED_BENCHMARK OUTPUT_JSON</code>. It executes the exact shipped engine and checks the two global response cases; it does not rerun CalculiX or turn the local-stress diagnostics into an accuracy pass.</p>
+<p><a href="make-figures.py">Figure-generation source</a> replots the published CSV samples with NumPy and Matplotlib.</p>
+<p>Independent software sources: <a href="https://www.dhondt.de/">CalculiX — official solver and source</a> · <a href="https://www.dhondt.de/calculix_2.23_4win.zip">CalculiX 2.23 Windows release</a> · <a href="https://gmsh.info/doc/texinfo/">Gmsh documentation</a>.</p>
+</main></body></html>

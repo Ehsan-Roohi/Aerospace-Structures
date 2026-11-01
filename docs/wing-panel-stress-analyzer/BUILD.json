@@ -2,9 +2,9 @@
   "product": "MIE 446 Wing AeroStruct",
   "version": "0.3.9",
   "status": "Qualified educational solver; explicit 2D/3D section context and tested structural design guidance",
-  "builtAt": "2026-10-31T23:48:02.547751+00:00",
+  "builtAt": "2026-11-01T00:39:03.669071+00:00",
   "page": "index.html",
-  "pageSha256": "ba5699cd33572430c6777af5d752d82947b54d9197d016208b876d6bd8b09d2e",
+  "pageSha256": "46825c42beb74eeabaeaea071d727c786275096269e29cd2f227b7b39697d3ce",
   "workers": {
     "wing-aero": {
       "worker": "8e2d79fa0bfe",
@@ -203,7 +203,7 @@
     },
     "wx-shell.js": {
       "path": "docs/wing-panel-stress-analyzer/ui/wx-shell.js",
-      "sha256": "b043258496568f57c4e2fa3e8404eee338e9886f15b92779fe3a8db951df7b7e",
+      "sha256": "cb1a505c06d92e7622d85bee10b673617bf1fce650771c201719145f2fe7b420",
       "sha256_scope": "Canonical LF source, as committed"
     },
     "wx-shell.css": {
@@ -230,14 +230,15 @@
       "wing-aero-ui.js": "dbf565c4f00a093b12ebc8d982674795dda2a5c9c408a12e47e18e05675b21bf",
       "wx-aero-results.js": "6310eb5fb5a3a484ba9e184339d7856d5634eada3a2c6aa83dd1eca1b60ac929",
       "wx-shell.css": "fa3821ed64d0a61880ddd8311acccdf49f9edbb86667ca001ccbbf5f052b6da7",
-      "wx-shell.js": "b043258496568f57c4e2fa3e8404eee338e9886f15b92779fe3a8db951df7b7e",
+      "wx-shell.js": "cb1a505c06d92e7622d85bee10b673617bf1fce650771c201719145f2fe7b420",
       "04-geometry-first-context-menu.patch": "653987960c2a8999cb77a4d0c9a6318a086de4d2b935aa77e3ed643deac3f1b2",
       "05-lightweight-view-rendering.patch": "396248051b76b95cba7679141a5c7eeac3019e859da022f3bf0af8229eb9f60d",
       "06-surface-gradient.patch": "04f381d9937dc7ccd4c0bc40721a1070725a0a094f7c064da1248bdfa15ba678",
       "THIRD_PARTY_NOTICES.md": "26d4289dd21fd64d24401d0fa66c73d066f6dce24e28f219a80db2d7b0801f23",
       "07-airfoil-trailing-edge.patch": "d1d6e08a863fbe95e08d7a75484dfb25dbc21d5f8a4a3ee0eecc19735b336c1a",
       "08-wing-model-visibility.patch": "1b83b98b05fa75b208a78577c8a5e21276e667aaa288004076d05a5a7a29e208",
-      "11-load-admission-feedback.patch": "103f778236eb8aa4c94e842b539c63ba99db69a89ffe2b1e350c28bb5b0e3adc"
+      "11-load-admission-feedback.patch": "103f778236eb8aa4c94e842b539c63ba99db69a89ffe2b1e350c28bb5b0e3adc",
+      "20-structural-validation.patch": "ed2dff65259b35a242a702a98d4c0e8dd972cce31acbf004c224d1ae4bb1e3ea"
     },
     "validation": "validation/UI_RELEASE_REVIEW.json",
     "surfaceReview": "validation/UI_SURFACE_REVIEW.json",
@@ -385,5 +386,13 @@
     "test": "validation/test_custom_aero_mesh.cjs",
     "review": "validation/CUSTOM_AERO_MESH_REVIEW.json",
     "sourcePortSha256": "7262c930a168aaec5cbd64be1e75d5d7e0a10dc24a2c7527586acd3bb1904e95"
+  },
+  "structuralValidation": {
+    "page": "validation/structure/index.html",
+    "summary": "validation/structure/comparison.json",
+    "review": "validation/STRUCTURAL_VALIDATION_REVIEW.json",
+    "entry": "Help → Structural validation",
+    "sourcePort": "ui/20-structural-validation.patch",
+    "scope": "Independent CalculiX 2.23 C3D10 comparison of one finite-tip swept wing; current beam matched-point rerun; no general local-stress or experimental validation pass"
   }
 }

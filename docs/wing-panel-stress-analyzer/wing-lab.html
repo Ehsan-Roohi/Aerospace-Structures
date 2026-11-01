@@ -25748,9 +25748,13 @@ window.WingAeroStructResults = (() => {
     href:'validation/2026-10-29/index.html', target:'_blank', rel:'noopener',
     text:'Numerical validation · Cp, lift, moment and reference software'
   }));
+  const structuralValidationHelp = el('p', {id:'wxStructuralValidation'}, el('a', {
+    href:'validation/structure/index.html', target:'_blank', rel:'noopener',
+    text:'Structural validation · independent CalculiX comparison'
+  }));
   const evidenceHelp=el('div',{id:'wxEvidenceHelp',html:typeof WingAeroUI!=='undefined'?WingAeroUI.provenanceHelp():''});
   const deformationHelp=el('details',{id:'wxDeformationHelp'},el('summary',{text:'Deformed shape and visual scale'}),el('p',{text:'Deformed changes only the drawn structural shape: displayed position = original position + visual multiplier × solved displacement. It does not change loads, computed stress or displacement values. Visual scale multiplies an automatic magnification, so slider 1 is not necessarily physical scale 1:1; the actual × multiplier is shown beside it. These controls are hidden in aerodynamic result views because aerodynamic pressures are calculated on the rigid wing; this is not an aeroelastic re-solve.'}));
-  helpBody.prepend(...[helpTop, validationHelp, where, evidenceHelp, deformationHelp, aeroHelp, pressureHelp,algorithmHelp,accuracyHelp,foilHelp].filter(Boolean));
+  helpBody.prepend(...[helpTop, validationHelp, structuralValidationHelp, where, evidenceHelp, deformationHelp, aeroHelp, pressureHelp,algorithmHelp,accuracyHelp,foilHelp].filter(Boolean));
 
   // ---------------------------------------------------------------- result strip
   const results = el('section', { id: 'wxResults', 'aria-label': 'Displayed result and solver status' });

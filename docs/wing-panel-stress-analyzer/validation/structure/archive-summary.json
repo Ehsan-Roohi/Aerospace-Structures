@@ -1,0 +1,236 @@
+{
+  "scope": "One specific swept, dihedral, twisted, tapered homogeneous wing and two global-wrench load channels. Raw signed matched-IP comparison, not complete section stress recovery or general validation.",
+  "channels": {
+    "uniform": {
+      "h5_solid_generalized_response": 3.154945259640925,
+      "beam_generalized_response": 3.213818510211743,
+      "generalized_response_relative_difference": 0.01866062505867966,
+      "solid_response_h8_h5_relative_change": 0.0018458456485532383,
+      "band_changes": [
+        {
+          "station_mm": 110.0,
+          "h8_count": 422,
+          "h5_count": 722,
+          "solid_band_rms_change_relative": 0.008851218404202466,
+          "h5_raw_beam_difference_relative_rms": 0.008307074241676699,
+          "h5_max_absolute_raw_difference_MPa": 0.04612733333188945
+        },
+        {
+          "station_mm": 130.0,
+          "h8_count": 367,
+          "h5_count": 702,
+          "solid_band_rms_change_relative": 0.024440958158850393,
+          "h5_raw_beam_difference_relative_rms": 0.008125842812686397,
+          "h5_max_absolute_raw_difference_MPa": 0.03651763229871263
+        },
+        {
+          "station_mm": 190.0,
+          "h8_count": 428,
+          "h5_count": 792,
+          "solid_band_rms_change_relative": 0.017524530437219403,
+          "h5_raw_beam_difference_relative_rms": 0.026698258864899137,
+          "h5_max_absolute_raw_difference_MPa": 0.05318864420644076
+        }
+      ],
+      "h5_regions": {
+        "root_0_20mm": {
+          "count": 144,
+          "station_min_mm": 7.768937677358215,
+          "station_max_mm": 19.937887075332583,
+          "solid_rms_MPa": 0.8500965952853364,
+          "beam_rms_MPa": 0.8632833838437968,
+          "raw_difference_rms_MPa": 0.0779561027587745,
+          "raw_difference_relative_rms": 0.09170264084237204,
+          "solid_min_MPa": -1.3151921157060649,
+          "solid_max_MPa": 1.2648922880425435,
+          "beam_min_MPa": -1.3260206083173454,
+          "beam_max_MPa": 1.3021047702715458,
+          "max_absolute_raw_difference_MPa": 0.1937954522491112
+        },
+        "rib_within3mm": {
+          "count": 279,
+          "station_min_mm": 77.23501227015718,
+          "station_max_mm": 162.99051896931985,
+          "solid_rms_MPa": 0.5011158114628349,
+          "beam_rms_MPa": 0.528254381105565,
+          "raw_difference_rms_MPa": 0.1177002959088572,
+          "raw_difference_relative_rms": 0.23487643617803985,
+          "solid_min_MPa": -1.035144422883213,
+          "solid_max_MPa": 1.040505403356496,
+          "beam_min_MPa": -1.0375541859459387,
+          "beam_max_MPa": 1.0532371617855532,
+          "max_absolute_raw_difference_MPa": 0.6456481621772794
+        },
+        "tip_220_240mm": {
+          "count": 214,
+          "station_min_mm": 220.02213344904874,
+          "station_max_mm": 236.73264287019447,
+          "solid_rms_MPa": 0.08572548800716998,
+          "beam_rms_MPa": 0.08281876030970868,
+          "raw_difference_rms_MPa": 0.011950289231017455,
+          "raw_difference_relative_rms": 0.1394018221280694,
+          "solid_min_MPa": -0.17360566581979128,
+          "solid_max_MPa": 0.1720404966057907,
+          "beam_min_MPa": -0.1873622374162112,
+          "beam_max_MPa": 0.18217396580050296,
+          "max_absolute_raw_difference_MPa": 0.09822061827588605
+        },
+        "interior_20_220_excluding_ribs3mm": {
+          "count": 2170,
+          "station_min_mm": 20.014323405470737,
+          "station_max_mm": 219.922724482254,
+          "solid_rms_MPa": 0.5483281175250609,
+          "beam_rms_MPa": 0.5495821694459763,
+          "raw_difference_rms_MPa": 0.019754579091639423,
+          "raw_difference_relative_rms": 0.036026930701281344,
+          "solid_min_MPa": -1.2898648912506088,
+          "solid_max_MPa": 1.235128866727314,
+          "beam_min_MPa": -1.3192030742920953,
+          "beam_max_MPa": 1.252945331555713,
+          "max_absolute_raw_difference_MPa": 0.33514386032861637
+        }
+      },
+      "independent_energy_max_relative_difference": 8.637140640975474e-10,
+      "beam_refinement": {
+        "verticalGeneralizedDisplacementRelative": 6.0334337901758523e-05,
+        "torqueThetaWorkRelative": 1.726655505472726e-05,
+        "criteria": {
+          "meshRelative": 0.02,
+          "rotationFloorRad": 1e-07,
+          "displacementFloorMm": 1e-05
+        },
+        "passed": true
+      },
+      "coverage_h8_h5": [
+        {
+          "all_ips": 66592,
+          "matched_samples": 4664,
+          "resolved_samples": 4531,
+          "unresolved_samples": 133
+        },
+        {
+          "all_ips": 96448,
+          "matched_samples": 7395,
+          "resolved_samples": 7188,
+          "unresolved_samples": 207
+        }
+      ]
+    },
+    "torque": {
+      "h5_solid_generalized_response": 0.0037047530006912373,
+      "beam_generalized_response": 0.0037825437335942368,
+      "generalized_response_relative_difference": 0.0209975490642656,
+      "solid_response_h8_h5_relative_change": 0.004279491608874405,
+      "band_changes": [
+        {
+          "station_mm": 110.0,
+          "h8_count": 422,
+          "h5_count": 722,
+          "solid_band_rms_change_relative": 0.010689047433363465,
+          "h5_raw_beam_difference_relative_rms": 0.14173378730279892,
+          "h5_max_absolute_raw_difference_MPa": 0.0490660489222897
+        },
+        {
+          "station_mm": 130.0,
+          "h8_count": 367,
+          "h5_count": 702,
+          "solid_band_rms_change_relative": 0.02656532282210185,
+          "h5_raw_beam_difference_relative_rms": 0.1359420124904934,
+          "h5_max_absolute_raw_difference_MPa": 0.022663219057044694
+        },
+        {
+          "station_mm": 190.0,
+          "h8_count": 428,
+          "h5_count": 792,
+          "solid_band_rms_change_relative": 0.002855223984704278,
+          "h5_raw_beam_difference_relative_rms": 0.13431553513398012,
+          "h5_max_absolute_raw_difference_MPa": 0.046041963090388514
+        }
+      ],
+      "h5_regions": {
+        "root_0_20mm": {
+          "count": 144,
+          "station_min_mm": 7.768937677358215,
+          "station_max_mm": 19.937887075332583,
+          "solid_rms_MPa": 0.02987317732197058,
+          "beam_rms_MPa": 0.01852088764772048,
+          "raw_difference_rms_MPa": 0.027187859419606587,
+          "raw_difference_relative_rms": 0.9101093976907155,
+          "solid_min_MPa": -0.07529386163601275,
+          "solid_max_MPa": 0.08405951943072851,
+          "beam_min_MPa": -0.027064840274355854,
+          "beam_max_MPa": 0.028934971287441418,
+          "max_absolute_raw_difference_MPa": 0.08122613163415132
+        },
+        "rib_within3mm": {
+          "count": 279,
+          "station_min_mm": 77.23501227015718,
+          "station_max_mm": 162.99051896931985,
+          "solid_rms_MPa": 0.021778239141826947,
+          "beam_rms_MPa": 0.021727560371060776,
+          "raw_difference_rms_MPa": 0.007358859954551025,
+          "raw_difference_relative_rms": 0.33789967621476397,
+          "solid_min_MPa": -0.06830973330108805,
+          "solid_max_MPa": 0.09166853580949592,
+          "beam_min_MPa": -0.03559793788916655,
+          "beam_max_MPa": 0.0407345708949798,
+          "max_absolute_raw_difference_MPa": 0.06953240850274085
+        },
+        "tip_220_240mm": {
+          "count": 214,
+          "station_min_mm": 220.02213344904874,
+          "station_max_mm": 236.73264287019447,
+          "solid_rms_MPa": 0.03320136699556009,
+          "beam_rms_MPa": 0.028875021065169856,
+          "raw_difference_rms_MPa": 0.015403629563376684,
+          "raw_difference_relative_rms": 0.4639456431247714,
+          "solid_min_MPa": -0.05883010812248146,
+          "solid_max_MPa": 0.05459871422921066,
+          "beam_min_MPa": -0.04426196567121802,
+          "beam_max_MPa": 0.04765846488716882,
+          "max_absolute_raw_difference_MPa": 0.08082681458531149
+        },
+        "interior_20_220_excluding_ribs3mm": {
+          "count": 2170,
+          "station_min_mm": 20.014323405470737,
+          "station_max_mm": 219.922724482254,
+          "solid_rms_MPa": 0.022909042990185827,
+          "beam_rms_MPa": 0.022293999819447338,
+          "raw_difference_rms_MPa": 0.005512716029396984,
+          "raw_difference_relative_rms": 0.24063493319029594,
+          "solid_min_MPa": -0.05234853525480791,
+          "solid_max_MPa": 0.07666243046764964,
+          "beam_min_MPa": -0.04386447506442799,
+          "beam_max_MPa": 0.04630257080736687,
+          "max_absolute_raw_difference_MPa": 0.04872699688006013
+        }
+      },
+      "independent_energy_max_relative_difference": 6.474231967447079e-10,
+      "beam_refinement": {
+        "verticalGeneralizedDisplacementRelative": 6.0334337901758523e-05,
+        "torqueThetaWorkRelative": 1.726655505472726e-05,
+        "criteria": {
+          "meshRelative": 0.02,
+          "rotationFloorRad": 1e-07,
+          "displacementFloorMm": 1e-05
+        },
+        "passed": true
+      },
+      "coverage_h8_h5": [
+        {
+          "all_ips": 66592,
+          "matched_samples": 4664,
+          "resolved_samples": 4531,
+          "unresolved_samples": 133
+        },
+        {
+          "all_ips": 96448,
+          "matched_samples": 7395,
+          "resolved_samples": 7188,
+          "unresolved_samples": 207
+        }
+      ]
+    }
+  },
+  "overall_validation_claimed": false
+}

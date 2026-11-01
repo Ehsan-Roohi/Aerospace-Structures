@@ -1,0 +1,394 @@
+{
+  "format": "mie446-structural-independent-comparison",
+  "evidenceDate": "2026-10-26",
+  "reviewedUtc": "2026-11-01T01:16:19.419541+00:00",
+  "solidSolver": "CalculiX 2.23",
+  "solidElements": "C3D10, quadratic tetrahedra",
+  "currentBeamSourceSha256": {
+    "docs/wing-panel-stress-analyzer/ui/zero-tip-source/engine.js": "590f7b3d5e946abd9f5a10f5cb3a96b6775fa691a2143afa858706a6b42cffd0",
+    "computational\\printed-wing-solver\\web\\wing_geometry.js": "43bc0b302ee672ef1415b98cd07e006cc0c224bda9249181e69d6f53fa37a2ce",
+    "computational\\printed-wing-solver\\web\\wing_frame3d.js": "823b27ea0d8a41fcb5cf71d7935a7ae65bc9ef6c8426840930d14222c15e656f",
+    "computational\\printed-wing-solver\\web\\wing_spars.js": "d40b45f85f2474a520ee04a9abd2ddeea521928a6821505b691d135b2abc433a",
+    "computational\\printed-wing-solver\\web\\wing_airfoils.js": "473e66e1335ee08349d6ada6863c32673b88cc05459bbe6301ca99e27f33ddee",
+    "computational\\printed-wing-solver\\web\\load_profiles.js": "9f481f7db3220ecbe4e392adbee6484c6b5459a5b38563cc62364d80acd5356f",
+    "computational\\printed-wing-solver\\web\\wing_finite_section.js": "6f236f9cad98400951b360fa3f486ad67d7e5f80b503111c4b26d218339d1b4e"
+  },
+  "status": "Case-specific independent-code comparison; not general validation or a local stress accuracy pass",
+  "units": {
+    "length": "mm",
+    "force": "N",
+    "stress": "MPa"
+  },
+  "channels": {
+    "uniform": {
+      "h5_solid_generalized_response": 3.154945259640925,
+      "beam_generalized_response": 3.213818510211743,
+      "generalized_response_relative_difference": 0.01866062505867966,
+      "solid_response_h8_h5_relative_change": 0.0018458456485532383,
+      "band_changes": [
+        {
+          "station_mm": 110.0,
+          "h8_count": 422,
+          "h5_count": 722,
+          "solid_band_rms_change_relative": 0.008851218404202466,
+          "h5_raw_beam_difference_relative_rms": 0.008307074241676699,
+          "h5_max_absolute_raw_difference_MPa": 0.04612733333188945
+        },
+        {
+          "station_mm": 130.0,
+          "h8_count": 367,
+          "h5_count": 702,
+          "solid_band_rms_change_relative": 0.024440958158850393,
+          "h5_raw_beam_difference_relative_rms": 0.008125842812686397,
+          "h5_max_absolute_raw_difference_MPa": 0.03651763229871263
+        },
+        {
+          "station_mm": 190.0,
+          "h8_count": 428,
+          "h5_count": 792,
+          "solid_band_rms_change_relative": 0.017524530437219403,
+          "h5_raw_beam_difference_relative_rms": 0.026698258864899137,
+          "h5_max_absolute_raw_difference_MPa": 0.05318864420644076
+        }
+      ],
+      "h5_regions": {
+        "root_0_20mm": {
+          "count": 144,
+          "station_min_mm": 7.768937677358215,
+          "station_max_mm": 19.937887075332583,
+          "solid_rms_MPa": 0.8500965952853364,
+          "beam_rms_MPa": 0.8632833838437968,
+          "raw_difference_rms_MPa": 0.0779561027587745,
+          "raw_difference_relative_rms": 0.09170264084237204,
+          "solid_min_MPa": -1.3151921157060649,
+          "solid_max_MPa": 1.2648922880425435,
+          "beam_min_MPa": -1.3260206083173454,
+          "beam_max_MPa": 1.3021047702715458,
+          "max_absolute_raw_difference_MPa": 0.1937954522491112
+        },
+        "rib_within3mm": {
+          "count": 279,
+          "station_min_mm": 77.23501227015718,
+          "station_max_mm": 162.99051896931985,
+          "solid_rms_MPa": 0.5011158114628349,
+          "beam_rms_MPa": 0.528254381105565,
+          "raw_difference_rms_MPa": 0.1177002959088572,
+          "raw_difference_relative_rms": 0.23487643617803985,
+          "solid_min_MPa": -1.035144422883213,
+          "solid_max_MPa": 1.040505403356496,
+          "beam_min_MPa": -1.0375541859459387,
+          "beam_max_MPa": 1.0532371617855532,
+          "max_absolute_raw_difference_MPa": 0.6456481621772794
+        },
+        "tip_220_240mm": {
+          "count": 214,
+          "station_min_mm": 220.02213344904874,
+          "station_max_mm": 236.73264287019447,
+          "solid_rms_MPa": 0.08572548800716998,
+          "beam_rms_MPa": 0.08281876030970868,
+          "raw_difference_rms_MPa": 0.011950289231017455,
+          "raw_difference_relative_rms": 0.1394018221280694,
+          "solid_min_MPa": -0.17360566581979128,
+          "solid_max_MPa": 0.1720404966057907,
+          "beam_min_MPa": -0.1873622374162112,
+          "beam_max_MPa": 0.18217396580050296,
+          "max_absolute_raw_difference_MPa": 0.09822061827588605
+        },
+        "interior_20_220_excluding_ribs3mm": {
+          "count": 2170,
+          "station_min_mm": 20.014323405470737,
+          "station_max_mm": 219.922724482254,
+          "solid_rms_MPa": 0.5483281175250609,
+          "beam_rms_MPa": 0.5495821694459763,
+          "raw_difference_rms_MPa": 0.019754579091639423,
+          "raw_difference_relative_rms": 0.036026930701281344,
+          "solid_min_MPa": -1.2898648912506088,
+          "solid_max_MPa": 1.235128866727314,
+          "beam_min_MPa": -1.3192030742920953,
+          "beam_max_MPa": 1.252945331555713,
+          "max_absolute_raw_difference_MPa": 0.33514386032861637
+        }
+      },
+      "independent_energy_max_relative_difference": 8.637140640975474e-10,
+      "beam_refinement": {
+        "verticalGeneralizedDisplacementRelative": 6.0334337901758523e-05,
+        "torqueThetaWorkRelative": 1.726655505472726e-05,
+        "criteria": {
+          "meshRelative": 0.02,
+          "rotationFloorRad": 1e-07,
+          "displacementFloorMm": 1e-05
+        },
+        "passed": true
+      },
+      "coverage_h8_h5": [
+        {
+          "all_ips": 66592,
+          "matched_samples": 4664,
+          "resolved_samples": 4531,
+          "unresolved_samples": 133
+        },
+        {
+          "all_ips": 96448,
+          "matched_samples": 7395,
+          "resolved_samples": 7188,
+          "unresolved_samples": 207
+        }
+      ],
+      "current_beam_generalized_response": 3.213818510211743,
+      "current_matched_field_max_change_from_archive_MPa": 0.0,
+      "sampled_max_absolute_beam_solid_difference_MPa": 0.6456481621772794,
+      "current_matched_sample_count": 7188,
+      "unresolved_count": 207,
+      "resolved_station_min_mm": 7.768937677358215,
+      "resolved_station_max_mm": 236.73264287019447,
+      "motion_samples": {
+        "selected_nodes": 6023,
+        "resolved_nodes": 5805,
+        "twist_fit_stations": 23,
+        "twist_fit_scope": "Unweighted least-squares rigid-motion fit to all material nodes in each aircraft-y band +/-0.75 mm; not an area-weighted physical cut rotation or a torsion-only response.",
+        "max_fit_displacement_rms_mm": 0.002745640962159487
+      }
+    },
+    "torque": {
+      "h5_solid_generalized_response": 0.0037047530006912373,
+      "beam_generalized_response": 0.0037825437335942368,
+      "generalized_response_relative_difference": 0.0209975490642656,
+      "solid_response_h8_h5_relative_change": 0.004279491608874405,
+      "band_changes": [
+        {
+          "station_mm": 110.0,
+          "h8_count": 422,
+          "h5_count": 722,
+          "solid_band_rms_change_relative": 0.010689047433363465,
+          "h5_raw_beam_difference_relative_rms": 0.14173378730279892,
+          "h5_max_absolute_raw_difference_MPa": 0.0490660489222897
+        },
+        {
+          "station_mm": 130.0,
+          "h8_count": 367,
+          "h5_count": 702,
+          "solid_band_rms_change_relative": 0.02656532282210185,
+          "h5_raw_beam_difference_relative_rms": 0.1359420124904934,
+          "h5_max_absolute_raw_difference_MPa": 0.022663219057044694
+        },
+        {
+          "station_mm": 190.0,
+          "h8_count": 428,
+          "h5_count": 792,
+          "solid_band_rms_change_relative": 0.002855223984704278,
+          "h5_raw_beam_difference_relative_rms": 0.13431553513398012,
+          "h5_max_absolute_raw_difference_MPa": 0.046041963090388514
+        }
+      ],
+      "h5_regions": {
+        "root_0_20mm": {
+          "count": 144,
+          "station_min_mm": 7.768937677358215,
+          "station_max_mm": 19.937887075332583,
+          "solid_rms_MPa": 0.02987317732197058,
+          "beam_rms_MPa": 0.01852088764772048,
+          "raw_difference_rms_MPa": 0.027187859419606587,
+          "raw_difference_relative_rms": 0.9101093976907155,
+          "solid_min_MPa": -0.07529386163601275,
+          "solid_max_MPa": 0.08405951943072851,
+          "beam_min_MPa": -0.027064840274355854,
+          "beam_max_MPa": 0.028934971287441418,
+          "max_absolute_raw_difference_MPa": 0.08122613163415132
+        },
+        "rib_within3mm": {
+          "count": 279,
+          "station_min_mm": 77.23501227015718,
+          "station_max_mm": 162.99051896931985,
+          "solid_rms_MPa": 0.021778239141826947,
+          "beam_rms_MPa": 0.021727560371060776,
+          "raw_difference_rms_MPa": 0.007358859954551025,
+          "raw_difference_relative_rms": 0.33789967621476397,
+          "solid_min_MPa": -0.06830973330108805,
+          "solid_max_MPa": 0.09166853580949592,
+          "beam_min_MPa": -0.03559793788916655,
+          "beam_max_MPa": 0.0407345708949798,
+          "max_absolute_raw_difference_MPa": 0.06953240850274085
+        },
+        "tip_220_240mm": {
+          "count": 214,
+          "station_min_mm": 220.02213344904874,
+          "station_max_mm": 236.73264287019447,
+          "solid_rms_MPa": 0.03320136699556009,
+          "beam_rms_MPa": 0.028875021065169856,
+          "raw_difference_rms_MPa": 0.015403629563376684,
+          "raw_difference_relative_rms": 0.4639456431247714,
+          "solid_min_MPa": -0.05883010812248146,
+          "solid_max_MPa": 0.05459871422921066,
+          "beam_min_MPa": -0.04426196567121802,
+          "beam_max_MPa": 0.04765846488716882,
+          "max_absolute_raw_difference_MPa": 0.08082681458531149
+        },
+        "interior_20_220_excluding_ribs3mm": {
+          "count": 2170,
+          "station_min_mm": 20.014323405470737,
+          "station_max_mm": 219.922724482254,
+          "solid_rms_MPa": 0.022909042990185827,
+          "beam_rms_MPa": 0.022293999819447338,
+          "raw_difference_rms_MPa": 0.005512716029396984,
+          "raw_difference_relative_rms": 0.24063493319029594,
+          "solid_min_MPa": -0.05234853525480791,
+          "solid_max_MPa": 0.07666243046764964,
+          "beam_min_MPa": -0.04386447506442799,
+          "beam_max_MPa": 0.04630257080736687,
+          "max_absolute_raw_difference_MPa": 0.04872699688006013
+        }
+      },
+      "independent_energy_max_relative_difference": 6.474231967447079e-10,
+      "beam_refinement": {
+        "verticalGeneralizedDisplacementRelative": 6.0334337901758523e-05,
+        "torqueThetaWorkRelative": 1.726655505472726e-05,
+        "criteria": {
+          "meshRelative": 0.02,
+          "rotationFloorRad": 1e-07,
+          "displacementFloorMm": 1e-05
+        },
+        "passed": true
+      },
+      "coverage_h8_h5": [
+        {
+          "all_ips": 66592,
+          "matched_samples": 4664,
+          "resolved_samples": 4531,
+          "unresolved_samples": 133
+        },
+        {
+          "all_ips": 96448,
+          "matched_samples": 7395,
+          "resolved_samples": 7188,
+          "unresolved_samples": 207
+        }
+      ],
+      "current_beam_generalized_response": 0.0037825437335942368,
+      "current_matched_field_max_change_from_archive_MPa": 0.0,
+      "sampled_max_absolute_beam_solid_difference_MPa": 0.08122613163415132,
+      "current_matched_sample_count": 7188,
+      "unresolved_count": 207,
+      "resolved_station_min_mm": 7.768937677358215,
+      "resolved_station_max_mm": 236.73264287019447,
+      "motion_samples": {
+        "selected_nodes": 6023,
+        "resolved_nodes": 5805,
+        "twist_fit_stations": 23,
+        "twist_fit_scope": "Unweighted least-squares rigid-motion fit to all material nodes in each aircraft-y band +/-0.75 mm; not an area-weighted physical cut rotation or a torsion-only response.",
+        "max_fit_displacement_rms_mm": 0.0006096322549183847
+      }
+    }
+  },
+  "archiveFiles": {
+    "slender-study.json": "7d56054874e64483d71d7d05c4d20da33d06277916fc043be2831fed1762ccec",
+    "slender-wing.step": "c0bb6d99bcf9cfe97941eef9895bed1979f007e769459fae9ec94eb818ad1855",
+    "cad-report.json": "b7131b653d4a5281786398eae8d521a51110efa47f8fb47ed74160e409505dd0",
+    "cad-volume-reference.json": "18156a037f04a0a49320f63b1c692b47ca918ae70ad155258032876c6130f85e",
+    "h5-mesh-report.json": "1eb6df5c5af073a6a6de78fea1f03ff14c90b2426cf834d573ab33e2ac106438",
+    "h8-mesh-report.json": "6c65f239df9c2ca5ed1c863de29513db268c01e99e11614c24b9bf6c6c29729b",
+    "h5-volume-admission.json": "a721a243ba6cdb092894c033c152b6f0dc5e1a7d31f4127d24bc668ed2a898b7",
+    "h8-volume-admission.json": "2db85e081655e5890f59687f51e566ca112b35b8c372e19c00799372be8839e1",
+    "qa-audit.json": "2204555f79c4e91d0118e0fc7d91495e2f3e51a4ff0988cf27e16eee94b74cae",
+    "qa-deck-roundtrip.json": "ee06eee2319228d26164cf92a89c405418636c16266e88e21db3c2d12b8029aa",
+    "ccx-h8-uniform.inp": "b0a8c157430fa2fed6854301c14f85966c769019c5676bdd0a2cc2282c7731b3",
+    "ccx-h8-uniform.dat": "0f5d52a603bf79a6d57e53ae085667c0929b09cd190e254ca4a5df24c0dadb85",
+    "ccx-h8-uniform-solver.log": "7d1dfdaf43fe35709e7b480aec645ac324c036cf0adc20e5e734f264c96fbd17",
+    "ccx-h8-uniform-report.json": "932ae3417d87b6961c7b3a36c711526c2bb25d873b6ef93e8ef8c8aa8b677a1f",
+    "ccx-h8-uniform-stress-comparison.json": "f82ad35144858f9f1d811278b8d37b31dd2efa72f739755fa818ddfecc09da94",
+    "ccx-h8-uniform-ip-comparison.npz": "88c638d08c46674646f00178ae136ff058e981a24816df0d649e103d0cea7120",
+    "ccx-h8-uniform-solution.npz": "9f85bb8a92ee1418079da63382db59bf791d8b57d6c7de92118b753b89b2dfd7",
+    "ccx-h8-torque.inp": "5561dd8b2e4918bc371070fc4c842e047e9994856cd9ab2a36b45feeca823566",
+    "ccx-h8-torque.dat": "3992eb1f59c02c216833a959f9a3fcd6834eb5c5d3357b8d8d91e53bc5666cd5",
+    "ccx-h8-torque-solver.log": "b0b2deb71fd394537741785bd6be4e81164a4dbb0459ebc278d1a06ad81c0192",
+    "ccx-h8-torque-report.json": "353e2b916c3a67b44b268b1473b8eb75ed9d16266d837b6e4141c439446e2d5a",
+    "ccx-h8-torque-stress-comparison.json": "59d3644cf802ad914654124c647a82299912eac17bbf36d1128bb1e574557ba2",
+    "ccx-h8-torque-ip-comparison.npz": "148e785ae81d247b8e690b59c74ccb8b2c1613c77480eb8cb52505cd6a3c0f71",
+    "ccx-h8-torque-solution.npz": "3f6d4a1b9c2958f0d1c9f6c88d5302147544248196a84e52fb6c2cd77d4ebf17",
+    "ccx-h5-uniform.inp": "fea46b31f3831a39f0d110bd7bfacc5f9a2fbc133920b23bd8d2c935373f2cca",
+    "ccx-h5-uniform.dat": "723e7f4871b2057690fa403550e9fca12630ff2c4ef1c5df445ea4b36e91f271",
+    "ccx-h5-uniform-solver.log": "db1fb083be07d8d929182d9992e235135f572f654b4b9532ff421523768788aa",
+    "ccx-h5-uniform-report.json": "4f4e1df6668623361baba5f6766675c09450207db860182b2cd29cffae0608b8",
+    "ccx-h5-uniform-stress-comparison.json": "dea56e6823ea860d7cb8e8c477cd233f01a06fd4c99613825e91ff3cf328dee3",
+    "ccx-h5-uniform-ip-comparison.npz": "c0b6219ab94062a228418276cd8ac921c5727b5d2f1086a91e8245dcc9319d21",
+    "ccx-h5-uniform-solution.npz": "d68cf1f1ec9a8307abcd1126d15bc0bb591a7acdc4104f71dbc85b6f32568d4f",
+    "ccx-h5-torque.inp": "d25d12f45d28948fd6a92f861e2b2a1097091552222c3debd5ef4314676704da",
+    "ccx-h5-torque.dat": "1d954e9cdd408416850d37206dcb350ca3abe9a759f8d7e5c8634924a74f09e9",
+    "ccx-h5-torque-solver.log": "05a83090466c922607a7acac0e7be9eca11adf7d80cea2e38bd3694d40956186",
+    "ccx-h5-torque-report.json": "4f87933ca71aed6d8d530fd5e70d842875417cae567a81264167f0c608b17076",
+    "ccx-h5-torque-stress-comparison.json": "a9e4ad043ec4a0415987d1f39ac5deeb743b39ec2ec371f2dadd80173bc3d4ee",
+    "ccx-h5-torque-ip-comparison.npz": "ecffcda678394d0877d8de10cf130d3c0f42381add3e33ed413fee2d1651021e",
+    "ccx-h5-torque-solution.npz": "38dfd581564dbb269c4360d572ef7cb27bce40e32c6ae0afc67aaddf4fb4422e"
+  },
+  "publishedEngineIdentity": {
+    "publishedPage": "docs/wing-panel-stress-analyzer/index.html",
+    "editableEngine": "docs/wing-panel-stress-analyzer/ui/zero-tip-source/engine.js",
+    "editableSourceContainsExactPublishedEngine": true,
+    "publishedEngineSha256": "42bf0946e573ea88e0ef71f23a9b18b7eb371f5cd94493764ab7e8b0a9886f26",
+    "editableEngineSourceSha256": "590f7b3d5e946abd9f5a10f5cb3a96b6775fa691a2143afa858706a6b42cffd0",
+    "execution": "Evaluated exact embedded WingEngine block in Node vm with unchanged shared production dependencies; benchmark bridge imports injected with that exact engine. Physical loads, material, mesh and matched IPs unchanged.",
+    "response": [
+      {
+        "requestedElements": 40,
+        "actualElements": 54,
+        "uniformMm": 3.214012413823693,
+        "torqueWorkRad": 0.0037824784220946137
+      },
+      {
+        "requestedElements": 80,
+        "actualElements": 94,
+        "uniformMm": 3.213818510211743,
+        "torqueWorkRad": 0.0037825437335942368
+      }
+    ]
+  },
+  "currentBeamReferenceSha256": "748d6a0897c4050334ffd4073c0c4f2e8404643655d1d5d4e1cd7e47a50f5dcf",
+  "benchmarkArchiveSha256": "4b50086bc8d2151d2ba135566d8149c6d23c562d073d6191428cf1e0e3af1b43",
+  "originalArchiveFileSha256": {
+    "slender-study.json": "7d56054874e64483d71d7d05c4d20da33d06277916fc043be2831fed1762ccec",
+    "slender-wing.step": "c0bb6d99bcf9cfe97941eef9895bed1979f007e769459fae9ec94eb818ad1855",
+    "cad-report.json": "b7131b653d4a5281786398eae8d521a51110efa47f8fb47ed74160e409505dd0",
+    "cad-volume-reference.json": "18156a037f04a0a49320f63b1c692b47ca918ae70ad155258032876c6130f85e",
+    "h5-mesh-report.json": "1eb6df5c5af073a6a6de78fea1f03ff14c90b2426cf834d573ab33e2ac106438",
+    "h8-mesh-report.json": "6c65f239df9c2ca5ed1c863de29513db268c01e99e11614c24b9bf6c6c29729b",
+    "h5-volume-admission.json": "1620a3f0104ba52d7eabe0d53bff37319e7a14bf4ff77728d07e3f29d5b8bec6",
+    "h8-volume-admission.json": "bdbbf15a78325e467de1f0cbd621ca3f93f9780510611f9af6ec5c4c139f1dcd",
+    "qa-audit.json": "1c0c45b863606f7038aa07bdd6b3294c762ab7a36e85cc86d8d6746dd82cd76a",
+    "qa-deck-roundtrip.json": "ee06eee2319228d26164cf92a89c405418636c16266e88e21db3c2d12b8029aa",
+    "ccx-h8-uniform.inp": "b0a8c157430fa2fed6854301c14f85966c769019c5676bdd0a2cc2282c7731b3",
+    "ccx-h8-uniform.dat": "0f5d52a603bf79a6d57e53ae085667c0929b09cd190e254ca4a5df24c0dadb85",
+    "ccx-h8-uniform-solver.log": "7d1dfdaf43fe35709e7b480aec645ac324c036cf0adc20e5e734f264c96fbd17",
+    "ccx-h8-uniform-report.json": "932ae3417d87b6961c7b3a36c711526c2bb25d873b6ef93e8ef8c8aa8b677a1f",
+    "ccx-h8-uniform-stress-comparison.json": "f82ad35144858f9f1d811278b8d37b31dd2efa72f739755fa818ddfecc09da94",
+    "ccx-h8-uniform-ip-comparison.npz": "88c638d08c46674646f00178ae136ff058e981a24816df0d649e103d0cea7120",
+    "ccx-h8-uniform-solution.npz": "9f85bb8a92ee1418079da63382db59bf791d8b57d6c7de92118b753b89b2dfd7",
+    "ccx-h8-torque.inp": "5561dd8b2e4918bc371070fc4c842e047e9994856cd9ab2a36b45feeca823566",
+    "ccx-h8-torque.dat": "3992eb1f59c02c216833a959f9a3fcd6834eb5c5d3357b8d8d91e53bc5666cd5",
+    "ccx-h8-torque-solver.log": "b0b2deb71fd394537741785bd6be4e81164a4dbb0459ebc278d1a06ad81c0192",
+    "ccx-h8-torque-report.json": "353e2b916c3a67b44b268b1473b8eb75ed9d16266d837b6e4141c439446e2d5a",
+    "ccx-h8-torque-stress-comparison.json": "59d3644cf802ad914654124c647a82299912eac17bbf36d1128bb1e574557ba2",
+    "ccx-h8-torque-ip-comparison.npz": "148e785ae81d247b8e690b59c74ccb8b2c1613c77480eb8cb52505cd6a3c0f71",
+    "ccx-h8-torque-solution.npz": "3f6d4a1b9c2958f0d1c9f6c88d5302147544248196a84e52fb6c2cd77d4ebf17",
+    "ccx-h5-uniform.inp": "fea46b31f3831a39f0d110bd7bfacc5f9a2fbc133920b23bd8d2c935373f2cca",
+    "ccx-h5-uniform.dat": "723e7f4871b2057690fa403550e9fca12630ff2c4ef1c5df445ea4b36e91f271",
+    "ccx-h5-uniform-solver.log": "db1fb083be07d8d929182d9992e235135f572f654b4b9532ff421523768788aa",
+    "ccx-h5-uniform-report.json": "4f4e1df6668623361baba5f6766675c09450207db860182b2cd29cffae0608b8",
+    "ccx-h5-uniform-stress-comparison.json": "dea56e6823ea860d7cb8e8c477cd233f01a06fd4c99613825e91ff3cf328dee3",
+    "ccx-h5-uniform-ip-comparison.npz": "c0b6219ab94062a228418276cd8ac921c5727b5d2f1086a91e8245dcc9319d21",
+    "ccx-h5-uniform-solution.npz": "d68cf1f1ec9a8307abcd1126d15bc0bb591a7acdc4104f71dbc85b6f32568d4f",
+    "ccx-h5-torque.inp": "d25d12f45d28948fd6a92f861e2b2a1097091552222c3debd5ef4314676704da",
+    "ccx-h5-torque.dat": "1d954e9cdd408416850d37206dcb350ca3abe9a759f8d7e5c8634924a74f09e9",
+    "ccx-h5-torque-solver.log": "05a83090466c922607a7acac0e7be9eca11adf7d80cea2e38bd3694d40956186",
+    "ccx-h5-torque-report.json": "4f87933ca71aed6d8d530fd5e70d842875417cae567a81264167f0c608b17076",
+    "ccx-h5-torque-stress-comparison.json": "a9e4ad043ec4a0415987d1f39ac5deeb743b39ec2ec371f2dadd80173bc3d4ee",
+    "ccx-h5-torque-ip-comparison.npz": "ecffcda678394d0877d8de10cf130d3c0f42381add3e33ed413fee2d1651021e",
+    "ccx-h5-torque-solution.npz": "38dfd581564dbb269c4360d572ef7cb27bce40e32c6ae0afc67aaddf4fb4422e"
+  },
+  "archivePathSanitization": {
+    "files": [
+      "h5-volume-admission.json",
+      "h8-volume-admission.json",
+      "qa-audit.json"
+    ],
+    "method": "Only absolute local-path string values are replaced with their basenames. Numerical values and solver data are unchanged. Original and packaged hashes are both retained."
+  }
+}

@@ -23,12 +23,12 @@
       "sha256": "d6d1b0d20c33044a685b65de28d36e9e72e256a8655875c43bbd8fcaa56863a4"
     },
     "index.html": {
-      "bytes": 29735,
-      "sha256": "5c51d6f5bf1d296c71ca612576af4a2f85a399c6f8f24363a3e6485ded0ce5d8"
+      "bytes": 30335,
+      "sha256": "8fb9488b8e0d93d2efeb7040d6cac594d061e0aeb7fca72eb1a32eae740c9283"
     },
     "c1-cavity.html": {
-      "bytes": 8402,
-      "sha256": "24a012d8f39cc0a4858190634e6aa6b4380b9e13cc24b4c05c5b5b85c2ff2db3"
+      "bytes": 9111,
+      "sha256": "0c1a793a389fea3b100e81520bc47647fb5dcd6fe35ec1aa2d16d3f675a267d1"
     },
     "c1-cavity-method.md": {
       "bytes": 14893,
@@ -179,5 +179,11 @@
       "sha256": "fa0a8b657654ae3cb4ed432544328ff3b6beaa045719832ca6a51a3bac2946e6"
     }
   },
-  "textLineEndings": "Published text is LF; equivalent CRLF Windows Git checkouts are accepted by the verifier."
+  "textLineEndings": "Published text is LF; equivalent CRLF Windows Git checkouts are accepted by the verifier.",
+  "additionalExperimentalComparison": {
+    "path": "c1-waid-experiment.html",
+    "status": "LIMITED_DIMENSIONS_ONLY_NOT_FULL_MODEL_QUALIFICATION",
+    "manifest": "reference/c1-waid1957/waid-current-manifest.json"
+  },
+  "experimentalValidationScope": "Original numerical payload: NOT_PERFORMED. New experimental work is linked separately; disk dimensions are limited comparisons, hydrofoil comparison not completed."
 }

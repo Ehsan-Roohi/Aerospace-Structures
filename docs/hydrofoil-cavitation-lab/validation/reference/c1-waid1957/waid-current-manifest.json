@@ -1,0 +1,191 @@
+{
+  "title": "Four-case Waid experimental dimension comparison: reviewed evidence",
+  "sourceKernel": {
+    "relativePath": "../../../axisymmetric-cavity-c1.js",
+    "sha256": "9bfb67177b372128a26c0893f7df35fc3bfadae5ea6e30a2770d6b71905bfc7c"
+  },
+  "tests": {
+    "eightCompletedRuns": true,
+    "fourMeasuredPointsRetained": true,
+    "sigmaMismatchBelow5eMinus8": true,
+    "declaredMeshAndQuadrature": true,
+    "allNineFractionSamplesRetained": true,
+    "absoluteProfilesMatchReportedMaxima": true,
+    "unchangedDirectThresholds": true,
+    "coarseFailuresRetained": true,
+    "noExperimentalQualificationClaim": true
+  },
+  "profileCounts": [
+    {
+      "marker": 1,
+      "Nc": 64,
+      "normal_samples": 1152,
+      "cavity_samples": 576,
+      "direct_field_passed": false
+    },
+    {
+      "marker": 1,
+      "Nc": 128,
+      "normal_samples": 2304,
+      "cavity_samples": 1152,
+      "direct_field_passed": true
+    },
+    {
+      "marker": 2,
+      "Nc": 64,
+      "normal_samples": 1152,
+      "cavity_samples": 576,
+      "direct_field_passed": false
+    },
+    {
+      "marker": 2,
+      "Nc": 128,
+      "normal_samples": 2304,
+      "cavity_samples": 1152,
+      "direct_field_passed": true
+    },
+    {
+      "marker": 3,
+      "Nc": 64,
+      "normal_samples": 1152,
+      "cavity_samples": 576,
+      "direct_field_passed": true
+    },
+    {
+      "marker": 3,
+      "Nc": 128,
+      "normal_samples": 2304,
+      "cavity_samples": 1152,
+      "direct_field_passed": true
+    },
+    {
+      "marker": 4,
+      "Nc": 64,
+      "normal_samples": 1152,
+      "cavity_samples": 576,
+      "direct_field_passed": true
+    },
+    {
+      "marker": 4,
+      "Nc": 128,
+      "normal_samples": 2304,
+      "cavity_samples": 1152,
+      "direct_field_passed": true
+    }
+  ],
+  "noPublicSourceImages": true,
+  "excludedPrivateSources": [
+    "waid1957.pdf",
+    "waid1957.txt",
+    "waid-p*.png",
+    "waid-hi-*.png",
+    "review-page-*.png"
+  ],
+  "files": [
+    {
+      "path": "METHOD.md",
+      "bytes": 5340,
+      "sha256": "43c39edff00141a78f88556a0ced8506a8991b69757d6bd128185dab1ea288da"
+    },
+    {
+      "path": "compare-waid-current.py",
+      "bytes": 8168,
+      "sha256": "8dac95880957f30acc43de46df999d0ec050956daf4e961b987b9ca63823cd67"
+    },
+    {
+      "path": "check-waid-comparison.py",
+      "bytes": 4274,
+      "sha256": "332c3b37cbe5de2bcc4bf045fea021bf44c2b80f24a518da423f99ea806eef40"
+    },
+    {
+      "path": "match-waid-additional.cjs",
+      "bytes": 4856,
+      "sha256": "492d332306f26001e9f0bb823ec4eadbc8c4ba8879a2d4aceb7133bd2a499c9a"
+    },
+    {
+      "path": "match-waid-1417.cjs",
+      "bytes": 3280,
+      "sha256": "a02019d0f977dd62ddb852e40ca62048d062cf2a2114eb32f50cc4955494e181"
+    },
+    {
+      "path": "waid-digitization.json",
+      "bytes": 6673,
+      "sha256": "0597b1bc07ecdfbb9e296489497da9fe390a9bff66f764624bff4a1a1315f75c"
+    },
+    {
+      "path": "waid-digitized-dimensions.csv",
+      "bytes": 635,
+      "sha256": "4810b90145528005159f1af0e277d72042b1dd1f275306e3ad9ebd2d59f8b397"
+    },
+    {
+      "path": "waid-current-comparison.json",
+      "bytes": 10094,
+      "sha256": "74f8f779cadaeaeeb48e250a14cf8c9dad7c99a77b33aea19295a4b3891cafba"
+    },
+    {
+      "path": "waid-current-comparison.csv",
+      "bytes": 3188,
+      "sha256": "5d6a8ba70f7520b2e125b34f7c57ca9465bdd02ad9a3ccefc7d319839369ec5d"
+    },
+    {
+      "path": "waid-marker1-Nc64.json",
+      "bytes": 195763,
+      "sha256": "b143b1e409f0304e608b78bb7281986509ee4c17da7b1a6b4f7edd94ca21c0e6"
+    },
+    {
+      "path": "waid-marker1-Nc128.json",
+      "bytes": 383613,
+      "sha256": "e7b4bccb56e14308ebf640850f5d444614ae029fa3c16ac186b302a8f2fb2087"
+    },
+    {
+      "path": "waid-1417-Nc64.json",
+      "bytes": 196633,
+      "sha256": "d30635963c19c10f58bcf6e63e289165b86993fe63edc3ee1b51cc0d8df3ef3c"
+    },
+    {
+      "path": "waid-1417-Nc128.json",
+      "bytes": 383275,
+      "sha256": "5c2e8853941b01d1b571087511735033d332d63d26e6a14d964fe5916c1e72f1"
+    },
+    {
+      "path": "waid-marker3-Nc64.json",
+      "bytes": 195485,
+      "sha256": "5ce03bc322ecaaa5c7a7a968e8f370e5616e9a1ffe1eb885751d076999d094b6"
+    },
+    {
+      "path": "waid-marker3-Nc128.json",
+      "bytes": 383889,
+      "sha256": "36fd589e56a2aef8fe5e2139d4834e8d892b11ff47815565f18c557a2e88895e"
+    },
+    {
+      "path": "waid-marker4-Nc64.json",
+      "bytes": 195144,
+      "sha256": "d4fd20fac72a1a5023288153331e31f96b1d594276438cc943451b668fd5b8ff"
+    },
+    {
+      "path": "waid-marker4-Nc128.json",
+      "bytes": 384968,
+      "sha256": "3d06c09a3a4217ad573b8b1e7c3331620e518eed20b221d1d80001bf6ca5d3cf"
+    },
+    {
+      "path": "waid-current-dimensions.png",
+      "bytes": 187691,
+      "sha256": "8c10f12f9797d9bb7b58ccad55b893c1f472f5b40c8be2e4a01695b5ab6bf9fd"
+    },
+    {
+      "path": "waid-current-dimensions.svg",
+      "bytes": 33933,
+      "sha256": "e17d3a2b098a65954c461f4ef58f587ede720b061618f3aeb2b3776b0fc5edd3"
+    },
+    {
+      "path": "waid-current-signed-field-audit.png",
+      "bytes": 302472,
+      "sha256": "e2a3e939b5c6892f15256a5c773653e672032806d9ba3128153b8ba2618f1ab6"
+    },
+    {
+      "path": "waid-current-signed-field-audit.svg",
+      "bytes": 116775,
+      "sha256": "f03170bd726e5582b52c21b3cc2414577a5f83106d1e3a5e0964c6bbb44f2ac8"
+    }
+  ]
+}

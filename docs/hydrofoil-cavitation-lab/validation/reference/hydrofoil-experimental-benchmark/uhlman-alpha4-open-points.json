@@ -1,0 +1,161 @@
+{
+  "source": {
+    "authors": "J. S. Uhlman Jr. and C.-W. Jiang",
+    "year": 1977,
+    "report": "MIT 83481-2, DTIC ADA045767",
+    "title": "Experiments on a Partially Cavitating Plano-Convex Hydrofoil with Comparison to Theory",
+    "primaryURL": "https://apps.dtic.mil/sti/pdfs/ADA045767.pdf",
+    "retrievedCopy": "https://archive.org/download/DTIC_ADA045767/DTIC_ADA045767.pdf",
+    "pdfSha256": "13d834dbf40cc4a6b66abf7e6479c5d032339d427954f6d9caca4b190dfccf13",
+    "figure": 3,
+    "pdfPage": 24,
+    "printedPage": 14
+  },
+  "geometry": {
+    "type": "2D plano-convex; upper parabolic, lower flat",
+    "thicknessRatio": 0.06,
+    "chord_inches": 4,
+    "chord_m": 0.1016,
+    "span_inches": 19.75,
+    "tunnel_width_inches": 20,
+    "tunnel_height_inches": 20,
+    "upper_reconstruction": "z/c = 4*0.06*(x/c)*(1-x/c)",
+    "reconstructionStatus": "Derived from the stated parabolic suction side, mid-chord thickness and closed endpoints; not a printed coordinate table."
+  },
+  "flow": {
+    "alpha_degrees": 4,
+    "per_point_speed_m_s": null,
+    "per_point_Reynolds": null,
+    "velocity_note": "Speed was varied for each point; 9.1 m/s is the facility maximum, not the test speed.",
+    "pressure_note": "Open and filled triangles use measured cavity pressure and vapor pressure, respectively; do not merge them."
+  },
+  "calibration": {
+    "image": "uhlman-jiang1977-figure3-upright.png",
+    "imageSha256": "9469086305a196c1aa7c7125e64b7025ecd3231dd4e0df33101b6e131e1ece6f",
+    "origin": [
+      255.0,
+      837.0
+    ],
+    "ratio_0_10_tick": [
+      986.0,
+      833.0
+    ],
+    "length_0_80_tick": [
+      251.0,
+      247.0
+    ],
+    "affinePixelMatrix": [
+      [
+        7310.0,
+        -5.0
+      ],
+      [
+        -40.0,
+        -737.5
+      ]
+    ],
+    "sourceScale": 1.8,
+    "rotationDegrees": -90
+  },
+  "manualDigitizationBounds": {
+    "alpha_over_sigma": 0.001,
+    "cavity_length_over_chord": 0.01,
+    "scope": "Conservative reading bounds only, not experimental confidence intervals."
+  },
+  "sigma_conversion_assumption": "Alpha is expressed in radians when converting the plotted alpha/sigma ratio. The figure labels alpha=4 degrees but does not print the ratio angle unit; retain the original ratio and this inference.",
+  "selection": "All five resolved open triangular points retained, including l/c>0.75. No theory lines or vapor-pressure markers digitized here.",
+  "limitations": [
+    "Per-point speed/Re and formal measurement uncertainty absent from this report.",
+    "Tunnel and boundary-layer effects are not represented by current unbounded inviscid geometry.",
+    "Current NACA-only hydrofoil must gain the actual custom profile before a matched calculation.",
+    "Current recovery/detachment physics must be declared, not fitted to these lengths.",
+    "The report warns of instability at l/c>0.75; retain the point but do not claim steady validation there."
+  ],
+  "points": [
+    {
+      "id": "alpha4-cavity-pressure-1",
+      "pixel": [
+        738,
+        597
+      ],
+      "alpha_over_sigma": 0.06629400008346742,
+      "cavity_length_over_chord": 0.3218281220293713,
+      "sigma_using_alpha_radians": 1.0530842910651788,
+      "sigma_reading_bounds_using_ratio": [
+        1.0374352838764398,
+        1.0692126380759146
+      ],
+      "length_below_reported_instability_threshold": true,
+      "measured_pressure_basis": "Actual measured cavity pressure: open triangle",
+      "measurement_not_current_prediction": true
+    },
+    {
+      "id": "alpha4-cavity-pressure-2",
+      "pixel": [
+        712,
+        589
+      ],
+      "alpha_over_sigma": 0.06274477980830315,
+      "cavity_length_over_chord": 0.3328680797392107,
+      "sigma_using_alpha_radians": 1.1126530413058309,
+      "sigma_reading_bounds_using_ratio": [
+        1.0951982309723123,
+        1.1306732374221704
+      ],
+      "length_below_reported_instability_threshold": true,
+      "measured_pressure_basis": "Actual measured cavity pressure: open triangle",
+      "measurement_not_current_prediction": true
+    },
+    {
+      "id": "alpha4-cavity-pressure-3",
+      "pixel": [
+        753,
+        544
+      ],
+      "alpha_over_sigma": 0.06839506058343728,
+      "cavity_length_over_chord": 0.39357857298530513,
+      "sigma_using_alpha_radians": 1.0207340922610326,
+      "sigma_reading_bounds_using_ratio": [
+        1.0060250613346347,
+        1.0358796249369375
+      ],
+      "length_below_reported_instability_threshold": true,
+      "measured_pressure_basis": "Actual measured cavity pressure: open triangle",
+      "measurement_not_current_prediction": true
+    },
+    {
+      "id": "alpha4-cavity-pressure-4",
+      "pixel": [
+        782,
+        447
+      ],
+      "alpha_over_sigma": 0.07245204101032678,
+      "cavity_length_over_chord": 0.5248839570977449,
+      "sigma_using_alpha_radians": 0.96357768678763,
+      "sigma_reading_bounds_using_ratio": [
+        0.9504592264489696,
+        0.9770633433645831
+      ],
+      "length_below_reported_instability_threshold": true,
+      "measured_pressure_basis": "Actual measured cavity pressure: open triangle",
+      "measurement_not_current_prediction": true
+    },
+    {
+      "id": "alpha4-cavity-pressure-5",
+      "pixel": [
+        805,
+        264
+      ],
+      "alpha_over_sigma": 0.07576801621122822,
+      "cavity_length_over_chord": 0.7728397008156622,
+      "sigma_using_alpha_radians": 0.9214068622985462,
+      "sigma_reading_bounds_using_ratio": [
+        0.9094043786110261,
+        0.9337304052917891
+      ],
+      "length_below_reported_instability_threshold": false,
+      "measured_pressure_basis": "Actual measured cavity pressure: open triangle",
+      "measurement_not_current_prediction": true
+    }
+  ]
+}

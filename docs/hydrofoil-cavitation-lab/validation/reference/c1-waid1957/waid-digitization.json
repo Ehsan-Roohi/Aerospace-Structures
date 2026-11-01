@@ -1,0 +1,231 @@
+{
+  "source": {
+    "author": "R. L. Waid",
+    "year": 1957,
+    "title": "Cavity Shapes for Circular Disks at Angles of Attack",
+    "report": "E-73.4",
+    "url": "https://authors.library.caltech.edu/records/cape9-a2b62",
+    "pdf_sha256": "7274ee3de6291a30336271b90e46b931d11ee17891f65d30c528d0216376d822"
+  },
+  "evidenceType": "digitized experimental characteristic dimensions; not a full experimental profile",
+  "coverage": "Four clearly resolved high-sigma open-circle markers in the U12fps/d1in series. Other series and overlapping lower-sigma markers are not digitized here.",
+  "calibration": {
+    "figure12": {
+      "image": "waid-hi-p22.png",
+      "pdf_page": 22,
+      "figure": 12,
+      "sigma_ticks": [
+        [
+          1375.0,
+          0.12
+        ],
+        [
+          1915.0,
+          0.18
+        ]
+      ],
+      "ordinate_ticks": [
+        [
+          1116.0,
+          4.0
+        ],
+        [
+          923.0,
+          8.0
+        ]
+      ],
+      "ordinate": "a0/d",
+      "image_size": [
+        2136,
+        1679
+      ],
+      "sha256": "2fea82b94a9478a6c1554123adc135f4a11d68373fe022ecdadfd016ef61c8a1"
+    },
+    "figure13": {
+      "image": "waid-hi-p23.png",
+      "pdf_page": 23,
+      "figure": 13,
+      "sigma_ticks": [
+        [
+          1410.0,
+          0.12
+        ],
+        [
+          1957.0,
+          0.18
+        ]
+      ],
+      "ordinate_ticks": [
+        [
+          930.0,
+          0.8
+        ],
+        [
+          735.0,
+          1.2
+        ]
+      ],
+      "ordinate": "b0/d",
+      "image_size": [
+        2136,
+        1679
+      ],
+      "sha256": "ac471c9cc41dc6e64cb90b42e70afb78bb727b1de299759fcf3e0d3e81cef374"
+    }
+  },
+  "manual_reading_bounds": {
+    "sigma": 0.001,
+    "a0_over_d": 0.1,
+    "b0_over_d": 0.012,
+    "rmax_over_R": 0.024,
+    "note": "Conservative digitization/association bounds, not experimental confidence intervals. For printed sigma=.1417 retain author input separately."
+  },
+  "original_measurement_reading_estimate": {
+    "profile_position_inches": 0.015,
+    "source_pdf_page": 7,
+    "note": "Source estimate for profile-position reading; not automatically a confidence bound for the axial position of a flat maximum."
+  },
+  "normalization": {
+    "R": "d/2",
+    "a0": "disk to maximum-radius station, not observed total closure length",
+    "b0": "maximum radius minus disk radius",
+    "image_model_a0_over_d": "L_over_R/4",
+    "image_model_b0_over_d": "(Rmax_over_R-1)/2"
+  },
+  "correlations": {
+    "source_pdf_pages": [
+      10,
+      11
+    ],
+    "equations": [
+      4,
+      5,
+      6
+    ],
+    "valid_sigma": [
+      0.035,
+      0.171
+    ],
+    "a0_over_d": "0.540*sigma**(-1.118)",
+    "b0_over_d": "0.267*sigma**(-0.568)",
+    "n": 1.8,
+    "radius_profile": "r/d = 0.5 + (b0/d)*(1-(x/a0-1)**2)**(1/1.8), 0<=x<=a0",
+    "interpretation": "Published empirical fit, not a theory or raw measured profile. No extrapolation beyond source range."
+  },
+  "experiment_conditions": {
+    "tunnel_cross_section_inches": [
+      20,
+      20
+    ],
+    "disk_center_above_bottom_inches": 12,
+    "nominal_submergence_inches": 8,
+    "sting_diameter_inches": 1,
+    "ventilation": "air sustained; measured cavity gas pressure",
+    "sigma_definition": "(p0_at_disk_centerline - p_cavity)/(0.5*rho*U**2)",
+    "gravity": "Source removes centreline buoyant rise to report the first-half radial shape.",
+    "froude_d": 7.327314739002528
+  },
+  "points": [
+    {
+      "id": "wc-u12-d1-01",
+      "sigma": 0.13120455007109486,
+      "sigma_input_kind": "digitized paired marker centres",
+      "sigma_from_figure12": 0.1311111111111111,
+      "sigma_from_figure13": 0.13129798903107862,
+      "a0_over_d": 5.119170984455959,
+      "b0_over_d": 0.8851282051282051,
+      "rmax_over_R": 2.77025641025641,
+      "figure12_pixel": [
+        1475.0,
+        1062.0
+      ],
+      "figure13_pixel": [
+        1513.0,
+        888.5
+      ],
+      "U_fps": 12.0,
+      "U_mps": 3.6576000000000004,
+      "d_inches": 1.0,
+      "d_m": 0.0254,
+      "angle_deg": 0,
+      "source_marker": "open circle: U=12fps, disk d=1in",
+      "raw_profile_recovered": false
+    },
+    {
+      "id": "wc-u12-d1-02",
+      "sigma": 0.1417,
+      "sigma_input_kind": "printed Fig17 case",
+      "sigma_from_figure12": 0.1418888888888889,
+      "sigma_from_figure13": 0.14204753199268738,
+      "a0_over_d": 5.782383419689119,
+      "b0_over_d": 0.8400000000000001,
+      "rmax_over_R": 2.68,
+      "figure12_pixel": [
+        1572.0,
+        1030.0
+      ],
+      "figure13_pixel": [
+        1611.0,
+        910.5
+      ],
+      "U_fps": 12.0,
+      "U_mps": 3.6576000000000004,
+      "d_inches": 1.0,
+      "d_m": 0.0254,
+      "angle_deg": 0,
+      "source_marker": "open circle: U=12fps, disk d=1in",
+      "raw_profile_recovered": false
+    },
+    {
+      "id": "wc-u12-d1-03",
+      "sigma": 0.15355880560633758,
+      "sigma_input_kind": "digitized paired marker centres",
+      "sigma_from_figure12": 0.15333333333333332,
+      "sigma_from_figure13": 0.15378427787934185,
+      "a0_over_d": 4.290155440414508,
+      "b0_over_d": 0.8010256410256411,
+      "rmax_over_R": 2.602051282051282,
+      "figure12_pixel": [
+        1675.0,
+        1102.0
+      ],
+      "figure13_pixel": [
+        1718.0,
+        929.5
+      ],
+      "U_fps": 12.0,
+      "U_mps": 3.6576000000000004,
+      "d_inches": 1.0,
+      "d_m": 0.0254,
+      "angle_deg": 0,
+      "source_marker": "open circle: U=12fps, disk d=1in",
+      "raw_profile_recovered": false
+    },
+    {
+      "id": "wc-u12-d1-04",
+      "sigma": 0.1717755433678651,
+      "sigma_input_kind": "digitized paired marker centres",
+      "sigma_from_figure12": 0.17177777777777775,
+      "sigma_from_figure13": 0.17177330895795245,
+      "a0_over_d": 4.020725388601036,
+      "b0_over_d": 0.7517948717948718,
+      "rmax_over_R": 2.5035897435897434,
+      "figure12_pixel": [
+        1841.0,
+        1115.0
+      ],
+      "figure13_pixel": [
+        1882.0,
+        953.5
+      ],
+      "U_fps": 12.0,
+      "U_mps": 3.6576000000000004,
+      "d_inches": 1.0,
+      "d_m": 0.0254,
+      "angle_deg": 0,
+      "source_marker": "open circle: U=12fps, disk d=1in",
+      "raw_profile_recovered": false
+    }
+  ],
+  "exclusion": "Do not reconstruct absolute measured profiles from Fig17 residuals plus global correlations; individual fit parameters and difference sign were not independently resolved."
+}

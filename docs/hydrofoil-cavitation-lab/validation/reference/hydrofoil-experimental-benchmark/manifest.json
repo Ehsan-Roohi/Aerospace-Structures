@@ -1,0 +1,47 @@
+{
+  "scope": "Primary-source literature audit and hydrofoil experimental dataset; no accepted current hydrofoil prediction",
+  "hydrofoilExperimentalValidationCompleted": false,
+  "files": {
+    "COMPARISON.md": {
+      "bytes": 6601,
+      "sha256": "1939bbd9576dd698aa8431772ba3bbed4a26e80619900d357d565b9e23403fef"
+    },
+    "digitize-uhlman-figure3.py": {
+      "bytes": 4770,
+      "sha256": "010626bd3108d61617f9b38cc0d95cdd775ce86bbf9a2999b61cde186f523075"
+    },
+    "evidence-matrix.json": {
+      "bytes": 12387,
+      "sha256": "583c3c64f5c739c713095b91498253e1c046c0b8deedcccdf7cc23380e1352c7"
+    },
+    "plot-uhlman-benchmark.py": {
+      "bytes": 5787,
+      "sha256": "fb2d9647287d524515e0c180538afe5f7f7745df6f60c70ea7a915f4526e2afb"
+    },
+    "uhlman-alpha4-all-markers.csv": {
+      "bytes": 2289,
+      "sha256": "dd34a04956fb3d2ca14aa84cd74c71a77785d94ada92120ec7be6721354bfe5f"
+    },
+    "uhlman-alpha4-all-markers.json": {
+      "bytes": 12175,
+      "sha256": "e72304925f1f7a0898e40fbcc13b78156f9f051b9a6df62233322c288c8a5c64"
+    },
+    "uhlman-alpha4-experimental-benchmark.png": {
+      "bytes": 167721,
+      "sha256": "7217df7c5a0ce58f3040d04ad51aee6dd33f759ba6eb121659070785d253fb58"
+    },
+    "uhlman-alpha4-experimental-benchmark.svg": {
+      "bytes": 59953,
+      "sha256": "00853bd0129a75536f2d2eb59830354d2599f20c6c5bcee776d74bb07e27e8e6"
+    },
+    "uhlman-alpha4-open-points.csv": {
+      "bytes": 561,
+      "sha256": "e2b2283033f843c8108c2bd438be364a9c710a73397be4d15f6325fb7514cddc"
+    },
+    "uhlman-alpha4-open-points.json": {
+      "bytes": 5899,
+      "sha256": "5f31fa49e5f18c9b7c1078c7cad47145e55f95dcb9846bdcfa8b00509dc515ef"
+    }
+  },
+  "privateSourcePDFsRedistributed": false
+}

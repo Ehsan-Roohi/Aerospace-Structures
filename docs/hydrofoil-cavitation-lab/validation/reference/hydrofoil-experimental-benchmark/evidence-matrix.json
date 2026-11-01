@@ -1,0 +1,141 @@
+{
+  "purpose": "Primary-source comparison of cavity BEM evidence and experimental benchmark requirements",
+  "conclusion": {
+    "universalAcceptablePercent": null,
+    "reason": "The retrieved primary sources compare different geometries, closure models and observables. None establishes a universal permissible experimental cavity-length error.",
+    "ourWaidScope": "Nc128 first-half length differences of +12.52%, -9.06%, +11.41%, +4.03%, and width differences +2.84%, +2.90%, +2.18%, +0.80%, are model-to-digitized-experiment differences, not numerical residuals. Unmatched facility/closure physics remains.",
+    "hydrofoilExperimentalValidationCompleted": false
+  },
+  "papers": [
+    {
+      "id": "Nouroozi2016",
+      "citation": "Nouroozi, Pasandidehfard & Djavareshkian (2016), Mathematical Problems in Engineering, 1593849",
+      "doi": "10.1155/2016/1593849",
+      "url": "https://onlinelibrary.wiley.com/doi/10.1155/2016/1593849",
+      "fullPrimaryRead": true,
+      "method": "Fixed-length potential-based source/doublet-ring BEM; simple and reentrant-jet closure; axisymmetric and quasi-3D bodies",
+      "geometry": "Disk supercavity; blunt/hemispherical/conical head cylinders; quasi-3D elliptical head cylinder, not a hydrofoil",
+      "conditions": {
+        "diskFigure6": "PDFp7: Lc/D=5 gives sigma=.272; Lc/D=10 gives sigma=.149; jet length/Lc=.5",
+        "partialFigure10": "PDFp8: sigma=.3, blunt/hemispherical/conical-head cylinders; conical half-angle40deg from PDFp4",
+        "quasi3D": "PDFp9, section8.3: sigma=.2,.3; ellipse Rmax/Rmin=1.2; body20 times minor diameter; comparison to Fluent mixture model",
+        "CFDSpeeds": "PDFp5 section7:20 to46.33m/s; no single common Re specified"
+      },
+      "evidence": "PDFp7 Figs7/8 compare disk cavity length and maximum diameter to analytical/experimental curves cited through Knapp et al. [2]. PDFp8 Fig10 compares body Cp to experimental headform measurements; simple closure produces closure-region overshoot, reduced by reentrant jet.",
+      "explicitMagnitude": {
+        "valuePercent": 15,
+        "where": "PDFp9 section8.3",
+        "quantity": "Worst quasi-3D BEM cavity-length excess over 3D Fluent mixture-model result",
+        "isExperimentalError": false
+      },
+      "matchingLimits": "Current image-disk cavity does not implement this paper's finite reentrant jet and partial-body wake. Neither the15% statement nor headform Cp is a matched hydrofoil error tolerance."
+    },
+    {
+      "id": "FadaeiRodi2024",
+      "citation": "Fadaei Rodi, Kamali & Pasandidehfard (2024), Physics of Fluids36,103356",
+      "doi": "10.1063/5.0231369",
+      "url": "https://doi.org/10.1063/5.0231369",
+      "fullPrimaryRead": true,
+      "method": "Taguchi optimization; transient Ansys Fluent SST k-omega + VOF/HRIC and ventilated-cavity experiment, NOT BEM",
+      "geometry": "Optimized parabolic/rational-quadratic cavitator; diameter20mm, holder15mm diameter and355mm long; optimized incidence10deg",
+      "conditions": "PDFp10 (journalp9): U7.3m/s, Re164000, Fr16.5, CQ .06 to.125. PDFpp4-6: tunnel1000x100x200mm, dt1e-5s,825000cells. PDFp8 TableV:b1=.3,b2=.2,w=1.5,alpha10deg.",
+      "evidence": "PDFp8 Fig11 cavity photos and numerical interfaces; p9 Figs12/13 cavitation number and length; p10 Fig16 optimized-vs-disk comparison; pressure fluctuations also measured",
+      "explicitMagnitude": {
+        "valuePercent": 10,
+        "where": "Abstract PDFp2; design-performance statement",
+        "quantity": "Improvement of optimized cavitator characteristics versus alternatives",
+        "isValidationError": false
+      },
+      "matchingLimits": "No BEM accuracy threshold is established. Tilted ventilated geometry, gas flow, support rod, confined tunnel and unsteady closure do not match current zero-incidence ideal disk. Supporting data available from corresponding author on request, PDFp11."
+    },
+    {
+      "id": "KinnasFine1993",
+      "citation": "Kinnas & Fine (1993), JFM254,151-181",
+      "doi": "10.1017/S0022112093002071",
+      "url": "https://www.cambridge.org/core/journals/journal-of-fluid-mechanics/article/abs/numerical-nonlinear-analysis-of-the-flow-around-two-and-threedimensional-partially-cavitating-hydrofoils/8C79B80E53E158D89C671DDD754D5174",
+      "fullPrimaryRead": false,
+      "method": "Nonlinear low-order potential BEM; fixed length/unknown sigma or fixed sigma/unknown length; zero normal velocity and specified cavity pressure; 3D extension uses thin-cavity treatment",
+      "evidence": "Official abstract explicitly reports 3D cavity-planform comparison to MIT cavitation-tunnel experiment. It does not establish that a 2D foil experimental benchmark passed. Original-author chapter9 pp11-13 Fig9.8 presents numerical sigma1.097 at L/c=.4 and zero-end-height formulation; geometry/settings require original figure matching.",
+      "conditionsMissing": [
+        "Full paper's exact3D geometry/tunnel/case inputs and digitized experimental planforms were not recovered in this review.",
+        "2D Fig9.8 full geometry/detachment/recovery inputs must not be guessed."
+      ],
+      "explicitExperimentalPercent": null,
+      "matchingLimits": "Published qualitative agreement and numerical iteration convergence are not our hydrofoil experimental validation. Closed-sheet pressure recovery, detachment and physical admission must match."
+    },
+    {
+      "id": "LemonnierRowe1988",
+      "citation": "Lemonnier & Rowe (1988), JFM195,557-580",
+      "doi": "10.1017/S0022112088002526",
+      "url": "https://www.cambridge.org/core/journals/journal-of-fluid-mechanics/article/abs/another-approach-in-modelling-cavitating-flows/51A46E9ED20CFEC5A6D397F6584B7C70",
+      "fullPrimaryRead": false,
+      "readStatus": "Official primary abstract and indexed original-paper text at journalp570/573 verified; entire PDF unavailable after documented attempts. No unverified digitized BEM curve supplied.",
+      "method": "Panel method minimizing discretization-error vector; source/vortex strengths; closure/near-wake displacement thickness",
+      "evidence": "Journalp570 Fig9 compares t/c=.06, alpha2deg plano-convex cavity lengths to Uhlman-Jiang1977; Fig11 compares NACA16012 to Franc data. Source text says good agreement for short cavities L/c<.4; long-cavity reattachment assumption problematic. Official abstract emphasizes near-wake displacement thickness needed for satisfactory Lc/sigma.",
+      "explicitExperimentalPercent": null,
+      "otherExplicitMagnitude": "Journalp573: rounded trailing-edge cavity example lift changes less than +/-0.5% with chosen cavity length. This is model/wake sensitivity, not experiment error.",
+      "matchingLimits": "ReviewFig139 is this Fig9, not fresh independent evidence. Original-source K must be explicitly reconciled with sigma before using the review axis alpha/K. Do not replace actual parabolic foil by a circular-arc or NACA foil."
+    },
+    {
+      "id": "UhlmanJiang1977",
+      "citation": "Uhlman Jr. & Jiang (1977), MIT83481-2 / DTICADA045767",
+      "primaryURL": "https://apps.dtic.mil/sti/pdfs/ADA045767.pdf",
+      "retrievedPrimaryCopy": "https://archive.org/download/DTIC_ADA045767/DTIC_ADA045767.pdf",
+      "fullPrimaryRead": true,
+      "method": "Experiment plus linearized thin-foil source/vortex theory; not modern nonlinear BEM validation",
+      "geometry": "PDFp12/reportp2: 2D parabolic suction side and flat pressure side; t/c=.06; chord4in; span19.75in; vertical model in20in-square tunnel",
+      "conditions": "Figures2-6: alpha2,4,6,8,10deg. Per-point speed is varied and not tabulated; maximum facility speed9.1m/s is not the actual test speed. Cavity pressure read from tap atx/c~.17 when covered; otherwise vapor pressure inferred from temperature.",
+      "evidence": "PDFp24/reportp14 Fig3, alpha4deg, contains separate vapor-pressure and measured-cavity-pressure triangles. All five resolved open triangles digitized privately with bounded pixel provenance; four below L/c=.75 and one above retained. Figure2 alpha2deg is PDFp23/reportp13.",
+      "explicitExperimentalPercent": null,
+      "sourceWarnings": "PDFpp17-20/reportpp7-10: alpha2deg theories underpredict L/c; possible midchord cavity not represented. Good moderate-angle trend at4/6deg; instability for L/c>.75. Lift force was corrected using theoretical fully-wetted lift due poor lower-load-cell sensitivity; do not treat the corrected lift as wholly independent force validation.",
+      "matchingLimits": "Good candidate for a future restricted Lc(sigma) check, but custom geometry, pressure basis, detachment/closure, tunnel and Reynolds limitations must be explicit; current matched accepted solution does not yet exist."
+    },
+    {
+      "id": "BrewerKinnas1997",
+      "citation": "Brewer & Kinnas (1997), JSR41(3),161-171",
+      "doi": "10.5957/jsr.1997.41.3.161",
+      "url": "https://onepetro.org/JSR/article/41/03/161/174937/Experiment-and-Viscous-Flow-Analysis-on-a",
+      "fullPrimaryRead": false,
+      "method": "Nonlinear inviscid cavity analysis coupled to boundary-layer solver",
+      "evidence": "Official primary abstract: MIT Variable Pressure Water Tunnel velocities, detachment/reattachment for several sigma, momentum-flux force estimates; comparison with viscous-inviscid calculation",
+      "explicitExperimentalPercent": null,
+      "matchingLimits": "Plain inviscid kernel is not the reported coupled viscous method. Full case geometry/input tables not recovered; no numeric accuracy invented from abstract."
+    },
+    {
+      "id": "Phoemsapthawee2009",
+      "citation": "Phoemsapthawee, Leroux, Laurens & Deniset (2009), A Versatile Partial Sheet Cavitation Model, SMP2009",
+      "url": "https://www.marinepropulsors.com/proceedings/2009/TB4-3-Phoemsapthawee%20-%20A%20Versatile%20Partial%20Sheet%20Cavitation%20Model.pdf",
+      "fullPrimaryRead": true,
+      "method": "Potential/BEM code with transpiration sheet-cavity model driven by noncavitating pressure; adaptive factor, not identical to full mixed free-boundary BEM",
+      "hydrofoil2DCandidate": "PDFp3 Fig2: measured/computed Cp for NACA66(mod)-312 a=.8, alpha6deg, Re=.75e6, sigmaV1.495; measurements from Leroux2003. Exact modified profile coordinates, tunnel and closure need matching.",
+      "hydrofoil3DCandidate": "PDFpp3-4: NACA0010, U6m/s, wall-mounted with strut; tunnel walls modeled; nominalalpha7deg, calculation corrected7.22deg; Fig5 cavitating normalized CL/CD trends.",
+      "explicitMagnitude": {
+        "where": "PDFp4 Table1 and accompanying text",
+        "regime": "NONCAVITATING 3D hydrofoil",
+        "CLexperiment": 0.355,
+        "CLcalculation": 0.335,
+        "CLsignedDifferencePercent": -5.633802816901413,
+        "CDexperiment": 0.025,
+        "CDcalculation": 0.015,
+        "CDsignedDifferencePercent": -40.0,
+        "sourceInterpretation": "Authors state lift difference less than6%; drag underprediction associated with omitted viscosity.",
+        "isCavitatingCavityLengthError": false
+      },
+      "matchingLimits": "This supplies a specific BEM-related comparison, not a general4-13% allowance. Cavitating Fig5 is normalized by wet baseline, so baseline differences cannot be ignored."
+    }
+  ],
+  "actionableHydrofoilPlan": {
+    "firstCandidate": "Uhlman-Jiang parabolic t/c=.06, alpha4deg, measured cavity-pressure series, L/c<.75",
+    "dataFile": "uhlman-alpha4-open-points.json",
+    "notYetMatched": [
+      "Exact custom profile must be implemented or supplied to current solver; no NACA substitution",
+      "Sharp-leading-edge detachment and declared closure/recovery model",
+      "Sigma from actual cavity pressure, not silently vapor pressure",
+      "Tunnel-wall comparison or explicitly qualified omission",
+      "Per-point U/Re unknown, so do not claim matched viscous validation",
+      "Retain high-L instability point separately rather than deleting it"
+    ],
+    "secondCandidate": "NACA66(mod)-312 a=.8 alpha6deg, Re750000,sigma1.495 Cp from SMP2009 Fig2 and original Leroux2003 experiment",
+    "currentStatus": "Hydrofoil experimental validation NOT COMPLETED; numerical controls and wet/XFOIL comparisons cannot replace a cavitating experimental comparison."
+  }
+}

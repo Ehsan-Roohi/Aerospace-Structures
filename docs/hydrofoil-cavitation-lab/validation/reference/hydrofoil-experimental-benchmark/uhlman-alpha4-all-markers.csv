@@ -1,0 +1,15 @@
+id,series,pixel,alpha_over_sigma,cavity_length_over_chord,sigma_using_alpha_radians,measured_pressure_basis,resolved_marker,length_below_reported_instability_threshold
+open-cavity-pressure-1,open-cavity-pressure,"[738, 597]",0.06629400008346742,0.3218281220293713,1.0530842910651788,measured cavity pressure Pc,True,True
+open-cavity-pressure-2,open-cavity-pressure,"[712, 589]",0.06274477980830315,0.3328680797392107,1.1126530413058309,measured cavity pressure Pc,True,True
+open-cavity-pressure-3,open-cavity-pressure,"[753, 544]",0.06839506058343728,0.39357857298530513,1.0207340922610326,measured cavity pressure Pc,True,True
+open-cavity-pressure-4,open-cavity-pressure,"[782, 447]",0.07245204101032678,0.5248839570977449,0.96357768678763,measured cavity pressure Pc,True,True
+open-cavity-pressure-5,open-cavity-pressure,"[805, 264]",0.07576801621122822,0.7728397008156622,0.9214068622985462,measured cavity pressure Pc,True,False
+filled-vapor-pressure-1,filled-vapor-pressure,"[587, 768]",0.04547954352594214,0.09109263492740653,1.535045531843362,vapor pressure Pv,True,True
+filled-vapor-pressure-2,filled-vapor-pressure,"[607, 750]",0.04823211362698409,0.11535012265073985,1.4474416489331556,vapor pressure Pv,True,True
+filled-vapor-pressure-3,filled-vapor-pressure,"[630, 710]",0.05141546836816553,0.16941475425799782,1.3578242559198157,vapor pressure Pv,True,True
+filled-vapor-pressure-4,filled-vapor-pressure,"[658, 668]",0.05528464709510185,0.22615405303890973,1.2627948942077727,vapor pressure Pv,True,True
+filled-vapor-pressure-5,filled-vapor-pressure,"[699, 597]",0.060959040681094166,0.3221174757596695,1.1452471905684867,vapor pressure Pv,True,True
+filled-vapor-pressure-6,filled-vapor-pressure,"[715, 549]",0.06319225793288293,0.3870810978748267,1.1047741030858937,vapor pressure Pv,True,True
+filled-vapor-pressure-7,filled-vapor-pressure,"[753, 451]",0.0684813102530454,0.5196755899523772,1.0194485155410495,vapor pressure Pv,True,True
+filled-vapor-pressure-8,filled-vapor-pressure,"[774, 265]",0.0715264800396934,0.7717138180317454,0.9760464941240024,vapor pressure Pv,True,False
+overlapped-unassigned-1,overlapped-unassigned,"[684, 589]",0.05891455254506082,0.33307582087891197,1.1849902454300498,unassigned: filled or open not reliably resolved,False,True

@@ -2,8 +2,16 @@
 const fs=require('fs'),path=require('path'),crypto=require('crypto'),assert=require('assert/strict');
 const here=__dirname,read=p=>JSON.parse(fs.readFileSync(path.join(here,p),'utf8'));
 const manifest=read('c1-evidence-manifest.json');
+let equivalentCRLFCheckouts=0;
 for(const [name,expected] of Object.entries(manifest.files)){
- const bytes=fs.readFileSync(path.join(here,name));
+ let bytes=fs.readFileSync(path.join(here,name));
+ // Published text uses LF. A Windows Git checkout may add CR before LF;
+ // accept it only when removing those CR bytes restores the exact stored hash.
+ const hash=b=>crypto.createHash('sha256').update(b).digest('hex');
+ if(hash(bytes)!==expected.sha256&&/\.(?:js|cjs|py|json|html|md|svg)$/.test(name)){
+  const canonical=Buffer.from(bytes.toString('utf8').replace(/\r\n/g,'\n'),'utf8');
+  if(hash(canonical)===expected.sha256){bytes=canonical;equivalentCRLFCheckouts++;}
+ }
  assert.equal(bytes.length,expected.bytes,name+' byte count');
  assert.equal(crypto.createHash('sha256').update(bytes).digest('hex'),expected.sha256,name+' hash');
 }
@@ -29,4 +37,4 @@ const full=read('c1-cavity-verification.json'),guards=read('c1-reviewed-verifica
 assert.ok(full.checks.every(c=>c.passed)&&guards.checks.every(c=>c.passed));
 assert.ok(guards.pythonParity.every(c=>c.passed));assert.equal(ui.failures,0);
 assert.equal(manifest.experimentalValidation,'NOT_PERFORMED');
-console.log(JSON.stringify({status:'PASS_CURRENT_C1_EVIDENCE',hashedFiles:Object.keys(manifest.files).length,meshes:4,matchedCases:6,fullChecks:full.checks.length,guardChecks:guards.checks.length,pythonParityChecks:guards.pythonParity.length,UIchecks:ui.checks.length}));
+console.log(JSON.stringify({status:'PASS_CURRENT_C1_EVIDENCE',hashedFiles:Object.keys(manifest.files).length,equivalentCRLFCheckouts,meshes:4,matchedCases:6,fullChecks:full.checks.length,guardChecks:guards.checks.length,pythonParityChecks:guards.pythonParity.length,UIchecks:ui.checks.length}));

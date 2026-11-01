@@ -3,36 +3,36 @@
   "experimentalValidation": "NOT_PERFORMED",
   "files": {
     "../README.md": {
-      "bytes": 13047,
-      "sha256": "50c646a5da7e1d94d6cbcf8c94c8b24e61b0c3ecf4fafa30a5d5b3671739196a"
+      "bytes": 12942,
+      "sha256": "54f7505a59bb9c97f592de69d6e9dd7b36db0614a827f4ab3f5b7328fa7ec3b3"
     },
     "../axisymmetric-cavity-c1.js": {
       "bytes": 44907,
       "sha256": "9bfb67177b372128a26c0893f7df35fc3bfadae5ea6e30a2770d6b71905bfc7c"
     },
     "../axisymmetric-cavity-app.js": {
-      "bytes": 14673,
-      "sha256": "7791f09d419de330f64f95d446fb4f3c5bb99ba41bde680584ee9f44305dbeb2"
+      "bytes": 14574,
+      "sha256": "2c7f418d948cceda7a89510513de7358445e36be08cc7133ce5a91512b0bd0f4"
     },
     "../axisymmetric-cavity-worker.js": {
-      "bytes": 363,
-      "sha256": "f5e96c1e76c6402003d32943ecfe5c195a34758a4b1a36e1e2bd41135c7e7599"
+      "bytes": 355,
+      "sha256": "aa374264373a0604ef9b0d04c36343f4384376446294a25ea2955528ab4072b5"
     },
     "../axisymmetric-cavity.html": {
-      "bytes": 8994,
-      "sha256": "1fc4ff4c3a3d89b6cb2dcf80cefff7c860f567d839fef667d98632f75be9598a"
+      "bytes": 8983,
+      "sha256": "d6d1b0d20c33044a685b65de28d36e9e72e256a8655875c43bbd8fcaa56863a4"
     },
     "index.html": {
-      "bytes": 29835,
-      "sha256": "6005da95e3f20efd2efb4ce1a73ee50edba8cb2a0be2126c849b96d2371798ba"
+      "bytes": 29735,
+      "sha256": "5c51d6f5bf1d296c71ca612576af4a2f85a399c6f8f24363a3e6485ded0ce5d8"
     },
     "c1-cavity.html": {
-      "bytes": 8431,
-      "sha256": "f3c62a4925b89e264cdb0d8c3c6485041c8fd4f25db7cc56c782a3d120aaa6c0"
+      "bytes": 8402,
+      "sha256": "24a012d8f39cc0a4858190634e6aa6b4380b9e13cc24b4c05c5b5b85c2ff2db3"
     },
     "c1-cavity-method.md": {
-      "bytes": 14956,
-      "sha256": "e860242ad25ee5adbd01c9ddcbc5727b99a80c4eee61e37d6b12dfc9e3656e3a"
+      "bytes": 14893,
+      "sha256": "1d1d240088e4f927051ee463da7ef4e05ffda2e24107b18ae34a10dc8f4c5fbb"
     },
     "c1-cavity-verify.cjs": {
       "bytes": 19719,
@@ -55,60 +55,60 @@
       "sha256": "56b9b2b2d10017120ce43926e916a2103c6ec4e477be9df45f7cba32e2637348"
     },
     "c1-release-review.json": {
-      "bytes": 870,
-      "sha256": "e2ba381741089b4c73b8d745f11a04e2bcd2c13810d0cd8e002ef6301190159e"
+      "bytes": 852,
+      "sha256": "3730fb6ddf9a647b8cc6552536fe5a360995f9e96435fb09c4e14e2a2af5531d"
     },
     "c1-evidence-verify.cjs": {
-      "bytes": 2000,
-      "sha256": "3053bb2c01c02e194c31d40a8787f30feef8e9acdd3c44b34f5471fcbd6494ff"
+      "bytes": 2529,
+      "sha256": "5714fae6e3cd21da2237658d88154d656033b509273ccb821ff83557959e1108"
     },
     "curved-cavity-ui-smoke.cjs": {
-      "bytes": 11381,
-      "sha256": "c18a2e8bdfb4d1727135d4a190cab89336834e1c601839d87915158fc22e9dde"
+      "bytes": 11302,
+      "sha256": "bf4f833458e1375fcd93fd856cb23ea7dfdc2ec0752a802be54707b019d9e113"
     },
     "curved-cavity-ui-smoke.json": {
       "bytes": 3067,
       "sha256": "6021758a38fb864e88d1b8652acc2d4d913a29fb334b39f75f51515d33c02950"
     },
     "plot-c1-cavity.py": {
-      "bytes": 11648,
-      "sha256": "5918bdb850d8aa446752a25adb60b453344307d1b5ad915ab73cd00f81640070"
+      "bytes": 11529,
+      "sha256": "9303d65e462c6266dc1c6b9ac2702742ddcdc73ff75a1c8c91be72f4a5c44797"
     },
     "plot-c1-brennen.py": {
-      "bytes": 3725,
-      "sha256": "10cbc257890d792539c0d8aa4daa6c72157e999552b6ec524503d841c89412e3"
+      "bytes": 3664,
+      "sha256": "01dfa559fc9d00778574f49cab01aaa0e4dda4c2115c723326cf121cb64173cc"
     },
     "c1-cavity-profiles.png": {
       "bytes": 548901,
       "sha256": "cbfc06213de3f9beb023011e79fb70a6ce9ba38f8948dca7e16819afe9ad1924"
     },
     "c1-cavity-profiles.svg": {
-      "bytes": 3086437,
-      "sha256": "c2043acfe6c30f662fb773255c0b4f707c915bbe8b312426d250582ee190875a"
+      "bytes": 3057955,
+      "sha256": "b8f26b6e7f4c8661e3c7379d635b210005f1f9abd424c4dbc1a70313d55a530a"
     },
     "c1-cavity-mesh-study.png": {
       "bytes": 368913,
       "sha256": "65be4f3115ae09c5d8ba05b42bdd5686824eaaa4749243232500ca54f281234d"
     },
     "c1-cavity-mesh-study.svg": {
-      "bytes": 207348,
-      "sha256": "9edc8687ceecf2aa4a4d81f2463eea343680d7f0ec048b2655d910e87bb0d015"
+      "bytes": 201901,
+      "sha256": "bf9bef18468835760d5dc4b4e4e53ea4cb824e47f8e7904086dfcab4e7b13703"
     },
     "c1-cavity-geometry.png": {
       "bytes": 133890,
       "sha256": "2e51c26534d1e5c8b488a0134107b7e3a823ea60961f25dfd4f420a6b624dd48"
     },
     "c1-cavity-geometry.svg": {
-      "bytes": 119093,
-      "sha256": "cc3d990e0d4eaca0b440f228891089ef7d7daf92ed9232389b46446f323a7cac"
+      "bytes": 116145,
+      "sha256": "249c72eda3c1232e7a3d4c1b025af5d3471201149a6c5d8891535ef6c0e2cba4"
     },
     "c1-brennen-cp.png": {
       "bytes": 174921,
       "sha256": "4c58ccbc2bb005247183d1de0f9932a5c62318637361693ed341a06ce88f4d8c"
     },
     "c1-brennen-cp.svg": {
-      "bytes": 150730,
-      "sha256": "463d859594ffc54e0a33cf4c63648d19ffd464541ed0769d22218f5f1e3aa7f6"
+      "bytes": 146864,
+      "sha256": "e915a92c9d75941e06bb72ea0fa3d5163d2fe25e59bf7540787b015ebc77184e"
     },
     "reference/c1-cavity/domain-controls.json": {
       "bytes": 3741,
@@ -143,16 +143,16 @@
       "sha256": "ff2f2cc02fce17c8d958f5e373695554b77f43aae2868c8e18468f365ac7ad42"
     },
     "reference/c1-brennen/comparison-summary.json": {
-      "bytes": 2054,
-      "sha256": "8c70c36f8edfde16866f12915fd82674ea3fa7d01f147b32cd80e6692abaf342"
+      "bytes": 1993,
+      "sha256": "fefc116b82fcd796ee4973eae0a4a1fba84572413ae82ca605cc7bc4cd3bb41e"
     },
     "reference/c1-brennen/matched-disk-index.json": {
       "bytes": 350,
       "sha256": "70dd93f0d10d66ad1017a5b767809972c89763875674180166566be2fc1e7f21"
     },
     "reference/c1-brennen/run-matched-disk.cjs": {
-      "bytes": 3129,
-      "sha256": "006497129fafb244bc24ca634a965c11f27ac7394fce74741698524c65bc87b4"
+      "bytes": 3082,
+      "sha256": "bffa74fb30de5c4b442cf17bc0a56ef91826d64b773350eefffba007b2afa009"
     },
     "reference/c1-brennen/sigma-0.3-Nc128.json": {
       "bytes": 385408,
@@ -178,5 +178,6 @@
       "bytes": 196644,
       "sha256": "fa0a8b657654ae3cb4ed432544328ff3b6beaa045719832ca6a51a3bac2946e6"
     }
-  }
+  },
+  "textLineEndings": "Published text is LF; equivalent CRLF Windows Git checkouts are accepted by the verifier."
 }

@@ -1,0 +1,119 @@
+{
+  "synthetic": true,
+  "no_AI_training": true,
+  "beam_inputs_SI": {
+    "E_Pa": 70000000000.0,
+    "width_m": 0.04,
+    "depth_m": 0.006,
+    "force_N": 10.0,
+    "reference_length_m": 0.3
+  },
+  "I_m4": 7.2e-10,
+  "EI_Nm2": 50.4,
+  "reference_deflection_m": 0.0017857142857142857,
+  "surrogate_checks": [
+    {
+      "lambda": 0.8,
+      "exact": 0.5120000000000001,
+      "prediction": 0.5120000000000005,
+      "signed_relative_error": 6.505213034913025e-16
+    },
+    {
+      "lambda": 1,
+      "exact": 1,
+      "prediction": 1.0,
+      "signed_relative_error": 0.0
+    },
+    {
+      "lambda": 1.1,
+      "exact": 1.3310000000000004,
+      "prediction": 1.3340000000000005,
+      "signed_relative_error": 0.002253944402704818
+    },
+    {
+      "lambda": 1.2,
+      "exact": 1.7279999999999998,
+      "prediction": 1.7279999999999993,
+      "signed_relative_error": -2.569960705150826e-16
+    },
+    {
+      "lambda": 1.5,
+      "exact": 3.375,
+      "prediction": 3.2700000000000005,
+      "signed_relative_error": -0.031111111111110975
+    },
+    {
+      "lambda": 2,
+      "exact": 8,
+      "prediction": 7.04,
+      "signed_relative_error": -0.12
+    }
+  ],
+  "Q_update": 2.17,
+  "search_scores_A_B": [
+    0.7198759038962522,
+    1.096992462263972
+  ],
+  "softmax": [
+    0.6652409557748218,
+    0.24472847105479764,
+    0.09003057317038046
+  ],
+  "attention_output": 5.752103826044413,
+  "coordinate_raw_RMSD": 3.4641016151377544,
+  "coordinate_known_transform_corrected_RMSD": 0.0,
+  "coordinate_points": [
+    [
+      0,
+      0,
+      0
+    ],
+    [
+      1,
+      0,
+      0
+    ],
+    [
+      0,
+      1,
+      0
+    ],
+    [
+      0,
+      0,
+      1
+    ]
+  ],
+  "transformed_points": [
+    [
+      3,
+      2,
+      1
+    ],
+    [
+      3,
+      3,
+      1
+    ],
+    [
+      2,
+      2,
+      1
+    ],
+    [
+      3,
+      2,
+      2
+    ]
+  ],
+  "relative_variance_contributions": {
+    "Force": 0.0004,
+    "Length": 0.000225,
+    "Modulus": 0.0009,
+    "Width": 0.0001,
+    "Depth": 0.0009
+  },
+  "relative_std": 0.05024937810560445,
+  "halved_modulus_relative_std": 0.04301162633521313,
+  "illustrative_four_stage_success": 0.24009999999999995
+}

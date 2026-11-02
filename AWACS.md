@@ -1,99 +1,99 @@
-# آواکس چگونه کار می‌کند؟ از آنتن تا سازهٔ Boeing E-3 Sentry
+# How AWACS Works: Radar, Airframe Integration and Structural Loads on the Boeing E-3 Sentry
 
-مطالعهٔ موردی درس **MIE 446 · Aerospace Structures**، دانشگاه ماساچوست امهرست
+*MIE 446 · Aerospace Structures · University of Massachusetts Amherst*
 
-## چرا رادار را به آسمان می‌برند؟
+## Why put a radar on an aircraft?
 
-رادار زمینی برای دیدن هدف کم‌ارتفاع با انحنای زمین و عوارض روبه‌روست. ارتفاع بیشتر، خط دید را دورتر می‌برد. در مدل کروی ساده، فاصلهٔ افق تقریباً برابر ریشهٔ دومِ دو برابر حاصل‌ضرب شعاع زمین در ارتفاع است. در ارتفاع ۹ کیلومتری و با شعاع زمین ۶۳۷۱ کیلومتر، افق هندسی حدود ۳۳۹ کیلومتر است. این **برد تضمینی کشف نیست**: ارتفاع هدف، بازتاب آن، نویز، بازتاب زمین و شکست جوی نیز مهم‌اند.
+A ground-based radar can lose sight of a low-flying aircraft behind terrain or the curvature of the Earth. Raising the antenna moves the geometric horizon farther away. For a spherical Earth of radius 6,371 km, an antenna 9 km above the surface has a geometric horizon of approximately 339 km. This is a line-of-sight estimate to the surface, **not a guaranteed detection range**. Target altitude, reflected signal strength, terrain clutter and atmospheric refraction all affect what the radar can detect.
 
-## از بازتاب تا هشدار
+## From a reflected pulse to an aircraft track
 
-اختلاف زمان ارسال و دریافت پالس، فاصلهٔ مایل را می‌دهد؛ چون موج مسیر رفت و برگشت را طی می‌کند، حاصل‌ضرب زمان در سرعت نور را باید نصف کرد. جهت پرتو، جهت هدف را مشخص می‌کند. اطلاعات داپلر به تفکیک حرکت شعاعی هدف از پس‌زمینه کمک می‌کند. یک بازتاب به‌تنهایی مسیر پرواز نیست: اندازه‌گیری‌های پی‌درپی باید به همان هدف نسبت داده شوند تا موقعیت و روند حرکت آن برآورد شود. خدمه این تصویر را تفسیر و با دیگر واحدها مبادله می‌کنند؛ حرف C در AWACS به همین نقش کنترل اشاره دارد.
+The delay between transmission and reception gives slant range: multiply the elapsed time by the speed of light and divide by two for the outward and return journeys. The direction of the radar beam supplies angular information. The Doppler shift helps distinguish radial motion from background returns, although an aircraft moving across the line of sight can have little radial velocity. A single echo does not establish a flight path. Measurements from successive scans must be associated with the same target to estimate its position and motion. Controllers use that picture to coordinate with other aircraft—the *control* function in **Airborne Warning and Control System**.
 
-## چگونه یک هواپیمای مسافربری به سکوی راداری تبدیل می‌شود؟
+## How the rotodome changes the airframe
 
-E-3 بر پایهٔ 707-320 است. نیروی هوایی آمریکا قطر گنبد را ۹٫۱ متر، ضخامت آن را ۱٫۸ متر و ارتفاع نصب را حدود ۳٫۳ متر بالای بدنه، روی دو پایه، گزارش می‌کند. گنبد باید هم از آنتن در برابر محیط محافظت کند و هم اجازهٔ عبور امواج رادار را بدهد. اصلاح هواپیما فقط نصب دیسک نیست: برق، دفع گرمای الکترونیک، کابل‌کشی، ایستگاه‌های خدمه و دسترسی تعمیراتی باید با محدودیت جرم، مرکز ثقل و فضای بدنه سازگار شوند.
+The E-3 uses a modified Boeing 707-320 airframe. The U.S. Air Force describes a rotating dome 9.1 m in diameter and 1.8 m thick, supported by two struts about 3.3 m above the fuselage. The cover has two jobs: protect the radar from the flight environment and allow its radio waves to pass through. Inside the aircraft, electrical supply, equipment cooling, wiring, operator stations and maintenance access compete for space and weight allowance.
 
-**مسیر بار:** نیروی آیرودینامیکی از پوشش و سازهٔ حامل به پایه‌ها، از اتصال پایه به سازهٔ تقویت‌شدهٔ بدنه و سپس در پوسته و اعضای بدنه پخش می‌شود. وزن و شتاب مجموعه نیز بار اینرسی می‌سازند. برای مثال آموزشی، اگر نیروی افقی فرضی ۱۰ کیلونیوتن در فاصلهٔ عمودی ۳٫۳ متر از صفحهٔ اتصال اثر کند، لنگر آن حدود ۳۳ کیلونیوتن‌متر است. این عدد بار طراحی E-3 نیست؛ سهم هر پایه به جهت نیرو، هندسه و سختی اتصالات بستگی دارد. گام بعدی مهندس بررسی خستگی اتصال، ارتعاش و اثر جریان پشت گنبد بر دم است. عکس‌ها شکل بیرونی را نشان می‌دهند، نه ضخامت قطعات یا عمر مجازشان.
+**Follow the load into the aircraft.** Air pressure acts over the dome surface. Its resultant passes through the supporting structure and struts to the fuselage attachments; the surrounding frames and skin distribute it into the airframe. The weight and acceleration of the assembly add inertial loads. As a classroom example, a hypothetical horizontal force of 10 kN acting 3.3 m above the attachment plane produces a 33 kN·m overturning moment. That is not an E-3 design load, and dividing the force equally between the struts does not by itself balance the moment. A useful free-body diagram must show both force and moment equilibrium. Determining local stresses or fatigue life would additionally require connection geometry, stiffness and a load history that the photographs do not provide.
 
-## خط زمانی و ۱۲ عکس مستند
+## Historical sequence and photographic guide
 
-RC-121 نمونه‌ای از نسل پیشین بود. آزمون و ارزیابی E-3 در ۱۹۷۵ آغاز شد؛ نخستین هواپیماهای نیروی هوایی آمریکا در مارس ۱۹۷۷ به تینکر رسیدند و نخستین تحویل به ناتو در ژانویهٔ ۱۹۸۲ بود. عکس‌ها از تاریخچه به سخت‌افزار، خدمه و نمونه‌های عملیاتی می‌رسند. زیر هر عکس، پروندهٔ اصلی با مشخصات عکاس و مجوز همان تصویر پیوند داده شده است.
+The RC-121 illustrates the generation before the E-3. Engineering test and evaluation of the E-3 began in 1975; the first U.S. Air Force aircraft reached Tinker in March 1977, and NATO received its first E-3 in January 1982. The photographs below move from that history to the antenna, its structural supports and the crew who use the information.
 
-### شکل 1 — هواپیمای هشدار زودهنگام RC-121 در ۱۹۵۵
+### Figure 1. RC-121 Warning Star, 1955
 
-<img src="https://upload.wikimedia.org/wikipedia/commons/6/69/Lockheed_RC-121C_1955.jpg" width="720" alt="هواپیمای هشدار زودهنگام RC-121 در ۱۹۵۵">
+<img src="https://upload.wikimedia.org/wikipedia/commons/6/69/Lockheed_RC-121C_1955.jpg" width="720" alt="RC-121 Warning Star, 1955">
 
-هواپیمای هشدار زودهنگام RC-121 در ۱۹۵۵. برآمدگی‌های بالا و پایین بدنه را ببینید: پایش هوابرد پیش از دیسک چرخان E-3 وجود داشت. [پرونده، پدیدآورنده و مجوز عکس](https://commons.wikimedia.org/wiki/File:Lockheed_RC-121C_1955.jpg)
+The housings above and below the fuselage illustrate an earlier answer to the same surveillance problem. Airborne early warning predates the rotating disc associated with the E-3. [Original photograph, credit and license](https://commons.wikimedia.org/wiki/File:Lockheed_RC-121C_1955.jpg)
 
-### شکل 2 — ورود نخستین E-3 به پایگاه تینکر در ۱۹۷۷
+### Figure 2. The first E-3 at Tinker Air Force Base, 1977
 
-<img src="https://upload.wikimedia.org/wikipedia/commons/5/57/First_E-3_Sentry_at_Tinker_AFB.jpg" width="720" alt="ورود نخستین E-3 به پایگاه تینکر در ۱۹۷۷">
+<img src="https://upload.wikimedia.org/wikipedia/commons/5/57/First_E-3_Sentry_at_Tinker_AFB.jpg" width="720" alt="The first E-3 at Tinker Air Force Base, 1977">
 
-ورود نخستین E-3 به پایگاه تینکر در ۱۹۷۷. چهار موتور و بدنهٔ باریک، خاستگاه این هواپیما در خانوادهٔ 707 را نشان می‌دهند. [پرونده، پدیدآورنده و مجوز عکس](https://commons.wikimedia.org/wiki/File:First_E-3_Sentry_at_Tinker_AFB.jpg)
+The four engines and narrow fuselage show the aircraft’s Boeing 707 ancestry. The new mission equipment had to work within the weight, balance and structural limits of an existing airframe. [Original photograph, credit and license](https://commons.wikimedia.org/wiki/File:First_E-3_Sentry_at_Tinker_AFB.jpg)
 
-### شکل 3 — آنتن AN/APY-1 خارج از گنبد در موزه
+### Figure 3. The AN/APY-1 antenna on display
 
-<img src="https://upload.wikimedia.org/wikipedia/commons/4/4f/AWACS_antenna%2C_Airborne_Warning_and_Control_System_-_National_Electronics_Museum_-_DSC00416.JPG" width="720" alt="آنتن AN/APY-1 خارج از گنبد در موزه">
+<img src="https://upload.wikimedia.org/wikipedia/commons/4/4f/AWACS_antenna%2C_Airborne_Warning_and_Control_System_-_National_Electronics_Museum_-_DSC00416.JPG" width="720" alt="The AN/APY-1 antenna on display">
 
-آنتن AN/APY-1 خارج از گنبد در موزه. سطح کشیدهٔ آنتن را با پوشش دایره‌ای مقایسه کنید: آنچه از زمین دیده می‌شود خود آنتن نیست. [پرونده، پدیدآورنده و مجوز عکس](https://commons.wikimedia.org/wiki/File:AWACS_antenna%2C_Airborne_Warning_and_Control_System_-_National_Electronics_Museum_-_DSC00416.JPG)
+Compare the long antenna face with the circular outline in Figure 4. The antenna transmits and receives radio waves; the outer shell protects the equipment and presents a streamlined surface to the airflow. [Original photograph, credit and license](https://commons.wikimedia.org/wiki/File:AWACS_antenna%2C_Airborne_Warning_and_Control_System_-_National_Electronics_Museum_-_DSC00416.JPG)
 
-### شکل 4 — نمای نزدیک روتودوم
+### Figure 4. The E-3 rotodome
 
-<img src="https://upload.wikimedia.org/wikipedia/commons/c/c5/ILA_2008_PD_185.JPG" width="720" alt="نمای نزدیک روتودوم">
+<img src="https://upload.wikimedia.org/wikipedia/commons/c/c5/ILA_2008_PD_185.JPG" width="720" alt="The E-3 rotodome">
 
-نمای نزدیک روتودوم. شکل عدسی‌مانند پوشش، هم فضای حرکت آنتن را فراهم می‌کند و هم سطحی است که جریان هوا به آن نیرو وارد می‌کند. [پرونده، پدیدآورنده و مجوز عکس](https://commons.wikimedia.org/wiki/File:ILA_2008_PD_185.JPG)
+The disc gives the antenna room to sweep in azimuth. Aerodynamic pressure acts on the outer surface, so the enclosure is part of the structural problem even though it is not itself the radar antenna. [Original photograph, credit and license](https://commons.wikimedia.org/wiki/File:ILA_2008_PD_185.JPG)
 
-### شکل 5 — گنبد از زاویه‌ای دیگر
+### Figure 5. The dome and its supports
 
-<img src="https://upload.wikimedia.org/wikipedia/commons/f/fc/Dock_One_%288557615574%29.jpg" width="720" alt="گنبد از زاویه‌ای دیگر">
+<img src="https://upload.wikimedia.org/wikipedia/commons/f/fc/Dock_One_%288557615574%29.jpg" width="720" alt="The dome and its supports">
 
-گنبد از زاویه‌ای دیگر. فاصلهٔ گنبد از بدنه یک بازوی لنگر می‌سازد؛ برای فهم بار پایه تنها دانستن وزن گنبد کافی نیست. [پرونده، پدیدآورنده و مجوز عکس](https://commons.wikimedia.org/wiki/File:Dock_One_%288557615574%29.jpg)
+Notice the gap between the disc and the fuselage. A horizontal force acting above the attachment plane produces an overturning moment as well as a shear force. [Original photograph, credit and license](https://commons.wikimedia.org/wiki/File:Dock_One_%288557615574%29.jpg)
 
-### شکل 6 — کنترل‌کنندگان مأموریت در عملیات Provide Comfort
+### Figure 6. Controllers during Operation Provide Comfort
 
-<img src="https://upload.wikimedia.org/wikipedia/commons/6/61/ProvideComfortAWACScrew.jpg" width="720" alt="کنترل‌کنندگان مأموریت در عملیات Provide Comfort">
+<img src="https://upload.wikimedia.org/wikipedia/commons/6/61/ProvideComfortAWACScrew.jpg" width="720" alt="Controllers during Operation Provide Comfort">
 
-کنترل‌کنندگان مأموریت در عملیات Provide Comfort. آشکارسازی هدف و تصمیم برای هدایت هواپیما دو وظیفهٔ جدا هستند. [پرونده، پدیدآورنده و مجوز عکس](https://commons.wikimedia.org/wiki/File:ProvideComfortAWACScrew.jpg)
+Detecting a return and directing an aircraft are different tasks. Mission personnel interpret tracks in context and communicate information to other crews. [Original photograph, credit and license](https://commons.wikimedia.org/wiki/File:ProvideComfortAWACScrew.jpg)
 
-### شکل 7 — ایستگاه کاری ناتو در ۲۰۰۸
+### Figure 7. NATO mission consoles, 2008
 
-<img src="https://upload.wikimedia.org/wikipedia/commons/e/e6/E-3_Sentry_system_operator_of_NATO.jpg" width="720" alt="ایستگاه کاری ناتو در ۲۰۰۸">
+<img src="https://upload.wikimedia.org/wikipedia/commons/e/e6/E-3_Sentry_system_operator_of_NATO.jpg" width="720" alt="NATO mission consoles, 2008">
 
-ایستگاه کاری ناتو در ۲۰۰۸. نمایشگرها آخرین حلقهٔ زنجیرهٔ اندازه‌گیری، تشکیل مسیر و نمایش وضعیت هستند. [پرونده، پدیدآورنده و مجوز عکس](https://commons.wikimedia.org/wiki/File:E-3_Sentry_system_operator_of_NATO.jpg)
+The consoles show the human end of the measurement chain: individual echoes have to be associated across scans before they can be displayed as a useful track. [Original photograph, credit and license](https://commons.wikimedia.org/wiki/File:E-3_Sentry_system_operator_of_NATO.jpg)
 
-### شکل 8 — E-3D بریتانیا بر فراز یورکشایر
+### Figure 8. RAF E-3D over North Yorkshire
 
-<img src="https://upload.wikimedia.org/wikipedia/commons/c/c2/Royal_Air_Force_%28RAF%29_E-3D_Sentry_AEW1_%28airborne_early_warning%29_aircraft%2C_registration_ZH106%2C_taking_part_in_Exercise_Taurus_Mountain_3%2C_in_the_skies_over_North_Yorkshire_in_March_2012_-_MOD_45153803_%28cropped%29.jpg" width="720" alt="E-3D بریتانیا بر فراز یورکشایر">
+<img src="https://upload.wikimedia.org/wikipedia/commons/c/c2/Royal_Air_Force_%28RAF%29_E-3D_Sentry_AEW1_%28airborne_early_warning%29_aircraft%2C_registration_ZH106%2C_taking_part_in_Exercise_Taurus_Mountain_3%2C_in_the_skies_over_North_Yorkshire_in_March_2012_-_MOD_45153803_%28cropped%29.jpg" width="720" alt="RAF E-3D over North Yorkshire">
 
-E-3D بریتانیا بر فراز یورکشایر. جای دیسک را نسبت به بال و دم ببینید؛ تغییر جریان ورودی دم از موضوعات آزمون یکپارچه‌سازی است. [پرونده، پدیدآورنده و مجوز عکس](https://commons.wikimedia.org/wiki/File:Royal_Air_Force_%28RAF%29_E-3D_Sentry_AEW1_%28airborne_early_warning%29_aircraft%2C_registration_ZH106%2C_taking_part_in_Exercise_Taurus_Mountain_3%2C_in_the_skies_over_North_Yorkshire_in_March_2012_-_MOD_45153803_%28cropped%29.jpg)
+The side view places the dome upstream of the tail. An integration test must therefore consider how the disturbed airflow reaches the tail, not just the drag of the dome in isolation. [Original photograph, credit and license](https://commons.wikimedia.org/wiki/File:Royal_Air_Force_%28RAF%29_E-3D_Sentry_AEW1_%28airborne_early_warning%29_aircraft%2C_registration_ZH106%2C_taking_part_in_Exercise_Taurus_Mountain_3%2C_in_the_skies_over_North_Yorkshire_in_March_2012_-_MOD_45153803_%28cropped%29.jpg)
 
-### شکل 9 — E-3 ناتو با ثبت لوکزامبورگ
+### Figure 9. Luxembourg-registered NATO E-3
 
-<img src="https://upload.wikimedia.org/wikipedia/commons/9/9a/Boeing_E-3_Sentry_LX-N_90454-3.JPG" width="720" alt="E-3 ناتو با ثبت لوکزامبورگ">
+<img src="https://upload.wikimedia.org/wikipedia/commons/9/9a/Boeing_E-3_Sentry_LX-N_90454-3.JPG" width="720" alt="Luxembourg-registered NATO E-3">
 
-E-3 ناتو با ثبت لوکزامبورگ. برآمدگی زیر دماغه از دیسک اصلی جداست؛ همهٔ پوشش‌های بیرونی یک حسگر واحد را پنهان نمی‌کنند. [پرونده، پدیدآورنده و مجوز عکس](https://commons.wikimedia.org/wiki/File:Boeing_E-3_Sentry_LX-N_90454-3.JPG)
+The fairing beneath the nose is separate from the main radar dome. Similar-looking external covers need not house the same type of equipment. [Original photograph, credit and license](https://commons.wikimedia.org/wiki/File:Boeing_E-3_Sentry_LX-N_90454-3.JPG)
 
-### شکل 10 — E-3F فرانسه
+### Figure 10. French E-3F Sentry
 
-<img src="https://upload.wikimedia.org/wikipedia/commons/2/26/Boeing_E-3F_Sentry_%288%29.jpg" width="720" alt="E-3F فرانسه">
+<img src="https://upload.wikimedia.org/wikipedia/commons/2/26/Boeing_E-3F_Sentry_%288%29.jpg" width="720" alt="French E-3F Sentry">
 
-E-3F فرانسه. نمای جانبی محل مجموعهٔ حسگر نسبت به طول بدنه را برای ترسیم نمودار جسم آزاد نشان می‌دهد. [پرونده، پدیدآورنده و مجوز عکس](https://commons.wikimedia.org/wiki/File:Boeing_E-3F_Sentry_%288%29.jpg)
+Use the profile to sketch the lines of action of dome weight and drag. Their lever arms depend on the attachment point about which moments are taken. [Original photograph, credit and license](https://commons.wikimedia.org/wiki/File:Boeing_E-3F_Sentry_%288%29.jpg)
 
-### شکل 11 — E-3A ناتو
+### Figure 11. NATO E-3A at Paine Field
 
-<img src="https://upload.wikimedia.org/wikipedia/commons/6/6c/NATO_E3A_AWACS_Paine_Field_WA_Jul15_DSC8405.jpg" width="720" alt="E-3A ناتو">
+<img src="https://upload.wikimedia.org/wikipedia/commons/6/6c/NATO_E3A_AWACS_Paine_Field_WA_Jul15_DSC8405.jpg" width="720" alt="NATO E-3A at Paine Field">
 
-E-3A ناتو. در نمای مایل می‌توان پایه‌ها و بدنه را جدا دید؛ اتصالات و تقویت‌های داخلی از عکس قابل استنتاج نیستند. [پرونده، پدیدآورنده و مجوز عکس](https://commons.wikimedia.org/wiki/File:NATO_E3A_AWACS_Paine_Field_WA_Jul15_DSC8405.jpg)
+The oblique view separates the two supports visually. It does not reveal the internal fittings, frame reinforcement or actual load split between them. [Original photograph, credit and license](https://commons.wikimedia.org/wiki/File:NATO_E3A_AWACS_Paine_Field_WA_Jul15_DSC8405.jpg)
 
-### شکل 12 — E-3A عربستان
+### Figure 12. Royal Saudi Air Force E-3A
 
-<img src="https://upload.wikimedia.org/wikipedia/commons/1/1f/Royal_Saudi_Air_Force_E-3A_Sentry.jpg" width="720" alt="E-3A عربستان">
+<img src="https://upload.wikimedia.org/wikipedia/commons/1/1f/Royal_Saudi_Air_Force_E-3A_Sentry.jpg" width="720" alt="Royal Saudi Air Force E-3A">
 
-E-3A عربستان. این نمونه همان معماری کلی دیسک بالای بدنه را دارد؛ شباهت بیرونی به معنی یکسان بودن تجهیزات داخلی نیست. [پرونده، پدیدآورنده و مجوز عکس](https://commons.wikimedia.org/wiki/File:Royal_Saudi_Air_Force_E-3A_Sentry.jpg)
+The aircraft shares the characteristic dorsal disc with the other E-3 variants. A common external arrangement is not evidence of identical internal mission equipment. [Original photograph, credit and license](https://commons.wikimedia.org/wiki/File:Royal_Saudi_Air_Force_E-3A_Sentry.jpg)
 
-## منابع
+## Sources
 
-- [مشخصات رسمی E-3 و شرح مأموریت، USAF](https://www.af.mil/About-Us/Fact-Sheets/Display/Article/104504/e-3-sentry-awacs/)
-- [برگهٔ فنی و تاریخچه، Air Combat Command، فوریهٔ ۲۰۲۳](https://www.acc.af.mil/Portals/92/Docs/Fact%20Sheets%20-%202020%20Update/Facts%20Sheets%20-%202023%20Update/E3%20Sentry_FEB%202023.pdf)
-- [مقالهٔ فارسی فارس؛ نقطهٔ شروع مطالعه](https://farsnews.ir/Navidrezamousavi/1793574775574791879/آواکس-چیست-و-چگونه-ساخته-می-شود)
+- [U.S. Air Force: E-3 Sentry mission and aircraft specifications](https://www.af.mil/About-Us/Fact-Sheets/Display/Article/104504/e-3-sentry-awacs/)
+- [Air Combat Command: E-3 Sentry fact sheet and service history (February 2023)](https://www.acc.af.mil/Portals/92/Docs/Fact%20Sheets%20-%202020%20Update/Facts%20Sheets%20-%202023%20Update/E3%20Sentry_FEB%202023.pdf)
+- [Fars News: introductory article that prompted this case study (in Persian)](https://farsnews.ir/Navidrezamousavi/1793574775574791879/%D8%A2%D9%88%D8%A7%DA%A9%D8%B3-%DA%86%DB%8C%D8%B3%D8%AA-%D9%88-%DA%86%DA%AF%D9%88%D9%86%D9%87-%D8%B3%D8%A7%D8%AE%D8%AA%D9%87-%D9%85%DB%8C-%D8%B4%D9%88%D8%AF)

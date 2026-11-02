@@ -1,7 +1,7 @@
 (function(){
 'use strict';
 const $=id=>document.getElementById(id),ids=['geometry','method','inputMode','temperature','speed','pressure','sigma','naca','alpha','chord','radius','bodyRadius','bodyLength','coneAngle','coneEnvelopeModel','cylinderNose','mesh','budget','longDomain'];
-let worker=null,result=null,fluid=null,started=0,timer=null,setupAdjustment='';
+let worker=null,result=null,fluid=null,started=0,timer=null,setupAdjustment='',uiRevision=0;
 const viewState={hydrofoil:{geometry:'hydrofoil',method:'bem'},axisymmetric:{geometry:'disk',method:'bem'}};
 const number=x=>Number.isFinite(x)?Number(x.toPrecision(6)).toString():'unavailable',esc=x=>String(x).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function read(){
@@ -26,13 +26,15 @@ function controls(){
  const cone=geometry==='cone'||geometry==='cylinder'&&$('cylinderNose').value==='cone';$('coneInputs').hidden=!cone;$('coneAngle').disabled=!cone;$('coneEnvelopeModel').disabled=!cone||$('method').value!=='analytical';
  $('referenceOption').disabled=hydro||special;$('bemOption').disabled=special;$('analyticalOption').disabled=hydro;
  if(hydro&&$('method').value!=='bem'){$('method').value='bem';setupAdjustment='Hydrofoil selected: the boundary-element method applies. Axisymmetric reference and analytical estimates do not represent this geometry.';}
- const analytical=$('method').value==='analytical';$('coneOption').disabled=!analytical;$('cylinderOption').disabled=!analytical;
+ const analytical=$('method').value==='analytical';$('coneOption').disabled=false;$('cylinderOption').disabled=false;
+ const incompatible=special&&!analytical;$('solve').disabled=Boolean(worker)||incompatible;$('methodCompatibility').hidden=!incompatible;$('chooseAnalytical').disabled=Boolean(worker);
+ $('methodCompatibilityText').textContent='Cone/cylinder BEM is not yet available. Analytical estimate gives a source-model envelope; it does not solve pressure on a wetted body.';
  $('pressureRow').hidden=$('inputMode').value==='sigma';$('sigmaRow').hidden=$('inputMode').value!=='sigma';
  for(const id of ['naca','alpha','chord'])$(id).disabled=!hydro;
  $('radius').disabled=hydro;for(const id of ['bodyRadius','bodyLength'])$(id).disabled=!body;
  $('pressure').disabled=$('inputMode').value==='sigma';$('sigma').disabled=$('inputMode').value!=='sigma';
  const bem=$('method').value==='bem';$('longRow').hidden=hydro||!bem;
- const old=+$('mesh').value,options=hydro?[48,64,96]:[0,32,64,128];
+ const old=+$('mesh').value,options=hydro?[...new Set([48,64,96,...(Number.isInteger(old)&&old>=48&&old<=96?[old]:[])])].sort((a,b)=>a-b):[0,32,64,128];
  if([...$('mesh').options].map(o=>+o.value).join(',')!==options.join(','))$('mesh').replaceChildren(...options.map(v=>new Option(v===0?'Automatic · 32 → 128':String(v),String(v))));
  const next=options.includes(old)?old:hydro?48:0;$('mesh').value=String(next);
  if(next!==old&&bem)setupAdjustment=next===0?'Automatic disk mesh starts at 32 cavity bands and may retry 128 if only the field audit fails. The same total time budget and flow inputs are retained.':`Mesh ${next>old?'raised':'adjusted'} from ${old} to ${next} ${hydro?'panels for automatic hydrofoil detachment':'cavity bands for the axisymmetric BEM'}. Flow inputs are unchanged.`;
@@ -43,13 +45,13 @@ function controls(){
   if(current)link.setAttribute('aria-current','page');else link.removeAttribute('aria-current');
  }
  viewState[hydro?'hydrofoil':'axisymmetric']={geometry,method:$('method').value};
- $('geometryNote').textContent=hydro?'Steady 2-D attached sheet; angle of attack applies to this section.':geometry==='cone'?'Axisymmetric cone in axial flow. The apex angle is the full included angle; a 2-D triangular wedge is a different problem.':geometry==='cylinder'?'Cylinder downstream of the nose separation plane. Afterbody length excludes the nose; clearance is geometric, without a wetted-cylinder flow solution.':geometry==='disk-cylinder'?'Sharp front disk with a dry cylindrical afterbody inside the cavity. Axial flow only (α = 0°). Body intersection is checked.':'Sharp circular disk in axial flow (α = 0°). Choose Analytical estimate to enable cone and cylinder cases.';
- $('methodNote').textContent=analytical?(cone?'Cone drag: Eq. 36, full apex 30–180°, σ ≤ 0.25. '+($('coneEnvelopeModel').value==='semenenko-cone-35'?'Cone-specific dimensions: Eqs. 35–36.':'Generic asymptotic dimensions: Eqs. 27–28 with cone drag.')+' Eq. 51 main envelope; finite-σ accuracy is unqualified.':'Source-model drag and a low-σ main-envelope estimate. A finite endpoint is retained; no physical closure or experimental accuracy is established.'):!bem?'Semenenko disk correlation, σ = 0.012–0.057. Immediate semiempirical envelope with a finite endpoint.':hydro?'Automatic hydrofoil detachment uses at least 48 panels. A fully wetted result is valid when no cavity is required.':'Disk BEM with an artificial rear image disk. The length bracket expands automatically when needed. A numerical-range or field failure is not a physical no-cavity result.';
+ $('geometryNote').textContent=hydro?'Steady 2-D attached sheet; angle of attack applies to this section.':geometry==='cone'?'Axisymmetric cone in axial flow. The apex angle is the full included angle; a 2-D triangular wedge is a different problem.':geometry==='cylinder'?'Cylinder downstream of the nose separation plane. Afterbody length excludes the nose; clearance is geometric, without a wetted-cylinder flow solution.':geometry==='disk-cylinder'?'Sharp front disk with a dry cylindrical afterbody inside the cavity. Axial flow only (α = 0°). Body intersection is checked.':'Sharp circular disk in axial flow (α = 0°). Cone and cylinder geometries are selectable, with an explicit source-model analytical method.';
+ $('methodNote').textContent=incompatible?'The selected boundary-element method does not apply to this geometry. Choose the analytical estimate explicitly; it does not solve pressure on the wetted body.':analytical?(cone?'Cone drag: Eq. 36, full apex 30–180°, σ ≤ 0.25. '+($('coneEnvelopeModel').value==='semenenko-cone-35'?'Cone-specific dimensions: Eqs. 35–36.':'Generic asymptotic dimensions: Eqs. 27–28 with cone drag.')+' Eq. 51 main envelope; finite-σ accuracy is unqualified.':'Source-model drag and a low-σ main-envelope estimate. A finite endpoint is retained; no physical closure or experimental accuracy is established.'):!bem?'Semenenko disk correlation, σ = 0.012–0.057. Immediate semiempirical envelope with a finite endpoint.':hydro?'Automatic hydrofoil detachment uses at least 48 panels. A fully wetted result is valid when no cavity is required.':'Disk BEM with an artificial rear image disk. The length bracket expands automatically when needed. A numerical-range or field failure is not a physical no-cavity result.';
  try{const f=CavitationFluid.target({mode:$('inputMode').value,temperatureC:+$('temperature').value,U:+$('speed').value,pInf:+$('pressure').value*1000,sigma:+$('sigma').value});$('fluidInfo').textContent=`σ = ${number(f.sigma)} · ρ = ${number(f.rho)} kg/m³ · pv = ${number(f.pc/1000)} kPa · absolute p∞ = ${number(f.pInf/1000)} kPa`;}catch(e){$('fluidInfo').textContent=e.message;}
 }
 function stop(){worker?.terminate();worker=null;clearInterval(timer);timer=null;$('solve').disabled=false;$('cancel').disabled=true;for(const id of ids)$(id).disabled=false;controls();}
-function clearOutput(){result=null;fluid=null;$('output').hidden=true;for(const id of ['csv','figures'])$(id).disabled=true;}
-function invalidate(){stop();clearOutput();$('elapsed').textContent='';status('Inputs changed. Solve to recompute the selected problem.');}
+function clearOutput(){result=null;fluid=null;$('output').hidden=true;for(const id of ['geometryPlot','pressurePlot','numbers','raw'])$(id).innerHTML='';for(const id of ['csv','figures'])$(id).disabled=true;$('nextSteps').hidden=true;renderInputPreview();}
+function invalidate(){uiRevision++;stop();clearOutput();$('elapsed').textContent='';status('Inputs changed. Solve to recompute the selected problem.');}
 function error(message){status(message,'error');$('errorText').textContent=message;if(!$('errorDialog').open)$('errorDialog').showModal();}
 function failRun(message,request){
  stop();clearOutput();
@@ -93,11 +95,47 @@ function chart(title,series,{equal=false,xlabel='x (mm)',ylabel='r (mm)',shade=f
  for(const v of series)s+=`<polyline points="${v.points.filter(p=>p.every(Number.isFinite)).map(p=>X(p[0])+','+Y(p[1])).join(' ')}" fill="none" stroke="${v.color}" stroke-width="2.5" ${v.dash?'stroke-dasharray="6 4"':''}/>`;
  return s+`<rect x="${m.l}" y="${m.t}" width="${w}" height="${h}" fill="none" stroke="#77889a"/><text x="${m.l+w/2}" y="${H-5}" text-anchor="middle">${esc(xlabel)}</text><text transform="translate(20 ${m.t+h/2})rotate(-90)" text-anchor="middle">${esc(ylabel)}</text></svg>`;
 }
+function renderInputPreview(){
+ const target=$('inputPreview');target.hidden=false;
+ try{
+  const kind=$('geometry').value,series=[];let note='Input geometry only. No cavity or pressure calculation has been completed.';
+  if(kind==='hydrofoil'){
+   const g=HydrofoilCavitation.parseNaca($('naca').value.trim()),c=+$('chord').value;
+   if(!(Number.isFinite(c)&&c>0))throw Error('Enter a positive chord to preview the hydrofoil.');
+   series.push({name:'NACA '+$('naca').value.trim(),color:'#202b37',points:ForwardHydrofoilCavitation.pointsFor(g,64).map(q=>[q[0]*c,q[1]*c])});
+  }else{
+   const R=+$('radius').value,rb=+$('bodyRadius').value,L=+$('bodyLength').value;
+   if(!(Number.isFinite(R)&&R>0))throw Error('Enter a positive separation radius to preview the body.');
+   const cone=kind==='cone'||kind==='cylinder'&&$('cylinderNose').value==='cone';
+   if(cone){const a=+$('coneAngle').value;if(!(a>=30&&a<=180))throw Error('Use a full cone apex angle from 30° to 180°.');const x=-R/Math.tan(a*Math.PI/360);series.push({name:'Specified axisymmetric cone',color:'#202b37',points:[[x,0],[0,R],[0,-R],[x,0]]});}
+   else series.push({name:'Specified circular disk / flat nose',color:'#202b37',points:[[0,-R],[0,R]]});
+   if(kind==='disk-cylinder'||kind==='cylinder'){
+    if(!(Number.isFinite(rb)&&rb>0&&Number.isFinite(L)&&L>0))throw Error('Enter positive cylinder radius and length.');
+    series.push({name:'Specified cylindrical afterbody',color:'#5a6570',points:[[0,rb],[L,rb],[L,-rb],[0,-rb]]});
+    note+=' A cavity must contain the afterbody; this outline does not establish dry containment.';
+   }
+  }
+  target.innerHTML=chart('Input geometry · no cavity result',series,{equal:true,ylabel:kind==='hydrofoil'?'y (mm)':'r (mm)'})+'<figcaption>'+esc(note)+'</figcaption>';
+ }catch(e){target.innerHTML='<figcaption>'+esc(e.message)+' No result is displayed.</figcaption>';}
+}
+function showGuidance(r,request){
+ const el=$('nextSteps');let text='';
+ if(request.geometry==='hydrofoil'){
+  if(r.status==='fully-wetted')text='No attached cavity is required by both checked potential-flow meshes. This is a computed no-cavity classification, not an experimental inception test.';
+  else if(r.code==='LOWER_SURFACE_BELOW_CAVITY_PRESSURE'||r.code==='UPPER_SHEET_ONLY')text='This flow needs a cavity topology outside the current single upper partial-sheet model. The solver has not proved that cavitation is absent; keep these inputs for diagnostics.';
+  else if(!r.acceptedForDisplay)text='No accepted cavity was found. The current partial-sheet search covers length/c = 0.06–0.65; a failed or timed-out solve is not a no-cavity prediction. Save JSON to preserve the trials, or explicitly load the research example.';
+ }
+ if(request.geometry==='disk-cylinder'||request.geometry==='cylinder')text+=(text?' ':'')+'The afterbody is admitted only when fully inside the computed gas envelope; wetted-cylinder flow and reattachment are not solved.';
+ el.hidden=!text;el.textContent=text;
+}
+function responseMatchesFlow(fluid,request){
+ return ['U','pInf','temperatureC','sigma'].every(k=>Number.isFinite(fluid[k])&&Number.isFinite(request.flow[k])&&Math.abs(fluid[k]-request.flow[k])<=2e-12*Math.max(1,Math.abs(request.flow[k])));
+}
 function rows(data){return '<table><tbody>'+data.map(([k,v])=>`<tr><th>${esc(k)}</th><td>${esc(typeof v==='number'?number(v):v)}</td></tr>`).join('')+'</tbody></table>';}
 function show(r,f,request){
- result={request,result:r,fluid:f};fluid=f;$('output').hidden=false;$('raw').textContent=JSON.stringify(r,null,2);$('csv').disabled=!(r.points?.length||r.wetPreflight?.fine?.points?.length||r.cavity?.height?.length||r.diagnosticCandidate?.height?.length||r.profile?.front?.length||r.profile?.main?.length||r.profile?.full?.length);$('figures').disabled=false;
+ result={request,result:r,fluid:f};fluid=f;$('output').hidden=false;$('raw').textContent=JSON.stringify(r,null,2);$('csv').disabled=!(r.final?.nodes?.length||r.profile?.main?.length||r.status==='fully-wetted'&&r.points?.length||r.cavity?.height?.length||r.diagnosticCandidate?.height?.length);$('figures').disabled=false;
  const hydro=request.geometry==='hydrofoil',ref=request.method==='reference',analytical=request.method==='analytical',accepted=hydro?r.acceptedForDisplay:r.ok&&(!r.body||r.body.dryContained);
- status(resultMessage(r,f,request),accepted?'ready':'error');
+ status(resultMessage(r,f,request),accepted?'ready':'error');showGuidance(r,request);
  let values=[['Input σ',f.sigma],['Speed (m/s)',f.U],['Absolute ambient pressure (kPa)',f.pInf/1000],['Temperature (°C)',f.temperatureC],['Experimental validation','Not qualified for this calculation']];
  $('pressurePlot').innerHTML='';$('geometryPlot').innerHTML='';$('modelSource').textContent='';$('modelSource').hidden=true;$('modelWarnings').hidden=true;$('modelWarnings').innerHTML='';
  if(hydro){
@@ -142,19 +180,22 @@ function show(r,f,request){
   $('caption').textContent='Full solved Riabouchinsky image geometry. The downstream disk is mathematical, not a physical cylinder base. The cylinder is permitted only when dry-contained; no wetted-cylinder or nonzero-incidence flow is inferred. Passing sampled equations does not establish experimental accuracy.';
  }else $('caption').textContent='No completed admitted curve. The target, search bounds and complete diagnostic records remain in Save JSON.';
  for(const id of ['geometryPlot','pressurePlot'])$(id).hidden=!$(id).innerHTML;
+ $('inputPreview').hidden=Boolean($('geometryPlot').innerHTML);
+ $('figures').disabled=!$('geometryPlot').querySelector('svg')&&!$('pressurePlot').querySelector('svg');
  if(r.source?.url&&/^https:\/\//.test(r.source.url)){$('modelSource').hidden=false;$('modelSource').innerHTML='Source: <a href="'+esc(r.source.url)+'" target="_blank" rel="noopener">'+esc(r.source.author||r.source.title)+' ('+esc(r.source.year||'source')+')</a>'+(analytical?' · drag Eq. '+esc(r.drag?.equation||'not evaluated')+'; main envelope Eq. 51':ref?' · disk reference Eqs. 31–34':'');}
  if(r.warnings?.length){$('modelWarnings').hidden=false;$('modelWarnings').innerHTML='<h2>Model warnings</h2><ul>'+r.warnings.map(w=>'<li>'+esc(w)+'</li>').join('')+'</ul>';}
  $('numbers').innerHTML=rows(values);$('elapsed').textContent='Finished in '+((performance.now()-started)/1000).toFixed(1)+' s';
 }
 $('settings').onsubmit=e=>{e.preventDefault();invalidate();let request;try{request=read();}catch(e){error(e.message);return;}
  started=performance.now();$('solve').disabled=true;$('cancel').disabled=false;for(const id of ids)$(id).disabled=true;
- status('Starting the direct problem. Cavity endpoints are internal unknowns.','running');timer=setInterval(()=>{$('elapsed').textContent='Running · '+((performance.now()-started)/1000).toFixed(0)+' s · Cancel remains available';},1000);
+ status('Starting the direct problem. Cavity endpoints are internal unknowns.','running');timer=setInterval(()=>{const elapsed=(performance.now()-started)/1000;$('elapsed').textContent='Running · '+elapsed.toFixed(0)+' s · Cancel remains available';if(elapsed>request.settings.maxSeconds+5)failRun('The solver did not finish within its declared time budget.',request);},1000);
  try{
   const w=worker=new Worker('forward-worker.js?v=0.5.5');
   w.onmessage=e=>{if(worker!==w)return;const m=e.data;
    if(m?.type==='progress'){const q=m.row||{};status((q.stage||q.phase||'Solving')+(q.evaluation?' · evaluation '+q.evaluation:'')+(q.iteration!==undefined?' · iteration '+q.iteration:'')+(q.LOverRn?' · trial L/R = '+number(q.LOverRn):'')+(q.length?' · trial l/c = '+number(q.length):''),'running');return;}
    if(m?.type==='error'){failRun(m.message||'The solver worker reported an error.',request);return;}
    if(m?.type!=='result'||!m.result||!m.fluid){failRun('The solver returned an incomplete response.',request);return;}
+   if(!responseMatchesFlow(m.fluid,request)){failRun('The result does not match the submitted flow inputs.',request);return;}
    stop();try{show(m.result,m.fluid,request);}catch(e){failRun('The result could not be displayed: '+e.message,request);}
   };
   w.onerror=e=>{e.preventDefault();if(worker!==w)return;failRun(e.message||'The solver worker failed.',request);};
@@ -179,6 +220,8 @@ $('loadExample').onclick=()=>{
  $('longDomain').checked=false;setupAdjustment='';invalidate();$('mesh').value=String(values.mesh);controls();
  status(research?'Loaded the attached-cavity RESEARCH example: NACA 0020, α = 4°, chord 160 mm, σ = 1.3157940493756035, 48 panels, automatic initialization. Budget 240 s. This numerical research case is not experimentally validated. Solve to calculate.':hydro?'Loaded the fully wetted hydrofoil example: NACA 0012, α = 4°, chord 160 mm, U = 5 m/s, p∞ = 101.325 kPa, T = 20 °C. Solve to calculate.':cone||cylinder?'Loaded the explicit '+(cone?'150° cone':'flat-nose cylinder')+' analytical example at σ = 0.037. The main-envelope estimate and its source limits will be reported when solved.':'Loaded the published disk-reference example: radius 10 mm, σ = 0.03, T = 20 °C, U = 20 m/s. Solve to evaluate the reference envelope.');
 };
+$('chooseAnalytical').onclick=()=>{if(worker)return;$('method').value='analytical';setupAdjustment='Analytical estimate selected explicitly. Geometry, speed, pressure, temperature and σ inputs are unchanged.';invalidate();};
+$('chooseExample').onclick=()=>{$('exampleSection').open=true;$('example').focus();};
 $('dismiss').onclick=()=>$('errorDialog').close();
 function download(name,data,type){const a=document.createElement('a'),u=URL.createObjectURL(new Blob([data],{type}));a.href=u;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(u),1000);}
 function exportMetadata(){
@@ -186,9 +229,9 @@ function exportMetadata(){
  return {geometry:q.geometry,method:q.method,model:r.model||q.method,source:r.source||null,profileKind:r.profile?.kind||null,coneEnvelopeModel:q.cavitator?.coneEnvelopeModel||null,envelopeModel:r.input?.envelopeModel||null,dimensionEquations:r.dimensions?.dimensionEquations||null,profileEquation:r.profile?.equation||null,admission:r.admission||null,warnings:r.warnings||[],physicalClosureClaim:r.profile?.physicalClosureClaim??r.physicalClosureClaim??false,experimentalQualification:false,coordinateUnits:'m'};
 }
 $('save').onclick=()=>{try{download('cavitation-forward-case.json',JSON.stringify({schema:'cavitation-forward-case',version:1,inputs:read(),result,metadata:exportMetadata()},null,2),'application/json');}catch(e){error(e.message);}};
-$('open').onclick=()=>$('file').click();$('file').onchange=async()=>{try{const f=$('file').files[0];if(!f)return;if(f.size>25e6)throw Error('Case exceeds 25 MB.');const v=JSON.parse(await f.text());if(v.schema!=='cavitation-forward-case'||v.version!==1||!v.inputs)throw Error('Open a forward case JSON here. Existing inverse cases can be opened in Advanced inverse mode.');const o=v.inputs;if(!['hydrofoil','disk','disk-cylinder','cone','cylinder'].includes(o.geometry)||!['bem','reference','analytical'].includes(o.method)||o.geometry==='hydrofoil'&&o.method!=='bem'||['cone','cylinder'].includes(o.geometry)&&o.method!=='analytical')throw Error('This case has an unsupported geometry or method pairing. Its inputs were not loaded.');if(o.cavitator?.coneEnvelopeModel!==undefined&&!['semenenko-cone-35','garabedian-logvinovich'].includes(o.cavitator.coneEnvelopeModel))throw Error('This case has an unsupported cone envelope dimension model. Its inputs were not loaded.');const values={geometry:o.geometry,method:o.method,inputMode:o.flow.mode,temperature:o.flow.temperatureC,speed:o.flow.U,pressure:o.flow.pInf/1000,sigma:o.flow.sigma,naca:o.foil.naca,alpha:o.foil.alpha,chord:o.foil.chord*1000,radius:o.disk.radius*1000,bodyRadius:o.disk.bodyRadius*1000,bodyLength:o.disk.bodyLength*1000,coneAngle:o.cavitator?.coneAngleDeg??150,coneEnvelopeModel:o.cavitator?.coneEnvelopeModel??'garabedian-logvinovich',cylinderNose:o.cavitator?.cylinderNose??'flat',budget:o.settings.maxSeconds};stop();clearOutput();for(const [id,value]of Object.entries(values))$(id).value=value;$('longDomain').checked=Boolean(o.settings.extendedResearchDomain);setupAdjustment='';controls();if([...$('mesh').options].some(q=>+q.value===o.settings.resolution))$('mesh').value=o.settings.resolution;else setupAdjustment=`Saved mesh ${o.settings.resolution} adjusted to ${$('mesh').value} for the selected algorithm. Flow inputs are unchanged.`;read();invalidate();status('Case inputs restored. Solve to recompute; stored curves are not trusted as fresh solutions.');}catch(e){error(e.message);}finally{$('file').value='';}};
+$('open').onclick=()=>$('file').click();$('file').onchange=async()=>{try{const f=$('file').files[0];if(!f)return;if(f.size>25e6)throw Error('Case exceeds 25 MB.');const selectionRevision=uiRevision,text=await f.text();if(selectionRevision!==uiRevision)throw Error('Inputs changed while the case file was loading. Select the file again to replace them.');const v=JSON.parse(text);if(v.schema!=='cavitation-forward-case'||v.version!==1||!v.inputs)throw Error('Open a forward case JSON here. Existing inverse cases can be opened in Advanced inverse mode.');const o=v.inputs;if(!['hydrofoil','disk','disk-cylinder','cone','cylinder'].includes(o.geometry)||!['bem','reference','analytical'].includes(o.method)||o.geometry==='hydrofoil'&&o.method!=='bem'||['cone','cylinder'].includes(o.geometry)&&o.method!=='analytical')throw Error('This case has an unsupported geometry or method pairing. Its inputs were not loaded.');if(o.cavitator?.coneEnvelopeModel!==undefined&&!['semenenko-cone-35','garabedian-logvinovich'].includes(o.cavitator.coneEnvelopeModel))throw Error('This case has an unsupported cone envelope dimension model. Its inputs were not loaded.');const values={geometry:o.geometry,method:o.method,inputMode:o.flow.mode,temperature:o.flow.temperatureC,speed:o.flow.U,pressure:o.flow.pInf/1000,sigma:o.flow.sigma,naca:o.foil.naca,alpha:o.foil.alpha,chord:o.foil.chord*1000,radius:o.disk.radius*1000,bodyRadius:o.disk.bodyRadius*1000,bodyLength:o.disk.bodyLength*1000,coneAngle:o.cavitator?.coneAngleDeg??150,coneEnvelopeModel:o.cavitator?.coneEnvelopeModel??'garabedian-logvinovich',cylinderNose:o.cavitator?.cylinderNose??'flat',budget:o.settings.maxSeconds};stop();clearOutput();for(const [id,value]of Object.entries(values))$(id).value=value;$('longDomain').checked=Boolean(o.settings.extendedResearchDomain);setupAdjustment='';controls();if([...$('mesh').options].some(q=>+q.value===o.settings.resolution))$('mesh').value=o.settings.resolution;else setupAdjustment=`Saved mesh ${o.settings.resolution} adjusted to ${$('mesh').value} for the selected algorithm. Flow inputs are unchanged.`;read();invalidate();status('Case inputs restored. Solve to recompute; stored curves are not trusted as fresh solutions.');}catch(e){error(e.message);}finally{$('file').value='';}};
 $('csv').onclick=()=>{if(!result)return;const r=result.result,lines=['# '+r.status,'# metadata '+JSON.stringify(exportMetadata()),'x,y,kind'];if(r.final?.nodes)for(const p of r.final.nodes)lines.push([p[0]*result.request.disk.radius,p[1]*result.request.disk.radius,'BEM-diagnostic-m'].join(','));if(r.profile?.main)for(const p of [...(r.profile.front||[]),...r.profile.main])lines.push([p.x,p.r,result.request.method==='analytical'?'source-main-envelope-estimate-m':'semiempirical-envelope-m'].join(','));if(r.status==='fully-wetted')for(const p of r.points)lines.push([p[0]*result.request.foil.chord,p[1]*result.request.foil.chord,'fully-wetted-section-m'].join(','));const c=r.cavity||r.diagnosticCandidate;if(c?.height)for(const p of c.height)lines.push([p.x*result.request.foil.chord,p.y*result.request.foil.chord,r.acceptedForDisplay?'cavity-m':'rejected-trial-m'].join(','));download('cavity-shape.csv',lines.join('\n'),'text/csv');};
 $('figures').onclick=()=>{if(!result)return;download('cavity-figures.html','<!doctype html><meta charset="utf-8"><title>Cavity result</title><style>body{font:18px "Times New Roman";max-width:1100px;margin:auto}svg{width:100%}pre{font:12px Arial;white-space:pre-wrap;overflow-wrap:anywhere;background:#f1f4f7;padding:12px}table{border-collapse:collapse;width:100%;font:14px Arial}th,td{text-align:left;border-bottom:1px solid #ddd;padding:7px}</style><h1>'+esc(result.result.status)+'</h1>'+['geometryPlot','pressurePlot','numbers','modelSource','modelWarnings'].map(id=>$(id).innerHTML).join('')+'<p>'+esc($('caption').textContent)+'</p><pre>'+esc(JSON.stringify(exportMetadata(),null,2))+'</pre>','text/html');};
 if(document.body.dataset.geometry)$('geometry').value=document.body.dataset.geometry;
-controls();
+controls();renderInputPreview();
 })();

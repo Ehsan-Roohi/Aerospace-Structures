@@ -58,7 +58,17 @@ function failRun(message,request){
  error(message.replace(/[.!?]?$/,'.')+' No completed result is accepted. Your inputs are retained; retry or load an example.');
 }
 function resultMessage(r,f,request){
- if(request.geometry==='hydrofoil')return r.message||r.reason||r.status;
+ if(request.geometry==='hydrofoil'){
+  const angle='α = '+number(request.foil.alpha)+'°';
+  if(r.status==='fully-wetted'&&r.code==='NO_CAVITY_REQUIRED')return 'No cavity is predicted for these conditions ('+angle+'). The fully wetted calculation stays above cavity pressure on both checked meshes.';
+  if(r.code==='LOWER_SURFACE_BELOW_CAVITY_PRESSURE')return 'Preflight stopped at '+angle+': lower-surface pressure in the fully wetted estimate crosses cavity pressure. No cavity solve was attempted for this case.';
+  if(r.code==='UPPER_SHEET_ONLY')return 'This calculation stopped at '+angle+' because the current model only attempts an upper attached sheet at positive incidence. No cavity solve was attempted for this case.';
+  if(r.status==='budget-exhausted'||r.code==='TIME_BUDGET')return 'Cavity solve at '+angle+' reached its time budget. No converged cavity is shown. Your inputs are unchanged.';
+  if(r.code==='TARGET_SIGMA_ROOT_NOT_RESOLVED')return 'Cavity solve at '+angle+' did not resolve the requested σ = '+number(f.sigma)+' within this model’s search. No accepted cavity is shown; diagnostic trials are retained below.';
+  if(r.acceptedForDisplay&&r.cavityPresent)return 'Cavity solved at '+angle+'; the research result passed the declared sampled checks. Mesh convergence and experimental accuracy are not established.';
+  if(!r.acceptedForDisplay)return 'Cavity not solved at '+angle+'. '+(r.reason||r.message||r.code||r.status);
+  return r.message||r.reason||r.status;
+ }
  if(request.method==='analytical')return !r.ok?'Analytical estimate unavailable: '+(r.errors||[r.status]).join(' ')+' Flow inputs are unchanged; use a case within the source domain or explicitly load an example.':r.body&&!r.body.dryContained?'The estimated main envelope does not contain the full cylinder. Its profile is diagnostic only; no gas volume is admitted.':'Analytical estimate evaluated in its stated algebraic and drag domains. The main envelope has finite endpoints, with no physical closure or experimental accuracy claim.';
  if(['UNSUPPORTED_TARGET','NUMERICAL_DOMAIN_EXHAUSTED'].includes(r.status)){
   const range=r.search?.endpointSigmaRange;
@@ -95,15 +105,15 @@ function show(r,f,request){
   const original=raw?.original||r.points||wet?.points;
   const series=original?[{name:'Original hydrofoil',color:'#202b37',points:original.map(p=>[p[0]*c,p[1]*c])}]:[];
   if(raw?.height)series.push({name:r.acceptedForDisplay?'Computed cavity':'Rejected trial only',color:r.acceptedForDisplay?'#075eb7':'#b82028',points:raw.height.map(p=>[p.x*c,p.y*c])});
-  $('geometryPlot').innerHTML=chart(r.cavityPresent?'Computed attached sheet':r.acceptedForDisplay?'Fully wetted section · no cavity required':'No accepted cavity · raw trial if available',series,{equal:true,ylabel:'y (mm)'});
+  $('geometryPlot').innerHTML=chart(r.cavityPresent?'Computed attached sheet':r.acceptedForDisplay?'No cavity predicted · fully wetted section':'Cavity not solved · diagnostic trial only',series,{equal:true,ylabel:'y (mm)'});
   const upperCount=raw?2*raw.options.resolution+Math.max(8,Math.round(raw.options.resolution/3)):null;
   const panels=(raw?.panels||r.panels||wet?.panels||[]).map((p,k)=>({...p,surface:p.surface||(k<upperCount?'upper':'lower')}));
-  if(panels.length)$('pressurePlot').innerHTML=chart('Computed signed pressure coefficient',[
+  if(panels.length)$('pressurePlot').innerHTML=chart(r.acceptedForDisplay?'Computed signed pressure coefficient':'Diagnostic trial Cp · not accepted',[
    {name:'Upper surface',color:'#075eb7',points:panels.filter(p=>p.surface==='upper').map(p=>[p.x,p.cp]).sort((a,b)=>a[0]-b[0])},
    {name:'Lower surface',color:'#b25d0b',points:panels.filter(p=>p.surface==='lower').map(p=>[p.x,p.cp]).sort((a,b)=>a[0]-b[0])},
    {name:'Cavity pressure −σ',color:'#333',dash:true,points:[[0,-f.sigma],[1,-f.sigma]]}
   ],{xlabel:'x/c',ylabel:'Signed Cp'});
-  values.push(['Status',r.status],['Cavity present',r.cavityPresent?'YES':r.status==='fully-wetted'?'No · fully wetted':'No accepted cavity'],['Solved length l/c',r.cavityPresent?r.root.length:'not reported'],['Numerical root residual',r.root?.residual??(r.status==='fully-wetted'?'not applicable · fully wetted':'unresolved')],['Cavity area per unit span (mm²)',r.cavityPresent?r.cavityArea.perUnitSpan_m2*1e6:'not reported']);
+  values.push(['Status',r.status],['Cavity present',r.cavityPresent?'YES':r.status==='fully-wetted'?'No cavity predicted':'Unresolved · not a no-cavity prediction'],['Solved length l/c',r.cavityPresent?r.root.length:'not reported'],['Numerical root residual',r.root?.residual??(r.status==='fully-wetted'?'not applicable · fully wetted':'unresolved')],['Cavity area per unit span (mm²)',r.cavityPresent?r.cavityArea.perUnitSpan_m2*1e6:'not reported']);
   $('caption').textContent=r.cavityPresent?'Computed steady 2-D research sheet. Sampled pressure and gap checks pass; smooth-contact derivative, mesh accuracy and experimental accuracy remain unqualified. Area is per unit span, not a 3-D cavity volume.':r.acceptedForDisplay?'Fully wetted on both checked meshes: no attached cavity is required by this potential-flow calculation. This is not an experimental inception prediction.':'No accepted physical cavity or volume. Failed trial values are retained in JSON and diagnostics. Initial guesses cannot override physical screens.';
  }else if(analytical&&r.ok){
   const p=r.profile.main.map(v=>[v.x*1000,v.r*1000]),color=accepted?'#075eb7':'#b82028';
@@ -153,6 +163,8 @@ $('settings').onsubmit=e=>{e.preventDefault();invalidate();let request;try{reque
  }catch(e){failRun('The solver could not start: '+e.message,request);}
 };
 $('cancel').onclick=()=>{stop();status('Cancelled. No completed cavity result is reported.');$('elapsed').textContent='Cancelled';};
+// Invalidate as soon as a value is edited; committing on blur is not required.
+for(const id of ids)$(id).addEventListener('input',()=>{setupAdjustment='';invalidate();});
 for(const id of ids)$(id).addEventListener('change',()=>{setupAdjustment='';if(id==='longDomain')setupAdjustment=$('longDomain').checked?'The initial bracket is explicitly extended. Mesh, time budget and flow inputs are unchanged.':'Automatic length-bracket expansion is enabled. Mesh, time budget and flow inputs are unchanged.';invalidate();});
 for(const link of document.querySelectorAll('[data-geometry-view]'))link.addEventListener('click',e=>{
  if(e.ctrlKey||e.metaKey||e.shiftKey||e.altKey)return;

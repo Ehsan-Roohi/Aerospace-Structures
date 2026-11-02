@@ -1,0 +1,91 @@
+{
+  "coreVersion": "0.3.3",
+  "checks": [
+    {
+      "test": "stable-wetted-bitwise",
+      "n": 32,
+      "alpha": 0,
+      "method": "wetted",
+      "passed": true
+    },
+    {
+      "test": "stable-wetted-bitwise",
+      "n": 32,
+      "alpha": 0,
+      "method": "wettedVelocity",
+      "passed": true
+    },
+    {
+      "test": "stable-wetted-bitwise",
+      "n": 32,
+      "alpha": 4,
+      "method": "wetted",
+      "passed": true
+    },
+    {
+      "test": "stable-wetted-bitwise",
+      "n": 32,
+      "alpha": 4,
+      "method": "wettedVelocity",
+      "passed": true
+    },
+    {
+      "test": "stable-wetted-bitwise",
+      "n": 64,
+      "alpha": 0,
+      "method": "wetted",
+      "passed": true
+    },
+    {
+      "test": "stable-wetted-bitwise",
+      "n": 64,
+      "alpha": 0,
+      "method": "wettedVelocity",
+      "passed": true
+    },
+    {
+      "test": "stable-wetted-bitwise",
+      "n": 64,
+      "alpha": 4,
+      "method": "wetted",
+      "passed": true
+    },
+    {
+      "test": "stable-wetted-bitwise",
+      "n": 64,
+      "alpha": 4,
+      "method": "wettedVelocity",
+      "passed": true
+    }
+  ],
+  "cases": [
+    {
+      "d": 0.00616,
+      "oldSigma": 1.0697349643089127,
+      "newSigma": 1.0697349611479456,
+      "oldSeconds": 1.739,
+      "newSeconds": 1.083,
+      "oldIterations": 314,
+      "newIterations": 199,
+      "oldMinWetMargin": -0.01119582023039456,
+      "newMinWetMargin": -0.01119582196674651,
+      "oldEndpointSlope": 3.5495384062556035e-10,
+      "newEndpointSlope": 1.687404780140178e-8,
+      "passed": true
+    },
+    {
+      "d": 0.008,
+      "oldSigma": 1.0671187243254332,
+      "newSigma": 1.0671187225882774,
+      "oldSeconds": 2.394,
+      "newSeconds": 1.886,
+      "oldIterations": 299,
+      "newIterations": 172,
+      "oldMinWetMargin": -0.03280117537600047,
+      "newMinWetMargin": -0.032801176460899306,
+      "oldEndpointSlope": 1.9123707478696517e-10,
+      "newEndpointSlope": 1.4928431728289393e-7,
+      "passed": true
+    }
+  ]
+}

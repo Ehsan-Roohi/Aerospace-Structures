@@ -1,4 +1,4 @@
-/* Hydrofoil Cavitation Lab 0.3.2 — research prototype, not experimental validation.
+/* Hydrofoil Cavitation Lab 0.3.4 — research prototype, not experimental validation.
  * Original implementation of the potential mixed-boundary formulation described in:
  * Kinnas & Fine (1993), doi:10.1017/S0022112093002071;
  * Kinnas (2010), chapter 9, eqs. 9.9–9.16;
@@ -9,7 +9,7 @@
  */
 (function(root){
 'use strict';
-const TWO_PI=2*Math.PI, VERSION='0.3.2';
+const TWO_PI=2*Math.PI, VERSION='0.3.4';
 const dot=(a,b)=>a[0]*b[0]+a[1]*b[1];
 const maxabs=a=>Math.max(...Array.from(a,Math.abs));
 const sum=a=>a.reduce((s,v)=>s+v,0);
@@ -286,8 +286,16 @@ function options(input={},scope='standard'){
   if(o.closureMode==='smooth-contact'&&(o.recovery<=0||o.exponent<1))fail('Smooth-contact closure requires a recovery zone and exponent ν ≥ 1. Use fixed-recovery for a singular recovery derivative.');
   return o;
 }
-function* iterateFixed(input={},scope='standard'){
-  const o=options(input,scope),mesh=buildFoil(o),original=mesh.points.map(p=>p.slice()),points=mesh.points.map(p=>p.slice()),history=[];
+function* iterateFixed(input={},scope='standard',seedPoints=null){
+  const o=options(input,scope),mesh=buildFoil(o),original=mesh.points.map(p=>p.slice()),history=[];
+  // Internal continuation changes only the initial iterate. Reuse is confined to
+  // an identical fixed-x mesh; every new A still solves all original equations.
+  if(seedPoints&&(!Array.isArray(seedPoints)||seedPoints.length!==original.length||seedPoints.some((p,i)=>!Array.isArray(p)||p.length!==2||!p.every(Number.isFinite)||p[0]!==original[i][0])))
+    fail('The closure continuation seed does not match the current fixed-x mesh.');
+  const movableSeedNodes=new Set(mesh.nodes.slice(1,-1));
+  if(seedPoints&&seedPoints.some((p,i)=>!movableSeedNodes.has(i)&&p[1]!==original[i][1]))
+    fail('The closure continuation seed changed the wetted foil or a fixed endpoint.');
+  const points=(seedPoints||original).map(p=>p.slice());
   const fullyWetted=o.kuttaCondition==='velocity'?wettedVelocity(original,o.alpha):wetted(original,o.alpha);let r,converged=false,reason='Iteration limit reached.';
   for(let it=0;it<o.maxIterations;it++){
     r=mixed(points,mesh.ids,mesh.foilS,o);
@@ -351,7 +359,7 @@ function endpointGapSlope(height,count=3){
 }
 function* iterateSmooth(input={},scope='standard'){
   const o=options({...input,closureMode:'smooth-contact'},scope),trace=[],evaluated=new Map();
-  const inner={...o,closureMode:'fixed-recovery'};let totalIterations=0,baseline=null,best=null;
+  const inner={...o,closureMode:'fixed-recovery'};let totalIterations=0,baseline=null,best=null,numericalBest=null;
   // Require a tighter inner solve than the outer endpoint test. This reduces
   // noise in h_x(A); none of the original acceptance tolerances is loosened.
   inner.normalTolerance=Math.min(o.normalTolerance,1e-7);inner.shapeTolerance=Math.min(o.shapeTolerance,1e-8);
@@ -360,7 +368,9 @@ function* iterateSmooth(input={},scope='standard'){
     if(trace.length>=o.maxClosureEvaluations)return null;
     const entry={evaluation:trace.length+1,attenuation:A,status:'running'};trace.push(entry);let result;
     try{
-      const it=iterateFixed({...inner,attenuation:A},scope);let step;
+      const nearest=[...evaluated.values()].filter(v=>v&&v.valid).sort((a,b)=>Math.abs(a.A-A)-Math.abs(b.A-A))[0];
+      entry.seedAttenuation=nearest?.A??null;
+      const it=iterateFixed({...inner,attenuation:A},scope,nearest?.result.points??null);let step;
       do{step=it.next();if(!step.done){totalIterations++;yield {...step.value,phase:'closure-search',evaluation:entry.evaluation,maxEvaluations:o.maxClosureEvaluations,attenuation:A,totalIterations};}}while(!step.done);
       result=step.value;const last=result.metrics;
       const equationsConverged=last.innerEquationsConverged&&last.maxNormalVelocity<inner.normalTolerance&&last.maxShapeCorrection<inner.shapeTolerance&&last.linearResidual<1e-8;
@@ -368,11 +378,15 @@ function* iterateSmooth(input={},scope='standard'){
       Object.assign(entry,{status:valid?'admissible':result.status,reason:result.reason,equationsConverged,endpointGapSlope:slope,minimumGap:last.minimumHeight,normalResidual:last.maxNormalVelocity,shapeResidual:last.maxShapeCorrection,cornerAngleDeg:last.closureTurningAngleDeg,sigma:result.sigma});
       const value={A,slope,result,equationsConverged,valid};evaluated.set(key,value);
       if(valid&&(!best||Math.abs(slope)<Math.abs(best.slope)))best=value;
+      // The detachment outer solve needs a CLOSED numerical probe even when
+      // its gap is inadmissible. Preserve that probe as rejected; never replace
+      // its endpoint root by a geometrically valid but unregular baseline.
+      if(equationsConverged&&(!numericalBest||Math.abs(slope)<Math.abs(numericalBest.slope)))numericalBest=value;
       if(!baseline)baseline=value;
       return value;
     }catch(error){Object.assign(entry,{status:'rejected',reason:error.message,equationsConverged:false});evaluated.set(key,null);return null;}
   }
-  const completed=()=>best&&Math.abs(best.slope)<=o.regularityTolerance;
+  const numericallyCompleted=()=>numericalBest&&Math.abs(numericalBest.slope)<=o.regularityTolerance;
   const findBracket=()=>{
     const points=[...evaluated.values()].filter(v=>v&&v.equationsConverged&&Number.isFinite(v.slope)).sort((a,b)=>a.A-b.A),pairs=[];
     for(let i=1;i<points.length;i++)if(points[i-1].slope*points[i].slope<=0)pairs.push([points[i-1],points[i]]);
@@ -384,15 +398,15 @@ function* iterateSmooth(input={},scope='standard'){
   // probes may bracket a root; they can NEVER be returned as accepted results.
   const direction=first?.slope>0?-1:1;
   for(const step of [.10,.20,.35,.55]){
-    if(completed()||(bracket=findBracket()))break;
+    if(numericallyCompleted()||(bracket=findBracket()))break;
     const A=Math.max(.01,Math.min(.74,o.attenuation+direction*step));yield*evaluate(A);
   }
   for(const A of [.01,.1,.2,.3,.4,.5,.6,.74]){
-    if(completed()||(bracket=findBracket())||trace.length>=o.maxClosureEvaluations)break;
+    if(numericallyCompleted()||(bracket=findBracket())||trace.length>=o.maxClosureEvaluations)break;
     yield*evaluate(A);
   }
   bracket=findBracket();
-  while(!completed()&&bracket&&trace.length<o.maxClosureEvaluations){
+  while(!numericallyCompleted()&&bracket&&trace.length<o.maxClosureEvaluations){
     const [lo,hi]=bracket,width=hi.A-lo.A;
     if(width<1e-12)break;
     const secant=lo.A-lo.slope*width/(hi.slope-lo.slope),A=Math.max(lo.A+.1*width,Math.min(hi.A-.1*width,secant));
@@ -402,16 +416,17 @@ function* iterateSmooth(input={},scope='standard'){
     bracket=lo.slope*next.slope<=0?[lo,next]:[next,hi];
   }
   if(!best&&!baseline)fail('No resolved cavity branch was found for smooth-contact closure. Check angle, detachment, length and recovery zone.');
-  const chosen=best||baseline,r=chosen.result,accepted=!!completed();
-  const reason=accepted?'Cavity equations and physical-gap endpoint regularity converged.':bracket?'No nonintersecting endpoint-regular branch met the specified tolerance within the closure-search budget.':'No resolved sign-changing endpoint-slope bracket was found; no smooth-contact result is accepted.';
+  const numericalRegularityConverged=!!numericallyCompleted();
+  const chosen=numericalRegularityConverged?numericalBest:(best||numericalBest||baseline),r=chosen.result,accepted=numericalRegularityConverged&&chosen.valid;
+  const reason=accepted?'Cavity equations, endpoint regularity and gap geometry converged.':numericalRegularityConverged?'The endpoint equation converged on a numerical probe whose gap geometry is rejected; the closed probe is retained only for outer-detachment diagnostics. '+r.reason:bracket?'No nonintersecting endpoint-regular branch met the specified tolerance within the closure-search budget.':'No resolved sign-changing endpoint-slope bracket was found; no smooth-contact result is accepted.';
   const baselineRecord=baseline?{attenuation:baseline.A,status:baseline.result.status,endpointGapSlope:baseline.slope,sigma:baseline.result.sigma,metrics:baseline.result.metrics,coefficients:baseline.result.coefficients,height:baseline.result.height,pressure:baseline.result.panels.map(p=>({x:p.x,y:p.y,cp:p.cp,cavity:p.cavity}))}:null;
   return {...r,status:accepted?'converged-prototype':'rejected',reason,options:o,
-    physicalAdmissibility:physicalAdmissibility(r.panels,r.sigma,{equationsConverged:accepted,geometryValid:r.metrics.geometryValid}),
-    metrics:{...r.metrics,discreteConverged:accepted,closureRegularityConverged:accepted,endpointGapSlope:chosen.slope,endpointGapSlopeFivePoint:endpointGapSlope(r.height,5),closureEvaluations:trace.length,totalInnerIterations:totalIterations},
-    closure:{mode:'smooth-contact',selectedAttenuation:chosen.A,initialAttenuation:o.attenuation,regularityTolerance:o.regularityTolerance,innerTolerances:{normal:inner.normalTolerance,shape:inner.shapeTolerance},converged:accepted,trace,baseline:baselineRecord,
+    physicalAdmissibility:physicalAdmissibility(r.panels,r.sigma,{equationsConverged:numericalRegularityConverged,geometryValid:r.metrics.geometryValid}),
+    metrics:{...r.metrics,discreteConverged:accepted,closureRegularityConverged:accepted,numericalClosureRegularityConverged:numericalRegularityConverged,endpointGapSlope:chosen.slope,endpointGapSlopeFivePoint:endpointGapSlope(r.height,5),closureEvaluations:trace.length,totalInnerIterations:totalIterations},
+    closure:{mode:'smooth-contact',numericalRegularityConverged,geometryValid:r.metrics.geometryValid,selectedAttenuation:chosen.A,initialAttenuation:o.attenuation,regularityTolerance:o.regularityTolerance,innerTolerances:{normal:inner.normalTolerance,shape:inner.shapeTolerance},converged:accepted,trace,baseline:baselineRecord,initialization:'Nearest converged nonintersecting closure trial on the identical fixed-x mesh; first trial starts from the foil. No residual or admission tolerance is changed.',
       equationCount:`${r.panels.length+2+(o.kuttaCondition==='velocity'?1:0)} mixed-boundary unknowns/rows for each A; one additional A and the equation h_x(end)=0 in the outer solve`,
       modelNote:'Additional smooth-contact closure selection. Not a resolved re-entrant jet or a calibrated experimental model; no physical uniqueness is claimed.'},
-    provenance:{...r.provenance,closure:'Pressure-recovery law retained. A is an additional unknown selected by a three-node derivative of the PHYSICAL gap h at the prescribed cavity end; a separate five-node derivative is reported. No endpoint value or pressure is replaced.'}};
+    provenance:{...r.provenance,closure:'Numerical endpoint-root selection is separate from physical gap acceptance; a negative-gap root remains rejected. Pressure-recovery law retained. A is an additional unknown selected by a three-node derivative of the PHYSICAL gap h at the prescribed cavity end; a separate five-node derivative is reported. No endpoint value or pressure is replaced.'}};
 }
 function* iterate(input={},scope='standard'){
   const o=options(input,scope);

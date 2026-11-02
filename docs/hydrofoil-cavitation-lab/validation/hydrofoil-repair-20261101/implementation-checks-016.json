@@ -1,0 +1,417 @@
+{
+  "scope": "Scoped implementation/admission assertions, including eight bitwise fully-wetted comparisons. Not experimental or free-boundary accuracy validation.",
+  "sourceHashes": {
+    "cavitation.js": "241ce5626d281d81be592d28f354feb1405f201d6349ddaa8f3dee0926ae866c",
+    "smooth-detachment.js": "622a9317d03c70c193e4837de32e502e43a67a447801fa73c233f7073dc7894a",
+    "smooth-detachment-adapter.js": "ecb28dc65b017f044d553958d43bf848a23e257ecc69ff77a3c20614384e0e22",
+    "forward-hydrofoil.js": "fdc805fe65ac14849d7de977676c6909dc30fd1605dcb354db40a37c2f4115aa"
+  },
+  "checkCount": 96,
+  "suites": {
+    "port": {
+      "count": 40,
+      "checks": [
+        {
+          "name": "active versions identify all four changed modules",
+          "passed": true
+        },
+        {
+          "name": "wetted regression reference is exact reviewed 0.3.3",
+          "passed": true
+        },
+        {
+          "name": "fully wetted result bitwise unchanged 0012 alpha 0 wetted",
+          "passed": true
+        },
+        {
+          "name": "fully wetted result bitwise unchanged 0012 alpha 0 wettedVelocity",
+          "passed": true
+        },
+        {
+          "name": "fully wetted result bitwise unchanged 0012 alpha 4 wetted",
+          "passed": true
+        },
+        {
+          "name": "fully wetted result bitwise unchanged 0012 alpha 4 wettedVelocity",
+          "passed": true
+        },
+        {
+          "name": "fully wetted result bitwise unchanged 2412 alpha 0 wetted",
+          "passed": true
+        },
+        {
+          "name": "fully wetted result bitwise unchanged 2412 alpha 0 wettedVelocity",
+          "passed": true
+        },
+        {
+          "name": "fully wetted result bitwise unchanged 2412 alpha 4 wetted",
+          "passed": true
+        },
+        {
+          "name": "fully wetted result bitwise unchanged 2412 alpha 4 wettedVelocity",
+          "passed": true
+        },
+        {
+          "name": "active numerical endpoint selection negative",
+          "passed": true
+        },
+        {
+          "name": "active numerical endpoint selection positive",
+          "passed": true
+        },
+        {
+          "name": "active numerical endpoint selection pressure",
+          "passed": true
+        },
+        {
+          "name": "active numerical endpoint selection unresolved",
+          "passed": true
+        },
+        {
+          "name": "unclosed initial probe bypasses beta fit and retains rejected raw",
+          "passed": true
+        },
+        {
+          "name": "early unresolved result retains legacy metadata keys",
+          "passed": true
+        },
+        {
+          "name": "initial unresolved diagnostics serialize without object cycles",
+          "passed": true
+        },
+        {
+          "name": "strict-adapter unresolved diagnostics serialize without object cycles",
+          "passed": true
+        },
+        {
+          "name": "closed negative probes may fit beta but remain rejected",
+          "passed": true
+        },
+        {
+          "name": "later unclosed probes cannot introduce a beta bracket",
+          "passed": true
+        },
+        {
+          "name": "later unresolved diagnostics serialize without object cycles",
+          "passed": true
+        },
+        {
+          "name": "actual SD defaults enforce tighter beta and station tolerances",
+          "passed": true
+        },
+        {
+          "name": "adapter preserves explicitly stricter caller tolerances",
+          "passed": true
+        },
+        {
+          "name": "actual SD refuses caller tolerances looser than admission policy",
+          "passed": true
+        },
+        {
+          "name": "forward explicitly requests tighter beta and station tolerances with zero pressure allowance",
+          "passed": true
+        },
+        {
+          "name": "final admission rejects NaN cavity pressure",
+          "passed": true
+        },
+        {
+          "name": "final admission rejects NaN cavity speed",
+          "passed": true
+        },
+        {
+          "name": "final admission rejects infinite achieved sigma",
+          "passed": true
+        },
+        {
+          "name": "final admission rejects negative gap with stale geometry success",
+          "passed": true
+        },
+        {
+          "name": "strict adapter rejects null beta",
+          "passed": true
+        },
+        {
+          "name": "strict adapter rejects NaN beta",
+          "passed": true
+        },
+        {
+          "name": "strict adapter rejects rejected inner status",
+          "passed": true
+        },
+        {
+          "name": "strict adapter rejects invalid gap geometry",
+          "passed": true
+        },
+        {
+          "name": "actual SD preserves explicitly stricter caller tolerances",
+          "passed": true
+        },
+        {
+          "name": "forward preserves stricter requested beta and station tolerances",
+          "passed": true
+        },
+        {
+          "name": "warm configuration key includes stricter detachment tolerances",
+          "passed": true
+        },
+        {
+          "name": "forward rejects invalid detachmentBetaTolerance 0.001",
+          "passed": true
+        },
+        {
+          "name": "forward rejects invalid detachmentStationTolerance 0.0001",
+          "passed": true
+        },
+        {
+          "name": "forward rejects invalid detachmentBetaTolerance NaN",
+          "passed": true
+        },
+        {
+          "name": "forward rejects invalid detachmentStationTolerance NaN",
+          "passed": true
+        }
+      ]
+    },
+    "budgets": {
+      "count": 21,
+      "checks": [
+        {
+          "name": "source version is 0.1.6",
+          "passed": true
+        },
+        {
+          "name": "cold search starts at declared central length .24",
+          "passed": true
+        },
+        {
+          "name": "matching warm initial length retained",
+          "passed": true
+        },
+        {
+          "name": "previous driver warm state invalidated",
+          "passed": true
+        },
+        {
+          "name": "completed BV result crossing local deadline is not admitted or cached",
+          "passed": true
+        },
+        {
+          "name": "local incomplete attempt retains seed error and progress identity",
+          "passed": true
+        },
+        {
+          "name": "global deadline has priority over local and forbids late complete admission",
+          "passed": true
+        },
+        {
+          "name": "cancellation has priority over simultaneous global and local deadlines",
+          "passed": true
+        },
+        {
+          "name": "all slow branches allow multiple distinct lengths before total exhaustion",
+          "passed": true
+        },
+        {
+          "name": "local timeouts retain incomplete records and never raw candidate solutions",
+          "passed": true
+        },
+        {
+          "name": "shared per-length cap bounds both initializations",
+          "passed": true
+        },
+        {
+          "name": "retry shares original length deadline rather than resetting it",
+          "passed": true
+        },
+        {
+          "name": "budget repair does not retry converged physical failure or relax physical screen",
+          "passed": true
+        },
+        {
+          "name": "derived local budget never exceeds global budget",
+          "passed": true
+        },
+        {
+          "name": "global deadline checked immediately after wetted preflight computation",
+          "passed": true
+        },
+        {
+          "name": "global deadline checked again after final physical gates before admission",
+          "passed": true
+        },
+        {
+          "name": "local timeout at bracketed secant retains bracket and tries uncached interior fallback",
+          "passed": true
+        },
+        {
+          "name": "consecutive local bracket timeouts can proceed to another uncached interior sample",
+          "passed": true
+        },
+        {
+          "name": "search strategy describes central seed as an initial guess and discloses local budget",
+          "passed": true
+        },
+        {
+          "name": "first length has declared bounded extended allowance and later lengths keep base allowance",
+          "passed": true
+        },
+        {
+          "name": "near-target resolved initial sample probes actual neighboring length before remote endpoint",
+          "passed": true
+        }
+      ]
+    },
+    "continuation": {
+      "count": 12,
+      "checks": [
+        {
+          "name": "near-.24 secant uses nearest .24 D/A instead of latest .22 D/A",
+          "passed": true
+        },
+        {
+          "name": "geometric-distance roundoff tie chooses smaller target residual",
+          "passed": true
+        },
+        {
+          "name": "equal-distance equal-residual tie chooses lower length",
+          "passed": true
+        },
+        {
+          "name": "geometric proximity takes priority over a remote smaller residual",
+          "passed": true
+        },
+        {
+          "name": "returned unresolved attempts are excluded from continuation seed sources",
+          "passed": true
+        },
+        {
+          "name": "local-incomplete attempts are excluded from continuation seed sources",
+          "passed": true
+        },
+        {
+          "name": "NaN detachment is excluded and cannot leak through legacy last-state fallback",
+          "passed": true
+        },
+        {
+          "name": "out-of-bounds detachment is excluded and cannot leak through legacy last-state fallback",
+          "passed": true
+        },
+        {
+          "name": "NaN attenuation is excluded and cannot leak through legacy last-state fallback",
+          "passed": true
+        },
+        {
+          "name": "out-of-bounds attenuation is excluded and cannot leak through legacy last-state fallback",
+          "passed": true
+        },
+        {
+          "name": "new run starts without prior-run continuation cache",
+          "passed": true
+        },
+        {
+          "name": "driver version identifies updated continuation algorithm",
+          "passed": true
+        }
+      ]
+    },
+    "admission": {
+      "count": 23,
+      "checks": [
+        {
+          "name": "seed changed x rejected",
+          "passed": true
+        },
+        {
+          "name": "seed nonfinite interior rejected",
+          "passed": true
+        },
+        {
+          "name": "seed wetted y rejected",
+          "passed": true
+        },
+        {
+          "name": "seed fixed endpoint y rejected",
+          "passed": true
+        },
+        {
+          "name": "seed mesh resolution mismatch rejected",
+          "passed": true
+        },
+        {
+          "name": "seeded changed attenuation solves fresh mixed equations",
+          "passed": true
+        },
+        {
+          "name": "seeded failed fresh residual is not cached acceptance",
+          "passed": true
+        },
+        {
+          "name": "saved admitted candidate rechecks accepted",
+          "passed": true
+        },
+        {
+          "name": "target pressure independently checked at target sigma",
+          "passed": true
+        },
+        {
+          "name": "NaN target rejected",
+          "passed": true
+        },
+        {
+          "name": "NaN gap height rejected",
+          "passed": true
+        },
+        {
+          "name": "NaN gap station rejected",
+          "passed": true
+        },
+        {
+          "name": "nonfinite wetted pressure rejected",
+          "passed": true
+        },
+        {
+          "name": "NaN achieved sigma with stale summary rejected",
+          "passed": true
+        },
+        {
+          "name": "all completed retry attempts retained as raw trials",
+          "passed": true
+        },
+        {
+          "name": "returned numerical failure retries neutral seed on same length",
+          "passed": true
+        },
+        {
+          "name": "numerical physical failure never neutral retried",
+          "passed": true
+        },
+        {
+          "name": "thrown numerical error retries neutral seed on same length and records identity",
+          "passed": true
+        },
+        {
+          "name": "cancellation does not neutral retry and retains failure",
+          "passed": true
+        },
+        {
+          "name": "null numerical return retries with retained failed attempt",
+          "passed": true
+        },
+        {
+          "name": "all thrown initializations retained and cannot admit",
+          "passed": true
+        },
+        {
+          "name": "returned failure and thrown retry both retained without admission",
+          "passed": true
+        },
+        {
+          "name": "time budget does not neutral retry and retains failure",
+          "passed": true
+        }
+      ]
+    }
+  },
+  "passed": true
+}

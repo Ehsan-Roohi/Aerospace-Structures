@@ -1,0 +1,222 @@
+{
+  "date": "2026-11-01",
+  "currentSource": {
+    "driver": "0.1.6-forward-research",
+    "core": "0.3.4",
+    "detachment": "0.1.2-strict-research",
+    "adapter": "0.1.1-strict-research",
+    "hashes": {
+      "cavitation.js": "241ce5626d281d81be592d28f354feb1405f201d6349ddaa8f3dee0926ae866c",
+      "smooth-detachment.js": "622a9317d03c70c193e4837de32e502e43a67a447801fa73c233f7073dc7894a",
+      "smooth-detachment-adapter.js": "ecb28dc65b017f044d553958d43bf848a23e257ecc69ff77a3c20614384e0e22",
+      "forward-hydrofoil.js": "fdc805fe65ac14849d7de977676c6909dc30fd1605dcb354db40a37c2f4115aa"
+    }
+  },
+  "page": {
+    "relativePath": "../hydrofoil-repair.html",
+    "bytes": 11128,
+    "sha256": "4d2750231a406a621bb779a2c5005b8f27ef863e1a9889bda683ea7091df1eac"
+  },
+  "files": [
+    {
+      "name": "admitted-sheet-pressure-and-gap.png",
+      "bytes": 138626,
+      "sha256": "fa60d3b6c219854a6ff1da485543f48b5ede9a0086388dc917ce6772d64fdaca"
+    },
+    {
+      "name": "admitted-sheet-pressure-and-gap.svg",
+      "bytes": 101631,
+      "sha256": "b36dc92a39dc9b691f4737a9057c4f684c7c6d421ab36b4398fb16d0a130bdcf"
+    },
+    {
+      "name": "benchmark.json",
+      "bytes": 1414953,
+      "sha256": "e072ee968156ad27d6b412d462a6706f715af74bb9025a13bd0c3efa9cf48e1d"
+    },
+    {
+      "name": "browser-013-failed240-full.json.gz",
+      "bytes": 167793,
+      "sha256": "db9b7aaccf70c970e3957d9e9359ee58e4d9aaea1c7af155d2d5a186a217fa78"
+    },
+    {
+      "name": "browser-014-failed240-full.json.gz",
+      "bytes": 165055,
+      "sha256": "ed5215c387832997da5f4152faf9bea149be9250871b88954b86f86eea17dd4a"
+    },
+    {
+      "name": "browser-016-fresh-full.json.gz",
+      "bytes": 217105,
+      "sha256": "409444946995ad04ed87112c83cca7bb6bb41554f68310377c5a92a2509b30f0"
+    },
+    {
+      "name": "browser-016-qa-summary.json",
+      "bytes": 1452,
+      "sha256": "32f955c723d83319ba840eef893d740a91b5ef85f63194ab617e4482bbf9f536"
+    },
+    {
+      "name": "budget-checks.json",
+      "bytes": 2974,
+      "sha256": "2b2ec0fd6c8534c3f44da5ef8e6943c39b42bf075f3b940639ea380aa4b64bd1"
+    },
+    {
+      "name": "budget-review.md",
+      "bytes": 3787,
+      "sha256": "0cd02b747dd12d5762c988faff6eb657a2c4e6998279848cd8412513bb8ff7fc"
+    },
+    {
+      "name": "check-evidence.cjs",
+      "bytes": 2717,
+      "sha256": "d3af656e4426aa1185da6f90c8ce4bf14126a5975b9bc035fcee5bdf646da6c3"
+    },
+    {
+      "name": "control-flow-checks.cjs",
+      "bytes": 12276,
+      "sha256": "9626a33a49b734ebde9c407c9feae728abcee6cf926a495f1cf8c733ceb75219"
+    },
+    {
+      "name": "control-flow-fixture.json",
+      "bytes": 242462,
+      "sha256": "dd34cdab48ecc73c9fae360b9de1feda81c2079410284179d9eb31336a686706"
+    },
+    {
+      "name": "current-016-original0012-cp.png",
+      "bytes": 128183,
+      "sha256": "bc9d2e86a0252bafe8f9e39f4746adc0ce1e50e4b082932e4fc48b7d97516051"
+    },
+    {
+      "name": "current-016-original0012-cp.svg",
+      "bytes": 95027,
+      "sha256": "d50dc8854464d454a694be05079322a8030b84e35d301bf3f345160780bda17b"
+    },
+    {
+      "name": "current-016-pressure-gap.png",
+      "bytes": 185456,
+      "sha256": "f0066ef4dd871f115b7cce592369674d7349462fd87cdb8d93fa9fcd3e883ca1"
+    },
+    {
+      "name": "current-016-pressure-gap.svg",
+      "bytes": 115410,
+      "sha256": "7680ab989df81702ce7ef4e35d65e10d5571adbcf6fe6da53e146c2682d99917"
+    },
+    {
+      "name": "figure-lineage.json",
+      "bytes": 662,
+      "sha256": "a52196fbc3436a9af842269d2738f7acd894231580707d6409a519be76882ec6"
+    },
+    {
+      "name": "focused-checks.json",
+      "bytes": 7793,
+      "sha256": "51439bde6342af0dc67f731c5302df7e5f152d8c0b29d3063a550deee4fa8c85"
+    },
+    {
+      "name": "forward-no-rescue-check.json",
+      "bytes": 209,
+      "sha256": "3d508881e564f71b20c932d27d86e94128d3c10d8eaf5e99f9a6de23ebc330bd"
+    },
+    {
+      "name": "gap-profiles.csv",
+      "bytes": 71162,
+      "sha256": "25222554ec9fcc720af6fab797cecde10e8a41164123502b69ffa5d47fe0fc2e"
+    },
+    {
+      "name": "implementation-checks-016.json",
+      "bytes": 13276,
+      "sha256": "b2348281fa94c5d1670eef8a51a35202a0a7d9971c4650c1abbaac2e9260d6ef"
+    },
+    {
+      "name": "junction-pressure-refinement.png",
+      "bytes": 145505,
+      "sha256": "b531ea2da0762b37698cd78cafed2181f988b9e61cdb78e5db5bbb064623d734"
+    },
+    {
+      "name": "junction-pressure-refinement.svg",
+      "bytes": 92421,
+      "sha256": "073fd2a6ac6dac97b65550ea7ae63bc81482cd65d3c1d39b27c2f5d3234a9a66"
+    },
+    {
+      "name": "length-trace.csv",
+      "bytes": 6850,
+      "sha256": "0ff476bf014d21091f53b7363752ec7d61a7a555cfa58776c78f99ac4f717657"
+    },
+    {
+      "name": "native-015-unresolved-full.json.gz",
+      "bytes": 303833,
+      "sha256": "b17e6b3d99a0d269e25b423836db73ddc178d5c88be59485717214c18eee4cf0"
+    },
+    {
+      "name": "native-016-cold-full.json.gz",
+      "bytes": 183442,
+      "sha256": "938ede8ce458d4a5133c88e9a31238f92dccf85d30d3063ba895f248e0fe882b"
+    },
+    {
+      "name": "native-016-n64-bounded120-full.json.gz",
+      "bytes": 339865,
+      "sha256": "9b4a28bb9af811734eb0b3a910217813bc25c3dafbb863ff9c4295f5952e5396"
+    },
+    {
+      "name": "native-016-original0012-full.json.gz",
+      "bytes": 308989,
+      "sha256": "efaf3d7bbb9e567ca4dc1c9348aa0b8ebacc8178a73dbfa5d4290dccf80626b0"
+    },
+    {
+      "name": "native-016-repeat-full.json.gz",
+      "bytes": 99610,
+      "sha256": "160491caffebd135f39280a01abc90b6ff1eb3fff4f9aea0ee466e8176fc27d1"
+    },
+    {
+      "name": "neutral-retry-pressure-and-gap.png",
+      "bytes": 153259,
+      "sha256": "5a7d5b6bd02ea04cb4fa54d92982aa200a5d6d37263f85d76c916ea50e77679a"
+    },
+    {
+      "name": "neutral-retry-pressure-and-gap.svg",
+      "bytes": 118682,
+      "sha256": "08d92c74394d781c6fa1ab031365650a9220b0dc0037555f2b0855153451b12e"
+    },
+    {
+      "name": "nonfinite-admission-checks.json",
+      "bytes": 563,
+      "sha256": "83858a7923751c9ee76256736e86fcf6ea2fa48d8d1cb148cd7e5c94fcd355b7"
+    },
+    {
+      "name": "plot-profiles.py",
+      "bytes": 3459,
+      "sha256": "619ed2ae4061e0bda96415dd6991ab782b4f19a9f2750753bf9ba9a807aa9144"
+    },
+    {
+      "name": "pressure-profiles.csv",
+      "bytes": 317207,
+      "sha256": "f71c4f0c8bcd7b209dd975cf03d9b8ac72ba1a2c327b6a4ecff0a78f626a1b0e"
+    },
+    {
+      "name": "README.md",
+      "bytes": 3476,
+      "sha256": "35a0ced72871086190afaaa432ac0ac3367148e745d02d1d4864d5379e6a8232"
+    },
+    {
+      "name": "reproduce.cjs",
+      "bytes": 1611,
+      "sha256": "f0c20d25e437c81fdcb5ac747045511b079ebb7121233b05070e09106cc93770"
+    },
+    {
+      "name": "same-target-refinement.png",
+      "bytes": 180004,
+      "sha256": "9d6e4678d51c85226f99a16f97b94784ec8e4a40f8ee160a3297056f6871f801"
+    },
+    {
+      "name": "same-target-refinement.svg",
+      "bytes": 157538,
+      "sha256": "422a08d05794d89666c4965379d6f1218ecd299d96fae08e97512ba0404da285"
+    },
+    {
+      "name": "summary.csv",
+      "bytes": 2618,
+      "sha256": "3918c9410f2aa3f73f442dedf8984ddc8073c886114df127be5a1eedf2d5c5d2"
+    },
+    {
+      "name": "targeted-regression.json",
+      "bytes": 2015,
+      "sha256": "29614b5a73187d54405f4f78562f4f35079a787c9c37d4e4ac566ce8608b2c35"
+    }
+  ]
+}

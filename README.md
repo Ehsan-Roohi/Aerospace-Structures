@@ -132,7 +132,7 @@ The G-code is provided for inspection only. Do not send it directly to a printer
 
 ## Engineering readings and case studies
 
-**AWACS (Airborne Warning and Control System)** — [آواکس چیست و چگونه ساخته می‌شود؟](https://farsnews.ir/Navidrezamousavi/1793574775574791879/%D8%A2%D9%88%D8%A7%DA%A9%D8%B3-%DA%86%DB%8C%D8%B3%D8%AA-%D9%88-%DA%86%DA%AF%D9%88%D9%86%D9%87-%D8%B3%D8%A7%D8%AE%D8%AA%D9%87-%D9%85%DB%8C-%D8%B4%D9%88%D8%AF) (Fars News, in Persian). Class discussion: For an aircraft with a radar dome above the fuselage, sketch how aerodynamic and inertial loads reach the fuselage frames through the dome supports.
+**[AWACS: illustrated E-3 structures case study (12 photographs, Persian)](AWACS.md)** — [آواکس چیست و چگونه ساخته می‌شود؟](https://farsnews.ir/Navidrezamousavi/1793574775574791879/%D8%A2%D9%88%D8%A7%DA%A9%D8%B3-%DA%86%DB%8C%D8%B3%D8%AA-%D9%88-%DA%86%DA%AF%D9%88%D9%86%D9%87-%D8%B3%D8%A7%D8%AE%D8%AA%D9%87-%D9%85%DB%8C-%D8%B4%D9%88%D8%AF) (Fars News, in Persian). Class discussion: For an aircraft with a radar dome above the fuselage, sketch how aerodynamic and inertial loads reach the fuselage frames through the dome supports.
 
 **[Air launch to the edge of space: Apeiron and VMS Eve](AIR_LAUNCH_APEIRON.md)** — illustrated historical and engineering case study: X-1/X-15/Pegasus/SpaceShipOne lineage; atmospheric release, rocket ascent and feathered return; carrier load paths, pressure-vessel stresses, fatigue and the NTSB 2014 safety lessons. Expanded second edition: five figures, 20 references, quantitative energy comparisons, composite/attachment analysis, reproducible calculations and extended Persian explanations. [Open the full report](https://ehsan-roohi.github.io/Aerospace-Structures/case-studies/apeiron/).
 

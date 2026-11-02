@@ -1,0 +1,24 @@
+{
+  "current-016-pressure-gap": [
+    "native-016-cold",
+    "native-016-repeat",
+    "browser-016-fresh"
+  ],
+  "current-016-original0012-cp": [
+    "native-016-original0012"
+  ],
+  "same-target-refinement": {
+    "cases": [
+      "ui-n48",
+      "ui-n64"
+    ],
+    "recordedDriver": "0.1.2-forward-research",
+    "recordedCore": "0.3.3",
+    "meaning": "Historical unresolved fine-mesh record, not current-method convergence."
+  },
+  "currentFineMesh": {
+    "case": "native-016-n64-bounded120",
+    "qualification": false,
+    "meaning": "One independently started120s run; actual outcome retained without a mesh-accuracy claim."
+  }
+}

@@ -1,6 +1,4 @@
-/* Release adaptation: pressure admission is mandatory with zero allowance.
- * Original source and SHA256 are recorded in validation/bem-source-provenance.json.
- * Root equations and all solution samples are unchanged. */
+/* Release adaptation0.1.2: only numerically closed inner probes may fit beta. Closed negative-gap probes remain physically rejected. Prior source bytes and hashes are preserved in repair provenance. */
 /* smooth-detachment.js 0.1.0-research — Brillouin–Villat (smooth-detachment) outer solve
  * for Hydrofoil Cavitation Lab 0.3.0.  SEPARATE MODULE: it never edits, patches or
  * re-implements cavitation.js.  It only calls HydrofoilCavitation.iterate() with different
@@ -28,7 +26,7 @@
   if (isNode) module.exports = api; else root.SmoothDetachment = Object.freeze(api);
 })(typeof window !== 'undefined' ? window : globalThis, function (H) {
   'use strict';
-  const VERSION = '0.1.1-strict-research';
+  const VERSION = '0.1.2-strict-research';
   if (!H || typeof H.iterate !== 'function') throw new Error('HydrofoilCavitation (cavitation.js) must be loaded first.');
 
   function lstsq(rows, y) {
@@ -113,12 +111,12 @@
   }
 
   function settings(ad = {}) {
-    const o = { xdMin: 0.002, xdMax: 0.15, tolBeta: 0.02, tolX: 2e-4, windowFraction: 0.25, minSamples: 4, estimator: 'cavity', maxEvaluations: 16,
+    const o = { xdMin: 0.002, xdMax: 0.15, tolBeta: 2e-4, tolX: 2e-6, windowFraction: 0.25, minSamples: 4, estimator: 'cavity', maxEvaluations: 16,
       inner: 'smooth-contact', initialStep: null, pressureTolerance: 0, ...ad };
     if (!['mean', 'cavity', 'wet'].includes(o.estimator)) throw new Error('estimator must be mean, cavity or wet.');
     if (!['smooth-contact', 'fixed-recovery'].includes(o.inner)) throw new Error('inner must be smooth-contact or fixed-recovery.');
     if (!(o.xdMin >= 0.002 && o.xdMax <= 0.15 && o.xdMin < o.xdMax)) throw new Error('Detachment search range must lie in the published range 0.002-0.15.');
-    if (!(o.tolBeta > 0 && o.tolBeta <= 0.05 && o.tolX > 0 && o.tolX <= 2e-3)) throw new Error('Use 0 < tolBeta <= 0.05 and 0 < tolX <= 0.002.');
+    if (!(o.tolBeta > 0 && o.tolBeta <= 2e-4 && o.tolX > 0 && o.tolX <= 2e-6)) throw new Error('Use 0 < tolBeta <= 0.0002 and 0 < tolX <= 0.000002; stricter supplied values are preserved.');
     if (!(o.windowFraction >= 0.1 && o.windowFraction <= 0.5) || !Number.isInteger(o.minSamples) || o.minSamples < 3 || o.minSamples > 8) throw new Error('Use windowFraction 0.1-0.5 and minSamples 3-8.');
     if (!Number.isInteger(o.maxEvaluations) || o.maxEvaluations < 4 || o.maxEvaluations > 40) throw new Error('Use 4-40 detachment evaluations.');
     if (o.pressureTolerance !== 0) throw new Error('Published research mode retains the zero-allowance wetted-pressure screen.');
@@ -138,7 +136,16 @@
       try {
         const it = H.iterate({ ...baseInput, detachment: xd, attenuation: guessA }); let step;
         do { step = it.next(); if (!step.done) yield { ...step.value, phase: 'detachment-search', detachmentEvaluation: entry.evaluation, detachment: xd }; } while (!step.done);
-        const r = step.value, reg = [[0.5 * o.windowFraction, o.minSamples], [o.windowFraction, o.minSamples + 1], [Math.min(0.5, 1.5 * o.windowFraction), o.minSamples + 2]].map(([f, k]) => regularity(r, f, k));
+        const r = step.value;
+        const closedNumericalProbe=o.inner==='smooth-contact'?r.closure?.numericalRegularityConverged===true:r.metrics?.innerEquationsConverged===true;
+        if(!closedNumericalProbe){
+          Object.assign(entry,{status:'inner-closure-unresolved',reason:'No converged numerical endpoint root is available. No beta is fitted or used for a detachment bracket.',sigma:r.sigma,
+            attenuation:r.closure?.selectedAttenuation??baseInput.attenuation,closedNumericalProbe:false,beta:null,betaWet:null,betaCav:null,
+            regularityResolved:false,endpointGapSlope:r.metrics?.endpointGapSlope??null,minimumGap:r.metrics?.minimumHeight??null,unresolvedProbe:r});
+          cache.set(key,null);return null;
+        }
+        entry.closedNumericalProbe=true;
+        const reg = [[0.5 * o.windowFraction, o.minSamples], [o.windowFraction, o.minSamples + 1], [Math.min(0.5, 1.5 * o.windowFraction), o.minSamples + 2]].map(([f, k]) => regularity(r, f, k));
         const e = reg[1], A = r.closure ? r.closure.selectedAttenuation : baseInput.attenuation;
         if (r.status === 'converged-prototype' && Number.isFinite(A)) guessA = A;
         Object.assign(entry, { status: r.status, reason: r.reason, sigma: r.sigma, attenuation: A,
@@ -152,6 +159,13 @@
     }
     // 1. Start at the user's station and march in the direction indicated by the sign of beta.
     let a = yield* evaluate(input.detachment ?? 0.01), b = null;
+    if(!a&&trace[0]?.unresolvedProbe){
+      const r=trace[0].unresolvedProbe;
+      return{...r,status:'rejected',code:'INNER_CLOSURE_UNRESOLVED',reason:trace[0].reason,
+        detachment:{mode:'brillouin-villat',version:VERSION,selected:trace[0].detachment,rootEstimate:null,beta:null,betaWet:null,betaCav:null,
+          regularityResolved:false,equationCount:null,window:null,betaWindowSpread:null,estimator:o.estimator,estimatorRoots:{cavity:null,wet:null,mean:null},dBetaDxD:null,xdUncertainty:null,admissibleWithinTolerance:[],startSlope3:Array.isArray(r.height)&&r.height.length>=3?startSlope(r.height):null,wettedPressure:wettedPressureMargin(r),bracket:null,innerStatus:r.status,innerReason:r.reason,trace,settings:o,warnings:['INNER_CLOSURE_UNRESOLVED_NO_BETA'],
+          note:'No beta fit or bracket contribution is permitted without a closed numerical inner probe.'}};
+    }
     if (!a) throw new Error('The starting detachment station could not be evaluated: ' + trace[0].reason);
     const dir = a.beta > 0 ? -1 : 1;
     let step = o.initialStep ?? Math.max(0.002, 0.3 * a.xd);

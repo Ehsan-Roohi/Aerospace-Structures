@@ -1,0 +1,95 @@
+{
+  "reviewedAt": "2026-11-02T00:44:56.539Z",
+  "driverVersion": "0.1.4-forward-research",
+  "sourceSHA256": "ffb99e499f4b399c0a20110c4aa1b9844c74cc3f80e7fd86aecb7c20467d59b1",
+  "method": "Independent virtual-clock and injected adapter flow-control checks; real wetted preflight and retained admitted candidate; no expensive root reruns.",
+  "scope": "Injected control-flow verification only; not physical or experimental validation.",
+  "checkCount": 21,
+  "checks": [
+    {
+      "name": "source version is 0.1.4",
+      "passed": true
+    },
+    {
+      "name": "cold search starts at declared central length .24",
+      "passed": true
+    },
+    {
+      "name": "matching warm initial length retained",
+      "passed": true
+    },
+    {
+      "name": "previous driver warm state invalidated",
+      "passed": true
+    },
+    {
+      "name": "completed BV result crossing local deadline is not admitted or cached",
+      "passed": true
+    },
+    {
+      "name": "local incomplete attempt retains seed error and progress identity",
+      "passed": true
+    },
+    {
+      "name": "global deadline has priority over local and forbids late complete admission",
+      "passed": true
+    },
+    {
+      "name": "cancellation has priority over simultaneous global and local deadlines",
+      "passed": true
+    },
+    {
+      "name": "all slow branches allow multiple distinct lengths before total exhaustion",
+      "passed": true
+    },
+    {
+      "name": "local timeouts retain incomplete records and never raw candidate solutions",
+      "passed": true
+    },
+    {
+      "name": "shared per-length cap bounds both initializations",
+      "passed": true
+    },
+    {
+      "name": "retry shares original length deadline rather than resetting it",
+      "passed": true
+    },
+    {
+      "name": "budget repair does not retry converged physical failure or relax physical screen",
+      "passed": true
+    },
+    {
+      "name": "derived local budget never exceeds global budget",
+      "passed": true
+    },
+    {
+      "name": "global deadline checked immediately after wetted preflight computation",
+      "passed": true
+    },
+    {
+      "name": "global deadline checked again after final physical gates before admission",
+      "passed": true
+    },
+    {
+      "name": "local timeout at bracketed secant retains bracket and tries uncached interior fallback",
+      "passed": true
+    },
+    {
+      "name": "consecutive local bracket timeouts can proceed to another uncached interior sample",
+      "passed": true
+    },
+    {
+      "name": "search strategy describes central seed as an initial guess and discloses local budget",
+      "passed": true
+    },
+    {
+      "name": "first length has declared bounded extended allowance and later lengths keep base allowance",
+      "passed": true
+    },
+    {
+      "name": "near-target resolved initial sample probes actual neighboring length before remote endpoint",
+      "passed": true
+    }
+  ],
+  "passed": true
+}

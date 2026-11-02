@@ -1,0 +1,34 @@
+{
+  "version": "0.1.2-forward-research",
+  "baselineAccepted": true,
+  "outcomes": [
+    {
+      "field": "sigma-NaN",
+      "accepted": false
+    },
+    {
+      "field": "sigma-Infinity",
+      "accepted": false
+    },
+    {
+      "field": "speed-NaN",
+      "accepted": false
+    },
+    {
+      "field": "cavity-Cp-NaN",
+      "accepted": false
+    },
+    {
+      "field": "wet-Cp-NaN",
+      "accepted": false
+    },
+    {
+      "field": "gap-NaN",
+      "accepted": false
+    },
+    {
+      "field": "sigma-speed-mismatch",
+      "accepted": false
+    }
+  ]
+}

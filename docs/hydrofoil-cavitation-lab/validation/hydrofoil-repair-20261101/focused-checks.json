@@ -1,0 +1,273 @@
+{
+  "reviewedAt": "2026-11-02T00:39:26.498Z",
+  "referenceCommit": "49d4e04",
+  "coreVersion": "0.3.3",
+  "driverVersion": "0.1.4-forward-research",
+  "method": "Independent seed-guard/fresh-equation checks plus retained physical solve rechecks and injected flow-control failures; no repeated expensive root solve.",
+  "checks": [
+    {
+      "name": "seed changed x rejected",
+      "passed": true,
+      "error": "The closure continuation seed does not match the current fixed-x mesh."
+    },
+    {
+      "name": "seed nonfinite interior rejected",
+      "passed": true,
+      "error": "The closure continuation seed does not match the current fixed-x mesh."
+    },
+    {
+      "name": "seed wetted y rejected",
+      "passed": true,
+      "error": "The closure continuation seed changed the wetted foil or a fixed endpoint."
+    },
+    {
+      "name": "seed fixed endpoint y rejected",
+      "passed": true,
+      "error": "The closure continuation seed changed the wetted foil or a fixed endpoint."
+    },
+    {
+      "name": "seed mesh resolution mismatch rejected",
+      "passed": true,
+      "error": "The closure continuation seed does not match the current fixed-x mesh."
+    },
+    {
+      "name": "seeded changed attenuation solves fresh mixed equations",
+      "passed": true,
+      "newAttenuation": 0.08045125445440209,
+      "seedAttenuation": 0.07045125445440209,
+      "firstResidual": {
+        "iteration": 1,
+        "sigma": 1.3771552833593588,
+        "maxNormalVelocity": 0.14477986852144023,
+        "maxShapeCorrection": 0.00006281587322402323,
+        "linearResidual": 1.4210854715202004e-14,
+        "closureError": 2.4860417001913715e-17
+      },
+      "finalStatus": "rejected"
+    },
+    {
+      "name": "seeded failed fresh residual is not cached acceptance",
+      "passed": true
+    },
+    {
+      "name": "saved admitted candidate rechecks accepted",
+      "passed": true
+    },
+    {
+      "name": "target pressure independently checked at target sigma",
+      "passed": true,
+      "achievedSigma": 1.376563236731137,
+      "targetSigma": 1.3727531645236124,
+      "margin": -0.0009999999999998899
+    },
+    {
+      "name": "NaN target rejected",
+      "passed": true,
+      "accepted": false
+    },
+    {
+      "name": "NaN gap height rejected",
+      "passed": true,
+      "accepted": false
+    },
+    {
+      "name": "NaN gap station rejected",
+      "passed": true,
+      "accepted": false
+    },
+    {
+      "name": "nonfinite wetted pressure rejected",
+      "passed": true,
+      "accepted": false
+    },
+    {
+      "name": "NaN achieved sigma with stale summary rejected",
+      "passed": true,
+      "accepted": false
+    },
+    {
+      "name": "all completed retry attempts retained as raw trials",
+      "passed": true,
+      "traceAttempts": 7,
+      "rawTrials": 7,
+      "failedAttempts": 3
+    },
+    {
+      "name": "returned numerical failure retries neutral seed on same length",
+      "passed": true,
+      "calls": [
+        {
+          "length": 0.12,
+          "detachment": 0.04333522947320603,
+          "attenuation": 0.2
+        },
+        {
+          "length": 0.12,
+          "detachment": 0.04333522947320603,
+          "attenuation": 0.37
+        }
+      ],
+      "attempts": 2
+    },
+    {
+      "name": "numerical physical failure never neutral retried",
+      "passed": true,
+      "calls": [
+        {
+          "length": 0.12,
+          "detachment": 0.04333522947320603,
+          "attenuation": 0.2
+        }
+      ],
+      "status": "rejected",
+      "code": "FORWARD_ROOT_PHYSICAL_SCREEN_FAILED"
+    },
+    {
+      "name": "thrown numerical error retries neutral seed on same length and records identity",
+      "passed": true,
+      "calls": [
+        {
+          "length": 0.12,
+          "detachment": 0.04333522947320603,
+          "attenuation": 0.2
+        },
+        {
+          "length": 0.12,
+          "detachment": 0.04333522947320603,
+          "attenuation": 0.37
+        }
+      ],
+      "trace": [
+        {
+          "evaluation": 1,
+          "length": 0.12,
+          "status": "converged-prototype",
+          "seedDetachment": 0.04333522947320603,
+          "seedAttenuation": 0.2,
+          "localBudgetSeconds": 5,
+          "attempts": [
+            {
+              "attempt": 1,
+              "initialDetachment": 0.04333522947320603,
+              "initialAttenuation": 0.2,
+              "numericalConverged": false,
+              "status": "error",
+              "code": null,
+              "error": "independent synthetic numerical branch loss",
+              "elapsedSeconds": 0,
+              "localBudgetSeconds": 5
+            },
+            {
+              "attempt": 2,
+              "initialDetachment": 0.04333522947320603,
+              "initialAttenuation": 0.37,
+              "numericalConverged": true,
+              "status": "converged-prototype",
+              "code": "BV_NUMERICAL_CHECKS_PASSED",
+              "sigma": 1.376563236731137,
+              "physicalScreenPassed": true
+            }
+          ],
+          "code": "BV_NUMERICAL_CHECKS_PASSED",
+          "sigma": 1.376563236731137,
+          "sigmaResidual": 0,
+          "elapsedSeconds": 0.001,
+          "numericalConverged": true,
+          "physicalScreenPassed": true,
+          "detachment": 0.04333522947320603,
+          "minimumWettedPressureMargin": 0.0028100722075246054,
+          "minimumGap": 0
+        }
+      ],
+      "retainedTrials": [
+        {
+          "length": 0.12,
+          "attempt": 1,
+          "error": "independent synthetic numerical branch loss",
+          "incomplete": false
+        },
+        {
+          "length": 0.12,
+          "attempt": 2
+        }
+      ]
+    },
+    {
+      "name": "cancellation does not neutral retry and retains failure",
+      "passed": true,
+      "calls": [
+        {
+          "length": 0.12,
+          "detachment": 0.04333522947320603,
+          "attenuation": 0.2
+        }
+      ],
+      "status": "cancelled"
+    },
+    {
+      "name": "null numerical return retries with retained failed attempt",
+      "passed": true,
+      "calls": [
+        {
+          "length": 0.12,
+          "detachment": 0.04333522947320603,
+          "attenuation": 0.2
+        },
+        {
+          "length": 0.12,
+          "detachment": 0.04333522947320603,
+          "attenuation": 0.37
+        }
+      ],
+      "attempts": [
+        {
+          "attempt": 1,
+          "initialDetachment": 0.04333522947320603,
+          "initialAttenuation": 0.2,
+          "numericalConverged": false,
+          "status": "error",
+          "code": null,
+          "error": "Cannot read properties of null (reading 'smoothDetachment')",
+          "elapsedSeconds": 0.001,
+          "localBudgetSeconds": 5
+        },
+        {
+          "attempt": 2,
+          "initialDetachment": 0.04333522947320603,
+          "initialAttenuation": 0.37,
+          "numericalConverged": true,
+          "status": "converged-prototype",
+          "code": "BV_NUMERICAL_CHECKS_PASSED",
+          "sigma": 1.376563236731137,
+          "physicalScreenPassed": true
+        }
+      ]
+    },
+    {
+      "name": "all thrown initializations retained and cannot admit",
+      "passed": true,
+      "calls": 4,
+      "status": "rejected",
+      "identifiedFailedAttempts": 4
+    },
+    {
+      "name": "returned failure and thrown retry both retained without admission",
+      "passed": true,
+      "status": "rejected",
+      "code": "NO_RESOLVED_DETACHMENT_CANDIDATE"
+    },
+    {
+      "name": "time budget does not neutral retry and retains failure",
+      "passed": true,
+      "calls": [
+        {
+          "length": 0.12,
+          "detachment": 0.04333522947320603,
+          "attenuation": 0.2
+        }
+      ],
+      "status": "budget-exhausted"
+    }
+  ],
+  "passed": true
+}

@@ -14,7 +14,7 @@
   if(node)module.exports=api;else root.ForwardHydrofoilCavitation=Object.freeze(api);
 })(typeof window!=='undefined'?window:globalThis,function(H,BV,F){
   'use strict';
-  const VERSION='0.1.0-forward-research',SCOPE='Steady 2-D upper partial-sheet potential flow with algebraic pressure recovery and the existing smooth-contact/BV estimator. No viscous separation, cloud shedding, erosion or experimental accuracy qualification.';
+  const VERSION='0.1.6-forward-research',SCOPE='Steady 2-D upper partial-sheet potential flow with algebraic pressure recovery and the existing smooth-contact/BV estimator. No viscous separation, cloud shedding, erosion or experimental accuracy qualification.';
   const finite=(x)=>typeof x==='number'&&Number.isFinite(x);
   const positive=(x,name)=>{if(!finite(x)||x<=0)throw new Error(name+' must be a finite positive number.');return x;};
   const clamp=(x,a,b)=>Math.min(b,Math.max(a,x));
@@ -29,6 +29,15 @@
     if(!finite(s.sigmaTolerance)||s.sigmaTolerance<1e-7||s.sigmaTolerance>1e-3)throw new Error('Use target-sigma tolerance 1e-7–1e-3.');
     if(!finite(s.lengthMin)||!finite(s.lengthMax)||s.lengthMin<.06||s.lengthMax>.65||s.lengthMin>=s.lengthMax)
       throw new Error('The automatic partial-cavity search is restricted to 0.06 <= length/c <= 0.65.');
+    // Allocate bounded opportunity to several lengths. This is a numerical
+    // scheduling budget, not a convergence tolerance or a physical criterion.
+    s.lengthEvaluationBudgetSeconds=Math.min(s.maxSeconds,Math.max(40,s.maxSeconds/s.maxLengthEvaluations));
+    s.initialLengthEvaluationBudgetSeconds=Math.min(s.maxSeconds,Math.max(s.lengthEvaluationBudgetSeconds,.5*s.maxSeconds));
+    for(const [name,upper]of[['detachmentBetaTolerance',2e-4],['detachmentStationTolerance',2e-6]]){
+      const value=Object.prototype.hasOwnProperty.call(input,name)?input[name]:upper;
+      if(!finite(value)||value<=0||value>upper)throw new Error(name+' must be finite, positive and <= '+upper+'; stricter values are preserved.');
+      s[name]=value;
+    }
     return s;
   }
   function target(input={}){
@@ -81,15 +90,35 @@
   function stableKey(o){return JSON.stringify({driver:VERSION,core:H.VERSION,bv:BV.VERSION,
     foil:o.foil,target:o.target.sigma,resolution:o.settings.resolution,recovery:o.recovery,exponent:o.exponent,
     lengthMin:o.settings.lengthMin,lengthMax:o.settings.lengthMax,
-    sigmaTolerance:o.settings.sigmaTolerance,closure:'smooth-contact',kutta:'velocity',estimator:'cavity'});}
+    sigmaTolerance:o.settings.sigmaTolerance,detachmentBetaTolerance:o.settings.detachmentBetaTolerance,detachmentStationTolerance:o.settings.detachmentStationTolerance,closure:'smooth-contact',kutta:'velocity',estimator:'cavity'});}
   function configuration(input={}){
     const t=target(input),g=foil(input),s=controls(input.settings||{}),recovery=input.recovery??.15,exponent=input.exponent??1;
     if(!finite(recovery)||recovery<.05||recovery>.4||!finite(exponent)||exponent<1||exponent>4)
       throw new Error('Forward smooth-contact recovery requires lambda .05–.4 and exponent 1–4.');
     const out={target:t,foil:g,settings:s,recovery,exponent};out.key=stableKey(out);return out;
   }
+  function solutionDiagnostics(raw){
+    if(!raw)return null;
+    const d=raw.detachment,m=raw.metrics||{},betaWet=d?.betaWet,betaCav=d?.betaCav;
+    const betaDisagreement=finite(betaWet)&&finite(betaCav)?Math.abs(betaWet-betaCav):null;
+    const endpointDerivativeDisagreement=finite(m.endpointGapSlope)&&finite(m.endpointGapSlopeFivePoint)?Math.abs(m.endpointGapSlope-m.endpointGapSlopeFivePoint):null;
+    const betaTolerance=d?.settings?.tolBeta??null,endpointTolerance=raw.closure?.regularityTolerance??null;
+    return{detachment:{betaWet:betaWet??null,betaCavity:betaCav??null,betaDisagreement,
+      fitWindowSpread:d?.betaWindowSpread??null,betaTolerance,
+      independentEstimatorsAgree:betaDisagreement!==null&&finite(betaTolerance)&&betaDisagreement<=2*betaTolerance,
+      estimatorLimitation:'The existing detachment root uses an s^(3/2) + s^2 gap fit. A curvature-matched smooth detachment has leading gap s^(5/2); an estimator root alone does not establish that asymptotic limit.'},
+      closure:{threeNodeGapSlope:m.endpointGapSlope??null,fiveNodeGapSlope:m.endpointGapSlopeFivePoint??null,
+        derivativeDisagreement:endpointDerivativeDisagreement,declaredSlopeTolerance:endpointTolerance,
+        independentDerivativesAgree:endpointDerivativeDisagreement!==null&&finite(endpointTolerance)&&endpointDerivativeDisagreement<=endpointTolerance},
+      pressure:{plateauReconstructionRMS:m.pressureReconstructionRMS??null,maximumReconstructionError:m.maximumPressureReconstructionError??null,
+        note:'Reconstructed pressure is compared to the imposed boundary condition. This is a discretization diagnostic, not independent physical validation.'},
+      meshAccuracyQualified:false,experimentalValidation:false};
+  }
   function candidateChecks(raw,targetSigma,rootConverged){
-    const numerical=raw?.smoothDetachment?.numericalConverged===true;
+    const fieldFinite=Array.isArray(raw?.panels)&&raw.panels.length>0&&raw.panels.every(p=>finite(p.cp)&&finite(p.x)&&finite(p.y));
+    const cavitySpeedConsistent=finite(raw?.cavitySpeedRatio)&&raw.cavitySpeedRatio>0&&finite(raw?.sigma)&&
+      Math.abs(raw.cavitySpeedRatio**2-1-raw.sigma)<=128*Number.EPSILON*Math.max(1,Math.abs(raw.sigma));
+    const numerical=raw?.smoothDetachment?.numericalConverged===true&&finite(raw?.sigma)&&raw.sigma>0&&fieldFinite&&cavitySpeedConsistent;
     const gapFinite=Array.isArray(raw?.height)&&raw.height.length>2&&raw.height.every((p,i)=>
       finite(p.h)&&finite(p.x)&&(i===0||p.x>raw.height[i-1].x));
     const minGap=gapFinite?Math.min(...raw.height.map(p=>p.h)):null;
@@ -99,9 +128,11 @@
     const geometry=raw?.metrics?.geometryValid===true&&gapPassed;
     const physical=Array.isArray(raw?.panels)?H.physicalAdmissibility(raw.panels,targetSigma,
       {equationsConverged:numerical&&rootConverged,geometryValid:geometry}):null;
-    const actual=raw?.physicalAdmissibility?.screenPassed===true;
-    return{numericalConverged:numerical,rootConverged,gapPassed,minimumGap:minGap,signedAreaOverChordSquared:signedArea,gapRoundoffAllowance:gapRoundoff,
-      computedSigmaScreenPassed:actual,targetSigmaScreen:physical,
+    const achieved=Array.isArray(raw?.panels)?H.physicalAdmissibility(raw.panels,raw.sigma,
+      {equationsConverged:numerical&&rootConverged,geometryValid:geometry}):null;
+    const actual=raw?.physicalAdmissibility?.screenPassed===true&&achieved?.screenPassed===true;
+    return{numericalConverged:numerical,fieldFinite,cavitySpeedConsistent,rootConverged,gapPassed,minimumGap:minGap,signedAreaOverChordSquared:signedArea,gapRoundoffAllowance:gapRoundoff,
+      computedSigmaScreenPassed:actual,computedSigmaScreen:achieved,targetSigmaScreen:physical,diagnostics:solutionDiagnostics(raw),
       accepted:numerical&&rootConverged&&geometry&&actual&&physical?.screenPassed===true};
   }
   function* iterate(input={},hooks={}){
@@ -114,6 +145,9 @@
     const result=(status,code,reason,extra={})=>({version:VERSION,mode:'forward',status,code,reason,
       acceptedForDisplay:false,cavityPresent:false,target:t,geometry:g,settings:s,configurationKey:cfg.key,
       warmStartUsed:!!matchingWarm,warmStartIgnoredReason:warm&&!matchingWarm?'State version, mathematical configuration or finite seed bounds do not match.':null,
+      searchStrategy:{defaultInitialLength:.24,initialGuessIsNotAPhysicalConstraint:true,continuationSeedPolicy:'Nearest completed numerically resolved length in this configuration and run; target residual breaks geometric-distance roundoff ties.',
+        lengthEvaluationBudgetSeconds:s.lengthEvaluationBudgetSeconds,initialLengthEvaluationBudgetSeconds:s.initialLengthEvaluationBudgetSeconds,nearTargetNeighborStep:.02,
+        localBudgetPolicy:'The initial length may use at most half the global budget (or the base length allowance if larger); later lengths use the base allowance. A length shares its allowance across its initializations. Incomplete local trials are retained and later lengths can proceed; global budget and cancellation stop the search.'},
       scope:SCOPE,elapsedSeconds:(Date.now()-start)/1000,
       experimentalValidation:false,meshAccuracyQualified:false,trace,trials,wetPreflight:wet,...extra});
     function stop(){
@@ -123,9 +157,9 @@
     function progress(p){stop();return{phase:'forward-hydrofoil',...p,elapsedSeconds:(Date.now()-start)/1000};}
     try{
       yield progress({stage:'fully wetted preflight',mesh:1,meshes:2});
-      const a=wetRun(g,Math.max(32,s.resolution),t.sigma);
+      const a=wetRun(g,Math.max(32,s.resolution),t.sigma);stop();
       yield progress({stage:'fully wetted preflight',mesh:2,meshes:2});
-      const b=wetRun(g,2*Math.max(32,s.resolution),t.sigma);
+      const b=wetRun(g,2*Math.max(32,s.resolution),t.sigma);stop();
       const minShift=a.minimum&&b.minimum?Math.abs(a.minimum.cp-b.minimum.cp):Infinity;
       // Conservative resolution warning, not a pressure-error allowance.
       const marginResolved=a.passed&&b.passed&&Math.min(a.minimum.margin,b.minimum.margin)>minShift;
@@ -143,55 +177,131 @@
       if(s.resolution<48)return result('unresolved','DETACHMENT_MESH_TOO_COARSE','Automatic smooth detachment requires resolution >= 48; the requested numerical resolution has been retained.');
       const upper=b.panels.filter(p=>p.surface==='upper'),minimum=upper.reduce((a,b)=>a.cp<b.cp?a:b);
       const initialD=matchingWarm&&finite(warm.detachment)?clamp(warm.detachment,.002,.15):clamp(minimum.x,.002,.15);
-      let seedD=initialD,seedA=matchingWarm&&finite(warm.attenuation)?clamp(warm.attenuation,.01,.74):.37;
-      const lengthSeed=matchingWarm&&finite(warm.length)?clamp(warm.length,s.lengthMin,s.lengthMax):clamp(.4,s.lengthMin,s.lengthMax);
+      const initialA=matchingWarm&&finite(warm.attenuation)?clamp(warm.attenuation,.01,.74):.37;
+      let seedD=initialD,seedA=initialA;
+      const lengthSeed=matchingWarm&&finite(warm.length)?clamp(warm.length,s.lengthMin,s.lengthMax):clamp(.24,s.lengthMin,s.lengthMax);
       const values=new Map();
       function* evaluate(length){
         length=clamp(length,s.lengthMin,s.lengthMax);const key=length.toPrecision(14);
         if(values.has(key))return values.get(key);
         if(trace.length>=s.maxLengthEvaluations)return null;
-        const entry={evaluation:++serial,length,status:'running',seedDetachment:seedD,seedAttenuation:seedA};trace.push(entry);
+        // Parameter continuation must follow the nearest resolved length, not
+        // whichever remote probe happened to finish last. All cached roots
+        // here belong to this same foil/flow/resolution configuration and run.
+        const nearestSeed=[...values.values()].filter(v=>v?.numerical&&finite(v.f)&&
+          finite(v.raw?.detachment?.selected)&&v.raw.detachment.selected>=.002&&v.raw.detachment.selected<=.15&&
+          finite(v.raw?.closure?.selectedAttenuation)&&v.raw.closure.selectedAttenuation>0&&v.raw.closure.selectedAttenuation<.75)
+          .sort((a,b)=>{const da=Math.abs(a.length-length),db=Math.abs(b.length-length);
+            if(Math.abs(da-db)>128*Number.EPSILON*Math.max(1,Math.abs(length)))return da-db;
+            return Math.abs(a.f)-Math.abs(b.f)||a.length-b.length;})[0];
+        if(nearestSeed){seedD=nearestSeed.raw.detachment.selected;seedA=nearestSeed.raw.closure.selectedAttenuation;}
+        else{seedD=initialD;seedA=initialA;}
+        const lengthStarted=Date.now(),localBudgetSeconds=serial===0?s.initialLengthEvaluationBudgetSeconds:s.lengthEvaluationBudgetSeconds;
+        const entry={evaluation:++serial,length,status:'running',seedDetachment:seedD,seedAttenuation:seedA,seedSourceLength:nearestSeed?.length??null,seedSourceSigma:nearestSeed?.raw.sigma??null,seedOrigin:nearestSeed?'nearest resolved length':matchingWarm?'matching configuration warm seed':'wetted preflight and neutral amplitude',
+          localBudgetSeconds};trace.push(entry);
+        function checkLengthBudget(){
+          // Global time and cancellation have priority over a local deadline.
+          stop();
+          if((Date.now()-lengthStarted)/1000>=localBudgetSeconds){
+            const e=new Error('This length reached its local wall-clock allowance; its incomplete attempts are retained and the search can try another length.');
+            e.code='LENGTH_TIME_BUDGET';throw e;
+          }
+        }
         let lastProgress=null;
         yield progress({stage:'target-sigma length search',evaluation:serial,maxEvaluations:s.maxLengthEvaluations,length,targetSigma:t.sigma});
         try{
-          const it=BV.iterate({thickness:g.thickness,camber:g.camber,camberPosition:g.camberPosition,
-            alpha:g.alpha,length,detachment:seedD,attenuation:seedA,resolution:s.resolution,
-            recovery:cfg.recovery,exponent:cfg.exponent,maxIterations:s.maxInnerIterations,
-            closureMode:'smooth-contact',kuttaCondition:'velocity'},
-            {maxEvaluations:s.maxDetachmentEvaluations,initialStep:.002,pressureTolerance:0});
-          let step;
-          do{stop();step=it.next();if(!step.done){lastProgress=step.value;yield progress({...step.value,stage:step.value.phase||'cavity/closure iteration',lengthEvaluation:serial,length});}}while(!step.done);
-          const raw=step.value,numerical=raw.smoothDetachment?.numericalConverged===true;
+          // Continuation can lose the inner closure branch even though an
+          // independently initialized solve exists. Retry the SAME equations
+          // once from a declared neutral amplitude only after numerical failure.
+          // A numerically converged but physically failed root is never rescued.
+          let raw=null,numerical=false;
+          entry.attempts=[];
+          for(const initialAttenuation of [...new Set([seedA,.37])]){
+            const attempt=entry.attempts.length+1;lastProgress=null;
+            yield progress({stage:attempt===1?'continued detachment solve':'neutral-seed numerical retry',
+              lengthEvaluation:serial,length,attempt,initialAttenuation});
+            try{
+            checkLengthBudget();
+            const it=BV.iterate({thickness:g.thickness,camber:g.camber,camberPosition:g.camberPosition,
+              alpha:g.alpha,length,detachment:seedD,attenuation:initialAttenuation,resolution:s.resolution,
+              recovery:cfg.recovery,exponent:cfg.exponent,maxIterations:s.maxInnerIterations,
+              closureMode:'smooth-contact',kuttaCondition:'velocity'},
+              {maxEvaluations:s.maxDetachmentEvaluations,initialStep:.002,tolBeta:s.detachmentBetaTolerance,tolX:s.detachmentStationTolerance,pressureTolerance:0});
+            let step;
+            do{checkLengthBudget();step=it.next();checkLengthBudget();if(!step.done){lastProgress=step.value;yield progress({...step.value,
+              stage:step.value.phase||'cavity/closure iteration',lengthEvaluation:serial,length,attempt});}}while(!step.done);
+            raw=step.value;numerical=raw.smoothDetachment?.numericalConverged===true&&finite(raw.sigma)&&raw.sigma>0;
+            entry.attempts.push({attempt,initialDetachment:seedD,initialAttenuation,
+              numericalConverged:numerical,status:raw.status,code:raw.code,sigma:raw.sigma,
+              physicalScreenPassed:raw.physicalAdmissibility?.screenPassed===true});
+            trials.push({length,attempt,initialDetachment:seedD,initialAttenuation,
+              purpose:attempt===1?'continuation':'neutral seed after numerical failure',raw});
+            }catch(error){
+              const local=error.code==='LENGTH_TIME_BUDGET';
+              const interrupted=local||error.code==='CANCELLED'||error.code==='TIME_BUDGET';
+              entry.attempts.push({attempt,initialDetachment:seedD,initialAttenuation,
+                numericalConverged:false,status:local?'local-budget-exhausted':interrupted?'interrupted':'error',code:error.code??null,error:error.message,elapsedSeconds:(Date.now()-lengthStarted)/1000,localBudgetSeconds});
+              trials.push({length,attempt,initialDetachment:seedD,initialAttenuation,
+                purpose:attempt===1?'continuation':'neutral seed after numerical failure',
+                incomplete:interrupted,code:error.code??null,error:error.message,lastProgress,elapsedSeconds:(Date.now()-lengthStarted)/1000,localBudgetSeconds});
+              if(interrupted)throw error;
+              numerical=false;
+            }
+            if(numerical)break;
+          }
+          if(!raw)throw new Error('Neither declared initialization produced a complete detachment candidate.');
           const v={length,raw,numerical,f:numerical&&finite(raw.sigma)?raw.sigma-t.sigma:null};
-          Object.assign(entry,{status:raw.status,code:raw.code,sigma:raw.sigma,sigmaResidual:v.f,
+          checkLengthBudget();
+          Object.assign(entry,{status:raw.status,code:raw.code,sigma:raw.sigma,sigmaResidual:v.f,elapsedSeconds:(Date.now()-lengthStarted)/1000,
             numericalConverged:numerical,physicalScreenPassed:raw.physicalAdmissibility?.screenPassed===true,
             detachment:raw.detachment?.selected,minimumWettedPressureMargin:raw.physicalAdmissibility?.minimumWettedPressureMargin,
             minimumGap:raw.metrics?.minimumHeight});
-          trials.push({length,raw});values.set(key,v);last=v;
-          if(numerical){seedD=raw.detachment.selected;seedA=raw.closure?.selectedAttenuation??seedA;}
+          values.set(key,v);last=v;
           return v;
         }catch(e){
+          if(e.code==='LENGTH_TIME_BUDGET'){
+            Object.assign(entry,{status:'local-budget-exhausted',code:e.code,reason:e.message,
+              elapsedSeconds:(Date.now()-lengthStarted)/1000});
+            values.set(key,null);return null;
+          }
           if(e.code==='CANCELLED'||e.code==='TIME_BUDGET'){
-            Object.assign(entry,{status:e.code==='CANCELLED'?'cancelled':'budget-exhausted',reason:e.message});
+            Object.assign(entry,{status:e.code==='CANCELLED'?'cancelled':'budget-exhausted',code:e.code,reason:e.message,elapsedSeconds:(Date.now()-lengthStarted)/1000});
             trials.push({length,incomplete:true,error:e.message,lastProgress});throw e;
           }
           Object.assign(entry,{status:'error',reason:e.message});trials.push({length,error:e.message});values.set(key,null);return null;
         }
       }
-      let v=yield*evaluate(lengthSeed),bracket=null,best=v?.numerical?v:null;
+      let v=yield*evaluate(lengthSeed),bracket=null,best=v?.numerical&&finite(v.f)?v:null;
       function update(){
         const good=[...values.values()].filter(p=>p&&p.numerical&&finite(p.f)).sort((a,b)=>a.length-b.length);
         if(good.length)best=good.reduce((a,b)=>Math.abs(a.f)<Math.abs(b.f)?a:b);
         for(let i=1;i<good.length;i++)if(good[i-1].f*good[i].f<=0){bracket=[good[i-1],good[i]];break;}
       }
       update();
+      // A resolved value already near the target deserves short neighboring
+      // probes before expensive remote endpoints. These are numerical guesses:
+      // only actually evaluated signs establish a bracket or admit a root.
+      if(v?.numerical&&Math.abs(v.f)>s.sigmaTolerance&&Math.abs(v.f)<=Math.max(.02*t.sigma,20*s.sigmaTolerance)){
+        const direction=v.f>0?1:-1;
+        for(const sign of [direction,-direction]){
+          if(bracket||trace.length>=s.maxLengthEvaluations||best&&Math.abs(best.f)<=s.sigmaTolerance)break;
+          yield*evaluate(clamp(v.length+sign*.02,s.lengthMin,s.lengthMax));update();
+        }
+      }
       // Sign-informed exploration is an initial-guess strategy, not a presumed
       // monotonicity/admission law. Bracketed iteration is used unless an actual
       // evaluated point already meets the declared target-sigma tolerance.
       const preferred=v?.numerical&&v.f>0?s.lengthMax:s.lengthMin;
-      for(const x of [preferred,preferred===s.lengthMax?s.lengthMin:s.lengthMax,.24,.12,.56]){
+      for(const x of [preferred,preferred===s.lengthMax?s.lengthMin:s.lengthMax,.24,.4,.12,.56]){
         if(bracket||trace.length>=s.maxLengthEvaluations||best&&Math.abs(best.f)<=s.sigmaTolerance)break;
         yield*evaluate(x);update();
+      }
+      function uncachedInteriorLength(a,b){
+        for(let level=1;level<=4;level++)for(let k=1;k<2**level;k+=2){
+          const x=a.length+(b.length-a.length)*k/2**level;
+          if(x>a.length&&x<b.length&&!values.has(x.toPrecision(14)))return x;
+        }
+        return null;
       }
       let held=0,fa,fb,scalarSteps=0;
       if(bracket){fa=bracket[0].f;fb=bracket[1].f;}
@@ -200,20 +310,39 @@
         if(width<=128*Number.EPSILON*Math.max(1,Math.abs(a.length),Math.abs(b.length)))break;
         let x=(a.length*fb-b.length*fa)/(fb-fa);
         if(!finite(x)||x<=a.length+1e-10||x>=b.length-1e-10)x=(a.length+b.length)/2;
-        if(values.has(x.toPrecision(14)))x=(a.length+b.length)/2;
-        if(values.has(x.toPrecision(14)))break;
-        v=yield*evaluate(x);if(!v||!v.numerical)break;
+        if(values.has(x.toPrecision(14)))x=uncachedInteriorLength(a,b);
+        if(x===null)break;
+        v=yield*evaluate(x);
+        if(!v||!v.numerical){
+          const failed=trace.find(p=>p.length.toPrecision(14)===x.toPrecision(14));
+          if(failed?.code!=='LENGTH_TIME_BUDGET')break;
+          const fallback=uncachedInteriorLength(a,b);
+          if(fallback===null)break;
+          v=yield*evaluate(fallback);
+          if(!v||!v.numerical){
+            if(trace.at(-1)?.code==='LENGTH_TIME_BUDGET')continue;
+            break;
+          }
+        }
         if(Math.abs(v.f)<Math.abs(best.f))best=v;
         if(a.f*v.f<=0){bracket=[a,v];fb=v.f;if(held===1)fa*=.5;held=1;}
         else{bracket=[v,b];fa=v.f;if(held===-1)fb*=.5;held=-1;}
       }
+      stop();
       const rootConverged=!!best&&Math.abs(best.f)<=s.sigmaTolerance;
       const checks=best?candidateChecks(best.raw,t.sigma,rootConverged):null;
+      const resolvedSigmas=[...values.values()].filter(v=>v?.numerical&&finite(v.raw.sigma)).map(v=>({length:v.length,sigma:v.raw.sigma}));
+      const searchDiagnostics={resolvedLengthSamples:resolvedSigmas,
+        minimumObservedSigma:resolvedSigmas.length?Math.min(...resolvedSigmas.map(v=>v.sigma)):null,
+        maximumObservedSigma:resolvedSigmas.length?Math.max(...resolvedSigmas.map(v=>v.sigma)):null,
+        targetSigmaBracketFound:!!bracket,
+        interpretation:'Observed values from the retained numerical trials only. No monotonicity, exhaustive branch coverage or physical admissibility is inferred from this range.'};
+      stop();
       if(checks?.accepted){
         const raw=best.raw,area=raw.height.slice(1).reduce((a,p,i)=>a+.5*(p.h+raw.height[i].h)*(p.x-raw.height[i].x),0);
         return result('admitted-research-cavity','TARGET_SIGMA_AND_SAMPLED_PHYSICAL_CHECKS_PASSED',
           'Target sigma, inner closure/BV estimator and sampled physical screens pass. This remains an unvalidated steady partial-sheet research result.',
-          {acceptedForDisplay:true,cavityPresent:true,cavity:raw,root:{converged:true,length:best.length,sigma:raw.sigma,residual:best.f,bracket:bracket?.map(p=>p.length)??null},checks,
+          {acceptedForDisplay:true,cavityPresent:true,cavity:raw,searchDiagnostics,root:{converged:true,length:best.length,sigma:raw.sigma,residual:best.f,bracket:bracket?.map(p=>p.length)??null},checks,
             cavityArea:{perUnitSpan_m2:area*t.chord*t.chord,normalizedByChordSquared:area,notAThreeDimensionalVolume:true},
             warmStart:{driverVersion:VERSION,configurationKey:cfg.key,length:best.length,detachment:raw.detachment.selected,attenuation:raw.closure?.selectedAttenuation??seedA}});
       }
@@ -221,7 +350,7 @@
         !best?'No numerically resolved smooth-detachment candidate was found within the declared budget.':!rootConverged?
           'The supported length range/evaluation budget did not resolve a target-sigma root. The numerical trials are retained.':
           'A numerical target-sigma root was found, but its physical cavity checks failed. No accepted cavity shape or volume is reported.',
-        {root:{converged:rootConverged,length:best?.length??null,sigma:best?.raw.sigma??null,residual:best?.f??null,bracket:bracket?.map(p=>p.length)??null},checks,
+        {searchDiagnostics,root:{converged:rootConverged,length:best?.length??null,sigma:best?.raw.sigma??null,residual:best?.f??null,bracket:bracket?.map(p=>p.length)??null},checks,
           diagnosticCandidate:best?.raw??last?.raw??null});
     }catch(e){
       if(e.code!=='CANCELLED'&&e.code!=='TIME_BUDGET')throw e;
@@ -234,5 +363,5 @@
       await(hooks.yieldControl?hooks.yieldControl():new Promise(r=>setTimeout(r,0)));lastYield=Date.now();}}}while(!step.done);
     return step.value;
   }
-  return{VERSION,SCOPE,configuration,target,pointsFor,candidateChecks,iterate,solve};
+  return{VERSION,SCOPE,configuration,target,pointsFor,candidateChecks,solutionDiagnostics,iterate,solve};
 });

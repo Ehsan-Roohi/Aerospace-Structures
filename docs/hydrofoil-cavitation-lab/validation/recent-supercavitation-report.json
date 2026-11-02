@@ -1,0 +1,368 @@
+{
+  "schema_version": 1,
+  "as_of": "2026-11-01",
+  "scope": "Recent Ukrainian/Russian-language Logvinovich/Semenenko water-supercavitation lineage; targeted primary-source assessment, not an exhaustive 2016-2026 systematic review. Supersonic air-cavity Simonenko work excluded.",
+  "sources": [
+    {
+      "id": "moroz2024",
+      "year": 2024,
+      "title": "Theoretical and experimental study of dynamics of supercavitating vehicles with cone cavitators",
+      "authors": "V. V. Moroz; V. O. Kochin; V. M. Semenenko; Bu-Geun Paik",
+      "doi": "10.15407/jha2024.02.170",
+      "landing_url": "https://hydromech.org.ua/en/jha/jha-03-2/170",
+      "pdf_url": "https://hydromech.org.ua/content/pdf/jha/jha-03(2)_170-197.pdf",
+      "language": "English",
+      "pages": 28,
+      "read_depth": "Full main text sections 1-6, equations 1-24, tables 1-5; rendered printed pp.176,183,185,186 inspected. References surveyed, not individually validated.",
+      "evidence": "Cone half-angles 20, 30, 60 degrees plus disk; base diameter 50 mm, immersion 150 mm; 8-10 m/s, sigma approximately 0.03-0.04. Table 5 has 11 diameter samples. Dynamic experiment permits pitch only; this is not full 6-DOF experimental validation.",
+      "code_status": "No source repository, downloadable source, executable or code license found on article/PDF or targeted author/program searches. Published formulas can be independently implemented.",
+      "license": "PDF first page: CC BY-NC-ND 4.0",
+      "bytes": 3080032,
+      "sha256": "9ffdc21dc75aee91dccc2f01a1586a0de6953b34b7da52ad92d80631ba49e859",
+      "access": "Publisher full PDF retrieved and text extracted on 2026-11-01",
+      "original_filename": "2024-cone-dynamics.pdf"
+    },
+    {
+      "id": "moroz2023",
+      "year": 2023,
+      "title": "Formation and development of ventilated supercavity past the disk-cavitator in accelerated motion",
+      "authors": "V. Moroz; V. Kochin; V. Semenenko; O. Naumova",
+      "doi": "10.20535/2521-1943.2023.7.2.286337",
+      "landing_url": "https://journal.mmi.kpi.ua/article/view/286337",
+      "pdf_url": "https://journal.mmi.kpi.ua/article/download/286337/282780",
+      "language": "English",
+      "pages": 12,
+      "read_depth": "Full main text sections 1-8, equations 1-12, tables 1-2; rendered printed p.168 inspected.",
+      "evidence": "30 mm disk, immersion 150 mm, experimental air supply 2.91 L/s; acceleration to 7.12 m/s. Eight measured and paper-calculated steady profile samples. Model retains portion-type air loss through acceleration, then switches after a delay. Prescribed near-constant pressure replaces gas-mass balance to avoid unsupported oscillations at low velocity.",
+      "code_status": "SCV program named, but no public source download or executable found in checked sources.",
+      "license": "CC BY 4.0",
+      "bytes": 2955288,
+      "sha256": "e86abe27daa67e9450a9b861c9f2c9630483b436e50efc250d557529a6dae484",
+      "access": "Publisher full PDF retrieved and text extracted on 2026-11-01",
+      "original_filename": "2023-accelerating-disk.pdf"
+    },
+    {
+      "id": "semenenko2022",
+      "year": 2022,
+      "title": "Dynamics of supercavitating vehicles with cone cavitators",
+      "authors": "V. Semenenko; V. Moroz; V. Kochin; O. Naumova",
+      "doi": "10.20535/2521-1943.2022.6.1.252889",
+      "landing_url": "https://journal.mmi.kpi.ua/article/view/252889",
+      "pdf_url": "https://journal.mmi.kpi.ua/article/download/252889/260761",
+      "language": "English",
+      "pages": 11,
+      "read_depth": "Targeted main-text review: experiment, force laws, equivalent disk, model architecture and selected balancing/control cases. Printed p.87 rendered for polynomial sign. Not every control simulation independently reproduced.",
+      "evidence": "50 mm cavitators at full cone angles 40,60,120 degrees plus disk. Printed cubic Eq.2 has a positive cubic term inconsistent with its Figure 5 and the later 2024 negative-cubic formula. Use 2024 Eq.23 explicitly rather than silently editing the earlier formula.",
+      "code_status": "Computational algorithms described; no source repository/download found.",
+      "license": "CC BY 4.0",
+      "bytes": 1392405,
+      "sha256": "9019dd11e54973d9e0b180a257b679c745938c341f9cf971dc00c8dae9ba99d7",
+      "access": "Publisher full PDF retrieved and text extracted on 2026-11-01",
+      "original_filename": "2022-cone-cavitators.pdf"
+    },
+    {
+      "id": "semenenko2020",
+      "year": 2020,
+      "title": "Prediction of the unsteady ventilated partial cavities",
+      "authors": "V. Semenenko; O. Naumova",
+      "doi": "10.20535/2521-1943.2020.0.212048",
+      "landing_url": "https://journal.mmi.kpi.ua/article/view/212048",
+      "pdf_url": "https://journal.mmi.kpi.ua/article/download/212048/pdf_181",
+      "language": "English",
+      "pages": 12,
+      "read_depth": "Targeted full-text review of formulation, discretization, comparison and conclusions; not all equations visually rechecked.",
+      "evidence": "Two distinct methods: planar slender wedge on a wall uses linear potential flow and discrete singularities; ring flange on a cylinder uses independent cavity-section expansion. Planar model fails to generate known ventilation instability, explicitly acknowledged by authors. These are partial cavities, not a drop-in fully enclosing cone-supercavity model.",
+      "code_status": "Algorithm/discretization published; no reusable public source code located.",
+      "license": "CC BY 4.0",
+      "bytes": 842393,
+      "sha256": "278f235defa4e06c2b8a5eb40ffb20a92fa28c64ea7af87c241815e78a1ba25e",
+      "access": "Publisher full PDF retrieved and text extracted on 2026-11-01",
+      "original_filename": "2020-partial-cavities.pdf"
+    },
+    {
+      "id": "savchenko2026",
+      "year": 2026,
+      "title": "Experimental study and computer simulation of dynamics of supercavitating bodies penetrating water at small angles to the free surface",
+      "authors": "Yu. M. Savchenko; V. M. Semenenko; G. Yu. Savchenko; O. I. Naumova",
+      "doi": "10.15407/jha2026.01.075",
+      "publication_date": "2026-09-03",
+      "landing_url": "https://hydromech.org.ua/en/jha/jha-04-1/075",
+      "pdf_url": "https://hydromech.org.ua/content/pdf/jha/jha-04(1)_075-103.pdf",
+      "language": "Ukrainian",
+      "pages": 29,
+      "read_depth": "English landing abstract plus targeted Ukrainian full text: sections 4.1-5,6.3-6.5,7; key source pages 88-90 rendered. This is not a complete independently checked translation.",
+      "evidence": "Free-flight water entry: 10-25 m/s, angles 4-15 degrees, video 1000 fps. Free-surface correction has fitted Ks, depth clamped below 2 cavitator diameters. Authors report Fortran DIVE_16.2 and DIVE_52. Splash/surface closure, atmospheric breakthrough and underwater tumbling lie outside stated approximation.",
+      "code_status": "Fortran language and program names established from section 5; no public repository, source package, downloadable executable or reproducible runtime found.",
+      "license": "CC BY-NC-ND 4.0",
+      "metadata_note": "First PDF page prints DOI: ***; verified DOI and publication date come from publisher landing page.",
+      "bytes": 3639220,
+      "sha256": "a511237ce6f5cbcdbaefd4b806e3264cabdc43a9b71caec3bc8f0e6af7cd4bf9",
+      "access": "Publisher full PDF retrieved and text extracted on 2026-11-01",
+      "original_filename": "2026-shallow-water-entry.pdf"
+    }
+  ],
+  "implemented_on_new_page": [
+    "Exact finite-station paper-data overlays: 2024 cone diameter, 2023 disk diameter and axis rise.",
+    "Independent implementation of 2024 Eqs.22-23 for signed cone lift slope and coefficient; radians used for inclination, degrees for cone half-angle.",
+    "Recomputed finite-sample profile errors; no CFD or 6-DOF trajectory simulation."
+  ],
+  "not_implemented": [
+    "SCV/DIVE source recovery or execution",
+    "A validated time-history cavity-memory solver",
+    "Gas mass balance and physical gas-loss transition",
+    "Planing/contact and cavity-piercing-fin forces",
+    "Free-surface water-entry dynamics, fitted Ks correction, ricochet map",
+    "Any hardware-scale extrapolation or new scientific simulation"
+  ],
+  "formulas": [
+    {
+      "source_id": "moroz2024",
+      "equation": "22-23",
+      "expression": "f(gamma_deg)=2-1.64e-6*gamma_deg^3+5.42e-4*gamma_deg^2-6.65e-2*gamma_deg; cy=f(gamma_deg)*(1+sigma)*delta_rad",
+      "units": "f in 1/rad; gamma degrees; delta radians",
+      "zero_lift_halfangle_deg": 43.42525852035685,
+      "implemented": true,
+      "validation": "Published Table4 samples: (20,0.8354),(30,0.4950),(60,-0.4060); Table3 disk slope -0.7890. Polynomial is a fit, not exact interpolation. Predicted slopes 0.87368,0.44852,-0.39304,-0.79036 at 20,30,60,90 degrees.",
+      "limitation": "Experiments concentrated near sigma 0.03-0.04; inclination small (Eq22 |delta|<20 degrees). Slider is an algebraic illustration."
+    },
+    {
+      "source_id": "moroz2024",
+      "equation": "16",
+      "expression": "cx1=0.5+1.81*(gamma_deg/180-0.25)-2*(gamma_deg/180-0.25)^2+(0.524+0.672*gamma_deg/180)*sigma",
+      "implemented": false,
+      "domain": "15 <= gamma_deg <= 90; sigma <=0.25; add viscous term cf/sin(gamma) in Eq15 and inclination correction Eq24 only with consistent sign conventions."
+    },
+    {
+      "source_id": "moroz2024",
+      "equation": "5-6",
+      "expression": "Deq=Dn*sqrt(cx0/0.8275); Dc=Dn*sqrt(cx0*(1+sigma)/(kappa*sigma)); Lc=Dn*A*sqrt(cx0)/sigma",
+      "implemented": false,
+      "domain": "Slender cavity, A approximately2, kappa0.9-1.0; forward-section matching differs for sharp cones."
+    },
+    {
+      "source_id": "moroz2023",
+      "equation": "10-12",
+      "expression": "Cavity section history plus gas-volume/pressure balance; modified acceleration model prescribes pressure instead of Eq12.",
+      "implemented": false,
+      "limitation": "Do not claim the prescribed-pressure adaptation predicts ventilation stability or initial nucleation from rest."
+    },
+    {
+      "source_id": "savchenko2026",
+      "equation": "12,17",
+      "expression": "Free-surface displacement proportional to sqrt(sigma)*x*(Lc-x)/(4*A*H*Ks), with H clamped at2*Dn.",
+      "implemented": false,
+      "limitation": "Ks is calibrated: approximately1.5-2 for steady/unsteady travel and exit;2-3 for shallow-angle entry. Formula/source notation requires a separate dimensional/sign review before implementation."
+    }
+  ],
+  "data": {
+    "cone2024": {
+      "source_id": "moroz2024",
+      "table": "5",
+      "printed_page": 186,
+      "x_mm": [
+        50,
+        100,
+        150,
+        200,
+        250,
+        300,
+        350,
+        400,
+        450,
+        500,
+        550
+      ],
+      "experiment_D_mm": [
+        66,
+        81,
+        92,
+        101,
+        108,
+        112,
+        115,
+        117,
+        117,
+        116,
+        113
+      ],
+      "paper_calculation_D_mm": [
+        66.9,
+        83.3,
+        94,
+        102.1,
+        108.2,
+        112.5,
+        115.2,
+        116.5,
+        116.5,
+        115,
+        112.2
+      ],
+      "conditions": {
+        "cavitator_base_mm": 50,
+        "cone_halfangle_deg": 20,
+        "immersion_mm": 150,
+        "speed_m_s": 9.12,
+        "cavitator_inclination_deg": 2.1,
+        "model_pitch_deg": 0
+      },
+      "coverage": "Only listed axial stations; cavity closure is not sampled.",
+      "note": "Both curves are paper data. No present project solver prediction is included; percent differences recomputed from diameters rather than copied from printed percentage column.",
+      "recomputed_diameter_metrics": {
+        "mean_absolute_error_mm": 0.9090909090909091,
+        "max_absolute_error_mm": 2.299999999999997,
+        "max_absolute_relative_error_percent": 2.839506172839503
+      }
+    },
+    "disk2023": {
+      "source_id": "moroz2023",
+      "table": "1 and 2",
+      "printed_page": 168,
+      "x_mm": [
+        60,
+        120,
+        180,
+        240,
+        300,
+        360,
+        420,
+        480
+      ],
+      "experiment_D_mm": [
+        70,
+        87,
+        99,
+        106,
+        111,
+        112,
+        111,
+        107
+      ],
+      "paper_calculation_D_mm": [
+        69.76,
+        87.35,
+        99.41,
+        107.82,
+        113.38,
+        116.5,
+        117.39,
+        116.09
+      ],
+      "experiment_axis_rise_mm": [
+        0,
+        2,
+        4,
+        6,
+        8,
+        10,
+        13,
+        17
+      ],
+      "paper_calculation_axis_rise_mm": [
+        0.26,
+        1.03,
+        2.32,
+        4.12,
+        6.44,
+        9.27,
+        12.61,
+        16.48
+      ],
+      "conditions": {
+        "disk_mm": 30,
+        "immersion_mm": 150,
+        "speed_m_s": 7.12,
+        "sigma": 0.071,
+        "experiment_air_l_s": 2.91,
+        "calculation_air_l_s": 3.03
+      },
+      "note": "The paper assumes circular sections through the tail; actual steady tail becomes elliptical/twin-vortex. This explains growing downstream profile mismatch. Do not relabel its paper calculation as a new prediction.",
+      "recomputed_diameter_metrics": {
+        "mean_absolute_error_mm": 3.1474999999999973,
+        "max_absolute_error_mm": 9.090000000000003,
+        "max_absolute_relative_error_percent": 8.495327102803742
+      }
+    }
+  },
+  "source_discrepancies": [
+    {
+      "source_id": "semenenko2022",
+      "location": "Printed p87 Eq2",
+      "finding": "Positive cubic term +2.05e-7*beta^3 gives +1.60076 at beta180; its own graph has a negative disk endpoint. Later2024 Eq23 uses negative cubic and gives -0.79036. Not silently corrected."
+    },
+    {
+      "source_id": "moroz2024",
+      "location": "Printed p183 text below Fig4",
+      "finding": "Text drops negative sign for disk endpoint, while Table3/Fig4/Eq23 consistently show negative. Page uses signed table/formula values."
+    },
+    {
+      "source_id": "moroz2024",
+      "location": "Table5 divergence column",
+      "finding": "Some percentages differ from arithmetic on rounded diameters; page recomputes and labels its own metrics."
+    }
+  ],
+  "earlier_primary_leads": [
+    {
+      "year": 2016,
+      "title": "Features of manoeuvring at the supercavitation flowing around",
+      "authors": "Yu.N.Savchenko; V.N.Semenenko; G.Yu.Savchenko",
+      "url": "https://hydromech.org.ua/content/en/ph/Semenenko_VN.html",
+      "read_depth": "Bibliography/index discovery only; no numerical claim based on this work."
+    },
+    {
+      "year": 2018,
+      "title": "Dynamics of a partially cavitating underwater vehicle",
+      "doi": "10.15407/jha2018.01.070",
+      "url": "https://doi.org/10.15407/jha2018.01.070",
+      "read_depth": "Referenced by the full-text papers; not full-text reviewed for this deliverable."
+    },
+    {
+      "year": 2018,
+      "title": "Some ways of hydrodynamic fin application for underwater supercavitating vehicles",
+      "doi": "10.15407/jha2018.03.355",
+      "url": "https://doi.org/10.15407/jha2018.03.355",
+      "read_depth": "Reference-level lead; no new fin-force reproduction."
+    },
+    {
+      "year": 2019,
+      "title": "Peculiarities of supercavitating vehicles maneuvering",
+      "doi": "10.1615/InterJFluidMechRes.v46.i4.30",
+      "url": "https://doi.org/10.1615/InterJFluidMechRes.v46.i4.30",
+      "read_depth": "Reference-level lead; publisher full text not obtained."
+    }
+  ],
+  "code_search": {
+    "date": "2026-11-01",
+    "queries": [
+      "SCV Semenenko source code supercavitation",
+      "DIVE Semenenko program download",
+      "Logvinovich Semenenko github"
+    ],
+    "result": "No verified public source distribution found in these targeted searches and checked primary articles. This is a search result, not proof no code exists.",
+    "next_action": "Request SCV/DIVE source, version, license, build instructions, example inputs and raw experimental records from authors; no author contact was made."
+  },
+  "reproduction_checks": {
+    "data_transcription": "2024 Table5 and2023 Tables1-2 checked against rendered pages.",
+    "formula_sign": "2024 p183 and2022 p87 visually checked.",
+    "scientific_status": "Reproduction of reported tabular comparisons and algebraic fit only; not independent validation of the original algorithms.",
+    "executed_checks": {
+      "inline_js_syntax": "PASS",
+      "three_profile_views_in_DOM_stub": "PASS",
+      "six_lift_angles_in_DOM_stub": "PASS",
+      "zero_crossing_and_signed_disk": "PASS",
+      "finite_stations_and_lengths": "PASS",
+      "five_source_sha256": "PASS",
+      "browser_visual_QA": "PASS: independently launched headless Microsoft Edge using an isolated D-drive profile; desktop 1440 px, mobile 390 px, narrow 320 px. Three profile views, signed polynomial and radians conversion, zero crossing, exact-data download, relative links, accessible plot descriptions, responsive labels, equation wrapping, and horizontally scrollable tables checked. Desktop and mobile screenshots visually inspected."
+    }
+  },
+  "publication": {
+    "public_path": "docs/hydrofoil-cavitation-lab/validation/recent-supercavitation.html",
+    "source_access": "Primary papers are linked at publisher URLs. No full-paper PDFs, rendered source-paper pages, or local filesystem paths are redistributed in this package.",
+    "selected_data": "recent-supercavitation-paper-data.json",
+    "public_files": [
+      "recent-supercavitation.html",
+      "recent-supercavitation-report.json",
+      "recent-supercavitation-paper-data.json"
+    ]
+  }
+}

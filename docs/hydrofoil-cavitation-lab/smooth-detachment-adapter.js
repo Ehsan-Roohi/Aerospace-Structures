@@ -1,9 +1,4 @@
-/* Admission adapter for the immutable Opus smooth-detachment research module.
- * No flow equations, root estimator, fit window or solution samples are changed.
- * Browser load order: cavitation.js, smooth-detachment.js, this file.
- * The original research wrapper is retained separately; this adapter enforces
- * the same physical pressure screen as the current cavity core.
- */
+/* Strict admission adapter0.1.1 for closure-qualified detachment. Physical pressure and gap acceptance stay separate from numerical selection; no allowance is added. Browser order: cavitation.js, smooth-detachment.js, this file. */
 (function(root,factory){
   const node=typeof module!=='undefined'&&module.exports;
   const api=factory(node?require('./cavitation.js'):root.HydrofoilCavitation,
@@ -11,7 +6,7 @@
   if(node)module.exports=api;else root.HydrofoilSmoothDetachment=Object.freeze(api);
 })(typeof window!=='undefined'?window:globalThis,function(H,SD){
   'use strict';
-  const VERSION='0.1.0-strict-research';
+  const VERSION='0.1.1-strict-research';
   if(!H||typeof H.physicalAdmissibility!=='function'||!SD||typeof SD.iterate!=='function')
     throw new Error('Load the current cavitation core and smooth-detachment research module first.');
 
@@ -27,7 +22,7 @@
     const geometryValid=raw.metrics.geometryValid===true;
     const numericalConverged=bracketed&&betaConverged&&d.regularityResolved===true&&innerConverged&&geometryValid;
     // Never inherit a physical check that only assessed the inner closure or a
-    // user-configured pressure tolerance. The core 0.3.2 screen uses roundoff only.
+    // user-configured pressure tolerance. The current core screen uses roundoff only.
     const physicalAdmissibility=H.physicalAdmissibility(raw.panels,raw.sigma,
       {equationsConverged:numericalConverged,geometryValid});
     if(physicalAdmissibility.status==='FAILED_WETTED_PRESSURE')

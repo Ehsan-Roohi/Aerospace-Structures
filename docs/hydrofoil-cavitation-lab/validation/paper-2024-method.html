@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>2024 cylinder BEM paper · method, corrections and limits</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#fff;color:#172536;font:18px/1.6 Georgia,'Times New Roman',serif}main{max-width:1050px;margin:auto;padding:26px 24px 48px}nav{display:flex;flex-wrap:wrap;gap:12px 24px;padding-bottom:15px;border-bottom:1px solid #ccd5df}a{color:#075eb7}h1{font-size:32px;line-height:1.2}h2{font-size:24px;margin-top:30px}.notice{border:2px solid #9b651d;border-radius:7px;background:#fff8e9;padding:14px 18px}.equation{overflow-x:auto;white-space:nowrap;background:#f1f5f8;border-left:4px solid #075eb7;padding:14px 16px;margin:16px 0;font-size:19px}.small{font-size:16px}li{margin:8px 0}sub,sup{line-height:0}code{font-size:.86em}footer{border-top:1px solid #ccd5df;margin-top:30px;padding-top:15px}@media(max-width:650px){body{font-size:17px}main{padding:18px 13px 36px}h1{font-size:28px}.equation{font-size:17px}}
+</style>
+</head>
+<body><main>
+<nav aria-label="Related pages"><a href="../">Cavitation lab</a><a href="index.html">Numerical evidence</a><a href="#metric">Surface metric</a><a href="#length">Length update</a><a href="#sources">Primary sources</a></nav>
+<h1>What the 2024 cylinder BEM paper establishes</h1>
+<p><a href="https://doi.org/10.1016/j.enganabound.2024.105912"><cite>A quick 3D BEM iterative algorithm for partially cavitating flows over cylindrical bodies at angles of attack</cite> (2024)</a> describes a steady potential-flow calculation with prescribed cavitation number and iterated cavity length. Its sharp-shoulder cylinder problem provides useful methodological context for a forward solver.</p>
+<p class="notice"><strong>Evidence reviewed: the supplied full 11-page article.</strong> The authors’ source code was not obtained or verified. The article states that data are available on request; this does not establish access to runnable software. The expressions derived below are mathematical corrections made in this note, rather than claims about what the authors’ code actually does.</p>
+
+<h2>Model and scope</h2>
+<p>The liquid is incompressible, inviscid and irrotational. The paper uses source/doublet boundary elements and a thin-cavity approximation: boundary conditions and thickness calculations remain on the underlying body panels, without remeshing the physical cavity. Detachment is fixed at a blunt or conical shoulder. Each circumferential strip’s length changes until its signed endpoint thickness tends to zero.</p>
+<p>A smooth hydrofoil requires a separate detachment condition; a shoulder condition cannot select that station. The paper’s simple return to the cylinder surface also differs from a pressure-recovery closure or a disk with an artificial image disk. Its cylinder comparisons do not validate either of those different problems. A prescribed-σ outer search is transferable as a numerical idea, subject to its own field and geometry checks.</p>
+
+<h2 id="metric">Equation 11: retain the nonorthogonal surface metric</h2>
+<p>Let <i>s</i><sub>1</sub> and <i>s</i><sub>2</sub> be local arclength coordinates with unit tangent directions <b>e</b><sub>1</sub> and <b>e</b><sub>2</sub>. Write <i>c</i> = cos θ = <b>e</b><sub>1</sub> · <b>e</b><sub>2</sub>, and let <i>V</i><sub>1</sub>, <i>V</i><sub>2</sub> and <i>V</i><sub>3</sub> be velocity projections on those directions and the unit normal. The reciprocal tangents are</p>
+<div class="equation" aria-label="Reciprocal tangent basis">e<sup>1</sup> = (e<sub>1</sub> − c e<sub>2</sub>)/(1 − c²), &nbsp; e<sup>2</sup> = (e<sub>2</sub> − c e<sub>1</sub>)/(1 − c²).</div>
+<p>For thickness η, the surface gradient is e<sup>1</sup>η<sub>s₁</sub> + e<sup>2</sup>η<sub>s₂</sub>. In the paper’s reference-surface approximation, the steady material-surface condition equates its tangential advection to <i>V</i><sub>3</sub>. Multiplying by 1 − <i>c</i>² gives</p>
+<div class="equation" aria-label="Corrected nonorthogonal kinematic thickness equation">η<sub>s₁</sub>(V<sub>1</sub> − c V<sub>2</sub>) + η<sub>s₂</sub>(V<sub>2</sub> − c V<sub>1</sub>) = V<sub>3</sub> sin²θ.</div>
+<p>The second thickness derivative is with respect to <i>s</i><sub>2</sub>; the printed Equation 11 repeats <i>s</i><sub>1</sub>. Treating these projections as orthogonal Cartesian components would also lose the metric terms. At θ = 90°, the equation reduces to η<sub>s₁</sub>V<sub>1</sub> + η<sub>s₂</sub>V<sub>2</sub> = V<sub>3</sub>. Reject a degenerate tangent basis and unsupported flow reversal. This reference-surface derivation does not remove finite-thickness curvature corrections from an exact updated-surface formulation.</p>
+
+<h2 id="length">Equation 17: derive a bounded residual update</h2>
+<p>Define the signed endpoint residual <i>R</i>(<i>L</i>) = δ(<i>L</i>). Taylor expansion gives <i>R</i>(<i>L</i> + Δ<i>L</i>) ≈ <i>R</i>(<i>L</i>) + <i>R</i>′(<i>L</i>)Δ<i>L</i>. Setting that approximation to zero yields</p>
+<div class="equation" aria-label="Newton and secant updates">L<sub>new</sub> = L − R(L)/R′(L),<br>L<sub>k+1</sub> = L<sub>k</sub> − R<sub>k</sub>(L<sub>k</sub> − L<sub>k−1</sub>)/(R<sub>k</sub> − R<sub>k−1</sub>).</div>
+<p>The printed Equation 17 instead multiplies the residual by its derivative and adds that product. It does not follow from this linearization. Both expressions can have units of length, so dimensional consistency alone cannot detect the error. A rule that positive endpoint thickness always requires increasing length additionally assumes a negative residual slope.</p>
+<p>Evaluate the derivative or secant from actual completed solves. Bound each proposal within a valid sign-changing bracket or a declared trust region; reject a nonfinite or nearly flat slope and use a safeguarded step. Recompute the signed residual and check progress. Coupled strips require attention to cross-strip derivatives: a coupled Jacobian satisfies <b>J</b>Δ<b>L</b> = −<b>R</b>; an independent scalar update is an additional approximation.</p>
+
+<h2>Assembly and admission checks still matter</h2>
+<p>The printed operator labels and cavity signs in Equations 19–23 are inconsistent. Choose one normal and kernel convention and derive the partition from it. For example, if the complete equation is <b>D</b>φ = <b>S</b>q, the wet/cavity split is</p>
+<div class="equation" aria-label="Partitioned boundary-integral equation">D<sub>w</sub>φ<sub>w</sub> − S<sub>c</sub>q<sub>c</sub> = S<sub>w</sub>q<sub>w</sub> − D<sub>c</sub>φ<sub>c</sub>.</div>
+<p>Verify the resulting operators with known harmonic fields before solving a free boundary. Equation 15’s integral must follow the detachment-to-target <i>s</i><sub>1</sub> direction consistently. Equation 14’s velocity square root requires a nonnegative radicand; clipping it would hide a failed state.</p>
+<ul>
+<li>Keep signed thickness, endpoint residuals and all sampled pressure values. Check nonintersection, finite fields and the chosen physical branch.</li>
+<li>Check normal velocity and Bernoulli pressure independently of the assembled algebraic residual, including samples away from collocation points and near both junctions.</li>
+<li>Compare imposed and reconstructed cavity pressure, and require sampled wetted pressure to remain above the selected cavity pressure within a declared roundoff allowance.</li>
+<li>Report mesh sensitivity, unresolved or incomplete trials, and closure assumptions. Endpoint closure alone establishes neither a physical free boundary nor experimental accuracy.</li>
+</ul>
+<p>The paper’s reported cylinder comparisons and closure sensitivity apply to its stated geometry and approximation. They do not supply an accuracy guarantee for a browser implementation, smooth-foil detachment, natural cavity-tail dynamics, or re-entrant-jet physics.</p>
+
+<footer id="sources">
+<h2>Primary sources</h2>
+<p class="small"><a href="https://doi.org/10.1016/j.enganabound.2024.105912">2024 article, <cite>Engineering Analysis with Boundary Elements</cite> 168, 105912</a> — supplied full text; Equations 9–18 and 19–23, Sections 2.4–2.6, and the reported validation limits.</p>
+<p class="small"><a href="https://cavity.caee.utexas.edu/kinnas/COURSES/bem/kinnas_ch09.pdf">S. A. Kinnas, <cite>Simulation of Cavitating and Free Surface Flows Using BEM</cite>, Chapter 9 (2010)</a> — a separate author-hosted treatment of nonlinear hydrofoil cavity boundaries, closure and detachment; see Sections 9.2.2 and 9.2.6. Its model must be matched before using it as a comparison.</p>
+</footer>
+</main></body></html>

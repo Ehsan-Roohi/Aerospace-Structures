@@ -1,0 +1,130 @@
+{
+  "cone2024": {
+    "source_id": "moroz2024",
+    "table": "5",
+    "printed_page": 186,
+    "x_mm": [
+      50,
+      100,
+      150,
+      200,
+      250,
+      300,
+      350,
+      400,
+      450,
+      500,
+      550
+    ],
+    "experiment_D_mm": [
+      66,
+      81,
+      92,
+      101,
+      108,
+      112,
+      115,
+      117,
+      117,
+      116,
+      113
+    ],
+    "paper_calculation_D_mm": [
+      66.9,
+      83.3,
+      94,
+      102.1,
+      108.2,
+      112.5,
+      115.2,
+      116.5,
+      116.5,
+      115,
+      112.2
+    ],
+    "conditions": {
+      "cavitator_base_mm": 50,
+      "cone_halfangle_deg": 20,
+      "immersion_mm": 150,
+      "speed_m_s": 9.12,
+      "cavitator_inclination_deg": 2.1,
+      "model_pitch_deg": 0
+    },
+    "coverage": "Only listed axial stations; cavity closure is not sampled.",
+    "note": "Both curves are paper data. No present project solver prediction is included; percent differences recomputed from diameters rather than copied from printed percentage column.",
+    "recomputed_diameter_metrics": {
+      "mean_absolute_error_mm": 0.9090909090909091,
+      "max_absolute_error_mm": 2.299999999999997,
+      "max_absolute_relative_error_percent": 2.839506172839503
+    }
+  },
+  "disk2023": {
+    "source_id": "moroz2023",
+    "table": "1 and 2",
+    "printed_page": 168,
+    "x_mm": [
+      60,
+      120,
+      180,
+      240,
+      300,
+      360,
+      420,
+      480
+    ],
+    "experiment_D_mm": [
+      70,
+      87,
+      99,
+      106,
+      111,
+      112,
+      111,
+      107
+    ],
+    "paper_calculation_D_mm": [
+      69.76,
+      87.35,
+      99.41,
+      107.82,
+      113.38,
+      116.5,
+      117.39,
+      116.09
+    ],
+    "experiment_axis_rise_mm": [
+      0,
+      2,
+      4,
+      6,
+      8,
+      10,
+      13,
+      17
+    ],
+    "paper_calculation_axis_rise_mm": [
+      0.26,
+      1.03,
+      2.32,
+      4.12,
+      6.44,
+      9.27,
+      12.61,
+      16.48
+    ],
+    "conditions": {
+      "disk_mm": 30,
+      "immersion_mm": 150,
+      "speed_m_s": 7.12,
+      "sigma": 0.071,
+      "experiment_air_l_s": 2.91,
+      "calculation_air_l_s": 3.03
+    },
+    "note": "The paper assumes circular sections through the tail; actual steady tail becomes elliptical/twin-vortex. This explains growing downstream profile mismatch. Do not relabel its paper calculation as a new prediction.",
+    "recomputed_diameter_metrics": {
+      "mean_absolute_error_mm": 3.1474999999999973,
+      "max_absolute_error_mm": 9.090000000000003,
+      "max_absolute_relative_error_percent": 8.495327102803742
+    }
+  }
+}

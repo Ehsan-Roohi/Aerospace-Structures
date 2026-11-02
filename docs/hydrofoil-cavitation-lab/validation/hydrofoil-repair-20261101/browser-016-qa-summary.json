@@ -1,0 +1,33 @@
+{
+  "passed": true,
+  "executionMethod": "Native headless Edge, new isolated D: profile, CDP. Real UI and real solver workers; no cached solution supplied.",
+  "browser": {
+    "protocolVersion": "1.3",
+    "product": "Edg/156.0.4314.50",
+    "revision": "@af2ba23ae0ecf7084d900446fc59d5119dd5fd5e",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.0.0 Safari/537.36 Edg/156.0.0.0",
+    "jsVersion": "15.6.12.7"
+  },
+  "sourceHashes": {
+    "cavitation.js": "241ce5626d281d81be592d28f354feb1405f201d6349ddaa8f3dee0926ae866c",
+    "smooth-detachment.js": "622a9317d03c70c193e4837de32e502e43a67a447801fa73c233f7073dc7894a",
+    "smooth-detachment-adapter.js": "ecb28dc65b017f044d553958d43bf848a23e257ecc69ff77a3c20614384e0e22",
+    "forward-hydrofoil.js": "fdc805fe65ac14849d7de977676c6909dc30fd1605dcb354db40a37c2f4115aa"
+  },
+  "solverElapsedSeconds": 31.493,
+  "acceptedForDisplay": true,
+  "warmStartUsed": false,
+  "root": {
+    "converged": true,
+    "length": 0.24054215390245262,
+    "sigma": 1.3157944612262673,
+    "residual": 4.1185066379512136e-07,
+    "bracket": [
+      0.24054215390245262,
+      0.26
+    ]
+  },
+  "targetPressureMinimum": 0.0014732952036031755,
+  "csvGapNodes": 49,
+  "checksScope": "Actual fresh worker, JSON/CSV/HTML exports, desktop and mobile layout; source hashes stable. Full harness report retained privately."
+}

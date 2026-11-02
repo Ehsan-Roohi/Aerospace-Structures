@@ -1,0 +1,127 @@
+{
+  "createdAt": "2026-11-02T03:15:29.566Z",
+  "sourceSHA256": "c803e570b26ea27456805fe01905cc08a0e93fed204361eafa0b1cc78daceea1",
+  "scope": "Pure synthetic core control tests; no numerical core solves and no scientific validation.",
+  "checks": [
+    {
+      "name": "default false hint expands only as needed and always uses a fresh final audit",
+      "passed": true,
+      "calls": [
+        {
+          "L": 2,
+          "audit": false
+        },
+        {
+          "L": 24,
+          "audit": false
+        },
+        {
+          "L": 48,
+          "audit": false
+        },
+        {
+          "L": 30,
+          "audit": false
+        },
+        {
+          "L": 30,
+          "audit": true
+        }
+      ],
+      "status": "FORWARD_RESEARCH_FIELD_PASSED"
+    },
+    {
+      "name": "fresh final sigma mismatch cannot inherit provisional root success",
+      "passed": true,
+      "status": "ROOT_NOT_CONVERGED",
+      "residual": 0.000020000000000006124
+    },
+    {
+      "name": "nonfinite expanded sigma fails closed before any bracket or audit contribution",
+      "passed": true,
+      "status": "REJECTED",
+      "completed": 2,
+      "incomplete": 48
+    },
+    {
+      "name": "expanded geometry failure cannot enter the pressure bracket",
+      "passed": true,
+      "status": "REJECTED"
+    },
+    {
+      "name": "final field failure remains rejected after successful expansion/root",
+      "passed": true,
+      "status": "FORWARD_FIELD_UNRESOLVED"
+    },
+    {
+      "name": "nonmonotone positive endpoint probes never create an invented sign bracket",
+      "passed": true,
+      "status": "NUMERICAL_DOMAIN_EXHAUSTED",
+      "range": [
+        0.125,
+        1.5
+      ]
+    },
+    {
+      "name": "high-sigma target reports numerical domain exhaustion without inappropriate long extension",
+      "passed": true,
+      "status": "NUMERICAL_DOMAIN_EXHAUSTED",
+      "calls": [
+        2,
+        24
+      ]
+    },
+    {
+      "name": "two expansions consume scalar budget and cannot masquerade as convergence",
+      "passed": true,
+      "status": "ROOT_NOT_CONVERGED",
+      "calls": [
+        {
+          "L": 2,
+          "audit": false
+        },
+        {
+          "L": 24,
+          "audit": false
+        },
+        {
+          "L": 48,
+          "audit": false
+        },
+        {
+          "L": 80,
+          "audit": false
+        },
+        {
+          "L": 48,
+          "audit": true
+        }
+      ]
+    },
+    {
+      "name": "cancelled expansion retains prior completed state and incomplete identity",
+      "passed": true,
+      "status": "CANCELLED",
+      "lastComplete": 24
+    },
+    {
+      "name": "global deadline during final computation prevents late acceptance",
+      "passed": true,
+      "status": "TIME_LIMIT"
+    },
+    {
+      "name": "single active solve guard and finally cleanup survive automatic strategy",
+      "passed": true,
+      "busy": "BUSY",
+      "first": "FORWARD_RESEARCH_FIELD_PASSED",
+      "next": "FORWARD_RESEARCH_FIELD_PASSED"
+    },
+    {
+      "name": "failed expansion releases active guard for a later clean solve",
+      "passed": true,
+      "failed": "REJECTED",
+      "next": "FORWARD_RESEARCH_FIELD_PASSED"
+    }
+  ],
+  "passed": true
+}

@@ -1,5 +1,5 @@
 'use strict';
-importScripts('fluid-state.js?v=0.1.0','cavitation.js?v=0.3.4','smooth-detachment.js?v=0.1.2','smooth-detachment-adapter.js?v=0.1.1','forward-hydrofoil.js?v=0.1.6-forward-research','axisymmetric-cavity-c1.js?v=0.3.1-forward','axisymmetric-forward.js?v=0.1.0','axisymmetric-reference.js?v=0.1.0','analytical-cavitators.js?v=0.1.0');
+importScripts('fluid-state.js?v=0.1.0','cavitation.js?v=0.3.4','smooth-detachment.js?v=0.1.2','smooth-detachment-adapter.js?v=0.1.1','forward-hydrofoil.js?v=0.1.6-forward-research','axisymmetric-cavity-c1.js?v=0.3.1-forward','axisymmetric-forward.js?v=0.1.1-automatic-bracket','axisymmetric-reference.js?v=0.1.0','analytical-cavitators.js?v=0.1.0');
 self.onmessage=async function(event){
  try{
   const {geometry,method,flow,foil,disk,cavitator,settings}=event.data;

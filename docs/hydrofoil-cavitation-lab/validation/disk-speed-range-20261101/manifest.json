@@ -1,0 +1,243 @@
+{
+  "createdUtc": "2026-11-02T03:39:49.281Z",
+  "wrapperVersion": "0.1.1-automatic-bracket",
+  "sourceChange": "Automatic bounded numerical search only; unchanged production C1 core and physical/field screens. Separate guard-only rejected probes are labeled exploratory.",
+  "sources": [
+    {
+      "file": "docs/hydrofoil-cavitation-lab/axisymmetric-forward.js",
+      "sha256": "c803e570b26ea27456805fe01905cc08a0e93fed204361eafa0b1cc78daceea1"
+    },
+    {
+      "file": "docs/hydrofoil-cavitation-lab/axisymmetric-cavity-c1.js",
+      "sha256": "03aefa3ef10f59005f8f053a4b2b6a0c66216508b2a1fbf00bcf78662a0899f0"
+    },
+    {
+      "file": "docs/hydrofoil-cavitation-lab/validation/test-axisymmetric-auto-bracket.cjs",
+      "sha256": "8ad879a6267d96059fbc8654a4df429e9bddaf91ef3d66c37f44e2a4a58ed6cc"
+    },
+    {
+      "file": "docs/hydrofoil-cavitation-lab/validation/test-axisymmetric-forward.cjs",
+      "sha256": "d855ffef989c1996e483d8d839a13d3abdc9b7d4e5c2e54763248faa5f75e88e"
+    }
+  ],
+  "relatedFiles": [
+    {
+      "file": "../disk-speed-range.html",
+      "sha256": "cd35b7b4957e5af185260a73c4d7854b5c5e63453c554a7dc8695b5810c436ce"
+    }
+  ],
+  "files": [
+    {
+      "file": "automatic-bracket-checks.json",
+      "bytes": 2413,
+      "sha256": "e4ad5735ae2c9762c331c245631122daab45148fb14def2cf1684939908aa3ec"
+    },
+    {
+      "file": "axisymmetric-forward-previous.js.txt",
+      "bytes": 19167,
+      "sha256": "3474011c5833e38efaa3d48d82154f04ced197a2c7ce1e6ba0ab55ce9faeb410"
+    },
+    {
+      "file": "benchmark.json",
+      "bytes": 18111,
+      "sha256": "5554c8b3cd9bcf85cf5cbc2cb100d48f10eae246e0e5e90be9fef1addbea27f6"
+    },
+    {
+      "file": "crosschecks.json",
+      "bytes": 1850,
+      "sha256": "7ced31ca7d0ed73246d6c1c4f3387b56654ccae66a73897fda5dac29def8574e"
+    },
+    {
+      "file": "guard-only-c1-length-probe.js.txt",
+      "bytes": 45507,
+      "sha256": "2b67f66ce6d150c8e1301fb42bc6a025d188eeb5e31e874e441ed37b0b9348e3"
+    },
+    {
+      "file": "guard-only-long160_128-fieldquad64-24-full.json.gz",
+      "bytes": 216404,
+      "sha256": "11775606accb940e93cf6344aaeef53963bc9cc5bc69939f1a77ef2b379f87f0"
+    },
+    {
+      "file": "guard-only-long160_128-full.json.gz",
+      "bytes": 223050,
+      "sha256": "05505cb088edf87246d7c1db32634cb09e54140dfccb47a430deb02af644bb49"
+    },
+    {
+      "file": "guard-only-long160_32-full.json.gz",
+      "bytes": 51880,
+      "sha256": "a73ae31448325074b89b752f4948ea9bd20c4fdf79a803ea82bc99f147e4008a"
+    },
+    {
+      "file": "independent-wrapper-checks.json",
+      "bytes": 3233,
+      "sha256": "c1b2ac3970e3cf47022f2e4eff36d8cd9835c2b319e7f3ea99a69b5f3b199bbf"
+    },
+    {
+      "file": "outside-production-range-probes.json",
+      "bytes": 5985,
+      "sha256": "f103fcc7c8cd87ff9b6954d9772605d8fb726bc63e4bba5110ed52c074784bf2"
+    },
+    {
+      "file": "plot-profiles.py",
+      "bytes": 3205,
+      "sha256": "691bc3c834ab4d297bb7d4a3638f70284bacdc9dd6549c62bec12dfc530ed4e8"
+    },
+    {
+      "file": "README.md",
+      "bytes": 5689,
+      "sha256": "44f48a73d62315c402e536107207dec8ead51446dfd45d615cf7060b54266dc4"
+    },
+    {
+      "file": "reproduce-range-probes.cjs",
+      "bytes": 2940,
+      "sha256": "be9a6e32993abf5bcee460e16000981b351ac58809bef634afdb2420e5eee9b4"
+    },
+    {
+      "file": "reproduce.cjs",
+      "bytes": 5638,
+      "sha256": "87d95ed7520a995ffabf8170238e101cd2960db1aacf631ad43d73ccfe3aaa66"
+    },
+    {
+      "file": "speed-envelope-profiles.png",
+      "bytes": 141155,
+      "sha256": "0ad5a67777d58d2208133b7def9c0957f80d098a82565ff95e481295bf07ed1e"
+    },
+    {
+      "file": "speed-envelope-profiles.svg",
+      "bytes": 70801,
+      "sha256": "f7756c0da59ad666990ea1bf6db5de771522bad287bc07ecf927b2e77e1c95c9"
+    },
+    {
+      "file": "summary.csv",
+      "bytes": 1411,
+      "sha256": "7af7cc5e4123effbe7c475f1e591269233ec10d8d550310ab112465114823498"
+    },
+    {
+      "file": "test-auto-bracket.cjs",
+      "bytes": 8019,
+      "sha256": "5c3a8985ea19025950e0e3248892ea28a30c09922d93e29b46e49ee75892cae6"
+    },
+    {
+      "file": "test-independent-wrapper.cjs",
+      "bytes": 6997,
+      "sha256": "b9c49f9da7d3be950939abab46f75f454d73f5299ce33959d77355b3181c5e2a"
+    },
+    {
+      "file": "U10-Nc32-auto-domain-limit-full.json.gz",
+      "bytes": 3756,
+      "sha256": "8dad65d0e1151993e598538c349e42b6d2c339363e4e9c741075fcb1dac4c215"
+    },
+    {
+      "file": "U37-Nc32-auto-field.csv",
+      "bytes": 150097,
+      "sha256": "f58b28e683abb36f04be9feabfa130155b00a0ba893031f79b6231c0851b72b6"
+    },
+    {
+      "file": "U37-Nc32-auto-full.json.gz",
+      "bytes": 65546,
+      "sha256": "aee7c7cc932fc2e801f6f6fda915c7cda219fe56a2f048a18f473f1315441380"
+    },
+    {
+      "file": "U37-Nc32-auto-shape.csv",
+      "bytes": 22096,
+      "sha256": "681867159e4b05aa65b8058c4e474793585334cc7da50dda83ddac6b9f7e1180"
+    },
+    {
+      "file": "U37-Nc32-original-wrapper-full.json.gz",
+      "bytes": 65388,
+      "sha256": "7da45997d03f0cd5491a69e4538e6b11e79547fdb057a03a6d3201780274d8a9"
+    },
+    {
+      "file": "U40-Nc32-auto-field.csv",
+      "bytes": 149548,
+      "sha256": "db5137c9d54156135f2630505ba27945f212363f4ed1d2038bf6094bb6382547"
+    },
+    {
+      "file": "U40-Nc32-auto-full.json.gz",
+      "bytes": 66450,
+      "sha256": "1d4a7024b7f00ab153ed092b656c07ba5fc4d9de4ed46bbdaefea3791a2dfb19"
+    },
+    {
+      "file": "U40-Nc32-auto-shape.csv",
+      "bytes": 22001,
+      "sha256": "e519a1b3637752fa796a38fa260ff1b5fe87dc54717daea2f27cd8b42f51516f"
+    },
+    {
+      "file": "U40-Nc32-explicit-legacy-full.json.gz",
+      "bytes": 3756,
+      "sha256": "a5c0c2fa19d30d9135f4424855fba3bc0b8bbe7eb51d7ef3ed1f119da47e2d91"
+    },
+    {
+      "file": "U50-Nc32-auto-field.csv",
+      "bytes": 149292,
+      "sha256": "3590c7aaacb3d3a9178dfcd9d0ebd9f2609de2336db4ed62be00a69de1e6fa5a"
+    },
+    {
+      "file": "U50-Nc32-auto-full.json.gz",
+      "bytes": 66384,
+      "sha256": "caa7e14d33fa38a3b439275bc151025b037fd22594980f20749a0ac3278c7c50"
+    },
+    {
+      "file": "U50-Nc32-auto-shape.csv",
+      "bytes": 21964,
+      "sha256": "e1450ec7bf9c80fe5662d3f270913c355bce32e5adb2dcb3401e6f4991ecc584"
+    },
+    {
+      "file": "U60-Nc128-auto-field.csv",
+      "bytes": 591042,
+      "sha256": "ee7e0360b373e3868f6c10b1b3893dc0af79b141d5e041c8c6b7772a4c8c1783"
+    },
+    {
+      "file": "U60-Nc128-auto-full.json.gz",
+      "bytes": 277883,
+      "sha256": "079ba9d08eabe56231943826cad782fed968ade93670595cbf187e5d9b23be7e"
+    },
+    {
+      "file": "U60-Nc128-auto-shape.csv",
+      "bytes": 87907,
+      "sha256": "a69f71ee3e39547b5c7222847381378383bfdad8377ca6bb8f3f23d09b384a0f"
+    },
+    {
+      "file": "U60-Nc128-higher-quadrature-field-full.json.gz",
+      "bytes": 218934,
+      "sha256": "99881021690c10b4244545dd364d3ca4a948d60884e70ea82103454993a71dde"
+    },
+    {
+      "file": "U60-Nc32-auto-field.csv",
+      "bytes": 150088,
+      "sha256": "26b78fd09ad2a856664a9899de2239a155a21bee69d6ee953bb4eef33ef53fa1"
+    },
+    {
+      "file": "U60-Nc32-auto-full.json.gz",
+      "bytes": 66694,
+      "sha256": "9fa401cf54963ed3787872affd2b6859dcdc22c99f5bbdcaa6d44fdaa9d80e44"
+    },
+    {
+      "file": "U60-Nc32-auto-shape.csv",
+      "bytes": 21825,
+      "sha256": "34f6476e08b0c6b8413067ea4995ced7adfa62cc1ba7ad4b37ae9f297cd8105b"
+    },
+    {
+      "file": "U60-Nc32-higher-quadrature-field-full.json.gz",
+      "bytes": 50476,
+      "sha256": "2ef61ced192b5710dfe1bdd0a183c3a8be53ed75ac445e19fadafefc4d9515e2"
+    },
+    {
+      "file": "U60-signed-field-comparison.png",
+      "bytes": 174613,
+      "sha256": "92574b3d0a80557e0ec9d6ceeb3628001df26c90a449155c451c25a14561bda1"
+    },
+    {
+      "file": "U60-signed-field-comparison.svg",
+      "bytes": 2035241,
+      "sha256": "a00054b4296b446d5d99bd1403129e6b9eee0cded196b03c32c841bdc8132bb8"
+    },
+    {
+      "file": "U80-Nc32-auto-domain-limit-full.json.gz",
+      "bytes": 4340,
+      "sha256": "109597f3937f3e4e0c31e383576bfa9cb8176cd8058fa7aa4d7c68c5531a128a"
+    }
+  ],
+  "meshAccuracyQualified": false,
+  "experimentalAccuracyQualified": false
+}

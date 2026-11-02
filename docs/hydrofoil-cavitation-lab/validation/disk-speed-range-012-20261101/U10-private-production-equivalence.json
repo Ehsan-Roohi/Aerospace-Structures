@@ -1,0 +1,84 @@
+{
+  "productionVersion": "0.1.2-bidirectional-bracket",
+  "measuredPrivateVersion": "0.1.2-private-bidirectional-bracket",
+  "source": {
+    "createdUtc": "2026-11-02T04:28:45.621Z",
+    "productionVersion": "0.1.2-bidirectional-bracket",
+    "coreVersion": "0.3.1-c1-forward-domain",
+    "baseline": {
+      "coreSha256": "03aefa3ef10f59005f8f053a4b2b6a0c66216508b2a1fbf00bcf78662a0899f0",
+      "forwardSha256": "c803e570b26ea27456805fe01905cc08a0e93fed204361eafa0b1cc78daceea1"
+    },
+    "production": {
+      "coreSha256": "bdf1463c744263fef4f4a2fe28f864cbfb9b38991fe1b7f8c42f7f463e1908c5",
+      "forwardSha256": "2d53850a2359f32f42765e97c4f61a3a2f4caadaed9afa408fc614b18e6f15ed"
+    },
+    "measuredPrivate": {
+      "coreSha256": "fae9b6384f20a0c756314d046b6eddf46a15870dccae81eea32f388753e5bfef",
+      "forwardSha256": "1886347bf803db115fae2930e5e791ec4ccc2886d7c8040d31c827ef638430b6"
+    },
+    "coreExactChangesFrom011": [
+      {
+        "before": "VERSION='0.3.0-c1-reviewed-guards'",
+        "after": "VERSION='0.3.1-c1-forward-domain'"
+      },
+      {
+        "before": "mColl=3,researchLengthExtension=false}={})",
+        "after": "mColl=3,researchLengthExtension=false,forwardLengthExtension=false}={})"
+      },
+      {
+        "before": " if(typeof researchLengthExtension!=='boolean')throw Error('researchLengthExtension must be an explicit boolean.');",
+        "after": " if(typeof researchLengthExtension!=='boolean')throw Error('researchLengthExtension must be an explicit boolean.');\n if(typeof forwardLengthExtension!=='boolean')throw Error('forwardLengthExtension must be an explicit boolean.');\n const minimumLength=forwardLengthExtension?.5:2;"
+      },
+      {
+        "before": " const maximumLength=researchLengthExtension?80:24;",
+        "after": " const maximumLength=forwardLengthExtension?160:researchLengthExtension?80:24;"
+      },
+      {
+        "before": " if(L<2||L>maximumLength||Rm<=1||Rm>20)throw Error(researchLengthExtension?'Opt-in unqualified research domain: L/R 2–80 and reference radius ratio >1 through 20.':'Research domain: L/R 2–24 and reference radius ratio >1 through 20.');",
+        "after": " if(L<minimumLength||L>maximumLength||Rm<=1||Rm>20)throw Error(forwardLengthExtension?'Forward-only numerical domain: L/R 0.5–160 and reference radius ratio >1 through 20.':researchLengthExtension?'Opt-in unqualified research domain: L/R 2–80 and reference radius ratio >1 through 20.':'Research domain: L/R 2–24 and reference radius ratio >1 through 20.');"
+      },
+      {
+        "before": "domain:{lengthInterval:[2,maximumLength],researchLengthExtension,meshAccuracyQualified:false,experimentalAccuracyQualified:false,label:researchLengthExtension?'Opt-in long-cavity research domain; no accuracy qualification.':'Default research domain.'}",
+        "after": "domain:{lengthInterval:[minimumLength,maximumLength],researchLengthExtension,forwardLengthExtension,meshAccuracyQualified:false,experimentalAccuracyQualified:false,label:forwardLengthExtension?'Forward-only extended numerical domain; no accuracy qualification.':researchLengthExtension?'Opt-in long-cavity research domain; no accuracy qualification.':'Default research domain.'}"
+      }
+    ],
+    "forwardExactChangesFromMeasuredPrivate": [
+      {
+        "before": "require('./axisymmetric-cavity-c1-private.js')",
+        "after": "require('./axisymmetric-cavity-c1.js')"
+      },
+      {
+        "before": "const VERSION = '0.1.2-private-bidirectional-bracket';",
+        "after": "const VERSION = '0.1.2-bidirectional-bracket';"
+      },
+      {
+        "before": "const CORE_SHA256 = 'fae9b6384f20a0c756314d046b6eddf46a15870dccae81eea32f388753e5bfef';",
+        "after": "const CORE_SHA256 = 'bdf1463c744263fef4f4a2fe28f864cbfb9b38991fe1b7f8c42f7f463e1908c5';"
+      },
+      {
+        "before": "audit,researchLengthExtension:o.lengthStrategy==='extended-research'||L>24,",
+        "after": "audit,researchLengthExtension:o.lengthStrategy==='extended-research'||L>24,\n      forwardLengthExtension:o.lengthStrategy==='automatic',"
+      }
+    ],
+    "proof": {
+      "productionCoreReversesByteExactlyTo011": true,
+      "measuredPrivateCoreReversesByteExactlyTo011": true,
+      "productionForwardReversesByteExactlyToMeasuredPrivate": true
+    },
+    "scope": "All production core edits are VERSION/explicit domain-option validation/bounds/domain metadata. All forward differences from the measured private candidate are module binding/version/source hash and explicit forwardLengthExtension flag. Kernels, nonlinear equations, existing limits and acceptance gates are unchanged."
+  },
+  "bitwisePhysicalOutputs": {
+    "L": true,
+    "sigma": true,
+    "Rmax": true,
+    "CD": true,
+    "CD_directField": true,
+    "volume": true,
+    "maxDynamicResidual": true,
+    "nodes": true,
+    "solutionState": true,
+    "fullFieldAudit": true
+  },
+  "allIdentical": true
+}

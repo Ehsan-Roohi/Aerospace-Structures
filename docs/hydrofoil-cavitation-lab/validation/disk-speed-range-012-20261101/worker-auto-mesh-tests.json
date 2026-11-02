@@ -1,0 +1,78 @@
+{
+  "startedUTC": "2026-11-02T04:35:12.845Z",
+  "scope": "Isolated VM mocks and one short Node worker_threads termination check. No browser/native UI or real numerical solve.",
+  "workerSha256": "405e77a0ff4a1ccbb86fe6ca393e645ecb5ce39de664a7fdd8b11cc8238625a1",
+  "checks": [
+    {
+      "name": "Worker syntax and promoted driver/core cache tokens match",
+      "pass": true
+    },
+    {
+      "name": "Automatic32 success is returned without a fine solve",
+      "pass": true
+    },
+    {
+      "name": "Only field failure retries a fresh128 with remaining global budget and full coarse/fine diagnostics",
+      "pass": true,
+      "coarseBudget": 300,
+      "fineBudget": 293,
+      "totalSeconds": 118,
+      "progressEvents": 7
+    },
+    {
+      "name": "Manual32/64/128 remain exact single-call choices, preserving optional legacy fields",
+      "pass": true
+    },
+    {
+      "name": "Body/domain/root/nodal/geometry/cancel/time failures cannot trigger refinement",
+      "pass": true,
+      "cases": [
+        "body status",
+        "domain",
+        "scalar budget",
+        "root status",
+        "root flag",
+        "nodal flag",
+        "geometry flag",
+        "body flag",
+        "body dry containment",
+        "missing direct-field flag",
+        "contradictory accepted",
+        "cancelled",
+        "time limit"
+      ]
+    },
+    {
+      "name": "Remaining-budget10s boundary and minimum10s original budget are handled safely",
+      "pass": true
+    },
+    {
+      "name": "Progress-reporting overhead is charged before deciding whether a fine solve fits",
+      "pass": true
+    },
+    {
+      "name": "No late coarse/fine success is admitted; the exact shared deadline remains legal",
+      "pass": true
+    },
+    {
+      "name": "Only one fine attempt is possible, including rejection, exception and incomplete responses",
+      "pass": true
+    },
+    {
+      "name": "Invalid automatic budgets stop before any solver call",
+      "pass": true
+    },
+    {
+      "name": "Automatic disk mesh logic does not change reference, analytical or hydrofoil dispatch",
+      "pass": true
+    },
+    {
+      "name": "UI cancel retains terminate semantics; terminating the real isolated test thread prevents any fine continuation",
+      "pass": true
+    }
+  ],
+  "finishedUTC": "2026-11-02T04:35:12.954Z",
+  "passed": true,
+  "noRealNumericalSolves": true,
+  "sourceUnchangedDuringTests": true
+}

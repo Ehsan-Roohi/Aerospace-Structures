@@ -51,7 +51,7 @@
  */
 (function(root,factory){const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;else root.CurvedVortexCavity=api;})(typeof globalThis!=='undefined'?globalThis:this,function(){
 'use strict';
-const PI=Math.PI,TWO_PI=2*Math.PI,GL=new Map(),VERSION='0.3.0-c1-reviewed-guards';let CLP=3;   // clustering exponent z = zs + span u^CLP toward the foot (u^3: endpoint log behaves as u^2 log u)
+const PI=Math.PI,TWO_PI=2*Math.PI,GL=new Map(),VERSION='0.3.1-c1-forward-domain';let CLP=3;   // clustering exponent z = zs + span u^CLP toward the foot (u^3: endpoint log behaves as u^2 log u)
 const dot=(a,b)=>a[0]*b[0]+a[1]*b[1],norm=a=>Math.hypot(a[0],a[1]);
 const maxabs=a=>{let m=0;for(const v of a)m=Math.max(m,Math.abs(v));return m;};
 
@@ -234,11 +234,13 @@ function interp(xs,ys,x){if(x<=xs[0])return ys[0];if(x>=xs.at(-1))return ys.at(-
 function gradient(y,x){return y.map((v,i)=>{if(i===0)return(y[1]-v)/(x[1]-x[0]);if(i===y.length-1)return(v-y[i-1])/(x[i]-x[i-1]);const hs=x[i]-x[i-1],hd=x[i+1]-x[i];return-hd*y[i-1]/(hs*(hs+hd))+(hd-hs)*v/(hs*hd)+hs*y[i+1]/(hd*(hs+hd));});}
 function reference(L,Rm){const m=40001,x=new Array(m),r=new Array(m),s=new Array(m);s[0]=0;for(let i=0;i<m;i++){x[i]=L*(1-Math.cos(PI*i/(m-1)))/2;r[i]=1+(Rm-1)*Math.max(0,4*x[i]*(L-x[i])/(L*L))**(2/3);if(i)s[i]=s[i-1]+Math.hypot(x[i]-x[i-1],r[i]-r[i-1]);}let tx=gradient(x,s),tr=gradient(r,s);const nx=[],nr=[];for(let i=0;i<m;i++){const h=Math.hypot(tx[i],tr[i]);nx[i]=-tr[i]/h;nr[i]=tx[i]/h;}nx[0]=-1;nr[0]=0;nx[m-1]=1;nr[m-1]=0;return{x,r,u:s.map(v=>v/s.at(-1)),nx,nr};}
 
-function setup({L=8,Nc=32,Nf=Nc/2,Rm=1.95,nNear=24,nFar=12,mColl=3,researchLengthExtension=false}={}){
+function setup({L=8,Nc=32,Nf=Nc/2,Rm=1.95,nNear=24,nFar=12,mColl=3,researchLengthExtension=false,forwardLengthExtension=false}={}){
  for(const[k,v]of Object.entries({L,Nc,Nf,Rm,nNear,nFar,mColl}))if(typeof v!=='number'||!Number.isFinite(v))throw Error(k+' must be a finite number.');
  if(typeof researchLengthExtension!=='boolean')throw Error('researchLengthExtension must be an explicit boolean.');
- const maximumLength=researchLengthExtension?80:24;
- if(L<2||L>maximumLength||Rm<=1||Rm>20)throw Error(researchLengthExtension?'Opt-in unqualified research domain: L/R 2–80 and reference radius ratio >1 through 20.':'Research domain: L/R 2–24 and reference radius ratio >1 through 20.');
+ if(typeof forwardLengthExtension!=='boolean')throw Error('forwardLengthExtension must be an explicit boolean.');
+ const minimumLength=forwardLengthExtension?.5:2;
+ const maximumLength=forwardLengthExtension?160:researchLengthExtension?80:24;
+ if(L<minimumLength||L>maximumLength||Rm<=1||Rm>20)throw Error(forwardLengthExtension?'Forward-only numerical domain: L/R 0.5–160 and reference radius ratio >1 through 20.':researchLengthExtension?'Opt-in unqualified research domain: L/R 2–80 and reference radius ratio >1 through 20.':'Research domain: L/R 2–24 and reference radius ratio >1 through 20.');
  for(const[k,v,lo,hi]of[['Nc',Nc,8,512],['Nf',Nf,4,256],['nNear',nNear,4,64],['nFar',nFar,4,32],['mColl',mColl,1,6]])if(!Number.isInteger(v)||v<lo||v>hi)throw Error(k+' outside supported integer range '+lo+'–'+hi+'.');
  if(2*Nf+Nc>1024)throw Error('At most 1024 meridian panels in this research implementation.');
  if(Nc%2!==0)throw Error('Even cavity panel count required.');
@@ -251,7 +253,7 @@ function setup({L=8,Nc=32,Nf=Nc/2,Rm=1.95,nNear=24,nFar=12,mColl=3,researchLengt
  const N=2*Nf+Nc,h=Nf+Nc/2;
  const Dface=splineSlopeOperator(Nf,'natural','notaknot');     // gamma odd at the axis; free at the rim
  const Dcav=splineSlopeOperator(Nc/2,'clamped','clamped');      // gamma even at the rim and at the mid-plane
- const s={L,Nc,Nf,N,h,Rm,nNear,nFar,mColl,cav,normal,front,Dface,Dcav,kind:'disk-cavity',domain:{lengthInterval:[2,maximumLength],researchLengthExtension,meshAccuracyQualified:false,experimentalAccuracyQualified:false,label:researchLengthExtension?'Opt-in long-cavity research domain; no accuracy qualification.':'Default research domain.'}};
+ const s={L,Nc,Nf,N,h,Rm,nNear,nFar,mColl,cav,normal,front,Dface,Dcav,kind:'disk-cavity',domain:{lengthInterval:[minimumLength,maximumLength],researchLengthExtension,forwardLengthExtension,meshAccuracyQualified:false,experimentalAccuracyQualified:false,label:forwardLengthExtension?'Forward-only extended numerical domain; no accuracy qualification.':researchLengthExtension?'Opt-in long-cavity research domain; no accuracy qualification.':'Default research domain.'}};
  const sr=slopeRows(s);s.srows=sr;s.fA=sr.rowA.map(r=>foldRow(s,r));s.fB=sr.rowB.map(r=>foldRow(s,r));
  return s;
 }

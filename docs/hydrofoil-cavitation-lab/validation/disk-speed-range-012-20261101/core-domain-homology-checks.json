@@ -1,0 +1,36 @@
+{
+  "coreVersion": "0.3.1-c1-forward-domain",
+  "forwardVersion": "0.1.2-bidirectional-bracket",
+  "source": {
+    "coreSha256": "bdf1463c744263fef4f4a2fe28f864cbfb9b38991fe1b7f8c42f7f463e1908c5",
+    "forwardSha256": "2d53850a2359f32f42765e97c4f61a3a2f4caadaed9afa408fc614b18e6f15ed"
+  },
+  "checks": [
+    {
+      "name": "productioncore explicit legacy guards unchanged",
+      "passed": true
+    },
+    {
+      "name": "new explicit forwardflag permits onlyboundedpoint5to160",
+      "passed": true
+    },
+    {
+      "name": "forwarddomain flag fails closed on nonbooleans",
+      "passed": true
+    },
+    {
+      "name": "all original numericalsetupfields bitwise equal atlegacycases",
+      "passed": true
+    },
+    {
+      "name": "forwardoption numericalsetupfields bitwise equal tomeasured privatecopy",
+      "passed": true
+    },
+    {
+      "name": "sourcehomology inverseproofs and currenthashes match",
+      "passed": true
+    }
+  ],
+  "allPassed": true,
+  "scope": "Guard/API and exact numerical-source/setup equivalence; no experimental accuracy qualification."
+}

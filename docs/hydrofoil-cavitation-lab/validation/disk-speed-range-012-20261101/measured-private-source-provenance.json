@@ -1,0 +1,35 @@
+{
+  "createdUtc": "2026-11-02T04:16:09.614Z",
+  "privateCandidate": true,
+  "productionChanged": false,
+  "baseline": {
+    "coreSource": "docs/hydrofoil-cavitation-lab/axisymmetric-cavity-c1.js",
+    "coreSha256": "03aefa3ef10f59005f8f053a4b2b6a0c66216508b2a1fbf00bcf78662a0899f0",
+    "forwardSource": "docs/hydrofoil-cavitation-lab/axisymmetric-forward.js",
+    "forwardSha256": "c803e570b26ea27456805fe01905cc08a0e93fed204361eafa0b1cc78daceea1"
+  },
+  "candidate": {
+    "coreSource": "axisymmetric-cavity-c1-private.js",
+    "coreSha256": "fae9b6384f20a0c756314d046b6eddf46a15870dccae81eea32f388753e5bfef",
+    "forwardSource": "axisymmetric-forward-private.js",
+    "forwardSha256": "1886347bf803db115fae2930e5e791ec4ccc2886d7c8040d31c827ef638430b6"
+  },
+  "coreExactGuardChanges": [
+    {
+      "before": "const maximumLength=researchLengthExtension?80:24;",
+      "after": "const maximumLength=researchLengthExtension?160:24;"
+    },
+    {
+      "before": "if(L<2||L>maximumLength||Rm<=1||Rm>20)throw Error(researchLengthExtension?'Opt-in unqualified research domain: L/R 2–80 and reference radius ratio >1 through 20.':'Research domain: L/R 2–24 and reference radius ratio >1 through 20.');",
+      "after": "if(L<.5||L>maximumLength||Rm<=1||Rm>20)throw Error(researchLengthExtension?'Private exploratory domain: L/R 0.5–160 and reference radius ratio >1 through 20.':'Private exploratory domain: L/R 0.5–24 and reference radius ratio >1 through 20.');"
+    },
+    {
+      "before": "domain:{lengthInterval:[2,maximumLength],",
+      "after": "domain:{lengthInterval:[.5,maximumLength],"
+    }
+  ],
+  "coreNumericalKernelsAndGatesUnchanged": true,
+  "wrapperPolicy": "Automatic fresh initial2/24, upper48/80/160 only for positive endpoint signs, lower1/.5 only for negative signs; all probes count in existing scalar cap; separate fresh15-fraction final audit. Legacy bounded/direct extended paths retain2..24/2..80.",
+  "qualification": "Exploratory numerical-domain candidate only; no mesh or experimental accuracy qualification.",
+  "wrapperBudgetDiagnostic": "SCALAR_BUDGET_EXHAUSTED distinguishes an untested allowed endpoint from exhausted numerical range."
+}

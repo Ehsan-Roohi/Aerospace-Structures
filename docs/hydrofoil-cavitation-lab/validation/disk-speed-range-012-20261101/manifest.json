@@ -1,0 +1,268 @@
+{
+  "createdUtc": "2026-11-02T12:50:22.588Z",
+  "forwardVersion": "0.1.2-bidirectional-bracket",
+  "coreVersion": "0.3.1-c1-forward-domain",
+  "sources": [
+    {
+      "file": "docs/hydrofoil-cavitation-lab/axisymmetric-cavity-c1.js",
+      "sha256": "bdf1463c744263fef4f4a2fe28f864cbfb9b38991fe1b7f8c42f7f463e1908c5"
+    },
+    {
+      "file": "docs/hydrofoil-cavitation-lab/axisymmetric-forward.js",
+      "sha256": "2d53850a2359f32f42765e97c4f61a3a2f4caadaed9afa408fc614b18e6f15ed"
+    },
+    {
+      "file": "docs/hydrofoil-cavitation-lab/forward-worker.js",
+      "sha256": "405e77a0ff4a1ccbb86fe6ca393e645ecb5ce39de664a7fdd8b11cc8238625a1"
+    },
+    {
+      "file": "docs/hydrofoil-cavitation-lab/validation/test-axisymmetric-auto-bracket.cjs",
+      "sha256": "4a35e10f5f34884844356491b3ee814ff692d51308098fbfeaa08c3b1603b4d4"
+    },
+    {
+      "file": "docs/hydrofoil-cavitation-lab/validation/test-axisymmetric-bidirectional.cjs",
+      "sha256": "151c444c261b0d939261614f76070442b1ca1dcbde7daffaa4baa3fdd864fad5"
+    }
+  ],
+  "relatedFiles": [
+    {
+      "file": "../disk-speed-range-012.html",
+      "sha256": "e378afa4d7874177b55042f0c4ef55fb2dcc0c6b07e664f36ef1ac89189fab97"
+    }
+  ],
+  "files": [
+    {
+      "file": "actual-browser-automatic-retry.json",
+      "bytes": 2672,
+      "sha256": "b073997606931f063439d133f93f240492d0633c40b15eeb134344eebcf0e4a5"
+    },
+    {
+      "file": "automatic-bracket-checks.json",
+      "bytes": 2822,
+      "sha256": "88ff76039352049518ec4daef7e976168c17d0542c97c8d791f38dd6d251f504"
+    },
+    {
+      "file": "baseline-core-011.js",
+      "bytes": 45505,
+      "sha256": "03aefa3ef10f59005f8f053a4b2b6a0c66216508b2a1fbf00bcf78662a0899f0"
+    },
+    {
+      "file": "baseline-forward-011.js.txt",
+      "bytes": 22242,
+      "sha256": "c803e570b26ea27456805fe01905cc08a0e93fed204361eafa0b1cc78daceea1"
+    },
+    {
+      "file": "benchmark.json",
+      "bytes": 12329,
+      "sha256": "38f53412a39914305f4964f8049fcef779b36bbab8479423eaa16b99990f2022"
+    },
+    {
+      "file": "core-domain-homology-checks.json",
+      "bytes": 1083,
+      "sha256": "5f816604fcaa9808e74dacb2a95d15831ca267f4a811a2e50a59b4eb308c9556"
+    },
+    {
+      "file": "current-browser-U80-profiles.png",
+      "bytes": 339853,
+      "sha256": "00dfa1085896d33273d4d9eacd70777dacf041a7f44c52be61277ea759dfa2fd"
+    },
+    {
+      "file": "current-browser-U80-profiles.svg",
+      "bytes": 56168,
+      "sha256": "aea4637b4ac5d4a13ff87b02fce4736e8f37c09b6bd48b591cf63d6d1458064d"
+    },
+    {
+      "file": "historical-011-preservation.json",
+      "bytes": 475,
+      "sha256": "602d2dd1167688732842e922234a70afa9cf3f9db1fabc0a0437619e1e5056f8"
+    },
+    {
+      "file": "measured-private-cold-envelope-profiles.png",
+      "bytes": 148258,
+      "sha256": "6712bdab9ceace31c95497f63c6a6aa8b25aadbf7bed7d519125354277262772"
+    },
+    {
+      "file": "measured-private-cold-envelope-profiles.svg",
+      "bytes": 69886,
+      "sha256": "18263ae816e59cf177d36e64aa6b31e666fed306a0614833398276331dd1798a"
+    },
+    {
+      "file": "measured-private-cold-signed-fields.png",
+      "bytes": 201176,
+      "sha256": "5c55501d368e1783a3a6f4e09f2d301ac686cf57ca61972b1880a73454f08dbd"
+    },
+    {
+      "file": "measured-private-cold-signed-fields.svg",
+      "bytes": 905976,
+      "sha256": "90ea206f815389f363af4cd669f0fa83807d2750a0286d87c0ecb66d8d77d8e6"
+    },
+    {
+      "file": "measured-private-core.js",
+      "bytes": 45516,
+      "sha256": "fae9b6384f20a0c756314d046b6eddf46a15870dccae81eea32f388753e5bfef"
+    },
+    {
+      "file": "measured-private-forward.js.txt",
+      "bytes": 23942,
+      "sha256": "1886347bf803db115fae2930e5e791ec4ccc2886d7c8040d31c827ef638430b6"
+    },
+    {
+      "file": "measured-private-source-provenance.json",
+      "bytes": 2182,
+      "sha256": "2236286fcd7ff1fb53a00a0cd3e1cc12104e2758471fc6a404247bcde910f90b"
+    },
+    {
+      "file": "measured-private-U10-Nc32-cold-field.csv",
+      "bytes": 150328,
+      "sha256": "dfe484a2976bfcf594e2f63502f3ec92d09bbf98de4938416405bb5030bef3d9"
+    },
+    {
+      "file": "measured-private-U10-Nc32-cold-full.json.gz",
+      "bytes": 65666,
+      "sha256": "114192849a623637565c0abde01e57f216fab299f2c01803970f48cee44864cf"
+    },
+    {
+      "file": "measured-private-U10-Nc32-cold-shape.csv",
+      "bytes": 22681,
+      "sha256": "d8688f947aeabf205523d003aaa0fbf4dd4442c9663667e177a78a4d72f3733f"
+    },
+    {
+      "file": "measured-private-U80-Nc128-cold-field.csv",
+      "bytes": 594725,
+      "sha256": "3da47abc865ccb28d387a5cf9048493efa14ce9bb7cc3f82a705d0cd47a218f1"
+    },
+    {
+      "file": "measured-private-U80-Nc128-cold-full.json.gz",
+      "bytes": 279640,
+      "sha256": "a3b14ea22e71df5702a6fe681f9e74cecc281171bf9a9642782ef56cadd0e20a"
+    },
+    {
+      "file": "measured-private-U80-Nc128-cold-shape.csv",
+      "bytes": 87349,
+      "sha256": "2f9ceebaf76a40c0feef07677c8a74b6ac8dff519229b41aa857be1c92dcfc7f"
+    },
+    {
+      "file": "plot-current-browser.py",
+      "bytes": 2325,
+      "sha256": "436bfb0a591f4454e0f806f602b7bcc6004726b0d8a42788d40abb97f6dfb17d"
+    },
+    {
+      "file": "production-012-U10-Nc32-cold-field.csv",
+      "bytes": 150328,
+      "sha256": "dfe484a2976bfcf594e2f63502f3ec92d09bbf98de4938416405bb5030bef3d9"
+    },
+    {
+      "file": "production-012-U10-Nc32-cold-full.json.gz",
+      "bytes": 65690,
+      "sha256": "507fe9d1efd60ce340322a5da3321d3f476dab971c2d3d49e73ac7eb7d1416ae"
+    },
+    {
+      "file": "production-012-U10-Nc32-cold-shape.csv",
+      "bytes": 22681,
+      "sha256": "d8688f947aeabf205523d003aaa0fbf4dd4442c9663667e177a78a4d72f3733f"
+    },
+    {
+      "file": "production-012-U80-Nc128-held-state-audit-full.json.gz",
+      "bytes": 221269,
+      "sha256": "e880bf870471aa1d861947d1bfa3fd68a2c2d79aa0c7c5fa8956170c3051a86c"
+    },
+    {
+      "file": "production-012-U80-Nc32-cold-field.csv",
+      "bytes": 149149,
+      "sha256": "a67408a5daff143c301890769282c94cdbc0f13761ea7cb40eeb4d1872130be8"
+    },
+    {
+      "file": "production-012-U80-Nc32-cold-full.json.gz",
+      "bytes": 66877,
+      "sha256": "fc20e933576ba4f25d1e5bdc2044aa7985a8299644029ff3452c086b7ec8ed41"
+    },
+    {
+      "file": "production-012-U80-Nc32-cold-shape.csv",
+      "bytes": 21644,
+      "sha256": "26c3eb9a82a173d7d90d3047ecd83671318d005bbdcaf62ecf63c3c45497909d"
+    },
+    {
+      "file": "production-browser-U80-auto-export.json.gz",
+      "bytes": 694879,
+      "sha256": "499bfd409ffb43381b43fef1050a137555fda71c967afac3f93df35d94b6f4ae"
+    },
+    {
+      "file": "production-browser-U80-auto-field.csv",
+      "bytes": 602964,
+      "sha256": "fa414cf69389b279ce0ff3b0083cf1ad94ed530ab5500d7e3472254dc75c0660"
+    },
+    {
+      "file": "production-browser-U80-auto-full.json.gz",
+      "bytes": 636317,
+      "sha256": "e8ba28d9e7d4685077bdc0190149a6594f8986680bf18f7f1f9b638567ab4b4c"
+    },
+    {
+      "file": "production-browser-U80-auto-shape.csv",
+      "bytes": 79489,
+      "sha256": "ef5cc8ab7a8061791dd51dbf1e1a2dd16f36b042dda08c177c18d21f5d3f38b9"
+    },
+    {
+      "file": "production-held-state-audit-summary.json",
+      "bytes": 4028,
+      "sha256": "25f1fbce55080c7bd4e2c9c3995144dbf3fc281f28662c6ca602c6857458aae6"
+    },
+    {
+      "file": "README.md",
+      "bytes": 5295,
+      "sha256": "5dc2d437cd15b7bac0522b7817837ae76e39b5dd2e02c74e5f26cd88d0ee91b8"
+    },
+    {
+      "file": "reproduce.cjs",
+      "bytes": 4973,
+      "sha256": "c280c53fd68b32c11540c64676ed6d95ef70fc21e412d1a9fae379e72524b9c2"
+    },
+    {
+      "file": "source-homology.json",
+      "bytes": 4365,
+      "sha256": "1fe3895364e72b79478f793ea680673cd52cd206ba3dc43221230c3f92b9f169"
+    },
+    {
+      "file": "summary.csv",
+      "bytes": 1713,
+      "sha256": "2b74c34f978953cffe14a0ada4b924daec0697b026cb1603336bc1dfb93c635a"
+    },
+    {
+      "file": "test-auto-bracket.cjs",
+      "bytes": 9274,
+      "sha256": "35338610ecc1d0139aa156775d56534e04048d31c42faafb3c66e82a111ec405"
+    },
+    {
+      "file": "test-domain-homology.cjs",
+      "bytes": 4034,
+      "sha256": "55bc60ab8456a187c8a15f127589f887bcacee9455706f06aedadec75b6313ef"
+    },
+    {
+      "file": "test-worker-auto-mesh.cjs",
+      "bytes": 14196,
+      "sha256": "1af45e74c53195436abf760a944f3c7d247fc292c0f0c356429321b163f163bc"
+    },
+    {
+      "file": "U10-private-production-equivalence.json",
+      "bytes": 4914,
+      "sha256": "1e036899503cc1435885627154001da6366fee473d27e6a9eb9d1253de9c2deb"
+    },
+    {
+      "file": "worker-auto-mesh-tests.json",
+      "bytes": 2416,
+      "sha256": "ca779c17e4dd90182871ac496b551eec5332f0100166c078d371585adbc21f89"
+    },
+    {
+      "file": "worker-implementation-summary.json",
+      "bytes": 1136,
+      "sha256": "db331faf9bfe7802039a469582b9e9044d1a4e2b69e778c5b840ede4a5c03301"
+    },
+    {
+      "file": "worker-source-012.js.txt",
+      "bytes": 7525,
+      "sha256": "405e77a0ff4a1ccbb86fe6ca393e645ecb5ce39de664a7fdd8b11cc8238625a1"
+    }
+  ],
+  "scope": "Separate0.1.2 package; historical0.1.1 files unchanged. Measured private cold fine result is distinguished from current held-state equivalence audit.",
+  "meshAccuracyQualified": false,
+  "experimentalAccuracyQualified": false
+}

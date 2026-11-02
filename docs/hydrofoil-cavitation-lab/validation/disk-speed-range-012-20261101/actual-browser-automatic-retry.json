@@ -1,0 +1,75 @@
+{
+  "execution": "Actual current production worker, own in-app browser; two fresh stages. No reused result.",
+  "flow": {
+    "temperatureC": 20,
+    "rho": 998.158052292759,
+    "pc": 2339.1937366227544,
+    "vapourPressure": 2339.1937366227544,
+    "source": {
+      "title": "IAPWS SR1-86(1992), saturation properties of ordinary water",
+      "url": "https://iapws.org/technical-guidance/release/Supp-sat",
+      "densityAssumption": "Saturated-liquid density used for incompressible fresh water; no pressure-dependent equation of state."
+    },
+    "U": 80,
+    "pInf": 101325,
+    "sigma": 0.030990146686942468,
+    "dynamicPressure": 3194105.7673368286,
+    "mode": "physical"
+  },
+  "meshSelection": {
+    "mode": "automatic",
+    "requestedResolution": 0,
+    "effectiveResolution": 128,
+    "attemptedResolutions": [
+      32,
+      128
+    ],
+    "attemptCount": 2,
+    "maxSeconds": 300,
+    "elapsedSeconds": 161.441,
+    "retryEligible": true,
+    "refinementAttempted": true,
+    "message": "A fresh 128-band calculation followed the completed 32-band field-check failure. Both complete stage outputs are retained.",
+    "stages": [
+      {
+        "resolution": 32,
+        "budgetSeconds": 300,
+        "startedElapsedSeconds": 0,
+        "status": "FORWARD_FIELD_UNRESOLVED",
+        "ok": false,
+        "elapsedSeconds": 9.648,
+        "finishedElapsedSeconds": 9.648,
+        "rootConverged": true,
+        "nodalConverged": true,
+        "geometryAdmissible": true,
+        "directFieldPassed": false
+      },
+      {
+        "resolution": 128,
+        "budgetSeconds": 290.352,
+        "startedElapsedSeconds": 9.648,
+        "status": "FORWARD_RESEARCH_FIELD_PASSED",
+        "ok": true,
+        "elapsedSeconds": 151.793,
+        "finishedElapsedSeconds": 161.441,
+        "rootConverged": true,
+        "nodalConverged": true,
+        "geometryAdmissible": true,
+        "directFieldPassed": true
+      }
+    ]
+  },
+  "status": "FORWARD_RESEARCH_FIELD_PASSED",
+  "browserDisplayedSeconds": 162.8,
+  "fieldSamples": 3840,
+  "cavityPressureSamples": 1920,
+  "maxNormal_U": 0.009522187754107693,
+  "maxCavityDynamicCpResidual": 0.012504977131287509,
+  "uncompressedExportSha256": "fc489e4dcb63b3fe1c4419eb8717adb9cc0f5e79a247e75710b4cfc90ee43d0a",
+  "uncompressedExportBytes": 4051172,
+  "fullExport": "production-browser-U80-auto-export.json.gz",
+  "rawResult": "production-browser-U80-auto-full.json.gz",
+  "shapeSamples": "production-browser-U80-auto-shape.csv",
+  "signedFieldSamples": "production-browser-U80-auto-field.csv",
+  "experimentalAccuracyQualified": false
+}

@@ -1,0 +1,332 @@
+{
+  "recordDate": "2026-11-02",
+  "forwardVersion": "0.1.2-bidirectional-bracket",
+  "coreVersion": "0.3.1-c1-forward-domain",
+  "sources": [
+    {
+      "file": "docs/hydrofoil-cavitation-lab/axisymmetric-cavity-c1.js",
+      "sha256": "bdf1463c744263fef4f4a2fe28f864cbfb9b38991fe1b7f8c42f7f463e1908c5"
+    },
+    {
+      "file": "docs/hydrofoil-cavitation-lab/axisymmetric-forward.js",
+      "sha256": "2d53850a2359f32f42765e97c4f61a3a2f4caadaed9afa408fc614b18e6f15ed"
+    },
+    {
+      "file": "docs/hydrofoil-cavitation-lab/forward-worker.js",
+      "sha256": "405e77a0ff4a1ccbb86fe6ca393e645ecb5ce39de664a7fdd8b11cc8238625a1"
+    },
+    {
+      "file": "docs/hydrofoil-cavitation-lab/validation/test-axisymmetric-auto-bracket.cjs",
+      "sha256": "4a35e10f5f34884844356491b3ee814ff692d51308098fbfeaa08c3b1603b4d4"
+    },
+    {
+      "file": "docs/hydrofoil-cavitation-lab/validation/test-axisymmetric-bidirectional.cjs",
+      "sha256": "151c444c261b0d939261614f76070442b1ca1dcbde7daffaa4baa3fdd864fad5"
+    }
+  ],
+  "physicalInputs": {
+    "pInf": 101325,
+    "pc": 2339.19,
+    "rho": 998.158,
+    "diskRn": 0.01
+  },
+  "legacyCoreDomains": {
+    "default": [
+      2,
+      24
+    ],
+    "researchLengthExtensionTrue": [
+      2,
+      80
+    ]
+  },
+  "newCoreDomain": {
+    "requiresExplicitBoolean": "forwardLengthExtension:true",
+    "lengthInterval": [
+      0.5,
+      160
+    ]
+  },
+  "defaultForwardStrategy": {
+    "initialEndpoints": [
+      2,
+      24
+    ],
+    "upperFreshEndpoints": [
+      48,
+      80,
+      160
+    ],
+    "lowerFreshEndpoints": [
+      1,
+      0.5
+    ],
+    "additionalEndpointsRequireActualSameSideResiduals": true,
+    "scalarCapIncludesAllEndpoints": true,
+    "separateFreshFinalAudit": true
+  },
+  "cases": [
+    {
+      "id": "production-012-U80-Nc32-cold",
+      "execution": "Fresh production0.1.2 native pressure-target solve",
+      "source": {
+        "coreSha256": "bdf1463c744263fef4f4a2fe28f864cbfb9b38991fe1b7f8c42f7f463e1908c5",
+        "forwardSha256": "2d53850a2359f32f42765e97c4f61a3a2f4caadaed9afa408fc614b18e6f15ed"
+      },
+      "recordedVersion": "0.1.2-bidirectional-bracket",
+      "request": {
+        "mode": "physical",
+        "pInf": 101325,
+        "pc": 2339.19,
+        "rho": 998.158,
+        "U": 80,
+        "diskRn": 0.01,
+        "dynamicPressure": 3194105.6,
+        "physicalSigma": 0.03099014948034279,
+        "sigma": 0.03099014948034279,
+        "Nc": 32,
+        "extendedResearchDomain": false,
+        "lengthStrategy": "automatic",
+        "maxEvaluations": 10,
+        "sigmaTolerance": 1e-05,
+        "maxSeconds": 300,
+        "body": null,
+        "closure": "symmetric-artificial-image-disk"
+      },
+      "status": "FORWARD_FIELD_UNRESOLVED",
+      "ok": false,
+      "targetSigma": 0.03099014948034279,
+      "achievedSigma": 0.03099418535505083,
+      "sigmaResidual": 4.035874708038095e-06,
+      "LOverRn": 122.24685617159432,
+      "RmaxOverRn": 5.462320944703826,
+      "seconds": 7.367,
+      "maxNormal_U": 0.013199676030184763,
+      "maxCavityDynamicCpResidual": 0.02009278478979981,
+      "fieldSampleCount": 960,
+      "scalarEvaluations": 7,
+      "rawFile": "production-012-U80-Nc32-cold-full.json.gz",
+      "shapeSamples": "production-012-U80-Nc32-cold-shape.csv",
+      "signedFieldSamples": "production-012-U80-Nc32-cold-field.csv",
+      "meshAccuracyQualified": false,
+      "experimentalAccuracyQualified": false
+    },
+    {
+      "id": "production-012-U10-Nc32-cold",
+      "execution": "Fresh production0.1.2 native pressure-target solve",
+      "source": {
+        "coreSha256": "bdf1463c744263fef4f4a2fe28f864cbfb9b38991fe1b7f8c42f7f463e1908c5",
+        "forwardSha256": "2d53850a2359f32f42765e97c4f61a3a2f4caadaed9afa408fc614b18e6f15ed"
+      },
+      "recordedVersion": "0.1.2-bidirectional-bracket",
+      "request": {
+        "mode": "physical",
+        "pInf": 101325,
+        "pc": 2339.19,
+        "rho": 998.158,
+        "U": 10,
+        "diskRn": 0.01,
+        "dynamicPressure": 49907.9,
+        "physicalSigma": 1.9833695667419386,
+        "sigma": 1.9833695667419386,
+        "Nc": 32,
+        "extendedResearchDomain": false,
+        "lengthStrategy": "automatic",
+        "maxEvaluations": 10,
+        "sigmaTolerance": 1e-05,
+        "maxSeconds": 120,
+        "body": null,
+        "closure": "symmetric-artificial-image-disk"
+      },
+      "status": "FORWARD_RESEARCH_FIELD_PASSED",
+      "ok": true,
+      "targetSigma": 1.9833695667419386,
+      "achievedSigma": 1.98336956680249,
+      "sigmaResidual": 6.055134171845111e-11,
+      "LOverRn": 0.8816254110547087,
+      "RmaxOverRn": 1.2063117708619198,
+      "seconds": 12.41,
+      "maxNormal_U": 0.0008242123930318201,
+      "maxCavityDynamicCpResidual": 0.0019492046641800265,
+      "fieldSampleCount": 960,
+      "scalarEvaluations": 8,
+      "rawFile": "production-012-U10-Nc32-cold-full.json.gz",
+      "shapeSamples": "production-012-U10-Nc32-cold-shape.csv",
+      "signedFieldSamples": "production-012-U10-Nc32-cold-field.csv",
+      "meshAccuracyQualified": false,
+      "experimentalAccuracyQualified": false
+    },
+    {
+      "id": "measured-private-U80-Nc128-cold",
+      "execution": "Measured private candidate cold solve; original version and source hashes retained",
+      "source": {
+        "coreSha256": "fae9b6384f20a0c756314d046b6eddf46a15870dccae81eea32f388753e5bfef",
+        "forwardSha256": "1886347bf803db115fae2930e5e791ec4ccc2886d7c8040d31c827ef638430b6"
+      },
+      "recordedVersion": "0.1.2-private-bidirectional-bracket",
+      "request": {
+        "mode": "physical",
+        "pInf": 101325,
+        "pc": 2339.19,
+        "rho": 998.158,
+        "U": 80,
+        "diskRn": 0.01,
+        "dynamicPressure": 3194105.6,
+        "physicalSigma": 0.03099014948034279,
+        "sigma": 0.03099014948034279,
+        "Nc": 128,
+        "extendedResearchDomain": false,
+        "lengthStrategy": "automatic",
+        "maxEvaluations": 10,
+        "sigmaTolerance": 1e-05,
+        "maxSeconds": 300,
+        "body": null,
+        "closure": "symmetric-artificial-image-disk"
+      },
+      "status": "FORWARD_RESEARCH_FIELD_PASSED",
+      "ok": true,
+      "targetSigma": 0.03099014948034279,
+      "achievedSigma": 0.03099416182944892,
+      "sigmaResidual": 4.0123491061271055e-06,
+      "LOverRn": 122.41331791427709,
+      "RmaxOverRn": 5.469795244807609,
+      "seconds": 110.78,
+      "maxNormal_U": 0.009522250783068087,
+      "maxCavityDynamicCpResidual": 0.012504975313766264,
+      "fieldSampleCount": 3840,
+      "scalarEvaluations": 7,
+      "rawFile": "measured-private-U80-Nc128-cold-full.json.gz",
+      "shapeSamples": "measured-private-U80-Nc128-cold-shape.csv",
+      "signedFieldSamples": "measured-private-U80-Nc128-cold-field.csv",
+      "meshAccuracyQualified": false,
+      "experimentalAccuracyQualified": false
+    },
+    {
+      "id": "measured-private-U10-Nc32-cold",
+      "execution": "Measured private candidate cold solve for bitwise production comparison",
+      "source": {
+        "coreSha256": "fae9b6384f20a0c756314d046b6eddf46a15870dccae81eea32f388753e5bfef",
+        "forwardSha256": "1886347bf803db115fae2930e5e791ec4ccc2886d7c8040d31c827ef638430b6"
+      },
+      "recordedVersion": "0.1.2-private-bidirectional-bracket",
+      "request": {
+        "mode": "physical",
+        "pInf": 101325,
+        "pc": 2339.19,
+        "rho": 998.158,
+        "U": 10,
+        "diskRn": 0.01,
+        "dynamicPressure": 49907.9,
+        "physicalSigma": 1.9833695667419386,
+        "sigma": 1.9833695667419386,
+        "Nc": 32,
+        "extendedResearchDomain": false,
+        "lengthStrategy": "automatic",
+        "maxEvaluations": 10,
+        "sigmaTolerance": 1e-05,
+        "maxSeconds": 120,
+        "body": null,
+        "closure": "symmetric-artificial-image-disk"
+      },
+      "status": "FORWARD_RESEARCH_FIELD_PASSED",
+      "ok": true,
+      "targetSigma": 1.9833695667419386,
+      "achievedSigma": 1.98336956680249,
+      "sigmaResidual": 6.055134171845111e-11,
+      "LOverRn": 0.8816254110547087,
+      "RmaxOverRn": 1.2063117708619198,
+      "seconds": 14.418,
+      "maxNormal_U": 0.0008242123930318201,
+      "maxCavityDynamicCpResidual": 0.0019492046641800265,
+      "fieldSampleCount": 960,
+      "scalarEvaluations": 8,
+      "rawFile": "measured-private-U10-Nc32-cold-full.json.gz",
+      "shapeSamples": "measured-private-U10-Nc32-cold-shape.csv",
+      "signedFieldSamples": "measured-private-U10-Nc32-cold-field.csv",
+      "meshAccuracyQualified": false,
+      "experimentalAccuracyQualified": false
+    },
+    {
+      "id": "production-browser-U80-auto",
+      "execution": "Actual current production worker, own in-app browser; two fresh stages. No reused result.",
+      "recordedVersion": "0.1.2-bidirectional-bracket",
+      "ok": true,
+      "status": "FORWARD_RESEARCH_FIELD_PASSED",
+      "request": {
+        "mode": "physical",
+        "pInf": 101325,
+        "pc": 2339.1937366227544,
+        "rho": 998.158052292759,
+        "U": 80,
+        "diskRn": 0.01,
+        "dynamicPressure": 3194105.7673368286,
+        "physicalSigma": 0.030990146686942468,
+        "sigma": 0.030990146686942468,
+        "Nc": 128,
+        "extendedResearchDomain": false,
+        "lengthStrategy": "automatic",
+        "maxEvaluations": 10,
+        "sigmaTolerance": 1e-05,
+        "maxSeconds": 290.352,
+        "body": null,
+        "closure": "symmetric-artificial-image-disk"
+      },
+      "fieldSampleCount": 3840,
+      "shapeSamples": "production-browser-U80-auto-shape.csv",
+      "signedFieldSamples": "production-browser-U80-auto-field.csv",
+      "rawResult": "production-browser-U80-auto-full.json.gz",
+      "runtimeSeconds": 162.8,
+      "targetSigma": 0.030990146686942468,
+      "achievedSigma": 0.030994159034081203,
+      "sigmaResidual": 4.012347138735578e-06,
+      "LOverRn": 122.41333043155576,
+      "RmaxOverRn": 5.469795480413884,
+      "seconds": 162.8,
+      "maxNormal_U": 0.009522187754107693,
+      "maxCavityDynamicCpResidual": 0.012504977131287509,
+      "rawFile": "production-browser-U80-auto-full.json.gz"
+    }
+  ],
+  "productionHeldStateAudit": {
+    "file": "production-012-U80-Nc128-held-state-audit-full.json.gz",
+    "summaryFile": "production-held-state-audit-summary.json",
+    "newProductionRootSolve": false,
+    "newNeumannSolve": false,
+    "newNewtonSolve": false,
+    "actualMeasuredPrivateSeconds": 110.78,
+    "productionAuditSeconds": 8.616,
+    "allNodesBitwiseEqual": true,
+    "allFullShapeSamplesBitwiseEqual": true,
+    "entireAuditBitwiseEqual": true,
+    "normal": 0.009522250783068087,
+    "Cp": 0.012504975313766264,
+    "samples": 3840
+  },
+  "implementationChecks": {
+    "wrapperAssertions": 24,
+    "coreDomainSourceAssertions": 6,
+    "workerMockTerminationGroups": 12,
+    "allPassed": true,
+    "scope": "Synthetic/API/source-equivalence and thread termination checks, not physical-validation experiments."
+  },
+  "autoMeshPolicy": {
+    "requestedResolution": 0,
+    "first": 32,
+    "oneRetry": 128,
+    "retryRequires": "Completed coarse root, nodal and geometry admission, actual final field failure, no known body-containment failure, remaining time at least10s.",
+    "sharedGlobalBudgetSeconds": 300,
+    "fullCoarseAndFineDiagnosticsPreserved": true
+  },
+  "historical011": {
+    "historicalCommit": "c9ea0d5a",
+    "historicalManifestSHA256": "6bb8ef7041915597c8533376a45965aa48de03b9c371c96411d518ffff40c72d",
+    "historicalDataFileCount": 42,
+    "allHistoricalFilesMatchTheirManifest": true,
+    "historicalPageSHA256": "cd35b7b4957e5af185260a73c4d7854b5c5e63453c554a7dc8695b5810c436ce",
+    "instruction": "The historical source-bound verifier must be run at commit c9ea0d5a; its recorded old source hashes intentionally differ from current production."
+  },
+  "meshAccuracyQualified": false,
+  "experimentalAccuracyQualified": false,
+  "accuracyQualified": false,
+  "actualBrowserAutomaticRetry": "actual-browser-automatic-retry.json"
+}

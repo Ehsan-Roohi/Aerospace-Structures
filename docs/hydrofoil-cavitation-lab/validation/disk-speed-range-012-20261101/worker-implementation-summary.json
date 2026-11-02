@@ -1,0 +1,22 @@
+{
+  "status": "Mock and termination checks passed; this receipt includes no real numerical or browser run.",
+  "ownedProductionFile": "docs/hydrofoil-cavitation-lab/forward-worker.js",
+  "workerSha256": "405e77a0ff4a1ccbb86fe6ca393e645ecb5ce39de664a7fdd8b11cc8238625a1",
+  "testGroups": 12,
+  "testsPassed": true,
+  "scope": "Isolated VM mocks and one short Node worker_threads termination check. No browser/native UI or real numerical solve.",
+  "retryConditions": [
+    "disk BEM resolution0 only",
+    "coarse okfalse/FORWARD_FIELD_UNRESOLVED/root+nodal+geometrytrue/directFieldPassedfalse",
+    "no known body-containment failure",
+    "at least10s remain in the original global budget",
+    "fresh128 solve with same physical inputs and no coarse warm state"
+  ],
+  "resultFields": [
+    "meshSelection",
+    "coarseDiagnostic and fineDiagnostic when128 attempted"
+  ],
+  "deadline": "One original maxSeconds, per-stage cooperative absolute deadline and final late-result rejection",
+  "manualMeshes": "32/64/128 stay single-call exact caller choices; optional legacy settings forwarded",
+  "sourceEditsOutsideOwnedWorker": false
+}

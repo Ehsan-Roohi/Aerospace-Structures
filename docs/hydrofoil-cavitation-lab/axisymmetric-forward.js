@@ -6,8 +6,8 @@
   else root.AxisymmetricForward = factory(root.CurvedVortexCavity);
 })(typeof globalThis === 'undefined' ? this : globalThis, function(C) {
   'use strict';
-  const VERSION = '0.1.1-automatic-bracket';
-  const CORE_SHA256 = '03aefa3ef10f59005f8f053a4b2b6a0c66216508b2a1fbf00bcf78662a0899f0';
+  const VERSION = '0.1.2-bidirectional-bracket';
+  const CORE_SHA256 = 'bdf1463c744263fef4f4a2fe28f864cbfb9b38991fe1b7f8c42f7f463e1908c5';
   const FRACTIONS = [.001,.005,.01,.02,.05,.1,.25,.5,.75,.9,.95,.98,.99,.995,.999];
   const CLOSURE = 'symmetric-artificial-image-disk';
   const RM_RULE = 'Rm(L/Rn) = 1 + 0.4*sqrt(L/Rn); numerical reference coordinates only, not an empirical cavity fit.';
@@ -62,6 +62,7 @@
   function settings(o,L,audit) {
     return {L,Rm:referenceRadius(L),Nc:o.Nc,Nf:o.Nc/2,nNear:24,nFar:12,mColl:3,
       tolerance:1e-10,maxIterations:24,audit,researchLengthExtension:o.lengthStrategy==='extended-research'||L>24,
+      forwardLengthExtension:o.lengthStrategy==='automatic',
       auditFractions:FRACTIONS.slice()};
   }
   function lerp(xs,rs,x) {
@@ -181,9 +182,10 @@
       if(!C||typeof C.solve!=='function') throw Error('The C1 BEM core must be loaded before the forward wrapper.');
       C.setClustering(3);
       const minL=2,initialMaxL=o.lengthStrategy==='extended-research'?80:24;
-      const allowedMaxL=o.lengthStrategy==='legacy-bounded'?24:80;
+      const allowedMinL=o.lengthStrategy==='automatic'?.5:2;
+      const allowedMaxL=o.lengthStrategy==='automatic'?160:o.lengthStrategy==='legacy-bounded'?24:80;
       searchState={lengthStrategy:o.lengthStrategy,requestedExtendedResearchDomain:o.extendedResearchDomain,
-        initialLengthDomain:[minL,initialMaxL],allowedLengthDomain:[minL,allowedMaxL],lengthDomain:[minL,initialMaxL],
+        initialLengthDomain:[minL,initialMaxL],allowedLengthDomain:[allowedMinL,allowedMaxL],lengthDomain:[minL,initialMaxL],
         expansionSteps:[],endpointSigmaRange:null,referenceRule:RM_RULE};
       const base={version:VERSION,input:o,targetSigma:o.sigma,closure:{id:CLOSURE,artificial:true,
         interpretation:'Riabouchinsky physical sharp disk plus a symmetric artificial image disk. Unknown L is their full separation, not a predicted natural tail.'},
@@ -217,14 +219,14 @@
       let b=await evaluate(initialMaxL,false,null,'initial upper endpoint');records.push(b);
       const endpoints=[a,b];
       const updateEndpointEvidence=()=>{
-        searchState.lengthDomain=[minL,Math.max(...endpoints.map(e=>e.L))];
+        searchState.lengthDomain=[Math.min(...endpoints.map(e=>e.L)),Math.max(...endpoints.map(e=>e.L))];
         searchState.endpointSigmaRange=[Math.min(...endpoints.map(e=>e.result.sigma)),Math.max(...endpoints.map(e=>e.result.sigma))];
       };
       updateEndpointEvidence();
       // Expand only after fresh, admitted upper endpoints show a lower target.
       // Every expansion consumes one scalar evaluation. These observations do
       // not establish global monotonicity, uniqueness or a physical cavity limit.
-      if(o.lengthStrategy==='automatic')for(const nextL of [48,80]) {
+      if(o.lengthStrategy==='automatic')for(const nextL of [48,80,160]) {
         if(!(a.residual>o.sigmaTolerance&&b.residual>o.sigmaTolerance)||records.length>=o.maxEvaluations)break;
         const step={fromLOverRn:b.L,toLOverRn:nextL,trigger:'target below both fresh bracket endpoints',scalarEvaluation:records.length+1,completed:false};
         searchState.expansionSteps.push(step);
@@ -233,9 +235,22 @@
         step.completed=true;step.sigma=c.result.sigma;step.residual=c.residual;
         a=b;b=c;updateEndpointEvidence();
       }
+      // Private lower-domain exploration: only actual fresh negative signs
+      // justify a shorter endpoint. Field/geometry gates are not relaxed.
+      if(o.lengthStrategy==='automatic')for(const nextL of [1,.5]) {
+        if(!(a.residual < -o.sigmaTolerance&&b.residual < -o.sigmaTolerance)||records.length>=o.maxEvaluations)break;
+        const step={direction:'lower',fromLOverRn:a.L,toLOverRn:nextL,trigger:'target above both fresh bracket endpoints',scalarEvaluation:records.length+1,completed:false};
+        searchState.expansionSteps.push(step);
+        progress({stage:'automatic lower bracket expansion',LOverRn:nextL,evaluation:records.length+1,lengthStrategy:o.lengthStrategy});
+        const c=await evaluate(nextL,false,null,'automatic lower endpoint');records.push(c);endpoints.push(c);
+        step.completed=true;step.sigma=c.result.sigma;step.residual=c.residual;
+        b=a;a=c;updateEndpointEvidence();
+      }
       if(a.residual*b.residual>0&&Math.min(Math.abs(a.residual),Math.abs(b.residual))>o.sigmaTolerance) {
         const legacy=o.lengthStrategy==='legacy-bounded';
-        return Object.assign(base,{ok:false,status:legacy?'UNSUPPORTED_TARGET':'NUMERICAL_DOMAIN_EXHAUSTED',errors:['Fresh endpoint solves do not bracket this target sigma within the tested image-separation domain. No extrapolation or clipping is applied; this is not a physical no-cavity conclusion.'],
+        const budgetPreventedExpansion=o.lengthStrategy==='automatic'&&records.length>=o.maxEvaluations&&((a.residual>o.sigmaTolerance&&b.residual>o.sigmaTolerance&&b.L<allowedMaxL)||(a.residual < -o.sigmaTolerance&&b.residual < -o.sigmaTolerance&&a.L>allowedMinL));
+        searchState.bracketingStopReason=budgetPreventedExpansion?'scalar budget before remaining allowed endpoints':'fresh endpoints do not bracket target';
+        return Object.assign(base,{ok:false,status:legacy?'UNSUPPORTED_TARGET':budgetPreventedExpansion?'SCALAR_BUDGET_EXHAUSTED':'NUMERICAL_DOMAIN_EXHAUSTED',errors:[budgetPreventedExpansion?'The scalar budget ended before a further allowed endpoint could be tested. No target root is admitted.':'Fresh endpoint solves do not bracket this target sigma within the tested image-separation domain. No extrapolation or clipping is applied; this is not a physical no-cavity conclusion.'],
           rootConverged:false,nodalConverged:false,geometryAdmissible:false,directFieldPassed:false,
           search:searchInfo({finalBracket:[a.L,b.L],sigmaTolerance:o.sigmaTolerance}),lastComplete,seconds:(Date.now()-start)/1000});
       }

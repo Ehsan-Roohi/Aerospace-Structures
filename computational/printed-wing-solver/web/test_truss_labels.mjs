@@ -19,7 +19,7 @@ try{
   assert.match($('[data-member="0"] title').textContent,/N · (tension|compression|zero force)/);
   if(detail==='compact')assert.ok(!$('[data-member-force="0"]').textContent.includes('compression'));
   if(detail==='detailed')assert.match($('[data-member-force="0"]').textContent,/N · /);
-  if(detail==='ids')assert.equal($('[data-member-force="0"]').textContent,'M1');
+  if(detail==='ids')assert.equal($('[data-member-force="0"]').textContent,'N1–N4');
   assert.equal(JSON.stringify(w.TrussLab.state().model),original);assert.equal(JSON.stringify(w.TrussLab.state().result),numbers,'display settings cannot change solved data');
  }
  assert.ok(w.document.querySelector('[data-label-leader]'));

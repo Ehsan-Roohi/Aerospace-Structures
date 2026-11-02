@@ -59,9 +59,9 @@ async function run(name,input) {
   check('actual C1 geometry rejects unsupported body coverage',!overlongBody.completeCoverage&&!overlongBody.dryContained&&overlongBody.tipClearance===null);
   check('zero clearance is retained without a positive gap floor',touchingBody.dryContained&&touchingBody.minimumClearance===0);
   assert.throws(()=>F.checkAfterbody({radius:.008,length:.01},basic.final,{...basic.finalCoreOptions,L:8},.01),/must match/);
-  const unsupported=await F.solve({sigma:.05,Nc:32,maxSeconds:90});
-  fs.writeFileSync(path.join(out,'unsupported-default-domain-sigma-0p05.json'),JSON.stringify(unsupported));
-  check('unsupported default-domain sigma rejected by fresh bracket',unsupported.status==='UNSUPPORTED_TARGET'&&!unsupported.rootConverged&&unsupported.search.evaluations.length===2&&unsupported.search.endpointSigmaRange[0]>.05);
+  const unsupported=await F.solve({sigma:.05,Nc:32,maxSeconds:90,lengthStrategy:'legacy-bounded'});
+  fs.writeFileSync(path.join(out,'unsupported-explicit-legacy-domain-sigma-0p05.json'),JSON.stringify(unsupported));
+  check('explicit legacy-domain sigma rejected by fresh bracket',unsupported.status==='UNSUPPORTED_TARGET'&&!unsupported.rootConverged&&unsupported.search.evaluations.length===2&&unsupported.search.endpointSigmaRange[0]>.05);
   if(process.argv.includes('--long'))await run('explicit-sigma-0p05-extended',{sigma:.05,diskRn:.01,Nc:128,extendedResearchDomain:true,body:{radius:.008,length:.2},maxSeconds:600});
   fs.writeFileSync(path.join(out,'validation.json'),JSON.stringify({coreSourceSha256:F.coreSourceSha256,checks,allPassed:true,longCaseRun:process.argv.includes('--long'),recheckedStoredCases:process.argv.includes('--resume'),experimentalAccuracyQualified:false,meshAccuracyQualified:false},null,2));
   console.log('Forward validation complete: '+checks.length+' checks. No mesh or experimental accuracy qualification.');

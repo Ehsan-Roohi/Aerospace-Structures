@@ -1,0 +1,617 @@
+{
+  "recordDate": "2026-11-01",
+  "wrapperVersion": "0.1.1-automatic-bracket",
+  "currentSource": {
+    "wrapperVersion": "0.1.1-automatic-bracket",
+    "wrapperSha256": "c803e570b26ea27456805fe01905cc08a0e93fed204361eafa0b1cc78daceea1",
+    "coreVersion": "0.3.0-c1-reviewed-guards",
+    "coreSha256": "03aefa3ef10f59005f8f053a4b2b6a0c66216508b2a1fbf00bcf78662a0899f0",
+    "coreNormalizedSha256": "03aefa3ef10f59005f8f053a4b2b6a0c66216508b2a1fbf00bcf78662a0899f0"
+  },
+  "sources": [
+    {
+      "file": "docs/hydrofoil-cavitation-lab/axisymmetric-forward.js",
+      "sha256": "c803e570b26ea27456805fe01905cc08a0e93fed204361eafa0b1cc78daceea1"
+    },
+    {
+      "file": "docs/hydrofoil-cavitation-lab/axisymmetric-cavity-c1.js",
+      "sha256": "03aefa3ef10f59005f8f053a4b2b6a0c66216508b2a1fbf00bcf78662a0899f0"
+    },
+    {
+      "file": "docs/hydrofoil-cavitation-lab/validation/test-axisymmetric-auto-bracket.cjs",
+      "sha256": "8ad879a6267d96059fbc8654a4df429e9bddaf91ef3d66c37f44e2a4a58ed6cc"
+    },
+    {
+      "file": "docs/hydrofoil-cavitation-lab/validation/test-axisymmetric-forward.cjs",
+      "sha256": "d855ffef989c1996e483d8d839a13d3abdc9b7d4e5c2e54763248faa5f75e88e"
+    }
+  ],
+  "physicalInputs": {
+    "pInf_Pa": 101325,
+    "pc_Pa": 2339.19,
+    "rho_kg_m3": 998.158,
+    "diskRadius_m": 0.01
+  },
+  "strategy": {
+    "default": "automatic",
+    "initialEndpoints": [
+      2,
+      24
+    ],
+    "conditionalFreshUpperEndpoints": [
+      48,
+      80
+    ],
+    "condition": "Both current fresh endpoint sigma residuals exceed the positive target tolerance.",
+    "scalarLimitIncludesExpansion": true,
+    "separateFreshFinalAudit": true,
+    "legacy": "lengthStrategy: legacy-bounded reproduces2..24; extendedResearchDomain:true retains direct2..80.",
+    "interpretation": "Numerical image-separation search only; not a physical inception, closure-length, monotonicity or uniqueness guarantee."
+  },
+  "unchangedGates": {
+    "sigmaAbsoluteTolerance": 0.00001,
+    "nodalTolerance": 1e-10,
+    "normalVelocityMax_U": 0.01,
+    "cavityDynamicCpResidualMax": 0.02,
+    "offNodeFractions": [
+      0.001,
+      0.005,
+      0.01,
+      0.02,
+      0.05,
+      0.1,
+      0.25,
+      0.5,
+      0.75,
+      0.9,
+      0.95,
+      0.98,
+      0.99,
+      0.995,
+      0.999
+    ],
+    "geometryAndPhysicalBranchRequired": true
+  },
+  "cases": [
+    {
+      "name": "U37-Nc32-auto",
+      "request": {
+        "mode": "physical",
+        "U": 37,
+        "pInf": 101325,
+        "pc": 2339.19,
+        "rho": 998.158,
+        "diskRn": 0.01,
+        "Nc": 32,
+        "extendedResearchDomain": false,
+        "maxEvaluations": 10,
+        "maxSeconds": 120
+      },
+      "status": "FORWARD_RESEARCH_FIELD_PASSED",
+      "ok": true,
+      "targetSigma": 0.14487725104031693,
+      "achievedSigma": 0.14487725587879896,
+      "sigmaResidual": 4.838482031699343e-9,
+      "LOverRn": 20.495431618933523,
+      "RmaxOverRn": 2.7040722180557686,
+      "seconds": 5.482,
+      "scalarEvaluations": 6,
+      "expansions": [],
+      "rootConverged": true,
+      "nodalConverged": true,
+      "geometryAdmissible": true,
+      "directFieldPassed": true,
+      "maxNormal_U": 0.007067128848496368,
+      "maxCavityDynamicCpResidual": 0.0160070283153273,
+      "auditFractions": [
+        0.001,
+        0.005,
+        0.01,
+        0.02,
+        0.05,
+        0.1,
+        0.25,
+        0.5,
+        0.75,
+        0.9,
+        0.95,
+        0.98,
+        0.99,
+        0.995,
+        0.999
+      ],
+      "meshAccuracyQualified": false,
+      "experimentalAccuracyQualified": false,
+      "errors": [],
+      "execution": "Fresh native Node.js, no external warm start or cached result",
+      "rawFile": "U37-Nc32-auto-full.json.gz",
+      "shapeSamples": "U37-Nc32-auto-shape.csv",
+      "signedFieldSamples": "U37-Nc32-auto-field.csv"
+    },
+    {
+      "name": "U40-Nc32-auto",
+      "request": {
+        "mode": "physical",
+        "U": 40,
+        "pInf": 101325,
+        "pc": 2339.19,
+        "rho": 998.158,
+        "diskRn": 0.01,
+        "Nc": 32,
+        "extendedResearchDomain": false,
+        "maxEvaluations": 10,
+        "maxSeconds": 120
+      },
+      "status": "FORWARD_RESEARCH_FIELD_PASSED",
+      "ok": true,
+      "targetSigma": 0.12396059792137117,
+      "achievedSigma": 0.1239680171657056,
+      "sigmaResidual": 0.0000074192443344361925,
+      "LOverRn": 24.64921001401399,
+      "RmaxOverRn": 2.8921727963315287,
+      "seconds": 4.447,
+      "scalarEvaluations": 5,
+      "expansions": [
+        {
+          "fromLOverRn": 24,
+          "toLOverRn": 48,
+          "trigger": "target below both fresh bracket endpoints",
+          "scalarEvaluation": 3,
+          "completed": true,
+          "sigma": 0.07015373397174374,
+          "residual": -0.05380686394962743
+        }
+      ],
+      "rootConverged": true,
+      "nodalConverged": true,
+      "geometryAdmissible": true,
+      "directFieldPassed": true,
+      "maxNormal_U": 0.007853739778858834,
+      "maxCavityDynamicCpResidual": 0.016596885503639358,
+      "auditFractions": [
+        0.001,
+        0.005,
+        0.01,
+        0.02,
+        0.05,
+        0.1,
+        0.25,
+        0.5,
+        0.75,
+        0.9,
+        0.95,
+        0.98,
+        0.99,
+        0.995,
+        0.999
+      ],
+      "meshAccuracyQualified": false,
+      "experimentalAccuracyQualified": false,
+      "errors": [],
+      "execution": "Fresh native Node.js, no external warm start or cached result",
+      "rawFile": "U40-Nc32-auto-full.json.gz",
+      "shapeSamples": "U40-Nc32-auto-shape.csv",
+      "signedFieldSamples": "U40-Nc32-auto-field.csv"
+    },
+    {
+      "name": "U50-Nc32-auto",
+      "request": {
+        "mode": "physical",
+        "U": 50,
+        "pInf": 101325,
+        "pc": 2339.19,
+        "rho": 998.158,
+        "diskRn": 0.01,
+        "Nc": 32,
+        "extendedResearchDomain": false,
+        "maxEvaluations": 10,
+        "maxSeconds": 120
+      },
+      "status": "FORWARD_RESEARCH_FIELD_PASSED",
+      "ok": true,
+      "targetSigma": 0.07933478266967754,
+      "achievedSigma": 0.07934060004117449,
+      "sigmaResidual": 0.000005817371496949497,
+      "LOverRn": 41.60371543301265,
+      "RmaxOverRn": 3.5276733374938525,
+      "seconds": 4.72,
+      "scalarEvaluations": 5,
+      "expansions": [
+        {
+          "fromLOverRn": 24,
+          "toLOverRn": 48,
+          "trigger": "target below both fresh bracket endpoints",
+          "scalarEvaluation": 3,
+          "completed": true,
+          "sigma": 0.07015373397174374,
+          "residual": -0.009181048697933805
+        }
+      ],
+      "rootConverged": true,
+      "nodalConverged": true,
+      "geometryAdmissible": true,
+      "directFieldPassed": true,
+      "maxNormal_U": 0.007266808225920728,
+      "maxCavityDynamicCpResidual": 0.01274419204925814,
+      "auditFractions": [
+        0.001,
+        0.005,
+        0.01,
+        0.02,
+        0.05,
+        0.1,
+        0.25,
+        0.5,
+        0.75,
+        0.9,
+        0.95,
+        0.98,
+        0.99,
+        0.995,
+        0.999
+      ],
+      "meshAccuracyQualified": false,
+      "experimentalAccuracyQualified": false,
+      "errors": [],
+      "execution": "Fresh native Node.js, no external warm start or cached result",
+      "rawFile": "U50-Nc32-auto-full.json.gz",
+      "shapeSamples": "U50-Nc32-auto-shape.csv",
+      "signedFieldSamples": "U50-Nc32-auto-field.csv"
+    },
+    {
+      "name": "U60-Nc32-auto",
+      "request": {
+        "mode": "physical",
+        "U": 60,
+        "pInf": 101325,
+        "pc": 2339.19,
+        "rho": 998.158,
+        "diskRn": 0.01,
+        "Nc": 32,
+        "extendedResearchDomain": false,
+        "maxEvaluations": 10,
+        "maxSeconds": 120
+      },
+      "status": "FORWARD_RESEARCH_FIELD_PASSED",
+      "ok": true,
+      "targetSigma": 0.055093599076164956,
+      "achievedSigma": 0.05509794329465856,
+      "sigmaResidual": 0.000004344218493601559,
+      "LOverRn": 63.450133309825056,
+      "RmaxOverRn": 4.1702650251163815,
+      "seconds": 4.926,
+      "scalarEvaluations": 6,
+      "expansions": [
+        {
+          "fromLOverRn": 24,
+          "toLOverRn": 48,
+          "trigger": "target below both fresh bracket endpoints",
+          "scalarEvaluation": 3,
+          "completed": true,
+          "sigma": 0.07015373397174374,
+          "residual": 0.01506013489557878
+        },
+        {
+          "fromLOverRn": 48,
+          "toLOverRn": 80,
+          "trigger": "target below both fresh bracket endpoints",
+          "scalarEvaluation": 4,
+          "completed": true,
+          "sigma": 0.04501486748566119,
+          "residual": -0.010078731590503764
+        }
+      ],
+      "rootConverged": true,
+      "nodalConverged": true,
+      "geometryAdmissible": true,
+      "directFieldPassed": true,
+      "maxNormal_U": 0.004715006742537553,
+      "maxCavityDynamicCpResidual": 0.012818928635118576,
+      "auditFractions": [
+        0.001,
+        0.005,
+        0.01,
+        0.02,
+        0.05,
+        0.1,
+        0.25,
+        0.5,
+        0.75,
+        0.9,
+        0.95,
+        0.98,
+        0.99,
+        0.995,
+        0.999
+      ],
+      "meshAccuracyQualified": false,
+      "experimentalAccuracyQualified": false,
+      "errors": [],
+      "execution": "Fresh native Node.js, no external warm start or cached result",
+      "rawFile": "U60-Nc32-auto-full.json.gz",
+      "shapeSamples": "U60-Nc32-auto-shape.csv",
+      "signedFieldSamples": "U60-Nc32-auto-field.csv"
+    },
+    {
+      "name": "U60-Nc128-auto",
+      "request": {
+        "mode": "physical",
+        "U": 60,
+        "pInf": 101325,
+        "pc": 2339.19,
+        "rho": 998.158,
+        "diskRn": 0.01,
+        "Nc": 128,
+        "extendedResearchDomain": false,
+        "maxEvaluations": 10,
+        "maxSeconds": 300
+      },
+      "status": "FORWARD_RESEARCH_FIELD_PASSED",
+      "ok": true,
+      "targetSigma": 0.055093599076164956,
+      "achievedSigma": 0.055097836351597484,
+      "sigmaResidual": 0.000004237275432528165,
+      "LOverRn": 63.436824643427066,
+      "RmaxOverRn": 4.169485455487702,
+      "seconds": 78.612,
+      "scalarEvaluations": 6,
+      "expansions": [
+        {
+          "fromLOverRn": 24,
+          "toLOverRn": 48,
+          "trigger": "target below both fresh bracket endpoints",
+          "scalarEvaluation": 3,
+          "completed": true,
+          "sigma": 0.0701258847321855,
+          "residual": 0.01503228565602055
+        },
+        {
+          "fromLOverRn": 48,
+          "toLOverRn": 80,
+          "trigger": "target below both fresh bracket endpoints",
+          "scalarEvaluation": 4,
+          "completed": true,
+          "sigma": 0.045021628694829285,
+          "residual": -0.010071970381335671
+        }
+      ],
+      "rootConverged": true,
+      "nodalConverged": true,
+      "geometryAdmissible": true,
+      "directFieldPassed": true,
+      "maxNormal_U": 0.0018726447489317843,
+      "maxCavityDynamicCpResidual": 0.003134852931817589,
+      "auditFractions": [
+        0.001,
+        0.005,
+        0.01,
+        0.02,
+        0.05,
+        0.1,
+        0.25,
+        0.5,
+        0.75,
+        0.9,
+        0.95,
+        0.98,
+        0.99,
+        0.995,
+        0.999
+      ],
+      "meshAccuracyQualified": false,
+      "experimentalAccuracyQualified": false,
+      "errors": [],
+      "execution": "Fresh native Node.js, no external warm start or cached result",
+      "rawFile": "U60-Nc128-auto-full.json.gz",
+      "shapeSamples": "U60-Nc128-auto-shape.csv",
+      "signedFieldSamples": "U60-Nc128-auto-field.csv"
+    }
+  ],
+  "boundaryCases": [
+    {
+      "name": "U40-Nc32-explicit-legacy",
+      "request": {
+        "mode": "physical",
+        "U": 40,
+        "pInf": 101325,
+        "pc": 2339.19,
+        "rho": 998.158,
+        "diskRn": 0.01,
+        "Nc": 32,
+        "maxSeconds": 30,
+        "maxEvaluations": 10,
+        "lengthStrategy": "legacy-bounded",
+        "extendedResearchDomain": false
+      },
+      "status": "UNSUPPORTED_TARGET",
+      "ok": false,
+      "targetSigma": 0.12396059792137117,
+      "seconds": 1.599,
+      "scalarEvaluations": 2,
+      "lengthDomain": [
+        2,
+        24
+      ],
+      "endpointSigmaRange": [
+        0.1268001219009196,
+        0.9969761560123078
+      ],
+      "expansionSteps": [],
+      "errors": [
+        "Fresh endpoint solves do not bracket this target sigma within the tested image-separation domain. No extrapolation or clipping is applied; this is not a physical no-cavity conclusion."
+      ],
+      "rawFile": "U40-Nc32-explicit-legacy-full.json.gz"
+    },
+    {
+      "name": "U80-Nc32-auto-domain-limit",
+      "request": {
+        "mode": "physical",
+        "U": 80,
+        "pInf": 101325,
+        "pc": 2339.19,
+        "rho": 998.158,
+        "diskRn": 0.01,
+        "Nc": 32,
+        "maxSeconds": 30,
+        "maxEvaluations": 10,
+        "lengthStrategy": "automatic",
+        "extendedResearchDomain": false
+      },
+      "status": "NUMERICAL_DOMAIN_EXHAUSTED",
+      "ok": false,
+      "targetSigma": 0.03099014948034279,
+      "seconds": 3.098,
+      "scalarEvaluations": 4,
+      "lengthDomain": [
+        2,
+        80
+      ],
+      "endpointSigmaRange": [
+        0.04501486748566119,
+        0.9969761560123078
+      ],
+      "expansionSteps": [
+        {
+          "fromLOverRn": 24,
+          "toLOverRn": 48,
+          "trigger": "target below both fresh bracket endpoints",
+          "scalarEvaluation": 3,
+          "completed": true,
+          "sigma": 0.07015373397174374,
+          "residual": 0.03916358449140095
+        },
+        {
+          "fromLOverRn": 48,
+          "toLOverRn": 80,
+          "trigger": "target below both fresh bracket endpoints",
+          "scalarEvaluation": 4,
+          "completed": true,
+          "sigma": 0.04501486748566119,
+          "residual": 0.0140247180053184
+        }
+      ],
+      "errors": [
+        "Fresh endpoint solves do not bracket this target sigma within the tested image-separation domain. No extrapolation or clipping is applied; this is not a physical no-cavity conclusion."
+      ],
+      "rawFile": "U80-Nc32-auto-domain-limit-full.json.gz"
+    },
+    {
+      "name": "U10-Nc32-auto-domain-limit",
+      "request": {
+        "mode": "physical",
+        "U": 10,
+        "pInf": 101325,
+        "pc": 2339.19,
+        "rho": 998.158,
+        "diskRn": 0.01,
+        "Nc": 32,
+        "maxSeconds": 30,
+        "maxEvaluations": 10,
+        "lengthStrategy": "automatic",
+        "extendedResearchDomain": false
+      },
+      "status": "NUMERICAL_DOMAIN_EXHAUSTED",
+      "ok": false,
+      "targetSigma": 1.9833695667419386,
+      "seconds": 1.565,
+      "scalarEvaluations": 2,
+      "lengthDomain": [
+        2,
+        24
+      ],
+      "endpointSigmaRange": [
+        0.1268001219009196,
+        0.9969761560123078
+      ],
+      "expansionSteps": [],
+      "errors": [
+        "Fresh endpoint solves do not bracket this target sigma within the tested image-separation domain. No extrapolation or clipping is applied; this is not a physical no-cavity conclusion."
+      ],
+      "rawFile": "U10-Nc32-auto-domain-limit-full.json.gz"
+    }
+  ],
+  "originalUnexpandedComparison": {
+    "currentVersion": "0.1.1-automatic-bracket",
+    "previousWrapperSha256": "3474011c5833e38efaa3d48d82154f04ced197a2c7ce1e6ba0ab55ce9faeb410",
+    "speed": 37,
+    "oldStatus": "FORWARD_RESEARCH_FIELD_PASSED",
+    "newStatus": "FORWARD_RESEARCH_FIELD_PASSED",
+    "bitwiseIdenticalPhysicalOutputs": {
+      "L": true,
+      "sigma": true,
+      "Rmax": true,
+      "CD": true,
+      "CD_directField": true,
+      "volume": true,
+      "maxDynamicResidual": true,
+      "nodes": true,
+      "solutionState": true,
+      "fieldAudit": true
+    },
+    "oldSeconds": 5.676,
+    "newSeconds": 5.482
+  },
+  "quadratureCrosschecks": [
+    {
+      "Nc": 32,
+      "maxNormal_U": 0.004715006787694653,
+      "maxCavityDynamicCpResidual": 0.01281892855582778,
+      "withinUnchangedThresholds": true,
+      "normalMaxDifference": 4.5157100281301155e-11,
+      "CpMaxDifference": -7.929079615109913e-11,
+      "CD_directField": 0.874745761796806,
+      "dragDifference": 1.0735856648125264e-13
+    },
+    {
+      "Nc": 128,
+      "maxNormal_U": 0.0018726447528957801,
+      "maxCavityDynamicCpResidual": 0.0031348529318171447,
+      "withinUnchangedThresholds": true,
+      "normalMaxDifference": 3.96399579827289e-12,
+      "CpMaxDifference": -4.440892098500626e-16,
+      "CD_directField": 0.8744065040988808,
+      "dragDifference": -4.440892098500626e-16
+    }
+  ],
+  "resolutionSensitivity": {
+    "description": "Two independent fresh pressure-target searches on Nc32 and Nc128; this is a resolution sensitivity check, not a mesh-convergence qualification.",
+    "sameTarget": true,
+    "relativeDifferenceL": -0.00020979401905433357,
+    "relativeDifferenceRmax": -0.0001869702237847668,
+    "relativeDifferenceVolume": -0.0005831173241178003,
+    "relativeDifferenceDirectDrag": -0.00038798624693101795,
+    "meshAccuracyQualified": false
+  },
+  "controlChecks": {
+    "owner": 20,
+    "independent": 12,
+    "total": 32,
+    "scope": "Synthetic implementation checks; no physical or experimental validation."
+  },
+  "rawDataFiles": [
+    "U37-Nc32-auto-full.json.gz",
+    "U40-Nc32-auto-full.json.gz",
+    "U50-Nc32-auto-full.json.gz",
+    "U60-Nc32-auto-full.json.gz",
+    "U60-Nc128-auto-full.json.gz",
+    "U40-Nc32-explicit-legacy-full.json.gz",
+    "U80-Nc32-auto-domain-limit-full.json.gz",
+    "U10-Nc32-auto-domain-limit-full.json.gz",
+    "U37-Nc32-original-wrapper-full.json.gz",
+    "U60-Nc32-higher-quadrature-field-full.json.gz",
+    "U60-Nc128-higher-quadrature-field-full.json.gz"
+  ],
+  "figures": [
+    "speed-envelope-profiles.png",
+    "U60-signed-field-comparison.png"
+  ],
+  "meshAccuracyQualified": false,
+  "experimentalAccuracyQualified": false,
+  "accuracyQualified": false,
+  "outsideProductionRangeStudy": {
+    "summaryFile": "outside-production-range-probes.json",
+    "productionChanged": false,
+    "sourceGuardOnly": true,
+    "allThreeFieldAuditsRejected": true
+  }
+}

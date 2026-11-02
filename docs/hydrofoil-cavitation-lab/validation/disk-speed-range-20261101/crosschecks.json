@@ -1,0 +1,54 @@
+{
+  "unexpandedCase": {
+    "currentVersion": "0.1.1-automatic-bracket",
+    "previousWrapperSha256": "3474011c5833e38efaa3d48d82154f04ced197a2c7ce1e6ba0ab55ce9faeb410",
+    "speed": 37,
+    "oldStatus": "FORWARD_RESEARCH_FIELD_PASSED",
+    "newStatus": "FORWARD_RESEARCH_FIELD_PASSED",
+    "bitwiseIdenticalPhysicalOutputs": {
+      "L": true,
+      "sigma": true,
+      "Rmax": true,
+      "CD": true,
+      "CD_directField": true,
+      "volume": true,
+      "maxDynamicResidual": true,
+      "nodes": true,
+      "solutionState": true,
+      "fieldAudit": true
+    },
+    "oldSeconds": 5.676,
+    "newSeconds": 5.482
+  },
+  "referenceField": [
+    {
+      "Nc": 32,
+      "maxNormal_U": 0.004715006787694653,
+      "maxCavityDynamicCpResidual": 0.01281892855582778,
+      "withinUnchangedThresholds": true,
+      "normalMaxDifference": 4.5157100281301155e-11,
+      "CpMaxDifference": -7.929079615109913e-11,
+      "CD_directField": 0.874745761796806,
+      "dragDifference": 1.0735856648125264e-13
+    },
+    {
+      "Nc": 128,
+      "maxNormal_U": 0.0018726447528957801,
+      "maxCavityDynamicCpResidual": 0.0031348529318171447,
+      "withinUnchangedThresholds": true,
+      "normalMaxDifference": 3.96399579827289e-12,
+      "CpMaxDifference": -4.440892098500626e-16,
+      "CD_directField": 0.8744065040988808,
+      "dragDifference": -4.440892098500626e-16
+    }
+  ],
+  "refinement": {
+    "description": "Two independent fresh pressure-target searches on Nc32 and Nc128; this is a resolution sensitivity check, not a mesh-convergence qualification.",
+    "sameTarget": true,
+    "relativeDifferenceL": -0.00020979401905433357,
+    "relativeDifferenceRmax": -0.0001869702237847668,
+    "relativeDifferenceVolume": -0.0005831173241178003,
+    "relativeDifferenceDirectDrag": -0.00038798624693101795,
+    "meshAccuracyQualified": false
+  }
+}

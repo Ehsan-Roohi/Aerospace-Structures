@@ -1,0 +1,188 @@
+{
+  "scope": "Exploratory exact-guard-only source copy outside the production length domain. Not included in the active solver. No accuracy qualification.",
+  "baselineCoreSha256": "03aefa3ef10f59005f8f053a4b2b6a0c66216508b2a1fbf00bcf78662a0899f0",
+  "probeCoreSha256": "2b67f66ce6d150c8e1301fb42bc6a025d188eeb5e31e874e441ed37b0b9348e3",
+  "probeSourceFile": "guard-only-c1-length-probe.js.txt",
+  "exactSourceChanges": [
+    {
+      "line": 240,
+      "before": " const maximumLength=researchLengthExtension?80:24;",
+      "after": " const maximumLength=researchLengthExtension?320:24;"
+    },
+    {
+      "line": 241,
+      "before": " if(L<2||L>maximumLength||Rm<=1||Rm>20)throw Error(researchLengthExtension?'Opt-in unqualified research domain: L/R 2–80 and reference radius ratio >1 through 20.':'Research domain: L/R 2–24 and reference radius ratio >1 through 20.');",
+      "after": " if(L<2||L>maximumLength||Rm<=1||Rm>20)throw Error(researchLengthExtension?'Opt-in unqualified research domain: L/R 2–320 and reference radius ratio >1 through 20.':'Research domain: L/R 2–24 and reference radius ratio >1 through 20.');"
+    }
+  ],
+  "productionLengthDomain": [
+    2,
+    80
+  ],
+  "cases": [
+    {
+      "case": "long160_32",
+      "L": 160,
+      "Nc": 32,
+      "seconds": 2.011,
+      "withinBudget": true,
+      "error": null,
+      "admittedByUnchangedScreens": false,
+      "sigma": 0.024403783962463343,
+      "qc": 1.0121283436217283,
+      "Rmax": 6.119207907572201,
+      "CD": 0.8453905611793253,
+      "volume": 13203.680371675473,
+      "nodalConverged": true,
+      "geometry": true,
+      "physicalBranch": true,
+      "stopReason": "nodal tolerance",
+      "nodalResidual": 2.353672812205332e-14,
+      "normal": 0.022497389488218743,
+      "Cp": 0.03184462630580187,
+      "fieldsFinite": true,
+      "auditFractions": [
+        0.001,
+        0.005,
+        0.01,
+        0.02,
+        0.05,
+        0.1,
+        0.25,
+        0.5,
+        0.75,
+        0.9,
+        0.95,
+        0.98,
+        0.99,
+        0.995,
+        0.999
+      ],
+      "fieldSampleCount": 960,
+      "accuracyQualified": false,
+      "sourceSHA256": "2b67f66ce6d150c8e1301fb42bc6a025d188eeb5e31e874e441ed37b0b9348e3",
+      "rawSHA256": "83ed2511c009799b64564dd1526084f8e73304491b854d6af7e71da55c29ba33",
+      "rawFile": "guard-only-long160_32-full.json.gz"
+    },
+    {
+      "case": "long160_128",
+      "L": 160,
+      "Nc": 128,
+      "seconds": 25.529,
+      "withinBudget": true,
+      "error": null,
+      "admittedByUnchangedScreens": false,
+      "sigma": 0.02445575081271434,
+      "qc": 1.0121540153616515,
+      "Rmax": 6.127812011402114,
+      "CD": 0.8489182032006901,
+      "volume": 13241.405570365509,
+      "nodalConverged": true,
+      "geometry": true,
+      "physicalBranch": true,
+      "stopReason": "nodal tolerance",
+      "nodalResidual": 1.7763568394002505e-14,
+      "normal": 0.013608151165446447,
+      "Cp": 0.01707320533459833,
+      "fieldsFinite": true,
+      "auditFractions": [
+        0.001,
+        0.005,
+        0.01,
+        0.02,
+        0.05,
+        0.1,
+        0.25,
+        0.5,
+        0.75,
+        0.9,
+        0.95,
+        0.98,
+        0.99,
+        0.995,
+        0.999
+      ],
+      "fieldSampleCount": 3840,
+      "accuracyQualified": false,
+      "sourceSHA256": "2b67f66ce6d150c8e1301fb42bc6a025d188eeb5e31e874e441ed37b0b9348e3",
+      "rawSHA256": "a79105c39d0a4d9ea71430711d8aa569cd18be6fb13f5fa67665b7eceadea1ab",
+      "rawFile": "guard-only-long160_128-full.json.gz"
+    },
+    {
+      "createdAt": "2026-11-02T03:19:53.388Z",
+      "private": true,
+      "scope": "Stored L160/Nc128 geometry and density held fixed; direct field quadrature only. No Neumann system, residual, stateFor or Newton call.",
+      "sourceCopy": "c1-long320-private.js",
+      "sourceSHA256": "2b67f66ce6d150c8e1301fb42bc6a025d188eeb5e31e874e441ed37b0b9348e3",
+      "inputSHA256": "a79105c39d0a4d9ea71430711d8aa569cd18be6fb13f5fa67665b7eceadea1ab",
+      "stateSHA256": "71732deb4f2fd82c15a639b2b5988ff9f40b0add6ca1a6391ee0ab08965efa9a",
+      "unchangedState": true,
+      "maxNodeReconstructionDifference": 0,
+      "seconds": 13.957,
+      "reference": {
+        "nNear": 32,
+        "nFar": 12,
+        "normal": 0.013608151165446447,
+        "Cp": 0.01707320533459833,
+        "fieldsFinite": true,
+        "withinPriorOffgridThresholds": false,
+        "maxNormalLocation": {
+          "value": -0.013608151165446447,
+          "panel": 192,
+          "fraction": 0.001,
+          "point": [
+            160,
+            0.9999999996988036
+          ]
+        }
+      },
+      "higher": {
+        "nNear": 64,
+        "nFar": 24,
+        "normal": 0.01276474011749826,
+        "Cp": 0.017073205334615427,
+        "fieldsFinite": true,
+        "withinPriorOffgridThresholds": false,
+        "maxNormalLocation": {
+          "value": 0.01276474011749826,
+          "panel": 63,
+          "fraction": 0.999,
+          "point": [
+            0,
+            0.9999999996988036
+          ]
+        }
+      },
+      "maximumPointwiseChange": {
+        "normal": 0.00084341118115446,
+        "tangent": 0.0000044093841369274855,
+        "cavityCpDefect": 0.000003869825841773533
+      },
+      "allSamplesRetained": true,
+      "sampleCount": 3840,
+      "fractions": [
+        0.001,
+        0.005,
+        0.01,
+        0.02,
+        0.05,
+        0.1,
+        0.25,
+        0.5,
+        0.75,
+        0.9,
+        0.95,
+        0.98,
+        0.99,
+        0.995,
+        0.999
+      ],
+      "experimentalValidation": false,
+      "accuracyQualified": false,
+      "rawFile": "guard-only-long160_128-fieldquad64-24-full.json.gz"
+    }
+  ],
+  "interpretation": "L160 closes nodal equations but fails the unchanged normal-field limit at both meshes and after held-state higher quadrature. Removing the production guard is not validated by these probes.",
+  "meshAccuracyQualified": false,
+  "experimentalAccuracyQualified": false
+}

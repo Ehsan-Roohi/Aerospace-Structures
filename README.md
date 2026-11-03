@@ -132,6 +132,8 @@ The G-code is provided for inspection only. Do not send it directly to a printer
 
 ## Engineering readings and case studies
 
+**[Feynman's reverse sprinkler: momentum flux, geometry and structural reaction loads](FEYNMAN_SPRINKLER.md)** — English engineering reading inspired by the supplied Zoomit article, with 37 numbered equations, primary 2024/2026 research references, two original teaching figures and reproducible Python calculations. Covers control volumes, pressure-cut moments, torque, curved-pipe flow, shaft/wing-box torsion, forced vibration, uncertainty and classroom activities. [Open the large-equation reading](https://ehsan-roohi.github.io/Aerospace-Structures/case-studies/feynman-sprinkler/).
+
 **[How AWACS Works: Radar, Airframe Integration and Structural Loads on the Boeing E-3 Sentry](AWACS.md)** — An English case study with 12 historical and technical photographs. Trace the radar measurements from echo to track, then follow the dome loads through the struts into the fuselage.
 
 **[Air launch to the edge of space: Apeiron and VMS Eve](AIR_LAUNCH_APEIRON.md)** — illustrated historical and engineering case study: X-1/X-15/Pegasus/SpaceShipOne lineage; atmospheric release, rocket ascent and feathered return; carrier load paths, pressure-vessel stresses, fatigue and the NTSB 2014 safety lessons. Expanded second edition: five figures, 20 references, quantitative energy comparisons, composite/attachment analysis, reproducible calculations and extended Persian explanations. [Open the full report](https://ehsan-roohi.github.io/Aerospace-Structures/case-studies/apeiron/).

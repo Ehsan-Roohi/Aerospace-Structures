@@ -1,0 +1,321 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Feynman's Reverse Sprinkler · MIE 446</title><meta name="description" content="Momentum flux, geometry and structural reactions: 37 equations, research references and reproducible teaching examples."><style>body{margin:0;background:#eef2f6;color:#173346;font:18px/1.75 system-ui,sans-serif}main{max-width:1080px;margin:auto;padding:48px;background:white}h1{font-size:clamp(30px,4vw,46px);line-height:1.2}h2{margin-top:2em;color:#174f6c}h3{color:#174f6c}a{color:#086b9b}nav{font-size:15px;border-bottom:1px solid #ccd9df;padding-bottom:18px}.math.display{display:block;overflow-x:auto;font-size:1.18em;padding:10px 0}img{max-width:100%;height:auto}table{display:block;overflow-x:auto;border-collapse:collapse;font-size:16px}td,th{padding:12px;border:1px solid #cbd8df;text-align:left}th{background:#edf5f8}p,li{max-width:85ch}code{font-size:.9em}a:focus-visible{outline:3px solid #ba7933}@media(max-width:650px){main{padding:24px 18px}body{font-size:17px}.math.display{font-size:1.05em}}@media print{body{background:white;font-size:11pt}main{padding:0}h2,h3{break-after:avoid}nav{display:none}}</style><script>window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]}};</script><script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script></head><body><main><nav><a href="https://github.com/Ehsan-Roohi/Aerospace-Structures">Course home</a> · <a href="https://github.com/Ehsan-Roohi/Aerospace-Structures/blob/main/FEYNMAN_SPRINKLER.md">GitHub source</a> · <a href="teaching_calculations.py">Calculation script</a> · <a href="calculations.json">Numerical record</a></nav><h1 id="feynmans-reverse-sprinkler-momentum-flux-geometry-and-structural-reaction-loads">Feynman’s Reverse Sprinkler: Momentum Flux, Geometry and Structural Reaction Loads</h1>
+<p><strong>MIE 446 · Aerospace Structures · University of Massachusetts Amherst</strong><br />
+Supplementary engineering reading · 3 November 2026</p>
+<p><a href="https://github.com/Ehsan-Roohi/Aerospace-Structures">Course home</a> · <a href="https://ehsan-roohi.github.io/Aerospace-Structures/case-studies/feynman-sprinkler/">Large-equation reading view</a></p>
+<h2 id="a-small-device-that-tests-a-large-principle">1. A small device that tests a large principle</h2>
+<p>An ordinary sprinkler expels water through curved arms and rotates. Submerge it, withdraw water through the central hub, and ask what happens when the arms become inlets. Does the device stop, turn the same way, or reverse? The interesting engineering question is not simply which answer sounds plausible. It is which fluid boundary, momentum transport and structural reactions make that answer defensible.</p>
+<p>This reading was prompted by the <a href="https://www.zoomit.ir/science/470421-feynman-diverse-sprinklers-featured/">supplied Zoomit article</a>. It is an original English teaching treatment, rather than a translation or reproduction of that article. The derivations and numerical examples below are classroom models; they are not fitted reproductions of the research experiments.</p>
+<p>For an aerospace structures course, the sprinkler provides a compact route from a measured flow field to a torque, an attachment reaction, a shaft stress and a dynamic response. Similar accounting is needed for bent fuel lines, rotating machinery and propulsion mounts. A structural solver cannot repair a load that was derived from an incomplete fluid free-body diagram.</p>
+<h3 id="what-the-recent-research-establishes">What the recent research establishes</h3>
+<p>Wang, Sprinkle, Zuo and Ristroph [1] reported sustained reverse rotation using a very low friction apparatus in 2024. Their flow measurements connected the response to angular-momentum transport and curved internal passages. Smith, Zuo, Kuhlke, Sprinkle and Ristroph [2] extended the experimental inquiry in 2026 using different arm geometries and measurements of motion, torque and flow. The reported geometry comparisons support momentum flux into the device over explanations based only on the outer portions of the arms or total fluid angular momentum.</p>
+<p>Those results concern the tested devices and conditions. They do not establish a universal speed ratio or rotation direction for every geometry and flow regime. In particular, a small measured speed does not imply a small internal pressure load. The following equations are standard conservation and structural mechanics developed independently for teaching, not transcriptions of the authors’ detailed models.</p>
+<h2 id="define-the-experiment-before-predicting-its-outcome">2. Define the experiment before predicting its outcome</h2>
+<p>There are three distinct measurements:</p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Experiment</th>
+<th>Mechanical condition</th>
+<th>Observable</th>
+<th>Interpretation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Locked rotor</td>
+<td>Angular velocity is zero</td>
+<td>Support torque</td>
+<td>Fluid forcing at zero rotor speed</td>
+</tr>
+<tr class="even">
+<td>Free rotor</td>
+<td>No torsional restraint</td>
+<td>Angular speed and acceleration</td>
+<td>Forcing balanced by inertia and resistance</td>
+</tr>
+<tr class="odd">
+<td>Compliant support</td>
+<td>Finite torsional stiffness</td>
+<td>Twist and vibration</td>
+<td>Coupled forcing, stiffness, inertia and damping</td>
+</tr>
+</tbody>
+</table>
+<p>A photograph of rotation cannot distinguish a start-up impulse from a persistent mean torque. Record the pump history, flow rate, bearing resistance, arm geometry and observation duration. Locking the rotor can also change the flow, so a measured locked torque should not automatically be used as the forcing at every free-running speed.</p>
+<h3 id="notation-and-sign-convention">Notation and sign convention</h3>
+<p>Use a fixed inertial origin on the rotation axis, with positive <span class="math inline">\(z\)</span> upward. Positive torque and angular speed are counterclockwise when viewed from above. The outward unit normal of a fluid control surface is <span class="math inline">\(\mathbf n\)</span>. Fluid velocity <span class="math inline">\(\mathbf u\)</span> is absolute velocity; control-surface velocity is <span class="math inline">\(\mathbf v_s\)</span>. Define specific axial angular momentum by</p>
+<p><span class="math display">\[
+h_z=(\mathbf r\times\mathbf u)\cdot\mathbf e_z=xu_y-yu_x=r u_\theta. \tag{1}
+\]</span></p>
+<p>Thus <span class="math inline">\(h_z\)</span> has units <span class="math inline">\(\mathrm{m^2/s}\)</span>. Let <span class="math inline">\(Q&gt;0\)</span> denote the magnitude of the throughput, not a signed inlet flux. Inlet/outlet signs enter through <span class="math inline">\((\mathbf u-\mathbf v_s)\cdot\mathbf n\)</span>.</p>
+<h2 id="mass-and-linear-momentum-the-foundation">3. Mass and linear momentum: the foundation</h2>
+<p>For a moving control volume <span class="math inline">\(V(t)\)</span>, mass conservation is</p>
+<p><span class="math display">\[
+\frac{d}{dt}\int_{V(t)}\rho\,dV+
+\int_{S(t)}\rho(\mathbf u-\mathbf v_s)\cdot\mathbf n\,dA=0. \tag{2}
+\]</span></p>
+<p>For incompressible steady flow, the total volume inflow equals the total outflow. With <span class="math inline">\(N\)</span> identical arms of area <span class="math inline">\(A\)</span> and equal flow division,</p>
+<p><span class="math display">\[
+q=\frac{Q}{N},\qquad U=\frac{q}{A}=\frac{Q}{NA},\qquad \dot m=\rho Q. \tag{3}
+\]</span></p>
+<p>The linear momentum equation, with no omitted surface cuts, is</p>
+<p><span class="math display">\[
+\sum\mathbf F_{\mathrm{ext}\to f}=
+\frac{d}{dt}\int_{V(t)}\rho\mathbf u\,dV+
+\int_{S(t)}\rho\mathbf u[(\mathbf u-\mathbf v_s)\cdot\mathbf n]\,dA. \tag{4}
+\]</span></p>
+<p>Here the force sum includes wall traction, pressure traction on open cuts and body forces. For uniform steady fixed ports,</p>
+<p><span class="math display">\[
+\mathbf F_{w\to f}+\mathbf F_{p,\mathrm{cuts}}+\mathbf F_b
+=\sum_{\mathrm{out}}\dot m_j\mathbf u_j-
+\sum_{\mathrm{in}}\dot m_j\mathbf u_j. \tag{5}
+\]</span></p>
+<p>The fluid force on the solid wall is the negative of <span class="math inline">\(\mathbf F_{w\to f}\)</span>, not necessarily the negative of the entire left-hand side. Pressure forces at artificial control-surface cuts must first be accounted for. This distinction is important for a curved pipe: a pressure-only estimate can be wrong even when its units are correct.</p>
+<h2 id="the-angular-momentum-theorem">4. The angular-momentum theorem</h2>
+<p>Taking moments about the same fixed inertial origin gives</p>
+<p><span class="math display">\[
+\sum T_{z,\mathrm{ext}\to f}=
+\frac{d}{dt}\int_{V(t)}\rho h_z\,dV+
+\int_{S(t)}\rho h_z[(\mathbf u-\mathbf v_s)\cdot\mathbf n]\,dA. \tag{6}
+\]</span></p>
+<p>The first term is angular-momentum <strong>storage</strong>; the second is its <strong>flux</strong> through the boundary. A flow can have constant stored angular momentum and continuously transport angular momentum. Conversely, a large stored swirl does not by itself determine the torque.</p>
+<p>For a stationary, steady control volume, define the signed net outward flux</p>
+<p><span class="math display">\[
+\Phi_H=\int_S\rho h_z(\mathbf u\cdot\mathbf n)\,dA. \tag{7}
+\]</span></p>
+<p>Then</p>
+<p><span class="math display">\[
+T_{w\to f}+T_{p,\mathrm{cuts}}+T_b=\Phi_H,
+\qquad
+T_{f\to w}=-\Phi_H+T_{p,\mathrm{cuts}}+T_b. \tag{8}
+\]</span></p>
+<p>Pressure-cut torque is</p>
+<p><span class="math display">\[
+T_{p,\mathrm{cuts}}=-\int_{S_{\mathrm{cuts}}}
+[\mathbf r\times(p\mathbf n)]\cdot\mathbf e_z\,dA. \tag{9}
+\]</span></p>
+<p>It vanishes for some carefully chosen boundaries, not for every convenient pipe cut. Gravity has zero axial moment when it acts parallel to <span class="math inline">\(z\)</span>. Ambient pressure may be subtracted consistently over a closed boundary; subtracting it on only selected surfaces creates spurious forces.</p>
+<h3 id="a-useful-port-approximation">A useful port approximation</h3>
+<p>If each port can be represented by a mass-flux-weighted radius and tangential velocity,</p>
+<p><span class="math display">\[
+\Phi_H\simeq\sum_{\mathrm{out}}\dot m_j r_j u_{\theta j}
+-\sum_{\mathrm{in}}\dot m_j r_j u_{\theta j}. \tag{10}
+\]</span></p>
+<p>A nonuniform profile requires the integral in (7). Averaging velocities first can discard the correlation between local throughput and angular momentum.</p>
+<p><strong>Do not double count.</strong> One valid route integrates all wall stresses. Another uses control-volume fluxes plus the remaining surface forces. Adding a momentum-flux estimate to the already integrated complete wall torque counts the same interaction twice.</p>
+<h2 id="why-simply-reversing-the-arrows-fails">5. Why simply reversing the arrows fails</h2>
+<p>For a conventional idealized rotor at rest, take <span class="math inline">\(N\)</span> tangential outlets at radius <span class="math inline">\(R\)</span>, negligible inlet swirl near the axis, equal outlet speed <span class="math inline">\(U\)</span> and negligible pressure-cut moment. Let <span class="math inline">\(s=+1\)</span> denote counterclockwise ejected fluid and <span class="math inline">\(s=-1\)</span> clockwise ejected fluid. Equations (3), (8) and (10) give</p>
+<p><span class="math display">\[
+\Phi_H=s\rho Q R U,
+\qquad T_{f\to w}=-s\rho Q R U
+=-s\frac{\rho R Q^2}{NA}. \tag{11}
+\]</span></p>
+<p>The two diametrically opposite jet forces can cancel as a net force while adding as a couple. A zero net force therefore does not imply zero torque.</p>
+<p>In suction, water converges from the surrounding reservoir; it is not generally an identical narrow jet played backward. Internal curvature, velocity profiles, viscous layers and hub flow differ. A precise time reversal would require reversing the full fluid state and its boundary conditions, not just changing the pump setting.</p>
+<p>For a Newtonian incompressible fluid,</p>
+<p><span class="math display">\[
+\nabla\cdot\mathbf u=0,\qquad
+\rho\left(\partial_t\mathbf u+\mathbf u\cdot\nabla\mathbf u\right)
+=-\nabla p+\mu\nabla^2\mathbf u. \tag{12}
+\]</span></p>
+<p>Under <span class="math inline">\(t\mapsto-t\)</span>, <span class="math inline">\(\mathbf u\mapsto-\mathbf u\)</span>, the inertial terms retain their transformation while the viscous term changes sign. The viscous equations do not possess the simple reversibility sometimes assumed in the thought experiment. At negligible inertia, the linear Stokes problem has a different, restricted reversibility, which still requires matching geometry and boundary conditions. Neither observation alone predicts the finite-Reynolds-number sprinkler torque.</p>
+<h2 id="geometry-converts-throughput-into-angular-momentum-flux">6. Geometry converts throughput into angular-momentum flux</h2>
+<p>For a streamlined estimate in a curved passage of centerline radius <span class="math inline">\(R_c\)</span>, the outward pressure gradient needed to turn the flow is approximately</p>
+<p><span class="math display">\[
+\frac{\partial p}{\partial n_c}\sim\rho\frac{U^2}{R_c}. \tag{13}
+\]</span></p>
+<p>Here <span class="math inline">\(n_c\)</span> points away from the center of curvature. Across a passage width <span class="math inline">\(d\ll R_c\)</span>,</p>
+<p><span class="math display">\[
+\Delta p_{\perp}\sim\rho U^2\frac{d}{R_c}. \tag{14}
+\]</span></p>
+<p>These are local scaling estimates, not a complete torque model. Cross-sectional velocity redistribution and secondary flow can change where angular momentum enters the hub. Useful dimensionless quantities are</p>
+<p><span class="math display">\[
+Re=\frac{\rho Ud}{\mu},\qquad
+De=Re\sqrt{\frac{d}{2R_c}}. \tag{15}
+\]</span></p>
+<p>The Dean-number convention here uses tube diameter <span class="math inline">\(d\)</span> and curvature radius <span class="math inline">\(R_c\)</span>. Passage length, curvature sequence, entrance development and hub geometry also matter. One scalar curvature cannot specify every arm.</p>
+<h3 id="an-equivalent-jet-lever-arm">An equivalent jet lever arm</h3>
+<p>A useful interpretation of measured hub-entry flux is an equivalent signed offset <span class="math inline">\(b_{\mathrm{eff}}\)</span>. If the entering jets have representative speed <span class="math inline">\(U_j\)</span>, define</p>
+<p><span class="math display">\[
+\dot H_{\mathrm{into\ hub}}=\rho Q U_j b_{\mathrm{eff}}. \tag{16}
+\]</span></p>
+<p>This is a definition based on the actual integral; it need not be the geometric centerline offset. When hub outlet angular momentum, pressure-cut moments and storage are negligible,</p>
+<p><span class="math display">\[
+T_{f\to\mathrm{hub}}\simeq\rho Q U_j b_{\mathrm{eff}}. \tag{17}
+\]</span></p>
+<p>The positive sign follows because inflow has negative outward flux. Two jets with opposite linear momenta can have the same sign of <span class="math inline">\(\mathbf r\times\mathbf u\)</span> if they pass opposite sides of the center.</p>
+<figure>
+<img src="jet-couple.svg" alt="Signed two-jet angular-momentum example" />
+<figcaption aria-hidden="true">Signed two-jet angular-momentum example</figcaption>
+</figure>
+<p><em>Original schematic, viewed from above. In this particular drawing both jets have negative specific angular momentum. Their linear momenta cancel while their angular-momentum inputs add. The drawn sign is illustrative and is not a measured universal direction.</em></p>
+<p>Equation (17) describes the selected hub walls. The complete rotor torque also includes the arms and any other wetted rotating surfaces. A central jet picture is instructive, but is not a license to omit those contributions. Likewise, a centered outlet has negligible angular-momentum flux only if its swirl is negligible; proximity to the axis alone is insufficient.</p>
+<p>For comparable speeds, a small residual effective offset relative to the outer radius gives the scale comparison</p>
+<p><span class="math display">\[
+\frac{|T_{\mathrm{hub,reverse}}|}{|T_{\mathrm{forward}}|}
+\sim\frac{|b_{\mathrm{eff}}|}{R}. \tag{18}
+\]</span></p>
+<p>This compares torque scales under explicit assumptions. It is not a universal ratio, and it is not automatically the angular-speed ratio.</p>
+<h2 id="from-torque-to-rotation-and-support-twist">7. From torque to rotation and support twist</h2>
+<p>For a rigid rotor with known total hydrodynamic torque,</p>
+<p><span class="math display">\[
+I_s\dot\Omega=T_h(Q,\Omega,t)-c\Omega-k\theta-T_C\operatorname{sgn}(\Omega),
+\qquad\dot\theta=\Omega. \tag{19}
+\]</span></p>
+<p>Here <span class="math inline">\(I_s\)</span> is solid inertia, <span class="math inline">\(c\)</span> a modeled mechanical damping coefficient, <span class="math inline">\(k\)</span> the support torsional stiffness and <span class="math inline">\(T_C\)</span> sliding friction. At rest, Coulomb friction is set-valued: a rotor may remain stuck while the demanded reaction is below the static-friction threshold. Do not evaluate <span class="math inline">\(\operatorname{sgn}(0)=0\)</span> and conclude that arbitrarily small torques must start it.</p>
+<p>If <span class="math inline">\(T_h\)</span> already comes from the full unsteady stress field, fluid inertia is already included. An effective inertia <span class="math inline">\(I_{\mathrm{eff}}=I_s+I_a\)</span> is an alternative reduced model in which an added-inertia term has first been removed from <span class="math inline">\(T_h\)</span>. Using both without that separation double counts fluid inertia.</p>
+<p>For a free rotor with constant imposed torque <span class="math inline">\(T_0\)</span>, linear damping only and initial rest,</p>
+<p><span class="math display">\[
+\Omega(t)=\frac{T_0}{c}\left[1-\exp\left(-\frac{ct}{I_{\mathrm{eff}}}\right)\right],
+\qquad \tau_r=\frac{I_{\mathrm{eff}}}{c}. \tag{20}
+\]</span></p>
+<p>For steady quadratic resistance <span class="math inline">\(c_2\Omega|\Omega|\)</span>,</p>
+<p><span class="math display">\[
+|\Omega_{\infty}|=\sqrt{\frac{|T_0|}{c_2}},
+\qquad \operatorname{sgn}\Omega_{\infty}=\operatorname{sgn}T_0. \tag{21}
+\]</span></p>
+<p>Thus a torque ratio of <span class="math inline">\(0.02\)</span> produces a speed ratio of <span class="math inline">\(0.02\)</span> under identical linear damping but about <span class="math inline">\(0.141\)</span> under identical quadratic damping. Neither comparison is a prediction for the experimental apparatus.</p>
+<p>For a compliant support with linearized forcing,</p>
+<p><span class="math display">\[
+I_{\mathrm{eff}}\ddot\theta+c\dot\theta+k\theta=T_h(t),
+\qquad\omega_n=\sqrt{\frac{k}{I_{\mathrm{eff}}}},
+\qquad\zeta=\frac{c}{2\sqrt{kI_{\mathrm{eff}}}}. \tag{22}
+\]</span></p>
+<p>If <span class="math inline">\(T_h=T_a\cos\omega t\)</span>, the steady twist amplitude is</p>
+<p><span class="math display">\[
+\Theta=\frac{|T_a|}{\sqrt{(k-I_{\mathrm{eff}}\omega^2)^2+(c\omega)^2}}. \tag{23}
+\]</span></p>
+<p>For constant loading the final twist is <span class="math inline">\(\theta_0=T_0/k\)</span>. A small mean torque can coexist with appreciable oscillatory twist near a resonance. This one-degree-of-freedom example is forced vibration, not a flutter analysis. Flow-dependent negative damping would require a separate stability model and evidence.</p>
+<h2 id="the-aerospace-structures-connection">8. The aerospace structures connection</h2>
+<h3 id="local-loads-and-global-couples">8.1 Local loads and global couples</h3>
+<p>At each bend, momentum changes and pressure tractions load the tube wall. Attachments carry those loads into the hub and support. A torque pair can disappear from a force-only summary, just as distributed aerodynamic loads can be reduced incorrectly if their moments are omitted. Preserve both resultants:</p>
+<p><span class="math display">\[
+\mathbf F_R=\sum_j\mathbf F_j,
+\qquad\mathbf M_O=\sum_j\mathbf r_j\times\mathbf F_j+\sum_j\mathbf M_j. \tag{24}
+\]</span></p>
+<p>For a thin circular tube with internal gauge pressure <span class="math inline">\(p_g\)</span>, radius <span class="math inline">\(r_t\)</span> and wall thickness <span class="math inline">\(t\ll r_t\)</span>, the membrane approximations are</p>
+<p><span class="math display">\[
+\sigma_{\theta}=\frac{p_g r_t}{t},
+\qquad \sigma_z=\frac{p_g r_t}{2t}. \tag{25}
+\]</span></p>
+<p>The axial expression assumes a closed-end load path. Open ends or independently restrained end caps change the axial force. These stresses depend on pressure and wall dimensions, not on the small residual rotor torque. External pressure introduces buckling questions outside this membrane estimate.</p>
+<h3 id="torsion-bending-and-attachment-reactions">8.2 Torsion, bending and attachment reactions</h3>
+<p>For a circular support shaft with outer and inner diameters <span class="math inline">\(d_o,d_i\)</span>,</p>
+<p><span class="math display">\[
+J_p=\frac{\pi}{32}(d_o^4-d_i^4),\qquad
+\tau_{\max}=\frac{|T|d_o}{2J_p},\qquad
+\theta=\frac{TL}{GJ_p}. \tag{26}
+\]</span></p>
+<p>These are elastic Saint-Venant formulas away from load introduction. Threads, notches and joint flexibility require additional treatment. For a thin-walled closed single-cell wing box, the corresponding torsional shear-flow relation is</p>
+<p><span class="math display">\[
+q_s=\frac{T}{2A_m},\qquad
+\tau(s)=\frac{q_s}{t(s)}. \tag{27}
+\]</span></p>
+<p>Here <span class="math inline">\(A_m\)</span> is enclosed median-line area. Do not substitute the circular-shaft expression for an arbitrary open section or multicell wing.</p>
+<p>For a straight cantilever carrying an idealized transverse tip force <span class="math inline">\(F\)</span>, the root moment and tip deflection are</p>
+<p><span class="math display">\[
+M_{\mathrm{root}}=FL,\qquad
+\delta_{\mathrm{tip}}=\frac{FL^3}{3EI_b}. \tag{28}
+\]</span></p>
+<p>A curved flowing arm generally needs distributed loading and geometric analysis; (28) is a comparison model, not an exact sprinkler-arm solution. For a circular member under normal stress and torsional shear, a simple plane-stress equivalent stress is</p>
+<p><span class="math display">\[
+\sigma_{\mathrm{vm}}=\sqrt{\sigma^2+3\tau^2}. \tag{29}
+\]</span></p>
+<p>Pressure-vessel biaxial stress requires the full plane-stress expression. For aircraft applications, strength is only one check: fatigue, local buckling, attachment bearing, stiffness and dynamic response may govern.</p>
+<h3 id="connection-to-turbines-and-power">8.3 Connection to turbines and power</h3>
+<p>A steady rotor exchanging angular momentum with a throughflow has shaft-torque scale</p>
+<p><span class="math display">\[
+T_{\mathrm{shaft}}\sim\dot m(r_2u_{\theta2}-r_1u_{\theta1}),
+\qquad P=T\Omega. \tag{30}
+\]</span></p>
+<p>The sign depends on whether torque is defined on the fluid or on the rotor. A locked support can transmit torque while doing zero rotational work. The hydraulic source nevertheless supplies pressure-flow power</p>
+<p><span class="math display">\[
+P_{\mathrm{hyd}}=\Delta p\,Q. \tag{31}
+\]</span></p>
+<p>This separates support strength from conversion efficiency. A small <span class="math inline">\(T\Omega\)</span> does not imply that the pump consumes little power.</p>
+<h2 id="worked-example-explicit-assumptions-reproducible-arithmetic">9. Worked example: explicit assumptions, reproducible arithmetic</h2>
+<p>The <a href="teaching_calculations.py">calculation script</a> uses only the Python standard library. All numbers below are assumed teaching inputs, not reported apparatus data.</p>
+<p>Take water with <span class="math inline">\(\rho=1000\ \mathrm{kg/m^3}\)</span> and <span class="math inline">\(\mu=10^{-3}\ \mathrm{Pa\,s}\)</span>, two arms of inner diameter <span class="math inline">\(d=8\)</span> mm, total throughput <span class="math inline">\(Q=2.0\times10^{-5}\ \mathrm{m^3/s}\)</span>, outer radius <span class="math inline">\(R=0.10\)</span> m and representative bend radius <span class="math inline">\(R_c=0.025\)</span> m. Then</p>
+<p><span class="math display">\[
+A=5.02655\times10^{-5}\ \mathrm{m^2},\quad
+U=0.198944\ \mathrm{m/s},\quad
+Re=1591.55,\quad De=636.62. \tag{32}
+\]</span></p>
+<p>A straight-pipe transition criterion does not by itself classify every curved passage at these conditions. Equation (11) gives the ideal forward torque magnitude</p>
+<p><span class="math display">\[
+|T_{\mathrm{forward}}|=3.97887\times10^{-4}\ \mathrm{N\,m}. \tag{33}
+\]</span></p>
+<p>Assume, solely for a hub-load illustration, <span class="math inline">\(U_j=U\)</span> and <span class="math inline">\(b_{\mathrm{eff}}=2\)</span> mm. Equation (17) gives</p>
+<p><span class="math display">\[
+|T_{\mathrm{hub}}|=7.95775\times10^{-6}\ \mathrm{N\,m}. \tag{34}
+\]</span></p>
+<p>The torque-scale ratio is <span class="math inline">\(0.0200\)</span>. It follows from the assumed offset, not from a measured 50-fold rotation difference. For the next calculations only, additionally assume that other rotor-wall contributions cancel so that this hub estimate equals the total imposed torque <span class="math inline">\(T_0\)</span>. This assumption must be replaced by a complete torque balance for a real device.</p>
+<p>For linear damping <span class="math inline">\(c=2.0\times10^{-5}\ \mathrm{N\,m\,s}\)</span> and effective inertia <span class="math inline">\(I_{\mathrm{eff}}=10^{-4}\ \mathrm{kg\,m^2}\)</span>, equation (20) gives <span class="math inline">\(\Omega_\infty=0.397887\)</span> rad/s, <span class="math inline">\(\tau_r=5\)</span> s and <span class="math inline">\(\Omega(5\ \mathrm{s})=0.251513\)</span> rad/s. Observe the rotor for several time constants before calling a measured speed stationary.</p>
+<p>For a solid shaft of diameter <span class="math inline">\(2\)</span> mm, length <span class="math inline">\(50\)</span> mm and shear modulus <span class="math inline">\(G=26\)</span> GPa, using <span class="math inline">\(T=T_0\)</span> gives <span class="math inline">\(J_p=1.57080\times10^{-12}\ \mathrm{m^4}\)</span>, <span class="math inline">\(\tau_{\max}=5.06606\)</span> kPa and <span class="math inline">\(\theta=9.74242\times10^{-6}\)</span> rad. This demonstrates arithmetic, not an approved shaft design or a prediction of the experimental bearing.</p>
+<p>If instead the support has <span class="math inline">\(k=10^{-3}\ \mathrm{N\,m/rad}\)</span>, equation (22) gives <span class="math inline">\(\omega_n=\sqrt{10}=3.16228\)</span> rad/s and <span class="math inline">\(\zeta=0.0316228\)</span>. Under harmonic torque amplitude <span class="math inline">\(T_a=T_0\)</span> at <span class="math inline">\(\omega=\omega_n\)</span>, equation (23) gives <span class="math inline">\(\Theta=0.125823\)</span> rad. That amplification is a property of this assumed lightly damped linear oscillator; real joints and flow feedback can change it.</p>
+<p>At an assumed pump pressure difference of <span class="math inline">\(20\)</span> kPa, <span class="math inline">\(P_{\mathrm{hyd}}=0.4\)</span> W. The modeled free-running mechanical power <span class="math inline">\(T_0\Omega_\infty\)</span> is <span class="math inline">\(3.16629\times10^{-6}\)</span> W. The resulting ratio is illustrative bookkeeping, not a measured efficiency or an optimized design.</p>
+<figure>
+<img src="response.svg" alt="Synthetic transient and forced-response curves" />
+<figcaption aria-hidden="true">Synthetic transient and forced-response curves</figcaption>
+</figure>
+<p><em>Original analytical teaching curves. Left: constant-torque spin-up under linear damping. Right: normalized steady harmonic twist for the assumed compliant support. Neither curve contains experimental observations.</em></p>
+<h2 id="measurement-uncertainty-and-numerical-verification">10. Measurement, uncertainty and numerical verification</h2>
+<p>A useful laboratory sequence measures <span class="math inline">\(Q\)</span> by timed collection, static support torque with a calibrated torsional element, free rotation by video and the internal flow by particle tracking or particle-image velocimetry. The last measurement supplies information that visible rotation alone cannot provide.</p>
+<p>For a small planar port with outward normal velocity <span class="math inline">\(u_n\)</span>, an area-discretized flux estimate is</p>
+<p><span class="math display">\[
+\Phi_H\approx\sum_m\rho(x_m u_{ym}-y_m u_{xm})u_{nm}\,\Delta A_m. \tag{35}
+\]</span></p>
+<p>Integrate all needed ports and include pressure-cut moments. A single illuminated plane does not resolve an arbitrary three-dimensional velocity field; quantify the missing components or justify a planar approximation.</p>
+<p>For the ideal forward model, because <span class="math inline">\(A=\pi d^2/4\)</span>, first-order independent relative uncertainty gives</p>
+<p><span class="math display">\[
+\left(\frac{s_T}{|T|}\right)^2\approx
+\left(\frac{s_\rho}{\rho}\right)^2+
+\left(\frac{s_R}{R}\right)^2+
+4\left(\frac{s_Q}{Q}\right)^2+
+4\left(\frac{s_d}{d}\right)^2. \tag{36}
+\]</span></p>
+<p>This formula assumes a fixed exact arm count and neglects parameter correlations and model discrepancy. For the hub model with independently measured <span class="math inline">\(U_j\)</span> and <span class="math inline">\(b_{\mathrm{eff}}\)</span>, use the relative variances of <span class="math inline">\(\rho,Q,U_j,b_{\mathrm{eff}}\)</span>. If <span class="math inline">\(U_j=Q/(NA)\)</span> is derived from the same <span class="math inline">\(Q\)</span> and <span class="math inline">\(d\)</span>, propagate through that expression instead of treating the variables as independent. Near zero effective offset, use absolute uncertainty; a relative-error formula becomes singular.</p>
+<p>A CFD study should report mass imbalance, spatial/time refinement, boundary placement and the residual between stress-integrated torque and the complete angular-momentum balance. Mesh convergence of angular speed alone is insufficient if numerical torques nearly cancel. For a fixed control volume, a useful diagnostic is</p>
+<p><span class="math display">\[
+\epsilon_T=T_{w\to f}+T_{p,\mathrm{cuts}}+T_b
+-\frac{dH_z}{dt}-\Phi_H. \tag{37}
+\]</span></p>
+<p>Normalize by a stated nonzero torque scale and report the dimensional residual too. For a moving boundary, replace the flux by the relative-velocity form in (6). Validate locked and freely rotating cases separately; the boundary motion changes the solution.</p>
+<h2 id="a-35-minute-classroom-investigation">11. A 35-minute classroom investigation</h2>
+<ol type="1">
+<li><strong>Predict (5 min).</strong> Sketch both flow directions, select positive rotation and predict the locked torque and free rotation separately. State which unknown flow feature your prediction assumes.</li>
+<li><strong>Balance (10 min).</strong> Draw one control volume around the hub and another around the complete internal passage. Mark every pressure cut, angular-momentum flux and solid reaction. Explain why their wall torques need not be equal.</li>
+<li><strong>Calculate (10 min).</strong> Run the supplied script. Double <span class="math inline">\(Q\)</span> while keeping the assumed geometry and coefficients fixed. The ideal torque increases fourfold; discuss why a real offset or resistance coefficient might also change.</li>
+<li><strong>Design (5 min).</strong> Choose a support stiffness to limit static twist. Then check whether a forcing frequency near its natural frequency invalidates a static-only decision.</li>
+<li><strong>Evaluate evidence (5 min).</strong> Identify a measurement that distinguishes an outer-mouth explanation from a momentum-flux explanation. Specify which geometric change should preserve the predicted torque under each hypothesis.</li>
+</ol>
+<h3 id="discussion-questions">Discussion questions</h3>
+<ul>
+<li>Can zero total linear momentum flux coexist with nonzero angular-momentum flux? Construct a two-jet example with signed coordinates.</li>
+<li>Can a stationary rotor carry torque? Where does the reaction go, and what is the rotational power?</li>
+<li>Why does reversing the flow rate fail to specify the reversed internal velocity field?</li>
+<li>How could bearing friction conceal a persistent small torque?</li>
+<li>Which changes to an arm can alter pressure stress without producing an equal fractional change in total torque?</li>
+<li>Which terms must remain in a start-up calculation even if they vanish in a steady locked experiment?</li>
+</ul>
+<h2 id="references-and-reading-route">12. References and reading route</h2>
+<p>Read [1] for the 2024 experiment and [2] for the later geometry comparisons. The remaining items provide historical context or the mechanics used in the independently derived teaching sections. Source access was checked on 3 November 2026. Full research text and supplementary material may require publisher or institutional access; detailed apparatus coefficients have not been reconstructed here.</p>
+<ol type="1">
+<li>K. Wang, B. Sprinkle, M. Zuo and L. Ristroph (2024), <strong>Centrifugal Flows Drive Reverse Rotation of Feynman’s Sprinkler</strong>, <em>Physical Review Letters</em> <strong>132</strong>, 044003. <a href="https://doi.org/10.1103/PhysRevLett.132.044003">DOI: 10.1103/PhysRevLett.132.044003</a>. Primary experimental source.</li>
+<li>J. E. Smith, M. Zuo, W. Kuhlke, B. Sprinkle and L. Ristroph (2026), <strong>Geometry controls momentum flux in the sprinkler problem</strong>, <em>Proceedings of the National Academy of Sciences</em> <strong>123</strong>(30), e2537479123. <a href="https://doi.org/10.1073/pnas.2537479123">DOI: 10.1073/pnas.2537479123</a>. Primary geometry/torque/flow comparison; online publication 13 July 2026.</li>
+<li>A. Jenkins (2004), <strong>An elementary treatment of the reverse sprinkler</strong>, <em>American Journal of Physics</em> <strong>72</strong>, 1276–1282. <a href="https://arxiv.org/abs/physics/0312087">Author preprint</a>. Historical theoretical treatment; read alongside the later experiments.</li>
+<li>W. R. Dean (1927), <strong>Note on the motion of fluid in a curved pipe</strong>, <em>Philosophical Magazine</em> <strong>4</strong>, 208–223. <a href="https://doi.org/10.1080/14786440708564324">DOI: 10.1080/14786440708564324</a>. Classical curved-pipe analysis; background for (13)–(15), not a whole-sprinkler torque law.</li>
+<li>N. Nangia, H. Johansen, N. A. Patankar and A. P. S. Bhalla (2017), <strong>A moving control volume approach to computing hydrodynamic forces and torques on immersed bodies</strong>, <em>Journal of Computational Physics</em> <strong>347</strong>, 437–462. <a href="https://doi.org/10.1016/j.jcp.2017.06.047">DOI: 10.1016/j.jcp.2017.06.047</a>. Computational load-accounting context.</li>
+<li>W. Thielicke and R. Sonntag (2021), <strong>Particle Image Velocimetry for MATLAB: Accuracy and enhanced algorithms in PIVlab</strong>, <em>Journal of Open Research Software</em> <strong>9</strong>, 12. <a href="https://doi.org/10.5334/jors.334">DOI: 10.5334/jors.334</a>. Measurement-method background.</li>
+<li>E. H. Dowell and K. C. Hall (2001), <strong>Modeling of fluid-structure interaction</strong>, <em>Annual Review of Fluid Mechanics</em> <strong>33</strong>, 445–490. <a href="https://doi.org/10.1146/annurev.fluid.33.1.445">DOI: 10.1146/annurev.fluid.33.1.445</a>. Context for coupled structural response.</li>
+<li>S. L. Dixon and C. A. Hall, <strong>Fluid Mechanics and Thermodynamics of Turbomachinery</strong>, 7th ed., Butterworth-Heinemann (2014). <a href="https://shop.elsevier.com/books/fluid-mechanics-and-thermodynamics-of-turbomachinery/dixon/978-0-12-415954-9">Publisher / ISBN 9780124159549</a>. Standard reference for angular-momentum and shaft-work relations; not the source of the assumed example values.</li>
+<li><strong>Starting popular-science reading:</strong> <a href="https://www.zoomit.ir/science/470421-feynman-diverse-sprinklers-featured/">Zoomit: Feynman and reverse sprinklers</a>. The requested link is preserved for context; research claims above are attributed to primary publications.</li>
+</ol>
+<p><strong>Reproducibility:</strong> <a href="teaching_calculations.py">Python calculations</a> · <a href="calculations.json">Numerical record</a>. All diagrams and example calculations are original teaching material. No publisher figures or experimental datasets are reproduced.</p>
+</main></body></html>

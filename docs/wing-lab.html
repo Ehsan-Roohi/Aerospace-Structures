@@ -1025,6 +1025,30 @@ nav.workspace-nav .workspace-link:focus-visible { outline: 3px solid var(--accen
 
 .stl-reference-active #anatomyKey,.stl-reference-active #aircraftAxes,.stl-reference-active #wingModelAxes,.stl-reference-active #wingMassReadout,.stl-reference-active #ribLabels,.stl-reference-active #legend,.stl-reference-active #stressPeaks,.stl-reference-active #plotinfo{visibility:hidden!important}
 </style>
+<script>
+window.downloadNamedLabFile = (defaultName, blob, doc = document) => {
+  const win = doc.defaultView;
+  const extension = defaultName.slice(defaultName.lastIndexOf('.'));
+  const answer = win.prompt('File name for ' + extension + ' export', defaultName);
+  if (answer === null) return null;
+  let stem = answer.trim();
+  if (stem.toLowerCase().endsWith(extension.toLowerCase())) stem = stem.slice(0, -extension.length);
+  stem = stem.trim().replace(/[<>:"/\\|?*\x00-\x1f]/g, '_').replace(/[. ]+$/, '');
+  if (/^(?:CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])(?:\.|$)/i.test(stem)) stem = '_' + stem;
+  const name = stem ? stem + extension : defaultName;
+  const url = win.URL.createObjectURL(blob);
+  const link = doc.createElement('a');
+  link.href = url;
+  link.download = name;
+  doc.body.append(link);
+  try { link.click(); }
+  finally {
+    link.remove();
+    win.setTimeout(() => win.URL.revokeObjectURL(url), 30000);
+  }
+  return name;
+};
+</script>
 </head>
 <body>
 
@@ -5312,7 +5336,7 @@ const Lecture03BeamCases = Object.freeze({
     const img=plotImage(key);
     try {
       const blob=await rasterize(img);
-      downloadBlob(`MIE446-beam-${key}.png`,blob);
+      if(!downloadBlob(`MIE446-beam-${key}.png`,blob))return;
       exportStatus(`${D.CHARTS[key].title} saved as PNG (${img.width*2} × ${img.height*2} px): plot with title, model and loads, axes with units and the sign convention, on a white background.`);
     } catch(e) {exportStatus(`The PNG could not be made here (${e.message}). Use Report (print or PDF) instead.`);}
   }
@@ -5359,9 +5383,9 @@ const Lecture03BeamCases = Object.freeze({
         if(res.error) {$('#beamStationListError').textContent=res.error;$('#beamStationListError').hidden=false;exportStatus(`Station table not saved: ${res.error}`);return;}
         st.stationList=res.xs;$('#beamStationListError').hidden=true;renderStationTable();
       }
-      const n=Study.stationRows(r,stationList()).length;download('MIE446-beam-stations.csv',Study.stationsCsv(r,stationList()),'text/csv');exportStatus(`Station table saved as CSV (${n} rows): exact values at the listed x, with x⁻ and x⁺ rows at jumps. Columns carry their units.`);}
-    else if(kind==='samples') {download('MIE446-beam-plot-samples.csv',Study.resultsCsv(r),'text/csv');exportStatus('Plot samples saved as CSV: the points used to draw the plots (duplicate x rows are the left and right limits at a jump). For values at a chosen x use the station table.');}
-    else if(kind==='reactions') {download('MIE446-beam-reactions.csv',Study.reactionsCsv(r),'text/csv');exportStatus('Reactions saved as CSV (force ↓ +, couple ↻ +).');}
+      const n=Study.stationRows(r,stationList()).length;if(!download('MIE446-beam-stations.csv',Study.stationsCsv(r,stationList()),'text/csv'))return;exportStatus(`Station table saved as CSV (${n} rows): exact values at the listed x, with x⁻ and x⁺ rows at jumps. Columns carry their units.`);}
+    else if(kind==='samples') {if(!download('MIE446-beam-plot-samples.csv',Study.resultsCsv(r),'text/csv'))return;exportStatus('Plot samples saved as CSV: the points used to draw the plots (duplicate x rows are the left and right limits at a jump). For values at a chosen x use the station table.');}
+    else if(kind==='reactions') {if(!download('MIE446-beam-reactions.csv',Study.reactionsCsv(r),'text/csv'))return;exportStatus('Reactions saved as CSV (force ↓ +, couple ↻ +).');}
     else if(kind==='print') printReport();
   }
 
@@ -5660,11 +5684,8 @@ const Lecture03BeamCases = Object.freeze({
     if(!st.solved||!isCurrent()) {exportStatus('Solve the current inputs before exporting; nothing was exported.');return false;}
     return true;
   }
-  function download(name,text,type) {downloadBlob(name,new Blob([text],{type}));}
-  function downloadBlob(name,blob) {
-    const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.append(a);a.click();a.remove();
-    setTimeout(()=>URL.revokeObjectURL(a.href),1000);
-  }
+  function download(name,text,type) {return downloadBlob(name,new Blob([text],{type}));}
+  function downloadBlob(name,blob) {return window.downloadNamedLabFile(name,blob);}
   function compareForExport(){const c={};for(const k of ['A','B'])if(st.compare[k])c[k]={label:k,model:st.compare[k].model};return Object.keys(c).length?c:null;}
   function exportText(){const text=Study.exportStudy({result:st.solved.result,notes:$('#beamExplain').value,compare:compareForExport()});if(!window.BeamStrengthUI)return text;const doc=JSON.parse(text);doc.strength=window.BeamStrengthUI.exportConfig();return JSON.stringify(doc,null,2);}
   function portableText(){
@@ -6136,8 +6157,8 @@ const Lecture03BeamCases = Object.freeze({
   $('#beamSaveA').onclick=()=>snapshot('A');$('#beamSaveB').onclick=()=>snapshot('B');
   $('#beamClearAB').onclick=()=>{st.compare={A:null,B:null};renderCompare();};
   $('#beamEqualMassBtn').onclick=equalMass;
-  $('#beamDownload').onclick=()=>{if(!guard())return;download('MIE446-beam-study.json',exportText(),'application/json');exportStatus('Study saved as MIE446-beam-study.json (versioned JSON).');};
-  $('#beamSaveJson').onclick=()=>{try{const text=portableText();download('MIE446-beam-study.json',text,'application/json');exportStatus(JSON.parse(text).state==='draft'?'Current inputs saved as JSON (working draft, not a solved result).':'Current study saved as JSON. Inputs will be validated and results recomputed when opened.');}catch(e){exportStatus('JSON not saved: '+e.message+' Correct the invalid input first.');}};
+  $('#beamDownload').onclick=()=>{if(!guard())return;const name=download('MIE446-beam-study.json',exportText(),'application/json');if(name)exportStatus('Study saved as '+name+' (versioned JSON).');};
+  $('#beamSaveJson').onclick=()=>{try{const text=portableText();if(!download('MIE446-beam-study.json',text,'application/json'))return;exportStatus(JSON.parse(text).state==='draft'?'Current inputs saved as JSON (working draft, not a solved result).':'Current study saved as JSON. Inputs will be validated and results recomputed when opened.');}catch(e){exportStatus('JSON not saved: '+e.message+' Correct the invalid input first.');}};
   $('#beamCsv').onclick=()=>exportAction('samples');
   $('#beamCsvReactions').onclick=()=>exportAction('reactions');
   // Downloads offered on the Diagrams tab (and the station table) use the same guarded actions.
@@ -6258,7 +6279,7 @@ const Lecture03BeamCases = Object.freeze({
  }
  $('#beamStrengthCut').onclick=()=>{refresh();if(!latest||latest.maxRatio<=0)return;const c=latest.critical;stationX=c.x;stationSide=c.side;window.BeamLab.setCut(c.x,'Critical evaluated material point; inspect the indicated side of any jump.',c.side);updatePicture();window.BeamLab.openTab('cut');};
  $('#beamStrengthCsv').onclick=()=>{refresh();if(!latest)return;const a=latest,c=a.maxRatio>0?a.critical:null,rows=[['nominal_strength_screening_not_certification'],['criterion',a.config.criterion],['required_FoS',a.config.requiredFos??'not specified'],['assessment',a.status],['missing',a.missing.join('; ')],['conservative_minimum_FoS_lower_bound',a.complete?(a.maxBound===0?'infinite zero demand':a.fosLower):'not checked'],['point_FoS',a.pointFos??''],['critical_evaluated_x_mm',c?.x??'not identified'],['critical_x_limit',c?.side??''],['critical_z_mm_from_middepth',c?.z??''],['critical_material',c?c.layer+1:''],['critical_sigma_MPa',c?.sigma??''],['critical_tau_MPa',c?.tau??''],['deflection_limit_mm',a.deflection.limit??'not specified'],['deflection_FE_max_mm',a.deflection.value],['deflection_status',a.deflection.status],...a.config.layers.flatMap((m,i)=>Object.entries(m).map(([k,v])=>[`material_${i+1}_${k}_MPa`,v??'not specified'])),[],['interval_start_mm','interval_end_mm','evaluated_utilization','conservative_bound','status'],...a.cells.map(c=>[c.a,c.b,c.ratio,c.bound,c.status])];
-  const text=rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n'),url=URL.createObjectURL(new Blob([text],{type:'text/csv'})),link=document.createElement('a');link.href=url;link.download='beam-strength-screening.csv';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+  const text=rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n');window.downloadNamedLabFile('beam-strength-screening.csv',new Blob([text],{type:'text/csv'}));
  };
  $('#strengthStationX').addEventListener('input',()=>{const text=$('#strengthStationX').value.trim(),x=Number(text);if(text&&Number.isFinite(x)&&x>=0&&x<=window.BeamLab.state().model.length){stationX=x;updatePicture();}else $('#strengthStationResult').textContent='Enter a station within the beam span.';});
  function inspectAt(x){if(!latest)return;const r=window.BeamLab.state().solved.result,L=r.input.length;stationX=Math.max(0,Math.min(L,x));for(const t of r.nodes)if(Math.abs(t-stationX)<L*1e-3){stationX=t;break;}stationSide=stationX===L?'left':'right';updatePicture();}
@@ -12329,7 +12350,11 @@ if(typeof module!=='undefined')module.exports=WingWorkspaceUI;
     const say = (msg) => { status.textContent = msg; };
     function downloadText(filename, textValue, done) {
       try {
-        if (typeof options.download === 'function') options.download(filename, textValue, 'application/json');
+        if (typeof options.download === 'function') {
+          const actual = options.download(filename, textValue, 'application/json');
+          if (actual === null) return false;
+          if (typeof actual === 'string') done = done.replace(filename, () => actual);
+        }
         else {
           let url, revoke = false;
           if (win.URL && typeof win.URL.createObjectURL === 'function' && win.Blob) { url = win.URL.createObjectURL(new win.Blob([textValue], { type: 'application/json' })); revoke = true; }
@@ -12628,7 +12653,7 @@ const WingPrintUI=(()=>{
   const style=node('style');style.textContent='.wing-print-dialog{position:fixed;z-index:300;right:12px;top:90px;width:min(580px,calc(100vw - 24px));max-height:calc(100dvh - 110px);overflow:auto;padding:16px;background:var(--panel,#fff);color:var(--fg,#17202c);border:2px solid var(--accent,#0875d1);border-radius:12px;box-shadow:0 12px 40px #10203040}.wing-print-dialog[hidden]{display:none}.wing-print-dialog h3{margin:0 44px 12px 0}.wing-print-close{position:absolute;right:8px;top:8px}.wing-print-dialog table{width:100%;font-size:13px}.wing-print-dialog th,.wing-print-dialog td{text-align:left;padding:5px;border-bottom:1px solid var(--line,#ccd)}.wing-print-dialog .btn{margin:5px 5px 0 0;min-height:40px}.wing-print-symmetry{display:inline-flex;align-items:center;gap:5px;padding:6px;font-weight:600}.wing-print-symmetry input{width:18px;height:18px}#wingSymmetryNote{font-size:12px;color:var(--muted)}#wingPrintStatus[data-error=true]{color:var(--bad,#ba2635)}';doc.head.append(style);
   let worker=null,returnFocus=null,output=null,fitRecord=null;try{fitRecord=JSON.parse(doc.defaultView.localStorage.getItem('winglab:print-fit-record'));}catch{}
   const release=()=>{worker?.terminate();worker=null;for(const b of [button,dxf,step])b.disabled=false;};
-  const download=(blob,name)=>{const url=doc.defaultView.URL.createObjectURL(blob),a=node('a');a.href=url;a.download=name;doc.body.append(a);a.click();a.remove();doc.defaultView.setTimeout(()=>doc.defaultView.URL.revokeObjectURL(url),2000);};
+  const download=(blob,name)=>doc.defaultView.downloadNamedLabFile(name,blob,doc);
   const fail=text=>{release();output=null;status.dataset.error='true';status.textContent=text;};
   const currentInput=()=>({...getInput(),fullWing:fullWing.checked});
   const key=input=>JSON.stringify([input.geometry,input.density,input.shellMaterial,input.fullWing]);
@@ -13965,7 +13990,7 @@ if(typeof module!=='undefined'&&module.exports)module.exports=WingPrintUI;
       for(const p of resultLabels()){if(!p.mesh.visible)continue;const v=resultWorldPoint(p);if(S.clip&&v.x>S.clipY)continue;v.project(camera);if(Math.abs(v.x)>1||Math.abs(v.y)>1||Math.abs(v.z)>1)continue;const x=left+(v.x+1)*w/2,y=top+(1-v.y)*h/2;ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(x,y,5,0,2*Math.PI);ctx.fill();ctx.font='bold 14px Arial';const txt=p.label+' '+sig(p.value,4)+' MPa';const tw=ctx.measureText(txt).width;const tx=Math.min(poster.width-tw-15,Math.max(left+5,x+10)),ty=Math.max(top+20,y-10);ctx.fillStyle='#fff';ctx.fillRect(tx-3,ty-16,tw+6,22);ctx.fillStyle=p.color;ctx.fillText(txt,tx,ty);}
       ctx.fillStyle='#111';ctx.font='14px Arial';ctx.fillText('Prescribed load · x aft, y spanwise, z up · grey = unresolved · nominal beam result, not local solid stress',22,top+h+30,poster.width-44);ctx.fillText(new Date().toISOString()+' · '+(stale?'stale':'solved')+' · original outline dashed when enabled',22,top+h+54,poster.width-44);
     }catch(error){flash('Image export failed: '+error.message);return;}finally{renderer.setPixelRatio(oldRatio);renderer.setSize(oldSize.x,oldSize.y,false);camera.aspect=oldAspect;camera.updateProjectionMatrix();renderer.render(scene,camera);}
-    poster.toBlob(blob=>{if(!blob){flash('Image export failed.');return;}const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=(S.projectName?WingStudyIO.safeFilenameStem(S.projectName):'Wing')+'-'+S.plot+'.png';a.click();setTimeout(()=>URL.revokeObjectURL(url),30000);},'image/png');
+    poster.toBlob(blob=>{if(!blob){flash('Image export failed.');return;}window.downloadNamedLabFile((S.projectName?WingStudyIO.safeFilenameStem(S.projectName):'Wing')+'-'+S.plot+'.png',blob);},'image/png');
   }
   function rainbow(t) {
     t = Math.min(1, Math.max(0, t));
@@ -15027,7 +15052,7 @@ if(typeof module!=='undefined'&&module.exports)module.exports=WingPrintUI;
     if(r.load.kind==='custom') return r.load.items.length?`${r.load.items.length} custom load${r.load.items.length>1?'s':''} (upward +; no automatic lift, weight or inertia relief)`:'No load defined';
     return r.load.kind==='tip'?`Tip force ${nf(r.load.tipForce,2)} N at ${nf(r.load.tipFraction,2)}c`:`Flight-like lift: n=${r.load.loadFactor}, mass=${r.load.aircraftMass} kg, ${r.load.distribution}${r.load.inertiaRelief?', inertia relief':''}`;
   }
-  const downloadText=(name,text,type)=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000);};
+  const downloadText=(name,text,type)=>{return window.downloadNamedLabFile(name,new Blob([text],{type}));};
   // Shared custom-load editor (wing_loads_ui.js); this adapter keeps the printed wing's ids, units and rules.
   const wingLoadAdapter={
     onScale:mode=>{S.lineArrowScale=mode;if(model&&R)drawLoads();},
@@ -19982,7 +20007,7 @@ const METAL_REFERENCE = {
     },
     defaults: () => ({ a: 2, b: E.D520.ribs.at(-1), P: 1000, q0: 500, q1: 1000, total: 2000, xc: 0.25 }),
     statusText: () => (R ? `Solved case: ${R.input.customLoads == null ? `flight loading, n = ${sgn(R.n, 1)} g` : R.input.customLoads.length ? `${R.input.customLoads.length} custom load(s) × ${sgn(R.n, 1)}` : "no load defined"} · fitting reaction ${nf((-R.fitting.Fz_per_g * R.n) / 1e3, 3)} kN · moment at the fittings ${nf((R.fitting.M_per_g * R.n) / 1e3, 3)} kN·m · torque ${nf(R.fitting.T_per_g * R.n, 1)} N·m (nose-up +).${stale ? " Inputs changed: run the study to update." : ""}` : ""),
-    download: (name, text, type) => { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([text], { type })); a.download = name; document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 1000); },
+    download: (name, text, type) => window.downloadNamedLabFile(name,new Blob([text],{type})),
     torqueNote: "In the D.520 model each load's torque is taken about the shear centre at its own station (as for the flight loads); the tapered-beam option also lets the inclined booms carry part of the torque.",
   };
   const loadKeeper = typeof WingLoadsUI !== "undefined" ? WingLoadsUI.keeper(loadAdapter) : null;
@@ -20224,7 +20249,7 @@ const METAL_REFERENCE = {
       if (stale || running) { $("#mCopyState").textContent = "Correct the inputs and run the study before exporting."; return; }
       const r = R, out = { input: r.input, engine: E.VERSION, n: r.n, mass: r.mass, fitting: r.fitting, tip: r.tip, failure: r.failure, frequencies: r.fem && { bending: r.fem.fBending, torsion: r.fem.fTorsion }, stations: r.stations.map((s) => ({ y: s.y, V: s.V, M: s.M, T: s.T, Vw: s.Vw, EI: s.EI, GJ: s.GJ, xsc: s.xsc, boomU: s.boomU, boomL: s.boomL, tauWeb: s.tauWeb, w: s.w, twist: s.twist })),
         compare: AB.A || AB.B ? { A: AB.A, B: AB.B } : null };
-      const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([JSON.stringify(out, null, 1)], { type: "application/json" })); a.download = "D520-wing-lab-results.json"; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+      window.downloadNamedLabFile("D520-wing-lab-results.json",new Blob([JSON.stringify(out,null,1)],{type:"application/json"}));
     });
   }
 
@@ -20284,7 +20309,7 @@ const METAL_REFERENCE = {
       mass: state.mass ?? E.D520.aircraft.mass, CL: state.CL ?? E.D520.aircraft.CL, material: state.material ? { ...state.material } : { ...E.D520.material } };
     lastError = null; syncN();
   }
-  const downloadFile = (name, text, type) => { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([text], { type })); a.download = name; document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 1000); };
+  const downloadFile = (name, text, type) => window.downloadNamedLabFile(name,new Blob([text],{type}));
   const studyFiles = typeof WingStudyIO !== "undefined" && $("#mStudyFiles") ? WingStudyIO.mount($("#mStudyFiles"), {
     workspace: "d520", engine: E, download: downloadFile, getState: () => MS.input,
     applyState: (state) => { applyD520State(state); renderTree(); renderPM(); changed(); },

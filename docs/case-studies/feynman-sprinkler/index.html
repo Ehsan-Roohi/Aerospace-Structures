@@ -1,4 +1,4 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Feynman's Reverse Sprinkler · MIE 446</title><meta name="description" content="Momentum flux, geometry and structural reactions: 37 equations, research references and reproducible teaching examples."><style>body{margin:0;background:#eef2f6;color:#173346;font:18px/1.75 system-ui,sans-serif}main{max-width:1080px;margin:auto;padding:48px;background:white}h1{font-size:clamp(30px,4vw,46px);line-height:1.2}h2{margin-top:2em;color:#174f6c}h3{color:#174f6c}a{color:#086b9b}nav{font-size:15px;border-bottom:1px solid #ccd9df;padding-bottom:18px}.math.display{display:block;overflow-x:auto;font-size:1.18em;padding:10px 0}img{max-width:100%;height:auto}table{display:block;overflow-x:auto;border-collapse:collapse;font-size:16px}td,th{padding:12px;border:1px solid #cbd8df;text-align:left}th{background:#edf5f8}p,li{max-width:85ch}code{font-size:.9em}a:focus-visible{outline:3px solid #ba7933}@media(max-width:650px){main{padding:24px 18px}body{font-size:17px}.math.display{font-size:1.05em}}@media print{body{background:white;font-size:11pt}main{padding:0}h2,h3{break-after:avoid}nav{display:none}}</style><script>window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]}};</script><script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script></head><body><main><nav><a href="https://github.com/Ehsan-Roohi/Aerospace-Structures">Course home</a> · <a href="https://github.com/Ehsan-Roohi/Aerospace-Structures/blob/main/FEYNMAN_SPRINKLER.md">GitHub source</a> · <a href="teaching_calculations.py">Calculation script</a> · <a href="calculations.json">Numerical record</a></nav><h1 id="feynmans-reverse-sprinkler-momentum-flux-geometry-and-structural-reaction-loads">Feynman’s Reverse Sprinkler: Momentum Flux, Geometry and Structural Reaction Loads</h1>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Feynman's Reverse Sprinkler · MIE 446</title><meta name="description" content="Momentum flux, geometry and structural reactions: 10 original figures, 37 equations, research references and reproducible teaching examples."><style>body{margin:0;background:#eef2f6;color:#173346;font:18px/1.75 system-ui,sans-serif}main{max-width:1080px;margin:auto;padding:48px;background:white}h1{font-size:clamp(30px,4vw,46px);line-height:1.2}h2{margin-top:2em;color:#174f6c}h3{color:#174f6c}a{color:#086b9b}nav{font-size:15px;border-bottom:1px solid #ccd9df;padding-bottom:18px}.math.display{display:block;overflow-x:auto;font-size:1.18em;padding:10px 0}img{display:block;max-width:100%;height:auto;margin:32px auto 12px;border:1px solid #dce6ec;border-radius:8px}figure{margin:28px 0}figcaption{font-size:15px;line-height:1.6;color:#45616f}table{display:block;overflow-x:auto;border-collapse:collapse;font-size:16px}td,th{padding:12px;border:1px solid #cbd8df;text-align:left}th{background:#edf5f8}p,li{max-width:85ch}code{font-size:.9em}a:focus-visible{outline:3px solid #ba7933}@media(max-width:650px){main{padding:24px 18px}body{font-size:17px}.math.display{font-size:1.05em}}@media print{body{background:white;font-size:11pt}main{padding:0}h2,h3{break-after:avoid}nav{display:none}}</style><script>window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]}};</script><script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script></head><body><main><nav><a href="https://github.com/Ehsan-Roohi/Aerospace-Structures">Course home</a> · <a href="https://github.com/Ehsan-Roohi/Aerospace-Structures/blob/main/FEYNMAN_SPRINKLER.md">GitHub source</a> · <a href="teaching_calculations.py">Calculation script</a> · <a href="calculations.json">Numerical record</a></nav><h1 id="feynmans-reverse-sprinkler-momentum-flux-geometry-and-structural-reaction-loads">Feynman’s Reverse Sprinkler: Momentum Flux, Geometry and Structural Reaction Loads</h1>
 <p><strong>MIE 446 · Aerospace Structures · University of Massachusetts Amherst</strong><br />
 Supplementary engineering reading · 3 November 2026</p>
 <p><a href="https://github.com/Ehsan-Roohi/Aerospace-Structures">Course home</a> · <a href="https://ehsan-roohi.github.io/Aerospace-Structures/case-studies/feynman-sprinkler/">Large-equation reading view</a></p>
@@ -9,6 +9,11 @@ Supplementary engineering reading · 3 November 2026</p>
 <h3 id="what-the-recent-research-establishes">What the recent research establishes</h3>
 <p>Wang, Sprinkle, Zuo and Ristroph [1] reported sustained reverse rotation using a very low friction apparatus in 2024. Their flow measurements connected the response to angular-momentum transport and curved internal passages. Smith, Zuo, Kuhlke, Sprinkle and Ristroph [2] extended the experimental inquiry in 2026 using different arm geometries and measurements of motion, torque and flow. The reported geometry comparisons support momentum flux into the device over explanations based only on the outer portions of the arms or total fluid angular momentum.</p>
 <p>Those results concern the tested devices and conditions. They do not establish a universal speed ratio or rotation direction for every geometry and flow regime. In particular, a small measured speed does not imply a small internal pressure load. The following equations are standard conservation and structural mechanics developed independently for teaching, not transcriptions of the authors’ detailed models.</p>
+<figure>
+<img src="forward-reverse.svg" alt="Forward ejection and converging reverse inflow" />
+<figcaption aria-hidden="true">Forward ejection and converging reverse inflow</figcaption>
+</figure>
+<p><em>A plan-view comparison. The forward jet couple and solid reaction are explicitly signed; the suction panel leaves the rotor direction to the full torque balance.</em></p>
 <h2 id="define-the-experiment-before-predicting-its-outcome">2. Define the experiment before predicting its outcome</h2>
 <p>There are three distinct measurements:</p>
 <table>
@@ -48,6 +53,11 @@ Supplementary engineering reading · 3 November 2026</p>
 </tbody>
 </table>
 <p>A photograph of rotation cannot distinguish a start-up impulse from a persistent mean torque. Record the pump history, flow rate, bearing resistance, arm geometry and observation duration. Locking the rotor can also change the flow, so a measured locked torque should not automatically be used as the forcing at every free-running speed.</p>
+<figure>
+<img src="support-conditions.svg" alt="Locked, free and compliant rotor supports" />
+<figcaption aria-hidden="true">Locked, free and compliant rotor supports</figcaption>
+</figure>
+<p><em>The same fluid device can be tested with three different mechanical boundary conditions. Reaction torque, rotation and support twist are different observables.</em></p>
 <h3 id="notation-and-sign-convention">Notation and sign convention</h3>
 <p>Use a fixed inertial origin on the rotation axis, with positive <span class="math inline">\(z\)</span> upward. Positive torque and angular speed are counterclockwise when viewed from above. The outward unit normal of a fluid control surface is <span class="math inline">\(\mathbf n\)</span>. Fluid velocity <span class="math inline">\(\mathbf u\)</span> is absolute velocity; control-surface velocity is <span class="math inline">\(\mathbf v_s\)</span>. Define specific axial angular momentum by</p>
 <p><span class="math display">\[
@@ -101,6 +111,11 @@ T_{p,\mathrm{cuts}}=-\int_{S_{\mathrm{cuts}}}
 [\mathbf r\times(p\mathbf n)]\cdot\mathbf e_z\,dA. \tag{9}
 \]</span></p>
 <p>It vanishes for some carefully chosen boundaries, not for every convenient pipe cut. Gravity has zero axial moment when it acts parallel to <span class="math inline">\(z\)</span>. Ambient pressure may be subtracted consistently over a closed boundary; subtracting it on only selected surfaces creates spurious forces.</p>
+<figure>
+<img src="control-volume.svg" alt="Control-volume storage, momentum flux and surface torques" />
+<figcaption aria-hidden="true">Control-volume storage, momentum flux and surface torques</figcaption>
+</figure>
+<p><em>A fluid-only control volume has outward normals on both ports. Inlet flux is signed negative. Wall torque and pressure-cut torque are separate contributions.</em></p>
 <h3 id="a-useful-port-approximation">A useful port approximation</h3>
 <p>If each port can be represented by a mass-flux-weighted radius and tangential velocity,</p>
 <p><span class="math display">\[
@@ -140,6 +155,16 @@ Re=\frac{\rho Ud}{\mu},\qquad
 De=Re\sqrt{\frac{d}{2R_c}}. \tag{15}
 \]</span></p>
 <p>The Dean-number convention here uses tube diameter <span class="math inline">\(d\)</span> and curvature radius <span class="math inline">\(R_c\)</span>. Passage length, curvature sequence, entrance development and hub geometry also matter. One scalar curvature cannot specify every arm.</p>
+<figure>
+<img src="curvature-pressure.svg" alt="Pressure gradient across a curved passage" />
+<figcaption aria-hidden="true">Pressure gradient across a curved passage</figcaption>
+</figure>
+<p><em>A conceptual bend and pressure trend explain the local turning mechanism in equations (13)–(15). The pressure curve is schematic and is not an experimental measurement.</em></p>
+<figure>
+<img src="geometry-comparison.svg" alt="Geometry comparisons to test competing torque explanations" />
+<figcaption aria-hidden="true">Geometry comparisons to test competing torque explanations</figcaption>
+</figure>
+<p><em>Hypothetical arm modifications illustrate a controlled comparison. These drawings are not reproductions of the 2026 apparatus and do not assert equal or opposite measured torques.</em></p>
 <h3 id="an-equivalent-jet-lever-arm">An equivalent jet lever arm</h3>
 <p>A useful interpretation of measured hub-entry flux is an equivalent signed offset <span class="math inline">\(b_{\mathrm{eff}}\)</span>. If the entering jets have representative speed <span class="math inline">\(U_j\)</span>, define</p>
 <p><span class="math display">\[
@@ -193,6 +218,11 @@ I_{\mathrm{eff}}\ddot\theta+c\dot\theta+k\theta=T_h(t),
 \]</span></p>
 <p>For constant loading the final twist is <span class="math inline">\(\theta_0=T_0/k\)</span>. A small mean torque can coexist with appreciable oscillatory twist near a resonance. This one-degree-of-freedom example is forced vibration, not a flutter analysis. Flow-dependent negative damping would require a separate stability model and evidence.</p>
 <h2 id="the-aerospace-structures-connection">8. The aerospace structures connection</h2>
+<figure>
+<img src="structural-load-path.svg" alt="Tube wall to hub to support structural load path" />
+<figcaption aria-hidden="true">Tube wall to hub to support structural load path</figcaption>
+</figure>
+<p><em>An elevation schematic follows fluid traction through the arm joints, hub, bearing/support, shaft and foundation. The foundation supplies the closing structural reaction.</em></p>
 <h3 id="local-loads-and-global-couples">8.1 Local loads and global couples</h3>
 <p>At each bend, momentum changes and pressure tractions load the tube wall. Attachments carry those loads into the hub and support. A torque pair can disappear from a force-only summary, just as distributed aerodynamic loads can be reduced incorrectly if their moments are omitted. Preserve both resultants:</p>
 <p><span class="math display">\[
@@ -205,6 +235,11 @@ I_{\mathrm{eff}}\ddot\theta+c\dot\theta+k\theta=T_h(t),
 \qquad \sigma_z=\frac{p_g r_t}{2t}. \tag{25}
 \]</span></p>
 <p>The axial expression assumes a closed-end load path. Open ends or independently restrained end caps change the axial force. These stresses depend on pressure and wall dimensions, not on the small residual rotor torque. External pressure introduces buckling questions outside this membrane estimate.</p>
+<figure>
+<img src="pressure-and-torsion.svg" alt="Pressure membrane loading and circular-shaft shear stress" />
+<figcaption aria-hidden="true">Pressure membrane loading and circular-shaft shear stress</figcaption>
+</figure>
+<p><em>Pressure stresses in the tube and torsional shear in the shaft arise from different load measures. The linear radial shear profile assumes an elastic circular shaft.</em></p>
 <h3 id="torsion-bending-and-attachment-reactions">8.2 Torsion, bending and attachment reactions</h3>
 <p>For a circular support shaft with outer and inner diameters <span class="math inline">\(d_o,d_i\)</span>,</p>
 <p><span class="math display">\[
@@ -265,6 +300,11 @@ Re=1591.55,\quad De=636.62. \tag{32}
 <figcaption aria-hidden="true">Synthetic transient and forced-response curves</figcaption>
 </figure>
 <p><em>Original analytical teaching curves. Left: constant-torque spin-up under linear damping. Right: normalized steady harmonic twist for the assumed compliant support. Neither curve contains experimental observations.</em></p>
+<figure>
+<img src="torque-sensitivity.svg" alt="Sensitivity to throughput and signed effective offset" />
+<figcaption aria-hidden="true">Sensitivity to throughput and signed effective offset</figcaption>
+</figure>
+<p><em>Analytical curves for the stated models: torque scales quadratically with Q for fixed geometry, while the ideal hub torque changes linearly with the signed effective offset at matched speed. No experimental data are plotted.</em></p>
 <h2 id="measurement-uncertainty-and-numerical-verification">10. Measurement, uncertainty and numerical verification</h2>
 <p>A useful laboratory sequence measures <span class="math inline">\(Q\)</span> by timed collection, static support torque with a calibrated torsional element, free rotation by video and the internal flow by particle tracking or particle-image velocimetry. The last measurement supplies information that visible rotation alone cannot provide.</p>
 <p>For a small planar port with outward normal velocity <span class="math inline">\(u_n\)</span>, an area-discretized flux estimate is</p>
@@ -317,5 +357,6 @@ Re=1591.55,\quad De=636.62. \tag{32}
 <li>S. L. Dixon and C. A. Hall, <strong>Fluid Mechanics and Thermodynamics of Turbomachinery</strong>, 7th ed., Butterworth-Heinemann (2014). <a href="https://shop.elsevier.com/books/fluid-mechanics-and-thermodynamics-of-turbomachinery/dixon/978-0-12-415954-9">Publisher / ISBN 9780124159549</a>. Standard reference for angular-momentum and shaft-work relations; not the source of the assumed example values.</li>
 <li><strong>Starting popular-science reading:</strong> <a href="https://www.zoomit.ir/science/470421-feynman-diverse-sprinklers-featured/">Zoomit: Feynman and reverse sprinklers</a>. The requested link is preserved for context; research claims above are attributed to primary publications.</li>
 </ol>
+<p><strong>Visual guide:</strong> Ten original figure files accompany this reading: eight newly added explanatory diagrams/plots, the signed jet-couple schematic and the two-panel response plot. The <a href="generate_figures.py">figure-generation script</a> reproduces the eight added SVGs using NumPy and Matplotlib.</p>
 <p><strong>Reproducibility:</strong> <a href="teaching_calculations.py">Python calculations</a> · <a href="calculations.json">Numerical record</a>. All diagrams and example calculations are original teaching material. No publisher figures or experimental datasets are reproduced.</p>
 </main></body></html>

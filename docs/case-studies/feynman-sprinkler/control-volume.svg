@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns:xlink="http://www.w3.org/1999/xlink" width="664.439119pt" height="404.39952pt" viewBox="0 0 664.439119 404.39952" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ <metadata>
+  <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+   <cc:Work>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:date>2026-11-03T16:50:24.219427</dc:date>
+    <dc:format>image/svg+xml</dc:format>
+    <dc:creator>
+     <cc:Agent>
+      <dc:title>Matplotlib v3.10.8, https://matplotlib.org/</dc:title>
+     </cc:Agent>
+    </dc:creator>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="figure_1">
+  <g id="patch_1">
+   <path d="M 0 404.39952 
+L 664.439119 404.39952 
+L 664.439119 0 
+L 0 0 
+z
+" style="fill: #ffffff"/>
+  </g>
+  <g id="axes_1">
+   <g id="patch_2">
+    <path d="M 190.906707 305.346166 
+L 473.532411 305.346166 
+L 473.532411 121.639459 
+L 190.906707 121.639459 
+z
+" clip-path="url(#p849e543263)" style="fill: #eaf4f8; stroke-dasharray: 7.4,3.2; stroke-dashoffset: 0; stroke: #176d91; stroke-width: 2; stroke-linejoin: miter"/>
+   </g>
+   <g id="line2d_1">
+    <path d="M 190.906707 262.952311 
+L 190.906707 164.033314 
+" clip-path="url(#p849e543263)" style="fill: none; stroke: #bb8525; stroke-width: 5; stroke-linecap: square"/>
+   </g>
+   <g id="line2d_2">
+    <path d="M 473.532411 262.952311 
+L 473.532411 164.033314 
+" clip-path="url(#p849e543263)" style="fill: none; stroke: #bb8525; stroke-width: 5; stroke-linecap: square"/>
+   </g>
+   <g id="text_1">
+    <text style="font-weight: 700; font-size: 12px; font-family: 'DejaVu Sans'; text-anchor: middle; fill: #176d91" x="332.219559" y="190.882756" transform="rotate(-0 332.219559 190.882756)">FLUID CONTROL VOLUME</text>
+   </g>
+   <g id="text_2">
+    <text style="font-size: 12px; font-family: 'DejaVu Sans'; text-anchor: middle" x="332.219559" y="236.102869" transform="rotate(-0 332.219559 236.102869)">Storage: dH / dt</text>
+   </g>
+   <g id="patch_3">
+    <path d="M 188.907852 213.492812 
+Q 159.113734 213.492812 132.114702 213.492812 
+" style="fill: none; stroke: #bb8525; stroke-width: 2.5; stroke-linecap: round"/>
+    <path d="M 138.114702 216.492812 
+L 132.114702 213.492812 
+L 138.114702 210.492812 
+z
+" style="fill: #bb8525; stroke: #bb8525; stroke-width: 2.5; stroke-linecap: round"/>
+   </g>
+   <g id="text_3">
+    <text style="font-size: 12px; font-family: 'DejaVu Sans'; text-anchor: start; fill: #bb8525" x="155.578495" y="188.056499" transform="rotate(-0 155.578495 188.056499)">n</text>
+   </g>
+   <g id="patch_4">
+    <path d="M 475.531267 213.492812 
+Q 505.325385 213.492812 532.324417 213.492812 
+" style="fill: none; stroke: #bb8525; stroke-width: 2.5; stroke-linecap: round"/>
+    <path d="M 526.324417 210.492812 
+L 532.324417 213.492812 
+L 526.324417 216.492812 
+z
+" style="fill: #bb8525; stroke: #bb8525; stroke-width: 2.5; stroke-linecap: round"/>
+   </g>
+   <g id="text_4">
+    <text style="font-size: 12px; font-family: 'DejaVu Sans'; text-anchor: start; fill: #bb8525" x="508.860624" y="188.056499" transform="rotate(-0 508.860624 188.056499)">n</text>
+   </g>
+   <g id="patch_5">
+    <path d="M 51.59724 227.624098 
+Q 116.720301 227.624098 179.048278 227.624098 
+" style="fill: none; stroke: #176d91; stroke-width: 2.5; stroke-linecap: round"/>
+    <path d="M 173.048278 224.624098 
+L 179.048278 227.624098 
+L 173.048278 230.624098 
+z
+" style="fill: #176d91; stroke: #176d91; stroke-width: 2.5; stroke-linecap: round"/>
+   </g>
+   <g id="text_5">
+    <text style="font-size: 12px; font-family: 'DejaVu Sans'; text-anchor: middle; fill: #176d91" x="99.053354" y="279.909853" transform="rotate(-0 99.053354 279.909853)">Inlet flux</text>
+   </g>
+   <g id="patch_6">
+    <path d="M 482.601438 227.624098 
+Q 547.7245 227.624098 610.052476 227.624098 
+" style="fill: none; stroke: #a33350; stroke-width: 2.5; stroke-linecap: round"/>
+    <path d="M 604.052476 224.624098 
+L 610.052476 227.624098 
+L 604.052476 230.624098 
+z
+" style="fill: #a33350; stroke: #a33350; stroke-width: 2.5; stroke-linecap: round"/>
+   </g>
+   <g id="text_6">
+    <text style="font-size: 12px; font-family: 'DejaVu Sans'; text-anchor: middle; fill: #a33350" x="565.385765" y="279.909853" transform="rotate(-0 565.385765 279.909853)">Outlet flux</text>
+   </g>
+   <g id="patch_7">
+    <path d="M 362.898373 74.377225 
+Q 368.515287 97.037654 373.86321 118.612891 
+" style="fill: none; stroke: #607582; stroke-linecap: round"/>
+    <path d="M 375.03787 113.376463 
+L 373.86321 118.612891 
+L 370.378864 114.531306 
+" style="fill: none; stroke: #607582; stroke-linecap: round"/>
+   </g>
+   <g id="text_7">
+    <text style="font-size: 12px; font-family: 'DejaVu Sans'; text-anchor: middle" x="360.48213" y="67.940575" transform="rotate(-0 360.48213 67.940575)">Wall torque on fluid</text>
+   </g>
+   <g id="text_8">
+    <text style="font-size: 11px; font-family: 'DejaVu Sans'; text-anchor: middle" x="332.219559" y="359.04505" transform="rotate(-0 332.219559 359.04505)">Wall torque + pressure-cut torque + body torque = storage + net outward flux</text>
+   </g>
+  </g>
+  <g id="text_9">
+   <text style="font-weight: 700; font-size: 17px; font-family: 'DejaVu Sans'; text-anchor: middle; fill: #183b50" x="332.219559" y="20.117344" transform="rotate(-0 332.219559 20.117344)">A fluid control volume: retain every torque contribution</text>
+  </g>
+ </g>
+ <defs>
+  <clipPath id="p849e543263">
+   <rect x="7.2" y="29.786105" width="650.039119" height="367.413415"/>
+  </clipPath>
+ </defs>
+</svg>

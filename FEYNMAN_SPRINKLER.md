@@ -19,6 +19,10 @@ Wang, Sprinkle, Zuo and Ristroph [1] reported sustained reverse rotation using a
 
 Those results concern the tested devices and conditions. They do not establish a universal speed ratio or rotation direction for every geometry and flow regime. In particular, a small measured speed does not imply a small internal pressure load. The following equations are standard conservation and structural mechanics developed independently for teaching, not transcriptions of the authors' detailed models.
 
+![Forward ejection and converging reverse inflow](docs/case-studies/feynman-sprinkler/forward-reverse.svg)
+
+*A plan-view comparison. The forward jet couple and solid reaction are explicitly signed; the suction panel leaves the rotor direction to the full torque balance.*
+
 ## 2. Define the experiment before predicting its outcome
 
 There are three distinct measurements:
@@ -30,6 +34,10 @@ There are three distinct measurements:
 | Compliant support | Finite torsional stiffness | Twist and vibration | Coupled forcing, stiffness, inertia and damping |
 
 A photograph of rotation cannot distinguish a start-up impulse from a persistent mean torque. Record the pump history, flow rate, bearing resistance, arm geometry and observation duration. Locking the rotor can also change the flow, so a measured locked torque should not automatically be used as the forcing at every free-running speed.
+
+![Locked, free and compliant rotor supports](docs/case-studies/feynman-sprinkler/support-conditions.svg)
+
+*The same fluid device can be tested with three different mechanical boundary conditions. Reaction torque, rotation and support twist are different observables.*
 
 ### Notation and sign convention
 
@@ -109,6 +117,10 @@ $$
 
 It vanishes for some carefully chosen boundaries, not for every convenient pipe cut. Gravity has zero axial moment when it acts parallel to $z$. Ambient pressure may be subtracted consistently over a closed boundary; subtracting it on only selected surfaces creates spurious forces.
 
+![Control-volume storage, momentum flux and surface torques](docs/case-studies/feynman-sprinkler/control-volume.svg)
+
+*A fluid-only control volume has outward normals on both ports. Inlet flux is signed negative. Wall torque and pressure-cut torque are separate contributions.*
+
 ### A useful port approximation
 
 If each port can be represented by a mass-flux-weighted radius and tangential velocity,
@@ -168,6 +180,14 @@ De=Re\sqrt{\frac{d}{2R_c}}. \tag{15}
 $$
 
 The Dean-number convention here uses tube diameter $d$ and curvature radius $R_c$. Passage length, curvature sequence, entrance development and hub geometry also matter. One scalar curvature cannot specify every arm.
+
+![Pressure gradient across a curved passage](docs/case-studies/feynman-sprinkler/curvature-pressure.svg)
+
+*A conceptual bend and pressure trend explain the local turning mechanism in equations (13)–(15). The pressure curve is schematic and is not an experimental measurement.*
+
+![Geometry comparisons to test competing torque explanations](docs/case-studies/feynman-sprinkler/geometry-comparison.svg)
+
+*Hypothetical arm modifications illustrate a controlled comparison. These drawings are not reproductions of the 2026 apparatus and do not assert equal or opposite measured torques.*
 
 ### An equivalent jet lever arm
 
@@ -247,6 +267,10 @@ For constant loading the final twist is $\theta_0=T_0/k$. A small mean torque ca
 
 ## 8. The aerospace structures connection
 
+![Tube wall to hub to support structural load path](docs/case-studies/feynman-sprinkler/structural-load-path.svg)
+
+*An elevation schematic follows fluid traction through the arm joints, hub, bearing/support, shaft and foundation. The foundation supplies the closing structural reaction.*
+
 ### 8.1 Local loads and global couples
 
 At each bend, momentum changes and pressure tractions load the tube wall. Attachments carry those loads into the hub and support. A torque pair can disappear from a force-only summary, just as distributed aerodynamic loads can be reduced incorrectly if their moments are omitted. Preserve both resultants:
@@ -264,6 +288,10 @@ $$
 $$
 
 The axial expression assumes a closed-end load path. Open ends or independently restrained end caps change the axial force. These stresses depend on pressure and wall dimensions, not on the small residual rotor torque. External pressure introduces buckling questions outside this membrane estimate.
+
+![Pressure membrane loading and circular-shaft shear stress](docs/case-studies/feynman-sprinkler/pressure-and-torsion.svg)
+
+*Pressure stresses in the tube and torsional shear in the shaft arise from different load measures. The linear radial shear profile assumes an elastic circular shaft.*
 
 ### 8.2 Torsion, bending and attachment reactions
 
@@ -354,6 +382,10 @@ At an assumed pump pressure difference of $20$ kPa, $P_{\mathrm{hyd}}=0.4$ W. Th
 
 *Original analytical teaching curves. Left: constant-torque spin-up under linear damping. Right: normalized steady harmonic twist for the assumed compliant support. Neither curve contains experimental observations.*
 
+![Sensitivity to throughput and signed effective offset](docs/case-studies/feynman-sprinkler/torque-sensitivity.svg)
+
+*Analytical curves for the stated models: torque scales quadratically with Q for fixed geometry, while the ideal hub torque changes linearly with the signed effective offset at matched speed. No experimental data are plotted.*
+
 ## 10. Measurement, uncertainty and numerical verification
 
 A useful laboratory sequence measures $Q$ by timed collection, static support torque with a calibrated torsional element, free rotation by video and the internal flow by particle tracking or particle-image velocimetry. The last measurement supplies information that visible rotation alone cannot provide.
@@ -417,5 +449,7 @@ Read [1] for the 2024 experiment and [2] for the later geometry comparisons. The
 7. E. H. Dowell and K. C. Hall (2001), **Modeling of fluid-structure interaction**, *Annual Review of Fluid Mechanics* **33**, 445–490. [DOI: 10.1146/annurev.fluid.33.1.445](https://doi.org/10.1146/annurev.fluid.33.1.445). Context for coupled structural response.
 8. S. L. Dixon and C. A. Hall, **Fluid Mechanics and Thermodynamics of Turbomachinery**, 7th ed., Butterworth-Heinemann (2014). [Publisher / ISBN 9780124159549](https://shop.elsevier.com/books/fluid-mechanics-and-thermodynamics-of-turbomachinery/dixon/978-0-12-415954-9). Standard reference for angular-momentum and shaft-work relations; not the source of the assumed example values.
 9. **Starting popular-science reading:** [Zoomit: Feynman and reverse sprinklers](https://www.zoomit.ir/science/470421-feynman-diverse-sprinklers-featured/). The requested link is preserved for context; research claims above are attributed to primary publications.
+
+**Visual guide:** Ten original figure files accompany this reading: eight newly added explanatory diagrams/plots, the signed jet-couple schematic and the two-panel response plot. The [figure-generation script](docs/case-studies/feynman-sprinkler/generate_figures.py) reproduces the eight added SVGs using NumPy and Matplotlib.
 
 **Reproducibility:** [Python calculations](docs/case-studies/feynman-sprinkler/teaching_calculations.py) · [Numerical record](docs/case-studies/feynman-sprinkler/calculations.json). All diagrams and example calculations are original teaching material. No publisher figures or experimental datasets are reproduced.

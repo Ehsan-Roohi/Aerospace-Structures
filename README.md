@@ -132,6 +132,8 @@ The G-code is provided for inspection only. Do not send it directly to a printer
 
 ## Engineering readings and case studies
 
+**[The Blue LED: thirty years of materials, manufacturing and multiphysics engineering](BLUE_LED.md)** — detailed English enrichment reading inspired by the supplied Zoomit article: 33 numbered equations, ten original figures, 13 primary/official references, a Persian summary and reproducible Python calculations. Connects crystal growth, Mg activation, InGaN confinement, quantum/energy efficiency and white-light conversion to package cooling, bonded interfaces, thermal stress and aerospace attachment loads. [Open the illustrated reading](https://ehsan-roohi.github.io/Aerospace-Structures/case-studies/blue-led/).
+
 **[Feynman's reverse sprinkler: momentum flux, geometry and structural reaction loads](FEYNMAN_SPRINKLER.md)** — English engineering reading inspired by the supplied Zoomit article, with 37 numbered equations, primary 2024/2026 research references, ten original teaching figures and reproducible Python calculations. Covers control volumes, pressure-cut moments, torque, curved-pipe flow, shaft/wing-box torsion, forced vibration, uncertainty and classroom activities. [Open the large-equation reading](https://ehsan-roohi.github.io/Aerospace-Structures/case-studies/feynman-sprinkler/).
 
 **[How AWACS Works: Radar, Airframe Integration and Structural Loads on the Boeing E-3 Sentry](AWACS.md)** — An English case study with 12 historical and technical photographs. Trace the radar measurements from echo to track, then follow the dome loads through the struts into the fuselage.

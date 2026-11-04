@@ -1,4 +1,4 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>The Blue LED · MIE 446</title><meta name="description" content="A detailed illustrated blue LED case study: semiconductor physics, crystal growth, carrier activation, 33 equations, 10 figures, thermal stress and reproducible calculations."><style>body{margin:0;background:#eef2f6;color:#173346;font:18px/1.75 system-ui,sans-serif}main{max-width:1080px;margin:auto;padding:48px;background:white}h1{font-size:clamp(30px,4vw,46px);line-height:1.2}h2{margin-top:2em;color:#174f6c}h3{color:#174f6c}a{color:#086b9b}nav{font-size:15px;border-bottom:1px solid #ccd9df;padding-bottom:18px}.math.display{display:block;overflow-x:auto;font-size:1.18em;padding:10px 0}img{display:block;max-width:100%;height:auto;margin:32px auto 12px;border:1px solid #dce6ec;border-radius:8px}figure{margin:28px 0}figcaption{font-size:15px;line-height:1.6;color:#45616f}table{display:block;overflow-x:auto;border-collapse:collapse;font-size:16px}td,th{padding:12px;border:1px solid #cbd8df;text-align:left}th{background:#edf5f8}p,li{max-width:85ch}code{font-size:.9em}a:focus-visible{outline:3px solid #ba7933}@media(max-width:650px){main{padding:24px 18px}body{font-size:17px}.math.display{font-size:1.05em}}@media print{body{background:white;font-size:11pt}main{padding:0}h2,h3{break-after:avoid}nav{display:none}} .math.display{background:#f1f6fa;border-left:4px solid #2669c9;padding:16px;box-sizing:border-box}h2{scroll-margin-top:20px}.toc{background:#eef5fa;padding:20px;line-height:1.9} img{width:100%} [lang=fa]{direction:rtl}</style><script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script></head><body><main><nav><a href="https://github.com/Ehsan-Roohi/Aerospace-Structures#engineering-readings-and-case-studies">Course readings</a> · <a href="https://github.com/Ehsan-Roohi/Aerospace-Structures/blob/main/BLUE_LED.md">GitHub source</a> · <a href="teaching_calculations.py">Calculation script</a> · <a href="calculations.json">Numerical record</a></nav><h1
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>The Blue LED · MIE 446</title><meta name="description" content="A detailed illustrated blue LED case study: semiconductor physics, crystal growth, carrier activation, 33 equations, 10 original figures, 7 real photographs, thermal stress and reproducible calculations."><style>body{margin:0;background:#eef2f6;color:#173346;font:18px/1.75 system-ui,sans-serif}main{max-width:1080px;margin:auto;padding:48px;background:white}h1{font-size:clamp(30px,4vw,46px);line-height:1.2}h2{margin-top:2em;color:#174f6c}h3{color:#174f6c}a{color:#086b9b}nav{font-size:15px;border-bottom:1px solid #ccd9df;padding-bottom:18px}.math.display{display:block;overflow-x:auto;font-size:1.18em;padding:10px 0}img{display:block;max-width:100%;height:auto;margin:32px auto 12px;border:1px solid #dce6ec;border-radius:8px}figure{margin:28px 0}figcaption{font-size:15px;line-height:1.6;color:#45616f}table{display:block;overflow-x:auto;border-collapse:collapse;font-size:16px}td,th{padding:12px;border:1px solid #cbd8df;text-align:left}th{background:#edf5f8}p,li{max-width:85ch}code{font-size:.9em}a:focus-visible{outline:3px solid #ba7933}@media(max-width:650px){main{padding:24px 18px}body{font-size:17px}.math.display{font-size:1.05em}}@media print{body{background:white;font-size:11pt}main{padding:0}h2,h3{break-after:avoid}nav{display:none}} .math.display{background:#f1f6fa;border-left:4px solid #2669c9;padding:16px;box-sizing:border-box}h2{scroll-margin-top:20px} table img{max-height:310px;width:auto;max-width:100%;margin:12px auto;object-fit:contain} table:has(img){table-layout:fixed;width:100%} table:has(img) td{width:33.333%;vertical-align:top}.toc{background:#eef5fa;padding:20px;line-height:1.9} img{width:100%} [lang=fa]{direction:rtl}</style><script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script></head><body><main><nav><a href="https://github.com/Ehsan-Roohi/Aerospace-Structures#engineering-readings-and-case-studies">Course readings</a> · <a href="https://github.com/Ehsan-Roohi/Aerospace-Structures/blob/main/BLUE_LED.md">GitHub source</a> · <a href="teaching_calculations.py">Calculation script</a> · <a href="calculations.json">Numerical record</a></nav><h1
 id="the-blue-led-thirty-years-of-materials-manufacturing-and-multiphysics-engineering">The
 Blue LED: Thirty Years of Materials, Manufacturing and Multiphysics
 Engineering</h1>
@@ -33,6 +33,19 @@ cycling. These requirements connect semiconductor engineering to
 residual stress, bonded joints, thin films and the thermal design of
 aircraft electronics. A successful blue emitter is not, by itself, a
 qualified aircraft lighting assembly.</p>
+<figure>
+<img src="photos/real-blue-led.jpg"
+alt="Photo A: A real 5 mm blue LED in its transparent package, not illuminated" />
+<figcaption aria-hidden="true">Photo A: A real 5 mm blue LED in its
+transparent package, not illuminated</figcaption>
+</figure>
+<p><em>Photo A. A real packaged 5 mm blue LED, shown unpowered. The
+clear lens and two leads are visible; the package itself need not be
+blue. This is a later component example, not Nakamura’s original
+prototype. Photo: oomlout, <a
+href="https://commons.wikimedia.org/wiki/File:5mm_Super_Bright_Blue_LED.jpg">source</a>,
+<a href="https://creativecommons.org/licenses/by-sa/2.0/">CC BY-SA
+2.0</a>.</em></p>
 <p><strong>Learning goals.</strong> Explain why blue photons demand
 different materials; distinguish doping from dopant activation; identify
 what buffer layers and heterostructures accomplish; calculate photon and
@@ -54,6 +67,54 @@ Hiroshi Amano and Shuji Nakamura</strong> for efficient blue LEDs
 enabling bright, energy-saving white light [1]. The achievement depended
 on complementary advances rather than a single change in chemical
 composition.</p>
+<h3 id="the-researchers-three-real-photographs">The researchers: three
+real photographs</h3>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Isamu Akasaki</th>
+<th>Hiroshi Amano</th>
+<th>Shuji Nakamura</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><img src="photos/isamu-akasaki.jpg"
+alt="Photo B: Isamu Akasaki, portrait associated with the 2011 Order of Culture" /></td>
+<td><img src="photos/hiroshi-amano.jpg"
+alt="Photo C: Hiroshi Amano, official 2014 portrait" /></td>
+<td><img src="photos/shuji-nakamura.jpg"
+alt="Photo D: Shuji Nakamura speaking at UCSB on 30 October 2014" /></td>
+</tr>
+<tr class="even">
+<td>Advanced GaN growth and p-type nitride research. Portrait: MEXT,
+Minister’s Secretariat Personnel Division; <a
+href="https://commons.wikimedia.org/wiki/File:Isamu_Akasaki_201111_(cropped).jpg">source</a>,
+<a href="https://creativecommons.org/licenses/by/4.0/">CC BY
+4.0</a>.</td>
+<td>Co-developed the buffer-layer and p-type-conduction breakthroughs.
+Portrait: MEXT, Minister’s Secretariat Personnel Division; <a
+href="https://commons.wikimedia.org/wiki/File:Hiroshi_Amano_20141007.jpg">source</a>,
+<a href="https://creativecommons.org/licenses/by/4.0/">CC BY
+4.0</a>.</td>
+<td>Advanced reactor design, thermal activation and efficient InGaN
+emitters. Photograph at UCSB, 30 October 2014: Glenn Beltz; <a
+href="https://commons.wikimedia.org/wiki/File:Professor_Shuji_Nakamura_(Cropped).jpg">source</a>,
+<a href="https://creativecommons.org/licenses/by/2.0/">CC BY
+2.0</a>.</td>
+</tr>
+</tbody>
+</table>
+<p><em>Photos B–D. All three researchers shared the 2014 Physics Nobel
+Prize. These are real sourced photographs, not generated likenesses. The
+two files whose source names include “cropped” were already cropped in
+the credited Commons versions; this report applies no additional
+crop.</em></p>
 <table>
 <colgroup>
 <col style="width: 25%" />
@@ -440,6 +501,20 @@ effective linear loss improves low-density performance, while the
 modeled cubic term eventually reduces efficiency.</em></p>
 <h2 id="a-photon-made-inside-the-crystal-may-not-escape">9. A photon
 made inside the crystal may not escape</h2>
+<figure>
+<img src="photos/rgb-led-dies.jpg"
+alt="Photo E: Illuminated red, green and blue LED dies and fine bond wires inside a 5050 SMD package" />
+<figcaption aria-hidden="true">Photo E: Illuminated red, green and blue
+LED dies and fine bond wires inside a 5050 SMD package</figcaption>
+</figure>
+<p><em>Photo E. A real close-up of a 5050 RGB surface-mount LED. Three
+emitting dies and fine bond-wire connections are visible. The photograph
+shows a packaged device, not an atomic cross-section or a direct view of
+its quantum wells. Photo: Mister rf, <a
+href="https://commons.wikimedia.org/wiki/File:5050_SMD_RGB_LED.png">source</a>,
+<a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA
+4.0</a>. Proportionally reduced and converted to JPEG for web delivery;
+no crop or retouching.</em></p>
 <p>Internal quantum efficiency counts photons generated in the active
 region relative to recombining carriers. External quantum efficiency
 counts photons leaving the device relative to supplied electrons. A
@@ -529,6 +604,21 @@ Consequently, “one candela,” “2.7% EQE,” “one milliwatt” and “100 
 describe different properties.</p>
 <h2 id="heat-flow-a-light-source-is-also-a-thermal-load">11. Heat flow:
 a light source is also a thermal load</h2>
+<figure>
+<img src="photos/white-led-board.jpg"
+alt="Photo F: A real white LED breakout module photographed on a coin for scale" />
+<figcaption aria-hidden="true">Photo F: A real white LED breakout module
+photographed on a coin for scale</figcaption>
+</figure>
+<p><em>Photo F. A Luxeon white-LED breakout module, with a coin
+providing physical scale. The emitter, mounting board and contact pads
+show the assembly level at which heat conduction and electrical
+attachment become design issues. The photograph does not establish the
+internal thermal resistance or the device’s operating temperature.
+Photo: SparkFun Electronics, <a
+href="https://commons.wikimedia.org/wiki/File:Luxeon_Portable_LED_-_White_1_Watt_Breakout_08673-04-L.jpg">source</a>,
+<a href="https://creativecommons.org/licenses/by/2.0/">CC BY
+2.0</a>.</em></p>
 <p>The first package-level balance is</p>
 <p><span class="math display">\[P_h=IV_f-P_{\mathrm{opt}},\qquad
 T_j=T_a+P_hR_{\theta,ja}. \tag{27}\]</span></p>
@@ -621,6 +711,19 @@ and efficient semiconductor can fail as a system through a cracked
 solder joint or vibrating mounting tab.</p>
 <h3 id="where-the-aerospace-relevance-is-direct">Where the aerospace
 relevance is direct</h3>
+<figure>
+<img src="photos/aircraft-led-cabin.jpg"
+alt="Photo G: Blue cabin lighting in a Delta Boeing 717 aircraft" />
+<figcaption aria-hidden="true">Photo G: Blue cabin lighting in a Delta
+Boeing 717 aircraft</figcaption>
+</figure>
+<p><em>Photo G. Blue LED cabin lighting in a Delta Boeing 717, as
+identified by the photographer. It illustrates an actual aircraft
+lighting application, not a structural qualification test or evidence
+about the particular emitters used. Photo: N717JG, <a
+href="https://commons.wikimedia.org/wiki/File:Blue_LED_Lighting_on_Delta’s_717.jpg">source</a>,
+<a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA
+4.0</a>.</em></p>
 <table>
 <colgroup>
 <col style="width: 33%" />
@@ -749,9 +852,16 @@ attachment</td>
 </table>
 <p>The <a href="generate_figures.py">figure
 generator</a> uses Matplotlib and NumPy for reproducible vector artwork.
-All ten figures are original teaching graphics. They contain no
-digitized experimental data and no copied article photographs. Numerical
-plots identify their governing formulas or assumed coefficients.</p>
+The ten numbered figures are original teaching graphics. They contain no
+digitized experimental data. Seven additional real photographs (A–G)
+show the components, the three researchers and an aircraft application;
+their captions identify the photographer/source, license and any format
+changes. Numerical plots identify their governing formulas or assumed
+coefficients. Full image credits are recorded in <a
+href="PHOTO_CREDITS.md">PHOTO_CREDITS.md</a>,
+with machine-readable <a
+href="photos/sources.json">source
+metadata</a>. Each photograph retains its stated license.</p>
 <h2 id="predict-derive-compute-compare-explain">14. Predict, derive,
 compute, compare, explain</h2>
 <p><strong>Activity A — color and power.</strong> Predict whether a 450

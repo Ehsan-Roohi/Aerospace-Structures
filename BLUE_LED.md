@@ -13,6 +13,10 @@ This original English lesson was prompted by [Pooyesh Pourmohammad's Zoomit arti
 
 For structures students, the central connection is **interfaces**. A useful device must accommodate incompatible crystal lattices, retain electrically active impurities, confine carriers, release photons, remove heat and survive thermal cycling. These requirements connect semiconductor engineering to residual stress, bonded joints, thin films and the thermal design of aircraft electronics. A successful blue emitter is not, by itself, a qualified aircraft lighting assembly.
 
+![Photo A: A real 5 mm blue LED in its transparent package, not illuminated](docs/case-studies/blue-led/photos/real-blue-led.jpg)
+
+*Photo A. A real packaged 5 mm blue LED, shown unpowered. The clear lens and two leads are visible; the package itself need not be blue. This is a later component example, not Nakamura's original prototype. Photo: oomlout, [source](https://commons.wikimedia.org/wiki/File:5mm_Super_Bright_Blue_LED.jpg), [CC BY-SA 2.0](https://creativecommons.org/licenses/by-sa/2.0/).*
+
 **Learning goals.** Explain why blue photons demand different materials; distinguish doping from dopant activation; identify what buffer layers and heterostructures accomplish; calculate photon and energy efficiencies; estimate package temperatures and thermal mismatch; and explain where each simplified model stops being credible.
 
 ![Figure 1: Milestones from the practical red LED to the blue LED Nobel Prize](docs/case-studies/blue-led/timeline.svg)
@@ -22,6 +26,16 @@ For structures students, the central connection is **interfaces**. A useful devi
 ## 2. History: several bottlenecks, several contributors
 
 The 2014 Physics Nobel Prize recognized **Isamu Akasaki, Hiroshi Amano and Shuji Nakamura** for efficient blue LEDs enabling bright, energy-saving white light [1]. The achievement depended on complementary advances rather than a single change in chemical composition.
+
+### The researchers: three real photographs
+
+| Isamu Akasaki | Hiroshi Amano | Shuji Nakamura |
+|---|---|---|
+| ![Photo B: Isamu Akasaki, portrait associated with the 2011 Order of Culture](docs/case-studies/blue-led/photos/isamu-akasaki.jpg) | ![Photo C: Hiroshi Amano, official 2014 portrait](docs/case-studies/blue-led/photos/hiroshi-amano.jpg) | ![Photo D: Shuji Nakamura speaking at UCSB on 30 October 2014](docs/case-studies/blue-led/photos/shuji-nakamura.jpg) |
+| Advanced GaN growth and p-type nitride research. Portrait: MEXT, Minister's Secretariat Personnel Division; [source](https://commons.wikimedia.org/wiki/File:Isamu_Akasaki_201111_(cropped).jpg), [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). | Co-developed the buffer-layer and p-type-conduction breakthroughs. Portrait: MEXT, Minister's Secretariat Personnel Division; [source](https://commons.wikimedia.org/wiki/File:Hiroshi_Amano_20141007.jpg), [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). | Advanced reactor design, thermal activation and efficient InGaN emitters. Photograph at UCSB, 30 October 2014: Glenn Beltz; [source](https://commons.wikimedia.org/wiki/File:Professor_Shuji_Nakamura_(Cropped).jpg), [CC BY 2.0](https://creativecommons.org/licenses/by/2.0/). |
+
+*Photos B–D. All three researchers shared the 2014 Physics Nobel Prize. These are real sourced photographs, not generated likenesses. The two files whose source names include “cropped” were already cropped in the credited Commons versions; this report applies no additional crop.*
+
 
 | Period | Advance | Engineering significance | Evidence |
 |---|---|---|---|
@@ -197,6 +211,11 @@ $$n_{\mathrm{peak}}=\sqrt{A/C}. \tag{18}$$
 
 ## 9. A photon made inside the crystal may not escape
 
+![Photo E: Illuminated red, green and blue LED dies and fine bond wires inside a 5050 SMD package](docs/case-studies/blue-led/photos/rgb-led-dies.jpg)
+
+*Photo E. A real close-up of a 5050 RGB surface-mount LED. Three emitting dies and fine bond-wire connections are visible. The photograph shows a packaged device, not an atomic cross-section or a direct view of its quantum wells. Photo: Mister rf, [source](https://commons.wikimedia.org/wiki/File:5050_SMD_RGB_LED.png), [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/). Proportionally reduced and converted to JPEG for web delivery; no crop or retouching.*
+
+
 Internal quantum efficiency counts photons generated in the active region relative to recombining carriers. External quantum efficiency counts photons leaving the device relative to supplied electrons. A useful bookkeeping model is
 
 $$\eta_{\mathrm{EQE}}=\eta_{\mathrm{inj}}\eta_{\mathrm{IQE}}\eta_{\mathrm{ext}}. \tag{19}$$
@@ -246,6 +265,11 @@ $$\Phi_v=683\int V(\lambda)P_\lambda(\lambda)\,d\lambda,\qquad K=\frac{\Phi_v}{P
 $\Phi_v$ is luminous flux in lumens; $K$ is efficacy in lm/W; $V(\lambda)$ is the dimensionless photopic response. Integrate consistently with the wavelength units used in $P_\lambda$. A candela is luminous intensity in a direction, not total optical power. A lens can increase peak candela by narrowing the beam without creating more photons. Consequently, “one candela,” “2.7% EQE,” “one milliwatt” and “100 lm/W” describe different properties.
 
 ## 11. Heat flow: a light source is also a thermal load
+
+![Photo F: A real white LED breakout module photographed on a coin for scale](docs/case-studies/blue-led/photos/white-led-board.jpg)
+
+*Photo F. A Luxeon white-LED breakout module, with a coin providing physical scale. The emitter, mounting board and contact pads show the assembly level at which heat conduction and electrical attachment become design issues. The photograph does not establish the internal thermal resistance or the device's operating temperature. Photo: SparkFun Electronics, [source](https://commons.wikimedia.org/wiki/File:Luxeon_Portable_LED_-_White_1_Watt_Breakout_08673-04-L.jpg), [CC BY 2.0](https://creativecommons.org/licenses/by/2.0/).*
+
 
 The first package-level balance is
 
@@ -297,6 +321,11 @@ A 20 g module, assumed 10g acceleration and 30 mm moment arm yield 1.96 N and 0.
 
 ### Where the aerospace relevance is direct
 
+![Photo G: Blue cabin lighting in a Delta Boeing 717 aircraft](docs/case-studies/blue-led/photos/aircraft-led-cabin.jpg)
+
+*Photo G. Blue LED cabin lighting in a Delta Boeing 717, as identified by the photographer. It illustrates an actual aircraft lighting application, not a structural qualification test or evidence about the particular emitters used. Photo: N717JG, [source](https://commons.wikimedia.org/wiki/File:Blue_LED_Lighting_on_Delta’s_717.jpg), [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/).*
+
+
 | Assembly question | Suitable first model | What further evidence is needed |
 |---|---|---|
 | Is the optical power creating excessive junction temperature? | Energy balance and thermal resistance | Device limits, measured interface resistance, environmental conditions |
@@ -324,7 +353,7 @@ Run the dependency-free [calculation script](docs/case-studies/blue-led/teaching
 | Assumed 5 $\mu$m film | 0.075 J/m² | Stored elastic energy per area |
 | Assumed 2 mm die/50 $\mu$m attachment | 0.03 shear strain | Compatibility scale |
 
-The [figure generator](docs/case-studies/blue-led/generate_figures.py) uses Matplotlib and NumPy for reproducible vector artwork. All ten figures are original teaching graphics. They contain no digitized experimental data and no copied article photographs. Numerical plots identify their governing formulas or assumed coefficients.
+The [figure generator](docs/case-studies/blue-led/generate_figures.py) uses Matplotlib and NumPy for reproducible vector artwork. The ten numbered figures are original teaching graphics. They contain no digitized experimental data. Seven additional real photographs (A–G) show the components, the three researchers and an aircraft application; their captions identify the photographer/source, license and any format changes. Numerical plots identify their governing formulas or assumed coefficients. Full image credits are recorded in [PHOTO_CREDITS.md](docs/case-studies/blue-led/PHOTO_CREDITS.md), with machine-readable [source metadata](docs/case-studies/blue-led/photos/sources.json). Each photograph retains its stated license.
 
 ## 14. Predict, derive, compute, compare, explain
 

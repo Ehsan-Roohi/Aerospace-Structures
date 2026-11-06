@@ -1,0 +1,656 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Navigation Without GPS · MIE 446</title><meta name="description" content="An illustrated engineering lesson with 13 visuals: sensing, uncertainty, camera brackets and vibration."><style>body{margin:0;background:#eef2f6;color:#173346;font:18px/1.75 system-ui,sans-serif}main{max-width:1080px;margin:auto;padding:48px;background:white}h1{font-size:clamp(30px,4vw,46px);line-height:1.2}h2{margin-top:2em;color:#174f6c}h3{color:#174f6c}a{color:#086b9b}nav{font-size:15px;border-bottom:1px solid #ccd9df;padding-bottom:18px}.math.display{display:block;overflow-x:auto;font-size:1.18em;padding:10px 0}img{display:block;max-width:100%;height:auto;margin:32px auto 12px;border:1px solid #dce6ec;border-radius:8px}figure{margin:28px 0}figcaption{font-size:15px;line-height:1.6;color:#45616f}table{display:block;overflow-x:auto;border-collapse:collapse;font-size:16px}td,th{padding:12px;border:1px solid #cbd8df;text-align:left}th{background:#edf5f8}p,li{max-width:85ch}code{font-size:.9em}a:focus-visible{outline:3px solid #ba7933}@media(max-width:650px){main{padding:24px 18px}body{font-size:17px}.math.display{font-size:1.05em}}@media print{body{background:white;font-size:11pt}main{padding:0}h2,h3{break-after:avoid}nav{display:none}} .math.display{background:#f1f6fa;border-left:4px solid #2669c9;padding:16px;box-sizing:border-box}h2{scroll-margin-top:20px} table img{max-height:310px;width:auto;max-width:100%;margin:12px auto;object-fit:contain} table:has(img){table-layout:fixed;width:100%} table:has(img) td{width:33.333%;vertical-align:top}.toc{background:#eef5fa;padding:20px;line-height:1.9} img{width:100%} [lang=fa]{direction:rtl} .toc{background:#eef5fa;padding:20px} img{max-height:850px;object-fit:contain} .footnote-ref{font-size:.9em}</style><script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script></head><body><main><nav><a href="https://github.com/Ehsan-Roohi/Aerospace-Structures#engineering-readings-and-case-studies">Course readings</a> · <a href="https://github.com/Ehsan-Roohi/Aerospace-Structures/blob/main/NAVIGATION_WITHOUT_GPS.md">GitHub source</a> · <a href="teaching_calculations.py">Laboratory calculations</a></nav><h1
+id="navigation-without-gps-sensors-uncertainty-and-the-structural-connection">Navigation
+Without GPS: Sensors, Uncertainty and the Structural Connection</h1>
+<p><strong>MIE 446 · Aerospace Structures · University of Massachusetts
+Amherst</strong><br />
+Supplementary engineering reading · 5 November 2026</p>
+<p><a href="https://github.com/Ehsan-Roohi/Aerospace-Structures">Course home</a> · <a
+href="https://ehsan-roohi.github.io/Aerospace-Structures/case-studies/navigation-without-gps/">Illustrated
+web edition</a></p>
+<details class="toc"><summary>Contents</summary><ol><li><a href="#خلاصه-فارسی">خلاصهٔ فارسی</a></li></ol></details><h2 id="from-the-news-question-to-an-engineering-question">1. From the
+news question to an engineering question</h2>
+<p>A vehicle can move without receiving GPS, but maintaining a
+trustworthy estimate of its motion is a separate engineering problem. A
+navigation system estimates quantities such as position, velocity and
+orientation from imperfect measurements. The answer is therefore not a
+single replacement instrument: different physical measurements supply
+different pieces of information, with different weaknesses.</p>
+<p>This original English lesson was prompted by Oleg Chernysh’s BBC
+Persian article, <a
+href="https://www.bbc.com/persian/articles/cr5y5n8vx90no">“How do drones
+fly without GPS in enemy territory?”</a>, published 4 November 2026.
+<strong>The news report concerns wartime systems; this lesson develops
+general scientific principles and civilian aerospace/planetary
+examples.</strong> It does not provide an operational design for the
+systems described in the news.</p>
+<p><strong>What the BBC reports, in brief.</strong> The article
+discusses disrupted satellite navigation, inertial and visual
+alternatives, magnetic references and terrestrial radio beacons. It
+reports a claimed 15–20 cm accuracy for the Russian Ariadna prototype,
+versus 50–150 m errors described by a representative of a different
+Ukrainian development. These are attributed statements about different
+systems and conditions, not comparable independent benchmarks. The
+article also discusses infrastructure, weather and maintenance
+constraints. Its broader message is that navigation may rely on several
+sources rather than one universal substitute [1].</p>
+<p>For structures students, the important extension is physical: a
+sensor is attached to a deformable, vibrating, thermally expanding
+vehicle. Software cannot make a flexible camera bracket rigid. A good
+measurement model must remain compatible with the mechanical system that
+carries the sensor.</p>
+<p><strong>Learning goals:</strong> distinguish navigation from control
+and communication; explain absolute and relative information; recognize
+why inertial measurements drift; compare sensor limitations; calculate
+simple structural and optical sensitivities; and assess the evidence
+behind a performance claim.</p>
+<figure>
+<img src="01-system.svg"
+alt="Figure 1: Navigation, guidance and control connected to the mechanical aircraft" />
+<figcaption aria-hidden="true">Figure 1: Navigation, guidance and
+control connected to the mechanical aircraft</figcaption>
+</figure>
+<p><em>Figure 1. Navigation estimates the state; guidance defines
+intended motion; control commands forces and moments. Structure and
+instrumentation influence all three. Arrows show conceptual
+relationships, not an implemented flight architecture.</em></p>
+<h2 id="gps-gnss-and-four-different-jobs">2. GPS, GNSS and four
+different jobs</h2>
+<p><strong>GPS</strong> is one satellite navigation system;
+<strong>GNSS</strong> is the broader category that includes GPS,
+Galileo, GLONASS and BeiDou. A GNSS receiver interprets signals from
+external references to estimate position and time. The basic educational
+distinction is between knowing where a reference is, measuring something
+related to distance, and accounting for clock uncertainty [2].</p>
+<p><strong>Navigation</strong> asks where the vehicle is and how it is
+moving. <strong>Guidance</strong> asks what motion is desired.
+<strong>Control</strong> produces the forces and moments needed to
+follow that motion. <strong>Communication</strong> exchanges commands or
+information with another system. Losing a communication link and losing
+a position reference are different failures, even if they happen
+together.</p>
+<p>A familiar civilian example is a camera-equipped inspection robot in
+a building. It may keep estimating local motion after it leaves
+satellite reception. That does not automatically mean it knows its
+global map coordinates, remains connected to its operator, or can safely
+complete every task.</p>
+<p>A conceptual state description is</p>
+<p><span
+class="math display">\[\mathbf{x}=\begin{bmatrix}\mathbf{p}^{T}&amp;\mathbf{v}^{T}&amp;\boldsymbol{\theta}^{T}\end{bmatrix}^{T}.
+\tag{1}\]</span></p>
+<p>Here <span class="math inline">\(\mathbf p\)</span> is position,
+<span class="math inline">\(\mathbf v\)</span> velocity, and <span
+class="math inline">\(\boldsymbol\theta\)</span> a local orientation
+parameterization. This is a list of physical quantities, not a complete
+estimator. Some orientation parameterizations have singularities; real
+software must address that separately.</p>
+<figure>
+<img src="02-families.svg"
+alt="Figure 2: Inertial, vision, radio, environmental and map information" />
+<figcaption aria-hidden="true">Figure 2: Inertial, vision, radio,
+environmental and map information</figcaption>
+</figure>
+<p><em>Figure 2. Measurement families provide complementary information.
+A map is stored reference information rather than a physical
+sensor.</em></p>
+<h2 id="absolute-information-relative-information-and-observability">3.
+Absolute information, relative information and observability</h2>
+<p>A relative estimate describes change: “I moved from here to there.”
+An absolute estimate connects the vehicle to an external reference
+frame. A local trajectory can be smooth and internally consistent while
+its global position is wrong. Similarly, excellent short-term angular
+measurements do not establish a global position.</p>
+<p><strong>Observability</strong> is the question of whether the
+available measurements and motion contain enough information to
+distinguish the quantities being estimated. More numerical output does
+not necessarily mean more physical information. For example, a pressure
+measurement may constrain height approximately, but it cannot determine
+horizontal location by itself. Seeing the same uniform surface
+repeatedly does not reveal as much motion as seeing a rich, stable
+scene.</p>
+<p>Every position estimate should be interpreted with an uncertainty
+description and assumptions. Accuracy refers to agreement with a
+reference; precision describes spread or repeatability. An uncertainty
+reported by an estimator is conditional on its model, calibration and
+noise assumptions. It is not a guarantee that all possible faults are
+covered [3].</p>
+<figure>
+<img src="03-uncertainty.svg"
+alt="Figure 3: Estimate, reference point and illustrative uncertainty region" />
+<figcaption aria-hidden="true">Figure 3: Estimate, reference point and
+illustrative uncertainty region</figcaption>
+</figure>
+<p><em>Figure 3. The ellipse is illustrative and has no assigned
+probability. It must not be read as a measured confidence boundary or a
+certified containment region.</em></p>
+<h2
+id="inertial-sensing-useful-motion-measurements-accumulating-error">4.
+Inertial sensing: useful motion measurements, accumulating error</h2>
+<p>An inertial measurement unit typically combines accelerometers and
+gyroscopes. An accelerometer measures <strong>specific force</strong>,
+not global translational acceleration directly. Orientation and gravity
+matter when interpreting its output. A gyroscope measures angular rate.
+Biases, temperature sensitivity, scale errors and vibration affect these
+measurements.</p>
+<p>For a deliberately simplified, one-dimensional classroom model,
+suppose acceleration is known in a fixed frame and has a constant error
+<span class="math inline">\(b_a\)</span>. With zero initial velocity and
+position errors,</p>
+<p><span class="math display">\[\Delta v=b_a t, \tag{2}\]</span></p>
+<p><span class="math display">\[\Delta p=\tfrac12 b_a t^2.
+\tag{3}\]</span></p>
+<p>These expressions illustrate integration; they are not a realistic
+navigation error budget. They omit changing attitude, gravity projection
+errors, random noise, changing bias and external corrections. They also
+do not imply that every inertial device has the same drift.</p>
+<p>For the hypothetical value <span class="math inline">\(b_a=0.01\
+\mathrm{m/s^2}\)</span>, Eq. (3) gives 0.5 m after 10 s and 18 m after
+60 s. The lesson is the time dependence, not those particular numbers. A
+small persistent measurement error may become consequential after
+integration.</p>
+<figure>
+<img src="04-drift.svg"
+alt="Figure 4: Quadratic error growth under a hypothetical constant acceleration bias" />
+<figcaption aria-hidden="true">Figure 4: Quadratic error growth under a
+hypothetical constant acceleration bias</figcaption>
+</figure>
+<p><em>Figure 4. Analytical teaching curve using Eq. (3). It is neither
+measured hardware data nor a prediction for any named aircraft.</em></p>
+<h2
+id="vision-relative-motion-is-different-from-recognizing-a-mapped-location">5.
+Vision: relative motion is different from recognizing a mapped
+location</h2>
+<p>A camera measures image intensity over an array of pixels. Motion
+estimation can exploit how visible features change between images.
+Matching a view to a geographically referenced map is a different task:
+it seeks an external position reference. Recognizing an object,
+classifying a scene and determining camera motion are also distinct
+problems.</p>
+<p>Several effects complicate the relationship between images and
+physical motion: unknown depth, occlusion, illumination changes, weak
+texture, repetitive patterns, reflections, moving objects and image
+blur. A camera may be functioning perfectly while the scene contains
+little useful geometric information.</p>
+<p>A basic pinhole-camera relation is</p>
+<p><span class="math display">\[u=f_{\mathrm{px}}\frac{X}{Z}, \qquad
+v=f_{\mathrm{px}}\frac{Y}{Z}. \tag{4}\]</span></p>
+<p><span class="math inline">\(X,Y,Z\)</span> are coordinates in the
+camera frame, with <span class="math inline">\(Z&gt;0\)</span>; <span
+class="math inline">\(u,v\)</span> are image coordinates relative to the
+principal point; <span class="math inline">\(f_{\mathrm{px}}\)</span> is
+focal length in pixels. Equation (4) omits distortion and assumes an
+idealized projection. It explains why a pixel change alone does not
+uniquely establish physical displacement: depth also matters.</p>
+<figure>
+<img src="05-texture.svg"
+alt="Figure 5: Textured and low-texture scenes" />
+<figcaption aria-hidden="true">Figure 5: Textured and low-texture
+scenes</figcaption>
+</figure>
+<p><em>Figure 5. Synthetic scene-content illustration. The dots are
+drawing elements, not extracted features from an experiment.</em></p>
+<p>Artificial intelligence may help interpret images, but it does not
+create information absent from the measurements. A convincing
+demonstration on one landscape is not evidence of equal performance in
+another season, lighting condition or camera configuration. Validation
+should separate the scenes used during development from the scenes used
+for evaluation.</p>
+<h2 id="a-real-non-gps-example-ingenuity-on-mars">6. A real non-GPS
+example: Ingenuity on Mars</h2>
+<p>NASA’s Ingenuity offers a particularly clear educational example
+because terrestrial GNSS reception is not an available navigation source
+on Mars. NASA describes its use of inertial measurements, a
+downward-looking navigation camera and a laser range finder. Its sensor
+discussion also shows that losing one instrument does not mean all
+remaining measurements become useless [4]. This is an example of
+planetary engineering, not evidence for the performance of the systems
+in the BBC story.</p>
+<figure>
+<img
+src="photos/ingenuity-hardware.jpg"
+alt="Photo 1: Ingenuity hardware inspected in a ground-test chamber" />
+<figcaption aria-hidden="true">Photo 1: Ingenuity hardware inspected in
+a ground-test chamber</figcaption>
+</figure>
+<p><em>Photo 1. Real ground-test photograph of the underside of
+Ingenuity. Credit: NASA/JPL-Caltech, PIA23969. <a
+href="https://science.nasa.gov/photojournal/bottom-of-ingenuity-mars-helicopter/">Source
+and instrument identification</a>. Resized without cropping. The visible
+hardware helps connect sensor concepts to actual packaging and
+attachment.</em></p>
+<figure>
+<img
+src="photos/ingenuity-on-mars.jpg"
+alt="Photo 2: Ingenuity on the surface of Mars at Airfield D" />
+<figcaption aria-hidden="true">Photo 2: Ingenuity on the surface of Mars
+at Airfield D</figcaption>
+</figure>
+<p><em>Photo 2. Real Mastcam-Z image from Perseverance, 15 June 2021,
+showing Ingenuity at Airfield D. Credit: NASA/JPL-Caltech/ASU/MSSS,
+PIA25213. <a
+href="https://science.nasa.gov/blog/keeping-our-sense-of-direction-dealing-with-a-dead-sensor/">Source</a>.
+Resized without cropping.</em></p>
+<figure>
+<img
+src="photos/navigation-camera.jpg"
+alt="Photo 3: Surface and helicopter shadow viewed by Ingenuity’s navigation camera" />
+<figcaption aria-hidden="true">Photo 3: Surface and helicopter shadow
+viewed by Ingenuity’s navigation camera</figcaption>
+</figure>
+<p><em>Photo 3. Real navigation-camera image from Ingenuity’s second
+experimental flight, 22 April 2021. Credit: NASA/JPL-Caltech. <a
+href="https://science.nasa.gov/blog/what-were-learning-about-ingenuitys-flight-control-and-aerodynamic-performance/">Source</a>.
+Resized without cropping. This is a sensor image, not a
+computer-generated landscape.</em></p>
+<p>NASA’s flight-performance account explains that dust can initially
+obstruct the camera, making inertial information especially important
+during that phase [5]. The general lesson is temporal: a sensor can be
+useful during one part of an activity and less useful during another.
+The photograph alone cannot establish the accuracy of the corresponding
+motion estimate.</p>
+<h2
+id="radio-references-infrastructure-and-measurement-are-separate-questions">7.
+Radio references: infrastructure and measurement are separate
+questions</h2>
+<p>Terrestrial navigation references long predate satellite navigation.
+However, the word “beacon” does not specify a unique measurement method.
+A system might measure an angle, a travel-time-related quantity or
+another signal property. Its available information depends on the actual
+measurement type and reference infrastructure.</p>
+<p>A conceptual range-like observation may include geometric separation,
+clock effects and propagation errors. Knowing the transmitter’s
+coordinates is only part of the problem. Synchronization, calibration,
+reflected paths, obstruction and reference stability can matter. A
+single reference does not generally establish a unique unconstrained
+three-dimensional position.</p>
+<p>For critical reading, ask what a published demonstration actually
+measured: a range error, a horizontal position error, a vertical error,
+or repeatability at one point? Were references surveyed independently?
+Were results collected in open space, indoors or near reflective
+structures? These questions assess evidence without assuming that every
+beacon network is equivalent.</p>
+<p>Two popular shortcuts deserve correction. First, a ground-based
+signal is not automatically immune to disruption. Second, increasing the
+separation of references does not universally improve position accuracy.
+Measurement geometry and measurement quality both matter; a changed
+arrangement may improve one sensitivity while reducing coverage or
+worsening another [3]. No deployment geometry or operational network
+design follows from this conceptual discussion.</p>
+<h2
+id="magnetic-and-pressure-references-environmental-information-has-limits">8.
+Magnetic and pressure references: environmental information has
+limits</h2>
+<p>A magnetic compass primarily supplies heading-related information.
+Magnetic map matching is a different idea: it compares local
+measurements with spatial variations in a reference field. Earth’s field
+has regional structure and changes with time; NOAA provides models,
+surveys and magnetic anomaly resources [6]. A field model is not
+automatically a sufficiently detailed or current local navigation
+map.</p>
+<p>The vehicle itself may introduce magnetic disturbances through
+motors, electrical currents or nearby ferromagnetic material. A reading
+that changes when electrical equipment switches on may reflect the
+vehicle rather than a change in geographic location. Anomalies can also
+be insufficiently distinctive to resolve location uniquely. Therefore
+“magnetic navigation” should not be treated as one universally mature
+substitute for GPS.</p>
+<p>Pressure provides another environmental constraint. Under local
+hydrostatic balance,</p>
+<p><span class="math display">\[\frac{dp}{dz}=-\rho g.
+\tag{5}\]</span></p>
+<p>For a small pressure change and approximately constant density,</p>
+<p><span class="math display">\[\Delta z\simeq-\frac{\Delta p}{\rho g}.
+\tag{6}\]</span></p>
+<p>Pressure-derived height depends on atmospheric conditions and the
+pressure actually sampled by the installation. Static-port location and
+surrounding flow can change the reading. Equation (6) is a local
+physical approximation, not a globally valid atmosphere model or an
+absolute height guarantee.</p>
+<h2 id="combining-information-does-not-eliminate-shared-errors">9.
+Combining information does not eliminate shared errors</h2>
+<p>Complementary sensors can constrain different quantities and provide
+useful cross-checks. Yet two sensors may share a fault source:
+temperature, power, time stamps, structural motion or a common reference
+map. Their errors are then not independent.</p>
+<p>A scalar classroom uncertainty identity is</p>
+<p><span
+class="math display">\[\operatorname{Var}(aX+bY)=a^2\sigma_X^2+b^2\sigma_Y^2+2ab\operatorname{Cov}(X,Y).
+\tag{7}\]</span></p>
+<p>For the average of two equally noisy measurements, each with standard
+deviation <span class="math inline">\(\sigma\)</span> and correlation
+coefficient <span class="math inline">\(\rho_c\)</span>,</p>
+<p><span
+class="math display">\[\sigma_{\mathrm{avg}}=\sigma\sqrt{\frac{1+\rho_c}{2}}.
+\tag{8}\]</span></p>
+<p>If the errors are independent, averaging reduces their standard
+deviation by <span class="math inline">\(\sqrt2\)</span>. If they are
+perfectly correlated, it gives no reduction. Neither result removes a
+common bias. These are elementary measurement-statistics examples, not a
+sensor-fusion implementation.</p>
+<p>Mechanical integration therefore affects both the magnitude and
+dependence of errors. Two instruments on one flexible panel may
+experience a common vibration. Two cameras may share the same obscured
+view. Counting sensors is an inadequate substitute for understanding the
+information they provide.</p>
+<h2 id="the-structural-connection-alignment-and-flexibility">10. The
+structural connection: alignment and flexibility</h2>
+<p>A structural model may describe an aircraft as a rigid body for one
+purpose while treating a sensor support as flexible for another. These
+approximations are compatible only if their neglected motions are small
+enough for the measurement task.</p>
+<p>A small angular change <span
+class="math inline">\(\delta\theta\)</span> in a camera’s pointing
+direction changes the image approximately by</p>
+<p><span class="math display">\[\delta u\simeq
+f_{\mathrm{px}}\,\delta\theta, \tag{9}\]</span></p>
+<p>near the optical axis and for small angles. A mount can therefore
+produce a noticeable image displacement without a large visible
+translation. This relation describes geometric sensitivity; it does not
+say that every image displacement becomes the same navigation error.</p>
+<figure>
+<img src="06-flexure.svg"
+alt="Figure 6: Beam deformation changes the camera’s local orientation" />
+<figcaption aria-hidden="true">Figure 6: Beam deformation changes the
+camera’s local orientation</figcaption>
+</figure>
+<p><em>Figure 6. Exaggerated conceptual bending shape. A camera attached
+to a flexible structure can rotate relative to the reference
+airframe.</em></p>
+<p>There are several different alignment questions: manufacturing
+alignment, static deformation under load, dynamic motion, and changes
+after maintenance or thermal cycling. A calibration obtained under one
+condition may not describe another. Conversely, a flexible structure is
+not automatically unacceptable: the relevant question is whether
+deformation is understood and remains within the measurement
+assumptions.</p>
+<h2 id="equipment-mounting-and-vibration">11. Equipment mounting and
+vibration</h2>
+<p>An elementary mass–spring–damper model illustrates why adding a soft
+mount is not a universal improvement [7]. For absolute equipment
+displacement <span class="math inline">\(x\)</span> and base
+displacement <span class="math inline">\(y\)</span>,</p>
+<p><span class="math display">\[m\ddot x+c(\dot x-\dot y)+k(x-y)=0.
+\tag{10}\]</span></p>
+<p>The natural frequency and damping ratio are</p>
+<p><span class="math display">\[\omega_n=\sqrt{k/m},\qquad
+\zeta=\frac{c}{2\sqrt{km}}. \tag{11}\]</span></p>
+<p>For sinusoidal steady-state base excitation, with frequency ratio
+<span class="math inline">\(r=\omega/\omega_n\)</span>, the absolute
+displacement transmissibility is</p>
+<p><span
+class="math display">\[T=\left|\frac{X}{Y}\right|=\sqrt{\frac{1+(2\zeta
+r)^2}{(1-r^2)^2+(2\zeta r)^2}}. \tag{12}\]</span></p>
+<figure>
+<img src="07-mount.svg"
+alt="Figure 7: Single-degree-of-freedom equipment mount" />
+<figcaption aria-hidden="true">Figure 7: Single-degree-of-freedom
+equipment mount</figcaption>
+</figure>
+<p><em>Figure 7. Linear teaching model. Real assemblies may have
+multiple modes, rotational coupling, nonlinear behavior and attachment
+compliance.</em></p>
+<figure>
+<img
+src="08-transmissibility.svg"
+alt="Figure 8: Transmissibility versus excitation frequency ratio" />
+<figcaption aria-hidden="true">Figure 8: Transmissibility versus
+excitation frequency ratio</figcaption>
+</figure>
+<p><em>Figure 8. Curves calculated from Eq. (12), not measured aircraft
+data. Low damping produces strong amplification near resonance. Damping
+and stiffness influence different frequency regions
+differently.</em></p>
+<p>This model is valuable because it exposes a tradeoff, not because it
+selects a flight-qualified mount. Relative travel, cable stiffness,
+mechanical stops, temperature and fatigue are additional considerations.
+The frequency and amplitude content of the actual excitation must also
+be understood before the model can be evaluated against hardware.</p>
+<h2 id="a-bracket-calculation-the-path-from-load-to-line-of-sight">12. A
+bracket calculation: the path from load to line of sight</h2>
+<p>Consider a stationary laboratory camera bracket subjected to a
+prescribed equivalent transverse acceleration. The camera produces an
+inertial load</p>
+<p><span class="math display">\[F=ma,\qquad M_{\mathrm{root}}=FL.
+\tag{13}\]</span></p>
+<p>For an ideal prismatic cantilever with a transverse end force,</p>
+<p><span class="math display">\[I=\frac{bt^3}{12}, \tag{14}\]</span></p>
+<p><span
+class="math display">\[\delta_{\mathrm{tip}}=\frac{FL^3}{3EI},\qquad
+\theta_{\mathrm{tip}}=\frac{FL^2}{2EI}, \tag{15}\]</span></p>
+<p><span
+class="math display">\[\sigma_{\max}=\frac{M_{\mathrm{root}}(t/2)}{I}.
+\tag{16}\]</span></p>
+<p>Here <span class="math inline">\(b\)</span> is width and <span
+class="math inline">\(t\)</span> the dimension through the bending
+depth. These expressions assume small deflection, linear elasticity, a
+fixed root, and a slender beam. They omit fastener flexibility, stress
+concentration, torsion and dynamic amplification.</p>
+<figure>
+<img src="09-bracket.svg"
+alt="Figure 9: Inertial force and root moment on a camera bracket" />
+<figcaption aria-hidden="true">Figure 9: Inertial force and root moment
+on a camera bracket</figcaption>
+</figure>
+<p><em>Figure 9. Simplified bracket free-body concept. The dimensions
+and boundary conditions for the numerical example are specified
+below.</em></p>
+<p><strong>Hypothetical laboratory example.</strong> Let <span
+class="math inline">\(m=0.10\)</span> kg, <span
+class="math inline">\(a=2\)</span> m/s², <span
+class="math inline">\(L=0.10\)</span> m, <span
+class="math inline">\(b=0.020\)</span> m, <span
+class="math inline">\(t=0.003\)</span> m and <span
+class="math inline">\(E=70\)</span> GPa. Then <span
+class="math inline">\(F=0.20\)</span> N, <span
+class="math inline">\(M=0.020\)</span> N·m and <span
+class="math inline">\(I=4.50\times10^{-11}\)</span> m⁴. The ideal beam
+predicts <span
+class="math inline">\(\delta_{\mathrm{tip}}=0.0212\)</span> mm, <span
+class="math inline">\(\theta_{\mathrm{tip}}=0.000317\)</span> rad and
+<span class="math inline">\(\sigma_{\max}=0.667\)</span> MPa. With an
+illustrative <span class="math inline">\(f_{\mathrm{px}}=600\)</span>
+pixels, Eq. (9) gives approximately 0.190 pixel displacement.</p>
+<p>This calculation makes an important distinction: a low nominal
+bending stress does not automatically imply negligible optical motion.
+Strength, stiffness and instrument alignment are different requirements.
+It is a static sensitivity example, not a camera design recommendation
+or a reconstruction of any reported vehicle.</p>
+<p>Thermal effects create another source of geometric change:</p>
+<p><span class="math display">\[\Delta L=\alpha L\Delta T.
+\tag{17}\]</span></p>
+<p>For two unrestrained members of equal initial length,</p>
+<p><span class="math display">\[\Delta L_1-\Delta
+L_2=(\alpha_1-\alpha_2)L\Delta T. \tag{18}\]</span></p>
+<p>In a constrained assembly, compatibility and load sharing determine
+stresses; free-expansion expressions alone cannot establish them. An
+uneven temperature field may additionally cause curvature.</p>
+<h2 id="how-to-assess-the-articles-performance-claims">13. How to assess
+the article’s performance claims</h2>
+<p>A centimeter figure and a hundred-meter figure should not be placed
+on a common ranking without compatible definitions. A comparison needs
+the measured quantity, reference method, probability level, operating
+conditions, duration and failure handling. “Better than GPS” is also
+incomplete unless the GPS mode and comparison conditions are
+identified.</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Question</th>
+<th>Why it changes the interpretation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Horizontal, vertical, three-dimensional, or range error?</td>
+<td>These are different quantities.</td>
+</tr>
+<tr class="even">
+<td>Mean, RMS, standard deviation, percentile, or observed maximum?</td>
+<td>The same dataset can yield very different numbers.</td>
+</tr>
+<tr class="odd">
+<td>Independent truth reference?</td>
+<td>A shared reference can conceal common errors.</td>
+</tr>
+<tr class="even">
+<td>How long, and under what conditions?</td>
+<td>Short demonstrations may not expose drift or intermittent
+failures.</td>
+</tr>
+<tr class="odd">
+<td>What happened when the estimate was unavailable?</td>
+<td>Reporting only successful outputs can hide outages.</td>
+</tr>
+<tr class="even">
+<td>Was the test independent of development data?</td>
+<td>Familiar scenes or tuned conditions can inflate apparent
+generality.</td>
+</tr>
+<tr class="odd">
+<td>Were mounting and thermal conditions documented?</td>
+<td>Mechanical changes can invalidate calibration assumptions.</td>
+</tr>
+</tbody>
+</table>
+<p>For errors <span class="math inline">\(\mathbf e_i\)</span> relative
+to an independently established reference,</p>
+<p><span
+class="math display">\[\mathrm{RMSE}=\sqrt{\frac1N\sum_{i=1}^{N}\|\mathbf
+e_i\|^2}. \tag{19}\]</span></p>
+<p>A mean error vector describes bias, whereas the spread around that
+mean describes another aspect of performance. An observed maximum in a
+finite experiment is not a mathematical bound on all future errors.</p>
+<figure>
+<img src="10-bias.svg"
+alt="Figure 10: Tight but biased estimates compared with broad estimates near the reference" />
+<figcaption aria-hidden="true">Figure 10: Tight but biased estimates
+compared with broad estimates near the reference</figcaption>
+</figure>
+<p><em>Figure 10. Seeded synthetic samples illustrating precision and
+bias. These are not experimental navigation measurements.</em></p>
+<p>The correct conclusion from the supplied article is that several
+approaches are being discussed and developed. Its attributed statements
+alone do not establish interchangeable systems, universal accuracy,
+immunity to interference or a validated performance envelope. The
+independent principles in this lesson explain why those distinctions
+matter.</p>
+<h2 id="classroom-activities-and-discussion">14. Classroom activities
+and discussion</h2>
+<p><strong>Activity A — Separate the jobs.</strong> In teams, describe a
+museum inspection robot that loses GNSS reception indoors. Identify
+which tasks involve navigation, guidance, control and communication.
+Explain which information can remain available and which conclusions
+would require an external reference. Submit one annotated diagram and a
+short explanation of assumptions.</p>
+<p><strong>Activity B — Check the bracket model.</strong> Recalculate
+the laboratory example. Keep material and load fixed and double
+thickness; then independently double length. Compare the factors
+affecting stress, tip displacement and tip slope. Explain why changing
+stiffness cannot be assessed using stress alone. State where the
+small-deflection cantilever assumptions could fail.</p>
+<p><strong>Activity C — Interpret a plot.</strong> Use Figure 8 to
+explain the difference between resonance amplification and isolation.
+Identify which curve has the largest peak. Discuss why a claim that a
+mount “reduces vibration” is incomplete without a frequency range.</p>
+<p><strong>Activity D — Audit an accuracy statement.</strong> Write a
+paragraph assessing “our system is accurate to 20 cm.” List the missing
+definitions and evidence. Do not invent test conditions. Propose what
+information a civilian measurement report should disclose so that the
+statement can be evaluated.</p>
+<p><strong>Discussion:</strong> Can two sensors have independent
+electronics but correlated errors? Can a strong bracket still have
+inadequate pointing stiffness? Can a precise-looking position output be
+inaccurate? Which limitations arise from physics, which from
+environment, and which from missing evidence?</p>
+<h2 id="reproducibility-and-figure-provenance">15. Reproducibility and
+figure provenance</h2>
+<p>This reading contains <strong>13 visual items: ten original SVG
+teaching figures and three real NASA photographs</strong>. Figure 4 and
+Figure 8 are analytical plots; Figure 10 is synthetic statistical data;
+the remaining original figures are conceptual diagrams. None is
+presented as measured wartime system performance. Photos retain separate
+credits and source links and were resized without cropping. NASA imagery
+is used for educational/editorial illustration under its <a
+href="https://www.nasa.gov/nasa-brand-center/images-and-media/">images
+and media guidance</a>; no endorsement is implied.</p>
+<ul>
+<li><a href="https://github.com/Ehsan-Roohi/Aerospace-Structures/blob/main/scripts/build_navigation_figures.py">Figure-generation
+source</a></li>
+<li><a
+href="teaching_calculations.py">Laboratory
+calculations</a></li>
+<li><a
+href="calculations.json">Calculation
+output</a></li>
+<li><a
+href="photos/credits.json">Photo
+provenance</a></li>
+<li><a href="https://github.com/Ehsan-Roohi/Aerospace-Structures/blob/main/scripts/build_navigation_reading.py">Web-edition build
+script</a></li>
+</ul>
+<p>The calculations reproduce elementary examples only. They do not
+estimate a real aircraft’s navigation performance. The web edition uses
+MathJax for equations and needs internet access to load that renderer;
+all figures and photographs are stored in this repository.</p>
+<h2 id="references-and-further-reading">16. References and further
+reading</h2>
+<ol type="1">
+<li>Oleg Chernysh, BBC Persian/BBC Ukrainian, 4 November 2026. <a
+href="https://www.bbc.com/persian/articles/cr5y5n8vx90no">Supplied news
+report</a>. Source of the attributed news claims, not an independent
+technical validation.</li>
+<li>ESA Navipedia. <a
+href="https://gssc.esa.int/navipedia/index.php/GPS">GPS</a> and <a
+href="https://gssc.esa.int/navipedia/index.php/GPS_Receivers">GPS
+Receivers</a>. Satellite-navigation terminology and measurement
+principles.</li>
+<li>ESA Navipedia. <a
+href="https://gssc.esa.int/navipedia/index.php/Accuracy">Accuracy</a>
+and <a
+href="https://gssc.esa.int/navipedia/index.php?title=Positioning_Error">Positioning
+Error</a>. Error definitions, uncertainty and geometry.</li>
+<li>NASA/JPL. <a
+href="https://science.nasa.gov/blog/keeping-our-sense-of-direction-dealing-with-a-dead-sensor/">Keeping
+Our Sense of Direction: Dealing With a Dead Sensor</a>, 2022. Planetary
+sensor example and Photo 2.</li>
+<li>NASA/JPL. <a
+href="https://science.nasa.gov/blog/what-were-learning-about-ingenuitys-flight-control-and-aerodynamic-performance/">What
+We’re Learning About Ingenuity’s Flight Control and Aerodynamic
+Performance</a>, 2021. Environmental limits during flight and Photo
+3.</li>
+<li>NOAA NCEI. <a href="https://www.ngdc.noaa.gov/geomag/maps/">Magnetic
+Declination, Models, Data and Services</a> and <a
+href="https://www.ngdc.noaa.gov/geomag/models.shtml">Geomagnetic Field
+Models</a>. Field models, navigation uses and spatial/temporal
+variation.</li>
+<li>MIT OpenCourseWare, J. Kim Vandiver. <a
+href="https://ocw.mit.edu/courses/2-003sc-engineering-dynamics-fall-2011/resources/lecture-19-introduction-to-mechanical-vibration-1/">Introduction
+to Mechanical Vibration, Engineering Dynamics</a>. Introductory SDOF
+dynamics.</li>
+<li>NASA/JPL-Caltech. <a
+href="https://science.nasa.gov/photojournal/bottom-of-ingenuity-mars-helicopter/">Bottom
+of Ingenuity Mars Helicopter, PIA23969</a>. Instrument identification
+and Photo 1.</li>
+<li>NASA. <a
+href="https://www.nasa.gov/nasa-brand-center/images-and-media/">Images
+and Media Usage Guidelines</a>. Educational/editorial imagery
+context.</li>
+</ol>
+<section lang="fa"><h2 id="خلاصه-فارسی">خلاصهٔ فارسی</h2>
+<p>پرواز بدون GPS به معنی داشتن موقعیت دقیق و قابل‌اعتماد در همهٔ شرایط
+نیست. حسگر اینرسی حرکت را اندازه می‌گیرد، اما خطا پس از انتگرال‌گیری رشد
+می‌کند. دوربین به نور، بافت صحنه و کیفیت تصویر وابسته است. مرجع رادیویی
+به زیرساخت و نوع اندازه‌گیری وابسته است؛ دادهٔ مغناطیسی و فشار هم
+محدودیت‌های محیطی خود را دارند. ترکیب چند حسگر می‌تواند اطلاعات مکمل فراهم
+کند، ولی خطاهای مشترک را خودبه‌خود حذف نمی‌کند.</p>
+<p>ارتباط اصلی با درس سازه‌های هوایی در نصب حسگر است: خمش و ارتعاش پایهٔ
+دوربین می‌توانند راستای دید را تغییر دهند. کم‌بودن تنش لزوماً به معنی
+کافی‌بودن سختی یا ثبات زاویه نیست. مثال تیر یک‌سرگیردار و نمودار انتقال
+ارتعاش این تفاوت را نشان می‌دهند. عکس‌های واقعی اینجنیوتی نیز نمونه‌ای علمی
+و غیرنظامی از ناوبری بدون GPS هستند. اعداد دقت در خبر، گفته‌های منتسب به
+سامانه‌های متفاوت‌اند و بدون تعریف خطا و شرایط آزمون نباید با هم مقایسه
+شوند.</p>
+</section></main></body></html>

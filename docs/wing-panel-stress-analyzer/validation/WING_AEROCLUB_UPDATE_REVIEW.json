@@ -1,9 +1,10 @@
 {
-  "date": "2026-11-06T23:29:21.041311+00:00",
+  "date": "2026-11-06T18:29:21.041311-05:00",
   "scope": "Editable 2D panel count and full-wing performance display; prescribed-load study only when the sole failed admission check is aeroelastic feedback. Numerical aerodynamic and structural kernels unchanged.",
   "tests": [
     "Analytic Joukowski Cp/lift regression passed",
-    "81, 240 and 321 panels/side; invalid counts, ratio uncertainty, N m signs/units, transfer and torque guards, both inline-page syntax checks passed"
+    "81, 240 and 321 panels/side; invalid counts, ratio uncertainty, N m signs/units, transfer and torque guards, both inline-page syntax checks passed",
+    "Actual independent-airfoil DOM controller passed: custom odd/refined panel counts, invalid input, Clark Y, NACA, DAT upload/races and stale-export prevention. Canvas presentation stub only."
   ],
   "case900mm": {
     "admitted": false,
@@ -25,5 +26,11 @@
     "No viscous/profile drag computed.",
     "Prescribed-load results cannot establish safe flight."
   ],
-  "cleanup": []
+  "cleanup": [
+    {
+      "path": "D:\\ChatGPT Backup\\Projects\\Aerospace-Structures-wing-update\\output\\wing-update-current\\ui-test",
+      "bytes": 39934162.0,
+      "reason": "Disposable UI-test dependencies and failed exFAT install, after passing controller tests"
+    }
+  ]
 }

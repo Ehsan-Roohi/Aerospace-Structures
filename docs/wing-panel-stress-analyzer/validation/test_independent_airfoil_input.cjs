@@ -2,7 +2,7 @@
 // presentation stub; airfoil geometry, DAT parsing and panel equations are real.
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
 const app=path.resolve(__dirname,'..'),repo=path.resolve(app,'../..');
-const {JSDOM}=require(path.join(repo,'.review-js/node_modules/jsdom'));
+const {JSDOM}=require(process.env.MIE446_JSDOM_MODULE||path.join(repo,'.review-js/node_modules/jsdom'));
 const dom=new JSDOM('<main id="view"><div id="loading"></div></main><section id="strip"><button data-plot="model"></button><select id="wingMoreResults"></select></section>',{runScripts:'outside-only',url:'https://example.test/'}),w=dom.window,d=w.document;
 const read=f=>fs.readFileSync(path.join(app,f),'utf8');
 w.eval(read('wing-aero/aero_bundle.js')+'\nwindow.WingAirfoils=WingAirfoils;window.WingGeometry=WingGeometry;window.WingAeroPanel=WingAeroPanel;');
@@ -23,6 +23,8 @@ async function solve(){assert.ok(!$('wxFoilSolve').disabled);$('wxFoilSolve').cl
 const report={checks:[]},pass=name=>report.checks.push(name);
 (async()=>{
  r.show('foil2d');assert.equal($('wxFoilMode').value,'independent');assert.equal($('wxFoilWing').hidden,true);pass('Independent geometry is directly available without a wing solve');
+ assert.equal($('wxFoilN').type,'number');change('wxFoilN','81');await solve();change('wxFoilN','240');await solve();pass('User-entered odd and refined counts run through the actual independent airfoil controller');
+ change('wxFoilN','');$('wxFoilSolve').click();await wait();assert.equal(r.csvButton.disabled,true);assert.match($('wxArNotice').textContent,/integer/);pass('Blank panel count is rejected and cannot export a stale solution');
  change('wxFoilN','40');const c2412=await solve();assert.match($('wxArTitle').textContent,/NACA 2412.*4°.*independent geometry/);assert.match(c2412,/geometry source independent; airfoil NACA 2412/);pass('NACA independent solve labels geometry, angle and CSV provenance');
  $('wxFoilCode').value='0012';$('wxFoilCode').dispatchEvent(new w.Event('input'));assert.equal($('wxArCanvas').hidden,true);const c0012=await solve();assert.notEqual(c2412,c0012);pass('Changing NACA invalidates and changes the actual 2D pressure solution');
  change('wxFoilLibrary','clarky');const library=await solve();assert.match(library,/Clark/i);pass('Curated coordinate airfoil uses the real library and solver');

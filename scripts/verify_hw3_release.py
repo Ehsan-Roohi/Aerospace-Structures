@@ -1,11 +1,11 @@
-"""Check public release identity and protect the instructor solution boundary."""
+"""Check course release identity and keep solutions outside the student package."""
 from pathlib import Path
 from zipfile import ZipFile
 import json
 import xml.etree.ElementTree as ET
 ROOT=Path(__file__).resolve().parents[1]
 folder=ROOT/'assignments/homework-03'
-assert not any('solution' in p.name.lower() for p in folder.iterdir())
+assert {p.name for p in (folder/'solutions').iterdir()} == {'README.md', 'MIE446_HW3_Solutions.pdf', 'MIE446_HW3_Solutions.docx'}
 nb=json.loads((ROOT/'notebooks/MIE446_HW3_Three_Beams.ipynb').read_text(encoding='utf-8'))
 assert all(c['cell_type']=='markdown' for c in nb['cells'])
 student='\n'.join(''.join(c['source']) for c in nb['cells'])
@@ -25,4 +25,4 @@ with ZipFile(folder/'MIE446_HW3_Three_Beams.docx') as z:
 for f in ['README.md','ASSIGNMENTS.md','SYLLABUS.md','notebooks/README.md']:
     text=(ROOT/f).read_text(encoding='utf-8')
     assert 'HW 2B' not in text, f
-print('HW 3 release checks pass: numbering, deadline, support setup, correct links, blank student notebook, private-solution exclusion.')
+print('HW 3 release checks pass: numbering, deadline, support setup, correct links, blank student notebook, separate solution downloads and solution-free student package.')

@@ -9,3 +9,7 @@ MIE 446 Aerospace Structures, Fall 2026. **35 points. Due October 20, 2026**, at
 Complete Parts 1 and 3 and submit the report PDF, MATLAB file and Excel workbook specified in the guide. The HW 2A package is unchanged.
 
 The three-beam assignment is [HW 3](../homework-03/README.md), due November 5, 2026.
+
+## Solutions
+
+[Reviewed PDF solution](HW2A/solutions/MIE446_HW2A_Solutions.pdf) · [Word solution](HW2A/solutions/MIE446_HW2A_Solutions.docx)

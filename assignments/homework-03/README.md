@@ -61,3 +61,7 @@ For optional exploration only, keep the model fixed and compare the same output 
 1. Submit **one PDF** with the three analytical solutions and the comparison table.
 2. Include A and I. No additional drawings, stress calculations, full maximum-deflection search, mesh study, screenshots, slides, notebook submission or separate software files are required.
 3. Use [Lecture 03](https://colab.research.google.com/github/Ehsan-Roohi/Aerospace-Structures/blob/main/notebooks/MIE446_Lecture_03_Beam_Reactions_Stress_and_Deflection.ipynb) for supports, integration and compatibility. The companion notebook is an optional workspace, not an extra deliverable.
+
+## Solutions
+
+[Reviewed PDF solution](solutions/MIE446_HW3_Solutions.pdf) · [Word solution](solutions/MIE446_HW3_Solutions.docx)

@@ -1,0 +1,29 @@
+{
+  "date": "2026-11-06T23:29:21.041311+00:00",
+  "scope": "Editable 2D panel count and full-wing performance display; prescribed-load study only when the sole failed admission check is aeroelastic feedback. Numerical aerodynamic and structural kernels unchanged.",
+  "tests": [
+    "Analytic Joukowski Cp/lift regression passed",
+    "81, 240 and 321 panels/side; invalid counts, ratio uncertainty, N m signs/units, transfer and torque guards, both inline-page syntax checks passed"
+  ],
+  "case900mm": {
+    "admitted": false,
+    "smallDisplacement": false,
+    "tipTwistDeg": -0.4008084871912705,
+    "liftChangeFraction": 0.05563302891324149,
+    "semiWingForceN": [
+      -2.1670944746717913,
+      1.5919965540740346,
+      96.88413398215272
+    ],
+    "failed": [
+      "One-way coupling: twist effect on lift"
+    ]
+  },
+  "browserVisualQA": "Unavailable: both computer-use runtimes timed out; no visual-verification claim.",
+  "limitations": [
+    "No nonlinear aeroelastic iteration or deformed-wing pressure solve added.",
+    "No viscous/profile drag computed.",
+    "Prescribed-load results cannot establish safe flight."
+  ],
+  "cleanup": []
+}

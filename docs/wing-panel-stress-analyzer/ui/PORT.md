@@ -109,3 +109,9 @@ Apply `08-wing-model-visibility.patch` after the existing UI ports. It changes o
 ## Separate structural validation section
 
 Apply `20-structural-validation.patch` after the earlier UI ports. It adds Help → Structural validation, linked to `validation/structure/index.html`. The page publishes the archived independently executed CalculiX 2.23 C3D10 benchmark, current-production beam reruns, signed displacement/rotation diagnostics, raw normal-stress profiles, matched samples and input/output/source archive. It distinguishes global response agreement from the larger local torque stress discrepancy; no experimental, general local-stress, or exact-zero-tip validation is claimed. This entry does not alter numerical kernels.
+
+## AeroClub panel counts and performance (2026-11-06)
+
+`22-aeroclub-panels-performance-study.patch` ports the assembled-page edits against main 1ea504d6. Apply to index.html and synchronize wing-lab.html. Editable UI module sources are wing-aero-ui.js and wx-aero-results.js. The numeric kernels are unchanged. A prescribed rigid-load structural study is displayed only when the sole failed admission category is aeroelastic feedback; admission remains failed, the persistent warning includes linear-range failure, and normal/transfer/torque checks remain mandatory. This does not add a nonlinear or iterated aeroelastic solver.
+
+Run `node docs/wing-panel-stress-analyzer/validation/test_wing_update.cjs` and the existing analytic airfoil tests. See validation/WING_AEROCLUB_UPDATE_REVIEW.json for the 900 mm fixture and visual-QA limitations.

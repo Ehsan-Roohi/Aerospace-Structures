@@ -73,7 +73,7 @@ window.WingAirfoilPanel2D = (() => {
   function solveCoordinates(raw, alphaDeg=0) {
     if(!Number.isFinite(alphaDeg)||Math.abs(alphaDeg)>15)throw Error('Use a 2D angle of attack between -15 and 15 degrees. Stall is not modelled.');
     let pts=raw.map(p=>[+p[0],+p[1]]);
-    if(pts.length<17||pts.length>641||pts.some(p=>p.some(v=>!Number.isFinite(v))))throw Error('The 2D section needs 16–640 finite contour panels.');
+    if(pts.length<17||pts.length>1025||pts.some(p=>p.some(v=>!Number.isFinite(v))))throw Error('The 2D section needs 16–1024 finite contour panels.');
     if(Math.hypot(pts[0][0]-pts.at(-1)[0],pts[0][1]-pts.at(-1)[1])>1e-7)throw Error('The 2D aerodynamic trailing edge must close.');
     let area=0;for(let i=0;i<pts.length-1;i++)area+=pts[i][0]*pts[i+1][1]-pts[i+1][0]*pts[i][1];
     if(area>0)pts.reverse(); // Clockwise contour: left normal is outward.
@@ -122,7 +122,7 @@ window.WingAirfoilPanel2D = (() => {
   }
   function section(g,eta,nHalf){
     if(!Number.isFinite(eta)||eta<0||eta>1)throw Error('Section eta must be between 0 and 1.');
-    if(![20,40,80,160].includes(nHalf))throw Error('Unsupported 2D panel count.');
+    if(!Number.isInteger(nHalf)||nHalf<8||nHalf>512)throw Error('Enter an integer from 8 to 512 panels per surface.');
     const ag=WingAeroPanel.aeroGeometry(g), y=eta*ag.semiSpan,st=WingGeometry.stationAt(ag,y);
     if(st.chord<1e-7)throw Error('The exact zero-chord tip is not an airfoil section. Select an inboard station.');
     const profile=WingGeometry.airfoilAt(ag,y), s=WingAirfoils.surfaces(profile,1,0,nHalf+1),pts=[];
@@ -297,7 +297,7 @@ window.WingAeroStructResults = (() => {
     const foilRib=el('select',{id:'wxFoilRib','aria-label':'Choose a rib or spanwise station for the independent 2D section'});
     const foilStation=el('span',{id:'wxFoilStation',class:'note'});
     const foilAlpha=el('input',{id:'wxFoilAlpha',type:'number',min:'-15',max:'15',step:'.5',value:'4','aria-label':'2D angle of attack relative to section chord, degrees'});
-    const foilN=el('select',{id:'wxFoilN','aria-label':'2D panels per surface'},...[40,80,160].map(n=>el('option',{value:String(n),text:String(n),selected:n===80})));
+    const foilN=el('input',{id:'wxFoilN',type:'number',min:'16',max:'512',step:'1',value:'160','aria-label':'2D panels per surface',title:'16–512 panels per side; total contour panels = twice this value. Dense solves become slower as the count increases.'});
     const foilSolve=el('button',{type:'button',class:'btn primary',id:'wxFoilSolve',text:'Solve 2D airfoil'});
     const foilCompare3D=el('button',{type:'button',class:'btn',id:'wxFoilCompare3D',text:'3D Cp near this station',title:'Compare with an actually solved finite-wing strip; a 3D aerodynamic solve is required.'});
     const sectionCompare2D=el('button',{type:'button',class:'btn',id:'wxSectionCompare2D',text:'Independent 2D at this station',hidden:true});
@@ -447,8 +447,10 @@ window.WingAeroStructResults = (() => {
         const independent=foilMode.value==='independent';
         if((!independent&&!foilEta.value.trim())||!foilAlpha.value.trim())throw Error('Enter a 2D angle of attack'+(independent?'.':' and section η.'));
         const key=foilInputKey(),n=+foilN.value;
+        if(!foilN.value.trim()||!Number.isInteger(n)||n<16||n>512)throw Error('Enter an integer from 16 to 512 panels per side.');
+        const nc=Math.floor(n/2);
         const fromWing=m=>{const sec=window.WingAirfoilPanel2D.section(ui.state().geometry,+foilEta.value,m);return {...sec,mode:'wing',name:independentName(sec.profile)};};
-        const sec=independent?independentSection(n):fromWing(n),coarse=independent?independentSection(n/2):fromWing(n/2);
+        const sec=independent?independentSection(n):fromWing(n),coarse=independent?independentSection(nc):fromWing(nc);
         const r=window.WingAirfoilPanel2D.solveCoordinates(sec.points,+foilAlpha.value),old=window.WingAirfoilPanel2D.solveCoordinates(coarse.points,+foilAlpha.value);
         foil2D={...r,section:sec,coarse:old,key,n};foilMessage='';probes=[];
       }catch(e){foil2D=null;foilMessage=e.message;}
@@ -932,6 +934,7 @@ window.WingAeroStructResults = (() => {
       const conv = (name, e) => `<tr><td>${name}</td><td>${e.chord.levels.map((n, i) => `${n}: ${sig(e.chord.values[i])}`).join('<br>')}</td><td>${e.span.levels.map((n, i) => `${n}: ${sig(e.span.values[i])}`).join('<br>')}</td><td>${sig(e.chord.observedOrder, 3)} / ${sig(e.span.observedOrder, 3)}</td></tr>`;
       const meshRows = r.levels.map((l) => { const w = (c.weights.find((x) => x.chordPanels === l.chordPanels && x.spanPanels === l.spanPanels) || { weight: 0 }).weight, F = l.strips.reduce((t, v) => t + v[4], 0); return `<tr><td>${2 * l.chordPanels} × ${l.spanPanels}</td><td>${l.panels ?? '–'}</td><td>${sig(l.coefficients.CL)}</td><td>${sig(F)}</td><td>${sig(w, 3)}</td></tr>`; }).join('');
       const lc = c.consistency.lift, dc = c.consistency.drag, adm = s.admission;
+      const perf=WingAeroUI.performanceSummary(c,b);
       const S = ui.state(), applied = S.aeroLoad;
       let admHtml = '<p class="note">This aerodynamic load is not applied to the structure. Use Apply aerodynamic loads to structure in Aerodynamics to run the admission test.</p>';
       if (c.structuralLoadAvailable === false) admHtml = '<p class="note">Aerodynamic results are available. Transfer to the spatial-beam structural model is unavailable for an exact zero-chord tip; no structural load has been generated.</p>';
@@ -944,7 +947,7 @@ window.WingAeroStructResults = (() => {
         <div class="wae-scroll"><table><thead><tr><th>Quantity</th><th>Extrapolated ± U (mesh)</th><th>Finest-direction combination</th><th>Base mesh</th></tr></thead><tbody>
           ${row('Lift coefficient C<sub>L</sub>, pressure integral', cf.CL)}${row('C<sub>L</sub>, Trefftz plane', cf.CLTrefftz)}${row('Induced drag C<sub>Di</sub>, Trefftz plane', cf.CDiTrefftz)}
           ${row('Pressure drag C<sub>D,p</sub> (inviscid; equals C<sub>Di</sub> in exact potential flow)', cf.CDpressure)}${row('Pitching moment C<sub>m</sub> about ¼ MAC (nose-up +)', cf.Cm)}
-          ${row('Semi-wing lift F<sub>z</sub>', c.rootWrench[2], ' N')}</tbody></table></div>
+          ${row('Semi-wing lift F<sub>z</sub>', c.rootWrench[2], ' N')}${perf.rows}</tbody></table></div>
         <p class="note">No viscous (skin-friction) drag, stall or boundary layer is computed: attached, incompressible potential flow only.</p>
         <h4>Mesh convergence</h4>
         <div class="wae-scroll"><table><thead><tr><th>Quantity</th><th>Chordwise refinement (panels per surface: value)</th><th>Spanwise refinement (panels: value)</th><th>Observed order chord / span</th></tr></thead><tbody>${conv('C<sub>L</sub>', cf.CL)}${conv('C<sub>Di</sub> Trefftz', cf.CDiTrefftz)}${conv('C<sub>m</sub>', cf.Cm)}${conv('Semi-wing F<sub>z</sub> (N)', c.rootWrench[2])}</tbody></table></div>

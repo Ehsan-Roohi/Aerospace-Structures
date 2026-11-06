@@ -2,9 +2,9 @@
   "product": "MIE 446 Wing AeroStruct",
   "version": "0.3.9",
   "status": "Qualified educational solver; explicit 2D/3D section context and tested structural design guidance",
-  "builtAt": "2026-11-01T17:25:04.295206+00:00",
+  "builtAt": "2026-11-06T23:17:27.545844+00:00",
   "page": "index.html",
-  "pageSha256": "11b8d6411574cfb3b2146ccd4b279585ce631a1fb75055ce8239e730254491dc",
+  "pageSha256": "a5b96a3d989d0a57f87ac3f27a2fc6f3f6b6219e5466649844a97d3fa9594e67",
   "workers": {
     "wing-aero": {
       "worker": "8e2d79fa0bfe",
@@ -102,7 +102,7 @@
     },
     "wing_aero_ui.js": {
       "path": "docs/wing-panel-stress-analyzer/ui/wing-aero-ui.js",
-      "sha256": "328e10b8e5ab6dab5804e96d3721a37feb6505293bfe25abcf5e56b6f886cccc",
+      "sha256": "5c1f2699cbfc603caec6f099ade9451c35fdcf60378465b6258f17148233012a",
       "prior_archived_source_path": "computational/printed-wing-solver/aerostruct/wing_aero_ui.js",
       "sha256_scope": "Canonical LF source, as committed"
     },
@@ -198,7 +198,7 @@
     },
     "wx-aero-results.js": {
       "path": "docs/wing-panel-stress-analyzer/ui/wx-aero-results.js",
-      "sha256": "6310eb5fb5a3a484ba9e184339d7856d5634eada3a2c6aa83dd1eca1b60ac929",
+      "sha256": "bd1d046041247cca577d662e11d4d1525bd108225fbc11490eb88e076a57e457",
       "sha256_scope": "Canonical LF source, as committed"
     },
     "wx-shell.js": {
@@ -214,7 +214,7 @@
     "wing-aero-ui.js": {
       "path": "docs/wing-panel-stress-analyzer/ui/wing-aero-ui.js",
       "sha256_scope": "Canonical LF source",
-      "sha256": "dbf565c4f00a093b12ebc8d982674795dda2a5c9c408a12e47e18e05675b21bf"
+      "sha256": "5c1f2699cbfc603caec6f099ade9451c35fdcf60378465b6258f17148233012a"
     }
   },
   "solverVersion": "0.3.1",
@@ -409,5 +409,6 @@
       "Full-scale wing"
     ],
     "scope": "Navigation only; generated-page overlay opens the separate 2D research application. Numerical solver sources and the original Wing Lab page are unchanged."
-  }
+  },
+  "wingUpdate": "User-selected 2D panel count; performance summary; explicitly qualified prescribed-load study, original aeroelastic admission unchanged."
 }

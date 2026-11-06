@@ -13436,9 +13436,25 @@ const WingAeroUI = (() => {
     if (adm.admitted && adm.claims.twist === 'shown') return { ok: true, html: 'Aerodynamic load admitted: the coupled structural result is shown, including torque and twist (resolved to 10%).' };
     if (adm.admitted) return { ok: true, html: `Aerodynamic load admitted with ${torqueShown ? 'the twist' : 'torque and twist'} withheld: ${notResolved}. ${tw ? `The twist is only bounded, |θ| ≤ ${degText(tw.maxBound)}, which would change the lift by at most ${pct(tw.liftEffect)}% (limit 1%). ` : ''}${torqueShown ? 'Bending, shear force, normal stress, displacement and torque are shown; twist values are not.' : 'Bending, shear force, normal stress and displacement are shown; torque and twist values are not.'}` };
     const failure = admissionFailure(adm);
+    if(prescribedLoadEligible(adm))return {ok:false,html:'Aeroelastic admission FAILED. A prescribed rigid-wing load study is available: stresses and bending describe response to fixed pressures. This is not a converged aeroelastic flight prediction. '+esc(failure.message.replace('Structural result withheld:','Aeroelastic prediction withheld:'))};
     return { ok: false, html: failure.message.split('\n\n').map(p => `<span>${esc(p)}</span>`).join('<br><br>') };
   }
   // --------------------------------------------------------------- mount
+  function performanceSummary(combined, base) {
+    const c=combined.coefficients, qS=base.flow.dynamicPressure_Pa*base.reference.area_mm2*1e-6;
+    const scale=(e,k)=>({value:e.value*k,uncertainty:e.uncertainty*Math.abs(k),finest:e.finest*k,base:e.base*k});
+    const drag=scale(c.CDiTrefftz,qS), moment=scale(c.Cm,qS*base.reference.mac_mm*1e-3);
+    const ratio=c.CDiTrefftz.value>c.CDiTrefftz.uncertainty ? c.CL.value/c.CDiTrefftz.value : null;
+    const row=(label,e)=>`<tr><td>${label}</td><td>${fmt(e.value)} ± ${fmt(e.uncertainty,2)}</td><td>${fmt(e.finest)}</td></tr>`;
+    const rows=row('Induced drag Dᵢ · full wing (N)',drag)+row('Pitching moment about ¼ MAC · full wing (N·m; nose-up +)',moment)+`<tr><td>C<sub>L</sub>/C<sub>Di</sub> · induced-drag-only efficiency</td><td>${ratio===null?'Unresolved: induced drag is not positive beyond mesh uncertainty':fmt(ratio)}</td><td>Ratio of estimates; excludes viscous drag</td></tr>`;
+    return {drag,moment,ratio,rows};
+  }
+  // A failed coupling test remains failed. This permits only a prescribed-load structural study;
+  // all force/bending/transfer and pressure-vs-wake checks must still pass.
+  function prescribedLoadEligible(adm) {
+    return !!adm && !adm.admitted && adm.rows.some(r=>r.kind==='aeroelastic'&&!r.admitted)
+      && adm.rows.every(r=>r.admitted||r.kind==='aeroelastic');
+  }
   function mount(host, ad) {
     const doc = host.ownerDocument || document; injectStyles(doc);
     const saved = { ...DEFAULTS, ...(ad.settings?.() || {}) };
@@ -13502,6 +13518,7 @@ const WingAeroUI = (() => {
       $('#aeroApply').disabled = running || !fresh || !st.supported || lastCombined?.structuralLoadAvailable === false || !!ad.disabled?.();
       $('#aeroApply').title = !st.supported ? st.message : lastCombined?.structuralLoadAvailable === false ? 'Structural load transfer is unavailable for an exact zero-chord tip.' : 'Transfer the aerodynamic load and run the structural admission checks.';
       $('#aeroRemove').hidden = !ad.applied?.();
+      const quick=host.querySelector('#aeroQuickSummary');if(quick)quick.hidden=running||!fresh;
     }
     const customStamp = () => JSON.stringify([ad.geometryKey?.(ad.geometry()) || ad.geometry(), ['aeroV','aeroRho','aeroAlpha','aeroMu','aeroSound','aeroTarget','aeroCustomChord','aeroCustomSpan'].map(id=>$('#'+id).value)]);
     function invalidateCustom() {
@@ -13580,6 +13597,10 @@ const WingAeroUI = (() => {
       const levelRows = r.levels.map(l => { const w = (c.weights.find(x => x.chordPanels === l.chordPanels && x.spanPanels === l.spanPanels) || { weight: 0 }).weight, F = l.strips.reduce((t, s) => t + s[4], 0), M = l.strips.reduce((t, s) => t + s[5], 0);
         return `<tr><td>${2 * l.chordPanels} × ${l.spanPanels}</td><td>${l.panels}</td><td>${fmt(l.coefficients.CL)}</td><td>${fmt(F)}</td><td>${fmt(M)}</td><td>${fmt(w, 3)}</td></tr>`; }).join('');
       const lc = c.consistency.lift, dc = c.consistency.drag;
+      const perf=performanceSummary(c,base);
+      let quick=host.querySelector('#aeroQuickSummary');
+      if(!quick){quick=document.createElement('div');quick.id='aeroQuickSummary';(host.querySelector('.wx-scroll')||host).prepend(quick);}
+      quick.innerHTML=`<h4>Aerodynamic performance · full wing</h4><p>CL ${fmt(cf.CL.value)} · Cm¼ ${fmt(cf.Cm.value)} · CDi ${fmt(cf.CDiTrefftz.value)}</p><div class="wae-scroll"><table><tbody>${perf.rows}</tbody></table></div><p class="note">Attached inviscid flow. Pressure drag is another estimate of the same induced drag; do not add them. Viscous/profile drag requires a validated viscous polar and is not computed here.</p>`;
       $('#aeroResults').innerHTML = `
         ${r.trim ? `<p class="note">Target lift reached at α = ${fmt(r.trim.alphaDeg, 5)}° on the extrapolated pressure lift (residual ${fmt(r.trim.residual_N, 2)} N).</p>` : ''}
         ${provenanceHelp()}
@@ -13588,7 +13609,7 @@ const WingAeroUI = (() => {
         ${row('C<sub>L</sub>, Trefftz plane', cf.CLTrefftz)}
         ${row('Induced drag C<sub>Di</sub>, Trefftz plane', cf.CDiTrefftz)}
         ${row('Pressure drag C<sub>D,p</sub> (equals C<sub>Di</sub> in exact potential flow)', cf.CDpressure)}
-        ${row('Pitching moment C<sub>m</sub> about ¼ MAC (nose-up +)', cf.Cm)}
+        ${row('Pitching moment C<sub>m</sub> about ¼ MAC (nose-up +)', cf.Cm)}${perf.rows}
         ${['x', 'y', 'z'].map((k, i) => row(`Semi-wing force F<sub>${k}</sub> (N)`, c.rootWrench[i])).join('')}
         ${['x', 'y', 'z'].map((k, i) => row(`Semi-wing moment M<sub>${k}</sub> about the root origin (N·mm)`, c.rootWrench[3 + i])).join('')}
         </tbody></table></div>
@@ -13632,7 +13653,7 @@ const WingAeroUI = (() => {
       const v = admissionVerdict(adm);
       box.innerHTML = `<div class="wae-box ${v.ok ? 'ok' : 'no'}"><p class="${v.ok ? 'wae-ok' : 'wae-no'}">${v.html}</p>${admissionTable(adm)}</div>`;
       if(adm.mode==='closed-tip-rigid-load-sectional-response'){status(adm.admitted?'Sectional response solved: nominal normal stress and pure-bending components; torsion and aeroelastic feedback not assessed.':'Sectional load assessment failed; see the checks below.',!adm.admitted);return;}
-      status(`Admission test (${adm.sequence} sequence): ${!adm.admitted ? 'coupled structural result withheld; aerodynamic solution retained' : adm.claims.twist === 'shown' ? 'admitted with torque and twist' : adm.claims.torque === 'shown' ? 'admitted with the twist withheld' : 'admitted with torque and twist withheld'}. See the table below.`, false);
+      status(`Admission test (${adm.sequence} sequence): ${!adm.admitted ? prescribedLoadEligible(adm) ? 'prescribed-load study only; aeroelastic coupling NOT admitted' : 'coupled structural result withheld; aerodynamic solution retained' : adm.claims.twist === 'shown' ? 'admitted with torque and twist' : adm.claims.torque === 'shown' ? 'admitted with the twist withheld' : 'admitted with torque and twist withheld'}. See the table below.`, false);
     }
     function refresh() {
       const s = { ...DEFAULTS, ...(ad.settings?.() || {}) };
@@ -13645,6 +13666,7 @@ const WingAeroUI = (() => {
     function reset() {
       if (running) throw new Error('Wait for the aerodynamic solve to finish before opening the course example.');
       last = null; lastCombined = null; lastKey = ''; lastAdmission = null;customLevels=null;$('#aeroCustomResults').replaceChildren();$('#aeroCustomStatus').textContent='';
+      host.querySelector('#aeroQuickSummary')?.remove();
       $('#aeroResults').innerHTML = ''; $('#aeroAdmission').innerHTML = ''; $('#aeroTarget').value = '';
       status('Set the flow conditions, then press Solve Aerodynamics.');
       refresh();
@@ -13662,7 +13684,7 @@ const WingAeroUI = (() => {
     refresh();
     return { refresh, reset, syncApplied, compute, apply, showAdmission, destroy: () => { cancelCustom();worker?.terminate(); worker = null; host.innerHTML = ''; }, cancelCustom, get customRunning(){return customRunning;}, get customResult(){return customLevels;}, get result() { return last; }, get combined() { return lastCombined; }, get admission() { return lastAdmission; }, get solvedKey() { return lastKey; }, get running() { return running; } };
   }
-  return Object.freeze({ mount, DEFAULTS, SEQUENCE_TEXT, SEQUENCE_NOTE, spanwiseFigure, cpFigure, csv, runMainThread, recordFromSequence, sequenceOf, delivered, aerodynamicSummary, customMeshPlan, meshCheckFigure, customMeshCsv, engineLoad, structuralCuts, structuralTorsion, admit, provenanceHelp, admissionSource, admissionTable, admissionVerdict, admissionFailure, speedUnits });
+  return Object.freeze({ performanceSummary, prescribedLoadEligible, mount, DEFAULTS, SEQUENCE_TEXT, SEQUENCE_NOTE, spanwiseFigure, cpFigure, csv, runMainThread, recordFromSequence, sequenceOf, delivered, aerodynamicSummary, customMeshPlan, meshCheckFigure, customMeshCsv, engineLoad, structuralCuts, structuralTorsion, admit, provenanceHelp, admissionSource, admissionTable, admissionVerdict, admissionFailure, speedUnits });
 })();
 if (typeof module !== 'undefined' && module.exports) module.exports = WingAeroUI;
 
@@ -17103,7 +17125,7 @@ if(typeof module!=='undefined'&&module.exports)module.exports=WingPrintUI;
     $("#wingStale").hidden = !out;
     $("#wingStale").innerHTML = out ? '<span aria-hidden="true">⚠</span><span><b>Not up to date.</b> These results belong to the last solved model, not to the inputs now on screen. Press <b>Solve Structure / Stress</b> to update them.</span>' : "";
     $("#viewStale").hidden = !out;
-    $("#copyBtn").disabled = out || !R;
+    $("#copyBtn").disabled = out || !R || !!R.prescribedAeroStudy;
     if (out !== reportBlocked) { reportBlocked = out; $("#copyState").textContent = out ? "Copying is disabled until the inputs on screen are solved." : "Plain-text study summary for your engineering record."; }
     if (stale && $("#wingShareBox") && !$("#wingShareBox").hidden) { $("#wingShareBox").hidden = true; $("#wingShareBox").value = ""; $("#wingShareMsg").textContent = ""; }
     if (running) { chip.className = "chip idle"; chip.textContent = "Solving"; t.textContent = text || "Solving the inputs on screen"; return; }
@@ -17115,6 +17137,7 @@ if(typeof module!=='undefined'&&module.exports)module.exports=WingPrintUI;
     if (stale) { chip.className = "chip warn"; chip.textContent = "Out of date"; t.textContent = R ? "Inputs changed — press Solve Structure / Stress. Results shown are for the last solved model." : "Press Solve Structure / Stress to compute the first result."; return; }
     if (!R) return;
     if(noStructuralLoad(R)){chip.className='chip warn';chip.textContent='No structural load';t.textContent='No structural load is applied. Stress and static displacement are zero. Solve Aerodynamics, then Apply aerodynamic loads to structure, or add a structural load.';return;}
+    if (R.prescribedAeroStudy) { chip.className='chip warn';chip.textContent='Prescribed-load study';t.textContent='Rigid-wing aerodynamic load: stress and bending only. Aeroelastic admission FAILED; deformation feedback is not solved. Review the Aerodynamics admission table.';return; }
     if(R.analysis3D){
       const valid=R.analysis3D.validity.smallDisplacement;
       chip.className=valid?'chip ok':'chip warn';chip.textContent=valid?'Solved · 3-D beam':'Linear range exceeded';
@@ -17197,18 +17220,25 @@ if(typeof module!=='undefined'&&module.exports)module.exports=WingPrintUI;
         try { adm = WingAeroUI.admit(WingAeroPanel, input.geometry, S.aeroLoad, aeroDelivered(), solved); }
         catch (e) { wingAero?.showAdmission(null, e.message); throw e; }
         wingAero?.showAdmission(adm); solved.aeroAdmission = adm;
-        if (!adm.admitted) {
+        if (!adm.admitted && WingAeroUI.prescribedLoadEligible(adm)) {
+          solved.prescribedAeroStudy=true;
+        } else if (!adm.admitted) {
           const failure=WingAeroUI.admissionFailure(adm,{flow:S.aeroLoad.flow,liftN:solved.analysis3D?.aeroLoad?.appliedWrench?.force?.[2],validity:solved.analysis3D?.validity});
           throw Object.assign(Error(failure.message),{withheld:true,refusal:failure});
         }
       } else wingAero?.showAdmission(null);
       R = TeachingModels.studentResult(solved);
+      R.prescribedAeroStudy=!!solved.prescribedAeroStudy;
+      let warning=document.getElementById("prescribedAeroWarning");
+      if(!warning){warning=document.createElement("div");warning.id="prescribedAeroWarning";warning.className="callout";warning.setAttribute("role","status");document.getElementById("wingStale").after(warning);}
+      warning.hidden=!R.prescribedAeroStudy;
+      warning.textContent="PRESCRIBED RIGID-WING LOAD STUDY — aerodynamic/structural coupling failed. Displayed stresses and bending are responses to fixed pressures, not a converged aeroelastic prediction. Changing span or stiffness can change this validity. Review the admission checks; do not treat strength checks as approval of this flight condition."+(R.analysis3D?.validity?.smallDisplacement===false?' SMALL-DISPLACEMENT LIMIT ALSO EXCEEDED: '+R.analysis3D.validity.message:'');
       if(aeroViewWithheld(S.plot)){S.plot='model';document.querySelectorAll('#app [data-plot]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.plot==='model')));}
       if(R.analysis3D&&(['mode','fos'].includes(S.plot)||R.analysis3D.stressOnly&&!['model','stress','bending','torque',...(R.analysis3D.bending?['disp']:[])].includes(S.plot))){S.plot='model';document.querySelectorAll('#app [data-plot]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.plot==='model')));}
       // A successful solve clears an error message that was on screen when it started (not one entered meanwhile).
       if (inputError === errorAtStart) inputError = null;
       if (fieldErrors === fieldErrorsAtStart) fieldErrors = {};
-      if (!designBaseline || saveDesignAfterRun) { designBaseline = R; saveDesignAfterRun = false; }
+      if (!R.prescribedAeroStudy && (!designBaseline || saveDesignAfterRun)) { designBaseline = R; saveDesignAfterRun = false; }
       geometryPreview = false;
       $('#loadStep').textContent = 'Preparing the wing view and result contours';
       $('#loadBar').style.width = '95%';
@@ -24700,7 +24730,7 @@ window.WingAirfoilPanel2D = (() => {
   function solveCoordinates(raw, alphaDeg=0) {
     if(!Number.isFinite(alphaDeg)||Math.abs(alphaDeg)>15)throw Error('Use a 2D angle of attack between -15 and 15 degrees. Stall is not modelled.');
     let pts=raw.map(p=>[+p[0],+p[1]]);
-    if(pts.length<17||pts.length>641||pts.some(p=>p.some(v=>!Number.isFinite(v))))throw Error('The 2D section needs 16–640 finite contour panels.');
+    if(pts.length<17||pts.length>1025||pts.some(p=>p.some(v=>!Number.isFinite(v))))throw Error('The 2D section needs 16–1024 finite contour panels.');
     if(Math.hypot(pts[0][0]-pts.at(-1)[0],pts[0][1]-pts.at(-1)[1])>1e-7)throw Error('The 2D aerodynamic trailing edge must close.');
     let area=0;for(let i=0;i<pts.length-1;i++)area+=pts[i][0]*pts[i+1][1]-pts[i+1][0]*pts[i][1];
     if(area>0)pts.reverse(); // Clockwise contour: left normal is outward.
@@ -24749,7 +24779,7 @@ window.WingAirfoilPanel2D = (() => {
   }
   function section(g,eta,nHalf){
     if(!Number.isFinite(eta)||eta<0||eta>1)throw Error('Section eta must be between 0 and 1.');
-    if(![20,40,80,160].includes(nHalf))throw Error('Unsupported 2D panel count.');
+    if(!Number.isInteger(nHalf)||nHalf<8||nHalf>512)throw Error('Enter an integer from 8 to 512 panels per surface.');
     const ag=WingAeroPanel.aeroGeometry(g), y=eta*ag.semiSpan,st=WingGeometry.stationAt(ag,y);
     if(st.chord<1e-7)throw Error('The exact zero-chord tip is not an airfoil section. Select an inboard station.');
     const profile=WingGeometry.airfoilAt(ag,y), s=WingAirfoils.surfaces(profile,1,0,nHalf+1),pts=[];
@@ -24924,7 +24954,7 @@ window.WingAeroStructResults = (() => {
     const foilRib=el('select',{id:'wxFoilRib','aria-label':'Choose a rib or spanwise station for the independent 2D section'});
     const foilStation=el('span',{id:'wxFoilStation',class:'note'});
     const foilAlpha=el('input',{id:'wxFoilAlpha',type:'number',min:'-15',max:'15',step:'.5',value:'4','aria-label':'2D angle of attack relative to section chord, degrees'});
-    const foilN=el('select',{id:'wxFoilN','aria-label':'2D panels per surface'},...[40,80,160].map(n=>el('option',{value:String(n),text:String(n),selected:n===80})));
+    const foilN=el('input',{id:'wxFoilN',type:'number',min:'16',max:'512',step:'1',value:'160','aria-label':'2D panels per surface',title:'16–512 panels per side; total contour panels = twice this value. Dense solves become slower as the count increases.'});
     const foilSolve=el('button',{type:'button',class:'btn primary',id:'wxFoilSolve',text:'Solve 2D airfoil'});
     const foilCompare3D=el('button',{type:'button',class:'btn',id:'wxFoilCompare3D',text:'3D Cp near this station',title:'Compare with an actually solved finite-wing strip; a 3D aerodynamic solve is required.'});
     const sectionCompare2D=el('button',{type:'button',class:'btn',id:'wxSectionCompare2D',text:'Independent 2D at this station',hidden:true});
@@ -25074,8 +25104,10 @@ window.WingAeroStructResults = (() => {
         const independent=foilMode.value==='independent';
         if((!independent&&!foilEta.value.trim())||!foilAlpha.value.trim())throw Error('Enter a 2D angle of attack'+(independent?'.':' and section η.'));
         const key=foilInputKey(),n=+foilN.value;
+        if(!foilN.value.trim()||!Number.isInteger(n)||n<16||n>512)throw Error('Enter an integer from 16 to 512 panels per side.');
+        const nc=Math.floor(n/2);
         const fromWing=m=>{const sec=window.WingAirfoilPanel2D.section(ui.state().geometry,+foilEta.value,m);return {...sec,mode:'wing',name:independentName(sec.profile)};};
-        const sec=independent?independentSection(n):fromWing(n),coarse=independent?independentSection(n/2):fromWing(n/2);
+        const sec=independent?independentSection(n):fromWing(n),coarse=independent?independentSection(nc):fromWing(nc);
         const r=window.WingAirfoilPanel2D.solveCoordinates(sec.points,+foilAlpha.value),old=window.WingAirfoilPanel2D.solveCoordinates(coarse.points,+foilAlpha.value);
         foil2D={...r,section:sec,coarse:old,key,n};foilMessage='';probes=[];
       }catch(e){foil2D=null;foilMessage=e.message;}
@@ -25559,6 +25591,7 @@ window.WingAeroStructResults = (() => {
       const conv = (name, e) => `<tr><td>${name}</td><td>${e.chord.levels.map((n, i) => `${n}: ${sig(e.chord.values[i])}`).join('<br>')}</td><td>${e.span.levels.map((n, i) => `${n}: ${sig(e.span.values[i])}`).join('<br>')}</td><td>${sig(e.chord.observedOrder, 3)} / ${sig(e.span.observedOrder, 3)}</td></tr>`;
       const meshRows = r.levels.map((l) => { const w = (c.weights.find((x) => x.chordPanels === l.chordPanels && x.spanPanels === l.spanPanels) || { weight: 0 }).weight, F = l.strips.reduce((t, v) => t + v[4], 0); return `<tr><td>${2 * l.chordPanels} × ${l.spanPanels}</td><td>${l.panels ?? '–'}</td><td>${sig(l.coefficients.CL)}</td><td>${sig(F)}</td><td>${sig(w, 3)}</td></tr>`; }).join('');
       const lc = c.consistency.lift, dc = c.consistency.drag, adm = s.admission;
+      const perf=WingAeroUI.performanceSummary(c,b);
       const S = ui.state(), applied = S.aeroLoad;
       let admHtml = '<p class="note">This aerodynamic load is not applied to the structure. Use Apply aerodynamic loads to structure in Aerodynamics to run the admission test.</p>';
       if (c.structuralLoadAvailable === false) admHtml = '<p class="note">Aerodynamic results are available. Transfer to the spatial-beam structural model is unavailable for an exact zero-chord tip; no structural load has been generated.</p>';
@@ -25571,7 +25604,7 @@ window.WingAeroStructResults = (() => {
         <div class="wae-scroll"><table><thead><tr><th>Quantity</th><th>Extrapolated ± U (mesh)</th><th>Finest-direction combination</th><th>Base mesh</th></tr></thead><tbody>
           ${row('Lift coefficient C<sub>L</sub>, pressure integral', cf.CL)}${row('C<sub>L</sub>, Trefftz plane', cf.CLTrefftz)}${row('Induced drag C<sub>Di</sub>, Trefftz plane', cf.CDiTrefftz)}
           ${row('Pressure drag C<sub>D,p</sub> (inviscid; equals C<sub>Di</sub> in exact potential flow)', cf.CDpressure)}${row('Pitching moment C<sub>m</sub> about ¼ MAC (nose-up +)', cf.Cm)}
-          ${row('Semi-wing lift F<sub>z</sub>', c.rootWrench[2], ' N')}</tbody></table></div>
+          ${row('Semi-wing lift F<sub>z</sub>', c.rootWrench[2], ' N')}${perf.rows}</tbody></table></div>
         <p class="note">No viscous (skin-friction) drag, stall or boundary layer is computed: attached, incompressible potential flow only.</p>
         <h4>Mesh convergence</h4>
         <div class="wae-scroll"><table><thead><tr><th>Quantity</th><th>Chordwise refinement (panels per surface: value)</th><th>Spanwise refinement (panels: value)</th><th>Observed order chord / span</th></tr></thead><tbody>${conv('C<sub>L</sub>', cf.CL)}${conv('C<sub>Di</sub> Trefftz', cf.CDiTrefftz)}${conv('C<sub>m</sub>', cf.Cm)}${conv('Semi-wing F<sub>z</sub> (N)', c.rootWrench[2])}</tbody></table></div>

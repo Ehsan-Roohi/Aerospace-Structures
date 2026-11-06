@@ -69,7 +69,7 @@
       "Separate structural validation page: independent CalculiX comparison, signed displacement/rotation and raw stress profiles, matched sample CSV and reproducible decks",
       "Top-level Cavitation link opens the separate 2D research application from the Wing, Beam and Full-scale wing workspace menus"
     ],
-    "page_sha256": "11b8d6411574cfb3b2146ccd4b279585ce631a1fb75055ce8239e730254491dc",
+    "page_sha256": "a5b96a3d989d0a57f87ac3f27a2fc6f3f6b6219e5466649844a97d3fa9594e67",
     "source_port": "ui/01-wing-aerostruct-ui-sources.patch",
     "independent_review": "validation/UI_RELEASE_REVIEW.json",
     "surface_review": "validation/UI_SURFACE_REVIEW.json",
@@ -92,7 +92,8 @@
       "ui/17-member-aero-access.patch",
       "ui/18-independent-airfoil-input.patch",
       "ui/19-custom-aero-mesh.patch",
-      "ui/21-cavitation-navigation.patch"
+      "ui/21-cavitation-navigation.patch",
+      "ui/22-aeroclub-panels-performance-study.patch"
     ],
     "closed_tip_review": "validation/CLOSED_TIP_AERO_REVIEW.json",
     "course_review": "validation/COURSE_UI_REVIEW.json",

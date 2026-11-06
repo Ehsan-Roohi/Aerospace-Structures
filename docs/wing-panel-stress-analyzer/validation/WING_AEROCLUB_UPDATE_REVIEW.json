@@ -29,8 +29,21 @@
   "cleanup": [
     {
       "path": "D:\\ChatGPT Backup\\Projects\\Aerospace-Structures-wing-update\\output\\wing-update-current\\ui-test",
-      "bytes": 39934162.0,
-      "reason": "Disposable UI-test dependencies and failed exFAT install, after passing controller tests"
+      "bytes": 39934162,
+      "reason": "Disposable UI-test dependencies and failed exFAT install, after passing controller tests",
+      "status": "Removed; zero residual bytes verified"
+    },
+    {
+      "bytes": 19527,
+      "status": "Deleted superseded helpers; current source and regressions retained in project",
+      "paths": [
+        "D:/ChatGPT Backup/ChatGPT/پروژه با کوکو/wing_update.py",
+        "D:/ChatGPT Backup/ChatGPT/پروژه با کوکو/wing_finish.py",
+        "D:/ChatGPT Backup/ChatGPT/پروژه با کوکو/wing_polish.py",
+        "D:/ChatGPT Backup/ChatGPT/پروژه با کوکو/wing_release.py",
+        "D:/ChatGPT Backup/ChatGPT/پروژه با کوکو/test_wing_update.cjs",
+        "D:/ChatGPT Backup/ChatGPT/پروژه با کوکو/ui_check.cjs"
+      ]
     }
   ]
 }

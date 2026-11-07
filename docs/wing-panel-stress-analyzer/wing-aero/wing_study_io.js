@@ -1226,21 +1226,21 @@
       for(const [i,s]of (g.stations||[]).entries())add('Geometry',`Station ${i+1}`,`eta ${fmt(s.eta)}, y ${fmt(s.eta*g.semiSpan)} mm · ${profileName(s.airfoil)} · incidence ${fmt(s.incidenceDeg)}°`);
     }
     add('Structure', 'Modules', g.modules === 1 ? '1 (one piece, no seams)' : `${g.modules} (seams at ${E.seams(E.makeGeometry(clone(g))).map((v) => fmt(+v.toFixed(3))).join(', ')} mm)`);
-    add('Structure', 'Skin / rib thickness', `${fmt(g.skin)} / ${fmt(g.ribThickness)} mm`);
+    if(g.construction==='solid-foam'){add('Structure','Construction','Solid foam; reinforcement replaces occupied foam volume');if(g.spars.length)add('Structure','Foam cover over spar caps',`${fmt(g.skin)} mm`);}else add('Structure', 'Skin / rib thickness', `${fmt(g.skin)} / ${fmt(g.ribThickness)} mm`);
     add('Structure', 'Interior ribs', g.customInteriorRibs ? (g.customInteriorRibs.length ? `custom stations ${g.customInteriorRibs.map(fmt).join(', ')} mm` : 'none (empty custom list)') : `${g.interiorRibs} requested, evenly spaced (interface ribs are added at seams)`);
     add('Structure', 'Rods', g.rodFractions.length ? `${g.rodFractions.length} × ⌀${fmt(g.rodDiameter)} mm at ${g.rodFractions.map((f) => `${fmt(f)}c`).join(', ')}; radial clearance ${fmt(g.clearance)} mm; sleeve wall ${fmt(g.sleeveWall)} mm` : 'none');
-    for(const [i,s]of (g.spars||[]).entries())add('Structure',`Bonded spar ${i+1}`,`x/c ${fmt(s.fraction)}; root-to-end ${fmt(s.length)} mm; ${s.widthMode==='auto'?'automatic chord-based cap-width taper; fixed thickness':'fixed cap widths'}; upper root cap ${fmt(s.topWidth)} × ${fmt(s.topThickness)} mm; lower cap ${fmt(s.bottomWidth)} × ${fmt(s.bottomThickness)} mm; web ${fmt(s.webThickness)} mm, skin-derived height; ${s.material.name}, E ${fmt(s.material.E)} MPa, nu ${fmt(s.material.nu)}, rho ${fmt(s.material.rho)} g/cm³, ft/fc/fs ${fmt(s.material.ft)}/${fmt(s.material.fc)}/${fmt(s.material.fs)} MPa; perfect bond, thin-wall model`);
-    add('Structure', 'Other', `trailing edge ${fmt(g.te)} mm; root/tip caps ${fmt(g.cap)} mm; interface rib offset ${fmt(g.interfaceOffset)} mm; cavity ${fmt(g.cavityStart)}–${fmt(g.cavityEnd)}c`);
+    for(const [i,s]of (g.spars||[]).entries())add('Structure',`Bonded spar ${i+1}`,`x/c ${fmt(s.fraction)}; root-to-end ${fmt(s.length)} mm; ${s.widthMode==='auto'?'automatic chord-based cap-width taper; fixed thickness':'fixed cap widths'}; upper root cap ${fmt(s.topWidth)} × ${fmt(s.topThickness)} mm; lower cap ${fmt(s.bottomWidth)} × ${fmt(s.bottomThickness)} mm; web ${fmt(s.webThickness)} mm, skin-derived height; ${s.material.name}, E ${fmt(s.material.E)} MPa, nu ${fmt(s.material.nu)}, rho ${fmt(s.material.rho)} g/cm³, ft/fc/fs ${fmt(s.material.ft)}/${fmt(s.material.fc)}/${fmt(s.material.fs)} MPa; perfect bond, ${g.construction==='solid-foam'?'solid/composite material section':'thin-wall model'}`);
+    if(g.construction==='solid-foam')add('Structure','Interior','Full foam volume; no hollow cavity or separate printed end caps');else add('Structure', 'Other', `trailing edge ${fmt(g.te)} mm; root/tip caps ${fmt(g.cap)} mm; interface rib offset ${fmt(g.interfaceOffset)} mm; cavity ${fmt(g.cavityStart)}–${fmt(g.cavityEnd)}c`);
     const card = (key, over, fields, unit) => {
       const m = E.MATERIALS[key];
       return `${m.short || m.name}: ${fields.map((f) => `${f} ${fmt(over[f] > 0 ? over[f] : m[f])} ${unit}${over[f] > 0 ? ' (override)' : ''}`).join(', ')}`;
     };
-    add('Materials', 'Shell, ribs, sleeves', card(state.plaKey, state.plaOver, ['E', 'ft', 'fc', 'fs'], 'MPa'));
+    add('Materials',g.construction==='solid-foam'?'Bulk foam':'Shell, ribs, sleeves',g.construction==='solid-foam'?card(state.plaKey,state.plaOver,['E'],'MPa')+'; strength allowables not supplied':card(state.plaKey,state.plaOver,['E','ft','fc','fs'],'MPa'));
     add('Materials','Shell Poisson ratio / density',`${fmt(state.plaOver.nu!=null?state.plaOver.nu:E.MATERIALS[state.plaKey].nu)} / ${fmt(state.plaOver.rho>0?state.plaOver.rho:E.MATERIALS[state.plaKey].rho)} g/cm³`);
     add('Materials', 'Rods', card(state.rodKey, state.rodOver, ['E'], 'MPa'));
     const a = state.assembly;
-    add('Joints', 'Rods in sleeves', a.rodsBonded ? 'epoxied (bonded)' : 'slip fit');
-    add('Joints', 'Module seams', `${a.seamsBonded ? 'epoxied' : 'dry (rods only)'}; rod free length ${a.seamFreeLength === null ? '2 × interface offset' : `${fmt(a.seamFreeLength)} mm`}; epoxy ${fmt(a.adhesiveTensile)} MPa`);
+    if(g.construction!=='solid-foam'||g.rodFractions.length) add('Joints', 'Rods in sleeves', a.rodsBonded ? 'epoxied (bonded)' : 'slip fit');
+    if(g.construction==='solid-foam')add('Joints','Embedded reinforcements','Perfect bond assumed; adhesive strength and local foam crushing not assessed');else add('Joints', 'Module seams', `${a.seamsBonded ? 'epoxied' : 'dry (rods only)'}; rod free length ${a.seamFreeLength === null ? '2 × interface offset' : `${fmt(a.seamFreeLength)} mm`}; epoxy ${fmt(a.adhesiveTensile)} MPa`);
     const L = state.load;
     if (L.kind === 'flight') add('Load', 'Case', `Flight-like lift: aircraft ${fmt(L.aircraftMass)} kg, n = ${fmt(L.loadFactor)}, ${L.distribution} distribution at ${fmt(L.liftFraction)}c, inertia relief ${L.inertiaRelief ? 'on' : 'off'}`);
     else if (L.kind === 'tip') add('Load', 'Case', `Tip force ${fmt(L.tipForce)} N (upward +) at ${fmt(L.tipFraction)}c of the tip chord`);
@@ -2074,7 +2074,7 @@
         provenance: provenanceRows(result.provenance, 'parameters'),
       };
     }
-    const ws = result.workspace ? WORKSPACE_LABEL[result.workspace] : 'Wing Lab';
+    const ws=result.state?.geometry?.construction==='solid-foam'?'solid foam semi-wing':result.workspace?WORKSPACE_LABEL[result.workspace]:'Wing Lab';
     return {
       title: result.ok ? `Open study: ${ws}` : 'Open study: not imported',
       state: result.ok ? { kind: result.warnings.length ? 'warn' : 'ok', text: 'Every field was checked. Apply replaces the current study; Cancel leaves it unchanged.' } : { kind: 'error', text: 'Nothing was imported; your current study is unchanged.' },

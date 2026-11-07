@@ -69,7 +69,7 @@ b['flexibleWingSources']={str(p.relative_to(R)).replace('\\','/'):sha(p.read_tex
 p=A/'RELEASE.json'
 release=json.loads(p.read_text(encoding='utf-8'))
 release.update(version='0.5.0',flexible_solver_version='finite-rotation-coupled-2')
-release['scope']='Educational attached inviscid 3D potential-flow pressures and nominal beam stresses, with separate legacy rigid-load models and an optional finite-rotation static two-way Kirchhoff solver for positive-chord tips. No viscous/stall model, section distortion, material failure, stability or experimental validation.'
+release['scope']='Educational attached inviscid 3D potential-flow pressures and nominal beam stresses, with separate legacy rigid-load models and an optional finite-rotation static two-way beam solver (Kirchhoff for hollow wings; shear-deformable Reissner for solid foam) for positive-chord tips. No viscous/stall model, section distortion, material failure, stability or experimental validation.'
 release['ui_release']['page_sha256']=b['pageSha256']
 release['flexible_solver']={'source':'computational/printed-wing-solver/nonlinear','builder':'computational/printed-wing-solver/nonlinear/build_flexible_solver.py','scope':b['flexibleWingScope'],'review':'validation/NONLINEAR_FLEXIBLE_WING_REVIEW.json'}
 p.write_text(json.dumps(release,indent=2)+'\n',encoding='utf-8')

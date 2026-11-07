@@ -5,7 +5,7 @@
   "source_sha256": "bc6986c744568a516fd22bdd3b9508550625b82a77cd924adf52dfaa5156a54d",
   "original_base": "5ab2498",
   "independent_review": "validation/INDEPENDENT_REVIEW.md",
-  "scope": "Educational attached inviscid 3D potential-flow pressures and nominal beam stresses, with separate legacy rigid-load models and an optional finite-rotation static two-way Kirchhoff solver for positive-chord tips. No viscous/stall model, section distortion, material failure, stability or experimental validation.",
+  "scope": "Educational attached inviscid 3D potential-flow pressures and nominal beam stresses, with separate legacy rigid-load models and an optional finite-rotation static two-way beam solver (Kirchhoff for hollow wings; shear-deformable Reissner for solid foam) for positive-chord tips. No viscous/stall model, section distortion, material failure, stability or experimental validation.",
   "solver_version": "0.3.2-exp.4",
   "ui_release": {
     "features": [

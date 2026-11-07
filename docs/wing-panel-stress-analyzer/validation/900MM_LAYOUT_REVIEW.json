@@ -1,0 +1,250 @@
+{
+  "physicsCommit": "99968453ad8e17754a45dcb54d418e13388e2160",
+  "workflow": "https://github.com/Ehsan-Roohi/Aerospace-Structures/actions/runs/42402193083",
+  "qualification": "Independent numerical and analytical verification; no experiment or ANSYS comparison.",
+  "semiSpan_mm": 900,
+  "chord_mm": 400,
+  "speed_m_s": 15,
+  "alpha_deg": 0,
+  "selfWeight": false,
+  "hollow": [
+    {
+      "variant": "spar5",
+      "tip": 1.3353730333112046,
+      "twistDeg": -0.030898236371958827,
+      "mass": {
+        "shell": 1738.5854657391446,
+        "ribs": 112.16391960722875,
+        "caps": 56.081959803614374,
+        "spars": 158.26652976388303,
+        "rods": 0,
+        "tip": 0,
+        "printed": 1906.8313451499878,
+        "total": 2065.097874913871
+      },
+      "admission": {
+        "admitted": true,
+        "prescribed": false,
+        "failed": []
+      },
+      "verification": {
+        "forceError": 4.610707836266745e-09,
+        "momentError": 2.778731978210029e-06,
+        "freeResidual": 3.154877570299419e-08,
+        "energyError": 9.34696481150351e-10,
+        "totalForce": [
+          0.2368074987230061,
+          0.34209922575645857,
+          12.679078205313763
+        ],
+        "totalMoment": [
+          5086.469379078923,
+          -2795.541094637239,
+          -46.68325787041408
+        ],
+        "supportForce": [
+          -0.23680750065175674,
+          -0.34209922576009477,
+          -12.679078209501666
+        ],
+        "supportMoment": [
+          -5086.46938154773,
+          2795.5410951855665,
+          46.683259021796005
+        ]
+      }
+    },
+    {
+      "variant": "spar0",
+      "tip": 1.3353730327616387,
+      "twistDeg": -0.03089823637195898,
+      "mass": {
+        "shell": 1738.5854657391449,
+        "ribs": 0,
+        "caps": 56.081959803614374,
+        "spars": 158.26652976388306,
+        "rods": 0,
+        "tip": 0,
+        "printed": 1794.6674255427592,
+        "total": 1952.9339553066422
+      },
+      "admission": {
+        "admitted": true,
+        "prescribed": false,
+        "failed": []
+      },
+      "verification": {
+        "forceError": 1.995069147040091e-09,
+        "momentError": 1.2201241890100203e-06,
+        "freeResidual": 9.866084116350038e-09,
+        "energyError": 2.2153766407203623e-10,
+        "totalForce": [
+          0.2368074987230061,
+          0.34209922575645857,
+          12.67907820531376
+        ],
+        "totalMoment": [
+          5086.469379078924,
+          -2795.541094637238,
+          -46.68325787041408
+        ],
+        "supportForce": [
+          -0.23680749714929264,
+          -0.3420992257569244,
+          -12.679078206540025
+        ],
+        "supportMoment": [
+          -5086.469379805201,
+          2795.541094833142,
+          46.6832569097651
+        ]
+      }
+    },
+    {
+      "variant": "rod-bonded",
+      "tip": 1.433912364260632,
+      "twistDeg": -0.04273545469680571,
+      "mass": {
+        "shell": 1786.547783790384,
+        "ribs": 0,
+        "caps": 56.41442996149619,
+        "spars": 0,
+        "rods": 31.667253948185117,
+        "tip": 0,
+        "printed": 1842.9622137518802,
+        "total": 1874.6294677000653
+      },
+      "admission": {
+        "admitted": true,
+        "prescribed": false,
+        "failed": []
+      },
+      "verification": {
+        "forceError": 2.5209069946422374e-09,
+        "momentError": 2.0170846771254696e-06,
+        "totalForce": [
+          0.23680749872300627,
+          0.34209922575645857,
+          12.679078205313756
+        ],
+        "totalMoment": [
+          5086.469379078925,
+          -2795.54109463724,
+          -46.68325787041417
+        ],
+        "supportForce": [
+          -0.23680749999827883,
+          -0.3420992257697266,
+          -12.679078207488262
+        ],
+        "supportMoment": [
+          -5086.469380830582,
+          2795.5410948609465,
+          46.68325884523952
+        ],
+        "freeResidual": 1.194485255151534e-08,
+        "maxPenetration": 0,
+        "energyError": 3.7741224495240947e-10,
+        "iterations": 0,
+        "contactResidual": 0,
+        "contactDefectCorrections": 0,
+        "contactWork": 0
+      }
+    },
+    {
+      "variant": "rod-sleeve",
+      "tip": 1.4607552756732893,
+      "twistDeg": -0.04287485231766788,
+      "mass": {
+        "shell": 1786.547783790384,
+        "ribs": 0,
+        "caps": 56.41442996149619,
+        "spars": 0,
+        "rods": 31.667253948185117,
+        "tip": 0,
+        "printed": 1842.9622137518802,
+        "total": 1874.6294677000653
+      },
+      "admission": {
+        "admitted": true,
+        "prescribed": false,
+        "failed": []
+      },
+      "verification": {
+        "forceError": 8.134908703413544e-13,
+        "momentError": 2.8484172106439597e-11,
+        "totalForce": [
+          0.23680749872300627,
+          0.34209922575645857,
+          12.679078205313756
+        ],
+        "totalMoment": [
+          5086.469379078925,
+          -2795.54109463724,
+          -46.68325787041417
+        ],
+        "supportForce": [
+          -0.2368074987238117,
+          -0.3420992257564226,
+          -12.679078205313647
+        ],
+        "supportMoment": [
+          -5086.46937907892,
+          2795.541094637214,
+          46.68325787042464
+        ],
+        "freeResidual": 6.410342145990455e-09,
+        "maxPenetration": 0,
+        "energyError": 1.3240624496483919e-15,
+        "iterations": 500,
+        "contactResidual": 1.4432904705708108e-15,
+        "contactDefectCorrections": 0,
+        "contactWork": 0.0008650322665624394
+      }
+    }
+  ],
+  "foam": [
+    {
+      "variant": "foam-rods",
+      "mass_g": 265.28725437293537,
+      "tip_mm": 58.70615484149033,
+      "incidence_deg": -1.5238468622417662,
+      "liftFullWing_N": 18.994811429285924,
+      "CL": 0.19143171004571355,
+      "passedChecks": 18,
+      "foamModel": {
+        "maxNominalElasticStrain": 0.007549738284002285,
+        "smallStrainScreen": 0.01,
+        "shearTranslationEstimateMm": 0.3012188599447535,
+        "shearRelative": 0.005126594265433198,
+        "transverseShearIncluded": true,
+        "maxGeneralizedShearStrain": 0.0007570989975762058,
+        "shearSectionRefinementRelative": 0.002970320958994612,
+        "priorKirchhoffShearScreenPassed": true,
+        "strengthAssessed": false,
+        "scope": "Solid EPS with perfectly bonded embedded material regions; 1% strain is an illustrative small-strain model screen, not a measured foam allowable. Transverse shear is included through a refined section compliance in the geometrically exact Reissner kinematics; the section law retains the Poisson-zero approximation."
+      }
+    },
+    {
+      "variant": "foam-spars",
+      "mass_g": 389.8363523708213,
+      "tip_mm": 10.020467710330449,
+      "incidence_deg": -1.4259307316861922,
+      "liftFullWing_N": 19.22387489256269,
+      "CL": 0.19374023575271043,
+      "passedChecks": 18,
+      "foamModel": {
+        "maxNominalElasticStrain": 0.0012887568291985816,
+        "smallStrainScreen": 0.01,
+        "shearTranslationEstimateMm": 0.15994198953874622,
+        "shearRelative": 0.015960470390228524,
+        "transverseShearIncluded": true,
+        "maxGeneralizedShearStrain": 0.0001315546610260808,
+        "shearSectionRefinementRelative": 0.0005826496787664802,
+        "priorKirchhoffShearScreenPassed": false,
+        "strengthAssessed": false,
+        "scope": "Solid EPS with perfectly bonded embedded material regions; 1% strain is an illustrative small-strain model screen, not a measured foam allowable. Transverse shear is included through a refined section compliance in the geometrically exact Reissner kinematics; the section law retains the Poisson-zero approximation."
+      }
+    }
+  ]
+}

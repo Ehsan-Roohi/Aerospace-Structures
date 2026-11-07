@@ -233,7 +233,7 @@ const WingAeroUI = (() => {
       lines.push(`Structural result withheld: aerodynamic load admission failed (${(adm.failed || []).join('; ')}).`);
       lines.push(adm.sequence === 'standard' ? 'Select the Fine panel sequence, solve Aerodynamics and try applying its loads again. Review the admission table for the failed quantity.' : 'Review the failed quantity and its uncertainty in the admission table. The finest browser sequence did not establish a reliable coupled result for this case.');
     }
-    lines.push('Your inputs and wing geometry are unchanged. The geometry preview remains available; no unaccepted stress or displacement field is shown.');
+    lines.push(prescribedLoadEligible(adm)?'Your inputs and wing geometry are unchanged. A qualified fixed-pressure structural response may be displayed; it is not a converged aeroelastic flight prediction.':'Your inputs and wing geometry are unchanged. The geometry preview remains available; no unaccepted stress or displacement field is shown.');
     return { kind: row ? 'coupling-model-limit' : 'load-admission', title: 'Structural result withheld', message: lines.join('\n\n'), failed: (adm.failed || []).slice() };
   }
   // Verdict sentence of an admission (HTML).

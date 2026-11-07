@@ -7,17 +7,23 @@ on:
       - 'docs/wing-panel-stress-analyzer/nonlinear/**'
       - 'docs/wing-panel-stress-analyzer/wing-aero/**'
       - '.github/workflows/nonlinear-wing.yml'
+      - 'docs/wing-panel-stress-analyzer/ui/zero-tip-source/engine.js'
+      - 'scripts/validation/*900mm*'
+      - 'scripts/validation/*foam*'
   pull_request:
     paths:
       - 'computational/printed-wing-solver/nonlinear/**'
       - 'docs/wing-panel-stress-analyzer/nonlinear/**'
       - 'docs/wing-panel-stress-analyzer/wing-aero/**'
       - '.github/workflows/nonlinear-wing.yml'
+      - 'docs/wing-panel-stress-analyzer/ui/zero-tip-source/engine.js'
+      - 'scripts/validation/*900mm*'
+      - 'scripts/validation/*foam*'
   workflow_dispatch:
 jobs:
   finite-rotation-and-coupling:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -36,6 +42,8 @@ jobs:
           node computational/printed-wing-solver/nonlinear/test_scalar_elastica.cjs
           node computational/printed-wing-solver/nonlinear/test_rod_system.cjs
           node computational/printed-wing-solver/nonlinear/test_rod_flexibility.cjs
+          node computational/printed-wing-solver/nonlinear/test_solid_foam.cjs
+          node scripts/validation/test_reinforced_foam.cjs
           node computational/printed-wing-solver/nonlinear/test_rod_wing.cjs
           node computational/printed-wing-solver/nonlinear/test_rod_saved_pressure.cjs
           node computational/printed-wing-solver/nonlinear/test_deformed_pressure.cjs
@@ -47,6 +55,14 @@ jobs:
         run: |
           node computational/printed-wing-solver/nonlinear/run_900mm.cjs
           node computational/printed-wing-solver/nonlinear/test_900mm_result.cjs
+      - name: Matched internal-layout pressure comparison
+        run: |
+          node scripts/validation/compare_900mm_layouts.cjs
+          node scripts/validation/verify_900mm_layouts.cjs
+      - name: Five-rib and solid-foam two-way regression
+        env:
+          LAYOUT_COUPLED_CASES: 'spar5:50,foam:10'
+        run: node scripts/validation/couple_900mm_layouts.cjs
       - name: Install DOM-only UI test dependency
         run: npm install --prefix /tmp/flexible-ui-test --no-audit --no-fund jsdom@26
       - name: Controller rendering, cancellation and stale-result checks

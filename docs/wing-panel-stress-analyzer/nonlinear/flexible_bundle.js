@@ -1655,7 +1655,8 @@ if(typeof module!=='undefined'&&module.exports)module.exports=WingClosedTipStres
 
 ;
 /* Independent multi-beam rod/sleeve system. Units mm,N,MPa.
- * Bonded: exact rigid-offset six-DOF ties (coordinate elimination).
+ * Bonded: rigid-offset centreline displacement and axial-spin ties.
+ * Rod bending rotations remain independent (embedded line-bond idealization).
  * Sleeve: independent rod beams; circular radial clearance, compressive-only
  * frictionless contact, no axial friction and no rod-spin tie. All roots clamped.
  * Small-displacement beam kinematics; no adhesive/contact strength prediction.
@@ -1693,13 +1694,13 @@ function cantileverFlex(ns,members,ids,free,nShell){
  };
 }
 function offsetRows(arm){const [x,y,z]=arm;return [[1,0,0,0,z,-y],[0,1,0,-z,0,x],[0,0,1,y,-x,0],[0,0,0,1,0,0],[0,0,0,0,1,0],[0,0,0,0,0,1]];}
-function solve({nodes,elements,rods,mode='bonded',gap=0,contactStations=null,tolerance=1e-6,maxIterations=1500}){
+function solve({nodes,elements,rods,mode='bonded',gap=0,contactStations=null,tolerance=1e-6,maxIterations=6000}){
  if(!['bonded','sleeve'].includes(mode)||!Number.isFinite(gap)||gap<0)throw Error('Choose bonded or sleeve and a finite nonnegative radial clearance.');
  if(!rods?.length||rods.some(r=>r.nodes.length!==nodes.length))throw Error('Rod paths need one node per shell station.');
- const count=nodes.length,nShell=count*6,total=mode==='bonded'?nShell:nShell*(1+rods.length),K=zero(total),f=new Float64Array(total),all=[];
- function insert(ns,es,id){const members=es.map(e=>F.element(ns,e));for(const e of members){let maps=e.dofs.map(d=>{const station=Math.floor(d/6),j=d%6;if(!id)return [[d,1]];if(mode==='sleeve')return [[id*nShell+d,1]];return offsetRows(sub(ns[station],nodes[station]))[j].flatMap((v,k)=>v?[[station*6+k,v]]:[]);});for(let i=0;i<12;i++)for(const[a,v]of maps[i]){f[a]+=v*e.fg[i];for(let j=0;j<12;j++)for(const[b,w]of maps[j])K[a][b]+=v*w*e.kg[i][j];}all.push({id,e,maps});}}
+ const count=nodes.length,nShell=count*6,total=mode==='bonded'?nShell+2*count*rods.length:nShell*(1+rods.length),K=zero(total),f=new Float64Array(total),all=[];
+ function insert(ns,es,id){const members=es.map(e=>F.element(ns,e));for(const e of members){let maps=e.dofs.map(d=>{const station=Math.floor(d/6),j=d%6;if(!id)return [[d,1]];if(mode==='sleeve')return [[id*nShell+d,1]];if(j<3)return offsetRows(sub(ns[station],nodes[station]))[j].flatMap((v,k)=>v?[[station*6+k,v]]:[]);const R=F.basis(ns[Math.max(0,station-1)],ns[Math.min(count-1,station+1)]),h=j-3,b=nShell+(id-1)*2*count+2*station;return [...R[0].flatMap((v,k)=>v*R[0][h]?[[station*6+3+k,v*R[0][h]]]:[]),[b,R[1][h]],[b+1,R[2][h]]];});for(let i=0;i<12;i++)for(const[a,v]of maps[i]){f[a]+=v*e.fg[i];for(let j=0;j<12;j++)for(const[b,w]of maps[j])K[a][b]+=v*w*e.kg[i][j];}all.push({id,e,maps});}}
  insert(nodes,elements,0);rods.forEach((r,i)=>insert(r.nodes,r.elements,i+1));
- const fixed=new Set(Array.from({length:mode==='bonded'?1:1+rods.length},(_,i)=>Array.from({length:6},(_,j)=>i*nShell+j)).flat()),free=Array.from({length:total},(_,i)=>i).filter(i=>!fixed.has(i)),map=new Map(free.map((v,i)=>[v,i])),solveK=(()=>{const blocks=Array.from({length:mode==='bonded'?1:rods.length+1},(_,k)=>{const ids=free.flatMap((v,i)=>Math.floor(v/nShell)===k?[i]:[]),back=mode==='sleeve'?cantileverFlex(k?rods[k-1].nodes:nodes,all.filter(a=>a.id===k).map(a=>a.e),ids,free,nShell):factor(ids.map(i=>Float64Array.from(ids,j=>K[free[i]][free[j]])));return {ids,back};});return b=>{const x=new Float64Array(free.length);for(const block of blocks){const z=block.back(block.ids.map(i=>b[i]));block.ids.forEach((d,i)=>x[d]=z[i]);}return x;};})(),ff=Float64Array.from(free,i=>f[i]),u0=solveK(ff),contacts=[];
+ const fixed=new Set(Array.from({length:mode==='bonded'?1:1+rods.length},(_,i)=>Array.from({length:6},(_,j)=>i*nShell+j)).flat().concat(mode==='bonded'?rods.flatMap((_,i)=>[nShell+i*2*count,nShell+i*2*count+1]):[])),free=Array.from({length:total},(_,i)=>i).filter(i=>!fixed.has(i)),map=new Map(free.map((v,i)=>[v,i])),solveK=(()=>{const blocks=Array.from({length:mode==='bonded'?1:rods.length+1},(_,k)=>{const ids=free.flatMap((v,i)=>(mode==='bonded'||Math.floor(v/nShell)===k)?[i]:[]),back=mode==='sleeve'?cantileverFlex(k?rods[k-1].nodes:nodes,all.filter(a=>a.id===k).map(a=>a.e),ids,free,nShell):factor(ids.map(i=>Float64Array.from(ids,j=>K[free[i]][free[j]])));return {ids,back};});return b=>{const x=new Float64Array(free.length);for(const block of blocks){const z=block.back(block.ids.map(i=>b[i]));block.ids.forEach((d,i)=>x[d]=z[i]);}return x;};})(),ff=Float64Array.from(free,i=>f[i]),u0=solveK(ff),contacts=[];
  if(mode==='sleeve')rods.forEach((r,k)=>{for(let i=1;i<count;i++){if(contactStations&&!contactStations.includes(i))continue;const arm=sub(r.nodes[i],nodes[i]),T=offsetRows(arm),R=F.basis(r.nodes[Math.max(0,i-1)],r.nodes[Math.min(count-1,i+1)]),C=R.slice(1).map(normal=>{const row=new Float64Array(free.length);for(let j=0;j<6;j++){const v=normal.reduce((s,a,h)=>s+a*T[h][j],0);row[map.get(i*6+j)]+=v;}for(let j=0;j<3;j++)row[map.get((k+1)*nShell+i*6+j)]-=normal[j];return row;});contacts.push({rod:k,station:i,C});}});
  const C=contacts.flatMap(c=>c.C),Z=C.map(c=>solveK(c)),W=C.map(a=>Float64Array.from(Z,z=>dot(a,z))),d0=C.map(c=>dot(c,u0));let relative=d0.slice(),iterations=0;
  // Enforce elastic reciprocity at floating-point precision. Independent
@@ -1760,14 +1761,16 @@ function solve({nodes,elements,rods,mode='bonded',gap=0,contactStations=null,tol
  const members=recover(0),rodMembers=rods.map((_,i)=>recover(i+1)),displacements=nodes.map((_,i)=>Array.from(u.slice(i*6,i*6+3))),rotations=nodes.map((_,i)=>Array.from(u.slice(i*6+3,i*6+6))),contact=contacts.map((c,i)=>({...c,C:undefined,radialDisplacement:relative.slice(2*i,2*i+2),force: Array.from(radial.slice(2*i,2*i+2)),gap})),maxPenetration=Math.max(0,...contact.map(c=>Math.hypot(...c.radialDisplacement)-gap)),freeResidual=Math.max(0,...free.map(i=>Math.abs(residual[i]))),scale=Math.max(1,...f.map(Math.abs));
  if(maxPenetration>tolerance*1.01||freeResidual>1e-5*scale)throw Error('Rod equilibrium/contact checks failed; no accepted response. '+JSON.stringify({maxPenetration,gapTolerance:tolerance*1.01,freeResidual,residualTolerance:1e-5*scale,contactResidual,iterations}));
  const totalForce=[0,0,0],totalMoment=[0,0,0],supportForce=[0,0,0],supportMoment=[0,0,0];
- for(let id=0;id<(mode==='bonded'?1:rods.length+1);id++)for(let i=0;i<count;i++){
-  const point=id?rods[id-1].nodes[i]:nodes[i],base=id*nShell+i*6,af=Array.from(f.slice(base,base+3)),am=add(Array.from(f.slice(base+3,base+6)),F.cross(point,af)),rf=[0,1,2].map(j=>fixed.has(base+j)?residual[base+j]:0),rm=add([0,1,2].map(j=>fixed.has(base+3+j)?residual[base+3+j]:0),F.cross(point,rf));
-  for(let j=0;j<3;j++){totalForce[j]+=af[j];totalMoment[j]+=am[j];supportForce[j]+=rf[j];supportMoment[j]+=rm[j];}
+ // Sum loads on their physical body nodes, before constraint elimination.
+ for(const {id,e} of all){const ns=id?rods[id-1].nodes:nodes;for(let h=0;h<2;h++){const af=Array.from(e.fg.slice(6*h,6*h+3)),am=add(Array.from(e.fg.slice(6*h+3,6*h+6)),F.cross(ns[h?e.b:e.a],af));for(let j=0;j<3;j++){totalForce[j]+=af[j];totalMoment[j]+=am[j];}}}
+ for(let id=0;id<(mode==='bonded'?1:rods.length+1);id++){
+  const point=id?rods[id-1].nodes[0]:nodes[0],base=id*nShell,rf=Array.from(residual.slice(base,base+3)),rm=add(Array.from(residual.slice(base+3,base+6)),F.cross(point,rf));for(let j=0;j<3;j++){supportForce[j]+=rf[j];supportMoment[j]+=rm[j];}
  }
+ if(mode==='bonded')rods.forEach((r,i)=>{const R=F.basis(r.nodes[0],r.nodes[1]),b=nShell+i*2*count;for(let j=0;j<3;j++)supportMoment[j]+=R[1][j]*residual[b]+R[2][j]*residual[b+1];});
  const forceError=F.norm(add(totalForce,supportForce)),momentError=F.norm(add(totalMoment,supportMoment));
  const internalWork=all.reduce((s,a)=>s+a.e.axialMode.load**2/a.e.axialMode.stiffness,0),energy=.5*[...members,...rodMembers.flat()].reduce((sum,e)=>sum+F.GAUSS.reduce((v,[t,w])=>{const strain=F.strainMatrix(t,e.L,true).map(row=>dot(row,[...e.ul,e.bubble]));return v+w*e.L*dot(strain,e.D.map(row=>dot(row,strain)));},0),0),work=dot(u,f)+internalWork,contactWork=dot(radial,relative),energyError=Math.abs(2*energy-work+contactWork)/Math.max(1,Math.abs(work));
  if(forceError>1e-5*Math.max(1,F.norm(totalForce))||momentError>1e-5*Math.max(1,F.norm(totalMoment))||energyError>1e-7||contactResidual>tolerance)throw Error('Rod force/moment/energy/contact verification failed; no accepted response. '+JSON.stringify({forceError,momentError,energyError,contactResidual,maxPenetration}));
- return {nodes,elements:members,rodElements:rodMembers,displacements,rotations,u,applied:f.slice(0,nShell),reactions:[...fixed].map(d=>({dof:d,value:residual[d]})),energy,work,verification:{forceError,momentError,totalForce,totalMoment,supportForce,supportMoment,freeResidual,maxPenetration,energyError,iterations,contactResidual,contactDefectCorrections,contactWork},contact,mode,method:mode==='bonded'?'Separate rod beams with exact six-DOF rigid-offset bonded ties':'Separate rod beams with unilateral circular-clearance frictionless sleeve contact',scope:'Small displacement; shell and every rod root fully clamped; continuous sleeve sampled at beam stations; no friction, glue failure, bearing strength, sleeve crushing or geometric nonlinearity.'};
+ return {nodes,elements:members,rodElements:rodMembers,displacements,rotations,u,applied:f.slice(0,nShell),reactions:[...fixed].map(d=>({dof:d,value:residual[d]})),energy,work,verification:{forceError,momentError,totalForce,totalMoment,supportForce,supportMoment,freeResidual,maxPenetration,energyError,iterations,contactResidual,contactDefectCorrections,contactWork},contact,mode,method:mode==='bonded'?'Separate rod beams with centreline displacement and axial-spin bonded ties; independent rod bending rotations':'Separate rod beams with unilateral circular-clearance frictionless sleeve contact',scope:'Small displacement; shell and every rod root fully clamped; continuous sleeve sampled at beam stations; no friction, glue failure, bearing strength, sleeve crushing or geometric nonlinearity.'};
 }
 return {solve,offsetRows};
 })();
@@ -1800,6 +1803,7 @@ const WingEngine = (() => {
 
   // ------------------------------------------------------------------ materials
   const MATERIALS = {
+    eps100:{key:'eps100',kind:'pla',name:'EPS100 solid foam (illustrative)',short:'EPS100 foam',E:6,nu:.1,rho:.020,ft:null,fc:null,fs:null,G:null,source:'Illustrative EPS100: E=6 MPa, G about 2.73 MPa, density=20 kg/m3, EOTA TR019. Not a measured aircraft foam; no strength allowables assigned.'},
     custom_shell:{key:'custom_shell',kind:'pla',name:'Custom effective shell / rib material',short:'Custom shell',E:2000,nu:.35,rho:1.24,ft:15,fc:50,fs:10,G:null,source:'User-supplied effective isotropic beam properties. Initial numbers are PLA teaching placeholders, not certified properties; replace E, nu, density and allowables before material comparisons.'},
     pla_upright: {
       key: "pla_upright", kind: "pla", name: "Printed PLA Pro — span along printer Z",
@@ -1863,7 +1867,7 @@ const WingEngine = (() => {
 
   // ------------------------------------------------------------------ geometry
   const DEFAULT_GEOMETRY = {
-    naca: "2412", semiSpan: 450, rootChord: 160, tipChord: 100, skin: 1.2, ribThickness: 1.6,
+    construction: "hollow", naca: "2412", semiSpan: 450, rootChord: 160, tipChord: 100, skin: 1.2, ribThickness: 1.6,
     modules: 3, te: 1.2, interiorRibs: 3, customInteriorRibs: null, interfaceOffset: 4, cap: 2, cavityStart: 0.06,
     cavityEnd: 0.9, rodFractions: [0.3, 0.6], rodDiameter: 4, clearance: 0.25, sleeveWall: 1.2,
     spars: [],
@@ -1880,6 +1884,8 @@ const WingEngine = (() => {
 
   function makeGeometry(opts = {}) {
     const g = { ...DEFAULT_GEOMETRY, ...opts };
+    if(!['hollow','solid-foam'].includes(g.construction))throw Error('Choose hollow or solid-foam construction.');
+    if(g.construction==='solid-foam'&&(g.tipChord<=0||g.modules!==1||g.customInteriorRibs?.length||g.customInteriorRibs==null&&g.interiorRibs))throw Error('Solid foam requires positive chord, one continuous body and no separate ribs.');
     g.naca = normalizeNaca(g.naca);
     Object.assign(g, Geometry.normalizeGeometryFields(g));
     g.rodFractions = [...g.rodFractions];
@@ -1982,7 +1988,7 @@ const WingEngine = (() => {
       return {supported:!restrictions.length,requires3D:true,stressOnly:true,mode:'section-stress',reasons:['Exact zero-chord tip'],restrictions,message:restrictions.length?restrictions.join(' '):'Nominal axial and biaxial normal section stress from physical load equilibrium. Exact-apex stress is undefined. Nominal transverse bending components are available; torsion, shear, local buckling, full displacement and 3-D stress concentrations are not assessed.'};
     }
     const c=Geometry.analysisCapability(g);
-    if(c.supported&&!g.airfoil&&!g.stations&&input.aeroLoad==null&&!g.rodFractions?.length)return c;
+    if(c.supported&&!g.airfoil&&!g.stations&&input.aeroLoad==null&&!g.rodFractions?.length&&g.construction!=='solid-foam')return c;
     if(c.supported)c.reasons.push(input.aeroLoad!=null?'six-component aerodynamic loads require the full spatial beam':'explicit airfoil profiles / station sections require the full biaxial spatial beam');
     const restrictions=[];
     if(g.rodFractions?.length&&!RodSystem)restrictions.push('Load the rod/sleeve structural solver before applying loads.');
@@ -2113,6 +2119,7 @@ const WingEngine = (() => {
   // Matched inner (cavity) and outer loops for a mapped ring mesh, CCW around the cavity
   function ringLoops(g, y, Ks = 120, Kn = 40, Ka = 24) {
     const c = chordAt(g, y);
+    if(g.construction==='solid-foam')return {inner:[],outer:outerContour(g,y,161),corners:[],chord:c,upperSkin:[],solid:true};
     if(Geometry.closedTip(g)&&!g._rawCavity&&y>=cavityTipLimit(g))return {inner:[],outer:outerContour(g,y,Ks),corners:[],chord:c,upperSkin:[],solid:true};
     if(c===0)throw Error('Zero-chord tip has no hollow cavity.');
     const te=effectiveTE(g,y);
@@ -2187,8 +2194,10 @@ const WingEngine = (() => {
     return { nodes, tris: Int32Array.from(tris), K, layers };
   }
 
+  const compensatedSparse=(row,x,rhs=0)=>{let sum=-rhs,correction=0;for(const[j,k]of row){const v=k*x[j],t=sum+v;correction+=Math.abs(sum)>=Math.abs(v)?sum-t+v:v-t+sum;sum=t;}return sum+correction;};
+  const compensatedLaplacian=(row,x,i,rhs=0)=>{let sum=-rhs,c=0;for(const[j,k]of row)if(j!==i){const v=k*(x[j]-x[i]),t=sum+v;c+=Math.abs(sum)>=Math.abs(v)?sum-t+v:v-t+sum;sum=t;}return sum+c;};
   // Preconditioned conjugate gradient on a sparse symmetric matrix (rows: Map col->val)
-  function solveCG(rows, b, fixed = 0, tol = 1e-11, maxIt = 20000) {
+  function solveCG(rows, b, fixed = 0, tol = 1e-11, maxIt = 20000, incompleteCholesky=false) {
     const n = b.length;
     const diag = new Float64Array(n);
     for (let i = 0; i < n; i++) diag[i] = rows[i].get(i) || 1;
@@ -2197,28 +2206,39 @@ const WingEngine = (() => {
     // for every multiply. Matrix, gauge, tolerance and iteration limit agree.
     const offsets=new Int32Array(n+1),columns=[],entries=[];
     for(let i=0;i<n;i++){
-      if(i!==fixed)for(const [j,v]of rows[i])if(j!==fixed){columns.push(j);entries.push(v);}
+      if(i!==fixed)for(const [j,v]of rows[i])if(j!==fixed||incompleteCholesky){columns.push(j);entries.push(v);}
       offsets[i+1]=columns.length;
     }
     const col=Int32Array.from(columns),values=Float64Array.from(entries);
     const mult = (x, out) => {
       for (let i = 0; i < n; i++) {
         if (i === fixed) { out[i] = x[i]; continue; }
-        let s = 0;
-        for(let k=offsets[i];k<offsets[i+1];k++)s+=values[k]*x[col[k]];
-        out[i] = s;
+        let s=0,c=0;
+        for(let k=offsets[i];k<offsets[i+1];k++){if(incompleteCholesky&&col[k]===i)continue;const v=values[k]*(incompleteCholesky?x[col[k]]-x[i]:x[col[k]]),t=s+v;if(incompleteCholesky)c+=Math.abs(s)>=Math.abs(v)?s-t+v:v-t+s;s=t;}
+        out[i]=s+c;
       }
     };
+    let lower=null,ld=null;
+    if(incompleteCholesky){
+      lower=Array.from({length:n},()=>new Map());ld=new Float64Array(n);let valid=true;
+      for(let i=0;i<n&&valid;i++){if(i===fixed){ld[i]=1;continue;}const js=[...rows[i].keys()].filter(j=>j<i&&j!==fixed).sort((a,b)=>a-b);for(const j of js){let v=rows[i].get(j)/Math.sqrt(diag[i]*diag[j]);for(const[k,a]of lower[i])if(k<j)v-=a*(lower[j].get(k)||0);lower[i].set(j,v/ld[j]);}let v=1;for(const a of lower[i].values())v-=a*a;if(!(v>0))valid=false;else ld[i]=Math.sqrt(v);}if(!valid){lower=null;ld=null;}
+    }
+    const rootDiag=Float64Array.from(diag,Math.sqrt),loff=new Int32Array(n+1),lcols=[],lvals=[];
+    if(lower)for(let i=0;i<n;i++){for(const[j,a]of lower[i]){lcols.push(j);lvals.push(a);}loff[i+1]=lcols.length;}
+    const lc=Int32Array.from(lcols),lv=Float64Array.from(lvals);
+    const precondition=(r,z)=>{if(!lower){for(let i=0;i<n;i++)z[i]=r[i]/diag[i];return;}for(let i=0;i<n;i++){let v=r[i]/rootDiag[i];for(let k=loff[i];k<loff[i+1];k++)v-=lv[k]*z[lc[k]];z[i]=v/ld[i];}for(let i=n-1;i>=0;i--){z[i]/=ld[i];for(let k=loff[i];k<loff[i+1];k++)z[lc[k]]-=lv[k]*z[i];}for(let i=0;i<n;i++)z[i]/=rootDiag[i];};
     const x = new Float64Array(n);
     const r = Float64Array.from(b);
     r[fixed] = 0;
     const z = new Float64Array(n), p = new Float64Array(n), Ap = new Float64Array(n);
-    for (let i = 0; i < n; i++) z[i] = r[i] / diag[i];
+    precondition(r,z);
     p.set(z);
     let rz = 0, bnorm = 0;
     for (let i = 0; i < n; i++) { rz += r[i] * z[i]; bnorm += r[i] * r[i]; }
+    if(bnorm===0)return x;
     bnorm = Math.sqrt(bnorm) || 1;
     for (let it = 0; it < maxIt; it++) {
+      if(globalThis.WING_SOLID_TRACE&&incompleteCholesky&&it%1000===0)console.log('Section PCG',n,it,!!lower);
       mult(p, Ap);
       let pAp = 0;
       for (let i = 0; i < n; i++) pAp += p[i] * Ap[i];
@@ -2227,7 +2247,7 @@ const WingEngine = (() => {
       for (let i = 0; i < n; i++) { x[i] += alpha * p[i]; r[i] -= alpha * Ap[i]; rn += r[i] * r[i]; }
       if (Math.sqrt(rn) / bnorm < tol) break;
       let rz2 = 0;
-      for (let i = 0; i < n; i++) { z[i] = r[i] / diag[i]; rz2 += r[i] * z[i]; }
+      precondition(r,z);for (let i = 0; i < n; i++) rz2 += r[i] * z[i];
       const beta = rz2 / rz;
       rz = rz2;
       for (let i = 0; i < n; i++) p[i] = z[i] + beta * p[i];
@@ -2238,6 +2258,7 @@ const WingEngine = (() => {
   // 2-D finite elements on the shell ring: area properties, warping (St-Venant torsion),
   // Trefftz shear centre and the shear function for a vertical shear force (Poisson's ratio 0).
   function shellFE(mesh) {
+    const ew=e=>mesh.Erel?.[e]??1,gw=e=>mesh.Grel?.[e]??1;
     const { nodes, tris } = mesh;
     const nT = tris.length / 3, nN = nodes.length / 2;
     const A = new Float64Array(nT), bx = new Float64Array(3 * nT), by = new Float64Array(3 * nT);
@@ -2250,9 +2271,9 @@ const WingEngine = (() => {
       A[e] = a;
       bx[3 * e] = (y2 - y3) / det; bx[3 * e + 1] = (y3 - y1) / det; bx[3 * e + 2] = (y1 - y2) / det;
       by[3 * e] = (x3 - x2) / det; by[3 * e + 1] = (x1 - x3) / det; by[3 * e + 2] = (x2 - x1) / det;
-      At += a;
-      Sx += (a * (x1 + x2 + x3)) / 3;
-      Sz += (a * (y1 + y2 + y3)) / 3;
+      At += a*ew(e);
+      Sx += (a * ew(e) * (x1 + x2 + x3)) / 3;
+      Sz += (a * ew(e) * (y1 + y2 + y3)) / 3;
     }
     const xc = Sx / At, zc = Sz / At;
     let Ixx = 0, Iyy = 0, Ixy = 0; // Ixx = ∫z'², Iyy = ∫x'², Ixy = ∫x'z' (section-plane convention)
@@ -2260,7 +2281,7 @@ const WingEngine = (() => {
     for (let e = 0; e < nT; e++) {
       const v = [tris[3 * e], tris[3 * e + 1], tris[3 * e + 2]];
       const xs = v.map(X), ys = v.map(Y);
-      const a = A[e];
+      const a = A[e]*ew(e);
       Ixx += (a / 6) * (ys[0] ** 2 + ys[1] ** 2 + ys[2] ** 2 + ys[0] * ys[1] + ys[1] * ys[2] + ys[0] * ys[2]);
       Iyy += (a / 6) * (xs[0] ** 2 + xs[1] ** 2 + xs[2] ** 2 + xs[0] * xs[1] + xs[1] * xs[2] + xs[0] * xs[2]);
       Ixy += (a / 12) * (2 * (xs[0] * ys[0] + xs[1] * ys[1] + xs[2] * ys[2]) + xs[0] * ys[1] + xs[1] * ys[0] + xs[1] * ys[2] + xs[2] * ys[1] + xs[0] * ys[2] + xs[2] * ys[0]);
@@ -2275,22 +2296,27 @@ const WingEngine = (() => {
       const xm = (xs[0] + xs[1] + xs[2]) / 3, ym = (ys[0] + ys[1] + ys[2]) / 3;
       for (let p = 0; p < 3; p++) {
         for (let q = 0; q < 3; q++) {
-          const kv = a * (bx[3 * e + p] * bx[3 * e + q] + by[3 * e + p] * by[3 * e + q]);
+          const kv = gw(e)*a * (bx[3 * e + p] * bx[3 * e + q] + by[3 * e + p] * by[3 * e + q]);
           rows[v[p]].set(v[q], (rows[v[p]].get(v[q]) || 0) + kv);
         }
-        fW[v[p]] += a * (bx[3 * e + p] * ym - by[3 * e + p] * xm);
+        fW[v[p]] += gw(e)*a * (bx[3 * e + p] * ym - by[3 * e + p] * xm);
         // ∇²Φ = 2(Ixy x − Iyy y)  →  ∫∇N·∇Φ = −∫N f ;  ∫_T N_p g = A/12 (2 g_p + g_q + g_r)
-        const gv = xs.map((xx, i) => 2 * (Ixy * xx - Iyy * ys[i]));
-        fV[v[p]] -= (a / 12) * (gv[0] + gv[1] + gv[2] + gv[p]);
+        const gv = xs.map((xx, i) => mesh.Grel?(Ixy*xx-Iyy*ys[i])/(Ixx*Iyy-Ixy*Ixy):2*(Ixy*xx-Iyy*ys[i]));
+        fV[v[p]] -= (ew(e)*a / 12) * (gv[0] + gv[1] + gv[2] + gv[p]);
       }
     }
-    const omega = solveCG(rows, fW);
-    const phi = solveCG(rows, fV);
+    if(mesh.Grel)for(let i=0;i<nN;i++){let off=0;for(const[j,k]of rows[i])if(j!==i)off+=k;rows[i].set(i,-off);}
+    let gauge=0;if(mesh.Grel)for(let i=1;i<nN;i++)if((rows[i].get(i)||0)>(rows[gauge].get(gauge)||0))gauge=i;
+    const omega = solveCG(rows, fW,gauge,1e-11,20000,!!mesh.Grel);
+    const phi = solveCG(rows, fV,gauge,1e-11,20000,!!mesh.Grel);
+    if(mesh.Grel)for(const [u,rhs] of [[omega,fW],[phi,fV]]){for(let pass=0;pass<3;pass++){const residual=Float64Array.from(rhs,(v,i)=>-compensatedLaplacian(rows[i],u,i,v));if(Math.sqrt(residual.reduce((v,x)=>v+x*x,0))<=1e-9*Math.max(rhs===fW?1:1e-6,Math.sqrt(rhs.reduce((v,x)=>v+x*x,0))))break;const du=solveCG(rows,residual,gauge,1e-11,20000,true);for(let i=0;i<nN;i++)u[i]+=du[i];}let err=0,norm=0;for(let i=0;i<nN;i++){const v=compensatedLaplacian(rows[i],u,i,rhs[i]);err+=v*v;norm+=rhs[i]**2;}if(Math.sqrt(err)>1e-8*Math.max(rhs===fW?1:1e-6,Math.sqrt(norm)))throw Error('Composite solid section failed its true equilibrium residual: '+JSON.stringify({err:Math.sqrt(err),rhs:Math.sqrt(norm),gauge,maxDiag:Math.max(...rows.map((row,i)=>row.get(i))),maxU:Math.max(...u.map(Math.abs)),minArea:Math.min(...A),sumRhs:rhs.reduce((a,b)=>a+b,0),largest:rows.map((row,i)=>({i,value:[...row].reduce((v,[j,k])=>v+k*u[j],-rhs[i])})).sort((a,b)=>Math.abs(b.value)-Math.abs(a.value)).slice(0,4)}));}
     // zero-mean warping, J, Trefftz shear centre
     let wMean = 0;
-    for (let e = 0; e < nT; e++) wMean += (A[e] * (omega[tris[3 * e]] + omega[tris[3 * e + 1]] + omega[tris[3 * e + 2]])) / 3;
+    for (let e = 0; e < nT; e++) wMean += (A[e] * ew(e) * (omega[tris[3 * e]] + omega[tris[3 * e + 1]] + omega[tris[3 * e + 2]])) / 3;
     wMean /= At;
     for (let i = 0; i < nN; i++) omega[i] -= wMean;
+    let polarG=0;
+    for(let e=0;e<nT;e++){const ids=Array.from(tris.slice(3*e,3*e+3));for(const q of [ids.map(X),ids.map(Y)])polarG+=gw(e)*A[e]/6*(q[0]**2+q[1]**2+q[2]**2+q[0]*q[1]+q[0]*q[2]+q[1]*q[2]);}
     let Jw = 0, Ixw = 0, Iyw = 0;
     const gradW = new Float64Array(2 * nT), gradP = new Float64Array(2 * nT);
     for (let e = 0; e < nT; e++) {
@@ -2303,11 +2329,12 @@ const WingEngine = (() => {
       }
       gradW[2 * e] = gx; gradW[2 * e + 1] = gy; gradP[2 * e] = px; gradP[2 * e + 1] = py;
       const xm = (xs[0] + xs[1] + xs[2]) / 3, ym = (ys[0] + ys[1] + ys[2]) / 3;
-      Jw += A[e] * (xm * gy - ym * gx);
-      Ixw += (A[e] / 12) * (xs[0] * ws[0] + xs[1] * ws[1] + xs[2] * ws[2] + (xs[0] + xs[1] + xs[2]) * (ws[0] + ws[1] + ws[2]));
-      Iyw += (A[e] / 12) * (ys[0] * ws[0] + ys[1] * ws[1] + ys[2] * ws[2] + (ys[0] + ys[1] + ys[2]) * (ws[0] + ws[1] + ws[2]));
+      Jw += gw(e)*A[e] * (xm * gy - ym * gx);
+      Ixw += (ew(e)*A[e] / 12) * (xs[0] * ws[0] + xs[1] * ws[1] + xs[2] * ws[2] + (xs[0] + xs[1] + xs[2]) * (ws[0] + ws[1] + ws[2]));
+      Iyw += (ew(e)*A[e] / 12) * (ys[0] * ws[0] + ys[1] * ws[1] + ys[2] * ws[2] + (ys[0] + ys[1] + ys[2]) * (ws[0] + ws[1] + ws[2]));
     }
-    const J = Ixx + Iyy + Jw;
+    const J = polarG + Jw;
+    if(mesh.Grel){let gradEnergy=0;for(let e=0;e<nT;e++)gradEnergy+=gw(e)*A[e]*(gradW[2*e]**2+gradW[2*e+1]**2);const positiveEnergy=polarG+2*Jw+gradEnergy;if(!(J>0)||Math.abs(positiveEnergy-J)/J>1e-7)throw Error('Composite torsion strain-energy identity failed.');}
     const D = Ixx * Iyy - Ixy * Ixy;
     const xsc = xc + (Ixy * Ixw - Iyy * Iyw) / D;
     const zsc = zc + (Ixx * Ixw - Ixy * Iyw) / D;
@@ -2318,10 +2345,10 @@ const WingEngine = (() => {
     for (let e = 0; e < nT; e++) {
       const v = [tris[3 * e], tris[3 * e + 1], tris[3 * e + 2]];
       const xm = v.reduce((s, n) => s + X(n), 0) / 3, ym = v.reduce((s, n) => s + Y(n), 0) / 3;
-      tauT[2 * e] = (gradW[2 * e] - ym) / J;
-      tauT[2 * e + 1] = (gradW[2 * e + 1] + xm) / J;
-      tauV[2 * e] = gradP[2 * e] / Ds;
-      tauV[2 * e + 1] = gradP[2 * e + 1] / Ds;
+      tauT[2 * e] = gw(e)*(gradW[2 * e] - ym) / J;
+      tauT[2 * e + 1] = gw(e)*(gradW[2 * e + 1] + xm) / J;
+      tauV[2 * e] = gw(e)*gradP[2 * e] / (mesh.Grel?1:Ds);
+      tauV[2 * e + 1] = gw(e)*gradP[2 * e + 1] / (mesh.Grel?1:Ds);
       FyV += A[e] * tauV[2 * e + 1];
       MzT += A[e] * (xm * tauT[2 * e + 1] - ym * tauT[2 * e]);
     }
@@ -2371,17 +2398,54 @@ const WingEngine = (() => {
   function geometricSection(g, y, layers = 4) {
     // Warping mesh depends only on this shell outline, not on spar materials,
     // rods, rib layout or module labels. Reuse exactly the same immutable FE data.
-    const key = JSON.stringify([airfoilAt(g,y),chordAt(g,y),g.skin,g.te,g.cavityStart,g.cavityEnd,layers]);
+    const key = JSON.stringify([g.construction,airfoilAt(g,y),chordAt(g,y),g.skin,g.te,g.cavityStart,g.cavityEnd,layers]);
     if (!geoCache.has(key)) {
       if (geoCache.size > 120) geoCache.clear();
       const loops = ringLoops(g, y);
+      if(g.construction==='solid-foam'){
+        const spec={G:1,outer:loops.outer,inner:[]},h=loops.chord/32;let previous=null,record=null;
+        for(let k=0;k<5;k++){const result=FiniteSection.level(spec,h/2**k,1,FiniteSectionDeps,previous);previous=result._mesh;if(record&&Math.abs(result.J-record.J)/result.J<.003){record=result;break;}record=result;if(k===4)throw Error('Solid foam torsion section did not reach 0.3% mesh refinement.');}
+        const mesh={nodes:Float64Array.from(previous.points.flat()),tris:Int32Array.from(previous.tris.flat()),Erel:new Float64Array(previous.tris.length).fill(1),Grel:new Float64Array(previous.tris.length).fill(1)},fe=shellFE(mesh);
+        const rotated={...mesh,nodes:Float64Array.from(mesh.nodes,(v,i)=>i%2?mesh.nodes[i-1]:-mesh.nodes[i+1]),tris:mesh.tris},horizontal=shellFE(rotated);if(Math.abs(horizontal.J/fe.J-1)>1e-6)throw Error('Composite torsion failed rigid coordinate-rotation invariance.');let xx=0,zz=0,xz=0;
+        for(let i=0;i<fe.areas.length;i++){const sx=horizontal.tauV[2*i+1],sz=-horizontal.tauV[2*i],vx=fe.tauV[2*i],vz=fe.tauV[2*i+1],a=fe.areas[i];xx+=a*(sx*sx+sz*sz);zz+=a*(vx*vx+vz*vz);xz+=a*(sx*vx+sz*vz);}
+        fe.shearComplianceUnitG=[[xx,xz],[xz,zz]];fe.maxShearComplianceUnitG=.5*(xx+zz+Math.hypot(xx-zz,2*xz));
+        if(Math.abs(fe.J/record.J-1)>1e-5)throw Error('Solid section torsion formulations disagree.');
+        geoCache.set(key,{loops,mesh,fe,bredt:{J:fe.J,Am:fe.A},outer:loops.outer,solidRefinement:record});
+        return geoCache.get(key);
+      }
       const mesh = ringMesh(loops.inner, loops.outer, layers);
       geoCache.set(key, { loops, mesh, fe: shellFE(mesh), bredt: bredtBatho(g, y), outer: outerContour(g, y) });
     }
     return geoCache.get(key);
   }
 
+  const solidCompositeCache=new Map();
+  function solidCompositeSection(g,pla,rod,y){
+    const parts=sparParts(g,y),outer=outerContour(g,y,161),regions=parts.map(p=>({polygon:p.outline,m:p.s.material,kind:'spar',index:p.index}));
+    for(const cc of rodCentres(g,y))regions.push({polygon:Array.from({length:64},(_,i)=>[cc[0]+rodRadius(g)*Math.cos(2*Math.PI*i/64),cc[1]+rodRadius(g)*Math.sin(2*Math.PI*i/64)]),m:rod,kind:'rod'});
+    const key=JSON.stringify([outer,regions,pla]);if(solidCompositeCache.has(key))return {...solidCompositeCache.get(key),y};
+    const inside=(p,poly)=>{let c=false;for(let i=0,j=poly.length-1;i<poly.length;j=i++)if((poly[i][1]>p[1])!==(poly[j][1]>p[1])&&p[0]<(poly[j][0]-poly[i][0])*(p[1]-poly[i][1])/(poly[j][1]-poly[i][1])+poly[i][0])c=!c;return c;};
+    const clip=FiniteSectionDeps.polygonClipping,area=poly=>Math.abs(polyIntegrals(poly)[0]);
+    for(let i=0;i<regions.length;i++){const r=regions[i];if(r.polygon.some(p=>!inside(p,outer)))throw Error('Foam reinforcement must fit wholly inside the outer airfoil.');for(let j=0;j<i;j++){const overlap=clip.intersection([r.polygon],[regions[j].polygon]).reduce((v,p)=>v+area(p[0])-p.slice(1).reduce((a,q)=>a+area(q),0),0);if(overlap>1e-7)throw Error('Foam reinforcements overlap; no material may be counted twice.');}}
+    const points=[],edges=[],seen=new Map(),h=chordAt(g,y)/48,node=p=>{const k=p.map(v=>v.toPrecision(13)).join(',');if(seen.has(k))return seen.get(k);const i=points.length;points.push(p);seen.set(k,i);return i;};
+    for(const poly of [outer,...regions.map(r=>r.polygon)]){const ids=[];for(let i=0;i<poly.length;i++){const a=poly[i],b=poly[(i+1)%poly.length],n=Math.max(1,Math.ceil(Math.hypot(b[0]-a[0],b[1]-a[1])/h));for(let j=0;j<n;j++)ids.push(node([a[0]+(b[0]-a[0])*j/n,a[1]+(b[1]-a[1])*j/n]));}for(let i=0;i<ids.length;i++)edges.push([ids[i],ids[(i+1)%ids.length]]);}
+    const zs=outer.map(p=>p[1]);for(let x=h*.413;x<chordAt(g,y);x+=h)for(let z=Math.min(...zs)+h*.271;z<Math.max(...zs);z+=h){const p=[x,z];if(inside(p,outer)&&!regions.some(r=>inside(p,r.polygon)))node(p);}
+    let mesh={nodes:Float64Array.from(points.flat()),tris:Int32Array.from(FiniteSectionDeps.cdt2d(points,edges,{exterior:true}).filter(ids=>inside(ids.reduce((v,i)=>[v[0]+points[i][0]/3,v[1]+points[i][1]/3],[0,0]),outer)).flat())},fe,previous=null,refinementRelative=Infinity;
+    const assign=m=>{m.Erel=new Float64Array(m.tris.length/3);m.Grel=new Float64Array(m.tris.length/3);for(let e=0;e<m.Erel.length;e++){const q=[0,0];for(let j=0;j<3;j++){q[0]+=m.nodes[2*m.tris[3*e+j]]/3;q[1]+=m.nodes[2*m.tris[3*e+j]+1]/3;}const r=regions.find(r=>inside(q,r.polygon));m.Erel[e]=(r?.m.E??pla.E)/pla.E;m.Grel[e]=shearModulus(r?.m??pla)/shearModulus(pla);}return m;};
+    for(let level=0;level<5;level++){
+      if(globalThis.WING_SOLID_TRACE)console.log('Composite refinement',level,mesh.nodes.length/2,mesh.tris.length/3);assign(mesh);fe=shellFE(mesh);const exactAreaE=(polyIntegrals(outer)[0]+regions.reduce((v,r)=>v+(r.m.E/pla.E-1)*polyIntegrals(r.polygon)[0],0));if(Math.abs(fe.A/exactAreaE-1)>1e-8)throw Error('Composite constrained mesh does not preserve material area.');if(previous!=null){refinementRelative=Math.abs(fe.J/previous-1);if(refinementRelative<.003)break;}if(level===4)throw Error('Composite foam torsion did not reach 0.3% nested refinement.');previous=fe.J;
+      const pp=Array.from({length:mesh.nodes.length/2},(_,i)=>Array.from(mesh.nodes.slice(2*i,2*i+2))),mid=new Map(),at=(a,b)=>{const k=Math.min(a,b)+','+Math.max(a,b);if(mid.has(k))return mid.get(k);const i=pp.length;pp.push([(pp[a][0]+pp[b][0])/2,(pp[a][1]+pp[b][1])/2]);mid.set(k,i);return i;},tt=[];for(let e=0;e<mesh.tris.length;e+=3){const[a,b,c]=mesh.tris.slice(e,e+3),ab=at(a,b),bc=at(b,c),ca=at(c,a);tt.push(a,ab,ca,ab,b,bc,ca,bc,c,ab,bc,ca);}mesh={nodes:Float64Array.from(pp.flat()),tris:Int32Array.from(tt)};
+    }
+    const rotated={...mesh,nodes:Float64Array.from(mesh.nodes,(v,i)=>i%2?mesh.nodes[i-1]:-mesh.nodes[i+1])},horizontal=shellFE(rotated);if(Math.abs(horizontal.J/fe.J-1)>1e-6)throw Error('Composite torsion failed rigid coordinate-rotation invariance.');let xx=0,zz=0,xz=0;for(let i=0;i<fe.areas.length;i++){const sx=horizontal.tauV[2*i+1],sz=-horizontal.tauV[2*i],vx=fe.tauV[2*i],vz=fe.tauV[2*i+1],a=fe.areas[i]/mesh.Grel[i];xx+=a*(sx*sx+sz*sz);zz+=a*(vx*vx+vz*vz);xz+=a*(sx*vx+sz*vz);}fe.maxShearComplianceUnitG=.5*(xx+zz+Math.hypot(xx-zz,2*xz));
+    const base=polyIntegrals(outer),foam=base.slice(),sum=base.map(v=>pla.E*v),mi=base.map(v=>pla.rho*1e-3*v),sparInts=[];let sparMass=0,rodArea=0;
+    for(const r of regions){const q=polyIntegrals(r.polygon);q.forEach((v,i)=>{foam[i]-=v;sum[i]+=(r.m.E-pla.E)*v;mi[i]+=(r.m.rho-pla.rho)*1e-3*v;});if(r.kind==='spar'){sparMass+=r.m.rho*1e-3*q[0];sparInts.push({index:r.index,m:r.m,polygon:r.polygon,int:q});}else rodArea+=q[0];}
+    const EA=sum[0],xc=sum[2]/EA,zc=sum[1]/EA,EIf=sum[3]-EA*zc**2,EIc=sum[4]-EA*xc**2,EIxz=sum[5]-EA*xc*zc,xsc=fe.xsc,zsc=fe.zsc,polar=q=>q[3]+q[4]-2*zsc*q[1]-2*xsc*q[2]+(xsc*xsc+zsc*zsc)*q[0];
+    const result={y,chord:chordAt(g,y),EA,xc,zc,EIf,EIc,EIxz,principal:0,EIrods:0,GJ:shearModulus(pla)*fe.J,Jfe:fe.J,Jbredt:fe.J,bredtArea:base[0],xsc,zsc,mass:mi[0],cgx:mi[2]/mi[0],cgz:mi[1]/mi[0],polarInertia:polar(mi),zTop:Math.max(...zs),zBot:Math.min(...zs),sparParts:parts,sparInts,sparMass,sparNetwork:null,bendCoupling:0,plaArea:foam[0],shellArea:foam[0],foamMass:foam[0]*pla.rho*1e-3,rodArea,ribExtra:0,ribCgx:0,ribExtraCgx:0,ribExtraCgz:0,ribPolar:0,skinWidth:0,skinRadius:Infinity,mesh,fe,corners:[],outer,centres:rodCentres(g,y),Rs:0,rh:0,rr:rodRadius(g),solidComposite:{refinementRelative,materialRegions:regions.length,normalIntegral:sum,foamArea:foam[0],torsionMethod:'Conforming heterogeneous G-weighted Saint-Venant section; E-weighted Trefftz shear centre, Poisson-zero approximation'}};
+    if(solidCompositeCache.size>64)solidCompositeCache.clear();solidCompositeCache.set(key,result);return result;
+  }
+
   function analyseSection(g, pla, rod, asm, y, layers = 4) {
+    if(g.construction==='solid-foam'&&(g.spars.length||g.rodFractions.length))return solidCompositeSection(g,pla,rod,y);
     const { loops, mesh, fe, bredt, outer } = geometricSection(g, y, layers);
     const Ep = pla.E, Er = rod.E;
     const centres = rodCentres(g, y);
@@ -2429,7 +2493,7 @@ const WingEngine = (() => {
     const outerInt = polyIntegrals(outer);
     const holeInt = centres.map((cc) => diskIntegrals(cc, rh)).reduce((s, a) => s.map((v, i) => v + a[i]), [0, 0, 0, 0, 0, 0]);
     const ribInt = outerInt.map((v, i) => v - holeInt[i]-sparInts.reduce((a,s)=>a+s.int[i],0));
-    const ribExtra = ribInt[0] - plaInt[0];
+    const ribExtra = g.construction==='solid-foam'?0:ribInt[0] - plaInt[0];
     let zTop = -Infinity, zBot = Infinity;
     for (const p of outer) { zTop = Math.max(zTop, p[1]); zBot = Math.min(zBot, p[1]); }
     // upper-skin panel: same point set as the Python solver (241-point surface, x0..x1)
@@ -2443,7 +2507,7 @@ const WingEngine = (() => {
       y, chord: loops.chord, EA, xc, zc, EIf, EIc, EIxz, principal, EIrods, GJ, Jfe: fe.J, Jbredt: bredt.J,
       bredtArea: bredt.Am, xsc, zsc, mass, cgx, cgz, polarInertia, zTop, zBot,
       sparParts:sectionSparParts,sparInts,sparMass,sparNetwork,bendCoupling,
-      plaArea: plaInt[0], shellArea: fe.A, rodArea: rodInt[0], ribExtra, ribCgx: ribInt[2] / ribInt[0],ribExtraCgx:(ribInt[2]-plaInt[2])/ribExtra,ribExtraCgz:(ribInt[1]-plaInt[1])/ribExtra,
+      plaArea: plaInt[0], shellArea: fe.A, rodArea: rodInt[0], ribExtra, ribCgx: ribInt[2] / ribInt[0],ribExtraCgx:ribExtra?(ribInt[2]-plaInt[2])/ribExtra:0,ribExtraCgz:ribExtra?(ribInt[1]-plaInt[1])/ribExtra:0,
       ribPolar: polar(ribInt), skinWidth: width, skinRadius: radius, mesh, fe, corners: loops.corners,
       outer, centres, Rs, rh, rr,
     };
@@ -2677,11 +2741,14 @@ const WingEngine = (() => {
   function normalize(input = {}) {
     requestedElementCount(input);
     const g = makeGeometry(input.geometry || {});
-    const pla = { ...MATERIALS.pla_upright, ...(input.pla || {}) };
-    for(const k of ['E','rho','ft','fc','fs'])if(!Number.isFinite(pla[k])||pla[k]<=0)throw new Error(`Shell material ${k} must be finite and positive.`);
+    if(g.construction==='solid-foam'&&(g.rodFractions.length||g.spars.length)&&(Math.abs(g.rootChord-g.tipChord)>1e-8||Math.abs(g.sweepDeg||0)>1e-10||Math.abs(g.dihedralDeg||0)>1e-10||g.stations?.length))throw Error('Reinforced foam currently requires a straight constant-chord wing without intermediate shape stations; oblique insert geometry is not validated.');
+    if(g.construction==='solid-foam'&&g.rodFractions.length&&!input.assembly?.rodsBonded)throw Error('Foam-embedded rods currently require bonded connection; frictionless foam-channel contact is not validated.');
+    const pla = { ...(g.construction==='solid-foam'?MATERIALS.eps100:MATERIALS.pla_upright), ...(input.pla || {}) };
+    for(const k of (g.construction==='solid-foam'?['E','rho']:['E','rho','ft','fc','fs']))if(!Number.isFinite(pla[k])||pla[k]<=0)throw new Error(`Shell material ${k} must be finite and positive.`);
     if(!Number.isFinite(pla.nu)||pla.nu<0||pla.nu>=.5)throw new Error('Shell material nu must be 0 ≤ nu < 0.5.');
     const rod = { ...MATERIALS.rod_hobby, ...(input.rod || {}) };
     if(g.rodFractions.length){for(const key of ['E','rho'])if(!Number.isFinite(rod[key])||rod[key]<=0)throw Error('Rod '+key+' must be finite and positive.');if(!Number.isFinite(rod.nu)||rod.nu<0||rod.nu>=.5)throw Error('Rod Poisson ratio must be in [0, 0.5).');}
+    if(!Number.isFinite(shearModulus(pla))||shearModulus(pla)<=0||g.rodFractions.length&&(!Number.isFinite(shearModulus(rod))||shearModulus(rod)<=0))throw Error('Material shear modulus must be finite and positive.');
     const asm = { ...DEFAULT_ASSEMBLY, ...(input.assembly || {}) };
     if(g.spars.length&&!asm.seamsBonded&&seams(g).length)throw new Error('Bonded spars require bonded module seams (or a one-piece shell). Dry-seam joint mechanics with spars are not validated.');
     const load = { ...DEFAULT_LOAD, selfWeight:false, ...(input.load || {}) };
@@ -3155,7 +3222,7 @@ const WingEngine = (() => {
     return ClosedTipStress.solve(input,{E:{ringLoops,outerContour,cavityTipLimit,ribStations,seams,sparParts,sparWidthBreaks,verticalOrdinates},normalize,polyIntegrals,prescribedFlightLoads,customLine,customFraction,Geometry,Frame,GRAV,Profiles,chordAt,airfoilAt,requestedElementCount});
   }
   function finiteSectionTorsion(input,g,pla,y,B,previous){
-    const parts=sparParts(g,y);if(!parts.length)return {GJ:previous,torsionSection:{method:'existing shell warping FE',finiteWall:false}};
+    const parts=sparParts(g,y);if(g.construction==='solid-foam')return {GJ:previous,torsionSection:{method:'Solid/composite material section',finiteWall:true}};if(!parts.length)return {GJ:previous,torsionSection:{method:'existing shell warping FE',finiteWall:false}};
     if(input.finiteSectionTorsion!==true)return {GJ:previous,torsionSection:{method:'thin-wall network',finiteWall:false}};
     const G=shearModulus(pla),partG=parts.map(p=>shearModulus(p.s.material));
     if(partG.some(v=>Math.abs(v-G)>1e-12*G))return {GJ:previous,torsionSection:{method:'multi-material thin-wall network',finiteWall:false,reason:'Finite material-union solve requires a homogeneous shear modulus.'}};
@@ -3192,7 +3259,7 @@ const WingEngine = (() => {
       if(!network){
         if(Math.abs(area-1)<1e-12){const sc=map([sec.fe.xsc,sec.fe.zsc]);fe={J:sec.fe.J,xsc:sc[0],zsc:sc[1]};}
         else{
-          const key=JSON.stringify([airfoilAt(g,y),sec.chord,g.skin,g.te,g.cavityStart,g.cavityEnd,B.flat().map(v=>+v.toFixed(10))]);
+          const key=JSON.stringify([g.construction,g.spars,g.rodFractions,rod,pla,airfoilAt(g,y),sec.chord,g.skin,g.te,g.cavityStart,g.cavityEnd,B.flat().map(v=>+v.toFixed(10))]);
           if(!projectedCache.has(key)){if(projectedCache.size>=160)projectedCache.clear();projectedCache.set(key,shellFE(mesh));}
           fe=projectedCache.get(key);
         }
@@ -3200,7 +3267,7 @@ const WingEngine = (() => {
       const sc=[network?.xsc??fe.xsc,network?.zsc??fe.zsc],centre=map([sec.xc,sec.zc]),d=F.sub(centre,sc);
       const C=[[sec.EIc,sec.EIxz],[sec.EIxz,sec.EIf+(sec.sparNetwork?sec.EIxz**2/sec.EIc:0)]];
       const Q=Array.from({length:2},(_,i)=>Array.from({length:2},(_,j)=>area*B[i].reduce((v,a,k)=>v+a*B[j].reduce((w,b,h)=>w+b*C[k][h],0),0)));
-      const EA=area*sec.EA,props={EA,first2:EA*d[0],first3:EA*d[1],EI22:Q[1][1]+EA*d[1]**2,EI33:Q[0][0]+EA*d[0]**2,EI23:Q[0][1]+EA*d[0]*d[1],GJ:network?.GJ??shearModulus(pla)*(fe.J+g.rodFractions.length*Math.PI/2*(sleeveRadius(g)**4-holeRadius(g)**4))};
+      const EA=area*sec.EA,props={EA,first2:EA*d[0],first3:EA*d[1],EI22:Q[1][1]+EA*d[1]**2,EI33:Q[0][0]+EA*d[0]**2,EI23:Q[0][1]+EA*d[0]*d[1],GJ:network?.GJ??shearModulus(pla)*(fe.J+(g.construction==='solid-foam'?0:g.rodFractions.length)*Math.PI/2*(sleeveRadius(g)**4-holeRadius(g)**4))};
       const scLocal=[(B[1][1]*sc[0]-B[0][1]*sc[1])/det,(-B[1][0]*sc[0]+B[0][0]*sc[1])/det];
       return {y,R,B,area,scLocal,reference:Geometry.transformPoint(g,y,scLocal),...props,D:Frame.constitutive(props),local:sec,mesh,fe,network};
     }
@@ -3233,9 +3300,9 @@ const WingEngine = (() => {
     const items=sourceItems.flatMap(p=>g.planform==='elliptic'&&p.kind==='schrenk'?schrenkParts(p,g).map(part=>({...part,fraction:p.fraction})):[p]);
     const aeroItems=n.aero?n.aero.strips.map((r,i,a)=>aeroStripItem(r,i,n.aero.lineFraction,g,i===a.length-1)):[];items.push(...aeroItems);
     const loadName=(p,i)=>p.kind==='aeroStrip'?`Aerodynamic strip ${p.index+1}`:`Wing load ${i+1} (${p.kind})`;
-    // Strip loads are integrated piecewise below; rod systems need not inherit
+    // Strip loads are integrated piecewise below; stiffness meshes need not inherit
     // every pressure boundary as a stiffness node (which creates short elements).
-    const physical=[0,L,...(g.stations||[]).map(s=>s.eta*L),...ribStations(g),...seams(g),...g.spars.map(s=>s.length),...items.filter(p=>!p.gravity&&(!g.rodFractions.length||p.kind!=='aeroStrip')).flatMap(p=>loadStations(p,L))];
+    const physical=[0,L,...(g.stations||[]).map(s=>s.eta*L),...ribStations(g),...seams(g),...g.spars.map(s=>s.length),...items.filter(p=>!p.gravity&&p.kind!=='aeroStrip').flatMap(p=>loadStations(p,L))];
     const mandatory=[...physical,...ys.filter(y=>!physical.some(p=>Math.abs(p-y)<.1))];
     const regular=linspace(0,L,count+1).filter(y=>!mandatory.some(v=>Math.abs(v-y)<.1));
     let nodeY=[...new Set([...mandatory,...regular].map(y=>+y.toFixed(9)))].sort((a,b)=>a-b),nodes=nodeY.map(referenceAt);
@@ -3318,7 +3385,7 @@ const WingEngine = (() => {
         for(let j=1;j<split.length;j++){const lo=split[j-1],hi=split[j],foot=footAt(loadPoint(p,(lo+hi)/2)),v=F.integrate(y=>loadVector(foot.index,loadPoint(p,y),lineVector(p,y),undefined,lineCouple(p,y)),lo,hi);v.forEach((x,i)=>elements[foot.index].consistentLoad[i]+=x);if(foot.outside)loadMapping.endWrenches.push({load:loadIndex+1,end:foot.outside,sourceStart:lo,sourceEnd:hi,reason:'Outside-axis part of this line load is retained as an equivalent end wrench; end-zone stresses are unresolved.'});}
       }
     });
-    const rodPaths=g.rodFractions.map((fraction,k)=>{
+    const rodPaths=(g.construction==='solid-foam'?[]:g.rodFractions).map((fraction,k)=>{
       const rn=nodeY.map(y=>Geometry.transformPoint(g,y,rodCentres(g,y)[k])),A=Math.PI*rodRadius(g)**2,I=Math.PI*rodRadius(g)**4/4;
       const re=elements.map((e,i)=>({a:i,b:i+1,EA:rod.E*A,EI22:rod.E*I,EI33:rod.E*I,GJ:shearModulus(rod)*2*I,orientation:e.orientation,consistentLoad:new Float64Array(13)}));
       if(sourceLoad.selfWeight)for(let i=0;i<re.length;i++){
@@ -3335,6 +3402,7 @@ const WingEngine = (() => {
       // Stress recovery must balance the actual local material section, not
       // an interpolation of tensors expressed in neighbouring moving frames.
       // Polygon integrals require no additional torsion/warping FE solves.
+      if(g.construction==='solid-foam'&&(g.spars.length||g.rodFractions.length)&&!normalIntegralCache.has(y))normalIntegralCache.set(y,solidCompositeSection(g,pla,rod,y).solidComposite.normalIntegral);
       if(!normalIntegralCache.has(y)){const loops=ringLoops(g,y),outer=polyIntegrals(loops.outer),inner=polyIntegrals(loops.inner),sum=outer.map((v,i)=>pla.E*(v-inner[i]));for(const cc of rodCentres(g,y)){const ann=annulusIntegrals(cc,sleeveRadius(g),holeRadius(g));ann.forEach((v,i)=>sum[i]+=pla.E*v);}for(const part of sparParts(g,y))for(const polygon of part.polygons){const p=polyIntegrals(polygon);p.forEach((v,i)=>sum[i]+=part.s.material.E*v);}normalIntegralCache.set(y,sum);}
       const sum=normalIntegralCache.get(y);
       const EA=sum[0],x=cut.scLocal[0],z=cut.scLocal[1],X=sum[2]-EA*x,Z=sum[1]-EA*z,XX=sum[4]-2*x*sum[2]+EA*x*x,ZZ=sum[3]-2*z*sum[1]+EA*z*z,XZ=sum[5]-x*sum[1]-z*sum[2]+EA*x*z,B=cut.B,area=Math.abs(B[0][0]*B[1][1]-B[0][1]*B[1][0]),C=[[XX,XZ],[XZ,ZZ]],Q=(a,b)=>a.reduce((v,c,i)=>v+c*b.reduce((w,d,j)=>w+d*C[i][j],0),0);
@@ -3361,7 +3429,7 @@ const WingEngine = (() => {
       const cut={...s,y,recoveryD,force,moment,localForce:fl,localMoment:ml,strain:Array.from(strain),displacement:out.displacement,rotation:out.rotation,endZone:endZone(reference,plane.normal,y),nominal:true};
       if(cutCache.size>60000)cutCache.clear();cutCache.set(y,cut);return cut;
     }
-    const y=Float64Array.from([...new Set([...linspace(0,L,Math.min(1001,input.nGrid||201)),...nodeY,...(rodPaths.length?aeroItems.flatMap(p=>[p.start,p.end]):[])])].sort((a,b)=>a-b)),cuts=Array.from(y,cutAt),response=Array.from(y,frameAt);
+    const y=Float64Array.from([...new Set([...linspace(0,L,Math.min(1001,input.nGrid||201)),...nodeY,...aeroItems.flatMap(p=>[p.start,p.end])])].sort((a,b)=>a-b)),cuts=Array.from(y,cutAt),response=Array.from(y,frameAt);
     const normalStress=(cut,point,E=pla.E)=>{const dx=point[0]-cut.scLocal[0],dz=point[1]-cut.scLocal[1],q2=cut.B[0][0]*dx+cut.B[0][1]*dz,q3=cut.B[1][0]*dx+cut.B[1][1]*dz;return E*(cut.strain[0]+cut.strain[1]*q3-cut.strain[2]*q2);};
     const tension=[],compression=[],sparStress=[];
     cuts.forEach((c,i)=>{
@@ -3370,8 +3438,9 @@ const WingEngine = (() => {
       sparParts(g,y[i]).forEach(p=>{let entry=sparStress.find(s=>s.index===p.index);if(!entry){entry={index:p.index,material:p.s.material,tension:0,compression:0,shear:null};sparStress.push(entry);}const stress=p.polygons.flat().map(q=>normalStress(c,q,p.s.material.E));entry.tension=Math.max(entry.tension,...stress);entry.compression=Math.max(entry.compression,...stress.map(v=>-v));});
     });
     const lineMass=y.map(q=>interp(q,ys,local.map(s=>s.mass))),rho=pla.rho*1e-3,ribs=ribStations(g),ribMass=ribs.map(q=>rho*g.ribThickness*interp(q,ys,local.map(s=>s.ribExtra))),capMass=[0,L].map(q=>rho*g.cap*interp(q,ys,local.map(s=>s.ribExtra))),sparMass=trapz(y.map(q=>interp(q,ys,local.map(s=>s.sparMass))),y),bodyMass=trapz(lineMass,y);
-    const rodMass=rodPaths.length?rod.rho*1e-3*Math.PI*rodRadius(g)**2*rodPaths.reduce((v,r)=>v+r.nodes.slice(1).reduce((a,p,i)=>a+F.norm(F.sub(p,r.nodes[i])),0),0):0;
+    const rodMass=g.construction==='solid-foam'?trapz(y.map(q=>interp(q,ys,local.map(s=>s.rodArea*rod.rho*1e-3))),y):rodPaths.length?rod.rho*1e-3*Math.PI*rodRadius(g)**2*rodPaths.reduce((v,r)=>v+r.nodes.slice(1).reduce((a,p,i)=>a+F.norm(F.sub(p,r.nodes[i])),0),0):0;
     const mass={shell:bodyMass-sparMass-rodMass,ribs:ribMass.reduce((a,b)=>a+b,0),caps:capMass[0]+capMass[1],spars:sparMass,rods:rodMass,tip:load.tipMass};mass.printed=mass.shell+mass.ribs+mass.caps;mass.total=mass.printed+sparMass+rodMass+load.tipMass;
+    if(g.construction==='solid-foam'){mass.foam=bodyMass-sparMass-rodMass;mass.shell=0;mass.printed=0;}
     const deflection=Float64Array.from(response,r=>r.displacement[2]),chordwiseDeflection=Float64Array.from(response,r=>r.displacement[0]),twist=Float64Array.from(response,r=>F.dot(r.rotation,r.element.R[0])),elasticIncidenceDeg=frame.rotations.map(r=>r[1]*180/Math.PI);
     const root=cuts[0],sigTop=Float64Array.from(tension),sigBot=Float64Array.from(compression,v=>-v),V=Float64Array.from(cuts,c=>c.force[2]),M=Float64Array.from(cuts,c=>F.norm(c.moment)),T=Float64Array.from(cuts,c=>c.localMoment[0]);
     // A normal root cut may exclude physical loads on its inboard side. The
@@ -3384,6 +3453,13 @@ const WingEngine = (() => {
     const validity={smallDisplacement,maxTranslation,maxRotation,translationRatio:maxTranslation/L,message:smallDisplacement?'Small-displacement screening passed (translation/span ≤ 5%, rotation ≤ 0.1 rad); this is not a nonlinear validation.':'Outside the admitted small-displacement screening (translation/span > 5% or rotation > 0.1 rad). Linear results are illustrative only; reduce loads or use a geometrically nonlinear model.'};
     const analysis3D={method:frame.method,limitations,validity,spanStations:nodeY,referenceCoordinates:nodes,nodes,displacements:frame.displacements,rotations:frame.rotations,elasticIncidenceDeg,reactions:rodPaths.length?[...frame.verification.supportForce,...F.sub(frame.verification.supportMoment,F.cross(nodes[0],frame.verification.supportForce))].map((value,dof)=>({dof,value})):frame.reactions,energy:frame.energy,work:frame.work,verification:frame.verification,elements:frame.elements,sectionSamples:samples,resultants:cuts.map((c,i)=>({y:y[i],force:c.force,moment:c.moment,localForce:c.localForce,localMoment:c.localMoment,endZone:c.endZone})),localM2:Float64Array.from(cuts,c=>c.localMoment[1]),localM3:Float64Array.from(cuts,c=>c.localMoment[2]),localT:T,normalStress:{skinTension:tension,skinCompression:compression,spars:sparStress},loadMapping,frameAt,cutAt,evaluateNormalStress:normalStress,locatePhysicalPoint:normals.locate,referenceAt:y=>frameAt(y).reference,sectionReferenceAt:referenceAt,normalSectionAxisIterationChangeMm:axisChange};
     analysis3D.rodSystem=rodPaths.length?{mode:frame.mode,method:frame.method,scope:frame.scope,contact:frame.contact,verification:frame.verification,componentRootReactions:frame.reactions,rodElements:frame.rodElements}:null;
+    if(g.construction==='solid-foam'){
+      const sectionCompliance=local.map(sec=>sec.fe.maxShearComplianceUnitG/shearModulus(pla));
+      const shearBound=F.integrate(yy=>{const cut=cutAt(yy),force=F.sub(cut.force,F.scale(cut.R[0],F.dot(cut.force,cut.R[0])));return [F.norm(force)*interp(yy,ys,sectionCompliance)];},0,L)[0];
+      analysis3D.shearEstimate={translationBoundMm:shearBound,relativeToBeamTranslation:shearBound/Math.max(maxTranslation,1e-30),method:'Poisson-zero solid-section unit-shear energy; largest in-plane compliance eigenvalue. Diagnostic estimate, not a 3D shear-deformable solution.'};
+    }
+    analysis3D.construction=g.construction;analysis3D.strengthAssessed=false;
+    if(g.construction==='solid-foam')analysis3D.limitations.push('Solid foam volume with reinforcement volumes replaced, not double-counted. Embedded reinforcements are perfectly bonded continuum sections; foam-channel slip/contact is not supported. EPS stiffness/density are illustrative. No tensile/compressive/shear allowable or local crushing/failure is assessed. Shear-centre section solve uses the existing Poisson-zero warping approximation.');
     analysis3D.units={length:'mm',force:'N',moment:'N mm',stress:'MPa',rotation:'rad',energy:'N mm',lineLoad:'N/mm of projected y'};
     analysis3D.mesh=mesh;analysis3D.appliedWrench={force:appliedWrench.slice(0,3),momentAboutRoot:appliedWrench.slice(3)};
     if(n.aero){const aw=wrenchOf(aeroItems),given=n.aero.strips.reduce((t,r)=>t.map((v,i)=>v+r[2+i]),[0,0,0,0,0,0]),about=F.sub(given.slice(3),F.cross(nodes[0],given.slice(0,3)));
@@ -6493,8 +6569,9 @@ const WingFlexibleSolver=(()=>{
  }
  async function solve(request,progress=()=>{}){
   const input={...request.input,nElements:Math.max(80,request.input.nElements||40),nSections:Math.max(15,request.input.nSections||7)},g=E.makeGeometry(input.geometry),L=g.semiSpan,flow={...request.flow},settings=request.settings||{},maxIterations=settings.maxIterations??16;
+  const snapStations=[...E.ribStations(g),...E.seams(g),...(g.stations||[]).map(s=>s.eta*L),...(g.spars||[]).map(s=>s.length)];
   A.normalizeFlow(flow);
-  if(g.rodFractions?.length)throw Error('Rod/sleeve models currently use separate small-displacement beam fields with clearance contact. Use Apply aerodynamic loads to structure; finite-rotation multi-beam contact is not yet admitted.');
+  if(g.rodFractions?.length&&g.construction!=='solid-foam')throw Error('Rod/sleeve models currently use separate small-displacement beam fields with clearance contact. Use Apply aerodynamic loads to structure; finite-rotation multi-beam contact is not yet admitted.');
   if(!(g.tipChord>0)||G.closedTip(g))throw Error('Finite-rotation coupling is not validated for exact zero-chord tips.');
   if(settings.targetLift_N!=null&&!Number.isFinite(settings.targetLift_N))throw Error('Target lift must be finite.');
   progress('Building actual projected sections and finite-rotation beam…');let base=template(input),shape=undeformed(base),lastRows=null,lastRoot=null,seq=null,result=null,rows=null,rigid=null,history=[],converged=false;
@@ -6504,10 +6581,10 @@ const WingFlexibleSolver=(()=>{
    for(let it=0;it<maxIterations;it++){
     const shapeKey=JSON.stringify(Array.from({length:61},(_,i)=>{const s=shape.at(L*i/60);return [s.position,s.rotationQuaternion];})),opts={pointTransform:(y,p)=>shape.deformPoint(y,p),deformationKey:shapeKey,progress:t=>progress(`Coupled ${stage+1}/${meshes.length}, iteration ${it+1}: ${t}`)};
     progress(`Coupled ${stage+1}/${meshes.length}, iteration ${it+1}: resolving pressure on the current deformed surface…`);await tick();
-    if(mesh.sequence){seq=A.runSequence(g,flow,mesh.sequence,{...opts,targetLift_N:settings.targetLift_N});rows=A.combineSequence(g,seq).strips;result={coefficients:seq.levels[0].coefficients,flow:seq.flow};}
+    if(mesh.sequence){seq=A.runSequence(g,flow,mesh.sequence,{...opts,targetLift_N:settings.targetLift_N});rows=A.combineSequence(g,seq,{snapStations}).strips;result={coefficients:seq.levels[0].coefficients,flow:seq.flow};}
     else {const model=A.prepare(g,mesh,opts);let ff=flow;if(settings.targetLift_N!=null)ff={...flow,alphaDeg:A.alphaForLift(model,flow,settings.targetLift_N).alphaDeg};result=A.evaluate(model,ff);rows=A.stripWrenches(result);seq=null;}
     if(settings.targetLift_N!=null){const trimResidual=seq?.trim?.residual_N??(result.aircraft.lift_N-settings.targetLift_N);if(!Number.isFinite(trimResidual)||Math.abs(trimResidual)>1e-8*Math.max(1,Math.abs(settings.targetLift_N)))throw Error('Target-lift trim did not converge; no accepted coupled field returned.');}
-    if(!rigid||(mesh.sequence&&stage===meshes.length-1&&it===0)){let rigidRows=rows,rigidFlow=result.flow;if(mesh.sequence){progress('Solving matched rigid-wing reference on the same aerodynamic refinement sequence…');await tick();const referenceSequence=A.runSequence(g,flow,mesh.sequence,{targetLift_N:settings.targetLift_N,progress:t=>progress('Matched rigid reference: '+t)});rigidRows=A.combineSequence(g,referenceSequence).strips;rigidFlow=referenceSequence.flow;}const linear=E.solve({...templateInput(input),aeroLoad:{kind:'aeroStrips',lineFraction:.25,strips:rigidRows,label:'Fresh matched rigid-wing pressure load'}});rigid={flow:rigidFlow,matchingBasis:settings.targetLift_N!=null?'same target lift and speed; each shape separately trimmed':'same speed and angle of attack',mesh:mesh.sequence||mesh,rows:rigidRows.map(r=>r.slice()),profiles:Array.from({length:61},(_,i)=>{const y=L*i/60,s=linear.analysis3D.frameAt(y),cut=linear.analysis3D.cutAt(y),sig=cut.endZone?[]:E.outerContour(g,y,81).map(p=>linear.analysis3D.evaluateNormalStress(cut,p));return {y,localMoment:cut.localMoment,skinTension:sig.length?Math.max(0,...sig):null,skinCompression:sig.length?Math.max(0,...sig.map(v=>-v)):null,displacement:s.displacement,twist:dot(s.rotation,s.element.R[0]),elasticIncidence:s.rotation[1]};}),lift:rigidRows.reduce((sum,r)=>sum+r[4],0),smallDisplacement:linear.analysis3D.validity.smallDisplacement};}
+    if(!rigid||(mesh.sequence&&stage===meshes.length-1&&it===0)){let rigidRows=rows,rigidFlow=result.flow;if(mesh.sequence){progress('Solving matched rigid-wing reference on the same aerodynamic refinement sequence…');await tick();const referenceSequence=A.runSequence(g,flow,mesh.sequence,{targetLift_N:settings.targetLift_N,progress:t=>progress('Matched rigid reference: '+t)});rigidRows=A.combineSequence(g,referenceSequence,{snapStations}).strips;rigidFlow=referenceSequence.flow;}const linear=E.solve({...templateInput(input),aeroLoad:{kind:'aeroStrips',lineFraction:.25,strips:rigidRows,label:'Fresh matched rigid-wing pressure load'}});rigid={flow:rigidFlow,matchingBasis:settings.targetLift_N!=null?'same target lift and speed; each shape separately trimmed':'same speed and angle of attack',mesh:mesh.sequence||mesh,rows:rigidRows.map(r=>r.slice()),profiles:Array.from({length:61},(_,i)=>{const y=L*i/60,s=linear.analysis3D.frameAt(y),cut=linear.analysis3D.cutAt(y),sig=cut.endZone?[]:E.outerContour(g,y,81).map(p=>linear.analysis3D.evaluateNormalStress(cut,p));return {y,localMoment:cut.localMoment,skinTension:sig.length?Math.max(0,...sig):null,skinCompression:sig.length?Math.max(0,...sig.map(v=>-v)):null,displacement:s.displacement,twist:dot(s.rotation,s.element.R[0]),elasticIncidence:s.rotation[1]};}),lift:rigidRows.reduce((sum,r)=>sum+r[4],0),smallDisplacement:linear.analysis3D.validity.smallDisplacement};}
     progress(`Coupled iteration ${it+1}: solving finite-rotation structural equilibrium…`);await tick();
     const next=beam(g,base,rows,shape,{initialRootMoment:lastRoot}),change=compare(shape,next,L,g),force=rows.reduce((s,r)=>add(s,r.slice(2,5)),[0,0,0]),previousForce=lastRows?.reduce((s,r)=>add(s,r.slice(2,5)),[0,0,0]),loadChange=previousForce?norm(sub(force,previousForce))/Math.max(norm(force),1e-30):Infinity;
     const transfer=sourceWrench(distributed(g,base,rows,shape),next,0,[0,0,0]),givenMoment=rows.reduce((s,r)=>add(s,r.slice(5)),[0,0,0]),transferMoment=norm(sub(transfer.moment,givenMoment))/Math.max(norm(givenMoment),1e-30);
@@ -6536,7 +6613,13 @@ const WingFlexibleSolver=(()=>{
   const profile=Array.from({length:61},(_,i)=>{const y=L*i/60,s=shape.at(y),cut=base.analysis3D.cutAt(y),R=cut.R.map(v=>B.rotate(s.rotationQuaternion,v)),fl=R.map(v=>dot(v,s.force)),ml=R.map(v=>dot(v,s.moment)),strain=Array.from(F.solveSPD(cut.recoveryD,[fl[0],ml[1],ml[2],ml[0]]));let tension=null,compression=null,sparTension=null,sparCompression=null;
    if(!cut.endZone){const cc={...cut,strain},sig=E.outerContour(g,y,81).map(p=>base.analysis3D.evaluateNormalStress(cc,p));tension=Math.max(0,...sig);compression=Math.max(0,...sig.map(v=>-v));const sp=E.sparParts(g,y).flatMap(p=>p.polygons.flat().map(q=>base.analysis3D.evaluateNormalStress(cc,q,p.s.material.E)));if(sp.length){sparTension=Math.max(0,...sp);sparCompression=Math.max(0,...sp.map(v=>-v));}}
    const line=rows.find(r=>y>=r[0]&&y<=r[1]);return {y,position:s.position,reference:s.reference,displacement:s.displacement,rotation:s.rotation,twist:twist(s),elasticIncidence:incidence(shape,y),force:s.force,moment:s.moment,torque:ml[0],localMoment:ml,strain,skinTension:tension,skinCompression:compression,sparTension,sparCompression,liftPerReferenceMm:line?line[4]/(line[1]-line[0]):0};});
-  return {version:'finite-rotation-coupled-1',units:{length:'mm',force:'N',moment:'N mm',stress:'MPa',rotation:'rad',lineForce:'N/mm reference span'},finiteWallReceipts:WingFiniteSection.getReceipts?.()||[],geometry:A.aeroGeometry(g),flow:result.flow,converged,admitted:admission.admitted,admission,history,profile,rigid,rows,beamVerification:shape.verification,rootForce:shape.rootForce,rootMoment:shape.rootMoment,maxAxialStrain:shape.maxAxialStrain,massG:base.mass.total,sectionTorsion:[...new Set(base.analysis3D.sectionSamples.map(e=>e.torsionSection?.method||'section torsion'))],settings,actualNumerics:{requestedElements:input.nElements,sectionSamples:input.nSections,actualElements:base.analysis3D.elements.length,actualSections:base.ySec.length,finiteWallTorsion:input.finiteSectionTorsion??true},discretization:{displacementRelative,incidenceRelative,stressRelative},scope:'Static two-way attached incompressible inviscid pressure / finite-rotation small-strain Kirchhoff beam. Self-weight retained as chosen; other prescribed loads replaced by pressures. Bonded beam sections; no section distortion, local buckling, material nonlinearity, divergence, flutter or experimental validation. Exact end-face stress excluded.',numericalReference:seq?{sequence:seq.sequence,levels:seq.levels.map(l=>({chordPanels:l.chordPanels,spanPanels:l.spanPanels,coefficients:l.coefficients,diagnostics:l.diagnostics})),reference:seq.reference}:null};
+  let foamModel=null;
+  if(g.construction==='solid-foam'){
+    const peak=Math.max(...profile.flatMap(r=>[r.skinTension||0,r.skinCompression||0])),strain=peak/base.pla.E,compliance=Math.max(...base.sections.map(s=>s.fe.maxShearComplianceUnitG))/(base.pla.G??base.pla.E/(2*(1+base.pla.nu))),shearTranslation=F.integrate(y=>{const st=shape.at(y),axis=st.R[0];return [compliance*norm(sub(st.force,mul(axis,dot(st.force,axis))))];},0,L)[0],translation=Math.max(...profile.map(r=>norm(r.displacement))),shearRatio=shearTranslation/Math.max(translation,1e-30);
+    foamModel={maxNominalElasticStrain:strain,smallStrainScreen:.01,shearTranslationEstimateMm:shearTranslation,shearRelative: shearRatio,strengthAssessed:false,scope:'Solid EPS with perfectly bonded embedded material regions; 1% strain is an illustrative small-strain model screen, not a measured foam allowable. Unit-shear diagnostic uses the Poisson-zero section approximation.'};
+    admission.checks.push({label:'Foam small-strain model screen (not strength)',value:strain,tolerance:.01,passed:strain<=.01},{label:'Foam neglected-shear estimate',value:shearRatio,tolerance:.01,passed:shearRatio<=.01});admission.admitted=admission.checks.every(c=>c.passed);
+  }
+  return {version:'finite-rotation-coupled-1',foamModel,units:{length:'mm',force:'N',moment:'N mm',stress:'MPa',rotation:'rad',lineForce:'N/mm reference span'},finiteWallReceipts:WingFiniteSection.getReceipts?.()||[],geometry:A.aeroGeometry(g),flow:result.flow,converged,admitted:admission.admitted,admission,history,profile,rigid,rows,beamVerification:shape.verification,rootForce:shape.rootForce,rootMoment:shape.rootMoment,maxAxialStrain:shape.maxAxialStrain,massG:base.mass.total,sectionTorsion:[...new Set(base.analysis3D.sectionSamples.map(e=>e.torsionSection?.method||'section torsion'))],settings,actualNumerics:{requestedElements:input.nElements,sectionSamples:input.nSections,actualElements:base.analysis3D.elements.length,actualSections:base.ySec.length,finiteWallTorsion:input.finiteSectionTorsion??true},discretization:{displacementRelative,incidenceRelative,stressRelative},scope:'Static two-way attached incompressible inviscid pressure / finite-rotation small-strain Kirchhoff beam. Self-weight retained as chosen; other prescribed loads replaced by pressures. Bonded beam sections; no section distortion, local buckling, material nonlinearity, divergence, flutter or experimental validation. Exact end-face stress excluded.',numericalReference:seq?{sequence:seq.sequence,levels:seq.levels.map(l=>({chordPanels:l.chordPanels,spanPanels:l.spanPanels,coefficients:l.coefficients,diagnostics:l.diagnostics})),reference:seq.reference}:null};
  }
  return {solve,templateInput,distributed,beam,compare,sourceWrench,numericalAdmission};
 })();

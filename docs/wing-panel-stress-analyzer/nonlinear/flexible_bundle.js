@@ -1671,6 +1671,27 @@ function factor(A){
  return b=>{const x=back(b);for(let pass=0;pass<4;pass++){const r=A.map((row,i)=>{let sum=0,c=0;for(let j=0;j<row.length;j++){const v=row[j]*x[j],t=sum+v;c+=Math.abs(sum)>=Math.abs(v)?sum-t+v:v-t+sum;sum=t;}return b[i]-(sum+c);}),dx=back(r);dx.forEach((v,i)=>x[i]+=v);}return x;};
 }
 
+// Exact force-based flexibility of a root-clamped chain of prismatic frame
+// elements. N and the global moment about the origin are constant between
+// nodal loads. Integrate D^-1 [N1,M2,M3,T] and the small-rotation kinematics.
+// This is the same condensed Euler-Bernoulli element law without forming an
+// ill-conditioned global stiffness inverse for each independent sleeve beam.
+function cantileverFlex(ns,members,ids,free,nShell){
+ if(members.length!==ns.length-1||members.some((e,i)=>e.a!==i||e.b!==i+1))throw Error('Sleeve flexibility requires an ordered, root-clamped beam chain.');
+ const inverses=members.map(e=>Array.from({length:4},(_,j)=>{const b=[0,0,0,0];b[j]=1;return F.solveSPD(e.D,b);}));
+ return rhs=>{
+  const loads=new Float64Array(nShell);ids.forEach((i,j)=>loads[free[i]%nShell]=rhs[j]);
+  const forces=Array.from({length:ns.length+1},()=>[0,0,0]),moments=Array.from({length:ns.length+1},()=>[0,0,0]);
+  for(let i=ns.length-1;i>=0;i--){const f=Array.from(loads.slice(6*i,6*i+3)),m=Array.from(loads.slice(6*i+3,6*i+6));forces[i]=add(forces[i+1],f);moments[i]=add(moments[i+1],add(m,F.cross(ns[i],f)));}
+  const out=new Float64Array(nShell);let u=[0,0,0],theta=[0,0,0];
+  for(let i=0;i<members.length;i++){
+   const e=members[i],N=forces[i+1],fl=F.toLocal(e.R,N),strain=p=>{const ml=F.toLocal(e.R,sub(moments[i+1],F.cross(p,N))),w=[fl[0],ml[1],ml[2],ml[0]];return [0,1,2,3].map(k=>inverses[i].reduce((v,col,j)=>v+col[k]*w[j],0));},a=strain(ns[i]),b=strain(ns[i+1]),k0=F.toGlobal(e.R,[a[3],a[1],a[2]]),k1=F.toGlobal(e.R,[b[3],b[1],b[2]]),integratedTheta=add(mul(theta,e.L),mul(add(mul(k0,1/3),mul(k1,1/6)),e.L**2));
+   u=add(u,add(F.cross(integratedTheta,e.R[0]),mul(e.R[0],e.L*(a[0]+b[0])/2)));theta=add(theta,mul(add(k0,k1),e.L/2));
+   out.set([...u,...theta],6*(i+1));
+  }
+  return Float64Array.from(ids,i=>out[free[i]%nShell]);
+ };
+}
 function offsetRows(arm){const [x,y,z]=arm;return [[1,0,0,0,z,-y],[0,1,0,-z,0,x],[0,0,1,y,-x,0],[0,0,0,1,0,0],[0,0,0,0,1,0],[0,0,0,0,0,1]];}
 function solve({nodes,elements,rods,mode='bonded',gap=0,contactStations=null,tolerance=1e-6,maxIterations=1500}){
  if(!['bonded','sleeve'].includes(mode)||!Number.isFinite(gap)||gap<0)throw Error('Choose bonded or sleeve and a finite nonnegative radial clearance.');
@@ -1678,7 +1699,7 @@ function solve({nodes,elements,rods,mode='bonded',gap=0,contactStations=null,tol
  const count=nodes.length,nShell=count*6,total=mode==='bonded'?nShell:nShell*(1+rods.length),K=zero(total),f=new Float64Array(total),all=[];
  function insert(ns,es,id){const members=es.map(e=>F.element(ns,e));for(const e of members){let maps=e.dofs.map(d=>{const station=Math.floor(d/6),j=d%6;if(!id)return [[d,1]];if(mode==='sleeve')return [[id*nShell+d,1]];return offsetRows(sub(ns[station],nodes[station]))[j].flatMap((v,k)=>v?[[station*6+k,v]]:[]);});for(let i=0;i<12;i++)for(const[a,v]of maps[i]){f[a]+=v*e.fg[i];for(let j=0;j<12;j++)for(const[b,w]of maps[j])K[a][b]+=v*w*e.kg[i][j];}all.push({id,e,maps});}}
  insert(nodes,elements,0);rods.forEach((r,i)=>insert(r.nodes,r.elements,i+1));
- const fixed=new Set(Array.from({length:mode==='bonded'?1:1+rods.length},(_,i)=>Array.from({length:6},(_,j)=>i*nShell+j)).flat()),free=Array.from({length:total},(_,i)=>i).filter(i=>!fixed.has(i)),map=new Map(free.map((v,i)=>[v,i])),solveK=(()=>{const blocks=Array.from({length:mode==='bonded'?1:rods.length+1},(_,k)=>{const ids=free.flatMap((v,i)=>Math.floor(v/nShell)===k?[i]:[]),back=factor(ids.map(i=>Float64Array.from(ids,j=>K[free[i]][free[j]])));return {ids,back};});return b=>{const x=new Float64Array(free.length);for(const block of blocks){const z=block.back(block.ids.map(i=>b[i]));block.ids.forEach((d,i)=>x[d]=z[i]);}return x;};})(),ff=Float64Array.from(free,i=>f[i]),u0=solveK(ff),contacts=[];
+ const fixed=new Set(Array.from({length:mode==='bonded'?1:1+rods.length},(_,i)=>Array.from({length:6},(_,j)=>i*nShell+j)).flat()),free=Array.from({length:total},(_,i)=>i).filter(i=>!fixed.has(i)),map=new Map(free.map((v,i)=>[v,i])),solveK=(()=>{const blocks=Array.from({length:mode==='bonded'?1:rods.length+1},(_,k)=>{const ids=free.flatMap((v,i)=>Math.floor(v/nShell)===k?[i]:[]),back=mode==='sleeve'?cantileverFlex(k?rods[k-1].nodes:nodes,all.filter(a=>a.id===k).map(a=>a.e),ids,free,nShell):factor(ids.map(i=>Float64Array.from(ids,j=>K[free[i]][free[j]])));return {ids,back};});return b=>{const x=new Float64Array(free.length);for(const block of blocks){const z=block.back(block.ids.map(i=>b[i]));block.ids.forEach((d,i)=>x[d]=z[i]);}return x;};})(),ff=Float64Array.from(free,i=>f[i]),u0=solveK(ff),contacts=[];
  if(mode==='sleeve')rods.forEach((r,k)=>{for(let i=1;i<count;i++){if(contactStations&&!contactStations.includes(i))continue;const arm=sub(r.nodes[i],nodes[i]),T=offsetRows(arm),R=F.basis(r.nodes[Math.max(0,i-1)],r.nodes[Math.min(count-1,i+1)]),C=R.slice(1).map(normal=>{const row=new Float64Array(free.length);for(let j=0;j<6;j++){const v=normal.reduce((s,a,h)=>s+a*T[h][j],0);row[map.get(i*6+j)]+=v;}for(let j=0;j<3;j++)row[map.get((k+1)*nShell+i*6+j)]-=normal[j];return row;});contacts.push({rod:k,station:i,C});}});
  const C=contacts.flatMap(c=>c.C),Z=C.map(c=>solveK(c)),W=C.map(a=>Float64Array.from(Z,z=>dot(a,z))),d0=C.map(c=>dot(c,u0));let relative=d0.slice(),iterations=0;
  // Enforce elastic reciprocity at floating-point precision. Independent
@@ -1687,7 +1708,7 @@ function solve({nodes,elements,rods,mode='bonded',gap=0,contactStations=null,tol
  // Convex dual: min 1/2 lambda.W.lambda - d0.lambda + gap sum |lambda_i|.
  // Each exact two-component coordinate minimization is a 2x2 solve plus
  // scalar bisection. No tensile force or artificial contact stiffness.
- const radial=new Float64Array(C.length),Wr=new Float64Array(C.length);let contactResidual=0;
+ const radial=new Float64Array(C.length),Wr=new Float64Array(C.length);let contactResidual=0,contactDefectCorrections=0;
  const maxSweeps=Math.max(10000,maxIterations*20);
  if(contacts.length&&gap===0){const exact=F.solveSPD(W,d0);exact.forEach((v,i)=>radial[i]=v);W.forEach((row,i)=>Wr[i]=dot(row,radial));contactResidual=Math.max(...d0.map((v,i)=>Math.abs(v-Wr[i])));}
  for(iterations=0;gap>0&&iterations<maxSweeps;iterations++){
@@ -1719,7 +1740,14 @@ function solve({nodes,elements,rods,mode='bonded',gap=0,contactStations=null,tol
   if(iterations%10===0){
    contactResidual=0;
    for(let k=0;k<contacts.length;k++){const i=2*k,x=d0[i]-Wr[i],y=d0[i+1]-Wr[i+1],r=Math.hypot(radial[i],radial[i+1]);contactResidual=Math.max(contactResidual,r>1e-12?Math.hypot(x-gap*radial[i]/r,y-gap*radial[i+1]/r):Math.max(0,Math.hypot(x,y)-gap));}
-   if(contactResidual<=tolerance*.5)break;
+   if(contactResidual<=tolerance*.5){
+    // Check the actual primal field, not only the approximate dual compliance.
+    // Correct its numerical defect without changing any applied load or gap.
+    const rhs=ff.map((v,i)=>v-C.reduce((sum,c,j)=>sum+c[i]*radial[j],0)),primal=solveK(rhs),actual=C.map(c=>dot(c,primal));
+    const trueResidual=Math.max(0,...contacts.map((_,k)=>{const i=2*k,r=Math.hypot(radial[i],radial[i+1]),x=actual[i],y=actual[i+1];return r>1e-12?Math.hypot(x-gap*radial[i]/r,y-gap*radial[i+1]/r):Math.max(0,Math.hypot(x,y)-gap);}));
+    if(trueResidual<=tolerance*.5)break;
+    actual.forEach((v,i)=>d0[i]=v+Wr[i]);contactDefectCorrections++;
+   }
   }
  }
  if(mode==='sleeve'&&(maxIterations===0||iterations===maxSweeps))throw Error('Circular sleeve contact did not converge; no partial structural result accepted.');
@@ -1739,7 +1767,7 @@ function solve({nodes,elements,rods,mode='bonded',gap=0,contactStations=null,tol
  const forceError=F.norm(add(totalForce,supportForce)),momentError=F.norm(add(totalMoment,supportMoment));
  const internalWork=all.reduce((s,a)=>s+a.e.axialMode.load**2/a.e.axialMode.stiffness,0),energy=.5*[...members,...rodMembers.flat()].reduce((sum,e)=>sum+F.GAUSS.reduce((v,[t,w])=>{const strain=F.strainMatrix(t,e.L,true).map(row=>dot(row,[...e.ul,e.bubble]));return v+w*e.L*dot(strain,e.D.map(row=>dot(row,strain)));},0),0),work=dot(u,f)+internalWork,contactWork=dot(radial,relative),energyError=Math.abs(2*energy-work+contactWork)/Math.max(1,Math.abs(work));
  if(forceError>1e-5*Math.max(1,F.norm(totalForce))||momentError>1e-5*Math.max(1,F.norm(totalMoment))||energyError>1e-7||contactResidual>tolerance)throw Error('Rod force/moment/energy/contact verification failed; no accepted response. '+JSON.stringify({forceError,momentError,energyError,contactResidual,maxPenetration}));
- return {nodes,elements:members,rodElements:rodMembers,displacements,rotations,u,applied:f.slice(0,nShell),reactions:[...fixed].map(d=>({dof:d,value:residual[d]})),energy,work,verification:{forceError,momentError,totalForce,totalMoment,supportForce,supportMoment,freeResidual,maxPenetration,energyError,iterations,contactResidual,contactWork},contact,mode,method:mode==='bonded'?'Separate rod beams with exact six-DOF rigid-offset bonded ties':'Separate rod beams with unilateral circular-clearance frictionless sleeve contact',scope:'Small displacement; shell and every rod root fully clamped; continuous sleeve sampled at beam stations; no friction, glue failure, bearing strength, sleeve crushing or geometric nonlinearity.'};
+ return {nodes,elements:members,rodElements:rodMembers,displacements,rotations,u,applied:f.slice(0,nShell),reactions:[...fixed].map(d=>({dof:d,value:residual[d]})),energy,work,verification:{forceError,momentError,totalForce,totalMoment,supportForce,supportMoment,freeResidual,maxPenetration,energyError,iterations,contactResidual,contactDefectCorrections,contactWork},contact,mode,method:mode==='bonded'?'Separate rod beams with exact six-DOF rigid-offset bonded ties':'Separate rod beams with unilateral circular-clearance frictionless sleeve contact',scope:'Small displacement; shell and every rod root fully clamped; continuous sleeve sampled at beam stations; no friction, glue failure, bearing strength, sleeve crushing or geometric nonlinearity.'};
 }
 return {solve,offsetRows};
 })();

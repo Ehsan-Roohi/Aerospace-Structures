@@ -35,6 +35,7 @@ jobs:
           node computational/printed-wing-solver/nonlinear/test_nonlinear_beam.cjs
           node computational/printed-wing-solver/nonlinear/test_scalar_elastica.cjs
           node computational/printed-wing-solver/nonlinear/test_rod_system.cjs
+          node computational/printed-wing-solver/nonlinear/test_rod_flexibility.cjs
           node computational/printed-wing-solver/nonlinear/test_rod_wing.cjs
           node computational/printed-wing-solver/nonlinear/test_rod_saved_pressure.cjs
           node computational/printed-wing-solver/nonlinear/test_deformed_pressure.cjs

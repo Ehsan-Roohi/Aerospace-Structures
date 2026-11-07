@@ -19,7 +19,7 @@ This original teaching note critically develops the supplied [Zoomit feature](ht
 
 ![Train in an autumn landscape as shown in the supplied Zoomit feature](docs/case-studies/leaves-on-rails/zoomit-autumn-train.jpg)
 
-*Source visual A. Opening image from the supplied feature; an editorial scene-setter, not evidence for the tribological mechanism. [Zoomit feature](https://www.zoomit.ir/engineering/470667-autumn-leaves-stop-train-featured/). Original source markings and Persian labels retained; resized without cropping.*
+*Source visual A. Opening image from the supplied feature; an editorial scene-setter, not evidence for the tribological mechanism. [Zoomit feature](https://www.zoomit.ir/engineering/470667-autumn-leaves-stop-train-featured/). Source attribution retained. Labels have been translated into English where present; the unedited source images are preserved separately.*
 
 ### Reading the evidence at three different scales
 
@@ -31,13 +31,13 @@ A black material in a beaker is evidence of a reaction. A lower friction reading
 
 *Figure 1. Original conceptual sequence. Leaf deposition, mechanical processing and environmental conditioning interact. A railway layer is continually renewed, displaced and chemically modified; it is not a permanent uniform coating.*
 
-![Crushed leaf, dark transferred material and surrounding rail surface](docs/case-studies/leaves-on-rails/zoomit-leaf-on-rail.jpg)
+![Crushed leaf, dark transferred material and surrounding rail surface](docs/case-studies/leaves-on-rails/zoomit-leaf-on-rail-en.jpg)
 
-*Source visual B. Close view of crushed leaf and dark material, credited to SAGE in the feature. The image illustrates the transition from visible leaf to transferred film; it does not determine the chemical composition by appearance. [Zoomit feature](https://www.zoomit.ir/engineering/470667-autumn-leaves-stop-train-featured/). Original source markings and Persian labels retained; resized without cropping.*
+*Source visual B. Close view of crushed leaf and dark material, credited to SAGE in the feature. The image illustrates the transition from visible leaf to transferred film; it does not determine the chemical composition by appearance. [Zoomit feature](https://www.zoomit.ir/engineering/470667-autumn-leaves-stop-train-featured/). Source attribution retained. Labels have been translated into English where present; the unedited source images are preserved separately.*
 
-![Compacted leaf contamination within and outside the wheel running band](docs/case-studies/leaves-on-rails/zoomit-leaf-layer.jpg)
+![Compacted leaf contamination within and outside the wheel running band](docs/case-studies/leaves-on-rails/zoomit-leaf-layer-en.jpg)
 
-*Source visual C. Rail-surface contamination image credited to SAGE in the feature. Persian callouts distinguish material in the wheel passage from debris outside it; a dark color alone is not a friction measurement. [Zoomit feature](https://www.zoomit.ir/engineering/470667-autumn-leaves-stop-train-featured/). Original source markings and Persian labels retained; resized without cropping.*
+*Source visual C. Rail-surface contamination image credited to SAGE in the feature. English callouts distinguish material in the wheel passage from debris outside it; a dark color alone is not a friction measurement. [Zoomit feature](https://www.zoomit.ir/engineering/470667-autumn-leaves-stop-train-featured/). Source attribution retained. Labels have been translated into English where present; the unedited source images are preserved separately.*
 
 ## 2. Normal load survives while tangential capacity collapses
 
@@ -65,9 +65,9 @@ The example gives $p_0=700$ MPa. Area is an input here, not a Hertz prediction: 
 
 Small area explains high local stress and the importance of surface condition. It does not by itself explain a small friction force: in the elementary Coulomb model the force limit depends on $N$ and $\mu$, with no explicit apparent-area term.
 
-![Editorial cutaway illustration of a wheel, rail and leaf layer with Persian labels](docs/case-studies/leaves-on-rails/zoomit-contact-illustration.jpg)
+![Editorial cutaway illustration of a wheel, rail and leaf layer with English labels](docs/case-studies/leaves-on-rails/zoomit-contact-illustration-en.jpg)
 
-*Source visual D. Editorial contact illustration from the feature. Layer thickness and glowing contact are illustrative; use the Hertz calculations below for pressure and geometry, not the apparent dimensions or lighting in this drawing. [Zoomit feature](https://www.zoomit.ir/engineering/470667-autumn-leaves-stop-train-featured/). Original source markings and Persian labels retained; resized without cropping.*
+*Source visual D. Editorial contact illustration from the feature. Layer thickness and glowing contact are illustrative; use the Hertz calculations below for pressure and geometry, not the apparent dimensions or lighting in this drawing. [Zoomit feature](https://www.zoomit.ir/engineering/470667-autumn-leaves-stop-train-featured/). Source attribution retained. Labels have been translated into English where present; the unedited source images are preserved separately.*
 
 ### Hertz pressure is spatially distributed
 
@@ -287,9 +287,9 @@ Equal nominal creep does not make the measurements equivalent. The layer may res
 
 The paper reports air temperature accuracy ±0.5°C, relative humidity accuracy ±3.5%, and rail temperature probe accuracy ±1.5°C. Thus a small reported rail–air temperature difference should not be interpreted without measurement uncertainty. The moisture meter's quoted ±0.05%WME device accuracy also does not include all uncertainty in converting heterogeneous leaf-layer response into physical water content. Resolution, calibration basis, local contact and sampling variation are different issues.
 
-![Persian diagram contrasting relatively dry, lightly wetted and more strongly wetted contaminated contact](docs/case-studies/leaves-on-rails/zoomit-wetting-illustration.jpg)
+![English diagram contrasting relatively dry, lightly wetted and more strongly wetted contaminated contact](docs/case-studies/leaves-on-rails/zoomit-wetting-illustration-en.jpg)
 
-*Source visual E. Qualitative three-state wetting illustration from the feature. Its wheel shapes and water volumes are conceptual, not scaled steel-wheel measurements; this is not the measured 2026 moisture curve. The scientific fit and %WME limitations remain separately stated. [Zoomit feature](https://www.zoomit.ir/engineering/470667-autumn-leaves-stop-train-featured/). Original source markings and Persian labels retained; resized without cropping.*
+*Source visual E. Qualitative three-state wetting illustration from the feature. Its wheel shapes and water volumes are conceptual, not scaled steel-wheel measurements; this is not the measured 2026 moisture curve. The scientific fit and %WME limitations remain separately stated. [Zoomit feature](https://www.zoomit.ir/engineering/470667-autumn-leaves-stop-train-featured/). Source attribution retained. Labels have been translated into English where present; the unedited source images are preserved separately.*
 
 ### Censored readings are inequalities, not boundary values
 
@@ -322,7 +322,7 @@ A future prediction workflow could use weather and rail temperature as inputs, e
 
 ![Close view of the Water-Trak wheel and rail spray installation as shown in Zoomit](docs/case-studies/leaves-on-rails/zoomit-water-trak.jpg)
 
-*Source visual F. Water-Trak installation view, credited in the feature to Water-Trak / Network Rail. This photograph gives the real hardware context for controlled water addition; the image itself does not measure dosing or braking improvement. [Zoomit feature](https://www.zoomit.ir/engineering/470667-autumn-leaves-stop-train-featured/). Original source markings and Persian labels retained; resized without cropping.*
+*Source visual F. Water-Trak installation view, credited in the feature to Water-Trak / Network Rail. This photograph gives the real hardware context for controlled water addition; the image itself does not measure dosing or braking improvement. [Zoomit feature](https://www.zoomit.ir/engineering/470667-autumn-leaves-stop-train-featured/). Source attribution retained. Labels have been translated into English where present; the unedited source images are preserved separately.*
 
 Network Rail reports Water-Trak trials in autumn 2021 and 2022, including more than 12% shorter stopping distances for two electric trains in the 2021 low-adhesion trial [5]. This is a trial-specific observation, not a universal guaranteed reduction.
 
@@ -338,7 +338,7 @@ High-pressure treatment is a different intervention. Network Rail describes pump
 
 ![Editorial depiction of rail-cleaning equipment spraying the rail in an autumn setting](docs/case-studies/leaves-on-rails/zoomit-cleaning.jpg)
 
-*Source visual G. Rail-cleaning depiction from the feature. It is retained as an editorial illustration; the feature supplies no independently verified equipment identity or photographic provenance for this particular visual. The nearby real treatment-train photograph and Network Rail reference provide separate hardware context. [Zoomit feature](https://www.zoomit.ir/engineering/470667-autumn-leaves-stop-train-featured/). Original source markings and Persian labels retained; resized without cropping.*
+*Source visual G. Rail-cleaning depiction from the feature. It is retained as an editorial illustration; the feature supplies no independently verified equipment identity or photographic provenance for this particular visual. The nearby real treatment-train photograph and Network Rail reference provide separate hardware context. [Zoomit feature](https://www.zoomit.ir/engineering/470667-autumn-leaves-stop-train-featured/). Source attribution retained. Labels have been translated into English where present; the unedited source images are preserved separately.*
 
 ### Dosage, flow rate and why speed must enter the design
 
@@ -522,7 +522,7 @@ Web sources checked 7 November 2026. Numbered diagrams and analytical plots are 
 
 The figure set combines two openly licensed hardware photographs, seven attributed source visuals from the supplied Zoomit feature and fourteen original schematics/analytical graphics. Their functions differ: photographs show actual hardware, schematics explain a mechanism or experimental design, and plots calculate a declared mathematical model. None of the original conceptual figures is experimental imaging.
 
-[Image attribution records](docs/case-studies/leaves-on-rails/image-credits.json) list exact creators, source pages, licenses and changes. [Reproducible calculation and plot script](docs/case-studies/leaves-on-rails/calculations.py) regenerates the numerical plots and writes checked example outputs without requiring the research PDFs. The site uses local images so the reading does not depend on third-party hotlinks. The seven source visuals have individual captions distinguishing observations, hardware photographs and editorial illustrations; see [Zoomit image provenance](docs/case-studies/leaves-on-rails/zoomit-image-sources.json).
+[Image attribution records](docs/case-studies/leaves-on-rails/image-credits.json) list exact creators, source pages, licenses and changes. [Reproducible calculation and plot script](docs/case-studies/leaves-on-rails/calculations.py) regenerates the numerical plots and writes checked example outputs without requiring the research PDFs. The site uses local images so the reading does not depend on third-party hotlinks. The seven source visuals have individual captions distinguishing observations, hardware photographs and editorial illustrations. Four are English-label adaptations; unedited originals are retained for reference. These adapted teaching visuals should not be used as unaltered research photographs; see [Zoomit image provenance](docs/case-studies/leaves-on-rails/zoomit-image-sources.json).
 
 
 ### Photograph credits

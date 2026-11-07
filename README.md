@@ -132,7 +132,7 @@ The G-code is provided for inspection only. Do not send it directly to a printer
 
 ## Engineering readings and case studies
 
-**[Leaves on rails: contact mechanics, chemistry and friction](LEAVES_ON_RAILS.md)** — extended illustrated chapter (~7,600 words), 17 visuals including three real photographs, 23 numbered equations, detailed critical analysis of the 2020/2026 papers, worked structural examples and a two-session teaching assignment. [Open the illustrated reading](https://ehsan-roohi.github.io/Aerospace-Structures/case-studies/leaves-on-rails/).
+**[Leaves on rails: contact mechanics, chemistry and friction](LEAVES_ON_RAILS.md)** — extended illustrated chapter (~7,600 words), 23 visuals including seven sourced from the Zoomit feature, 23 numbered equations, detailed critical analysis of the 2020/2026 papers, worked structural examples and a two-session teaching assignment. [Open the illustrated reading](https://ehsan-roohi.github.io/Aerospace-Structures/case-studies/leaves-on-rails/).
 
 **[Menar Jonban: coupled vibration and flexible supports](MENAR_JONBAN.md)** — research-based structural-dynamics reading with five original figures, beam and coupled-oscillator equations, seven references, a claim audit and a complete BeamLab team activity. Includes three importable beam studies and verified calculations. [Open the illustrated reading](https://ehsan-roohi.github.io/Aerospace-Structures/case-studies/menar-jonban/).
 

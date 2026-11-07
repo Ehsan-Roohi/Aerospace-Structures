@@ -212,6 +212,8 @@
       "liftFullWing_N": 18.994811429285924,
       "CL": 0.19143171004571355,
       "passedChecks": 18,
+      "teachingTipLimit_mm": 45,
+      "meetsTeachingTipLimit": false,
       "foamModel": {
         "maxNominalElasticStrain": 0.007549738284002285,
         "smallStrainScreen": 0.01,
@@ -233,6 +235,8 @@
       "liftFullWing_N": 19.22387489256269,
       "CL": 0.19374023575271043,
       "passedChecks": 18,
+      "teachingTipLimit_mm": 45,
+      "meetsTeachingTipLimit": true,
       "foamModel": {
         "maxNominalElasticStrain": 0.0012887568291985816,
         "smallStrainScreen": 0.01,

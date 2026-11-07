@@ -90,6 +90,8 @@ jobs:
         with:
           node-version: '22'
       - name: Matched internal-layout pressure comparison
+        env:
+          LAYOUT_REFINEMENT: '1'
         run: |
           node scripts/validation/compare_900mm_layouts.cjs
           node scripts/validation/verify_900mm_layouts.cjs

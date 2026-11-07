@@ -115,3 +115,7 @@ Apply `20-structural-validation.patch` after the earlier UI ports. It adds Help 
 `22-aeroclub-panels-performance-study.patch` ports the assembled-page edits against main 1ea504d6. Apply to index.html and synchronize wing-lab.html. Editable UI module sources are wing-aero-ui.js and wx-aero-results.js. The numeric kernels are unchanged. A prescribed rigid-load structural study is displayed only when the sole failed admission category is aeroelastic feedback; admission remains failed, the persistent warning includes linear-range failure, and normal/transfer/torque checks remain mandatory. This does not add a nonlinear or iterated aeroelastic solver.
 
 Run `node docs/wing-panel-stress-analyzer/validation/test_wing_update.cjs` and the existing analytic airfoil tests. See validation/WING_AEROCLUB_UPDATE_REVIEW.json for the 900 mm fixture and visual-QA limitations.
+
+## Finite-rotation two-way solver (0.4.0)
+
+The current source is `computational/printed-wing-solver/nonlinear/`. Run `build_flexible_solver.py` after the existing source ports. It synchronizes the optional deformed-vertex hook from `wing-aero/wing_aero_panel.js`, produces the dedicated worker and UI, and versions both old and new worker URLs. The legacy structural engine and shared linear section library are preserved. See the nonlinear README and `validation/NONLINEAR_FLEXIBLE_WING_REVIEW.json` for equations, actual verification and limitations. Passing numerical admission is not a material or stability certification.

@@ -1,0 +1,51 @@
+name: Nonlinear flexible-wing verification
+on:
+  push:
+    branches: [main, codex/nonlinear-coupled-wing]
+    paths:
+      - 'computational/printed-wing-solver/nonlinear/**'
+      - 'docs/wing-panel-stress-analyzer/nonlinear/**'
+      - 'docs/wing-panel-stress-analyzer/wing-aero/**'
+      - '.github/workflows/nonlinear-wing.yml'
+  pull_request:
+    paths:
+      - 'computational/printed-wing-solver/nonlinear/**'
+      - 'docs/wing-panel-stress-analyzer/nonlinear/**'
+      - 'docs/wing-panel-stress-analyzer/wing-aero/**'
+      - '.github/workflows/nonlinear-wing.yml'
+  workflow_dispatch:
+jobs:
+  finite-rotation-and-coupling:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Reproduce served solver and worker assets
+        run: |
+          python computational/printed-wing-solver/nonlinear/build_flexible_solver.py
+          git diff --exit-code -- docs/wing-panel-stress-analyzer/index.html docs/wing-panel-stress-analyzer/wing-lab.html docs/wing-panel-stress-analyzer/nonlinear docs/wing-panel-stress-analyzer/wing-aero/aero_bundle.js docs/wing-panel-stress-analyzer/wing-aero/wing_aero_worker.js
+      - name: Exact, independent-reference and invariance checks
+        run: |
+          node computational/printed-wing-solver/nonlinear/test_nonlinear_beam.cjs
+          node computational/printed-wing-solver/nonlinear/test_scalar_elastica.cjs
+          node computational/printed-wing-solver/nonlinear/test_deformed_pressure.cjs
+          node computational/printed-wing-solver/nonlinear/test_finite_wall.mjs
+          node docs/wing-panel-stress-analyzer/validation/test_wing_update.cjs
+      - name: Full 900 mm deformed-pressure coupled case
+        env:
+          FULL_SEQUENCE: '1'
+        run: |
+          node computational/printed-wing-solver/nonlinear/run_900mm.cjs
+          node computational/printed-wing-solver/nonlinear/test_900mm_result.cjs
+      - name: Install DOM-only UI test dependency
+        run: npm install --prefix /tmp/flexible-ui-test --no-audit --no-fund jsdom@26
+      - name: Controller rendering, cancellation and stale-result checks
+        env:
+          MIE446_JSDOM_MODULE: /tmp/flexible-ui-test/node_modules/jsdom
+        run: node computational/printed-wing-solver/nonlinear/test_flexible_ui.cjs

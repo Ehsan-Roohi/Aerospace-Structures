@@ -1,16 +1,20 @@
 {
   "product": "MIE 446 Wing AeroStruct",
-  "version": "0.3.9",
+  "version": "0.4.0",
   "status": "Qualified educational solver; explicit 2D/3D section context and tested structural design guidance",
-  "builtAt": "2026-11-06T23:17:27.545844+00:00",
+  "builtAt": "2026-11-07T00:32:52.359808+00:00",
   "page": "index.html",
-  "pageSha256": "a5b96a3d989d0a57f87ac3f27a2fc6f3f6b6219e5466649844a97d3fa9594e67",
+  "pageSha256": "6310adb368613e685ada54f291226f818a3cbbf389e2e41ba5b6a9adaeba7994",
   "workers": {
     "wing-aero": {
-      "worker": "8e2d79fa0bfe",
-      "bundle": "14d8c9a6df16"
+      "bundle": "a844da300527",
+      "worker": "a23a7863e118"
     },
-    "wing-print": "a56bd8704a71"
+    "wing-print": "a56bd8704a71",
+    "flexible-wing": {
+      "bundle": "2915a3044d52",
+      "worker": "d61deb620028"
+    }
   },
   "sources": {
     "beam_diagrams.js": {
@@ -97,7 +101,7 @@
     },
     "wing_aero_panel.js": {
       "path": "docs/wing-panel-stress-analyzer/wing-aero/wing_aero_panel.js",
-      "sha256": "70bdf2d093327262f17c786eff44232316fda2bd2860a7900c258e29d5e7d948",
+      "sha256": "4f5391bf41528952718279a11190d06fdd36715a729dc18312b3a8817b3b3e9f",
       "sha256_scope": "Canonical LF source, as committed"
     },
     "wing_aero_ui.js": {
@@ -410,5 +414,22 @@
     ],
     "scope": "Navigation only; generated-page overlay opens the separate 2D research application. Numerical solver sources and the original Wing Lab page are unchanged."
   },
-  "wingUpdate": "User-selected 2D panel count; performance summary; explicitly qualified prescribed-load study, original aeroelastic admission unchanged."
+  "wingUpdate": "User-selected 2D panel count; performance summary; explicitly qualified prescribed-load study, original aeroelastic admission unchanged.",
+  "flexibleWingScope": "Geometrically exact static two-way pressure/beam solver; numerical admission is not a material, stability or experimental validation.",
+  "flexibleWingSources": {
+    "computational/printed-wing-solver/web/load_profiles.js": "9f481f7db3220ecbe4e392adbee6484c6b5459a5b38563cc62364d80acd5356f",
+    "computational/printed-wing-solver/web/wing_spars.js": "35a7ddf57fb27c4d64dba7eb35f86b92ed89fd69116cb6559e22158989f1cc2c",
+    "computational/printed-wing-solver/web/vendor/finite-section-geometry/geometry.min.js": "6673d3336d7aa489131e4ff26bb91705ab0181020742c54f5cff2ebb07f5a5ca",
+    "computational/printed-wing-solver/nonlinear/wing_finite_section_guarded.js": "c967b002a3da4ac5c891b1a132e37df3d36d66db89ac67557b368ffbdf0c7502",
+    "computational/printed-wing-solver/web/wing_airfoils.js": "473e66e1335ee08349d6ada6863c32673b88cc05459bbe6301ca99e27f33ddee",
+    "computational/printed-wing-solver/web/wing_geometry.js": "71ec0893f6587eb3ee0a6568a5c8ab27d9936117b141e22dcaf1ded2ecf9fd27",
+    "computational/printed-wing-solver/web/wing_frame3d.js": "823b27ea0d8a41fcb5cf71d7935a7ae65bc9ef6c8426840930d14222c15e656f",
+    "computational/printed-wing-solver/web/wing_closed_tip_stress.js": "f48504931ea002a27a300cb14251231fdfd5ad83b48b8c400598e730efbe0a16",
+    "docs/wing-panel-stress-analyzer/ui/zero-tip-source/engine.js": "590f7b3d5e946abd9f5a10f5cb3a96b6775fa691a2143afa858706a6b42cffd0",
+    "docs/wing-panel-stress-analyzer/wing-aero/wing_aero_panel.js": "4f5391bf41528952718279a11190d06fdd36715a729dc18312b3a8817b3b3e9f",
+    "computational/printed-wing-solver/nonlinear/wing_nonlinear_beam.js": "b4e99e09d55062a88b046ce5cb0d8e8ddcf8fcb1b5ca611776a90cd5e2b12aa0",
+    "computational/printed-wing-solver/nonlinear/wing_flexible_solver.js": "55db4ef6ae097b0aeb63d654ee2731887b92816ac84c57531bada8db00839bcf",
+    "computational/printed-wing-solver/nonlinear/flexible-ui.js": "410aab2de8cf2377fd134e674f95bc3cb058deb8d75375707d996b38c28995e7",
+    "computational/printed-wing-solver/nonlinear/build_flexible_solver.py": "eea7fe9b3325d494dec26861605f19e960311c4687e59f32bb7ee9ffe41f3b8b"
+  }
 }

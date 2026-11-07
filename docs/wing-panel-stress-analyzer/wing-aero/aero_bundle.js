@@ -2384,7 +2384,8 @@ const WingAeroPanel = (() => {
       const y = ys[j], pts = loop(y, nHalf);
       if (pts && pts.length !== ni + 1) throw new Error('A section loop must have 2 nHalf + 1 points.');
       for (let i = 0; i <= ni; i++) {
-        const P = Geometry.transformPoint(g, y, pts ? pts[i] : [0, 0]), o = 3 * (j * (ni + 1) + i);
+        const rest = Geometry.transformPoint(g, y, pts ? pts[i] : [0, 0]), P = m.pointTransform ? m.pointTransform(y, rest) : rest, o = 3 * (j * (ni + 1) + i);
+        if(!Array.isArray(P)||P.length!==3||P.some(v=>!Number.isFinite(v)))throw Error('A deformed panel vertex must have three finite coordinates.');
         nodes[o] = P[0]; nodes[o + 1] = P[1]; nodes[o + 2] = P[2];
       }
       const st = Geometry.stationAt(g, y);
@@ -2486,11 +2487,13 @@ const WingAeroPanel = (() => {
     // options.referenceLimits: larger meshes for Node reference studies only (the Worker never passes it)
     const limits = options.referenceLimits ? { ...LIMITS, ...options.referenceLimits } : LIMITS;
     const g = aeroGeometry(rawGeometry), mesh = normalizeMesh(rawMesh, limits);
+    if(options.pointTransform && typeof options.deformationKey!=='string')throw Error('A deformed surface needs an explicit shape key; stale aerodynamic caching is forbidden.');
+    if(options.pointTransform && mesh.tipClosure!=='rounded')throw Error('The flexible-wing pressure solve requires the tensor-quadratic rounded-tip surface.');
     if (options.sectionLoop && typeof options.sectionKey !== 'string') throw new Error('A custom section loop needs a sectionKey for caching.');
-    const key = JSON.stringify([GEOMETRY_KEYS.map(k => g[k] ?? null), mesh, options.sectionKey ?? null, options.solver ?? 'auto', options.wakeDirection ?? null, options.gradientScheme ?? 'unfolded', options.doubletModel ?? 'default']);
+    const key = JSON.stringify([GEOMETRY_KEYS.map(k => g[k] ?? null), mesh, options.sectionKey ?? null, options.solver ?? 'auto', options.wakeDirection ?? null, options.gradientScheme ?? 'unfolded', options.doubletModel ?? 'default', options.deformationKey ?? null]);
     const cache = options.cache;
     if (cache && cache.has(key)) { const hit = cache.get(key); hit.lastCacheHit = true; return hit; }
-    const t0 = now(), wm = wingMesh(g, { ...mesh, sectionLoop: options.sectionLoop, wakeDirection: options.wakeDirection, doubletModel: options.doubletModel }, limits), t1 = now();
+    const t0 = now(), wm = wingMesh(g, { ...mesh, sectionLoop: options.sectionLoop, wakeDirection: options.wakeDirection, doubletModel: options.doubletModel, pointTransform: options.pointTransform }, limits), t1 = now();
     options.progress?.(`Assembling ${wm.S.count} panels with the mirror image and ${wm.wake.count} wake strips...`);
     // the tensor model: strip block symmetric Gauss-Seidel, and GMRES (with its LU fallback) from TENSOR_LU_MAX panels
     const tensor = !!(wm.body && wm.body.kind === 'tensor-quadratic');
@@ -2511,7 +2514,7 @@ const WingAeroPanel = (() => {
       const cpx = wm.body ? controlPointValues(wm.body, sol.mux) : sol.mux, cpz = wm.body ? controlPointValues(wm.body, sol.muz) : sol.muz;
       Ux = surfaceVelocity(wm.S, wm.layout, cpx, [1, 0, 0], gs); Uz = surfaceVelocity(wm.S, wm.layout, cpz, [0, 0, 1], gs);
     }
-    const model = { version: VERSION, key, geometry: g, mesh, wm, sol, Ux, Uz, surface, refs: references(g), timing: { meshMs: t1 - t0, ...sol.timing }, lastCacheHit: false };
+    const model = { version: VERSION, key, geometry: g, mesh, pointTransform: options.pointTransform, wm, sol, Ux, Uz, surface, refs: references(g), timing: { meshMs: t1 - t0, ...sol.timing }, lastCacheHit: false };
     if (cache) { if (cache.size >= LIMITS.modelCache) cache.delete(cache.keys().next().value); cache.set(key, model); }
     return model;
   }
@@ -2649,7 +2652,7 @@ const WingAeroPanel = (() => {
     let kuttaMax = 0, kuttaInterior = 0;
     for (let j = 0; j < wm.ns; j++) {
       const y0 = wm.ys[j], y1 = wm.ys[j + 1], ym = 0.5 * (y0 + y1), st = Geometry.stationAt(g, ym), chord = st.chord;
-      const qc = Geometry.transformPoint(g, ym, [0.25 * chord, 0]);
+      const qc0 = Geometry.transformPoint(g, ym, [0.25 * chord, 0]), qc = model.pointTransform ? model.pointTransform(ym,qc0) : qc0;
       const F = [0, 0, 0], M = [0, 0, 0]; let Xz = 0;
       for (let i = 0; i < wm.ni; i++) {
         const k = wm.index(i, j), fx = force[3 * k], fy = force[3 * k + 1], fz = force[3 * k + 2], rx = S.PC[3 * k] - qc[0], ry = S.PC[3 * k + 1] - qc[1], rz = S.PC[3 * k + 2] - qc[2];
@@ -2721,6 +2724,7 @@ const WingAeroPanel = (() => {
     for (let i = 0; i < wm.ni; i++) {
       const k = wm.index(i, j), c = [S.PC[3 * k], S.PC[3 * k + 1], S.PC[3 * k + 2]], chord = Geometry.chordAt(g, c[1]);
       const local = Geometry.inversePoint(g, c), xc = chord > 0 ? local[0] / chord : 0;
+      if(model.pointTransform)throw Error('Deformed-wing Cp export needs a material-coordinate mapping; rigid-wing sectional x/c is not reused.');
       (i < wm.nHalf ? lower : upper).push([xc, result.panels.cp[k]]);
     }
     lower.reverse();
@@ -2962,7 +2966,7 @@ const WingAeroPanel = (() => {
     const tipClosure = options.tipClosure ?? DEFAULT_MESH.tipClosure, work = {}; // work: matrix storage shared by the meshes
     const models = meshes.map((m, i) => {
       options.progress?.(`Mesh ${i + 1} of ${meshes.length}: ${2 * m.chordPanels} × ${m.spanPanels} panels (around × spanwise)…`);
-      return prepare(rawGeometry, { ...m, tipClosure }, { cache, solver: options.solver, referenceLimits: options.referenceLimits, work });
+      return prepare(rawGeometry, { ...m, tipClosure }, { cache, solver: options.solver, referenceLimits: options.referenceLimits, pointTransform: options.pointTransform, deformationKey: options.deformationKey, work });
     });
     const weights = sequenceWeights(name), weightOf = m => weights.find(w => w.chordPanels === m.chordPanels && w.spanPanels === m.spanPanels)?.weight || 0;
     let alphaDeg = normalizeFlow(rawFlow).alphaDeg, trim = null;
@@ -2985,7 +2989,7 @@ const WingAeroPanel = (() => {
       warnings: r.warnings, timing: r.timing, modelCacheHit: !!models[i].lastCacheHit }));
     const bi = meshes.findIndex(m => m.chordPanels === def.baseChord && m.spanPanels === def.baseSpan);
     return { version: VERSION, kind: 'meshSequence', sequence: name, label: def.label, definition: { chord: def.chord.slice(), span: def.span.slice(), baseChord: def.baseChord, baseSpan: def.baseSpan, joint: def.joint.slice() },
-      weights, flow: results[bi].flow, reference: results[bi].reference, scope: SCOPE, tipClosure, levels, base: compactResult(models[bi], results[bi]), trim, timing: { totalMs: now() - t0 } };
+      weights, flow: results[bi].flow, reference: results[bi].reference, scope: SCOPE, tipClosure, levels, base: options.pointTransform ? {flow:results[bi].flow,reference:results[bi].reference,coefficients:results[bi].coefficients,diagnostics:results[bi].diagnostics,mesh:results[bi].mesh,warnings:results[bi].warnings,scope:results[bi].scope} : compactResult(models[bi], results[bi]), trim, timing: { totalMs: now() - t0 } };
   }
   // Delivery stations: the finest spanwise level's strip boundaries (its rounded-tip zone merged into the last
   // strip), snapped to structural stations within 0.25 mm, wide strips halved, every station kept at least

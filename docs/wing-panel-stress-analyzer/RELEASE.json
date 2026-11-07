@@ -1,11 +1,11 @@
 {
   "application": "Wing Panel Stress Analyzer (Wing AeroStruct)",
-  "version": "0.3.9",
+  "version": "0.4.0",
   "source_archive": "wing-aerostruct-0.3.0-dev-review.zip",
   "source_sha256": "bc6986c744568a516fd22bdd3b9508550625b82a77cd924adf52dfaa5156a54d",
   "original_base": "5ab2498",
   "independent_review": "validation/INDEPENDENT_REVIEW.md",
-  "scope": "Educational 3D potential-flow pressures coupled one way to nominal spatial-beam stress for finite tips, or homogeneous closed-tip section normal stress and transverse pure bending at zero user sweep/dihedral/incidence. No local solid-FE stress, strength approval, viscous/stall model or full zero-tip motion/torsion.",
+  "scope": "Educational attached inviscid 3D potential-flow pressures and nominal beam stresses, with separate legacy rigid-load models and an optional finite-rotation static two-way Kirchhoff solver for positive-chord tips. No viscous/stall model, section distortion, material failure, stability or experimental validation.",
   "solver_version": "0.3.2-exp.4",
   "ui_release": {
     "features": [
@@ -69,7 +69,7 @@
       "Separate structural validation page: independent CalculiX comparison, signed displacement/rotation and raw stress profiles, matched sample CSV and reproducible decks",
       "Top-level Cavitation link opens the separate 2D research application from the Wing, Beam and Full-scale wing workspace menus"
     ],
-    "page_sha256": "a5b96a3d989d0a57f87ac3f27a2fc6f3f6b6219e5466649844a97d3fa9594e67",
+    "page_sha256": "6310adb368613e685ada54f291226f818a3cbbf389e2e41ba5b6a9adaeba7994",
     "source_port": "ui/01-wing-aerostruct-ui-sources.patch",
     "independent_review": "validation/UI_RELEASE_REVIEW.json",
     "surface_review": "validation/UI_SURFACE_REVIEW.json",
@@ -142,5 +142,12 @@
       "Full-scale wing"
     ],
     "scope": "Navigation only; generated-page overlay opens the separate 2D research application. Numerical solver sources and the original Wing Lab page are unchanged."
+  },
+  "flexible_solver_version": "finite-rotation-coupled-1",
+  "flexible_solver": {
+    "source": "computational/printed-wing-solver/nonlinear",
+    "builder": "computational/printed-wing-solver/nonlinear/build_flexible_solver.py",
+    "scope": "Geometrically exact static two-way pressure/beam solver; numerical admission is not a material, stability or experimental validation.",
+    "review": "validation/NONLINEAR_FLEXIBLE_WING_REVIEW.json"
   }
 }

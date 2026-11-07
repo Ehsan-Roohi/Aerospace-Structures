@@ -1,0 +1,31 @@
+{
+  "status": "candidate; final additional stress-refinement run in progress",
+  "date": "2026-11-07T00:34:10.607734+00:00",
+  "model": "Finite-rotation static Kirchhoff beam + genuinely re-solved deformed-surface tensor-quadratic potential flow",
+  "verified": [
+    "Exact circular elastica through 1.6 rad",
+    "Independent scalar nonlinear boundary-value solution",
+    "Small-load limits, full constitutive coupling, arbitrary rigid rotation and 1.8 rad pure torsion",
+    "Analytic finite-wall torsion checks",
+    "Identity/deformed pressure, target lift and six-component wrench checks",
+    "Controller rendering, frozen exports, cancellation races and duplicate suppression",
+    "Deterministic served-asset rebuild"
+  ],
+  "completed900mmBeforeAdditionalStressCheck": {
+    "converged": true,
+    "admitted": true,
+    "checks": 15,
+    "tipDzMm": 62.831946430663955,
+    "tipIncidenceDeg": -0.10219302627201392
+  },
+  "browserQA": "Native browser consultation/control blocked by unavailable Firefox URL-policy enforcement; no claim of live-browser visual QA. Actual controller SVG plots were rasterized and inspected.",
+  "consultation": "Attempted Astra browser consultation unavailable; no external advice claimed.",
+  "scopeLimits": [
+    "Attached incompressible inviscid flow only",
+    "Small elastic strains and rigid beam sections; no transverse shear or section distortion",
+    "Finite-wall GJ does not replace the shear-centre approximation",
+    "No material/buckling/failure/stable-branch/flutter or experimental validation",
+    "Positive tip chord only; excluded end-zone normal stress remains absent"
+  ],
+  "cleanup": []
+}

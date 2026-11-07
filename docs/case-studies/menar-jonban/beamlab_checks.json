@@ -1,0 +1,26 @@
+[
+  {
+    "name": "baseline",
+    "E_MPa": 600,
+    "tip_mm": 3.9008564481976813,
+    "frequency_Hz": 1.8721998265200774,
+    "analytical_Hz": 1.8721998202692403,
+    "stiffness_N_per_m": 256353.96053292713
+  },
+  {
+    "name": "softer",
+    "E_MPa": 480,
+    "tip_mm": 4.876070560483701,
+    "frequency_Hz": 1.6745464318278414,
+    "analytical_Hz": 1.674546426233964,
+    "stiffness_N_per_m": 205083.1684263417
+  },
+  {
+    "name": "stiffer",
+    "E_MPa": 720,
+    "tip_mm": 3.250713706734337,
+    "frequency_Hz": 2.050892154340398,
+    "analytical_Hz": 2.0508921474371613,
+    "stiffness_N_per_m": 307624.7526395126
+  }
+]

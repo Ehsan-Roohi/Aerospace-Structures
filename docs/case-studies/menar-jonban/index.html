@@ -1,0 +1,767 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Menar Jonban · MIE 446</title><style>body{margin:0;background:#eef2f6;color:#173346;font:18px/1.75 system-ui,sans-serif}main{max-width:1080px;margin:auto;padding:48px;background:white}h1{font-size:clamp(30px,4vw,46px);line-height:1.2}h2{margin-top:2em;color:#174f6c}h3{color:#174f6c}a{color:#086b9b}nav{font-size:15px;border-bottom:1px solid #ccd9df;padding-bottom:18px}.math.display{display:block;overflow-x:auto;font-size:1.18em;padding:10px 0}img{display:block;max-width:100%;height:auto;margin:32px auto 12px;border:1px solid #dce6ec;border-radius:8px}figure{margin:28px 0}figcaption{font-size:15px;line-height:1.6;color:#45616f}table{display:block;overflow-x:auto;border-collapse:collapse;font-size:16px}td,th{padding:12px;border:1px solid #cbd8df;text-align:left}th{background:#edf5f8}p,li{max-width:85ch}code{font-size:.9em}a:focus-visible{outline:3px solid #ba7933}@media(max-width:650px){main{padding:24px 18px}body{font-size:17px}.math.display{font-size:1.05em}}@media print{body{background:white;font-size:11pt}main{padding:0}h2,h3{break-after:avoid}nav{display:none}} .math.display{background:#f1f6fa;border-left:4px solid #2669c9;padding:16px;box-sizing:border-box}h2{scroll-margin-top:20px} table img{max-height:310px;width:auto;max-width:100%;margin:12px auto;object-fit:contain} table:has(img){table-layout:fixed;width:100%} table:has(img) td{width:33.333%;vertical-align:top}.toc{background:#eef5fa;padding:20px;line-height:1.9} img{width:100%} [lang=fa]{direction:rtl} .toc{background:#eef5fa;padding:20px} img{max-height:850px;object-fit:contain} .footnote-ref{font-size:.9em}</style><script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script></head><body><main><nav><a href="https://github.com/Ehsan-Roohi/Aerospace-Structures#engineering-readings-and-case-studies">Course readings</a> · <a href="https://github.com/Ehsan-Roohi/Aerospace-Structures/blob/main/MENAR_JONBAN.md">GitHub source</a> · <a href="../../wing-lab.html">BeamLab</a></nav><h1
+id="menar-jonban-coupled-vibration-flexible-supports-and-aerospace-structures">Menar
+Jonban: coupled vibration, flexible supports and aerospace
+structures</h1>
+<p><strong>MIE 446 · Aerospace Structures · UMass Amherst</strong><br />
+Engineering enrichment reading and BeamLab activity · 7 November
+2026</p>
+<p><a
+href="https://ehsan-roohi.github.io/Aerospace-Structures/case-studies/menar-jonban/">Illustrated
+reading</a> · <a
+href="https://ehsan-roohi.github.io/Aerospace-Structures/wing-lab.html">BeamLab</a>
+· <a href="https://github.com/Ehsan-Roohi/Aerospace-Structures">Course home</a></p>
+<details class="toc"><summary>Contents</summary><ol><li><a href="#from-a-historical-monument-to-a-structural-question">1. From a
+historical monument to a structural question</a></li><li><a href="#what-the-research-establishes">2. What the research
+establishes</a></li><li><a href="#audit-of-the-popular-explanation">3. Audit of the popular
+explanation</a></li><li><a href="#single-tower-bending-compliance-before-dynamics">4. Single-tower
+bending: compliance before dynamics</a></li><li><a href="#natural-frequency-and-effective-mass">5. Natural frequency and
+effective mass</a></li><li><a href="#a-flexible-base-can-dominate-tip-motion">6. A flexible base can
+dominate tip motion</a></li><li><a href="#two-coupled-towers-what-resonance-must-include">7. Two coupled
+towers: what “resonance” must include</a></li><li><a href="#resonance-damping-and-the-limits-of-amplification">8. Resonance,
+damping and the limits of amplification</a></li><li><a href="#aerospace-connections">9. Aerospace connections</a></li><li><a href="#reproducibility-and-scope">11. Reproducibility and scope</a></li><li><a href="#references-and-reading-guide">12. References and reading
+guide</a></li><li><a href="#خلاصه-فارسی">خلاصهٔ فارسی</a></li></ol></details><h2 id="from-a-historical-monument-to-a-structural-question">1. From a
+historical monument to a structural question</h2>
+<p>What connects two towers when a force applied to one makes the other
+move? Menar Jonban in Isfahan gives students an unusually memorable way
+to investigate that question. The useful engineering ideas extend to
+twin fins, flexible payload mounts, instrument brackets and appendages
+attached to a common airframe.</p>
+<p>This original lesson was prompted by Masoud Yousefnejad’s <a
+href="https://www.kojaro.com/history-art-culture/311157-menar-jonban-isfahan-shaking-minarets/">Kojaro
+article</a>, published 7 November 2026 [1]. It develops independent
+calculations and exercises rather than translating or reproducing the
+article. Its central physical explanation is reasonable: flexible
+components exchange forces through the structure joining them. However,
+“resonance” alone is an incomplete model. We must identify the force
+path, the support compliance, the masses, the damping and the
+excitation.</p>
+<p><strong>Learning objectives.</strong> Calculate beam compliance and
+natural frequency; distinguish a component mode from an assembled-system
+mode; derive a coupled oscillator model; explain why a quiet-looking
+support can transmit vibration; and separate a measured result from an
+illustrative calculation.</p>
+<figure>
+<img src="coupling-schema.svg"
+alt="Original conceptual schematic of towers on a common flexible structure" />
+<figcaption aria-hidden="true">Original conceptual schematic of towers
+on a common flexible structure</figcaption>
+</figure>
+<p><em>Figure 1. Original teaching schematic. It identifies the
+transmission path but does not represent surveyed joints, member sizes
+or foundation restraints.</em></p>
+<h2 id="what-the-research-establishes">2. What the research
+establishes</h2>
+<p>The following compact evidence summary refers to the papers, not new
+measurements.</p>
+<p>Hosseinzadeh’s 2011 journal study [2] and Hosseinzadeh and
+Hosseinzadeh’s 2012 conference paper [3] describe field testing and
+simplified models of the monument. These are related publications, not
+independent replications. The conference paper reports eight
+accelerometers and forced/free records of 20/15 seconds. Its principal
+observed modes are near 2 and 5.5 Hz, with approximately 5% damping.
+Under one reported condition, the driven tip moved about ±5 cm and the
+other about 35% as much. The isolated cantilever and connected U-frame
+predictions differ; the reported roughly 80% contribution from roof
+deformation is model dependent. Reduced-section joint modeling changed
+the predicted frequencies little. The first mode is lateral bending; the
+higher observed mode includes torsion. These findings support
+considering the whole assembly rather than a fixed-base tower alone
+[3].</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Reading</th>
+<th>Evidence type and how to use it</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Hosseinzadeh (2011) [2]</td>
+<td>Direct monument study; journal antecedent to the conference
+account.</td>
+</tr>
+<tr class="even">
+<td>Hosseinzadeh &amp; Hosseinzadeh (2012) [3]</td>
+<td>Public full paper with test layouts and idealized models; start with
+§§4–6 and Figures 5, 10–13.</td>
+</tr>
+<tr class="odd">
+<td>Roozbahan &amp; Turan (2023) [4]</td>
+<td>Conference study using a three-degree-of-freedom example; useful for
+parameter sensitivity, not an independent field campaign.</td>
+</tr>
+<tr class="even">
+<td>Oliveira et al. (2012) [5]</td>
+<td>Ambient tests and numerical models of other historical minarets;
+useful comparison, not Menar Jonban measurements.</td>
+</tr>
+<tr class="odd">
+<td>Sallam et al. (2026) [6]</td>
+<td>Database/regression study of masonry minaret periods; useful context
+for variability and uncertainty.</td>
+</tr>
+</tbody>
+</table>
+<p>The 2023 paper [4] illustrates how the mass, stiffness and damping of
+towers and their supporting structure affect the response. Its numerical
+example is a general mechanism demonstration. Statements about
+historical design intent or remaining elastic during earthquakes require
+historical evidence and a monument-specific structural assessment; an
+illustrative oscillator calculation cannot establish either.</p>
+<p>Oliveira et al. [5] report low-amplitude damping around 0.5–1% for
+their tested historical minarets. This differs from the value reported
+in [3]. Neither number is a universal masonry property: amplitude,
+construction, joints, condition and identification procedure matter.
+Sallam et al. [6] use a database of 111 minarets and distinguish
+ambient-test records from finite-element-only records when fitting
+period relationships. A frequency estimate has uncertainty even when the
+geometry is known.</p>
+<h2 id="audit-of-the-popular-explanation">3. Audit of the popular
+explanation</h2>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Idea in the starting article</th>
+<th>Engineering assessment</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Resonance helps produce visible motion</td>
+<td>Sound in principle. The forcing frequency must be compared with
+modes of the assembled system.</td>
+</tr>
+<tr class="even">
+<td>The common building transmits motion</td>
+<td>Essential: without mechanical coupling, equal frequencies do not
+cause motion in an unforced second oscillator.</td>
+</tr>
+<tr class="odd">
+<td>Timber belts and gaps may influence flexibility</td>
+<td>Plausible mechanisms; their existence does not quantify their
+contribution. Separate observation from identified stiffness.</td>
+</tr>
+<tr class="even">
+<td>Most tip motion can originate in the supporting structure</td>
+<td>Supported as an interpretation of the simplified model in [3], not a
+universal displacement partition.</td>
+</tr>
+<tr class="odd">
+<td>The two towers have similar frequencies</td>
+<td>Helpful for strong interaction, but exact equality is unnecessary;
+different towers can still respond.</td>
+</tr>
+<tr class="even">
+<td>The phenomenon resembles a tuned mass damper</td>
+<td>A useful analogy for coupled dynamics, but a damper is designed to
+reduce a chosen response. Visible motion does not demonstrate vibration
+control.</td>
+</tr>
+<tr class="odd">
+<td>Historical intent and earthquake resistance remain uncertain</td>
+<td>Appropriate caution. Dynamic resemblance does not establish purpose,
+capacity or current condition.</td>
+</tr>
+</tbody>
+</table>
+<p>The small effect of the simplified joints in [3] is especially
+instructive. A visually distinctive feature is not necessarily the
+dominant parameter in a particular model. Conversely, replacing contact
+or a gap by a reduced elastic section may omit opening, closing and
+friction. A weak sensitivity in that model cannot prove that real joint
+behavior is irrelevant.</p>
+<h2 id="single-tower-bending-compliance-before-dynamics">4. Single-tower
+bending: compliance before dynamics</h2>
+<p>We first replace one tower by a uniform hollow circular
+Euler–Bernoulli beam. This is an educational surrogate: the actual tower
+tapers, contains stairs, has masonry joints and sits on a flexible
+building. Let the beam coordinate run from the clamp to its free tip. A
+transverse beam drawing may be rotated conceptually to represent a
+vertical tower under lateral loading; the transverse-only model omits
+axial gravity and geometric stiffness.</p>
+<p>For outer diameter <span class="math inline">\(D\)</span>, inner
+diameter <span class="math inline">\(d=D-2t\)</span>, and thickness
+<span class="math inline">\(t\)</span>,</p>
+<p><span class="math display">\[A=\frac{\pi}{4}(D^2-d^2),\qquad
+I=\frac{\pi}{64}(D^4-d^4).\tag{1}\]</span></p>
+<p>A tip force of magnitude <span class="math inline">\(P\)</span> gives
+the deflection magnitude</p>
+<p><span class="math display">\[v(x)=\frac{Px^2(3L-x)}{6EI},\qquad
+\delta=v(L)=\frac{PL^3}{3EI}.\tag{2}\]</span></p>
+<p>Thus the tip-coordinate static stiffness is</p>
+<p><span
+class="math display">\[k_t=\frac{P}{\delta}=\frac{3EI}{L^3}.\tag{3}\]</span></p>
+<p>Moment magnitude grows linearly toward the root and shear magnitude
+is constant. In BeamLab’s convention for a positive downward tip force,
+<span class="math inline">\(V=P\)</span> and <span
+class="math inline">\(M=-P(L-x)\)</span>; the fixed-support reactions
+are <span class="math inline">\(R_y=-P\)</span> and <span
+class="math inline">\(C=-PL\)</span>. A reaction couple is an external
+action, while internal moment acts on a cut face. Preserve the app’s
+convention rather than reversing the shear plot to resemble the
+reaction.</p>
+<p>The extreme bending stress magnitude is</p>
+<p><span
+class="math display">\[|\sigma_{\max}|=\frac{PL(D/2)}{I}.\tag{4}\]</span></p>
+<p>This is nominal elastic bending stress. It omits stress
+concentrations, axial preload, cracking and masonry tension limits. A
+visually small deflection is not a masonry strength criterion.</p>
+<figure>
+<img src="beam-deflection.svg"
+alt="Calculated static deflection of the teaching beam" />
+<figcaption aria-hidden="true">Calculated static deflection of the
+teaching beam</figcaption>
+</figure>
+<p><em>Figure 2. Original closed-form calculation, not monument
+displacement data.</em></p>
+<h2 id="natural-frequency-and-effective-mass">5. Natural frequency and
+effective mass</h2>
+<p>For a uniform clamped-free beam with distributed mass <span
+class="math inline">\(\rho A\)</span>, the first bending frequency
+is</p>
+<p><span class="math display">\[f_1=\frac{\beta_1^2}{2\pi
+L^2}\sqrt{\frac{EI}{\rho A}},\qquad
+\beta_1=1.875104\ldots\tag{5}\]</span></p>
+<p>The governing eigenproblem follows from</p>
+<p><span class="math display">\[EI\frac{\partial^4 v}{\partial x^4}+\rho
+A\frac{\partial^2 v}{\partial t^2}=0.\tag{6}\]</span></p>
+<p>Use clamped conditions <span
+class="math inline">\(v=v&#39;=0\)</span> at the root and zero bending
+moment and shear at the free end. Equation (5) is a uniform-beam result;
+use a variable-section FE model for taper.</p>
+<p>Students often put the entire tower mass into <span
+class="math inline">\(\sqrt{k/m}\)</span>. That mixes a tip-coordinate
+stiffness with a mass moving uniformly, although the beam displacement
+varies along its length. For a single-coordinate surrogate that matches
+both static tip compliance and the exact first frequency, define</p>
+<p><span class="math display">\[m_{\mathrm{eff}}=\frac{k_t}{(2\pi
+f_1)^2}=\frac{3}{\beta_1^4}\rho AL\simeq0.2427\rho
+AL.\tag{7}\]</span></p>
+<p>This particular coefficient is a matching choice, not a universal
+modal mass. A modal mass requires a declared shape and normalization. A
+static tip-shape Rayleigh approximation instead gives <span
+class="math inline">\(33/140\)</span> of the total mass and a slightly
+different frequency.</p>
+<p>For the prescribed classroom values <span
+class="math inline">\(L=7.5\)</span> m, <span
+class="math inline">\(D=1.1\)</span> m, <span
+class="math inline">\(t=0.2\)</span> m, <span
+class="math inline">\(E=600\)</span> MPa and <span
+class="math inline">\(\rho=1800\)</span> kg/m³:</p>
+<table>
+<thead>
+<tr class="header">
+<th>Quantity</th>
+<th style="text-align: right;">Calculated value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Area</td>
+<td style="text-align: right;">0.56548668 m²</td>
+</tr>
+<tr class="even">
+<td>Second moment of area</td>
+<td style="text-align: right;">0.06008296 m⁴</td>
+</tr>
+<tr class="odd">
+<td>Static tip stiffness</td>
+<td style="text-align: right;">256,353.96 N/m</td>
+</tr>
+<tr class="even">
+<td>Tip deflection under 1 kN</td>
+<td style="text-align: right;">3.900856 mm</td>
+</tr>
+<tr class="odd">
+<td>First bending frequency</td>
+<td style="text-align: right;">1.87219982 Hz</td>
+</tr>
+<tr class="even">
+<td>Matched effective mass</td>
+<td style="text-align: right;">1,852.58 kg</td>
+</tr>
+</tbody>
+</table>
+<p><strong>All values in this table belong to the chosen uniform
+surrogate.</strong> Their proximity to a published monument frequency is
+not a calibration or validation. Multiple combinations of support
+compliance, effective modulus and mass can produce similar
+frequencies.</p>
+<p>At fixed geometry and density, <span
+class="math inline">\(\delta\propto E^{-1}\)</span> and <span
+class="math inline">\(f_1\propto E^{1/2}\)</span>. At fixed section,
+<span class="math inline">\(\delta\propto L^3\)</span> and <span
+class="math inline">\(f_1\propto L^{-2}\)</span>. Frequency and static
+deflection therefore provide complementary information.</p>
+<h2 id="a-flexible-base-can-dominate-tip-motion">6. A flexible base can
+dominate tip motion</h2>
+<p>Suppose a tower has bending compliance <span
+class="math inline">\(L^3/(3EI)\)</span> and its support has an
+equivalent rotational stiffness <span
+class="math inline">\(K_\theta\)</span>. A lateral tip load produces a
+support moment <span class="math inline">\(PL\)</span> and base rotation
+<span class="math inline">\(\theta_b=PL/K_\theta\)</span>. The tip
+receives an additional displacement <span
+class="math inline">\(L\theta_b\)</span>:</p>
+<p><span
+class="math display">\[\delta=P\left(\frac{L^3}{3EI}+\frac{L^2}{K_\theta}\right).\tag{8}\]</span></p>
+<p>If support rotation contributes 80% of the total in this deliberately
+simplified series-compliance model,</p>
+<p><span
+class="math display">\[\frac{L^2/K_\theta}{L^3/(3EI)+L^2/K_\theta}=0.8
+\quad\Rightarrow\quad K_\theta=\frac{3EI}{4L}.\tag{9}\]</span></p>
+<p>This calculation explains a mechanism; it does not identify the
+monument’s support stiffness. The real roof may bend, twist and
+translate. Rotational flexibility can yield large tip motion even if a
+point near the base translates little. Small support displacement also
+does not imply zero transmitted force.</p>
+<p>BeamLab has ideal fixed/pin/roller supports, not a finite rotational
+spring. Students calculate equation (8) separately; replacing the clamp
+by a pin would introduce a mechanism rather than the desired spring
+stiffness.</p>
+<h2 id="two-coupled-towers-what-resonance-must-include">7. Two coupled
+towers: what “resonance” must include</h2>
+<p>For an instructional model, let <span
+class="math inline">\(x_1,x_2\)</span> be absolute tip-like coordinates
+and connect two masses to ground through <span
+class="math inline">\(k_1,k_2\)</span> and to each other through <span
+class="math inline">\(k_c\)</span>. The coupling spring is an effective
+representation of a transmission path, not a literal spring stretched
+between the minaret tips.</p>
+<p><span class="math display">\[\mathbf M\ddot{\mathbf x}+\mathbf
+C\dot{\mathbf x}+\mathbf K\mathbf x=\mathbf F(t),\tag{10}\]</span></p>
+<p><span class="math display">\[\mathbf
+M=\begin{bmatrix}m_1&amp;0\\0&amp;m_2\end{bmatrix},\quad
+\mathbf
+K=\begin{bmatrix}k_1+k_c&amp;-k_c\\-k_c&amp;k_2+k_c\end{bmatrix}.\tag{11}\]</span></p>
+<p>For equal masses and grounding stiffnesses, the undamped modes are in
+phase and out of phase:</p>
+<p><span class="math display">\[\omega_-^2=\frac{k}{m},\quad
+\boldsymbol\phi_-=[1,1]^T;
+\qquad\omega_+^2=\frac{k+2k_c}{m},\quad\boldsymbol\phi_+=[1,-1]^T.\tag{12}\]</span></p>
+<p>In the in-phase mode the coupling spring has no extension. In the
+out-of-phase mode it is strongly engaged, increasing the frequency. Thus
+even two identical components form an assembly with two frequencies.
+These modes are a property of the simplified two-coordinate model; they
+must not be equated automatically to the measured bending and torsional
+modes in §2.</p>
+<p>For undamped free motion with <span
+class="math inline">\(x_1(0)=a\)</span>, <span
+class="math inline">\(x_2(0)=0\)</span> and zero initial velocities,</p>
+<p><span class="math display">\[x_1(t)=\frac
+a2[\cos(\omega_-t)+\cos(\omega_+t)],\quad
+x_2(t)=\frac a2[\cos(\omega_-t)-\cos(\omega_+t)].\tag{13}\]</span></p>
+<p>The beating pattern comes from superposing modes with different
+frequencies. Energy exchanges between coordinates. It is not evidence
+that a structure creates energy. Sustained forced oscillation draws
+energy from the person or actuator; damping dissipates it.</p>
+<figure>
+<img src="beating.svg"
+alt="Synthetic beating response of two coupled oscillators" />
+<figcaption aria-hidden="true">Synthetic beating response of two coupled
+oscillators</figcaption>
+</figure>
+<p><em>Figure 3. Exact undamped teaching solution. It does not predict a
+historical test record or the damping of the monument.</em></p>
+<p>For harmonic forcing <span class="math inline">\(\mathbf
+F(t)=\Re\{\hat{\mathbf F}e^{i\Omega t}\}\)</span>,</p>
+<p><span class="math display">\[\hat{\mathbf X}=(\mathbf
+K-\Omega^2\mathbf M+i\Omega\mathbf C)^{-1}\hat{\mathbf
+F}.\tag{14}\]</span></p>
+<p>With forcing only on oscillator 1 and diagonal damping, the second
+row gives</p>
+<p><span class="math display">\[\frac{\hat X_2}{\hat
+X_1}=\frac{k_c}{k_2+k_c-m_2\Omega^2+i\Omega c_2}.\tag{15}\]</span></p>
+<p>Both amplitude and phase depend on frequency. The displacement ratio
+can exceed unity near a receiver resonance; it is not an energy
+fraction. A ratio measured at one frequency does not determine <span
+class="math inline">\(k_c\)</span> uniquely. If <span
+class="math inline">\(k_c=0\)</span>, an initially stationary, unforced
+receiver stays stationary even when the two uncoupled natural
+frequencies are identical. Detuning changes transmission but does not
+generally eliminate it.</p>
+<figure>
+<img src="coupled-response.svg"
+alt="Synthetic forced response and displacement ratios with detuning" />
+<figcaption aria-hidden="true">Synthetic forced response and
+displacement ratios with detuning</figcaption>
+</figure>
+<p><em>Figure 4. Original two-DOF sweep with <span
+class="math inline">\(k_c=0.15k_1\)</span>, equal masses and reference
+damping of 5%. These are declared teaching parameters. The reported
+historical displacement ratio has not been fitted.</em></p>
+<h2 id="resonance-damping-and-the-limits-of-amplification">8. Resonance,
+damping and the limits of amplification</h2>
+<p>For a single damped oscillator under a harmonic force, with <span
+class="math inline">\(r=\Omega/\omega_n\)</span>,</p>
+<p><span
+class="math display">\[\frac{X}{F_0/k}=\frac{1}{\sqrt{(1-r^2)^2+(2\zeta
+r)^2}}.\tag{16}\]</span></p>
+<p>At <span class="math inline">\(r=1\)</span>, this factor is <span
+class="math inline">\(1/(2\zeta)\)</span>, or 10 for <span
+class="math inline">\(\zeta=0.05\)</span>. The exact displacement peak
+occurs at <span class="math inline">\(r=\sqrt{1-2\zeta^2}\)</span> when
+<span class="math inline">\(\zeta&lt;1/\sqrt2\)</span>. A finite forcing
+duration may not reach steady state, and a multi-mode system requires
+modal participation as well as frequency matching.</p>
+<figure>
+<img src="amplification.svg"
+alt="Damping dependence of SDOF harmonic amplification" />
+<figcaption aria-hidden="true">Damping dependence of SDOF harmonic
+amplification</figcaption>
+</figure>
+<p><em>Figure 5. Original analytical response curves. A factor of ten is
+a conditional SDOF result, not a universal multiplier for every load and
+displacement in the monument.</em></p>
+<p>For a clean, lightly damped single-mode free decay, peaks separated
+by <span class="math inline">\(n\)</span> cycles give</p>
+<p><span
+class="math display">\[\Lambda=\frac1n\ln\left|\frac{u_j}{u_{j+n}}\right|,\qquad
+\zeta=\frac{\Lambda}{\sqrt{4\pi^2+\Lambda^2}}.\tag{17}\]</span></p>
+<p>A beating signal can invalidate a naive successive-peak estimate.
+Select a dominant mode, inspect bandwidth and noise, and disclose
+filtering. Frequencies and damping may change with amplitude when gaps,
+friction, cracking or geometric effects matter. A linear model should be
+presented with an amplitude range, not promoted into a proof of seismic
+safety.</p>
+<h2 id="aerospace-connections">9. Aerospace connections</h2>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Monument concept</th>
+<th>Aerospace counterpart</th>
+<th>Engineering consequence</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Two flexible towers joined through a roof</td>
+<td>Two fins or appendages joined through a fuselage</td>
+<td>Component frequencies alone do not predict coupled modes.</td>
+</tr>
+<tr class="even">
+<td>Support rotation contributes to tip displacement</td>
+<td>Flexible wing-box root or equipment mounting frame</td>
+<td>A rigid-clamp assumption can overpredict stiffness and
+frequency.</td>
+</tr>
+<tr class="odd">
+<td>Damping and small frequency mismatch affect transfer</td>
+<td>Instrument mounts and flexible payloads</td>
+<td>Evaluate response over a frequency band, not at one nominal
+frequency.</td>
+</tr>
+<tr class="even">
+<td>Changes in joints change the model</td>
+<td>Bolted or bonded aerospace attachments</td>
+<td>Boundary-condition uncertainty can rival material uncertainty.</td>
+</tr>
+<tr class="odd">
+<td>Modal testing informs model choice</td>
+<td>Ground vibration testing</td>
+<td>Compare frequencies, shapes, mass assumptions and excitation
+locations.</td>
+</tr>
+</tbody>
+</table>
+<p>A tuned mass damper introduces a deliberately selected secondary
+system to reduce a stated primary response. Our two-tower example
+teaches the underlying coupling, but two components moving together is
+not itself evidence of successful vibration suppression. Likewise, an
+ordinary structural resonance is not flutter: flutter requires
+aerodynamic feedback and a stability analysis of the aeroelastic
+system.</p>
+<h2
+id="beamlab-activity-from-a-cantilever-to-a-coupled-system-hypothesis">10.
+BeamLab activity: from a cantilever to a coupled-system hypothesis</h2>
+<p><strong>Suggested format:</strong> teams of three; 50–60 minutes plus
+a short report. This is a proposed enrichment activity, with no new
+deadline or change to course assessment. The core activity runs in the
+existing BeamLab. The coupled-oscillator extension uses the supplied
+Python calculation or equations, because BeamLab does not solve a
+two-tower frame, torsion or a forced time history.</p>
+<h3 id="a.-predict-and-build-the-baseline">A. Predict and build the
+baseline</h3>
+<p>Before solving, predict the shear and moment shapes, the sign of the
+support force and couple, and how a 20% reduction in <span
+class="math inline">\(E\)</span> affects deflection and frequency.</p>
+<p>Open <a
+href="https://ehsan-roohi.github.io/Aerospace-Structures/wing-lab.html">BeamLab</a>.
+Use the beam workspace. Clear existing supports and loads, switch
+self-weight off, and enter:</p>
+<table>
+<thead>
+<tr class="header">
+<th>Input</th>
+<th style="text-align: right;">Value in BeamLab units</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Length</td>
+<td style="text-align: right;">7500 mm</td>
+</tr>
+<tr class="even">
+<td>Young’s modulus</td>
+<td style="text-align: right;">600 MPa</td>
+</tr>
+<tr class="odd">
+<td>Density</td>
+<td style="text-align: right;">1.8 g/cm³</td>
+</tr>
+<tr class="even">
+<td>Section</td>
+<td style="text-align: right;">Circular tube</td>
+</tr>
+<tr class="odd">
+<td>Outer diameter</td>
+<td style="text-align: right;">1100 mm</td>
+</tr>
+<tr class="even">
+<td>Wall thickness</td>
+<td style="text-align: right;">200 mm</td>
+</tr>
+<tr class="odd">
+<td>Mesh</td>
+<td style="text-align: right;">40 elements</td>
+</tr>
+<tr class="even">
+<td>Root</td>
+<td style="text-align: right;">Fixed at x = 0</td>
+</tr>
+<tr class="odd">
+<td>Other end</td>
+<td style="text-align: right;">Free</td>
+</tr>
+<tr class="even">
+<td>Point force</td>
+<td style="text-align: right;">+1000 N at x = 7500 mm</td>
+</tr>
+</tbody>
+</table>
+<p>The horizontal diagram represents lateral bending of the idealized
+tower. Self-weight is off because turning it on applies a transverse
+distributed load to the horizontal beam; it would not reproduce vertical
+tower gravity. The undamped bending modes still include density when
+self-weight is off.</p>
+<p>For a reproducible starting point, import <a
+href="baseline.json">baseline.json</a>
+through the study-file control. The JSON is editable and contains a note
+identifying the idealization. It is generated by the same public engine
+used in BeamLab.</p>
+<h3 id="b.-verify-equilibrium-compliance-and-the-first-mode">B. Verify
+equilibrium, compliance and the first mode</h3>
+<ol type="1">
+<li>Solve and record the signed root reactions, tip displacement,
+maximum moment magnitude and first bending frequency.</li>
+<li>Check <span class="math inline">\(R_y=-1000\)</span> N, <span
+class="math inline">\(C=-7.5\times10^6\)</span> N·mm, <span
+class="math inline">\(V=1000\)</span> N and root internal <span
+class="math inline">\(M=-7.5\times10^6\)</span> N·mm using the app
+convention.</li>
+<li>Compare tip deflection with equation (2) and frequency with equation
+(5). Calculate the percentage difference using the analytical value as
+denominator.</li>
+<li>Inspect the first mode. A normalized mode amplitude is arbitrary; it
+is not a predicted displacement under 1000 N. The static load does not
+determine the undamped linear natural frequency.</li>
+<li>Repeat with 20 and 80 elements. Tabulate frequency convergence;
+explain why exact nodal static values under a tip load can coexist with
+a numerical modal discretization error.</li>
+</ol>
+<h3 id="c.-detune-a-second-tower-model">C. Detune a second tower
+model</h3>
+<p>Save the baseline as Tower A. Create Tower B with the same geometry
+and density, first with <span class="math inline">\(E=480\)</span> MPa
+and then with <span class="math inline">\(E=720\)</span> MPa. Importable
+versions are <a
+href="softer.json">softer.json</a> and <a
+href="stiffer.json">stiffer.json</a>.</p>
+<table>
+<thead>
+<tr class="header">
+<th>Case</th>
+<th style="text-align: right;">Expected tip deflection (mm)</th>
+<th style="text-align: right;">Expected first frequency (Hz)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>A: 600 MPa</td>
+<td style="text-align: right;">3.900856</td>
+<td style="text-align: right;">1.872200</td>
+</tr>
+<tr class="even">
+<td>B: 480 MPa</td>
+<td style="text-align: right;">4.876071</td>
+<td style="text-align: right;">1.674546</td>
+</tr>
+<tr class="odd">
+<td>B: 720 MPa</td>
+<td style="text-align: right;">3.250714</td>
+<td style="text-align: right;">2.050892</td>
+</tr>
+</tbody>
+</table>
+<p>Explain why the deflection ratios are <span
+class="math inline">\(1/0.8\)</span> and <span
+class="math inline">\(1/1.2\)</span>, whereas the frequency ratios are
+<span class="math inline">\(\sqrt{0.8}\)</span> and <span
+class="math inline">\(\sqrt{1.2}\)</span>. <strong>These are three
+separate single-beam solves; they do not simulate vibration
+transfer.</strong></p>
+<h3 id="d.-estimate-a-missing-support-compliance-by-hand">D. Estimate a
+missing support compliance by hand</h3>
+<p>From the baseline, obtain <span
+class="math inline">\(k_t=P/\delta\)</span> in N/m. Add the rotational
+support term in equation (8), first for <span
+class="math inline">\(K_\theta\to\infty\)</span> and then for the 80%
+illustrative case in equation (9). Report the total static displacement
+and the support-rotation contribution.</p>
+<p>Can the same BeamLab clamp model represent both cases merely by
+changing density? Explain why density changes the dynamic mass but not
+linear static stiffness. Can reducing <span
+class="math inline">\(E\)</span> mimic support flexibility in a single
+scalar measurement while giving the wrong deformation shape? Identify a
+second measurement that would distinguish the hypotheses.</p>
+<h3 id="e.-optional-coupled-response-extension">E. Optional
+coupled-response extension</h3>
+<p>Run <a
+href="teaching_calculations.py">teaching_calculations.py</a>
+with Python, NumPy and Matplotlib. It uses <span
+class="math inline">\(k=P/\delta\)</span>, the matched mass in equation
+(7), <span class="math inline">\(k_c=0.15k\)</span> and diagonal damping
+<span class="math inline">\(c=2(0.05)\sqrt{km}\)</span>. It generates
+Figures 1–5.</p>
+<p>Use equations (11)–(15) to compare <span
+class="math inline">\(k_c/k=0\)</span>, 0.05 and 0.15. Keep the forcing
+on oscillator 1. Then increase <span
+class="math inline">\(k_2/k_1\)</span> from 1 to 1.08 and 1.30. Identify
+a response peak, inspect the receiver/driven displacement ratio and
+explain how detuning changes the curve. Do not assume the ratio
+decreases monotonically at every fixed frequency.</p>
+<p>For the equal baseline with <span
+class="math inline">\(k_c=0.15k\)</span>, predict the modal frequencies
+<span class="math inline">\(f_-=f_1\)</span> and <span
+class="math inline">\(f_+=\sqrt{1.3}f_1\)</span> before running. Explain
+why these are synthetic oscillator modes and cannot be identified with
+the monument’s observed torsional mode.</p>
+<h3 id="f.-team-deliverable-and-discussion">F. Team deliverable and
+discussion</h3>
+<p>Submit a 2–3 page team report when requested by the instructor: a
+stated model and unit table; one BeamLab screenshot with restraints and
+load visible; signed equilibrium checks; the mesh-convergence table; the
+three stiffness cases; and a paragraph identifying what must be added to
+model the actual two-tower assembly. Attach the editable study JSON. If
+completing the extension, add one frequency-response figure with its
+assumed coupling and damping.</p>
+<p>Conclude by answering: <strong>What measurement would distinguish
+“the tower itself bends” from “the support rotates”?</strong> Propose
+sensor locations and measured quantities. Do not claim that a matching
+frequency alone validates the model.</p>
+<p>Suggested discussion weighting: modeling/units 20%, analytical checks
+30%, sensitivity/convergence 20%, physical interpretation and model
+limits 30%.</p>
+<h2 id="reproducibility-and-scope">11. Reproducibility and scope</h2>
+<p><a
+href="verify_beamlab.cjs">verify_beamlab.cjs</a>
+runs the existing BeamLab solver for the three cases, checks closed-form
+tip deflection and frequency, and round-trips the share-link
+serialization. Run from a repository checkout:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">node</span> verify_beamlab.cjs</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> teaching_calculations.py</span></code></pre></div>
+<p>The Python script checks the zero-coupling receiver limit and the
+free-response initial condition. <a
+href="beamlab_checks.json">beamlab_checks.json</a>
+records numerical results. Calculations and vector figures are original
+teaching material; no journal figures or Kojaro photographs have been
+reproduced. For actual monument photographs and measured mode diagrams,
+consult Figures 1–3 and 10 of [3] at the linked source.</p>
+<p>The baseline is straight, uniform, homogeneous, elastic and
+small-deflection, with an ideal clamp. It omits taper, stairs, masonry
+cracking, contact, timber details, axial weight, geometric stiffness,
+foundation compliance and torsion. The two-DOF supplement omits an
+explicit roof mass; a three-DOF support/towers model or a calibrated
+spatial FE model is a natural next step. These models explain mechanisms
+and sensitivities, not heritage conservation capacity or seismic
+performance.</p>
+<h2 id="references-and-reading-guide">12. References and reading
+guide</h2>
+<ol type="1">
+<li><strong>Yousefnejad, M. (2026).</strong> <a
+href="https://www.kojaro.com/history-art-culture/311157-menar-jonban-isfahan-shaking-minarets/">The
+engineering mystery of Isfahan’s Menar Jonban</a>, Kojaro, 7 November.
+Starting popular article; original Persian title: «راز مهندسی منارجنبان
+اصفهان؛ چرا دو برج آجری با هم می‌لرزند؟».</li>
+<li><strong>Hosseinzadeh, N. (2011).</strong> “Vibration Mechanism of
+13th Century Historical Menar-Jonban Monument in Iran.”
+<em>International Journal of Engineering</em>, 24(4), 313–324. <a
+href="https://doi.org/10.5829/idosi.ije.2011.24.04b.02">DOI:
+10.5829/idosi.ije.2011.24.04b.02</a>. Journal metadata verified; the
+detailed test account used here is the openly available conference paper
+below. Historical wording in the title is not an independent dating
+assessment.</li>
+<li><strong>Hosseinzadeh, N., &amp; Hosseinzadeh, M. (2012).</strong>
+“On the Vibration Mechanism of Historical Menar-Jonban Monument in
+Iran.” <em>15th World Conference on Earthquake Engineering</em>, Lisbon,
+paper 2856. <a
+href="https://www.iitk.ac.in/nicee/wcee/article/WCEE2012_2856.pdf">Full
+paper, 10 pages</a>. Main direct source for the compact field-test
+summary; read §§4–6.</li>
+<li><strong>Roozbahan, M., &amp; Turan, G. (2023).</strong> “A simple
+explanation of the vibration phenomenon in minarets of Monar Jonban.”
+<em>7th International Conference on Researches in Science &amp;
+Engineering / 4th International Congress on Civil, Architecture and
+Urbanism in Asia</em>, Bangkok. <a
+href="https://www.researchgate.net/publication/368289864_A_simple_explanation_of_the_vibration_phenomenon_in_minarets_of_Monar_Jonban">Author-uploaded
+paper</a>. Read the three-DOF model and numerical example; distinguish
+model conclusions from historical inference.</li>
+<li><strong>Oliveira, C., Çaktı, E., Stengel, D., &amp; Branco, M.
+(2012).</strong> “Minaret behavior under earthquake loading: The case of
+historical Istanbul.” <em>Earthquake Engineering &amp; Structural
+Dynamics</em>, 41(1), 19–39. <a
+href="https://doi.org/10.1002/eqe.1115">DOI: 10.1002/eqe.1115</a> · <a
+href="https://avesis.bogazici.edu.tr/yayin/ff66e779-575d-4ec8-9fa2-355eaa3294cc/minaret-behavior-under-earthquake-loading-the-case-of-historical-istanbul">University
+publication record and abstract</a>. Abstract-level comparison used
+here.</li>
+<li><strong>Sallam, M. A., Fasan, M., Hassan, H. M., Bedon, C.,
+Smiroldo, G., &amp; Abdel Hafiez, H. E. (2026).</strong> “Dynamic
+characterization of masonry minarets using regression models.”
+<em>Bulletin of Earthquake Engineering</em>, 8917–8943. <a
+href="https://doi.org/10.1007/s10518-026-02554-1">DOI:
+10.1007/s10518-026-02554-1</a> · <a
+href="https://arts.units.it/handle/11368/3149858">University record</a>.
+Record/abstract consulted; no coefficients from an inaccessible full
+text are used.</li>
+<li><strong>Course BeamLab documentation.</strong> <a
+href="https://github.com/Ehsan-Roohi/Aerospace-Structures/blob/main/computational/printed-wing-solver/web/BEAM_LAB.md">Model, units,
+supports, section library and mode limitations</a>. Software reference
+for the activity; the app’s modes are undamped bending eigenmodes, not
+forced-response animations.</li>
+</ol>
+<section lang="fa"><h2 id="خلاصه-فارسی">خلاصهٔ فارسی</h2>
+<p>منارجنبان نمونه‌ای جذاب برای آموزش ارتعاش سازه است: نیروی وارد بر یک
+مناره از مسیر سازهٔ مشترک به منارهٔ دیگر منتقل می‌شود. تشابه فرکانس‌ها به
+انتقال مؤثر کمک می‌کند، اما بدون اتصال مکانیکی کافی نیست. برای تحلیل باید
+جرم، سختی، میرایی، فرکانس تحریک و انعطاف تکیه‌گاه را هم‌زمان دید.</p>
+<p>در تمرین، دانشجویان ابتدا یک منارهٔ ساده‌شده را با تیر یک‌سرگیردار و
+مقطع لوله‌ای در BeamLab مدل می‌کنند؛ تغییرمکان و فرکانس را با روابط تحلیلی
+کنترل می‌کنند و اثر تغییر مدول الاستیسیته را می‌سنجند. سپس سهم چرخش
+تکیه‌گاه را دستی محاسبه می‌کنند. بخش تکمیلی با مدل دو درجهٔ آزادی نشان
+می‌دهد کوپل مکانیکی چگونه پاسخ منارهٔ دوم را ایجاد می‌کند. این مدل آموزشی،
+بازسازی دقیق بنای تاریخی یا اثبات مقاومت آن در زلزله نیست.</p>
+</section></main></body></html>

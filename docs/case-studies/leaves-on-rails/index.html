@@ -1,0 +1,505 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Leaves on rails · MIE 446</title><style>body{margin:0;background:#eef2f6;color:#173346;font:18px/1.75 system-ui,sans-serif}main{max-width:1080px;margin:auto;padding:48px;background:white}h1{font-size:clamp(30px,4vw,46px);line-height:1.2}h2{margin-top:2em;color:#174f6c}h3{color:#174f6c}a{color:#086b9b}nav{font-size:15px;border-bottom:1px solid #ccd9df;padding-bottom:18px}.math.display{display:block;overflow-x:auto;font-size:1.18em;padding:10px 0}img{display:block;max-width:100%;height:auto;margin:32px auto 12px;border:1px solid #dce6ec;border-radius:8px}figure{margin:28px 0}figcaption{font-size:15px;line-height:1.6;color:#45616f}table{display:block;overflow-x:auto;border-collapse:collapse;font-size:16px}td,th{padding:12px;border:1px solid #cbd8df;text-align:left}th{background:#edf5f8}p,li{max-width:85ch}code{font-size:.9em}a:focus-visible{outline:3px solid #ba7933}@media(max-width:650px){main{padding:24px 18px}body{font-size:17px}.math.display{font-size:1.05em}}@media print{body{background:white;font-size:11pt}main{padding:0}h2,h3{break-after:avoid}nav{display:none}} .math.display{background:#f1f6fa;border-left:4px solid #2669c9;padding:16px;box-sizing:border-box}h2{scroll-margin-top:20px} table img{max-height:310px;width:auto;max-width:100%;margin:12px auto;object-fit:contain} table:has(img){table-layout:fixed;width:100%} table:has(img) td{width:33.333%;vertical-align:top}.toc{background:#eef5fa;padding:20px;line-height:1.9} img{width:100%} [lang=fa]{direction:rtl} .toc{background:#eef5fa;padding:20px} img{max-height:850px;object-fit:contain} .footnote-ref{font-size:.9em}</style><script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script></head><body><main><nav><a href="https://github.com/Ehsan-Roohi/Aerospace-Structures#engineering-readings-and-case-studies">Course home</a> · <a href="https://github.com/Ehsan-Roohi/Aerospace-Structures/blob/main/LEAVES_ON_RAILS.md">GitHub source</a></nav><h1
+id="leaves-on-rails-contact-mechanics-chemistry-and-the-limits-of-friction">Leaves
+on rails: contact mechanics, chemistry and the limits of friction</h1>
+<p><strong>MIE 446 · Aerospace Structures · UMass Amherst</strong><br />
+Research-based engineering enrichment · 7 November 2026</p>
+<p><a
+href="https://ehsan-roohi.github.io/Aerospace-Structures/case-studies/leaves-on-rails/">Illustrated
+reading</a> · <a
+href="https://github.com/Ehsan-Roohi/Aerospace-Structures">Course
+home</a></p>
+<h2 id="the-engineering-question">1. The engineering question</h2>
+<p>How can a thin layer of crushed leaves disable a train whose engine
+and brakes are working? The useful answer is a force-path problem: the
+motor supplies torque, but the wheel–rail interface must transmit the
+corresponding tangential force. A contaminated interface can support the
+normal load while transmitting very little tangential load. This
+distinction connects contact mechanics with landing gear, friction
+joints and structural load paths.</p>
+<p>This original teaching note critically develops the supplied <a
+href="https://www.zoomit.ir/engineering/470667-autumn-leaves-stop-train-featured/">Zoomit
+feature</a> [1] using the full texts of Watson et al. (2020) [2] and
+Jaffé et al. (2026) [3]. It does not reproduce the feature. Operational
+claims are checked against primary railway sources [5–7].</p>
+<p><strong>Learning goals:</strong> derive traction and stopping limits;
+distinguish mean and maximum contact pressure; explain the experimental
+evidence for tannins and moisture; distinguish measured correlations
+from established mechanisms; and transfer these ideas to aerospace
+structures without equating steel–steel and tire–runway contacts.</p>
+<h2 id="normal-load-survives-while-tangential-capacity-collapses">2.
+Normal load survives while tangential capacity collapses</h2>
+<p>For one contact, let <span class="math inline">\(N\)</span> be normal
+force and <span class="math inline">\(F_t\)</span> tangential force.
+Define the measured coefficient of traction as <span
+class="math inline">\(\mathrm{CoT}=F_t/N\)</span> at the instrument’s
+particular speed, slip and contact condition. Its measured value is not
+automatically the peak adhesion available to a full train.</p>
+<p>An elementary limiting-force model is</p>
+<p><span class="math display">\[|F_t|\leq\mu N,\qquad |T|\leq\mu NR.
+\tag{1}\]</span></p>
+<p>Here <span class="math inline">\(R\)</span> is wheel radius and <span
+class="math inline">\(T\)</span> is wheel torque. A real rolling contact
+develops force through creepage, with partial slip and a traction curve.
+Equation (1) is a useful envelope, not a full rolling-contact
+constitutive law. Low adhesion is not zero friction: a sliding wheel can
+still slow the train, but much less effectively.</p>
+<figure>
+<img src="contact.svg"
+alt="Normal and tangential load paths through the wheel contact" />
+<figcaption aria-hidden="true">Normal and tangential load paths through
+the wheel contact</figcaption>
+</figure>
+<p><em>Figure 1. Original schematic, not to scale. A thin third-body
+layer changes tangential transmission without removing the normal
+reaction.</em></p>
+<p>A nominal 1–2 cm² patch refers to an individual wheel contact, not
+the entire train. The train has many wheels, and their loads need not be
+equal. For an <strong>illustrative</strong>, not measured, wheel load of
+70 kN and contact area 150 mm²,</p>
+<p><span class="math display">\[\bar p=N/A=467\ \mathrm{MPa}.
+\tag{2}\]</span></p>
+<p>For an ideal Hertz elliptical pressure distribution with semiaxes
+<span class="math inline">\(a,b\)</span>,</p>
+<p><span class="math display">\[p(x,y)=p_0\sqrt{1-x^2/a^2-y^2/b^2},\quad
+A=\pi ab,\quad p_0=\frac{3N}{2\pi ab}=1.5\bar p.\tag{3}\]</span></p>
+<p>The example gives <span class="math inline">\(p_0=700\)</span> MPa.
+Area is an input here, not a Hertz prediction: predicting it requires
+elastic properties and both principal relative curvatures. Rail profile,
+wear, plasticity, roughness and contamination can invalidate the ideal
+elastic model. The 2026 study’s portable instruments used nominal
+contact pressures of 660 and 700 MPa; its layer-generation rig applied
+70 kN [3, p.191]. These are different devices, not interchangeable
+loading conditions.</p>
+<p>Small area explains high local stress and the importance of surface
+condition. It does not by itself explain a small friction force: in the
+elementary Coulomb model the force limit depends on <span
+class="math inline">\(N\)</span> and <span
+class="math inline">\(\mu\)</span>, with no explicit apparent-area
+term.</p>
+<h2 id="why-extra-train-mass-does-not-guarantee-grip">3. Why extra train
+mass does not guarantee grip</h2>
+<p>On level track, assuming every wheel can brake at the same constant
+adhesion limit and neglecting drag, rotational inertia and brake-system
+delays,</p>
+<p><span class="math display">\[m\dot v=-\mu mg,\quad a_b=\mu g,\quad
+t_s=\frac{v_0}{\mu g},\quad s_s=\frac{v_0^2}{2\mu
+g}.\tag{4}\]</span></p>
+<p>Mass cancels under these assumptions. At 80 km/h (<span
+class="math inline">\(v_0=22.222\)</span> m/s), the following are
+<strong>idealized calculations</strong>, not measured train stopping
+distances:</p>
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 26%" />
+<col style="width: 26%" />
+<col style="width: 26%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Assumed constant <span class="math inline">\(\mu\)</span></th>
+<th style="text-align: right;">Deceleration (m/s²)</th>
+<th style="text-align: right;">Stop time (s)</th>
+<th style="text-align: right;">Stop distance (m)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>0.30</td>
+<td style="text-align: right;">2.943</td>
+<td style="text-align: right;">7.55</td>
+<td style="text-align: right;">83.9</td>
+</tr>
+<tr class="even">
+<td>0.10</td>
+<td style="text-align: right;">0.981</td>
+<td style="text-align: right;">22.65</td>
+<td style="text-align: right;">251.7</td>
+</tr>
+<tr class="odd">
+<td>0.05</td>
+<td style="text-align: right;">0.4905</td>
+<td style="text-align: right;">45.31</td>
+<td style="text-align: right;">503.4</td>
+</tr>
+<tr class="even">
+<td>0.01</td>
+<td style="text-align: right;">0.0981</td>
+<td style="text-align: right;">226.53</td>
+<td style="text-align: right;">2517.0</td>
+</tr>
+</tbody>
+</table>
+<figure>
+<img src="stopping.svg"
+alt="Ideal adhesion-limited stopping distances" />
+<figcaption aria-hidden="true">Ideal adhesion-limited stopping
+distances</figcaption>
+</figure>
+<p><em>Figure 2. Equation (4), level track, instantaneous braking and
+constant adhesion. This is not an operational braking curve.</em></p>
+<p>A delay <span class="math inline">\(t_d\)</span> adds approximately
+<span class="math inline">\(v_0t_d\)</span> before deceleration begins.
+On a downhill gradient <span class="math inline">\(\theta\)</span>, this
+ideal braking magnitude becomes <span
+class="math inline">\(g(\mu\cos\theta-\sin\theta)\)</span>; when
+nonpositive, adhesion-limited wheel braking alone cannot hold or
+decelerate the train in this model.</p>
+<p>For uphill traction, the available normal load belongs to
+<strong>driven wheels</strong>, whereas gravity acts on the entire
+consist. If their supported mass fraction is <span
+class="math inline">\(f_d\)</span> and resistance other than gravity is
+<span class="math inline">\(F_r\)</span>,</p>
+<p><span class="math display">\[F_{\mathrm{drive,max}}=\mu
+f_dmg\cos\theta,\qquad
+\tan\theta\leq\mu f_d-\frac{F_r}{mg\cos\theta}.\tag{5}\]</span></p>
+<p>At <span class="math inline">\(\mu=0.01\)</span>, even <span
+class="math inline">\(f_d=1\)</span> only gives a 1% ideal gradient
+ceiling before additional resistance; a locomotive hauling unpowered
+wagons has a smaller <span class="math inline">\(f_d\)</span>. Adding
+weight over powered axles can help, so the mass-cancellation argument
+must not be generalized to every traction scenario.</p>
+<h2 id="what-the-2020-chemistry-study-actually-did">4. What the 2020
+chemistry study actually did</h2>
+<p>Watson et al. [2] studied aqueous extracts of naturally fallen brown
+sycamore leaves. Leaves were milled, extracted at 1 g per 50 mL water
+for 60 hours, then filtered to 0.49 µm. The filtered solution had pH
+4.8. Fresh extracts were tested on the day of preparation because they
+degraded during storage [2, §§4a–b].</p>
+<p>The causal intervention was removal of polyphenols, including
+tannins, using PVPP. The authors compared untreated extract, treated
+extract, water and, in selected tests, tannic acid or tannic-acid
+replacement. Adding ferric chloride to extract produced a black
+precipitate. Spectroscopic and elemental evidence (FTIR, XPS, CHNS,
+ICP-MS and XRF) supported identification as an iron–tannin complex,
+termed iron tannate. Removal of polyphenols reduced precipitate yield by
+an average 82% (three repeats, reported <span
+class="math inline">\(p=0.00038\)</span>) [2, §2b].</p>
+<p>The dry precipitate had reported nanoindentation hardness <span
+class="math inline">\(352\pm2\)</span> MPa and modulus <span
+class="math inline">\(6.90\pm0.29\)</span> GPa. These are properties of
+the prepared, dried material; they are not the effective stiffness or
+strength of a wet in-service rail film.</p>
+<p>Three friction configurations provided an important test of
+relevance:</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Configuration</th>
+<th>Key reported settings</th>
+<th>What it establishes</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Reciprocating ball on flat</td>
+<td>10 N; 1.55 GPa Hertz pressure; 12 repeats/condition</td>
+<td>Removing tannins increased friction in pure sliding.</td>
+</tr>
+<tr class="even">
+<td>Mini traction, ball on ring</td>
+<td>44 N; 1 GPa; 50% slide–roll ratio; four repeats</td>
+<td>Tannin-containing solutions had lower friction than water;
+replacement tests strengthened attribution.</td>
+</tr>
+<tr class="odd">
+<td>Twin-disc rolling/sliding</td>
+<td>2720 N; 0.9 GPa; 3% slide–roll ratio; six repeats</td>
+<td>More representative kinematics reproduced very low friction and the
+tannin-removal effect.</td>
+</tr>
+</tbody>
+</table>
+<p>In twin-disc tests, the treated extract was not significantly
+different from water (reported <span
+class="math inline">\(p=0.92\)</span> for mean and 0.54 for minimum
+friction). This is not proof of exact equality. Untreated extract
+differed from water/treated extract; the study reports <span
+class="math inline">\(p=0.015\)</span> for mean and 0.032 for minimum
+[2, §2d].</p>
+<p>The experimental design controlled order and sample effects,
+randomized tests and blinded operators until application. Twin-disc
+tests reused specimens, with possible cross-contamination explicitly
+acknowledged. These details matter more than merely detecting a chemical
+in a field sample.</p>
+<p><strong>Evidence versus proposed mechanism.</strong> Tannins can
+cause low friction, and cellulose is not necessary for that experimental
+result. The authors proposed a cross-linked hydrogel that expels water
+under compression and produces dynamic lubrication. They explicitly left
+confirmation of the detailed lubrication mechanism to future work and
+did not claim to exclude all other mechanisms in the open railway
+environment [2, §3].</p>
+<h2 id="what-the-2026-moisture-study-adds">5. What the 2026 moisture
+study adds</h2>
+<p>Jaffé, Tomlinson and Lewis [3] combined controlled climate-chamber
+testing, laboratory-generated layers and natural layers on narrow-gauge
+railways. Generated layers used R260 rail, approximately 1 mm ground
+leaf particles, water, a full-size wheel, 70 kN normal load and 3% slip.
+Generation-rig CoT was 0.038 for contaminated rail versus 0.308 for the
+control [3, p.191]. Later portable-instrument readings must not be
+treated as the same measurement.</p>
+<p>The OnTrak instrument was used in the climate chamber; a Rivelin Rail
+instrument was used in later uncontrolled and field work. Both operated
+at 5% creep, but their loads, speeds and angles of attack differed. The
+authors discuss instrument-dependent traction results and notably did
+<strong>not</strong> measure CoT below 0.1 on contaminated rails in the
+chamber [3, pp.198–199].</p>
+<p>Layer moisture was held within a high range of roughly 30–45% while
+air temperature and humidity varied. The contaminated-rail CoT showed
+little relation to those environmental variables (<span
+class="math inline">\(R^2=0.0981\)</span> and 0.011). This supports
+moisture as the more direct descriptor within the tested conditions. It
+does not prove that temperature has no independent effect for all
+temperatures, contaminants, speeds or instruments.</p>
+<p><strong>Essential unit warning:</strong> the Testo 606-1 output is
+<strong>%WME (wood moisture equivalent)</strong>, an instrument response
+referenced to wood in moisture equilibrium. It is not a direct
+gravimetric water fraction of the leaf film. Its reading range was
+8.8–54.8%WME; out-of-range readings were censored at the limits. The
+reported approximately 20–25%WME transition is therefore an empirical
+instrument- and dataset-specific indicator, not a universal
+water-content safety threshold.</p>
+<p>The fitted relationship for the created-layer dataset was [3, Eq.1
+and Appendix II]</p>
+<p><span
+class="math display">\[\mathrm{CoT}(M)=1.306e^{-0.2017M}+0.04757e^{0.008406M},\tag{6}\]</span></p>
+<p>with <span class="math inline">\(R^2=0.8195\)</span>, RMSE 0.035 and
+42 degrees of freedom. <span class="math inline">\(M\)</span> is the
+numerical %WME reading (e.g. 25, not 0.25). The fit is descriptive, not
+a constitutive law.</p>
+<figure>
+<img src="moisture-fit.svg"
+alt="Published moisture fit reconstructed from its equation" />
+<figcaption aria-hidden="true">Published moisture fit reconstructed from
+its equation</figcaption>
+</figure>
+<p><em>Figure 3. Reconstruction of published Eq.1 over the instrument
+range; no raw data digitized or invented. The dashed 0.1 line is the
+study’s low-adhesion reference, not a general operating certificate.
+This curve does not represent a controlled flooding experiment.</em></p>
+<p>In open/wooded conditions, humidity and layer moisture often varied
+together. In deep cuttings at Kirklees Light Railway, very high relative
+humidity could coexist with relatively dry layers and higher traction;
+local rail–air temperature differences helped interpret this. Relative
+humidity alone was an unreliable proxy. Condensation physically depends
+on surface temperature relative to dew point; a rail–air temperature
+difference alone is not a sufficient condensation criterion.</p>
+<p>The study supports a rapid adhesion drop as moisture rises across
+roughly 10–25%WME, followed by degraded conditions across much of the
+measurable range. The distinction between an absorbed wet film and
+<strong>free surface water/flooding</strong> is vital. One must not
+infer the Water-Trak flooding response by simply extrapolating
+Eq.(6).</p>
+<h2 id="why-adding-water-can-help-and-what-it-does-not-prove">6. Why
+adding water can help, and what it does not prove</h2>
+<p>Network Rail reports Water-Trak trials in autumn 2021 and 2022,
+including more than 12% shorter stopping distances for two electric
+trains in the 2021 low-adhesion trial [5]. This is a trial-specific
+observation, not a universal guaranteed reduction.</p>
+<p>The developer reports dosing of 1–4 mL per metre of rail and
+activation through wheel-slide detection, with water applied ahead of
+the leading axle [6]. This differs from the feature’s simplified
+description of front wheels detecting slip and nozzles necessarily
+serving only later wheels. Hardware configuration and control timing
+should be checked for the particular installation.</p>
+<p>Water addition moves the interface away from a particularly
+unfavorable lightly wetted contaminated condition. Dilution,
+redistribution and removal can contribute; the two attached papers do
+not isolate every mechanism in an installed Water-Trak system. Saying
+the device “tricks the chemistry” is a metaphor, not demonstrated
+reaction kinetics.</p>
+<p>High-pressure treatment is a different intervention. Network Rail
+describes pumps delivering 1500 bar and optional
+gel/sand/steel-or-iron-shot adhesion modifier [7]. The pump pressure is
+150 MPa; it is not the Hertz pressure under a wheel. The jet removes
+contamination, while controlled on-train wetting changes the interface
+condition. Neither method establishes that every wet rail is safer than
+every damp one.</p>
+<h2 id="audit-of-the-starting-feature">7. Audit of the starting
+feature</h2>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Popular statement</th>
+<th>Research-based correction or qualification</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>The whole train rests on a fingernail</td>
+<td>Each wheel has a small patch; normal load is distributed across many
+contacts.</td>
+</tr>
+<tr class="even">
+<td>Friction disappears or braking no longer slows the train</td>
+<td>Very low, nonzero traction reduces braking; it need not eliminate
+it.</td>
+</tr>
+<tr class="odd">
+<td>Cellulose, lignin and pectin react under extreme heat and pressure
+to make the key material</td>
+<td>The supplied 2020 paper specifically tests tannin–iron complexation
+and shows cellulose is unnecessary in those experiments. It does not
+require wheel-generated extreme heat to create precipitate.</td>
+</tr>
+<tr class="even">
+<td>The RSC paper is the attached 2020 study</td>
+<td>They are different papers: the RSC study is Ishizaka et al. (2018)
+[4]; Watson et al. is Proceedings of the Royal Society A (2020)
+[2].</td>
+</tr>
+<tr class="odd">
+<td>A dry leaf layer always has excellent grip</td>
+<td>Dry layers can still degrade adhesion; condition, history and
+instrument matter.</td>
+</tr>
+<tr class="even">
+<td>A 25% moisture threshold predicts dangerous rail everywhere</td>
+<td>The 2026 threshold is approximately 25%WME within tested layers and
+instruments.</td>
+</tr>
+<tr class="odd">
+<td>More water always improves adhesion</td>
+<td>No; small additions can first worsen it. Layer wetness and flooding
+must be distinguished.</td>
+</tr>
+<tr class="even">
+<td>Black film makes trains invisible</td>
+<td>Electrical shunting can be impaired, but signaling includes
+protective design. Do not infer inevitable undetected occupancy or
+collision.</td>
+</tr>
+</tbody>
+</table>
+<p>The 2018 RSC paper [4] reported synthesized black material and
+multiple plausible chemical contributors, with pin-on-flat CoF
+0.08–0.14. It should not be read as the same intervention study as [2],
+or its numerical coefficients compared directly across different
+rigs.</p>
+<h2 id="connections-to-aerospace-structures">8. Connections to aerospace
+structures</h2>
+<p><strong>Landing gear:</strong> wheel braking is also limited by
+surface traction, while the strut and airframe must carry the resulting
+forces and moments. Rubber–runway behavior, hydroplaning and anti-skid
+control differ from steel–rail chemistry; a rail dosing strategy is not
+an aircraft recommendation.</p>
+<p><strong>Friction joints:</strong> a bolted joint can retain clamp
+force while contamination reduces slip resistance. With <span
+class="math inline">\(n\)</span> identical bolts of preload <span
+class="math inline">\(P_b\)</span>, an elementary single-interface
+estimate is</p>
+<p><span class="math display">\[F_{\mathrm{slip}}\leq\mu
+nP_b.\tag{7}\]</span></p>
+<p>For four bolts at 10 kN each, reducing assumed friction from 0.30 to
+0.05 reduces the estimate from 12 to 2 kN. Real design requires preload
+scatter, multiple interfaces, surface treatment, joint separation,
+bearing and fatigue checks. Frictional slip is not equivalent to
+immediate bolt fracture.</p>
+<p><strong>Load paths:</strong> for an ideal cantilever landing-gear
+surrogate of length <span class="math inline">\(L\)</span> loaded
+laterally by contact force <span class="math inline">\(F_t\)</span>,</p>
+<p><span class="math display">\[V=F_t,\quad M_{\mathrm{root}}=F_tL,\quad
+\delta=\frac{F_tL^3}{3EI}.\tag{8}\]</span></p>
+<p>At <span class="math inline">\(N=70\)</span> kN, <span
+class="math inline">\(L=0.8\)</span> m and assumed <span
+class="math inline">\(\mu=0.30\)</span>, the traction envelope is 21 kN
+and root moment 16.8 kN·m. At <span
+class="math inline">\(\mu=0.01\)</span> these become 0.70 kN and 0.56
+kN·m. A smaller transmitted load can reduce structural demand while
+severely worsening stopping performance. Strength and controllability
+are different requirements. This beam surrogate omits the actual gear
+geometry, tire compliance, axial load and dynamics.</p>
+<h2 id="team-exercise-and-instructor-checks">9. Team exercise and
+instructor checks</h2>
+<ol type="1">
+<li>Draw a train or aircraft wheel free-body diagram. Identify applied
+torque, normal load and tangential reaction. Explain why large engine
+torque cannot enforce a reaction above the traction limit.</li>
+<li>Recalculate Table 1 at 100 km/h. Derive the speed-squared scaling
+and add a 2 s delay. Expected multiplier for braking distance alone:
+1.5625; delay distance: 55.56 m.</li>
+<li>For <span class="math inline">\(f_d=0.20\)</span>, <span
+class="math inline">\(\mu=0.05\)</span> and negligible extra resistance,
+find the uphill gradient ceiling from Eq.(5). Expected: approximately
+1%, not 5%.</li>
+<li>Evaluate Eq.(6) at <span
+class="math inline">\(M=10,20,25,40\)</span>. Discuss why using 0.10 in
+place of 10 is a unit error. Expected CoT: approximately 0.226, 0.0796,
+0.0671, 0.0669.</li>
+<li>Use a cantilever beam model (or the course <a
+href="https://ehsan-roohi.github.io/Aerospace-Structures/wing-lab.html">BeamLab</a>)
+to compare the two lateral loads in §8 using identical <span
+class="math inline">\(E,I,L\)</span>. Report root moment and deflection
+ratio (30). This is a structural surrogate, not a wheel-contact
+simulation.</li>
+<li>Write a 150-word evidence statement separating the tannin-removal
+result, the proposed hydrogel mechanism, the moisture correlation and
+the operational Water-Trak trial. Identify one limitation for each.</li>
+</ol>
+<p>Submit one team report with calculations, labeled diagrams and
+citations. No experiments on real railway infrastructure are part of
+this activity.</p>
+<h2 id="references-and-reading-guide">10. References and reading
+guide</h2>
+<ol type="1">
+<li>Pourmohammad, P. (2026). <a
+href="https://www.zoomit.ir/engineering/470667-autumn-leaves-stop-train-featured/">Zoomit
+engineering feature</a>, 7 November. Starting popular account; supplied
+text reviewed.</li>
+<li>Watson, M., White, B., Lanigan, J., Slatter, T. &amp; Lewis, R.
+(2020). <strong>The composition and friction-reducing properties of leaf
+layers.</strong> <em>Proceedings of the Royal Society A</em>, 476,
+20200057. <a
+href="https://doi.org/10.1098/rspa.2020.0057">doi:10.1098/rspa.2020.0057</a>.
+Full supplied PDF reviewed; see §§2–4 and Figures 1–2.</li>
+<li>Jaffé, J., Tomlinson, K. &amp; Lewis, R. (2026). <strong>Moisture:
+The most important factor in leaf low adhesion?</strong> <em>Tribology –
+Materials, Surfaces &amp; Interfaces</em>, 20(3), 189–205. <a
+href="https://doi.org/10.1177/17515831261434461">doi:10.1177/17515831261434461</a>.
+Full supplied PDF reviewed; see pp.191–201, Eq.1 and appendices.</li>
+<li>Ishizaka, K., Lewis, S.R., Hammond, D. &amp; Lewis, R. (2018).
+<strong>Chemistry of black leaf films synthesised using rail steels and
+their influence on the low friction mechanism.</strong> <em>RSC
+Advances</em>, 8, 32506–32521. <a
+href="https://doi.org/10.1039/C8RA06080K">doi:10.1039/C8RA06080K</a>.
+Publisher abstract and introduction checked for the distinction from
+[2].</li>
+<li>Network Rail (2023). <a
+href="https://www.networkrail.co.uk/stories/tackling-leaves-on-the-line-using-water-trak/">Tackling
+leaves on the line using Water-Trak</a>, 14 November. Operational trial
+report.</li>
+<li>Water-Trak. <a href="https://www.water-trak.com/faq">Frequently
+Asked Questions</a>. Developer account of dosing and activation; not
+independent validation.</li>
+<li>Network Rail. <a
+href="https://www.networkrail.co.uk/our-work/looking-after-the-railway/our-fleet-machines-and-vehicles/seasonal-track-treatment-and-weather-support-fleet/">Seasonal
+track treatment and weather support fleet</a>. Pump pressure, modifier
+and signaling context.</li>
+</ol>
+<p>Web sources checked 7 November 2026. Figures are original teaching
+graphics; no paper figures, full PDFs or Zoomit images are
+redistributed. Numerical outputs are illustrative models or a
+reconstruction of the explicitly cited published equation, not new
+experimental observations.</p>
+<h2 id="خلاصه-فارسی">خلاصهٔ فارسی</h2>
+<p>برگ‌ها نیرویی برای متوقف‌کردن قطار ایجاد نمی‌کنند؛ لایهٔ حاصل از آن‌ها
+ظرفیت انتقال نیروی مماسی بین چرخ و ریل را کاهش می‌دهد، در حالی که نیروی
+عمودی همچنان منتقل می‌شود. مقالهٔ ۲۰۲۰ با حذف تانن‌ها از عصارهٔ برگ نشان
+می‌دهد که ترکیبات تاننی و برهم‌کنش آن‌ها با آهن نقش مهمی در کاهش اصطکاک
+دارند؛ سازوکار دقیق روانکاری هنوز کاملاً اثبات نشده است. مقالهٔ ۲۰۲۶ نشان
+می‌دهد رطوبت خود لایه نسبت به رطوبت نسبی هوا شاخص مستقیم‌تری است، اما واحد
+آن «معادل رطوبت چوب» است و نباید درصد جرمی آب تلقی شود. افزودن کنترل‌شدهٔ
+آب در شرایط مشخص می‌تواند مفید باشد؛ این نتیجه به معنی مفیدبودن هر مقدار
+آب روی هر ریل نیست. ارتباط با سازه‌های هوایی در مسیر انتقال نیرو، تماس،
+ترمز چرخ، اتصالات اصطکاکی و تفکیک مقاومت سازه از قابلیت کنترل وسیله
+است.</p>
+</main></body></html>

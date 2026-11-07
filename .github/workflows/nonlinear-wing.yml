@@ -42,8 +42,6 @@ jobs:
           node computational/printed-wing-solver/nonlinear/test_scalar_elastica.cjs
           node computational/printed-wing-solver/nonlinear/test_rod_system.cjs
           node computational/printed-wing-solver/nonlinear/test_rod_flexibility.cjs
-          node computational/printed-wing-solver/nonlinear/test_solid_foam.cjs
-          node scripts/validation/test_reinforced_foam.cjs
           node computational/printed-wing-solver/nonlinear/test_rod_wing.cjs
           node computational/printed-wing-solver/nonlinear/test_rod_saved_pressure.cjs
           node computational/printed-wing-solver/nonlinear/test_deformed_pressure.cjs
@@ -55,14 +53,6 @@ jobs:
         run: |
           node computational/printed-wing-solver/nonlinear/run_900mm.cjs
           node computational/printed-wing-solver/nonlinear/test_900mm_result.cjs
-      - name: Matched internal-layout pressure comparison
-        run: |
-          node scripts/validation/compare_900mm_layouts.cjs
-          node scripts/validation/verify_900mm_layouts.cjs
-      - name: Five-rib and solid-foam two-way regression
-        env:
-          LAYOUT_COUPLED_CASES: 'spar5:50,foam:10'
-        run: node scripts/validation/couple_900mm_layouts.cjs
       - name: Install DOM-only UI test dependency
         run: npm install --prefix /tmp/flexible-ui-test --no-audit --no-fund jsdom@26
       - name: Controller rendering, cancellation and stale-result checks
@@ -71,3 +61,43 @@ jobs:
         run: |
           node computational/printed-wing-solver/nonlinear/test_flexible_ui.cjs
           node computational/printed-wing-solver/nonlinear/test_rod_error_ui.cjs
+  solid-section-references:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Independent solid and heterogeneous section references
+        run: |
+          node computational/printed-wing-solver/nonlinear/test_solid_foam.cjs
+          node scripts/validation/test_reinforced_foam.cjs
+  matched-layouts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Matched internal-layout pressure comparison
+        run: |
+          node scripts/validation/compare_900mm_layouts.cjs
+          node scripts/validation/verify_900mm_layouts.cjs
+  coupled-layouts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        case: ['spar5:50', 'foam:10', 'foam-rods:15', 'foam-spars:15']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Complete admitted two-way pressure and structure
+        env:
+          LAYOUT_COUPLED_CASES: ${{ matrix.case }}
+        run: node scripts/validation/couple_900mm_layouts.cjs

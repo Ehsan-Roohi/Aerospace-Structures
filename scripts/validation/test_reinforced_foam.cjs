@@ -1,3 +1,4 @@
+globalThis.WING_SOLID_TRACE=process.env.FOAM_TRACE==='1';
 const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
 const ctx=vm.createContext({Math,module:{exports:{}},console,performance,setTimeout,WING_SOLID_TRACE:true});let bundle=fs.readFileSync('docs/wing-panel-stress-analyzer/nonlinear/flexible_bundle.js','utf8'),a=bundle.indexOf('const WingEngine = (() => {'),b=bundle.indexOf('module.exports = WingEngine;',a)+'module.exports = WingEngine;'.length;bundle=bundle.slice(0,a)+fs.readFileSync('docs/wing-panel-stress-analyzer/ui/zero-tip-source/engine.js','utf8')+bundle.slice(b);Object.assign(ctx,Function('module','require',bundle+';return {WingEngine,WingSpars,WingFiniteSection,WingFiniteSectionDeps};')({exports:{}},require));
 ctx.original=JSON.parse(fs.readFileSync('docs/wing-panel-stress-analyzer/validation/fixtures/clarky-900mm-sleeve-pressure-2026-11-06.json','utf8')).input;

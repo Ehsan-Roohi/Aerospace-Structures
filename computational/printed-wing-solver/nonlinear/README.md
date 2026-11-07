@@ -88,7 +88,7 @@ and self-weight are frozen for that run. As in the existing pressure-apply actio
 prescribed flight/tip/custom loads are replaced by aerodynamic pressures;
 self-weight stays as selected. A selected target lift is re-trimmed on each
 updated aerodynamic geometry. Progress, cancellation, complete-result JSON and
-matched physical profiles are available. A late cancelled worker cannot replace
+matched physical profiles are available. Selected deflection/torsional-rotation design limits are reported separately; an exceeded stiffness criterion does not erase a converged solution or become a numerical pass. A late cancelled worker cannot replace
 a newer result; input changes mark the saved result out of date.
 
 Build from the repository root:

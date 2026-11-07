@@ -1,31 +1,274 @@
 {
-  "status": "candidate; final additional stress-refinement run in progress",
-  "date": "2026-11-07T00:34:10.607734+00:00",
-  "model": "Finite-rotation static Kirchhoff beam + genuinely re-solved deformed-surface tensor-quadratic potential flow",
-  "verified": [
-    "Exact circular elastica through 1.6 rad",
-    "Independent scalar nonlinear boundary-value solution",
-    "Small-load limits, full constitutive coupling, arbitrary rigid rotation and 1.8 rad pure torsion",
-    "Analytic finite-wall torsion checks",
-    "Identity/deformed pressure, target lift and six-component wrench checks",
-    "Controller rendering, frozen exports, cancellation races and duplicate suppression",
-    "Deterministic served-asset rebuild"
-  ],
-  "completed900mmBeforeAdditionalStressCheck": {
+  "status": "verified within the stated static potential-flow / elastic-beam scope",
+  "date": "2026-11-06T19:43:31.855418-05:00",
+  "model": "Finite-rotation static Kirchhoff beam + freshly re-solved deformed-surface tensor-quadratic potential flow",
+  "numericalBundle": "2915a3044d52",
+  "case900mm": {
+    "fixture": "validation/fixtures/900mm-panel-load-2026-10-30.json",
+    "fixtureCanonicalSha256": "d98c40b303f79e2383238c54ef30a9977ab8dc06cf512ef388de44d0e950fe1c",
+    "flow": {
+      "speed": 50,
+      "density": 1.225,
+      "alphaDeg": 2,
+      "betaDeg": 0,
+      "viscosity": 1.81E-05,
+      "speedOfSound": 340.29,
+      "mach": 0.14693349789885096,
+      "dynamicPressure_Pa": 1531.2500000000002,
+      "reynoldsMac": 649222.4268411947
+    },
     "converged": true,
     "admitted": true,
-    "checks": 15,
-    "tipDzMm": 62.831946430663955,
-    "tipIncidenceDeg": -0.10219302627201392
+    "checks": [
+      {
+        "label": "Pressure / wake lift",
+        "value": 0.003140431702377624,
+        "tolerance": 0.02,
+        "passed": true
+      },
+      {
+        "label": "Force uncertainty at 0 span",
+        "value": 0.00458119838720831,
+        "tolerance": 0.05,
+        "passed": true
+      },
+      {
+        "label": "Bending uncertainty at 0 span",
+        "value": 0.0040411726467253105,
+        "tolerance": 0.05,
+        "passed": true
+      },
+      {
+        "label": "Torque uncertainty at 0 span",
+        "value": 0.007782346889148629,
+        "tolerance": 0.1,
+        "passed": true,
+        "signsAgree": true
+      },
+      {
+        "label": "Force uncertainty at 0.25 span",
+        "value": 0.005838062346275404,
+        "tolerance": 0.05,
+        "passed": true
+      },
+      {
+        "label": "Bending uncertainty at 0.25 span",
+        "value": 0.03491376146391895,
+        "tolerance": 0.05,
+        "passed": true
+      },
+      {
+        "label": "Torque uncertainty at 0.25 span",
+        "value": 0.039784728779776846,
+        "tolerance": 0.1,
+        "passed": true,
+        "signsAgree": true
+      },
+      {
+        "label": "Force uncertainty at 0.5 span",
+        "value": 0.004145312845838139,
+        "tolerance": 0.05,
+        "passed": true
+      },
+      {
+        "label": "Bending uncertainty at 0.5 span",
+        "value": 0.011054423096270711,
+        "tolerance": 0.05,
+        "passed": true
+      },
+      {
+        "label": "Torque uncertainty at 0.5 span",
+        "value": 0.015067454740184665,
+        "tolerance": 0.1,
+        "passed": true,
+        "signsAgree": true
+      },
+      {
+        "label": "Force uncertainty at 0.75 span",
+        "value": 0.005477791746927425,
+        "tolerance": 0.05,
+        "passed": true
+      },
+      {
+        "label": "Bending uncertainty at 0.75 span",
+        "value": 0.00957194686874784,
+        "tolerance": 0.05,
+        "passed": true
+      },
+      {
+        "label": "Torque uncertainty at 0.75 span",
+        "value": 0.00824515948054028,
+        "tolerance": 0.1,
+        "passed": true,
+        "signsAgree": true
+      },
+      {
+        "label": "Beam integration refinement 8 → 16 per element",
+        "translation": 3.8430138771594E-08,
+        "rotation": 1.1677802890254468E-07,
+        "passed": true
+      },
+      {
+        "label": "Independent section/axis discretization refinement",
+        "displacementRelative": 4.199014602127237E-05,
+        "incidenceRelative": 0.0061697572514145295,
+        "tolerance": 0.01,
+        "passed": true,
+        "coarse": {
+          "elements": 99,
+          "sections": 16
+        },
+        "refined": {
+          "elements": 132,
+          "sections": 32
+        }
+      },
+      {
+        "label": "Nominal normal-stress envelope refinement",
+        "value": 1.8649402199788472E-06,
+        "tolerance": 0.01,
+        "passed": true,
+        "materialSamples": 11977
+      }
+    ],
+    "tipVerticalDisplacementMm": 62.831946430663955,
+    "matchedLinearTipVerticalDisplacementMm": 63.576002924801514,
+    "structuralTipTorsionalRotationDeg": -0.40272346099998996,
+    "actualElasticAirfoilIncidenceChangeDeg": -0.10219302627201392,
+    "semiWingLiftN": 96.62635877538548,
+    "matchedRigidSemiWingLiftN": 96.91224584189102,
+    "relativeLiftChange": -0.0029499581195543915,
+    "lastCoupledIteration": {
+      "stage": 1,
+      "it": 3,
+      "mesh": "standard",
+      "translationResidual": 5.787360113430071E-07,
+      "rotationResidual": 8.919949850154672E-07,
+      "loadResidual": 9.804736959315058E-06,
+      "transferMomentResidual": 7.642840872437938E-09,
+      "liftN": 96.62635877538547,
+      "beamResidual": 2.3486875828167703E-10,
+      "tip": [
+        28.05671446678012,
+        897.3483093594683,
+        65.23217306264549
+      ],
+      "tipTwist": -0.0070288503694768
+    },
+    "discretization": {
+      "displacementRelative": 4.199014602127237E-05,
+      "incidenceRelative": 0.0061697572514145295,
+      "stressRelative": 1.8649402199788472E-06
+    },
+    "actualNumerics": {
+      "requestedElements": 80,
+      "sectionSamples": 15,
+      "actualElements": 99,
+      "actualSections": 16,
+      "finiteWallTorsion": true
+    },
+    "maxAxialStrain": 0.0007509970972154089,
+    "designCriteria": {
+      "selected": {
+        "maxTipDeflection": 45,
+        "maxTipTwist": 2
+      },
+      "tipDeflectionCriterionMet": false,
+      "tipTwistCriterionMet": true
+    },
+    "sectionTorsion": [
+      "finite-wall homogeneous material-union P1 Saint-Venant section"
+    ],
+    "microscopicUnionRoundingMm": [
+      2.488838092932445E-09,
+      2.2429603886878593E-09
+    ]
   },
-  "browserQA": "Native browser consultation/control blocked by unavailable Firefox URL-policy enforcement; no claim of live-browser visual QA. Actual controller SVG plots were rasterized and inspected.",
-  "consultation": "Attempted Astra browser consultation unavailable; no external advice claimed.",
-  "scopeLimits": [
-    "Attached incompressible inviscid flow only",
-    "Small elastic strains and rigid beam sections; no transverse shear or section distortion",
-    "Finite-wall GJ does not replace the shear-centre approximation",
-    "No material/buckling/failure/stable-branch/flutter or experimental validation",
-    "Positive tip chord only; excluded end-zone normal stress remains absent"
+  "verified": [
+    "Exact circular elastica through 1.6 rad",
+    "Independent scalar nonlinear BVP to better than 1e-8 normalized displacement/rotation",
+    "Small-load and full constitutive-coupling limits; rigid-motion objectivity; 1.8 rad pure torsion",
+    "Analytic finite-wall torsion: ellipse, rectangle and rotated held-out ellipse",
+    "Identity/deformed pressure, target-lift and six-component pressure-wrench checks",
+    "All 16 complete coupled/refinement checks and independent whole-case force/moment balance",
+    "Actual controller rendering, frozen exports, selected design-criteria reporting, cancellation/late-message races and duplicate suppression",
+    "Deterministic served-asset rebuild; two actual profile figures rasterized and inspected"
   ],
-  "cleanup": []
+  "independentLinuxExecution": {
+    "commit": "966ae66bdfaa59659b8ddf527e96e532138c9520",
+    "conclusion": "success",
+    "url": "https://github.com/Ehsan-Roohi/Aerospace-Structures/actions/runs/42319106069",
+    "coverage": "Current numerical bundle; latest separate design-criterion UI changes also passed local controller tests."
+  },
+  "browserQA": "Native browser consultation/control blocked by unavailable Firefox URL-policy enforcement; no live-browser visual-QA claim. The actual controller SVG displacement/incidence plots were rasterized and inspected at readable resolution.",
+  "consultation": "Astra browser consultation attempted but blocked; no external advice claimed.",
+  "scopeLimits": [
+    "Attached incompressible inviscid flow; no viscosity, stall or separation",
+    "Small elastic strains and rigid beam sections; no transverse shear or section distortion",
+    "Finite-wall GJ does not replace the existing shear-centre approximation",
+    "No material/plasticity, buckling, local strength, stable-branch, divergence, flutter or experimental validation",
+    "Positive tip chord only; excluded end-zone normal stress remains absent",
+    "Numerical acceptance is separate from the selected stiffness criteria; this example exceeds its 45 mm deflection criterion"
+  ],
+  "sourceCanonicalHashes": {
+    "computational/printed-wing-solver/web/load_profiles.js": "9f481f7db3220ecbe4e392adbee6484c6b5459a5b38563cc62364d80acd5356f",
+    "computational/printed-wing-solver/web/wing_spars.js": "35a7ddf57fb27c4d64dba7eb35f86b92ed89fd69116cb6559e22158989f1cc2c",
+    "computational/printed-wing-solver/web/vendor/finite-section-geometry/geometry.min.js": "6673d3336d7aa489131e4ff26bb91705ab0181020742c54f5cff2ebb07f5a5ca",
+    "computational/printed-wing-solver/nonlinear/wing_finite_section_guarded.js": "c967b002a3da4ac5c891b1a132e37df3d36d66db89ac67557b368ffbdf0c7502",
+    "computational/printed-wing-solver/web/wing_airfoils.js": "473e66e1335ee08349d6ada6863c32673b88cc05459bbe6301ca99e27f33ddee",
+    "computational/printed-wing-solver/web/wing_geometry.js": "71ec0893f6587eb3ee0a6568a5c8ab27d9936117b141e22dcaf1ded2ecf9fd27",
+    "computational/printed-wing-solver/web/wing_frame3d.js": "823b27ea0d8a41fcb5cf71d7935a7ae65bc9ef6c8426840930d14222c15e656f",
+    "computational/printed-wing-solver/web/wing_closed_tip_stress.js": "f48504931ea002a27a300cb14251231fdfd5ad83b48b8c400598e730efbe0a16",
+    "docs/wing-panel-stress-analyzer/ui/zero-tip-source/engine.js": "590f7b3d5e946abd9f5a10f5cb3a96b6775fa691a2143afa858706a6b42cffd0",
+    "docs/wing-panel-stress-analyzer/wing-aero/wing_aero_panel.js": "4f5391bf41528952718279a11190d06fdd36715a729dc18312b3a8817b3b3e9f",
+    "computational/printed-wing-solver/nonlinear/wing_nonlinear_beam.js": "b4e99e09d55062a88b046ce5cb0d8e8ddcf8fcb1b5ca611776a90cd5e2b12aa0",
+    "computational/printed-wing-solver/nonlinear/wing_flexible_solver.js": "55db4ef6ae097b0aeb63d654ee2731887b92816ac84c57531bada8db00839bcf",
+    "computational/printed-wing-solver/nonlinear/flexible-ui.js": "fda842555bd47c403d45f1b5fb099a7b427c4f56eb9e4880766498c1f0c099c0",
+    "computational/printed-wing-solver/nonlinear/build_flexible_solver.py": "eea7fe9b3325d494dec26861605f19e960311c4687e59f32bb7ee9ffe41f3b8b"
+  },
+  "cleanup": [
+    {
+      "remainingBytes": 0,
+      "bytes": 26693746.0,
+      "status": "Removed",
+      "reason": "Disposable dependencies after passing UI controller tests",
+      "path": "D:\\ChatGPT Backup\\Projects\\Aerospace-Structures-wing-update\\output\\flexible-wing-current\\test-deps"
+    },
+    {
+      "bytes": 3085,
+      "status": "Removed",
+      "reason": "Superseded generated diagnostic/render cache; current checked result, CSV and paired SVG/PNG retained",
+      "path": "D:\\ChatGPT Backup\\Projects\\Aerospace-Structures-wing-update\\output\\flexible-wing-current\\profile-1.svg"
+    },
+    {
+      "bytes": 3114,
+      "status": "Removed",
+      "reason": "Superseded generated diagnostic/render cache; current checked result, CSV and paired SVG/PNG retained",
+      "path": "D:\\ChatGPT Backup\\Projects\\Aerospace-Structures-wing-update\\output\\flexible-wing-current\\profile-2.svg"
+    },
+    {
+      "bytes": 3143,
+      "status": "Removed",
+      "reason": "Superseded generated diagnostic/render cache; current checked result, CSV and paired SVG/PNG retained",
+      "path": "D:\\ChatGPT Backup\\Projects\\Aerospace-Structures-wing-update\\output\\flexible-wing-current\\profile-3.svg"
+    },
+    {
+      "bytes": 3158,
+      "status": "Removed",
+      "reason": "Superseded generated diagnostic/render cache; current checked result, CSV and paired SVG/PNG retained",
+      "path": "D:\\ChatGPT Backup\\Projects\\Aerospace-Structures-wing-update\\output\\flexible-wing-current\\profile-4.svg"
+    },
+    {
+      "bytes": 5180,
+      "status": "Removed",
+      "reason": "Superseded generated diagnostic/render cache; current checked result, CSV and paired SVG/PNG retained",
+      "path": "D:\\ChatGPT Backup\\Projects\\Aerospace-Structures-wing-update\\output\\flexible-wing-current\\profile-5.svg"
+    },
+    {
+      "bytes": 98324,
+      "status": "Removed",
+      "reason": "Superseded generated diagnostic/render cache; current checked result, CSV and paired SVG/PNG retained",
+      "path": "D:\\ChatGPT Backup\\Projects\\Aerospace-Structures-wing-update\\output\\flexible-wing-current\\diagnostic-result.json"
+    }
+  ]
 }

@@ -1,0 +1,78 @@
+/* Independent multi-beam rod/sleeve system. Units mm,N,MPa.
+ * Bonded: exact rigid-offset six-DOF ties (coordinate elimination).
+ * Sleeve: independent rod beams; circular radial clearance, compressive-only
+ * frictionless contact, no axial friction and no rod-spin tie. All roots clamped.
+ * Small-displacement beam kinematics; no adhesive/contact strength prediction.
+ */
+const WingRodSystem=(()=>{
+'use strict';
+const F=typeof WingFrame3D!=='undefined'?WingFrame3D:require('../web/wing_frame3d.js');
+const zero=n=>Array.from({length:n},()=>new Float64Array(n)),dot=F.dot,add=F.add,sub=F.sub,mul=F.scale;
+function factor(A){const d=A.map((r,i)=>Math.sqrt(r[i])),L=zero(A.length);for(let i=0;i<A.length;i++)for(let j=0;j<=i;j++){let v=A[i][j]/d[i]/d[j];for(let k=0;k<j;k++)v-=L[i][k]*L[j][k];if(i===j){if(!(v>0))throw Error('Rod system is singular; check root restraints/contact constraints.');L[i][j]=Math.sqrt(v);}else L[i][j]=v/L[j][j];}return b=>{let y=new Float64Array(b.length),x=new Float64Array(b.length);for(let i=0;i<b.length;i++){let v=b[i]/d[i];for(let j=0;j<i;j++)v-=L[i][j]*y[j];y[i]=v/L[i][i];}for(let i=b.length-1;i>=0;i--){let v=y[i];for(let j=i+1;j<b.length;j++)v-=L[j][i]*x[j];x[i]=v/L[i][i];}return x.map((v,i)=>v/d[i]);};}
+function offsetRows(arm){const [x,y,z]=arm;return [[1,0,0,0,z,-y],[0,1,0,-z,0,x],[0,0,1,y,-x,0],[0,0,0,1,0,0],[0,0,0,0,1,0],[0,0,0,0,0,1]];}
+function solve({nodes,elements,rods,mode='bonded',gap=0,contactStations=null,tolerance=1e-6,maxIterations=1500}){
+ if(!['bonded','sleeve'].includes(mode)||!Number.isFinite(gap)||gap<0)throw Error('Choose bonded or sleeve and a finite nonnegative radial clearance.');
+ if(!rods?.length||rods.some(r=>r.nodes.length!==nodes.length))throw Error('Rod paths need one node per shell station.');
+ const count=nodes.length,nShell=count*6,total=mode==='bonded'?nShell:nShell*(1+rods.length),K=zero(total),f=new Float64Array(total),all=[];
+ function insert(ns,es,id){const members=es.map(e=>F.element(ns,e));for(const e of members){let maps=e.dofs.map(d=>{const station=Math.floor(d/6),j=d%6;if(!id)return [[d,1]];if(mode==='sleeve')return [[id*nShell+d,1]];return offsetRows(sub(ns[station],nodes[station]))[j].flatMap((v,k)=>v?[[station*6+k,v]]:[]);});for(let i=0;i<12;i++)for(const[a,v]of maps[i]){f[a]+=v*e.fg[i];for(let j=0;j<12;j++)for(const[b,w]of maps[j])K[a][b]+=v*w*e.kg[i][j];}all.push({id,e,maps});}}
+ insert(nodes,elements,0);rods.forEach((r,i)=>insert(r.nodes,r.elements,i+1));
+ const fixed=new Set(Array.from({length:mode==='bonded'?1:1+rods.length},(_,i)=>Array.from({length:6},(_,j)=>i*nShell+j)).flat()),free=Array.from({length:total},(_,i)=>i).filter(i=>!fixed.has(i)),map=new Map(free.map((v,i)=>[v,i])),solveK=factor(free.map(i=>Float64Array.from(free,j=>K[i][j]))),ff=Float64Array.from(free,i=>f[i]),u0=solveK(ff),contacts=[];
+ if(mode==='sleeve')rods.forEach((r,k)=>{for(let i=1;i<count;i++){if(contactStations&&!contactStations.includes(i))continue;const arm=sub(r.nodes[i],nodes[i]),T=offsetRows(arm),R=F.basis(r.nodes[Math.max(0,i-1)],r.nodes[Math.min(count-1,i+1)]),C=R.slice(1).map(normal=>{const row=new Float64Array(free.length);for(let j=0;j<6;j++){const v=normal.reduce((s,a,h)=>s+a*T[h][j],0);row[map.get(i*6+j)]+=v;}for(let j=0;j<3;j++)row[map.get((k+1)*nShell+i*6+j)]-=normal[j];return row;});contacts.push({rod:k,station:i,C});}});
+ const C=contacts.flatMap(c=>c.C),Z=C.map(c=>solveK(c)),W=C.map(a=>Float64Array.from(Z,z=>dot(a,z))),d0=C.map(c=>dot(c,u0));let relative=d0.slice(),iterations=0;
+ // Convex dual: min 1/2 lambda.W.lambda - d0.lambda + gap sum |lambda_i|.
+ // Each exact two-component coordinate minimization is a 2x2 solve plus
+ // scalar bisection. No tensile force or artificial contact stiffness.
+ const radial=new Float64Array(C.length),Wr=new Float64Array(C.length);let contactResidual=0;
+ const maxSweeps=Math.max(10000,maxIterations*20);
+ if(contacts.length&&gap===0){const exact=F.solveSPD(W,d0);exact.forEach((v,i)=>radial[i]=v);W.forEach((row,i)=>Wr[i]=dot(row,radial));contactResidual=Math.max(...d0.map((v,i)=>Math.abs(v-Wr[i])));}
+ for(iterations=0;gap>0&&iterations<maxSweeps;iterations++){
+  for(let k=0;k<contacts.length;k++){
+   const i=2*k,a=W[i][i],b=W[i][i+1],c=W[i+1][i+1],x=radial[i],y=radial[i+1],bx=d0[i]-Wr[i]+a*x+b*y,by=d0[i+1]-Wr[i+1]+b*x+c*y;
+   let nx=0,ny=0;
+   if(Math.hypot(bx,by)>gap){
+    const at=mu=>{const aa=a+mu,cc=c+mu,det=aa*cc-b*b;return [(cc*bx-b*by)/det,(aa*by-b*bx)/det];};
+    let mu=0;
+    if(gap){let lo=0,hi=Math.max(a,c);while(hi*Math.hypot(...at(hi))<gap)hi*=2;for(let j=0;j<44;j++){const mid=(lo+hi)/2;if(mid*Math.hypot(...at(mid))<gap)lo=mid;else hi=mid;}mu=(lo+hi)/2;}
+    [nx,ny]=at(mu);
+   }
+   radial[i]=nx;radial[i+1]=ny;const dx=nx-x,dy=ny-y;
+   if(dx||dy)for(let j=0;j<C.length;j++)Wr[j]+=W[j][i]*dx+W[j][i+1]*dy;
+  }
+  if(iterations%10===0&&iterations>0){
+   const groups=contacts.map((_,k)=>k).filter(k=>Math.hypot(radial[2*k],radial[2*k+1])>1e-10),ids=groups.flatMap(k=>[2*k,2*k+1]);
+   if(ids.length){
+    const H=ids.map(i=>Float64Array.from(ids,j=>W[i][j])),rhs=ids.map(i=>d0[i]-Wr[i]);
+    groups.forEach((k,a)=>{const i=2*k,r=Math.hypot(radial[i],radial[i+1]),n=[radial[i]/r,radial[i+1]/r];for(let h=0;h<2;h++){rhs[2*a+h]-=gap*n[h];for(let j=0;j<2;j++)H[2*a+h][2*a+j]+=gap/r*((h===j?1:0)-n[h]*n[j]);}});
+    const du=F.solveSPD(H,rhs),objective=(x,wx)=>.5*dot(x,wx)-dot(d0,x)+gap*contacts.reduce((v,_,k)=>v+Math.hypot(x[2*k],x[2*k+1]),0),old=objective(radial,Wr);
+    for(let ls=0;ls<18;ls++){
+     const trial=radial.slice();ids.forEach((i,j)=>trial[i]+=du[j]*2**(-ls));const wt=W.map(row=>dot(row,trial));
+     if(objective(trial,wt)<old){trial.forEach((v,i)=>radial[i]=v);wt.forEach((v,i)=>Wr[i]=v);break;}
+    }
+   }
+  }
+  if(iterations%10===0){
+   contactResidual=0;
+   for(let k=0;k<contacts.length;k++){const i=2*k,x=d0[i]-Wr[i],y=d0[i+1]-Wr[i+1],r=Math.hypot(radial[i],radial[i+1]);contactResidual=Math.max(contactResidual,r>1e-12?Math.hypot(x-gap*radial[i]/r,y-gap*radial[i+1]/r):Math.max(0,Math.hypot(x,y)-gap));}
+   if(contactResidual<=tolerance*.5)break;
+  }
+ }
+ if(mode==='sleeve'&&(maxIterations===0||iterations===maxSweeps))throw Error('Circular sleeve contact did not converge; no partial structural result accepted.');
+ relative=d0.map((v,i)=>v-Wr[i]);
+ const uf=u0.map((v,i)=>v-Z.reduce((s,z,j)=>s+z[i]*radial[j],0)),u=new Float64Array(total);free.forEach((d,i)=>u[d]=uf[i]);
+ const residual=K.map((r,i)=>dot(r,u)-f[i]);C.forEach((c,j)=>c.forEach((v,i)=>residual[free[i]]+=v*radial[j]));
+ const recover=id=>all.filter(a=>a.id===id).map(({e,maps})=>{const ug=maps.map(row=>row.reduce((s,[d,v])=>s+v*u[d],0)),ul=e.T.map(row=>dot(row,ug)),bubble=(e.axialMode.load-dot(e.axialMode.coupling,ul))/e.axialMode.stiffness;return {...e,ul,bubble};});
+ const members=recover(0),rodMembers=rods.map((_,i)=>recover(i+1)),displacements=nodes.map((_,i)=>Array.from(u.slice(i*6,i*6+3))),rotations=nodes.map((_,i)=>Array.from(u.slice(i*6+3,i*6+6))),contact=contacts.map((c,i)=>({...c,C:undefined,radialDisplacement:relative.slice(2*i,2*i+2),force: Array.from(radial.slice(2*i,2*i+2)),gap})),maxPenetration=Math.max(0,...contact.map(c=>Math.hypot(...c.radialDisplacement)-gap)),freeResidual=Math.max(0,...free.map(i=>Math.abs(residual[i]))),scale=Math.max(1,...f.map(Math.abs));
+ if(maxPenetration>tolerance*1.01||freeResidual>1e-5*scale)throw Error('Rod equilibrium/contact checks failed; no accepted response.');
+ const totalForce=[0,0,0],totalMoment=[0,0,0],supportForce=[0,0,0],supportMoment=[0,0,0];
+ for(let id=0;id<(mode==='bonded'?1:rods.length+1);id++)for(let i=0;i<count;i++){
+  const point=id?rods[id-1].nodes[i]:nodes[i],base=id*nShell+i*6,af=Array.from(f.slice(base,base+3)),am=add(Array.from(f.slice(base+3,base+6)),F.cross(point,af)),rf=[0,1,2].map(j=>fixed.has(base+j)?residual[base+j]:0),rm=add([0,1,2].map(j=>fixed.has(base+3+j)?residual[base+3+j]:0),F.cross(point,rf));
+  for(let j=0;j<3;j++){totalForce[j]+=af[j];totalMoment[j]+=am[j];supportForce[j]+=rf[j];supportMoment[j]+=rm[j];}
+ }
+ const forceError=F.norm(add(totalForce,supportForce)),momentError=F.norm(add(totalMoment,supportMoment));
+ const internalWork=all.reduce((s,a)=>s+a.e.axialMode.load**2/a.e.axialMode.stiffness,0),energy=.5*(dot(u,K.map(row=>dot(row,u)))+internalWork),work=dot(u,f)+internalWork,contactWork=dot(radial,relative),energyError=Math.abs(2*energy-work+contactWork)/Math.max(1,Math.abs(work));
+ if(forceError>1e-5*Math.max(1,F.norm(totalForce))||momentError>1e-5*Math.max(1,F.norm(totalMoment))||energyError>1e-7||contactResidual>tolerance)throw Error('Rod force/moment/energy/contact verification failed; no accepted response.');
+ return {nodes,elements:members,rodElements:rodMembers,displacements,rotations,u,applied:f.slice(0,nShell),reactions:[...fixed].map(d=>({dof:d,value:residual[d]})),energy,work,verification:{forceError,momentError,totalForce,totalMoment,supportForce,supportMoment,freeResidual,maxPenetration,energyError,iterations,contactResidual,contactWork},contact,mode,method:mode==='bonded'?'Separate rod beams with exact six-DOF rigid-offset bonded ties':'Separate rod beams with unilateral circular-clearance frictionless sleeve contact',scope:'Small displacement; shell and every rod root fully clamped; continuous sleeve sampled at beam stations; no friction, glue failure, bearing strength, sleeve crushing or geometric nonlinearity.'};
+}
+return {solve,offsetRows};
+})();
+if(typeof module!=='undefined'&&module.exports)module.exports=WingRodSystem;

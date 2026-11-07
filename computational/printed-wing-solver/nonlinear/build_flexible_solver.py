@@ -8,6 +8,17 @@ A=R/'docs/wing-panel-stress-analyzer'
 dest=A/'nonlinear'
 dest.mkdir(exist_ok=True)
 sha=lambda b:hashlib.sha256(b).hexdigest()
+# Canonical rod mechanics and engine are shared by page and both workers.
+engine=(A/'ui/zero-tip-source/engine.js').read_text(encoding='utf-8-sig').strip()
+rod=(N/'wing_rod_system.js').read_text(encoding='utf-8-sig').strip()
+for target in [A/'index.html',A/'wing-lab.html']:
+ text=target.read_text(encoding='utf-8-sig')
+ start=text.index('const WingEngine = (() => {')
+ end=text.index('module.exports = WingEngine;',start)+len('module.exports = WingEngine;')
+ if 'const WingRodSystem=(()=>{' in text[:start]:
+  start=text.index('/* Independent multi-beam rod/sleeve system.')
+ text=text[:start]+rod+'\n;\n'+engine+text[end:]
+ target.write_text(text,encoding='utf-8',newline='\n')
 core=(A/'wing-aero/wing_aero_panel.js').read_text(encoding='utf-8-sig')
 module_start='const WingAeroPanel = (() => {'
 module_end="if (typeof module !== 'undefined' && module.exports) module.exports = WingAeroPanel;"
@@ -24,7 +35,7 @@ aero_worker=aero_worker_path.read_text(encoding='utf-8')
 aero_worker=re.sub(r"(['\"]\./aero_bundle\.js)(?:\?v=[0-9a-f]+)?",rf'\1?v={aero_bundle_hash}',aero_worker)
 aero_worker_path.write_text(aero_worker,encoding='utf-8',newline='\n')
 aero_worker_hash=sha(aero_worker_path.read_bytes())[:12]
-parts=[W/'load_profiles.js',W/'wing_spars.js',W/'vendor/finite-section-geometry/geometry.min.js',N/'wing_finite_section_guarded.js',W/'wing_airfoils.js',W/'wing_geometry.js',W/'wing_frame3d.js',W/'wing_closed_tip_stress.js',A/'ui/zero-tip-source/engine.js',A/'wing-aero/wing_aero_panel.js',N/'wing_nonlinear_beam.js',N/'wing_flexible_solver.js']
+parts=[W/'load_profiles.js',W/'wing_spars.js',W/'vendor/finite-section-geometry/geometry.min.js',N/'wing_finite_section_guarded.js',W/'wing_airfoils.js',W/'wing_geometry.js',W/'wing_frame3d.js',W/'wing_closed_tip_stress.js',N/'wing_rod_system.js',A/'ui/zero-tip-source/engine.js',A/'wing-aero/wing_aero_panel.js',N/'wing_nonlinear_beam.js',N/'wing_flexible_solver.js']
 source='/* Finite-section dependency notices:\n'+(W/'vendor/finite-section-geometry/LICENSES.txt').read_text(encoding='utf-8')+' */\n'+'\n;\n'.join(p.read_text(encoding='utf-8-sig') for p in parts)
 (dest/'flexible_bundle.js').write_text(source,encoding='utf-8',newline='\n')
 bundle_hash=sha(source.encode())[:12]
@@ -46,7 +57,7 @@ for name in ['index.html','wing-lab.html']:
  text=text.replace('</body>',f'<script src="nonlinear/flexible-ui.js?v={ui_hash}"></script>\n</body>')
  p.write_text(text,encoding='utf-8',newline='\n')
 b=json.loads((A/'BUILD.json').read_text(encoding='utf-8'))
-b.update(version='0.4.0',builtAt=datetime.datetime.now(datetime.timezone.utc).isoformat(),pageSha256=sha((A/'index.html').read_bytes()))
+b.update(version='0.4.1',builtAt=datetime.datetime.now(datetime.timezone.utc).isoformat(),pageSha256=sha((A/'index.html').read_bytes()))
 b['workers']['wing-aero']={'bundle':aero_bundle_hash,'worker':aero_worker_hash}
 b['workers']['flexible-wing']={'bundle':bundle_hash,'worker':worker_hash}
 b['flexibleWingScope']='Geometrically exact static two-way pressure/beam solver; numerical admission is not a material, stability or experimental validation.'
@@ -57,7 +68,7 @@ b['flexibleWingSources']={str(p.relative_to(R)).replace('\\','/'):sha(p.read_tex
 (A/'BUILD.json').write_text(json.dumps(b,indent=2)+'\n',encoding='utf-8')
 p=A/'RELEASE.json'
 release=json.loads(p.read_text(encoding='utf-8'))
-release.update(version='0.4.0',flexible_solver_version='finite-rotation-coupled-1')
+release.update(version='0.4.1',flexible_solver_version='finite-rotation-coupled-1')
 release['scope']='Educational attached inviscid 3D potential-flow pressures and nominal beam stresses, with separate legacy rigid-load models and an optional finite-rotation static two-way Kirchhoff solver for positive-chord tips. No viscous/stall model, section distortion, material failure, stability or experimental validation.'
 release['ui_release']['page_sha256']=b['pageSha256']
 release['flexible_solver']={'source':'computational/printed-wing-solver/nonlinear','builder':'computational/printed-wing-solver/nonlinear/build_flexible_solver.py','scope':b['flexibleWingScope'],'review':'validation/NONLINEAR_FLEXIBLE_WING_REVIEW.json'}

@@ -29,6 +29,7 @@ const WingFlexibleSolver=(()=>{
  async function solve(request,progress=()=>{}){
   const input={...request.input,nElements:Math.max(80,request.input.nElements||40),nSections:Math.max(15,request.input.nSections||7)},g=E.makeGeometry(input.geometry),L=g.semiSpan,flow={...request.flow},settings=request.settings||{},maxIterations=settings.maxIterations??16;
   A.normalizeFlow(flow);
+  if(g.rodFractions?.length)throw Error('Rod/sleeve models currently use separate small-displacement beam fields with clearance contact. Use Apply aerodynamic loads to structure; finite-rotation multi-beam contact is not yet admitted.');
   if(!(g.tipChord>0)||G.closedTip(g))throw Error('Finite-rotation coupling is not validated for exact zero-chord tips.');
   if(settings.targetLift_N!=null&&!Number.isFinite(settings.targetLift_N))throw Error('Target lift must be finite.');
   progress('Building actual projected sections and finite-rotation beam…');let base=template(input),shape=undeformed(base),lastRows=null,lastRoot=null,seq=null,result=null,rows=null,rigid=null,history=[],converged=false;

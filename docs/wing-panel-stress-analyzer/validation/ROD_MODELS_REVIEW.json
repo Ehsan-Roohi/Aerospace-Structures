@@ -1,0 +1,105 @@
+{
+  "status": "Analytical numerical verification; not experimental validation",
+  "models": {
+    "bonded": "Separate rod beams; exact six-DOF eccentric ties",
+    "sleeve": "Separate rod beams; circular-clearance frictionless compression-only contact; free axial slip and spin"
+  },
+  "root_boundary": "All six shell and rod root DOFs clamped; integral sleeves rigidly follow shell cross-section; bonded module seams",
+  "scope_limit": "Small-displacement models only. The finite-rotation single-beam solver refuses rods. No friction, glue strength, bearing/crushing, dry seams or experimental aircraft validation.",
+  "references": {
+    "bonded": "Euler-Bernoulli composite EI = EI_carrier + 2*Erod*(Irod+Arod*offset^2), symmetric rods at z=+/-10 mm; tip=P L^3/(3 EI).",
+    "sleeve": "Two independent cantilever compliances ks=3EI/L^3, kr=3ErIr/L^3. Before contact w=P/ks; after contact w=(P+sign(P)*kr*gap)/(ks+kr). Continuous prismatic sleeve has the same exact solution because the relative cubic profile is below gap at every interior station."
+  },
+  "criteria": {
+    "finest_bonded_relative": 0.001,
+    "sleeve_tip_absolute_mm": 1e-07,
+    "penetration_mm": 1e-06
+  },
+  "independent_cases": 21,
+  "bonded_refinement": [
+    {
+      "elements": 12,
+      "reference_mm": 0.09890573604358283,
+      "solver_mm": 0.09933878284216958,
+      "relative_error": 0.004378379009241096
+    },
+    {
+      "elements": 24,
+      "reference_mm": 0.09890573604358283,
+      "solver_mm": 0.09901399774706728,
+      "relative_error": 0.0010945947911125131
+    },
+    {
+      "elements": 48,
+      "reference_mm": 0.09890573604358283,
+      "solver_mm": 0.09893280155964283,
+      "relative_error": 0.00027364960964537666
+    }
+  ],
+  "sleeve_worst_tip_absolute_error_mm": 1.996652843061497e-11,
+  "wing_integration_cases": 8,
+  "wing_summary": [
+    {
+      "bonded": true,
+      "selfWeight": false,
+      "elements": 25,
+      "tip_mm": 2.202483509870223,
+      "smallDisplacement": true
+    },
+    {
+      "bonded": true,
+      "selfWeight": false,
+      "elements": 44,
+      "tip_mm": 2.200767295379517,
+      "smallDisplacement": true
+    },
+    {
+      "bonded": true,
+      "selfWeight": true,
+      "elements": 25,
+      "tip_mm": -2.862230701731018,
+      "smallDisplacement": true
+    },
+    {
+      "bonded": true,
+      "selfWeight": true,
+      "elements": 44,
+      "tip_mm": -2.8614293289842956,
+      "smallDisplacement": true
+    },
+    {
+      "bonded": false,
+      "selfWeight": false,
+      "elements": 25,
+      "tip_mm": 2.222276581094536,
+      "smallDisplacement": true
+    },
+    {
+      "bonded": false,
+      "selfWeight": false,
+      "elements": 44,
+      "tip_mm": 2.2210900508921125,
+      "smallDisplacement": true
+    },
+    {
+      "bonded": false,
+      "selfWeight": true,
+      "elements": 25,
+      "tip_mm": -2.881984958403592,
+      "smallDisplacement": true
+    },
+    {
+      "bonded": false,
+      "selfWeight": true,
+      "elements": 44,
+      "tip_mm": -2.8792223067839866,
+      "smallDisplacement": true
+    }
+  ],
+  "sources": {
+    "computational/printed-wing-solver/nonlinear/wing_rod_system.js": "e42e43c65f3e4945b5ffd1c2fded2733ac6b722433f49978f1e9847b33d5b72d",
+    "computational/printed-wing-solver/nonlinear/test_rod_system.cjs": "099ea8cb8d2c923c24694c6a9628a6fe449513f558dd208944b30edd3852213a",
+    "computational/printed-wing-solver/nonlinear/test_rod_wing.cjs": "72185d320152f83b681be554b677977b83e0a885af49b823509de834c2f32044",
+    "docs/wing-panel-stress-analyzer/ui/zero-tip-source/engine.js": "58f0af8318763cf82bf295da89b48372beb5208130e45c33d2f1101fea71f70b"
+  }
+}

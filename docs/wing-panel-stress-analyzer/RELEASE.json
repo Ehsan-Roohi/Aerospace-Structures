@@ -1,6 +1,6 @@
 {
   "application": "Wing Panel Stress Analyzer (Wing AeroStruct)",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "source_archive": "wing-aerostruct-0.3.0-dev-review.zip",
   "source_sha256": "bc6986c744568a516fd22bdd3b9508550625b82a77cd924adf52dfaa5156a54d",
   "original_base": "5ab2498",
@@ -69,7 +69,7 @@
       "Separate structural validation page: independent CalculiX comparison, signed displacement/rotation and raw stress profiles, matched sample CSV and reproducible decks",
       "Top-level Cavitation link opens the separate 2D research application from the Wing, Beam and Full-scale wing workspace menus"
     ],
-    "page_sha256": "867d126a9fb1f34c6e91862d943a821748019d9a126c26b477024004b008a1d0",
+    "page_sha256": "f8f621b0afa1f237db27824d16f2eaf16e61d3f5431c2cd138e1188ada784fc6",
     "source_port": "ui/01-wing-aerostruct-ui-sources.patch",
     "independent_review": "validation/UI_RELEASE_REVIEW.json",
     "surface_review": "validation/UI_SURFACE_REVIEW.json",

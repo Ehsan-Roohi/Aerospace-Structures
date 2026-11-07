@@ -1654,6 +1654,86 @@ const WingClosedTipStress = (() => {
 if(typeof module!=='undefined'&&module.exports)module.exports=WingClosedTipStress;
 
 ;
+/* Independent multi-beam rod/sleeve system. Units mm,N,MPa.
+ * Bonded: exact rigid-offset six-DOF ties (coordinate elimination).
+ * Sleeve: independent rod beams; circular radial clearance, compressive-only
+ * frictionless contact, no axial friction and no rod-spin tie. All roots clamped.
+ * Small-displacement beam kinematics; no adhesive/contact strength prediction.
+ */
+const WingRodSystem=(()=>{
+'use strict';
+const F=typeof WingFrame3D!=='undefined'?WingFrame3D:require('../web/wing_frame3d.js');
+const zero=n=>Array.from({length:n},()=>new Float64Array(n)),dot=F.dot,add=F.add,sub=F.sub,mul=F.scale;
+function factor(A){const d=A.map((r,i)=>Math.sqrt(r[i])),L=zero(A.length);for(let i=0;i<A.length;i++)for(let j=0;j<=i;j++){let v=A[i][j]/d[i]/d[j];for(let k=0;k<j;k++)v-=L[i][k]*L[j][k];if(i===j){if(!(v>0))throw Error('Rod system is singular; check root restraints/contact constraints.');L[i][j]=Math.sqrt(v);}else L[i][j]=v/L[j][j];}return b=>{let y=new Float64Array(b.length),x=new Float64Array(b.length);for(let i=0;i<b.length;i++){let v=b[i]/d[i];for(let j=0;j<i;j++)v-=L[i][j]*y[j];y[i]=v/L[i][i];}for(let i=b.length-1;i>=0;i--){let v=y[i];for(let j=i+1;j<b.length;j++)v-=L[j][i]*x[j];x[i]=v/L[i][i];}return x.map((v,i)=>v/d[i]);};}
+function offsetRows(arm){const [x,y,z]=arm;return [[1,0,0,0,z,-y],[0,1,0,-z,0,x],[0,0,1,y,-x,0],[0,0,0,1,0,0],[0,0,0,0,1,0],[0,0,0,0,0,1]];}
+function solve({nodes,elements,rods,mode='bonded',gap=0,contactStations=null,tolerance=1e-6,maxIterations=1500}){
+ if(!['bonded','sleeve'].includes(mode)||!Number.isFinite(gap)||gap<0)throw Error('Choose bonded or sleeve and a finite nonnegative radial clearance.');
+ if(!rods?.length||rods.some(r=>r.nodes.length!==nodes.length))throw Error('Rod paths need one node per shell station.');
+ const count=nodes.length,nShell=count*6,total=mode==='bonded'?nShell:nShell*(1+rods.length),K=zero(total),f=new Float64Array(total),all=[];
+ function insert(ns,es,id){const members=es.map(e=>F.element(ns,e));for(const e of members){let maps=e.dofs.map(d=>{const station=Math.floor(d/6),j=d%6;if(!id)return [[d,1]];if(mode==='sleeve')return [[id*nShell+d,1]];return offsetRows(sub(ns[station],nodes[station]))[j].flatMap((v,k)=>v?[[station*6+k,v]]:[]);});for(let i=0;i<12;i++)for(const[a,v]of maps[i]){f[a]+=v*e.fg[i];for(let j=0;j<12;j++)for(const[b,w]of maps[j])K[a][b]+=v*w*e.kg[i][j];}all.push({id,e,maps});}}
+ insert(nodes,elements,0);rods.forEach((r,i)=>insert(r.nodes,r.elements,i+1));
+ const fixed=new Set(Array.from({length:mode==='bonded'?1:1+rods.length},(_,i)=>Array.from({length:6},(_,j)=>i*nShell+j)).flat()),free=Array.from({length:total},(_,i)=>i).filter(i=>!fixed.has(i)),map=new Map(free.map((v,i)=>[v,i])),solveK=factor(free.map(i=>Float64Array.from(free,j=>K[i][j]))),ff=Float64Array.from(free,i=>f[i]),u0=solveK(ff),contacts=[];
+ if(mode==='sleeve')rods.forEach((r,k)=>{for(let i=1;i<count;i++){if(contactStations&&!contactStations.includes(i))continue;const arm=sub(r.nodes[i],nodes[i]),T=offsetRows(arm),R=F.basis(r.nodes[Math.max(0,i-1)],r.nodes[Math.min(count-1,i+1)]),C=R.slice(1).map(normal=>{const row=new Float64Array(free.length);for(let j=0;j<6;j++){const v=normal.reduce((s,a,h)=>s+a*T[h][j],0);row[map.get(i*6+j)]+=v;}for(let j=0;j<3;j++)row[map.get((k+1)*nShell+i*6+j)]-=normal[j];return row;});contacts.push({rod:k,station:i,C});}});
+ const C=contacts.flatMap(c=>c.C),Z=C.map(c=>solveK(c)),W=C.map(a=>Float64Array.from(Z,z=>dot(a,z))),d0=C.map(c=>dot(c,u0));let relative=d0.slice(),iterations=0;
+ // Convex dual: min 1/2 lambda.W.lambda - d0.lambda + gap sum |lambda_i|.
+ // Each exact two-component coordinate minimization is a 2x2 solve plus
+ // scalar bisection. No tensile force or artificial contact stiffness.
+ const radial=new Float64Array(C.length),Wr=new Float64Array(C.length);let contactResidual=0;
+ const maxSweeps=Math.max(10000,maxIterations*20);
+ if(contacts.length&&gap===0){const exact=F.solveSPD(W,d0);exact.forEach((v,i)=>radial[i]=v);W.forEach((row,i)=>Wr[i]=dot(row,radial));contactResidual=Math.max(...d0.map((v,i)=>Math.abs(v-Wr[i])));}
+ for(iterations=0;gap>0&&iterations<maxSweeps;iterations++){
+  for(let k=0;k<contacts.length;k++){
+   const i=2*k,a=W[i][i],b=W[i][i+1],c=W[i+1][i+1],x=radial[i],y=radial[i+1],bx=d0[i]-Wr[i]+a*x+b*y,by=d0[i+1]-Wr[i+1]+b*x+c*y;
+   let nx=0,ny=0;
+   if(Math.hypot(bx,by)>gap){
+    const at=mu=>{const aa=a+mu,cc=c+mu,det=aa*cc-b*b;return [(cc*bx-b*by)/det,(aa*by-b*bx)/det];};
+    let mu=0;
+    if(gap){let lo=0,hi=Math.max(a,c);while(hi*Math.hypot(...at(hi))<gap)hi*=2;for(let j=0;j<44;j++){const mid=(lo+hi)/2;if(mid*Math.hypot(...at(mid))<gap)lo=mid;else hi=mid;}mu=(lo+hi)/2;}
+    [nx,ny]=at(mu);
+   }
+   radial[i]=nx;radial[i+1]=ny;const dx=nx-x,dy=ny-y;
+   if(dx||dy)for(let j=0;j<C.length;j++)Wr[j]+=W[j][i]*dx+W[j][i+1]*dy;
+  }
+  if(iterations%10===0&&iterations>0){
+   const groups=contacts.map((_,k)=>k).filter(k=>Math.hypot(radial[2*k],radial[2*k+1])>1e-10),ids=groups.flatMap(k=>[2*k,2*k+1]);
+   if(ids.length){
+    const H=ids.map(i=>Float64Array.from(ids,j=>W[i][j])),rhs=ids.map(i=>d0[i]-Wr[i]);
+    groups.forEach((k,a)=>{const i=2*k,r=Math.hypot(radial[i],radial[i+1]),n=[radial[i]/r,radial[i+1]/r];for(let h=0;h<2;h++){rhs[2*a+h]-=gap*n[h];for(let j=0;j<2;j++)H[2*a+h][2*a+j]+=gap/r*((h===j?1:0)-n[h]*n[j]);}});
+    const du=F.solveSPD(H,rhs),objective=(x,wx)=>.5*dot(x,wx)-dot(d0,x)+gap*contacts.reduce((v,_,k)=>v+Math.hypot(x[2*k],x[2*k+1]),0),old=objective(radial,Wr);
+    for(let ls=0;ls<18;ls++){
+     const trial=radial.slice();ids.forEach((i,j)=>trial[i]+=du[j]*2**(-ls));const wt=W.map(row=>dot(row,trial));
+     if(objective(trial,wt)<old){trial.forEach((v,i)=>radial[i]=v);wt.forEach((v,i)=>Wr[i]=v);break;}
+    }
+   }
+  }
+  if(iterations%10===0){
+   contactResidual=0;
+   for(let k=0;k<contacts.length;k++){const i=2*k,x=d0[i]-Wr[i],y=d0[i+1]-Wr[i+1],r=Math.hypot(radial[i],radial[i+1]);contactResidual=Math.max(contactResidual,r>1e-12?Math.hypot(x-gap*radial[i]/r,y-gap*radial[i+1]/r):Math.max(0,Math.hypot(x,y)-gap));}
+   if(contactResidual<=tolerance*.5)break;
+  }
+ }
+ if(mode==='sleeve'&&(maxIterations===0||iterations===maxSweeps))throw Error('Circular sleeve contact did not converge; no partial structural result accepted.');
+ relative=d0.map((v,i)=>v-Wr[i]);
+ const uf=u0.map((v,i)=>v-Z.reduce((s,z,j)=>s+z[i]*radial[j],0)),u=new Float64Array(total);free.forEach((d,i)=>u[d]=uf[i]);
+ const residual=K.map((r,i)=>dot(r,u)-f[i]);C.forEach((c,j)=>c.forEach((v,i)=>residual[free[i]]+=v*radial[j]));
+ const recover=id=>all.filter(a=>a.id===id).map(({e,maps})=>{const ug=maps.map(row=>row.reduce((s,[d,v])=>s+v*u[d],0)),ul=e.T.map(row=>dot(row,ug)),bubble=(e.axialMode.load-dot(e.axialMode.coupling,ul))/e.axialMode.stiffness;return {...e,ul,bubble};});
+ const members=recover(0),rodMembers=rods.map((_,i)=>recover(i+1)),displacements=nodes.map((_,i)=>Array.from(u.slice(i*6,i*6+3))),rotations=nodes.map((_,i)=>Array.from(u.slice(i*6+3,i*6+6))),contact=contacts.map((c,i)=>({...c,C:undefined,radialDisplacement:relative.slice(2*i,2*i+2),force: Array.from(radial.slice(2*i,2*i+2)),gap})),maxPenetration=Math.max(0,...contact.map(c=>Math.hypot(...c.radialDisplacement)-gap)),freeResidual=Math.max(0,...free.map(i=>Math.abs(residual[i]))),scale=Math.max(1,...f.map(Math.abs));
+ if(maxPenetration>tolerance*1.01||freeResidual>1e-5*scale)throw Error('Rod equilibrium/contact checks failed; no accepted response.');
+ const totalForce=[0,0,0],totalMoment=[0,0,0],supportForce=[0,0,0],supportMoment=[0,0,0];
+ for(let id=0;id<(mode==='bonded'?1:rods.length+1);id++)for(let i=0;i<count;i++){
+  const point=id?rods[id-1].nodes[i]:nodes[i],base=id*nShell+i*6,af=Array.from(f.slice(base,base+3)),am=add(Array.from(f.slice(base+3,base+6)),F.cross(point,af)),rf=[0,1,2].map(j=>fixed.has(base+j)?residual[base+j]:0),rm=add([0,1,2].map(j=>fixed.has(base+3+j)?residual[base+3+j]:0),F.cross(point,rf));
+  for(let j=0;j<3;j++){totalForce[j]+=af[j];totalMoment[j]+=am[j];supportForce[j]+=rf[j];supportMoment[j]+=rm[j];}
+ }
+ const forceError=F.norm(add(totalForce,supportForce)),momentError=F.norm(add(totalMoment,supportMoment));
+ const internalWork=all.reduce((s,a)=>s+a.e.axialMode.load**2/a.e.axialMode.stiffness,0),energy=.5*(dot(u,K.map(row=>dot(row,u)))+internalWork),work=dot(u,f)+internalWork,contactWork=dot(radial,relative),energyError=Math.abs(2*energy-work+contactWork)/Math.max(1,Math.abs(work));
+ if(forceError>1e-5*Math.max(1,F.norm(totalForce))||momentError>1e-5*Math.max(1,F.norm(totalMoment))||energyError>1e-7||contactResidual>tolerance)throw Error('Rod force/moment/energy/contact verification failed; no accepted response.');
+ return {nodes,elements:members,rodElements:rodMembers,displacements,rotations,u,applied:f.slice(0,nShell),reactions:[...fixed].map(d=>({dof:d,value:residual[d]})),energy,work,verification:{forceError,momentError,totalForce,totalMoment,supportForce,supportMoment,freeResidual,maxPenetration,energyError,iterations,contactResidual,contactWork},contact,mode,method:mode==='bonded'?'Separate rod beams with exact six-DOF rigid-offset bonded ties':'Separate rod beams with unilateral circular-clearance frictionless sleeve contact',scope:'Small displacement; shell and every rod root fully clamped; continuous sleeve sampled at beam stations; no friction, glue failure, bearing strength, sleeve crushing or geometric nonlinearity.'};
+}
+return {solve,offsetRows};
+})();
+if(typeof module!=='undefined'&&module.exports)module.exports=WingRodSystem;
+
+;
 const WingEngine = (() => {
   "use strict";
   // AeroStruct fork: shared Wing Lab sources from this directory first, then ../web/ (unchanged).
@@ -1667,6 +1747,7 @@ const WingEngine = (() => {
   if (!Profiles) throw new Error("Load load_profiles.js before engine.js.");
   const FiniteSection=typeof WingFiniteSection!=='undefined'?WingFiniteSection:(typeof require==='function'?requireShared('wing_finite_section.js'):null);
   const FiniteSectionDeps=typeof WingFiniteSectionDeps!=='undefined'?WingFiniteSectionDeps:(typeof require==='function'?requireShared('vendor/finite-section-geometry/geometry.min.js'):null);
+  const RodSystem=typeof WingRodSystem!=='undefined'?WingRodSystem:null;
   const GRAV = 9.81;
   const VERSION = "1.3.0+aerostruct.1";
   const MESH_LIMITS=Object.freeze({min:4,max:100,legacyDefault:60,spatialDefault:40});
@@ -1861,10 +1942,10 @@ const WingEngine = (() => {
       return {supported:!restrictions.length,requires3D:true,stressOnly:true,mode:'section-stress',reasons:['Exact zero-chord tip'],restrictions,message:restrictions.length?restrictions.join(' '):'Nominal axial and biaxial normal section stress from physical load equilibrium. Exact-apex stress is undefined. Nominal transverse bending components are available; torsion, shear, local buckling, full displacement and 3-D stress concentrations are not assessed.'};
     }
     const c=Geometry.analysisCapability(g);
-    if(c.supported&&!g.airfoil&&!g.stations&&input.aeroLoad==null)return c;
+    if(c.supported&&!g.airfoil&&!g.stations&&input.aeroLoad==null&&!g.rodFractions?.length)return c;
     if(c.supported)c.reasons.push(input.aeroLoad!=null?'six-component aerodynamic loads require the full spatial beam':'explicit airfoil profiles / station sections require the full biaxial spatial beam');
     const restrictions=[];
-    if(g.rodFractions?.length)restrictions.push('Remove external rods: 3-D rod/sleeve slip and curved rod paths are not validated.');
+    if(g.rodFractions?.length&&!RodSystem)restrictions.push('Load the rod/sleeve structural solver before applying loads.');
     if((g.spars||[]).some(s=>s.length<g.semiSpan-1e-8))restrictions.push('Use full-span bonded spars for the spatial beam: abrupt partial-span spar runouts need a validated reference-axis/joint transition model. Geometry and CAD export remain available.');
     if(g.modules>1&&input.assembly?.seamsBonded!==true)restrictions.push('Use one piece or explicitly fully bonded module seams; 3-D dry-joint compliance is not validated.');
     if(input.load?.kind==='flight'&&input.load.inertiaRelief!==false)restrictions.push('For the spatial beam, set Wing inertia relief to Ignored. Distributed aircraft lift is supported; spatial inertia relief is not validated.');
@@ -2264,6 +2345,12 @@ const WingEngine = (() => {
     const { loops, mesh, fe, bredt, outer } = geometricSection(g, y, layers);
     const Ep = pla.E, Er = rod.E;
     const centres = rodCentres(g, y);
+    if(centres.length){
+      const inside=(p,poly)=>{let c=false;for(let i=0,j=poly.length-1;i<poly.length;j=i++)if((poly[i][1]>p[1])!==(poly[j][1]>p[1])&&p[0]<(poly[j][0]-poly[i][0])*(p[1]-poly[i][1])/(poly[j][1]-poly[i][1])+poly[i][0])c=!c;return c;};
+      const distance=(p,a,b)=>{const dx=b[0]-a[0],dz=b[1]-a[1],q=Math.max(0,Math.min(1,((p[0]-a[0])*dx+(p[1]-a[1])*dz)/(dx*dx+dz*dz)));return Math.hypot(p[0]-a[0]-q*dx,p[1]-a[1]-q*dz);};
+      for(const cc of centres)if(!inside(cc,loops.inner)||Math.min(...loops.inner.map((a,i)=>distance(cc,a,loops.inner[(i+1)%loops.inner.length])))<sleeveRadius(g)-1e-7)throw Error(`Rod sleeve does not fit inside the cavity at y=${y} mm. Reduce sleeve/rod diameter or change its position.`);
+      for(let i=0;i<centres.length;i++)for(let j=0;j<i;j++)if(Math.hypot(centres[i][0]-centres[j][0],centres[i][1]-centres[j][1])<2*sleeveRadius(g))throw Error('Rod sleeves overlap; their section material cannot be counted twice.');
+    }
     const Rs = sleeveRadius(g), rh = holeRadius(g), rr = rodRadius(g);
     const shellInt = [fe.A, fe.A * fe.zc, fe.A * fe.xc, fe.Ixx + fe.A * fe.zc ** 2, fe.Iyy + fe.A * fe.xc ** 2, fe.Ixy + fe.A * fe.xc * fe.zc];
     const sleeveInts = centres.map((cc) => annulusIntegrals(cc, Rs, rh));
@@ -2554,6 +2641,7 @@ const WingEngine = (() => {
     for(const k of ['E','rho','ft','fc','fs'])if(!Number.isFinite(pla[k])||pla[k]<=0)throw new Error(`Shell material ${k} must be finite and positive.`);
     if(!Number.isFinite(pla.nu)||pla.nu<0||pla.nu>=.5)throw new Error('Shell material nu must be 0 ≤ nu < 0.5.');
     const rod = { ...MATERIALS.rod_hobby, ...(input.rod || {}) };
+    if(g.rodFractions.length){for(const key of ['E','rho'])if(!Number.isFinite(rod[key])||rod[key]<=0)throw Error('Rod '+key+' must be finite and positive.');if(!Number.isFinite(rod.nu)||rod.nu<0||rod.nu>=.5)throw Error('Rod Poisson ratio must be in [0, 0.5).');}
     const asm = { ...DEFAULT_ASSEMBLY, ...(input.assembly || {}) };
     if(g.spars.length&&!asm.seamsBonded&&seams(g).length)throw new Error('Bonded spars require bonded module seams (or a one-piece shell). Dry-seam joint mechanics with spars are not validated.');
     const load = { ...DEFAULT_LOAD, selfWeight:false, ...(input.load || {}) };
@@ -3042,7 +3130,13 @@ const WingEngine = (() => {
     const count=requestedElementCount(input,MESH_LIMITS.spatialDefault);
     const cap=analysisCapability(g,input);if(!cap.supported)throw Error(cap.message);
     if(input.nSections!=null&&(!Number.isInteger(input.nSections)||input.nSections<3||input.nSections>31))throw Error('The spatial beam supports 3–31 numerical section samples.');
-    const ys=[...new Set([...n.ySec,L])].sort((a,b)=>a-b),local=ys.map(y=>cachedSection(g,pla,rod,asm,y));
+    const rodSpeed=(y,k)=>{const h=Math.max(1e-4,L*1e-6),a=Math.max(0,y-h),b=Math.min(L,y+h),point=q=>Geometry.transformPoint(g,q,rodCentres(g,q)[k]);return F.norm(F.sub(point(b),point(a)))/(b-a);};
+    const ys=[...new Set([...n.ySec,L])].sort((a,b)=>a-b),local=ys.map(y=>{
+      const sec=cachedSection(g,pla,rod,g.rodFractions.length?{...asm,rodsBonded:false}:asm,y);
+      if(!g.rodFractions.length)return sec;
+      const m0=rod.rho*1e-3*Math.PI*rodRadius(g)**2,extra=g.rodFractions.map((_,k)=>m0*(rodSpeed(y,k)-1)),mass=sec.mass+extra.reduce((a,b)=>a+b,0),cc=rodCentres(g,y);
+      return {...sec,mass,cgx:(sec.mass*sec.cgx+extra.reduce((v,m,k)=>v+m*cc[k][0],0))/mass,cgz:(sec.mass*sec.cgz+extra.reduce((v,m,k)=>v+m*cc[k][1],0))/mass};
+    });
     load=loadWithSelfWeight(sourceLoad,g,pla,local,ys);
     const frac=g.twistReferenceFraction??.25;
     let reference=ys.map(y=>Geometry.transformPoint(g,y,[frac*chordAt(g,y),0])),samples=[],axisChange=0;
@@ -3066,7 +3160,7 @@ const WingEngine = (() => {
       const sc=[network?.xsc??fe.xsc,network?.zsc??fe.zsc],centre=map([sec.xc,sec.zc]),d=F.sub(centre,sc);
       const C=[[sec.EIc,sec.EIxz],[sec.EIxz,sec.EIf+(sec.sparNetwork?sec.EIxz**2/sec.EIc:0)]];
       const Q=Array.from({length:2},(_,i)=>Array.from({length:2},(_,j)=>area*B[i].reduce((v,a,k)=>v+a*B[j].reduce((w,b,h)=>w+b*C[k][h],0),0)));
-      const EA=area*sec.EA,props={EA,first2:EA*d[0],first3:EA*d[1],EI22:Q[1][1]+EA*d[1]**2,EI33:Q[0][0]+EA*d[0]**2,EI23:Q[0][1]+EA*d[0]*d[1],GJ:network?.GJ??shearModulus(pla)*fe.J};
+      const EA=area*sec.EA,props={EA,first2:EA*d[0],first3:EA*d[1],EI22:Q[1][1]+EA*d[1]**2,EI33:Q[0][0]+EA*d[0]**2,EI23:Q[0][1]+EA*d[0]*d[1],GJ:network?.GJ??shearModulus(pla)*(fe.J+g.rodFractions.length*Math.PI/2*(sleeveRadius(g)**4-holeRadius(g)**4))};
       const scLocal=[(B[1][1]*sc[0]-B[0][1]*sc[1])/det,(-B[1][0]*sc[0]+B[0][0]*sc[1])/det];
       return {y,R,B,area,scLocal,reference:Geometry.transformPoint(g,y,scLocal),...props,D:Frame.constitutive(props),local:sec,mesh,fe,network};
     }
@@ -3182,14 +3276,24 @@ const WingEngine = (() => {
         for(let j=1;j<split.length;j++){const lo=split[j-1],hi=split[j],foot=footAt(loadPoint(p,(lo+hi)/2)),v=F.integrate(y=>loadVector(foot.index,loadPoint(p,y),lineVector(p,y),undefined,lineCouple(p,y)),lo,hi);v.forEach((x,i)=>elements[foot.index].consistentLoad[i]+=x);if(foot.outside)loadMapping.endWrenches.push({load:loadIndex+1,end:foot.outside,sourceStart:lo,sourceEnd:hi,reason:'Outside-axis part of this line load is retained as an equivalent end wrench; end-zone stresses are unresolved.'});}
       }
     });
-    const frame=F.solve({nodes,elements});
+    const rodPaths=g.rodFractions.map((fraction,k)=>{
+      const rn=nodeY.map(y=>Geometry.transformPoint(g,y,rodCentres(g,y)[k])),A=Math.PI*rodRadius(g)**2,I=Math.PI*rodRadius(g)**4/4;
+      const re=elements.map((e,i)=>({a:i,b:i+1,EA:rod.E*A,EI22:rod.E*I,EI33:rod.E*I,GJ:shearModulus(rod)*2*I,orientation:e.orientation,consistentLoad:new Float64Array(13)}));
+      if(sourceLoad.selfWeight)for(let i=0;i<re.length;i++){
+        const a=nodeY[i],b=nodeY[i+1],R=F.basis(rn[i],rn[i+1],re[i].orientation),len=F.norm(F.sub(rn[i+1],rn[i])),density=rod.rho*1e-3*A,force=[0,0,-density*GRAV];
+        const q=F.integrate(y=>F.pointLoadVector(R,len,(y-a)/(b-a),F.scale(force,rodSpeed(y,k)),[0,0,0]),a,b);q.forEach((v,j)=>re[i].consistentLoad[j]+=v);
+        const back=F.integrate(y=>{const P=Geometry.transformPoint(g,y,rodCentres(g,y)[k]);return loadVector(i,P,F.scale(force,-rodSpeed(y,k)),{boundedStation:y});},a,b);back.forEach((v,j)=>elements[i].consistentLoad[j]+=v);
+      }
+      return {nodes:rn,elements:re};
+    });
+    const frame=rodPaths.length?RodSystem.solve({nodes,elements,rods:rodPaths,mode:asm.rodsBonded?'bonded':'sleeve',gap:g.clearance}):F.solve({nodes,elements});
     const mesh={requestedElements:count,actualElements:frame.elements.length,nodeCount:nodes.length,mandatorySpanStations:[...new Set(mandatory)].sort((a,b)=>a-b)};
     function frameAt(y){let i=0;while(i<nodeY.length-2&&y>nodeY[i+1])i++;const e=frame.elements[i],t=Math.max(0,Math.min(1,(y-nodeY[i])/(nodeY[i+1]-nodeY[i])));return {...F.sampleElement(e,t),reference:F.add(nodes[i],F.scale(F.sub(nodes[i+1],nodes[i]),t)),element:e,t};}
     function normalRecoveryD(y,cut){
       // Stress recovery must balance the actual local material section, not
       // an interpolation of tensors expressed in neighbouring moving frames.
       // Polygon integrals require no additional torsion/warping FE solves.
-      if(!normalIntegralCache.has(y)){const loops=ringLoops(g,y),outer=polyIntegrals(loops.outer),inner=polyIntegrals(loops.inner),sum=outer.map((v,i)=>pla.E*(v-inner[i]));for(const part of sparParts(g,y))for(const polygon of part.polygons){const p=polyIntegrals(polygon);p.forEach((v,i)=>sum[i]+=part.s.material.E*v);}normalIntegralCache.set(y,sum);}
+      if(!normalIntegralCache.has(y)){const loops=ringLoops(g,y),outer=polyIntegrals(loops.outer),inner=polyIntegrals(loops.inner),sum=outer.map((v,i)=>pla.E*(v-inner[i]));for(const cc of rodCentres(g,y)){const ann=annulusIntegrals(cc,sleeveRadius(g),holeRadius(g));ann.forEach((v,i)=>sum[i]+=pla.E*v);}for(const part of sparParts(g,y))for(const polygon of part.polygons){const p=polyIntegrals(polygon);p.forEach((v,i)=>sum[i]+=part.s.material.E*v);}normalIntegralCache.set(y,sum);}
       const sum=normalIntegralCache.get(y);
       const EA=sum[0],x=cut.scLocal[0],z=cut.scLocal[1],X=sum[2]-EA*x,Z=sum[1]-EA*z,XX=sum[4]-2*x*sum[2]+EA*x*x,ZZ=sum[3]-2*z*sum[1]+EA*z*z,XZ=sum[5]-x*sum[1]-z*sum[2]+EA*x*z,B=cut.B,area=Math.abs(B[0][0]*B[1][1]-B[0][1]*B[1][0]),C=[[XX,XZ],[XZ,ZZ]],Q=(a,b)=>a.reduce((v,c,i)=>v+c*b.reduce((w,d,j)=>w+d*C[i][j],0),0);
       return F.constitutive({EA:area*EA,first2:area*(B[0][0]*X+B[0][1]*Z),first3:area*(B[1][0]*X+B[1][1]*Z),EI22:area*Q(B[1],B[1]),EI33:area*Q(B[0],B[0]),EI23:area*Q(B[0],B[1]),GJ:cut.GJ});
@@ -3211,7 +3315,7 @@ const WingEngine = (() => {
       if(cutCache.has(y))return cutCache.get(y);
       const out=frameAt(y),plane=normals.at(y),s=sectionData(y,plane.normal,plane.reference),reference=s.reference;
       const {force,moment}=outboardLoads(items,reference,plane.normal);
-      const fl=F.toLocal(s.R,force),ml=F.toLocal(s.R,moment),recoveryD=normalRecoveryD(y,s),strain=F.solveSPD(recoveryD,[fl[0],ml[1],ml[2],ml[0]]);
+      const fl=F.toLocal(s.R,force),ml=F.toLocal(s.R,moment),recoveryD=normalRecoveryD(y,s),strain=rodPaths.length?(()=>{const k=F.toLocal(s.R,F.toGlobal(out.element.R,[out.strain[3],out.strain[1],out.strain[2]]));return [out.strain[0],k[1],k[2],k[0]];})():F.solveSPD(recoveryD,[fl[0],ml[1],ml[2],ml[0]]);
       const cut={...s,y,recoveryD,force,moment,localForce:fl,localMoment:ml,strain:Array.from(strain),displacement:out.displacement,rotation:out.rotation,endZone:endZone(reference,plane.normal,y),nominal:true};
       if(cutCache.size>60000)cutCache.clear();cutCache.set(y,cut);return cut;
     }
@@ -3224,18 +3328,20 @@ const WingEngine = (() => {
       sparParts(g,y[i]).forEach(p=>{let entry=sparStress.find(s=>s.index===p.index);if(!entry){entry={index:p.index,material:p.s.material,tension:0,compression:0,shear:null};sparStress.push(entry);}const stress=p.polygons.flat().map(q=>normalStress(c,q,p.s.material.E));entry.tension=Math.max(entry.tension,...stress);entry.compression=Math.max(entry.compression,...stress.map(v=>-v));});
     });
     const lineMass=y.map(q=>interp(q,ys,local.map(s=>s.mass))),rho=pla.rho*1e-3,ribs=ribStations(g),ribMass=ribs.map(q=>rho*g.ribThickness*interp(q,ys,local.map(s=>s.ribExtra))),capMass=[0,L].map(q=>rho*g.cap*interp(q,ys,local.map(s=>s.ribExtra))),sparMass=trapz(y.map(q=>interp(q,ys,local.map(s=>s.sparMass))),y),bodyMass=trapz(lineMass,y);
-    const mass={shell:bodyMass-sparMass,ribs:ribMass.reduce((a,b)=>a+b,0),caps:capMass[0]+capMass[1],spars:sparMass,rods:0,tip:load.tipMass};mass.printed=mass.shell+mass.ribs+mass.caps;mass.total=mass.printed+sparMass+load.tipMass;
+    const rodMass=rodPaths.length?rod.rho*1e-3*Math.PI*rodRadius(g)**2*rodPaths.reduce((v,r)=>v+r.nodes.slice(1).reduce((a,p,i)=>a+F.norm(F.sub(p,r.nodes[i])),0),0):0;
+    const mass={shell:bodyMass-sparMass-rodMass,ribs:ribMass.reduce((a,b)=>a+b,0),caps:capMass[0]+capMass[1],spars:sparMass,rods:rodMass,tip:load.tipMass};mass.printed=mass.shell+mass.ribs+mass.caps;mass.total=mass.printed+sparMass+rodMass+load.tipMass;
     const deflection=Float64Array.from(response,r=>r.displacement[2]),chordwiseDeflection=Float64Array.from(response,r=>r.displacement[0]),twist=Float64Array.from(response,r=>F.dot(r.rotation,r.element.R[0])),elasticIncidenceDeg=frame.rotations.map(r=>r[1]*180/Math.PI);
     const root=cuts[0],sigTop=Float64Array.from(tension),sigBot=Float64Array.from(compression,v=>-v),V=Float64Array.from(cuts,c=>c.force[2]),M=Float64Array.from(cuts,c=>F.norm(c.moment)),T=Float64Array.from(cuts,c=>c.localMoment[0]);
     // A normal root cut may exclude physical loads on its inboard side. The
     // total applied wrench and support equilibrium must still include ALL loads.
     const wrenchOf=list=>{let total=[0,0,0,0,0,0];for(const p of list){const add=(qy,force,couple=null)=>{const arm=F.cross(F.sub(loadPoint(p,qy),nodes[0]),force);return [...force,...(couple?F.add(arm,couple):arm)];};if(p.kind==='point')total=F.add(total,add(p.position,[0,0,p.force]));else for(const[a,b]of sourceIntervals(p))total=F.add(total,F.integrate(q=>add(q,lineVector(p,q),lineCouple(p,q)),a,b));}return total;};
     let appliedWrench=wrenchOf(items);
-    const limitations=['Linear small-displacement Euler–Bernoulli beam; no shear deformation, geometric nonlinearity or section distortion','Locally prismatic projected normal sections; taper, twist and curved reference axis are beam approximations, not a 3-D solid mesh','A continuous C1 reference normal family maps physical loads and surface points; straight frame elements approximate that reference curve','The six-DOF equivalent axis clamp is not a resolved physical oblique root face. Geometrically truncated end cuts are masked; this is only a minimum exclusion, not a validated Saint-Venant decay length',n.aero?'Aerodynamic loads: rigid-wing, attached, incompressible potential-flow panel pressures (no stall, viscous or aeroelastic redistribution), carried as six-component strip forces and couples on the quarter-chord load line; any other prescribed loads are aircraft-global +z per projected y':'Prescribed aircraft-global +z loads per projected y; no aerodynamic lift, zero-lift angle, stall or aeroelastic redistribution prediction','Perfectly bonded skin/ribs/spars and module seams; external rods and dry/slipping joints not modeled','Reported skin/spar stresses are nominal axial + biaxial normal beam stresses; shear failure, local buckling, bond stress and stress concentrations are unresolved','Natural frequencies, flutter and an overall certified factor of safety are unavailable'];
+    const limitations=['Linear small-displacement Euler–Bernoulli beam; no shear deformation, geometric nonlinearity or section distortion','Locally prismatic projected normal sections; taper, twist and curved reference axis are beam approximations, not a 3-D solid mesh','A continuous C1 reference normal family maps physical loads and surface points; straight frame elements approximate that reference curve','The six-DOF equivalent axis clamp is not a resolved physical oblique root face. Geometrically truncated end cuts are masked; this is only a minimum exclusion, not a validated Saint-Venant decay length',n.aero?'Aerodynamic loads: rigid-wing, attached, incompressible potential-flow panel pressures (no stall, viscous or aeroelastic redistribution), carried as six-component strip forces and couples on the quarter-chord load line; any other prescribed loads are aircraft-global +z per projected y':'Prescribed aircraft-global +z loads per projected y; no aerodynamic lift, zero-lift angle, stall or aeroelastic redistribution prediction',rodPaths.length?frame.scope:'Perfectly bonded skin/ribs/spars and module seams; external rods and dry/slipping joints not modeled','Reported skin/spar stresses are nominal axial + biaxial normal beam stresses; shear failure, local buckling, bond stress and stress concentrations are unresolved','Natural frequencies, flutter and an overall certified factor of safety are unavailable'];
     limitations.push('Non-affine torsional warping normal stress is not recovered; nominal affine stress is not a validated local strength field.');
     const maxTranslation=Math.max(...frame.displacements.map(F.norm)),maxRotation=Math.max(...frame.rotations.map(F.norm)),smallDisplacement=maxTranslation/L<=.05&&maxRotation<=.1;
     const validity={smallDisplacement,maxTranslation,maxRotation,translationRatio:maxTranslation/L,message:smallDisplacement?'Small-displacement screening passed (translation/span ≤ 5%, rotation ≤ 0.1 rad); this is not a nonlinear validation.':'Outside the admitted small-displacement screening (translation/span > 5% or rotation > 0.1 rad). Linear results are illustrative only; reduce loads or use a geometrically nonlinear model.'};
-    const analysis3D={method:frame.method,limitations,validity,spanStations:nodeY,referenceCoordinates:nodes,nodes,displacements:frame.displacements,rotations:frame.rotations,elasticIncidenceDeg,reactions:frame.reactions,energy:frame.energy,work:frame.work,verification:frame.verification,elements:frame.elements,sectionSamples:samples,resultants:cuts.map((c,i)=>({y:y[i],force:c.force,moment:c.moment,localForce:c.localForce,localMoment:c.localMoment,endZone:c.endZone})),localM2:Float64Array.from(cuts,c=>c.localMoment[1]),localM3:Float64Array.from(cuts,c=>c.localMoment[2]),localT:T,normalStress:{skinTension:tension,skinCompression:compression,spars:sparStress},loadMapping,frameAt,cutAt,evaluateNormalStress:normalStress,locatePhysicalPoint:normals.locate,referenceAt:y=>frameAt(y).reference,sectionReferenceAt:referenceAt,normalSectionAxisIterationChangeMm:axisChange};
+    const analysis3D={method:frame.method,limitations,validity,spanStations:nodeY,referenceCoordinates:nodes,nodes,displacements:frame.displacements,rotations:frame.rotations,elasticIncidenceDeg,reactions:rodPaths.length?[...frame.verification.supportForce,...F.sub(frame.verification.supportMoment,F.cross(nodes[0],frame.verification.supportForce))].map((value,dof)=>({dof,value})):frame.reactions,energy:frame.energy,work:frame.work,verification:frame.verification,elements:frame.elements,sectionSamples:samples,resultants:cuts.map((c,i)=>({y:y[i],force:c.force,moment:c.moment,localForce:c.localForce,localMoment:c.localMoment,endZone:c.endZone})),localM2:Float64Array.from(cuts,c=>c.localMoment[1]),localM3:Float64Array.from(cuts,c=>c.localMoment[2]),localT:T,normalStress:{skinTension:tension,skinCompression:compression,spars:sparStress},loadMapping,frameAt,cutAt,evaluateNormalStress:normalStress,locatePhysicalPoint:normals.locate,referenceAt:y=>frameAt(y).reference,sectionReferenceAt:referenceAt,normalSectionAxisIterationChangeMm:axisChange};
+    analysis3D.rodSystem=rodPaths.length?{mode:frame.mode,method:frame.method,scope:frame.scope,contact:frame.contact,verification:frame.verification,componentRootReactions:frame.reactions,rodElements:frame.rodElements}:null;
     analysis3D.units={length:'mm',force:'N',moment:'N mm',stress:'MPa',rotation:'rad',energy:'N mm',lineLoad:'N/mm of projected y'};
     analysis3D.mesh=mesh;analysis3D.appliedWrench={force:appliedWrench.slice(0,3),momentAboutRoot:appliedWrench.slice(3)};
     if(n.aero){const aw=wrenchOf(aeroItems),given=n.aero.strips.reduce((t,r)=>t.map((v,i)=>v+r[2+i]),[0,0,0,0,0,0]),about=F.sub(given.slice(3),F.cross(nodes[0],given.slice(0,3)));
@@ -6346,6 +6452,7 @@ const WingFlexibleSolver=(()=>{
  async function solve(request,progress=()=>{}){
   const input={...request.input,nElements:Math.max(80,request.input.nElements||40),nSections:Math.max(15,request.input.nSections||7)},g=E.makeGeometry(input.geometry),L=g.semiSpan,flow={...request.flow},settings=request.settings||{},maxIterations=settings.maxIterations??16;
   A.normalizeFlow(flow);
+  if(g.rodFractions?.length)throw Error('Rod/sleeve models currently use separate small-displacement beam fields with clearance contact. Use Apply aerodynamic loads to structure; finite-rotation multi-beam contact is not yet admitted.');
   if(!(g.tipChord>0)||G.closedTip(g))throw Error('Finite-rotation coupling is not validated for exact zero-chord tips.');
   if(settings.targetLift_N!=null&&!Number.isFinite(settings.targetLift_N))throw Error('Target lift must be finite.');
   progress('Building actual projected sections and finite-rotation beam…');let base=template(input),shape=undeformed(base),lastRows=null,lastRoot=null,seq=null,result=null,rows=null,rigid=null,history=[],converged=false;

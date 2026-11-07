@@ -1,0 +1,339 @@
+{
+  "status": "Numerical repair verified on the exact saved user case; not experimental aircraft validation",
+  "codeCommit": "4e787672a6adc2692c94980acbeb8e6a7c9067ad",
+  "ciRun": "https://github.com/Ehsan-Roohi/Aerospace-Structures/actions/runs/42329898412",
+  "case": {
+    "profile": "CLARK Y AIRFOIL",
+    "semiSpan_mm": 900,
+    "chord_mm": 400,
+    "rodDiameter_mm": 4,
+    "radialClearance_mm": 0.25,
+    "mode": "frictionless sleeve",
+    "flow": {
+      "speed": 50,
+      "density": 1.225,
+      "alphaDeg": 0,
+      "viscosity": 1.81e-05,
+      "speedOfSound": 340.29
+    },
+    "semiWingLift_N": 140.87864672631852
+  },
+  "before": {
+    "codeCommit": "970dfd84af378e19119fc9210a887aa83f597418",
+    "verification": {
+      "forceError": 0.00019520301247739644,
+      "momentError": 0.056977712547345745,
+      "energyError": 1.0044955375755367e-06,
+      "contactResidual": 6.47121679882239e-08,
+      "maxPenetration": 1.4782142454539127e-08,
+      "totalForce": [
+        2.631194430270164,
+        3.801102508413941,
+        140.87864672631844
+      ],
+      "totalMoment": [
+        56516.32643471028,
+        -31061.567718325674,
+        -518.7028652444778
+      ],
+      "iterations": 26730
+    }
+  },
+  "unchangedLimits": {
+    "relativeEnergyError": 1e-07,
+    "relativeForceError": 1e-05,
+    "relativeMomentError": 1e-05,
+    "gapTolerance_mm": 1e-06,
+    "primalContactResidual_mm": 1e-06,
+    "finestTipMeshRelative": 0.002
+  },
+  "after": {
+    "tipDeflection_mm": 16.258173103264323,
+    "verification": {
+      "forceError": 6.337800064050684e-12,
+      "momentError": 7.102695073985781e-10,
+      "totalForce": [
+        2.631194430270167,
+        3.8011025084139414,
+        140.8786467263185
+      ],
+      "totalMoment": [
+        56516.326434710296,
+        -31061.567718325685,
+        -518.7028652444783
+      ],
+      "supportForce": [
+        -2.6311944302695243,
+        -3.8011025084131305,
+        -140.87864672632475
+      ],
+      "supportMoment": [
+        -56516.32643471034,
+        31061.56771832639,
+        518.7028652445451
+      ],
+      "freeResidual": 2.860592118736349e-07,
+      "maxPenetration": 8.04756261629791e-12,
+      "energyError": 1.360018848092194e-15,
+      "iterations": 3250,
+      "contactResidual": 4.2498194744771526e-07,
+      "contactDefectCorrections": 0,
+      "contactWork": 0.00899864632110991
+    },
+    "smallDisplacement": {
+      "smallDisplacement": true,
+      "maxTranslation": 16.25995199427901,
+      "maxRotation": 0.024990090224117894,
+      "translationRatio": 0.018066613326976677,
+      "message": "Small-displacement screening passed (translation/span \u2264 5%, rotation \u2264 0.1 rad); this is not a nonlinear validation."
+    }
+  },
+  "meshCases": [
+    {
+      "bonded": true,
+      "requestedElements": 20,
+      "actualNodes": 26,
+      "tipDeflection_mm": 16.04783544465294,
+      "verification": {
+        "forceError": 5.638446336588404e-09,
+        "momentError": 5.584743062772333e-06,
+        "totalForce": [
+          2.631194430270166,
+          3.8011025084139405,
+          140.87864672631846
+        ],
+        "totalMoment": [
+          56516.32643471028,
+          -31061.567718325685,
+          -518.7028652444801
+        ],
+        "supportForce": [
+          -2.631194425702848,
+          -3.801102508422872,
+          -140.87864672962476
+        ],
+        "supportMoment": [
+          -56516.32643914944,
+          31061.567718773604,
+          518.7028618855197
+        ],
+        "freeResidual": 2.1096762381489498e-07,
+        "maxPenetration": 0,
+        "energyError": 9.455976130583875e-11,
+        "iterations": 0,
+        "contactResidual": 0,
+        "contactDefectCorrections": 0,
+        "contactWork": 0
+      }
+    },
+    {
+      "bonded": true,
+      "requestedElements": 40,
+      "actualNodes": 45,
+      "tipDeflection_mm": 16.047720373648502,
+      "verification": {
+        "forceError": 4.941014409113336e-08,
+        "momentError": 3.163456825953694e-05,
+        "totalForce": [
+          2.631194430270167,
+          3.8011025084139414,
+          140.8786467263185
+        ],
+        "totalMoment": [
+          56516.326434710296,
+          -31061.567718325685,
+          -518.7028652444783
+        ],
+        "supportForce": [
+          -2.6311944247887338,
+          -3.801102508644469,
+          -140.87864667721388
+        ],
+        "supportMoment": [
+          -56516.326403659936,
+          31061.567712872515,
+          518.7028626207442
+        ],
+        "freeResidual": 1.4417940441546762e-07,
+        "maxPenetration": 0,
+        "energyError": 5.667195279533974e-10,
+        "iterations": 0,
+        "contactResidual": 0,
+        "contactDefectCorrections": 0,
+        "contactWork": 0
+      }
+    },
+    {
+      "bonded": true,
+      "requestedElements": 80,
+      "actualNodes": 85,
+      "tipDeflection_mm": 16.047687670694383,
+      "verification": {
+        "forceError": 3.129414399668644e-07,
+        "momentError": 0.00018642501138979166,
+        "totalForce": [
+          2.6311944302701713,
+          3.801102508413941,
+          140.87864672631844
+        ],
+        "totalMoment": [
+          56516.32643471031,
+          -31061.567718325667,
+          -518.7028652444833
+        ],
+        "supportForce": [
+          -2.6311944886932053,
+          -3.801102509407592,
+          -140.87864641888046
+        ],
+        "supportMoment": [
+          -56516.32625779647,
+          31061.56768265347,
+          518.7029119699846
+        ],
+        "freeResidual": 5.91875417121912e-07,
+        "maxPenetration": 0,
+        "energyError": 3.1427516655846376e-09,
+        "iterations": 0,
+        "contactResidual": 0,
+        "contactDefectCorrections": 0,
+        "contactWork": 0
+      }
+    },
+    {
+      "bonded": false,
+      "requestedElements": 20,
+      "actualNodes": 26,
+      "tipDeflection_mm": 16.258173103032117,
+      "verification": {
+        "forceError": 1.2856916441520848e-12,
+        "momentError": 1.267424696986915e-10,
+        "totalForce": [
+          2.631194430270166,
+          3.8011025084139405,
+          140.87864672631846
+        ],
+        "totalMoment": [
+          56516.32643471028,
+          -31061.567718325685,
+          -518.7028652444801
+        ],
+        "supportForce": [
+          -2.6311944302703343,
+          -3.8011025084128462,
+          -140.87864672631912
+        ],
+        "supportMoment": [
+          -56516.3264347103,
+          31061.56771832575,
+          518.7028652445864
+        ],
+        "freeResidual": 1.352958456379838e-07,
+        "maxPenetration": 3.3861802251067274e-15,
+        "energyError": 8.311513690508218e-17,
+        "iterations": 240,
+        "contactResidual": 1.24901442202889e-14,
+        "contactDefectCorrections": 0,
+        "contactWork": 0.00898633630144587
+      }
+    },
+    {
+      "bonded": false,
+      "requestedElements": 40,
+      "actualNodes": 45,
+      "tipDeflection_mm": 16.258173103264323,
+      "verification": {
+        "forceError": 6.337800064050684e-12,
+        "momentError": 7.102695073985781e-10,
+        "totalForce": [
+          2.631194430270167,
+          3.8011025084139414,
+          140.8786467263185
+        ],
+        "totalMoment": [
+          56516.326434710296,
+          -31061.567718325685,
+          -518.7028652444783
+        ],
+        "supportForce": [
+          -2.6311944302695243,
+          -3.8011025084131305,
+          -140.87864672632475
+        ],
+        "supportMoment": [
+          -56516.32643471034,
+          31061.56771832639,
+          518.7028652445451
+        ],
+        "freeResidual": 2.860592118736349e-07,
+        "maxPenetration": 8.04756261629791e-12,
+        "energyError": 1.360018848092194e-15,
+        "iterations": 3250,
+        "contactResidual": 4.2498194744771526e-07,
+        "contactDefectCorrections": 0,
+        "contactWork": 0.00899864632110991
+      }
+    },
+    {
+      "bonded": false,
+      "requestedElements": 80,
+      "actualNodes": 85,
+      "tipDeflection_mm": 16.258173103272398,
+      "verification": {
+        "forceError": 1.2935195140273824e-11,
+        "momentError": 1.328356788114838e-09,
+        "totalForce": [
+          2.6311944302701713,
+          3.801102508413941,
+          140.87864672631844
+        ],
+        "totalMoment": [
+          56516.32643471031,
+          -31061.567718325667,
+          -518.7028652444833
+        ],
+        "supportForce": [
+          -2.6311944302742614,
+          -3.801102508412832,
+          -140.87864672633066
+        ],
+        "supportMoment": [
+          -56516.326434710296,
+          31061.56771832699,
+          518.702865244587
+        ],
+        "freeResidual": 3.6831216743138384e-07,
+        "maxPenetration": 8.729128531115293e-13,
+        "energyError": 6.487537601558081e-15,
+        "iterations": 22150,
+        "contactResidual": 9.407166919041834e-08,
+        "contactDefectCorrections": 0,
+        "contactWork": 0.008998640872645658
+      }
+    }
+  ],
+  "admission": {
+    "admitted": false,
+    "prescribedLoadEligible": true,
+    "failedChecks": [
+      {
+        "kind": "aeroelastic",
+        "value": 0.1393219566932108,
+        "tolerance": 0.02
+      }
+    ]
+  },
+  "independentFormulationCheck": {
+    "test": "test_rod_flexibility.cjs",
+    "comparison": "force-integrated flexibility versus assembled stiffness on curved, variable, fully coupled 3D beam sections and consistent distributed loads",
+    "relativeTolerance": 1e-08
+  },
+  "scope": "Small-displacement beam/contact model. No finite-rotation multi-beam contact, material failure, adhesive/bearing strength, or experimental certification. Failed aeroelastic admission stays failed.",
+  "sources": {
+    "computational/printed-wing-solver/nonlinear/wing_rod_system.js": "490899e8493802d32cfd13ca06d1c290c98e0c297b4139c4e0a906b85523150e",
+    "docs/wing-panel-stress-analyzer/ui/zero-tip-source/engine.js": "3fdf876380b7c3c3b17ab11c6485af41a378b1a41133feb62dc081a6d0d95a0f",
+    "computational/printed-wing-solver/nonlinear/test_rod_saved_pressure.cjs": "27742ff23d1174558210ade64ca7f44f36b3c98d8eeeab28112c7b2bfa34c406",
+    "computational/printed-wing-solver/nonlinear/test_rod_flexibility.cjs": "76eb86f0ec1042b7edfd3ed2a65313189167406e1ebe223b20911ea0644bc9f9",
+    "docs/wing-panel-stress-analyzer/validation/fixtures/clarky-900mm-sleeve-pressure-2026-11-06.json": "ede1263225556d5e16b7ad4fcb5c6d33a788e3e0c736f63e4e1eb97b651df81a"
+  }
+}

@@ -39,6 +39,7 @@ jobs:
       - name: Exact, independent-reference and invariance checks
         run: |
           node computational/printed-wing-solver/nonlinear/test_nonlinear_beam.cjs
+          node computational/printed-wing-solver/nonlinear/test_reissner_beam.cjs
           node computational/printed-wing-solver/nonlinear/test_scalar_elastica.cjs
           node computational/printed-wing-solver/nonlinear/test_rod_system.cjs
           node computational/printed-wing-solver/nonlinear/test_rod_flexibility.cjs
@@ -73,6 +74,13 @@ jobs:
         run: |
           node computational/printed-wing-solver/nonlinear/test_solid_foam.cjs
           node scripts/validation/test_reinforced_foam.cjs
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: wing-section-references
+          path: output/900mm-layout-current/*foam-validation.json
+          retention-days: 7
+          if-no-files-found: error
   matched-layouts:
     runs-on: ubuntu-latest
     timeout-minutes: 45
@@ -85,6 +93,13 @@ jobs:
         run: |
           node scripts/validation/compare_900mm_layouts.cjs
           node scripts/validation/verify_900mm_layouts.cjs
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: wing-matched-layouts
+          path: output/900mm-layout-current/layout-results.json
+          retention-days: 7
+          if-no-files-found: error
   coupled-layouts:
     runs-on: ubuntu-latest
     timeout-minutes: 45
@@ -101,3 +116,10 @@ jobs:
         env:
           LAYOUT_COUPLED_CASES: ${{ matrix.case }}
         run: node scripts/validation/couple_900mm_layouts.cjs
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: wing-coupled-${{ strategy.job-index }}
+          path: output/900mm-layout-current/coupled-*.json
+          retention-days: 7
+          if-no-files-found: error

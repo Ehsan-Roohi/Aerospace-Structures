@@ -60,15 +60,15 @@ b=json.loads((A/'BUILD.json').read_text(encoding='utf-8'))
 b.update(version='0.5.0',builtAt=datetime.datetime.now(datetime.timezone.utc).isoformat(),pageSha256=sha((A/'index.html').read_bytes()))
 b['workers']['wing-aero']={'bundle':aero_bundle_hash,'worker':aero_worker_hash}
 b['workers']['flexible-wing']={'bundle':bundle_hash,'worker':worker_hash}
-b['flexibleWingScope']='Geometrically exact static two-way pressure/beam solver; numerical admission is not a material, stability or experimental validation.'
+b['flexibleWingScope']='Geometrically exact static two-way pressure/beam solver, with refined transverse shear in solid foam; numerical admission is not a material, stability or experimental validation.'
 for entry in b['sources'].values():
  p=R/entry.get('path','')
- if p in parts or p==bundle_path:entry['sha256']=sha(p.read_text(encoding='utf-8-sig').encode())
+ if p in parts or p==bundle_path or p==A/'ui/zero-tip-source/wing_study_io.js':entry['sha256']=sha(p.read_text(encoding='utf-8-sig').encode())
 b['flexibleWingSources']={str(p.relative_to(R)).replace('\\','/'):sha(p.read_text(encoding='utf-8-sig').encode()) for p in parts+[N/'flexible-ui.js',N/'build_flexible_solver.py']}
 (A/'BUILD.json').write_text(json.dumps(b,indent=2)+'\n',encoding='utf-8')
 p=A/'RELEASE.json'
 release=json.loads(p.read_text(encoding='utf-8'))
-release.update(version='0.5.0',flexible_solver_version='finite-rotation-coupled-1')
+release.update(version='0.5.0',flexible_solver_version='finite-rotation-coupled-2')
 release['scope']='Educational attached inviscid 3D potential-flow pressures and nominal beam stresses, with separate legacy rigid-load models and an optional finite-rotation static two-way Kirchhoff solver for positive-chord tips. No viscous/stall model, section distortion, material failure, stability or experimental validation.'
 release['ui_release']['page_sha256']=b['pageSha256']
 release['flexible_solver']={'source':'computational/printed-wing-solver/nonlinear','builder':'computational/printed-wing-solver/nonlinear/build_flexible_solver.py','scope':b['flexibleWingScope'],'review':'validation/NONLINEAR_FLEXIBLE_WING_REVIEW.json'}

@@ -1,8 +1,9 @@
-/* Geometrically exact, shear-free spatial Kirchhoff beam, small elastic strains.
+/* Geometrically exact spatial beam, small elastic strains. Optional symmetric
+ * transverse-shear compliance gives a Reissner beam; absent compliance retains Kirchhoff.
  * Reference elements and section D use mm, N, MPa. Finite rotations are unit
  * quaternions; position, force and moment equilibrium are solved in space.
  * Distributed loads are per reference span coordinate, not deformed arc length.
- * Independent implementation: r'=Q e1(1+epsilon), Q'=Q hat(kappa),
+ * Independent implementation: r'=Q [1+epsilon,gamma2,gamma3], Q'=Q hat(kappa),
  * n'=-f, m'=-r' cross n-c. Reference element triad jumps preserve natural curvature.
  * Static shooting follows load continuation; convergence is NOT a stability test.
  */
@@ -29,7 +30,7 @@ const WingNonlinearBeam=(()=>{
   const {nodes,elements}=input;if(!nodes?.length||!elements?.length)throw Error('A nonlinear beam needs reference nodes and section elements.');
   const steps=input.stepsPerElement??4,tol=input.tolerance??1e-8,maxIterations=input.maxIterations??25;
   if(!Number.isInteger(steps)||steps<1||steps>64)throw Error('Use 1–64 integration steps per reference element.');
-  const es=elements.map(e=>{const a=e.spanStart??nodes[e.a][0],b=e.spanEnd??nodes[e.b][0],L=norm(sub(nodes[e.b],nodes[e.a])),R=e.R||(()=>{const x=unit(sub(nodes[e.b],nodes[e.a])),v=e.orientation||[0,1,0],y=unit(sub(v,mul(x,dot(x,v))));return[x,y,cross(x,y)];})();if(!(b>a&&L>0))throw Error('Reference span stations must increase.');const D=e.D||[[e.EA,e.first3||0,-(e.first2||0),0],[e.first3||0,e.EI22,-(e.EI23||0),0],[-(e.first2||0),-(e.EI23||0),e.EI33,0],[0,0,0,e.GJ]];return {...e,y0:a,y1:b,L,R,q0:fromBasis(R),invD:inverse(D)};});
+  const es=elements.map(e=>{const a=e.spanStart??nodes[e.a][0],b=e.spanEnd??nodes[e.b][0],L=norm(sub(nodes[e.b],nodes[e.a])),R=e.R||(()=>{const x=unit(sub(nodes[e.b],nodes[e.a])),v=e.orientation||[0,1,0],y=unit(sub(v,mul(x,dot(x,v))));return[x,y,cross(x,y)];})();if(!(b>a&&L>0))throw Error('Reference span stations must increase.');const D=e.D||[[e.EA,e.first3||0,-(e.first2||0),0],[e.first3||0,e.EI22,-(e.EI23||0),0],[-(e.first2||0),-(e.EI23||0),e.EI33,0],[0,0,0,e.GJ]];const H=e.shearCompliance;if(H&&(!Array.isArray(H)||H.length!==2||H.some(r=>r.length!==2||Array.from(r).some(v=>!Number.isFinite(v)))||H[0][0]<=0||H[1][1]<=0||Math.abs(H[0][1]-H[1][0])>1e-12*Math.sqrt(H[0][0]*H[1][1])||H[0][0]*H[1][1]-H[0][1]*H[1][0]<=0))throw Error('Transverse shear compliance must be finite, symmetric and positive definite.');return {...e,y0:a,y1:b,L,R,q0:fromBasis(R),invD:inverse(D)};});
   const y0=es[0].y0,y1=es.at(-1).y1,span=y1-y0,root=nodes[es[0].a].slice(),loads=input.distributed||[],points=(input.pointLoads||[]).filter(p=>p.y>y0+1e-10);
   for(const p of loads)if(!Number.isFinite(p.y0)||!Number.isFinite(p.y1)||p.y0<y0||p.y1>y1||p.y1<=p.y0)throw Error('A distributed load must lie within the reference span.');
   for(const p of input.pointLoads||[])if(!Number.isFinite(p.y)||p.y<y0||p.y>y1)throw Error('A point load must lie within the reference span.');
@@ -41,19 +42,19 @@ const WingNonlinearBeam=(()=>{
   const scale=Math.max(1,norm(fAt(y0))*span,...points.map(p=>norm(p.moment||[0,0,0])),...loads.map(p=>norm(p.couple||[0,0,0])*(p.y1-p.y0)));
   const arm=(p,y,q,e)=>rotate(qm(q,qc(e.q0)),p.armAt?p.armAt(y):(p.arm||[0,0,0]));
   function integrate(M,lambda,collect=false){
-   let z=[...root,...es[0].q0,...M],last=es[0],samples=[],segments=[],maxAxialStrain=0;
+   let z=[...root,...es[0].q0,...M],last=es[0],samples=[],segments=[],maxAxialStrain=0,maxShearStrain=0;
    const record=(y,e)=>{if(collect)samples.push({y,position:z.slice(0,3),quaternion:qn(z.slice(3,7)),moment:z.slice(7,10),element:e});};record(y0,last);
    for(let k=1;k<knots.length;k++){
     const a=knots[k-1],b=knots[k],mid=(a+b)/2,h=b-a,e=elementAt(mid);
     if(e!==last){z.splice(3,4,...qn(qm(z.slice(3,7),qm(qc(last.q0),e.q0))));last=e;}
     const active=loads.filter(p=>mid>p.y0&&mid<p.y1),f=mul(active.reduce((s,p)=>add(s,p.force||[0,0,0]),[0,0,0]),lambda),nm=mul(fAt(mid),lambda),ds=e.L/(e.y1-e.y0);
-    function rhs(y,s){const q=qn(s.slice(3,7)),n=sub(nm,mul(f,y-mid)),m=s.slice(7,10),nl=rotate(qc(q),n),ml=rotate(qc(q),m),v=[nl[0],ml[1],ml[2],ml[0]],strain=e.invD.map(r=>dot(r,v));maxAxialStrain=Math.max(maxAxialStrain,Math.abs(strain[0]));const dr=mul(rotate(q,[1,0,0]),ds*(1+strain[0])),dq=mul(qm(q,[0,strain[3],strain[1],strain[2]]),.5*ds);let c=[0,0,0];for(const p of active)c=add(c,mul(add(cross(arm(p,y,q,e),p.force||[0,0,0]),p.couple||[0,0,0]),lambda));return [...dr,...dq,...mul(add(cross(dr,n),c),-1)];}
+    function rhs(y,s){const q=qn(s.slice(3,7)),n=sub(nm,mul(f,y-mid)),m=s.slice(7,10),nl=rotate(qc(q),n),ml=rotate(qc(q),m),v=[nl[0],ml[1],ml[2],ml[0]],strain=e.invD.map(r=>dot(r,v));maxAxialStrain=Math.max(maxAxialStrain,Math.abs(strain[0]));const gamma=e.shearCompliance?e.shearCompliance.map(r=>r[0]*nl[1]+r[1]*nl[2]):[0,0];maxShearStrain=Math.max(maxShearStrain,norm(gamma));const dr=mul(rotate(q,[1+strain[0],...gamma]),ds),dq=mul(qm(q,[0,strain[3],strain[1],strain[2]]),.5*ds);let c=[0,0,0];for(const p of active)c=add(c,mul(add(cross(arm(p,y,q,e),p.force||[0,0,0]),p.couple||[0,0,0]),lambda));return [...dr,...dq,...mul(add(cross(dr,n),c),-1)];}
     const start=collect?z.slice():null;const k1=rhs(a,z),k2=rhs(mid,add(z,mul(k1,h/2))),k3=rhs(mid,add(z,mul(k2,h/2))),k4=rhs(b,add(z,mul(k3,h)));z=z.map((v,i)=>v+h/6*(k1[i]+2*k2[i]+2*k3[i]+k4[i]));z.splice(3,4,...qn(z.slice(3,7)));
     if(collect)segments.push({a,b,start,end:z.slice(),element:e,forceMid:nm,forceDensity:f});
     for(const p of points)if(Math.abs(p.y-b)<1e-8){const q=z.slice(3,7),m=mul(add(p.moment||[0,0,0],cross(arm(p,b,q,e),p.force||[0,0,0])),lambda);for(let j=0;j<3;j++)z[7+j]-=m[j];}
     if(z.some(v=>!Number.isFinite(v)))throw Error('Nonlinear beam integration diverged.');record(b,e);
    }
-   return {residual:z.slice(7,10),samples,segments,maxAxialStrain,tip:z.slice(0,3)};
+   return {residual:z.slice(7,10),samples,segments,maxAxialStrain,maxShearStrain,tip:z.slice(0,3)};
   }
   let M=(input.initialRootMoment||[0,0,0]).slice(),previous=0,history=[];
   const stages=input.continuation||[.25,.5,.75,1];if(stages.at(-1)!==1)throw Error('Load continuation must finish at the full requested load.');
@@ -67,9 +68,9 @@ const WingNonlinearBeam=(()=>{
    if(!converged)throw Error(`Nonlinear beam iteration limit reached at load fraction ${lambda}.`);previous=lambda;
   }
   const final=integrate(M,1,true);
-  function at(y){if(y<y0-1e-7||y>y1+1e-7)throw Error('Nonlinear beam sample lies outside the reference span.');let i=0;while(i<final.segments.length-1&&y>final.segments[i].b)i++;const v=final.segments[i],t=(y-v.a)/(v.b-v.a),e=v.element,aa=v.start.slice(3,7),bb=v.end.slice(3,7),q=qn(add(mul(aa,1-t),mul(bb,(dot(aa,bb)<0?-1:1)*t))),position=add(mul(v.start.slice(0,3),1-t),mul(v.end.slice(0,3),t)),reference=refAt(e,y),moment=add(mul(v.start.slice(7,10),1-t),mul(v.end.slice(7,10),t)),force=sub(v.forceMid,mul(v.forceDensity,y-(v.a+v.b)/2)),delta=qm(q,qc(e.q0)),nl=rotate(qc(q),force),ml=rotate(qc(q),moment),strain=e.invD.map(r=>dot(r,[nl[0],ml[1],ml[2],ml[0]]));return {y,position,reference,displacement:sub(position,reference),quaternion:q,rotation:rotationVector(delta),rotationQuaternion:delta,force,moment,localForce:nl,localMoment:ml,strain,R:[[1,0,0],[0,1,0],[0,0,1]].map(v=>rotate(q,v)),element:e};}
+  function at(y){if(y<y0-1e-7||y>y1+1e-7)throw Error('Nonlinear beam sample lies outside the reference span.');let i=0;while(i<final.segments.length-1&&y>final.segments[i].b)i++;const v=final.segments[i],t=(y-v.a)/(v.b-v.a),e=v.element,aa=v.start.slice(3,7),bb=v.end.slice(3,7),q=qn(add(mul(aa,1-t),mul(bb,(dot(aa,bb)<0?-1:1)*t))),position=add(mul(v.start.slice(0,3),1-t),mul(v.end.slice(0,3),t)),reference=refAt(e,y),moment=add(mul(v.start.slice(7,10),1-t),mul(v.end.slice(7,10),t)),force=sub(v.forceMid,mul(v.forceDensity,y-(v.a+v.b)/2)),delta=qm(q,qc(e.q0)),nl=rotate(qc(q),force),ml=rotate(qc(q),moment),strain=e.invD.map(r=>dot(r,[nl[0],ml[1],ml[2],ml[0]]));return {y,position,reference,displacement:sub(position,reference),quaternion:q,rotation:rotationVector(delta),rotationQuaternion:delta,force,moment,localForce:nl,localMoment:ml,strain,shearStrain:e.shearCompliance?e.shearCompliance.map(r=>r[0]*nl[1]+r[1]*nl[2]):[0,0],R:[[1,0,0],[0,1,0],[0,0,1]].map(v=>rotate(q,v)),element:e};}
   function deformPoint(y,P){const s=at(y);return add(s.position,rotate(s.rotationQuaternion,sub(P,s.reference)));}
-  return {method:'Geometrically exact spatial Kirchhoff beam; unit-quaternion finite rotations, load continuation and shooting equilibrium',at,deformPoint,samples:final.samples,rootForce:fAt(y0),rootMoment:M,tipPosition:final.tip,history,maxAxialStrain:final.maxAxialStrain,verification:{freeTipMomentResidual: norm(final.residual),relativeResidual:norm(final.residual)/scale,stepsPerElement:steps},scope:'Linear elastic section law, small strain, finite displacement/rotation. No shear deformation, section distortion, material failure, flutter or equilibrium-branch stability certification.'};
+  return {method:es.some(e=>e.shearCompliance)?'Geometrically exact spatial Reissner beam with transverse shear; finite rotations and shooting equilibrium':'Geometrically exact spatial Kirchhoff beam; unit-quaternion finite rotations, load continuation and shooting equilibrium',at,deformPoint,samples:final.samples,rootForce:fAt(y0),rootMoment:M,tipPosition:final.tip,history,maxAxialStrain:final.maxAxialStrain,maxShearStrain:final.maxShearStrain,shearIncluded:es.some(e=>e.shearCompliance),verification:{freeTipMomentResidual: norm(final.residual),relativeResidual:norm(final.residual)/scale,stepsPerElement:steps},scope:'Linear elastic section law, small strain, finite displacement/rotation. Transverse shear is included only when section shear compliance is supplied. No section distortion, material failure, flutter or equilibrium-branch stability certification.'};
  }
  return {solve,rotate,fromBasis,rotationVector,qm,qc,qn,linearSolve,add,sub,mul,dot,cross,norm};
 })();

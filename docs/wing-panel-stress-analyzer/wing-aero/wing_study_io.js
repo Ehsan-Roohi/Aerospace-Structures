@@ -1142,7 +1142,7 @@
   }
   /** Rod holes must fit inside the airfoil and printed sleeves must not overlap (checked at the tip, the smallest chord). */
   function rodLayoutIssues(g, E) {
-    const out = [], c = g.tipChord, rh = E.holeRadius(g), Rs = E.sleeveRadius(g);
+    const out=[],c=g.tipChord,solid=g.construction==='solid-foam',rh=solid?E.rodRadius(g):E.holeRadius(g),Rs=solid?E.rodRadius(g):E.sleeveRadius(g);
     const centres = E.rodCentres(g,g.semiSpan),profile=E.airfoilAt?E.airfoilAt(g,g.semiSpan):g.naca;
     g.rodFractions.forEach((f, i) => {
       const v = E.verticalOrdinates(profile, f, c, g.te), depth = v.upper - v.lower;
@@ -1252,7 +1252,7 @@
     add('Checks', 'Factor of safety / tip mass', `${fmt(L.fos)} / ${fmt(L.tipMass)} g`);
     add('Checks', 'Stiffness criteria', `tip deflection ≤ ${fmt(state.criteria.maxTipDeflection)} mm; tip twist ≤ ${fmt(state.criteria.maxTipTwist)}°`);
     add('Analysis','Requested beam elements',state.analysis?.nElements?`${state.analysis.nElements}; required stations may add elements. CAD/STL geometry is unchanged.`:'Solver default; required stations may add elements.');
-    add('Analysis','Torsion sections',state.analysis?.finiteSectionTorsion===true?'Finite-wall homogeneous bonded-spar refinement requested; mixed shear moduli retain the thin-wall method. Closed-tip torsion is unavailable.':'Fast method (default)');
+    add('Analysis','Torsion sections',g.construction==='solid-foam'?'Solid material section; refined transverse shear in the finite-rotation foam model':state.analysis?.finiteSectionTorsion===true?'Finite-wall homogeneous bonded-spar refinement requested; mixed shear moduli retain the thin-wall method. Closed-tip torsion is unavailable.':'Fast method (default)');
     if(state.aerodynamics){const a=state.aerodynamics;add('Aerodynamics','Panel-method inputs',`V ${fmt(a.speed)} m/s, ρ ${fmt(a.density)} kg/m³, α ${fmt(a.alphaDeg)}°, ${a.sequence==='fine'?'Fine':'Standard'} mesh sequence`);}
     if(state.aeroLoad){const a=state.aeroLoad;add('Aerodynamics','Applied aerodynamic load',`${a.label}: ${a.levels.length} solved meshes of the ${a.sequence} sequence at V ${fmt(a.flow.speed)} m/s, α ${fmt(a.flow.alphaDeg)}°; the extrapolated six-component strip load and its admission are recomputed from them`);}
     return rows;

@@ -68,13 +68,13 @@ function solve({nodes,elements,rods,mode='bonded',gap=0,contactStations=null,tol
  }
  if(mode==='sleeve'&&(maxIterations===0||iterations===maxSweeps))throw Error('Circular sleeve contact did not converge; no partial structural result accepted.');
  relative=d0.map((v,i)=>v-Wr[i]);
- const uf=u0.map((v,i)=>v-Z.reduce((s,z,j)=>s+z[i]*radial[j],0)),u=new Float64Array(total);free.forEach((d,i)=>u[d]=uf[i]);
+ const contactRhs=ff.map((v,i)=>v-C.reduce((s,c,j)=>s+c[i]*radial[j],0)),uf=solveK(contactRhs),u=new Float64Array(total);free.forEach((d,i)=>u[d]=uf[i]);
  relative=C.map(c=>dot(c,uf));
  contactResidual=Math.max(0,...contacts.map((_,k)=>{const i=2*k,r=Math.hypot(radial[i],radial[i+1]),x=relative[i],y=relative[i+1];return r>1e-12?Math.hypot(x-gap*radial[i]/r,y-gap*radial[i+1]/r):Math.max(0,Math.hypot(x,y)-gap);}));
  const residual=K.map((r,i)=>dot(r,u)-f[i]);C.forEach((c,j)=>c.forEach((v,i)=>residual[free[i]]+=v*radial[j]));
  const recover=id=>all.filter(a=>a.id===id).map(({e,maps})=>{const ug=maps.map(row=>row.reduce((s,[d,v])=>s+v*u[d],0)),ul=e.T.map(row=>dot(row,ug)),bubble=(e.axialMode.load-dot(e.axialMode.coupling,ul))/e.axialMode.stiffness;return {...e,ul,bubble};});
  const members=recover(0),rodMembers=rods.map((_,i)=>recover(i+1)),displacements=nodes.map((_,i)=>Array.from(u.slice(i*6,i*6+3))),rotations=nodes.map((_,i)=>Array.from(u.slice(i*6+3,i*6+6))),contact=contacts.map((c,i)=>({...c,C:undefined,radialDisplacement:relative.slice(2*i,2*i+2),force: Array.from(radial.slice(2*i,2*i+2)),gap})),maxPenetration=Math.max(0,...contact.map(c=>Math.hypot(...c.radialDisplacement)-gap)),freeResidual=Math.max(0,...free.map(i=>Math.abs(residual[i]))),scale=Math.max(1,...f.map(Math.abs));
- if(maxPenetration>tolerance*1.01||freeResidual>1e-5*scale)throw Error('Rod equilibrium/contact checks failed; no accepted response.');
+ if(maxPenetration>tolerance*1.01||freeResidual>1e-5*scale)throw Error('Rod equilibrium/contact checks failed; no accepted response. '+JSON.stringify({maxPenetration,gapTolerance:tolerance*1.01,freeResidual,residualTolerance:1e-5*scale,contactResidual,iterations}));
  const totalForce=[0,0,0],totalMoment=[0,0,0],supportForce=[0,0,0],supportMoment=[0,0,0];
  for(let id=0;id<(mode==='bonded'?1:rods.length+1);id++)for(let i=0;i<count;i++){
   const point=id?rods[id-1].nodes[i]:nodes[i],base=id*nShell+i*6,af=Array.from(f.slice(base,base+3)),am=add(Array.from(f.slice(base+3,base+6)),F.cross(point,af)),rf=[0,1,2].map(j=>fixed.has(base+j)?residual[base+j]:0),rm=add([0,1,2].map(j=>fixed.has(base+3+j)?residual[base+3+j]:0),F.cross(point,rf));

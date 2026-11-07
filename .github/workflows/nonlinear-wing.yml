@@ -36,6 +36,7 @@ jobs:
           node computational/printed-wing-solver/nonlinear/test_scalar_elastica.cjs
           node computational/printed-wing-solver/nonlinear/test_rod_system.cjs
           node computational/printed-wing-solver/nonlinear/test_rod_wing.cjs
+          node computational/printed-wing-solver/nonlinear/test_rod_saved_pressure.cjs
           node computational/printed-wing-solver/nonlinear/test_deformed_pressure.cjs
           node computational/printed-wing-solver/nonlinear/test_finite_wall.mjs
           node docs/wing-panel-stress-analyzer/validation/test_wing_update.cjs
@@ -50,4 +51,6 @@ jobs:
       - name: Controller rendering, cancellation and stale-result checks
         env:
           MIE446_JSDOM_MODULE: /tmp/flexible-ui-test/node_modules/jsdom
-        run: node computational/printed-wing-solver/nonlinear/test_flexible_ui.cjs
+        run: |
+          node computational/printed-wing-solver/nonlinear/test_flexible_ui.cjs
+          node computational/printed-wing-solver/nonlinear/test_rod_error_ui.cjs

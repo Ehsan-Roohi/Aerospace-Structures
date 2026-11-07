@@ -458,7 +458,7 @@ const WingAeroUI = (() => {
     function showAdmission(adm, message = '') {
       lastAdmission = adm || null;
       const box = $('#aeroAdmission');
-      if (!adm) { box.innerHTML = message ? `<div class="wae-box no"><p class="wae-err">${esc(message)}</p></div>` : ''; return; }
+      if (!adm) { if(message)status('Structural solve failed: '+message,true); box.innerHTML = message ? `<div class="wae-box no"><p class="wae-err">${esc(message)}</p></div>` : ''; return; }
       const v = admissionVerdict(adm);
       box.innerHTML = `<div class="wae-box ${v.ok ? 'ok' : 'no'}"><p class="${v.ok ? 'wae-ok' : 'wae-no'}">${v.html}</p>${admissionTable(adm)}</div>`;
       if(adm.mode==='closed-tip-rigid-load-sectional-response'){status(adm.admitted?'Sectional response solved: nominal normal stress and pure-bending components; torsion and aeroelastic feedback not assessed.':'Sectional load assessment failed; see the checks below.',!adm.admitted);return;}

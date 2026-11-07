@@ -21,3 +21,13 @@ Run `test_rod_wing.cjs` for actual tapered 900 mm wing integration, two longitud
 Both new multi-beam rod models use small-displacement kinematics. The usual displacement/rotation screen is retained. The separate two-way finite-rotation single-beam solver explicitly refuses rod cases rather than discarding the extra rod fields or treating frictionless contact as a bond. Large-displacement multi-beam contact, friction, dry module seams, adhesive failure and bearing strength are not implemented. A failed numerical/model screen is not an aircraft design allowable.
 
 Primary formulation references: [Abaqus tie constraints](https://docs.software.vt.edu/abaqusv2026/English/SIMACAEKEYRefMap/simakey-r-tie.htm), [GetFEM unilateral contact formulation](https://getfem.org/userdoc/model_contact_friction.html). These explain the interface laws; neither validates this implementation.
+
+## Saved Clark Y pressure regression and numerical precision repair
+
+`test_rod_saved_pressure.cjs` uses the actual saved 900 mm semi-span, constant 400 mm chord Clark Y case: one 4 mm rod at quarter chord, 0.25 mm radial clearance, and all eight Fine pressure meshes at 50 m/s, alpha=0. The vertical semi-wing pressure resultant is 140.8786467263 N. The former 1 N single-strip integration test did not cover this case.
+
+Before repair the original saved sleeve case failed the 1e-7 energy check with a relative error of approximately 1.0045e-6. Its pressure boundaries forced extra, sometimes short structural elements, worsening numerical conditioning. Pressure strips are now integrated with their original six components on an independent structural mesh. Every pressure boundary remains a nominal stress sampling location. No load component is removed or rescaled.
+
+The linear solves use independent uncoupled beam blocks where valid, with compensated-residual iterative refinement. Energy is integrated from the positive section strain-energy density, including the condensed axial mode, rather than subtracting large cancelling matrix products. Contact compliance is made reciprocal at roundoff precision; Newton globalization checks the actual contact KKT residual. The final check recomputes contact compatibility from the recovered displacement field. The original force, moment, energy and gap limits are unchanged.
+
+The saved-pressure regression checks both rod choices on 20/40/80-element structural meshes. The 40/80 tip-deflection difference must be below 0.2%. The actual aerodynamic admission path is also checked for the saved sleeve case; a failed aeroelastic coupling test stays failed even if a qualified prescribed-load response is available. Structural failures are reported as failed in the Aerodynamics panel, not left as solving.

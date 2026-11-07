@@ -1457,7 +1457,9 @@ const WingEngine = (() => {
     const items=sourceItems.flatMap(p=>g.planform==='elliptic'&&p.kind==='schrenk'?schrenkParts(p,g).map(part=>({...part,fraction:p.fraction})):[p]);
     const aeroItems=n.aero?n.aero.strips.map((r,i,a)=>aeroStripItem(r,i,n.aero.lineFraction,g,i===a.length-1)):[];items.push(...aeroItems);
     const loadName=(p,i)=>p.kind==='aeroStrip'?`Aerodynamic strip ${p.index+1}`:`Wing load ${i+1} (${p.kind})`;
-    const physical=[0,L,...(g.stations||[]).map(s=>s.eta*L),...ribStations(g),...seams(g),...g.spars.map(s=>s.length),...items.filter(p=>!p.gravity).flatMap(p=>loadStations(p,L))];
+    // Strip loads are integrated piecewise below; rod systems need not inherit
+    // every pressure boundary as a stiffness node (which creates short elements).
+    const physical=[0,L,...(g.stations||[]).map(s=>s.eta*L),...ribStations(g),...seams(g),...g.spars.map(s=>s.length),...items.filter(p=>!p.gravity&&(!g.rodFractions.length||p.kind!=='aeroStrip')).flatMap(p=>loadStations(p,L))];
     const mandatory=[...physical,...ys.filter(y=>!physical.some(p=>Math.abs(p-y)<.1))];
     const regular=linspace(0,L,count+1).filter(y=>!mandatory.some(v=>Math.abs(v-y)<.1));
     let nodeY=[...new Set([...mandatory,...regular].map(y=>+y.toFixed(9)))].sort((a,b)=>a-b),nodes=nodeY.map(referenceAt);
@@ -1583,7 +1585,7 @@ const WingEngine = (() => {
       const cut={...s,y,recoveryD,force,moment,localForce:fl,localMoment:ml,strain:Array.from(strain),displacement:out.displacement,rotation:out.rotation,endZone:endZone(reference,plane.normal,y),nominal:true};
       if(cutCache.size>60000)cutCache.clear();cutCache.set(y,cut);return cut;
     }
-    const y=Float64Array.from([...new Set([...linspace(0,L,Math.min(1001,input.nGrid||201)),...nodeY])].sort((a,b)=>a-b)),cuts=Array.from(y,cutAt),response=Array.from(y,frameAt);
+    const y=Float64Array.from([...new Set([...linspace(0,L,Math.min(1001,input.nGrid||201)),...nodeY,...(rodPaths.length?aeroItems.flatMap(p=>[p.start,p.end]):[])])].sort((a,b)=>a-b)),cuts=Array.from(y,cutAt),response=Array.from(y,frameAt);
     const normalStress=(cut,point,E=pla.E)=>{const dx=point[0]-cut.scLocal[0],dz=point[1]-cut.scLocal[1],q2=cut.B[0][0]*dx+cut.B[0][1]*dz,q3=cut.B[1][0]*dx+cut.B[1][1]*dz;return E*(cut.strain[0]+cut.strain[1]*q3-cut.strain[2]*q2);};
     const tension=[],compression=[],sparStress=[];
     cuts.forEach((c,i)=>{

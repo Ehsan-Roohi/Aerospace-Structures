@@ -32,6 +32,78 @@ A nearly complete circle is not necessary. A bird may briefly bank to remain in 
 
 Mallon, Bildstein and Katzner [2] documented **“contorted soaring”** in Turkey and Black Vultures. At low altitude, particularly along forest edges and in weak-thermal conditions, the birds made tortuous, vertically variable paths that appeared to exploit small-scale turbulent uplift. This is a particularly relevant alternative explanation for the irregular Amherst flight. In their observations, almost all such flights were below 50 m above ground level; that result **must not** be treated as a measured altitude for the Amherst bird.
 
+## Original Amherst field photographs: identification and wing geometry
+
+**Photographer and rights holder:** Ehsan Roohi. **Location and date:** Amherst, Massachusetts, 8 November 2026. The field images supplied by the photographer are **IMG_2789.jpeg, IMG_2791.jpeg, and IMG_2790.jpeg**. These original JPEG files are **not yet hosted in the public repository**. Their observed content and accompanying scientific interpretations are recorded below rather than substituting stock images and incorrectly labeling them as field photographs.
+
+**Figure A, original IMG_2789.jpeg (wide sky view):** A distant bird glides with wings spread against a pale gray sky over leafless Amherst trees. This establishes the setting and flight posture, but the bird's distance does not allow a reliable color, airspeed or altitude measurement.
+
+**Figure B, original IMG_2791.jpeg (blue sky, closer silhouette):** The broad wings, separated outer primaries, compact-looking head, and tail are visible from below. Apparent changes of angle between the inner and outer wing need to be interpreted with care because camera perspective and three-dimensional wing posture can create apparent sweep or a kink.
+
+**Figure C, original IMG_2790.jpeg (pale cloudy sky):** An additional silhouette with extended wings and finger-like primaries confirms the overall flight shape. Underwing color contrast cannot be resolved well enough to be considered a decisive diagnostic character.
+
+### Why Turkey Vulture is a reasonable but provisional identification
+
+The combination of **long broad wings, fingered outer primaries, relatively small head, a substantial tail, and prolonged gliding with rare wingbeats** is consistent with a Turkey Vulture (*Cathartes aura*). Cornell Lab of Ornithology [1] also describes this species' characteristic shallow V-shaped **dihedral** and gently teetering flight. The observer described several minutes of extended gliding, interrupted by partial and irregular turns, an especially compatible behavior.
+
+This identification is **probable, not confirmed**. The photographs do not clearly resolve a red head, the underside's diagnostic contrast between darker wing linings and paler flight feathers, or a measured dihedral angle. Red-tailed Hawks and other large soaring raptors can share some of these silhouette traits. The field guide by Maryland Department of Natural Resources [9] provides useful comparison characters, including the Turkey Vulture's relatively longer tail and broad, grayish trailing flight feathers. Color-resolved, close underside photographs would be needed to improve confidence.
+
+### Why the wing looks like two pieces, or partially swept
+
+The apparent “two-piece wing” is not a pair of independent wings. It reflects an **articulated arm wing and hand wing**, an adjustable wrist joint, and overlapping arrays of secondary and primary feathers.
+
+| Wing section | What the observer sees | Why it matters |
+|---|---|---|
+| Proximal arm wing | Broad wing surface nearer the body, dominated by many overlapping secondaries | Produces much of the lifting surface and transfers distributed loads into the shoulder |
+| Carpal or wrist transition | A visible change in planform or apparent kink | Allows posture change and local wing twist; its projected angle changes with camera viewpoint |
+| Distal hand wing | A more tapered outer region, whose leading and trailing edges can look swept | Adjusts load distribution and contributes to roll and pitch control |
+| Separated outer primaries | Individual “fingers” visible at the tip | Forms nonplanar slotted wingtips that can reduce induced drag |
+
+**Sweep** means a fore–aft inclination of a spanwise line in plan view. **Dihedral** means the wings rise upward from the body in front view. These are different geometric features, and neither should be inferred as a precise angle from one backlit view. A local wrist bend or feather rotation may *look* like an aircraft-style swept-back outer panel, but the living wing is continuously morphing. It is not the same thing as the deliberately fixed sweep of a high-speed transport aircraft.
+
+Why this shape? The inner wing offers a relatively broad lifting area for economical, low-speed soaring. The more maneuverable outer wing and separated primaries offer passive and actively controlled responses to gusts and allow the three-dimensional tip wake to distribute vorticity more effectively.
+
+### The aerodynamic purpose of the finger-like primary feathers
+
+Finite wings incur induced drag associated with the three-dimensional vortex wake. In a simple engineering model,
+
+$
+C_{D_i} \approx \frac{C_L^2}{\pi e\,AR},\qquad AR=\frac{b^2}{S},
+$
+
+where the span efficiency factor summarizes effects of lift distribution and nonplanarity. The separation and upward curvature of outer primaries help make the tip flow three-dimensional. Such separated feathers act partly like multiple small nonplanar lifting surfaces, or natural winglets.
+
+Experimental evidence comes from **Harris's Hawks** rather than Turkey Vultures: Tucker [10] compared a gliding hawk with intact wingtip slots against its wingtip feathers altered to remove slots. At tested conditions, the intact configuration had about **70–90% of the drag** of the modified configuration. Van Oorschot, Tang and Tobalske [11] examined the wider phylogenetic and morphological context of emarginate (slotted) primary feathers. These results support an induced-drag mechanism in gliding birds; they do **not** establish the exact drag savings of the Amherst bird.
+
+The shape also affects loading and control. A rigid idealized right half-wing with span coordinate y, spanwise distributed load l(y) and semispan b/2 has
+
+$
+V(y)=\int_y^{b/2} l(\eta)\,d\eta,\qquad
+M(y)=\int_y^{b/2} l(\eta)(\eta-y)\,d\eta,
+$
+
+after omitting wing self-weight and inertial terms. Changing wrist geometry or primary-feather position changes the aerodynamic load distribution and therefore shear and bending transmitted into the wing. In real flight, aeroelastic deformation couples the feather structure, aerodynamic forces, and bird's muscular control.
+
+For a simplified coordinated **level** turn with bank angle phi,
+
+$
+n=\frac{L}{W}=\frac{1}{\cos\phi}.
+$
+
+Turning harder increases lift demand, induced drag and wing loading in this idealized model. A bird seeking updrafts balances maneuvering costs against potential energy gain; the incomplete circles observed over Amherst may therefore reflect a search for patchy lift, but video plus wind measurements would be required to determine the actual energy pathway.
+
+**Key lesson for MIE 446:** The photographs provide a useful observation of a flexible, swept-looking, finger-tipped wing. A scientifically defensible interpretation separates **observable silhouette** from **unmeasured flight quantities**; neither an exact sweep angle, glide ratio, induced-drag coefficient, nor a unique species determination follows from those photographs alone.
+
+**Additional sources**
+
+[9] Maryland Department of Natural Resources, *Turkey Vulture*. https://dnr.maryland.gov/wildlife/Pages/plants_wildlife/Turkey_Vulture.aspx
+
+[10] Tucker, V. A. (1995). “Drag reduction by wing tip slots in a gliding Harris' hawk, Parabuteo unicinctus.” *Journal of Experimental Biology*, **198**, 775–781. https://doi.org/10.1242/jeb.198.3.775
+
+[11] van Oorschot, B. K., Tang, H. K., & Tobalske, B. W. (2017). “Phylogenetics and ecomorphology of emarginate primary feathers.” *Journal of Morphology*, **278**, 936–947. https://doi.org/10.1002/jmor.20686
+
+---
+
 ## 2. Wings still produce lift when they do not flap
 
 The essential reference velocity is **airspeed relative to the surrounding air**, not speed relative to the ground. For a wing of reference area $S$, the usual aerodynamic definitions are

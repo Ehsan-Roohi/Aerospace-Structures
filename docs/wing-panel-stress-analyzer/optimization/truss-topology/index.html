@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ground-Structure Topology Optimization · MIE 446 Optimization Lab</title>
+<link rel="stylesheet" href="../shared/lab.css">
+<link rel="icon" href="data:,">
+<style>
+  .summary-wrap { overflow-x: auto; }
+  table.results td.badgecell { white-space: nowrap; }
+  #table-summary td:first-child { min-width: 190px; }
+  #table-summary td.gov { min-width: 170px; font-size: 0.84rem; }
+  .warnbox { background: var(--warn-soft); border-left: 4px solid var(--warn); border-radius: var(--radius); padding: 8px 12px; margin: 8px 0; font-size: 0.88rem; }
+  .badbox { background: var(--bad-soft); border-left: 4px solid var(--bad); border-radius: var(--radius); padding: 8px 12px; margin: 8px 0; font-size: 0.88rem; }
+  .inline-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 6px 0; }
+  .inline-row label { font-size: 0.88rem; }
+  .inline-row select { padding: 4px 6px; border: 1px solid var(--line); border-radius: 6px; font: inherit; font-size: 0.88rem; }
+  .u-bad { color: var(--bad); font-weight: 600; }
+  .u-ok { color: var(--ok); }
+  .u-active { color: var(--warn); font-weight: 600; }
+  details.adv summary { cursor: pointer; font-size: 0.9rem; font-weight: 600; color: var(--muted); margin: 8px 0 4px; }
+  .eq { font-family: var(--mono); font-size: 0.85rem; background: var(--page); padding: 2px 5px; border-radius: 4px; }
+</style>
+</head>
+<body>
+<header class="lab-header">
+  <div class="crumbs"><a href="../index.html">Optimization Lab</a> · <a href="https://ehsan-roohi.github.io/Aerospace-Structures/wing-panel-stress-analyzer/#beam">Beam</a> · <a href="https://ehsan-roohi.github.io/Aerospace-Structures/wing-panel-stress-analyzer/truss-lab.html">Truss Lab</a> · <a href="https://ehsan-roohi.github.io/Aerospace-Structures/wing-panel-stress-analyzer/">Wing AeroStruct</a></div>
+  <h1>Ground-Structure Topology Optimization</h1>
+  <span class="version">truss-topology 0.1.1</span>
+</header>
+
+<main class="lab-main">
+  <div class="scope">
+    <strong>Scope.</strong> Instead of sizing a truss you drew, the computer starts from a dense ground structure of candidate pin-jointed bars on a rectangular grid and decides which bars should exist.
+    Model: 2D linear elastic truss (direct stiffness method), one static load case, continuous member areas, no self weight.
+    Two deterministic optimizers are compared: optimality criteria (OC) for minimum compliance at a fixed material volume, and minimum-volume plastic design solved as a linear program (LP).
+    Every layout shown is rebuilt from the kept bars and re-solved from scratch with the exact elastic solver; the Euler buckling column is a screening indicator only (assumed solid square section, effective length factor K = 1).
+    No joint design, no stability or fatigue claims, no certified allowables; independent of the Wing AeroStruct solver.
+  </div>
+
+  <div class="grid">
+    <section>
+      <div class="panel">
+        <h2>Inputs</h2>
+        <h3>Design domain and ground structure</h3>
+        <div class="field"><label for="in-W">Domain width W <span class="unit">mm</span></label><input id="in-W" type="number" value="3000" step="100" min="1"></div>
+        <div class="field"><label for="in-H">Domain height H <span class="unit">mm</span></label><input id="in-H" type="number" value="1500" step="100" min="1"></div>
+        <div class="field"><label for="in-nx">Grid nodes across, nx <span class="unit">3 to 10</span></label><input id="in-nx" type="number" value="7" step="1" min="3" max="10"></div>
+        <div class="field"><label for="in-ny">Grid nodes up, ny <span class="unit">2 to 6</span></label><input id="in-ny" type="number" value="4" step="1" min="2" max="6"></div>
+        <div class="field"><label for="in-r">Connectivity level r</label>
+          <select id="in-r"><option value="1">1 (neighbours and diagonals)</option><option value="2" selected>2 (adds knight moves)</option><option value="3">3 (long bars)</option></select></div>
+        <h3>Supports and load</h3>
+        <div class="field wide"><label for="in-support">Support preset</label><select id="in-support"></select></div>
+        <div class="field"><label for="in-loadIx">Load node column, ix <span class="unit">0 = left</span></label><input id="in-loadIx" type="number" value="6" step="1" min="0"></div>
+        <div class="field"><label for="in-loadIy">Load node row, iy <span class="unit">0 = bottom</span></label><input id="in-loadIy" type="number" value="1" step="1" min="0"></div>
+        <div class="field"><label for="in-P">Load magnitude P <span class="unit">N</span></label><input id="in-P" type="number" value="10000" step="500"></div>
+        <div class="field"><label for="in-angle">Load direction <span class="unit">deg, 0 = +x, -90 = down</span></label><input id="in-angle" type="number" value="-90" step="1"></div>
+        <h3>Material and sizing</h3>
+        <div class="field wide"><label for="in-material">Material card</label><select id="in-material"></select></div>
+        <div class="field"><label>Young's modulus E <span class="unit">MPa</span></label><input id="in-E" type="text" value="" readonly aria-label="Young's modulus from the material card"></div>
+        <div class="field"><label for="in-sigT">Allowable tension <span class="unit">MPa</span></label><input id="in-sigT" type="number" value="276" step="10" min="1"></div>
+        <div class="field"><label for="in-sigC">Allowable compression <span class="unit">MPa</span></label><input id="in-sigC" type="number" value="276" step="10" min="1"></div>
+        <div class="field"><label for="in-Aref">Reference area A_ref, your uniform trial <span class="unit">mm^2</span></label><input id="in-Aref" type="number" value="20" step="5" min="0.001"></div>
+        <div class="field"><label for="in-volfrac">OC volume fraction of the ground structure at A_ref</label><input id="in-volfrac" type="number" value="0.2" step="0.05" min="0.001" max="1"></div>
+        <div class="field"><label for="in-amin">Minimum area floor <span class="unit">fraction of A_ref</span></label><input id="in-amin" type="number" value="0.0001" step="0.0001" min="0.0000001"></div>
+        <div class="field"><label for="in-theta">Display threshold theta <span class="unit">fraction of A_max</span></label><input id="in-theta" type="number" value="0.02" step="0.01" min="0" max="0.99"></div>
+        <details class="adv">
+          <summary>Advanced solver settings</summary>
+          <div class="field"><label for="in-ocMaxIter">OC maximum iterations</label><input id="in-ocMaxIter" type="number" value="200" step="50" min="1"></div>
+          <div class="field"><label for="in-ocTol">OC stop when max area change below <span class="unit">fraction of A_max</span></label><input id="in-ocTol" type="number" value="0.001" step="0.0001" min="0.0000001"></div>
+          <div class="field"><label for="in-ocMove">OC move limit per iteration</label><input id="in-ocMove" type="number" value="0.2" step="0.05" min="0.01" max="0.9"></div>
+          <div class="field"><label for="in-lpRule">LP pivot rule</label>
+            <select id="in-lpRule"><option value="auto" selected>Dantzig + lexicographic, Bland fallback</option><option value="bland">Bland's rule only</option><option value="dantzig">Dantzig + lexicographic</option></select></div>
+        </details>
+        <div class="btn-row">
+          <button class="btn" id="btn-run">Run both optimizers</button>
+          <button class="btn secondary" id="btn-cancel" disabled>Cancel</button>
+          <button class="btn secondary" id="btn-reset">Reset</button>
+        </div>
+        <progress id="prog" max="1" value="0" style="display:none"></progress>
+        <div class="status" id="status" aria-live="polite"></div>
+      </div>
+
+      <div class="panel">
+        <h2>How it works</h2>
+        <details class="help" open>
+          <summary>Ground structure</summary>
+          <div class="body">
+            The nodes of an nx by ny grid are joined by every candidate bar whose grid index differences are both at most r.
+            A candidate that passes exactly through an intermediate grid node (for example two steps along a row) is skipped, because the same force path already exists as a chain of shorter bars.
+            Supports and the load are placed on grid nodes. The baseline, your own design point, is this ground structure with every bar at the reference area A_ref.
+          </div>
+        </details>
+        <details class="help">
+          <summary>OC: minimum compliance at fixed volume</summary>
+          <div class="body">
+            Compliance is the work of the load, <span class="eq">C = f · u</span>, a measure of flexibility. The optimality criteria (OC) method (Bendsoe and Sigmund 2003) adjusts the member areas so that the compliance is minimal for a fixed total volume
+            <span class="eq">V_t = volfrac × A_ref × sum of candidate lengths</span>. The sensitivity of compliance to a bar area is
+            <span class="eq">dC/dA_i = -N_i^2 L_i / (E A_i^2) = -sigma_i^2 L_i / E</span>: bars with a high stress are worth more material.
+            Each iteration multiplies every area by (its sensitivity divided by lambda times its length) to the power 0.5 (damping), moves at most 20 percent, respects the floor and ceiling, and finds the Lagrange multiplier lambda by bisection so that the volume stays exactly at V_t.
+            A safeguard halves the move if a step would raise the compliance. Iterations stop when the largest area change is below the tolerance (relative to the largest area) or after the maximum number of iterations.
+            At the optimum every bar that is neither at its floor nor at its ceiling carries the same stress magnitude <span class="eq">sqrt(lambda E)</span>, the fully stressed condition.
+          </div>
+        </details>
+        <details class="help">
+          <summary>LP: minimum-volume plastic design</summary>
+          <div class="body">
+            Dorn, Gomory and Greenberg (1964) wrote the minimum-volume truss on a ground structure as a linear program (LP). Each candidate bar gets two variables, a tension force t_i and a compression force c_i, both nonnegative.
+            Equilibrium at every free degree of freedom (dof) reads <span class="eq">B (t - c) = f</span>, where B holds the direction cosines of the bars. A fully stressed bar needs the area
+            <span class="eq">A_i = t_i / sigma_t + c_i / sigma_c</span>, so the volume <span class="eq">sum L_i (t_i / sigma_t + c_i / sigma_c)</span> is linear in the variables and is minimized.
+            The page solves this with its own dense two-phase simplex (no libraries): phase 1 finds a feasible equilibrium with artificial variables, phase 2 reduces the volume.
+            Bland's rule is implemented and used as the anti-cycling fallback; the default entering rule is Dantzig's most negative reduced cost with a lexicographic ratio test, because pure Bland's rule needs tens of thousands of degenerate pivots on these problems (every unloaded free dof gives a zero right-hand side).
+            The optimum is a vertex, so at most as many bars as free dofs are nonzero: the layout is statically determinate. With a single load case and a grid that gets finer, the LP solution approaches Michell's (1904) least-volume structures.
+          </div>
+        </details>
+        <details class="help">
+          <summary>Why the two volumes differ, and the classical identity</summary>
+          <div class="body">
+            OC solves an elastic problem: the stiffest truss for a volume budget, with no stress limit. The LP solves a plastic design: the lightest truss whose bars are all at the allowable, with no stiffness requirement and no compatibility of deformations.
+            For one load case with equal allowables in tension and compression the two problems share the same optimal layout (Michell, Hemp 1973), and the areas differ only by a common factor. Then
+            <span class="eq">C × V × E = (sigma_allow × V_LP)^2</span> for the optimal layout at any volume V. The page reports this product for the OC layout (it can only be above 1, the Michell lower bound on compliance) and for the LP layout (exactly 1 when it is fully stressed).
+            The LP volume is the minimum for any layout that respects the stress limit, so the OC layout scaled up or down to put its worst bar at the allowable can never be lighter than the LP design.
+            A compliance within a fraction of a percent of the bound can still show a visibly different layout: compliance is flat near the optimum while slowly vanishing bars are still shrinking, so tighten the OC tolerance to see the layouts converge.
+          </div>
+        </details>
+        <details class="help">
+          <summary>Verification, thresholds and mechanisms</summary>
+          <div class="body">
+            Bars below theta times the largest area are hidden. The remaining bars (a dangling bar at an unloaded joint is removed, two collinear bars at an unloaded two-bar joint become one continuous bar) are re-solved exactly with the direct stiffness method, which reports member forces, stresses, utilization against the allowables, mass and compliance.
+            If the thresholded layout is kinematically unstable the page says so and tries a lower threshold automatically.
+            A plastic design can be a mechanism even with every nonzero bar kept, typically a roller hanging on one vertical bar, because equilibrium under the given load needs no horizontal reaction. In that case the load does no work in the zero-stiffness mode, the member forces are still unique and are reported, the mode is drawn in purple, and the layout is flagged as not usable without bracing.
+            Mass is <span class="eq">sum A_i L_i × rho / 1000</span> in grams. The baseline and the OC layout are also reported scaled so that their worst bar is exactly at the allowable; scaling all areas by one factor does not change the force distribution in a linear truss.
+          </div>
+        </details>
+        <details class="help">
+          <summary>References and limitations</summary>
+          <div class="body">
+            A. G. M. Michell, The limits of economy of material in frame-structures, Philosophical Magazine 8 (1904) 589-597.
+            W. S. Dorn, R. E. Gomory and H. J. Greenberg, Automatic design of optimal structures, Journal de Mecanique 3 (1964) 25-52.
+            W. S. Hemp, Optimum Structures, Clarendon Press, Oxford, 1973.
+            M. P. Bendsoe and O. Sigmund, Topology Optimization: Theory, Methods and Applications, Springer, 2003 (optimality criteria, truss topology design).
+            Limitations: pin-jointed bars with continuous areas and one static load case; no buckling constraint (the Euler column is a screen only), no joint or connection design, no self weight, no dynamic or fatigue loads, no certified material allowables.
+            Candidate bars may cross without a joint; a real structure needs a decision at each crossing.
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <section>
+      <div class="panel">
+        <h2>Results</h2>
+        <div id="verdict" class="status"></div>
+        <div id="warnings"></div>
+        <div class="kpi-row" id="kpis"></div>
+        <div class="summary-wrap"><table class="results" id="table-summary"></table></div>
+        <h3>Layouts: light gray = unused candidates, blue = tension, red = compression, width grows with sqrt(A / A_max)</h3>
+        <canvas class="plot" id="plot-oc" width="720" height="400" aria-label="OC layout"></canvas>
+        <div class="note" id="note-oc">Hover over a bar to read its force and stress.</div>
+        <canvas class="plot" id="plot-lp" width="720" height="400" aria-label="LP layout"></canvas>
+        <div class="note" id="note-lp">Hover over a bar to read its force and stress.</div>
+        <h3>Convergence</h3>
+        <canvas class="plot" id="plot-conv-oc" width="720" height="260" aria-label="OC convergence"></canvas>
+        <canvas class="plot" id="plot-conv-lp" width="720" height="260" aria-label="LP convergence"></canvas>
+        <h3>Heaviest members</h3>
+        <div class="inline-row">
+          <label for="sel-table">Design</label>
+          <select id="sel-table"><option value="lp">LP minimum-volume layout</option><option value="oc">OC minimum-compliance layout</option><option value="baseline">Baseline: all candidates at A_ref</option></select>
+          <button class="btn secondary" id="btn-csv">Download CSV (all members of this design)</button>
+          <button class="btn secondary" id="btn-png-oc">OC layout PNG</button>
+          <button class="btn secondary" id="btn-png-lp">LP layout PNG</button>
+        </div>
+        <table class="results" id="table-members"></table>
+        <p class="note">Utilization U = |sigma| / allowable (tension or compression). Rows at or above U = 0.98 are highlighted as governing. The Euler column is a screen only: |N| / P_cr with P_cr = pi^2 E I / L^2, I = A^2 / 12 (solid square), K = 1; a value above 1 flags a compression bar that would need a stockier section or a shorter length.</p>
+      </div>
+    </section>
+  </div>
+<p class="scope"><strong>Review note:</strong> A fresh solve checks feasibility within this page's stated model. It is not independent physical validation or a proof of global optimality. Optimizer results are candidates; comparisons depend on bounds, discretization and evaluation counts.</p></main>
+
+<footer class="lab-footer">
+  MIE 446 Aerospace Structures, University of Massachusetts Amherst. Educational optimization demonstration on a simplified model; independent of the Wing AeroStruct solver and not a certified analysis.
+</footer>
+
+<script type="module">
+import { linePlot, fmt, badge, setupCanvas, canvasPoint, palette, downloadCSV, downloadPNG, escapeHTML } from '../shared/labkit.js';
+import { MATERIALS } from '../shared/presets.js';
+import * as mod from './truss-topology.js';
+
+const $ = id => document.getElementById(id);
+const D = mod.DEFAULTS;
+
+// ------------------------------------------------------------------ inputs
+
+for (const [key, s] of Object.entries(mod.SUPPORT_PRESETS)) {
+  const o = document.createElement('option'); o.value = key; o.textContent = s.name; $('in-support').appendChild(o);
+}
+for (const [key, m] of Object.entries(MATERIALS)) {
+  const o = document.createElement('option'); o.value = key; o.textContent = `${m.name} (E = ${m.E} MPa, allowable ${m.sigmaAllow} MPa, ${m.rho} g/cm^3)`; $('in-material').appendChild(o);
+}
+
+function setInputs(p) {
+  $('in-W').value = p.W; $('in-H').value = p.H; $('in-nx').value = p.nx; $('in-ny').value = p.ny; $('in-r').value = String(p.r);
+  $('in-support').value = p.support;
+  const ln = mod.defaultLoadNode(p.support, p.nx, p.ny);
+  $('in-loadIx').value = p.loadIx ?? ln.ix; $('in-loadIy').value = p.loadIy ?? ln.iy;
+  $('in-P').value = p.P; $('in-angle').value = p.angleDeg;
+  $('in-material').value = p.material;
+  const mat = MATERIALS[p.material];
+  $('in-E').value = mat ? mat.E : '';
+  $('in-sigT').value = p.sigmaT ?? (mat ? mat.sigmaAllow : ''); $('in-sigC').value = p.sigmaC ?? (mat ? mat.sigmaAllow : '');
+  $('in-Aref').value = p.Aref; $('in-volfrac').value = p.volfrac; $('in-amin').value = p.aminFrac; $('in-theta').value = p.theta;
+  $('in-ocMaxIter').value = p.oc.maxIter; $('in-ocTol').value = p.oc.tol; $('in-ocMove').value = p.oc.move; $('in-lpRule').value = p.lp.rule;
+}
+
+function readInputs() {
+  return {
+    W: $('in-W').value, H: $('in-H').value, nx: $('in-nx').value, ny: $('in-ny').value, r: $('in-r').value,
+    support: $('in-support').value, loadIx: $('in-loadIx').value, loadIy: $('in-loadIy').value, P: $('in-P').value, angleDeg: $('in-angle').value,
+    material: $('in-material').value, sigmaT: $('in-sigT').value, sigmaC: $('in-sigC').value,
+    Aref: $('in-Aref').value, volfrac: $('in-volfrac').value, aminFrac: $('in-amin').value, theta: $('in-theta').value,
+    oc: { maxIter: $('in-ocMaxIter').value, tol: $('in-ocTol').value, move: $('in-ocMove').value, eta: 0.5 },
+    lp: { rule: $('in-lpRule').value, maxPivots: 0 },
+  };
+}
+
+function applyLoadDefault() {
+  const nx = Number($('in-nx').value), ny = Number($('in-ny').value);
+  if (!Number.isInteger(nx) || !Number.isInteger(ny) || nx < 2 || ny < 2) return;
+  const ln = mod.defaultLoadNode($('in-support').value, nx, ny);
+  $('in-loadIx').value = ln.ix; $('in-loadIy').value = ln.iy;
+  $('in-loadIx').max = nx - 1; $('in-loadIy').max = ny - 1;
+}
+for (const id of ['in-support', 'in-nx', 'in-ny']) $(id).addEventListener('change', applyLoadDefault);
+$('in-material').addEventListener('change', () => {
+  const mat = MATERIALS[$('in-material').value];
+  if (!mat) return;
+  $('in-E').value = mat.E; $('in-sigT').value = mat.sigmaAllow; $('in-sigC').value = mat.sigmaAllow;
+});
+
+// ------------------------------------------------------------------ running (worker with main-thread fallback)
+
+let worker = null, running = false, cancelFlag = false, workerBroken = false, lastResult = null;
+
+function showProgress(pr) {
+  if (pr && Number.isFinite(pr.fraction)) $('prog').value = Math.max(0, Math.min(1, pr.fraction));
+  if (pr && pr.text) $('status').textContent = pr.text;
+}
+
+function runViaWorker(params) {
+  return new Promise((resolve, reject) => {
+    let gotMessage = false;
+    try {
+      worker = new Worker(new URL('./truss-topology.worker.js', import.meta.url), { type: 'module' });
+    } catch (err) { reject(Object.assign(new Error('worker unavailable'), { workerFailed: true })); return; }
+    worker.onmessage = (e) => {
+      gotMessage = true;
+      const msg = e.data;
+      if (msg.type === 'progress') showProgress(msg);
+      else if (msg.type === 'done') { resolve(msg.result); worker.terminate(); worker = null; }
+      else if (msg.type === 'error') { reject(new Error(msg.message)); worker.terminate(); worker = null; }
+    };
+    worker.onerror = (ev) => {
+      if (worker) { worker.terminate(); worker = null; }
+      if (!gotMessage) reject(Object.assign(new Error('worker failed to start: ' + (ev && ev.message || '')), { workerFailed: true }));
+      else reject(new Error('worker error: ' + (ev && ev.message || 'unknown')));
+      if (ev && ev.preventDefault) ev.preventDefault();
+    };
+    worker.postMessage({ cmd: 'run', params });
+  });
+}
+
+const yieldFn = () => new Promise(r => setTimeout(r, 0));
+
+async function run() {
+  if (running) return;
+  const raw = readInputs();
+  const p = mod.normalizeParams(raw);
+  const val = mod.validateParams(p);
+  $('status').classList.remove('error');
+  if (!val.ok) {
+    $('status').textContent = 'Please fix the inputs: ' + val.errors.join(' ');
+    $('status').classList.add('error');
+    return;
+  }
+  running = true; cancelFlag = false;
+  $('btn-run').disabled = true; $('btn-cancel').disabled = false;
+  $('prog').style.display = 'block'; $('prog').value = 0;
+  $('status').textContent = 'Building the ground structure...';
+  try {
+    let result;
+    if (!workerBroken) {
+      try { result = await runViaWorker(p); }
+      catch (err) {
+        if (err && err.workerFailed) {
+          workerBroken = true;
+          $('status').textContent = 'Web Worker unavailable here (for example when opened from a local file), running on the page in small chunks...';
+          result = await mod.runAllAsync(p, { onProgress: showProgress, yieldFn, shouldCancel: () => cancelFlag });
+        } else throw err;
+      }
+    } else {
+      result = await mod.runAllAsync(p, { onProgress: showProgress, yieldFn, shouldCancel: () => cancelFlag });
+    }
+    if (cancelFlag || (result && result.cancelled)) { $('status').textContent = 'Cancelled.'; return; }
+    if (result.error) {
+      $('status').textContent = 'Error: ' + (result.message || (result.messages || []).join(' '));
+      $('status').classList.add('error');
+      return;
+    }
+    lastResult = result;
+    render(result);
+  } catch (err) {
+    $('status').textContent = 'Error: ' + err.message;
+    $('status').classList.add('error');
+    console.error(err);
+  } finally {
+    running = false;
+    $('btn-run').disabled = false; $('btn-cancel').disabled = true;
+    $('prog').style.display = 'none';
+  }
+}
+
+function cancel() {
+  cancelFlag = true;
+  if (worker) { worker.terminate(); worker = null; }
+  running = false;
+  $('btn-run').disabled = false; $('btn-cancel').disabled = true; $('prog').style.display = 'none';
+  $('status').textContent = 'Cancelled.';
+}
+
+$('btn-run').addEventListener('click', run);
+$('btn-cancel').addEventListener('click', cancel);
+$('btn-reset').addEventListener('click', () => { setInputs(Object.assign({}, D, { oc: Object.assign({}, D.oc), lp: Object.assign({}, D.lp) })); applyLoadDefault(); run(); });
+
+// ------------------------------------------------------------------ rendering
+
+const kN = v => fmt(v / 1000, 3) + ' kN';
+const g = v => fmt(v, 4) + ' g';
+const nmm = v => fmt(v, 4) + ' N mm';
+
+function verifyBadges(which, data) {
+  const v = data.verify;
+  const out = [];
+  if (!v) return badge('bad', `${which}: not available`);
+  if (!v.ok) return badge('bad', `${which}: ${v.message}`);
+  if (!v.stable) {
+    out.push(badge('bad', `${which}: forces checked by fresh model solve, but the layout is a mechanism (${v.modeCount} zero-stiffness mode${v.modeCount === 1 ? '' : 's'}), bracing needed`));
+  } else if (which === 'OC') {
+    out.push(badge('ok', 'OC: Checked by fresh model solve, volume budget met'));
+    out.push(v.stressOk ? badge('ok', `OC stress check: max U = ${fmt(v.Umax, 3)}`) : badge('warn', `OC stress check: max U = ${fmt(v.Umax, 3)}, OC does not enforce stress`));
+  } else {
+    out.push(v.feasible ? badge('ok', `LP: Checked by fresh model solve, fully stressed, max U = ${fmt(v.Umax, 4)}`)
+      : badge('bad', `LP: verification failed, max U = ${fmt(v.Umax, 4)} after thresholding, lower the threshold`));
+  }
+  if (data.thetaUsed !== data.thetaRequested && data.thetaUsed !== null) out.push(badge('warn', `${which}: verified at theta = ${data.thetaUsed}`));
+  return out.join(' ');
+}
+
+function render(res) {
+  const ocB = verifyBadges('OC', res.oc);
+  const lpB = res.lp.status === 'optimal' ? verifyBadges('LP', res.lp) : badge('bad', `LP: simplex status ${res.lp.status} after ${res.lp.pivots} pivots`);
+  $('status').innerHTML = ocB + ' ' + lpB;
+  $('verdict').innerHTML = `${ocB} ${lpB} <span class="note">OC ${fmt(res.oc.ms, 3)} ms, ${res.oc.iterations} iterations; LP ${fmt(res.lp.ms, 3)} ms, ${res.lp.pivots} pivots on ${res.lp.nVariables} variables and ${res.lp.nConstraints} equality constraints.</span>`;
+  const warns = [];
+  if (res.oc.thresholdWarning) warns.push(`<div class="warnbox"><strong>OC layout.</strong> ${escapeHTML(res.oc.thresholdWarning)}</div>`);
+  if (res.lp.thresholdWarning) warns.push(`<div class="${res.lp.verify && !res.lp.verify.stable ? 'badbox' : 'warnbox'}"><strong>LP layout.</strong> ${escapeHTML(res.lp.thresholdWarning)}</div>`);
+  if (!res.oc.converged) warns.push(`<div class="warnbox"><strong>OC.</strong> Stopped at the maximum of ${res.oc.iterations} iterations with a largest area change of ${fmt(res.oc.history[res.oc.history.length - 1].change, 3)} of A_max; raise the maximum under advanced settings for a sharper layout.</div>`);
+  if (!res.michell.equalAllowables) warns.push(`<div class="warnbox">The Michell identity and the shared-layout argument need equal allowables in tension and compression; with different allowables the LP and OC layouts legitimately differ.</div>`);
+  $('warnings').innerHTML = warns.join('');
+  renderKPIs(res);
+  renderSummary(res);
+  drawLayout($('plot-oc'), res, 'oc');
+  drawLayout($('plot-lp'), res, 'lp');
+  drawConvergence(res);
+  renderMembers(res, $('sel-table').value);
+}
+
+function kpi(label, value, sub) {
+  return `<div class="kpi"><div class="label">${label}</div><div class="value">${value}</div><div class="sub">${sub || ''}</div></div>`;
+}
+
+function renderKPIs(res) {
+  const b = res.baseline, oc = res.oc, lp = res.lp, gn = res.gains, mi = res.michell;
+  const tiles = [];
+  if (gn.massSaved_g !== undefined) {
+    tiles.push(kpi('Mass saved by the LP layout', `${g(gn.massSaved_g)} (${fmt(gn.massSavedPct, 3)} %)`,
+      `baseline sized to the allowable ${g(b.scaled.verify.mass)} versus LP ${g(lp.scaled.verify.mass)}${lp.verify.stable ? '' : ' (LP layout is a mechanism)'}`));
+  } else {
+    tiles.push(kpi('Mass saved by the LP layout', 'n/a', 'LP not verified'));
+  }
+  if (gn.complianceReductionPct !== undefined) {
+    tiles.push(kpi('Compliance cut by OC at the same volume', `${fmt(gn.complianceReductionPct, 3)} %`,
+      `uniform areas at V_t: ${nmm(oc.uniformAtBudget.compliance)}; OC layout: ${nmm(oc.verify.compliance)}`));
+  }
+  if (Number.isFinite(mi.ocRatio)) {
+    tiles.push(kpi('Michell identity C V E / (sigma V_LP)^2', `OC ${fmt(mi.invariantOC, 4)}, LP ${fmt(mi.invariantLP, 4)}`,
+      'equals 1 for the Michell-optimal layout; the OC value cannot drop below 1'));
+  } else {
+    tiles.push(kpi('Michell identity C V E / (sigma V_LP)^2', 'n/a', mi.equalAllowables ? 'LP not available' : 'needs equal allowables'));
+  }
+  if (gn.ocScaledOverLp !== undefined) {
+    tiles.push(kpi('OC layout scaled to the allowable', `${g(oc.scaled.verify.mass)} = ${fmt(gn.ocScaledOverLp, 3)} × LP`,
+      `LP minimum volume ${fmt(lp.volume, 4)} mm^3 is the lower bound for any stress-feasible layout`));
+  }
+  $('kpis').innerHTML = tiles.join('');
+}
+
+function memberName(res, v, k) {
+  if (!v || !v.ok || k < 0) return 'n/a';
+  const mb = v.members[k];
+  return `bar ${mb.i}-${mb.j}`;
+}
+
+function renderSummary(res) {
+  const b = res.baseline, oc = res.oc, lp = res.lp;
+  const rows = [];
+  const row = (name, v, governing, check, scaledMass) => {
+    if (!v || !v.ok) {
+      rows.push(`<tr><td>${name}</td><td class="num">${v ? v.nMembers : ''}</td><td class="num"></td><td class="num"></td><td class="num"></td><td class="num"></td><td>${escapeHTML(v ? v.message : 'not available')}</td><td class="num"></td><td class="badgecell">${check}</td></tr>`);
+      return;
+    }
+    const ucls = v.Umax > 1 + 1e-6 ? 'u-bad' : (v.Umax >= 0.98 ? 'u-active' : 'u-ok');
+    rows.push(`<tr><td>${name}</td><td class="num">${v.nMembers}</td><td class="num">${fmt(v.volume, 4)}</td><td class="num">${fmt(v.mass, 4)}</td><td class="num">${fmt(v.compliance, 4)}</td><td class="num ${ucls}">${fmt(v.Umax, 4)}</td><td class="gov">${governing}</td><td class="num">${scaledMass}</td><td class="badgecell">${check}</td></tr>`);
+  };
+  const bv = b.verify;
+  row(`Baseline, your design point: all ${res.ground.nMembers} candidates at A_ref = ${fmt(b.Aref, 3)} mm^2`, bv,
+    `${memberName(res, bv, bv.governing)} at U = ${fmt(bv.Umax, 3)}`,
+    bv.feasible ? badge('ok', 'feasible') : badge('bad', 'over the allowable'),
+    b.scaled ? fmt(b.scaled.verify.mass, 4) : 'n/a');
+  const uv = oc.uniformAtBudget;
+  row(`OC starting point: uniform areas at the budget V_t = ${fmt(oc.Vt, 4)} mm^3`, uv,
+    uv.ok ? `${memberName(res, uv, uv.governing)} at U = ${fmt(uv.Umax, 3)}` : '',
+    uv.ok ? (uv.feasible ? badge('ok', 'feasible') : badge('warn', 'over the allowable')) : badge('bad', 'n/a'), 'same as baseline');
+  const ov = oc.verify;
+  row(`OC minimum-compliance layout, theta = ${oc.thetaUsed}, ${oc.iterations} iterations (${oc.converged ? 'converged' : 'not converged'})`, ov,
+    ov.ok ? `volume budget active; OC target stress sqrt(lambda E) = ${fmt(oc.sigmaUniform, 3)} MPa, kept bars carry ${fmt(oc.uniformity ? oc.uniformity.sigmaMin : NaN, 3)} to ${fmt(oc.uniformity ? oc.uniformity.sigmaMax : NaN, 3)} MPa, worst ${memberName(res, ov, ov.governing)}` : '',
+    ov.ok ? (ov.stable ? badge('ok', 'Checked by fresh model solve') : badge('bad', 'mechanism')) : badge('bad', 'unstable'),
+    oc.scaled ? fmt(oc.scaled.verify.mass, 4) : 'n/a');
+  if (lp.status === 'optimal') {
+    const lv = lp.verify;
+    row(`LP minimum-volume layout, theta = ${lp.thetaUsed}; plastic optimum V = ${fmt(lp.volume, 4)} mm^3`, lv,
+      lv && lv.ok ? `allowable stress active in ${lv.nActive} of ${lv.nMembers} bars (${lv.nTension} tension, ${lv.nCompression} compression)` : '',
+      lv && lv.ok ? (lv.feasible ? badge('ok', 'Checked by fresh model solve') : (lv.stable ? badge('bad', 'over the allowable') : badge('bad', 'mechanism: bracing needed'))) : badge('bad', 'unstable'),
+      lp.scaled ? fmt(lp.scaled.verify.mass, 4) : 'n/a');
+  } else {
+    rows.push(`<tr><td>LP minimum-volume layout</td><td colspan="7">simplex status: ${escapeHTML(lp.status)}</td><td>${badge('bad', 'no LP optimum')}</td></tr>`);
+  }
+  $('table-summary').innerHTML = `<thead><tr><th>Design</th><th class="num">Bars</th><th class="num">Volume (mm^3)</th><th class="num">Mass (g)</th><th class="num">Compliance (N mm)</th><th class="num">Max U</th><th>Governing</th><th class="num">Mass at the allowable (g)</th><th>Check</th></tr></thead><tbody>${rows.join('')}</tbody>`;
+}
+
+// ---- layout drawing
+
+const drawState = { oc: null, lp: null };
+
+function drawLayout(canvas, res, which) {
+  const ground = res.ground;
+  const data = res[which];
+  const verify = data.verify;
+  const { ctx, W, H } = setupCanvas(canvas);
+  const pad = { l: 40, r: 40, t: 44, b: 74 };
+  const s = Math.min((W - pad.l - pad.r) / ground.W, (H - pad.t - pad.b) / ground.H);
+  const ox = pad.l + ((W - pad.l - pad.r) - ground.W * s) / 2;
+  const oy = pad.b + ((H - pad.t - pad.b) - ground.H * s) / 2;
+  const X = x => ox + x * s, Y = y => H - oy - y * s;
+  const nodes = ground.nodes;
+  // title
+  ctx.fillStyle = palette.ink; ctx.font = 'bold 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
+  ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+  let title;
+  if (which === 'oc') title = `OC layout: minimum compliance at V_t = ${fmt(data.Vt, 4)} mm^3`;
+  else title = data.status === 'optimal' ? `LP layout: minimum volume ${fmt(data.volume, 4)} mm^3 (plastic design)` : `LP: ${data.status}`;
+  ctx.fillText(title, 10, 8);
+  ctx.font = '12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
+  if (verify && verify.ok) {
+    ctx.fillStyle = palette.gray;
+    ctx.fillText(`${verify.nMembers} bars kept of ${ground.nMembers} candidates, mass ${fmt(verify.mass, 4)} g, C = ${fmt(verify.compliance, 4)} N mm, max U = ${fmt(verify.Umax, 3)}`, 10, 24);
+  }
+  // candidates
+  ctx.strokeStyle = '#e2e2e7'; ctx.lineWidth = 1;
+  ctx.beginPath();
+  for (const mb of ground.members) { const a = nodes[mb.i], b = nodes[mb.j]; ctx.moveTo(X(a.x), Y(a.y)); ctx.lineTo(X(b.x), Y(b.y)); }
+  ctx.stroke();
+  // kept members
+  let Amax = 0, Nmax = 0;
+  if (verify && verify.members) for (const mb of verify.members) { Amax = Math.max(Amax, mb.A); if (Number.isFinite(mb.N)) Nmax = Math.max(Nmax, Math.abs(mb.N)); }
+  if (verify && verify.members) {
+    const sorted = verify.members.slice().sort((p, q) => q.A - p.A);   // thin on top of thick for visibility
+    for (const mb of sorted) {
+      const a = nodes[mb.i], b = nodes[mb.j];
+      const w = 1.5 + 8.5 * Math.sqrt(mb.A / (Amax || 1));
+      let color = palette.gray;
+      if (Number.isFinite(mb.N) && Math.abs(mb.N) > 1e-6 * (Nmax || 1)) color = mb.N > 0 ? palette.blue : palette.red;
+      ctx.strokeStyle = color; ctx.lineWidth = w; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(X(a.x), Y(a.y)); ctx.lineTo(X(b.x), Y(b.y)); ctx.stroke();
+    }
+  }
+  // nodes
+  for (const nd of nodes) { ctx.fillStyle = '#9a9aa2'; ctx.beginPath(); ctx.arc(X(nd.x), Y(nd.y), 2.4, 0, Math.PI * 2); ctx.fill(); }
+  // supports
+  const size = 12;
+  nodes.forEach((nd, a) => {
+    const fx = ground.fixed[2 * a], fy = ground.fixed[2 * a + 1];
+    if (!fx && !fy) return;
+    const cx = X(nd.x), cy = Y(nd.y);
+    ctx.strokeStyle = palette.ink; ctx.fillStyle = '#fff'; ctx.lineWidth = 1.5;
+    if (fx && fy) {                       // pin: triangle below with a ground line
+      ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx - size * 0.8, cy + size); ctx.lineTo(cx + size * 0.8, cy + size); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(cx - size, cy + size + 3); ctx.lineTo(cx + size, cy + size + 3); ctx.stroke();
+    } else if (fy) {                      // roller: triangle below plus circles
+      ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx - size * 0.8, cy + size); ctx.lineTo(cx + size * 0.8, cy + size); ctx.closePath(); ctx.fill(); ctx.stroke();
+      for (const dx of [-6, 0, 6]) { ctx.beginPath(); ctx.arc(cx + dx, cy + size + 4, 2.6, 0, Math.PI * 2); ctx.stroke(); }
+      ctx.beginPath(); ctx.moveTo(cx - size, cy + size + 8); ctx.lineTo(cx + size, cy + size + 8); ctx.stroke();
+    } else {                              // x fixed, y free: triangle on the left plus circles (symmetry roller)
+      ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx - size, cy - size * 0.8); ctx.lineTo(cx - size, cy + size * 0.8); ctx.closePath(); ctx.fill(); ctx.stroke();
+      for (const dy of [-6, 0, 6]) { ctx.beginPath(); ctx.arc(cx - size - 4, cy + dy, 2.6, 0, Math.PI * 2); ctx.stroke(); }
+      ctx.beginPath(); ctx.moveTo(cx - size - 8, cy - size); ctx.lineTo(cx - size - 8, cy + size); ctx.stroke();
+    }
+  });
+  // load arrow
+  nodes.forEach((nd, a) => {
+    const fx = ground.loads[2 * a], fy = ground.loads[2 * a + 1];
+    const P = Math.hypot(fx, fy);
+    if (!(P > 0)) return;
+    const ux = fx / P, uy = -fy / P;      // screen direction (y down)
+    const len = 52, hx = X(nd.x), hy = Y(nd.y), tx = hx - ux * len, ty = hy - uy * len;
+    ctx.strokeStyle = palette.orange; ctx.fillStyle = palette.orange; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.moveTo(tx, ty); ctx.lineTo(hx - ux * 6, hy - uy * 6); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(hx, hy); ctx.lineTo(hx - ux * 12 - uy * 5, hy - uy * 12 + ux * 5); ctx.lineTo(hx - ux * 12 + uy * 5, hy - uy * 12 - ux * 5); ctx.closePath(); ctx.fill();
+    ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
+    ctx.fillText(`P = ${kN(P)}`, tx + 6, ty - 2);
+  });
+  // mechanism mode
+  if (verify && verify.mode && verify.movingNodes && verify.movingNodes.length) {
+    ctx.strokeStyle = palette.purple; ctx.fillStyle = palette.purple; ctx.lineWidth = 2;
+    for (const mv of verify.movingNodes) {
+      const nd = nodes[mv.node];
+      const mx = verify.mode[2 * mv.node], my = -verify.mode[2 * mv.node + 1];
+      const r = Math.hypot(mx, my); if (!(r > 0)) continue;
+      const len = 44 * Math.min(1, mv.amplitude);
+      const x0 = X(nd.x), y0 = Y(nd.y), x1 = x0 + mx / r * len, y1 = y0 + my / r * len;
+      ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.stroke();
+      ctx.beginPath(); ctx.arc(x1, y1, 3, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.textAlign = 'right'; ctx.textBaseline = 'top';
+    ctx.fillText('purple: zero-stiffness mode (mechanism)', W - 10, 8);
+  }
+  // legend
+  const ly = H - 16;
+  let lx = 12;
+  const legendItem = (color, width, text) => {
+    ctx.strokeStyle = color; ctx.lineWidth = width; ctx.beginPath(); ctx.moveTo(lx, ly); ctx.lineTo(lx + 24, ly); ctx.stroke();
+    ctx.fillStyle = palette.ink; ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.fillText(text, lx + 30, ly);
+    lx += 30 + ctx.measureText(text).width + 18;
+  };
+  legendItem(palette.blue, 4, 'tension'); legendItem(palette.red, 4, 'compression'); legendItem('#d0d0d6', 1, 'unused candidate');
+  ctx.fillStyle = palette.gray; ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+  ctx.fillText(`line width grows with sqrt(A / A_max), A_max = ${fmt(Amax, 3)} mm^2; domain ${fmt(ground.W, 4)} x ${fmt(ground.H, 4)} mm`, W - 10, ly - 18);
+  drawState[which] = { X, Y, verify, nodes };
+}
+
+function attachHover(which) {
+  const canvas = $('plot-' + which), note = $('note-' + which);
+  canvas.addEventListener('mousemove', (evt) => {
+    const st = drawState[which];
+    if (!st || !st.verify || !st.verify.members) return;
+    const p = canvasPoint(canvas, evt);
+    let best = null, bestD = 8;
+    st.verify.members.forEach((mb, k) => {
+      const a = st.nodes[mb.i], b = st.nodes[mb.j];
+      const d = segDist(p.x, p.y, st.X(a.x), st.Y(a.y), st.X(b.x), st.Y(b.y));
+      if (d < bestD) { bestD = d; best = { mb, k }; }
+    });
+    if (!best) { note.textContent = 'Hover over a bar to read its force and stress.'; return; }
+    const mb = best.mb;
+    const kind = !Number.isFinite(mb.N) ? '' : mb.N > 0 ? ' (tension)' : mb.N < 0 ? ' (compression)' : ' (zero force)';
+    note.textContent = `Bar ${mb.i}-${mb.j}${mb.merged ? ' (merged collinear chain)' : ''}: L = ${fmt(mb.L, 4)} mm, A = ${fmt(mb.A, 4)} mm^2, N = ${fmt(mb.N, 4)} N${kind}, sigma = ${fmt(mb.sigma, 4)} MPa, U = ${fmt(mb.U, 3)}` + (mb.Ubuck > 0 ? `, Euler screen ${fmt(mb.Ubuck, 3)}` : '');
+  });
+}
+function segDist(px, py, ax, ay, bx, by) {
+  const dx = bx - ax, dy = by - ay, L2 = dx * dx + dy * dy;
+  const t = L2 > 0 ? Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / L2)) : 0;
+  return Math.hypot(px - (ax + t * dx), py - (ay + t * dy));
+}
+attachHover('oc'); attachHover('lp');
+
+// ---- convergence plots
+
+function downsample(arr, maxN) {
+  if (arr.length <= maxN) return arr.map((v, i) => [i, v]);
+  const out = []; const step = (arr.length - 1) / (maxN - 1);
+  for (let k = 0; k < maxN; k++) { const i = Math.round(k * step); out.push([i, arr[i]]); }
+  return out;
+}
+
+function drawConvergence(res) {
+  const h = res.oc.history;
+  const series = [{ x: h.map(p => p.iter), y: h.map(p => p.compliance), label: 'OC compliance (full ground structure)', color: palette.blue, type: 'both', size: 2.5 }];
+  const hl = [];
+  if (Number.isFinite(res.michell.ocBound)) hl.push({ y: res.michell.ocBound, label: 'Michell bound (sigma V_LP)^2 / (E V)', color: palette.green });
+  linePlot($('plot-conv-oc'), series, { title: `OC convergence: ${res.oc.iterations} iterations, stopped by ${res.oc.stoppedBy}`, xlabel: 'OC iteration (0 = uniform areas)', ylabel: 'compliance (N mm)', hlines: hl, yZero: true, marginLeft: 84 });
+  const lh = res.lp.history || [];
+  if (lh.length) {
+    const pts = downsample(lh, 1200);
+    linePlot($('plot-conv-lp'), [{ x: pts.map(p => p[0]), y: pts.map(p => p[1]), label: 'LP objective (volume) in phase 2', color: palette.orange }],
+      { title: `LP convergence: ${res.lp.phase1Pivots} phase-1 pivots to reach equilibrium, then ${res.lp.pivots - res.lp.phase1Pivots} phase-2 pivots`, xlabel: 'phase-2 simplex pivot', ylabel: 'volume (mm^3)', hlines: [{ y: res.lp.volume, label: `optimum ${fmt(res.lp.volume, 4)} mm^3`, color: palette.green }], yZero: true, marginLeft: 84 });
+  } else {
+    const { ctx } = setupCanvas($('plot-conv-lp'));
+    ctx.fillStyle = palette.gray; ctx.fillText('LP convergence history not available (status ' + res.lp.status + ')', 12, 20);
+  }
+}
+
+// ---- members table
+
+function renderMembers(res, which) {
+  const v = which === 'oc' ? res.oc.verify : which === 'lp' ? res.lp.verify : res.baseline.verify;
+  const tbl = $('table-members');
+  if (!v || !v.members) { tbl.innerHTML = `<tbody><tr><td>${escapeHTML(v ? v.message : 'not available')}</td></tr></tbody>`; return; }
+  const nodes = res.ground.nodes;
+  const sorted = v.members.map((mb, k) => Object.assign({ k }, mb)).sort((p, q) => (q.A * q.L) - (p.A * p.L)).slice(0, 20);
+  const rows = sorted.map(mb => {
+    const a = nodes[mb.i], b = nodes[mb.j];
+    const active = mb.U >= 0.98 && mb.U <= 1 + 1e-6;
+    const ucls = mb.U > 1 + 1e-6 ? 'u-bad' : active ? 'u-active' : 'u-ok';
+    return `<tr${active ? ' class="active"' : ''}><td>${mb.i}-${mb.j}${mb.merged ? ' (chain)' : ''}</td><td class="num">(${fmt(a.x, 4)}, ${fmt(a.y, 4)}) to (${fmt(b.x, 4)}, ${fmt(b.y, 4)})</td><td class="num">${fmt(mb.L, 4)}</td><td class="num">${fmt(mb.A, 4)}</td><td class="num">${fmt(mb.A * mb.L, 4)}</td><td class="num">${fmt(mb.N, 4)}</td><td class="num">${fmt(mb.sigma, 4)}</td><td class="num ${ucls}">${fmt(mb.U, 3)}</td><td class="num">${mb.Ubuck > 0 ? fmt(mb.Ubuck, 3) : 'tension'}</td></tr>`;
+  });
+  tbl.innerHTML = `<thead><tr><th>Bar (nodes)</th><th class="num">Ends (mm)</th><th class="num">L (mm)</th><th class="num">A (mm^2)</th><th class="num">Volume (mm^3)</th><th class="num">N (N)</th><th class="num">sigma (MPa)</th><th class="num">U</th><th class="num">Euler screen</th></tr></thead><tbody>${rows.join('')}</tbody>` +
+    `<caption style="caption-side: bottom; text-align: left; color: var(--muted); font-size: 0.82rem; padding-top: 6px;">Showing the ${sorted.length} heaviest of ${v.members.length} bars (sorted by volume); the CSV contains all of them.</caption>`;
+}
+
+$('sel-table').addEventListener('change', () => { if (lastResult) renderMembers(lastResult, $('sel-table').value); });
+$('btn-csv').addEventListener('click', () => { if (lastResult) downloadCSV(`truss-topology-${$('sel-table').value}-members.csv`, mod.membersCSVRows(lastResult, $('sel-table').value)); });
+$('btn-png-oc').addEventListener('click', () => downloadPNG($('plot-oc'), 'truss-topology-oc-layout.png'));
+$('btn-png-lp').addEventListener('click', () => downloadPNG($('plot-lp'), 'truss-topology-lp-layout.png'));
+
+// ------------------------------------------------------------------ start
+
+setInputs(Object.assign({}, D, { oc: Object.assign({}, D.oc), lp: Object.assign({}, D.lp) }));
+applyLoadDefault();
+run();
+</script>
+</body>
+</html>

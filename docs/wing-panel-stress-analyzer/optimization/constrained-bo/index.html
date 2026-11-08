@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Constrained Bayesian Optimization for Expensive Solves · MIE 446 Optimization Lab</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="../shared/lab.css">
+<style>
+  .legend-line { display: inline-block; margin-right: 14px; white-space: nowrap; }
+  .legend-line .sw { display: inline-block; width: 12px; height: 12px; border-radius: 50%; vertical-align: -2px; margin-right: 4px; border: 1px solid #1d1d1f; }
+  .legend-line .sw.cross { border-radius: 0; background: transparent !important; border: none; color: #c43d3d; font-weight: 700; width: auto; }
+  .legend-line .sw.star { border-radius: 0; background: transparent !important; border: none; color: #e07a1f; font-weight: 700; width: auto; }
+  .legend-line .sw.square { border-radius: 0; }
+  .legend-line .sw.line { border-radius: 0; height: 0; width: 18px; border: none; border-top: 2px solid; vertical-align: 3px; }
+  .legend-line .sw.dashed { border-top-style: dashed; }
+  .subtle { color: var(--muted); }
+  #verdict { margin: 6px 0 10px; }
+  .stack { display: grid; gap: 4px; }
+  table.results td.small { font-size: 0.82rem; }
+</style>
+</head>
+<body>
+<header class="lab-header">
+  <div class="crumbs"><a href="../index.html">Optimization Lab</a> · <a href="https://ehsan-roohi.github.io/Aerospace-Structures/wing-panel-stress-analyzer/#beam">Beam</a> · <a href="https://ehsan-roohi.github.io/Aerospace-Structures/wing-panel-stress-analyzer/truss-lab.html">Truss Lab</a> · <a href="https://ehsan-roohi.github.io/Aerospace-Structures/wing-panel-stress-analyzer/">Wing AeroStruct</a></div>
+  <h1>Constrained Bayesian Optimization for Expensive Solves</h1>
+  <span class="version">constrained-bo 0.1.1</span>
+</header>
+
+<main class="lab-main">
+  <div class="scope">
+    <strong>Scope.</strong> When one exact structural solve is expensive (for example the coupled aerodynamic and structural solve of a whole wing),
+    a grid search is unaffordable. This page shows how a Gaussian process (GP) surrogate plus a constrained expected-improvement acquisition
+    chooses the next design to evaluate, how the surrogate's uncertainty is displayed honestly, and why the recommendation is always a design that
+    was actually evaluated and then re-solved exactly, never a surrogate estimate. The demonstration solvers are deliberately cheap closed forms:
+    an Euler-Bernoulli beam (linear elastic, small deflection, four classical load cases) and a 2-D linear elastic pin-jointed Warren truss with an
+    Euler buckling screen (effective length factor K = 1, solid square section assumed). The optional solve delay is a demonstration device that only
+    emulates an expensive solver. No certified strengths, no stability or fatigue claims; independent of the Wing AeroStruct solver.
+  </div>
+
+  <div class="grid">
+    <section>
+      <div class="panel">
+        <h2>Problem</h2>
+        <div class="field"><label for="in-problem">Demonstration problem</label>
+          <select id="in-problem">
+            <option value="beam">Beam section (2 variables)</option>
+            <option value="truss">Warren truss (3 variables)</option>
+          </select></div>
+
+        <div id="beam-inputs">
+          <div class="field"><label for="in-preset">Beam preset</label><select id="in-preset"></select></div>
+          <div class="field"><label for="in-section">Section type</label>
+            <select id="in-section"><option value="rect">Solid rectangle b x h</option><option value="tube">Round tube D, t</option></select></div>
+          <div class="field"><label for="in-support">Support</label>
+            <select id="in-support"><option value="cantilever">Cantilever, clamped at x = 0</option><option value="simply">Simply supported</option></select></div>
+          <div class="field"><label for="in-loadtype">Load type</label>
+            <select id="in-loadtype"><option value="point">Point load (tip or midspan)</option><option value="udl">Uniform load over the span</option></select></div>
+          <div class="field"><label for="in-L">Span L <span class="unit">mm</span></label><input id="in-L" type="number" value="600" step="10" min="1"></div>
+          <div class="field"><label for="in-load">Load magnitude <span class="unit" id="load-unit">N</span></label><input id="in-load" type="number" value="20" step="1" min="0"></div>
+          <div class="field"><label for="in-material">Material</label><select id="in-material"></select></div>
+          <div class="field"><label for="in-FS">Factor of safety FS on stress</label><input id="in-FS" type="number" value="2" step="0.1" min="0.1"></div>
+          <div class="field"><label for="in-k">Deflection limit ratio k (limit = L / k)</label><input id="in-k" type="number" value="50" step="10" min="1"></div>
+          <div class="field"><label for="in-tmin">Minimum feature thickness t_min <span class="unit">mm</span></label><input id="in-tmin" type="number" value="1.2" step="0.1" min="0"></div>
+          <h3>Your own design (solved exactly for comparison)</h3>
+          <div class="field"><label for="in-s1" id="lbl-s1">Width b <span class="unit">mm</span></label><input id="in-s1" type="number" value="12" step="0.5" min="0.1"></div>
+          <div class="field"><label for="in-s2" id="lbl-s2">Depth h <span class="unit">mm</span></label><input id="in-s2" type="number" value="24" step="0.5" min="0.1"></div>
+          <div class="note" id="beam-bounds"></div>
+        </div>
+
+        <div id="truss-inputs" hidden>
+          <div class="field"><label for="in-loadcase">Load case</label><select id="in-loadcase"></select></div>
+          <div class="field"><label for="in-tFS">Factor of safety FS (stress and buckling)</label><input id="in-tFS" type="number" value="1.5" step="0.1" min="0.1"></div>
+          <div class="field"><label for="in-tk">Deflection limit ratio (limit = span / ratio)</label><input id="in-tk" type="number" value="250" step="10" min="1"></div>
+          <h3>Your own design (solved exactly for comparison)</h3>
+          <div class="field"><label for="in-t1">Chord area A_chord <span class="unit">mm^2</span></label><input id="in-t1" type="number" value="300" step="10" min="1"></div>
+          <div class="field"><label for="in-t2">Diagonal area A_diag <span class="unit">mm^2</span></label><input id="in-t2" type="number" value="300" step="10" min="1"></div>
+          <div class="field"><label for="in-t3">Truss height h <span class="unit">mm</span></label><input id="in-t3" type="number" value="1000" step="10" min="1"></div>
+          <div class="note" id="truss-bounds"></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Optimizer settings</h2>
+        <div class="field"><label for="in-budget">Budget: total exact evaluations</label><input id="in-budget" type="number" value="30" step="1" min="6" max="200"></div>
+        <div class="field"><label for="in-seed">Seed of the pseudo-random number generator</label><input id="in-seed" type="number" value="1" step="1" min="0"></div>
+        <div class="field wide"><label for="in-delay">Artificial solve delay: <output id="out-delay">0</output> ms per exact solve</label>
+          <input id="in-delay" type="range" min="0" max="300" step="10" value="0"></div>
+        <div class="note">Demonstration device only: a busy wait of this length is added to every exact solve so the page behaves as if the solver were expensive. It changes no number in the results.</div>
+        <div class="field wide"><label><input id="in-compare" type="checkbox" checked> Also run the same budget cap uniform grid and the seeded random search for comparison</label></div>
+        <div class="btn-row">
+          <button class="btn" id="btn-run">Run optimization</button>
+          <button class="btn secondary" id="btn-cancel" disabled>Cancel</button>
+          <button class="btn secondary" id="btn-reset">Reset</button>
+        </div>
+        <progress id="progress" max="100" value="0" hidden></progress>
+        <div class="status" id="status"></div>
+      </div>
+
+      <div class="panel">
+        <h2>How it works</h2>
+        <details class="help" open>
+          <summary>The optimizer, step by step</summary>
+          <div class="body">
+            <ol>
+              <li><strong>Initial design.</strong> A seeded Latin hypercube sample (LHS) of 2n + 2 designs is solved exactly (n is the number of design variables).</li>
+              <li><strong>Surrogates.</strong> One Gaussian process (GP) is fitted to the mass and one to each constraint value g_j (feasible means g_j &lt;= 0). Hyperparameters are refitted after every evaluation.</li>
+              <li><strong>Acquisition.</strong> Constrained expected improvement (Gardner et al. 2014): EI(x) times the product over constraints of P(g_j(x) &lt;= 0). EI is measured against the best <em>feasible</em> design evaluated so far. While no feasible design exists, the probability of feasibility alone is maximized.</li>
+              <li><strong>Maximization.</strong> 400 quasi-random Halton candidates are scored, the best three are polished with the Nelder-Mead simplex method, and the result is clamped to the variable bounds. A point that would repeat an evaluated design is replaced by the candidate where the surrogate is least certain.</li>
+              <li><strong>Exact evaluation.</strong> The chosen design is solved exactly and added to the data. Steps 2 to 5 repeat until the budget is spent.</li>
+              <li><strong>Recommendation.</strong> The best evaluated feasible design is re-solved from scratch and every constraint is re-checked. That verified result is what you see.</li>
+            </ol>
+          </div>
+        </details>
+        <details class="help">
+          <summary>Why the answer never comes from the surrogate</summary>
+          <div class="body">
+            The GP mean is an interpolation of a handful of solves. It can be wrong by several times its own standard deviation where data are sparse,
+            and its feasibility probability is a model statement, not a check. This page therefore uses the surrogate only to decide <em>where to look next</em>.
+            Every number in the key results comes from the exact solver, and the recommendation carries the badge "Checked by fresh model solve" only after
+            a fresh solve of the recommended design passes all constraints. The honesty panel below shows the GP's own estimate at the recommendation with
+            its ±2 sigma range so that you can judge how much (or how little) the surrogate should be trusted.
+          </div>
+        </details>
+        <details class="help">
+          <summary>The Gaussian process in one paragraph</summary>
+          <div class="body">
+            Inputs are scaled to the unit box and outputs are standardized. The kernel is Matern 5/2 with one length scale per input
+            (automatic relevance determination, ARD) and a signal variance; the mean is the sample mean; the diagonal receives a nugget of 1e-6 plus a small noise term of 1e-4
+            (standardized units). Hyperparameters maximize the log marginal likelihood on a grid of 5 length scales per dimension and 5 signal variances
+            (full grid for two variables, coordinate-wise search for three). Constraint GPs are fitted to the signed logarithm sign(g) ln(1 + |g|) because
+            utilizations span orders of magnitude across the design box; the transform is monotone and keeps zero fixed, so P(g &lt;= 0) is unchanged.
+            Factorizations use Cholesky with a jitter fallback.
+          </div>
+        </details>
+        <details class="help">
+          <summary>The demonstration solvers</summary>
+          <div class="body">
+            <p><strong>Beam</strong> (Euler-Bernoulli, linear elastic, small deflection): cantilever with tip load, M = P L and v = P L^3 / (3 E I);
+            cantilever with uniform load, M = w L^2 / 2 and v = w L^4 / (8 E I); simply supported with midspan load, M = P L / 4 and v = P L^3 / (48 E I);
+            simply supported with uniform load, M = w L^2 / 8 and v = 5 w L^4 / (384 E I). Constraints: U_stress = |M| c FS / (I sigma_allow) &lt;= 1,
+            U_defl = v / (L / k) &lt;= 1, and a minimum feature thickness t_min / t_section &lt;= 1. Objective: mass = A L rho / 1000 in grams.
+            For tubes a wall at or beyond the radius (2 t &gt;= D) is treated as the solid-bar limit, so D &gt; 2 t acts as a bound.</p>
+            <p><strong>Warren truss</strong> (2-D pin-jointed, linear elastic, direct stiffness): chord area, diagonal area and height h (all top-chord
+            nodes move together) are the variables. Member force N = (E A / L) times the axial elongation. Tension: U = |N| FS / (A sigma_allow).
+            Compression: U = max(stress utilization, |N| FS / P_cr) with P_cr = pi^2 E I / (K L)^2, I = A^2 / 12 (solid square) and K = 1. This buckling
+            check is a <em>screen</em>: the effective length and the section shape are assumed, not analysed. Midspan deflection is limited to span / 250 by default.
+            A singular stiffness matrix (mechanism) is reported as an unstable structure and counted as a large constraint violation.</p>
+          </div>
+        </details>
+        <details class="help">
+          <summary>Same budget cap comparison and reference optimum</summary>
+          <div class="body">
+            With a budget of B exact solves the uniform grid uses floor(sqrt(B))^2 points for two variables and floor(B^(1/3))^3 for three, placed on the
+            bounds inclusive. The random search draws B designs uniformly with the same seed. The reference optimum is computed outside the budget with the
+            cheap exact solver: for the beam, a fine 1-D scan over the free section variable with bisection on the other (every constraint is monotone in it);
+            for the rectangular section the classical closed form (width at its lower bound or depth at its upper bound, active constraint solved explicitly)
+            is shown as well. For the truss, a 1-D scan over h uses static determinacy (member forces do not depend on the areas) and solves the deflection
+            constraint in closed form. All references are re-solved exactly before they are displayed.
+          </div>
+        </details>
+        <details class="help">
+          <summary>Using the engine with your own expensive solver</summary>
+          <div class="body">
+            The module exports <code>optimize({ n, lower, upper, evaluate(x) -&gt; { f, g: [] }, budget, seed }, onProgress)</code> where <code>evaluate</code>
+            is pure and synchronous and <code>g</code> holds the constraint values (feasible when all are &lt;= 0). The worker protocol
+            (messages <code>run</code>, <code>cancel</code>, <code>progress</code>, <code>done</code>) is documented in the README so another app such as Wing AeroStruct can plug in its solver.
+          </div>
+        </details>
+        <details class="help">
+          <summary>Limitations</summary>
+          <div class="body">
+            Two and three design variables only in this demonstration; the GP grid search for hyperparameters is coarse by design; the acquisition
+            maximizer is a heuristic (quasi-random candidates plus local polishing) and can miss a narrow peak; results are deterministic for a seed but
+            different seeds give different paths. The demonstration solvers are simplified models with educational material cards and are not design allowables.
+          </div>
+        </details>
+        <details class="help">
+          <summary>References</summary>
+          <div class="body">
+            Jones, Schonlau and Welch (1998), Efficient global optimization of expensive black-box functions, J. Global Optim. 13.
+            Gardner, Kusner, Xu, Weinberger and Cunningham (2014), Bayesian optimization with inequality constraints, ICML.
+            Rasmussen and Williams (2006), Gaussian Processes for Machine Learning, MIT Press.
+            McKay, Beckman and Conover (1979), Latin hypercube sampling, Technometrics 21.
+            Halton (1960), quasi-random sequences, Numer. Math. 2. Nelder and Mead (1965), A simplex method for function minimization, Comput. J. 7.
+            Beam and truss formulas: any mechanics of materials text (for example Gere and Goodno, Mechanics of Materials; Hibbeler, Structural Analysis).
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <section>
+      <div class="panel">
+        <h2>Key results</h2>
+        <div id="verdict"></div>
+        <div class="kpi-row" id="kpis"></div>
+        <canvas class="plot" id="plot-curve" width="720" height="380"></canvas>
+        <div class="note">Each curve is the best <em>verified feasible</em> mass found so far by that method after a given number of exact solves. Gaps mean no feasible design yet.</div>
+        <h3>Comparison at same budget cap</h3>
+        <table class="results" id="table-compare"></table>
+        <div class="btn-row">
+          <button class="btn secondary" id="btn-csv-curves">Download curves CSV</button>
+          <button class="btn secondary" id="btn-png-curve">Download curve PNG</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Recommended design, checked by fresh model solve</h2>
+        <div id="rec-summary" class="note"></div>
+        <table class="results" id="table-rec"></table>
+      </div>
+
+      <div class="panel">
+        <h2>What the surrogate believes (honesty panel)</h2>
+        <div class="note" id="honesty-intro"></div>
+        <canvas class="plot" id="plot-mean" width="720" height="440"></canvas>
+        <div class="note" id="legend-mean"></div>
+        <div class="field wide"><label><input id="in-exact" type="checkbox"> Overlay the exact feasibility boundary (for teaching; possible only because the demonstration solver is cheap)</label></div>
+        <canvas class="plot" id="plot-sd" width="720" height="440"></canvas>
+        <div class="note">The standard deviation collapses at evaluated designs and grows where none were solved: this is where the surrogate is guessing.</div>
+        <div class="field"><label for="in-slice">Slice variable</label><select id="in-slice"></select></div>
+        <canvas class="plot" id="plot-slice" width="720" height="380"></canvas>
+        <div class="note" id="legend-slice"></div>
+        <div class="note" id="slice-note"></div>
+        <div id="surrogate-note"></div>
+      </div>
+
+      <div class="panel">
+        <h2>Evaluation history</h2>
+        <details class="help" open>
+          <summary>All exact evaluations of the Bayesian optimization run</summary>
+          <div class="body">
+            <div class="note">"GP before" is what the surrogate predicted for the mass at that design just before it was solved (mean ±2 sigma) and the predicted probability of feasibility; "exact" is the solver's answer.</div>
+            <table class="results" id="table-history"></table>
+          </div>
+        </details>
+        <div class="btn-row"><button class="btn secondary" id="btn-csv-history">Download history CSV</button></div>
+      </div>
+    </section>
+  </div>
+<p class="scope"><strong>Review note:</strong> A fresh solve checks feasibility within this page's stated model. It is not independent physical validation or a proof of global optimality. Optimizer results are candidates; comparisons depend on bounds, discretization and evaluation counts.</p></main>
+
+<footer class="lab-footer">
+  MIE 446 Aerospace Structures, University of Massachusetts Amherst. Educational optimization demonstration on a simplified model; independent of the Wing AeroStruct solver and not a certified analysis.
+</footer>
+
+<script type="module">
+import { linePlot, heatmap, contourLines, fmt, badge, escapeHTML, palette, downloadCSV, downloadPNG } from '../shared/labkit.js';
+import { MATERIALS, BEAM_PRESETS, TRUSS_PRESETS } from '../shared/presets.js';
+import * as cbo from './constrained-bo.js';
+
+const $ = id => document.getElementById(id);
+
+const state = {
+  worker: null, useMainThread: false, running: false, cancelRequested: false, cancelTimer: null,
+  lastRequest: null, problem: null, result: null, rec: null, stud: null,
+  live: { bo: [], grid: [], random: [] }, liveFrame: false,
+};
+
+// ---------------------------------------------------------------- inputs ----
+
+function fillSelect(sel, entries) {
+  sel.innerHTML = '';
+  for (const [value, text] of entries) {
+    const o = document.createElement('option');
+    o.value = value; o.textContent = text; sel.appendChild(o);
+  }
+}
+fillSelect($('in-preset'), Object.entries(BEAM_PRESETS).map(([k, p]) => [k, p.name]));
+fillSelect($('in-material'), Object.entries(MATERIALS).map(([k, m]) => [k, `${m.name} (E ${m.E} MPa, allowable ${m.sigmaAllow} MPa, ${m.rho} g/cm^3)`]));
+fillSelect($('in-loadcase'), Object.keys(TRUSS_PRESETS.warren.loadCases).map(k => [k, k]));
+
+function setStatus(html, isError = false) {
+  const el = $('status');
+  el.innerHTML = html;
+  el.classList.toggle('error', isError);
+}
+
+function applyBeamPreset(key) {
+  const cfg = cbo.beamConfigFromPreset(key);
+  $('in-section').value = cfg.sectionType;
+  $('in-support').value = cfg.support;
+  $('in-loadtype').value = cfg.loadType;
+  $('in-L').value = cfg.L;
+  $('in-load').value = cfg.loadType === 'point' ? cfg.P : cfg.w;
+  $('in-material').value = cfg.material;
+  $('in-FS').value = cfg.FS;
+  $('in-k').value = cfg.deflectionLimitRatio;
+  $('in-tmin').value = cfg.tMin;
+  $('in-s1').value = cfg.student[0];
+  $('in-s2').value = cfg.student[1];
+  updateLabels();
+}
+
+function applySectionDefaults() {
+  const type = $('in-section').value;
+  const preset = cbo.beamConfigFromPreset($('in-preset').value);
+  if (preset.sectionType === type) { $('in-s1').value = preset.student[0]; $('in-s2').value = preset.student[1]; }
+  else if (type === 'rect') { $('in-s1').value = 12; $('in-s2').value = 24; }
+  else { $('in-s1').value = 30; $('in-s2').value = 2; }
+  updateLabels();
+}
+
+function updateLabels() {
+  const type = $('in-section').value;
+  const vars = cbo.BEAM_VARIABLES[type];
+  $('lbl-s1').innerHTML = `${escapeHTML(vars.labels[0])} <span class="unit">${vars.units[0]}</span>`;
+  $('lbl-s2').innerHTML = `${escapeHTML(vars.labels[1])} <span class="unit">${vars.units[1]}</span>`;
+  $('load-unit').textContent = $('in-loadtype').value === 'point' ? 'N' : 'N/mm';
+  $('beam-bounds').textContent = `Design box searched by the optimizer: ${vars.names[0]} in ${vars.lower[0]} to ${vars.upper[0]} ${vars.units[0]}, ${vars.names[1]} in ${vars.lower[1]} to ${vars.upper[1]} ${vars.units[1]}.`;
+  const tv = cbo.TRUSS_VARIABLES;
+  $('truss-bounds').textContent = `Design box: chord and diagonal areas ${tv.lower[0]} to ${tv.upper[0]} mm^2, height ${tv.lower[2]} to ${tv.upper[2]} mm. Span 6000 mm, 6 panels, pinned left, roller right.`;
+  const isBeam = $('in-problem').value === 'beam';
+  $('beam-inputs').hidden = !isBeam;
+  $('truss-inputs').hidden = isBeam;
+}
+
+function num(id, label) {
+  const v = Number($(id).value);
+  if ($(id).value === '' || !Number.isFinite(v)) throw new Error(`${label} must be a number`);
+  return v;
+}
+
+function readSpec() {
+  if ($('in-problem').value === 'beam') {
+    const loadType = $('in-loadtype').value;
+    const load = num('in-load', 'Load magnitude');
+    return {
+      kind: 'beam', preset: $('in-preset').value, sectionType: $('in-section').value, support: $('in-support').value, loadType,
+      L: num('in-L', 'Span L'), P: loadType === 'point' ? load : 1, w: loadType === 'udl' ? load : 1,
+      material: $('in-material').value, FS: num('in-FS', 'Factor of safety'), deflectionLimitRatio: num('in-k', 'Deflection limit ratio'),
+      tMin: num('in-tmin', 'Minimum thickness'), student: [num('in-s1', 'Your first design variable'), num('in-s2', 'Your second design variable')],
+    };
+  }
+  return {
+    kind: 'truss', preset: 'warren', loadCase: $('in-loadcase').value, FS: num('in-tFS', 'Factor of safety'),
+    deflectionLimitRatio: num('in-tk', 'Deflection limit ratio'), K: 1,
+    student: [num('in-t1', 'Chord area'), num('in-t2', 'Diagonal area'), num('in-t3', 'Truss height')],
+  };
+}
+
+function readSettings() {
+  const budget = Math.floor(num('in-budget', 'Budget'));
+  if (budget < 6 || budget > 200) throw new Error('Budget must be between 6 and 200 exact evaluations');
+  const seed = Math.floor(num('in-seed', 'Seed'));
+  if (seed < 0) throw new Error('Seed must be zero or a positive integer');
+  return { budget, seed, delayMs: Number($('in-delay').value) || 0, compare: $('in-compare').checked };
+}
+
+// ---------------------------------------------------------------- running ----
+
+function ensureWorker() {
+  if (state.worker) return true;
+  if (typeof Worker === 'undefined') { state.useMainThread = true; return false; }
+  try {
+    const w = new Worker(new URL('./constrained-bo.worker.js', import.meta.url), { type: 'module' });
+    w.onmessage = e => handleMessage(e.data);
+    w.onerror = (err) => {
+      // Module workers are unavailable in some file:// setups; continue on the main thread in chunks.
+      if (err && typeof err.preventDefault === 'function') err.preventDefault();
+      if (state.worker) { state.worker.terminate(); state.worker = null; }
+      state.useMainThread = true;
+      if (state.running && state.lastRequest) {
+        setStatus('Web Worker unavailable, running in chunks on the main thread instead...');
+        runOnMainThread(state.lastRequest);
+      }
+    };
+    state.worker = w;
+    return true;
+  } catch (err) {
+    state.useMainThread = true;
+    return false;
+  }
+}
+
+async function runOnMainThread(request) {
+  try {
+    await cbo.runCampaign(request, handleMessage, () => state.cancelRequested);
+  } catch (err) {
+    handleMessage({ type: 'error', message: err.message });
+  }
+}
+
+function startRun() {
+  if (state.running) return;
+  let spec, settings;
+  try {
+    spec = readSpec();
+    settings = readSettings();
+    state.problem = cbo.makeProblem(spec);
+  } catch (err) {
+    setStatus('Error: ' + escapeHTML(err.message), true);
+    return;
+  }
+  state.running = true;
+  state.cancelRequested = false;
+  state.result = null;
+  state.live = { bo: [], grid: [], random: [] };
+  $('btn-run').disabled = true;
+  $('btn-cancel').disabled = false;
+  $('progress').hidden = false;
+  $('progress').value = 0;
+  setStatus('Starting...');
+  const request = { type: 'run', spec, budget: settings.budget, seed: settings.seed, delayMs: settings.delayMs, compare: settings.compare, gridN: 50 };
+  state.lastRequest = request;
+  if (!state.useMainThread && ensureWorker()) state.worker.postMessage(request);
+  else runOnMainThread(request);
+}
+
+function finishRun() {
+  state.running = false;
+  $('btn-run').disabled = false;
+  $('btn-cancel').disabled = true;
+  $('progress').hidden = true;
+  if (state.cancelTimer) { clearTimeout(state.cancelTimer); state.cancelTimer = null; }
+}
+
+function cancelRun() {
+  if (!state.running) return;
+  state.cancelRequested = true;
+  setStatus('Cancelling after the current exact solve...');
+  if (state.worker && !state.useMainThread) {
+    state.worker.postMessage({ type: 'cancel' });
+    state.cancelTimer = setTimeout(() => {
+      if (!state.running) return;
+      if (state.worker) { state.worker.terminate(); state.worker = null; }
+      finishRun();
+      setStatus('Cancelled (the worker was terminated).');
+    }, 2500);
+  }
+}
+
+const METHOD_LABEL = { bo: 'Bayesian optimization', grid: 'Uniform grid', random: 'Random search' };
+
+function handleMessage(msg) {
+  if (!msg || !state.running) return;
+  if (msg.type === 'progress') {
+    $('progress').value = 100 * msg.overall / msg.overallTotal;
+    const r = msg.record;
+    state.live[msg.method].push({ k: r.k, bestF: r.bestF });
+    const bestTxt = r.bestF === null ? 'no feasible design yet' : `best feasible so far ${fmt(r.bestF, 4)} g`;
+    setStatus(`${METHOD_LABEL[msg.method]}: exact solve ${msg.k} of ${msg.total} (${escapeHTML(r.phase)}), ${bestTxt}. Elapsed ${(msg.elapsedMs / 1000).toFixed(1)} s.`);
+    if (!state.liveFrame) {
+      state.liveFrame = true;
+      requestAnimationFrame(() => { state.liveFrame = false; if (state.running) renderLiveCurve(); });
+    }
+  } else if (msg.type === 'phase') {
+    setStatus(escapeHTML(msg.text));
+  } else if (msg.type === 'done') {
+    state.result = msg.payload;
+    finishRun();
+    try {
+      renderAll();
+    } catch (err) {
+      setStatus('Error while rendering: ' + escapeHTML(err.message), true);
+      console.error(err);
+    }
+  } else if (msg.type === 'cancelled') {
+    finishRun();
+    const n = state.live.bo.length + state.live.grid.length + state.live.random.length;
+    setStatus(`Cancelled after ${n} exact solves. No recommendation is shown because the run did not finish; press Run to start again.`);
+    renderLiveCurve();
+  } else if (msg.type === 'error') {
+    finishRun();
+    setStatus('Error: ' + escapeHTML(msg.message), true);
+  }
+}
+
+// ---------------------------------------------------------------- rendering helpers ----
+
+const designString = (problem, x, digits = 4) => x.map((v, d) => `${problem.names[d]} = ${fmt(v, digits)}${problem.units[d] ? ' ' + problem.units[d] : ''}`).join(', ');
+const massStr = m => (Number.isFinite(m) ? `${fmt(m, 4)} g` : 'n/a');
+const massSub = m => (Number.isFinite(m) && m >= 1000 ? ` (${fmt(m / 1000, 3)} kg)` : '');
+
+function kpi(label, value, sub = '') {
+  return `<div class="kpi"><div class="label">${label}</div><div class="value">${value}</div><div class="sub">${sub}</div></div>`;
+}
+
+function statusBadge(U) {
+  if (!Number.isFinite(U)) return badge('bad', 'not computable');
+  if (U > 1 + 1e-9) return badge('bad', 'violated');
+  if (U >= 0.98) return badge('warn', 'active');
+  return badge('ok', 'satisfied');
+}
+
+function drawOverlays(h, overlays) {
+  const { ctx, X, Y, frame } = h;
+  ctx.save();
+  ctx.beginPath(); ctx.rect(frame.left, frame.top, frame.pw, frame.ph); ctx.clip();
+  for (const o of overlays) {
+    const r = o.size || 6, cx = X(o.x), cy = Y(o.y);
+    ctx.fillStyle = o.color; ctx.strokeStyle = o.stroke || '#1d1d1f'; ctx.lineWidth = o.shape === 'cross' ? 2 : 1.2;
+    ctx.beginPath();
+    if (o.shape === 'square') ctx.rect(cx - r, cy - r, 2 * r, 2 * r);
+    else if (o.shape === 'star') { for (let k = 0; k < 10; k++) { const ang = -Math.PI / 2 + k * Math.PI / 5; const rr = k % 2 ? r * 0.45 : r; ctx.lineTo(cx + rr * Math.cos(ang), cy + rr * Math.sin(ang)); } ctx.closePath(); }
+    else if (o.shape === 'cross') { ctx.strokeStyle = o.color; ctx.moveTo(cx - r, cy - r); ctx.lineTo(cx + r, cy + r); ctx.moveTo(cx - r, cy + r); ctx.lineTo(cx + r, cy - r); }
+    else ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    if (o.shape !== 'cross') ctx.fill();
+    ctx.stroke();
+    if (o.label) { ctx.fillStyle = '#1d1d1f'; ctx.font = 'bold 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.fillText(o.label, cx + r + 4, cy); }
+  }
+  ctx.restore();
+}
+
+function drawFieldContours(h, xs, ys, Z, specs) {
+  const { ctx, X, Y, frame } = h;
+  ctx.save();
+  ctx.beginPath(); ctx.rect(frame.left, frame.top, frame.pw, frame.ph); ctx.clip();
+  for (const s of specs) {
+    const segs = contourLines(xs, ys, Z, s.level);
+    ctx.strokeStyle = s.color; ctx.lineWidth = s.width || 1.8; ctx.setLineDash(s.dash || []);
+    ctx.beginPath();
+    for (const g of segs) { ctx.moveTo(X(g[0]), Y(g[1])); ctx.lineTo(X(g[2]), Y(g[3])); }
+    ctx.stroke();
+  }
+  ctx.setLineDash([]);
+  ctx.restore();
+}
+
+// ---------------------------------------------------------------- rendering ----
+
+function renderLiveCurve() {
+  const series = [];
+  const toSeries = (arr, label, color) => ({ x: arr.map(p => p.k), y: arr.map(p => (p.bestF === null ? NaN : p.bestF)), label, color, type: 'both', size: 3 });
+  if (state.live.bo.length) series.push(toSeries(state.live.bo, 'Bayesian optimization', palette.blue));
+  if (state.live.grid.length) series.push(toSeries(state.live.grid, 'Uniform grid', palette.orange));
+  if (state.live.random.length) series.push(toSeries(state.live.random, 'Random search', palette.gray));
+  if (!series.length) return;
+  linePlot($('plot-curve'), series, { title: 'Best verified feasible mass so far versus exact evaluations (running)', xlabel: 'exact evaluations', ylabel: 'mass (g)', xZero: true });
+}
+
+function renderAll() {
+  const R = state.result, problem = state.problem;
+  state.rec = R.bo.best ? cbo.verifyDesign(problem, R.bo.best.x) : null;
+  state.stud = problem.student ? cbo.verifyDesign(problem, problem.student) : null;
+  renderVerdict();
+  renderKpis();
+  renderCurve();
+  renderCompare();
+  renderRecommendation();
+  fillSelect($('in-slice'), problem.names.map((nm, d) => [String(d), `${problem.labels[d]} (${problem.units[d] || 'dimensionless'})`]));
+  renderHonesty();
+  renderHistory();
+}
+
+function renderVerdict() {
+  const R = state.result, rec = state.rec, problem = state.problem;
+  let html;
+  if (!R.bo.best) {
+    html = badge('bad', 'No feasible design was found within the budget') + ' <span class="note">Try a larger budget, another seed, or check that a feasible section exists in the design box.</span>';
+    setStatus('Finished, but no feasible design was found with this budget.', true);
+  } else if (rec.feasible) {
+    html = badge('ok', 'Checked by fresh model solve') + ` Recommended design: <strong>${escapeHTML(designString(problem, R.bo.best.x))}</strong>, mass <strong>${massStr(rec.mass)}</strong>${massSub(rec.mass)}; found at exact solve ${R.bo.best.k} of ${R.budget}.`;
+    setStatus(badge('ok', 'Checked by fresh model solve') + ` Finished ${R.budget} exact solves in ${(R.elapsedMs / 1000).toFixed(1)} s${R.delayMs ? ` with an artificial delay of ${R.delayMs} ms per solve` : ''}.`);
+  } else {
+    html = badge('bad', 'Verification failed: ' + (rec.reason || 'unknown reason')) + ' <span class="note">The optimizer proposed this design as feasible but the fresh exact re-solve disagrees; it is not recommended.</span>';
+    setStatus('Finished, but the proposed design failed verification.', true);
+  }
+  $('verdict').innerHTML = html;
+}
+
+function renderKpis() {
+  const R = state.result, rec = state.rec, stud = state.stud, problem = state.problem;
+  const tiles = [];
+  if (stud) {
+    tiles.push(kpi('Your design (exact solve)', massStr(stud.mass) + massSub(stud.mass),
+      (stud.feasible ? badge('ok', 'feasible') : badge('bad', 'infeasible')) + ' ' + escapeHTML(designString(problem, problem.student, 3))
+      + (stud.feasible ? '' : `<br>${escapeHTML(stud.reason || '')}`)));
+  }
+  if (rec && rec.feasible) {
+    tiles.push(kpi('Recommended design', massStr(rec.mass) + massSub(rec.mass), badge('ok', 'Checked by fresh model solve') + ' ' + escapeHTML(designString(problem, R.bo.best.x, 4))));
+    if (stud && Number.isFinite(stud.mass)) {
+      const saved = stud.mass - rec.mass;
+      const pct = 100 * Math.abs(saved) / stud.mass;
+      tiles.push(kpi(stud.feasible ? 'Mass saved versus your design' : 'Mass difference versus your (infeasible) design',
+        saved >= 0 ? `${fmt(saved, 4)} g saved` : `+${fmt(-saved, 4)} g`,
+        `recommendation is ${fmt(pct, 3)} % ${saved >= 0 ? 'lighter' : 'heavier'}${stud.feasible ? '' : '; your design is infeasible, so this is not a like-for-like saving'}`));
+    }
+    const gi = rec.constraints.reduce((bi, c, i, arr) => (c.U > arr[bi].U ? i : bi), 0);
+    const gc = rec.constraints[gi];
+    tiles.push(kpi('Governing constraint at the recommendation', escapeHTML(gc.label), `utilization ${fmt(gc.U, 4)} ${statusBadge(gc.U)}${gc.member ? ', worst member ' + escapeHTML(gc.member) : ''}`));
+    const p = cbo.predictAt(R.bo, R.bo.best.x);
+    tiles.push(kpi('GP surrogate at the same design (not used for the answer)', `${fmt(p.f.mu, 4)} ± ${fmt(2 * p.f.sigma, 3)} g`,
+      `mean ±2 sigma; predicted P(feasible) ${fmt(p.pFeasible, 3)}; exact ${massStr(rec.mass)}. The design is a training point, so agreement here is by construction`));
+  }
+  if (R.reference) {
+    const gap = rec && rec.feasible ? 100 * (rec.mass / R.reference.mass - 1) : NaN;
+    tiles.push(kpi('Reference optimum (outside the budget)', massStr(R.reference.mass) + massSub(R.reference.mass),
+      `${escapeHTML(designString(problem, R.reference.x, 4))}${Number.isFinite(gap) ? `; BO is ${fmt(gap, 3)} % above it` : ''}`));
+  }
+  if (R.grid && R.grid.best) tiles.push(kpi(`Uniform grid, ${R.grid.history.length} solves`, massStr(R.grid.best.f) + massSub(R.grid.best.f), escapeHTML(designString(problem, R.grid.best.x, 4))));
+  else if (R.grid) tiles.push(kpi(`Uniform grid, ${R.grid.history.length} solves`, badge('bad', 'no feasible point'), ''));
+  if (R.random && R.random.best) tiles.push(kpi(`Random search, ${R.random.history.length} solves`, massStr(R.random.best.f) + massSub(R.random.best.f), escapeHTML(designString(problem, R.random.best.x, 4))));
+  else if (R.random) tiles.push(kpi(`Random search, ${R.random.history.length} solves`, badge('bad', 'no feasible point'), ''));
+  $('kpis').innerHTML = tiles.join('');
+}
+
+function curveSeries(R) {
+  const n = state.problem.n;
+  const toSeries = (hist, label, color) => ({ x: hist.map(r => r.k), y: hist.map(r => (r.bestF === null ? NaN : r.bestF)), label, color, type: 'both', size: 3 });
+  const series = [toSeries(R.bo.history, 'Bayesian optimization', palette.blue)];
+  if (R.grid) series.push(toSeries(R.grid.history, `Uniform grid (${R.grid.side}^${n} = ${R.grid.history.length} solves)`, palette.orange));
+  if (R.random) series.push(toSeries(R.random.history, 'Random search (seeded)', palette.gray));
+  return series;
+}
+
+function renderCurve() {
+  const R = state.result, stud = state.stud;
+  const series = curveSeries(R);
+  const hlines = [];
+  if (R.reference) hlines.push({ y: R.reference.mass, label: 'reference optimum', color: palette.green });
+  if (stud && stud.feasible) hlines.push({ y: stud.mass, label: 'your design', color: palette.purple });
+  const finite = [];
+  for (const s of series) for (const v of s.y) if (Number.isFinite(v)) finite.push(v);
+  for (const h of hlines) finite.push(h.y);
+  let ylim;
+  if (finite.length) {
+    const lo = Math.min(...finite), hi = Math.max(...finite);
+    const top = Math.min(hi, 3.5 * lo);
+    ylim = [lo - 0.08 * (top - lo || lo), top + 0.08 * (top - lo || lo)];
+  }
+  const maxK = Math.max(...series.map(s => s.x.length));
+  linePlot($('plot-curve'), series, {
+    title: 'Best verified feasible mass so far versus exact evaluations', xlabel: 'exact evaluations', ylabel: 'mass (g)',
+    hlines, ylim, xlim: [0, maxK + 1], marginLeft: marginFor(finite),
+  });
+}
+
+// Wider left margin when tick labels have five or more digits, so the axis label does not collide with them.
+function marginFor(values) {
+  const big = values.some(v => Math.abs(v) >= 10000);
+  return big ? 84 : 62;
+}
+
+function gapText(gap) {
+  if (!Number.isFinite(gap)) return '';
+  if (Math.abs(gap) < 0.0005) return '0.000';
+  return fmt(gap, 3);
+}
+
+function renderCompare() {
+  const R = state.result, problem = state.problem, rec = state.rec, stud = state.stud;
+  const refMass = R.reference ? R.reference.mass : NaN;
+  const row = (method, evals, mass, x, governing, note = '') => {
+    const gap = Number.isFinite(mass) && Number.isFinite(refMass) ? 100 * (mass / refMass - 1) : NaN;
+    return `<tr><td>${method}</td><td class="num">${evals}</td><td class="num">${Number.isFinite(mass) ? fmt(mass, 5) : badge('bad', 'none feasible')}</td><td class="small">${x ? escapeHTML(designString(problem, x, 4)) : ''}</td><td>${governing ? escapeHTML(governing) : ''}</td><td class="num">${gapText(gap)}</td><td class="small">${note}</td></tr>`;
+  };
+  const gov = v => (v && v.governingLabel) || (v && v.governing) || '';
+  const rows = [];
+  rows.push(row('Bayesian optimization', R.bo.history.length, rec && rec.feasible ? rec.mass : NaN, R.bo.best ? R.bo.best.x : null, rec ? gov(rec) : '', rec && rec.feasible ? badge('ok', 'Checked by fresh model solve') : ''));
+  if (R.grid) {
+    const v = R.grid.best ? cbo.verifyDesign(problem, R.grid.best.x) : null;
+    rows.push(row(`Uniform grid ${R.grid.side}^${problem.n}`, R.grid.history.length, v && v.feasible ? v.mass : NaN, R.grid.best ? R.grid.best.x : null, v ? gov(v) : '', v && v.feasible ? badge('ok', 'verified') : ''));
+  }
+  if (R.random) {
+    const v = R.random.best ? cbo.verifyDesign(problem, R.random.best.x) : null;
+    rows.push(row('Random search (same seed)', R.random.history.length, v && v.feasible ? v.mass : NaN, R.random.best ? R.random.best.x : null, v ? gov(v) : '', v && v.feasible ? badge('ok', 'verified') : ''));
+  }
+  if (stud) rows.push(row('Your design', 1, stud.feasible ? stud.mass : NaN, problem.student, gov(stud), stud.feasible ? badge('ok', 'feasible') : badge('bad', 'infeasible: ' + (stud.reason || ''))));
+  if (R.reference) rows.push(row('Reference optimum', 'outside budget', R.reference.mass, R.reference.x, gov(R.reference.solve), escapeHTML(R.reference.method)));
+  if (R.closedForm && R.closedForm.feasible) rows.push(row('Classical closed form (rectangle)', 'none', R.closedForm.mass, R.closedForm.x, R.closedForm.active, escapeHTML(R.closedForm.formula)));
+  $('table-compare').innerHTML = `<thead><tr><th>Method</th><th class="num">Exact solves</th><th class="num">Best verified feasible mass (g)</th><th>Design</th><th>Governing</th><th class="num">Gap to reference (%)</th><th>Notes</th></tr></thead><tbody>${rows.join('')}</tbody>`;
+}
+
+function renderRecommendation() {
+  const R = state.result, rec = state.rec, problem = state.problem;
+  if (!rec) { $('rec-summary').textContent = 'No feasible design was evaluated, so there is nothing to recommend.'; $('table-rec').innerHTML = ''; return; }
+  const d = rec.details;
+  let extra = '';
+  if (problem.kind === 'beam' && d && d.section) {
+    extra = ` Section: A = ${fmt(d.section.A, 4)} mm^2, I = ${fmt(d.section.I, 4)} mm^4, c = ${fmt(d.section.c, 4)} mm${d.section.solid ? ' (solid bar limit)' : ''}; M_max = ${fmt(d.M, 4)} N mm.`;
+  } else if (problem.kind === 'truss' && d && d.members) {
+    const comp = d.members.filter(m => m.N < 0).length;
+    extra = ` ${d.members.length} members, ${comp} in compression; midspan deflection ${fmt(d.vMid, 4)} mm against a limit of ${fmt(d.vLim, 4)} mm.`;
+  }
+  $('rec-summary').innerHTML = `${escapeHTML(designString(problem, R.bo.best.x, 5))}, mass ${massStr(rec.mass)}${massSub(rec.mass)}. ${rec.feasible ? badge('ok', 'Checked by fresh model solve') : badge('bad', 'Verification failed')} ` +
+    `Sign convention for the beam: y up, loads positive upward, moment positive sagging; magnitudes are reported.${escapeHTML(extra)}`;
+  const rows = rec.constraints.map(c => `<tr class="${c.U >= 0.98 && c.U <= 1 + 1e-9 ? 'active' : ''}"><td>${escapeHTML(c.label)}${c.member ? `<br><span class="subtle small">${escapeHTML(c.member)}</span>` : ''}</td><td class="num">${Number.isFinite(c.value) ? fmt(c.value, 4) : 'n/a'} ${escapeHTML(c.unit || '')}</td><td class="num">${Number.isFinite(c.limit) ? fmt(c.limit, 4) : 'n/a'} ${escapeHTML(c.unit || '')}</td><td class="num">${fmt(c.U, 4)}</td><td>${statusBadge(c.U)}</td><td class="small subtle">${escapeHTML(c.rule || '')}</td></tr>`);
+  $('table-rec').innerHTML = `<thead><tr><th>Constraint</th><th class="num">Value</th><th class="num">Limit</th><th class="num">Utilization U</th><th>Status</th><th>Rule</th></tr></thead><tbody>${rows.join('')}</tbody>`;
+}
+
+function renderHonesty() {
+  const R = state.result, problem = state.problem, rec = state.rec, stud = state.stud;
+  const dims = R.dims, base = R.base;
+  const [di, dj] = dims;
+  const pg = cbo.predictGrid(R.bo, dims, base, 50, 50);
+  const sliceNote = problem.n > 2 ? ` at ${problem.names[2]} = ${fmt(base[2], 4)} ${problem.units[2]}` : '';
+  const overlays = R.bo.history.map(r => ({ x: r.x[di], y: r.x[dj], color: r.feasible ? palette.green : palette.red, shape: r.feasible ? 'circle' : 'cross', size: 5 }));
+  if (stud && problem.student) overlays.push({ x: problem.student[di], y: problem.student[dj], color: palette.purple, shape: 'square', size: 6, label: 'your design' });
+  if (R.bo.best) overlays.push({ x: R.bo.best.x[di], y: R.bo.best.x[dj], color: palette.orange, shape: 'star', size: 10, label: 'recommendation' });
+  const xlabel = `${problem.labels[di]} (${problem.units[di] || '-'})`, ylabel = `${problem.labels[dj]} (${problem.units[dj] || '-'})`;
+  const h1 = heatmap($('plot-mean'), pg.xs, pg.ys, pg.mean, { title: 'GP posterior mean of mass (g)' + sliceNote, xlabel, ylabel, zlabel: 'mass (g)' });
+  drawFieldContours(h1, pg.xs, pg.ys, pg.pf, [{ level: 0.5, color: '#ffffff', dash: [7, 5] }, { level: 0.95, color: '#ffffff', dash: [] }]);
+  const showExact = $('in-exact').checked;
+  if (showExact && R.exactGrid) drawFieldContours(h1, R.exactGrid.xs, R.exactGrid.ys, R.exactGrid.maxG, [{ level: 0, color: palette.ink, dash: [2, 4], width: 2 }]);
+  drawOverlays(h1, overlays);
+  $('legend-mean').innerHTML =
+    `<span class="legend-line"><span class="sw" style="background:${palette.green}"></span>evaluated, feasible</span>` +
+    `<span class="legend-line"><span class="sw cross">x</span>evaluated, infeasible</span>` +
+    `<span class="legend-line"><span class="sw star">&#9733;</span>recommendation (verified)</span>` +
+    (stud ? `<span class="legend-line"><span class="sw square" style="background:${palette.purple}"></span>your design</span>` : '') +
+    `<span class="legend-line"><span class="sw line dashed" style="border-color:#888"></span>GP P(feasible) = 0.5</span>` +
+    `<span class="legend-line"><span class="sw line" style="border-color:#888"></span>GP P(feasible) = 0.95</span>` +
+    (showExact ? `<span class="legend-line"><span class="sw line dashed" style="border-color:${palette.ink}"></span>exact feasibility boundary (teaching)</span>` : '') +
+    (problem.n > 2 ? `<br>Evaluated designs are projected onto this slice; their heights differ.` : '');
+  const h2 = heatmap($('plot-sd'), pg.xs, pg.ys, pg.sd, { title: 'GP posterior standard deviation of mass (g)' + sliceNote, xlabel, ylabel, zlabel: 'sigma (g)', cmap: 'coolwarm' });
+  drawOverlays(h2, overlays.filter(o => o.shape !== 'square'));
+  $('honesty-intro').textContent = `These maps are the surrogate's beliefs after ${R.bo.history.length} exact solves, not results. The white lines are where the GP puts the probability of satisfying all constraints at 0.5 and 0.95; the evaluated designs show which data those beliefs rest on.`;
+  renderSlice();
+  if (rec && R.bo.best) {
+    const p = cbo.predictAt(R.bo, R.bo.best.x);
+    $('surrogate-note').innerHTML = `<p class="note">At the recommended design the GP predicts a mass of <strong>${fmt(p.f.mu, 4)} ± ${fmt(2 * p.f.sigma, 3)} g</strong> (mean ±2 sigma) and a feasibility probability of ${fmt(p.pFeasible, 3)}. ` +
+      `The exact re-solve gives <strong>${massStr(rec.mass)}</strong> and ${rec.feasible ? 'passes' : 'fails'} every constraint check. The recommendation rests on the exact re-solve alone; the GP numbers are shown only so you can judge the surrogate.</p>`;
+  } else {
+    $('surrogate-note').innerHTML = '';
+  }
+}
+
+function renderSlice() {
+  const R = state.result, problem = state.problem;
+  if (!R) return;
+  const v = Number($('in-slice').value) || 0;
+  const base = R.bo.best ? R.bo.best.x.slice() : R.base.slice();
+  const xs = cbo.linspace(problem.lower[v], problem.upper[v], 121);
+  const mean = [], up = [], lo = [], exF = [], exI = [], feas = [], exact = [];
+  for (const xv of xs) {
+    const x = base.slice(); x[v] = xv;
+    const p = cbo.predictAt(R.bo, x);
+    mean.push(p.f.mu); up.push(p.f.mu + 2 * p.f.sigma); lo.push(p.f.mu - 2 * p.f.sigma);
+    const e = problem.evaluate(x);
+    exact.push(e.f); feas.push(Math.max(...e.g) <= 0);
+  }
+  for (let i = 0; i < xs.length; i++) {
+    const boundary = (i > 0 && feas[i - 1] !== feas[i]) || (i + 1 < xs.length && feas[i + 1] !== feas[i]);
+    exF.push(feas[i] || boundary ? exact[i] : NaN);
+    exI.push(!feas[i] || boundary ? exact[i] : NaN);
+  }
+  const name = problem.names[v], unit = problem.units[v] || '';
+  const others = problem.names.map((nm, d) => (d === v ? null : `${nm} = ${fmt(base[d], 4)} ${problem.units[d]}`)).filter(Boolean).join(', ');
+  // evaluated designs lying close to this slice (within 3 percent of the range in every other variable)
+  const nearPts = R.bo.history.filter(r => problem.names.every((nm, d) => d === v || Math.abs(r.x[d] - base[d]) <= 0.03 * (problem.upper[d] - problem.lower[d])));
+  const series = [
+    { x: xs, y: up, color: palette.blue, width: 1, dash: [5, 4] },
+    { x: xs, y: lo, color: palette.blue, width: 1, dash: [5, 4] },
+    { x: xs, y: mean, color: palette.blue, width: 2 },
+    { x: xs, y: exF, color: palette.green, width: 2 },
+    { x: xs, y: exI, color: palette.red, width: 2, dash: [3, 3] },
+  ];
+  if (nearPts.length) series.push({ x: nearPts.map(r => r.x[v]), y: nearPts.map(r => r.f), color: palette.ink, type: 'scatter', size: 4 });
+  const allY = [...up, ...lo, ...exact];
+  const h = linePlot($('plot-slice'), series, {
+    title: `Slice along ${name} through the recommendation`, xlabel: `${name}${unit ? ' (' + unit + ')' : ''}`, ylabel: 'mass (g)',
+    markers: R.bo.best ? [{ x: base[v], label: 'recommendation', color: palette.orange }] : [], legend: false, marginLeft: marginFor(allY),
+  });
+  $('legend-slice').innerHTML =
+    `<span class="legend-line"><span class="sw line" style="border-color:${palette.blue}"></span>GP posterior mean</span>` +
+    `<span class="legend-line"><span class="sw line dashed" style="border-color:${palette.blue}"></span>GP mean ±2 sigma (shaded)</span>` +
+    `<span class="legend-line"><span class="sw line" style="border-color:${palette.green}"></span>exact mass where feasible (for teaching)</span>` +
+    `<span class="legend-line"><span class="sw line dashed" style="border-color:${palette.red}"></span>exact mass where infeasible (for teaching)</span>` +
+    (nearPts.length ? `<span class="legend-line"><span class="sw" style="background:${palette.ink}"></span>evaluated designs within 3 % of this slice</span>` : '');
+  // shaded ±2 sigma band using the returned pixel mapping
+  const { ctx, X, Y, frame } = h;
+  ctx.save();
+  ctx.beginPath(); ctx.rect(frame.left, frame.top, frame.pw, frame.ph); ctx.clip();
+  ctx.fillStyle = 'rgba(31,95,191,0.13)';
+  ctx.beginPath();
+  xs.forEach((xv, i) => { if (i === 0) ctx.moveTo(X(xv), Y(up[i])); else ctx.lineTo(X(xv), Y(up[i])); });
+  for (let i = xs.length - 1; i >= 0; i--) ctx.lineTo(X(xs[i]), Y(lo[i]));
+  ctx.closePath(); ctx.fill();
+  ctx.restore();
+  $('slice-note').textContent = `Other variables fixed at the recommendation: ${others}. The shaded band is the GP mean ±2 sigma. The exact curve is drawn only because the demonstration solver is cheap; with a real expensive solver it would not exist, which is the whole point of the method.`;
+}
+
+function renderHistory() {
+  const R = state.result, problem = state.problem;
+  const head = ['#', 'Phase', ...problem.names.map((nm, d) => `${nm}${problem.units[d] ? ' (' + problem.units[d] + ')' : ''}`), 'Exact mass (g)', ...problem.constraintLabels.map(l => `${l}`), 'Feasible', 'GP before: mass ±2 sigma (g)', 'GP before: P(feasible)', 'Best feasible so far (g)'];
+  const rows = R.bo.history.map(r => {
+    const cells = [r.k, escapeHTML(r.phase), ...r.x.map(v => fmt(v, 4)), fmt(r.f, 5), ...r.g.map(v => fmt(v, 3)),
+      r.feasible ? badge('ok', 'yes') : badge('bad', 'no'),
+      r.pred ? `${fmt(r.pred.mu, 4)} ± ${fmt(2 * r.pred.sigma, 3)}` : '',
+      r.pred ? fmt(r.pred.pf, 3) : '',
+      r.bestF === null ? '' : fmt(r.bestF, 5)];
+    return `<tr>${cells.map((c, i) => `<td class="${i === 1 || i === cells.length - 4 ? '' : 'num'}">${c}</td>`).join('')}</tr>`;
+  });
+  $('table-history').innerHTML = `<thead><tr>${head.map(hh => `<th>${escapeHTML(hh)}</th>`).join('')}</tr></thead><tbody>${rows.join('')}</tbody>`;
+}
+
+// ---------------------------------------------------------------- downloads ----
+
+function downloadHistory() {
+  const R = state.result, problem = state.problem;
+  if (!R) return;
+  const rows = [['k', 'phase', ...problem.names, 'mass_g', ...problem.constraintNames.map(n => 'g_' + n), 'feasible', 'gp_mean_before_g', 'gp_sigma_before_g', 'gp_p_feasible_before', 'best_feasible_so_far_g']];
+  for (const r of R.bo.history) rows.push([r.k, r.phase, ...r.x, r.f, ...r.g, r.feasible ? 1 : 0, r.pred ? r.pred.mu : '', r.pred ? r.pred.sigma : '', r.pred ? r.pred.pf : '', r.bestF === null ? '' : r.bestF]);
+  downloadCSV(`constrained-bo-history-${problem.kind}-seed${R.seed}.csv`, rows);
+}
+
+function downloadCurves() {
+  const R = state.result;
+  if (!R) return;
+  const n = Math.max(R.bo.history.length, R.grid ? R.grid.history.length : 0, R.random ? R.random.history.length : 0);
+  const rows = [['evaluation', 'bo_best_feasible_g', 'grid_best_feasible_g', 'random_best_feasible_g', 'reference_g']];
+  const at = (res, i) => (res && res.history[i] && res.history[i].bestF !== null ? res.history[i].bestF : '');
+  for (let i = 0; i < n; i++) rows.push([i + 1, at(R.bo, i), at(R.grid, i), at(R.random, i), R.reference ? R.reference.mass : '']);
+  downloadCSV(`constrained-bo-curves-${state.problem.kind}-seed${R.seed}.csv`, rows);
+}
+
+// ---------------------------------------------------------------- wiring ----
+
+$('btn-run').addEventListener('click', startRun);
+$('btn-cancel').addEventListener('click', cancelRun);
+$('btn-reset').addEventListener('click', () => {
+  if (state.running) cancelRun();
+  $('in-problem').value = 'beam';
+  $('in-preset').value = 'printed-spar';
+  applyBeamPreset('printed-spar');
+  $('in-loadcase').value = 'uniform'; $('in-tFS').value = 1.5; $('in-tk').value = 250; $('in-t1').value = 300; $('in-t2').value = 300; $('in-t3').value = 1000;
+  $('in-budget').value = 30; $('in-seed').value = 1; $('in-delay').value = 0; $('out-delay').value = '0'; $('in-compare').checked = true; $('in-exact').checked = false;
+  updateLabels();
+  let waited = 0;
+  const tryStart = () => {
+    if (!state.running) { startRun(); return; }
+    waited += 200;
+    if (waited < 6000) setTimeout(tryStart, 200);
+  };
+  tryStart();
+});
+$('in-problem').addEventListener('change', updateLabels);
+$('in-preset').addEventListener('change', () => applyBeamPreset($('in-preset').value));
+$('in-section').addEventListener('change', applySectionDefaults);
+$('in-loadtype').addEventListener('change', updateLabels);
+$('in-delay').addEventListener('input', () => { $('out-delay').value = $('in-delay').value; });
+$('in-slice').addEventListener('change', () => { try { renderSlice(); } catch (err) { setStatus('Error: ' + escapeHTML(err.message), true); } });
+$('in-exact').addEventListener('change', () => { if (state.result) { try { renderHonesty(); } catch (err) { setStatus('Error: ' + escapeHTML(err.message), true); } } });
+$('btn-csv-history').addEventListener('click', downloadHistory);
+$('btn-csv-curves').addEventListener('click', downloadCurves);
+$('btn-png-curve').addEventListener('click', () => downloadPNG($('plot-curve'), 'constrained-bo-curves.png'));
+
+applyBeamPreset('printed-spar');
+updateLabels();
+startRun();
+</script>
+</body>
+</html>

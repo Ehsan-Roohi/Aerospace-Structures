@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MIE 446 Optimization Lab</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="shared/lab.css">
+<style>
+  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; margin: 10px 0 22px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; display: flex; flex-direction: column; }
+  .card h3 { margin: 0 0 6px; font-size: 1rem; }
+  .card p { margin: 0 0 10px; font-size: 0.9rem; color: var(--muted); flex: 1; }
+  .card .meta { font-size: 0.8rem; color: var(--muted); margin-bottom: 8px; }
+  .card a.btn { align-self: flex-start; text-decoration: none; }
+  h2.section { font-size: 1.1rem; margin: 22px 0 6px; }
+  .pill { display: inline-block; font-size: 0.75rem; padding: 1px 8px; border-radius: 999px; background: var(--info-soft); color: var(--muted); margin-right: 6px; }
+  ol.steps li { margin: 4px 0; }
+</style>
+</head>
+<body>
+<header class="lab-header">
+  <div class="crumbs"><a href="https://ehsan-roohi.github.io/Aerospace-Structures/wing-panel-stress-analyzer/">Wing AeroStruct</a> · <a href="https://ehsan-roohi.github.io/Aerospace-Structures/wing-panel-stress-analyzer/#beam">Beam</a> · <a href="https://ehsan-roohi.github.io/Aerospace-Structures/wing-panel-stress-analyzer/truss-lab.html">Truss Lab</a></div>
+  <h1>MIE 446 Optimization Lab</h1>
+  <span class="version">optimization-lab 0.1.1</span>
+</header>
+
+<main class="lab-main">
+  <div class="scope">
+    <strong>What this is.</strong> Ten small, self-contained pages that take the beam, truss and wing-box problems students already solve in MIE 446 and add the design-optimization layer: where does your design sit in the design space, which constraint governs, what is the lightest design that still passes, and how do classical optimization methods (fully stressed design, optimality criteria, linear programming, Nelder-Mead, CMA-ES, NSGA-II, Bayesian optimization) actually work.
+    <strong>What it is not.</strong> Every page uses its own simplified linear-elastic model stated at the top of the page; nothing here is a certified strength or stability analysis, and nothing here reads or replaces the Wing AeroStruct solver. Every recommended design is re-solved from scratch with the exact solver of its page before it is shown, Final candidate metrics are recomputed with that model; surrogate curves are explicitly approximate.
+  </div>
+
+  <h2 class="section">Suggested order for students</h2>
+  <ol class="steps">
+    <li>Solve the beam or truss by hand and in the Beam or Truss Lab page first. Write down your section or member sizes.</li>
+    <li>Open the matching lab page, type your design as "your design", and read the governing constraint and the mass saving the optimizer finds.</li>
+    <li>Only then look at how the optimizer got there (the "How it works" block on every page) and at the classical result it reproduces.</li>
+  </ol>
+
+  <h2 class="section">Beam</h2>
+  <div class="cards">
+    <div class="card">
+      <div class="meta"><span class="pill">design-space map</span><span class="pill">Pareto</span><span class="pill">Ashby</span></div>
+      <h3>Beam Section Design-Space Map</h3>
+      <p>Feasibility map of the cross-section parameters with iso-mass contours and the stress, deflection and printability boundaries; your design, the lightest feasible design found and the nearest lighter feasible design; mass versus deflection Pareto front; material ranking against Ashby indices.</p>
+      <a class="btn" href="beam-section-map/index.html">Open</a>
+    </div>
+    <div class="card">
+      <div class="meta"><span class="pill">fully stressed design</span><span class="pill">taper</span></div>
+      <h3>Fully Stressed Tapered Beam</h3>
+      <p>Lets the depth follow the bending-moment diagram: the fully stressed design iteration, the mass saved against the prismatic beam, the stiffness it costs, and the deflection-limited variant. Reproduces Galileo's parabolic cantilever and the 2/3 mass ratio.</p>
+      <a class="btn" href="beam-fsd/index.html">Open</a>
+    </div>
+    <div class="card">
+      <div class="meta"><span class="pill">support placement</span><span class="pill">influence lines</span></div>
+      <h3>Support Placement and Worst-Case Load Position</h3>
+      <p>Supports as design variables: the overhang that minimizes the peak moment (0.207 L for a uniform load), two independent supports on a heat map, a third support on a continuous beam, and influence lines as a worst-case search over the load position.</p>
+      <a class="btn" href="beam-supports/index.html">Open</a>
+    </div>
+  </div>
+
+  <h2 class="section">Truss</h2>
+  <div class="cards">
+    <div class="card">
+      <div class="meta"><span class="pill">sizing</span><span class="pill">sensitivities</span><span class="pill">catalog</span></div>
+      <h3>Truss Member Sizing</h3>
+      <p>Fully stressed design against gradient-based sizing with analytical sensitivities on the Wright Flyer type half-wing truss and a Warren truss: stress, Euler buckling screen and displacement constraints, utilization profiles before and after, and rounding to real rod and wire sizes.</p>
+      <a class="btn" href="truss-sizing/index.html">Open</a>
+    </div>
+    <div class="card">
+      <div class="meta"><span class="pill">topology</span><span class="pill">ground structure</span><span class="pill">LP</span></div>
+      <h3>Ground-Structure Topology Optimization</h3>
+      <p>Start from a dense set of candidate members and let the optimizer decide which ones exist: optimality criteria for minimum compliance and the Dorn, Gomory and Greenberg linear program for minimum volume, both checked by a fresh model solve of the thresholded layout.</p>
+      <a class="btn" href="truss-topology/index.html">Open</a>
+    </div>
+    <div class="card">
+      <div class="meta"><span class="pill">redundancy</span><span class="pill">load cases</span><span class="pill">reliability</span></div>
+      <h3>Truss Redundancy, Load Cases and Reliability</h3>
+      <p>Remove each member in turn to map which load paths are redundant, size for one load case and check under all the others, and run a Monte Carlo study with coupon scatter to turn a single factor of safety into a probability of exceeding a utilization of one.</p>
+      <a class="btn" href="truss-failsafe/index.html">Open</a>
+    </div>
+    <div class="card">
+      <div class="meta"><span class="pill">shape</span><span class="pill">Nelder-Mead</span><span class="pill">CMA-ES</span></div>
+      <h3>Truss Shape Optimization</h3>
+      <p>Node positions as design variables with member sizing nested inside each evaluation: the classical optimum height of a Warren truss by a sweep and by two derivative-free optimizers, with the geometry trajectory replayed on screen.</p>
+      <a class="btn" href="truss-shape/index.html">Open</a>
+    </div>
+  </div>
+
+  <h2 class="section">Wing box</h2>
+  <div class="cards">
+    <div class="card">
+      <div class="meta"><span class="pill">sensitivity profile</span><span class="pill">active constraints</span><span class="pill">shadow prices</span></div>
+      <h3>Wing Box Layout: Sensitivities, Active Constraints and Shadow Prices</h3>
+      <p>A simplified thin-walled wing box (independent of the Wing AeroStruct solver): which variable moves mass, deflection and twist the most, the minimum-mass layout with its active constraints, Lagrange multipliers read as "relaxing this limit by one unit saves this many grams", rib pitch against skin buckling, and tapered spar caps.</p>
+      <a class="btn" href="wingbox-sensitivity/index.html">Open</a>
+    </div>
+  </div>
+
+  <h2 class="section">Methods</h2>
+  <div class="cards">
+    <div class="card">
+      <div class="meta"><span class="pill">multi-objective</span><span class="pill">NSGA-II</span><span class="pill">hypervolume</span></div>
+      <h3>Multi-Objective Design: Pareto Fronts with NSGA-II</h3>
+      <p>Mass against deflection for a beam section or a Warren truss: the Pareto front found by NSGA-II, your design classified as dominated or non-dominated with its distance to the front, dominance regions and the hypervolume as a convergence measure.</p>
+      <a class="btn" href="pareto-nsga2/index.html">Open</a>
+    </div>
+    <div class="card">
+      <div class="meta"><span class="pill">Gaussian process</span><span class="pill">expected improvement</span></div>
+      <h3>Constrained Bayesian Optimization for Expensive Solves</h3>
+      <p>How a surrogate with honest uncertainty chooses the next expensive solve: constrained expected improvement on a beam section and a Warren truss, compared with a grid and a random search under the same budget cap (actual counts are shown), with the recommendation always an exactly re-solved design.</p>
+      <a class="btn" href="constrained-bo/index.html">Open</a>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Conventions shared by all pages</h2>
+    <p class="note">Units: mm, N, MPa, g. Utilization U is demand divided by capacity with the factor of safety included, so every check passes when U is at most 1. Green means feasible, amber means active or within ten percent of the limit, red means violated. "Screen" marks an indicative check with assumed boundary conditions, for example the Euler buckling estimate with an assumed effective length. Material cards are representative educational values; printed parts should use measured coupon data. Source files, tests and release checksums are in the course repository under <span class="mono">docs/wing-panel-stress-analyzer/optimization/</span>.</p>
+  </div>
+</main>
+
+<footer class="lab-footer">
+  MIE 446 Aerospace Structures, University of Massachusetts Amherst. Educational optimization demonstrations on simplified models; independent of the Wing AeroStruct solver and not a certified analysis.
+<p>Reviewed release 0.1.1: <a href="validation/REVIEW.json">independent checks and limits</a> · <a href="SOURCE.json">source provenance</a></p></footer>
+</body>
+</html>

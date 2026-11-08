@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wing Box Layout: Sensitivities, Active Constraints and Shadow Prices · MIE 446 Optimization Lab</title>
+<link rel="stylesheet" href="../shared/lab.css">
+<link rel="icon" href="data:,">
+<style>
+  .plot-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px; }
+  @media (max-width: 1100px) { .plot-grid { grid-template-columns: 1fr; } }
+  .plot-grid canvas.plot { margin: 4px 0 6px; }
+  .kpi .value small { font-size: 0.78rem; font-weight: 500; color: var(--muted); }
+  .sentence { margin: 4px 0 8px; font-size: 0.92rem; }
+  .sentence li { margin: 3px 0; }
+  .muted { color: var(--muted); }
+  .inline-note { font-size: 0.86rem; color: var(--muted); margin: 6px 0 10px; }
+  #progress-wrap { display: none; margin: 8px 0; }
+  #progress-wrap.show { display: block; }
+  table.results td.num { white-space: nowrap; }
+  .panel h2 .badge { margin-left: 8px; }
+</style>
+</head>
+<body>
+<header class="lab-header">
+  <div class="crumbs"><a href="../index.html">Optimization Lab</a> · <a href="https://ehsan-roohi.github.io/Aerospace-Structures/wing-panel-stress-analyzer/#beam">Beam</a> · <a href="https://ehsan-roohi.github.io/Aerospace-Structures/wing-panel-stress-analyzer/truss-lab.html">Truss Lab</a> · <a href="https://ehsan-roohi.github.io/Aerospace-Structures/wing-panel-stress-analyzer/">Wing AeroStruct</a></div>
+  <h1>Wing Box Layout: Sensitivities, Active Constraints and Shadow Prices</h1>
+  <span class="version">wingbox-sensitivity 0.1.1</span>
+</header>
+
+<main class="lab-main">
+  <div class="scope">
+    <strong>Scope.</strong> This page sizes a straight, untwisted, cantilevered half wing with its own simplified thin-walled wing box model:
+    a single rectangular cell between 15 and 60 percent chord, spar caps and skins treated as lumped flanges in bending (modulus weighted,
+    webs ignored in bending), Bredt-Batho shear flow and torsion constant, Euler-Bernoulli bending of a linear elastic cantilever,
+    an elliptic lift distribution and a plate buckling screen with simply supported edges. It is written for this page alone and is
+    independent of the Wing AeroStruct solver on this site: there is no panel method, no coupled aeroelasticity and no certified
+    strength data (the material cards are educational values). Its purpose is to show what sensitivities, active constraints and
+    Lagrange multipliers (shadow prices) mean for a wing layout. Every design presented here is re-solved from scratch with the same
+    solver before it is shown; nothing here is a certified strength or safety statement.
+  </div>
+
+  <div class="grid">
+    <section>
+      <div class="panel">
+        <h2>Inputs</h2>
+        <div class="field"><label for="in-scenario">Scenario preset</label><select id="in-scenario"></select></div>
+
+        <h3>Geometry (half wing)</h3>
+        <div class="field"><label for="in-s">Half-span s <span class="unit">mm</span></label><input id="in-s" type="number" step="10" min="1"></div>
+        <div class="field"><label for="in-croot">Root chord c_r <span class="unit">mm</span></label><input id="in-croot" type="number" step="5" min="1"></div>
+        <div class="field"><label for="in-ctip">Tip chord c_t <span class="unit">mm</span></label><input id="in-ctip" type="number" step="5" min="1"></div>
+        <div class="field"><label for="in-tau">Thickness ratio tau (t/c) <span class="unit">-</span></label><input id="in-tau" type="number" step="0.01" min="0.01" max="0.5"></div>
+
+        <h3>Structure (design variables and layout)</h3>
+        <div class="field"><label for="in-tskin">Skin thickness t_s <span class="unit">mm</span></label><input id="in-tskin" type="number" step="0.1" min="0.05"></div>
+        <div class="field"><label for="in-tweb">Spar web thickness t_w <span class="unit">mm</span></label><input id="in-tweb" type="number" step="0.1" min="0.05"></div>
+        <div class="field"><label for="in-acap">Spar cap area A_cap, each of 4 <span class="unit">mm^2</span></label><input id="in-acap" type="number" step="1" min="0.1"></div>
+        <div class="field"><label for="in-nribs">Number of ribs n_r <span class="unit">-</span></label><input id="in-nribs" type="number" step="1" min="1" max="200"></div>
+        <div class="field"><label for="in-trib">Rib thickness t_r <span class="unit">mm</span></label><input id="in-trib" type="number" step="0.1" min="0.05"></div>
+        <div class="field"><label for="in-skinmat">Skin, web and rib material</label><select id="in-skinmat"></select></div>
+        <div class="field"><label for="in-capmat">Spar cap material</label><select id="in-capmat"></select></div>
+
+        <h3>Loads</h3>
+        <div class="field"><label for="in-mass">Aircraft mass m <span class="unit">kg</span></label><input id="in-mass" type="number" step="0.1" min="0.01"></div>
+        <div class="field"><label for="in-n">Load factor n <span class="unit">-</span></label><input id="in-n" type="number" step="0.5" min="0.1"></div>
+        <div class="field"><label for="in-fs">Factor of safety FS <span class="unit">-</span></label><input id="in-fs" type="number" step="0.1" min="1"></div>
+        <div class="field"><label for="in-v">Airspeed V (pitching moment only) <span class="unit">m/s</span></label><input id="in-v" type="number" step="1" min="0"></div>
+        <div class="field"><label for="in-cm">Section pitching moment c_m <span class="unit">-</span></label><input id="in-cm" type="number" step="0.01"></div>
+        <div class="field"><label for="in-loadshape">Spanwise lift distribution</label><select id="in-loadshape"><option value="elliptic">Elliptic</option><option value="uniform">Uniform (closed-form check)</option></select></div>
+
+        <h3>Limits and screens</h3>
+        <div class="field"><label for="in-defl">Tip deflection limit <span class="unit">% of s</span></label><input id="in-defl" type="number" step="0.5" min="0.01"></div>
+        <div class="field"><label for="in-twist">Tip twist limit <span class="unit">deg</span></label><input id="in-twist" type="number" step="0.1" min="0.01"></div>
+        <div class="field"><label for="in-tmin">Minimum printable thickness t_min <span class="unit">mm</span></label><input id="in-tmin" type="number" step="0.1" min="0"></div>
+        <div class="field"><label for="in-k">Plate buckling coefficient k <span class="unit">-</span></label><input id="in-k" type="number" step="0.1" min="0.1"></div>
+        <div class="field"><label for="in-nu">Poisson ratio nu <span class="unit">-</span></label><input id="in-nu" type="number" step="0.01" min="0" max="0.49"></div>
+
+        <h3>Optimizer and studies</h3>
+        <div class="field"><label for="in-ribmin">Rib count search, minimum <span class="unit">-</span></label><input id="in-ribmin" type="number" step="1" min="1"></div>
+        <div class="field"><label for="in-ribmax">Rib count search, maximum <span class="unit">-</span></label><input id="in-ribmax" type="number" step="1" min="1" max="60"></div>
+        <div class="field"><label for="in-taperlaw">Cap taper law for the study</label><select id="in-taperlaw"><option value="moment">A_cap proportional to M(y)</option><option value="fullyStressed">A_cap proportional to M(y)/h(y)</option></select></div>
+        <div class="field"><label for="in-capfloor">Cap taper floor <span class="unit">% of root cap</span></label><input id="in-capfloor" type="number" step="5" min="0" max="100"></div>
+
+        <div class="btn-row">
+          <button class="btn" id="btn-run">Solve and optimize</button>
+          <button class="btn secondary" id="btn-reset">Reset</button>
+          <button class="btn secondary" id="btn-cancel" disabled>Cancel</button>
+        </div>
+        <div class="status" id="status" aria-live="polite"></div>
+        <div id="progress-wrap"><progress id="progress" max="100" value="0"></progress><div class="note" id="progress-note"></div></div>
+      </div>
+
+      <div class="panel">
+        <h2>How it works</h2>
+        <details class="help" open>
+          <summary>Model and loads</summary>
+          <div class="body">
+            <p>The half wing is a cantilever clamped at the root with a linear chord taper from c_r to c_t. The spar box spans 15 to 60 percent chord,
+            so its width is w(y) = 0.45 c(y) and its height is h(y) = 0.9 tau c(y). The half wing carries half of the aircraft load:
+            L_half = n m g / 2 with g = 9.81 m/s^2, distributed elliptically, l(y) = l_0 sqrt(1 - (y/s)^2) with l_0 = 4 L_half / (pi s).
+            Shear V(y), bending moment M(y) and torque T(y) are integrated numerically from the tip with the trapezoidal rule on 201 stations.
+            The torque per unit span is the section pitching moment q c^2 c_m (q = 0.5 rho V^2 with rho = 1.225 kg/m^3; the airspeed is used only here)
+            plus the lift offset: lift acts at 25 percent chord, the box shear centre is taken at its mid-width (37.5 percent chord), so lift acts
+            12.5 percent chord ahead of the shear centre. Nose-up torque is positive; lift and deflection are positive upward.</p>
+            <p>At each station the bending inertia uses the caps and skins as lumped flanges, I = 2 (2 A_cap)(h/2)^2 + 2 w t_s (h/2)^2, and the
+            bending stiffness is modulus weighted, EI = E_cap I_cap + E_skin I_skin. The outer fibre strain is M (h/2) / EI, so the cap stress is
+            E_cap times that strain and the skin stress is E_skin times it (when both moduli are equal this is the usual M (h/2) / I).
+            Web shear flow is V / (2 h), torsion shear flow is Bredt's T / (2 A_m) with A_m = w h; the web shear stress is their sum over t_w and the
+            skin shear stress is the torsion flow over t_s. Stress utilization U_stress is the largest of cap bending, skin bending, web shear
+            (times sqrt 3) and skin shear (times sqrt 3), each multiplied by the factor of safety and divided by the material allowable.
+            The buckling screen compares the largest upper skin compression (times FS) with sigma_cr = k pi^2 E_skin / (12 (1 - nu^2)) (t_s / b)^2,
+            where the plate width is the rib pitch b = s / n_r. Tip deflection integrates M / EI twice from the root, tip twist integrates
+            T / (G J) with G = E_skin / (2 (1 + nu)) and the Bredt-Batho J = 4 A_m^2 / (2 w / t_s + 2 h / t_w). U_thick = t_min / min(t_s, t_w, t_r).
+            Mass sums skins (2 w t_s), webs (2 h t_w), caps (4 A_cap) along the span plus n_r ribs of area w h and thickness t_r at y = b, 2b, ..., s.</p>
+          </div>
+        </details>
+        <details class="help">
+          <summary>Sensitivities (sensitivity profile)</summary>
+          <div class="body">Each design variable is perturbed one at a time by plus and minus 10 percent (plus and minus one rib for n_r) and every
+            response is re-solved. The bars show the percent change of mass, tip deflection, tip twist and the largest structural utilization
+            (stress, buckling, deflection, twist). The table lists elasticities d ln R / d ln x from the same two solves: an elasticity of 0.5 means that a
+            1 percent change of the variable changes the response by about 0.5 percent. Signs tell you which way to move; magnitudes tell you which
+            variables matter.</div>
+        </details>
+        <details class="help">
+          <summary>Minimum-mass optimization (sequential linear programming)</summary>
+          <div class="body">For each rib count in the search range the continuous variables x = (t_s, t_w, A_cap) are sized for minimum mass subject to
+            U_stress, U_buckle, U_defl and U_twist at most 1 and t_s, t_w at least t_min. The method is sequential linear programming with move limits:
+            at the current point the mass and the four utilizations are linearized with central finite differences in the relative variables
+            u_i = (x_i - x_i,k) / x_i,k; a proximal term scaled so that the unconstrained step has the length of the move limit turns the step problem
+            into a tiny strictly convex quadratic program, which is solved exactly by enumerating candidate active sets (this avoids the vertex-to-vertex
+            zigzag of a plain linear program when the optimum lies on a curved constraint). The trial point is pulled back onto any violated constraint
+            by Newton corrections along the constraint gradients, so every accepted iterate is feasible and the mass decreases monotonically.
+            The move limit starts at 20 percent, is halved when a step is rejected or when consecutive steps reverse direction, and the loop stops
+            after 60 iterations or when the move limit falls below 1e-4. Rib counts are handled by an outer loop; ribs add mass but shorten the
+            buckling panel. The best design is re-solved from scratch before it is displayed.</div>
+        </details>
+        <details class="help">
+          <summary>Active constraints, Lagrange multipliers and shadow prices</summary>
+          <div class="body">A constraint is active when its utilization is within 0.02 of 1 (or a thickness sits at t_min). At a constrained minimum the
+            Karush-Kuhn-Tucker (KKT) condition says that the mass gradient is a non-negative combination of the gradients of the active constraints:
+            grad m = sum over j of lambda_j (-grad g_j) with g_j = U_j - 1. The page estimates the lambda_j by non-negative least squares from
+            finite-difference gradients at the verified optimum and reports the residual of that balance (small means the point is a true KKT point).
+            Each lambda_j is a shadow price: the grams of mass that one unit of relaxation of the normalized constraint would save, to first order.
+            The page translates it into physical units, for example grams per millimetre of deflection limit (lambda divided by the limit), and then
+            checks the first-order prediction by actually re-optimizing with the limit relaxed by 1 percent. Inactive constraints have zero shadow
+            price: relaxing them saves nothing.</div>
+        </details>
+        <details class="help">
+          <summary>Closed forms shown beside the numerical results</summary>
+          <div class="body">Largest rib pitch that passes the buckling screen for the current skin: b_max = t_s sqrt(k pi^2 E / (12 (1 - nu^2) sigma FS)), where
+            sigma is the largest upper skin compression; the minimum rib count is ceil(s / b_max). Fully stressed spar caps: A_cap(y) proportional to M(y)
+            (as specified for this page) or to M(y) / h(y) (the exact fully stressed law for a tapered depth), with a floor at a fraction of the root cap.
+            Analytic checks used in the tests: elliptic load integrates to L_half; uniform load on a constant chord gives v_tip = w s^4 / (8 EI);
+            Bredt J equals 4 A^2 / (perimeter / t) for a uniform wall; plate buckling gives 25.85 MPa for E = 70000 MPa, nu = 0.33, t = 1 mm, b = 100 mm, k = 4;
+            the multiplier of minimize x + y subject to x y at least 1 is 1 at (1, 1).</div>
+        </details>
+        <details class="help">
+          <summary>Limitations</summary>
+          <div class="body">Linear elastic, small deflections, no coupling between bending and torsion, no aeroelastic feedback (the lift distribution does
+            not change with twist), no rib or web buckling, no crippling of the caps, no joints, no fatigue, no damage tolerance. The plate buckling
+            check is a screen: k = 4 is the long simply supported plate value, the plate width is taken as the rib pitch, and printed or laminated skins
+            behave differently from the idealized isotropic plate. The material cards are representative values for teaching, not certified allowables.
+            The thickness bound protects printability only; nothing here checks manufacturing. This page is independent of the Wing AeroStruct solver.</div>
+        </details>
+      </div>
+    </section>
+
+    <section>
+      <div class="panel">
+        <h2>1. Your design <span id="base-badge"></span></h2>
+        <div class="kpi-row" id="base-kpis"></div>
+        <div class="inline-note" id="base-note"></div>
+        <div class="plot-grid">
+          <canvas class="plot" id="plot-moment" width="430" height="270"></canvas>
+          <canvas class="plot" id="plot-torque" width="430" height="270"></canvas>
+          <canvas class="plot" id="plot-capstress" width="430" height="270"></canvas>
+          <canvas class="plot" id="plot-skinstress" width="430" height="270"></canvas>
+          <canvas class="plot" id="plot-util" width="430" height="270"></canvas>
+          <canvas class="plot" id="plot-defl" width="430" height="270"></canvas>
+          <canvas class="plot" id="plot-twist" width="430" height="270"></canvas>
+        </div>
+        <table class="results" id="table-base"></table>
+        <div class="btn-row"><button class="btn secondary" id="btn-csv-span">Download span data CSV</button></div>
+      </div>
+
+      <div class="panel">
+        <h2>2. Tornado sensitivities (plus and minus 10 percent, plus and minus one rib)</h2>
+        <div class="inline-note">Orange bars: the variable is decreased by 10 percent (one rib fewer). Blue bars: the variable is increased by 10 percent (one rib more). Each bar is a fresh solve of the model.</div>
+        <div class="plot-grid">
+          <canvas class="plot" id="plot-tor-mass" width="430" height="250"></canvas>
+          <canvas class="plot" id="plot-tor-defl" width="430" height="250"></canvas>
+          <canvas class="plot" id="plot-tor-twist" width="430" height="250"></canvas>
+          <canvas class="plot" id="plot-tor-u" width="430" height="250"></canvas>
+        </div>
+        <h3>Normalized sensitivities (elasticities d ln R / d ln x, central differences)</h3>
+        <table class="results" id="table-tornado"></table>
+        <div class="btn-row"><button class="btn secondary" id="btn-csv-tornado">Download tornado CSV</button></div>
+      </div>
+
+      <div class="panel">
+        <h2>3. Minimum-mass layout <span id="opt-badge"></span></h2>
+        <div class="kpi-row" id="opt-kpis"></div>
+        <div class="inline-note" id="opt-note"></div>
+        <div class="plot-grid">
+          <canvas class="plot" id="plot-mass-ribs" width="430" height="280"></canvas>
+          <canvas class="plot" id="plot-u-compare" width="430" height="280"></canvas>
+        </div>
+        <h3>Your design versus the verified optimum</h3>
+        <table class="results" id="table-compare"></table>
+        <h3>Active constraints and shadow prices at the optimum</h3>
+        <div class="inline-note" id="kkt-note"></div>
+        <table class="results" id="table-kkt"></table>
+        <ul class="sentence" id="shadow-sentences"></ul>
+        <h3>Shadow price check: predicted versus actual saving for a 1 percent relaxation</h3>
+        <table class="results" id="table-checks"></table>
+        <div class="btn-row"><button class="btn secondary" id="btn-csv-ribs">Download mass versus rib count CSV</button></div>
+      </div>
+
+      <div class="panel">
+        <h2>4. Rib pitch closed form and rib count</h2>
+        <div class="kpi-row" id="rib-kpis"></div>
+        <div class="inline-note" id="rib-note"></div>
+        <canvas class="plot" id="plot-rib-mass" width="720" height="320"></canvas>
+        <table class="results" id="table-rib"></table>
+      </div>
+
+      <div class="panel">
+        <h2>5. Spar cap taper <span id="taper-badge"></span></h2>
+        <div class="kpi-row" id="taper-kpis"></div>
+        <div class="inline-note" id="taper-note"></div>
+        <div class="plot-grid">
+          <canvas class="plot" id="plot-cap-area" width="430" height="270"></canvas>
+          <canvas class="plot" id="plot-cap-stress" width="430" height="270"></canvas>
+        </div>
+        <table class="results" id="table-taper"></table>
+      </div>
+    </section>
+  </div>
+<p class="scope"><strong>Review note:</strong> A fresh solve checks feasibility within this page's stated model. It is not independent physical validation or a proof of global optimality. Optimizer results are candidates; comparisons depend on bounds, discretization and evaluation counts.</p></main>
+
+<footer class="lab-footer">
+  MIE 446 Aerospace Structures, University of Massachusetts Amherst. Educational optimization demonstration on a simplified thin-walled wing box model;
+  independent of the Wing AeroStruct solver and not a certified analysis.
+</footer>
+
+<script type="module">
+import { linePlot, categoryPlot, fmt, badge, escapeHTML, palette, downloadCSV } from '../shared/labkit.js';
+import { MATERIALS } from '../shared/presets.js';
+import * as mod from './wingbox-sensitivity.js';
+
+const $ = id => document.getElementById(id);
+
+// ---------- input wiring ----------
+const NUMBER_FIELDS = {
+  s: 'in-s', cRoot: 'in-croot', cTip: 'in-ctip', tau: 'in-tau',
+  tSkin: 'in-tskin', tWeb: 'in-tweb', aCap: 'in-acap', nRibs: 'in-nribs', tRib: 'in-trib',
+  massKg: 'in-mass', loadFactor: 'in-n', FS: 'in-fs', V: 'in-v', cm: 'in-cm',
+  deflLimitPct: 'in-defl', twistLimitDeg: 'in-twist', tMin: 'in-tmin', kBuckle: 'in-k', nu: 'in-nu',
+  ribMin: 'in-ribmin', ribMax: 'in-ribmax',
+};
+const SELECT_FIELDS = { skinMaterial: 'in-skinmat', capMaterial: 'in-capmat', loadShape: 'in-loadshape' };
+
+function fillSelects() {
+  for (const id of ['in-skinmat', 'in-capmat']) {
+    $(id).innerHTML = Object.entries(MATERIALS).map(([k, m]) => `<option value="${k}">${escapeHTML(m.name)} (E ${m.E} MPa, allow ${m.sigmaAllow} MPa, ${m.rho} g/cm^3)</option>`).join('');
+  }
+  $('in-scenario').innerHTML = Object.entries(mod.SCENARIOS).map(([k, sc]) => `<option value="${k}">${escapeHTML(sc.name)}</option>`).join('');
+}
+
+function applyScenario(key) {
+  const sc = mod.SCENARIOS[key] || mod.SCENARIOS['printed-trainer'];
+  const vals = Object.assign({}, mod.DEFAULTS, sc.overrides);
+  for (const [k, id] of Object.entries(NUMBER_FIELDS)) $(id).value = String(vals[k]);
+  for (const [k, id] of Object.entries(SELECT_FIELDS)) $(id).value = vals[k];
+  $('in-taperlaw').value = 'moment';
+  $('in-capfloor').value = String(vals.capFloor * 100);
+}
+
+function readInputs() {
+  const raw = {};
+  for (const [k, id] of Object.entries(NUMBER_FIELDS)) {
+    const txt = $(id).value.trim();
+    raw[k] = txt === '' ? NaN : Number(txt);
+  }
+  for (const [k, id] of Object.entries(SELECT_FIELDS)) raw[k] = $(id).value;
+  const floorTxt = $('in-capfloor').value.trim();
+  raw.capFloor = floorTxt === '' ? NaN : Number(floorTxt) / 100;
+  return { raw, taperLaw: $('in-taperlaw').value };
+}
+
+// ---------- small render helpers ----------
+function kpi(label, value, sub = '', badgeHtml = '') {
+  return `<div class="kpi"><div class="label">${escapeHTML(label)}</div><div class="value">${value}</div><div class="sub">${sub}${badgeHtml ? ' ' + badgeHtml : ''}</div></div>`;
+}
+function val(x, unit = '', digits = 3) { return `${escapeHTML(fmt(x, digits))}${unit ? ` <small>${escapeHTML(unit)}</small>` : ''}`; }
+function uBadge(U) {
+  if (!Number.isFinite(U)) return badge('bad', 'n/a');
+  if (U > 1 + 1e-9) return badge('bad', `violated, U = ${fmt(U)}`);
+  if (U >= 1 - mod.ACTIVE_TOL) return badge('warn', `active, U = ${fmt(U)}`);
+  return badge('ok', `U = ${fmt(U)}`);
+}
+function statusBadge(U) {
+  if (!Number.isFinite(U)) return badge('bad', 'n/a');
+  if (U > 1 + 1e-9) return badge('bad', 'violated');
+  if (U >= 1 - mod.ACTIVE_TOL) return badge('warn', 'active');
+  return badge('ok', 'ok');
+}
+function table(el, headers, rows) {
+  el.innerHTML = `<thead><tr>${headers.map(h => `<th${h.num ? ' class="num"' : ''}>${escapeHTML(h.label)}</th>`).join('')}</tr></thead>` +
+    `<tbody>${rows.map(r => `<tr${r.active ? ' class="active"' : ''}>${r.cells.map((c, i) => `<td${headers[i].num ? ' class="num"' : ''}>${c}</td>`).join('')}</tr>`).join('')}</tbody>`;
+}
+const n3 = x => escapeHTML(fmt(x, 3));
+const n4 = x => escapeHTML(fmt(x, 4));
+const arr = a => Array.from(a);
+const FONT = '12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
+
+// Show a limit line only when it is within three times the largest plotted value; otherwise the curve
+// would be squashed against the axis, so the limit is quoted in the title instead.
+// With labelInTitle the dashed line is explained in the title (used when a legend would cover the line label).
+function limitOpts(valueArrays, limit, label, unit = '', labelInTitle = false) {
+  let lo = 0, hi = 0;
+  for (const a of valueArrays) for (const v of a) { if (v < lo) lo = v; if (v > hi) hi = v; }
+  const m = Math.max(Math.abs(lo), Math.abs(hi));
+  const lim = `${fmt(Math.abs(limit))}${unit ? ' ' + unit : ''}`;
+  if (Number.isFinite(limit) && Math.abs(limit) <= 3 * m && m > 0) {
+    const top = Math.max(hi, limit), bottom = Math.min(lo, limit, 0);
+    const range = Math.max(top - bottom, 1e-9);
+    return { hlines: [{ y: limit, label: labelInTitle ? '' : label, color: palette.red }], ylim: [bottom - 0.05 * range, top + 0.18 * range],
+      suffix: labelInTitle ? ` (dashed: ${label} ${lim})` : '' };
+  }
+  return { hlines: [], ylim: undefined, suffix: ` (${label} ${lim} off scale)` };
+}
+
+// Draw marker labels at staggered heights so they do not overlap (labkit draws all marker labels at the top).
+function markerLabels(plot, items) {
+  const ctx = plot.ctx;
+  ctx.save();
+  ctx.font = FONT; ctx.textBaseline = 'top';
+  items.forEach((it, k) => {
+    if (!Number.isFinite(it.x)) return;
+    const px = plot.X(it.x);
+    const right = px > plot.frame.left + 0.6 * plot.frame.pw;
+    ctx.fillStyle = it.color; ctx.textAlign = right ? 'right' : 'left';
+    ctx.fillText(it.label, px + (right ? -4 : 4), plot.frame.top + 6 + 16 * k);
+  });
+  ctx.restore();
+}
+
+const state = { inp: null, base: null, tornado: null, perRib: null, best: null, analysis: null, checks: null, rib: null, taper: null };
+
+// ---------- 1. baseline ----------
+function renderBaseline(inp, r) {
+  state.base = r;
+  const U = r.U;
+  $('base-badge').innerHTML = r.feasible ? badge('ok', 'all checks pass') : badge('bad', `infeasible: ${mod.CONSTRAINT_LABELS[r.governing]}`);
+  $('base-kpis').innerHTML = [
+    kpi('Half-wing structural mass', val(r.mass.total, 'g'), `skins ${fmt(r.mass.skins)} g, webs ${fmt(r.mass.webs)} g, caps ${fmt(r.mass.caps)} g, ribs ${fmt(r.mass.ribs)} g`),
+    kpi('Tip deflection', val(r.vTip, 'mm'), `limit ${fmt(r.deflLimit)} mm`, uBadge(U.defl)),
+    kpi('Tip twist', val(r.phiTipDeg, 'deg'), `limit ${fmt(r.twistLimit)} deg, ${r.phiTipDeg >= 0 ? 'nose up' : 'nose down'}`, uBadge(U.twist)),
+    kpi('Stress', val(U.stress, '', 3), `governing term: ${escapeHTML(r.stress.term)} at y = ${fmt(r.stress.yStress)} mm`, statusBadge(U.stress)),
+    kpi('Upper skin buckling screen', val(U.buckle, '', 3), `sigma_cr ${fmt(r.sigmaCr)} MPa, rib pitch ${fmt(r.ribPitch)} mm`, statusBadge(U.buckle)),
+    kpi('Minimum thickness', val(U.thick, '', 3), `t_min ${fmt(inp.tMin)} mm over the thinnest of t_s, t_w, t_r`, statusBadge(U.thick)),
+  ].join('');
+  $('base-note').textContent = `Loads: L_half = ${fmt(r.loads.Lhalf)} N, l_0 = ${fmt(r.loads.l0, 4)} N/mm, q = ${fmt(r.loads.q * 1e6)} Pa, root shear ${fmt(r.loads.Vroot)} N, ` +
+    `root bending moment ${fmt(r.loads.Mroot)} N mm, root torque ${fmt(r.loads.Troot)} N mm (nose-up positive). ` +
+    `Root box ${fmt(r.root.w)} x ${fmt(r.root.h)} mm, EI = ${fmt(r.root.EI)} N mm^2 (caps carry ${fmt(r.material.Ec * r.root.Icap / r.root.EI * 100)} percent), GJ = ${fmt(r.root.GJ)} N mm^2.`;
+
+  const sp = r.span, y = arr(sp.y);
+  linePlot($('plot-moment'), [{ x: y, y: arr(sp.M), label: 'M(y)', color: palette.blue }], { title: 'Bending moment', xlabel: 'y (mm)', ylabel: 'M (N mm)', yZero: true, legend: false });
+  linePlot($('plot-torque'), [{ x: y, y: arr(sp.T), label: 'T(y)', color: palette.purple }], { title: 'Torque about the shear centre (nose-up positive)', xlabel: 'y (mm)', ylabel: 'T (N mm)', yZero: true, legend: false });
+  const capL = limitOpts([sp.sigmaCap], r.material.sigAc / inp.FS, 'allowable/FS', 'MPa');
+  linePlot($('plot-capstress'), [{ x: y, y: arr(sp.sigmaCap), label: 'cap bending stress', color: palette.brown }],
+    { title: 'Spar cap stress' + capL.suffix, xlabel: 'y (mm)', ylabel: 'sigma_cap (MPa)', yZero: true, hlines: capL.hlines, ylim: capL.ylim, legend: false });
+  const skinL = limitOpts([sp.sigmaSkin, sp.tauWeb, sp.tauSkin], r.sigmaCr / inp.FS, 'sigma_cr/FS', 'MPa', true);
+  linePlot($('plot-skinstress'), [
+    { x: y, y: arr(sp.sigmaSkin), label: 'upper skin compression', color: palette.blue },
+    { x: y, y: arr(sp.tauWeb), label: 'web shear stress', color: palette.orange },
+    { x: y, y: arr(sp.tauSkin), label: 'skin shear (torsion)', color: palette.teal },
+  ], { title: 'Skin and web stresses' + skinL.suffix, xlabel: 'y (mm)', ylabel: 'stress (MPa)', yZero: true, hlines: skinL.hlines, ylim: skinL.ylim });
+  const utilL = limitOpts([sp.Ucap, sp.Uskin, sp.Uweb, sp.Ubuck], 1, 'U limit', '', true);
+  linePlot($('plot-util'), [
+    { x: y, y: arr(sp.Ucap), label: 'cap stress', color: palette.brown },
+    { x: y, y: arr(sp.Uskin), label: 'skin stress', color: palette.blue },
+    { x: y, y: arr(sp.Uweb), label: 'web shear', color: palette.orange },
+    { x: y, y: arr(sp.Ubuck), label: 'skin buckling', color: palette.red },
+  ], { title: 'Local utilizations along the span' + utilL.suffix, xlabel: 'y (mm)', ylabel: 'U (-)', yZero: true, hlines: utilL.hlines.map(h => Object.assign(h, { color: palette.gray })), ylim: utilL.ylim });
+  const deflL = limitOpts([sp.v], r.deflLimit, 'tip limit', 'mm');
+  linePlot($('plot-defl'), [{ x: y, y: arr(sp.v), label: 'v(y)', color: palette.green }],
+    { title: 'Deflection (upward positive)' + deflL.suffix, xlabel: 'y (mm)', ylabel: 'v (mm)', yZero: true, hlines: deflL.hlines, ylim: deflL.ylim, legend: false });
+  const phiDeg = arr(sp.phi).map(p => p * 180 / Math.PI);
+  const twistL = limitOpts([phiDeg], r.phiTipDeg >= 0 ? r.twistLimit : -r.twistLimit, 'tip limit', 'deg');
+  linePlot($('plot-twist'), [{ x: y, y: phiDeg, label: 'twist', color: palette.purple }],
+    { title: 'Twist (nose-up positive)' + twistL.suffix, xlabel: 'y (mm)', ylabel: 'twist (deg)', yZero: true, hlines: twistL.hlines, ylim: twistL.ylim, legend: false });
+
+  const check = (name, desc) => `${escapeHTML(name)}<br><span class="muted">${escapeHTML(desc)}</span>`;
+  table($('table-base'), [{ label: 'Check' }, { label: 'Value', num: true }, { label: 'Limit', num: true }, { label: 'U', num: true }, { label: 'Status' }], [
+    { cells: [check('Stress', `largest of cap bending, skin bending, web shear and skin shear utilizations (x FS); governing term: ${r.stress.term} at y = ${fmt(r.stress.yStress)} mm`), `cap ${n3(r.stress.sigmaCapMax)} MPa<br>skin ${n3(r.stress.sigmaSkinMax)} MPa<br>web shear ${n3(r.stress.tauWebMax)} MPa`, `cap ${n3(r.material.sigAc)} MPa<br>skin ${n3(r.material.sigAs)} MPa`, n3(U.stress), statusBadge(U.stress)], active: U.stress >= 1 - mod.ACTIVE_TOL },
+    { cells: [check('Buckling screen', `upper skin compression x FS versus the plate sigma_cr with k = ${fmt(inp.kBuckle)} and plate width b = ${fmt(r.ribPitch)} mm (rib pitch)`), `${n3(r.stress.sigmaSkinMax * inp.FS)} MPa`, `${n3(r.sigmaCr)} MPa`, n3(U.buckle), statusBadge(U.buckle)], active: U.buckle >= 1 - mod.ACTIVE_TOL },
+    { cells: [check('Tip deflection', 'v at y = s'), `${n3(r.vTip)} mm`, `${n3(r.deflLimit)} mm`, n3(U.defl), statusBadge(U.defl)], active: U.defl >= 1 - mod.ACTIVE_TOL },
+    { cells: [check('Tip twist', 'twist at y = s, magnitude'), `${n3(r.phiTipDeg)} deg`, `${n3(r.twistLimit)} deg`, n3(U.twist), statusBadge(U.twist)], active: U.twist >= 1 - mod.ACTIVE_TOL },
+    { cells: [check('Minimum thickness', 't_min over the thinnest of t_s, t_w and t_r'), `${n3(Math.min(inp.tSkin, inp.tWeb, inp.tRib))} mm`, `${n3(inp.tMin)} mm`, n3(U.thick), statusBadge(U.thick)], active: U.thick >= 1 - mod.ACTIVE_TOL },
+  ]);
+}
+
+// ---------- 2. tornado ----------
+function renderTornado(inp, tor) {
+  state.tornado = tor;
+  const labels = tor.rows.map(r => r.label.replace(' thickness ratio', ' (t/c)'));
+  const plotFor = (canvasId, key, title) => {
+    const values = tor.rows.map(r => { const p = r.responses.find(q => q.key === key); return [p.pctMinus, p.pctPlus]; });
+    const m = Math.max(1e-9, ...values.flat().filter(Number.isFinite).map(Math.abs));
+    categoryPlot($(canvasId), labels, values, { title, xlabel: 'change (percent)', colors: [palette.orange, palette.blue],
+      xlim: [-2 * m, 2 * m], valueFmt: v => `${fmt(v, 3)}%` });
+  };
+  plotFor('plot-tor-mass', 'mass', 'Mass');
+  plotFor('plot-tor-defl', 'vTip', 'Tip deflection');
+  plotFor('plot-tor-twist', 'twist', 'Tip twist');
+  plotFor('plot-tor-u', 'maxU', 'Max structural utilization');
+  const heads = [{ label: 'Variable' }, { label: 'Values tried' }, ...mod.TORNADO_RESPONSES.map(p => ({ label: `e(${p.label})`, num: true }))];
+  table($('table-tornado'), heads, tor.rows.map(r => ({ cells: [escapeHTML(r.label), `${n3(r.xm)} / ${n3(r.x0)} / ${n3(r.xp)} ${escapeHTML(r.unit)}`, ...r.responses.map(p => n3(p.elasticity))] })));
+}
+
+// ---------- 3. optimization ----------
+function renderOptimization(inp, base, perRib, best, analysis, checks) {
+  state.perRib = perRib; state.best = best; state.analysis = analysis; state.checks = checks;
+  const feasibleRibs = perRib.filter(p => p.feasible);
+  if (!best) {
+    $('opt-badge').innerHTML = badge('bad', 'no feasible sizing found');
+    $('opt-kpis').innerHTML = kpi('Result', 'none', 'No rib count in the search range admits a feasible sizing within the variable bounds (t up to 20 mm, A_cap up to 500 mm^2). Change the loads, limits or materials.');
+    $('opt-note').textContent = perRib.map(p => `${p.nRibs} ribs: ${p.reason || 'n/a'}`).join('; ');
+    for (const id of ['table-compare', 'table-kkt', 'table-checks']) $(id).innerHTML = '';
+    $('shadow-sentences').innerHTML = '';
+    $('kkt-note').textContent = '';
+    return;
+  }
+  const ver = analysis.verified;
+  const r = analysis.result;
+  const d = best.design;
+  const warn = best.warnings && best.warnings.length ? best.warnings : [];
+  const verBadge = ver.feasible ? badge('ok', 'Checked by fresh model solve') : badge('bad', `re-solve finds U_${ver.governing} = ${fmt(ver.utilizations[ver.governing])}`);
+  $('opt-badge').innerHTML = verBadge;
+  const saved = analysis.massSaved, savedPct = analysis.massSavedPct;
+  $('opt-kpis').innerHTML = [
+    kpi('Optimum mass', val(r.mass.total, 'g'), `skins ${fmt(r.mass.skins)} g, webs ${fmt(r.mass.webs)} g, caps ${fmt(r.mass.caps)} g, ribs ${fmt(r.mass.ribs)} g`, verBadge),
+    kpi(analysis.baselineFeasible ? 'Mass saved versus your design' : 'Mass change versus your (infeasible) design', val(saved, 'g'), `${fmt(savedPct)} percent of ${fmt(analysis.baselineMass)} g`),
+    kpi('Best rib count', `${d.nRibs}`, `rib pitch ${fmt(inp.s / d.nRibs)} mm; searched ${inp.ribMin} to ${inp.ribMax}`),
+    kpi('Skin thickness t_s', val(d.tSkin, 'mm'), `your design ${fmt(inp.tSkin)} mm`),
+    kpi('Web thickness t_w', val(d.tWeb, 'mm'), `your design ${fmt(inp.tWeb)} mm`),
+    kpi('Cap area A_cap', val(d.aCap, 'mm^2'), `your design ${fmt(inp.aCap)} mm^2`),
+    kpi('Active (governing) constraints', analysis.active.length ? analysis.active.map(a => escapeHTML(a.label)).join('<br>') : 'none within 0.02 of the limit', `KKT residual ${fmt(analysis.kktResidual, 2)}`),
+  ].join('');
+  const bestRun = perRib.find(p => p.nRibs === d.nRibs);
+  $('opt-note').textContent = `Sizing at ${d.nRibs} ribs stopped after ${bestRun.iterations} iterations (${bestRun.status}). ` +
+    (feasibleRibs.length < perRib.length ? `Rib counts without a feasible sizing: ${perRib.filter(p => !p.feasible).map(p => p.nRibs).join(', ')}. ` : '') +
+    (warn.length ? warn.join(' ') : '');
+
+  // mass versus rib count (each point is a verified optimum for that rib count)
+  const xs = feasibleRibs.map(p => p.nRibs), ms = feasibleRibs.map(p => p.mass);
+  const massPlot = linePlot($('plot-mass-ribs'), [{ x: xs, y: ms, color: palette.blue, type: 'both' }],
+    { title: 'Minimum mass versus rib count (each point re-solved)', xlabel: 'number of ribs n_r', ylabel: 'mass (g)', legend: false,
+      markers: [{ x: d.nRibs, color: palette.green }],
+      hlines: base.feasible ? [{ y: base.mass.total, label: 'your design', color: palette.gray }] : [] });
+  markerLabels(massPlot, [{ x: d.nRibs, label: `best: ${d.nRibs} ribs, ${fmt(best.mass)} g`, color: palette.green }]);
+  // utilizations before and after
+  const keys = ['stress', 'buckle', 'defl', 'twist', 'thick'];
+  const shortLabels = { stress: 'Stress', buckle: 'Skin buckling', defl: 'Tip deflection', twist: 'Tip twist', thick: 'Min thickness' };
+  categoryPlot($('plot-u-compare'), keys.map(k => shortLabels[k]), keys.map(k => [base.U[k], r.U[k]]),
+    { title: 'Utilizations: gray your design, green optimum', xlabel: 'U (-)', colors: [palette.gray, palette.green],
+      colorFn: (v, i, g) => (v > 1 + 1e-9 ? palette.red : v >= 1 - mod.ACTIVE_TOL ? palette.orange : (g === 0 ? palette.gray : palette.green)),
+      refLines: [{ x: 1, label: 'limit', color: palette.red }], xlim: [0, Math.max(1.1, ...keys.map(k => Math.max(base.U[k], r.U[k]))) * 1.25], valueFmt: v => fmt(v, 3) });
+
+  const intLike = lab => lab.startsWith('Ribs');
+  table($('table-compare'), [{ label: 'Quantity' }, { label: 'Your design', num: true }, { label: 'Optimum', num: true }, { label: 'Change', num: true }], [
+    ...[['Skin thickness t_s (mm)', inp.tSkin, d.tSkin], ['Web thickness t_w (mm)', inp.tWeb, d.tWeb], ['Cap area A_cap (mm^2)', inp.aCap, d.aCap], ['Ribs n_r', inp.nRibs, d.nRibs],
+      ['Mass (g)', base.mass.total, r.mass.total], ['Tip deflection (mm)', base.vTip, r.vTip], ['Tip twist (deg)', base.phiTipDeg, r.phiTipDeg]]
+      .map(([lab, a, b]) => ({ cells: [escapeHTML(lab), intLike(lab) ? String(a) : n4(a), intLike(lab) ? String(b) : n4(b), `${b - a >= 0 ? '+' : ''}${intLike(lab) ? String(b - a) : n3(b - a)}`] })),
+    ...keys.map(k => ({ cells: [`U ${escapeHTML(mod.CONSTRAINT_LABELS[k])}`, `${n3(base.U[k])} ${statusBadge(base.U[k])}`, `${n3(r.U[k])} ${statusBadge(r.U[k])}`, `${r.U[k] - base.U[k] >= 0 ? '+' : ''}${n3(r.U[k] - base.U[k])}`], active: r.U[k] >= 1 - mod.ACTIVE_TOL })),
+  ]);
+
+  $('kkt-note').textContent = `Mass gradient at the optimum: ${fmt(analysis.gradMass[0])} g/mm (t_s), ${fmt(analysis.gradMass[1])} g/mm (t_w), ${fmt(analysis.gradMass[2])} g/mm^2 (A_cap). ` +
+    `Multipliers lambda are in grams per unit of the normalized constraint g = U - 1 (or (t_min - t) / t_min for the thickness bounds); ` +
+    `relative KKT residual ${fmt(analysis.kktResidual, 2)} ${analysis.kktResidual < 1e-2 ? '(the mass gradient is balanced by the active constraint gradients: a KKT point)' : '(not fully balanced: the optimizer may have stopped early or the active set is degenerate)'}.`;
+  table($('table-kkt'), [{ label: 'Constraint' }, { label: 'U or bound ratio', num: true }, { label: 'g = U - 1', num: true }, { label: 'Active' }, { label: 'lambda (g per unit g)', num: true }, { label: 'Shadow price in physical units', num: true }],
+    analysis.rows.map(row => ({ active: row.active, cells: [escapeHTML(row.label), n4(row.U), n4(row.g), row.active ? badge('warn', 'active') : badge('info', 'inactive'),
+      row.active ? n3(row.lambda) : '0', row.active ? `${n3(row.shadow.amount)} ${escapeHTML(row.shadow.unit)}` : '<span class="muted">0 (relaxing it saves nothing)</span>'] })));
+  $('shadow-sentences').innerHTML = analysis.active.length
+    ? analysis.active.map(a => `<li>${escapeHTML(a.shadow.text)}</li>`).join('')
+    : '<li>No constraint is active at the reported point, so no shadow price applies; this happens only when the optimizer stopped before reaching a constraint.</li>';
+
+  table($('table-checks'), [{ label: 'Relaxation (1 percent)' }, { label: 'Predicted saving lambda x delta (g)', num: true }, { label: 'Actual saving from re-optimization (g)', num: true }, { label: 'Ratio actual / predicted', num: true }, { label: 'Relaxed design re-solved' }],
+    checks.length ? checks.map(c => ({ cells: [escapeHTML(c.description), n4(c.predicted), n4(c.actual), c.predicted > 0 ? n3(c.actual / c.predicted) : 'n/a',
+      c.feasible && c.verified && c.verified.feasible ? badge('ok', 'Checked by fresh model solve') : badge('bad', 'relaxed problem infeasible')] }))
+      : [{ cells: ['<span class="muted">No active constraint with a relaxable limit.</span>', '', '', '', ''] }]);
+}
+
+// ---------- 4. rib pitch ----------
+function renderRibStudy(inp, rp) {
+  state.rib = rp;
+  const bestN = rp.best ? rp.best.n : NaN;
+  $('rib-kpis').innerHTML = [
+    kpi('Upper skin compression x FS', val(rp.sigmaReq, 'MPa'), `at y = ${fmt(rp.base.stress.yBuck)} mm, for your t_s = ${fmt(inp.tSkin)} mm`),
+    kpi('Largest rib pitch that passes the screen', Number.isFinite(rp.bMax) ? val(rp.bMax, 'mm') : 'unlimited', 'b_max = t_s sqrt(k pi^2 E / (12 (1 - nu^2) sigma FS))'),
+    kpi('Minimum rib count (closed form)', `${rp.nMin}`, `your design: ${inp.nRibs} ribs, pitch ${fmt(rp.current.b)} mm`, uBadge(rp.current.Ubuckle)),
+    kpi('Lightest skin plus ribs', rp.best ? `${bestN} <small>ribs</small>` : 'none', rp.best ? `${fmt(rp.best.skinPlusRib)} g with t_s = ${fmt(rp.best.tReq)} mm (caps and webs as in your design)` : 'no rib count passes the screen', rp.best ? badge('ok', 'Checked by fresh model solve') : badge('bad', 'infeasible')),
+  ].join('');
+  $('rib-note').textContent = 'For each rib count the skin is thinned (never below t_min) until the buckling screen is exactly met, by bisection on fresh solves; the closed-form thickness uses the skin stress of your design and ignores the small change of EI with t_s. Ribs add mass but shorten the buckling panel, so the sum has a minimum.';
+  const ok = rp.curve.filter(e => e.buckleOK);
+  const ribPlot = linePlot($('plot-rib-mass'), [
+    { x: ok.map(e => e.n), y: ok.map(e => e.skinPlusRib), label: 'skin + ribs (exact t_s)', color: palette.blue, type: 'both' },
+    { x: ok.map(e => e.n), y: ok.map(e => e.skinMass), label: 'skins', color: palette.teal, dash: [5, 4] },
+    { x: ok.map(e => e.n), y: ok.map(e => e.ribMass), label: 'ribs', color: palette.brown, dash: [5, 4] },
+  ], { title: 'Skin and rib mass versus rib count at the buckling limit', xlabel: 'number of ribs n_r', ylabel: 'mass (g)', yZero: true,
+    markers: [...(rp.best ? [{ x: bestN, color: palette.green }] : []), { x: rp.nMin, color: palette.purple }] });
+  markerLabels(ribPlot, [...(rp.best ? [{ x: bestN, label: `lightest skin + ribs: ${bestN} ribs`, color: palette.green }] : []), { x: rp.nMin, label: `n_min for your t_s (closed form): ${rp.nMin}`, color: palette.purple }]);
+  table($('table-rib'), [{ label: 'Ribs', num: true }, { label: 'Pitch b (mm)', num: true }, { label: 't_s required, exact (mm)', num: true }, { label: 't_s closed form (mm)', num: true }, { label: 'Skins (g)', num: true }, { label: 'Ribs (g)', num: true }, { label: 'Skins + ribs (g)', num: true }, { label: 'All checks' }],
+    rp.curve.map(e => ({ active: e.n === bestN, cells: [String(e.n), n3(e.b), e.buckleOK ? n3(e.tReq) : 'none up to 20 mm', n3(e.tCF), n3(e.skinMass), n3(e.ribMass), n3(e.skinPlusRib),
+      e.buckleOK ? (e.feasible ? badge('ok', 'pass') : badge('warn', `buckling met, ${mod.CONSTRAINT_LABELS[Object.keys(e.U).reduce((a, k) => (e.U[k] > e.U[a] ? k : a), 'stress')]} not`)) : badge('bad', 'no skin passes')] })));
+}
+
+// ---------- 5. cap taper ----------
+function renderCapTaper(inp, ct) {
+  state.taper = ct;
+  const c = ct.constant, t = ct.tapered;
+  const verBadge = t.feasible ? badge('ok', 'Checked by fresh model solve') : badge('bad', `tapered design fails ${mod.CONSTRAINT_LABELS[t.governing]}`);
+  $('taper-badge').innerHTML = verBadge;
+  $('taper-kpis').innerHTML = [
+    kpi('Cap mass saved by tapering', val(ct.capMassSaved, 'g'), `${fmt(ct.capMassSavedPct)} percent of the caps; ${fmt(ct.totalSavedPct)} percent of the half wing`),
+    kpi('Deflection penalty', `${ct.deflectionPenalty >= 0 ? '+' : ''}${val(ct.deflectionPenalty, 'mm')}`, `${fmt(c.vTip)} to ${fmt(t.vTip)} mm (${fmt(ct.deflectionPenaltyPct)} percent)`, uBadge(t.U.defl)),
+    kpi('Root cap stress, both designs', val(ct.rootStressConstant, 'MPa'), `equal by construction (same root cap area ${fmt(inp.aCap)} mm^2)`),
+    kpi('Largest cap stress, tapered', val(t.stress.sigmaCapMax, 'MPa'), `at y = ${fmt(t.stress.yCapMax)} mm (constant caps: ${fmt(c.stress.sigmaCapMax)} MPa at the root)`, statusBadge(t.U.stress)),
+  ].join('');
+  $('taper-note').textContent = ct.law === 'moment'
+    ? 'Tapered caps follow A_cap(y) = A_root max(floor, M(y) / M_root). For a tapered box the strain at a given cap area grows as the depth h shrinks, so the cap stress rises outboard until the floor takes over; choose the M / h law in the inputs to keep the stress flat. Skins are unchanged, so the saving is pure cap material and the price is outboard stiffness.'
+    : 'Tapered caps follow A_cap(y) = A_root max(floor, (M(y) / h(y)) / (M_root / h_root)), the fully stressed law for a tapered depth when the caps dominate the bending stiffness: the cap stress stays close to its root value until the floor takes over.';
+  const y = arr(c.span.y);
+  linePlot($('plot-cap-area'), [
+    { x: y, y: arr(c.span.Acap), label: 'constant caps', color: palette.gray, dash: [6, 4] },
+    { x: y, y: arr(t.span.Acap), label: 'tapered caps', color: palette.green },
+  ], { title: 'Spar cap area along the span', xlabel: 'y (mm)', ylabel: 'A_cap (mm^2)', yZero: true });
+  const capL = limitOpts([c.span.sigmaCap, t.span.sigmaCap], c.material.sigAc / inp.FS, 'allowable/FS', 'MPa', true);
+  linePlot($('plot-cap-stress'), [
+    { x: y, y: arr(c.span.sigmaCap), label: 'constant caps', color: palette.gray, dash: [6, 4] },
+    { x: y, y: arr(t.span.sigmaCap), label: 'tapered caps', color: palette.green },
+  ], { title: 'Cap stress along the span' + capL.suffix, xlabel: 'y (mm)', ylabel: 'sigma_cap (MPa)', yZero: true, hlines: capL.hlines, ylim: capL.ylim });
+  table($('table-taper'), [{ label: 'Quantity' }, { label: 'Constant caps', num: true }, { label: 'Tapered caps', num: true }], [
+    { cells: ['Cap mass (g)', n3(c.mass.caps), n3(t.mass.caps)] },
+    { cells: ['Total mass (g)', n3(c.mass.total), n3(t.mass.total)] },
+    { cells: ['Tip deflection (mm)', n3(c.vTip), n3(t.vTip)] },
+    { cells: ['Root cap stress (MPa)', n3(ct.rootStressConstant), n3(ct.rootStressTapered)] },
+    { cells: ['Largest cap stress (MPa)', n3(c.stress.sigmaCapMax), n3(t.stress.sigmaCapMax)] },
+    ...['stress', 'buckle', 'defl', 'twist', 'thick'].map(k => ({ cells: [`U ${escapeHTML(mod.CONSTRAINT_LABELS[k])}`, `${n3(c.U[k])} ${statusBadge(c.U[k])}`, `${n3(t.U[k])} ${statusBadge(t.U[k])}`] })),
+  ]);
+}
+
+// ---------- run control ----------
+let runToken = 0;
+const yieldFrame = () => new Promise(res => setTimeout(res, 0));
+function setStatus(html, isError = false) { $('status').innerHTML = html; $('status').classList.toggle('error', isError); }
+function showProgress(show, value = 0, note = '') { $('progress-wrap').classList.toggle('show', show); $('progress').value = value; $('progress-note').textContent = note; $('btn-cancel').disabled = !show; }
+
+async function run() {
+  const token = ++runToken;
+  try {
+    setStatus('Solving...');
+    const { raw, taperLaw } = readInputs();
+    const v = mod.validateInputs(raw);
+    if (!v.ok) { setStatus(escapeHTML(v.error), true); showProgress(false); return; }
+    const inp = v.inputs;
+    state.inp = inp;
+    const base = mod.solveWingBox(inp);
+    renderBaseline(inp, base);
+    renderTornado(inp, mod.tornado(inp));
+    renderRibStudy(inp, mod.ribPitchStudy(inp, Math.max(20, inp.ribMax)));
+    renderCapTaper(inp, mod.capTaperStudy(inp, taperLaw, inp.capFloor));
+
+    const total = inp.ribMax - inp.ribMin + 1;
+    showProgress(true, 0, 'Sizing for each rib count...');
+    const perRib = [];
+    for (let n = inp.ribMin; n <= inp.ribMax; n++) {
+      if (token !== runToken) return;
+      perRib.push(mod.optimizeForRibs(inp, n));
+      showProgress(true, (perRib.length / total) * 80, `Sizing for ${n} ribs done (${perRib.length} of ${total})`);
+      await yieldFrame();
+    }
+    const best = mod.pickBest(perRib);
+    let analysis = null;
+    const checks = [];
+    if (best) {
+      analysis = mod.analyzeOptimum(inp, best.design);
+      const relaxKeys = ['stress', 'buckle', 'defl', 'twist', 'tmin'];
+      for (const key of relaxKeys) {
+        if (token !== runToken) return;
+        const relevant = analysis.rows.some(r => r.active && (key === 'tmin' ? (r.key === 'tSkinMin' || r.key === 'tWebMin') : r.key === key));
+        if (!relevant) continue;
+        showProgress(true, 85, `Checking the shadow price of ${key}...`);
+        const c = mod.shadowPriceCheck(inp, best, analysis, key);
+        if (c) checks.push(c);
+        await yieldFrame();
+      }
+    }
+    if (token !== runToken) return;
+    renderOptimization(inp, base, perRib, best, analysis, checks);
+    showProgress(false);
+    if (best && analysis.verified.feasible) setStatus(badge('ok', 'Checked by fresh model solve') + ` optimum ${escapeHTML(fmt(best.mass))} g at ${best.nRibs} ribs; your design ${escapeHTML(fmt(base.mass.total))} g${base.feasible ? '' : ' (infeasible)'}.`);
+    else if (best) setStatus(badge('bad', 'Verification failed') + ' the re-solved optimum violates a check (see panel 3).', true);
+    else setStatus(badge('bad', 'No feasible sizing') + ' no rib count in the search range admits a feasible design within the variable bounds.', true);
+  } catch (err) {
+    showProgress(false);
+    setStatus('Error: ' + escapeHTML(err.message), true);
+    console.error(err);
+  }
+}
+
+// ---------- CSV exports ----------
+$('btn-csv-span').addEventListener('click', () => {
+  const r = state.base; if (!r) return;
+  const sp = r.span;
+  const rows = [['y_mm', 'chord_mm', 'box_w_mm', 'box_h_mm', 'lift_N_per_mm', 'V_N', 'M_Nmm', 'T_Nmm', 'A_cap_mm2', 'EI_Nmm2', 'GJ_Nmm2', 'sigma_cap_MPa', 'sigma_skin_MPa', 'tau_web_MPa', 'tau_skin_MPa', 'v_mm', 'twist_deg', 'U_cap', 'U_skin', 'U_web', 'U_buckle_local']];
+  for (let i = 0; i < sp.y.length; i++) rows.push([sp.y[i], sp.c[i], sp.w[i], sp.h[i], sp.l[i], sp.V[i], sp.M[i], sp.T[i], sp.Acap[i], sp.EI[i], sp.GJ[i], sp.sigmaCap[i], sp.sigmaSkin[i], sp.tauWeb[i], sp.tauSkin[i], sp.v[i], sp.phi[i] * 180 / Math.PI, sp.Ucap[i], sp.Uskin[i], sp.Uweb[i], sp.Ubuck[i]]);
+  downloadCSV('wingbox-span.csv', rows);
+});
+$('btn-csv-tornado').addEventListener('click', () => {
+  const tor = state.tornado; if (!tor) return;
+  const rows = [['variable', 'x_minus', 'x0', 'x_plus', ...mod.TORNADO_RESPONSES.flatMap(p => [`${p.key}_pct_minus`, `${p.key}_pct_plus`, `${p.key}_elasticity`])]];
+  for (const r of tor.rows) rows.push([r.label, r.xm, r.x0, r.xp, ...r.responses.flatMap(p => [p.pctMinus, p.pctPlus, p.elasticity])]);
+  downloadCSV('wingbox-tornado.csv', rows);
+});
+$('btn-csv-ribs').addEventListener('click', () => {
+  const perRib = state.perRib; if (!perRib) return;
+  const rows = [['n_ribs', 'feasible', 'mass_g', 't_skin_mm', 't_web_mm', 'A_cap_mm2', 'U_stress', 'U_buckle', 'U_defl', 'U_twist', 'U_thick', 'iterations', 'status']];
+  for (const p of perRib) rows.push(p.feasible ? [p.nRibs, 1, p.mass, p.design.tSkin, p.design.tWeb, p.design.aCap, p.result.U.stress, p.result.U.buckle, p.result.U.defl, p.result.U.twist, p.result.U.thick, p.iterations, p.status] : [p.nRibs, 0, '', '', '', '', '', '', '', '', '', 0, p.reason || '']);
+  downloadCSV('wingbox-mass-vs-ribs.csv', rows);
+});
+
+// ---------- buttons ----------
+$('btn-run').addEventListener('click', run);
+$('btn-reset').addEventListener('click', () => { applyScenario($('in-scenario').value); run(); });
+$('btn-cancel').addEventListener('click', () => { runToken++; showProgress(false); setStatus('Optimization cancelled. Panels 1, 2, 4 and 5 show the current inputs; press "Solve and optimize" to size the layout.'); });
+$('in-scenario').addEventListener('change', () => { applyScenario($('in-scenario').value); run(); });
+
+fillSelects();
+applyScenario('printed-trainer');
+run();
+</script>
+</body>
+</html>

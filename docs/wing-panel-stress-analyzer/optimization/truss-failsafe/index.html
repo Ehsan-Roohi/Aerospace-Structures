@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Truss Redundancy, Load Cases and Reliability · MIE 446 Optimization Lab</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="../shared/lab.css">
+<style>
+  .case-row { display: grid; grid-template-columns: 22px 1fr 78px; gap: 8px; align-items: center; margin: 4px 0; font-size: 0.9rem; }
+  .case-row input[type="number"] { width: 100%; padding: 4px 6px; border: 1px solid var(--line); border-radius: 6px; font: inherit; font-size: 0.88rem; }
+  .cov-row { display: grid; grid-template-columns: 1fr 78px 78px; gap: 8px; align-items: center; margin: 4px 0; font-size: 0.9rem; }
+  .cov-row input[type="number"] { width: 100%; padding: 4px 6px; border: 1px solid var(--line); border-radius: 6px; font: inherit; font-size: 0.88rem; }
+  .cov-head { color: var(--muted); font-size: 0.78rem; }
+  .mode-row { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 0.88rem; margin: 4px 0 2px; align-items: center; }
+  .mode-row label { cursor: pointer; }
+  .probe { min-height: 1.3em; font-size: 0.85rem; color: var(--muted); margin: -6px 0 10px; font-family: var(--mono); }
+  .sw { display: inline-block; width: 11px; height: 11px; border-radius: 2px; vertical-align: -1px; margin-right: 4px; }
+  .kpi.ok { border-color: var(--ok); } .kpi.bad { border-color: var(--bad); } .kpi.warn { border-color: var(--warn); }
+  .u-bad { color: var(--bad); font-weight: 600; } .u-warn { color: var(--warn); font-weight: 600; }
+  .mc-row { display: flex; gap: 10px; align-items: center; margin: 6px 0; }
+  .mc-row progress { flex: 1; }
+  .stack { display: grid; gap: 4px; font-size: 0.9rem; margin: 6px 0 10px; }
+  .inline-btn { margin: 4px 0 8px; }
+  table.results.compact td, table.results.compact th { padding: 3px 6px; font-size: 0.85rem; }
+  .wrap { overflow-x: auto; }
+</style>
+</head>
+<body>
+<header class="lab-header">
+  <div class="crumbs"><a href="../index.html">Optimization Lab</a> · <a href="https://ehsan-roohi.github.io/Aerospace-Structures/wing-panel-stress-analyzer/#beam">Beam</a> · <a href="https://ehsan-roohi.github.io/Aerospace-Structures/wing-panel-stress-analyzer/truss-lab.html">Truss Lab</a> · <a href="https://ehsan-roohi.github.io/Aerospace-Structures/wing-panel-stress-analyzer/">Wing AeroStruct</a></div>
+  <h1>Truss Redundancy, Load Cases and Reliability</h1>
+  <span class="version">truss-failsafe 0.1.1</span>
+</header>
+
+<main class="lab-main">
+  <div class="scope">
+    <strong>Scope.</strong> A design that passes one load case with a factor of safety FS = 1.5 can still fail when a bracing wire breaks, when the load case changes, or when the properties of printed or natural parts scatter. This page quantifies all three on your truss with a 2D pin-jointed linear elastic truss model (direct stiffness method): stress utilization U = |N| FS / (A sigma_allow), an Euler buckling <em>screen</em> for solid square members (P_cr = pi^2 E I / (K L)^2, I = A^2 / 12, assumed effective length factor K), and tension-only bracing wires. Member forces are axial only, joints are frictionless pins, displacements are small, and there is no pretension, no dynamic load transfer at the instant of failure, no fatigue, and no certified strength data. The Monte Carlo part is an educational reliability demonstration with assumed lognormal distributions, not a certification. Every design shown is re-solved from scratch with the exact solver before it is displayed. Independent of the Wing AeroStruct solver.
+  </div>
+
+  <div class="grid">
+    <section>
+      <div class="panel">
+        <h2>Inputs</h2>
+        <div class="field"><label for="in-preset">Truss preset</label>
+          <select id="in-preset"><option value="wright-bay">Wright Flyer half-wing (4 bays)</option><option value="warren">Warren truss (6 panels)</option></select></div>
+        <div class="note" id="preset-desc"></div>
+        <div class="field"><label for="in-fs">Factor of safety FS</label><input id="in-fs" type="number" value="1.5" step="0.05" min="0.1"></div>
+        <div class="field"><label for="in-buckling">Euler buckling screen (solid square members)</label><input id="in-buckling" type="checkbox" checked></div>
+        <div class="field"><label for="in-k">Effective length factor K</label><input id="in-k" type="number" value="1" step="0.1" min="0.1"></div>
+        <div class="field"><label for="in-wiremodel">Bracing wire model</label>
+          <select id="in-wiremodel"><option value="linear">linear bar, compression flagged slack</option><option value="tension-only">tension-only, slack wires dropped</option></select></div>
+        <h3>Member areas by group <span class="unit">mm^2</span></h3>
+        <div id="groups"></div>
+        <button class="btn secondary inline-btn" id="btn-size" title="Group-wise fully stressed sizing for the primary case: one section per group, governing member at U = 1">Size group areas for the primary case</button>
+        <h3>Load cases</h3>
+        <div class="field"><label for="in-primary">Primary case (sizing, fail-safe map, reliability)</label><select id="in-primary"></select></div>
+        <div class="note">Checked cases enter the envelope. Multipliers scale the case loads (1 = as defined).</div>
+        <div id="cases"></div>
+        <h3>Scatter for the reliability study</h3>
+        <div class="cov-row cov-head"><span>Group (material)</span><span>CoV of E</span><span>CoV of strength</span></div>
+        <div id="covs"></div>
+        <div class="field"><label for="in-covload">CoV of the load multiplier</label><input id="in-covload" type="number" value="0.10" step="0.01" min="0" max="1"></div>
+        <div class="field"><label for="in-n">Monte Carlo samples per run</label><input id="in-n" type="number" value="5000" step="1000" min="1000" max="50000"></div>
+        <div class="field"><label for="in-seed">Seed (deterministic generator)</label><input id="in-seed" type="number" value="1" step="1"></div>
+        <div class="btn-row">
+          <button class="btn" id="btn-run">Run all parts</button>
+          <button class="btn secondary" id="btn-reset">Reset</button>
+          <button class="btn secondary" id="btn-cancel" disabled>Cancel Monte Carlo</button>
+        </div>
+        <div class="status" id="status"></div>
+      </div>
+
+      <div class="panel">
+        <h2>How it works</h2>
+        <details class="help" open>
+          <summary>Model and utilization</summary>
+          <div class="body">
+            Direct stiffness method for a 2D pin-jointed truss: each bar contributes E A / L along its axis, supports remove degrees of freedom (DOF), and the free system is solved by Gaussian elimination with pivoting. A pivot that vanishes relative to the diagonal, or a failed residual check, means a mechanism: the page reports "unstable structure" instead of numbers. Member force N = (E A / L) times the elongation along the axis, tension positive, stress N / A. Utilization: tension U = |N| FS / (A sigma_allow); compression U = max(stress utilization, |N| FS / P_cr) with P_cr = pi^2 E I / (K L)^2 and I = A^2 / 12 for solid square members (a screening indicator with an assumed effective length factor, not a stability analysis); groups marked "none" use the stress check only. Mass = sum of A L rho / 1000 in grams. A tension-only wire that the linear model puts in compression is flagged <em>slack</em>: the linear model is then not valid for that wire. With the "tension-only" wire model such wires are dropped and the structure is re-solved until no wire is in compression; compressions below 0.1 percent of the largest member force count as zero so unloaded bays keep their wires.
+          </div>
+        </details>
+        <details class="help">
+          <summary>Part A: fail-safe map</summary>
+          <div class="body">
+            For the primary case, each member is deleted in turn (area set to zero) and the damaged truss is re-solved. The table records the maximum utilization of the remaining members, which member now governs, the displacement of the reference node (tip or midspan) relative to the intact truss, and whether the damaged truss is a mechanism ("collapse"). The damage tolerance index is the fraction of single-member removals after which every remaining utilization stays at or below 1. The count m + r - 2j (members, reaction components, joints) is the degree of static indeterminacy: a value of 0 means every member is needed for stability, so every removal is a mechanism; a positive value is necessary but not sufficient for redundancy, and the solve decides.
+          </div>
+        </details>
+        <details class="help">
+          <summary>Part B: load-case envelope and fully stressed design</summary>
+          <div class="body">
+            All checked cases are solved; the envelope is the elementwise maximum utilization over the cases and the governing case per member is the one that produces it. The fully stressed design (FSD) iteration A_i &lt;- A_i U_i (stress) and A_i &lt;- A_i sqrt(U_buckle,i) (buckling, because P_cr grows with A^2) takes the larger factor, clamps to A_min = 0.2 A0 and runs up to 40 iterations. Because a uniform scale-up of all areas leaves the member forces of a linear truss unchanged, a final uniform scale by max(U_stress, sqrt(U_buckle)) makes the governing member exactly fully stressed if the iteration has not converged. For a statically determinate truss the forces do not depend on the areas, so FSD converges in one step and (with stress constraints only) is the minimum mass design. "Size for one case, check under all" sizes for the primary case, then evaluates the result under every other checked case; sizing for the envelope uses the maximum utilization over all cases in every iteration, and the mass difference is the price of covering every case.
+          </div>
+        </details>
+        <details class="help">
+          <summary>Part C: Monte Carlo reliability</summary>
+          <div class="body">
+            Each sample draws, per group, a modulus E and an allowable stress sigma_allow from lognormal distributions with the given coefficient of variation (CoV = standard deviation / mean) and the mean preserved, and one load multiplier with the load CoV; the pseudo-random numbers come from a seeded mulberry32 generator, so a given seed always reproduces the same result. The truss is solved for every sample and the maximum design utilization U (FS included) over all members is recorded. Two events are counted: the <em>design criterion</em> is violated when max U &gt; 1, and the <em>limit state</em> is exceeded when max U &gt; FS, which means the actual stress exceeds the actual strength or the actual load exceeds the buckling load. P_f is the fraction of samples in the event with a 95 percent Wilson score interval; the reliability index is beta = -Phi^-1(P_f) with Phi^-1 from Acklam's rational approximation and Phi from an erf approximation. The sensitivity table re-runs the study with each scatter source switched off in turn, with the same random numbers, and the run with all scatter off must reproduce the deterministic maximum utilization exactly. Classical check: for lognormal load S and resistance R with central safety factor theta = mean R / mean S, beta = ln(theta sqrt((1 + V_S^2) / (1 + V_R^2))) / sqrt(ln((1 + V_R^2)(1 + V_S^2))); applied per member it gives the first-order series-system bounds max_i P_i &lt;= P_f &lt;= sum_i P_i, shown beside the Monte Carlo estimate. The members of one group share one sampled E and one sampled strength (a batch of material), so their failures are strongly correlated and P_f tends to sit near the lower bound.
+          </div>
+        </details>
+        <details class="help">
+          <summary>Classical references and limitations</summary>
+          <div class="body">
+            Direct stiffness truss analysis: any structural analysis text (for example Hibbeler, Structural Analysis). Fully stressed design and its optimality for determinate trusses under stress constraints: Haftka and Gurdal, Elements of Structural Optimization. Lognormal reliability index and series-system bounds: Melchers and Beck, Structural Reliability Analysis and Prediction; Nowak and Collins, Reliability of Structures. Limitations: pin-jointed bars only (real spars are continuous and carry bending), no wire pretension (the Wright Flyer wires were rigged taut, which keeps both wires of a crossed pair active), removal is static (no dynamic overshoot when a member snaps), the Euler screen ignores end fixity and imperfections, material cards are representative educational values, the scatter model (lognormal, independent between groups, one batch per group) is an assumption. Nothing here is a certified analysis.
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <section>
+      <div class="panel">
+        <h2>Overview: your design under the primary case</h2>
+        <div class="kpi-row" id="kpis"></div>
+        <div class="mode-row">
+          <span>Colour members by:</span>
+          <label><input type="radio" name="colormode" value="removal" checked> consequence of removing that member</label>
+          <label><input type="radio" name="colormode" value="case"> governing load case</label>
+          <label><input type="radio" name="colormode" value="util"> baseline utilization</label>
+        </div>
+        <canvas class="plot" id="plot-truss" width="760" height="430"></canvas>
+        <div class="probe" id="probe">Move the pointer over a member for its details.</div>
+        <div id="verify-line" class="stack"></div>
+      </div>
+
+      <div class="panel">
+        <h2>Part A: fail-safe map (single-member removal)</h2>
+        <div id="fs-summary" class="stack"></div>
+        <div class="wrap"><table class="results compact" id="table-fs-groups"></table></div>
+        <h3>All removals, sorted by criticality</h3>
+        <div class="wrap"><table class="results compact" id="table-failsafe"></table></div>
+        <div class="btn-row"><button class="btn secondary" id="btn-csv-failsafe">Download CSV (fail-safe table)</button></div>
+      </div>
+
+      <div class="panel">
+        <h2>Part B: load-case envelope and "size for one case, check under all"</h2>
+        <div id="env-summary" class="stack"></div>
+        <canvas class="plot" id="plot-cases" width="760" height="600"></canvas>
+        <div class="mode-row" id="cases-legend"></div>
+        <div class="wrap"><table class="results compact" id="table-envelope"></table></div>
+        <h3>Size for the primary case, then check under every other case</h3>
+        <div id="fsd-block" class="stack"></div>
+        <div class="wrap"><table class="results compact" id="table-crosscheck"></table></div>
+        <h3>Single-case sizing versus envelope sizing</h3>
+        <div class="wrap"><table class="results compact" id="table-compare"></table></div>
+        <canvas class="plot" id="plot-fsd" width="760" height="250"></canvas>
+        <div class="btn-row"><button class="btn secondary" id="btn-csv-envelope">Download CSV (envelope table)</button></div>
+      </div>
+
+      <div class="panel">
+        <h2>Part C: Monte Carlo reliability of your design (primary case)</h2>
+        <div class="mc-row"><progress id="mc-progress" value="0" max="1"></progress><span id="mc-stage" class="note"></span></div>
+        <div class="status" id="mc-status" data-engine="idle"></div>
+        <div class="kpi-row" id="mc-kpis"></div>
+        <div id="mc-check" class="stack"></div>
+        <canvas class="plot" id="plot-hist" width="760" height="300"></canvas>
+        <canvas class="plot" id="plot-conv" width="760" height="280"></canvas>
+        <h3>Which scatter source dominates (same random numbers, one source switched off at a time)</h3>
+        <div class="wrap"><table class="results compact" id="table-sens"></table></div>
+        <h3>Classical lognormal closed form per member and series-system bounds</h3>
+        <div id="cf-summary" class="stack"></div>
+        <div class="wrap"><table class="results compact" id="table-cf"></table></div>
+        <h3>Members that govern most often in the samples</h3>
+        <div class="wrap"><table class="results compact" id="table-gov"></table></div>
+        <p class="note">This is an educational reliability demonstration with assumed distributions (lognormal, mean preserved, one batch per material group, independent groups, one load multiplier). It is not a certification and must not be read as a statement about any real aircraft or structure.</p>
+        <div class="btn-row"><button class="btn secondary" id="btn-csv-mc">Download CSV (histogram and convergence)</button></div>
+      </div>
+    </section>
+  </div>
+<p class="scope"><strong>Review note:</strong> A fresh solve checks feasibility within this page's stated model. It is not independent physical validation or a proof of global optimality. Optimizer results are candidates; comparisons depend on bounds, discretization and evaluation counts.</p></main>
+
+<footer class="lab-footer">
+  MIE 446 Aerospace Structures, University of Massachusetts Amherst. Educational optimization demonstration on a simplified model; independent of the Wing AeroStruct solver and not a certified analysis.
+</footer>
+
+<script type="module">
+import { linePlot, categoryPlot, fmt, badge, escapeHTML, setupCanvas, canvasPoint, palette, downloadCSV } from '../shared/labkit.js';
+import { TRUSS_PRESETS, MATERIALS } from '../shared/presets.js';
+import * as mod from './truss-failsafe.js';
+
+const $ = id => document.getElementById(id);
+const C = { ok: '#2a9d5c', warn: '#c98a12', bad: '#c43d3d', gray: '#9a9aa2' };
+const pct = (x, d = 2) => (Number.isFinite(x) ? (100 * x).toFixed(d) + '%' : 'n/a');
+const uClass = u => (u > 1 + 1e-9 ? 'u-bad' : (u >= 0.9 ? 'u-warn' : ''));
+const uCell = u => `<td class="num ${uClass(u)}">${Number.isFinite(u) ? fmt(u, 3) : (u === Infinity ? 'collapse' : 'n/a')}</td>`;
+
+let model = null;
+let presetKey = 'wright-bay';
+const state = { inputs: null, A: null, baseline: null, failsafe: null, envelope: null, fsd: null, mc: null, colorMode: 'removal', draw: null };
+let worker = null, mcRunning = false, fallbackTimer = null, mcToken = 0;
+
+// ---------------- input panel construction ----------------
+
+function buildInputs(key) {
+  presetKey = key;
+  model = mod.buildModel(key);
+  $('preset-desc').textContent = model.description;
+  // group areas
+  $('groups').innerHTML = model.groupKeys.map(g => {
+    const grp = model.groups[g];
+    return `<div class="field"><label for="area-${g}">${escapeHTML(g)} (${escapeHTML(grp.materialName)}, A0 = ${fmt(grp.A0, 4)}${grp.tensionOnly ? ', tension only' : ''}${grp.buckling === 'square' ? ', solid square' : ''}) <span class="unit">mm^2</span></label><input id="area-${g}" type="number" value="${grp.A0}" step="any" min="0.001"></div>`;
+  }).join('');
+  // load cases
+  $('in-primary').innerHTML = model.caseNames.map(c => `<option value="${escapeHTML(c)}">${escapeHTML(c)}</option>`).join('');
+  $('in-primary').value = model.primaryCase;
+  $('cases').innerHTML = model.caseNames.map((c, i) => `<div class="case-row"><input type="checkbox" id="case-${i}" checked><label for="case-${i}">${escapeHTML(c)}</label><input type="number" id="mult-${i}" value="1" step="0.1" aria-label="multiplier for ${escapeHTML(c)}"></div>`).join('');
+  // scatter
+  $('covs').innerHTML = model.groupKeys.map(g => {
+    const grp = model.groups[g], cov = mod.defaultCov(grp.material);
+    return `<div class="cov-row"><label for="covE-${g}">${escapeHTML(g)} (${escapeHTML(grp.material)})</label><input id="covE-${g}" type="number" value="${cov.toFixed(2)}" step="0.01" min="0" max="1"><input id="covS-${g}" type="number" value="${cov.toFixed(2)}" step="0.01" min="0" max="1" aria-label="CoV of strength for ${escapeHTML(g)}"></div>`;
+  }).join('');
+  $('in-fs').value = '1.5'; $('in-buckling').checked = true; $('in-k').value = '1'; $('in-wiremodel').value = 'linear';
+  $('in-covload').value = '0.10'; $('in-n').value = '5000'; $('in-seed').value = '1';
+}
+
+function readInputs() {
+  const groupAreas = {}, covE = {}, covSigma = {};
+  for (const g of model.groupKeys) {
+    groupAreas[g] = Number($(`area-${g}`).value);
+    covE[g] = Number($(`covE-${g}`).value);
+    covSigma[g] = Number($(`covS-${g}`).value);
+  }
+  const multipliers = {}, checked = {};
+  model.caseNames.forEach((c, i) => { multipliers[c] = Number($(`mult-${i}`).value); checked[c] = $(`case-${i}`).checked; });
+  const inp = {
+    FS: Number($('in-fs').value), buckling: $('in-buckling').checked, K: Number($('in-k').value), wireModel: $('in-wiremodel').value,
+    groupAreas, primary: $('in-primary').value, multipliers, checked, covE, covSigma,
+    covLoad: Number($('in-covload').value), n: Number($('in-n').value), seed: Number($('in-seed').value),
+  };
+  const v = mod.validateInputs(inp);
+  if (!v.ok) throw new Error(v.errors.join('; '));
+  if (!(inp.n >= 1000 && inp.n <= 50000)) throw new Error('number of samples must be between 1000 and 50000');
+  // cases: checked ones plus the primary case (always included)
+  const cases = model.caseNames.filter(c => checked[c] || c === inp.primary).map(c => ({ name: c, loads: model.loadCases[c], mult: multipliers[c] }));
+  const primaryCase = cases.find(c => c.name === inp.primary);
+  inp.cases = cases; inp.primaryCase = primaryCase;
+  inp.opts = { FS: inp.FS, buckling: inp.buckling, K: inp.K, wireModel: inp.wireModel };
+  inp.primaryLoads = mod.scaleLoads(primaryCase.loads, primaryCase.mult);
+  return inp;
+}
+
+// ---------------- main run ----------------
+
+function run() {
+  stopMonteCarlo('restart');
+  const st = $('status');
+  try {
+    st.classList.remove('error');
+    st.textContent = 'Solving...';
+    const inp = readInputs();
+    state.inputs = inp;
+    const A = mod.memberAreasFromGroups(model, inp.groupAreas);
+    state.A = A;
+    const baseline = mod.solveTruss(model, A, inp.primaryLoads, inp.opts);
+    state.baseline = baseline;
+    if (!baseline.ok) {
+      state.failsafe = null; state.envelope = null; state.fsd = null; state.mc = null;
+      renderAll();
+      st.innerHTML = badge('bad', 'Baseline is unstable') + ' ' + escapeHTML(baseline.error);
+      st.classList.add('error');
+      return;
+    }
+    state.failsafe = mod.failSafeMap(model, A, inp.primaryLoads, inp.opts);
+    state.envelope = mod.loadCaseEnvelope(model, A, inp.cases, inp.opts);
+    state.fsd = computeSizing(inp, A);
+    state.mc = null;
+    renderAll();
+    st.innerHTML = badge(baseline.feasible ? 'ok' : 'bad', baseline.feasible ? 'Baseline checked by fresh model solve: all U <= 1' : 'Baseline checked by fresh model solve: some U > 1') + ` max U = ${fmt(baseline.maxU, 3)} (${escapeHTML(baseline.governingLabel)}, ${baseline.governingMode})`;
+    startMonteCarlo(inp, A);
+  } catch (err) {
+    st.textContent = 'Error: ' + err.message;
+    st.classList.add('error');
+    console.error(err);
+  }
+}
+
+function computeSizing(inp, A) {
+  const primary = [inp.primaryCase];
+  const single = mod.fullyStressedDesign(model, A, primary, inp.opts);
+  const others = inp.cases.filter(c => c !== inp.primaryCase);
+  const cross = single.ok ? mod.crossCheck(model, single.A, others, inp.opts) : [];
+  const env = mod.fullyStressedDesign(model, A, inp.cases, inp.opts);
+  const dti = design => { const m = mod.failSafeMap(model, design, inp.primaryLoads, inp.opts); return m.ok ? m.damageToleranceIndex : NaN; };
+  const rows = [];
+  const studentEnv = mod.loadCaseEnvelope(model, A, inp.cases, inp.opts);
+  rows.push({ name: 'student design (areas as entered)', A, mass: mod.massGrams(model, A), uPrimary: state.baseline.maxU, uEnv: studentEnv.ok ? studentEnv.maxU : NaN, dti: dti(A), verify: mod.verifyDesign(model, A, inp.cases, inp.opts) });
+  if (single.ok) rows.push({ name: 'sized for the primary case only (FSD)', A: single.A, mass: single.mass, uPrimary: single.envelope.maxU, uEnv: (() => { const e = mod.loadCaseEnvelope(model, single.A, inp.cases, inp.opts); return e.ok ? e.maxU : Infinity; })(), dti: dti(single.A), verify: mod.verifyDesign(model, single.A, inp.cases, inp.opts) });
+  if (env.ok) rows.push({ name: 'sized for the envelope of all checked cases (FSD)', A: env.A, mass: env.mass, uPrimary: mod.solveTruss(model, env.A, inp.primaryLoads, inp.opts).maxU, uEnv: env.envelope.maxU, dti: dti(env.A), verify: env.verify });
+  return { single, cross, env, rows, others };
+}
+
+function renderAll() {
+  renderKPIs();
+  drawTruss();
+  renderVerifyLine();
+  renderFailSafe();
+  renderEnvelope();
+  renderMC();
+}
+
+// ---------------- KPI tiles ----------------
+
+function kpi(label, value, sub, cls = '') {
+  return `<div class="kpi ${cls}"><div class="label">${label}</div><div class="value">${value}</div><div class="sub">${sub || ''}</div></div>`;
+}
+
+function renderKPIs() {
+  const b = state.baseline, fs = state.failsafe, sz = state.fsd, mc = state.mc;
+  const tiles = [];
+  if (b && b.ok) {
+    tiles.push(kpi('Baseline max U (primary case)', fmt(b.maxU, 3), `${escapeHTML(b.governingLabel)}, ${b.governingMode}${b.slackCount ? `, ${b.slackCount} slack wire${b.slackCount > 1 ? 's' : ''}` : ''}`, b.feasible ? 'ok' : 'bad'));
+    tiles.push(kpi('Mass of your design', fmt(b.mass, 4) + ' g', `redundancy m + r - 2j = ${b.redundancy}`));
+  } else {
+    tiles.push(kpi('Baseline', 'unstable', b ? escapeHTML(b.error) : '', 'bad'));
+  }
+  if (fs && fs.ok) {
+    const c = fs.counts;
+    tiles.push(kpi('Damage tolerance index', `${c.ok} / ${c.total} = ${pct(fs.damageToleranceIndex, 0)}`, `${c.overload} overload, ${c.collapse} collapse`, fs.damageToleranceIndex >= 0.999 ? 'ok' : (fs.damageToleranceIndex > 0.5 ? 'warn' : 'bad')));
+    const w = fs.worst;
+    tiles.push(kpi('Worst single removal', escapeHTML(w.label), w.consequence === 'collapse' ? 'mechanism (collapse)' : `max U after removal = ${fmt(w.maxU, 3)} (${escapeHTML(w.governingLabel)})`, w.consequence === 'ok' ? 'ok' : (w.consequence === 'overload' ? 'warn' : 'bad')));
+  }
+  if (sz && sz.single.ok && sz.env.ok) {
+    const d = sz.env.mass - sz.single.mass;
+    tiles.push(kpi('Envelope mass penalty', `${d >= 0 ? '+' : ''}${fmt(d, 4)} g (${d >= 0 ? '+' : ''}${(100 * d / sz.single.mass).toFixed(1)}%)`, `envelope FSD ${fmt(sz.env.mass, 4)} g vs single-case FSD ${fmt(sz.single.mass, 4)} g`));
+  }
+  if (mc) {
+    const m = mc.main;
+    tiles.push(kpi('P_f, limit state (max U > FS)', pct(m.pfLimit, 3), `95% CI ${pct(m.ciLimit[0], 3)} to ${pct(m.ciLimit[1], 3)}; beta = ${betaText(m.betaLimit)}; n = ${m.n}`, m.pfLimit === 0 ? 'ok' : (m.pfLimit < 0.01 ? 'warn' : 'bad')));
+    tiles.push(kpi('P(design criterion violated), max U > 1', pct(m.pfDesign, 2), `95% CI ${pct(m.ciDesign[0], 2)} to ${pct(m.ciDesign[1], 2)}; beta = ${betaText(m.betaDesign)}`, m.pfDesign < 0.05 ? 'ok' : 'warn'));
+  } else if (mcRunning) {
+    tiles.push(kpi('P_f (limit state)', '...', 'Monte Carlo running'));
+  }
+  $('kpis').innerHTML = tiles.join('');
+}
+
+function betaText(beta) {
+  if (beta === Infinity) return 'infinite (no failures)';
+  if (beta === -Infinity) return 'minus infinity (all samples fail)';
+  return fmt(beta, 3);
+}
+
+function renderVerifyLine() {
+  const b = state.baseline;
+  if (!b || !b.ok) { $('verify-line').innerHTML = ''; return; }
+  const slackList = model.members.filter((m, i) => b.slack[i]).map(m => m.label);
+  let html = `<div>${badge(b.feasible ? 'ok' : 'bad', 'Checked by fresh model solve')} Student design, primary case "${escapeHTML(state.inputs.primary)}": ${model.members.length} members, ${b.wireModel === 'tension-only' ? 'tension-only wire model' : 'linear wire model'}, FS = ${fmt(b.FS, 3)}, buckling screen ${b.buckling ? `on (K = ${fmt(b.K, 3)})` : 'off'}. Reference node ${b.refDisp.node} displacement ${fmt(b.refDisp.mag, 3)} mm.</div>`;
+  if (slackList.length) html += `<div>${badge('warn', `${slackList.length} slack wire${slackList.length > 1 ? 's' : ''}`)} ${escapeHTML(slackList.join(', '))}: ${b.wireModel === 'tension-only' ? 'dropped from the stiffness (they carry nothing)' : 'the linear model puts these tension-only wires in compression, which a real wire cannot carry without pretension; their listed utilization is the linear-model value'}.</div>`;
+  $('verify-line').innerHTML = html;
+}
+
+// ---------------- truss drawing ----------------
+
+function memberColor(i) {
+  const mode = state.colorMode, b = state.baseline, fs = state.failsafe, env = state.envelope;
+  if (mode === 'removal' && fs && fs.ok) {
+    const r = fs.byMember[i];
+    if (!r) return C.gray;
+    return r.consequence === 'ok' ? C.ok : (r.consequence === 'overload' ? C.warn : C.bad);
+  }
+  if (mode === 'case' && env && env.ok) {
+    if (!(env.envelope[i] > 0)) return C.gray;
+    return palette.series[env.governingCase[i] % palette.series.length];
+  }
+  if (b && b.ok) {
+    const u = b.U[i];
+    if (b.removed[i]) return C.gray;
+    if (!(u > 0)) return C.gray;
+    return u > 1 + 1e-9 ? C.bad : (u >= 0.9 ? C.warn : C.ok);
+  }
+  return C.gray;
+}
+
+function drawTruss() {
+  const canvas = $('plot-truss');
+  const { ctx, W, H } = setupCanvas(canvas);
+  const nodes = model.nodes, A = state.A || mod.memberAreasFromGroups(model, mod.defaultGroupAreas(model));
+  const b = state.baseline;
+  let xmin = Infinity, xmax = -Infinity, ymin = Infinity, ymax = -Infinity;
+  for (const [x, y] of nodes) { xmin = Math.min(xmin, x); xmax = Math.max(xmax, x); ymin = Math.min(ymin, y); ymax = Math.max(ymax, y); }
+  const margin = { left: 50, right: 50, top: 108, bottom: 66 };
+  const sx = (W - margin.left - margin.right) / Math.max(1, xmax - xmin), sy = (H - margin.top - margin.bottom) / Math.max(1, ymax - ymin);
+  const s = Math.min(sx, sy);
+  // ox, oy are offsets from the left and from the bottom edge (canvas y points down, structure y points up)
+  const ox = margin.left + ((W - margin.left - margin.right) - s * (xmax - xmin)) / 2, oy = margin.bottom + ((H - margin.top - margin.bottom) - s * (ymax - ymin)) / 2;
+  const X = x => ox + (x - xmin) * s, Y = y => H - (oy + (y - ymin) * s);
+  const Amax = Math.max(...A.filter(a => a > 0));
+  // legend
+  ctx.font = '12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
+  let legend = [];
+  if (state.colorMode === 'removal') legend = [[C.ok, 'removal survivable: all remaining U <= 1'], [C.warn, 'removal overloads a member: U > 1, stiffness finite'], [C.bad, 'removal gives a mechanism (collapse)']];
+  else if (state.colorMode === 'case') legend = (state.inputs ? state.inputs.cases : []).map((c, i) => [palette.series[i % palette.series.length], `governed by "${c.name}"${c.mult !== 1 ? ` x ${c.mult}` : ''}`]).concat([[C.gray, 'zero force in every case']]);
+  else legend = [[C.ok, 'baseline U < 0.9'], [C.warn, '0.9 <= U <= 1 (near the limit)'], [C.bad, 'U > 1 (violated)'], [C.gray, 'zero force']];
+  ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+  let lx = 12, ly = 14;
+  ctx.fillStyle = palette.ink; ctx.font = 'bold 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
+  ctx.fillText(model.name, lx, ly);
+  ctx.font = '12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
+  ly += 18;
+  for (const [col, text] of legend) {
+    if (lx + 24 + ctx.measureText(text).width > W - 10) { lx = 12; ly += 16; }
+    ctx.fillStyle = col; ctx.fillRect(lx, ly - 5, 16, 10);
+    ctx.fillStyle = palette.ink; ctx.fillText(text, lx + 22, ly);
+    lx += 22 + ctx.measureText(text).width + 18;
+  }
+  ly += 16;
+  ctx.fillStyle = palette.gray;
+  ctx.fillText('dashed = slack wire (compression in the linear model, or dropped in the tension-only model)', 12, ly);
+  ly += 15;
+  ctx.fillText('line width follows sqrt(A); arrows = primary case loads; circled node = reference node for displacements', 12, ly);
+  // members
+  const segs = [];
+  model.members.forEach((m, i) => {
+    if (!(A[i] > 0)) return;
+    const [xa, ya] = nodes[m.a], [xb, yb] = nodes[m.b];
+    const x1 = X(xa), y1 = Y(ya), x2 = X(xb), y2 = Y(yb);
+    segs.push({ i, x1, y1, x2, y2 });
+    ctx.strokeStyle = memberColor(i);
+    ctx.lineWidth = Math.max(1.5, Math.min(7, 1.2 + 5.5 * Math.sqrt(A[i] / Amax)));
+    ctx.setLineDash(b && b.ok && b.slack[i] ? [6, 5] : []);
+    ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+  });
+  ctx.setLineDash([]);
+  // member index labels (offset along the member so crossed wires do not overlap)
+  ctx.font = '10px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  for (const sg of segs) {
+    const m = model.members[sg.i];
+    const t = model.groups[m.group].tensionOnly ? 0.3 : 0.5;
+    const lxm = sg.x1 + (sg.x2 - sg.x1) * t, lym = sg.y1 + (sg.y2 - sg.y1) * t;
+    const label = String(sg.i);
+    const w = ctx.measureText(label).width + 6;
+    ctx.fillStyle = 'rgba(255,255,255,0.85)'; ctx.fillRect(lxm - w / 2, lym - 7, w, 13);
+    ctx.fillStyle = '#3a3a40'; ctx.fillText(label, lxm, lym);
+  }
+  // supports
+  for (const [k, sup] of Object.entries(model.supports)) {
+    const n = Number(k); const x = X(nodes[n][0]), y = Y(nodes[n][1]);
+    ctx.fillStyle = palette.ink; ctx.strokeStyle = palette.ink; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x - 9, y + 16); ctx.lineTo(x + 9, y + 16); ctx.closePath();
+    if (sup[0] && sup[1]) ctx.fill(); else ctx.stroke();
+    if (!(sup[0] && sup[1])) { ctx.beginPath(); ctx.arc(x - 5, y + 20, 2.5, 0, Math.PI * 2); ctx.arc(x + 5, y + 20, 2.5, 0, Math.PI * 2); ctx.fill(); }
+  }
+  // loads (primary case)
+  if (state.inputs) {
+    const loads = state.inputs.primaryLoads;
+    let fmax = 0;
+    for (const v of Object.values(loads)) fmax = Math.max(fmax, Math.hypot(v[0], v[1]));
+    ctx.strokeStyle = palette.purple; ctx.fillStyle = palette.purple; ctx.lineWidth = 2;
+    for (const [k, v] of Object.entries(loads)) {
+      const n = Number(k); const mag = Math.hypot(v[0], v[1]); if (!(mag > 0)) continue;
+      const len = 18 + 34 * mag / fmax;
+      const ux = v[0] / mag, uy = -v[1] / mag; // canvas y down
+      // purely vertical loads are drawn 10 px beside the node so they do not hide a vertical strut
+      const x = X(nodes[n][0]) + (Math.abs(ux) < 1e-9 ? 10 : 0), y = Y(nodes[n][1]);
+      const x0 = x - ux * len, y0 = y - uy * len;
+      ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x - ux * 6, y - uy * 6); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x - ux * 9 - uy * 4.5, y - uy * 9 + ux * 4.5); ctx.lineTo(x - ux * 9 + uy * 4.5, y - uy * 9 - ux * 4.5); ctx.closePath(); ctx.fill();
+      ctx.font = '10px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = uy > 0 ? 'bottom' : 'top';
+      ctx.fillText(`${fmt(mag, 3)} N`, x0, y0 + (uy > 0 ? -3 : 3));
+    }
+  }
+  // nodes (labels above the upper half of the truss, below the lower half)
+  const ymid = 0.5 * (ymin + ymax);
+  nodes.forEach((p, n) => {
+    const x = X(p[0]), y = Y(p[1]);
+    ctx.fillStyle = '#fff'; ctx.strokeStyle = palette.ink; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.arc(x, y, 4, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = palette.ink; ctx.font = '11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
+    ctx.textAlign = 'center';
+    const above = p[1] > ymid && !model.supports[n];
+    ctx.textBaseline = above ? 'bottom' : 'top';
+    ctx.fillText(String(n), x, above ? y - 7 : (model.supports[n] ? y + 26 : y + 7));
+  });
+  if (Number.isInteger(model.refNode)) {
+    const x = X(nodes[model.refNode][0]), y = Y(nodes[model.refNode][1]);
+    ctx.strokeStyle = palette.teal; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(x, y, 8, 0, Math.PI * 2); ctx.stroke();
+    ctx.fillStyle = palette.teal; ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.font = '10px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
+    ctx.fillText('ref', x + 10, y - 8);
+  }
+  // scale bar
+  const scaleLen = Math.pow(10, Math.floor(Math.log10((xmax - xmin) / 4)));
+  ctx.strokeStyle = palette.gray; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(W - margin.right - scaleLen * s, H - 14); ctx.lineTo(W - margin.right, H - 14); ctx.stroke();
+  ctx.fillStyle = palette.gray; ctx.font = '11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif'; ctx.textAlign = 'right'; ctx.textBaseline = 'bottom';
+  ctx.fillText(`${fmt(scaleLen, 4)} mm`, W - margin.right, H - 17);
+  state.draw = { segs };
+}
+
+function probe(evt) {
+  if (!state.draw) return;
+  const p = canvasPoint($('plot-truss'), evt);
+  let best = -1, bestD = 9;
+  for (const sg of state.draw.segs) {
+    const dx = sg.x2 - sg.x1, dy = sg.y2 - sg.y1, L2 = dx * dx + dy * dy;
+    let t = L2 > 0 ? ((p.x - sg.x1) * dx + (p.y - sg.y1) * dy) / L2 : 0; t = Math.max(0, Math.min(1, t));
+    const d = Math.hypot(p.x - (sg.x1 + t * dx), p.y - (sg.y1 + t * dy));
+    if (d < bestD) { bestD = d; best = sg.i; }
+  }
+  const el = $('probe');
+  if (best < 0) { el.textContent = 'Move the pointer over a member for its details.'; return; }
+  const m = model.members[best], b = state.baseline, fs = state.failsafe, env = state.envelope;
+  let text = `#${best} ${m.label}: A = ${fmt(state.A[best], 4)} mm^2, L = ${fmt(m.L, 4)} mm`;
+  if (b && b.ok) text += `, N = ${b.N[best] >= 0 ? '+' : ''}${fmt(b.N[best], 4)} N (${b.mode[best]}), U = ${fmt(b.U[best], 3)}${b.Ubuckle[best] > b.Ustress[best] ? ' buckling' : ' stress'}`;
+  if (fs && fs.ok && fs.byMember[best]) { const r = fs.byMember[best]; text += ` | if removed: ${r.consequence === 'collapse' ? 'collapse' : `max U = ${fmt(r.maxU, 3)} (${r.governingLabel}), ref disp x ${fmt(r.refDispRatio, 3)}`}`; }
+  if (env && env.ok && state.inputs) text += ` | envelope U = ${fmt(env.envelope[best], 3)} from "${state.inputs.cases[env.governingCase[best]].name}"`;
+  el.textContent = text;
+}
+
+// ---------------- Part A ----------------
+
+function renderFailSafe() {
+  const fs = state.failsafe;
+  if (!fs || !fs.ok) {
+    $('fs-summary').innerHTML = `<div>${badge('bad', 'not available')} ${fs ? escapeHTML(fs.error) : 'The baseline structure must solve first.'}</div>`;
+    $('table-fs-groups').innerHTML = ''; $('table-failsafe').innerHTML = '';
+    return;
+  }
+  const c = fs.counts;
+  const perGroup = {};
+  for (const r of fs.rows) {
+    const g = perGroup[r.group] || (perGroup[r.group] = { total: 0, ok: 0, overload: 0, collapse: 0, worst: null });
+    g.total++; g[r.consequence]++;
+    if (!g.worst || (r.consequence === 'collapse' && g.worst.consequence !== 'collapse') || (r.consequence === g.worst.consequence && r.maxU > g.worst.maxU)) g.worst = r;
+  }
+  const wires = Object.keys(perGroup).filter(g => model.groups[g].tensionOnly);
+  const isWright = presetKey === 'wright-bay';
+  let html = `<div>${badge(fs.damageToleranceIndex >= 0.999 ? 'ok' : (fs.damageToleranceIndex > 0.5 ? 'warn' : 'bad'), `damage tolerance index ${pct(fs.damageToleranceIndex, 0)}`)} ${c.ok} of ${c.total} single-member removals leave every remaining utilization at or below 1; ${c.overload} overload at least one member with finite stiffness; ${c.collapse} turn the truss into a mechanism. Degree of static indeterminacy m + r - 2j = ${fs.redundancy}${fs.redundancy === 0 ? ': the truss is statically determinate, so every member is essential and any single failure is a collapse' : ''}. Each entry comes from an actual re-solve of the damaged truss.</div>`;
+  if (isWright) {
+    const wg = perGroup.wire, sg = perGroup.strut, pg = perGroup.spar;
+    html += `<div><strong>Why the Wright Flyer used crossed wires.</strong> Each bay has two diagonal wires, so the bay shear has two load paths. Under positive lift one diagonal of each pair is in tension and the other is slack; in the linear model both are treated as bars sharing the shear, and the slack one is flagged. On this design: removing a wire is survivable in ${wg ? wg.ok : 0} of ${wg ? wg.total : 0} cases, removing a strut in ${sg ? sg.ok : 0} of ${sg ? sg.total : 0}, removing a spar segment in ${pg ? pg.ok : 0} of ${pg ? pg.total : 0}. ${state.inputs.wireModel === 'linear' ? 'In the linear wire model the surviving wire of a bay is allowed to push; a real wire can only pull, so the crossed pair survives a wire failure only if the surviving wire is the one in tension for this load direction or if the rigging pretension exceeds the compression the model asks for. The Wrights rigged their wires taut for exactly this reason. Switch the wire model to "tension-only" to see the pin-jointed structure without pretension: the taut wire and every strut then become single points of failure.' : 'In the tension-only wire model slack wires are dropped: removing the taut wire of a bay leaves a four-bar mechanism (collapse), and every strut becomes a single point of failure because it is the only vertical tie at its station once the slack wire is gone. With rigging pretension both wires stay active, which is the redundancy the crossed pair is meant to provide.'}</div>`;
+  } else if (fs.redundancy === 0) {
+    html += `<div>A simply supported Warren truss with m = ${model.members.length}, r = ${model.nFixed} and j = ${model.nodes.length} satisfies m + r = 2j exactly: there is no redundant member, so the damage tolerance index is 0 whatever the areas are. Adding crossed diagonals or a second load path is the only way to make such a truss fail-safe.</div>`;
+  }
+  $('fs-summary').innerHTML = html;
+  $('table-fs-groups').innerHTML = `<thead><tr><th>Group</th><th class="num">Members</th><th class="num">Survivable</th><th class="num">Overload</th><th class="num">Collapse</th><th>Worst removal in the group</th></tr></thead><tbody>` +
+    Object.entries(perGroup).map(([g, v]) => `<tr><td>${escapeHTML(g)}</td><td class="num">${v.total}</td><td class="num">${v.ok}</td><td class="num">${v.overload}</td><td class="num">${v.collapse}</td><td>${escapeHTML(v.worst.label)}: ${v.worst.consequence === 'collapse' ? 'collapse' : `max U = ${fmt(v.worst.maxU, 3)}`}</td></tr>`).join('') + '</tbody>';
+  const badgeFor = r => (r.consequence === 'ok' ? badge('ok', 'survivable') : (r.consequence === 'overload' ? badge('warn', 'overload') : badge('bad', 'collapse')));
+  $('table-failsafe').innerHTML = `<thead><tr><th>#</th><th>Removed member</th><th class="num">Baseline U</th><th>Consequence</th><th class="num">Max U after removal</th><th>Governing member after removal</th><th class="num">Ref. node displacement ratio</th><th class="num">Slack wires</th><th>Note</th></tr></thead><tbody>` +
+    fs.rows.map(r => `<tr class="${r.consequence !== 'ok' ? 'active' : ''}"><td class="num">${r.member}</td><td>${escapeHTML(r.label)}</td>${uCell(r.baselineU)}<td>${badgeFor(r)}</td>${uCell(r.maxU)}<td>${escapeHTML(r.governingLabel)}${r.governingMode ? ` (${r.governingMode})` : ''}</td><td class="num">${Number.isFinite(r.refDispRatio) ? fmt(r.refDispRatio, 3) : 'infinite'}</td><td class="num">${r.slackCount}</td><td>${escapeHTML(r.note || '')}</td></tr>`).join('') + '</tbody>';
+}
+
+// ---------------- Part B ----------------
+
+function renderEnvelope() {
+  const env = state.envelope, inp = state.inputs, sz = state.fsd;
+  const canvas = $('plot-cases');
+  if (!env || !env.ok || !inp) {
+    $('env-summary').innerHTML = `<div>${badge('bad', 'not available')} ${env && env.error ? escapeHTML(env.error) : 'The baseline structure must solve first.'}</div>`;
+    $('table-envelope').innerHTML = ''; $('fsd-block').innerHTML = ''; $('table-crosscheck').innerHTML = ''; $('table-compare').innerHTML = ''; $('cases-legend').innerHTML = '';
+    setupCanvas(canvas); setupCanvas($('plot-fsd'));
+    return;
+  }
+  const caseNames = inp.cases.map(c => c.name + (c.mult !== 1 ? ` x ${c.mult}` : ''));
+  const gov = env.governing >= 0 ? model.members[env.governing].label : 'none';
+  const caseCounts = inp.cases.map((c, ci) => env.governingCase.filter((g, i) => g === ci && env.envelope[i] > 0).length);
+  $('env-summary').innerHTML = `<div>${badge(env.feasible ? 'ok' : 'bad', env.feasible ? 'Student design passes every checked case' : 'Student design violates the envelope')} Envelope max U = ${fmt(env.maxU, 3)} (${escapeHTML(gov)}). Per case max U: ${inp.cases.map((c, i) => `${escapeHTML(caseNames[i])}: ${fmt(env.caseMax[i], 3)}`).join('; ')}. Members governed per case: ${inp.cases.map((c, i) => `${escapeHTML(caseNames[i])}: ${caseCounts[i]}`).join('; ')}.</div>`;
+  // grouped bar plot
+  const m = model.members.length;
+  const h = Math.max(260, 70 + 26 * m);
+  canvas.dataset.logicalW = '760'; canvas.dataset.logicalH = String(h); canvas.width = 760; canvas.height = h;
+  const xmax = Math.max(1.25, env.maxU * 1.12);
+  categoryPlot(canvas, model.members.map(mm => mm.label), env.Ucase.map(row => row.map(u => Math.min(u, xmax))), {
+    title: 'Utilization per member and load case (values in the table below; bars clipped at the axis end)', xlabel: 'utilization U (FS included)', xlim: [0, xmax],
+    colors: palette.series, refLines: [{ x: 1, label: 'U = 1', color: C.bad }],
+    valueFmt: () => '',
+  });
+  $('cases-legend').innerHTML = caseNames.map((n, i) => `<span><span class="sw" style="background:${palette.series[i % palette.series.length]}"></span>${escapeHTML(n)}</span>`).join('');
+  // envelope table
+  $('table-envelope').innerHTML = `<thead><tr><th>#</th><th>Member</th>${caseNames.map(n => `<th class="num">${escapeHTML(n)}</th>`).join('')}<th class="num">Envelope</th><th>Governing case</th><th>Mode</th></tr></thead><tbody>` +
+    model.members.map((mm, i) => `<tr><td class="num">${i}</td><td>${escapeHTML(mm.label)}</td>${env.Ucase[i].map(u => uCell(u)).join('')}${uCell(env.envelope[i])}<td>${env.envelope[i] > 0 ? escapeHTML(caseNames[env.governingCase[i]]) : 'zero force'}</td><td>${env.envelope[i] > 0 ? env.envelopeMode[i] : ''}</td></tr>`).join('') + '</tbody>';
+  // sizing block
+  if (!sz || !sz.single.ok) {
+    $('fsd-block').innerHTML = `<div>${badge('bad', 'sizing failed')} ${sz && sz.single.error ? escapeHTML(sz.single.error) : ''}</div>`;
+    $('table-crosscheck').innerHTML = ''; $('table-compare').innerHTML = ''; setupCanvas($('plot-fsd'));
+    return;
+  }
+  const s1 = sz.single;
+  const failingCases = sz.cross.filter(c => !c.ok || c.failing.length > 0);
+  let html = `<div>${badge(s1.verify.feasible ? 'ok' : 'bad', s1.verify.feasible ? 'Checked by fresh model solve' : 'Verification failed')} Fully stressed design for "${escapeHTML(inp.primary)}" only: mass ${fmt(s1.mass, 4)} g (student design ${fmt(mod.massGrams(model, state.A), 4)} g), ${s1.iterations} iteration${s1.iterations !== 1 ? 's' : ''}${s1.converged ? ', converged' : ', not converged within 40 iterations'}${s1.polishScale !== 1 ? `, final uniform scale x ${fmt(s1.polishScale, 5)} to put the governing member at U = 1` : ''}; governing member ${escapeHTML(s1.verify.governing.label)} (${s1.verify.governing.mode}) at U = ${fmt(s1.verify.governing.U, 4)}.</div>`;
+  if (sz.others.length === 0) html += `<div>${badge('info', 'no other case checked')} Check more load cases on the left to run the cross-check.</div>`;
+  else if (failingCases.length === 0) html += `<div>${badge('ok', 'passes every other checked case')} The design sized for the primary case alone also satisfies the ${sz.others.length} other checked case${sz.others.length > 1 ? 's' : ''}.</div>`;
+  else html += `<div>${badge('bad', `fails ${failingCases.length} of ${sz.others.length} other cases`)} Sizing for one case leaves no margin for the others: the members below exceed U = 1 (or the structure becomes a mechanism) when the load case changes.</div>`;
+  $('fsd-block').innerHTML = html;
+  $('table-crosscheck').innerHTML = sz.others.length === 0 ? '' : `<thead><tr><th>Checked under case</th><th class="num">Max U</th><th>Governing member</th><th>Members with U &gt; 1 (U, mode)</th></tr></thead><tbody>` +
+    sz.cross.map(c => `<tr class="${(!c.ok || c.failing.length) ? 'active' : ''}"><td>${escapeHTML(c.name)}</td>${uCell(c.ok ? c.maxU : Infinity)}<td>${c.ok ? escapeHTML(c.governingLabel) : badge('bad', 'mechanism')}</td><td>${c.ok ? (c.failing.length ? c.failing.map(f => `${escapeHTML(f.label)} (${fmt(f.U, 2)}, ${f.mode}${f.slack ? ', slack' : ''})`).join('; ') : badge('ok', 'none')) : escapeHTML(c.error)}</td></tr>`).join('') + '</tbody>';
+  // comparison table
+  $('table-compare').innerHTML = `<thead><tr><th>Design</th><th class="num">Mass (g)</th><th class="num">Max U, primary case</th><th class="num">Max U, envelope</th><th>Envelope check</th><th class="num">Damage tolerance index</th><th>Area range (mm^2)</th></tr></thead><tbody>` +
+    sz.rows.map(r => {
+      const act = r.A.filter(a => a > 0);
+      return `<tr><td>${escapeHTML(r.name)}</td><td class="num">${fmt(r.mass, 4)}</td>${uCell(r.uPrimary)}${uCell(r.uEnv)}<td>${r.verify.feasible ? badge('ok', 'verified: all cases pass') : badge('bad', r.verify.error ? 'mechanism in a case' : 'some U > 1')}</td><td class="num">${Number.isFinite(r.dti) ? pct(r.dti, 0) : 'n/a'}</td><td>${fmt(Math.min(...act), 3)} to ${fmt(Math.max(...act), 4)}</td></tr>`;
+    }).join('') + '</tbody>';
+  // FSD history
+  const series = [{ x: s1.history.map(hh => hh.iter), y: s1.history.map(hh => hh.maxU), label: 'single-case FSD: max U', color: palette.blue, type: 'both', size: 2.5 }];
+  if (sz.env.ok) series.push({ x: sz.env.history.map(hh => hh.iter), y: sz.env.history.map(hh => hh.maxU), label: 'envelope FSD: max U', color: palette.orange, type: 'both', size: 2.5 });
+  linePlot($('plot-fsd'), series, { title: 'Fully stressed design iteration (last point after the uniform polish)', xlabel: 'iteration', ylabel: 'max U', hlines: [{ y: 1, label: 'U = 1', color: C.bad }], yZero: true });
+}
+
+// ---------------- Part C: Monte Carlo ----------------
+
+function mcPayload(inp, A) {
+  return {
+    type: 'run', model, A, loads: inp.primaryLoads, opts: inp.opts, chunk: 400,
+    mc: { n: inp.n, seed: inp.seed, covE: inp.covE, covSigma: inp.covSigma, covLoad: inp.covLoad, sensitivity: true, histBins: 40 },
+  };
+}
+
+function setProgress(done, total, stage) {
+  $('mc-progress').max = Math.max(1, total); $('mc-progress').value = done;
+  $('mc-stage').textContent = total ? `${stage}: ${done} / ${total} solves` : '';
+}
+
+function startMonteCarlo(inp, A) {
+  if (inp.wireModel !== 'tension-only' && state.baseline?.slackCount > 0) { $('status').textContent = 'Reliability withheld: the linear comparison contains compressed wires. Choose the tension-only model or revise the bracing.'; return; }
+  const payload = mcPayload(inp, A);
+  const token = ++mcToken;
+  mcRunning = true;
+  $('btn-cancel').disabled = false;
+  $('mc-status').textContent = `Running ${inp.n} samples x 5 runs (main study plus four sensitivity runs)...`;
+  $('mc-status').classList.remove('error');
+  $('mc-status').dataset.engine = 'starting';
+  setProgress(0, inp.n * 5, 'starting');
+  renderKPIs();
+  const onMessage = data => {
+    if (token !== mcToken) return;
+    if (data.type === 'progress') setProgress(data.done, data.total, data.stage);
+    else if (data.type === 'result') { finishMonteCarlo(data.result); }
+    else if (data.type === 'error') { mcError(data.message); }
+    else if (data.type === 'cancelled') { mcCancelledUI(); }
+  };
+  if (typeof Worker === 'function') {
+    try {
+      const w = new Worker(new URL('./truss-failsafe.worker.js', import.meta.url), { type: 'module' });
+      worker = w;
+      let gotMessage = false;
+      w.onmessage = e => { gotMessage = true; $('mc-status').dataset.engine = 'worker'; onMessage(e.data); };
+      w.onerror = err => {
+        if (token !== mcToken) return;
+        console.warn('Monte Carlo worker failed, falling back to the main thread:', err.message || err);
+        if (err && err.preventDefault) err.preventDefault();
+        w.terminate(); if (worker === w) worker = null;
+        if (!gotMessage) runFallback(payload, token, onMessage); else mcError('worker error: ' + (err.message || 'unknown'));
+      };
+      w.postMessage(payload);
+      return;
+    } catch (err) {
+      console.warn('Worker construction failed, using the main thread:', err.message);
+    }
+  }
+  runFallback(payload, token, onMessage);
+}
+
+function runFallback(payload, token, onMessage) {
+  $('mc-status').dataset.engine = 'main-thread';
+  let study;
+  try { study = mod.createReliabilityStudy(payload.model, payload.A, payload.loads, payload.opts, payload.mc); }
+  catch (err) { onMessage({ type: 'error', message: err.message }); return; }
+  const tick = () => {
+    if (token !== mcToken || !mcRunning) return;
+    try {
+      study.step(payload.chunk);
+      onMessage({ type: 'progress', done: study.done, total: study.total, stage: study.stageLabel });
+      if (!study.finished) fallbackTimer = setTimeout(tick, 0);
+      else onMessage({ type: 'result', result: study.result() });
+    } catch (err) { onMessage({ type: 'error', message: err.message }); }
+  };
+  fallbackTimer = setTimeout(tick, 0);
+}
+
+function stopMonteCarlo(reason) {
+  mcToken++;
+  if (worker) { worker.terminate(); worker = null; }
+  if (fallbackTimer) { clearTimeout(fallbackTimer); fallbackTimer = null; }
+  if (mcRunning && reason === 'cancel') mcCancelledUI();
+  mcRunning = false;
+  $('btn-cancel').disabled = true;
+}
+
+function mcCancelledUI() {
+  mcRunning = false;
+  $('btn-cancel').disabled = true;
+  $('mc-status').textContent = 'Monte Carlo cancelled. Press "Run all parts" to start again.';
+  $('mc-stage').textContent = '';
+}
+
+function mcError(message) {
+  mcRunning = false;
+  $('btn-cancel').disabled = true;
+  $('mc-status').textContent = 'Monte Carlo error: ' + message;
+  $('mc-status').classList.add('error');
+  renderKPIs();
+}
+
+function finishMonteCarlo(result) {
+  mcRunning = false;
+  $('btn-cancel').disabled = true;
+  if (worker) { worker.terminate(); worker = null; }
+  state.mc = result;
+  setProgress(result.n * result.stages.length, result.n * result.stages.length, 'finished');
+  renderKPIs();
+  renderMC();
+}
+
+function renderMC() {
+  const mc = state.mc;
+  if (!mc) {
+    if (!mcRunning) { $('mc-status').textContent = state.baseline && state.baseline.ok ? 'Monte Carlo not run yet.' : 'Monte Carlo skipped: the baseline structure must solve first.'; }
+    $('mc-kpis').innerHTML = ''; $('mc-check').innerHTML = ''; $('table-sens').innerHTML = ''; $('table-cf').innerHTML = ''; $('table-gov').innerHTML = ''; $('cf-summary').innerHTML = '';
+    setupCanvas($('plot-hist')); setupCanvas($('plot-conv'));
+    return;
+  }
+  const m = mc.main, FS = mc.FS, det = mc.deterministic, chk = mc.deterministicCheck;
+  const engine = $('mc-status').dataset.engine;
+  $('mc-status').innerHTML = `${badge('ok', 'completed')} P_f (limit state, max U > FS = ${fmt(FS, 3)}) = ${pct(m.pfLimit, 3)} with 95% CI ${pct(m.ciLimit[0], 3)} to ${pct(m.ciLimit[1], 3)}, beta = ${betaText(m.betaLimit)}; P(design criterion violated, max U > 1) = ${pct(m.pfDesign, 2)}; ${m.n} samples, seed ${mc.seed}, ${engine === 'worker' ? 'computed in a Web Worker' : 'computed on the main thread in chunks'}.`;
+  $('mc-kpis').innerHTML = [
+    kpi('Mean of max U over samples', fmt(m.maxUmean, 3), `std ${fmt(m.maxUstd, 3)}; range ${fmt(m.maxUmin, 3)} to ${fmt(m.maxUmax, 3)}`),
+    kpi('Deterministic max U (mean properties)', fmt(det.maxU, 3), `${escapeHTML(det.governingLabel)}, ${det.governingMode}`, det.feasible ? 'ok' : 'bad'),
+    kpi('beta, limit state', betaText(m.betaLimit), `from the CI: ${betaText(m.betaLimitRange[0])} to ${betaText(m.betaLimitRange[1])}`),
+    kpi('Samples with a slack wire', pct(m.slackSamples / m.n, 1), 'linear-model compression in a tension-only wire'),
+  ].join('');
+  $('mc-check').innerHTML = `<div>${badge(chk.exact ? 'ok' : 'bad', chk.exact ? 'Deterministic check passed' : 'Deterministic check failed')} The run with every CoV set to zero returns max U = ${fmt(chk.mcMaxU, 6)} for every sample; the plain solver gives ${fmt(chk.solverMaxU, 6)} (${chk.exact ? 'identical' : 'different'}). The deterministic design is ${det.feasible ? 'feasible' : 'infeasible'} with mean properties, so that run counts P(design criterion violated) = ${pct(mc.deterministicStage.pfDesign, 0)} and P_f (limit state) = ${pct(mc.deterministicStage.pfLimit, 0)}.</div>`;
+  drawHistogram($('plot-hist'), mc);
+  drawConvergence($('plot-conv'), mc);
+  // sensitivity table
+  $('table-sens').innerHTML = `<thead><tr><th>Run</th><th class="num">P_f limit state</th><th class="num">Change vs full scatter</th><th class="num">P(design violated)</th><th class="num">Change</th><th class="num">std of max U</th><th class="num">beta limit state</th></tr></thead><tbody>` +
+    `<tr><td>all scatter on (reference)</td><td class="num">${pct(m.pfLimit, 3)}</td><td class="num"></td><td class="num">${pct(m.pfDesign, 2)}</td><td class="num"></td><td class="num">${fmt(m.maxUstd, 4)}</td><td class="num">${betaText(m.betaLimit)}</td></tr>` +
+    mc.sensitivity.map(s => `<tr><td>${escapeHTML(s.label)}</td><td class="num">${pct(s.pfLimit, 3)}</td><td class="num">${s.deltaLimit > 0 ? '-' : (s.deltaLimit < 0 ? '+' : '')}${pct(Math.abs(s.deltaLimit), 3)}</td><td class="num">${pct(s.pfDesign, 2)}</td><td class="num">${s.deltaDesign > 0 ? '-' : (s.deltaDesign < 0 ? '+' : '')}${pct(Math.abs(s.deltaDesign), 2)}</td><td class="num">${fmt(s.maxUstd, 4)}</td><td class="num">${betaText(s.betaLimit)}</td></tr>`).join('') + '</tbody>';
+  const dom = mc.sensitivity.slice(0, 3).reduce((best, s) => (best === null || s.deltaLimit > best.deltaLimit ? s : best), null);
+  // closed form
+  const cf = mc.closedForm;
+  if (cf) {
+    const inB = m.pfLimit >= cf.boundsLimit[0] - 1e-12 && m.pfLimit <= cf.boundsLimit[1] + 1e-12;
+    const ciOverlap = m.ciLimit[1] >= cf.boundsLimit[0] && m.ciLimit[0] <= cf.boundsLimit[1];
+    $('cf-summary').innerHTML = `<div>${badge(inB || ciOverlap ? 'ok' : 'warn', inB ? 'Monte Carlo inside the classical bounds' : (ciOverlap ? 'CI overlaps the classical bounds' : 'outside the classical bounds'))} Limit state: max_i P_i = ${pct(cf.boundsLimit[0], 4)} &lt;= P_f &lt;= sum_i P_i = ${pct(cf.boundsLimit[1], 4)} (beta between ${betaText(cf.betaBoundsLimit[0])} and ${betaText(cf.betaBoundsLimit[1])}); Monte Carlo ${pct(m.pfLimit, 4)}. Design criterion: bounds ${pct(cf.boundsDesign[0], 2)} to ${pct(cf.boundsDesign[1], 2)}, Monte Carlo ${pct(m.pfDesign, 2)}. The closed form takes the member forces as fixed (exact for a determinate truss) and uses the strength CoV for stress-governed members and the modulus CoV for buckling-governed members; the worst member by closed form is ${escapeHTML(cf.worstLimit ? cf.worstLimit.label : 'none')}. ${dom ? `Largest sensitivity: switching off "${escapeHTML(dom.label.replace(' off', ''))}" lowers P_f by ${pct(dom.deltaLimit, 3)}.` : ''}</div>`;
+    $('table-cf').innerHTML = `<thead><tr><th>Member</th><th class="num">U (mean properties)</th><th>Mode</th><th class="num">V_R</th><th class="num">V_S</th><th class="num">beta limit</th><th class="num">P_i limit</th><th class="num">beta design</th><th class="num">P_i design</th></tr></thead><tbody>` +
+      cf.perMember.slice(0, 8).map(r => `<tr><td>${escapeHTML(r.label)}</td>${uCell(r.U)}<td>${r.mode}</td><td class="num">${fmt(r.VR, 3)}</td><td class="num">${fmt(r.VS, 3)}</td><td class="num">${betaText(r.betaLimit)}</td><td class="num">${pct(r.pfLimit, 4)}</td><td class="num">${betaText(r.betaDesign)}</td><td class="num">${pct(r.pfDesign, 2)}</td></tr>`).join('') + '</tbody>';
+  } else { $('cf-summary').innerHTML = ''; $('table-cf').innerHTML = ''; }
+  // governing frequency
+  const govRows = m.governingCounts.map((cnt, i) => ({ i, cnt })).filter(r => r.cnt > 0).sort((p, q) => q.cnt - p.cnt).slice(0, 6);
+  $('table-gov').innerHTML = `<thead><tr><th>Member</th><th class="num">Governs in</th><th class="num">U with mean properties</th></tr></thead><tbody>` +
+    govRows.map(r => `<tr><td>${escapeHTML(model.members[r.i].label)}</td><td class="num">${pct(r.cnt / m.n, 1)} of samples</td>${uCell(det.U[r.i])}</tr>`).join('') + '</tbody>';
+}
+
+function drawHistogram(canvas, mc) {
+  const { edges, counts } = mc.histogram, FS = mc.FS;
+  const xs = [], ys = [];
+  for (let b = 0; b < counts.length; b++) { xs.push(edges[b], edges[b + 1]); ys.push(counts[b], counts[b]); }
+  const plot = linePlot(canvas, [{ x: xs, y: ys, label: `max U per sample (n = ${mc.n})`, color: palette.blue, width: 1.5 }], {
+    title: 'Binned count profile of maximum utilization across members', xlabel: 'max U (FS included)', ylabel: 'samples', yZero: true,
+    markers: [{ x: 1, color: C.warn }, { x: FS, color: C.bad }],
+  });
+  const { ctx, X, Y, frame } = plot;
+  ctx.save(); ctx.beginPath(); ctx.rect(frame.left, frame.top, frame.pw, frame.ph); ctx.clip();
+  // marker labels on two lines so they never overlap each other
+  ctx.font = '12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
+  ctx.textBaseline = 'top';
+  ctx.fillStyle = C.warn; ctx.textAlign = X(1) > frame.left + frame.pw / 2 ? 'right' : 'left';
+  ctx.fillText('U = 1: design criterion', X(1) + (ctx.textAlign === 'left' ? 4 : -4), frame.top + 4);
+  ctx.fillStyle = C.bad; ctx.textAlign = X(FS) > frame.left + frame.pw / 2 ? 'right' : 'left';
+  ctx.fillText(`U = FS = ${fmt(FS, 3)}: limit state (actual stress or load exceeds the actual capacity)`, X(FS) + (ctx.textAlign === 'left' ? 4 : -4), frame.top + 20);
+  ctx.restore();
+}
+
+function drawConvergence(canvas, mc) {
+  const conv = mc.convergence, m = mc.main;
+  const yMax = Math.max(m.ciLimit[1] * 1.15, ...conv.pfLimit) || 0.001;
+  const narrow = (m.ciLimit[1] - m.ciLimit[0]) < 0.04 * yMax;
+  linePlot(canvas, [
+    { x: conv.n, y: conv.pfLimit, label: 'running P_f (limit state)', color: palette.red, width: 2 },
+  ], {
+    title: 'Convergence of the failure probability estimate with the number of samples', xlabel: 'samples', ylabel: 'P_f', ylim: [0, yMax * 1.05], xlim: [0, mc.n],
+    hlines: [{ y: m.ciLimit[0], label: narrow ? '' : 'final 95% CI lower', color: palette.gray }, { y: m.ciLimit[1], label: narrow ? 'final 95% CI (narrow)' : 'final 95% CI upper', color: palette.gray }],
+  });
+}
+
+// ---------------- CSV exports ----------------
+
+function csvFailSafe() {
+  const fs = state.failsafe; if (!fs || !fs.ok) return;
+  const rows = [['member_index', 'member', 'group', 'baseline_U', 'consequence', 'max_U_after_removal', 'governing_member_after', 'ref_node_displacement_ratio', 'slack_wires', 'note']];
+  for (const r of fs.rows) rows.push([r.member, r.label, r.group, r.baselineU, r.consequence, Number.isFinite(r.maxU) ? r.maxU : 'collapse', r.governingLabel, Number.isFinite(r.refDispRatio) ? r.refDispRatio : 'infinite', r.slackCount, r.note || '']);
+  downloadCSV(`${presetKey}-failsafe.csv`, rows);
+}
+function csvEnvelope() {
+  const env = state.envelope, inp = state.inputs; if (!env || !env.ok) return;
+  const rows = [['member_index', 'member', 'group', 'area_mm2', ...inp.cases.map(c => `U_${c.name}${c.mult !== 1 ? `_x${c.mult}` : ''}`), 'envelope_U', 'governing_case', 'mode']];
+  model.members.forEach((m, i) => rows.push([i, m.label, m.group, state.A[i], ...env.Ucase[i], env.envelope[i], inp.cases[env.governingCase[i]].name, env.envelopeMode[i]]));
+  if (state.fsd && state.fsd.single.ok) {
+    rows.push([]); rows.push(['member_index', 'member', 'A_single_case_FSD_mm2', state.fsd.env.ok ? 'A_envelope_FSD_mm2' : '']);
+    model.members.forEach((m, i) => rows.push([i, m.label, state.fsd.single.A[i], state.fsd.env.ok ? state.fsd.env.A[i] : '']));
+  }
+  downloadCSV(`${presetKey}-envelope.csv`, rows);
+}
+function csvMC() {
+  const mc = state.mc; if (!mc) return;
+  const rows = [['histogram_bin_lower_U', 'histogram_bin_upper_U', 'count']];
+  mc.histogram.counts.forEach((c, b) => rows.push([mc.histogram.edges[b], mc.histogram.edges[b + 1], c]));
+  rows.push([]); rows.push(['samples', 'running_Pf_limit_state', 'running_P_design_violated']);
+  mc.convergence.n.forEach((n, k) => rows.push([n, mc.convergence.pfLimit[k], mc.convergence.pfDesign[k]]));
+  rows.push([]); rows.push(['run', 'Pf_limit', 'CI_lo', 'CI_hi', 'beta_limit', 'P_design', 'CI_lo', 'CI_hi']);
+  mc.stages.forEach(s => rows.push([s.label, s.pfLimit, s.ciLimit[0], s.ciLimit[1], s.betaLimit, s.pfDesign, s.ciDesign[0], s.ciDesign[1]]));
+  downloadCSV(`${presetKey}-reliability.csv`, rows);
+}
+
+// ---------------- sizing helper button ----------------
+
+function sizeGroups() {
+  const st = $('status');
+  try {
+    st.classList.remove('error');
+    const inp = readInputs();
+    let ga = Object.assign({}, inp.groupAreas);
+    let res = null;
+    for (let pass = 0; pass < 5; pass++) {
+      res = mod.sizeGroupAreas(model, ga, [inp.primaryCase], inp.opts);
+      if (!res.ok) throw new Error(res.error);
+      // round up to 5 significant digits so the inputs stay readable, then re-verify
+      ga = {};
+      for (const g of model.groupKeys) { const v = res.groupAreas[g]; const p = Math.pow(10, Math.floor(Math.log10(v)) - 4); ga[g] = Math.ceil(v / p) * p; }
+      const ver = mod.verifyDesign(model, mod.memberAreasFromGroups(model, ga), [inp.primaryCase], inp.opts);
+      if (ver.feasible) break;
+    }
+    for (const g of model.groupKeys) $(`area-${g}`).value = String(Number(ga[g].toPrecision(6)));
+    run();
+    st.innerHTML += ` ${badge('info', 'group areas sized for the primary case')}`;
+  } catch (err) {
+    st.textContent = 'Error: ' + err.message; st.classList.add('error'); console.error(err);
+  }
+}
+
+// ---------------- wiring ----------------
+
+$('btn-run').addEventListener('click', run);
+$('btn-reset').addEventListener('click', () => { buildInputs(presetKey); run(); });
+$('btn-cancel').addEventListener('click', () => stopMonteCarlo('cancel'));
+$('btn-size').addEventListener('click', sizeGroups);
+$('in-preset').addEventListener('change', e => { buildInputs(e.target.value); run(); });
+$('btn-csv-failsafe').addEventListener('click', csvFailSafe);
+$('btn-csv-envelope').addEventListener('click', csvEnvelope);
+$('btn-csv-mc').addEventListener('click', csvMC);
+document.querySelectorAll('input[name="colormode"]').forEach(r => r.addEventListener('change', e => { state.colorMode = e.target.value; drawTruss(); }));
+$('plot-truss').addEventListener('mousemove', probe);
+$('plot-truss').addEventListener('mouseleave', () => { $('probe').textContent = 'Move the pointer over a member for its details.'; });
+
+buildInputs('wright-bay');
+run();
+</script>
+</body>
+</html>

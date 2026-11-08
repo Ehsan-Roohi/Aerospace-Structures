@@ -1,0 +1,135 @@
+{
+  "application": "MIE 446 Optimization Lab",
+  "version": "0.1.1",
+  "date": "2026-11-08",
+  "location": "docs/wing-panel-stress-analyzer/optimization/",
+  "relationship_to_existing_apps": "Additive. Wing AeroStruct (index.html), Wing Lab, Truss Lab, their solvers and RELEASE.json are unchanged. No page in this folder reads or replaces their solvers.",
+  "scope": "Ten self-contained educational pages on simplified linear-elastic models (Euler-Bernoulli beams, 2D direct-stiffness trusses, a thin-walled single-cell wing box). Deterministic optimizers only; every recommended design is re-solved from scratch by the exact solver of its page before it is shown. Indicative checks (Euler and plate buckling with assumed boundary conditions) are labelled screens. No certified strength, stability or fatigue statements; representative educational material cards; no experimental validation.",
+  "modules": [
+    {
+      "folder": "beam-section-map",
+      "title": "Beam Section Design-Space Map",
+      "tests": 16,
+      "classical_checks": [
+        "P L^3/(3 E I)",
+        "5 w L^4/(384 E I)",
+        "h* = sqrt(6 M FS/(b sigma))",
+        "Ashby indices E^(1/2)/rho and sigma^(2/3)/rho"
+      ]
+    },
+    {
+      "folder": "beam-fsd",
+      "title": "Fully Stressed Tapered Beam",
+      "tests": 17,
+      "classical_checks": [
+        "Galileo cantilever h(x) = h_root sqrt(1 - x/L)",
+        "FSD/prismatic mass ratio 2/3 (cantilever tip load) and pi/4 (simply supported UDL)",
+        "propped cantilever 3wL/8, wL^2/8"
+      ]
+    },
+    {
+      "folder": "beam-supports",
+      "title": "Support Placement and Worst-Case Load Position",
+      "tests": 17,
+      "classical_checks": [
+        "optimum overhang a = 0.20711 L",
+        "two-span hogging moment w L^2/32 and reactions 3/16, 10/16, 3/16 wL",
+        "midspan moment influence line peak L/4"
+      ]
+    },
+    {
+      "folder": "truss-sizing",
+      "title": "Truss Member Sizing: Fully Stressed and Gradient Methods",
+      "tests": 13,
+      "classical_checks": [
+        "two-bar truss N = P/(2 sin theta)",
+        "FSD equals the gradient optimum on the statically determinate Warren truss",
+        "analytical sensitivities match central differences to 1e-4"
+      ]
+    },
+    {
+      "folder": "truss-topology",
+      "title": "Ground-Structure Topology Optimization",
+      "tests": 14,
+      "classical_checks": [
+        "Dorn, Gomory and Greenberg LP returns the two-bar truss with V = P l^2/(h sigma)",
+        "Michell identity C E/(sigma^2 V) = 1 for the fully stressed LP layout",
+        "textbook LP and Beale cycling example"
+      ]
+    },
+    {
+      "folder": "truss-failsafe",
+      "title": "Truss Redundancy, Load Cases and Reliability",
+      "tests": 20,
+      "classical_checks": [
+        "static indeterminacy m + r - 2j (Wright bay 5, Warren 0)",
+        "lognormal reliability beta = 2.874 at U = 1, FS = 1.5, CoV 0.10",
+        "Phi^-1(0.975) = 1.95996"
+      ]
+    },
+    {
+      "folder": "truss-shape",
+      "title": "Truss Shape Optimization: Moving the Nodes",
+      "tests": 19,
+      "classical_checks": [
+        "Rosenbrock minimum (1, 1)",
+        "CMA-ES reproduces Hansen's purecmaes to 1e-12",
+        "sweep and optimizer agree on the Warren height optimum"
+      ]
+    },
+    {
+      "folder": "wingbox-sensitivity",
+      "title": "Wing Box Layout: Sensitivities, Active Constraints and Shadow Prices",
+      "tests": 18,
+      "classical_checks": [
+        "elliptic lift root moment 4 s L/(3 pi)",
+        "w s^4/(8 E I)",
+        "Bredt J = 4 A^2/(perimeter/t)",
+        "plate buckling 25.85 MPa reference",
+        "KKT multiplier lambda = 1 for min x + y s.t. x y >= 1"
+      ]
+    },
+    {
+      "folder": "pareto-nsga2",
+      "title": "Multi-Objective Design: Pareto Fronts with NSGA-II",
+      "tests": 26,
+      "classical_checks": [
+        "ZDT1 front f2 = 1 - sqrt(f1) within 0.0012 mean distance",
+        "hypervolume of {(1,2),(2,1)} with reference (3,3) equals 3",
+        "closed-form beam Pareto front"
+      ]
+    },
+    {
+      "folder": "constrained-bo",
+      "title": "Constrained Bayesian Optimization for Expensive Solves",
+      "tests": 26,
+      "classical_checks": [
+        "GP interpolates training data",
+        "EI closed form equals numerical integration",
+        "rect spar optimum h = cbrt(4 k P L^2/(E b)) reproduced within 0.07 percent"
+      ]
+    }
+  ],
+  "tests": {
+    "runner": "node validation/run-tests.cjs (Node 22)",
+    "total": 197,
+    "passed": 197,
+    "failed": 0,
+    "originalBeforeReview": 186,
+    "independentValidationGroups": 11
+  },
+  "browser_smoke_test": {
+    "tool": "In-app browser, observed all ten pages and hub; actual default campaigns completed",
+    "result": "Default pages executed; follow-up checks cover invalid input and compressed-wire refusal. Original export smoke script was not included."
+  },
+  "review_status": "Independent source, analytic, randomized and browser review; see validation/REVIEW.json. No experimental or commercial FEA validation.",
+  "known_limitations": [
+    "Linear elastic, small displacement models; pin-jointed trusses; single-cell thin-walled wing box without aeroelastic feedback.",
+    "Buckling checks are screens with assumed effective length or edge conditions.",
+    "CSV and PNG downloads need a normal browser origin (GitHub Pages or a local server); they are blocked inside the Claude artifact viewer frame.",
+    "ES module pages do not run from file:// in Chrome; serve the folder over HTTP.",
+    "Singular or cycling tension-only active sets are withheld, not stabilized with compressive cables. A withheld branch is not a proof that every possible nonlinear equilibrium is impossible.",
+    "Member sizing defaults to Warren. Compressed wires in any bilateral linear comparison prevent physical design admission; reliability is withheld."
+  ],
+  "checksums": "checksums.json"
+}

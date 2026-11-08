@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Beam Section Design-Space Map · MIE 446 Optimization Lab</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="../shared/lab.css">
+<style>
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 0.84rem; color: var(--muted); margin: -4px 0 8px; }
+  .legend .sw { display: inline-block; width: 22px; height: 0; border-top: 3px solid; vertical-align: middle; margin-right: 6px; }
+  .legend .sw.dash { border-top-style: dashed; }
+  .legend .mk { display: inline-block; width: 11px; height: 11px; border: 1.5px solid var(--ink); vertical-align: middle; margin-right: 6px; background: #fff; }
+  .legend .mk.circle { border-radius: 50%; }
+  .legend .mk.star { background: #f2c14e; border-radius: 2px; transform: rotate(45deg); width: 9px; height: 9px; }
+  .legend .mk.square { background: #8ec5ff; }
+  .legend .mk.hatch { background: repeating-linear-gradient(135deg, #fff 0 3px, #444 3px 4px); }
+  .formula { font-family: var(--mono); font-size: 0.84rem; background: var(--page); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; margin: 6px 0; overflow-x: auto; }
+  .check-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  @media (max-width: 700px) { .check-grid { grid-template-columns: 1fr; } }
+  .check-box { background: var(--page); border: 1px solid var(--line); border-radius: var(--radius); padding: 8px 10px; font-size: 0.88rem; }
+  .check-box h4 { margin: 0 0 4px; font-size: 0.86rem; color: var(--muted); font-weight: 650; }
+  .progress-row { display: flex; align-items: center; gap: 10px; margin: 6px 0 10px; }
+  .progress-row progress { flex: 1; }
+  .field input[type="checkbox"] { width: 18px; height: 18px; justify-self: start; }
+  .kpi .value .badge { margin-left: 6px; }
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+<header class="lab-header">
+  <div class="crumbs"><a href="../index.html">Optimization Lab</a> · <a href="https://ehsan-roohi.github.io/Aerospace-Structures/wing-panel-stress-analyzer/#beam">Beam</a> · <a href="https://ehsan-roohi.github.io/Aerospace-Structures/wing-panel-stress-analyzer/truss-lab.html">Truss Lab</a> · <a href="https://ehsan-roohi.github.io/Aerospace-Structures/wing-panel-stress-analyzer/">Wing AeroStruct</a></div>
+  <h1>Beam Section Design-Space Map</h1>
+  <span class="version">beam-section-map 0.1.1</span>
+</header>
+
+<main class="lab-main">
+  <div class="scope">
+    <strong>Scope.</strong> This page places the beam cross-section you sized by hand on a map of the whole design space and shows which constraint governs, how far your design is from the minimum-mass design, and the mass against deflection trade-off.
+    The model is an Euler-Bernoulli beam (linear elastic, small deflection, constant section, one static load) evaluated with closed-form moment and deflection expressions. Only three checks are made: bending stress against the allowable stress divided by the factor of safety (FS), maximum deflection against L/k, and a minimum printable wall or dimension t_min.
+    It does not check shear, lateral-torsional or local buckling, fatigue or any certified strength, and it is independent of the Wing AeroStruct solver. Every optimum shown here is re-solved from scratch with the exact closed forms before it is displayed; nothing on this page is a certified strength or safety statement.
+  </div>
+
+  <div class="grid">
+    <section>
+      <div class="panel">
+        <h2>Inputs</h2>
+        <div class="field"><label for="in-preset">Beam preset</label><select id="in-preset"></select></div>
+
+        <h3>Beam and load</h3>
+        <div class="field"><label for="in-support">Support</label>
+          <select id="in-support"><option value="cantilever">Cantilever, clamped at x = 0</option><option value="simply">Simply supported</option></select></div>
+        <div class="field"><label for="in-L">Length L <span class="unit">mm</span></label><input id="in-L" type="number" min="1" step="10"></div>
+        <div class="field"><label for="in-loadtype">Load type</label>
+          <select id="in-loadtype"><option value="point">Point load P at x = a</option><option value="udl">Uniform load w over the span</option></select></div>
+        <div class="field" id="f-P"><label for="in-P">Point load P <span class="unit">N</span></label><input id="in-P" type="number" step="1"></div>
+        <div class="field" id="f-a"><label for="in-a">Load position a from x = 0 <span class="unit">mm</span></label><input id="in-a" type="number" step="10" min="0"></div>
+        <div class="field hidden" id="f-w"><label for="in-w">Uniform load w <span class="unit">N/mm</span></label><input id="in-w" type="number" step="0.1"></div>
+
+        <h3>Material and limits</h3>
+        <div class="field"><label for="in-material">Material card</label><select id="in-material"></select></div>
+        <div class="field"><label for="in-E">Young modulus E <span class="unit">MPa</span></label><input id="in-E" type="number" step="100" min="1"></div>
+        <div class="field"><label for="in-sigma">Allowable stress <span class="unit">MPa</span></label><input id="in-sigma" type="number" step="1" min="0.1"></div>
+        <div class="field"><label for="in-rho">Density <span class="unit">g/cm^3</span></label><input id="in-rho" type="number" step="0.01" min="0.01"></div>
+        <div class="field"><label for="in-FS">Factor of safety FS</label><input id="in-FS" type="number" step="0.1" min="0.1"></div>
+        <div class="field"><label for="in-k">Deflection limit ratio k (limit = L / k)</label><input id="in-k" type="number" step="10" min="1"></div>
+        <div class="field"><label for="in-tmin">Minimum printable thickness t_min <span class="unit">mm</span></label><input id="in-tmin" type="number" step="0.1" min="0"></div>
+
+        <h3>Your section (the design you sized by hand)</h3>
+        <div class="field"><label for="in-family">Section family</label><select id="in-family"></select></div>
+        <div class="field hidden" id="f-beta"><label for="in-beta">Box width ratio beta (b = beta h)</label><input id="in-beta" type="number" step="0.05" min="0.05"></div>
+        <div class="field"><label for="in-x" id="lbl-x">width b <span class="unit">mm</span></label><input id="in-x" type="number" step="0.5" min="0.01"></div>
+        <div class="field"><label for="in-y" id="lbl-y">depth h <span class="unit">mm</span></label><input id="in-y" type="number" step="0.5" min="0.01"></div>
+
+        <h3>Map ranges</h3>
+        <div class="field"><label for="in-auto">Derive the ranges from my design</label><input id="in-auto" type="checkbox" checked></div>
+        <div class="field"><label for="in-xmin" id="lbl-xmin">b minimum <span class="unit">mm</span></label><input id="in-xmin" type="number" step="0.5" min="0.01"></div>
+        <div class="field"><label for="in-xmax" id="lbl-xmax">b maximum <span class="unit">mm</span></label><input id="in-xmax" type="number" step="0.5" min="0.01"></div>
+        <div class="field"><label for="in-ymin" id="lbl-ymin">h minimum <span class="unit">mm</span></label><input id="in-ymin" type="number" step="0.5" min="0.01"></div>
+        <div class="field"><label for="in-ymax" id="lbl-ymax">h maximum <span class="unit">mm</span></label><input id="in-ymax" type="number" step="0.5" min="0.01"></div>
+        <div class="field"><label for="in-n">Grid points per axis (40 to 160)</label><input id="in-n" type="number" min="40" max="160" step="10" value="90"></div>
+
+        <div class="btn-row">
+          <button class="btn" id="btn-run">Solve and optimize</button>
+          <button class="btn secondary" id="btn-reset">Reset</button>
+        </div>
+        <div class="status" id="status"></div>
+      </div>
+
+      <div class="panel">
+        <h2>How it works</h2>
+        <details class="help" open>
+          <summary>Model and equations</summary>
+          <div class="body">
+            <p>Positions are measured from x = 0, the clamp of a cantilever or the left support of a simply supported beam. Loads are entered as magnitudes: in this linear model a load acting up or down gives the same utilizations, so the sign convention (y up, loads positive upward, sagging moment positive) does not change any number on this page. The maximum bending moment M_max and the maximum deflection v_max come from the classical closed forms (a is the load position, b = L minus a the distance to the other support, w the load per unit length, E the Young modulus, I the second moment of area):</p>
+            <div class="formula">cantilever, point load at a:   M_max = P a (at the clamp),   v_tip = P a^2 (3L - a) / (6 E I)<br>
+cantilever, uniform load:     M_max = w L^2 / 2,            v_tip = w L^4 / (8 E I)<br>
+simply supported, point load: M_max = P a b / L,            v_max = P b (L^2 - b^2)^(3/2) / (9 sqrt(3) L E I),  b = distance to the nearer support<br>
+simply supported, uniform:    M_max = w L^2 / 8,            v_max = 5 w L^4 / (384 E I)</div>
+            <p>With the extreme-fibre distance c and the area A of the section: sigma_max = M_max c / I, and the three utilizations are</p>
+            <div class="formula">U_stress = sigma_max FS / sigma_allow,   U_defl = v_max / (L / k),   U_thick = t_min / (smallest wall or dimension)<br>
+mass (g) = A (mm^2) L (mm) rho (g/cm^3) / 1000</div>
+            <p>A design is feasible when every U is at most 1. A utilization between 0.9 and 1 is flagged as near the limit. The section families are a solid rectangle (b, h), a circular tube (outer diameter D, wall t) and a rectangular box (depth h, wall t, width b = beta h).</p>
+          </div>
+        </details>
+        <details class="help">
+          <summary>Algorithm: map, refinement, verification</summary>
+          <div class="body">
+            <p><strong>Map.</strong> The two section parameters are sampled on an n by n grid over the ranges in the inputs and every cell is evaluated exactly with the closed forms above. The colour is the mass, the white lines are iso-mass contours, and the coloured lines are the three constraint boundaries U = 1 (red: stress, orange: deflection, grey: minimum thickness). Hatched cells violate at least one constraint. Cells where the geometry is impossible (for example a tube wall thicker than D/2) are drawn light grey.</p>
+            <p><strong>Refinement.</strong> The lightest feasible grid cell is the starting point of a boundary-following pattern search. Because every utilization decreases monotonically when a section grows, for any trial value of the first parameter the smallest feasible second parameter is found exactly by bisection on max(U) = 1. A compass search with step halving then moves the first parameter until no step (down to one ten-millionth of the range) lowers the mass. All trial points are feasible by construction, so no penalty function is needed. The search is deterministic and always gives the same answer for the same inputs.</p>
+            <p><strong>Verification.</strong> The refined design is then re-solved from scratch with the exact closed forms and all three constraints are re-checked. Only that verified result is displayed, with the badge "Checked by fresh model solve". If the re-check ever failed, the page would fall back to the best grid cell and say so. The "nearest lighter feasible design" is the feasible grid cell lighter than your design that minimizes the Euclidean distance in parameter space, with each parameter normalized by its map range; it is verified the same way.</p>
+            <p><strong>Governing constraint.</strong> At the optimum the constraint with the utilization closest to 1 governs. The minimum thickness is often active at the same time, because for all three families the lightest section is the thinnest one the printer allows, made as deep (or as large in diameter) as the stress or deflection boundary requires. When the optimum sits on an edge of your map range the page says so; widening the range may then lower the mass further.</p>
+          </div>
+        </details>
+        <details class="help">
+          <summary>Pareto panel</summary>
+          <div class="body">
+            <p>The mass against deflection panel treats deflection as a second objective instead of a constraint. All grid cells that satisfy the stress and minimum-thickness constraints are candidates. A candidate is non-dominated (on the Pareto front) when no other candidate is both lighter and stiffer. The front is found by sorting the candidates by mass and keeping every point whose deflection is lower than all lighter points. Your design is "dominated by N designs" when N candidates are at least as light and at least as stiff, with one of the two strictly better. The orange dashed line is your deflection limit L/k: front points below it are feasible designs.</p>
+          </div>
+        </details>
+        <details class="help">
+          <summary>Material comparison and performance indices</summary>
+          <div class="body">
+            <p>For every material card the same grid, refinement and verification are run with that card's E, allowable stress and density, over the same map range, so the minimum masses are directly comparable (a card with no feasible design inside the range is reported as such). The two classical Ashby indices for a beam of fixed length are also listed: E^(1/2)/rho for a stiffness-limited beam and sigma_allow^(2/3)/rho for a strength-limited beam, each normalized to the best card.</p>
+            <p>The indices assume that the section can be scaled freely at a fixed shape, with no minimum thickness and no map limits. The exact minimum masses include t_min, the section family and the map range, so the two rankings can differ. Comparing the index ranking with the exact ranking is the point of the panel. The steel bracing-wire card is a tension-member card and is included only for completeness.</p>
+          </div>
+        </details>
+        <details class="help">
+          <summary>Limitations and references</summary>
+          <div class="body">
+            <ul>
+              <li>No shear deformation, no shear stress check, no self-weight, a single static load case and a constant section along the span.</li>
+              <li>No lateral-torsional buckling check: the model rewards very deep, narrow rectangles. No local buckling check: the model rewards very thin walls. The slenderness ratio shown next to each design is a screening number only, not a pass or a fail.</li>
+              <li>The material cards are representative educational values, not certified allowables. Printed parts are anisotropic; use measured coupon data for real work.</li>
+              <li>The optimum is the lightest design inside the map range. If it sits on a range edge, the true unconstrained optimum of this model lies outside the map.</li>
+              <li>Closed forms: J. M. Gere and S. P. Timoshenko, Mechanics of Materials (deflection tables), and W. C. Young and R. G. Budynas, Roark's Formulas for Stress and Strain. Material indices: M. F. Ashby, Materials Selection in Mechanical Design, chapter on material indices for beams. Pattern search: R. Hooke and T. A. Jeeves, "Direct search" solution of numerical and statistical problems, J. ACM 8 (1961).</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <section>
+      <div class="panel">
+        <h2>Your design and the minimum-mass design</h2>
+        <div class="kpi-row" id="kpis"></div>
+        <p class="note" id="summary"></p>
+        <table class="results" id="table-designs"></table>
+      </div>
+
+      <div class="panel">
+        <h2>Design-space map</h2>
+        <canvas class="plot" id="plot-map" width="760" height="500"></canvas>
+        <div class="legend" id="map-legend"></div>
+        <div class="note" id="probe">Move the pointer over the map to read a design; click to adopt that point as your design (this fixes the map ranges).</div>
+        <div class="btn-row"><button class="btn secondary" id="btn-csv-map">Download map CSV</button></div>
+        <h3>Classical check</h3>
+        <div id="classical"></div>
+      </div>
+
+      <div class="panel">
+        <h2>Mass against deflection (Pareto trade-off)</h2>
+        <canvas class="plot" id="plot-pareto" width="760" height="400"></canvas>
+        <p class="note" id="pareto-note"></p>
+        <table class="results" id="table-pareto"></table>
+        <div class="btn-row"><button class="btn secondary" id="btn-csv-pareto">Download CSV</button></div>
+      </div>
+
+      <div class="panel">
+        <h2>Material comparison (same family, same map range)</h2>
+        <div class="progress-row" id="mat-progress-row"><progress id="mat-progress" max="7" value="0"></progress><button class="btn secondary" id="btn-cancel-mat">Cancel</button></div>
+        <canvas class="plot" id="plot-materials" width="760" height="330"></canvas>
+        <table class="results" id="table-materials"></table>
+        <p class="note" id="mat-note"></p>
+      </div>
+    </section>
+  </div>
+<p class="scope"><strong>Review note:</strong> A fresh solve checks feasibility within this page's stated model. It is not independent physical validation or a proof of global optimality. Optimizer results are candidates; comparisons depend on bounds, discretization and evaluation counts.</p></main>
+
+<footer class="lab-footer">
+  MIE 446 Aerospace Structures, University of Massachusetts Amherst. Educational optimization demonstration on a simplified model; independent of the Wing AeroStruct solver and not a certified analysis.
+</footer>
+
+<script type="module">
+import { heatmap, linePlot, categoryPlot, contourLines, niceTicks, fmt, badge, escapeHTML, palette, canvasPoint, downloadCSV } from '../shared/labkit.js';
+import { MATERIALS, BEAM_PRESETS } from '../shared/presets.js';
+import * as mod from './beam-section-map.js';
+
+const $ = id => document.getElementById(id);
+const num = id => { const v = $(id).value; return v === '' ? NaN : Number(v); };
+const setNum = (id, v, digits = 6) => { $(id).value = Number.isFinite(v) ? String(Number(v.toPrecision(digits))) : ''; };
+const CL = mod.CONSTRAINT_LABELS;
+const lowerFirst = s => s.charAt(0).toLowerCase() + s.slice(1);
+const COLORS = { stress: palette.red, defl: palette.orange, thick: '#7a7a82', student: '#ffffff', optimum: '#f2c14e', nearest: '#8ec5ff' };
+
+const state = { presetKey: 'printed-spar', result: null, matRows: null, matTimer: null, matCancelled: false, map: null, pareto: null };
+
+// ---------- populate selects ----------
+for (const [key, p] of Object.entries(BEAM_PRESETS)) {
+  const o = document.createElement('option'); o.value = key; o.textContent = p.name; $('in-preset').appendChild(o);
+}
+for (const [key, c] of Object.entries(MATERIALS)) {
+  const o = document.createElement('option'); o.value = key; o.textContent = c.name; $('in-material').appendChild(o);
+}
+{ const o = document.createElement('option'); o.value = 'custom'; o.textContent = 'Custom (enter E, allowable stress, density)'; $('in-material').appendChild(o); }
+for (const [key, f] of Object.entries(mod.FAMILIES)) {
+  const o = document.createElement('option'); o.value = key; o.textContent = f.name; $('in-family').appendChild(o);
+}
+
+// ---------- input helpers ----------
+function currentFamily() { return mod.FAMILIES[$('in-family').value] || mod.FAMILIES.rect; }
+
+function syncFamilyLabels() {
+  const f = currentFamily();
+  $('lbl-x').innerHTML = `${escapeHTML(f.x.label)} <span class="unit">mm</span>`;
+  $('lbl-y').innerHTML = `${escapeHTML(f.y.label)} <span class="unit">mm</span>`;
+  $('lbl-xmin').innerHTML = `${escapeHTML(f.x.key)} minimum <span class="unit">mm</span>`;
+  $('lbl-xmax').innerHTML = `${escapeHTML(f.x.key)} maximum <span class="unit">mm</span>`;
+  $('lbl-ymin').innerHTML = `${escapeHTML(f.y.key)} minimum <span class="unit">mm</span>`;
+  $('lbl-ymax').innerHTML = `${escapeHTML(f.y.key)} maximum <span class="unit">mm</span>`;
+  $('f-beta').classList.toggle('hidden', $('in-family').value !== 'box');
+  const step = f.y.kind === 'thickness' ? '0.1' : '0.5';
+  $('in-y').step = step; $('in-ymin').step = step; $('in-ymax').step = step;
+}
+
+function syncLoadFields() {
+  const point = $('in-loadtype').value === 'point';
+  $('f-P').classList.toggle('hidden', !point);
+  $('f-a').classList.toggle('hidden', !point);
+  $('f-w').classList.toggle('hidden', point);
+}
+
+function applyMaterialCard() {
+  const key = $('in-material').value;
+  const custom = key === 'custom';
+  if (!custom && MATERIALS[key]) {
+    setNum('in-E', MATERIALS[key].E); setNum('in-sigma', MATERIALS[key].sigmaAllow); setNum('in-rho', MATERIALS[key].rho);
+  }
+  for (const id of ['in-E', 'in-sigma', 'in-rho']) $(id).disabled = !custom;
+}
+
+function readModel() {
+  const loadType = $('in-loadtype').value;
+  const load = loadType === 'point' ? { type: 'point', P: num('in-P'), a: num('in-a') } : { type: 'udl', w: num('in-w') };
+  const matKey = $('in-material').value;
+  return {
+    support: $('in-support').value, L: num('in-L'), load,
+    E: num('in-E'), sigmaAllow: num('in-sigma'), rho: num('in-rho'),
+    FS: num('in-FS'), deflRatio: num('in-k'), tMin: num('in-tmin'),
+    family: $('in-family').value, beta: num('in-beta'),
+    materialName: matKey === 'custom' ? 'Custom' : (MATERIALS[matKey] ? MATERIALS[matKey].name : matKey),
+  };
+}
+
+function readDesign() {
+  const f = currentFamily();
+  return { [f.x.key]: num('in-x'), [f.y.key]: num('in-y') };
+}
+
+function applyAutoRanges(model, design) {
+  const dr = mod.defaultRanges(model, design);
+  if (!dr.ok) return null;
+  setNum('in-xmin', dr.ranges.x[0]); setNum('in-xmax', dr.ranges.x[1]);
+  setNum('in-ymin', dr.ranges.y[0]); setNum('in-ymax', dr.ranges.y[1]);
+  return dr.ranges;
+}
+
+function readRanges() {
+  return { x: [num('in-xmin'), num('in-xmax')], y: [num('in-ymin'), num('in-ymax')] };
+}
+
+function materialCards() {
+  const key = $('in-material').value;
+  if (key !== 'custom') return { cards: MATERIALS, selectedKey: key };
+  const cards = Object.assign({}, MATERIALS, { custom: { name: 'Custom (your values)', E: num('in-E'), sigmaAllow: num('in-sigma'), rho: num('in-rho') } });
+  return { cards, selectedKey: 'custom' };
+}
+
+function loadPreset(key) {
+  const p = BEAM_PRESETS[key] || BEAM_PRESETS['printed-spar'];
+  state.presetKey = key;
+  $('in-preset').value = key;
+  $('in-support').value = p.support;
+  setNum('in-L', p.L);
+  const ld = p.loads[0];
+  if (ld.type === 'point') { $('in-loadtype').value = 'point'; setNum('in-P', ld.P); setNum('in-a', ld.a); setNum('in-w', 1); }
+  else { $('in-loadtype').value = 'udl'; setNum('in-w', ld.w); setNum('in-P', 100); setNum('in-a', p.L / 2); }
+  syncLoadFields();
+  $('in-material').value = MATERIALS[p.material] ? p.material : 'pla';
+  applyMaterialCard();
+  setNum('in-FS', p.FS); setNum('in-k', p.deflectionLimitRatio); setNum('in-tmin', 0.8);
+  const sec = p.section;
+  $('in-family').value = mod.FAMILIES[sec.type] ? sec.type : 'rect';
+  setNum('in-beta', 0.6);
+  const f = currentFamily();
+  setNum('in-x', sec[f.x.key]); setNum('in-y', sec[f.y.key]);
+  syncFamilyLabels();
+  $('in-auto').checked = true;
+  $('in-n').value = '90';
+  applyAutoRanges(readModel(), readDesign());
+}
+
+function familyChanged() {
+  const key = $('in-family').value;
+  const defaults = { rect: { b: 12, h: 24 }, tube: { D: 30, t: 2 }, box: { h: 30, t: 2 } };
+  const preset = BEAM_PRESETS[state.presetKey];
+  const src = preset && preset.section.type === key ? preset.section : defaults[key];
+  const f = mod.FAMILIES[key];
+  setNum('in-x', src[f.x.key]); setNum('in-y', src[f.y.key]);
+  syncFamilyLabels();
+  $('in-auto').checked = true;
+  run();
+}
+
+// ---------- rendering helpers ----------
+function levelBadge(U) {
+  const lv = mod.utilizationLevel(U);
+  return badge(lv, lv === 'ok' ? 'ok' : lv === 'warn' ? 'near limit' : 'violated');
+}
+function kpi(label, value, sub) {
+  return `<div class="kpi"><div class="label">${label}</div><div class="value">${value}</div><div class="sub">${sub || ''}</div></div>`;
+}
+function govText(verified) {
+  if (!verified || !verified.ok) return 'n/a';
+  const g = verified.governing;
+  const others = (verified.active || []).filter(k => k !== g);
+  let s = `${CL[g]} (U = ${fmt(verified.utilizations[g], 4)})`;
+  if (others.length) s += `; also active: ${others.map(k => CL[k]).join(', ')}`;
+  return s;
+}
+function designText(family, design) { return mod.describeDesign(family, design, 4); }
+function statusBadge(e) {
+  if (!e || !e.ok) return badge('bad', 'invalid');
+  if (e.feasible) return badge('ok', 'feasible');
+  return badge('bad', `violates ${CL[e.governing]}`);
+}
+function slenderText(model, design) {
+  const s = mod.slendernessScreen(model, design);
+  return s.ok ? `${s.label} = ${fmt(s.value, 3)}` : 'n/a';
+}
+
+// ---------- KPI tiles, summary, design table ----------
+function renderKPIs(r) {
+  const s = r.student, U = s.U;
+  const tiles = [
+    kpi('Your U_stress', `${fmt(U.stress, 3)} ${levelBadge(U.stress)}`, `sigma_max ${fmt(s.sigmaMax, 4)} MPa against sigma_allow / FS = ${fmt(s.sigmaAllowFS, 4)} MPa`),
+    kpi('Your U_defl', `${fmt(U.defl, 3)} ${levelBadge(U.defl)}`, `v_max ${fmt(s.vMax, 4)} mm against L / k = ${fmt(s.vLimit, 4)} mm`),
+    kpi('Your U_thick', `${fmt(U.thick, 3)} ${levelBadge(U.thick)}`, `smallest wall or dimension ${fmt(s.section.tmin, 4)} mm against t_min = ${fmt(r.model.tMin, 3)} mm`),
+    kpi('Your mass', `${fmt(s.mass, 4)} g`, `${statusBadge(s)} ${designText(r.model.family, r.design)}`),
+  ];
+  if (r.optimum) {
+    const o = r.optimum, v = o.verified;
+    const sv = o.saving;
+    const saveTxt = sv.g >= 0 ? `saves ${fmt(sv.g, 4)} g (${fmt(sv.pct, 3)} %)` : `is ${fmt(-sv.g, 4)} g heavier (${fmt(-sv.pct, 3)} %), your design is lighter but infeasible`;
+    tiles.push(kpi('Minimum feasible mass', `${fmt(v.mass, 4)} g ${badge(v.feasible ? 'ok' : 'bad', v.feasible ? 'Checked by fresh model solve' : v.message)}`, `${saveTxt}; ${designText(r.model.family, o.design)}`));
+    if (v.active && v.active.length) tiles.push(kpi('Governing constraint at the optimum', `${escapeHTML(CL[v.governing])} ${badge('warn', 'active')}`, escapeHTML(govText(v))));
+    else tiles.push(kpi('Governing constraint at the optimum', `none ${badge('info', 'map edge')}`, `no utilization reaches 1 (largest: ${escapeHTML(CL[v.governing])}, U = ${fmt(v.Umax, 3)}); the map range limits the design`));
+  } else {
+    tiles.push(kpi('Minimum feasible mass', badge('bad', 'none in the map range'), escapeHTML(r.noFeasible || '')));
+  }
+  $('kpis').innerHTML = tiles.join('');
+}
+
+function renderSummary(r) {
+  const s = r.student, f = r.family;
+  const parts = [];
+  const famName = lowerFirst(f.name.replace(/\s*\(.*\)$/, ''));
+  parts.push(`Your ${escapeHTML(famName)} (${escapeHTML(designText(r.model.family, r.design))}) in ${escapeHTML(r.model.materialName)} has a mass of ${fmt(s.mass, 4)} g and is ${s.feasible ? 'feasible' : `infeasible: the ${CL[s.governing]} utilization is ${fmt(s.Umax, 3)}`}.`);
+  if (r.optimum) {
+    const o = r.optimum;
+    const govPhrase = o.verified.active && o.verified.active.length ? `governed by ${CL[o.verified.governing]}` : 'limited only by the map range (no constraint is active)';
+    parts.push(`The lightest feasible design inside the map is ${escapeHTML(designText(r.model.family, o.design))} at ${fmt(o.verified.mass, 4)} g, ${govPhrase}${o.saving.g >= 0 ? `, which saves ${fmt(o.saving.g, 4)} g (${fmt(o.saving.pct, 3)} %)` : ''}.`);
+    if (o.atBounds.length) parts.push(`The optimum touches the map edge (${o.atBounds.map(b => `${b.param} ${b.side} limit ${fmt(b.value, 4)} mm`).join('; ')}), so a wider range could give an even lighter design of this model.`);
+    if (o.fallback) parts.push('The refined point failed the exact re-check, so the best grid cell is shown instead.');
+    parts.push(`Slenderness screen at the optimum: ${slenderText(r.model, o.design)} (the model has no lateral or local stability check).`);
+  } else {
+    parts.push('No feasible design exists inside the current map range. Widen the ranges, relax a limit or try another family or material.');
+  }
+  if (r.nearest) {
+    const n = r.nearest;
+    parts.push(n.lighter
+      ? `The feasible grid design closest to yours that is also lighter is ${escapeHTML(designText(r.model.family, n.design))} at ${fmt(n.verified.mass, 4)} g.`
+      : `No feasible grid design is lighter than yours; the closest feasible one is ${escapeHTML(designText(r.model.family, n.design))} at ${fmt(n.verified.mass, 4)} g.`);
+  }
+  $('summary').innerHTML = parts.join(' ');
+}
+
+function renderDesignTable(r) {
+  const f = r.family;
+  const rows = [['Your design', r.student, r.design, null]];
+  if (r.nearest) rows.push([r.nearest.lighter ? 'Nearest lighter feasible (grid cell)' : 'Nearest feasible (grid cell, heavier)', r.nearest.verified.eval, r.nearest.design, r.nearest.verified]);
+  if (r.optimum) rows.push(['Minimum-mass design (verified)', r.optimum.verified.eval, r.optimum.design, r.optimum.verified]);
+  const head = `<thead><tr><th>Design</th><th class="num">${escapeHTML(f.x.key)} (mm)</th><th class="num">${escapeHTML(f.y.key)} (mm)</th><th class="num">A (mm^2)</th><th class="num">I (mm^4)</th><th class="num">sigma_max (MPa)</th><th class="num">v_max (mm)</th><th class="num">mass (g)</th><th class="num">U_stress</th><th class="num">U_defl</th><th class="num">U_thick</th><th>slenderness (screen)</th><th>Status</th></tr></thead>`;
+  const body = rows.map(([name, e, d, ver], k) => {
+    if (!e || !e.ok) return `<tr><td>${escapeHTML(name)}</td><td colspan="12">${badge('bad', 'invalid design')}</td></tr>`;
+    const status = ver ? badge(ver.feasible ? 'ok' : 'bad', ver.feasible ? 'Checked by fresh model solve' : ver.message) : statusBadge(e);
+    return `<tr${k === rows.length - 1 && r.optimum ? ' class="active"' : ''}><td>${escapeHTML(name)}</td><td class="num">${fmt(d[f.x.key], 4)}</td><td class="num">${fmt(d[f.y.key], 4)}</td><td class="num">${fmt(e.section.A, 4)}</td><td class="num">${fmt(e.section.I, 4)}</td><td class="num">${fmt(e.sigmaMax, 4)}</td><td class="num">${fmt(e.vMax, 4)}</td><td class="num">${fmt(e.mass, 4)}</td><td class="num">${fmt(e.U.stress, 3)} ${levelBadge(e.U.stress)}</td><td class="num">${fmt(e.U.defl, 3)} ${levelBadge(e.U.defl)}</td><td class="num">${fmt(e.U.thick, 3)} ${levelBadge(e.U.thick)}</td><td>${escapeHTML(slenderText(r.model, d))}</td><td>${status}</td></tr>`;
+  }).join('');
+  $('table-designs').innerHTML = head + `<tbody>${body}</tbody>`;
+}
+
+// ---------- design-space map ----------
+// Marker with a label. opts.side: 'right' (default), 'left' or 'above'; opts.frame flips a label that would
+// run past the right edge of the plot to the left side.
+function drawMarker(ctx, cx, cy, shape, color, label, r = 7, opts = {}) {
+  ctx.fillStyle = color; ctx.strokeStyle = '#1d1d1f'; ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  if (shape === 'square') ctx.rect(cx - r, cy - r, 2 * r, 2 * r);
+  else if (shape === 'star') { for (let k = 0; k < 10; k++) { const ang = -Math.PI / 2 + k * Math.PI / 5; const rr = k % 2 ? r * 0.45 : r * 1.25; ctx.lineTo(cx + rr * Math.cos(ang), cy + rr * Math.sin(ang)); } ctx.closePath(); }
+  else ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.fill(); ctx.stroke();
+  if (!label) return;
+  ctx.font = 'bold 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
+  ctx.textBaseline = 'middle';
+  const w = ctx.measureText(label).width;
+  let side = opts.side || 'right';
+  if (opts.frame && side === 'right' && cx + r + 12 + w > opts.frame.left + opts.frame.pw) side = 'left';
+  if (opts.frame && side === 'left' && cx - r - 12 - w < opts.frame.left) side = 'above';
+  let tx, ty;
+  if (side === 'left') { ctx.textAlign = 'right'; tx = cx - r - 6; ty = cy; }
+  else if (side === 'above') { ctx.textAlign = 'center'; tx = cx; ty = cy - r - 11; }
+  else { ctx.textAlign = 'left'; tx = cx + r + 6; ty = cy; }
+  const bx = side === 'left' ? tx - w - 3 : side === 'above' ? tx - w / 2 - 3 : tx - 3;
+  ctx.fillStyle = 'rgba(255,255,255,0.8)'; ctx.fillRect(bx, ty - 8, w + 6, 16);
+  ctx.fillStyle = '#1d1d1f'; ctx.fillText(label, tx, ty);
+}
+
+// Keep the labels of two nearby markers apart: returns the side for the second marker's label.
+function sideAwayFrom(cx, cy, ox, oy) {
+  if (!Number.isFinite(ox) || Math.abs(cy - oy) > 22 || Math.abs(cx - ox) > 170) return 'right';
+  return cx <= ox ? 'left' : 'right';
+}
+
+function renderMap(r) {
+  const g = r.grid, f = r.family, canvas = $('plot-map');
+  let lo = Infinity, hi = -Infinity;
+  for (const row of g.mass) for (const v of row) if (Number.isFinite(v)) { if (v < lo) lo = v; if (v > hi) hi = v; }
+  const levels = Number.isFinite(lo) && hi > lo ? niceTicks(lo, hi, 7).ticks : [];
+  const hm = heatmap(canvas, g.xs, g.ys, g.mass, {
+    title: `Mass map of the ${lowerFirst(f.name)} family, hatched = infeasible`,
+    xlabel: `${f.x.label} (mm)`, ylabel: `${f.y.label} (mm)`, zlabel: 'mass (g)', cmap: 'viridis',
+    contours: [{ levels, color: 'rgba(255,255,255,0.75)', width: 1, labels: true }], mask: g.mask,
+  });
+  const { ctx, X, Y, frame } = hm;
+  ctx.save(); ctx.beginPath(); ctx.rect(frame.left, frame.top, frame.pw, frame.ph); ctx.clip();
+  const drawBoundary = (Z, color, dash) => {
+    const segs = contourLines(g.xs, g.ys, Z, 1);
+    if (!segs.length) return false;
+    ctx.strokeStyle = color; ctx.lineWidth = 2.2; ctx.setLineDash(dash || []);
+    ctx.beginPath();
+    for (const s of segs) { ctx.moveTo(X(s[0]), Y(s[1])); ctx.lineTo(X(s[2]), Y(s[3])); }
+    ctx.stroke(); ctx.setLineDash([]);
+    return true;
+  };
+  const shown = { stress: drawBoundary(g.Ustress, COLORS.stress), defl: drawBoundary(g.Udefl, COLORS.defl), thick: drawBoundary(g.Uthick, COLORS.thick, [7, 4]) };
+  const sxy = mod.xyFromDesign(r.model.family, r.design);
+  const ox = r.optimum ? X(r.optimum.x) : NaN, oy = r.optimum ? Y(r.optimum.y) : NaN;
+  if (r.nearest) {
+    const nx = X(r.nearest.cell.x), ny = Y(r.nearest.cell.y);
+    drawMarker(ctx, nx, ny, 'square', COLORS.nearest, r.nearest.lighter ? 'nearest lighter feasible' : 'nearest feasible', 6, { side: sideAwayFrom(nx, ny, ox, oy), frame });
+  }
+  if (r.optimum) drawMarker(ctx, ox, oy, 'star', COLORS.optimum, 'optimum', 7, { frame });
+  drawMarker(ctx, X(sxy.x), Y(sxy.y), 'circle', COLORS.student, 'your design', 7, { side: sideAwayFrom(X(sxy.x), Y(sxy.y), ox, oy), frame });
+  ctx.restore();
+  state.map = { X, Y, frame, xlim: hm.xlim, ylim: hm.ylim };
+  const inside = (v, lim) => v >= lim[0] && v <= lim[1];
+  const offMap = !(inside(sxy.x, hm.xlim) && inside(sxy.y, hm.ylim));
+  const bnd = k => shown[k] ? '' : ' (not inside the map range)';
+  $('map-legend').innerHTML = [
+    `<span><span class="sw" style="border-color:${COLORS.stress}"></span>stress limit U_stress = 1${bnd('stress')}</span>`,
+    `<span><span class="sw" style="border-color:${COLORS.defl}"></span>deflection limit U_defl = 1${bnd('defl')}</span>`,
+    `<span><span class="sw dash" style="border-color:${COLORS.thick}"></span>minimum thickness U_thick = 1${bnd('thick')}</span>`,
+    `<span><span class="sw" style="border-color:#bbb"></span>iso-mass contours (g)</span>`,
+    `<span><span class="mk hatch"></span>infeasible</span>`,
+    `<span><span class="mk circle"></span>your design${offMap ? ' (outside the map range)' : ''}</span>`,
+    `<span><span class="mk star"></span>minimum-mass design (verified)</span>`,
+    `<span><span class="mk square"></span>nearest lighter feasible grid cell</span>`,
+  ].join('');
+}
+
+function mapCellAt(evt) {
+  if (!state.map || !state.result) return null;
+  const canvas = $('plot-map');
+  const p = canvasPoint(canvas, evt);
+  const { frame, xlim, ylim } = state.map;
+  if (p.x < frame.left || p.x > frame.left + frame.pw || p.y < frame.top || p.y > frame.top + frame.ph) return null;
+  const x = xlim[0] + (p.x - frame.left) / frame.pw * (xlim[1] - xlim[0]);
+  const y = ylim[0] + (frame.top + frame.ph - p.y) / frame.ph * (ylim[1] - ylim[0]);
+  const g = state.result.grid;
+  let i = 0, j = 0;
+  if (g.dx > 0) i = Math.max(0, Math.min(g.n - 1, Math.round((x - g.xs[0]) / g.dx)));
+  if (g.dy > 0) j = Math.max(0, Math.min(g.n - 1, Math.round((y - g.ys[0]) / g.dy)));
+  return { i, j, x: g.xs[i], y: g.ys[j] };
+}
+
+$('plot-map').addEventListener('mousemove', evt => {
+  const c = mapCellAt(evt);
+  if (!c) return;
+  const g = state.result.grid, f = state.result.family;
+  if (!g.valid[c.j][c.i]) { $('probe').textContent = `${f.x.key} = ${fmt(c.x, 4)} mm, ${f.y.key} = ${fmt(c.y, 4)} mm: impossible geometry for this family.`; return; }
+  const feas = g.feasible[c.j][c.i];
+  $('probe').innerHTML = `${escapeHTML(f.x.key)} = ${fmt(c.x, 4)} mm, ${escapeHTML(f.y.key)} = ${fmt(c.y, 4)} mm: mass ${fmt(g.mass[c.j][c.i], 4)} g, U_stress ${fmt(g.Ustress[c.j][c.i], 3)}, U_defl ${fmt(g.Udefl[c.j][c.i], 3)}, U_thick ${fmt(g.Uthick[c.j][c.i], 3)}, deflection ${fmt(g.vmax[c.j][c.i], 4)} mm ${badge(feas ? 'ok' : 'bad', feas ? 'feasible' : 'infeasible')}. Click to adopt this point as your design.`;
+});
+$('plot-map').addEventListener('click', evt => {
+  const c = mapCellAt(evt);
+  if (!c) return;
+  $('in-auto').checked = false;
+  setNum('in-x', c.x, 5); setNum('in-y', c.y, 5);
+  run();
+});
+
+// ---------- classical check ----------
+function renderClassical(r) {
+  const c = r.classical, f = r.family;
+  const boxes = [];
+  const agree = (num, ana) => Number.isFinite(num) && Number.isFinite(ana) && ana !== 0 ? `${fmt(100 * Math.abs(num - ana) / ana, 2)} %` : 'n/a';
+  if (c.family === 'rect') {
+    const at = (title, cl, numY, verdict) => {
+      if (!cl || !cl.ok) return '';
+      return `<div class="check-box"><h4>${title}</h4>
+        <div class="formula">h_stress = sqrt(6 M_max FS / (b sigma_allow)) = ${fmt(cl.hStress, 4)} mm<br>h_defl = (12 I_req / b)^(1/3) = ${fmt(cl.hDefl, 4)} mm,  I_req = ${fmt(cl.Ireq, 4)} mm^4<br>h_thick = t_min = ${fmt(cl.hThick, 3)} mm</div>
+        The largest governs: <strong>h* = ${fmt(cl.hStar, 4)} mm (${CL[cl.governing]})</strong>. Numerical boundary by bisection at the same width: ${Number.isFinite(numY) ? fmt(numY, 4) + ' mm' : 'none'}; difference ${agree(numY, cl.hStar)}. ${verdict || ''}${cl.widthOk ? '' : ' Note: this width is below t_min, so the column is infeasible regardless of depth.'}</div>`;
+    };
+    boxes.push(at(`At your width b = ${fmt(c.atStudent.b, 4)} mm`, c.atStudent, c.numericalAtStudent,
+      r.student.feasible ? `Your depth h = ${fmt(r.design.h, 4)} mm is ${r.design.h >= c.atStudent.hStar ? 'above' : 'below'} h*.` : `Your depth h = ${fmt(r.design.h, 4)} mm is below h*, which is why the design is infeasible.`));
+    if (r.optimum && c.atOptimum) {
+      boxes.push(at(`At the optimum width b = ${fmt(c.atOptimum.b, 4)} mm`, c.atOptimum, c.numericalAtOptimum,
+        c.optimumOnBoundary ? `The numerical optimum h = ${fmt(r.optimum.design.h, 4)} mm lies on the ${CL[r.optimum.verified.governing]} boundary and reproduces the closed form.` : 'The optimum is not on a stress or deflection boundary here (a map edge or t_min limits it), so h* is shown for reference only.'));
+    }
+  } else {
+    const at = (title, est, numX, verdict) => {
+      if (!est || !est.ok) return '';
+      const p = est.param;
+      return `<div class="check-box"><h4>${title}</h4>
+        <div class="formula">${est.family === 'tube' ? `${p}_stress ~ sqrt(4 M_max FS / (pi t sigma_allow)) = ${fmt(est.xStress, 4)} mm<br>${p}_defl ~ (8 I_req / (pi t))^(1/3) = ${fmt(est.xDefl, 4)} mm` : `${p}_stress ~ sqrt(M_max FS / (2 t sigma_allow (beta/2 + 1/6))) = ${fmt(est.xStress, 4)} mm<br>${p}_defl ~ (I_req / (t (beta/2 + 1/6)))^(1/3) = ${fmt(est.xDefl, 4)} mm`},  I_req = ${fmt(est.Ireq, 4)} mm^4</div>
+        Thin-wall estimate (${escapeHTML(est.note)}): <strong>${p}* ~ ${fmt(est.xStar, 4)} mm (${CL[est.governing]})</strong>. Exact boundary by bisection at the same wall: ${Number.isFinite(numX) ? fmt(numX, 4) + ' mm' : 'none'}; difference ${agree(numX, est.xStar)}, which shrinks as the wall gets thinner relative to ${p}. ${verdict || ''}</div>`;
+    };
+    const yKey = f.y.key, xKey = f.x.key;
+    boxes.push(at(`At your wall ${yKey} = ${fmt(r.design[yKey], 4)} mm`, c.atStudent, c.numericalAtStudent,
+      Number.isFinite(c.numericalAtStudent) ? `Your ${xKey} = ${fmt(r.design[xKey], 4)} mm is ${r.design[xKey] >= c.numericalAtStudent ? 'above' : 'below'} the exact boundary.` : ''));
+    if (r.optimum && c.atOptimum) {
+      boxes.push(at(`At the optimum wall ${yKey} = ${fmt(r.optimum.design[yKey], 4)} mm`, c.atOptimum, c.numericalAtOptimum,
+        c.optimumOnBoundary ? `The numerical optimum ${xKey} = ${fmt(r.optimum.design[xKey], 4)} mm lies on the ${CL[r.optimum.verified.governing]} boundary.` : 'The optimum is limited by a map edge or t_min here, so the estimate is for reference only.'));
+    }
+  }
+  $('classical').innerHTML = `<div class="check-grid">${boxes.join('')}</div>`;
+}
+
+// ---------- Pareto panel ----------
+function renderPareto(r) {
+  const p = r.pareto, s = r.student, f = r.family, canvas = $('plot-pareto');
+  const vLimit = s.vLimit;
+  const cand = p.candidates, front = p.front;
+  const vTop = Math.min(20 * vLimit, Math.max(3 * vLimit, 1.25 * s.vMax, front.length ? front[front.length - 1].defl * 1.05 : 0));
+  let massTop = Math.max(1.6 * s.mass, r.optimum ? 1.3 * r.optimum.verified.mass : 0);
+  const firstWithin = front.find(q => q.defl <= vLimit);
+  if (firstWithin) massTop = Math.max(massTop, 1.3 * firstWithin.mass);
+  const stride = Math.max(1, Math.ceil(cand.length / 6000));
+  const cx = [], cy = [];
+  for (let k = 0; k < cand.length; k += stride) { cx.push(cand[k].mass); cy.push(cand[k].defl); }
+  const studentColor = s.feasible ? palette.green : palette.red;
+  const series = [
+    { x: cx, y: cy, label: 'designs meeting stress and t_min', type: 'scatter', color: '#c8c8ce', size: 1.8 },
+    { x: front.map(q => q.mass), y: front.map(q => q.defl), label: 'Pareto front (non-dominated)', type: 'both', color: palette.blue, width: 2, size: 3 },
+    { x: [s.mass], y: [s.vMax], label: 'your design', type: 'scatter', color: studentColor, size: 6.5 },
+  ];
+  const lp = linePlot(canvas, series, {
+    title: 'Mass against maximum deflection for the whole map', xlabel: 'mass (g)', ylabel: 'maximum deflection (mm)',
+    xlim: [0, massTop], ylim: [0, vTop], hlines: [{ y: vLimit, label: `deflection limit L / k = ${fmt(vLimit, 4)} mm`, color: palette.orange }],
+  });
+  if (r.optimum) {
+    const { ctx, X, Y, frame } = lp;
+    ctx.save(); ctx.beginPath(); ctx.rect(frame.left, frame.top, frame.pw, frame.ph); ctx.clip();
+    drawMarker(ctx, X(r.optimum.verified.mass), Y(r.optimum.verified.eval.vMax), 'star', COLORS.optimum, 'optimum', 6, { frame });
+    ctx.restore();
+  }
+  const st = p.student;
+  let note = '';
+  if (st) {
+    note += st.inSet
+      ? (st.dominated ? `Your design is <strong>dominated by ${st.count} designs</strong> in the candidate set: each of them is at least as light and at least as stiff, and better in one of the two. ` : 'Your design is <strong>non-dominated</strong>: no candidate is both lighter and stiffer. ')
+      : `Your design violates the stress or minimum-thickness constraint, so it is not in the candidate set; it is shown for reference${st.dominated ? ` and would be dominated by ${st.count} candidates` : ''}. `;
+  }
+  note += `${cand.length} of ${r.grid.n * r.grid.n} grid cells satisfy stress and t_min; ${front.length} of them are non-dominated. ${s.vMax > vTop ? `Your deflection (${fmt(s.vMax, 4)} mm) is above the plotted range. ` : ''}The table lists up to 15 front points inside the plotted window; the CSV holds the whole front.`;
+  $('pareto-note').innerHTML = note;
+  const inWindow = front.filter(q => q.defl <= vTop && q.mass <= massTop);
+  const pick = [];
+  if (inWindow.length <= 15) pick.push(...inWindow);
+  else for (let k = 0; k < 15; k++) pick.push(inWindow[Math.round(k * (inWindow.length - 1) / 14)]);
+  const head = `<thead><tr><th>#</th><th class="num">${escapeHTML(f.x.key)} (mm)</th><th class="num">${escapeHTML(f.y.key)} (mm)</th><th class="num">mass (g)</th><th class="num">deflection (mm)</th><th class="num">U_stress</th><th class="num">U_defl</th><th>Deflection limit</th></tr></thead>`;
+  const body = pick.map((q, k) => `<tr><td>${k + 1}</td><td class="num">${fmt(q.x, 4)}</td><td class="num">${fmt(q.y, 4)}</td><td class="num">${fmt(q.mass, 4)}</td><td class="num">${fmt(q.defl, 4)}</td><td class="num">${fmt(q.Ustress, 3)}</td><td class="num">${fmt(q.Udefl, 3)}</td><td>${badge(q.defl <= vLimit ? 'ok' : 'warn', q.defl <= vLimit ? 'within L / k' : 'above L / k')}</td></tr>`).join('');
+  $('table-pareto').innerHTML = head + `<tbody>${body}</tbody>`;
+  state.pareto = { front, f };
+}
+
+// ---------- material comparison (chunked, one card per timer tick) ----------
+function cancelMaterials() {
+  if (state.matTimer) { clearTimeout(state.matTimer); state.matTimer = null; }
+  state.matCancelled = true;
+}
+
+function startMaterials(r, cards, selectedKey) {
+  cancelMaterials();
+  state.matCancelled = false;
+  const rows = mod.ashbyIndices(cards);
+  state.matRows = rows;
+  const prog = $('mat-progress');
+  prog.max = rows.length; prog.value = 0;
+  $('mat-progress-row').classList.remove('hidden');
+  $('mat-note').textContent = `Running the optimizer for ${rows.length} material cards...`;
+  let k = 0;
+  const step = () => {
+    state.matTimer = null;
+    if (state.matCancelled) { $('mat-progress-row').classList.add('hidden'); $('mat-note').textContent = 'Material comparison cancelled.'; return; }
+    if (k >= rows.length) {
+      mod.rankMaterialRows(rows);
+      $('mat-progress-row').classList.add('hidden');
+      renderMaterials(rows, selectedKey, r);
+      return;
+    }
+    mod.materialRow(r.model, r.ranges, r.n, rows[k]);
+    k++; prog.value = k;
+    state.matTimer = setTimeout(step, 0);
+  };
+  state.matTimer = setTimeout(step, 0);
+}
+
+function renderMaterials(rows, selectedKey, r) {
+  const f = r.family;
+  const labels = rows.map(x => x.name + (x.mass === null ? ' (none in range)' : ''));
+  const values = rows.map(x => (x.mass === null ? NaN : x.mass));
+  categoryPlot($('plot-materials'), labels, values, {
+    title: 'Verified minimum feasible mass per material card, same family and map range (g)', xlabel: 'mass (g)',
+    colorFn: (v, i) => (rows[i].key === selectedKey ? palette.orange : palette.blue), valueFmt: v => fmt(v, 4) + ' g',
+  });
+  const head = `<thead><tr><th>Material</th><th class="num">E (MPa)</th><th class="num">sigma_allow (MPa)</th><th class="num">rho (g/cm^3)</th><th class="num">min mass (g)</th><th class="num">rank by mass</th><th>governing</th><th>optimum (${escapeHTML(f.x.key)}, ${escapeHTML(f.y.key)}) mm</th><th class="num">E^(1/2)/rho (rel.)</th><th class="num">rank</th><th class="num">sigma^(2/3)/rho (rel.)</th><th class="num">rank</th><th>Status</th></tr></thead>`;
+  const body = rows.map(x => {
+    const sel = x.key === selectedKey;
+    const massTxt = x.mass === null ? 'none in range' : `${fmt(x.mass, 4)}${x.massRel ? ` (${fmt(x.massRel, 3)} x lightest)` : ''}`;
+    const des = x.design ? `${fmt(x.design[f.x.key], 4)}, ${fmt(x.design[f.y.key], 4)}${x.atBounds && x.atBounds.length ? ' (map edge)' : ''}` : 'n/a';
+    const status = x.feasible ? badge('ok', 'Checked by fresh model solve') : badge('bad', x.verifiedMessage || 'no feasible design');
+    return `<tr${sel ? ' class="active"' : ''}><td>${escapeHTML(x.name)}${sel ? ' ' + badge('info', 'selected') : ''}</td><td class="num">${fmt(x.E, 4)}</td><td class="num">${fmt(x.sigmaAllow, 4)}</td><td class="num">${fmt(x.rho, 3)}</td><td class="num">${massTxt}</td><td class="num">${x.rankMass || 'n/a'}</td><td>${x.governing ? escapeHTML(CL[x.governing]) + ((x.active || []).length > 1 ? ' + ' + x.active.filter(k => k !== x.governing).map(k => CL[k]).join(', ') : '') : 'n/a'}</td><td>${des}</td><td class="num">${fmt(x.MstiffRel, 3)}</td><td class="num">${x.rankStiff}</td><td class="num">${fmt(x.MstrengthRel, 3)}</td><td class="num">${x.rankStrength}</td><td>${status}</td></tr>`;
+  }).join('');
+  $('table-materials').innerHTML = head + `<tbody>${body}</tbody>`;
+  const sel = rows.find(x => x.key === selectedKey);
+  const best = rows.find(x => x.rankMass === 1);
+  let note = 'Exact minimum masses include t_min, the section family and the map range; the indices assume a freely scalable section, so the two rankings can differ. ';
+  if (sel && best && sel.mass !== null && best.key !== sel.key) note += `Within this map the lightest card is ${best.name} at ${fmt(best.mass, 4)} g against ${fmt(sel.mass, 4)} g for ${sel.name}. `;
+  if (sel && sel.mass !== null && sel.rankMass && sel.rankStiff && sel.rankMass !== sel.rankStiff) note += `${sel.name} ranks ${sel.rankMass} by exact mass but ${sel.rankStiff} by the stiffness index. `;
+  $('mat-note').textContent = note;
+}
+
+// ---------- CSV downloads ----------
+$('btn-csv-map').addEventListener('click', () => {
+  const r = state.result; if (!r) return;
+  const g = r.grid, f = r.family;
+  const rows = [[f.x.key + '_mm', f.y.key + '_mm', 'mass_g', 'U_stress', 'U_defl', 'U_thick', 'deflection_mm', 'feasible']];
+  for (let j = 0; j < g.n; j++) for (let i = 0; i < g.n; i++) rows.push([g.xs[i], g.ys[j], g.mass[j][i], g.Ustress[j][i], g.Udefl[j][i], g.Uthick[j][i], g.vmax[j][i], g.feasible[j][i] ? 1 : 0]);
+  downloadCSV('beam-section-map-grid.csv', rows);
+});
+$('btn-csv-pareto').addEventListener('click', () => {
+  const p = state.pareto; if (!p) return;
+  const rows = [[p.f.x.key + '_mm', p.f.y.key + '_mm', 'mass_g', 'deflection_mm', 'U_stress', 'U_defl', 'within_deflection_limit']];
+  for (const q of p.front) rows.push([q.x, q.y, q.mass, q.defl, q.Ustress, q.Udefl, q.Udefl <= 1 ? 1 : 0]);
+  downloadCSV('beam-section-map-pareto-front.csv', rows);
+});
+$('btn-cancel-mat').addEventListener('click', cancelMaterials);
+
+// ---------- main run ----------
+function run() {
+  const status = $('status');
+  try {
+    status.textContent = 'Solving...';
+    status.classList.remove('error');
+    cancelMaterials();
+    syncLoadFields(); syncFamilyLabels();
+    const model = readModel();
+    const design = readDesign();
+    let ranges;
+    if ($('in-auto').checked) ranges = applyAutoRanges(model, design);
+    ranges = ranges || readRanges();
+    let n = num('in-n');
+    if (!Number.isFinite(n)) n = 90;
+    n = Math.min(160, Math.max(40, Math.round(n)));
+    $('in-n').value = String(n);
+    const r = mod.analyze({ model, design, ranges, n, compare: false });
+    if (!r.ok) {
+      status.textContent = 'Error: ' + r.error;
+      status.classList.add('error');
+      return;
+    }
+    state.result = r;
+    renderKPIs(r); renderSummary(r); renderDesignTable(r); renderMap(r); renderClassical(r); renderPareto(r);
+    if (r.optimum && r.optimum.verified.feasible) {
+      status.innerHTML = `${badge('ok', 'Checked by fresh model solve')} Map ${r.grid.n} x ${r.grid.n}, ${r.grid.nFeasible} feasible cells, solved in ${fmt(r.timeMs, 3)} ms.`;
+    } else if (r.optimum) {
+      status.innerHTML = `${badge('bad', r.optimum.verified.message || 'verification failed')}`;
+    } else {
+      status.innerHTML = `${badge('bad', 'No feasible design in the map range')} ${escapeHTML(r.noFeasible || '')}`;
+    }
+    const { cards, selectedKey } = materialCards();
+    startMaterials(r, cards, selectedKey);
+  } catch (err) {
+    status.textContent = 'Error: ' + err.message;
+    status.classList.add('error');
+    console.error(err);
+  }
+}
+
+// ---------- wiring ----------
+$('btn-run').addEventListener('click', run);
+$('btn-reset').addEventListener('click', () => { loadPreset($('in-preset').value); run(); });
+$('in-preset').addEventListener('change', () => { loadPreset($('in-preset').value); run(); });
+$('in-family').addEventListener('change', familyChanged);
+$('in-loadtype').addEventListener('change', () => { syncLoadFields(); run(); });
+$('in-material').addEventListener('change', () => { applyMaterialCard(); run(); });
+$('in-support').addEventListener('change', run);
+for (const id of ['in-L', 'in-P', 'in-a', 'in-w', 'in-E', 'in-sigma', 'in-rho', 'in-FS', 'in-k', 'in-tmin', 'in-beta', 'in-x', 'in-y', 'in-xmin', 'in-xmax', 'in-ymin', 'in-ymax', 'in-n']) {
+  $(id).addEventListener('change', run);
+}
+for (const id of ['in-xmin', 'in-xmax', 'in-ymin', 'in-ymax']) $(id).addEventListener('input', () => { $('in-auto').checked = false; });
+
+loadPreset('printed-spar');
+run();
+</script>
+</body>
+</html>

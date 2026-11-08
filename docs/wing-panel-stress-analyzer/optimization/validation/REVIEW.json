@@ -1,0 +1,105 @@
+{
+  "version": "0.1.1",
+  "reviewedUtc": "2026-11-08T19:46:41.692686+00:00",
+  "source": {
+    "artifactUrl": "https://claude.ai/artifact/RCJdEbsNkWQzdCdWLcvnFE",
+    "originalVersion": "0.1.0",
+    "reviewedVersion": "0.1.1",
+    "originalZipSha256": "4463b17c6f28db1c97e33ee945c0f1aae199d297a130a12bd3ff5524528dba70",
+    "originalManifestFileCount": 52,
+    "originalManifestHashesVerified": 52,
+    "reviewDate": "2026-11-08",
+    "scope": "Only this optimization folder is added. No existing application or solver is changed."
+  },
+  "tests": {
+    "originalBeforeEdits": 186,
+    "reviewedTotal": 197,
+    "passed": 197,
+    "failed": 0,
+    "independentGroups": 11,
+    "runner": "node validation/run-tests.cjs"
+  },
+  "independentMetrics": {
+    "Independent Green-function beam oracle: 24 mixed point/UDL cantilevers at off-grid stations": {
+      "comparisons": 120,
+      "maxScaledError": 1.5794089902598785e-07
+    },
+    "Independent asymmetric two-bar oracle: 40 geometries/loads against three separate truss implementations": {
+      "comparisons": 520,
+      "maxScaledError": 4.4622919482528725e-15
+    },
+    "Cable admission refuses artificial stabilization and an unconverged active set": {
+      "comparisons": 0,
+      "maxScaledError": 0
+    },
+    "Independent vertex enumeration: 80 bounded LPs match the custom topology simplex": {
+      "comparisons": 80,
+      "maxScaledError": 3.1745254028145807e-16
+    },
+    "Independent two-point Gaussian conditioning matches GP mean and latent variance": {
+      "comparisons": 42,
+      "maxScaledError": 6.800116025829084e-16
+    },
+    "Expected improvement agrees with numerical Gaussian quadrature, including poor candidates": {
+      "comparisons": 4,
+      "maxScaledError": 7.771561172376096e-16
+    },
+    "Independent rectangular union area matches Pareto hypervolume for 50 random point sets": {
+      "comparisons": 50,
+      "maxScaledError": 2.894038875385499e-16
+    },
+    "Wing-box scale laws and signed torsion: linear loads, EI bending and GJ twist": {
+      "comparisons": 5,
+      "maxScaledError": 1.27675647831893e-15
+    },
+    "Zero-scatter strict limit-state equality is safe in the analytic reliability bound": {
+      "comparisons": 0,
+      "maxScaledError": 0
+    },
+    "Sizing rejects compressed wires as physical candidates while retaining the linear calculation": {
+      "comparisons": 0,
+      "maxScaledError": 0
+    },
+    "Linear cable comparisons cannot acquire a physical feasibility badge": {
+      "comparisons": 0,
+      "maxScaledError": 0
+    }
+  },
+  "metricDefinition": "Scaled error = abs(computed - oracle) / max(1, abs(oracle)); not a universal relative physical error. Comparisons reuse stated material constants but independent analytic/linear algebra/geometry oracles.",
+  "browser": {
+    "pagesObserved": 11,
+    "defaultModulesExecuted": 10,
+    "checks": [
+      "Default campaigns and result tables",
+      "Warren sizing gives model-checked candidates",
+      "Wright compressed-wire linear results are withheld",
+      "Landing active-set singularity gives no feasible optimum",
+      "Zero beam length gives readable error; reset recovers",
+      "BO shows actual counts: 30 BO, 25 grid, 30 random under budget cap 30"
+    ],
+    "capturedConsoleErrorsOnReviewedFinalPage": 0
+  },
+  "repairs": [
+    "Remove artificial compressive-wire stabilization",
+    "Refuse singular, cycling and unconverged unilateral active sets",
+    "Re-activate stretched released cables in failsafe model",
+    "Reject compressed-wire candidates across sizing, shape and failsafe; withhold reliability estimates for invalid linear-wire models",
+    "Reject non-finite loads; fix zero-scatter strict-exceedance boundary",
+    "Default sizing to valid Warren demo; label budget cap and model verification accurately",
+    "Replace filled bar charts with category points and distribution profiles; hide penalty values from mass profiles"
+  ],
+  "scope": "Numerical verification and educational usability review. No experimental, ANSYS, nonlinear geometric, aeroelastic or low-Re wing validation. Fresh model feasibility is not a proof of global optimality.",
+  "moduleAssessment": {
+    "beam-section-map": "Useful feasibility and bound-awareness teaching; buckling is not modeled.",
+    "beam-fsd": "Useful strength/stiffness trade-offs; section floors alter ideal zero-tip ratios.",
+    "beam-supports": "Useful support/influence-line studies within Euler-Bernoulli assumptions.",
+    "truss-sizing": "Useful Warren and linear comparison studies; compressed wires cannot be admitted.",
+    "truss-topology": "Useful LP/OC contrast; LP plastic strength and elastic verification are distinguished; buckling not globally optimized.",
+    "truss-failsafe": "Useful conditional load-case and scatter studies; independence/distribution assumptions and cable admission matter.",
+    "truss-shape": "Useful local geometry search; singular cable branches withheld; no global guarantee.",
+    "wingbox-sensitivity": "Useful simplified EI/GJ and sensitivity studies; not the existing Wing Lab model.",
+    "pareto-nsga2": "Useful sampled Pareto fronts; convergence on a teaching problem does not prove global optimality.",
+    "constrained-bo": "Useful optimizer/GP teaching; actual evaluation counts differ under a common cap, GP probabilities are model-conditional."
+  },
+  "existingApplications": "No existing application file is modified by this release."
+}

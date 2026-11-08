@@ -1,0 +1,235 @@
+{
+  "version": "0.1.1",
+  "root": "docs/wing-panel-stress-analyzer/optimization/",
+  "fileCount": 57,
+  "files": {
+    "index.html": {
+      "sha256": "68855054e5ecbc8b75d1e8cfa66ea6ce01bd6708786294e7ce040f8f9071b381",
+      "bytes": 10304
+    },
+    "README.md": {
+      "sha256": "57a45d97cdb736954800d0c43a3daf94210eabea69a4f68193fc7dc04751a59c",
+      "bytes": 6172
+    },
+    "RELEASE.json": {
+      "sha256": "4be9c1533e2247b642a2f3d37d5fb8ce1c343460bc68d3c88417b8da853f3164",
+      "bytes": 6068
+    },
+    "SPEC.md": {
+      "sha256": "0fd39972cdfd80190b32aa47d2b6d86c88d29cd4368206e799fd5c7b23142119",
+      "bytes": 10944
+    },
+    "beam-fsd/README.md": {
+      "sha256": "248dbeea39b7fa1020fc3c6941189a2846c05ffffbadb53b91d17d2be537564e",
+      "bytes": 10269
+    },
+    "beam-fsd/beam-fsd.js": {
+      "sha256": "d10e8db580328f44575a11a0eeae325124098b0848fd5e2e5f85004439671c40",
+      "bytes": 40087
+    },
+    "beam-fsd/beam-fsd.test.js": {
+      "sha256": "fb9099b608aa497c1e67eff16b34df3d0a93185fb5a57ca656dc3b756696faf1",
+      "bytes": 18983
+    },
+    "beam-fsd/index.html": {
+      "sha256": "6d73d7414423524615c60768d9c4e9706b125cf3ee185e7b5fff20cf48a04623",
+      "bytes": 42563
+    },
+    "beam-section-map/README.md": {
+      "sha256": "2edac10da3eaee54e17a08a139b49dab7e2a2d45a66f8ff479bd61032691e49c",
+      "bytes": 9294
+    },
+    "beam-section-map/beam-section-map.js": {
+      "sha256": "51dd010609160f583398f5d60b950c066c9938accd6a20fccbfefef963f1fcaa",
+      "bytes": 35201
+    },
+    "beam-section-map/beam-section-map.test.js": {
+      "sha256": "7b2501bc42ae5731d4bb447baa47cba339ac5daedb553262daaf3fe9ff074709",
+      "bytes": 15980
+    },
+    "beam-section-map/index.html": {
+      "sha256": "caa9cbbc4f137bec4a984ce1cf7b6a2ab1bcec10f48b7ec1349778e964448175",
+      "bytes": 53176
+    },
+    "beam-supports/README.md": {
+      "sha256": "47d8f2912551cd7554bfc61897fcf332f8c0d660dae7deb2179e926e3c2dd2ec",
+      "bytes": 9065
+    },
+    "beam-supports/beam-supports.js": {
+      "sha256": "3bc37b15ec55721442b6afff0d2d95543edd6177e6009deada2ad48e5bfad2c6",
+      "bytes": 48860
+    },
+    "beam-supports/beam-supports.test.js": {
+      "sha256": "6f85e9da5af0715beaa931ba4684c41528958e9ed4da8657b0efee000be5801d",
+      "bytes": 13129
+    },
+    "beam-supports/index.html": {
+      "sha256": "b3af4c890020d1e86fb72f7a91874ae4718e5dc49efac8ba065517b9e6a95272",
+      "bytes": 54724
+    },
+    "constrained-bo/README.md": {
+      "sha256": "074d842a53d7f5f28e30a16c1d12b860590a49738cfec7690a1f53c3ad6ba410",
+      "bytes": 13999
+    },
+    "constrained-bo/constrained-bo.js": {
+      "sha256": "3e622e0a2950d2b0f6edb50e51373fc7a539990850d5f4974ae3f1baec6828c9",
+      "bytes": 61935
+    },
+    "constrained-bo/constrained-bo.test.js": {
+      "sha256": "a862280f87a806c5bdea5345d7de4c6d2ffbb047362215c852f403cfc533cd95",
+      "bytes": 17537
+    },
+    "constrained-bo/constrained-bo.worker.js": {
+      "sha256": "3b4093acec8dcf0fc55f95ad4911019ec6674855c51631319c0778ca0c07b489",
+      "bytes": 1868
+    },
+    "constrained-bo/index.html": {
+      "sha256": "6ee51447e442f9406f6573f9b6d6473706b7e4123313ea1666da9cbe217d2700",
+      "bytes": 56106
+    },
+    "pareto-nsga2/README.md": {
+      "sha256": "b773016870e7ff657cef5292610da63fa1038148996a7f754fa7d44a36bc3ece",
+      "bytes": 10635
+    },
+    "pareto-nsga2/index.html": {
+      "sha256": "6119f4d0e974580e849d68a427b12356296bd7bd2ef4967e1b4fb34178a1cab5",
+      "bytes": 55177
+    },
+    "pareto-nsga2/pareto-nsga2.js": {
+      "sha256": "b21835e7aec0dd93f0f2bdaa655acad93224e09f590b482ddcc671431d5c80d5",
+      "bytes": 56873
+    },
+    "pareto-nsga2/pareto-nsga2.test.js": {
+      "sha256": "8cca4b00f9402e3da0c268956523c6525389de3b293e9c50c2a1689bfff8e2b9",
+      "bytes": 23178
+    },
+    "pareto-nsga2/pareto-nsga2.worker.js": {
+      "sha256": "d25b50f02f0ffb7fd8a8fc30998ab2aba19ddbbda6e50f4f3c8029bed729fa30",
+      "bytes": 2785
+    },
+    "shared/lab.css": {
+      "sha256": "36afa997782df41b7f148233994238be936ad618658d756f4f9b81eec951f607",
+      "bytes": 5413
+    },
+    "shared/labkit.js": {
+      "sha256": "7279e6251935a1fdef770704c0c74058bc158d75d8ed0f7f999440100c003748",
+      "bytes": 24327
+    },
+    "shared/presets.js": {
+      "sha256": "60f436cb56ae9a322e1993181db1baffff430906dc7e0d543674db92bba13da7",
+      "bytes": 7584
+    },
+    "truss-failsafe/README.md": {
+      "sha256": "a7a9e01878a35bd65496426b18fd1596c34dee49286632bbac0a9bdcce9030cd",
+      "bytes": 12426
+    },
+    "truss-failsafe/index.html": {
+      "sha256": "f239f400233be17d17c50fc4686556da2c1131d0e3bc6310dede56a0c4a08545",
+      "bytes": 67294
+    },
+    "truss-failsafe/truss-failsafe.js": {
+      "sha256": "310111a9a99ac0674ee21d161e4b912d6cd411b04ab3edc0b29d9789d1779a1f",
+      "bytes": 50066
+    },
+    "truss-failsafe/truss-failsafe.test.js": {
+      "sha256": "97d981afe410f52ece0a7d35a372c7e80973551863b2bc04b400be979603db0e",
+      "bytes": 24794
+    },
+    "truss-failsafe/truss-failsafe.worker.js": {
+      "sha256": "027ad2a0a6356535402dc59bd9e4fdca7c25a9de403401bff043d473a2fcb1fe",
+      "bytes": 1652
+    },
+    "truss-shape/README.md": {
+      "sha256": "21dbeb21be33444caa49d640d346c2c62d93d6bacba2f9b32409f28c90b29643",
+      "bytes": 13455
+    },
+    "truss-shape/index.html": {
+      "sha256": "25ba7a1c5adadfe856b9c4240aa474a8d5d7162a9454b87dd12eee5cf7167bdf",
+      "bytes": 52961
+    },
+    "truss-shape/truss-shape.js": {
+      "sha256": "285fe7168c76f839841246fccbbf4ad6ac3f66816b342b40442fa786f76f7e0d",
+      "bytes": 61343
+    },
+    "truss-shape/truss-shape.test.js": {
+      "sha256": "a33d574c0483b9227760a51fcfed9854b0553ba09b3886650862f89f7d156130",
+      "bytes": 23108
+    },
+    "truss-shape/truss-shape.worker.js": {
+      "sha256": "2cede3e0b7d9b6ceceefb0ce156fb6f0a3cc057d7e49a5624f4d399041faba04",
+      "bytes": 967
+    },
+    "truss-sizing/README.md": {
+      "sha256": "2c2498552f4d0c8c4dcb93913be2cd3247910cbdcb71cf1e01e9342fbb629800",
+      "bytes": 12057
+    },
+    "truss-sizing/index.html": {
+      "sha256": "146c440f1ea13bc6b66fd30fbc7f5ddb9a3e3a0431ff6417be16cb09bdee6e6b",
+      "bytes": 45432
+    },
+    "truss-sizing/truss-sizing.js": {
+      "sha256": "0b5f092e093582f483d17210b60527b5b9da3ec6f632fecd4554721a17347bfc",
+      "bytes": 45704
+    },
+    "truss-sizing/truss-sizing.test.js": {
+      "sha256": "e92fd73e64a91b6cd9f830f210448bff5b9ef08d50771f3cee66ce71a79e9534",
+      "bytes": 16367
+    },
+    "truss-topology/README.md": {
+      "sha256": "991c7cc18691cbdd51952af33d7d14aafc2df75faacaef99f496cf6a332a8ba7",
+      "bytes": 10824
+    },
+    "truss-topology/index.html": {
+      "sha256": "32abae84c0afb8f696a3ebce3c32c0fa67eb2e0dc80aabf2289686281eb03fe6",
+      "bytes": 46039
+    },
+    "truss-topology/truss-topology.js": {
+      "sha256": "8fda3295e16d409604d2a6e0fcccfcf277ed8b6e72fd6154450f76bb8859edfd",
+      "bytes": 61371
+    },
+    "truss-topology/truss-topology.test.js": {
+      "sha256": "55f0867cfd1393adbfc078130fb21d8d68228c7d7b3190d0c2eec59eca587226",
+      "bytes": 15256
+    },
+    "truss-topology/truss-topology.worker.js": {
+      "sha256": "1766d2bfda47d6cbfac2b66af989ba0b2e7df1bd0d7f37257fccb6cb2ba40c8a",
+      "bytes": 972
+    },
+    "wingbox-sensitivity/README.md": {
+      "sha256": "c446c8cb77bbbdaaf4fa0c407682aaba08903853cad900bb267f27ff0a43bbf0",
+      "bytes": 14605
+    },
+    "wingbox-sensitivity/index.html": {
+      "sha256": "d8055a8cebbab5abe5c181f69fef8d7b8f77ceea66e4e6bbc611c05fa2387e91",
+      "bytes": 52892
+    },
+    "wingbox-sensitivity/wingbox-sensitivity.js": {
+      "sha256": "bf5f2ad683bba0e4752c0e304c19d4c9cf252ad46df7a9c1f74e82b00538059b",
+      "bytes": 49751
+    },
+    "wingbox-sensitivity/wingbox-sensitivity.test.js": {
+      "sha256": "7bbd4d97a2b5b33f7f2e4566b5410517ebf4accd1e70544f0930f6ef2bb84601",
+      "bytes": 13489
+    },
+    "validation/independent.test.mjs": {
+      "sha256": "68f8b5a37749b0eb0431310316c230312a8d93e03b80a5b1d8ce3ed9cd591cee",
+      "bytes": 8325
+    },
+    "validation/REVIEW.json": {
+      "sha256": "fe9f9f975e29a864546ff2149f552e97caa55aa616a352e3b7cbdb25853f3958",
+      "bytes": 5566
+    },
+    "validation/original-checksums.json": {
+      "sha256": "2e1a3bd22ce48174d92fadd25b07663b6f48c83823f342dcac9db561a7670554",
+      "bytes": 7904
+    },
+    "validation/run-tests.cjs": {
+      "sha256": "2e8a85cf280b191ff83b56a1bff64fec55a72d217784a1f13acfc9410c5218f6",
+      "bytes": 537
+    },
+    "SOURCE.json": {
+      "sha256": "90c35e8ebc71ca7bb35f67f1dbd473504c3dc1da767cd505656099ca1f62296d",
+      "bytes": 439
+    }
+  }
+}

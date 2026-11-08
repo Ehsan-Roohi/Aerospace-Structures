@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fully Stressed Tapered Beam · MIE 446 Optimization Lab</title>
+<link rel="stylesheet" href="../shared/lab.css">
+<link rel="icon" href="data:,">
+<style>
+  .load-block { border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; margin: 8px 0; }
+  .load-block h3 { margin: 0 0 4px; }
+  .field.compact { grid-template-columns: 1fr 120px; }
+  .design-row td:first-child { font-weight: 600; }
+  .legend-note { font-size: 0.82rem; color: var(--muted); margin: -6px 0 10px; }
+  .classical { background: var(--info-soft); border-radius: var(--radius); padding: 10px 12px; margin: 8px 0 12px; font-size: 0.9rem; }
+  .classical table { margin-top: 6px; }
+  .hint { font-size: 0.82rem; color: var(--muted); }
+  table.results td.badgecell { white-space: nowrap; }
+  .table-wrap { overflow-x: auto; }
+  .grid > section { min-width: 0; }
+  table.results td.badgecell .badge { white-space: normal; }
+</style>
+</head>
+<body>
+<header class="lab-header">
+  <div class="crumbs"><a href="../index.html">Optimization Lab</a> · <a href="https://ehsan-roohi.github.io/Aerospace-Structures/wing-panel-stress-analyzer/#beam">Beam</a> · <a href="https://ehsan-roohi.github.io/Aerospace-Structures/wing-panel-stress-analyzer/truss-lab.html">Truss Lab</a> · <a href="https://ehsan-roohi.github.io/Aerospace-Structures/wing-panel-stress-analyzer/">Wing AeroStruct</a></div>
+  <h1>Fully Stressed Tapered Beam</h1>
+  <span class="version">beam-fsd 0.1.1</span>
+</header>
+
+<main class="lab-main">
+  <div class="scope">
+    <strong>Scope.</strong> This page takes the prismatic beam you sized yourself, lets the depth (or the tube wall) follow the bending-moment diagram through the fully stressed design (FSD) iteration, and shows what the taper saves in mass and what it costs in stiffness.
+    Model: Euler-Bernoulli beam, linear elastic, small deflection, bending about one axis, no shear deformation, no lateral or local buckling, no fatigue, no stress concentration at the steps.
+    Every design shown is re-solved from scratch with the exact finite element solver and all constraints are re-checked; nothing here is a certified strength or safety statement, and the page is independent of the Wing AeroStruct solver.
+  </div>
+
+  <div class="grid">
+    <section>
+      <div class="panel">
+        <h2>Inputs</h2>
+        <div class="field"><label for="in-preset">Preset</label><select id="in-preset"></select></div>
+        <div class="field"><label for="in-support">Support type</label><select id="in-support"></select></div>
+        <div class="field"><label for="in-L">Length L <span class="unit">mm</span></label><input id="in-L" type="number" value="500" step="10" min="1"></div>
+
+        <h3>Loads (positive upward)</h3>
+        <div id="loads"></div>
+
+        <h3>Material and limits</h3>
+        <div class="field"><label for="in-material">Material card</label><select id="in-material"></select></div>
+        <div id="custom-material" hidden>
+          <div class="field"><label for="in-E">Modulus E <span class="unit">MPa</span></label><input id="in-E" type="number" value="200000" step="1000" min="1"></div>
+          <div class="field"><label for="in-sigma">Allowable stress <span class="unit">MPa</span></label><input id="in-sigma" type="number" value="350" step="5" min="0.1"></div>
+          <div class="field"><label for="in-rho">Density <span class="unit">g/cm^3</span></label><input id="in-rho" type="number" value="7.85" step="0.01" min="0.01"></div>
+        </div>
+        <div class="field"><label for="in-FS">Factor of safety FS <span class="unit">-</span></label><input id="in-FS" type="number" value="1.5" step="0.1" min="0.1"></div>
+        <div class="field"><label for="in-k">Deflection limit ratio k (limit L / k) <span class="unit">-</span></label><input id="in-k" type="number" value="40" step="5" min="1"></div>
+
+        <h3>Section and discretization</h3>
+        <div class="field"><label for="in-section">Section family</label><select id="in-section"></select></div>
+        <div class="field"><label for="in-fixed" id="lbl-fixed">Fixed width b <span class="unit">mm</span></label><input id="in-fixed" type="number" value="10" step="1" min="0.1"></div>
+        <div class="field"><label for="in-min" id="lbl-min">Minimum depth h_min <span class="unit">mm</span></label><input id="in-min" type="number" value="2" step="0.1" min="0.01"></div>
+        <div class="field"><label for="in-N">Number of segments N (10 to 60) <span class="unit">-</span></label><input id="in-N" type="number" value="24" step="1" min="10" max="60"></div>
+        <div class="field"><label for="in-taper">Taper drawing mode</label><select id="in-taper"></select></div>
+        <div class="field"><label for="in-exp">Resizing exponent p (h_new = h U^(p/2))</label><select id="in-exp">
+          <option value="1.5" selected>1.5 (over-relaxed, default)</option>
+          <option value="1.25">1.25</option>
+          <option value="1">1 (textbook stress ratio)</option>
+        </select></div>
+
+        <div class="btn-row">
+          <button class="btn" id="btn-run">Solve and optimize</button>
+          <button class="btn secondary" id="btn-reset">Reset</button>
+          <button class="btn secondary" id="btn-csv">Download CSV</button>
+        </div>
+        <div class="status" id="status"></div>
+        <p class="hint">Sign convention: y up, loads positive upward, bending moment positive sagging (bottom fibre in tension), shear V = dM/dx.</p>
+      </div>
+
+      <div class="panel">
+        <h2>How it works</h2>
+        <details class="help" open>
+          <summary>Model</summary>
+          <div class="body">
+            The beam is meshed with 2-node Hermite cubic Euler-Bernoulli finite elements (FE): one element per segment, with extra nodes at every load position and at the supports, and each element carries its own bending stiffness EI. For a beam with piecewise constant EI, point loads and uniform loads this element gives the exact nodal deflections, so the bending moment M(x) and shear V(x) recovered from the element end forces are exact everywhere. The bending stress at the extreme fibre is sigma = |M| c / I and the stress utilization is U = sigma FS / sigma_allow, with FS the factor of safety. The deflection utilization is max |v| divided by L / k.
+          </div>
+        </details>
+        <details class="help" open>
+          <summary>Fully stressed design iteration</summary>
+          <div class="body">
+            <ol style="padding-left: 18px; margin: 4px 0;">
+              <li><strong>Prismatic start.</strong> One uniform depth h (or wall t) is chosen so that the largest bending moment reaches exactly the allowable stress divided by FS. This is the design you would make by hand.</li>
+              <li><strong>Resize every segment.</strong> The governing section of a segment is the point with the largest |M| in it (an end, or the point where the shear is zero under a uniform load). With U computed there, the rectangle depth is updated as h_new = h sqrt(U), because the bending stress scales with 1/h^2 at fixed width. For the tube the wall is updated by solving I(t_new) = I(t) U exactly, with t_min &lt;= t &lt;= D / 2. A segment that wants to be thinner than the minimum stays at the minimum.</li>
+              <li><strong>Repeat</strong> until max |U - 1| &lt; 0.001 on every segment not at the minimum, or 60 iterations. For a cantilever or a simply supported beam the moment diagram does not depend on the stiffness, so the first resize already is the fixed point. For the propped cantilever (statically indeterminate) the moments move toward the stiffer parts after each resize, so the loop runs many times and the design drifts toward a nearly statically determinate one with a very thin region near the inflection point. From the second pass the update uses h_new = h U^(p/2) with the exponent p chosen above; p = 1 is the textbook stress-ratio rule, p = 1.5 reaches the same fixed point in fewer passes.</li>
+              <li><strong>Deflection limit.</strong> Tapering removes material where the moment is small, which also removes stiffness, so the fully stressed beam deflects more than the prismatic one. If it exceeds L / k, the whole profile is multiplied by one factor s, found by bisection, until max |v| equals L / k exactly. The prismatic beam gets the same treatment so the two can be compared under identical limits. Uniform scaling is a simple repair, not the minimum-mass design under a deflection limit.</li>
+              <li><strong>Verify.</strong> Each design is rebuilt from its numbers, re-solved with the plain solver and re-checked (stress in every segment, deflection, minimum dimension) before anything is shown.</li>
+            </ol>
+          </div>
+        </details>
+        <details class="help">
+          <summary>Classical results</summary>
+          <div class="body">
+            Cantilever with a tip load and a rectangle of fixed width: h(x) = h_root sqrt(1 - x / L), Galileo's parabolic beam of uniform strength (1638). The continuous profile has exactly 2/3 of the prismatic mass and twice its tip deflection.
+            Simply supported beam under a uniform load, fixed width: h(x) = h_mid sqrt(4 x (L - x)) / L; the integral of sqrt(x (L - x)) from 0 to L is pi L^2 / 8, so the mass ratio is pi / 4 = 0.785, and the midspan deflection ratio is (6 pi - 12) / 5 = 1.370.
+            For a thin-walled tube of fixed outer diameter the section modulus is proportional to the wall, so t(x) follows |M(x)|: mass ratio 1/2 for the cantilever with tip load (moment triangle), 2/3 for the simply supported beam under uniform load (moment parabola).
+            A stepped design in which each step is sized for the largest moment inside it is always a little heavier than the continuous profile and approaches it as N grows (the difference is of order 1 / N); refine N and watch the numbers move.
+          </div>
+        </details>
+        <details class="help">
+          <summary>Limitations</summary>
+          <div class="body">
+            Only the bending stress at the extreme fibre is checked. Shear stress, stress concentrations at the steps, lateral-torsional and local buckling, fatigue, and manufacturing constraints are not considered. The linear taper option changes only the drawing (the smooth profile through the segment midpoints has the same volume as the stepped one for the rectangle, and nearly the same for the tube); the analysis always uses one depth per segment. Material cards are representative educational values, not certified allowables. Results are not a substitute for a design code check.
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <section>
+      <div class="panel">
+        <h2>Results</h2>
+        <div class="kpi-row" id="kpis"></div>
+        <div class="table-wrap"><table class="results" id="table-designs"></table></div>
+        <div class="classical" id="classical"></div>
+        <h3>Bending moment and depth profile</h3>
+        <canvas class="plot" id="plot-moment" width="720" height="300"></canvas>
+        <canvas class="plot" id="plot-beam" width="720" height="300"></canvas>
+        <p class="legend-note" id="beam-note"></p>
+        <h3>Stress utilization per segment</h3>
+        <canvas class="plot" id="plot-util" width="720" height="320"></canvas>
+        <h3>Deflected shapes</h3>
+        <canvas class="plot" id="plot-defl" width="720" height="320"></canvas>
+        <h3>Iteration history</h3>
+        <canvas class="plot" id="plot-hist" width="720" height="260"></canvas>
+        <h3>Segment table</h3>
+        <div class="table-wrap"><table class="results" id="table-segments"></table></div>
+      </div>
+    </section>
+  </div>
+<p class="scope"><strong>Review note:</strong> A fresh solve checks feasibility within this page's stated model. It is not independent physical validation or a proof of global optimality. Optimizer results are candidates; comparisons depend on bounds, discretization and evaluation counts.</p></main>
+
+<footer class="lab-footer">
+  MIE 446 Aerospace Structures, University of Massachusetts Amherst. Educational optimization demonstration on a simplified model; independent of the Wing AeroStruct solver and not a certified analysis.
+</footer>
+
+<script type="module">
+import { linePlot, categoryPlot, fmt, badge, escapeHTML, setupCanvas, downloadCSV, palette } from '../shared/labkit.js';
+import { MATERIALS } from '../shared/presets.js';
+import * as mod from './beam-fsd.js';
+
+const $ = id => document.getElementById(id);
+const num = id => { const v = $(id).value; return v === '' ? NaN : Number(v); };
+const q = x => (Number.isInteger(x) ? String(x) : fmt(x, 4)); // short number for labels
+let lastResult = null;
+
+// ---------- build the static controls ----------
+function fillSelect(id, entries, selected) {
+  const sel = $(id);
+  sel.innerHTML = '';
+  for (const [value, label] of entries) {
+    const o = document.createElement('option');
+    o.value = value; o.textContent = label;
+    if (value === selected) o.selected = true;
+    sel.appendChild(o);
+  }
+}
+fillSelect('in-preset', Object.entries(mod.FSD_PRESETS).map(([k, p]) => [k, p.name]), mod.DEFAULT_PRESET);
+fillSelect('in-support', Object.entries(mod.SUPPORT_TYPES), 'cantilever');
+fillSelect('in-material', [...Object.entries(MATERIALS).map(([k, m]) => [k, `${m.name} (E ${m.E} MPa, allowable ${m.sigmaAllow} MPa, ${m.rho} g/cm^3)`]), ['custom', 'Custom material']], 'steel');
+fillSelect('in-section', Object.entries(mod.SECTION_TYPES), 'rect');
+fillSelect('in-taper', Object.entries(mod.TAPER_MODES), 'stepped');
+
+const loadsDiv = $('loads');
+for (let i = 1; i <= 3; i++) {
+  const block = document.createElement('div');
+  block.className = 'load-block';
+  block.innerHTML = `
+    <h3>Load ${i}</h3>
+    <div class="field"><label for="in-load${i}-type">Type</label><select id="in-load${i}-type">
+      <option value="none">none</option><option value="point">point load P at a</option><option value="udl">uniform load w on [a, b]</option></select></div>
+    <div class="field"><label for="in-load${i}-mag" id="lbl-load${i}-mag">Magnitude P <span class="unit">N</span></label><input id="in-load${i}-mag" type="number" value="0" step="1"></div>
+    <div class="field"><label for="in-load${i}-a">Position a <span class="unit">mm</span></label><input id="in-load${i}-a" type="number" value="0" step="10" min="0"></div>
+    <div class="field"><label for="in-load${i}-b">End b (uniform load) <span class="unit">mm</span></label><input id="in-load${i}-b" type="number" value="0" step="10" min="0"></div>`;
+  loadsDiv.appendChild(block);
+  $(`in-load${i}-type`).addEventListener('change', () => updateLoadLabels(i));
+}
+
+function updateLoadLabels(i) {
+  const type = $(`in-load${i}-type`).value;
+  $(`lbl-load${i}-mag`).innerHTML = type === 'udl' ? 'Magnitude w <span class="unit">N/mm</span>' : 'Magnitude P <span class="unit">N</span>';
+  $(`in-load${i}-mag`).disabled = type === 'none';
+  $(`in-load${i}-a`).disabled = type === 'none';
+  $(`in-load${i}-b`).disabled = type !== 'udl';
+}
+
+function updateSectionLabels() {
+  const rect = $('in-section').value === 'rect';
+  $('lbl-fixed').innerHTML = rect ? 'Fixed width b <span class="unit">mm</span>' : 'Fixed outer diameter D <span class="unit">mm</span>';
+  $('lbl-min').innerHTML = rect ? 'Minimum depth h_min <span class="unit">mm</span>' : 'Minimum wall t_min <span class="unit">mm</span>';
+}
+
+$('in-section').addEventListener('change', () => {
+  const rect = $('in-section').value === 'rect';
+  $('in-fixed').value = rect ? 10 : 40;
+  $('in-min').value = rect ? 2 : 0.8;
+  updateSectionLabels();
+});
+$('in-material').addEventListener('change', () => {
+  const key = $('in-material').value;
+  $('custom-material').hidden = key !== 'custom';
+  if (MATERIALS[key]) { $('in-E').value = MATERIALS[key].E; $('in-sigma').value = MATERIALS[key].sigmaAllow; $('in-rho').value = MATERIALS[key].rho; }
+});
+
+// ---------- presets ----------
+function applyPreset(key) {
+  const p = mod.FSD_PRESETS[key];
+  if (!p) return;
+  $('in-support').value = p.support;
+  $('in-L').value = p.L;
+  for (let i = 1; i <= 3; i++) {
+    const ld = p.loads[i - 1];
+    $(`in-load${i}-type`).value = ld ? ld.type : 'none';
+    $(`in-load${i}-mag`).value = ld ? (ld.type === 'point' ? ld.P : ld.w) : 0;
+    $(`in-load${i}-a`).value = ld ? ld.a : 0;
+    $(`in-load${i}-b`).value = ld && ld.type === 'udl' ? ld.b : p.L;
+    updateLoadLabels(i);
+  }
+  $('in-material').value = p.material;
+  $('custom-material').hidden = true;
+  if (MATERIALS[p.material]) { $('in-E').value = MATERIALS[p.material].E; $('in-sigma').value = MATERIALS[p.material].sigmaAllow; $('in-rho').value = MATERIALS[p.material].rho; }
+  $('in-FS').value = p.FS;
+  $('in-k').value = p.deflectionLimitRatio;
+  $('in-section').value = p.section.type;
+  $('in-fixed').value = p.section.type === 'rect' ? p.section.b : p.section.D;
+  $('in-min').value = p.minDim;
+  $('in-N').value = p.N;
+  $('in-taper').value = p.taper || 'stepped';
+  $('in-exp').value = '1.5';
+  updateSectionLabels();
+}
+
+function readModel() {
+  const notes = [];
+  const loads = [];
+  for (let i = 1; i <= 3; i++) {
+    const type = $(`in-load${i}-type`).value;
+    if (type === 'none') continue;
+    if (type === 'point') loads.push({ type: 'point', P: num(`in-load${i}-mag`), a: num(`in-load${i}-a`) });
+    else loads.push({ type: 'udl', w: num(`in-load${i}-mag`), a: num(`in-load${i}-a`), b: num(`in-load${i}-b`) });
+  }
+  const matKey = $('in-material').value;
+  const material = matKey === 'custom' ? { key: 'custom', name: 'Custom material', E: num('in-E'), sigmaAllow: num('in-sigma'), rho: num('in-rho') } : matKey;
+  const secType = $('in-section').value;
+  const section = secType === 'rect' ? { type: 'rect', b: num('in-fixed') } : { type: 'tube', D: num('in-fixed') };
+  let N = Math.round(num('in-N'));
+  if (Number.isFinite(N) && (N < 10 || N > 60)) { N = Math.min(60, Math.max(10, N)); $('in-N').value = N; notes.push(`N limited to the range 10 to 60 (set to ${N}).`); }
+  return {
+    model: { support: $('in-support').value, L: num('in-L'), loads, material, FS: num('in-FS'), deflectionLimitRatio: num('in-k'),
+      section, minDim: num('in-min'), N, taper: $('in-taper').value, exponent: Number($('in-exp').value) },
+    notes,
+  };
+}
+
+// ---------- rendering helpers ----------
+const dimName = m => (m.section.type === 'rect' ? 'h' : 't');
+const kpi = (label, value, sub) => `<div class="kpi"><div class="label">${escapeHTML(label)}</div><div class="value">${value}</div><div class="sub">${sub || ''}</div></div>`;
+
+function uBadge(U) {
+  if (!Number.isFinite(U)) return badge('info', 'n/a');
+  if (U > 1 + mod.U_TOL) return badge('bad', `U = ${fmt(U, 3)} violated`);
+  if (U >= 0.97) return badge('warn', `U = ${fmt(U, 3)} active`);
+  return badge('ok', `U = ${fmt(U, 3)}`);
+}
+
+function verifyBadge(d) {
+  if (d.error) return badge('bad', d.error);
+  const v = d.verify;
+  if (v.feasible) return badge('ok', 'Checked by fresh model solve');
+  const parts = [];
+  if (v.utilizations) {
+    if (v.utilizations.stress > 1 + mod.U_TOL) parts.push(`stress U = ${fmt(v.utilizations.stress, 3)}`);
+    if (v.utilizations.deflection > 1 + mod.U_TOL) parts.push(`deflection U = ${fmt(v.utilizations.deflection, 3)}`);
+  }
+  if (!parts.length) parts.push(v.reason);
+  return badge('bad', 'Re-solve: limit exceeded, ' + parts.join(', '));
+}
+
+function renderKpis(res) {
+  const m = res.model, d = res.designs, dn = dimName(m);
+  const vlim = m.L / m.deflectionLimitRatio;
+  const tiles = [];
+  tiles.push(kpi('Prismatic mass (your design)', `${fmt(d.prismatic.mass, 4)} g`, `${dn} = ${fmt(d.prismatic.dim, 4)} mm uniform${d.prismatic.atMin ? ', held at the minimum' : ''}`));
+  tiles.push(kpi('Fully stressed mass', `${fmt(d.fsd.mass, 4)} g`, `saves ${fmt(res.savings.stressOnly.grams, 4)} g (${fmt(res.savings.stressOnly.percent, 3)} %) against stress only`));
+  if (!d.fsdDefl.error) {
+    tiles.push(kpi('FSD mass with deflection limit', `${fmt(d.fsdDefl.mass, 4)} g`,
+      d.fsdDefl.active ? `profile scaled by s = ${fmt(d.fsdDefl.scale, 4)}; saves ${fmt(d.prismatic.mass - d.fsdDefl.mass, 4)} g (${fmt(100 * (1 - d.fsdDefl.mass / d.prismatic.mass), 3)} %) against the prismatic design` : 'deflection limit not active: identical to the fully stressed design'));
+  } else {
+    tiles.push(kpi('FSD mass with deflection limit', 'n/a', escapeHTML(d.fsdDefl.error)));
+  }
+  if (res.savings.bothLimits && d.prismaticDefl.active) {
+    tiles.push(kpi('Saving under both limits', `${fmt(res.savings.bothLimits.percent, 3)} %`, `${fmt(res.savings.bothLimits.grams, 4)} g against a prismatic beam scaled to the same deflection limit (${fmt(d.prismaticDefl.mass, 4)} g)`));
+  }
+  tiles.push(kpi('Max deflection, prismatic', `${fmt(d.prismatic.solution.vmax, 4)} mm`, `limit L / ${fmt(m.deflectionLimitRatio, 4)} = ${fmt(vlim, 4)} mm; ${uBadge(d.prismatic.verify.utilizations.deflection)}`));
+  tiles.push(kpi('Max deflection, fully stressed', `${fmt(d.fsd.solution.vmax, 4)} mm`, `${fmt(res.numeric.deflRatio, 4)} times the prismatic value; ${uBadge(d.fsd.verify.utilizations.deflection)}`));
+  if (!d.fsdDefl.error) tiles.push(kpi('Max deflection, FSD with limit', `${fmt(d.fsdDefl.solution.vmax, 4)} mm`, uBadge(d.fsdDefl.verify.utilizations.deflection)));
+  const gp = d.prismatic.verify.governing;
+  tiles.push(kpi('Governing constraint', `${escapeHTML(d.fsd.verify.governing.type === 'deflection' ? 'deflection (FSD)' : 'bending stress')}`,
+    `prismatic: ${escapeHTML(gp.label)}; FSD: every segment not at the minimum is at U = 1`));
+  tiles.push(kpi('FSD iterations', `${res.iterations}`, res.converged ? badge('ok', `converged, max |U - 1| = ${res.history[res.history.length - 1].maxDev.toExponential(1)}`) : badge('warn', `not converged in ${res.iterations} passes (max |U - 1| = ${res.history[res.history.length - 1].maxDev.toExponential(1)}); shown design scaled to be feasible`)));
+  tiles.push(kpi('Mesh', `${res.mesh.elements} elements`, `${res.mesh.nodes} nodes, N = ${m.N} segments, solved in ${fmt(res.elapsedMs, 3)} ms`));
+  $('kpis').innerHTML = tiles.join('');
+}
+
+function renderDesignTable(res) {
+  const d = res.designs;
+  const rows = [d.prismatic, d.fsd, d.fsdDefl, d.prismaticDefl];
+  let html = '<thead><tr><th>Design</th><th class="num">Mass (g)</th><th class="num">Saving vs prismatic</th><th class="num">Max |v| (mm)</th><th>Stress</th><th>Deflection</th><th>Governing</th><th>Verification</th></tr></thead><tbody>';
+  for (const r of rows) {
+    if (r.error) { html += `<tr class="design-row"><td>${escapeHTML(r.label)}</td><td colspan="7">${badge('bad', r.error)}</td></tr>`; continue; }
+    const v = r.verify;
+    const saving = r.key === 'prismatic' ? '-' : `${fmt(d.prismatic.mass - r.mass, 4)} g (${fmt(100 * (1 - r.mass / d.prismatic.mass), 3)} %)`;
+    const extra = r.scale !== undefined && r.active ? ` <span class="hint">(scale ${fmt(r.scale, 4)})</span>` : (r.scale !== undefined && !r.active ? ' <span class="hint">(limit not active)</span>' : '');
+    html += `<tr class="design-row"><td>${escapeHTML(r.label)}${extra}</td><td class="num">${fmt(r.mass, 4)}</td><td class="num">${saving}</td><td class="num">${fmt(r.solution.vmax, 4)}</td>
+      <td class="badgecell">${uBadge(v.utilizations.stress)}</td><td class="badgecell">${uBadge(v.utilizations.deflection)}</td><td>${escapeHTML(v.governing.label)}</td><td class="badgecell">${verifyBadge(r)}</td></tr>`;
+  }
+  html += '</tbody>';
+  $('table-designs').innerHTML = html;
+}
+
+function renderClassical(res) {
+  const c = res.classical, n = res.numeric, m = res.model;
+  if (!c.applicable) {
+    let redistribution = '';
+    const M0 = res.designs.prismatic.solution.segments[0].Mgov, M1 = res.designs.fsd.solution.segments[0].Mgov;
+    if (m.support === 'propped' && Math.abs(M0) > 0) {
+      redistribution = ` Moment redistribution: the clamp moment moved from ${fmt(M0 / 1000, 4)} N m (prismatic) to ${fmt(M1 / 1000, 4)} N m (fully stressed), ${fmt(100 * (Math.abs(M1) / Math.abs(M0) - 1), 3)} %, because the stiff root attracts moment while the thin region near the inflection point behaves almost like a hinge.`;
+    }
+    $('classical').innerHTML = `<strong>Classical reference.</strong> ${escapeHTML(c.caseLabel)}. Numerical mass ratio FSD / prismatic for this stepped design (N = ${m.N}): <strong>${fmt(n.massRatio, 4)}</strong>; deflection ratio: <strong>${fmt(n.deflRatio, 4)}</strong>. ${escapeHTML(c.note)}${escapeHTML(redistribution)}`;
+    return;
+  }
+  const dMass = 100 * (n.massRatio / c.massRatio - 1), dDefl = 100 * (n.deflRatio / c.deflRatio - 1);
+  $('classical').innerHTML = `<strong>Classical reference: ${escapeHTML(c.caseLabel)}.</strong> Profile ${escapeHTML(c.profileLabel)}.
+    <table class="results"><thead><tr><th>Quantity</th><th class="num">Continuous closed form</th><th class="num">This stepped design (N = ${m.N})</th><th class="num">Difference</th></tr></thead><tbody>
+    <tr><td>Mass ratio FSD / prismatic</td><td class="num">${escapeHTML(c.massRatioLabel)} = ${fmt(c.massRatio, 4)}</td><td class="num">${fmt(n.massRatio, 4)}</td><td class="num">${dMass >= 0 ? '+' : ''}${fmt(dMass, 3)} %</td></tr>
+    <tr><td>Max deflection ratio FSD / prismatic</td><td class="num">${escapeHTML(c.deflRatioLabel)} = ${fmt(c.deflRatio, 4)}</td><td class="num">${fmt(n.deflRatio, 4)}</td><td class="num">${dDefl >= 0 ? '+' : ''}${fmt(dDefl, 3)} %</td></tr>
+    </tbody></table><div class="hint" style="margin-top:6px">${escapeHTML(c.note)}${c.exact ? ' The dotted line on the side view is the closed-form profile; each step meets it at its governing section.' : ''}</div>`;
+}
+
+function renderMomentPlot(res) {
+  const d = res.designs;
+  const Mp = d.prismatic.solution.curves.M, Mf = d.fsd.solution.curves.M;
+  const same = res.model.support !== 'propped';
+  // plot in N m when the moments are large, so the tick labels stay short (1 N m = 1000 N mm)
+  const maxAbs = Math.max(...Mp.y.map(Math.abs), ...Mf.y.map(Math.abs));
+  const k = maxAbs >= 1e4 ? 1e-3 : 1, unit = maxAbs >= 1e4 ? 'N m' : 'N mm';
+  const series = same
+    ? [{ x: Mf.x, y: Mf.y.map(v => v * k), label: 'M(x), prismatic and FSD (identical: statically determinate)', color: palette.blue, width: 2 }]
+    : [{ x: Mp.x, y: Mp.y.map(v => v * k), label: 'M(x) prismatic', color: palette.gray, width: 2, dash: [6, 4] }, { x: Mf.x, y: Mf.y.map(v => v * k), label: 'M(x) fully stressed', color: palette.blue, width: 2 }];
+  const r = linePlot($('plot-moment'), series, { title: `Bending moment diagram (positive sagging), in ${unit}`, xlabel: 'x (mm)', ylabel: `M (${unit})`, yZero: true, xlim: [0, res.model.L] });
+  // segment boundaries
+  const dx = res.model.L / res.model.N;
+  r.ctx.save(); r.ctx.strokeStyle = 'rgba(0,0,0,0.08)'; r.ctx.lineWidth = 1;
+  for (let i = 1; i < res.model.N; i++) { const X = r.X(i * dx); r.ctx.beginPath(); r.ctx.moveTo(X, r.frame.top); r.ctx.lineTo(X, r.frame.top + r.frame.ph); r.ctx.stroke(); }
+  r.ctx.restore();
+}
+
+function drawArrow(ctx, x0, y0, x1, y1, color) {
+  ctx.strokeStyle = color; ctx.fillStyle = color; ctx.lineWidth = 1.6;
+  ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.stroke();
+  const ang = Math.atan2(y1 - y0, x1 - x0), s = 7;
+  ctx.beginPath(); ctx.moveTo(x1, y1);
+  ctx.lineTo(x1 - s * Math.cos(ang - 0.45), y1 - s * Math.sin(ang - 0.45));
+  ctx.lineTo(x1 - s * Math.cos(ang + 0.45), y1 - s * Math.sin(ang + 0.45));
+  ctx.closePath(); ctx.fill();
+}
+
+function renderBeamView(res) {
+  const canvas = $('plot-beam');
+  const { ctx, W, H } = setupCanvas(canvas);
+  const m = res.model, L = m.L, d = res.designs, rect = m.section.type === 'rect';
+  // fixed layout in logical pixels: title row, load band above the beam, beam band, support band, axis
+  const left = 62, right = 16, top = 26, loadBand = 82, supportBand = 34, axisBand = 40, Rpx = 58;
+  const pw = W - left - right;
+  const X = x => left + x / L * pw;
+  const yc = top + loadBand + Rpx;           // neutral axis
+  const yTop = yc - Rpx, yBot = yc + Rpx;    // outline of the deepest profile drawn
+  const yAxis = yBot + supportBand;
+  const allDims = [...d.prismatic.design, ...d.fsd.design, ...(d.fsdDefl.design || [])];
+  const maxDim = Math.max(...allDims);
+  let sc, Y, exagText;
+  if (rect) {
+    sc = Rpx / (maxDim / 2);                 // px per mm of depth
+    Y = y => yc - y * sc;
+    exagText = `Depth drawn ${fmt(sc / (pw / L), 3)} times larger than length.`;
+  } else {
+    sc = 0.8 * Rpx / maxDim;                 // px per mm of wall, exaggerated relative to the diameter
+    Y = y => yc - y * sc;
+    exagText = `Wall thickness drawn ${fmt(sc * (m.section.D / 2) / Rpx, 3)} times larger relative to the diameter D (outer lines are D apart).`;
+  }
+  ctx.save();
+  ctx.fillStyle = '#1d1d1f'; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+  ctx.font = 'bold 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
+  ctx.fillText(rect ? 'Side view: depth profile h(x)' : 'Longitudinal section: wall profile t(x)', left, 8);
+  ctx.font = '12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
+
+  const profilePath = (design, fill, stroke, dash, doFill) => {
+    const pts = mod.profileOutline(m, design);
+    ctx.setLineDash(dash || []);
+    ctx.strokeStyle = stroke; ctx.fillStyle = fill; ctx.lineWidth = 1.5;
+    if (rect) {
+      ctx.beginPath();
+      pts.forEach((p, i) => { const x = X(p.x), y = Y(p.d / 2); if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y); });
+      for (let i = pts.length - 1; i >= 0; i--) ctx.lineTo(X(pts[i].x), Y(-pts[i].d / 2));
+      ctx.closePath();
+      if (doFill) ctx.fill();
+      ctx.stroke();
+    } else {
+      for (const sgn of [1, -1]) {
+        ctx.beginPath();
+        pts.forEach((p, i) => { const x = X(p.x), y = yc - sgn * Rpx; if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y); });
+        for (let i = pts.length - 1; i >= 0; i--) ctx.lineTo(X(pts[i].x), yc - sgn * (Rpx - pts[i].d * sc));
+        ctx.closePath();
+        if (doFill) ctx.fill();
+        ctx.stroke();
+      }
+    }
+    ctx.setLineDash([]);
+  };
+  // prismatic (gray), FSD (blue, filled), FSD with limit (orange dashed outline), analytic (dotted)
+  profilePath(d.prismatic.design, 'rgba(107,107,107,0.16)', palette.gray, [5, 4], true);
+  profilePath(d.fsd.design, 'rgba(31,95,191,0.35)', palette.blue, [], true);
+  if (!d.fsdDefl.error && d.fsdDefl.active) profilePath(d.fsdDefl.design, 'rgba(0,0,0,0)', palette.orange, [7, 4], false);
+  if (res.analyticProfile && res.analyticProfile.exact && rect) {
+    ctx.strokeStyle = '#1d1d1f'; ctx.setLineDash([2, 3]); ctx.lineWidth = 1.2;
+    for (const sgn of [1, -1]) {
+      ctx.beginPath();
+      res.analyticProfile.x.forEach((x, i) => { const px = X(x), py = Y(sgn * res.analyticProfile.d[i] / 2); if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py); });
+      ctx.stroke();
+    }
+    ctx.setLineDash([]);
+  }
+  // neutral axis
+  ctx.strokeStyle = 'rgba(0,0,0,0.25)'; ctx.setLineDash([2, 4]); ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(X(0), yc); ctx.lineTo(X(L), yc); ctx.stroke(); ctx.setLineDash([]);
+  // supports
+  const ink = '#1d1d1f';
+  const clamp = x => {
+    ctx.strokeStyle = ink; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(X(x), yTop - 12); ctx.lineTo(X(x), yBot + 12); ctx.stroke();
+    ctx.lineWidth = 1;
+    for (let y = yTop - 12; y < yBot + 12; y += 8) { ctx.beginPath(); ctx.moveTo(X(x), y); ctx.lineTo(X(x) - 9, y + 8); ctx.stroke(); }
+  };
+  const pin = (x, roller) => {
+    const px = X(x), py = yBot;
+    ctx.strokeStyle = ink; ctx.fillStyle = '#fff'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(px - 10, py + 16); ctx.lineTo(px + 10, py + 16); ctx.closePath(); ctx.fill(); ctx.stroke();
+    if (roller) { for (const dx of [-5, 5]) { ctx.beginPath(); ctx.arc(px + dx, py + 20, 3, 0, Math.PI * 2); ctx.stroke(); } ctx.beginPath(); ctx.moveTo(px - 14, py + 24); ctx.lineTo(px + 14, py + 24); ctx.stroke(); }
+    else { ctx.beginPath(); ctx.moveTo(px - 14, py + 17); ctx.lineTo(px + 14, py + 17); ctx.stroke(); }
+  };
+  if (m.support === 'cantilever') clamp(0);
+  else if (m.support === 'simply') { pin(0, false); pin(L, true); }
+  else { clamp(0); pin(L, true); }
+  // loads: all drawn above the beam; the arrow head gives the direction (down = negative, up = positive)
+  ctx.font = '11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
+  const col = palette.red;
+  for (const ld of m.loads) {
+    if (ld.type !== 'udl') continue;
+    const xa = X(ld.a), xb = X(ld.b);
+    const nArr = Math.max(2, Math.round((xb - xa) / 34));
+    const yFar = yTop - 30, yNear = yTop - 2;
+    ctx.strokeStyle = col; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(xa, ld.w < 0 ? yFar : yNear); ctx.lineTo(xb, ld.w < 0 ? yFar : yNear); ctx.stroke();
+    for (let i = 0; i <= nArr; i++) {
+      const px = xa + (xb - xa) * i / nArr;
+      if (ld.w < 0) drawArrow(ctx, px, yFar, px, yNear, col); else drawArrow(ctx, px, yNear, px, yFar, col);
+    }
+    ctx.fillStyle = col; ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
+    ctx.fillText(`w = ${q(ld.w)} N/mm on [${q(ld.a)}, ${q(ld.b)}] mm`, Math.max(left, xa), yFar - 3);
+  }
+  for (const ld of m.loads) {
+    if (ld.type !== 'point') continue;
+    const px = X(ld.a), yFar = yTop - 64, yNear = yTop - 2;
+    ctx.lineWidth = 2;
+    if (ld.P < 0) drawArrow(ctx, px, yFar, px, yNear, col); else drawArrow(ctx, px, yNear, px, yFar, col);
+    ctx.fillStyle = col; ctx.textAlign = px > left + pw - 60 ? 'right' : (px < left + 60 ? 'left' : 'center'); ctx.textBaseline = 'bottom';
+    ctx.fillText(`P = ${q(ld.P)} N`, px, yFar - 3);
+  }
+  // x axis
+  ctx.font = '12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
+  ctx.strokeStyle = '#9a9aa2'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(left, yAxis); ctx.lineTo(left + pw, yAxis); ctx.stroke();
+  ctx.fillStyle = '#3a3a40'; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+  for (let i = 0; i <= 4; i++) { const x = L * i / 4; ctx.beginPath(); ctx.moveTo(X(x), yAxis); ctx.lineTo(X(x), yAxis + 4); ctx.stroke(); ctx.fillText(Number.isInteger(x) ? String(x) : fmt(x, 4), X(x), yAxis + 6); }
+  ctx.fillStyle = '#1d1d1f'; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom'; ctx.fillText('x (mm)', left + pw / 2, H - 2);
+  // vertical label
+  ctx.save(); ctx.translate(13, yc); ctx.rotate(-Math.PI / 2); ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+  ctx.fillText(rect ? `depth, max ${fmt(maxDim, 4)} mm` : `D = ${fmt(m.section.D, 4)} mm, max t ${fmt(maxDim, 4)} mm`, 0, 0); ctx.restore();
+  ctx.restore();
+  const dn = dimName(m);
+  $('beam-note').textContent = `${exagText} Gray dashed: prismatic (${dn} = ${fmt(d.prismatic.dim, 4)} mm). Blue filled: fully stressed ${m.taper === 'linear' ? 'linear taper through the segment midpoints' : 'stepped profile'}` +
+    (!d.fsdDefl.error && d.fsdDefl.active ? `. Orange dashed: FSD scaled by ${fmt(d.fsdDefl.scale, 4)} to meet the deflection limit` : '') +
+    (res.analyticProfile && res.analyticProfile.exact && rect ? '. Dotted: closed-form profile' : '') + '. Red arrows: loads (head shows the direction).';
+}
+
+function renderUtilPlot(res) {
+  const canvas = $('plot-util');
+  const N = res.model.N;
+  canvas.dataset.logicalW = '720';
+  canvas.dataset.logicalH = String(Math.max(300, 70 + 11 * N));
+  const step = Math.max(1, Math.ceil(N / 20));
+  const labels = res.rows.map((r, i) => (i % step === 0 || i === N - 1 ? `${r.index}` : ''));
+  const values = res.rows.map(r => [r.Ubefore, r.Uafter]);
+  labels.push(''); values.push([NaN, NaN]); // one empty row so the group legend does not cover the last bars
+  const maxU = Math.max(1, ...values.flat().filter(Number.isFinite));
+  categoryPlot(canvas, labels, values, {
+    title: 'Stress utilization per segment (root to tip), before and after resizing', xlabel: 'U = |M| c FS / (I sigma_allow)  (-)',
+    colors: [palette.gray, palette.blue], groupLabels: ['prismatic', 'fully stressed'],
+    refLines: [{ x: 1, label: 'U = 1', color: palette.red }], xlim: [0, Math.max(1.08, maxU * 1.08)],
+    valueFmt: N > 16 ? (() => '') : (v => fmt(v, 2)),
+  });
+}
+
+function renderDeflPlot(res) {
+  const d = res.designs, m = res.model;
+  const series = [
+    { x: d.prismatic.solution.curves.v.x, y: d.prismatic.solution.curves.v.y, label: 'prismatic', color: palette.gray, width: 2 },
+    { x: d.fsd.solution.curves.v.x, y: d.fsd.solution.curves.v.y, label: 'fully stressed', color: palette.blue, width: 2 },
+  ];
+  if (!d.fsdDefl.error && d.fsdDefl.active) series.push({ x: d.fsdDefl.solution.curves.v.x, y: d.fsdDefl.solution.curves.v.y, label: 'FSD with deflection limit', color: palette.orange, width: 2 });
+  if (!d.prismaticDefl.error && d.prismaticDefl.active) series.push({ x: d.prismaticDefl.solution.curves.v.x, y: d.prismaticDefl.solution.curves.v.y, label: 'prismatic with deflection limit', color: palette.gray, width: 1.5, dash: [6, 4] });
+  const sign = d.fsd.solution.vmaxSigned < 0 ? -1 : 1;
+  const vlim = m.L / m.deflectionLimitRatio;
+  linePlot($('plot-defl'), series, { title: 'Deflected shapes v(x)', xlabel: 'x (mm)', ylabel: 'v (mm)', yZero: true, xlim: [0, m.L],
+    hlines: [{ y: sign * vlim, label: `limit L / ${fmt(m.deflectionLimitRatio, 4)} = ${fmt(vlim, 4)} mm`, color: palette.red }] });
+}
+
+function renderHistoryPlot(res) {
+  const h = res.history;
+  const m0 = h[0].mass;
+  const it = h.map(p => p.iter);
+  linePlot($('plot-hist'), [
+    { x: it, y: h.map(p => p.maxU), label: 'max stress utilization U', color: palette.blue, type: 'both' },
+    { x: it, y: h.map(p => p.mass / m0), label: 'mass / prismatic mass', color: palette.orange, type: 'both' },
+    { x: it, y: h.map(p => Math.min(2, p.maxDev)), label: 'max |U - 1| on free segments', color: palette.gray, type: 'both', dash: [4, 3] },
+  ], { title: `Iteration history (${res.converged ? 'converged' : 'not converged'} after ${res.iterations} resizing passes)`, xlabel: 'iteration (0 = prismatic start)', ylabel: '(-)', yZero: true, xlim: [-0.3, Math.max(1, it[it.length - 1]) + 0.3],
+    hlines: [{ y: 1, label: 'U = 1', color: palette.red }] });
+}
+
+function renderSegmentTable(res) {
+  const m = res.model, dn = dimName(m);
+  const govP = res.designs.prismatic.solution.govSeg;
+  let html = `<thead><tr><th class="num">#</th><th class="num">x_mid (mm)</th><th class="num">x_gov (mm)</th><th class="num">M prismatic (N mm)</th><th class="num">M FSD (N mm)</th>
+    <th class="num">${dn} prismatic (mm)</th><th class="num">${dn} FSD (mm)</th><th class="num">${dn} FSD + limit (mm)</th><th class="num">U before</th><th class="num">U after</th><th>Note</th></tr></thead><tbody>`;
+  for (const r of res.rows) {
+    const note = r.atMin ? badge('info', 'at minimum') : (r.index - 1 === govP ? badge('warn', 'governs the prismatic design') : '');
+    html += `<tr${r.index - 1 === govP ? ' class="active"' : ''}><td class="num">${r.index}</td><td class="num">${fmt(r.xmid, 4)}</td><td class="num">${fmt(r.xgov, 4)}</td><td class="num">${fmt(r.Mprismatic, 4)}</td><td class="num">${fmt(r.Mfsd, 4)}</td>
+      <td class="num">${fmt(r.dimPrismatic, 4)}</td><td class="num">${fmt(r.dimFsd, 4)}</td><td class="num">${fmt(r.dimFsdDefl, 4)}</td><td class="num">${fmt(r.Ubefore, 3)}</td><td class="num">${fmt(r.Uafter, 3)}</td><td>${note}</td></tr>`;
+  }
+  html += '</tbody>';
+  $('table-segments').innerHTML = html;
+}
+
+// ---------- main ----------
+function run() {
+  const status = $('status');
+  try {
+    status.classList.remove('error');
+    status.textContent = 'Solving...';
+    const { model, notes } = readModel();
+    const res = mod.runFSD(model);
+    if (!res.ok) {
+      status.textContent = 'Error: ' + res.error;
+      status.classList.add('error');
+      lastResult = null;
+      return;
+    }
+    lastResult = res;
+    renderKpis(res);
+    renderDesignTable(res);
+    renderClassical(res);
+    renderMomentPlot(res);
+    renderBeamView(res);
+    renderUtilPlot(res);
+    renderDeflPlot(res);
+    renderHistoryPlot(res);
+    renderSegmentTable(res);
+    const d = res.designs;
+    const verified = [d.prismatic, d.fsd, d.fsdDefl, d.prismaticDefl].filter(x => !x.error).length;
+    const parts = [];
+    parts.push(badge('ok', `Checked by fresh model solve (${verified} designs re-solved)`));
+    for (const w of res.warnings) parts.push(badge('warn', w));
+    if (d.fsdDefl.error) parts.push(badge('bad', d.fsdDefl.error));
+    for (const n of notes) parts.push(badge('info', n));
+    status.innerHTML = parts.join(' ') + ` <span class="hint">${fmt(res.elapsedMs, 3)} ms</span>`;
+  } catch (err) {
+    status.textContent = 'Error: ' + err.message;
+    status.classList.add('error');
+    console.error(err);
+  }
+}
+
+$('btn-run').addEventListener('click', run);
+$('btn-reset').addEventListener('click', () => { applyPreset($('in-preset').value); run(); });
+$('in-preset').addEventListener('change', () => { applyPreset($('in-preset').value); run(); });
+$('btn-csv').addEventListener('click', () => {
+  if (!lastResult) return;
+  const d = lastResult.designs;
+  const rows = [['design', 'mass (g)', 'max |v| (mm)', 'U stress', 'U deflection', 'feasible', 'note']];
+  for (const r of [d.prismatic, d.fsd, d.fsdDefl, d.prismaticDefl]) {
+    if (r.error) { rows.push([r.label, 'n/a', 'n/a', 'n/a', 'n/a', 'no', r.error]); continue; }
+    rows.push([r.label, r.mass.toFixed(3), r.solution.vmax.toFixed(4), r.verify.utilizations.stress.toFixed(5), r.verify.utilizations.deflection.toFixed(5), r.verify.feasible ? 'yes' : 'no', r.scale !== undefined ? `scale ${r.scale.toFixed(5)}` : '']);
+  }
+  rows.push([]);
+  for (const r of mod.tableToCSV(lastResult)) rows.push(r);
+  downloadCSV('beam-fsd-results.csv', rows);
+});
+
+applyPreset(mod.DEFAULT_PRESET);
+run();
+</script>
+</body>
+</html>

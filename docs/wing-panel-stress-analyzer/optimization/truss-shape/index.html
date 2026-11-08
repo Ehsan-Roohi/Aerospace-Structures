@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Truss Shape Optimization: Moving the Nodes · MIE 446 Optimization Lab</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="../shared/lab.css">
+<style>
+  .fam { border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; margin: 6px 0; font-size: 0.88rem; }
+  .fam .head { display: flex; gap: 8px; align-items: flex-start; }
+  .fam .head input { margin-top: 4px; }
+  .fam .sub { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 6px; }
+  .fam .sub label { display: block; font-size: 0.78rem; color: var(--muted); }
+  .fam .sub input { width: 100%; padding: 3px 5px; border: 1px solid var(--line); border-radius: 5px; font: inherit; font-size: 0.85rem; }
+  .check { display: flex; gap: 8px; align-items: center; margin: 6px 0; font-size: 0.9rem; }
+  .traj { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; margin: 4px 0 12px; font-size: 0.88rem; }
+  .traj input[type="range"] { width: 100%; }
+  .traj .lbl { grid-column: 1 / -1; color: var(--muted); font-variant-numeric: tabular-nums; font-size: 0.85rem; }
+  .legend { font-size: 0.82rem; color: var(--muted); margin: -6px 0 10px; }
+  .legend span.sw { display: inline-block; width: 14px; height: 4px; vertical-align: middle; margin: 0 4px 0 8px; border-radius: 2px; }
+  .inline-note { font-size: 0.85rem; color: var(--muted); margin: 4px 0 8px; }
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+<header class="lab-header">
+  <div class="crumbs"><a href="../index.html">Optimization Lab</a> · <a href="https://ehsan-roohi.github.io/Aerospace-Structures/wing-panel-stress-analyzer/#beam">Beam</a> · <a href="https://ehsan-roohi.github.io/Aerospace-Structures/wing-panel-stress-analyzer/truss-lab.html">Truss Lab</a> · <a href="https://ehsan-roohi.github.io/Aerospace-Structures/wing-panel-stress-analyzer/">Wing AeroStruct</a></div>
+  <h1>Truss Shape Optimization: Moving the Nodes</h1>
+  <span class="version">truss-shape 0.1.1</span>
+</header>
+
+<main class="lab-main">
+  <div class="scope">
+    <strong>Scope.</strong> Plane pin-jointed truss, linear elastic, small displacements, solved by the direct stiffness method. Node positions are the
+    design variables; inside every geometry evaluation the member areas are sized by a fully stressed design loop against a stress check
+    (allowable stress divided by the safety factor FS) and an Euler buckling <em>screen</em> for solid square sections (I = A<sup>2</sup>/12, effective length
+    factor K as entered). Bracing wires are tension-only: a wire that would go into compression is released and flagged slack. Every optimum
+    shown is re-solved from scratch with the exact solver before it is displayed. Nothing here is a certified strength, stability or fatigue
+    statement, the material cards are educational values, and this page is independent of the Wing AeroStruct solver.
+  </div>
+
+  <div class="grid">
+    <section>
+      <div class="panel">
+        <h2>Inputs</h2>
+        <div class="field"><label for="in-preset">Truss preset</label><select id="in-preset"></select></div>
+        <div class="field"><label for="in-loadcase">Load case</label><select id="in-loadcase"></select></div>
+        <p class="inline-note" id="preset-note"></p>
+        <h3>Checks</h3>
+        <div class="field"><label for="in-fs">Safety factor FS <span class="unit">-</span></label><input id="in-fs" type="number" value="1.5" min="1" step="0.1"></div>
+        <div class="field"><label for="in-k">Effective length factor K (buckling screen) <span class="unit">-</span></label><input id="in-k" type="number" value="1.0" min="0.5" max="2" step="0.1"></div>
+        <div class="check"><input id="in-buckling" type="checkbox" checked><label for="in-buckling">Include the Euler buckling screen (uncheck for a stress-only design)</label></div>
+        <h3>Inner sizing</h3>
+        <div class="field"><label for="in-mode">Member areas sized</label><select id="in-mode"><option value="group">by group (one area per group)</option><option value="individual">individually (one area per member)</option></select></div>
+        <div class="field"><label for="in-amin">Minimum member area A<sub>min</sub> <span class="unit">mm²</span></label><input id="in-amin" type="number" value="10" min="0.01" step="1"></div>
+        <div class="check"><input id="in-disp-on" type="checkbox"><label for="in-disp-on">Displacement limit at a node</label></div>
+        <div class="field"><label for="in-disp-node">Monitored node</label><select id="in-disp-node"></select></div>
+        <div class="field"><label for="in-disp-limit">Displacement limit <span class="unit">mm</span></label><input id="in-disp-limit" type="number" value="20" min="0.01" step="1"></div>
+        <div id="wire-opts">
+          <div class="field"><label for="in-slack">Slack bracing wires</label><select id="in-slack"><option value="release">release and re-solve (tension-only)</option><option value="linear">keep in the linear model (flag only)</option></select></div>
+          <div class="check"><input id="in-taut" type="checkbox"><label for="in-taut">Wires must stay taut (penalize geometries with slack wires)</label></div>
+        </div>
+        <h3>Design variables (node positions)</h3>
+        <div id="var-list"></div>
+        <div class="check" id="sym-row"><input id="in-sym" type="checkbox" checked><label for="in-sym">Symmetry: link mirrored top-chord nodes</label></div>
+        <h3>Outer optimizers</h3>
+        <div class="field"><label for="in-restarts">Nelder-Mead restarts from the perturbed best <span class="unit">0 to 3</span></label><input id="in-restarts" type="number" value="1" min="0" max="3" step="1"></div>
+        <div class="field"><label for="in-gens">CMA-ES generations <span class="unit">-</span></label><input id="in-gens" type="number" value="60" min="1" max="2000" step="10"></div>
+        <div class="field"><label for="in-seed">Seed of the CMA-ES and restart generator <span class="unit">integer</span></label><input id="in-seed" type="number" value="12345" min="0" step="1"></div>
+        <div class="check"><input id="in-sweep" type="checkbox" checked><label for="in-sweep">Run the classical 1-D sweep of mass versus height (or spar gap)</label></div>
+        <div class="field"><label for="in-sweep-n">Sweep samples <span class="unit">-</span></label><input id="in-sweep-n" type="number" value="80" min="5" max="2000" step="5"></div>
+        <div class="btn-row">
+          <button class="btn" id="btn-run">Solve and optimize</button>
+          <button class="btn secondary" id="btn-cancel" disabled>Cancel</button>
+          <button class="btn secondary" id="btn-reset">Reset</button>
+        </div>
+        <progress id="progress" max="1" value="0"></progress>
+        <div class="status" id="status"></div>
+      </div>
+
+      <div class="panel">
+        <h2>How it works</h2>
+        <details class="help" open>
+          <summary>Nested approach: outer geometry, inner sizing</summary>
+          <div class="body">
+            Students usually take the truss geometry as given and size the members. Here the outer design variables are node coordinates.
+            For every candidate geometry the inner loop finds the lightest feasible set of member areas: starting from the preset areas, each
+            sizing unit (a group or a single member) is updated with A &larr; max(A<sub>min</sub>, A &middot; max(U<sub>stress</sub>, &radic;U<sub>buckle</sub>)),
+            where U is the utilization (demand divided by capacity, 1 means fully used). The square root appears because the Euler load of a
+            solid square section grows with A<sup>2</sup>. The loop stops when every active unit has |U - 1| &lt; 10<sup>-3</sup> or after 40 iterations; a final
+            uniform scaling guarantees U &le; 1 exactly, and an optional displacement limit is met by scaling all areas uniformly (displacements
+            scale exactly with 1/A). The mass of that sized design, in grams, is the outer objective. A geometry that is a mechanism gets a large
+            finite penalty instead of NaN, so the optimizers simply move away from it.
+          </div>
+        </details>
+        <details class="help">
+          <summary>Outer optimizers (deterministic, written from scratch)</summary>
+          <div class="body">
+            <strong>Nelder-Mead simplex:</strong> n+1 trial geometries form a simplex that reflects, expands, contracts or shrinks on the normalized
+            variables, with the adaptive coefficients of Gao and Han (expansion 1 + 2/n, contraction 0.75 - 1/(2n), shrink 1 - 1/n). Trial points are
+            clamped to the bounds. Optional restarts rebuild the simplex around a slightly perturbed best point to escape a collapsed simplex.<br>
+            <strong>CMA-ES</strong> (Covariance Matrix Adaptation Evolution Strategy, (&mu;/&mu;<sub>w</sub>, &lambda;) form): each generation samples
+            &lambda; = 4 + &lfloor;3 ln n&rfloor; geometries from a Gaussian whose mean, step size and covariance adapt to the best &mu; = &lambda;/2 samples
+            (rank-one and rank-&mu; updates, cumulative step-size adaptation). Samples outside the bounds are evaluated at the clamped point plus a distance
+            penalty. The random stream is the seeded mulberry32 generator of the lab, so a given seed always reproduces the same run.
+            Both optimizers report the best geometry actually evaluated, never an interpolation.
+          </div>
+        </details>
+        <details class="help">
+          <summary>Classical result: optimum height of a parallel-chord truss</summary>
+          <div class="body">
+            Chord forces scale with the bending moment divided by the truss height h, so taller trusses have lighter chords. The diagonals get longer as h
+            grows, their force per unit shear falls only slowly, and under an Euler screen a longer compression diagonal needs a much larger area
+            (A &prop; L &radic;N for a solid square). The sum of a falling chord mass and a rising web mass has an interior minimum. For stress-governed
+            parallel-chord trusses the classical rule puts the optimum depth between about 1/8 and 1/5 of the span (0.125 to 0.2) with chord and web
+            material of the same order; for buckling-governed designs the optimum is set by the slenderness of the compression diagonals, which depends
+            on the panel length as much as on the height, so the optimum diagonal angle (about 45 to 60 degrees to the chord) is the more robust rule and
+            the h/L value follows from the number of panels. The sweep plot shows the computed curve for this preset with the chord and web contributions,
+            and the two optimizers are marked on it: an optimizer only finds what the full curve already shows, but it needs far fewer evaluations and
+            scales to many variables, where a sweep is impossible. Toggle the buckling screen off to see the optimum move to a taller truss.
+          </div>
+        </details>
+        <details class="help">
+          <summary>Limitations</summary>
+          <div class="body">
+            Pin-jointed members, no joint bending, no self-weight, one load case at a time, no fatigue, no local or lateral-torsional buckling, no
+            connection design. The Euler check is a screening indicator with an assumed effective length factor. Uniform scaling for the displacement
+            limit is simple but not mass-optimal. Loads stay attached to their nodes, so when strut stations move the lift points move with them (total
+            lift unchanged). Released wires are treated as absent; a bay whose two wires would both go slack keeps the less compressed wire active, because
+            the spar bending stiffness that really holds such a bay is not in a pin-jointed model. The fully stressed design is the exact minimum for
+            statically determinate trusses and a close, feasible design for indeterminate ones.
+          </div>
+        </details>
+        <details class="help">
+          <summary>References</summary>
+          <div class="body">
+            J. A. Nelder and R. Mead, A simplex method for function minimization, Computer Journal 7 (1965). F. Gao and L. Han, Implementing the Nelder-Mead
+            simplex algorithm with adaptive parameters, Computational Optimization and Applications 51 (2012). N. Hansen, The CMA Evolution Strategy: A Tutorial
+            (2016). R. T. Haftka and Z. Gürdal, Elements of Structural Optimization (fully stressed design, Chapter 9). E. H. Gaylord and C. N. Gaylord,
+            Structural Engineering Handbook (truss proportions).
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <section>
+      <div class="panel">
+        <h2>Results</h2>
+        <div class="kpi-row" id="kpis"></div>
+        <canvas class="plot" id="plot-truss" width="760" height="400"></canvas>
+        <div class="legend">Light gray: your start geometry. Colored: the design shown, line width proportional to &radic;A.
+          <span class="sw" style="background:#2a9d5c"></span>U &lt; 0.9 <span class="sw" style="background:#c98a12"></span>0.9 &le; U &le; 1 (active)
+          <span class="sw" style="background:#c43d3d"></span>U &gt; 1 <span class="sw" style="background:#9a9aa2; height:2px"></span>slack wire (dashed)</div>
+        <div class="traj">
+          <label for="traj-src">Replay <select id="traj-src"><option value="nm">Nelder-Mead</option><option value="cma">CMA-ES</option></select></label>
+          <input id="traj-slider" type="range" min="0" max="0" value="0" aria-label="Trajectory step">
+          <button class="btn secondary" id="traj-play" type="button">Play</button>
+          <span class="lbl" id="traj-label"></span>
+        </div>
+        <h3>Convergence</h3>
+        <canvas class="plot" id="plot-conv" width="760" height="300"></canvas>
+        <h3>Classical sweep</h3>
+        <canvas class="plot" id="plot-sweep" width="760" height="340"></canvas>
+        <p class="inline-note" id="sweep-note"></p>
+        <h3>Designs compared</h3>
+        <table class="results" id="table-compare"></table>
+        <h3>Members of the best verified design</h3>
+        <table class="results" id="table-members"></table>
+        <div class="btn-row">
+          <button class="btn secondary" id="btn-csv-members">Download members CSV</button>
+          <button class="btn secondary" id="btn-csv-sweep">Download sweep CSV</button>
+        </div>
+      </div>
+    </section>
+  </div>
+<p class="scope"><strong>Review note:</strong> A fresh solve checks feasibility within this page's stated model. It is not independent physical validation or a proof of global optimality. Optimizer results are candidates; comparisons depend on bounds, discretization and evaluation counts.</p></main>
+
+<footer class="lab-footer">
+  MIE 446 Aerospace Structures, University of Massachusetts Amherst. Educational optimization demonstration on a simplified model; independent of the Wing AeroStruct solver and not a certified analysis.
+</footer>
+
+<script type="module">
+import { linePlot, fmt, badge, escapeHTML, setupCanvas, downloadCSV, palette } from '../shared/labkit.js';
+import * as mod from './truss-shape.js';
+
+const $ = id => document.getElementById(id);
+const DEFAULTS = {
+  warren: { Amin: 10, dispNode: 3, dispLimit: 20 },
+  'wright-bay': { Amin: 2, dispNode: 4, dispLimit: 60 },
+};
+const state = {
+  problem: null, param: null, payload: null, start: null, sweep: null, nm: null, cma: null, best: null, verified: null,
+  running: false, cancelRequested: false, queuedRun: false, worker: null, workerReady: false, workerFailed: false,
+  trajTimer: null, lastDraw: 0, pendingIncumbent: null,
+};
+// numbers that are zero up to rounding are shown as 0
+const snap = v => (Math.abs(v) < 1e-7 ? 0 : v);
+const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
+
+// ---------------------------------------------------------------- inputs
+
+function populatePresets() {
+  const sel = $('in-preset');
+  sel.innerHTML = '';
+  for (const p of mod.listPresets()) {
+    const o = document.createElement('option');
+    o.value = p.key; o.textContent = p.name;
+    sel.appendChild(o);
+  }
+  sel.value = 'warren';
+}
+
+function presetKey() { return $('in-preset').value; }
+
+function populateLoadCases() {
+  const p = mod.makeProblem(presetKey());
+  const sel = $('in-loadcase');
+  sel.innerHTML = '';
+  for (const name of p.loadCaseNames) {
+    const o = document.createElement('option');
+    o.value = name; o.textContent = name;
+    sel.appendChild(o);
+  }
+  if (!p.loadCaseNames.length) { const o = document.createElement('option'); o.value = ''; o.textContent = 'default'; sel.appendChild(o); }
+  $('preset-note').textContent = p.description;
+  const nodeSel = $('in-disp-node');
+  nodeSel.innerHTML = '';
+  p.nodes0.forEach((q, i) => {
+    const o = document.createElement('option');
+    o.value = String(i); o.textContent = `node ${i} (x = ${q[0]} mm, y = ${q[1]} mm)`;
+    nodeSel.appendChild(o);
+  });
+  const d = DEFAULTS[presetKey()] || DEFAULTS.warren;
+  nodeSel.value = String(d.dispNode);
+  $('in-disp-limit').value = d.dispLimit;
+  $('in-amin').value = d.Amin;
+  $('wire-opts').classList.toggle('hidden', !mod.hasTensionOnly(p));
+}
+
+function renderVariableList() {
+  const spec = mod.defaultVariableSpec(presetKey());
+  const box = $('var-list');
+  box.innerHTML = '';
+  for (const fam of spec.families) {
+    const div = document.createElement('div');
+    div.className = 'fam';
+    const id = `fam-${fam.type}`;
+    let sub = '';
+    if (fam.type === 'height' || fam.type === 'gap') {
+      sub = `<label>start <span class="unit">mm</span><input id="${id}-x0" type="number" value="${fam.x0}" step="10"></label>
+             <label>lower bound <span class="unit">mm</span><input id="${id}-lower" type="number" value="${fam.lower}" step="10"></label>
+             <label>upper bound <span class="unit">mm</span><input id="${id}-upper" type="number" value="${fam.upper}" step="10"></label>`;
+    } else if (fam.type === 'topY') {
+      sub = `<label>lower bound <span class="unit">mm</span><input id="${id}-lower" type="number" value="${fam.lower}" step="10"></label>
+             <label>upper bound <span class="unit">mm</span><input id="${id}-upper" type="number" value="${fam.upper}" step="10"></label>`;
+    } else if (fam.type === 'topX') {
+      sub = `<label>margin from panel ends <span class="unit">mm</span><input id="${id}-margin" type="number" value="${fam.margin}" step="10" min="0"></label>`;
+    } else if (fam.type === 'strutX') {
+      sub = `<label>minimum spacing <span class="unit">mm</span><input id="${id}-spacing" type="number" value="${fam.minSpacing}" step="50" min="1"></label>`;
+    }
+    div.innerHTML = `<div class="head"><input id="${id}-enabled" type="checkbox" ${fam.enabled ? 'checked' : ''}><label for="${id}-enabled">${escapeHTML(mod.FAMILY_LABELS[fam.type])}</label></div><div class="sub">${sub}</div>`;
+    box.appendChild(div);
+  }
+  // common height and individual heights are alternatives
+  const h = $('fam-height-enabled'), y = $('fam-topY-enabled');
+  if (h && y) {
+    h.addEventListener('change', () => { if (h.checked) y.checked = false; });
+    y.addEventListener('change', () => { if (y.checked) h.checked = false; });
+  }
+  $('sym-row').classList.toggle('hidden', presetKey() !== 'warren');
+}
+
+function readVariableSpec() {
+  const spec = mod.defaultVariableSpec(presetKey());
+  const num = id => { const el = $(id); return el ? Number(el.value) : NaN; };
+  spec.symmetric = $('in-sym').checked;
+  spec.families = spec.families.map(fam => {
+    const id = `fam-${fam.type}`;
+    const f = { type: fam.type, enabled: $(`${id}-enabled`).checked };
+    if (fam.type === 'height' || fam.type === 'gap') { f.x0 = num(`${id}-x0`); f.lower = num(`${id}-lower`); f.upper = num(`${id}-upper`); }
+    else if (fam.type === 'topY') { f.lower = num(`${id}-lower`); f.upper = num(`${id}-upper`); }
+    else if (fam.type === 'topX') { f.margin = num(`${id}-margin`); }
+    else if (fam.type === 'strutX') { f.minSpacing = num(`${id}-spacing`); }
+    return f;
+  });
+  return spec;
+}
+
+function readPayload() {
+  const dispOn = $('in-disp-on').checked;
+  return {
+    presetKey: presetKey(), loadCase: $('in-loadcase').value || null,
+    FS: Number($('in-fs').value), K: Number($('in-k').value), bucklingOn: $('in-buckling').checked,
+    sizing: {
+      mode: $('in-mode').value, Amin: Number($('in-amin').value),
+      dispLimit: dispOn ? { node: Number($('in-disp-node').value), limit: Number($('in-disp-limit').value) } : null,
+      tautWires: $('in-taut').checked, slackMode: $('in-slack').value,
+    },
+    variables: readVariableSpec(),
+    nm: { restarts: Number($('in-restarts').value) },
+    cma: { generations: Number($('in-gens').value) },
+    seed: Number($('in-seed').value) || 12345,
+    sweep: { enabled: $('in-sweep').checked, samples: Number($('in-sweep-n').value) },
+  };
+}
+
+function resetInputs() {
+  $('in-fs').value = 1.5; $('in-k').value = 1.0; $('in-buckling').checked = true;
+  $('in-mode').value = 'group'; $('in-disp-on').checked = false; $('in-slack').value = 'release'; $('in-taut').checked = false;
+  $('in-restarts').value = 1; $('in-gens').value = 60; $('in-seed').value = 12345; $('in-sweep').checked = true; $('in-sweep-n').value = 80;
+  $('in-sym').checked = true;
+  populateLoadCases();
+  renderVariableList();
+}
+
+// ---------------------------------------------------------------- worker plumbing with in-page fallback
+
+function setupWorker() {
+  try {
+    const w = new Worker(new URL('./truss-shape.worker.js', import.meta.url), { type: 'module' });
+    w.onmessage = e => { if (e.data && e.data.type === 'ready') { state.workerReady = true; return; } onMessage(e.data); };
+    w.onerror = err => {
+      console.warn('worker unavailable, running in the page instead', err && err.message);
+      state.workerFailed = true; state.worker = null;
+      if (state.running && state.workerMode) runInPage(state.payload);
+    };
+    state.worker = w;
+  } catch (err) {
+    console.warn('worker creation failed, running in the page instead', err.message);
+    state.workerFailed = true; state.worker = null;
+  }
+}
+
+async function runInPage(payload) {
+  state.workerMode = false;
+  try {
+    await mod.runCampaign(payload, onMessage, () => state.cancelRequested);
+  } catch (err) {
+    onMessage({ type: 'error', message: err.message });
+  }
+}
+
+function dispatchRun(payload) {
+  if (state.worker && !state.workerFailed) {
+    state.workerMode = true;
+    state.worker.postMessage({ type: 'run', payload });
+    // if the worker never reported ready (for example file:// without module worker support), fall back
+    const id = state.runId;
+    setTimeout(() => {
+      if (state.running && state.runId === id && state.workerMode && !state.workerReady) {
+        state.workerFailed = true;
+        try { state.worker.terminate(); } catch (e) { /* ignore */ }
+        state.worker = null;
+        runInPage(payload);
+      }
+    }, 2500);
+  } else {
+    runInPage(payload);
+  }
+}
+
+// ---------------------------------------------------------------- run control
+
+function setBusy(busy) {
+  state.running = busy;
+  $('btn-run').disabled = busy;
+  $('btn-cancel').disabled = !busy;
+  $('progress').value = busy ? 0 : 1;
+}
+
+// Start a run now, or cancel the current one and queue a fresh run.
+function requestRun() {
+  if (state.running) { state.queuedRun = true; cancel(); return; }
+  run();
+}
+
+function run() {
+  if (state.running) return;
+  const payload = readPayload();
+  const v = mod.validateInputs(payload);
+  $('status').classList.remove('error');
+  if (!v.ok) {
+    $('status').textContent = 'Please fix the inputs: ' + v.errors.join('; ') + '.';
+    $('status').classList.add('error');
+    return;
+  }
+  try {
+    state.problem = mod.makeProblem(payload.presetKey, { loadCase: payload.loadCase, FS: payload.FS, K: payload.K, bucklingOn: payload.bucklingOn });
+    state.param = mod.buildParametrization(state.problem, payload.variables);
+  } catch (err) {
+    $('status').textContent = 'Error: ' + err.message;
+    $('status').classList.add('error');
+    return;
+  }
+  state.payload = payload;
+  state.start = null; state.sweep = null; state.nm = null; state.cma = null; state.best = null; state.verified = null;
+  state.cancelRequested = false;
+  state.runId = (state.runId || 0) + 1;
+  stopReplay();
+  setBusy(true);
+  $('status').textContent = 'Solving the start design...';
+  dispatchRun(payload);
+}
+
+function cancel() {
+  if (!state.running) return;
+  state.cancelRequested = true;
+  const id = state.runId;
+  if (state.worker && state.workerMode) {
+    state.worker.postMessage({ type: 'cancel' });
+    // hard stop if the worker does not answer within a second (only for this very run)
+    setTimeout(() => {
+      if (state.running && state.runId === id) {
+        try { state.worker.terminate(); } catch (e) { /* ignore */ }
+        state.worker = null; state.workerReady = false; setupWorker();
+        onMessage({ type: 'cancelled' });
+      }
+    }, 1000);
+  }
+}
+
+function onMessage(msg) {
+  if (!msg || !state.running) return;
+  switch (msg.type) {
+    case 'start':
+      state.start = msg.start;
+      renderStart();
+      $('status').textContent = 'Start design solved. Running the sweep and the optimizers...';
+      break;
+    case 'sweep':
+      state.sweep = msg.sweep;
+      renderSweep();
+      break;
+    case 'progress':
+      $('progress').value = msg.frac;
+      $('status').textContent = `${msg.stage === 'sweep' ? 'Sweep' : msg.stage === 'nm' ? 'Nelder-Mead' : 'CMA-ES'}: ${msg.evals} evaluations, best mass ${Number.isFinite(msg.bestF) && msg.bestF < 1e9 ? fmt(msg.bestF, 5) + ' g' : 'no admissible candidate'}`;
+      if (msg.incumbent && msg.incumbent.nodes) {
+        state.pendingIncumbent = msg.incumbent;
+        if (!state.lastDraw) state.lastDraw = requestAnimationFrame(() => { state.lastDraw = 0; if (state.pendingIncumbent) drawDesign(state.pendingIncumbent, `incumbent (${msg.stage === 'nm' ? 'Nelder-Mead' : 'CMA-ES'})`); });
+      }
+      break;
+    case 'nm':
+      state.nm = msg.result;
+      renderConvergence();
+      break;
+    case 'cma':
+      state.cma = msg.result;
+      renderConvergence();
+      break;
+    case 'done':
+      finalize(false);
+      break;
+    case 'cancelled':
+      finalize(true);
+      break;
+    case 'error':
+      setBusy(false);
+      $('status').textContent = 'Error: ' + msg.message;
+      $('status').classList.add('error');
+      console.error(msg.message);
+      break;
+    default:
+      break;
+  }
+}
+
+// Propose, then verify: the displayed optimum is the fresh re-solve of the candidate numbers in the main thread.
+function finalize(cancelled) {
+  setBusy(false);
+  if (state.queuedRun) { state.queuedRun = false; setTimeout(run, 0); return; }
+  const candidates = [state.nm, state.cma].filter(r => r && r.design && r.design.ok);
+  if (!candidates.length) {
+    $('status').innerHTML = cancelled ? badge('warn', 'Cancelled before an optimum was found') : badge('bad', 'No feasible optimum was found');
+    renderCompare();
+    return;
+  }
+  const verifyOpts = { dispLimit: state.payload.sizing.dispLimit, slackMode: state.payload.sizing.slackMode };
+  for (const c of candidates) c.verified = mod.verifyDesign(state.problem, c.design.nodes, c.design.areas, verifyOpts);
+  const feasible = candidates.filter(c => c.verified.feasible);
+  const pool = feasible.length ? feasible : candidates;
+  pool.sort((a, b) => a.design.objective - b.design.objective);
+  state.best = pool[0];
+  state.verified = state.best.verified;
+  renderKpis();
+  drawDesign(state.best.design, `${state.best.method} optimum`);
+  renderConvergence();
+  renderSweep();
+  renderCompare();
+  renderMembers();
+  setupReplay();
+  const prefix = cancelled ? 'Cancelled: showing the best geometry found so far. ' : '';
+  if (state.verified.feasible) {
+    const slackNote = state.verified.slackCount ? ` ${badge('warn', plural(state.verified.slackCount, 'slack wire'))}` : '';
+    $('status').innerHTML = `${escapeHTML(prefix)}${badge('ok', 'Checked by fresh model solve')}${slackNote} ${escapeHTML(state.best.method)} optimum, mass ${fmt(state.verified.mass, 5)} g, max U = ${fmt(state.verified.governing.U, 4)}.`;
+  } else {
+    $('status').innerHTML = `${escapeHTML(prefix)}${badge('bad', 'Verification failed: ' + state.verified.reason)}`;
+  }
+}
+
+// ---------------------------------------------------------------- rendering
+
+function kpi(label, value, sub) {
+  return `<div class="kpi"><div class="label">${escapeHTML(label)}</div><div class="value">${value}</div>${sub ? `<div class="sub">${sub}</div>` : ''}</div>`;
+}
+
+function varsText(vars) {
+  if (!vars || !vars.length) return 'n/a';
+  const span = state.param ? state.param.layout.span : 0;
+  return vars.slice(0, 6).map(v => {
+    let s = `${v.name} = ${fmt(v.value, 4)} ${v.unit}`;
+    if ((v.name === 'h' || v.name === 'g') && span) s += ` (${v.name}/L = ${(v.value / span).toFixed(3)})`;
+    return s;
+  }).join(', ') + (vars.length > 6 ? `, ... (${vars.length} variables)` : '');
+}
+
+function renderStart() {
+  const s = state.start;
+  if (!s) return;
+  const feasiblePreset = s.preset.ok ? (s.preset.feasible ? badge('ok', 'feasible') : badge('bad', `max U = ${fmt(s.preset.maxU, 3)}`)) : badge('bad', s.preset.reason);
+  $('kpis').innerHTML =
+    kpi('Your geometry, preset areas', s.preset.ok ? `${fmt(s.preset.mass, 5)} g` : 'n/a', feasiblePreset) +
+    kpi('Your geometry, members sized', s.sized.ok ? `${fmt(s.sized.mass, 5)} g` : 'n/a', s.sized.ok ? escapeHTML(s.sized.governingText) : escapeHTML(s.sized.reason)) +
+    kpi('Start variables', escapeHTML(varsText(s.vars)), 'optimizing...');
+  if (s.sized.ok) drawDesign(s.sized, 'your geometry, members sized');
+  else drawDesign({ nodes: s.nodes, areas: s.preset.areas || null, U: null, slack: null }, 'your geometry');
+}
+
+function renderKpis() {
+  const s = state.start, b = state.best, v = state.verified;
+  if (!s || !b || !v) return;
+  const startMass = s.sized.ok ? s.sized.mass : NaN;
+  const saved = startMass - v.mass;
+  const pct = Number.isFinite(startMass) ? 100 * saved / startMass : NaN;
+  const evalsText = `${state.nm ? `Nelder-Mead ${state.nm.evals}` : ''}${state.nm && state.cma ? ' · ' : ''}${state.cma ? `CMA-ES ${state.cma.evals}` : ''}`;
+  const feasiblePreset = s.preset.ok ? (s.preset.feasible ? badge('ok', 'feasible') : badge('bad', `max U = ${fmt(s.preset.maxU, 3)}`)) : badge('bad', s.preset.reason);
+  $('kpis').innerHTML =
+    kpi('Your geometry, preset areas', s.preset.ok ? `${fmt(s.preset.mass, 5)} g` : 'n/a', feasiblePreset + '<br>' + escapeHTML(varsText(s.vars))) +
+    kpi('Your geometry, members sized', s.sized.ok ? `${fmt(startMass, 5)} g` : 'n/a', s.sized.ok ? escapeHTML(s.sized.governingText) : '') +
+    kpi('Optimized geometry, sized (verified)', `${fmt(v.mass, 5)} g`, Number.isFinite(pct) ? `${saved >= 0 ? 'saves' : 'adds'} ${fmt(Math.abs(saved), 5)} g (${Math.abs(pct).toFixed(1)} %) vs the sized start` : '') +
+    kpi('Best variables', escapeHTML(varsText(b.design.vars)), `${escapeHTML(b.method)}, ${escapeHTML(b.reason)}`) +
+    kpi('Geometry evaluations', escapeHTML(evalsText), 'each one is a full inner sizing') +
+    kpi('Governing constraint at the optimum', escapeHTML(mod.describeGoverning(v.governing, state.problem)), v.slackCount ? `${plural(v.slackCount, 'slack wire')} flagged` : 'no slack wires');
+}
+
+// Draw a design (nodes, areas, U, slack, active) over the start geometry.
+function drawDesign(design, caption) {
+  const canvas = $('plot-truss');
+  const { ctx, W, H } = setupCanvas(canvas);
+  const problem = state.problem;
+  const startNodes = state.start ? state.start.nodes : problem.nodes0;
+  const nodes = design.nodes || startNodes;
+  const all = startNodes.concat(nodes);
+  let xmin = Infinity, xmax = -Infinity, ymin = Infinity, ymax = -Infinity;
+  for (const q of all) { xmin = Math.min(xmin, q[0]); xmax = Math.max(xmax, q[0]); ymin = Math.min(ymin, q[1]); ymax = Math.max(ymax, q[1]); }
+  const padL = 36, padR = 36, padT = 44, padB = 54;
+  const s = Math.min((W - padL - padR) / Math.max(1e-9, xmax - xmin), (H - padT - padB) / Math.max(1e-9, ymax - ymin));
+  const ox = padL + ((W - padL - padR) - (xmax - xmin) * s) / 2;
+  const oy = padT + ((H - padT - padB) - (ymax - ymin) * s) / 2;
+  const X = x => ox + (x - xmin) * s;
+  const Y = y => oy + (ymax - y) * s;
+  // start geometry
+  ctx.save();
+  ctx.strokeStyle = '#c9c9ce'; ctx.lineWidth = 1.2;
+  for (const m of problem.members) { ctx.beginPath(); ctx.moveTo(X(startNodes[m.a][0]), Y(startNodes[m.a][1])); ctx.lineTo(X(startNodes[m.b][0]), Y(startNodes[m.b][1])); ctx.stroke(); }
+  // loads: arrows are drawn on the side of the node that faces away from the structure, so they stay readable
+  let cxs = 0, cys = 0;
+  for (const q of nodes) { cxs += q[0]; cys += q[1]; }
+  cxs /= nodes.length; cys /= nodes.length;
+  for (const [idx, f] of Object.entries(problem.loads)) {
+    const i = Number(idx), mag = Math.hypot(f[0], f[1]);
+    if (!(mag > 0)) continue;
+    const ux = f[0] / mag, uy = -f[1] / mag; // canvas y is down
+    const len = 30, nx = X(nodes[i][0]), ny = Y(nodes[i][1]);
+    const towardCentroid = (f[0] * (cxs - nodes[i][0]) + f[1] * (cys - nodes[i][1])) > 0;
+    // head at the node when the force points into the structure, tail at the node when it points away
+    const tailX = towardCentroid ? nx - ux * len : nx, tailY = towardCentroid ? ny - uy * len : ny;
+    const headX = towardCentroid ? nx : nx + ux * len, headY = towardCentroid ? ny : ny + uy * len;
+    ctx.strokeStyle = palette.purple; ctx.fillStyle = palette.purple; ctx.lineWidth = 1.6;
+    ctx.beginPath(); ctx.moveTo(tailX, tailY); ctx.lineTo(headX - ux * 7, headY - uy * 7); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(headX, headY); ctx.lineTo(headX - ux * 9 - uy * 4, headY - uy * 9 + ux * 4); ctx.lineTo(headX - ux * 9 + uy * 4, headY - uy * 9 - ux * 4); ctx.closePath(); ctx.fill();
+    ctx.font = '10px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
+    const outerX = towardCentroid ? tailX : headX, outerY = towardCentroid ? tailY : headY;
+    const outward = towardCentroid ? -1 : 1; // sign of the outward direction along (ux, uy)
+    ctx.textAlign = 'center'; ctx.textBaseline = uy * outward > 0 ? 'top' : 'bottom';
+    ctx.fillText(`${fmt(mag, 3)} N`, outerX, outerY + (uy * outward > 0 ? 3 : -3));
+  }
+  // supports
+  for (const [idx, fx] of Object.entries(problem.supports)) {
+    const i = Number(idx), x = X(nodes[i][0]), y = Y(nodes[i][1]);
+    ctx.strokeStyle = palette.ink; ctx.fillStyle = '#fff'; ctx.lineWidth = 1.4;
+    if (fx[1]) {
+      ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x - 9, y + 14); ctx.lineTo(x + 9, y + 14); ctx.closePath(); ctx.fill(); ctx.stroke();
+      if (!fx[0]) { ctx.beginPath(); ctx.arc(x - 5, y + 18, 3, 0, Math.PI * 2); ctx.arc(x + 5, y + 18, 3, 0, Math.PI * 2); ctx.stroke(); }
+      else { ctx.beginPath(); ctx.moveTo(x - 12, y + 18); ctx.lineTo(x + 12, y + 18); ctx.stroke(); }
+    } else if (fx[0]) {
+      ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x - 14, y - 9); ctx.lineTo(x - 14, y + 9); ctx.closePath(); ctx.fill(); ctx.stroke();
+    }
+  }
+  // members
+  const areas = design.areas, U = design.U, slack = design.slack, active = design.active;
+  const Amax = areas ? Math.max(...areas) : 1;
+  problem.members.forEach((m, i) => {
+    const a = areas ? areas[i] : problem.groups[m.group].A0;
+    const w = 1.5 + 8.5 * Math.sqrt(Math.max(0, a) / Math.max(1e-12, Amax));
+    const u = U ? U[i] : NaN;
+    let color = palette.blue;
+    if (Number.isFinite(u)) color = u > 1 + 1e-6 ? palette.red : u >= 0.9 ? '#c98a12' : palette.green;
+    const isSlack = slack && slack[i];
+    ctx.strokeStyle = isSlack ? '#9a9aa2' : color;
+    ctx.lineWidth = isSlack ? Math.min(w, 2) : w;
+    ctx.setLineDash(isSlack ? [6, 5] : []);
+    ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(X(nodes[m.a][0]), Y(nodes[m.a][1])); ctx.lineTo(X(nodes[m.b][0]), Y(nodes[m.b][1])); ctx.stroke();
+    if (active && active[i] === false) {
+      const mx = (X(nodes[m.a][0]) + X(nodes[m.b][0])) / 2, my = (Y(nodes[m.a][1]) + Y(nodes[m.b][1])) / 2;
+      ctx.setLineDash([]); ctx.fillStyle = '#6b6b6b'; ctx.font = '10px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('slack', mx, my);
+    }
+  });
+  ctx.setLineDash([]);
+  // nodes (labels above the node, or below it for the lowest row so they clear the thick chord)
+  nodes.forEach((q, i) => {
+    ctx.fillStyle = '#fff'; ctx.strokeStyle = palette.ink; ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.arc(X(q[0]), Y(q[1]), 3.5, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#5b5b60'; ctx.font = '10px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif'; ctx.textAlign = 'left';
+    const lowRow = q[1] <= ymin + 1e-9;
+    ctx.textBaseline = lowRow ? 'top' : 'bottom';
+    ctx.fillText(String(i), X(q[0]) + 6, Y(q[1]) + (lowRow ? 5 : -5));
+  });
+  // caption and scale
+  ctx.fillStyle = palette.ink; ctx.font = 'bold 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif'; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+  ctx.fillText(caption || '', 10, 8);
+  ctx.font = '11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif'; ctx.fillStyle = '#5b5b60';
+  const mass = design.mass;
+  const info = [Number.isFinite(mass) ? `mass ${fmt(mass, 5)} g` : '', areas ? `A from ${fmt(Math.min(...areas), 3)} to ${fmt(Amax, 4)} mm²` : '', `span ${fmt(xmax - xmin, 4)} mm`].filter(Boolean).join(' · ');
+  ctx.textAlign = 'right'; ctx.fillText(info, W - 10, 10);
+  ctx.restore();
+}
+
+function renderConvergence() {
+  const canvas = $('plot-conv');
+  const series = [];
+  if (state.nm) series.push({ x: state.nm.history.map(h => h.evals), y: state.nm.history.map(h => h.f < 1e9 ? h.f : NaN), label: 'Nelder-Mead', color: palette.blue, width: 2 });
+  if (state.cma) series.push({ x: state.cma.history.map(h => h.evals), y: state.cma.history.map(h => h.f < 1e9 ? h.f : NaN), label: 'CMA-ES', color: palette.orange, width: 2 });
+  if (!series.length) { setupCanvas(canvas); return; }
+  const hlines = [];
+  if (state.start && state.start.sized.ok) hlines.push({ y: state.start.sized.mass, text: 'start geometry, sized', color: palette.gray });
+  if (state.sweep && state.sweep.best) hlines.push({ y: state.sweep.best.mass, text: 'sweep optimum', color: palette.purple });
+  const r = linePlot(canvas, series, { title: 'Convergence: best mass found versus geometry evaluations', xlabel: 'geometry evaluations (each with inner sizing)', ylabel: 'best mass (g)', hlines, xZero: true, marginLeft: 80 });
+  // reference-line labels on the left, clear of the legend
+  r.ctx.save();
+  r.ctx.font = '12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
+  r.ctx.textAlign = 'left';
+  for (const h of hlines) {
+    const y = r.Y(h.y);
+    const above = y > r.frame.top + 16;
+    r.ctx.fillStyle = h.color; r.ctx.textBaseline = above ? 'bottom' : 'top';
+    r.ctx.fillText(h.text, r.frame.left + 6, y + (above ? -3 : 3));
+  }
+  r.ctx.restore();
+}
+
+function renderSweep() {
+  const canvas = $('plot-sweep');
+  const sw = state.sweep;
+  const note = $('sweep-note');
+  if (!sw) { setupCanvas(canvas); note.textContent = state.payload && !state.payload.sweep.enabled ? 'The sweep is switched off.' : ''; return; }
+  const series = [{ x: sw.x, y: sw.mass, label: 'total mass (inner sizing)', color: palette.blue, width: 2.5 }];
+  const groupKeys = Object.keys(sw.groupMass);
+  groupKeys.forEach((k, i) => series.push({ x: sw.x, y: sw.groupMass[k], label: `${k} members`, color: palette.series[(i + 2) % palette.series.length], width: 1.5, dash: [5, 4] }));
+  const markers = [];
+  const sweepable = state.param && state.param.sweepable;
+  if (sw.best) {
+    markers.push({ x: sw.best.x, color: palette.purple });
+    series.push({ x: [sw.best.x], y: [sw.best.mass], label: 'sweep optimum', color: palette.purple, type: 'scatter', size: 6 });
+  }
+  const hlines = [];
+  if (sweepable) {
+    if (state.nm && state.nm.design && state.nm.design.ok) series.push({ x: [state.nm.x[0]], y: [state.nm.design.mass], label: `Nelder-Mead (${state.nm.evals} evaluations)`, color: palette.blue, type: 'scatter', size: 5 });
+    if (state.cma && state.cma.design && state.cma.design.ok) series.push({ x: [state.cma.x[0]], y: [state.cma.design.mass], label: `CMA-ES (${state.cma.evals} evaluations)`, color: palette.orange, type: 'scatter', size: 4 });
+  } else if (state.verified && state.verified.feasible) {
+    hlines.push({ y: state.verified.mass, color: palette.green });
+  }
+  const finite = sw.mass.filter(Number.isFinite);
+  const ylim = finite.length ? [0, Math.max(...finite) * 1.08] : undefined;
+  const r = linePlot(canvas, series, { title: `Classical sweep: sized mass versus ${sw.label}`, xlabel: `${sw.label} (mm)`, ylabel: 'mass (g)', markers, hlines, ylim, xlim: [sw.x[0], sw.x[sw.x.length - 1]], marginLeft: 80 });
+  // labels placed by hand so they never sit under the legend
+  r.ctx.save();
+  r.ctx.font = '12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
+  if (sw.best) {
+    const px = r.X(sw.best.x), rightHalf = px > r.frame.left + r.frame.pw / 2;
+    r.ctx.fillStyle = palette.purple; r.ctx.textAlign = rightHalf ? 'right' : 'left'; r.ctx.textBaseline = 'bottom';
+    r.ctx.fillText(`sweep optimum ${sw.name} = ${fmt(sw.best.x, 4)} mm`, px + (rightHalf ? -6 : 6), r.frame.top + r.frame.ph - 6);
+  }
+  if (hlines.length) {
+    r.ctx.fillStyle = palette.green; r.ctx.textAlign = 'left'; r.ctx.textBaseline = 'bottom';
+    r.ctx.fillText(`optimizer with your variable set: ${fmt(state.verified.mass, 5)} g`, r.frame.left + 6, r.Y(state.verified.mass) - 3);
+  }
+  r.ctx.restore();
+  if (sw.best) {
+    const span = sw.span || (state.param ? state.param.layout.span : 0);
+    const ratio = span ? sw.best.x / span : NaN;
+    const parts = [];
+    parts.push(`Sweep optimum: ${sw.name} = ${fmt(sw.best.x, 4)} mm, mass ${fmt(sw.best.mass, 5)} g, governed by ${sw.best.governing === 'buckling' ? 'the Euler buckling screen' : sw.best.governing}.`);
+    if (Number.isFinite(ratio)) parts.push(`Ratio to the span: ${sw.name}/L = ${ratio.toFixed(3)}.`);
+    if (state.problem && state.problem.key === 'warren' && sw.name === 'h') {
+      const halfPanel = 500;
+      const angle = Math.atan2(sw.best.x, halfPanel) * 180 / Math.PI;
+      const gm = groupKeys.map(k => `${k} ${fmt(sw.groupMass[k][sw.best.index], 5)} g`).join(', ');
+      parts.push(`Diagonals at ${angle.toFixed(1)} degrees to the chord; mass split at the optimum: ${gm}.`);
+      parts.push(state.problem.bucklingOn
+        ? 'With the buckling screen on, the compression diagonals set the optimum: a taller truss lightens the chords but lengthens the diagonals, whose Euler capacity falls with length squared, so the optimum here sits below the 0.15 to 0.25 range quoted for stress-governed trusses. The 6-panel layout fixes the panel length; the optimum height follows the diagonal angle rather than the span.'
+        : 'With the buckling screen off (stress-only design) the optimum moves to a taller truss, inside the classical 0.15 to 0.25 range; chord and web masses are then of the same order, as the classical argument predicts.');
+    }
+    if (state.problem && state.problem.key === 'wright-bay' && sw.name === 'g') {
+      parts.push('A larger spar gap lowers the spar forces (bending moment divided by gap) but lengthens the struts, which are compression members screened for Euler buckling, and the wires.');
+    }
+    if (sweepable && state.nm && state.cma && state.nm.design && state.cma.design) {
+      parts.push(`Nelder-Mead found ${fmt(state.nm.design.mass, 5)} g after ${state.nm.evals} evaluations and CMA-ES ${fmt(state.cma.design.mass, 5)} g after ${state.cma.evals} evaluations, against ${sw.x.length} sweep samples.`);
+    } else if (!sweepable && state.verified) {
+      parts.push('Your variable set differs from the single sweep variable, so the optimizer result is shown as a horizontal line: more geometric freedom reaches a lower mass than any point of the 1-D curve.');
+    }
+    note.textContent = parts.join(' ');
+  } else {
+    note.textContent = 'No feasible geometry in the sweep range.';
+  }
+}
+
+function renderCompare() {
+  const t = $('table-compare');
+  const s = state.start;
+  if (!s) { t.innerHTML = ''; return; }
+  const rows = [];
+  const feas = (ok, text) => ok ? badge('ok', text || 'feasible') : badge('bad', text || 'infeasible');
+  rows.push(['Your geometry, preset areas A0', escapeHTML(varsText(s.vars)), s.preset.ok ? fmt(s.preset.mass, 5) : 'n/a', s.preset.ok ? feas(s.preset.feasible, s.preset.feasible ? 'feasible' : `max U = ${fmt(s.preset.maxU, 3)}`) : badge('bad', s.preset.reason), s.preset.ok ? escapeHTML(s.preset.governingText) : '', '1 solve']);
+  rows.push(['Your geometry, members sized', escapeHTML(varsText(s.vars)), s.sized.ok ? fmt(s.sized.mass, 5) : 'n/a', s.sized.ok ? feas(s.sized.feasible) : badge('bad', s.sized.reason), s.sized.ok ? escapeHTML(s.sized.governingText) : '', '1 evaluation']);
+  if (state.sweep && state.sweep.best) rows.push([`Sweep optimum (${state.sweep.name} only)`, `${state.sweep.name} = ${fmt(state.sweep.best.x, 4)} mm`, fmt(state.sweep.best.mass, 5), badge('info', 'sampled'), escapeHTML(state.sweep.best.governing), `${state.sweep.x.length} evaluations`]);
+  for (const r of [state.nm, state.cma]) {
+    if (!r) continue;
+    const d = r.design;
+    const v = r.verified;
+    const status = v ? (v.feasible ? badge('ok', 'checked by fresh model solve') : badge('bad', 'verification failed')) : (d.ok ? badge('info', 'not yet verified') : badge('bad', d.reason));
+    rows.push([`${r.method} ${r.partial ? 'best so far (cancelled)' : 'optimum'}`, escapeHTML(varsText(d.vars)), d.ok ? fmt(v ? v.mass : d.mass, 5) : 'n/a', status, d.ok ? escapeHTML(d.governingText) : '', `${plural(r.evals, 'evaluation')}, ${escapeHTML(r.reason)}`]);
+  }
+  t.innerHTML = '<thead><tr><th>Design</th><th>Variables</th><th class="num">Mass (g)</th><th>Status</th><th>Governing constraint</th><th>Cost</th></tr></thead><tbody>' +
+    rows.map((r, i) => `<tr${state.best && r[0].startsWith(state.best.method) ? ' class="active"' : ''}><td>${r[0]}</td><td>${r[1]}</td><td class="num">${r[2]}</td><td>${r[3]}</td><td>${r[4]}</td><td>${r[5]}</td></tr>`).join('') + '</tbody>';
+}
+
+function renderMembers() {
+  const t = $('table-members');
+  const b = state.best, v = state.verified;
+  if (!b || !v || !v.sol) { t.innerHTML = ''; return; }
+  const d = b.design, sol = v.sol, p = state.problem;
+  const startAreas = state.start && state.start.sized.ok ? state.start.sized.areas : mod.presetAreas(p);
+  const rows = p.members.map((m, i) => {
+    const u = sol.U[i];
+    const status = sol.slack[i] ? badge('warn', sol.active[i] === false ? 'slack, released' : 'slack') : u > 1 + mod.U_TOL ? badge('bad', 'violated') : u >= 0.99 ? badge('warn', 'active') : badge('ok', 'ok');
+    return `<tr${u >= 0.99 && !sol.slack[i] ? ' class="active"' : ''}><td>${i}</td><td>${m.a}-${m.b}</td><td>${escapeHTML(m.group)}</td><td class="num">${fmt(sol.L[i], 4)}</td><td class="num">${fmt(startAreas[i], 4)}</td><td class="num">${fmt(d.areas[i], 4)}</td><td class="num">${fmt(snap(sol.N[i]), 4)}</td><td class="num">${fmt(snap(sol.stress[i]), 3)}</td><td class="num">${fmt(snap(sol.Ustress[i]), 3)}</td><td class="num">${sol.Ubuckle[i] > 1e-7 ? fmt(sol.Ubuckle[i], 3) : '-'}</td><td>${status}</td></tr>`;
+  });
+  t.innerHTML = '<thead><tr><th>#</th><th>Nodes</th><th>Group</th><th class="num">L (mm)</th><th class="num">A start, sized (mm²)</th><th class="num">A optimum (mm²)</th><th class="num">N (N)</th><th class="num">Stress (MPa)</th><th class="num">U stress</th><th class="num">U buckling (screen)</th><th>Status</th></tr></thead><tbody>' + rows.join('') + '</tbody>';
+}
+
+// ---------------------------------------------------------------- trajectory replay
+
+function currentTrajectory() {
+  const src = $('traj-src').value;
+  const r = src === 'cma' ? state.cma : state.nm;
+  return r && r.trajectory ? r.trajectory.filter(e => e.nodes) : [];
+}
+
+function setupReplay() {
+  const traj = currentTrajectory();
+  const slider = $('traj-slider');
+  slider.max = String(Math.max(0, traj.length - 1));
+  slider.value = slider.max;
+  $('traj-label').textContent = traj.length ? `${traj.length} incumbent geometries recorded` : 'no trajectory';
+}
+
+function showReplayStep(k) {
+  const traj = currentTrajectory();
+  if (!traj.length) return;
+  const e = traj[Math.min(traj.length - 1, Math.max(0, k))];
+  const name = $('traj-src').value === 'cma' ? 'CMA-ES' : 'Nelder-Mead';
+  drawDesign(e, `${name} incumbent ${k + 1} of ${traj.length}`);
+  $('traj-label').textContent = `after ${plural(e.evals, 'evaluation')}: mass ${fmt(e.mass, 5)} g${e.governing ? ', ' + mod.describeGoverning(e.governing, state.problem) : ''}`;
+}
+
+function stopReplay() {
+  if (state.trajTimer) { clearInterval(state.trajTimer); state.trajTimer = null; }
+  $('traj-play').textContent = 'Play';
+}
+
+function toggleReplay() {
+  if (state.trajTimer) { stopReplay(); return; }
+  const traj = currentTrajectory();
+  if (!traj.length) return;
+  const slider = $('traj-slider');
+  let k = Number(slider.value) >= traj.length - 1 ? 0 : Number(slider.value);
+  $('traj-play').textContent = 'Pause';
+  state.trajTimer = setInterval(() => {
+    slider.value = String(k);
+    showReplayStep(k);
+    k++;
+    if (k >= traj.length) stopReplay();
+  }, 90);
+}
+
+// ---------------------------------------------------------------- downloads
+
+function csvMembers() {
+  const b = state.best, v = state.verified;
+  if (!b || !v || !v.sol) return;
+  const sol = v.sol, p = state.problem;
+  const startAreas = state.start && state.start.sized.ok ? state.start.sized.areas : mod.presetAreas(p);
+  const rows = [['member', 'node_a', 'node_b', 'group', 'L_mm', 'A_start_mm2', 'A_opt_mm2', 'N_N', 'stress_MPa', 'U_stress', 'U_buckle_screen', 'slack']];
+  p.members.forEach((m, i) => rows.push([i, m.a, m.b, m.group, sol.L[i], startAreas[i], b.design.areas[i], sol.N[i], sol.stress[i], sol.Ustress[i], sol.Ubuckle[i], sol.slack[i] ? 1 : 0]));
+  rows.push([]);
+  rows.push(['node', 'x_mm', 'y_mm']);
+  b.design.nodes.forEach((q, i) => rows.push([i, q[0], q[1]]));
+  downloadCSV(`truss-shape-${p.key}-${b.method.replace(/[^a-z]/gi, '').toLowerCase()}-members.csv`, rows);
+}
+
+function csvSweep() {
+  const sw = state.sweep;
+  if (!sw) return;
+  const keys = Object.keys(sw.groupMass);
+  const rows = [[`${sw.name}_mm`, 'mass_g', ...keys.map(k => `mass_${k}_g`), 'governing', 'feasible']];
+  sw.x.forEach((x, i) => rows.push([x, sw.mass[i], ...keys.map(k => sw.groupMass[k][i]), sw.governing[i], sw.feasible[i] ? 1 : 0]));
+  downloadCSV(`truss-shape-${state.problem.key}-sweep.csv`, rows);
+}
+
+// ---------------------------------------------------------------- wiring
+
+populatePresets();
+resetInputs();
+setupWorker();
+$('btn-run').addEventListener('click', requestRun);
+$('btn-cancel').addEventListener('click', () => { state.queuedRun = false; cancel(); });
+$('btn-reset').addEventListener('click', () => { resetInputs(); requestRun(); });
+$('in-preset').addEventListener('change', () => { populateLoadCases(); renderVariableList(); requestRun(); });
+$('traj-slider').addEventListener('input', e => { stopReplay(); showReplayStep(Number(e.target.value)); });
+$('traj-src').addEventListener('change', () => { stopReplay(); setupReplay(); showReplayStep(Number($('traj-slider').value)); });
+$('traj-play').addEventListener('click', toggleReplay);
+$('btn-csv-members').addEventListener('click', csvMembers);
+$('btn-csv-sweep').addEventListener('click', csvSweep);
+run();
+</script>
+</body>
+</html>

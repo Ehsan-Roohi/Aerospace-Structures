@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Truss Member Sizing: Fully Stressed and Gradient Methods · MIE 446 Optimization Lab</title>
+<link rel="stylesheet" href="../shared/lab.css">
+<link rel="icon" href="data:,">
+<style>
+  .group-card { border: 1px solid var(--line); border-radius: 6px; padding: 6px 10px; margin: 8px 0; background: var(--page); }
+  .group-card .title { font-weight: 600; font-size: 0.9rem; }
+  .group-card .mat { color: var(--muted); font-size: 0.82rem; margin-bottom: 4px; }
+  .group-card .field { margin: 3px 0; }
+  .two-plots { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  @media (max-width: 700px) { .two-plots { grid-template-columns: 1fr; } }
+  .checkline { display: flex; align-items: center; gap: 8px; margin: 6px 0; font-size: 0.9rem; }
+  .checkline input { width: auto; }
+  td.slack { color: var(--muted); font-style: italic; }
+  .warnbox { background: var(--warn-soft); border-left: 4px solid var(--warn); border-radius: 6px; padding: 8px 12px; margin: 10px 0; font-size: 0.88rem; }
+  .okbox { background: var(--ok-soft); border-left: 4px solid var(--ok); border-radius: 6px; padding: 8px 12px; margin: 10px 0; font-size: 0.88rem; }
+  .eq { font-family: var(--mono); font-size: 0.85rem; background: var(--page); padding: 1px 4px; border-radius: 4px; }
+</style>
+</head>
+<body>
+<header class="lab-header">
+  <div class="crumbs"><a href="../index.html">Optimization Lab</a> · <a href="https://ehsan-roohi.github.io/Aerospace-Structures/wing-panel-stress-analyzer/#beam">Beam</a> · <a href="https://ehsan-roohi.github.io/Aerospace-Structures/wing-panel-stress-analyzer/truss-lab.html">Truss Lab</a> · <a href="https://ehsan-roohi.github.io/Aerospace-Structures/wing-panel-stress-analyzer/">Wing AeroStruct</a></div>
+  <h1>Truss Member Sizing: Fully Stressed and Gradient Methods</h1>
+  <span class="version">truss-sizing 0.1.1</span>
+</header>
+
+<main class="lab-main">
+  <div class="scope">
+    <strong>Scope.</strong> Two-dimensional pin-jointed truss, linear elastic, small displacements, solved by the direct stiffness method.
+    Members are sized under three checks: stress, <span class="eq">|N| FS / (A sigma_allow) &le; 1</span> where FS is the factor of safety;
+    an Euler buckling <em>screen</em> for solid square sections, <span class="eq">P_cr = pi^2 E (A^2/12) / (K L)^2</span> with an assumed effective length factor K
+    (a screening indicator, not a stability analysis); and a limit on one nodal displacement. Tension-only bracing wires that come out in compression
+    are flagged slack: the linear model is then not valid for that wire and the page reports it rather than iterating a tension-only solution.
+    Material cards are representative educational values, not certified allowables. Nothing here is a strength, stability or fatigue certification,
+    and the page is independent of the Wing AeroStruct solver. Every design shown below is re-solved from scratch with the exact solver before it is displayed.
+  </div>
+
+  <div class="grid">
+    <section>
+      <div class="panel">
+        <h2>Inputs</h2>
+        <div class="field"><label for="in-preset">Truss preset</label>
+          <select id="in-preset"><option value="wright-bay">Wright half-wing bay</option><option value="warren" selected>Warren truss</option></select></div>
+        <div class="field"><label for="in-loadcase">Load case</label><select id="in-loadcase"></select></div>
+        <div class="field"><label for="in-fs">Factor of safety FS</label><input id="in-fs" type="number" value="1.5" min="1" step="0.1"></div>
+        <div class="checkline"><input id="in-buckling" type="checkbox" checked><label for="in-buckling">Euler buckling screen (solid square, I = A^2/12)</label></div>
+        <div class="field"><label for="in-k">Effective length factor K</label><input id="in-k" type="number" value="1.0" min="0.5" max="2" step="0.05"></div>
+        <h3>Displacement constraint</h3>
+        <div class="field"><label for="in-disp-nodes">Node(s), comma separated</label><input id="in-disp-nodes" type="text" value="4, 9"></div>
+        <div class="field"><label for="in-disp-dir">Component</label>
+          <select id="in-disp-dir"><option value="y">vertical</option><option value="x">horizontal</option><option value="mag">resultant</option></select></div>
+        <div class="field"><label for="in-disp-limit">Limit <span class="unit">mm, 0 = no limit</span></label><input id="in-disp-limit" type="number" value="40" min="0" step="1"></div>
+        <h3>Sizing</h3>
+        <div class="checkline"><input id="in-mode" type="checkbox"><label for="in-mode">Size each member individually (default: one area per group)</label></div>
+        <h3>Member groups: your design</h3>
+        <p class="note">Enter the areas you chose by hand. Each group also has a minimum area and a catalog of stock sizes (mm^2, comma separated) used for the discrete design.</p>
+        <div id="group-table"></div>
+        <div class="btn-row">
+          <button class="btn" id="btn-run">Solve and optimize</button>
+          <button class="btn secondary" id="btn-reset">Reset</button>
+          <button class="btn secondary" id="btn-csv">Download CSV</button>
+        </div>
+        <div class="status" id="status"></div>
+      </div>
+
+      <div class="panel">
+        <h2>How it works</h2>
+        <details class="help" open>
+          <summary>Model and checks</summary>
+          <div class="body">
+            The truss is solved by the direct stiffness method: the global stiffness matrix <span class="eq">K</span> is assembled from the bar stiffnesses
+            <span class="eq">E A / L</span>, the supported degrees of freedom (DOF) are removed, and <span class="eq">K u = F</span> is solved by a Cholesky
+            factorization. A zero pivot means a mechanism and is reported as an unstable structure. Member force <span class="eq">N = (E A / L) (du along the axis)</span>,
+            positive in tension; stress <span class="eq">sigma = N / A</span>. Utilization is <span class="eq">U = |N| FS / (A sigma_allow)</span>, and for compression
+            members of groups with a square section the buckling screen <span class="eq">U_b = |N| FS / P_cr</span> is also applied; the larger of the two governs.
+            Mass is <span class="eq">sum(A L rho) / 1000</span> in grams. Sign convention: y up, loads positive upward.
+          </div>
+        </details>
+        <details class="help">
+          <summary>Fully stressed design (FSD)</summary>
+          <div class="body">
+            The classical heuristic: resize every design variable so that its most loaded member reaches U = 1, <span class="eq">A &larr; A U</span> for
+            stress and <span class="eq">A &larr; A sqrt(U_b)</span> for the buckling screen (P_cr grows with A^2), take the larger, never go below the minimum
+            area, re-solve and repeat until max |U - 1| &lt; 1e-3 for the variables that are not at their minimum, or 50 iterations. Slack wires carry no
+            constraint and are sent to the minimum area. If the displacement limit is then violated, all areas are scaled by the same factor: member forces are
+            unchanged by a uniform scaling and displacements scale as 1/factor, so the limit is met exactly. For statically determinate trusses with stress
+            constraints the fully stressed design is the minimum-mass design (Razani 1965); for indeterminate trusses or with a displacement limit it generally is not.
+          </div>
+        </details>
+        <details class="help">
+          <summary>Gradient method: sequential linear programming (SLP)</summary>
+          <div class="body">
+            Analytical sensitivities: differentiating <span class="eq">K u = F</span> gives <span class="eq">du/dA_j = -K^-1 (dK/dA_j) u</span>, one
+            back-substitution per design variable with the already factored K, and <span class="eq">dN_i/dA_j</span> follows from the member force formula.
+            The displacement sensitivity uses the adjoint method: one solve with a unit load at the constrained DOF gives <span class="eq">lambda</span>, and
+            <span class="eq">d(delta)/dA_j = -lambda^T (dK/dA_j) u</span> for every variable at once. The tests check both against central finite differences.
+            <br><br>
+            Each iteration linearizes the mass and all constraints in the reciprocal variables <span class="eq">y = 1/A</span> (member stress is exactly linear in 1/A
+            for a determinate truss, so this is far more accurate than linearizing in A), restricts the step to a move-limit box (an area may shrink by at most
+            20 percent and grow by at most 100 percent per iteration), and solves the resulting linear program (LP) with a small dense two-phase simplex method
+            using Bland's rule. A variable whose step changes sign has its shrink limit halved; it recovers after two steps in the same direction. If the LP has no
+            feasible point inside the box, the iteration falls back to one fully stressed repair step. The loop stops when the relative mass change is below 1e-4 at a
+            design within 0.1 percent of feasibility, or after 80 iterations. The final design is then made strictly feasible by at most a few fully stressed polish steps
+            plus uniform scaling for the displacement limit, and re-verified.
+          </div>
+        </details>
+        <details class="help">
+          <summary>Catalog rounding and verification</summary>
+          <div class="body">
+            The lighter of the two continuous optima is rounded up, variable by variable, to the nearest stock size in its group catalog, then re-solved.
+            The mass difference is the price of discreteness. Every design on this page (yours, FSD, gradient, catalog) is verified by a fresh solve: the
+            utilizations, the governing constraint and the badges come from that re-solve, never from the optimizer's internal estimate.
+          </div>
+        </details>
+        <details class="help">
+          <summary>Things to try</summary>
+          <div class="body">
+            Lower the displacement limit of the Wright bay to 20 or 12 mm and compare the two optimizers: FSD can only scale everything up, while the gradient
+            method thickens the members with the best deflection sensitivity per gram (the wires). Switch to member-by-member sizing to see under-used members
+            drop to their minimum area, then check the design against the other load cases in the last table: a half-wing sized for lift alone is not safe in the
+            landing or negative-g cases. Turn the buckling screen off on the Warren truss to see the compression chords collapse to the stress-only size.
+          </div>
+        </details>
+        <details class="help">
+          <summary>Limitations and references</summary>
+          <div class="body">
+            Linear elastic bars only: no joint stiffness, no member self-weight, no geometric nonlinearity, no fatigue, no certified allowables. The buckling check
+            is a screen for a solid square section with an assumed effective length; real members need a proper stability analysis. Slack wires are reported, not
+            removed: in a bay whose two crossed wires share one area, the linear model splits the shear equally between the tensioned and the slack wire, so the
+            tensioned wire's force is under-estimated by up to a factor of two for that load case. One load case is sized at a time; the last table checks the result
+            against the others. References: R. Razani, "Behavior of fully stressed design of structures and its relationship to minimum-weight design", AIAA Journal 3 (1965);
+            L. A. Schmit, "Structural design by systematic synthesis", 2nd ASCE Conference on Electronic Computation (1960); C. Fleury and V. Braibant, "Structural
+            optimization: a new dual method using mixed variables", Int. J. Numer. Methods Eng. 23 (1986); R. T. Haftka and Z. Gurdal, Elements of Structural Optimization (1992);
+            U. Kirsch, Structural Optimization: Fundamentals and Applications (1993).
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <section>
+      <div class="panel">
+        <h2>Results</h2>
+        <div class="kpi-row" id="kpis"></div>
+        <table class="results" id="table-compare"></table>
+        <div id="notes"></div>
+      </div>
+
+      <div class="panel">
+        <h2>Truss drawing</h2>
+        <div class="field"><label for="in-show">Design shown in the drawing and tables</label>
+          <select id="in-show"><option value="student">your design</option><option value="fsd" selected>fully stressed design</option><option value="slp">gradient method (SLP)</option><option value="catalog">catalog sizes</option></select></div>
+        <div class="field"><label for="in-scale">Deformed shape scale <span class="unit" id="scale-label">x 20</span></label><input id="in-scale" type="range" min="0" max="100" value="20" step="1"></div>
+        <canvas class="plot" id="draw" width="760" height="460"></canvas>
+        <p class="note">Line width grows with the square root of the area. Colour: green U &le; 0.9, amber 0.9 &lt; U &le; 1, red U &gt; 1; slack wires dashed grey. Orange arrows are the applied loads, scaled to the largest one. Dashed blue: deformed shape.</p>
+      </div>
+
+      <div class="panel">
+        <h2>Utilization per member: your design versus the design shown</h2>
+        <canvas class="plot" id="plot-bars" width="760" height="600"></canvas>
+      </div>
+
+      <div class="panel">
+        <h2>Iteration history</h2>
+        <div class="two-plots">
+          <canvas class="plot" id="plot-mass" width="380" height="270"></canvas>
+          <canvas class="plot" id="plot-maxu" width="380" height="270"></canvas>
+        </div>
+        <p class="note" id="history-note"></p>
+      </div>
+
+      <div class="panel">
+        <h2>Member table</h2>
+        <p class="note" id="table-note"></p>
+        <table class="results" id="table-members"></table>
+      </div>
+
+      <div class="panel">
+        <h2>Check of the design shown against every load case of the preset</h2>
+        <table class="results" id="table-loadcases"></table>
+        <p class="note">A truss sized for one load case must be verified against all of them. The displacement limit uses the same node(s) and component as above.</p>
+      </div>
+    </section>
+  </div>
+<p class="scope"><strong>Review note:</strong> A fresh solve checks feasibility within this page's stated model. It is not independent physical validation or a proof of global optimality. Optimizer results are candidates; comparisons depend on bounds, discretization and evaluation counts.</p></main>
+
+<footer class="lab-footer">
+  MIE 446 Aerospace Structures, University of Massachusetts Amherst. Educational optimization demonstration on a simplified model; independent of the Wing AeroStruct solver and not a certified analysis.
+</footer>
+
+<script type="module">
+import { linePlot, categoryPlot, fmt, badge, escapeHTML, setupCanvas, palette, downloadCSV } from '../shared/labkit.js';
+import { TRUSS_PRESETS } from '../shared/presets.js';
+import * as ts from './truss-sizing.js';
+
+const $ = id => document.getElementById(id);
+const state = { model: null, vm: null, opts: null, designs: null, catalogSource: null, closedForm: null };
+// Invalid user input is reported in #status without touching the console; only unexpected failures are logged.
+class InputError extends Error {}
+
+// ---------- inputs ----------
+
+function fillLoadCases(presetKey) {
+  const p = TRUSS_PRESETS[presetKey];
+  const sel = $('in-loadcase');
+  sel.innerHTML = '';
+  for (const k of Object.keys(p.loadCases || {})) {
+    const o = document.createElement('option');
+    o.value = k; o.textContent = k;
+    sel.appendChild(o);
+  }
+}
+
+function buildGroupTable(presetKey) {
+  const p = TRUSS_PRESETS[presetKey];
+  const box = $('group-table');
+  box.innerHTML = '';
+  for (const [key, g] of Object.entries(p.groups)) {
+    const model = ts.buildModel(presetKey);
+    const mat = model.ok ? model.groups[key] : null;
+    const card = document.createElement('div');
+    card.className = 'group-card';
+    const matLine = mat ? `${escapeHTML(mat.materialName)}: E = ${fmt(mat.E, 4)} MPa, sigma_allow = ${fmt(mat.sigmaAllow, 3)} MPa, rho = ${fmt(mat.rho, 3)} g/cm^3${g.tensionOnly ? ', tension only' : ''}${g.buckling === 'square' ? ', buckling screen' : ''}` : '';
+    card.innerHTML = `
+      <div class="title">Group "${escapeHTML(key)}"</div>
+      <div class="mat">${matLine}</div>
+      <div class="field"><label for="g-area-${key}">Area <span class="unit">mm^2</span></label><input id="g-area-${key}" type="number" value="${g.A0}" min="0" step="any"></div>
+      <div class="field"><label for="g-amin-${key}">Minimum area <span class="unit">mm^2</span></label><input id="g-amin-${key}" type="number" value="${ts.AMIN_DEFAULTS[g.material] ?? 1}" min="0" step="any"></div>
+      <div class="field wide"><label for="g-cat-${key}">Catalog sizes <span class="unit">mm^2</span></label><input id="g-cat-${key}" type="text" value="${(ts.CATALOG_DEFAULTS[g.material] || []).join(', ')}"></div>`;
+    box.appendChild(card);
+  }
+}
+
+function setPresetDefaults(presetKey) {
+  fillLoadCases(presetKey);
+  buildGroupTable(presetKey);
+  const model = ts.buildModel(presetKey);
+  if (model.ok) {
+    $('in-disp-nodes').value = ts.defaultDisplacementNodes(model).join(', ');
+    $('in-disp-limit').value = String(ts.defaultDisplacementLimit(model));
+  }
+  $('in-fs').value = '1.5';
+  $('in-k').value = '1.0';
+  $('in-buckling').checked = true;
+  $('in-disp-dir').value = 'y';
+  $('in-mode').checked = false;
+}
+
+function num(id, label, { min = -Infinity, allowZero = true } = {}) {
+  const v = Number($(id).value);
+  if ($(id).value.trim() === '' || !Number.isFinite(v)) throw new InputError(`${label} must be a number.`);
+  if (v < min || (!allowZero && v === 0)) throw new InputError(`${label} must be ${allowZero ? 'at least' : 'greater than'} ${min}.`);
+  return v;
+}
+
+function readInputs() {
+  const presetKey = $('in-preset').value;
+  const p = TRUSS_PRESETS[presetKey];
+  if (!p) throw new InputError('Unknown preset.');
+  const FS = num('in-fs', 'The factor of safety', { min: 0, allowZero: false });
+  const K = num('in-k', 'The effective length factor K', { min: 0, allowZero: false });
+  const nodesText = $('in-disp-nodes').value.trim();
+  const dispNodes = nodesText ? nodesText.split(/[,\s;]+/).filter(s => s.length).map(s => {
+    const n = Number(s);
+    if (!Number.isInteger(n) || n < 0 || n >= p.nodes.length) throw new InputError(`Displacement node "${s}" is not a node index (0 to ${p.nodes.length - 1}).`);
+    return n;
+  }) : [];
+  const dispLimit = num('in-disp-limit', 'The displacement limit', { min: 0 });
+  const groupAreas = {}, groupAmin = {}, catalogs = {};
+  for (const key of Object.keys(p.groups)) {
+    groupAreas[key] = num(`g-area-${key}`, `The area of group "${key}"`, { min: 0, allowZero: false });
+    groupAmin[key] = num(`g-amin-${key}`, `The minimum area of group "${key}"`, { min: 0, allowZero: false });
+    const cat = ts.parseCatalog($(`g-cat-${key}`).value);
+    if (!cat.length) throw new InputError(`The catalog of group "${key}" has no positive sizes.`);
+    catalogs[key] = cat;
+  }
+  return {
+    presetKey, loadCase: $('in-loadcase').value, FS, K, buckling: $('in-buckling').checked,
+    disp: { nodes: dispNodes, dir: $('in-disp-dir').value, limit: dispLimit > 0 ? dispLimit : null },
+    mode: $('in-mode').checked ? 'member' : 'group', groupAreas, groupAmin, catalogs,
+  };
+}
+
+// ---------- run ----------
+
+function run() {
+  const status = $('status');
+  try {
+    status.classList.remove('error');
+    status.textContent = 'Solving...';
+    const inp = readInputs();
+    const model = ts.buildModel(inp.presetKey, { loadCase: inp.loadCase });
+    if (!model.ok) throw new Error(model.error);
+    const vm = ts.variableMap(model, inp.mode);
+    const Amin = ts.minimumAreas(model, vm, inp.groupAmin);
+    const opts = { FS: inp.FS, K: inp.K, buckling: inp.buckling, disp: inp.disp, Amin };
+    const xStudent = ts.initialDesign(model, vm, inp.groupAreas);
+    const areasStudent = ts.expandAreas(vm, xStudent);
+    const vStudent = ts.verifyDesign(model, areasStudent, opts, { vm, Amin, xVars: xStudent });
+    if (!vStudent.ok) throw new Error(vStudent.error);
+    const designs = {};
+    designs.student = { key: 'student', label: 'Your design', short: 'your design', x: xStudent, areas: areasStudent, verified: vStudent };
+
+    const fsd = ts.fullyStressedDesign(model, xStudent, vm, opts);
+    if (!fsd.ok) throw new Error('Fully stressed design: ' + fsd.error);
+    designs.fsd = { key: 'fsd', label: 'Fully stressed design', short: 'FSD', ...fsd };
+
+    const slp = ts.gradientDesign(model, xStudent, vm, opts);
+    if (!slp.ok) throw new Error('Gradient method: ' + slp.error);
+    designs.slp = { key: 'slp', label: 'Gradient method (SLP)', short: 'gradient (SLP)', ...slp };
+
+    // Catalog: round the lighter verified-feasible continuous optimum (FSD if neither is feasible)
+    let source = 'fsd';
+    if (slp.verified.feasible && (!fsd.verified.feasible || slp.verified.mass < fsd.verified.mass)) source = 'slp';
+    const rc = ts.roundToCatalog(model, vm, designs[source].x, inp.catalogs);
+    if (!rc.ok) throw new Error('Catalog rounding: ' + rc.error);
+    const vCat = ts.verifyDesign(model, rc.areas, opts, { vm, Amin, xVars: rc.x });
+    if (!vCat.ok) throw new Error('Catalog verification: ' + vCat.error);
+    designs.catalog = { key: 'catalog', label: 'Catalog sizes', short: 'catalog', x: rc.x, areas: rc.areas, verified: vCat, exceeded: rc.exceeded, source };
+
+    state.model = model; state.vm = vm; state.opts = opts; state.designs = designs; state.catalogSource = source; state.inp = inp;
+    state.closedForm = ts.closedFormFSD(model, areasStudent, vm, opts);
+    render();
+
+    const parts = [];
+    for (const k of ['fsd', 'slp', 'catalog']) {
+      const d = designs[k];
+      parts.push(d.verified.feasible ? badge('ok', `${d.label}: checked by fresh model solve`) : badge('bad', `${d.label}: re-solve shows ${d.verified.governingSummary}`));
+    }
+    const slackCount = designs.student.verified.slack.length;
+    if (slackCount) parts.push(badge('bad', `${slackCount} compressed wire(s): linear comparison only; no admissible tension-only design`));
+    status.innerHTML = parts.join(' ');
+  } catch (err) {
+    status.textContent = 'Error: ' + err.message;
+    status.classList.add('error');
+    if (!(err instanceof InputError)) console.error(err);
+  }
+}
+
+// ---------- rendering ----------
+
+function shownDesign() {
+  const d = state.designs && state.designs[$('in-show').value];
+  return d || (state.designs ? state.designs.fsd : null);
+}
+
+function pct(a, b) { return b > 0 ? 100 * (a - b) / b : NaN; }
+// Hide floating-point noise (for example 1e-16 in a zero-force member) in displayed values.
+function clean(v, floor = 1e-9) { return Math.abs(v) < floor ? 0 : v; }
+
+function kpi(label, value, sub) {
+  return `<div class="kpi"><div class="label">${escapeHTML(label)}</div><div class="value">${value}</div><div class="sub">${sub}</div></div>`;
+}
+
+function massChangeText(mass, ref) {
+  const d = mass - ref, p = pct(mass, ref);
+  if (Math.abs(d) < 1e-9) return 'no change';
+  return d < 0 ? `saves ${fmt(-d, 4)} g (${fmt(-p, 3)} percent)` : `adds ${fmt(d, 4)} g (+${fmt(p, 3)} percent)`;
+}
+
+function render() {
+  const { model, designs } = state;
+  const s = designs.student.verified, f = designs.fsd.verified, g = designs.slp.verified, c = designs.catalog.verified;
+  const shown = shownDesign();
+  const v = shown.verified;
+  const src = designs[state.catalogSource];
+
+  // KPI tiles
+  const limit = state.opts.disp.limit;
+  const dispText = d => (d.disp.nodes.length ? `${fmt(d.disp.value, 4)} mm` : 'no node selected');
+  const vsFsd = Math.abs(g.mass - f.mass) < 1e-6 * f.mass ? 'same mass as FSD' : `${fmt(pct(g.mass, f.mass), 3)} percent versus FSD`;
+  $('kpis').innerHTML = [
+    kpi('Mass, your design', `${fmt(s.mass, 5)} g`, `${s.feasible ? badge('ok', 'feasible') : badge('bad', 'violated')} max U ${fmt(s.maxU, 3)}`),
+    kpi('Fully stressed design', `${fmt(f.mass, 5)} g`, `${massChangeText(f.mass, s.mass)}; ${designs.fsd.iterations} iteration${designs.fsd.iterations === 1 ? '' : 's'}${designs.fsd.scaling.applied ? `, scaled x${fmt(designs.fsd.scaling.factor, 4)} for displacement` : ''}`),
+    kpi('Gradient method (SLP)', `${fmt(g.mass, 5)} g`, `${massChangeText(g.mass, s.mass)}; ${designs.slp.iterations} iterations${designs.slp.converged ? '' : ' ' + badge('warn', 'iteration limit')}; ${vsFsd}`),
+    kpi('Catalog sizes', `${fmt(c.mass, 5)} g`, `rounded up from the ${state.catalogSource === 'slp' ? 'gradient' : 'FSD'} design: +${fmt(c.mass - src.verified.mass, 4)} g (+${fmt(pct(c.mass, src.verified.mass), 3)} percent) for discreteness`),
+    kpi(`Displacement, ${escapeHTML(shown.short)}`, dispText(v), limit ? `limit ${fmt(limit, 4)} mm, ${fmt(100 * v.disp.ratio, 3)} percent used (node ${v.disp.node})` : 'no limit set'),
+    kpi(`Governing constraint, ${escapeHTML(shown.short)}`, `<span style="font-size:0.95rem">${escapeHTML(v.governingSummary)}</span>`, `max U ${fmt(v.maxU, 4)}`),
+  ].join('');
+
+  // Comparison table
+  const rows = ['student', 'fsd', 'slp', 'catalog'].map(k => {
+    const d = designs[k], vd = d.verified;
+    const status = vd.feasible ? badge('ok', k === 'student' ? 'feasible (exact solve)' : 'checked by fresh model solve') : badge('bad', `violated: ${vd.governingSummary}`);
+    const extra = k === 'slp' && !d.converged ? ' ' + badge('warn', 'stopped at the iteration limit') : '';
+    const exceeded = k === 'catalog' && d.exceeded.length ? ' ' + badge('bad', `catalog too small for ${d.exceeded.map(e => e.name).join(', ')}`) : '';
+    return `<tr><td>${escapeHTML(d.label)}</td><td class="num">${fmt(vd.mass, 5)}</td><td class="num">${k === 'student' ? '' : fmt(pct(vd.mass, s.mass), 3) + ' %'}</td><td class="num">${fmt(vd.maxU, 4)}</td><td>${escapeHTML(vd.governingSummary)}</td><td class="num">${vd.disp.nodes.length ? fmt(vd.disp.value, 4) : 'n/a'}</td><td class="num">${vd.slack.length}</td><td>${status}${extra}${exceeded}</td></tr>`;
+  });
+  $('table-compare').innerHTML = `<thead><tr><th>Design</th><th class="num">Mass (g)</th><th class="num">vs yours</th><th class="num">Max U</th><th>Governing constraint</th><th class="num">Displacement (mm)</th><th class="num">Slack wires</th><th>Status</th></tr></thead><tbody>${rows.join('')}</tbody>`;
+
+  // Notes: classical result, slack wires, minimum area
+  const notes = [];
+  const dsi = ts.staticIndeterminacy(model);
+  const cf = state.closedForm;
+  notes.push(`<div class="okbox"><strong>Classical check.</strong> Degree of static indeterminacy m + r - 2j = ${dsi}${dsi === 0 ? ' (statically determinate)' : ' (statically indeterminate)'}.
+    One-shot closed-form fully stressed areas from the member forces of your design, A = max(|N| FS / sigma_allow, sqrt(12 |N| FS (K L)^2 / (pi^2 E))): mass ${fmt(cf.mass, 5)} g.
+    ${dsi === 0 ? 'For a determinate truss the member forces do not depend on the areas, so this closed form, the iterated FSD and the gradient optimum coincide whenever only stress and buckling constraints are active (Razani 1965); with an active displacement limit they differ.' : 'For an indeterminate truss the forces redistribute as the areas change, so the closed form is only a first guess; the iterated FSD and the gradient method can land on different designs.'}
+    Here FSD gives ${fmt(f.mass, 5)} g and the gradient method ${fmt(g.mass, 5)} g.</div>`);
+  const slackAll = new Set([...s.slack, ...f.slack, ...g.slack, ...c.slack]);
+  if (slackAll.size) {
+    const list = [...slackAll].sort((a, b) => a - b).map(i => `m${i} (${model.members[i].a}-${model.members[i].b})`).join(', ');
+    notes.push(`<div class="warnbox"><strong>Slack wires.</strong> Tension-only members in compression: ${list}. The linear model is not valid for a slack wire: it cannot carry the compressive force shown for it, which in reality goes to the neighbouring members.
+      ${state.vm.mode === 'group' ? 'With one area per group the two crossed wires of a bay stay equal, so the model splits the bay shear equally between the tensioned wire and the slack one: the tensioned wire’s force and utilization are under-estimated by up to a factor of two for this load case. Member-by-member sizing sends slack wires to their minimum area, which is closer to the physical load path.' : 'Member-by-member sizing has sent the slack wires to their minimum area, so they carry little; they are still needed for the reversed load cases, see the last table.'}</div>`);
+  }
+  const belowMin = state.vm.names.filter((n, j) => designs.student.x[j] < state.opts.Amin[j]);
+  if (belowMin.length) notes.push(`<div class="warnbox">Your area for ${belowMin.map(escapeHTML).join(', ')} is below the minimum area; your design is evaluated as entered, the optimizers start from the minimum.</div>`);
+  $('notes').innerHTML = notes.join('');
+
+  drawTruss();
+  drawBars();
+  drawHistory();
+  fillMemberTable();
+  fillLoadCaseTable();
+}
+
+// Green: U <= 0.9. Amber: active or near the limit (0.9 < U <= 1 within the feasibility tolerance). Red: violated.
+function uColor(U, slack) {
+  if (slack) return palette.gray;
+  return U > 1 + ts.FEAS_TOL ? palette.red : U > 0.9 ? '#d39b14' : palette.green;
+}
+
+function drawTruss() {
+  const canvas = $('draw');
+  const { ctx, W, H } = setupCanvas(canvas);
+  const { model } = state;
+  const shown = shownDesign();
+  const res = shown.verified.result;
+  const scale = Number($('in-scale').value);
+  $('scale-label').textContent = `x ${scale}`;
+  // Fit the undeformed and the (scaled) deformed shape together so that neither runs into the legend or the loads.
+  const xs = [], ys = [];
+  model.nodes.forEach((n, i) => {
+    xs.push(n[0], n[0] + scale * res.u[2 * i]);
+    ys.push(n[1], n[1] + scale * res.u[2 * i + 1]);
+  });
+  const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
+  const legendH = 70, padL = 40, padR = 40, padT = legendH + 14, padB = 66;
+  const k = Math.min((W - padL - padR) / Math.max(1e-9, x1 - x0), (H - padT - padB) / Math.max(1e-9, y1 - y0));
+  const ox = padL + (W - padL - padR - k * (x1 - x0)) / 2;
+  const oyTop = padT + (H - padT - padB - k * (y1 - y0)) / 2;
+  const X = x => ox + (x - x0) * k;
+  const Y = y => oyTop + (y1 - y) * k;
+  const Amax = Math.max(...shown.areas), Amin = Math.min(...shown.areas);
+  const width = A => 1.5 + 8 * Math.sqrt(A / Amax);
+
+  // Deformed shape first (behind)
+  if (scale > 0) {
+    ctx.save();
+    ctx.strokeStyle = palette.blue; ctx.lineWidth = 1.2; ctx.setLineDash([5, 4]); ctx.globalAlpha = 0.8;
+    for (const m of model.members) {
+      const ax = model.nodes[m.a][0] + scale * res.u[2 * m.a], ay = model.nodes[m.a][1] + scale * res.u[2 * m.a + 1];
+      const bx = model.nodes[m.b][0] + scale * res.u[2 * m.b], by = model.nodes[m.b][1] + scale * res.u[2 * m.b + 1];
+      ctx.beginPath(); ctx.moveTo(X(ax), Y(ay)); ctx.lineTo(X(bx), Y(by)); ctx.stroke();
+    }
+    ctx.restore();
+  }
+  // Members
+  for (const m of model.members) {
+    const i = m.id;
+    ctx.save();
+    ctx.strokeStyle = uColor(res.U[i], res.slack[i]);
+    ctx.lineWidth = width(shown.areas[i]);
+    ctx.lineCap = 'round';
+    if (res.slack[i]) ctx.setLineDash([6, 5]);
+    ctx.beginPath(); ctx.moveTo(X(model.nodes[m.a][0]), Y(model.nodes[m.a][1])); ctx.lineTo(X(model.nodes[m.b][0]), Y(model.nodes[m.b][1])); ctx.stroke();
+    ctx.restore();
+  }
+  // Nodes and labels
+  ctx.fillStyle = palette.ink;
+  model.nodes.forEach((n, i) => {
+    ctx.beginPath(); ctx.arc(X(n[0]), Y(n[1]), 3.2, 0, Math.PI * 2); ctx.fill();
+  });
+  ctx.fillStyle = palette.gray; ctx.font = '11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
+  ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
+  model.nodes.forEach((n, i) => { ctx.fillText(String(i), X(n[0]) + 5, Y(n[1]) - 4); });
+  // Supports
+  for (const [nd, fx] of Object.entries(model.supports)) {
+    const n = Number(nd), px = X(model.nodes[n][0]), py = Y(model.nodes[n][1]);
+    ctx.save();
+    ctx.strokeStyle = palette.ink; ctx.fillStyle = '#fff'; ctx.lineWidth = 1.5;
+    if (fx[0] && fx[1]) {
+      ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(px - 9, py + 16); ctx.lineTo(px + 9, py + 16); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(px - 13, py + 19); ctx.lineTo(px + 13, py + 19); ctx.stroke();
+    } else if (fx[1]) {
+      ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(px - 9, py + 14); ctx.lineTo(px + 9, py + 14); ctx.closePath(); ctx.fill(); ctx.stroke();
+      for (const dx of [-5, 5]) { ctx.beginPath(); ctx.arc(px + dx, py + 18, 3, 0, Math.PI * 2); ctx.stroke(); }
+      ctx.beginPath(); ctx.moveTo(px - 13, py + 22); ctx.lineTo(px + 13, py + 22); ctx.stroke();
+    } else if (fx[0]) {
+      ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(px - 14, py - 9); ctx.lineTo(px - 14, py + 9); ctx.closePath(); ctx.fill(); ctx.stroke();
+      for (const dy of [-5, 5]) { ctx.beginPath(); ctx.arc(px - 18, py + dy, 3, 0, Math.PI * 2); ctx.stroke(); }
+    }
+    ctx.restore();
+  }
+  // Loads
+  let Fmax = 0, labelled = false;
+  for (const f of Object.values(model.loads)) Fmax = Math.max(Fmax, Math.hypot(f[0], f[1]));
+  if (Fmax > 0) {
+    ctx.save();
+    ctx.strokeStyle = palette.orange; ctx.fillStyle = palette.orange; ctx.lineWidth = 2;
+    for (const [nd, f] of Object.entries(model.loads)) {
+      const mag = Math.hypot(f[0], f[1]);
+      if (mag === 0) continue;
+      const n = Number(nd), px = X(model.nodes[n][0]), py = Y(model.nodes[n][1]);
+      const len = 18 + 34 * mag / Fmax;
+      const dx = f[0] / mag, dy = -f[1] / mag; // canvas y is down
+      const tx = px, ty = py, sx0 = px - dx * len, sy0 = py - dy * len;
+      ctx.beginPath(); ctx.moveTo(sx0, sy0); ctx.lineTo(tx - dx * 6, ty - dy * 6); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(tx, ty); ctx.lineTo(tx - dx * 9 - dy * 4.5, ty - dy * 9 + dx * 4.5); ctx.lineTo(tx - dx * 9 + dy * 4.5, ty - dy * 9 - dx * 4.5); ctx.closePath(); ctx.fill();
+      if (!labelled && mag >= Fmax * 0.999) { labelled = true; ctx.textAlign = 'center'; ctx.textBaseline = dy > 0 ? 'bottom' : 'top'; ctx.fillText(`${fmt(mag, 4)} N`, sx0, sy0 + (dy > 0 ? -3 : 3)); }
+    }
+    ctx.restore();
+  }
+  // Legend (top): title, width samples, colours
+  ctx.save();
+  ctx.fillStyle = palette.ink; ctx.font = 'bold 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
+  ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+  ctx.fillText(`${shown.label}: ${model.name}, load case "${model.loadCase}"`, 10, 8);
+  ctx.font = '11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
+  ctx.fillStyle = palette.gray;
+  ctx.fillText(`mass ${fmt(shown.verified.mass, 5)} g, max U ${fmt(shown.verified.maxU, 3)}, displacement ${shown.verified.disp.nodes.length ? fmt(shown.verified.disp.value, 4) + ' mm' : 'n/a'}${scale > 0 ? `, deformed shape x ${scale}` : ''}`, 10, 26);
+  const samples = Amax > Amin * 1.0001 ? [Amin, Math.sqrt(Amin * Amax), Amax] : [Amax];
+  let lx = 10; const ly = 52;
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = palette.ink; ctx.fillText('line width:', lx, ly); lx += 62;
+  for (const A of samples) {
+    ctx.strokeStyle = palette.gray; ctx.lineWidth = width(A); ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(lx, ly); ctx.lineTo(lx + 26, ly); ctx.stroke();
+    ctx.fillStyle = palette.gray; ctx.fillText(`${fmt(A, 3)} mm^2`, lx + 31, ly);
+    lx += 31 + ctx.measureText(`${fmt(A, 3)} mm^2`).width + 14;
+  }
+  lx += 6;
+  for (const [col, txt] of [[palette.green, 'U <= 0.9'], ['#d39b14', '0.9 < U <= 1'], [palette.red, 'U > 1'], [palette.gray, 'slack']]) {
+    ctx.fillStyle = col; ctx.fillRect(lx, ly - 5, 12, 10); lx += 16;
+    ctx.fillStyle = palette.ink; ctx.fillText(txt, lx, ly); lx += ctx.measureText(txt).width + 12;
+  }
+  ctx.restore();
+}
+
+function memberLabel(m) { return `m${m.id} ${m.a}-${m.b} ${m.group}`; }
+
+function drawBars() {
+  const { model, designs } = state;
+  const shown = shownDesign();
+  const s = designs.student.verified.result, r = shown.verified.result;
+  const labels = model.members.map(m => memberLabel(m) + (r.slack[m.id] ? ' (slack)' : ''));
+  const values = model.members.map(m => [s.U[m.id], r.U[m.id]]);
+  const dispRow = state.opts.disp.limit && designs.student.verified.disp.nodes.length;
+  if (dispRow) { labels.push(`displacement / limit`); values.push([designs.student.verified.disp.ratio, shown.verified.disp.ratio]); }
+  const slackFlags = model.members.map(m => r.slack[m.id]);
+  const xmax = Math.max(1.15, Math.min(3, 1.05 * Math.max(...values.flat().filter(Number.isFinite))));
+  // Values beyond the axis are clipped by the kit; the label still shows the number. An empty last row leaves room for the legend.
+  labels.push(''); values.push([NaN, NaN]);
+  categoryPlot($('plot-bars'), labels, values, {
+    title: `Utilization U (FS = ${fmt(state.opts.FS, 3)}): grey = your design, coloured = ${shown.short}`,
+    xlabel: 'utilization (1 = at the limit, bars above 3 are cut off)',
+    xlim: [0, xmax],
+    colorFn: (v, i, g) => (g === 0 ? '#b9bdc7' : uColor(v, i < slackFlags.length && slackFlags[i])),
+    colors: ['#b9bdc7', palette.green],
+    groupLabels: ['your design', shown.short],
+    refLines: [{ x: 1, label: 'U = 1', color: palette.red }],
+    valueFmt: v => fmt(clean(v), 3),
+  });
+}
+
+function historySeries(d, color, label) {
+  const iters = [], mass = [], maxU = [];
+  d.history.forEach((h, k) => { iters.push(k); mass.push(h.mass); maxU.push(h.maxU !== undefined ? h.maxU : NaN); });
+  return { iters, mass, maxU, color, label };
+}
+
+function drawHistory() {
+  const { designs } = state;
+  const a = historySeries(designs.fsd, palette.orange, 'fully stressed design');
+  const b = historySeries(designs.slp, palette.blue, 'gradient method (SLP)');
+  const markers = [];
+  designs.fsd.history.forEach((h, k) => { if (h.stage === 'displacement scaling') markers.push({ x: k, label: 'FSD scaling', color: palette.orange }); });
+  designs.slp.history.forEach((h, k) => { if (h.stage === 'displacement scaling') markers.push({ x: k, label: 'SLP scaling', color: palette.blue }); });
+  linePlot($('plot-mass'), [
+    { x: a.iters, y: a.mass, label: a.label, color: a.color, type: 'both', size: 3 },
+    { x: b.iters, y: b.mass, label: b.label, color: b.color, type: 'both', size: 3 },
+  ], { title: 'Mass per iteration', xlabel: 'iteration (polish and scaling steps appended)', ylabel: 'mass (g)', yZero: true, markers });
+  linePlot($('plot-maxu'), [
+    { x: a.iters, y: a.maxU, label: a.label, color: a.color, type: 'both', size: 3 },
+    { x: b.iters, y: b.maxU, label: b.label, color: b.color, type: 'both', size: 3 },
+  ], { title: 'Max utilization per iteration (same colours)', xlabel: 'iteration', ylabel: 'max U (incl. displacement ratio)', yZero: true, legend: false,
+    ylim: [0, Math.max(1.25, 1.1 * Math.max(...a.maxU.filter(Number.isFinite), ...b.maxU.filter(Number.isFinite)))], hlines: [{ y: 1, label: 'U = 1', color: palette.red }] });
+  $('history-note').textContent = `FSD: ${designs.fsd.iterations} resizing iteration${designs.fsd.iterations === 1 ? '' : 's'}${designs.fsd.converged ? '' : ' (not converged within 50)'}${designs.fsd.scaling.applied ? `, then uniform scaling by ${fmt(designs.fsd.scaling.factor, 4)} for the displacement limit` : ''}. `
+    + `Gradient method: ${designs.slp.iterations} SLP iterations, ${designs.slp.converged ? 'converged (' + designs.slp.stopReason + ')' : 'stopped at the iteration limit'}${designs.slp.lpInfeasible ? `, ${designs.slp.lpInfeasible} fallback repair step${designs.slp.lpInfeasible > 1 ? 's' : ''}` : ''}${designs.slp.scaling.applied ? `, final scaling by ${fmt(designs.slp.scaling.factor, 5)}` : ''}. Points after the last numbered iteration are the feasibility polish and scaling steps.`;
+}
+
+function fillMemberTable() {
+  const { model, designs, vm } = state;
+  const shown = shownDesign();
+  const r = shown.verified.result;
+  const before = designs.student.areas;
+  let Nscale = 0;
+  for (const v of r.N) Nscale = Math.max(Nscale, Math.abs(v));
+  $('table-note').textContent = `Areas before are your design, areas after are the ${shown.short}; forces, stresses and utilizations are from the exact re-solve of the ${shown.short}. Rows highlighted in amber are at their limit (governing). Sizing mode: ${vm.mode === 'group' ? 'one area per group' : 'one area per member'}.`;
+  const rows = model.members.map(m => {
+    const i = m.id;
+    const gov = shown.verified.governing[i];
+    const active = /^(stress|buckling)/.test(gov);
+    const slackCell = r.slack[i] ? `${badge('warn', 'slack')} ` : '';
+    return `<tr${active ? ' class="active"' : ''}><td>m${i}</td><td>${m.a}-${m.b}</td><td>${escapeHTML(m.group)}</td><td class="num">${fmt(m.L, 4)}</td><td class="num">${fmt(before[i], 4)}</td><td class="num">${fmt(shown.areas[i], 4)}</td><td class="num">${fmt(clean(r.N[i], 1e-9 * (Nscale + 1)), 4)}</td><td class="num">${fmt(clean(r.sigma[i], 1e-9 * (Nscale + 1) / shown.areas[i]), 3)}</td><td class="num">${fmt(clean(r.Ustress[i]), 3)}</td><td class="num">${r.Ubuckle[i] > 0 ? fmt(clean(r.Ubuckle[i]), 3) : 'n/a'}</td><td>${slackCell}${escapeHTML(gov)}</td></tr>`;
+  });
+  $('table-members').innerHTML = `<thead><tr><th>Member</th><th>Nodes</th><th>Group</th><th class="num">L (mm)</th><th class="num">A before (mm^2)</th><th class="num">A after (mm^2)</th><th class="num">N (N)</th><th class="num">sigma (MPa)</th><th class="num">U stress</th><th class="num">U buckling</th><th>Governing</th></tr></thead><tbody>${rows.join('')}</tbody>`;
+}
+
+function fillLoadCaseTable() {
+  const { model } = state;
+  const shown = shownDesign();
+  const rows = ts.checkAllLoadCases(model, shown.areas, state.opts).map(r => {
+    if (!r.ok) return `<tr><td>${escapeHTML(r.loadCase)}</td><td colspan="4">${badge('bad', r.error)}</td></tr>`;
+    const cur = r.loadCase === model.loadCase ? ' (sized for this case)' : '';
+    return `<tr><td>${escapeHTML(r.loadCase)}${cur}</td><td class="num">${fmt(r.maxU, 4)}</td><td class="num">${r.disp.nodes.length ? fmt(r.disp.value, 4) : 'n/a'}</td><td class="num">${r.slack.length}</td><td>${r.feasible ? badge('ok', 'feasible') : badge('bad', 'violated: ' + r.governingSummary)}</td></tr>`;
+  });
+  $('table-loadcases').innerHTML = `<thead><tr><th>Load case</th><th class="num">Max U</th><th class="num">Displacement (mm)</th><th class="num">Slack wires</th><th>Status of the ${escapeHTML(shown.short)}</th></tr></thead><tbody>${rows.join('')}</tbody>`;
+}
+
+function exportCSV() {
+  if (!state.designs) return;
+  const { model, designs } = state;
+  const keys = ['student', 'fsd', 'slp', 'catalog'];
+  const head = ['member', 'node_a', 'node_b', 'group', 'L_mm'];
+  for (const k of keys) head.push(`A_${k}_mm2`, `N_${k}_N`, `U_${k}`, `governing_${k}`);
+  const rows = [head];
+  for (const m of model.members) {
+    const row = [m.id, m.a, m.b, m.group, m.L];
+    for (const k of keys) { const d = designs[k]; row.push(d.areas[m.id], d.verified.result.N[m.id], d.verified.result.U[m.id], d.verified.governing[m.id]); }
+    rows.push(row);
+  }
+  rows.push([]);
+  rows.push(['design', 'mass_g', 'max_U', 'displacement_mm', 'feasible', 'governing']);
+  for (const k of keys) { const d = designs[k]; rows.push([d.label, d.verified.mass, d.verified.maxU, d.verified.disp.value, d.verified.feasible, d.verified.governingSummary]); }
+  rows.push([]);
+  rows.push(['history_method', 'index', 'mass_g', 'max_U']);
+  designs.fsd.history.forEach((h, k) => rows.push(['FSD', k, h.mass, h.maxU ?? '']));
+  designs.slp.history.forEach((h, k) => rows.push(['SLP', k, h.mass, h.maxU ?? '']));
+  downloadCSV(`truss-sizing-${model.key}-${model.loadCase.replace(/[^a-z0-9]+/gi, '-')}.csv`, rows);
+}
+
+// ---------- wiring ----------
+
+$('btn-run').addEventListener('click', run);
+$('btn-reset').addEventListener('click', () => { setPresetDefaults($('in-preset').value); run(); });
+$('btn-csv').addEventListener('click', exportCSV);
+$('in-preset').addEventListener('change', () => { setPresetDefaults($('in-preset').value); run(); });
+$('in-show').addEventListener('change', () => { if (state.designs) render(); });
+$('in-scale').addEventListener('input', () => { if (state.designs) drawTruss(); else $('scale-label').textContent = `x ${$('in-scale').value}`; });
+
+setPresetDefaults($('in-preset').value);
+run();
+</script>
+</body>
+</html>

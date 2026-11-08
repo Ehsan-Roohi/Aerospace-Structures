@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Multi-Objective Design: Pareto Fronts with NSGA-II · MIE 446 Optimization Lab</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="../shared/lab.css">
+<style>
+  .hidden { display: none !important; }
+  .field.bounds { grid-template-columns: 1fr 60px 60px; }
+  .field.bounds input { width: 100%; padding: 5px 6px; border: 1px solid var(--line); border-radius: 6px; font: inherit; font-size: 0.88rem; }
+  .field.check { grid-template-columns: 1fr; }
+  .field.check label { display: flex; align-items: center; gap: 8px; }
+  table.results tr.selected td { background: #efe8f8; }
+  table.results tr.clickable { cursor: pointer; }
+  table.results tr.clickable:hover td { background: #f3f4f8; }
+  .legend-note { font-size: 0.84rem; color: var(--muted); margin: 2px 0 8px; }
+  .legend-note span.dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin: 0 4px 0 8px; vertical-align: middle; }
+  .subpanel { border-top: 1px solid var(--line); margin-top: 12px; padding-top: 10px; }
+  .subpanel h3 { margin-top: 4px; }
+  .twocol { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 700px) { .twocol { grid-template-columns: 1fr; } }
+  .eq { font-family: var(--mono); font-size: 0.85rem; background: var(--page); padding: 2px 6px; border-radius: 4px; }
+</style>
+</head>
+<body>
+<header class="lab-header">
+  <div class="crumbs"><a href="../index.html">Optimization Lab</a> · <a href="https://ehsan-roohi.github.io/Aerospace-Structures/wing-panel-stress-analyzer/#beam">Beam</a> · <a href="https://ehsan-roohi.github.io/Aerospace-Structures/wing-panel-stress-analyzer/truss-lab.html">Truss Lab</a> · <a href="https://ehsan-roohi.github.io/Aerospace-Structures/wing-panel-stress-analyzer/">Wing AeroStruct</a></div>
+  <h1>Multi-Objective Design: Pareto Fronts with NSGA-II</h1>
+  <span class="version">pareto-nsga2 0.1.1</span>
+</header>
+
+<main class="lab-main">
+  <div class="scope">
+    <strong>Scope.</strong> When mass and stiffness compete there is no single best design, only a set of trade-offs called the Pareto front.
+    This page computes that front with NSGA-II (Non-dominated Sorting Genetic Algorithm II, Deb et al. 2002) for two small structural problems:
+    a beam section (Euler-Bernoulli beam, linear elastic, small deflection, exact closed forms) and a Warren truss (2D pin-jointed bars, linear elastic direct stiffness).
+    Buckling of truss members is an Euler screen with effective length factor K = 1 and a solid square section; local wall buckling of thin tubes and boxes, shear deflection, fatigue and stability are not modelled.
+    Every design shown as feasible is re-solved from scratch with the exact solver and all constraints are re-checked. The material cards are educational values, not certified allowables, and this page is independent of the Wing AeroStruct solver.
+  </div>
+
+  <div class="grid">
+    <section>
+      <div class="panel">
+        <h2>Inputs</h2>
+        <div class="field"><label for="in-problem">Problem</label>
+          <select id="in-problem">
+            <option value="beam">Beam section</option>
+            <option value="truss">Warren truss</option>
+          </select></div>
+
+        <div id="beam-fields">
+          <div class="field"><label for="in-preset">Preset</label><select id="in-preset"></select></div>
+          <div class="field"><label for="in-case">Support and load</label><select id="in-case"></select></div>
+          <div class="field"><label for="in-L">Span L <span class="unit">mm</span></label><input id="in-L" type="number" value="600" step="10" min="1"></div>
+          <div class="field"><label for="in-load" id="lbl-load">Tip load P <span class="unit">N</span></label><input id="in-load" type="number" value="20" step="1" min="0"></div>
+          <div class="field"><label for="in-material">Material</label><select id="in-material"></select></div>
+          <div class="field"><label for="in-FS">Factor of safety FS</label><input id="in-FS" type="number" value="2" step="0.1" min="1"></div>
+          <div class="field"><label for="in-tmin">Minimum thickness t_min <span class="unit">mm</span></label><input id="in-tmin" type="number" value="2" step="0.5" min="0"></div>
+          <div class="field"><label for="in-family">Section family</label><select id="in-family"></select></div>
+          <h3>Design variable bounds (min, max)</h3>
+          <div class="field bounds"><label for="in-x1min" id="lbl-x1b">Width b <span class="unit">mm</span></label><input id="in-x1min" type="number" step="any" aria-label="x1 minimum"><input id="in-x1max" type="number" step="any" aria-label="x1 maximum"></div>
+          <div class="field bounds"><label for="in-x2min" id="lbl-x2b">Depth h <span class="unit">mm</span></label><input id="in-x2min" type="number" step="any" aria-label="x2 minimum"><input id="in-x2max" type="number" step="any" aria-label="x2 maximum"></div>
+          <h3>Your own design</h3>
+          <div class="field"><label for="in-s1" id="lbl-s1">Width b <span class="unit">mm</span></label><input id="in-s1" type="number" step="any"></div>
+          <div class="field"><label for="in-s2" id="lbl-s2">Depth h <span class="unit">mm</span></label><input id="in-s2" type="number" step="any"></div>
+        </div>
+
+        <div id="truss-fields" class="hidden">
+          <div class="field"><label for="in-loadcase">Load case</label><select id="in-loadcase"></select></div>
+          <div class="field"><label for="in-tFS">Factor of safety FS</label><input id="in-tFS" type="number" value="1.5" step="0.1" min="1"></div>
+          <h3>Design variable bounds (min, max)</h3>
+          <div class="field bounds"><label for="in-Amin">Member areas A_chord, A_diag <span class="unit">mm^2</span></label><input id="in-Amin" type="number" step="any" value="50" aria-label="area minimum"><input id="in-Amax" type="number" step="any" value="1500" aria-label="area maximum"></div>
+          <div class="field check"><label for="in-opth"><input type="checkbox" id="in-opth"> Optimize the truss height h as a third variable</label></div>
+          <div class="field bounds"><label for="in-hmin">Height h bounds <span class="unit">mm</span></label><input id="in-hmin" type="number" step="any" value="300" aria-label="height minimum"><input id="in-hmax" type="number" step="any" value="2500" aria-label="height maximum"></div>
+          <div class="field"><label for="in-hfix">Fixed height h (when not optimized) <span class="unit">mm</span></label><input id="in-hfix" type="number" step="any" value="1000"></div>
+          <h3>Your own design</h3>
+          <div class="field"><label for="in-sA1">Chord area A_chord <span class="unit">mm^2</span></label><input id="in-sA1" type="number" step="any" value="600"></div>
+          <div class="field"><label for="in-sA2">Diagonal area A_diag <span class="unit">mm^2</span></label><input id="in-sA2" type="number" step="any" value="600"></div>
+          <div class="field"><label for="in-sh">Truss height h <span class="unit">mm</span></label><input id="in-sh" type="number" step="any" value="1000"></div>
+        </div>
+
+        <h3>NSGA-II settings</h3>
+        <div class="field"><label for="in-pop">Population size</label><input id="in-pop" type="number" value="60" step="2" min="4"></div>
+        <div class="field"><label for="in-gen">Generations</label><input id="in-gen" type="number" value="120" step="10" min="1"></div>
+        <div class="field"><label for="in-seed">Random seed (deterministic)</label><input id="in-seed" type="number" value="1" step="1"></div>
+        <details class="help">
+          <summary>Operator settings</summary>
+          <div class="body">
+            <div class="field"><label for="in-etac">SBX distribution index eta_c</label><input id="in-etac" type="number" value="15" step="1" min="1"></div>
+            <div class="field"><label for="in-etam">Mutation distribution index eta_m</label><input id="in-etam" type="number" value="20" step="1" min="1"></div>
+            <div class="field"><label for="in-pc">Crossover probability p_c</label><input id="in-pc" type="number" value="0.9" step="0.05" min="0" max="1"></div>
+            <div class="field check"><label for="in-ref"><input type="checkbox" id="in-ref" checked> Also run the exact reference sweep (2-variable problems)</label></div>
+          </div>
+        </details>
+
+        <div class="btn-row">
+          <button class="btn" id="btn-run">Run NSGA-II</button>
+          <button class="btn secondary" id="btn-cancel" disabled>Cancel</button>
+          <button class="btn secondary" id="btn-student">Re-evaluate my design</button>
+          <button class="btn secondary" id="btn-reset">Reset</button>
+        </div>
+        <progress id="prog" max="100" value="0"></progress>
+        <div class="status" id="status"></div>
+      </div>
+
+      <div class="panel">
+        <h2>How it works</h2>
+        <details class="help" open>
+          <summary>Dominance and the Pareto front</summary>
+          <div class="body">
+            Both objectives are minimized: mass in grams and deflection in millimetres. Design A <em>dominates</em> design B when A is no worse in both objectives and strictly better in at least one.
+            A design that no feasible design dominates is <em>non-dominated</em> (Pareto optimal); the set of all such designs is the Pareto front.
+            On the plot, the region to the upper right of a point (heavier and more flexible) is the region it dominates: switch on the shading to see it for the selected design.
+          </div>
+        </details>
+        <details class="help">
+          <summary>NSGA-II in five steps</summary>
+          <div class="body">
+            <ol>
+              <li><strong>Initial population.</strong> N designs drawn uniformly inside the variable bounds with a seeded pseudo-random number generator, so the same seed always gives the same result.</li>
+              <li><strong>Non-dominated sorting.</strong> The population is peeled into fronts: front 1 is the set of designs nobody dominates, front 2 those dominated only by front 1, and so on. Constraints use Deb's rule: a feasible design always beats an infeasible one, two infeasible designs are compared by their total violation, two feasible designs by dominance.</li>
+              <li><strong>Crowding distance.</strong> Inside a front each design is scored by the normalized size of the box spanned by its two neighbours; the extreme designs get infinite distance. Larger distance means a less crowded part of the front and is preferred, which keeps the front spread out.</li>
+              <li><strong>Offspring.</strong> Parents are chosen by binary tournaments (feasibility, then violation, then rank, then crowding distance), recombined with simulated binary crossover (SBX, index eta_c, probability p_c) and perturbed by polynomial mutation (index eta_m, probability 1/n per variable).</li>
+              <li><strong>Elitist survival.</strong> Parents and offspring are pooled (2N designs), sorted again, and the best N survive; the last front that does not fit completely is truncated by crowding distance.</li>
+            </ol>
+            The <em>hypervolume</em> is the area of the objective plane dominated by the current front and bounded by a reference point (1.1 times the largest value of each objective over the feasible members of the initial population). It grows when the front moves towards the origin or spreads out, so a flat curve means convergence.
+          </div>
+        </details>
+        <details class="help">
+          <summary>Beam problem and closed forms</summary>
+          <div class="body">
+            Variables: width and depth (solid rectangle), outer diameter and wall (tube) or depth and wall with b = 0.6 h (box).
+            Objectives: mass <span class="eq">m = A L rho / 1000</span> and maximum deflection from the exact Euler-Bernoulli formulas:
+            cantilever with tip load <span class="eq">M = P L, v = P L^3 / (3 E I)</span>; cantilever with uniform load <span class="eq">M = w L^2 / 2, v = w L^4 / (8 E I)</span>;
+            simply supported midspan load <span class="eq">M = P L / 4, v = P L^3 / (48 E I)</span>; simply supported uniform load <span class="eq">M = w L^2 / 8, v = 5 w L^4 / (384 E I)</span>.
+            Constraints: bending stress utilization <span class="eq">U = sigma_max FS / sigma_allow &lt;= 1</span> with <span class="eq">sigma_max = M c / I</span>, minimum wall or dimension <span class="eq">t_min</span>, and for hollow sections an open bore (D &gt; 2 t, or b &gt; 2 t for the box).
+            Sign convention: y up, loads act downward, the deflection shown is the magnitude. Verification re-solves each displayed design with an independent finite element model (16 Hermite beam elements) and compares it with the closed form.
+            <p><strong>Classical result.</strong> At fixed mass (fixed area A) the second moment of area grows with the outer dimension: for the rectangle <span class="eq">I = b h^3 / 12 = A h^2 / 12</span>, and for the tube <span class="eq">I = (A / 16) (D^2 + d^2)</span>, both increasing in the outer size.
+            So every Pareto optimal section uses the largest depth or diameter allowed, except at the light end where the wall (or width) has reached its lower bound and only the outer dimension can shrink.
+            The front is therefore the union of two boundary segments, closed by the stress constraint at the light end. This closed-form front is drawn as the thin black line; the grid sweep and NSGA-II should land on it (the agreement tile reports the mean normalized gap).</p>
+          </div>
+        </details>
+        <details class="help">
+          <summary>Warren truss problem</summary>
+          <div class="body">
+            The shared 6-panel Warren truss (span 6000 mm, pinned left, roller right, 2000 N down at each interior bottom node) is solved with the 2D direct stiffness method: member force <span class="eq">N = (E A / L) du_axial</span>, stress N / A, mass sum(A L rho) / 1000.
+            Variables: the chord area, the diagonal area and optionally the height h, which moves every top chord node. Objectives: mass and the downward deflection of the midspan bottom node (node 3).
+            Constraints for every member: stress utilization <span class="eq">|N| FS / (A sigma_allow) &lt;= 1</span> and, for members in compression, the Euler screen <span class="eq">|N| FS / P_cr &lt;= 1</span> with <span class="eq">P_cr = pi^2 E I / (K L)^2</span>, I = A^2 / 12 (solid square bar) and K = 1.
+            Because this truss is statically determinate, the member forces do not depend on the areas; only the deflections do, which makes the mass versus stiffness trade-off very clean.
+            A singular stiffness matrix is reported as an unstable structure instead of numbers.
+          </div>
+        </details>
+        <details class="help">
+          <summary>Limitations</summary>
+          <div class="body">
+            Linear elastic models only; no local buckling of thin walls, no shear deformation, no fatigue, no dynamic loads. The Euler buckling check is a screening indicator with an assumed effective length.
+            The trade-off readings ("lighter by", "stiffer by") are interpolated along the computed front, so they are plot readings, not verified designs; the nearest front design is verified when you select it.
+            NSGA-II is a population heuristic: the front it returns is an approximation that improves with generations, which is why the exact reference sweep is shown for 2-variable problems.
+            References: Deb, Pratap, Agarwal and Meyarivan, IEEE Trans. Evol. Comput. 6 (2002); Deb and Agrawal, Complex Systems 9 (1995) for SBX; Zitzler and Thiele (1999) for the hypervolume; Gere and Timoshenko, Mechanics of Materials, for the beam formulas.
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <section>
+      <div class="panel">
+        <h2>Objective plane</h2>
+        <div class="kpi-row" id="kpis"></div>
+        <canvas class="plot" id="plot-front" width="720" height="440"></canvas>
+        <div class="legend-note">
+          <span class="dot" style="background:#b8b8c0"></span>final population
+          <span class="dot" style="background:#1f5fbf"></span>Pareto front (click a point to select it)
+          <span class="dot" style="background:#e07a1f"></span>your design
+          <span class="dot" style="background:#7b4fb3"></span>selected design
+          <span class="dot" style="background:#1d1d1f"></span>closed-form front (beam)
+          <span class="dot" style="background:#1b9aaa"></span>exact grid sweep
+          <span id="outside-note"></span>
+        </div>
+        <div class="field check"><label for="in-dom"><input type="checkbox" id="in-dom"> Show the region dominated by the selected design</label></div>
+        <div id="sel-info" class="subpanel"></div>
+      </div>
+
+      <div class="panel">
+        <h2>Your design against the front</h2>
+        <div id="student-info"></div>
+      </div>
+
+      <div class="panel">
+        <h2>Convergence</h2>
+        <canvas class="plot" id="plot-hv" width="720" height="260"></canvas>
+        <p class="note" id="hv-note"></p>
+      </div>
+
+      <div class="panel">
+        <h2>Pareto front designs</h2>
+        <div class="btn-row"><button class="btn secondary" id="btn-csv">Download CSV</button></div>
+        <div style="overflow:auto"><table class="results" id="table-front"></table></div>
+      </div>
+    </section>
+  </div>
+<p class="scope"><strong>Review note:</strong> A fresh solve checks feasibility within this page's stated model. It is not independent physical validation or a proof of global optimality. Optimizer results are candidates; comparisons depend on bounds, discretization and evaluation counts.</p></main>
+
+<footer class="lab-footer">
+  MIE 446 Aerospace Structures, University of Massachusetts Amherst. Educational optimization demonstration on a simplified model; independent of the Wing AeroStruct solver and not a certified analysis.
+</footer>
+
+<script type="module">
+import { linePlot, fmt, badge, canvasPoint, downloadCSV, palette, escapeHTML } from '../shared/labkit.js';
+import { MATERIALS, BEAM_PRESETS, TRUSS_PRESETS } from '../shared/presets.js';
+import * as mod from './pareto-nsga2.js';
+
+const $ = id => document.getElementById(id);
+const num = id => Number($(id).value);
+
+const state = {
+  spec: null, problem: null, specKey: null,
+  result: null, reference: null, analytic: null, elapsedMs: 0,
+  selected: -1, student: null, studentSpecKey: null,
+  worker: null, running: false, cancelled: false, workerFailed: false,
+  plotMap: null, frontPixels: [], tableVerify: [],
+};
+
+// ---------- populate selects ----------
+for (const [key, card] of Object.entries(MATERIALS)) {
+  const o = document.createElement('option');
+  o.value = key; o.textContent = `${card.name}: E ${card.E} MPa, allow ${card.sigmaAllow} MPa, ${card.rho} g/cm^3`;
+  $('in-material').appendChild(o);
+}
+for (const [key, p] of Object.entries(BEAM_PRESETS)) {
+  const o = document.createElement('option'); o.value = key; o.textContent = p.name; $('in-preset').appendChild(o);
+}
+for (const [key, c] of Object.entries(mod.BEAM_CASES)) {
+  const o = document.createElement('option'); o.value = key; o.textContent = c.name; $('in-case').appendChild(o);
+}
+for (const [key, f] of Object.entries(mod.SECTION_FAMILIES)) {
+  const o = document.createElement('option'); o.value = key; o.textContent = f.name; $('in-family').appendChild(o);
+}
+for (const key of Object.keys(TRUSS_PRESETS.warren.loadCases)) {
+  const o = document.createElement('option'); o.value = key; o.textContent = key; $('in-loadcase').appendChild(o);
+}
+
+// ---------- presets and labels ----------
+function setBeamLabels() {
+  const fam = mod.SECTION_FAMILIES[$('in-family').value];
+  const bc = mod.BEAM_CASES[$('in-case').value];
+  $('lbl-x1b').innerHTML = `${escapeHTML(fam.vars[0].label)} <span class="unit">${fam.vars[0].unit}</span>`;
+  $('lbl-x2b').innerHTML = `${escapeHTML(fam.vars[1].label)} <span class="unit">${fam.vars[1].unit}</span>`;
+  $('lbl-s1').innerHTML = `${escapeHTML(fam.vars[0].label)} <span class="unit">${fam.vars[0].unit}</span>`;
+  $('lbl-s2').innerHTML = `${escapeHTML(fam.vars[1].label)} <span class="unit">${fam.vars[1].unit}</span>`;
+  $('lbl-load').innerHTML = `${escapeHTML(bc.loadLabel)} <span class="unit">${bc.loadUnit}</span>`;
+}
+
+function applyBeamPreset(presetKey, family) {
+  const spec = mod.beamSpecFromPreset(presetKey, family);
+  $('in-preset').value = presetKey;
+  $('in-case').value = spec.caseKey;
+  $('in-L').value = spec.L;
+  $('in-load').value = spec.load;
+  $('in-material').value = spec.material;
+  $('in-FS').value = spec.FS;
+  $('in-tmin').value = spec.tMin;
+  $('in-family').value = spec.family;
+  applyBeamFamilyDefaults(presetKey, spec.family);
+}
+
+function applyBeamFamilyDefaults(presetKey, family) {
+  const d = mod.BEAM_DEFAULTS[presetKey];
+  const b = d.bounds[family], s = d.student[family];
+  $('in-x1min').value = b[0][0]; $('in-x1max').value = b[0][1];
+  $('in-x2min').value = b[1][0]; $('in-x2max').value = b[1][1];
+  $('in-s1').value = s[0]; $('in-s2').value = s[1];
+  setBeamLabels();
+}
+
+function applyTrussDefaults() {
+  const s = mod.trussSpecDefault();
+  $('in-loadcase').value = s.loadCase;
+  $('in-tFS').value = s.FS;
+  $('in-Amin').value = s.Abounds[0]; $('in-Amax').value = s.Abounds[1];
+  $('in-opth').checked = s.optimizeH;
+  $('in-hmin').value = s.hBounds[0]; $('in-hmax').value = s.hBounds[1];
+  $('in-hfix').value = s.hFixed;
+  $('in-sA1').value = s.student[0]; $('in-sA2').value = s.student[1]; $('in-sh').value = s.student[2];
+  updateTrussFieldState();
+}
+
+function updateTrussFieldState() {
+  const opt = $('in-opth').checked;
+  $('in-hmin').disabled = !opt; $('in-hmax').disabled = !opt; $('in-hfix').disabled = opt;
+  $('in-sh').disabled = !opt;
+  if (!opt) $('in-sh').value = $('in-hfix').value;
+}
+
+function applyGADefaults() {
+  $('in-pop').value = 60; $('in-gen').value = 120; $('in-seed').value = 1;
+  $('in-etac').value = 15; $('in-etam').value = 20; $('in-pc').value = 0.9; $('in-ref').checked = true;
+}
+
+function showProblemFields() {
+  const beam = $('in-problem').value === 'beam';
+  $('beam-fields').classList.toggle('hidden', !beam);
+  $('truss-fields').classList.toggle('hidden', beam);
+}
+
+// ---------- reading inputs ----------
+function requireNumber(id, label) {
+  const v = Number($(id).value);
+  if ($(id).value === '' || !Number.isFinite(v)) throw new Error(`${label} must be a number`);
+  return v;
+}
+
+function readSpec() {
+  if ($('in-problem').value === 'beam') {
+    return {
+      kind: 'beam', preset: $('in-preset').value, caseKey: $('in-case').value,
+      L: requireNumber('in-L', 'Span L'), load: requireNumber('in-load', 'Load'),
+      material: $('in-material').value, FS: requireNumber('in-FS', 'Factor of safety'), tMin: requireNumber('in-tmin', 't_min'),
+      family: $('in-family').value,
+      bounds: [[requireNumber('in-x1min', 'first variable minimum'), requireNumber('in-x1max', 'first variable maximum')],
+               [requireNumber('in-x2min', 'second variable minimum'), requireNumber('in-x2max', 'second variable maximum')]],
+    };
+  }
+  return {
+    kind: 'truss', loadCase: $('in-loadcase').value, FS: requireNumber('in-tFS', 'Factor of safety'),
+    Abounds: [requireNumber('in-Amin', 'area minimum'), requireNumber('in-Amax', 'area maximum')],
+    optimizeH: $('in-opth').checked,
+    hBounds: [requireNumber('in-hmin', 'height minimum'), requireNumber('in-hmax', 'height maximum')],
+    hFixed: requireNumber('in-hfix', 'fixed height'),
+  };
+}
+
+function readStudent(spec) {
+  if (spec.kind === 'beam') return [requireNumber('in-s1', 'your first variable'), requireNumber('in-s2', 'your second variable')];
+  const x = [requireNumber('in-sA1', 'your chord area'), requireNumber('in-sA2', 'your diagonal area')];
+  if (spec.optimizeH) x.push(requireNumber('in-sh', 'your truss height'));
+  return x;
+}
+
+function readOptions() {
+  return {
+    popSize: requireNumber('in-pop', 'Population size'), generations: requireNumber('in-gen', 'Generations'), seed: requireNumber('in-seed', 'Seed'),
+    etaC: requireNumber('in-etac', 'eta_c'), etaM: requireNumber('in-etam', 'eta_m'), pc: requireNumber('in-pc', 'p_c'),
+  };
+}
+
+function specKey(spec) { return JSON.stringify(spec); }
+
+// ---------- status helpers ----------
+function setStatus(html, isError = false) {
+  $('status').innerHTML = html;
+  $('status').classList.toggle('error', isError);
+}
+function setRunning(on) {
+  state.running = on;
+  $('btn-run').disabled = on;
+  $('btn-cancel').disabled = !on;
+  $('btn-reset').disabled = on;
+}
+
+// ---------- student evaluation ----------
+function evaluateStudent(spec, x) {
+  // For the truss with a fixed height the student's height input is disabled; the fixed height applies.
+  const v = mod.verifyDesign(spec, x);
+  return {
+    x: x.slice(),
+    f: [Number.isFinite(v.mass) ? v.mass : NaN, Number.isFinite(v.deflection) ? v.deflection : NaN],
+    verify: v, feasible: !!v.feasible,
+  };
+}
+
+function reevaluateStudent() {
+  try {
+    const spec = readSpec();
+    mod.makeProblem(spec); // validation
+    const x = readStudent(spec);
+    state.student = evaluateStudent(spec, x);
+    state.studentSpecKey = specKey(spec);
+    if (state.result && state.specKey === state.studentSpecKey) {
+      const front = state.result.front.map(p => p.f);
+      const cls = mod.classifyDesign(state.student.f, front);
+      if (cls.nearestIndex >= 0 && state.selected < 0) state.selected = cls.nearestIndex;
+    }
+    renderAll();
+    if (!state.running) setStatus(badge(state.student.feasible ? 'ok' : 'bad', state.student.verify.message) + (state.result && state.specKey !== state.studentSpecKey ? ' ' + badge('warn', 'Problem inputs changed since the last run: run NSGA-II again to refresh the front') : ''));
+  } catch (err) {
+    setStatus('Error: ' + escapeHTML(err.message), true);
+  }
+}
+
+// ---------- running NSGA-II ----------
+function startWorker() {
+  if (state.workerFailed || typeof Worker === 'undefined') return null;
+  try {
+    return new Worker(new URL('./pareto-nsga2.worker.js', import.meta.url), { type: 'module' });
+  } catch (err) {
+    console.warn('Worker unavailable, running on the main thread:', err.message);
+    state.workerFailed = true;
+    return null;
+  }
+}
+
+function onProgress(p) {
+  const pct = p.generations ? Math.round(100 * p.gen / p.generations) : 0;
+  $('prog').value = pct;
+  setStatus(`Generation ${p.gen} of ${p.generations}: hypervolume ${fmt(p.hv, 4)}, feasible ${p.nFeasible}, front size ${p.frontSize}`);
+}
+
+function runOnMainThread(problem, options, wantRef) {
+  return new Promise((resolve, reject) => {
+    let opt;
+    try { opt = mod.createNsga2(problem, options); } catch (err) { reject(err); return; }
+    onProgress(opt.progress());
+    const t0 = performance.now();
+    const tick = () => {
+      if (state.cancelled) { resolve(null); return; }
+      const tStart = performance.now();
+      let p = null;
+      while (!opt.done && performance.now() - tStart < 25) p = opt.step();
+      if (p) onProgress(p);
+      if (!opt.done) { setTimeout(tick, 0); return; }
+      const result = opt.result();
+      if (!(wantRef && problem.n === 2)) { resolve({ result, reference: null, elapsedMs: performance.now() - t0 }); return; }
+      const grid = problem.kind === 'truss' ? [60, 60] : [200, 200];
+      const sweep = mod.createReferenceSweep(problem, grid[0], grid[1]);
+      setStatus(`Running the exact reference sweep (${grid[0]} x ${grid[1]} evaluations)...`);
+      const sweepTick = () => {
+        if (state.cancelled) { resolve(null); return; }
+        const s0 = performance.now();
+        while (!sweep.done && performance.now() - s0 < 25) sweep.step(2);
+        if (!sweep.done) { setTimeout(sweepTick, 0); return; }
+        resolve({ result, reference: sweep.result(), elapsedMs: performance.now() - t0 });
+      };
+      setTimeout(sweepTick, 0);
+    };
+    setTimeout(tick, 0);
+  });
+}
+
+function runInWorker(spec, problem, options, wantRef) {
+  return new Promise((resolve, reject) => {
+    const w = startWorker();
+    if (!w) { resolve(runOnMainThread(problem, options, wantRef)); return; }
+    state.worker = w;
+    let gotMessage = false;
+    w.onmessage = (evt) => {
+      gotMessage = true;
+      const msg = evt.data || {};
+      if (msg.type === 'progress') onProgress(msg);
+      else if (msg.type === 'stage') setStatus(escapeHTML(msg.text));
+      else if (msg.type === 'done') { w.terminate(); state.worker = null; resolve({ result: msg.result, reference: msg.reference, elapsedMs: msg.elapsedMs }); }
+      else if (msg.type === 'cancelled') { w.terminate(); state.worker = null; resolve(null); }
+      else if (msg.type === 'error') { w.terminate(); state.worker = null; reject(new Error(msg.message)); }
+    };
+    w.onerror = (evt) => {
+      // Module workers are unavailable in some file:// setups; fall back to the main thread for this run.
+      w.terminate(); state.worker = null;
+      if (!gotMessage) {
+        console.warn('Worker failed to start, running on the main thread:', evt.message || evt);
+        state.workerFailed = true;
+        if (evt.preventDefault) evt.preventDefault();
+        resolve(runOnMainThread(problem, options, wantRef));
+      } else {
+        reject(new Error(evt.message || 'worker error'));
+      }
+    };
+    const grid = problem.kind === 'truss' ? [70, 70] : [200, 200];
+    w.postMessage({ type: 'run', spec, options, reference: wantRef, referenceGrid: grid });
+  });
+}
+
+async function run() {
+  if (state.running) return;
+  let spec, problem, options, x;
+  try {
+    spec = readSpec();
+    problem = mod.makeProblem(spec);
+    options = readOptions();
+    x = readStudent(spec);
+    // validate the GA options early so errors are readable
+    mod.createNsga2(problem, Object.assign({}, options, { popSize: Math.max(4, options.popSize), generations: 1 }));
+  } catch (err) {
+    // input validation problems are reported to the student, not logged as program errors
+    setStatus('Error: ' + escapeHTML(err.message), true);
+    return;
+  }
+  state.cancelled = false;
+  setRunning(true);
+  $('prog').value = 0;
+  try {
+    state.student = evaluateStudent(spec, x);
+    state.studentSpecKey = specKey(spec);
+    const out = await runInWorker(spec, problem, options, $('in-ref').checked);
+    if (!out) {
+      setStatus(badge('warn', 'Run cancelled') + ' The previous result, if any, is still shown.');
+      $('prog').value = 0;
+      return;
+    }
+    state.spec = spec; state.problem = problem; state.specKey = specKey(spec);
+    state.result = out.result; state.reference = out.reference; state.elapsedMs = out.elapsedMs;
+    state.analytic = spec.kind === 'beam' ? mod.analyticBeamFront(spec, 160) : null;
+    const front = state.result.front.map(p => p.f);
+    const cls = mod.classifyDesign(state.student.f, front);
+    state.selected = cls.nearestIndex >= 0 ? cls.nearestIndex : (front.length ? Math.floor(front.length / 2) : -1);
+    $('prog').value = 100;
+    renderAll();
+    const r = state.result;
+    if (r.front.length === 0) {
+      setStatus(badge('bad', 'NSGA-II completed but found no feasible design inside the bounds') + ` ${r.generations} generations, ${r.evaluations} evaluations. Widen the bounds or relax t_min.`, true);
+    } else {
+      setStatus(badge('ok', 'NSGA-II completed') + ` ${r.front.length} front designs after ${r.generations} generations and ${r.evaluations} exact evaluations (${fmt(out.elapsedMs / 1000, 2)} s). Every displayed design is re-solved with the exact solver.`);
+    }
+  } catch (err) {
+    setStatus('Error: ' + escapeHTML(err.message), true);
+    console.error(err);
+  } finally {
+    setRunning(false);
+  }
+}
+
+function cancelRun() {
+  if (!state.running) return;
+  state.cancelled = true;
+  if (state.worker) {
+    state.worker.postMessage({ type: 'cancel' });
+    // also terminate hard in case the worker is in a long reference sweep
+    const w = state.worker;
+    setTimeout(() => { if (state.worker === w) { w.terminate(); state.worker = null; setRunning(false); setStatus(badge('warn', 'Run cancelled')); } }, 300);
+  }
+}
+
+// ---------- rendering ----------
+function objLabels() {
+  return state.problem ? state.problem.objectiveLabels : ($('in-problem').value === 'beam' ? ['Mass (g)', 'Maximum deflection (mm)'] : ['Mass (g)', 'Midspan deflection (mm)']);
+}
+
+function kpi(label, value, sub = '') {
+  return `<div class="kpi"><div class="label">${label}</div><div class="value">${value}</div>${sub ? `<div class="sub">${sub}</div>` : ''}</div>`;
+}
+
+// mass in grams, with a kilogram reading added for heavy structures such as the truss
+function massText(g, digits = 4) {
+  return Number.isFinite(g) && Math.abs(g) >= 10000 ? `${fmt(g, digits)} g (${fmt(g / 1000, 3)} kg)` : `${fmt(g, digits)} g`;
+}
+
+function renderKpis() {
+  const r = state.result, s = state.student;
+  const parts = [];
+  if (r) {
+    const front = r.front;
+    parts.push(kpi('Pareto front designs', String(front.length), `of ${r.population.length} in the final population`));
+    parts.push(kpi('Final hypervolume', fmt(r.hvHistory[r.hvHistory.length - 1], 4), `reference point (${fmt(r.ref[0], 4)} g, ${fmt(r.ref[1], 4)} mm)`));
+    if (front.length) {
+      const lightest = front[0], stiffest = front[front.length - 1];
+      const vl = state.tableVerify[0], vs = state.tableVerify[front.length - 1];
+      parts.push(kpi('Lightest front design', massText(lightest.f[0]), `${fmt(lightest.f[1], 4)} mm; governing: ${vl && vl.governing ? escapeHTML(vl.governing.name) + ' U = ' + fmt(vl.governing.U, 3) : 'none'}`));
+      parts.push(kpi('Stiffest front design', `${fmt(stiffest.f[1], 4)} mm`, `${massText(stiffest.f[0])}; ${vs && vs.activeBounds && vs.activeBounds.length ? 'at bound: ' + escapeHTML(vs.activeBounds.map(b => b.name).join(', ')) : 'no bound active'}`));
+    }
+    if (state.analytic && state.analytic.length && front.length) {
+      const gap = mod.frontDistance(front.map(p => p.f), state.analytic.map(p => p.f));
+      parts.push(kpi('Agreement with closed form', `${fmt(gap * 100, 3)} %`, `mean normalized gap between the NSGA-II front and the classical boundary front (${state.analytic.length} points)`));
+    } else if (state.reference && state.reference.points.length && front.length) {
+      const gap = mod.frontDistance(front.map(p => p.f), state.reference.points.map(p => p.f));
+      parts.push(kpi('Agreement with exact sweep', `${fmt(gap * 100, 3)} %`, `mean normalized gap to the ${state.reference.grid[0]} x ${state.reference.grid[1]} grid front (${state.reference.points.length} points)`));
+    }
+  }
+  if (s && r && state.specKey === state.studentSpecKey && r.front.length) {
+    const cls = mod.classifyDesign(s.f, r.front.map(p => p.f));
+    if (!s.feasible) parts.push(kpi('Your design', badge('bad', 'infeasible'), 'dominance is only compared among feasible designs'));
+    else if (cls.status === 'non-dominated') parts.push(kpi('Your design', badge('ok', 'non-dominated'), `normalized distance to the front ${fmt(cls.normalizedDistance, 3)}`));
+    else parts.push(kpi('Your design', badge('warn', `dominated by ${cls.dominatedBy}`), `front designs; normalized distance ${fmt(cls.normalizedDistance, 3)}`));
+    const tr = mod.tradeoffReadings(s.f, r.front.map(p => p.f));
+    if (tr.lighterBy && Number.isFinite(tr.lighterBy.value)) {
+      const v = tr.lighterBy.value;
+      parts.push(kpi('Same deflection', `${v >= 0 ? 'lighter by ' : 'heavier by '}${massText(Math.abs(v))}`, `${fmt(100 * Math.abs(v) / s.f[0], 3)} % of your mass; ${escapeHTML(tr.lighterBy.note)}`));
+    }
+    if (tr.stifferBy && Number.isFinite(tr.stifferBy.value)) {
+      const v = tr.stifferBy.value;
+      parts.push(kpi('Same mass', `${v >= 0 ? 'stiffer by ' : 'more flexible by '}${fmt(Math.abs(v), 4)} mm`, `${Number.isFinite(s.f[1]) && s.f[1] > 0 ? fmt(100 * Math.abs(v) / s.f[1], 3) + ' % of your deflection; ' : ''}${escapeHTML(tr.stifferBy.note)}`));
+    }
+  }
+  $('kpis').innerHTML = parts.join('');
+}
+
+function padRange(lo, hi, frac = 0.06) {
+  if (!Number.isFinite(lo) || !Number.isFinite(hi)) return undefined;
+  if (hi === lo) { const d = Math.abs(lo) > 0 ? Math.abs(lo) * 0.1 : 1; return [lo - d, hi + d]; }
+  const d = (hi - lo) * frac;
+  return [lo - d, hi + d];
+}
+
+function renderFrontPlot() {
+  const canvas = $('plot-front');
+  const r = state.result, s = state.student;
+  const labels = objLabels();
+  const series = [];
+  const xs = [], ys = [];
+  let outside = 0;
+  const frontF = r ? r.front.map(p => p.f) : [];
+  if (r) {
+    series.push({ x: r.population.map(p => p.f[0]), y: r.population.map(p => p.f[1]), label: 'Final population', color: '#b8b8c0', type: 'scatter', size: 3 });
+    for (const p of r.population) if (p.feasible) { xs.push(p.f[0]); ys.push(p.f[1]); }
+    if (state.analytic && state.analytic.length) {
+      series.push({ x: state.analytic.map(p => p.f[0]), y: state.analytic.map(p => p.f[1]), label: 'Closed-form front (boundary argument)', color: palette.ink, type: 'line', width: 1.2 });
+    }
+    if (state.reference && state.reference.points.length) {
+      series.push({ x: state.reference.points.map(p => p.f[0]), y: state.reference.points.map(p => p.f[1]), label: 'Exact reference sweep (grid)', color: palette.teal, type: 'line', width: 1.5, dash: [6, 4] });
+    }
+    series.push({ x: frontF.map(f => f[0]), y: frontF.map(f => f[1]), label: 'Pareto front (NSGA-II)', color: palette.blue, type: 'both', size: 4, width: 1.5 });
+    for (const f of frontF) { xs.push(f[0]); ys.push(f[1]); }
+  }
+  if (s && Number.isFinite(s.f[0]) && Number.isFinite(s.f[1])) {
+    series.push({ x: [s.f[0]], y: [s.f[1]], label: 'Your design', color: palette.orange, type: 'scatter', size: 7 });
+    xs.push(s.f[0]); ys.push(s.f[1]);
+  }
+  const xlim = xs.length ? padRange(Math.min(...xs), Math.max(...xs)) : undefined;
+  const ylim = ys.length ? padRange(Math.min(...ys), Math.max(...ys)) : undefined;
+  if (r && xlim && ylim) {
+    for (const p of r.population) if (p.f[0] < xlim[0] || p.f[0] > xlim[1] || p.f[1] < ylim[0] || p.f[1] > ylim[1]) outside++;
+  }
+  const map = linePlot(canvas, series, { title: 'Objective plane: both objectives minimized', xlabel: labels[0], ylabel: labels[1], xlim, ylim });
+  state.plotMap = map;
+  const { ctx, X, Y, frame } = map;
+  ctx.save();
+  ctx.beginPath(); ctx.rect(frame.left, frame.top, frame.pw, frame.ph); ctx.clip();
+  if (r && state.selected >= 0 && state.selected < frontF.length) {
+    const f = frontF[state.selected];
+    const px = X(f[0]), py = Y(f[1]);
+    ctx.font = '12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
+    if ($('in-dom').checked) {
+      ctx.fillStyle = 'rgba(123,79,179,0.13)';
+      ctx.fillRect(px, frame.top, frame.left + frame.pw - px, py - frame.top);
+      ctx.strokeStyle = palette.purple; ctx.setLineDash([4, 4]); ctx.lineWidth = 1;
+      ctx.strokeRect(px + 0.5, frame.top + 0.5, frame.left + frame.pw - px - 1, py - frame.top - 1);
+      ctx.setLineDash([]);
+      // label in the lower right corner of the shaded box, away from the kit legend in the upper right
+      ctx.fillStyle = palette.purple; ctx.textAlign = 'right'; ctx.textBaseline = 'bottom';
+      ctx.fillText('region dominated by the selected design (heavier and more flexible)', frame.left + frame.pw - 6, Math.max(py - 6, frame.top + 14));
+    }
+    ctx.strokeStyle = palette.purple; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.arc(px, py, 9, 0, Math.PI * 2); ctx.stroke();
+    // selected label to the upper left of the point so it does not collide with the student label (lower right)
+    ctx.fillStyle = palette.purple; ctx.textBaseline = 'bottom';
+    if (px - frame.left > 90) { ctx.textAlign = 'right'; ctx.fillText(`selected #${state.selected + 1}`, px - 12, py - 6); }
+    else { ctx.textAlign = 'left'; ctx.fillText(`selected #${state.selected + 1}`, px + 12, py - 10); }
+  }
+  if (s && Number.isFinite(s.f[0]) && Number.isFinite(s.f[1])) {
+    const px = X(s.f[0]), py = Y(s.f[1]);
+    if (!s.feasible) {
+      ctx.strokeStyle = palette.red; ctx.lineWidth = 2.5;
+      ctx.beginPath(); ctx.arc(px, py, 11, 0, Math.PI * 2); ctx.stroke();
+    }
+    ctx.fillStyle = palette.orange; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+    ctx.fillText(s.feasible ? 'your design' : 'your design (infeasible)', px + 11, py + 4);
+  }
+  ctx.restore();
+  state.frontPixels = frontF.map(f => [X(f[0]), Y(f[1])]);
+  $('outside-note').textContent = outside ? ` (${outside} population points lie outside the view: infeasible designs with very large deflection)` : '';
+}
+
+function renderHvPlot() {
+  const canvas = $('plot-hv');
+  const r = state.result;
+  if (!r) { linePlot(canvas, [{ x: [0], y: [0], type: 'scatter', size: 0.1 }], { title: 'Hypervolume per generation', xlabel: 'Generation', ylabel: 'Hypervolume (g x mm)' }); $('hv-note').textContent = ''; return; }
+  const gens = r.hvHistory.map((_, i) => i);
+  // the kit prints axis values above 1e5 in exponential form, so scale large hypervolumes to keep the ticks readable
+  const hvMax = Math.max(...r.hvHistory);
+  const scale = hvMax >= 1e5 ? Math.pow(10, Math.floor(Math.log10(hvMax)) - 2) : 1;
+  const unit = scale === 1 ? 'g x mm' : `x ${scale.toExponential(0).replace('e+', 'e')} g x mm`;
+  linePlot(canvas, [{ x: gens, y: r.hvHistory.map(v => v / scale), label: 'Hypervolume of the feasible first front', color: palette.green, type: 'line', width: 2 }],
+    { title: 'Hypervolume per generation (axis zoomed to the range reached)', xlabel: 'Generation', ylabel: `Hypervolume (${unit})`, xZero: true, marginLeft: 78 });
+  const first = r.hvHistory[0], last = r.hvHistory[r.hvHistory.length - 1];
+  const half = r.hvHistory.findIndex(v => v >= first + 0.99 * (last - first));
+  $('hv-note').textContent = `Reference point (${fmt(r.ref[0], 4)} g, ${fmt(r.ref[1], 4)} mm) from the ${r.refBasis}. Hypervolume rose from ${fmt(first, 5)} to ${fmt(last, 5)} g x mm (${fmt(100 * (last - first) / Math.max(first, 1e-12), 3)} %); 99 % of the gain was reached by generation ${half < 0 ? r.generations : half}. Small dips are possible when the crowding truncation drops an extreme design. A flat curve means the front has stopped moving; try more generations or another seed to check.`;
+}
+
+function variableTable(x) {
+  const p = state.problem;
+  if (!p) return '';
+  let html = '<table class="results"><tr><th>Variable</th><th class="num">Value</th><th>Unit</th></tr>';
+  p.names.forEach((n, i) => { html += `<tr><td>${escapeHTML(n)}</td><td class="num">${fmt(x[i], 5)}</td><td>${escapeHTML(p.units[i])}</td></tr>`; });
+  return html + '</table>';
+}
+
+function utilizationTable(v, limit = 6) {
+  if (!v.utilizations || !v.utilizations.length) return '';
+  const rows = v.utilizations.slice().sort((a, b) => b.U - a.U);
+  const shown = rows.slice(0, limit);
+  const status = u => (u.U > 1 + 1e-9 ? badge('bad', 'violated') : u.U > 0.95 ? badge('warn', 'active') : badge('ok', 'ok'));
+  let html = `<table class="results"><tr><th>Constraint</th><th>Check</th><th class="num">Utilization U</th><th>Status</th></tr>`;
+  for (const u of shown) {
+    html += `<tr${u.U > 0.95 && u.U <= 1 + 1e-9 ? ' class="active"' : ''}><td>${escapeHTML(u.name)}</td><td>${escapeHTML(u.kind || '')}${u.kind === 'buckling' ? ' (screen, K = 1)' : ''}</td><td class="num">${fmt(u.U, 3)}</td><td>${status(u)}</td></tr>`;
+  }
+  html += '</table>';
+  if (rows.length > shown.length) html += `<p class="note">${shown.length} highest of ${rows.length} checked members shown; all ${rows.length} were re-checked.</p>`;
+  return html;
+}
+
+function designSummary(v, f) {
+  const labels = objLabels();
+  const parts = [`${labels[0].replace(/ \(.*\)/, '')}: <strong>${massText(f[0])}</strong>`, `${labels[1].replace(/ \(.*\)/, '')}: <strong>${fmt(f[1], 4)} mm</strong>`];
+  if (v.governing) parts.push(`governing constraint: <strong>${escapeHTML(v.governing.name)}</strong>${v.governing.kind ? ' (' + escapeHTML(v.governing.kind) + ')' : ''} with U = ${fmt(v.governing.U, 3)}`);
+  if (v.activeBounds && v.activeBounds.length) parts.push(`at variable bound: ${escapeHTML(v.activeBounds.map(b => `${b.name} ${b.side} = ${fmt(b.value, 4)}`).join(', '))}`);
+  if (v.fe) parts.push(`finite element re-solve (${v.fe.elements} elements): deflection ${fmt(v.fe.deflection, 5)} mm, moment ${fmt(v.fe.Mmax, 5)} N mm, relative difference ${fmt(Math.max(v.fe.relV, v.fe.relM), 2)}`);
+  if (v.equilibrium) parts.push(`equilibrium: reactions ${fmt(v.equilibrium.sumReactions[1], 5)} N against loads ${fmt(-v.equilibrium.sumLoads[1], 5)} N, residual ${fmt(v.equilibrium.residual, 2)} N`);
+  if (v.hollow === false) parts.push('the wall closes the bore, so the section was evaluated as a solid bar and flagged infeasible');
+  return `<p>${parts.join('; ')}.</p>`;
+}
+
+function renderSelected() {
+  const el = $('sel-info');
+  const r = state.result;
+  if (!r || state.selected < 0 || state.selected >= r.front.length) {
+    el.innerHTML = r && r.front.length ? '<p class="note">Click a blue front point or a table row to inspect a design.</p>' : '<p class="note">Run NSGA-II to compute the front.</p>';
+    return;
+  }
+  const ind = r.front[state.selected];
+  const v = state.tableVerify[state.selected] || mod.verifyDesign(state.spec, ind.x);
+  el.innerHTML = `<h3>Selected front design #${state.selected + 1} ${badge(v.verified ? 'ok' : 'bad', v.message)}</h3>
+    <div class="twocol"><div>${variableTable(ind.x)}</div><div>${utilizationTable(v)}</div></div>
+    ${designSummary(v, [v.mass, v.deflection])}
+    <p class="note">Crowding distance in the final front: ${ind.crowd === Infinity ? 'infinite (extreme design)' : fmt(ind.crowd, 3)}. Neighbouring front designs: ${state.selected > 0 ? '#' + state.selected : 'none'} and ${state.selected < r.front.length - 1 ? '#' + (state.selected + 2) : 'none'}.</p>`;
+}
+
+function renderStudent() {
+  const el = $('student-info');
+  const s = state.student;
+  if (!s) { el.innerHTML = '<p class="note">Enter your design in the inputs panel and press "Re-evaluate my design".</p>'; return; }
+  const v = s.verify;
+  let html = `<p>${badge(v.feasible ? 'ok' : 'bad', v.message)}</p>`;
+  if (state.problem) html += `<div class="twocol"><div>${variableTable(s.x)}</div><div>${utilizationTable(v)}</div></div>`;
+  if (Number.isFinite(v.mass)) html += designSummary(v, [v.mass, v.deflection]);
+  const r = state.result;
+  if (r && r.front.length && state.specKey === state.studentSpecKey && Number.isFinite(s.f[1])) {
+    const frontF = r.front.map(p => p.f);
+    const cls = mod.classifyDesign(s.f, frontF);
+    const tr = mod.tradeoffReadings(s.f, frontF);
+    html += '<h3>Position relative to the computed front</h3><ul>';
+    if (!s.feasible) {
+      html += `<li>${badge('bad', 'Infeasible')} Your design violates at least one constraint, so it cannot be Pareto optimal. The geometric position is still shown (red ring).</li>`;
+    } else if (cls.status === 'non-dominated') {
+      html += `<li>${badge('ok', 'Non-dominated')} No design of the computed front is both lighter and stiffer than yours${cls.dominatesFront ? `, and your design dominates ${cls.dominatesFront} front point${cls.dominatesFront > 1 ? 's' : ''} (the front is an approximation that improves with generations)` : ''}.</li>`;
+    } else {
+      html += `<li>${badge('warn', `Dominated by ${cls.dominatedBy} front design${cls.dominatedBy > 1 ? 's' : ''}`)} Each of them is at least as light and at least as stiff as your design, and strictly better in one objective.</li>`;
+    }
+    html += `<li>Normalized distance to the nearest front design (#${cls.nearestIndex + 1}): <strong>${fmt(cls.normalizedDistance, 3)}</strong>, with objectives scaled by the front ranges (${fmt(cls.scale[0], 4)} g, ${fmt(cls.scale[1], 4)} mm). Zero means on the front.</li>`;
+    if (tr.lighterBy) {
+      html += Number.isFinite(tr.lighterBy.value)
+        ? `<li>Same deflection (${fmt(s.f[1], 4)} mm): the front reaches it at about ${massText(tr.lighterBy.frontPoint[0])}, so a front design is <strong>${tr.lighterBy.value >= 0 ? 'lighter' : 'heavier'} by ${massText(Math.abs(tr.lighterBy.value))}</strong> (${fmt(100 * Math.abs(tr.lighterBy.value) / s.f[0], 3)} %); ${escapeHTML(tr.lighterBy.note)}.</li>`
+        : `<li>Same deflection: ${escapeHTML(tr.lighterBy.note)} (stiffest front design ${fmt(tr.lighterBy.frontPoint[1], 4)} mm at ${massText(tr.lighterBy.frontPoint[0])}).</li>`;
+    }
+    if (tr.stifferBy) {
+      html += Number.isFinite(tr.stifferBy.value)
+        ? `<li>Same mass (${massText(s.f[0])}): the front reaches about ${fmt(tr.stifferBy.frontPoint[1], 4)} mm, so a front design is <strong>${tr.stifferBy.value >= 0 ? 'stiffer' : 'more flexible'} by ${fmt(Math.abs(tr.stifferBy.value), 4)} mm</strong>${s.f[1] > 0 ? ` (${fmt(100 * Math.abs(tr.stifferBy.value) / s.f[1], 3)} %)` : ''}; ${escapeHTML(tr.stifferBy.note)}.</li>`
+        : `<li>Same mass: ${escapeHTML(tr.stifferBy.note)} (lightest front design ${massText(tr.stifferBy.frontPoint[0])} at ${fmt(tr.stifferBy.frontPoint[1], 4)} mm).</li>`;
+    }
+    html += '</ul><p class="note">The "lighter by" and "stiffer by" values are interpolated along the front, so they are plot readings. Select the nearest front design to see a verified alternative with its variables and governing constraint.</p>';
+  } else if (r && state.specKey !== state.studentSpecKey) {
+    html += `<p>${badge('warn', 'The front on the plot was computed for different problem inputs; run NSGA-II again to compare.')}</p>`;
+  }
+  el.innerHTML = html;
+}
+
+function renderTable() {
+  const table = $('table-front');
+  const r = state.result, p = state.problem;
+  if (!r || !p) { table.innerHTML = ''; return; }
+  state.tableVerify = r.front.map(ind => mod.verifyDesign(state.spec, ind.x));
+  const labels = objLabels();
+  let html = `<tr><th class="num">#</th>${p.names.map((n, i) => `<th class="num">${escapeHTML(n)} (${escapeHTML(p.units[i])})</th>`).join('')}<th class="num">${escapeHTML(labels[0])}</th><th class="num">${escapeHTML(labels[1])}</th><th class="num">Max U</th><th>Governing constraint</th><th>Active bound</th><th>Verification</th></tr>`;
+  r.front.forEach((ind, i) => {
+    const v = state.tableVerify[i];
+    html += `<tr class="clickable${i === state.selected ? ' selected' : ''}" data-i="${i}"><td class="num">${i + 1}</td>${ind.x.map(x => `<td class="num">${fmt(x, 4)}</td>`).join('')}<td class="num">${fmt(v.mass, 4)}</td><td class="num">${fmt(v.deflection, 4)}</td><td class="num">${v.governing ? fmt(v.governing.U, 3) : 'n/a'}</td><td>${v.governing ? escapeHTML(v.governing.name) + (v.governing.kind ? ' (' + escapeHTML(v.governing.kind) + ')' : '') : 'none'}</td><td>${v.activeBounds && v.activeBounds.length ? escapeHTML(v.activeBounds.map(b => `${b.name} ${b.side}`).join(', ')) : ''}</td><td>${badge(v.verified ? 'ok' : 'bad', v.verified ? 'verified' : v.message)}</td></tr>`;
+  });
+  table.innerHTML = html;
+}
+
+function renderAll() {
+  renderTable();
+  renderKpis();
+  renderFrontPlot();
+  renderHvPlot();
+  renderSelected();
+  renderStudent();
+}
+
+function selectIndex(i) {
+  if (!state.result || i < 0 || i >= state.result.front.length) return;
+  state.selected = i;
+  renderFrontPlot();
+  renderSelected();
+  for (const tr of $('table-front').querySelectorAll('tr.clickable')) tr.classList.toggle('selected', Number(tr.dataset.i) === i);
+}
+
+// ---------- events ----------
+$('plot-front').addEventListener('click', evt => {
+  if (!state.frontPixels.length) return;
+  const p = canvasPoint($('plot-front'), evt);
+  let best = -1, bd = Infinity;
+  state.frontPixels.forEach(([px, py], i) => { const d = Math.hypot(px - p.x, py - p.y); if (d < bd) { bd = d; best = i; } });
+  if (best >= 0 && bd <= 16) selectIndex(best);
+});
+$('table-front').addEventListener('click', evt => {
+  const tr = evt.target.closest('tr.clickable');
+  if (tr) selectIndex(Number(tr.dataset.i));
+});
+$('in-dom').addEventListener('change', renderFrontPlot);
+$('btn-run').addEventListener('click', run);
+$('btn-cancel').addEventListener('click', cancelRun);
+$('btn-student').addEventListener('click', reevaluateStudent);
+$('btn-reset').addEventListener('click', () => {
+  if (state.running) return;
+  $('in-problem').value = 'beam';
+  showProblemFields();
+  applyBeamPreset('printed-spar');
+  applyTrussDefaults();
+  applyGADefaults();
+  $('in-dom').checked = false;
+  state.selected = -1;
+  run();
+});
+$('btn-csv').addEventListener('click', () => {
+  if (!state.result || !state.problem) { setStatus('Error: run NSGA-II first to have a front to export', true); return; }
+  const rows = mod.frontTableRows(state.problem, state.result.front);
+  rows.push([]);
+  rows.push(['generation', 'hypervolume']);
+  state.result.hvHistory.forEach((h, i) => rows.push([i, Number(h.toPrecision(8))]));
+  downloadCSV(`pareto-front-${state.problem.kind}.csv`, rows);
+});
+$('in-problem').addEventListener('change', () => { showProblemFields(); state.selected = -1; });
+$('in-preset').addEventListener('change', () => applyBeamPreset($('in-preset').value));
+$('in-family').addEventListener('change', () => applyBeamFamilyDefaults($('in-preset').value, $('in-family').value));
+$('in-case').addEventListener('change', (evt) => {
+  // keep the total load when switching between a point load and a distributed load
+  const prev = $('in-case').dataset.prev || 'cant-point';
+  const was = mod.BEAM_CASES[prev], now = mod.BEAM_CASES[$('in-case').value];
+  const L = Number($('in-L').value) || 1;
+  if (was && now && was.loadType !== now.loadType) {
+    const q = Number($('in-load').value) || 0;
+    $('in-load').value = Number((now.loadType === 'udl' ? q / L : q * L).toPrecision(6));
+  }
+  $('in-case').dataset.prev = $('in-case').value;
+  setBeamLabels();
+});
+$('in-opth').addEventListener('change', updateTrussFieldState);
+$('in-hfix').addEventListener('input', () => { if (!$('in-opth').checked) $('in-sh').value = $('in-hfix').value; });
+
+// ---------- initial state ----------
+applyBeamPreset('printed-spar');
+$('in-case').dataset.prev = $('in-case').value;
+applyTrussDefaults();
+applyGADefaults();
+showProblemFields();
+run();
+</script>
+</body>
+</html>

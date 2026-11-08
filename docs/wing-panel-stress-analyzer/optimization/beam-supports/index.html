@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Support Placement and Worst-Case Load Position · MIE 446 Optimization Lab</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="../shared/lab.css">
+<style>
+  [hidden] { display: none !important; }
+  .kpi .value small { font-size: 0.75rem; font-weight: 500; color: var(--muted); }
+  .derived { font-family: var(--mono); font-size: 0.82rem; color: var(--muted); margin: 4px 0 8px; }
+  .progress-wrap { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; margin: 6px 0; font-size: 0.85rem; color: var(--muted); }
+  .legend-note { font-size: 0.84rem; color: var(--muted); margin: -6px 0 10px; }
+  textarea.list { width: 100%; min-height: 2.6em; padding: 5px 7px; border: 1px solid var(--line); border-radius: 6px; font: inherit; font-size: 0.86rem; }
+  .radio-row { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 0.9rem; margin: 4px 0 2px; }
+  .radio-row label { display: inline-flex; gap: 5px; align-items: center; }
+  details.help .body p { margin: 6px 0; }
+  details.help .body ul { margin: 4px 0 6px 18px; padding: 0; }
+  .warnlist { margin: 6px 0 0; font-size: 0.84rem; }
+</style>
+</head>
+<body>
+<header class="lab-header">
+  <div class="crumbs"><a href="../index.html">Optimization Lab</a> · <a href="https://ehsan-roohi.github.io/Aerospace-Structures/wing-panel-stress-analyzer/#beam">Beam</a> · <a href="https://ehsan-roohi.github.io/Aerospace-Structures/wing-panel-stress-analyzer/truss-lab.html">Truss Lab</a> · <a href="https://ehsan-roohi.github.io/Aerospace-Structures/wing-panel-stress-analyzer/">Wing AeroStruct</a></div>
+  <h1>Support Placement and Worst-Case Load Position</h1>
+  <span class="version">beam-supports 0.1.1</span>
+</header>
+
+<main class="lab-main">
+  <div class="scope">
+    <strong>Scope.</strong> You have solved a beam with given supports. This page treats the support positions as design variables:
+    it finds the placement that minimizes the peak bending moment or the peak deflection (Part A) and then asks where a moving load
+    does the most harm, using influence lines (Part B). Model: Euler-Bernoulli beam, linear elastic, small deflection, uniform EI
+    (flexural rigidity, E from the material card times I from the section), 2-node Hermite cubic finite elements with at least 120
+    elements, rigid supports (pin: v = 0; clamp: v = 0 and slope = 0). Sign convention: x to the right, y up, loads and reactions
+    positive upward, bending moment positive when sagging (tension at the bottom), shear V = dM/dx, deflection positive upward.
+    Every recommended layout is re-solved from scratch with the exact solver before it is shown. The stress and deflection
+    utilizations use representative educational material cards: nothing here is a certified strength, stability or fatigue statement,
+    and this page is independent of the Wing AeroStruct solver.
+  </div>
+
+  <div class="grid">
+    <section>
+      <div class="panel">
+        <h2>Inputs</h2>
+        <h3>Beam</h3>
+        <div class="field"><label for="in-L">Length L <span class="unit">mm</span></label><input id="in-L" type="number" value="1000" step="10" min="1"></div>
+        <div class="field"><label for="in-material">Material card</label><select id="in-material"></select></div>
+        <div class="field"><label for="in-section">Section type</label>
+          <select id="in-section">
+            <option value="tube">Round tube (D, t)</option>
+            <option value="rect">Solid rectangle (b, h)</option>
+            <option value="box">Box (b, h, t)</option>
+            <option value="ibeam">I-beam (bf, tf, hw, tw)</option>
+          </select></div>
+        <div class="field sec sec-tube"><label for="sec-D">Outer diameter D <span class="unit">mm</span></label><input id="sec-D" type="number" value="30" step="1" min="0.1"></div>
+        <div class="field sec sec-rect sec-box"><label for="sec-b">Width b <span class="unit">mm</span></label><input id="sec-b" type="number" value="12" step="1" min="0.1"></div>
+        <div class="field sec sec-rect sec-box"><label for="sec-h">Depth h <span class="unit">mm</span></label><input id="sec-h" type="number" value="24" step="1" min="0.1"></div>
+        <div class="field sec sec-tube sec-box"><label for="sec-t">Wall thickness t <span class="unit">mm</span></label><input id="sec-t" type="number" value="2" step="0.1" min="0.01"></div>
+        <div class="field sec sec-ibeam"><label for="sec-bf">Flange width bf <span class="unit">mm</span></label><input id="sec-bf" type="number" value="30" step="1" min="0.1"></div>
+        <div class="field sec sec-ibeam"><label for="sec-tf">Flange thickness tf <span class="unit">mm</span></label><input id="sec-tf" type="number" value="3" step="0.1" min="0.01"></div>
+        <div class="field sec sec-ibeam"><label for="sec-hw">Web height hw (clear) <span class="unit">mm</span></label><input id="sec-hw" type="number" value="34" step="1" min="0.1"></div>
+        <div class="field sec sec-ibeam"><label for="sec-tw">Web thickness tw <span class="unit">mm</span></label><input id="sec-tw" type="number" value="2" step="0.1" min="0.01"></div>
+        <div class="derived" id="derived">E, I: ...</div>
+
+        <h3>Loads (upward positive)</h3>
+        <div class="field"><label for="in-w">UDL intensity w <span class="unit">N/mm</span></label><input id="in-w" type="number" value="-2" step="0.1"></div>
+        <div class="field"><label for="in-wa">UDL start a <span class="unit">mm</span></label><input id="in-wa" type="number" value="0" step="10" min="0"></div>
+        <div class="field"><label for="in-wb">UDL end b <span class="unit">mm</span></label><input id="in-wb" type="number" value="1000" step="10" min="0"></div>
+        <div class="field wide"><label for="in-pointloads">Point loads, optional: P@a per entry, comma separated <span class="unit">N at mm</span></label>
+          <textarea class="list" id="in-pointloads" placeholder="for example  -300@250, -150@900"></textarea></div>
+        <div class="note">A UDL (uniformly distributed load) of -2 N/mm is a 2 N/mm gravity-type load. Negative point loads act downward.</div>
+
+        <h3>Limits for the utilization check</h3>
+        <div class="field"><label for="in-FS">Factor of safety FS on bending stress</label><input id="in-FS" type="number" value="1.5" step="0.1" min="0.1"></div>
+        <div class="field"><label for="in-ratio">Deflection limit L / ratio</label><input id="in-ratio" type="number" value="250" step="10" min="1"></div>
+
+        <h3>Part A: your support layout</h3>
+        <div class="radio-row" role="radiogroup" aria-label="Case">
+          <label><input type="radio" name="case" value="A1" checked> A1 symmetric overhang</label>
+          <label><input type="radio" name="case" value="A2"> A2 two free supports</label>
+          <label><input type="radio" name="case" value="A3"> A3 three supports</label>
+        </div>
+        <div class="field case-vars case-A1"><label for="in-a">Your overhang a (pins at a and L - a) <span class="unit">mm</span></label><input id="in-a" type="number" value="0" step="10" min="0"></div>
+        <div class="field case-vars case-A2"><label for="in-a1">Your first support a1 <span class="unit">mm</span></label><input id="in-a1" type="number" value="0" step="10" min="0"></div>
+        <div class="field case-vars case-A2"><label for="in-a2">Your second support a2 <span class="unit">mm</span></label><input id="in-a2" type="number" value="1000" step="10" min="0"></div>
+        <div class="field case-vars case-A3"><label for="in-s">Your interior support s (pins at 0, s, L) <span class="unit">mm</span></label><input id="in-s" type="number" value="500" step="10" min="0"></div>
+        <div class="field"><label for="in-objective">Objective to minimize</label>
+          <select id="in-objective"><option value="moment">peak bending moment |M|</option><option value="deflection">peak deflection |v|</option></select></div>
+
+        <h3>Part B: influence lines</h3>
+        <div class="field"><label for="in-il-source">Support layout for Part B</label>
+          <select id="in-il-source">
+            <option value="student">your layout of the selected case</option>
+            <option value="optimized">optimized layout of the selected case</option>
+            <option value="custom">custom list below</option>
+          </select></div>
+        <div class="field wide"><label for="in-il-custom">Custom supports: position and type (pin or clamp), comma separated <span class="unit">mm</span></label>
+          <textarea class="list" id="in-il-custom" placeholder="for example  0 clamp, 700 pin"></textarea></div>
+        <div class="field"><label for="in-xs">Section of interest x_s <span class="unit">mm</span></label><input id="in-xs" type="number" value="500" step="10" min="0"></div>
+        <div class="field"><label for="in-P">Moving load P (upward positive) <span class="unit">N</span></label><input id="in-P" type="number" value="-1" step="1"></div>
+        <div class="field"><label for="in-il-support">Support for the reaction influence line</label><select id="in-il-support"><option value="0">first support</option></select></div>
+
+        <div class="btn-row">
+          <button class="btn" id="btn-run">Solve and optimize</button>
+          <button class="btn secondary" id="btn-reset">Reset</button>
+          <button class="btn secondary" id="btn-csv">Download CSV</button>
+        </div>
+        <div class="status" id="status"></div>
+      </div>
+
+      <div class="panel">
+        <h2>How it works</h2>
+        <details class="help" open>
+          <summary>Model and sign convention</summary>
+          <div class="body">
+            <p>The beam is solved with 2-node Hermite cubic Euler-Bernoulli finite elements (FE). Nodes are placed at the beam ends, at every
+            support, at every load point and UDL end and at the section x_s, and each segment is refined so that at least 120 elements span
+            the beam. Loads are applied through consistent (work-equivalent) load vectors, so the nodal displacements and rotations of this
+            element are exact for the Euler-Bernoulli beam. The reactions follow from the exact nodal solution, and the shear and moment
+            diagrams are recovered by statics from the loads and reactions, which makes them exact as well. The deflection between nodes is
+            the Hermite cubic of the element.</p>
+            <p>A layout with fewer than two effective constraints (two pins at different positions or one clamp) is a mechanism and is
+            reported as an error. Supports closer than a quarter of an element length are merged with a warning.</p>
+            <p>Convention: x to the right, y up. Loads, reactions and deflections are positive upward, the bending moment is positive when
+            sagging (tension at the bottom), the shear is the sum of the upward forces to the left of the section, so V = dM/dx. The
+            bending stress is |M| c / I and its utilization is |sigma| FS / sigma_allow; the deflection utilization is |v| / (L / ratio).
+            A layout is called feasible when both utilizations are at most 1.</p>
+          </div>
+        </details>
+        <details class="help">
+          <summary>Part A: how the optimum is found and checked</summary>
+          <div class="body">
+            <p><strong>A1, symmetric overhang.</strong> The overhang a is swept over 400 values from 0 to 0.49 L. The best grid point of each
+            curve (peak |M| and peak |v|) is refined by golden-section search inside its neighbouring interval, then the refined layout is
+            re-solved from scratch and compared with the optimizer's value before it is shown ("propose, then verify").</p>
+            <p><strong>A2, two free supports.</strong> The peak objective is evaluated on a 60 by 60 grid of (a1, a2); the half with a1 at or beyond a2 is
+            infeasible and hatched. The grid runs in small time slices so the page stays responsive. The best cell starts a Nelder-Mead simplex
+            search whose trial points are projected onto 0 &lt;= a1, a1 + 0.02 L &lt;= a2 &lt;= L. The result is verified by a fresh solve.</p>
+            <p><strong>A3, three supports.</strong> Pins at both ends plus one interior pin at s, swept over 400 values from 0.02 L to 0.98 L, refined
+            and verified in the same way. At s = L/2 under a UDL the page checks the two-span textbook values.</p>
+            <p>The governing condition at a minimax optimum is a tie: for the moment objective the largest hogging and the largest sagging
+            moments become equal; for the deflection objective the largest upward and downward deflections (or two downward peaks) become equal.
+            The page reports the ratio of the two peaks so you can see which condition is active.</p>
+          </div>
+        </details>
+        <details class="help">
+          <summary>Part B: influence lines and the worst-case load position</summary>
+          <div class="body">
+            <p>An influence line (IL) for a quantity at a fixed section x_s gives that quantity as a function of the position x_p of a single
+            moving load. The page moves the load P over 200 positions on the chosen support layout, with all other loads removed (the
+            response to the other loads can be superposed afterwards because the model is linear), and computes M(x_s), V(x_s), v(x_s) and the
+            reaction at one support. The position with the largest |value| is refined by golden-section search and confirmed by a fresh solve.</p>
+            <p>At a section that coincides with the load or with a support the shear jumps; the plotted value is the mean of the left and right
+            limits, and the worst case is approached from one side. By the Maxwell-Betti reciprocal theorem the deflection IL at x_s equals
+            the deflected shape under a unit load placed at x_s (Mueller-Breslau principle).</p>
+          </div>
+        </details>
+        <details class="help">
+          <summary>Classical results used as checks</summary>
+          <div class="body">
+            <ul>
+              <li>Simply supported beam, full-span UDL: midspan moment w L^2 / 8, midspan deflection 5 w L^4 / (384 EI).</li>
+              <li>Two symmetric supports under a full-span UDL: the overhang a = (sqrt(2) - 1) / 2 L = 0.2071 L makes the hogging and sagging
+              peaks equal, at 0.0214 w L^2 instead of 0.125 w L^2 with the supports at the ends, a reduction of about 83 percent. The deflection
+              optimum is different; the sweep locates it (about 0.223 L for the UDL alone).</li>
+              <li>Two equal spans (pins at 0, L/2, L) under a UDL: hogging moment over the middle support w L^2 / 32, end reactions 3 w L / 16,
+              middle reaction 10 w L / 16 = 5 w L / 8, span sagging peak 9 w L^2 / 512.</li>
+              <li>Moment influence line at midspan of a simply supported beam: a triangle with peak L / 4 per unit load.</li>
+            </ul>
+          </div>
+        </details>
+        <details class="help">
+          <summary>Limitations</summary>
+          <div class="body">
+            <ul>
+              <li>Euler-Bernoulli kinematics only: no shear deformation, no large deflections, uniform EI, rigid supports without settlement,
+              loads in one plane.</li>
+              <li>The stress and deflection utilizations are screening indicators with educational material cards, not design checks; there is no
+              lateral-torsional buckling, local buckling, bearing, fatigue or dynamic amplification check.</li>
+              <li>The moving load of Part B is a single concentrated load; distributed moving loads and load trains are not covered.</li>
+              <li>Self-weight is included only if you put it into w.</li>
+            </ul>
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <section>
+      <div class="panel">
+        <h2>Your layout versus the optimized layout</h2>
+        <div class="kpi-row" id="kpis"></div>
+        <canvas class="plot" id="sketch" width="720" height="250"></canvas>
+        <canvas class="plot" id="plot-V" width="720" height="260"></canvas>
+        <canvas class="plot" id="plot-M" width="720" height="260"></canvas>
+        <canvas class="plot" id="plot-v" width="720" height="260"></canvas>
+        <div class="legend-note">Triangles under the axis mark the support positions: blue for your layout, orange for the optimized layout.</div>
+        <table class="results" id="table-main"></table>
+        <div class="warnlist" id="warn-main"></div>
+      </div>
+
+      <div class="panel">
+        <h2>Part A1: symmetric overhang a</h2>
+        <canvas class="plot" id="plot-a1-M" width="720" height="300"></canvas>
+        <canvas class="plot" id="plot-a1-D" width="720" height="300"></canvas>
+        <div class="note" id="a1-note"></div>
+      </div>
+
+      <div class="panel">
+        <h2>Part A2: two free supports a1 &lt; a2</h2>
+        <div class="progress-wrap" id="a2-progress-wrap" hidden>
+          <progress id="a2-progress" max="60" value="0"></progress>
+          <span id="a2-progress-text">row 0 of 60</span>
+          <button class="btn secondary" id="btn-cancel">Cancel</button>
+        </div>
+        <canvas class="plot" id="plot-a2" width="720" height="520"></canvas>
+        <div class="note" id="a2-note"></div>
+      </div>
+
+      <div class="panel">
+        <h2>Part A3: three supports, interior pin at s</h2>
+        <canvas class="plot" id="plot-a3-M" width="720" height="300"></canvas>
+        <canvas class="plot" id="plot-a3-D" width="720" height="300"></canvas>
+        <div class="note" id="a3-note"></div>
+      </div>
+
+      <div class="panel">
+        <h2>Part B: influence lines at x_s and worst-case load position</h2>
+        <canvas class="plot" id="sketch-il" width="720" height="150"></canvas>
+        <canvas class="plot" id="plot-il-M" width="720" height="240"></canvas>
+        <canvas class="plot" id="plot-il-V" width="720" height="240"></canvas>
+        <canvas class="plot" id="plot-il-D" width="720" height="240"></canvas>
+        <canvas class="plot" id="plot-il-R" width="720" height="240"></canvas>
+        <table class="results" id="table-il"></table>
+        <div class="note" id="il-note"></div>
+      </div>
+
+      <div class="panel">
+        <h2>Classical checks (fresh solves with the current L, EI and UDL intensity)</h2>
+        <table class="results" id="table-classical"></table>
+      </div>
+    </section>
+  </div>
+<p class="scope"><strong>Review note:</strong> A fresh solve checks feasibility within this page's stated model. It is not independent physical validation or a proof of global optimality. Optimizer results are candidates; comparisons depend on bounds, discretization and evaluation counts.</p></main>
+
+<footer class="lab-footer">
+  MIE 446 Aerospace Structures, University of Massachusetts Amherst. Educational optimization demonstration on a simplified model; independent of the Wing AeroStruct solver and not a certified analysis.
+</footer>
+
+<script type="module">
+import { linePlot, heatmap, fmt as fmtRaw, badge, setupCanvas, palette, downloadCSV, escapeHTML } from '../shared/labkit.js';
+import { MATERIALS } from '../shared/presets.js';
+import * as mod from './beam-supports.js';
+
+const $ = id => document.getElementById(id);
+// fmt with the last floating-point digits rounded away (999.99999994 prints as 1000, not 1000.00)
+const fmt = (x, d = 3) => fmtRaw(typeof x === 'number' && Number.isFinite(x) ? Number(x.toPrecision(9)) : x, d);
+const DEF = mod.DEFAULT_INPUT;
+const SECTION_FIELDS = { rect: ['b', 'h'], tube: ['D', 't'], box: ['b', 'h', 't'], ibeam: ['bf', 'tf', 'hw', 'tw'] };
+const SECTION_DEFAULTS = { tube: { D: 30, t: 2 }, rect: { b: 12, h: 24 }, box: { b: 30, h: 40, t: 2 }, ibeam: { bf: 30, tf: 3, hw: 34, tw: 2 } };
+const state = { params: null, caseId: 'A1', vars: null, which: 'moment', student: null, opt: null, sweepA1: null, sweepA3: null, heat: null, il: null, partB: null };
+let heatJob = null;
+
+// ---------- input handling ----------
+
+function fillMaterials() {
+  const sel = $('in-material');
+  sel.innerHTML = Object.entries(MATERIALS).map(([k, mt]) => `<option value="${k}">${escapeHTML(mt.name)}</option>`).join('');
+  sel.value = DEF.material;
+}
+
+function showSectionFields() {
+  const type = $('in-section').value;
+  document.querySelectorAll('.sec').forEach(el => { el.hidden = !el.classList.contains('sec-' + type); });
+}
+
+function showCaseFields() {
+  const c = document.querySelector('input[name="case"]:checked').value;
+  document.querySelectorAll('.case-vars').forEach(el => { el.hidden = !el.classList.contains('case-' + c); });
+}
+
+function num(id) {
+  const el = $(id);
+  const v = parseFloat(el.value);
+  if (!Number.isFinite(v)) {
+    const label = document.querySelector(`label[for="${id}"]`);
+    throw new Error(`"${label ? label.textContent.trim() : id}" must be a number.`);
+  }
+  return v;
+}
+
+function readInputs() {
+  const L = num('in-L');
+  const type = $('in-section').value;
+  const section = { type };
+  for (const k of SECTION_FIELDS[type]) section[k] = num('sec-' + k);
+  const pl = mod.parsePointLoads($('in-pointloads').value, L);
+  if (!pl.ok) throw new Error(pl.error);
+  const params = mod.makeParams({
+    L, material: $('in-material').value, section,
+    w: num('in-w'), wa: num('in-wa'), wb: num('in-wb'), pointLoads: pl.loads,
+    FS: num('in-FS'), deflRatio: num('in-ratio'),
+  });
+  const caseId = document.querySelector('input[name="case"]:checked').value;
+  const vars = { a: num('in-a'), a1: num('in-a1'), a2: num('in-a2'), s: num('in-s') };
+  const which = $('in-objective').value;
+  const partB = {
+    source: $('in-il-source').value, custom: $('in-il-custom').value,
+    xs: num('in-xs'), P: num('in-P'), reactionIndex: parseInt($('in-il-support').value, 10) || 0,
+  };
+  return { params, caseId, vars, which, partB };
+}
+
+function studentLayout(caseId, vars, L) {
+  switch (caseId) {
+    case 'A1':
+      if (!(vars.a >= 0 && vars.a < L / 2)) throw new Error('Case A1: the overhang a must satisfy 0 <= a < L/2.');
+      return mod.layoutA1(vars.a, L);
+    case 'A2':
+      if (!(vars.a1 >= 0 && vars.a1 < vars.a2 && vars.a2 <= L)) throw new Error('Case A2: the supports must satisfy 0 <= a1 < a2 <= L.');
+      return mod.layoutA2(vars.a1, vars.a2);
+    default:
+      if (!(vars.s > 0 && vars.s < L)) throw new Error('Case A3: the interior support must lie strictly inside the beam, 0 < s < L.');
+      return mod.layoutA3(vars.s, L);
+  }
+}
+
+function describeOpt(caseId, opt, L) {
+  if (!opt) return '';
+  if (caseId === 'A1') return `a = ${fmt(opt.x, 4)} mm (${fmt(opt.x / L, 4)} L)`;
+  if (caseId === 'A3') return `s = ${fmt(opt.x, 4)} mm (${fmt(opt.x / L, 4)} L)`;
+  return `a1 = ${fmt(opt.a1, 4)} mm, a2 = ${fmt(opt.a2, 4)} mm (${fmt(opt.a1 / L, 4)} L, ${fmt(opt.a2 / L, 4)} L)`;
+}
+
+// ---------- drawing helpers ----------
+
+function drawSupportGlyph(ctx, x, y, type, color) {
+  ctx.save();
+  ctx.strokeStyle = color; ctx.fillStyle = color; ctx.lineWidth = 1.5;
+  if (type === 'clamp') {
+    ctx.fillStyle = 'rgba(0,0,0,0)';
+    ctx.strokeRect(x - 5, y - 22, 10, 44);
+    ctx.beginPath();
+    for (let k = -22; k < 22; k += 6) { ctx.moveTo(x - 5, y + k); ctx.lineTo(x + 5, y + k + 6); }
+    ctx.stroke();
+  } else {
+    ctx.beginPath(); ctx.moveTo(x, y + 2); ctx.lineTo(x - 9, y + 18); ctx.lineTo(x + 9, y + 18); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(x - 13, y + 21); ctx.lineTo(x + 13, y + 21); ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawArrow(ctx, x, y0, y1, color, width = 1.5) {
+  ctx.save();
+  ctx.strokeStyle = color; ctx.fillStyle = color; ctx.lineWidth = width;
+  ctx.beginPath(); ctx.moveTo(x, y0); ctx.lineTo(x, y1); ctx.stroke();
+  const dir = Math.sign(y1 - y0) || 1;
+  ctx.beginPath(); ctx.moveTo(x, y1); ctx.lineTo(x - 4, y1 - 7 * dir); ctx.lineTo(x + 4, y1 - 7 * dir); ctx.closePath(); ctx.fill();
+  ctx.restore();
+}
+
+// rows: [{ label, supports, loads, marks: [{x, label, color}], color }]
+function drawBeamSketch(canvas, rows, L) {
+  const { ctx, W, H } = setupCanvas(canvas);
+  const left = 40, right = 30;
+  const rowH = H / rows.length;
+  const X = x => left + x / L * (W - left - right);
+  const font = '12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
+  rows.forEach((row, k) => {
+    const top = k * rowH;
+    const yb = top + rowH * 0.55;
+    ctx.font = 'bold ' + font; ctx.fillStyle = row.color || palette.ink; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+    ctx.fillText(row.label, left, top + 6);
+    ctx.font = font;
+    // beam
+    ctx.strokeStyle = palette.ink; ctx.lineWidth = 4; ctx.lineCap = 'butt';
+    ctx.beginPath(); ctx.moveTo(X(0), yb); ctx.lineTo(X(L), yb); ctx.stroke();
+    // loads
+    for (const ld of row.loads) {
+      if (ld.type === 'udl') {
+        const down = ld.w < 0;
+        const yTail = down ? yb - 30 : yb + 30, yHead = down ? yb - 5 : yb + 5;
+        const x0 = X(ld.a), x1 = X(ld.b);
+        ctx.strokeStyle = palette.red; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.moveTo(x0, yTail); ctx.lineTo(x1, yTail); ctx.stroke();
+        const nArr = Math.max(2, Math.round((x1 - x0) / 26));
+        for (let i = 0; i <= nArr; i++) drawArrow(ctx, x0 + (x1 - x0) * i / nArr, yTail, yHead, palette.red, 1.2);
+        ctx.fillStyle = palette.red; ctx.textAlign = 'center'; ctx.textBaseline = down ? 'bottom' : 'top';
+        ctx.fillText(`w = ${fmt(ld.w, 3)} N/mm`, 0.5 * (x0 + x1), down ? yTail - 3 : yTail + 3);
+      } else if (ld.type === 'point') {
+        const down = ld.P < 0;
+        const yTail = down ? yb - 48 : yb + 48, yHead = down ? yb - 5 : yb + 5;
+        drawArrow(ctx, X(ld.a), yTail, yHead, palette.purple, 2);
+        ctx.fillStyle = palette.purple; ctx.textAlign = 'center'; ctx.textBaseline = down ? 'bottom' : 'top';
+        ctx.fillText(`P = ${fmt(ld.P, 3)} N`, X(ld.a), down ? yTail - 3 : yTail + 3);
+      }
+    }
+    // supports and their positions
+    const col = row.color || palette.blue;
+    for (const s of row.supports) {
+      drawSupportGlyph(ctx, X(s.x), yb, s.type, col);
+      ctx.fillStyle = col; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+      ctx.fillText(`${fmt(s.x, 4)}`, X(s.x), yb + 24);
+    }
+    // marks
+    for (const mk of row.marks || []) {
+      ctx.save();
+      ctx.strokeStyle = mk.color || palette.gray; ctx.setLineDash([4, 3]); ctx.lineWidth = 1.2;
+      ctx.beginPath(); ctx.moveTo(X(mk.x), yb - 40); ctx.lineTo(X(mk.x), yb + 20); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = mk.color || palette.gray; ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
+      ctx.fillText(mk.label, X(mk.x) + 4, yb - 40);
+      ctx.restore();
+    }
+  });
+  // scale
+  ctx.fillStyle = palette.gray; ctx.textAlign = 'right'; ctx.textBaseline = 'bottom'; ctx.font = font;
+  ctx.fillText(`positions in mm, L = ${fmt(L, 4)} mm`, W - 6, H - 3);
+}
+
+function overlaySupports(plot, layouts) {
+  const { ctx, X, frame } = plot;
+  layouts.forEach((lay, k) => {
+    const y = frame.top + frame.ph - 1 - k * 9;
+    ctx.fillStyle = lay.color;
+    for (const s of lay.supports) {
+      ctx.beginPath(); ctx.moveTo(X(s.x), y - 9); ctx.lineTo(X(s.x) - 6, y); ctx.lineTo(X(s.x) + 6, y); ctx.closePath(); ctx.fill();
+    }
+  });
+}
+
+function kpi(label, value, sub) {
+  return `<div class="kpi"><div class="label">${label}</div><div class="value">${value}</div><div class="sub">${sub || ''}</div></div>`;
+}
+
+function pct(before, after) {
+  if (!(before > 0)) return 'n/a';
+  const r = (1 - after / before) * 100;
+  return (r >= 0 ? '-' : '+') + fmt(Math.abs(r), 3) + ' %';
+}
+
+function momentCoef(params, M) {
+  const aw = Math.abs(params.w);
+  return aw > 0 ? ` <small>= ${fmt(M / (aw * params.L * params.L), 4)} |w| L^2</small>` : '';
+}
+
+function feasBadge(v) {
+  if (!v || !v.ok) return badge('bad', 'not solvable');
+  if (v.feasible) return badge('ok', 'feasible: stress and deflection within limits');
+  const parts = [];
+  if (v.U_stress > 1) parts.push(`stress U = ${fmt(v.U_stress, 3)}`);
+  if (v.U_defl > 1) parts.push(`deflection U = ${fmt(v.U_defl, 3)}`);
+  return badge('bad', 'violated: ' + parts.join(', '));
+}
+
+function verifiedBadge(opt) {
+  if (!opt) return badge('info', 'computing');
+  if (!opt.verify || !opt.verify.ok) return badge('bad', 'verification failed: ' + (opt.verify && opt.verify.error ? opt.verify.error : 'no solution'));
+  return opt.verified ? badge('ok', 'Checked by fresh model solve') : badge('bad', 'Re-solve does not match the optimizer value');
+}
+
+// Which condition is active at the optimum: a tie between the leading local peaks, or a smooth minimum / bound.
+function governingText(v, which) {
+  const list = which === 'moment' ? v.balance.momentPeaks : v.balance.deflectionPeaks;
+  const unit = which === 'moment' ? 'N·mm' : 'mm';
+  if (!list || !list.length) return '';
+  const top = Math.abs(list[0].value);
+  const tied = list.filter(p => Math.abs(p.value) >= 0.98 * top);
+  const kind = p => which === 'moment' ? (p.value >= 0 ? 'sagging' : 'hogging') : (p.value >= 0 ? 'upward' : 'downward');
+  const desc = p => `${fmt(Math.abs(p.value), 4)} ${unit} ${kind(p)} at x = ${fmt(p.x, 4)} mm`;
+  if (tied.length >= 2) return `governing: tie between ${tied.length} peaks (${tied.map(desc).join('; ')}); ratio of the two largest ${fmt(Math.abs(tied[1].value) / top, 4)}`;
+  if (list.length >= 2) return `governing: a single peak (${desc(list[0])}); the next peak is ${desc(list[1])}, ratio ${fmt(Math.abs(list[1].value) / top, 3)}, so the optimum is a smooth minimum or lies on a bound rather than a tie`;
+  return `governing: a single peak (${desc(list[0])})`;
+}
+
+// ---------- rendering: summary ----------
+
+function renderSummary() {
+  const { params, caseId, which, student, opt } = state;
+  const L = params.L;
+  const sv = student.verify, ov = opt ? opt.verify : null;
+  const objName = which === 'moment' ? 'peak |M|' : 'peak |v|';
+  const tiles = [];
+  tiles.push(kpi('Peak |M|, your layout', `${fmt(sv.absM, 4)} N·mm${momentCoef(params, sv.absM)}`, `at x = ${fmt(sv.result.peaks.xM, 4)} mm, sigma = ${fmt(sv.sigmaMax, 3)} MPa, U_stress = ${fmt(sv.U_stress, 3)}`));
+  tiles.push(kpi('Peak |M|, optimized layout', ov && ov.ok ? `${fmt(ov.absM, 4)} N·mm${momentCoef(params, ov.absM)}` : 'computing', ov && ov.ok ? `${pct(sv.absM, ov.absM)} versus yours, U_stress = ${fmt(ov.U_stress, 3)}` : 'the A2 grid is still running'));
+  tiles.push(kpi('Peak |v|, your layout', `${fmt(sv.absD, 4)} mm`, `at x = ${fmt(sv.result.peaks.xD, 4)} mm, U_defl = ${fmt(sv.U_defl, 3)} (limit L/${fmt(params.deflRatio, 4)} = ${fmt(L / params.deflRatio, 3)} mm)`));
+  tiles.push(kpi('Peak |v|, optimized layout', ov && ov.ok ? `${fmt(ov.absD, 4)} mm` : 'computing', ov && ov.ok ? `${pct(sv.absD, ov.absD)} versus yours, U_defl = ${fmt(ov.U_defl, 3)}` : ''));
+  tiles.push(kpi(`Optimized supports (minimize ${objName})`, opt ? describeOpt(caseId, opt, L) : 'computing', `${verifiedBadge(opt)} ${ov && ov.ok ? governingText(ov, which) : ''}`));
+  tiles.push(kpi('Derived section values', `E = ${fmt(params.E, 4)} MPa, I = ${fmt(params.I, 4)} mm^4`, `c = ${fmt(params.c, 4)} mm, A = ${fmt(params.A, 4)} mm^2, EI = ${fmt(params.EI, 4)} N·mm^2, ${escapeHTML(params.materialName)}`));
+  $('kpis').innerHTML = tiles.join('');
+
+  // sketch
+  const rows = [{ label: `Your layout (${caseId}): ${mod.describeSupports(student.supports)}`, supports: sv.result.supports, loads: sv.result.loads, color: palette.blue }];
+  if (ov && ov.ok) rows.push({ label: `Optimized layout: ${mod.describeSupports(opt.supports)}`, supports: ov.result.supports, loads: ov.result.loads, color: palette.orange });
+  drawBeamSketch($('sketch'), rows, L);
+
+  // diagrams
+  const rS = sv.result, rO = ov && ov.ok ? ov.result : null;
+  const series = key => {
+    const s = [{ x: rS.x, y: rS[key], label: 'your layout', color: palette.blue }];
+    if (rO) s.push({ x: rO.x, y: rO[key], label: 'optimized layout', color: palette.orange, dash: [7, 4] });
+    return s;
+  };
+  const layouts = [{ supports: rS.supports, color: palette.blue }];
+  if (rO) layouts.push({ supports: rO.supports, color: palette.orange });
+  overlaySupports(linePlot($('plot-V'), series('V'), { title: 'Shear force V(x)', xlabel: 'x (mm)', ylabel: 'V (N)', xlim: [0, L], yZero: true, marginLeft: 84 }), layouts);
+  overlaySupports(linePlot($('plot-M'), series('M'), { title: 'Bending moment M(x), sagging positive', xlabel: 'x (mm)', ylabel: 'M (N·mm)', xlim: [0, L], yZero: true, marginLeft: 84 }), layouts);
+  overlaySupports(linePlot($('plot-v'), series('v'), { title: 'Deflection v(x), upward positive', xlabel: 'x (mm)', ylabel: 'v (mm)', xlim: [0, L], yZero: true, marginLeft: 84 }), layouts);
+
+  // table
+  const col = v => v && v.ok ? v : null;
+  const cS = col(sv), cO = col(ov);
+  const cell = (fn, cls = 'num') => `<td class="${cls}">${cS ? fn(cS) : 'n/a'}</td><td class="${cls}">${cO ? fn(cO) : (opt ? 'n/a' : 'computing')}</td>`;
+  const rowsT = [
+    ['Supports', v => escapeHTML(mod.describeSupports(v.result.supports)), ''],
+    ['Peak |M| (N·mm) and its position', v => `${fmt(v.absM, 5)} at x = ${fmt(v.result.peaks.xM, 4)} mm`],
+    ['Largest sagging moment (N·mm) and position', v => `${fmt(v.result.peaks.sagM, 5)} at x = ${fmt(v.result.peaks.xSag, 4)} mm`],
+    ['Largest hogging moment (N·mm) and position', v => `${fmt(v.result.peaks.hogM, 5)} at x = ${fmt(v.result.peaks.xHog, 4)} mm`],
+    ['Peak |V| (N) and its position', v => `${fmt(v.absV, 5)} at x = ${fmt(v.result.peaks.xV, 4)} mm`],
+    ['Peak |v| (mm) and its position', v => `${fmt(v.absD, 5)} at x = ${fmt(v.result.peaks.xD, 4)} mm`],
+    ['Max bending stress |M| c / I (MPa)', v => fmt(v.sigmaMax, 4)],
+    ['U_stress = sigma FS / sigma_allow', v => fmt(v.U_stress, 4)],
+    ['U_defl = |v| / (L / ratio)', v => fmt(v.U_defl, 4)],
+    ['Reactions (N, upward positive; clamp moments in N·mm)', v => escapeHTML(v.reactions.map(r => `${fmt(r.R, 5)}${r.type === 'clamp' ? ` (M = ${fmt(r.Mr, 5)})` : ''} at ${fmt(r.x, 4)}`).join('; ')), ''],
+    ['Governing utilization', v => v.governing, ''],
+    ['Status', v => feasBadge(v), ''],
+  ];
+  $('table-main').innerHTML = `<thead><tr><th>Quantity</th><th class="num">Your layout</th><th class="num">Optimized layout</th></tr></thead><tbody>` +
+    rowsT.map(([name, fn, cls]) => `<tr><td>${name}</td>${cell(fn, cls === '' ? '' : 'num')}</tr>`).join('') +
+    `<tr><td>Verification</td><td>${badge('ok', 'Exact solve of your inputs')}</td><td>${verifiedBadge(opt)}</td></tr></tbody>`;
+  const warns = [...(sv.warnings || []), ...((ov && ov.warnings) || [])];
+  $('warn-main').innerHTML = warns.map(w => badge('warn', w)).join(' ');
+}
+
+// ---------- rendering: Part A sweeps ----------
+
+function sweepPlot(canvas, xs, ys, title, ylabel, xlabel, opt, studentX, hline) {
+  const markers = [];
+  if (opt) markers.push({ x: opt.x, label: `optimum ${fmt(opt.x, 4)} mm`, color: palette.green });
+  if (studentX !== null && Number.isFinite(studentX)) markers.push({ x: studentX, label: `yours ${fmt(studentX, 4)} mm`, color: palette.blue });
+  const hlines = hline ? [hline] : [];
+  const plot = linePlot(canvas, [{ x: xs, y: ys, label: ylabel, color: palette.ink, width: 2 }], { title, xlabel, ylabel, yZero: true, markers, hlines, legend: false, marginLeft: 84 });
+  const { ctx, X, Y } = plot;
+  if (opt) { ctx.fillStyle = palette.green; ctx.beginPath(); ctx.arc(X(opt.x), Y(opt.value), 5, 0, Math.PI * 2); ctx.fill(); }
+  return plot;
+}
+
+function renderA1() {
+  const { params, caseId, vars, sweepA1: sw } = state;
+  const L = params.L;
+  const yourA = caseId === 'A1' ? vars.a : null;
+  const cl = sw.classical;
+  sweepPlot($('plot-a1-M'), sw.a, sw.M, 'A1: peak |M| versus overhang a (pins at a and L - a)', 'peak |M| (N·mm)', 'overhang a (mm)', sw.optM, yourA,
+    cl.applies ? { y: cl.moment, label: 'classical 0.0214 |w| L^2 at a = 0.2071 L', color: palette.purple } : null);
+  sweepPlot($('plot-a1-D'), sw.a, sw.D, 'A1: peak |v| versus overhang a', 'peak |v| (mm)', 'overhang a (mm)', sw.optD, yourA, null);
+  const parts = [];
+  if (sw.optM) parts.push(`Moment optimum: a = ${fmt(sw.optM.x, 4)} mm = ${fmt(sw.optM.x / L, 4)} L, peak |M| = ${fmt(sw.optM.value, 4)} N·mm (${pct(sw.endsM, sw.optM.value)} versus supports at the ends, ${fmt(sw.endsM, 4)} N·mm). ${verifiedBadge(sw.optM)}`);
+  if (sw.optD) parts.push(`Deflection optimum: a = ${fmt(sw.optD.x, 4)} mm = ${fmt(sw.optD.x / L, 4)} L, peak |v| = ${fmt(sw.optD.value, 4)} mm (${pct(sw.endsD, sw.optD.value)} versus ${fmt(sw.endsD, 4)} mm at the ends). ${verifiedBadge(sw.optD)}`);
+  parts.push(cl.applies
+    ? `Classical result for a full-span UDL: a = (sqrt(2) - 1)/2 L = ${fmt(cl.a, 4)} mm, peak |M| = ${fmt(cl.momentCoef, 4)} |w| L^2 = ${fmt(cl.moment, 4)} N·mm, a reduction of ${fmt(cl.reduction * 100, 3)} percent from ${fmt(cl.endsMoment, 4)} N·mm (0.125 |w| L^2). The numerical optimum above agrees.`
+    : `The classical overhang (sqrt(2) - 1)/2 L = ${fmt(cl.a, 4)} mm applies to a full-span UDL alone; your loads differ, so the sweep optimum is the reference here.`);
+  $('a1-note').innerHTML = parts.join('<br>');
+}
+
+function renderA3() {
+  const { params, caseId, vars, sweepA3: sw } = state;
+  const L = params.L;
+  const yourS = caseId === 'A3' ? vars.s : null;
+  const ts = sw.twoSpan;
+  sweepPlot($('plot-a3-M'), sw.s, sw.M, 'A3: peak |M| versus interior support position s (pins at 0, s, L)', 'peak |M| (N·mm)', 'interior support s (mm)', sw.optM, yourS,
+    ts.ok && ts.appliesToInputs ? { y: Math.abs(ts.hoggingClassical), label: 'classical |w| L^2 / 32 at s = L/2', color: palette.purple } : null);
+  sweepPlot($('plot-a3-D'), sw.s, sw.D, 'A3: peak |v| versus interior support position s', 'peak |v| (mm)', 'interior support s (mm)', sw.optD, yourS, null);
+  const parts = [];
+  if (sw.optM) parts.push(`Moment optimum: s = ${fmt(sw.optM.x, 4)} mm = ${fmt(sw.optM.x / L, 4)} L, peak |M| = ${fmt(sw.optM.value, 4)} N·mm. ${verifiedBadge(sw.optM)}`);
+  if (sw.optD) parts.push(`Deflection optimum: s = ${fmt(sw.optD.x, 4)} mm = ${fmt(sw.optD.x / L, 4)} L, peak |v| = ${fmt(sw.optD.value, 4)} mm. ${verifiedBadge(sw.optD)}`);
+  if (ts.ok) {
+    parts.push(`Two-span check at s = L/2 under the UDL alone (w = ${fmt(ts.w, 3)} N/mm): hogging moment over the middle support ${fmt(ts.hogging, 5)} N·mm versus w L^2 / 32 = ${fmt(ts.hoggingClassical, 5)} N·mm; reactions ${ts.reactions.map(r => fmt(r, 5)).join(', ')} N versus 3/16, 10/16, 3/16 of |w| L = ${ts.reactionsClassical.map(r => fmt(r, 5)).join(', ')} N.` +
+      (ts.appliesToInputs ? '' : ' (Your loads differ from a full-span UDL alone, so this check is shown for the UDL only.)'));
+  }
+  $('a3-note').innerHTML = parts.join('<br>');
+}
+
+function drawHeatmap(grid, ref) {
+  const { params, caseId, vars, which } = state;
+  const L = params.L;
+  let zmin = Infinity, zmax = -Infinity;
+  for (const row of grid.Z) for (const v of row) if (Number.isFinite(v)) { if (v < zmin) zmin = v; if (v > zmax) zmax = v; }
+  if (!Number.isFinite(zmin)) { zmin = 0; zmax = 1; }
+  const n = grid.a1s.length;
+  const cap = Math.min(zmax, 5 * zmin);
+  const overlays = [];
+  if (ref) overlays.push({ x: ref.a1, y: ref.a2, label: `optimum (${fmt(ref.a1, 4)}, ${fmt(ref.a2, 4)})`, color: palette.green, shape: 'star', size: 9 });
+  if (caseId === 'A2') overlays.push({ x: vars.a1, y: vars.a2, label: 'yours', color: palette.blue, shape: 'square', size: 6 });
+  const unit = which === 'moment' ? 'N·mm' : 'mm';
+  const zname = which === 'moment' ? 'peak |M|' : 'peak |v|';
+  heatmap($('plot-a2'), grid.a1s, grid.a2s, grid.Z, {
+    title: `A2: ${zname} (${unit}) over (a1, a2); hatched cells have a1 >= a2 (infeasible)`,
+    xlabel: 'first support a1 (mm)', ylabel: 'second support a2 (mm)',
+    zlim: [zmin, cap], mask: grid.mask,
+    contours: ref ? [{ levels: [1.25, 1.5, 2, 3].map(k => k * zmin), color: 'rgba(255,255,255,0.85)', width: 1, labels: false }] : [],
+    overlays,
+  });
+}
+
+function renderA2Done(grid, ref) {
+  const { params, which } = state;
+  const L = params.L;
+  drawHeatmap(grid, ref);
+  const unit = which === 'moment' ? 'N·mm' : 'mm';
+  const other = which === 'moment' ? 'deflection' : 'moment';
+  const n = grid.a1s.length;
+  const ends = grid.Z[n - 1][0];
+  $('a2-note').innerHTML = `Grid minimum at (a1, a2) = (${fmt(grid.best.a1, 4)}, ${fmt(grid.best.a2, 4)}) mm with ${fmt(grid.best.value, 4)} ${unit}; ` +
+    `Nelder-Mead refinement (${ref.iterations} iterations, ${ref.evaluations} solves${ref.converged ? '' : ', iteration limit reached'}) gives (a1, a2) = (${fmt(ref.a1, 4)}, ${fmt(ref.a2, 4)}) mm = (${fmt(ref.a1 / L, 4)} L, ${fmt(ref.a2 / L, 4)} L) with ${fmt(ref.value, 4)} ${unit}. ${verifiedBadge(ref)}` +
+    `<br>The colour scale is capped at five times the minimum, so yellow cells are at least five times worse than the optimum; white contours are at 1.25, 1.5, 2 and 3 times the minimum. For reference, supports at both ends (a1 = 0, a2 = L) give ${fmt(ends, 4)} ${unit}. The heatmap shows the objective selected in the inputs (${which === 'moment' ? 'peak |M|' : 'peak |v|'}); switch the objective to see the ${other} landscape. For symmetric loads the optimum is symmetric, a2 = L - a1, and matches case A1.`;
+}
+
+function cancelHeatmap() {
+  if (heatJob) { heatJob.cancelled = true; heatJob = null; }
+  $('a2-progress-wrap').hidden = true;
+}
+
+function startHeatmap() {
+  cancelHeatmap();
+  const job = { cancelled: false };
+  heatJob = job;
+  const gen = mod.heatmapA2(state.params, { n: 60, which: state.which });
+  const wrap = $('a2-progress-wrap'), prog = $('a2-progress'), txt = $('a2-progress-text');
+  wrap.hidden = false; prog.max = 60; prog.value = 0; txt.textContent = 'row 0 of 60';
+  $('a2-note').textContent = 'Computing the 60 by 60 grid of exact solves in small time slices...';
+  let lastDraw = 0, partial = null;
+  const step = () => {
+    if (job.cancelled) return;
+    const t0 = performance.now();
+    let res;
+    do {
+      res = gen.next();
+      if (!res.done) { partial = res.value; prog.value = res.value.j + 1; }
+    } while (!res.done && performance.now() - t0 < 30);
+    if (!res.done) {
+      txt.textContent = `row ${partial.j + 1} of ${partial.n}`;
+      if (performance.now() - lastDraw > 200) { drawHeatmap(partial, null); lastDraw = performance.now(); }
+      setTimeout(step, 0);
+      return;
+    }
+    heatJob = null;
+    wrap.hidden = true;
+    const grid = res.value;
+    if (!grid.best) { $('a2-note').innerHTML = badge('bad', 'No feasible layout found on the A2 grid.'); return; }
+    const ref = mod.refineA2(state.params, [grid.best.a1, grid.best.a2], { which: state.which });
+    state.heat = { grid, ref };
+    renderA2Done(grid, ref);
+    if (state.caseId === 'A2') {
+      state.opt = ref;
+      renderSummary();
+      if (state.partB && state.partB.source === 'optimized') renderPartB();
+    }
+  };
+  setTimeout(step, 0);
+}
+
+// ---------- rendering: Part B ----------
+
+function partBLayout() {
+  const { partB, student, opt, params } = state;
+  if (partB.source === 'custom') {
+    const ps = mod.parseSupports(partB.custom, params.L);
+    if (!ps.ok) throw new Error('Part B: ' + ps.error);
+    return { supports: ps.supports, label: 'custom layout' };
+  }
+  if (partB.source === 'optimized') {
+    if (!opt) return { supports: student.supports, label: 'your layout (the optimized A2 layout is still being computed)', pending: true };
+    return { supports: opt.supports, label: 'optimized layout' };
+  }
+  return { supports: student.supports, label: 'your layout' };
+}
+
+function fillSupportSelect(layout, reactionIndex) {
+  const sel = $('in-il-support');
+  sel.innerHTML = layout.map((s, i) => `<option value="${i}">${s.type} at ${fmt(s.x, 4)} mm</option>`).join('');
+  sel.value = String(Math.min(reactionIndex, layout.length - 1));
+}
+
+function renderPartB() {
+  const { params, partB } = state;
+  const L = params.L;
+  const lay = partBLayout();
+  const il = mod.influenceLines(params, lay.supports, { xs: partB.xs, P: partB.P, n: 200, reactionIndex: partB.reactionIndex });
+  if (!il.ok) throw new Error('Part B: ' + il.error);
+  state.il = il;
+  fillSupportSelect(il.supports, il.reactionIndex);
+  const rsup = il.supports[il.reactionIndex];
+  const marks = [];
+  if (il.worst.M && Math.abs(il.worst.M.x - il.xs) < 0.03 * L) marks.push({ x: il.xs, label: `x_s = ${fmt(il.xs, 4)} mm, also the worst load position for M(x_s)`, color: palette.red });
+  else {
+    marks.push({ x: il.xs, label: `x_s = ${fmt(il.xs, 4)} mm`, color: palette.gray });
+    if (il.worst.M) marks.push({ x: il.worst.M.x, label: `worst load position for M(x_s): ${fmt(il.worst.M.x, 4)} mm`, color: palette.red });
+  }
+  drawBeamSketch($('sketch-il'), [{ label: `Part B layout (${lay.label}): ${mod.describeSupports(il.supports)}; moving load P = ${fmt(il.P, 3)} N`, supports: il.supports, loads: [], marks, color: palette.teal }], L);
+  const plotIL = (canvas, ys, title, ylabel, worst) => {
+    const markers = [];
+    if (worst) {
+      const near = Math.abs(worst.x - il.xs) < 0.03 * L;
+      markers.push({ x: worst.x, label: near ? `worst case at x_s, ${fmt(worst.x, 4)} mm` : `worst case ${fmt(worst.x, 4)} mm`, color: palette.red });
+      if (!near) markers.push({ x: il.xs, label: 'x_s', color: palette.gray });
+    } else markers.push({ x: il.xs, label: 'x_s', color: palette.gray });
+    const plot = linePlot(canvas, [{ x: il.xp, y: ys, color: palette.teal, width: 2 }], { title, xlabel: 'load position x_p (mm)', ylabel, xlim: [0, L], yZero: true, markers, legend: false, marginLeft: 84 });
+    if (worst) { plot.ctx.fillStyle = palette.red; plot.ctx.beginPath(); plot.ctx.arc(plot.X(worst.x), plot.Y(worst.value), 5, 0, Math.PI * 2); plot.ctx.fill(); }
+    overlaySupports(plot, [{ supports: il.supports, color: palette.teal }]);
+  };
+  plotIL($('plot-il-M'), il.M, `Influence line of the bending moment at x_s = ${fmt(il.xs, 4)} mm`, 'M(x_s) (N·mm)', il.worst.M);
+  plotIL($('plot-il-V'), il.V, `Influence line of the shear force at x_s`, 'V(x_s) (N)', il.worst.V);
+  plotIL($('plot-il-D'), il.D, `Influence line of the deflection at x_s`, 'v(x_s) (mm)', il.worst.D);
+  plotIL($('plot-il-R'), il.R, `Influence line of the reaction at the ${rsup.type} at ${fmt(rsup.x, 4)} mm`, 'R (N)', il.worst.R);
+  const row = (name, unit, wc) => wc
+    ? `<tr><td>${name}</td><td class="num">${fmt(wc.x, 5)}</td><td class="num">${fmt(wc.value, 5)} ${unit}</td><td class="num">${fmt(wc.gridValue, 5)} at ${fmt(wc.gridX, 4)} mm</td><td>${wc.verified ? badge('ok', 'Checked by fresh model solve') : badge('bad', 'Re-solve does not match')}</td></tr>`
+    : `<tr><td>${name}</td><td colspan="4">n/a</td></tr>`;
+  $('table-il').innerHTML = `<thead><tr><th>Quantity at the section</th><th class="num">Worst-case load position (mm)</th><th class="num">Value with P there</th><th class="num">Best grid sample</th><th>Check</th></tr></thead><tbody>` +
+    row(`Bending moment M at x_s`, 'N·mm', il.worst.M) + row(`Shear force V at x_s`, 'N', il.worst.V) + row(`Deflection v at x_s`, 'mm', il.worst.D) + row(`Reaction at the ${rsup.type} at ${fmt(rsup.x, 4)} mm`, 'N', il.worst.R) + '</tbody>';
+  const notes = [];
+  if (lay.pending) notes.push(badge('info', 'Showing your layout until the A2 optimum is available'));
+  notes.push(`The influence lines use the moving load alone (|P| = ${fmt(Math.abs(il.P), 3)} N); per unit load divide the ordinates by ${fmt(Math.abs(il.P), 3)}. Classical check: on a simply supported beam the moment influence line at midspan is a triangle with peak L/4 = ${fmt(L / 4, 4)} N·mm per N, see the table of classical checks below.`);
+  if (il.warnings && il.warnings.length) notes.push(il.warnings.map(w => badge('warn', w)).join(' '));
+  $('il-note').innerHTML = notes.join('<br>');
+}
+
+// ---------- rendering: classical checks ----------
+
+function renderClassical() {
+  const rows = mod.classicalChecks(state.params, { sweepA1: state.sweepA1 });
+  $('table-classical').innerHTML = `<thead><tr><th>Check</th><th class="num">Computed</th><th class="num">Classical</th><th class="num">Relative difference</th><th>Unit</th></tr></thead><tbody>` +
+    rows.map(r => `<tr><td>${escapeHTML(r.name)}</td><td class="num">${fmt(r.computed, 6)}</td><td class="num">${fmt(r.classical, 6)}</td><td class="num">${Number.isFinite(r.relErr) ? r.relErr.toExponential(2) : 'n/a'} ${r.relErr < 1e-4 ? badge('ok', 'agrees') : badge('bad', 'differs')}</td><td>${escapeHTML(r.unit)}</td></tr>`).join('') + '</tbody>';
+}
+
+// ---------- CSV ----------
+
+function downloadAll() {
+  if (!state.student) { setStatus('Nothing to download yet.', true); return; }
+  const rows = [];
+  const block = (title, header, data) => { rows.push([title]); rows.push(header); for (const r of data) rows.push(r); rows.push([]); };
+  const sw1 = state.sweepA1, sw3 = state.sweepA3;
+  block('A1 sweep: symmetric overhang', ['a_mm', 'peak_abs_M_Nmm', 'peak_abs_v_mm'], sw1.a.map((a, i) => [a, sw1.M[i], sw1.D[i]]));
+  block('A3 sweep: interior support', ['s_mm', 'peak_abs_M_Nmm', 'peak_abs_v_mm'], sw3.s.map((s, i) => [s, sw3.M[i], sw3.D[i]]));
+  if (state.heat) {
+    const g = state.heat.grid;
+    const data = [];
+    for (let j = 0; j < g.a2s.length; j++) for (let i = 0; i < g.a1s.length; i++) if (Number.isFinite(g.Z[j][i])) data.push([g.a1s[i], g.a2s[j], g.Z[j][i]]);
+    block(`A2 grid: ${state.which === 'moment' ? 'peak |M| (N·mm)' : 'peak |v| (mm)'}`, ['a1_mm', 'a2_mm', 'objective'], data);
+  }
+  const diag = (title, r) => block(title, ['x_mm', 'V_N', 'M_Nmm', 'v_mm'], Array.from(r.x, (x, i) => [x, r.V[i], r.M[i], r.v[i]]));
+  diag('Diagrams, your layout', state.student.verify.result);
+  if (state.opt && state.opt.verify && state.opt.verify.ok) diag('Diagrams, optimized layout', state.opt.verify.result);
+  if (state.il) {
+    const il = state.il;
+    block(`Influence lines at x_s = ${il.xs} mm, moving load P = ${il.P} N`, ['xp_mm', 'M_xs_Nmm', 'V_xs_N', 'v_xs_mm', 'R_N'], il.xp.map((x, i) => [x, il.M[i], il.V[i], il.D[i], il.R[i]]));
+  }
+  downloadCSV('beam-supports.csv', rows);
+}
+
+// ---------- main ----------
+
+function setStatus(html, isError) {
+  const st = $('status');
+  st.innerHTML = html;
+  st.classList.toggle('error', !!isError);
+}
+
+function run() {
+  cancelHeatmap();
+  try {
+    setStatus('Solving...', false);
+    const t0 = performance.now();
+    const inp = readInputs();
+    Object.assign(state, { params: inp.params, caseId: inp.caseId, vars: inp.vars, which: inp.which, partB: inp.partB, opt: null, heat: null, il: null });
+    const { params } = state;
+    $('derived').textContent = `E = ${fmt(params.E, 4)} MPa, allowable stress ${fmt(params.sigmaAllow, 4)} MPa, I = ${fmt(params.I, 4)} mm^4, c = ${fmt(params.c, 4)} mm, A = ${fmt(params.A, 4)} mm^2, EI = ${fmt(params.EI, 4)} N·mm^2`;
+    if (!mod.hasLoads(params)) throw new Error('No loads: set a non-zero UDL intensity or add a point load.');
+    const supports = studentLayout(state.caseId, state.vars, params.L);
+    const verify = mod.verifyLayout(params, supports, { which: state.which });
+    if (!verify.ok) throw new Error(verify.error);
+    state.student = { supports, verify };
+    state.sweepA1 = mod.sweepA1(params, { n: 400 });
+    state.sweepA3 = mod.sweepA3(params, { n: 400 });
+    if (state.caseId === 'A1') state.opt = state.which === 'moment' ? state.sweepA1.optM : state.sweepA1.optD;
+    else if (state.caseId === 'A3') state.opt = state.which === 'moment' ? state.sweepA3.optM : state.sweepA3.optD;
+    renderSummary();
+    renderA1();
+    renderA3();
+    renderPartB();
+    renderClassical();
+    const ms = performance.now() - t0;
+    const okAll = state.opt ? state.opt.verified : true;
+    setStatus(`${okAll ? badge('ok', 'Checked by fresh model solve') : badge('warn', 'Check the verification badges')} solved and swept in ${fmt(ms, 3)} ms; the A2 grid continues in the background.`, false);
+    startHeatmap();
+  } catch (err) {
+    setStatus('Error: ' + err.message, true);
+    console.error(err);
+  }
+}
+
+function reset() {
+  cancelHeatmap();
+  $('in-L').value = DEF.L;
+  $('in-material').value = DEF.material;
+  $('in-section').value = DEF.section.type;
+  for (const [type, vals] of Object.entries(SECTION_DEFAULTS)) for (const [k, v] of Object.entries(vals)) $('sec-' + k).value = v;
+  for (const [k, v] of Object.entries(DEF.section)) if (k !== 'type') $('sec-' + k).value = v;
+  showSectionFields();
+  $('in-w').value = DEF.w; $('in-wa').value = DEF.wa; $('in-wb').value = DEF.wb;
+  $('in-pointloads').value = '';
+  $('in-FS').value = DEF.FS; $('in-ratio').value = DEF.deflRatio;
+  document.querySelector('input[name="case"][value="A1"]').checked = true;
+  showCaseFields();
+  $('in-a').value = DEF.a; $('in-a1').value = DEF.a1; $('in-a2').value = DEF.a2; $('in-s').value = DEF.s;
+  $('in-objective').value = 'moment';
+  $('in-il-source').value = 'student';
+  $('in-il-custom').value = '';
+  $('in-xs').value = DEF.xs; $('in-P').value = DEF.P;
+  $('in-il-support').innerHTML = '<option value="0">first support</option>';
+  run();
+}
+
+fillMaterials();
+showSectionFields();
+showCaseFields();
+$('in-section').addEventListener('change', showSectionFields);
+document.querySelectorAll('input[name="case"]').forEach(r => r.addEventListener('change', showCaseFields));
+$('btn-run').addEventListener('click', run);
+$('btn-reset').addEventListener('click', reset);
+$('btn-csv').addEventListener('click', downloadAll);
+$('btn-cancel').addEventListener('click', () => { cancelHeatmap(); $('a2-note').innerHTML = badge('info', 'A2 grid cancelled. Press "Solve and optimize" to run it again.'); });
+document.querySelector('.panel').addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.tagName === 'INPUT') run(); });
+run();
+</script>
+</body>
+</html>

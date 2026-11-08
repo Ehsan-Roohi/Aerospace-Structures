@@ -21,6 +21,7 @@ jobs:
       - name: Scope-aware browser controller
         env:
           MIE446_JSDOM_MODULE: /tmp/ml-ui-test/node_modules/jsdom
+          AERO_JSDOM_MODULE: /tmp/ml-ui-test/node_modules/jsdom
         run: |
           node scripts/lam/test_handoff.cjs
           node scripts/lam/test_page.cjs

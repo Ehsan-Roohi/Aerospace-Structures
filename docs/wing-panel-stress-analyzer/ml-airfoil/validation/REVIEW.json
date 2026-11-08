@@ -1,5 +1,5 @@
 {
-  "version": "2.0.1",
+  "version": "2.0.2",
   "baseCommit": "7c08f28cedc34eb24b6203b030ffa76a873fb996",
   "source": {
     "kind": "Claude downloadable patch",
@@ -53,5 +53,17 @@
     ],
     "optimization": "unchanged",
     "otherApplications": "unchanged"
+  },
+  "visualUpdate": {
+    "reviewers": 2,
+    "numericalSolversAndData": "unchanged",
+    "checks": [
+      "No course identifier remains in either comparison directory",
+      "Every legend band ends above the plot rectangle",
+      "Explicit upper/lower swatches within Cp and mesh figure headers",
+      "Machine learning clearly labels ADAPT and LWM",
+      "Responsive viewBox prevents tiny text in paired plots",
+      "Captions15px with readable contrast and method lines"
+    ]
   }
 }

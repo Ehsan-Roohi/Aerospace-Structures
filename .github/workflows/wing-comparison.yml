@@ -20,3 +20,4 @@ jobs:
       - run: node scripts/lwm/test_wing_comparison_page.cjs
         env:
           MIE446_JSDOM_MODULE: /tmp/wing-reference-tests/node_modules/jsdom
+          AERO_JSDOM_MODULE: /tmp/wing-reference-tests/node_modules/jsdom

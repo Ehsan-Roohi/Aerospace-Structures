@@ -18,41 +18,65 @@
     return out;
   }
   function fig(spec) {
-    const W = spec.w || 900, H = spec.h || 420, m = { l: 66, r: 18, t: 16, b: 48 };
+    // Legend occupies its own band inside the figure; data can never pass underneath it.
+    const hostWidth = $('panels').clientWidth || 900;
+    const paired = spec.paired && hostWidth >= 1000;
+    const W = spec.w || Math.max(320, paired ? (hostWidth - 28) / 2 : hostWidth - 14);
     const good = spec.series.filter(s => s.kind === 'vline' || (s.x && s.x.length));
-    const xs = [], ys = [];
-    for (const s of good) { if (s.kind === 'vline') { xs.push(s.x); continue; } for (let i = 0; i < s.x.length; i++) { if (Number.isFinite(s.x[i])) xs.push(s.x[i]); if (Number.isFinite(s.y[i])) ys.push(s.y[i]); if (s.y2 && Number.isFinite(s.y2[i])) ys.push(s.y2[i]); } }
-    if (!ys.length) return `<div class="caption">${esc(spec.empty || 'No data for this figure.')}</div>`;
-    let [x0, x1] = spec.xlim || [Math.min(...xs), Math.max(...xs)];
-    let [y0, y1] = spec.ylim || [Math.min(...ys), Math.max(...ys)];
-    if (x1 === x0) { x0 -= 1; x1 += 1; } const dy = (y1 - y0) * 0.07 || 0.1; if (!spec.ylim) { y0 -= dy; y1 += dy; }
-    const pw = W - m.l - m.r, ph = H - m.t - m.b;
-    const X = x => m.l + (x - x0) / (x1 - x0) * pw;
-    const Y = y => spec.invertY ? m.t + (y - y0) / (y1 - y0) * ph : m.t + ph - (y - y0) / (y1 - y0) * ph;
-    let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(spec.aria || spec.yLabel || 'figure')}" font-family="Barlow, Segoe UI, system-ui, sans-serif" font-size="12">`;
-    s += `<defs><clipPath id="${spec.id}c"><rect x="${m.l}" y="${m.t}" width="${pw}" height="${ph}"/></clipPath></defs>`;
-    for (const t of ticks(x0, x1)) s += `<line x1="${X(t)}" x2="${X(t)}" y1="${m.t}" y2="${m.t + ph}" stroke="${C.grid}"/><text x="${X(t)}" y="${m.t + ph + 18}" text-anchor="middle" fill="${C.axis}">${fmt(t, 4)}</text>`;
-    for (const t of ticks(y0, y1)) s += `<line x1="${m.l}" x2="${m.l + pw}" y1="${Y(t)}" y2="${Y(t)}" stroke="${C.grid}"/><text x="${m.l - 8}" y="${Y(t) + 4}" text-anchor="end" fill="${C.axis}">${fmt(t, 3)}</text>`;
-    s += `<rect x="${m.l}" y="${m.t}" width="${pw}" height="${ph}" fill="none" stroke="${C.axis}"/>`;
-    s += `<g clip-path="url(#${spec.id}c)">`;
-    const pts = (sx, sy) => { let d = '', pen = false; for (let i = 0; i < sx.length; i++) { if (!Number.isFinite(sx[i]) || !Number.isFinite(sy[i])) { pen = false; continue; } d += (pen ? 'L' : 'M') + X(sx[i]).toFixed(1) + ',' + Y(sy[i]).toFixed(1); pen = true; } return d; };
-    for (const q of good) {
-      if (q.kind === 'band') { const up = pts(q.x, q.y), lo = pts([...q.x].reverse(), [...q.y2].reverse()); s += `<path d="${up}${lo.replace(/^M/, 'L')}Z" fill="${q.color}" fill-opacity="0.2" stroke="none"/>`; }
-      else if (q.kind === 'line') s += `<path d="${pts(q.x, q.y)}" fill="none" stroke="${q.color}" stroke-width="${q.width || 2.2}"${q.dash ? ' stroke-dasharray="7 5"' : ''}/>`;
-      else if (q.kind === 'points') { for (let i = 0; i < q.x.length; i++) if (Number.isFinite(q.y[i])) s += `<circle cx="${X(q.x[i])}" cy="${Y(q.y[i])}" r="${q.r || 3.4}" fill="${q.fill || q.color}" stroke="${q.color}" stroke-width="1.3"/>`; }
-      else if (q.kind === 'vline') s += `<line x1="${X(q.x)}" x2="${X(q.x)}" y1="${m.t}" y2="${m.t + ph}" stroke="${q.color || C.axis}" stroke-dasharray="3 5"/>`;
-    }
-    s += '</g>';
-    s += `<text x="${m.l + pw / 2}" y="${H - 8}" text-anchor="middle" fill="${C.ink}">${esc(spec.xLabel || '')}</text><text transform="translate(16,${m.t + ph / 2}) rotate(-90)" text-anchor="middle" fill="${C.ink}">${esc(spec.yLabel || '')}</text>`;
+    const surfaceKey = ['cp', 'wcp', 'mesh0', 'mesh1'].includes(spec.id);
     const leg = good.filter(q => q.label);
-    if (leg.length) {
-      const lw = Math.min(pw - 20, 14 + Math.max(...leg.map(q => q.label.length)) * 6.6 + 44), lh = leg.length * 18 + 10;
-      const corner = spec.legend || 'tr', lx = corner.endsWith('r') ? m.l + pw - lw - 10 : m.l + 10, ly = corner.startsWith('t') ? m.t + 8 : m.t + ph - lh - 8;
-      s += `<g font-size="12"><rect x="${lx}" y="${ly}" width="${lw}" height="${lh}" rx="6" fill="#0d141c" fill-opacity="0.92" stroke="${C.grid}"/>`;
-      leg.forEach((q, i) => { const y = ly + 14 + i * 18; s += q.kind === 'points' ? `<circle cx="${lx + 16}" cy="${y}" r="3.4" fill="${q.fill || q.color}" stroke="${q.color}"/>` : q.kind === 'band' ? `<rect x="${lx + 8}" y="${y - 6}" width="16" height="12" fill="${q.color}" fill-opacity="0.3"/>` : `<line x1="${lx + 8}" x2="${lx + 26}" y1="${y}" y2="${y}" stroke="${q.color}" stroke-width="2.2"${q.dash ? ' stroke-dasharray="7 5"' : ''}/>`; s += `<text x="${lx + 34}" y="${y + 4}" fill="${C.ink}">${esc(q.label)}</text>`; });
-      s += '</g>';
+    const font = 15, rowH = 25, pad = 16;
+    const cols = W >= 740 ? 2 : 1, colW = (W - 2 * pad) / cols;
+    function wrap(text, width) {
+      const maxChars=Math.max(8,Math.floor(width/7.6));
+      const words=text.split(/\s+/).flatMap(word=>word.match(new RegExp('.{1,'+maxChars+'}','gu'))||[]), lines=[]; let line='';
+      for (const word of words) { if (line && (line + ' ' + word).length * 7.6 > width) { lines.push(line); line = word; } else line += (line ? ' ' : '') + word; }
+      if (line) lines.push(line); return lines;
     }
-    return s + '</svg>';
+    const blocks=[]; let legendY=18;
+    for(let i=0;i<leg.length;i+=cols) {
+      const row=leg.slice(i,i+cols).map((q,j)=>({q,x:pad+j*colW,lines:wrap(q.label,colW-55)}));
+      const height=Math.max(...row.map(b=>b.lines.length))*rowH;
+      for(const item of row) blocks.push({...item,y:legendY});
+      legendY += height + 4;
+    }
+    let keyY = legendY + 2;
+    if(surfaceKey) legendY += (W >= 650 ? 1 : 2) * 29 + 10;
+    const headerH = leg.length || surfaceKey ? legendY + 8 : 0;
+    const H = (spec.h || 420) + headerH, m={l:64,r:18,t:headerH+18,b:52};
+    const xs=[],ys=[];
+    for(const q of good) { if(q.kind==='vline'){xs.push(q.x);continue;} for(let i=0;i<q.x.length;i++){if(Number.isFinite(q.x[i]))xs.push(q.x[i]);if(Number.isFinite(q.y[i]))ys.push(q.y[i]);if(q.y2&&Number.isFinite(q.y2[i]))ys.push(q.y2[i]);} }
+    if(!ys.length)return `<div class="caption">${esc(spec.empty || 'No data for this figure.')}</div>`;
+    let [x0,x1]=spec.xlim||[Math.min(...xs),Math.max(...xs)];let [y0,y1]=spec.ylim||[Math.min(...ys),Math.max(...ys)];
+    if(x1===x0){x0-=1;x1+=1;}const dy=(y1-y0)*.07||.1;if(!spec.ylim){y0-=dy;y1+=dy;}
+    const pw=W-m.l-m.r,ph=H-m.t-m.b,X=x=>m.l+(x-x0)/(x1-x0)*pw,Y=y=>spec.invertY?m.t+(y-y0)/(y1-y0)*ph:m.t+ph-(y-y0)/(y1-y0)*ph;
+    let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(spec.aria||spec.yLabel||'figure')}" font-family="Barlow, Segoe UI, system-ui, sans-serif" font-size="14" data-plot-top="${m.t}" data-legend-bottom="${headerH}">`;
+    s+=`<defs><clipPath id="${spec.id}c"><rect x="${m.l}" y="${m.t}" width="${pw}" height="${ph}"/></clipPath></defs>`;
+    s+=`<g aria-label="Figure legend" font-size="${font}">`;
+    for(const {q,x,y,lines} of blocks){
+      if(q.kind==='points')s+=`<circle cx="${x+14}" cy="${y}" r="4" fill="${q.fill||q.color}" stroke="${q.color}"/>`;
+      else if(q.kind==='band')s+=`<rect x="${x}" y="${y-8}" width="28" height="16" fill="${q.color}" fill-opacity=".3"/>`;
+      else s+=`<line x1="${x}" x2="${x+28}" y1="${y}" y2="${y}" stroke="${q.color}" stroke-width="2.5"${q.dash?' stroke-dasharray="7 5"':''}/>`;
+      lines.forEach((line,i)=>{s+=`<text x="${x+40}" y="${y+5+i*rowH}" fill="${C.ink}">${esc(line)}</text>`;});
+    }
+    if(surfaceKey){
+      const keys=[['Upper surface — solid line',false],['Lower surface — dashed line',true]];
+      keys.forEach(([label,dash],i)=>{const x=pad+(W>=650?i*(W/2):0),y=keyY+(W>=650?0:i*29);s+=`<line x1="${x}" x2="${x+36}" y1="${y}" y2="${y}" stroke="${C.ink}" stroke-width="2.5"${dash?' stroke-dasharray="7 5"':''}/><text x="${x+47}" y="${y+5}" fill="${C.ink}" font-weight="600">${label}</text>`;});
+    }
+    s+='</g>';
+    if(headerH)s+=`<line x1="${pad}" x2="${W-pad}" y1="${headerH}" y2="${headerH}" stroke="${C.grid}"/>`;
+    for(const t of ticks(x0,x1))s+=`<line x1="${X(t)}" x2="${X(t)}" y1="${m.t}" y2="${m.t+ph}" stroke="${C.grid}"/><text x="${X(t)}" y="${m.t+ph+22}" text-anchor="middle" fill="${C.axis}">${fmt(t,4)}</text>`;
+    for(const t of ticks(y0,y1))s+=`<line x1="${m.l}" x2="${m.l+pw}" y1="${Y(t)}" y2="${Y(t)}" stroke="${C.grid}"/><text x="${m.l-9}" y="${Y(t)+5}" text-anchor="end" fill="${C.axis}">${fmt(t,3)}</text>`;
+    s+=`<rect x="${m.l}" y="${m.t}" width="${pw}" height="${ph}" fill="none" stroke="${C.axis}"/><g clip-path="url(#${spec.id}c)">`;
+    const pts=(x,y)=>{let d='',pen=false;for(let i=0;i<x.length;i++){if(!Number.isFinite(x[i])||!Number.isFinite(y[i])){pen=false;continue;}d+=(pen?'L':'M')+X(x[i]).toFixed(2)+','+Y(y[i]).toFixed(2);pen=true;}return d;};
+    for(const q of good){
+      if(q.kind==='band')s+=`<path d="${pts(q.x,q.y)}${pts([...q.x].reverse(),[...q.y2].reverse()).replace(/^M/,'L')}Z" fill="${q.color}" fill-opacity=".2" stroke="none"/>`;
+      else if(q.kind==='line')s+=`<path d="${pts(q.x,q.y)}" fill="none" stroke="${q.color}" stroke-width="${q.width||2.2}"${q.dash?' stroke-dasharray="7 5"':''}/>`;
+      else if(q.kind==='points'){for(let i=0;i<q.x.length;i++)if(Number.isFinite(q.y[i]))s+=`<circle cx="${X(q.x[i])}" cy="${Y(q.y[i])}" r="${q.r||3.4}" fill="${q.fill||q.color}" stroke="${q.color}" stroke-width="1.3"/>`;}
+      else if(q.kind==='vline')s+=`<line x1="${X(q.x)}" x2="${X(q.x)}" y1="${m.t}" y2="${m.t+ph}" stroke="${q.color||C.axis}" stroke-dasharray="3 5"/>`;
+    }
+    s+=`</g><text x="${m.l+pw/2}" y="${H-9}" text-anchor="middle" fill="${C.ink}">${esc(spec.xLabel||'')}</text><text transform="translate(18,${m.t+ph/2}) rotate(-90)" text-anchor="middle" fill="${C.ink}">${esc(spec.yLabel||'')}</text></svg>`;
+    return s;
   }
   const table = (head, rows, hl) => `<div class="scroll"><table class="data"><thead><tr>${head.map((h, i) => `<th${i ? ' class="n"' : ''}>${esc(h)}</th>`).join('')}</tr></thead><tbody>${rows.map((r, k) => `<tr${hl === k ? ' class="hl"' : ''}>${r.map((v, i) => `<td${i ? ' class="n"' : ''}>${esc(v)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
   const kpi = (l, v, s, cls = '') => `<div class="kpi ${cls}"><div class="l">${esc(l)}</div><div class="v${String(v).length > 11 ? ' long' : ''}">${esc(v)}</div><div class="s" title="${esc(s)}">${esc(s)}</div></div>`;
@@ -107,67 +131,67 @@
       const r = selected(); sec.err = null;
       const re = +$('re').value;
       if (!Number.isFinite(re) || re <= 0) throw Error('Enter a finite positive Reynolds number.');
-      if (!r) { $('strip').innerHTML = kpi('Case', 'none', 'no geometry for ' + $('foil').value); $('chips').innerHTML = chip('bad', 'no recorded model geometry'); tabs([{ id: 'cp', label: 'Cp', html: '<p class="note">No recorded ADAPT prediction and no geometry for this section. No other section or angle is substituted.</p>' }], state.tab.section); return; }
+      if (!r) { $('strip').innerHTML = kpi('Case', 'none', 'no geometry for ' + $('foil').value); $('chips').innerHTML = chip('bad', 'no recorded model geometry'); tabs([{ id: 'cp', label: 'Cp', html: '<p class="note">No recorded machine-learning prediction and no geometry for this section. No other section or angle is substituted.</p>' }], state.tab.section); return; }
       const kind = sec.ref && sec.ref.source.type === 'experiment' ? 'Experiment' : 'CFD', matching = refMatches(r, re), rc = matching ? sec.ref.cases.find(c => Math.abs(c.alphaDeg - r.alphaDeg) < 1e-8) : null;
       const scope = S.scope(re, r.alphaDeg, r.mach), inDom = !r.noML && scope.eligible, L = r.noML ? null : lift(r), cmStd = r.noML ? null : Math.sqrt(Math.max(0, r.forceMoment.covariance[2][2]));
       const refLabel = sec.ref ? (sec.ref.source.type === 'experiment' ? 'TR-613 tunnel' : sec.ref.source.solver) : 'reference';
       // chips
       $('chips').innerHTML = [
-        r.noML ? chip('warn', 'no recorded ML at this angle') : chip('ok', 'recorded ADAPT inference'),
-        r.noML ? '' : chip(inDom ? 'ok' : 'warn', inDom ? 'inside ADAPT input ranges · accuracy not guaranteed' : 'outside published domain'),
+        r.noML ? chip('warn', 'no recorded ML at this angle') : chip('ok', 'recorded machine learning · ADAPT'),
+        r.noML ? '' : chip(inDom ? 'ok' : 'warn', inDom ? 'inside ML input ranges · accuracy not guaranteed' : 'outside published domain'),
         r.panel ? chip('idle', 'panel ' + r.panel.panelsPerSurface + '/side') : chip('warn', 'panel withheld'),
         rc ? chip('ok', kind + ' matched at ' + r.alphaDeg + ' deg') : chip('idle', matching ? 'no ' + kind + ' at this angle' : 'no matching ' + kind),
       ].join('');
       // strip
       $('strip').innerHTML = [
         kpi('cl · panel', fmt(r.panel && r.panel.cl), PANEL2D, 'panel-c'),
-        kpi('cl · ADAPT', r.noML ? '—' : fmt(L.mean) + ' ± ' + fmt(2 * L.std, 2), r.noML ? 'no recorded prediction' : 'posterior mean ± 2σ, M ' + r.mach, 'ml-c'),
+        kpi('cl · machine learning', r.noML ? '—' : fmt(L.mean) + ' ± ' + fmt(2 * L.std, 2), r.noML ? 'no recorded prediction' : 'ADAPT · mean ± 2σ, M ' + r.mach, 'ml-c'),
         kpi('cl · ' + kind.toLowerCase(), fmt(rc && rc.cl), rc ? refLabel : 'no reference at this α', 'ref-c'),
         kpi('cm,¼ · panel', fmt(r.panel && r.panel.cmQuarter), 'nose-up positive', 'panel-c'),
-        kpi('cm,¼ · ADAPT', r.noML ? '—' : fmt(r.forceMoment.mean[2]) + ' ± ' + fmt(2 * cmStd, 2), 'joint covariance', 'ml-c'),
-        kpi('scope', inDom ? 'in range' : r.noML ? 'no ML' : 'outside', 'Re ' + re.toLocaleString() + ' · ADAPT: Re > 1e6, α −4…12°, M 0…0.9'),
+        kpi('cm,¼ · machine learning', r.noML ? '—' : fmt(r.forceMoment.mean[2]) + ' ± ' + fmt(2 * cmStd, 2), 'ADAPT · joint covariance', 'ml-c'),
+        kpi('scope', inDom ? 'in range' : r.noML ? 'no ML' : 'outside', 'Re ' + re.toLocaleString() + ' · Machine learning · ADAPT: Re > 1e6, α −4…12°, M 0…0.9'),
       ].join('');
       // Cp figure
       const cpSeries = [];
       if (r.panel) { cpSeries.push({ kind: 'line', x: r.panel.upper.map(p => p[0]), y: r.panel.upper.map(p => p[1]), color: C.panel, label: 'Panel · ' + PANEL2D }); cpSeries.push({ kind: 'line', x: r.panel.lower.map(p => p[0]), y: r.panel.lower.map(p => p[1]), color: C.panel, dash: true }); }
       if (!r.noML) { const n = r.upper.length; const mu = r.cpMean.slice(0, n), ml = r.cpMean.slice(n), su = r.cpStd.slice(0, n), sl = r.cpStd.slice(n), xu = r.upper.map(p => p[0]), xl = r.lower.map(p => p[0]);
-        cpSeries.push({ kind: 'band', x: xu, y: mu.map((v, i) => v - 2 * su[i]), y2: mu.map((v, i) => v + 2 * su[i]), color: C.ml, label: 'ADAPT ± 2σ' }, { kind: 'band', x: xl, y: ml.map((v, i) => v - 2 * sl[i]), y2: ml.map((v, i) => v + 2 * sl[i]), color: C.ml }, { kind: 'line', x: xu, y: mu, color: C.ml, label: 'ADAPT mean' }, { kind: 'line', x: xl, y: ml, color: C.ml, dash: true }); }
+        cpSeries.push({ kind: 'band', x: xu, y: mu.map((v, i) => v - 2 * su[i]), y2: mu.map((v, i) => v + 2 * su[i]), color: C.ml, label: 'Machine learning · ADAPT ± 2σ' }, { kind: 'band', x: xl, y: ml.map((v, i) => v - 2 * sl[i]), y2: ml.map((v, i) => v + 2 * sl[i]), color: C.ml }, { kind: 'line', x: xu, y: mu, color: C.ml, label: 'Machine learning · ADAPT mean' }, { kind: 'line', x: xl, y: ml, color: C.ml, dash: true }); }
       if (rc) { const exp = sec.ref.source.type === 'experiment'; for (const [k, dash] of [['branch1', false], ['branch2', true]]) cpSeries.push({ kind: exp ? 'points' : 'line', x: rc[k].map(p => p[0]), y: rc[k].map(p => p[1]), color: exp ? C.ref : C.cfd, fill: exp ? '#0d141c' : undefined, dash, label: k === 'branch1' ? (exp ? 'Experiment · ' + refLabel : 'CFD · ' + refLabel) : undefined }); }
-      const cpHtml = `<div class="fig">${fig({ id: 'cp', series: cpSeries, xLabel: 'x/c', yLabel: 'Cp (negative upward)', invertY: true, legend: 'tr', aria: 'Pressure coefficient comparison' })}</div><p class="caption">Solid upper, dashed lower. ${r.panel ? 'Panel: incompressible, ' + r.panel.panelsPerSurface + ' panels per surface, analytic closed trailing edge. ' : 'Panel withheld outside |α| ≤ 15°, M ≤ 0.3. '}${r.noML ? 'ML: no recorded prediction at this geometry or angle; nothing substituted. ' : 'ADAPT: recorded posterior at M ' + r.mach + ', Re is not an input. '}${rc ? kind + ': ' + refLabel + ' at the same α, never solved here.' : matching ? kind + ' exists only at α ' + sec.ref.cases.map(c => c.alphaDeg + '°').join(', ') + '; no angle interpolation.' : 'No matching reference geometry and conditions.'}</p>`;
+      const cpHtml = `<div class="fig">${fig({ id: 'cp', series: cpSeries, xLabel: 'x/c', yLabel: 'Cp (negative upward)', invertY: true, legend: 'tr', aria: 'Pressure coefficient comparison' })}</div><p class="caption">${r.panel ? '<b>Panel:</b> incompressible, ' + r.panel.panelsPerSurface + ' panels per surface; closed trailing edge.<br> ' : 'Panel withheld outside |α| ≤ 15°, M ≤ 0.3. '}${r.noML ? 'ML: no recorded prediction at this geometry or angle; nothing substituted. ' : '<b>Machine learning · ADAPT:</b> recorded at M ' + r.mach + '; Reynolds number is not a model input.<br> '}${rc ? kind + ': ' + refLabel + ' at the same α, never solved here.' : matching ? kind + ' exists only at α ' + sec.ref.cases.map(c => c.alphaDeg + '°').join(', ') + '; no angle interpolation.' : 'No matching reference data for this geometry and these flow conditions.'}</p>`;
       // coefficients
       const drag = r.noML ? null : S.project(r, [Math.cos(r.alphaDeg * Math.PI / 180), Math.sin(r.alphaDeg * Math.PI / 180), 0]);
       const coefHtml = table(['Method · provenance', 'cl', 'cm,¼ (nose-up +)', 'pressure cd', 'total cd', 'cl / total cd'], [
         ['Panel · ' + PANEL2D + ' · ' + (r.panel ? r.panel.panelsPerSurface + '/side' : 'withheld'), fmt(r.panel && r.panel.cl), fmt(r.panel && r.panel.cmQuarter), fmt(r.panel && r.panel.pressureCd), 'not computed', 'not computed'],
         [kind + ' · ' + refLabel + (rc ? '' : ' · no case at this α'), fmt(rc && rc.cl), fmt(rc && rc.cmQuarter), 'not provided', fmt(rc && rc.totalCd), fmt(rc && rc.totalCd > 0 ? rc.cl / rc.totalCd : undefined)],
-        ['ADAPT · recorded inference' + (r.noML ? ' · none here' : ' · mean ± 2σ'), r.noML ? '—' : fmt(L.mean) + ' ± ' + fmt(2 * L.std, 2), r.noML ? '—' : fmt(r.forceMoment.mean[2]) + ' ± ' + fmt(2 * cmStd, 2), fmt(drag && drag.mean), 'not computed', 'not computed'],
+        ['Machine learning · ADAPT · recorded inference' + (r.noML ? ' · none here' : ' · mean ± 2σ'), r.noML ? '—' : fmt(L.mean) + ' ± ' + fmt(2 * L.std, 2), r.noML ? '—' : fmt(r.forceMoment.mean[2]) + ' ± ' + fmt(2 * cmStd, 2), fmt(drag && drag.mean), 'not computed', 'not computed'],
       ]) + '<p class="caption">Pressure-only drag omits skin friction and is not total drag. Reference total cd is quoted from its source. Agreement between columns is a numerical comparison, not validation.</p>';
       // lift curve
       const all = sec.data.cases.filter(q => q.airfoil === r.airfoil && !q.noML).sort((a, b) => a.alphaDeg - b.alphaDeg);
       const mlCl = all.map(lift), mlCm = all.map(q => [q.forceMoment.mean[2], Math.sqrt(Math.max(0, q.forceMoment.covariance[2][2]))]);
       const panelPts = all.filter(q => q.panel), aX = all.map(q => q.alphaDeg);
       const refPts = matching ? sec.ref.cases : [];
-      const curve = (key, yl, mlY, mlS) => fig({ id: key, h: 360, series: [
-        { kind: 'band', x: aX, y: mlY.map((v, i) => v - 2 * mlS[i]), y2: mlY.map((v, i) => v + 2 * mlS[i]), color: C.ml, label: 'ADAPT ± 2σ' },
-        { kind: 'line', x: aX, y: mlY, color: C.ml, label: 'ADAPT mean' },
+      const curve = (key, yl, mlY, mlS) => fig({ id: key, h: 360, paired: true, series: [
+        { kind: 'band', x: aX, y: mlY.map((v, i) => v - 2 * mlS[i]), y2: mlY.map((v, i) => v + 2 * mlS[i]), color: C.ml, label: 'Machine learning · ADAPT ± 2σ' },
+        { kind: 'line', x: aX, y: mlY, color: C.ml, label: 'Machine learning · ADAPT mean' },
         { kind: 'line', x: panelPts.map(q => q.alphaDeg), y: panelPts.map(q => q.panel[key]), color: C.panel, label: 'Panel · 160/side' },
         { kind: 'points', x: refPts.filter(q => Number.isFinite(q[key])).map(q => q.alphaDeg), y: refPts.filter(q => Number.isFinite(q[key])).map(q => q[key]), color: C.cfd, label: refPts.some(q => Number.isFinite(q[key])) ? kind + ' · ' + refLabel : undefined },
         { kind: 'vline', x: r.alphaDeg },
       ], xLabel: 'α (deg)', yLabel: yl, legend: key === 'cl' ? 'tl' : 'tr', aria: yl + ' versus angle of attack' });
-      const liftHtml = `<div class="two"><div class="fig">${curve('cl', 'cl', mlCl.map(v => v.mean), mlCl.map(v => v.std))}</div><div class="fig">${curve('cmQuarter', 'cm,¼ (nose-up +)', mlCm.map(v => v[0]), mlCm.map(v => v[1]))}</div></div><p class="caption">Recorded ADAPT angles 0 to 12° in 0.1° steps at M ${all.length ? all[0].mach : '—'}. Panel values use the 160-per-side baseline. Reference markers are the source's own angles only; the dashed line marks the selected α. Attached-flow models do not predict stall.</p>`;
+      const liftHtml = `<div class="two"><div class="fig">${curve('cl', 'cl', mlCl.map(v => v.mean), mlCl.map(v => v.std))}</div><div class="fig">${curve('cmQuarter', 'cm,¼ (nose-up +)', mlCm.map(v => v[0]), mlCm.map(v => v[1]))}</div></div><p class="caption">Machine learning · ADAPT recorded angles 0 to 12° in 0.1° steps at M ${all.length ? all[0].mach : '—'}. Panel values use the 160-per-side baseline. Reference markers are the source's own angles only; the dashed line marks the selected α. Attached-flow models do not predict stall.</p>`;
       // screening
       const opts = { re, xsc: +$('xsc').value, zsc: +$('zsc').value }, minCL = +$('clmin').value;
       if (!Number.isFinite(minCL)) throw Error('Enter a finite lift target.');
       const cases = sec.data.cases.filter(q => q.alphaDeg === r.alphaDeg && !q.noML && Math.abs(q.mach - r.mach) < 1e-8).map(q => ({ q, a: S.assess(q, opts) }));
       const ok = cases.length > 0 && !r.noML && cases.every(c => c.a.scope.eligible);
       if (ok) cases.sort((x, y) => Number(y.a.lift.mean - 2 * y.a.lift.std >= minCL) - Number(x.a.lift.mean - 2 * x.a.lift.std >= minCL) || x.a.torqueScore - y.a.torqueScore);
-      const screenHtml = (ok ? '<p class="caption">Posterior screening at α ' + r.alphaDeg + '°, M ' + r.mach + ': lift screen requires mean − 2σ ≥ target; moment score |mean cm| + 2σ at the chosen reference point. A low score is not a design optimum.</p>' : '<p class="caption">Design scores withheld: ' + (r.noML ? 'no recorded ML at this angle.' : 'outside the published ADAPT domain (Re > 1e6, α −4…12°, M 0…0.9).') + '</p>') +
+      const screenHtml = (ok ? '<p class="caption">Posterior screening at α ' + r.alphaDeg + '°, M ' + r.mach + ': lift screen requires mean − 2σ ≥ target; moment score |mean cm| + 2σ at the chosen reference point. A low score is not a design optimum.</p>' : '<p class="caption">Design scores withheld: ' + (r.noML ? 'no recorded ML at this angle.' : 'outside the published machine-learning model domain (Re > 1e6, α −4…12°, M 0…0.9).') + '</p>') +
         table(['Section', 'cl mean ± 2σ', 'cm at reference ± 2σ', '|mean cm| + 2σ', 'Lift screen'], cases.map(({ q, a }) => [q.airfoil, ok ? fmt(a.lift.mean) + ' ± ' + fmt(2 * a.lift.std, 2) : 'withheld', ok ? fmt(a.moment.mean) + ' ± ' + fmt(2 * a.moment.std, 2) : 'withheld', ok ? fmt(a.torqueScore) : 'out of domain', ok ? (a.lift.mean - 2 * a.lift.std >= minCL ? 'meets target' : 'below target') : 'withheld']), cases.findIndex(c => c.q.airfoil === r.airfoil));
       tabs([{ id: 'cp', label: 'Cp', html: cpHtml }, { id: 'coef', label: 'Coefficients', html: coefHtml }, { id: 'curve', label: 'Lift curve', html: liftHtml }, { id: 'screen', label: 'Screening', html: screenHtml }], state.tab.section);
       // docs
       const d = sec.data, up = d.upstream;
       const srcLink = sec.ref ? `<a href="${esc(sec.ref.source.url)}" target="_blank" rel="noopener">${esc(sec.ref.source.solver)}</a>` : 'none loaded';
       $('docs').innerHTML = [
-        doc('docSources', 'Sources and execution', `<p class="srcline">Panel: ${PANEL2D}, linear-vortex stream-function panels, Kutta condition, incompressible; module SHA-256 ${esc(short(d.panelModuleSha256))}…; geometry module ${esc(short(d.panelGeometryModuleSha256))}…</p><p class="srcline">ML: ADAPT, the Large Airfoil Model (PCA-input SVDKL Gaussian process) of Lee, Seshadri and Rauleder, <a href="${esc(d.paper)}" target="_blank" rel="noopener">AST 180 (2027) 113783</a>; code <a href="${esc(up.repo)}" target="_blank" rel="noopener">hwlee924/Large-Airfoil-Model</a> commit ${esc(short(up.commit))}, one checkpoint, weights pinned by SHA-256 in <a href="demo.json">demo.json</a>. ${esc(d.execution)} Batch runtime ${fmt(d.runtimeSeconds, 4)} s for ${d.cases.filter(c => !c.noML).length} recorded cases.</p><p class="srcline">Reference: ${srcLink} · ${sec.ref ? esc(sec.ref.source.kind || sec.ref.source.type) : ''}${sec.ref && sec.ref.note ? ' · ' + esc(sec.ref.note) : ''}</p><p class="srcline">Section data is two-dimensional; the finite-wing mode uses the separate Large Wing Model and is never mixed with these section predictions.</p>`),
+        doc('docSources', 'Sources and execution', `<p class="srcline">Panel: ${PANEL2D}, linear-vortex stream-function panels, Kutta condition, incompressible; module SHA-256 ${esc(short(d.panelModuleSha256))}…; geometry module ${esc(short(d.panelGeometryModuleSha256))}…</p><p class="srcline">Machine learning · ADAPT, the Large Airfoil Model (PCA-input SVDKL Gaussian process) of Lee, Seshadri and Rauleder, <a href="${esc(d.paper)}" target="_blank" rel="noopener">AST 180 (2027) 113783</a>; code <a href="${esc(up.repo)}" target="_blank" rel="noopener">hwlee924/Large-Airfoil-Model</a> commit ${esc(short(up.commit))}, one checkpoint, weights pinned by SHA-256 in <a href="demo.json">demo.json</a>. ${esc(d.execution)} Batch runtime ${fmt(d.runtimeSeconds, 4)} s for ${d.cases.filter(c => !c.noML).length} recorded cases.</p><p class="srcline">Reference: ${srcLink} · ${sec.ref ? esc(sec.ref.source.kind || sec.ref.source.type) : ''}${sec.ref && sec.ref.note ? ' · ' + esc(sec.ref.note) : ''}</p><p class="srcline">Section data is two-dimensional; the finite-wing mode uses the separate Large Wing Model and is never mixed with these section predictions.</p>`),
         doc('docLimits', 'Limitations and scope', `<ul><li>${esc(d.domain)}</li><li>Panel: attached, incompressible potential flow; no stall, no boundary layer, no viscous or total drag; |α| ≤ 15°, M ≤ 0.3.</li><li>Reference values appear only at their own angles and conditions; nothing is interpolated between recorded angles.</li><li>Section cl is not a finite-wing CL; nothing here is a structural or flight approval.</li></ul>`),
         doc('docMesh', 'Panel geometry and mesh', `<p>${esc(r.panel ? r.panel.geometryNote + ' Original trailing-edge gap/chord ' + fmt(r.panel.naturalTrailingGap, 3) + '.' : 'No panel result at this condition.')}</p><p class="note">Endpoint Cp is not a convergence measure: a finite-angle sharp edge tends to stagnation. Compare fixed x/c probes across meshes. <a href="panel-validation.json">Analytic and mesh-validation record</a>.</p><div id="meshOut">${sec.mesh || '<p class="note">Run the convergence check from the Panel mesh controls.</p>'}</div>`),
         doc('docHelp', 'Help and solved examples', `<p>Choose a section and angle, set Re for the scope check, read the strip, then open the tabs. Legends sit inside each figure.</p><p><b>Lift target before a low-moment choice.</b> Re 3,000,000, α 4°, minimum cl 0.60, reference (0.35, 0): Clark Y lower screen 0.618536 − 0.010791 = 0.607745 meets the target; NACA 2412 gives 0.588550 and does not. <button class="btn" type="button" data-worked="lift">Load</button></p><p><b>Moving the moment reference is not stiffening a wing.</b> Clark Y, α 4°: cm,new = cm,¼ + (x/c − 0.25) cn − (z/c) ca = −0.076235 + 0.10 × 0.618563 = −0.014378. <button class="btn" type="button" data-worked="quarter">x/c 0.25</button> <button class="btn" type="button" data-worked="reference">x/c 0.35</button></p><p><b>Low-Re Aeroclub wing.</b> Re 400,000 is outside the published domain: scores are withheld and the Re field never re-runs the model. <button class="btn" type="button" data-worked="lowre">Load</button></p>`, location.hash === '#help'),
@@ -191,7 +215,7 @@
       if (results.some(x => !x)) throw Error('Panel mesh study is outside the solver scope.');
       const probes = [0.001, 0.01, 0.25, 0.5, 0.9, 0.99], a = results[results.length - 2], b = results[results.length - 1];
       const dc = Math.abs(b.cl - a.cl), dp = Math.max(...['upper', 'lower'].flatMap(sfc => probes.map(x => Math.abs(lin(a[sfc], x) - lin(b[sfc], x)))));
-      const edges = ['Leading edge', 'Trailing edge'].map((name, k) => { const [lo, hi] = k ? [0.97, 1] : [-0.001, 0.03]; return `<div class="fig">${fig({ id: 'mesh' + k, h: 300, series: results.flatMap((res, i) => ['upper', 'lower'].map(sfc => ({ kind: 'line', x: res[sfc].filter(p => p[0] >= lo && p[0] <= hi).map(p => p[0]), y: res[sfc].filter(p => p[0] >= lo && p[0] <= hi).map(p => p[1]), color: [C.panel, C.m2, C.m3][i], dash: sfc === 'lower', label: sfc === 'upper' ? res.panelsPerSurface + '/side' : undefined }))), xLabel: 'x/c · ' + name.toLowerCase(), yLabel: 'Cp', invertY: true, legend: k ? 'tl' : 'br', aria: name + ' mesh profiles' })}</div>`; });
+      const edges = ['Leading edge', 'Trailing edge'].map((name, k) => { const [lo, hi] = k ? [0.97, 1] : [-0.001, 0.03]; return `<div class="fig">${fig({ id: 'mesh' + k, h: 300, paired: true, series: results.flatMap((res, i) => ['upper', 'lower'].map(sfc => ({ kind: 'line', x: res[sfc].filter(p => p[0] >= lo && p[0] <= hi).map(p => p[0]), y: res[sfc].filter(p => p[0] >= lo && p[0] <= hi).map(p => p[1]), color: [C.panel, C.m2, C.m3][i], dash: sfc === 'lower', label: sfc === 'upper' ? res.panelsPerSurface + '/side' : undefined }))), xLabel: 'x/c · ' + name.toLowerCase(), yLabel: 'Cp', invertY: true, legend: k ? 'tl' : 'br', aria: name + ' mesh profiles' })}</div>`; });
       sec.mesh = `<p class="note">Finest two meshes: |Δcl| ${fmt(dc)}, max |ΔCp| at fixed probes ${fmt(dp)}. Observed mesh differences only; not an accuracy claim.</p>` + table(['Panels / side', 'cl', 'cm,¼', 'pressure cd', 'Cp upper x/c 0.001', 'Cp upper x/c 0.99'], results.map(res => [res.panelsPerSurface, fmt(res.cl), fmt(res.cmQuarter), fmt(res.pressureCd), fmt(lin(res.upper, 0.001)), fmt(lin(res.upper, 0.99))])) + `<div class="two">${edges.join('')}</div>`;
       renderSection(); const d = $('docMesh'); if (d) { d.open = true; d.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
     } catch (e) { sec.mesh = `<p class="err">${esc(e.message)}</p>`; renderSection(); }
@@ -236,27 +260,27 @@
   // ======================= WING (3D) =======================
   const WC = window.WingCompare, LW = window.LWMClient;
   const wing = { data: null, fresh: new Map(), worker: null, serial: 0, client: null, screenResult: null, serviceMsg: '' };
-  const LWM = 'LWM · Large Wing Model';
+  const LWM = 'Machine learning · LWM';
   function wsel() { const c = wing.data.cases[+$('wing').value], i = +$('mesh').value, key = c.id + ':' + i; return { c, i, key, p: wing.fresh.get(key) || c.panels[i] }; }
   function wstations() { const { c } = wsel(); const etas = [...new Set(c.reference.points.map(q => q.eta))].sort((a, b) => a - b); $('eta').replaceChildren(...etas.map(y => new Option(y.toFixed(4), String(y)))); }
   function renderWing() {
     if (!wing.data) return;
     const { c, p } = wsel(), eta = +$('eta').value, ref = c.reference.reportedWingCL, co = p.result.coefficients, ml = c.lwm.integratedMean, Cv = c.lwm.integratedCovariance, err = WC.errors(c, p), a = c.accuracy, cov = WC.coverage(c);
     const sd = i => Math.sqrt(Math.max(0, Cv[i][i])), PANEL3D = 'WingAeroPanel ' + p.result.version;
-    $('chips').innerHTML = [chip('ok', 'recorded benchmark · ' + c.rawSourceConditions.source), chip(p.fresh ? 'ok' : 'idle', p.fresh ? 'panel re-solved in browser' : 'panel recorded · ' + p.result.mesh.panels + ' panels'), chip('idle', 'LWM recorded, unconditioned'), chip(wing.client && wing.client.state === 'online' ? 'ok' : 'idle', 'service ' + (wing.client ? wing.client.state : 'offline'))].join('');
+    $('chips').innerHTML = [chip('ok', 'recorded benchmark · ' + c.rawSourceConditions.source), chip(p.fresh ? 'ok' : 'idle', p.fresh ? 'panel re-solved in browser' : 'panel recorded · ' + p.result.mesh.panels + ' panels'), chip('idle', 'machine learning · LWM recorded'), chip(wing.client && wing.client.state === 'online' ? 'ok' : 'idle', 'service ' + (wing.client ? wing.client.state : 'offline'))].join('');
     $('strip').innerHTML = [
       kpi('CL · experiment', fmt(ref), c.rawSourceConditions.source + ' · reported', 'ref-c'),
       kpi('CL · panel', fmt(co.CL), PANEL3D + ' · ' + pct(co.CL, ref) + ' vs reported', 'panel-c'),
-      kpi('CL · LWM', fmt(ml[0]) + ' ± ' + fmt(2 * sd(0), 2), 'full pressure projection · ' + pct(ml[0], ref), 'ml-c'),
+      kpi('CL · machine learning', fmt(ml[0]) + ' ± ' + fmt(2 * sd(0), 2), 'full pressure projection · ' + pct(ml[0], ref), 'ml-c'),
       kpi('Cp MAE · panel', fmt(err.panel, 3), err.n + ' matched measured points', 'panel-c'),
-      kpi('Cp MAE · LWM', fmt(err.ml, 3), 'same ' + err.n + ' points', 'ml-c'),
+      kpi('Cp MAE · machine learning', fmt(err.ml, 3), 'same ' + err.n + ' points', 'ml-c'),
       kpi('conditions', c.conditions.effectiveAlphaDeg + '° · M ' + c.conditions.effectiveMach, 's/c ' + c.conditions.semiSpanOverChord + ' · Re ' + c.rawSourceConditions.Re.toLocaleString() + ' (context)'),
     ].join('');
     // Cp at station
     const st = c.lwm.stations.find(s => Math.abs(s.eta - eta) < 1e-10), refs = c.reference.points.filter(q => q.eta === eta), series = [];
-    if (st) { const nU = st.upper.length; for (const [sfc, off, dash] of [['upper', 0, false], ['lower', nU, true]]) { const x = st[sfc].map(q => q[0]), y = st[sfc].map(q => q[1]), sdv = st.cpStd.slice(off, off + st[sfc].length); series.push({ kind: 'band', x, y: y.map((v, i) => v - 2 * sdv[i]), y2: y.map((v, i) => v + 2 * sdv[i]), color: C.ml, label: dash ? undefined : 'LWM ± 2σ' }, { kind: 'line', x, y, color: C.ml, dash, label: dash ? undefined : 'LWM mean · 2 checkpoints' }); const py = x.map(v => WC.pressure(p, eta, sfc, v)); series.push({ kind: 'line', x: x.filter((v, i) => py[i] !== null), y: py.filter(v => v !== null), color: C.panel, dash, label: dash ? undefined : 'Panel · ' + PANEL3D }); } }
+    if (st) { const nU = st.upper.length; for (const [sfc, off, dash] of [['upper', 0, false], ['lower', nU, true]]) { const x = st[sfc].map(q => q[0]), y = st[sfc].map(q => q[1]), sdv = st.cpStd.slice(off, off + st[sfc].length); series.push({ kind: 'band', x, y: y.map((v, i) => v - 2 * sdv[i]), y2: y.map((v, i) => v + 2 * sdv[i]), color: C.ml, label: dash ? undefined : 'Machine learning · LWM ± 2σ' }, { kind: 'line', x, y, color: C.ml, dash, label: dash ? undefined : 'Machine learning · LWM mean' }); const py = x.map(v => WC.pressure(p, eta, sfc, v)); series.push({ kind: 'line', x: x.filter((v, i) => py[i] !== null), y: py.filter(v => v !== null), color: C.panel, dash, label: dash ? undefined : 'Panel · ' + PANEL3D }); } }
     series.push({ kind: 'points', x: refs.map(q => q.x), y: refs.map(q => q.cp), color: C.ref, fill: '#0d141c', label: 'Experiment · ' + c.rawSourceConditions.source });
-    const cpHtml = `<div class="fig">${fig({ id: 'wcp', series, xLabel: 'x/c · station η = ' + eta.toFixed(4), yLabel: 'Cp (negative upward)', invertY: true, legend: 'tr', aria: 'Pressure comparison at a span station' })}</div><p class="caption">Solid upper, dashed lower. Panel values are centroid data interpolated linearly in chord and span inside sample coverage. LWM is evaluated at this recorded station; measured markers are discrete source samples. ${esc(c.reference.correction)}</p>`;
+    const cpHtml = `<div class="fig">${fig({ id: 'wcp', series, xLabel: 'x/c · station η = ' + eta.toFixed(4), yLabel: 'Cp (negative upward)', invertY: true, legend: 'tr', aria: 'Pressure comparison at a span station' })}</div><p class="caption">Panel values are centroid data interpolated linearly in chord and span inside sample coverage. LWM is evaluated at this recorded station; measured markers are discrete source samples. ${esc(c.reference.correction)}</p>`;
     // coefficients
     const coefHtml = table(['Quantity', 'Experiment · reference', 'Panel · ' + PANEL3D, LWM], [
       ['Full-wing CL · full pressure projection', fmt(ref), fmt(co.CL), fmt(ml[0]) + ' ± ' + fmt(2 * sd(0), 2)],
@@ -272,8 +296,8 @@
     // span
     const sl = WC.spanLoads(c, p);
     const spanHtml = `<div class="fig">${fig({ id: 'span', h: 380, series: [
-      { kind: 'band', x: sl.lwm.map(s => s.eta), y: sl.lwm.map(s => s.cl - 2 * s.std), y2: sl.lwm.map(s => s.cl + 2 * s.std), color: C.ml, label: 'LWM section cl ± 2σ' },
-      { kind: 'line', x: sl.lwm.map(s => s.eta), y: sl.lwm.map(s => s.cl), color: C.ml, label: 'LWM mean' },
+      { kind: 'band', x: sl.lwm.map(s => s.eta), y: sl.lwm.map(s => s.cl - 2 * s.std), y2: sl.lwm.map(s => s.cl + 2 * s.std), color: C.ml, label: 'Machine learning · LWM ± 2σ' },
+      { kind: 'line', x: sl.lwm.map(s => s.eta), y: sl.lwm.map(s => s.cl), color: C.ml, label: 'Machine learning · LWM mean' },
       { kind: 'line', x: sl.panel.map(s => s.eta), y: sl.panel.map(s => s.cl), color: C.panel, label: 'Panel strips · ' + PANEL3D },
       { kind: 'points', x: sl.panel.map(s => s.eta), y: sl.panel.map(s => s.cl), color: C.panel, r: 2.6 },
     ], xLabel: 'η = y / semi-span', yLabel: 'section cl', legend: 'bl', aria: 'Spanwise section lift' })}</div><p class="caption">Section lift integrated from each model's own pressures. No measured section lift is available for these cases, so no experimental curve is drawn. Bands are pointwise model ±2σ, not a calibrated 95% guarantee.</p>`;
@@ -354,6 +378,7 @@
   }
   $('modeSection').onclick = () => setMode('section'); $('modeWing').onclick = () => setMode('wing');
   $('helpBtn').onclick = () => { const d = $('docHelp'); if (d) { d.open = true; d.scrollIntoView({ behavior: 'smooth' }); } };
+  let resizeTimer; window.addEventListener('resize',()=>{clearTimeout(resizeTimer);resizeTimer=setTimeout(()=>{if(state.mode==='wing')renderWing();else if(sec.data)renderSection();},150);});
   window.addEventListener('hashchange', () => { if (location.hash === '#wing' && state.mode !== 'wing') setMode('wing'); else if (location.hash === '#comparison' && state.mode !== 'section') setMode('section'); else if (location.hash === '#help') $('helpBtn').click(); });
   (async () => {
     try { await initSection(); } catch (e) { $('strip').innerHTML = `<p class="err">${esc(e.message)}</p>`; $('chips').innerHTML = chip('bad', 'load error'); }

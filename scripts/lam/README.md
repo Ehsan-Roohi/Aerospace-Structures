@@ -15,7 +15,7 @@ Use an isolated Python 3.12 environment on project storage. Tested packages and 
 
 1. Obtain the pinned upstream source and the three files in `ADAPT/model` from that commit; their hashes are enforced by `export_adapt.py`.
 2. `node scripts/lam/export_clark_y.cjs`
-3. `python scripts/lam/export_adapt.py --upstream UPSTREAM_PATH --clark-y output/lam-current/clark-y.csv --output output/lam-current/actual-predictions.json`
+3. `python scripts/lam/export_adapt.py --upstream UPSTREAM_PATH --clark-y output/lam-current/clark-y.csv --alpha-step .1 --output output/lam-current/actual-predictions.json`
 4. Copy the actual output to `docs/wing-panel-stress-analyzer/ml-airfoil/demo.json`, then run `node scripts/lam/add_panel_baseline.cjs` to add current 320-panel incompressible references. The source module hash, trailing-edge closure and model-form differences are recorded.
 5. Validate with `node scripts/lam/test_screen.cjs` and `node scripts/lam/test_page.cjs` after exporting the actual result to the demo file.
 
@@ -32,3 +32,5 @@ The in-app Help uses NASA TMR CFL3D/SA reference data, alpha 0 degrees, Mach .15
 Generate the NASA contour from that formula with 401 cosine stations per surface, retaining the leading-edge coordinate separately on both branches for the upstream CSV surface splitter. Run `export_adapt.py --clark-y NASA_CONTOUR.csv --custom-name "NACA 0012 (NASA TMR geometry)" --upstream UPSTREAM --output output/lam-current/cfd-matched-inference.json`. Re is comparison context only and not consumed by ADAPT. Download `n0012cp_cfl3d_sa.dat` and `n0012clcd_cfl3d_sa.dat` from https://tmbwg.github.io/turbmodels/NACA0012_validation/ to `output/lam-current/`, then run `node scripts/lam/build_cfd_example.cjs`. The generator checks the ML surface representation against the actual NASA formula to 1e-6 chord and executes the current panel code on that formula.
 
 The help distinguishes Cp comparisons from total drag, shows the surrogate's nonzero lift in a symmetric case, and provides checked examples for the lift screen, reference-point moment transfer and low-Re withholding. Run `test_help.cjs` for source coverage, geometry, arithmetic and UI actions.
+
+The public angle control records actual ADAPT predictions for all four sections from 0 to 4 degrees at 0.1-degree increments (164 cases). The slider selects these records; no Cp/covariance interpolation is used.

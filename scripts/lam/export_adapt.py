@@ -15,7 +15,7 @@ def weights(surface_u,surface_l,np):
  return w
 
 def main():
- p=argparse.ArgumentParser();p.add_argument('--upstream',type=Path,required=True);p.add_argument('--output',type=Path,required=True);p.add_argument('--clark-y',type=Path);p.add_argument('--custom-name',default='Clark Y');a=p.parse_args()
+ p=argparse.ArgumentParser();p.add_argument('--upstream',type=Path,required=True);p.add_argument('--output',type=Path,required=True);p.add_argument('--clark-y',type=Path);p.add_argument('--custom-name',default='Clark Y');p.add_argument('--alpha-step',type=float,default=4.);a=p.parse_args();assert 0<a.alpha_step<=4 and abs(round(4/a.alpha_step)*a.alpha_step-4)<1e-9
  for name,expected in EXPECTED.items():
   assert hashlib.sha256((a.upstream/'ADAPT/model'/name).read_bytes()).hexdigest()==expected,'Unexpected upstream checkpoint'
  import numpy as np,torch,gpytorch,pandas,scipy,sklearn
@@ -47,7 +47,7 @@ def main():
  if a.clark_y:candidates.append((a.custom_name,str(a.clark_y)))
  cases=[];start=time.perf_counter()
  for name,geometry in candidates:
-  for alpha in [0.,4.]:
+  for alpha in [round(i*a.alpha_step,8) for i in range(round(4/a.alpha_step)+1)]:
    x=torch.tensor((1-np.cos(np.linspace(0,np.pi,81)))/2)
    inp=adapt.input_data(geometry,alpha=alpha,mach=.15,manual_points=[x,x],num_auto_points=len(x),output_device=torch.device('cpu'),model_version='pca')
    result=model.predict(inp,get_coeff=False,num_weights=1);dist=result['cp_distribution'];mean=dist.mean.detach().cpu().numpy();cov=dist.covariance_matrix.detach().cpu().numpy()

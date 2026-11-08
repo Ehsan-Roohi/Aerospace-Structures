@@ -11,12 +11,18 @@ or curved. The new model computes both quantities and re-solves pressure.
 
 Lengths are mm, forces N, moments N mm, stresses MPa and rotations radians.
 The material/reference span coordinate is retained during load transfer. Within
-each initially straight reference segment the elastic Kirchhoff equations are
+each initially straight reference segment the force/moment equations are shared
+by the Kirchhoff and Reissner paths. For hollow (Kirchhoff) sections:
 
 - `dr/ds = Q e1 (1 + epsilon)`;
 - `dQ/ds = Q hat(kappa)` (unit-quaternion integration);
 - `dn/ds = -f`;
 - `dm/ds = -(dr/ds) cross n - c`.
+
+For solid foam, the Reissner translation equation is
+`dr/ds = Q [1 + epsilon, gamma2, gamma3]`, with
+`[gamma2,gamma3] = C_s [n2,n3]` from the refined, heterogeneous section
+shear compliance. Rotational and equilibrium equations above are unchanged.
 
 The existing positive-definite composite section law maps
 `[epsilon,kappa2,kappa3,kappa1]` to `[n1,m2,m3,m1]`. Axial/biaxial coupling,

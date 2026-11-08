@@ -1,0 +1,22 @@
+const assert=require('node:assert/strict'),fs=require('fs'),path=require('path');
+const L=require('../lwm-client.js'),bench=JSON.parse(fs.readFileSync(path.join(__dirname,'../../wing-comparison/benchmarks.json')));
+const c=bench.cases[0],q={section:'NACA 0012',alphaDeg:c.conditions.effectiveAlphaDeg,mach:c.conditions.effectiveMach,semiSpanOverChord:c.conditions.semiSpanOverChord};
+(async()=>{
+assert.notEqual(L.canonical(q),L.canonical({...q,alphaDeg:q.alphaDeg+1e-6}));
+assert.throws(()=>L.canonical({...q,mach:NaN}));
+const mock=L.createClient({transport:L.createMockTransport(bench,{coldLoadMs:999999})});await mock.probe();
+assert.equal(mock.domain.coldLoadSeconds,null);assert.equal(mock.checkDomain({...q,alphaDeg:q.alphaDeg+1e-6}).ok,false);
+assert.equal(mock.checkDomain({...q,reynolds:400000}).ok,false);
+const valid=(await mock.predict([{...q,id:'external-id'}],'full'))[0];assert.equal(valid.status,'ok');assert.equal(mock.stats.coldLoadMs,0);
+assert.throws(()=>L.validateResult({...valid,integratedOrder:L.ORDER.slice().reverse()},'full'));
+assert.throws(()=>L.validateResult({...valid,integratedMean:[NaN,0,0,0]},'mean'));
+for(const cov of [[[1,2,0,0],[2,1,0,0],[0,0,1,0],[0,0,0,1]],[[1,1,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]],[[1]]])assert.throws(()=>L.validateResult({...valid,integratedCovariance:cov},'full'));
+L.validateResult({...valid,integratedCovariance:[[1,1,0,0],[1,1,0,0],[0,0,0,0],[0,0,0,0]]},'full');
+L.validateResult({...valid,integratedCovariance:Array.from({length:4},()=>[0,0,0,0])},'full');
+assert.throws(()=>L.validateResult({...valid,stations:[{eta:.2,cl:1,clStd:-1}]},'full'));
+await assert.rejects(mock.screen([q],{objective:'minRootBending',minCL:NaN}));
+const empty=await mock.screen([{...q,alphaDeg:30}],{topK:1});assert.equal(empty.top.length,0);
+const off=await L.createClient().screen([q]);assert.equal(off.timing,null);assert.equal(off.state,'offline');
+const bad=L.createClient({transport:async(p,b)=>p==='/domain'?{...mock.domain,mock:false}:{results:[]}});await bad.probe();await assert.rejects(bad.predict([q],'mean'),/Incomplete/);
+console.log('PASS independent client: exact keys, input/ID isolation, replay-only domain, honest timing, response order, finite means, PSD covariance, invalid uncertainty and offline paths');
+})().catch(e=>{console.error(e);process.exitCode=1;});

@@ -1,0 +1,34 @@
+const fs=require('fs'),path=require('path'),assert=require('node:assert/strict');
+const {JSDOM}=require(process.env.MIE446_JSDOM_MODULE||path.resolve('output/ui-test-deps/node_modules/jsdom'));const base=path.resolve(__dirname,'..');
+const load=f=>fs.readFileSync(path.join(base,f),'utf8');const data=JSON.parse(load('demo.json')),bench=JSON.parse(load('../wing-comparison/benchmarks.json'));
+const tick=()=>new Promise(r=>setTimeout(r,0));
+(async()=>{const dom=new JSDOM(load('index.html'),{url:'https://example.test/ml-airfoil/#comparison',runScripts:'outside-only'}),w=dom.window,d=w.document,errors=[];w.console.error=e=>errors.push(e);w.scrollTo=()=>{};w.HTMLElement.prototype.scrollIntoView=()=>{};
+w.fetch=async url=>({ok:true,json:async()=>structuredClone(String(url).includes('benchmarks')?bench:String(url).includes('experiment-reference')?JSON.parse(load('experiment-reference.json')):String(url).includes('cfd-reference')?JSON.parse(load('cfd-reference.json')):data)});
+const workers=[];w.Worker=class{constructor(){workers.push(this)}postMessage(v){this.request=v}terminate(){this.terminated=true}};
+for(const f of ['screen.js','panel2d.js','panel-geometry.js','wing-compare.js','lwm-client.js','app.js'])w.eval(load(f));for(let i=0;i<5;i++)await tick();
+const change=(id,v,type='input')=>{d.getElementById(id).value=String(v);d.getElementById(id).dispatchEvent(new w.Event(type));};const click=id=>d.getElementById(id).click();
+assert(!d.querySelector('.err'),d.body.textContent.slice(-1000));assert.equal(d.querySelectorAll('#tabs button').length,4);assert(d.querySelector('#tab-cp svg'));assert(d.querySelector('#tab-lift line[stroke-dasharray="3 5"]') || d.querySelector('#panels line[stroke-dasharray="3 5"]'),'selected-angle marker is drawn');
+assert.equal(d.querySelectorAll('#alpha option').length,301);
+for(const a of [0.1,1.7,2.5,3.9]) { change('alphaSlider',a); assert.equal(+d.getElementById('alpha').value,a); }
+click('helpBtn');assert(d.getElementById('docHelp').open);
+for(const k of ['lift','quarter','reference','lowre']) { d.querySelector('[data-worked="'+k+'"]').click(); assert.equal(d.getElementById('foil').value,'Clark Y'); assert.equal(+d.getElementById('alpha').value,4); if(k==='lowre') assert.match(d.getElementById('tab-screen').textContent,/withheld/); }
+change('foil','NACA 0012 (NASA TMR geometry)');change('re',6000000);
+change('panelN',80);assert.match(d.getElementById('chips').textContent,/80\/side/);
+change('panelN',15);assert.match(d.getElementById('strip').textContent,/16 to 512/);change('panelN',80);
+change('alpha',3.7);assert.match(d.getElementById('chips').textContent,/no CFD at this angle/);
+change('alpha',15);assert.match(d.getElementById('chips').textContent,/no recorded ML/);assert(!d.getElementById('tab-cp').textContent.includes('ADAPT mean'));
+change('referenceSet','experiment');click('useReference');assert.equal(d.getElementById('re').value,'1800000');
+change('alpha',16);assert.match(d.getElementById('chips').textContent,/panel withheld/);assert(d.querySelectorAll('#tab-cp circle').length>0);assert(!d.getElementById('tab-cp').textContent.includes('ADAPT mean'));
+click('modeWing');for(let i=0;i<5;i++)await tick();assert.equal(d.querySelectorAll('#eta option').length,10);assert.match(d.getElementById('strip').textContent,/0.6889/);
+click('solve');const old=workers[0];change('wing',1,'change');assert(old.terminated);const prior=d.getElementById('strip').textContent;old.onmessage({data:{result:bench.cases[0].panels[2].result}});assert.equal(d.getElementById('strip').textContent,prior);
+assert.equal(d.querySelectorAll('#eta option').length,7);click('solve');workers[1].onmessage({data:{result:bench.cases[1].panels[2].result}});assert.match(d.getElementById('chips').textContent,/re-solved in browser/);
+change('endpoint','mock');click('probe');for(let i=0;i<4;i++)await tick();assert.match(d.getElementById('tab-svc').textContent,/MOCK/);assert(!d.getElementById('screenBtn').disabled);
+const c=bench.cases[1];change('candSection','NACA 0015');change('candAlpha',c.conditions.effectiveAlphaDeg);change('candMach',c.conditions.effectiveMach);change('candSC',c.conditions.semiSpanOverChord);click('screenBtn');for(let i=0;i<5;i++)await tick();assert.match(d.getElementById('tab-svc').textContent,/0.3649/);
+change('endpoint','');click('probe');for(let i=0;i<4;i++)await tick();assert(d.getElementById('screenBtn').disabled);assert.match(d.getElementById('tab-svc').textContent,/Offline/);
+click('modeSection');for(let i=0;i<3;i++)await tick();
+const source=JSON.parse(load('cfd-reference.json'));const imported={...source,airfoil:'NACA 0012',mach:0.2};
+Object.defineProperty(d.getElementById('referenceFile'),'files',{configurable:true,value:[{size:10000,text:async()=>JSON.stringify(imported)}]});
+d.getElementById('referenceFile').dispatchEvent(new w.Event('change'));for(let i=0;i<4;i++)await tick();click('useReference');
+assert.match(d.getElementById('foil').value,/reference geometry/);assert.match(d.getElementById('chips').textContent,/CFD matched at 0/);assert.match(d.getElementById('chips').textContent,/no recorded ML/);
+assert.equal(errors.length,0);dom.window.close();console.log('PASS independent workspace UI: 2D meshes, missing ML/CFD angles, post-limit reference-only points, 3D cases/stations, stale workers, mock screening, offline recovery');
+})().catch(e=>{console.error(e);process.exitCode=1;});

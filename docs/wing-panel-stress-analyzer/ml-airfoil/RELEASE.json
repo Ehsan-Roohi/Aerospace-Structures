@@ -1,0 +1,80 @@
+{
+  "application": "Aero comparison workspace (section 2D and finite wing 3D)",
+  "version": "2.0.1",
+  "date": "2026-11-08",
+  "supersedes": "ml-airfoil long page (comparison.js, page.js, help.js) and the separate wing-comparison page; wing-comparison/index.html now redirects to ml-airfoil/#wing and its data files are unchanged",
+  "scope": "One Wing Lab style workspace: side controls, central tabbed figure (Cp, Coefficients, Lift curve or Span, Screening or Prediction service), concise results strip, sources and limitations collapsible. Legends inside every figure; no bar charts.",
+  "solvers_and_models": {
+    "section_panel": "WingAirfoilPanel2D 1.1.0, linear-vortex stream-function panels (panel2d.js and panel-geometry.js unchanged, SHA-256 pinned in demo.json)",
+    "section_ml": "ADAPT, Large Airfoil Model (PCA-input SVDKL Gaussian process), hwlee924/Large-Airfoil-Model commit 5353a862ec8c453788efef4e8aa8040148efbe6c, one checkpoint, recorded CPU inference in demo.json; two-dimensional only",
+    "wing_panel": "WingAeroPanel 0.3.2-exp.4 (Wing AeroStruct surface-panel solver), recorded meshes in wing-comparison/benchmarks.json and browser re-solve through wing-comparison/worker.js",
+    "wing_ml": "Large Wing Model (deep-kernel Gaussian process with LAM prior), hwlee924/Large-Wing-Model commit 4cca875b84b97571569070a8032ce304db3d7311, two checkpoints averaged, no conditioning on measured lift; three-dimensional only, never mixed with the section model",
+    "execution_provenance": "UMass Unity, 2026-11-08, for the recorded LWM inference and panel solves; shown only in Sources and execution. Full-covariance inference for the two recorded wings (about 7400 points) took 44.84 s on 16 CPU threads after model preparation, a batch time, not per-design latency."
+  },
+  "recorded_benchmarks": [
+    {
+      "case": 91,
+      "wing": "NACA 0012 rectangular, alpha 8.85 deg, M 0.13, s/c 2.95, NASA TN D-8307",
+      "CL": {
+        "reported": 0.667,
+        "panel_1152": 0.68888764,
+        "lwm_full_pressure": 0.6693072,
+        "lwm_paper_normal_only": 0.65687873
+      },
+      "cp_mae_matched": {
+        "panel": 0.09322,
+        "lwm": 0.04184,
+        "points": 580,
+        "excluded_from_panel": 10
+      }
+    },
+    {
+      "case": 92,
+      "wing": "NACA 0015, alpha 4.1 deg, M 0.17, s/c 3.2882, NASA TP-3151 (tunnel-corrected Cp)",
+      "CL": {
+        "reported": 0.353,
+        "panel_1152": 0.33886882,
+        "lwm_full_pressure": 0.36492633,
+        "lwm_paper_normal_only": 0.36291287
+      },
+      "cp_mae_matched": {
+        "panel": 0.10316,
+        "lwm": 0.05227,
+        "points": 180
+      }
+    }
+  ],
+  "prediction_service": {
+    "status": "adapter only; no live model in this build and no cluster job started",
+    "client": "lwm-client.js: canonical cache, domain gating, mean screening then full covariance for the top candidates, cold/warm timing, offline state",
+    "service": "Protocol host and exact recorded replay; --runtime loads a user-supplied plugin. No real LWM runtime is implemented or weight-tested in this release.",
+    "honesty": "no number is shown for a geometry the service did not answer; the mock refuses unrecorded cases"
+  },
+  "tests": {
+    "runner": "node validation/run-tests.js",
+    "count": 12,
+    "passed": 12,
+    "service_selftest": "python3 service/lwm_service.py --selftest ../wing-comparison/benchmarks.json",
+    "browser": "Independently exercised in the in-app browser: section/wing rendering and fresh 1152-panel solves for both reference wings. JSDOM regression separately checks references, worked examples, all controller paths, stale workers, mock screening and offline recovery.",
+    "independent": [
+      "node validation/independent-client.cjs",
+      "node validation/workspace-ui.cjs",
+      "python3 validation/test_service.py"
+    ]
+  },
+  "limitations": [
+    "Section ADAPT domain Re > 1e6, alpha -4 to 12 deg, Mach 0 to 0.9; Re is context only; recorded angles 0 to 12 deg in 0.1 deg steps for six section contexts",
+    "Reference CFD and wind-tunnel values appear only at their own angles and conditions; no interpolation; measured section lift is not available for the wing cases",
+    "Panel solvers: attached, incompressible, inviscid flow; no stall, boundary layer, viscous or total drag",
+    "Comparable but not identical geometries between panel (analytic closed trailing edge, rounded tip) and LWM (sampled section, implicit tip); NACA 0015 case uses tunnel-corrected Cp with a retained conditions discrepancy",
+    "No low-Reynolds, stall, structural, viscous-drag or flight-safety validation is implied",
+    "Independent-model consultation for this release was waived by the instructor; no consultation is recorded or claimed"
+  ],
+  "independent_review": {
+    "status": "passed numerical and software checks; not general ML accuracy or physical-design validation",
+    "real_runtime": "Not supplied or weight-tested; plugin contract only",
+    "mock": "Recorded replay only; no synthetic model timing",
+    "uncertainty": "Full joint-covariance projection retained in recorded data; pointwise 2sigma is not a calibrated 95% guarantee",
+    "report": "validation/REVIEW.json"
+  }
+}

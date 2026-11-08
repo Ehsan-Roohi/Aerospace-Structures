@@ -1,0 +1,57 @@
+{
+  "version": "2.0.1",
+  "baseCommit": "7c08f28cedc34eb24b6203b030ffa76a873fb996",
+  "source": {
+    "kind": "Claude downloadable patch",
+    "chat": "https://claude.ai/chat/8a60d171-48c9-47e8-9059-f7af41bc8a31",
+    "patchSha256": "ce8871ec7c0d2825037962bd583435baecdd3dfb14735c3e520a51554c87a08a",
+    "verification": "All ten comparison files matched supplied SHA256 after LF normalization before edits; root README intentionally excluded."
+  },
+  "repairs": [
+    "Exact cache inputs; no rounding of nearby geometries/conditions",
+    "Mock accepts only exact recorded benchmark combinations; no invented input-validity envelope",
+    "Removed synthetic 1.2-second cold-load timing; service timing measured, browser replay explicitly zero model work",
+    "Input admission, response completeness and coefficient-order checks",
+    "Finite, symmetric positive-semidefinite full covariance validation, including small-scale matrices",
+    "No unrelated ML record borrowed for transferred/imported geometries; current imported reference replaces old geometry",
+    "Recompute really runs panel at selected mesh, including baseline160",
+    "Offline screening and malformed candidate errors are explicit",
+    "Selected-angle plot marker repaired",
+    "Real runtime is explicitly an unimplemented/unvalidated plugin contract; not advertised as live model support",
+    "Pointwise 2sigma distinguished from a calibrated 95 percent guarantee"
+  ],
+  "validation": {
+    "originalBenchmarkSuite": "12 passed",
+    "independentClient": "passed precise keys, ID handling, malformed responses, covariance and offline checks",
+    "independentPython": "passed input/timing/cache/runtime-output/covariance checks",
+    "serviceHttpSelftest": "passed recorded replay, cold/warm measurement, unknown case refusal and cache",
+    "controllerJSDOM": "passed section/wing modes, angles, worked examples, mesh controls, imported reference matching, stale worker rejection, mock and offline paths",
+    "sectionAnalytic": "Joukowski at80/160/320 panels per side; finest CL absolute error2.5620162114e-7; Cp RMS4.3434958500e-4; max Cp error.0038439398; no arbitrary airfoil accuracy guarantee",
+    "pressureTransfer": "Exact signs, reference transfer, joint covariance cross-term, scope and malformed-data tests passed",
+    "recordedInference": "726 records validated; integration consistency and current course links passed",
+    "wingWorker": "Actual worker numerical reproduction passed for both coarse reference cases",
+    "interactiveBrowser": "Actual1152-panel re-solves observed for both reference wings; plots and named solver legends visually inspected"
+  },
+  "limits": [
+    "No new CFD, experiment, model training or HPC run",
+    "No live general LWM runtime or server deployed",
+    "Mock tests are not evidence of general LWM prediction accuracy",
+    "Recorded benchmark Cp/CL and underlying solvers/data unchanged",
+    "Not validation of low-Reynolds foam wings, stall, viscous drag, structural response or flight safety"
+  ],
+  "scope": {
+    "applicationChanges": [
+      "docs/wing-panel-stress-analyzer/ml-airfoil/",
+      "docs/wing-panel-stress-analyzer/wing-comparison/index.html"
+    ],
+    "testChangesOnly": [
+      "scripts/lam/test_comparison.cjs",
+      "scripts/lam/test_page.cjs",
+      "scripts/lam/test_help.cjs",
+      "scripts/lam/test_handoff.cjs",
+      "scripts/lwm/test_wing_comparison_page.cjs"
+    ],
+    "optimization": "unchanged",
+    "otherApplications": "unchanged"
+  }
+}

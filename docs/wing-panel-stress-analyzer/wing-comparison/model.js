@@ -1,0 +1,6 @@
+(function(root){'use strict';
+function interp(points,x){if(!points.length||x<points[0][0]||x>points.at(-1)[0])return null;let i=0;while(i<points.length-2&&points[i+1][0]<x)i++;const a=points[i],b=points[i+1];return a[1]+(b[1]-a[1])*(x-a[0])/(b[0]-a[0]);}
+function pressure(panel,eta,surface,x){const rows=panel.result.chordwise,L=panel.geometry.semiSpan,ys=rows.map(r=>r.y_mm/L);if(eta<ys[0]||eta>ys.at(-1))return null;let j=0;while(j<rows.length-2&&ys[j+1]<eta)j++;const a=interp(rows[j][surface],x),b=interp(rows[j+1][surface],x);return a==null||b==null?null:a+(b-a)*(eta-ys[j])/(ys[j+1]-ys[j]);}
+function errors(c,p){const matched=c.reference.points.map(q=>({q,v:pressure(p,q.eta,q.surface==='U'?'upper':'lower',q.x)})).filter(r=>r.v!==null);if(!matched.length)return {n:0,panel:null,ml:null};return {n:matched.length,panel:matched.reduce((s,{q,v})=>s+Math.abs(v-q.cp),0)/matched.length,ml:matched.reduce((s,{q})=>s+Math.abs(q.lwmMean-q.cp),0)/matched.length};}
+const api={interp,pressure,errors};if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.WingComparison=api;
+})(globalThis);

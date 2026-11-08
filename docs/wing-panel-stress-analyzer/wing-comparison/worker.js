@@ -1,0 +1,1 @@
+'use strict';importScripts('../wing-aero/aero_bundle.js');onmessage=({data})=>{try{const model=WingAeroPanel.prepare(data.geometry,data.mesh,{progress:message=>postMessage({progress:message})}),result=WingAeroPanel.evaluate(model,data.flow);postMessage({result:WingAeroPanel.compactResult(model,result)});}catch(e){postMessage({error:e.message});}};

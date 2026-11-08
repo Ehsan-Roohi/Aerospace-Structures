@@ -1,0 +1,22 @@
+name: Wing reference comparison
+on:
+  push:
+    branches: [main, codex/adapt-help-cfd]
+    paths: ['docs/wing-panel-stress-analyzer/wing-comparison/**', 'docs/wing-panel-stress-analyzer/wing-aero/**', 'scripts/lwm/test_*.cjs', '.github/workflows/wing-comparison.yml']
+  pull_request:
+    paths: ['docs/wing-panel-stress-analyzer/wing-comparison/**', 'scripts/lwm/test_*.cjs', '.github/workflows/wing-comparison.yml']
+  workflow_dispatch:
+jobs:
+  numerical-and-ui:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --prefix /tmp/wing-reference-tests --no-audit --no-fund jsdom@26
+      - run: node scripts/lwm/test_wing_comparison.cjs
+      - run: node scripts/lwm/test_wing_comparison_page.cjs
+        env:
+          MIE446_JSDOM_MODULE: /tmp/wing-reference-tests/node_modules/jsdom

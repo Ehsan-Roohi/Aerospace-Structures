@@ -1061,6 +1061,7 @@ window.downloadNamedLabFile = (defaultName, blob, doc = document) => {
   <button class="workspace-link" type="button" aria-current="page" id="currentPrintedWing">Wing</button>
   <button class="workspace-link" type="button" id="toMetalWing">Full-scale wing</button>
   <a class="workspace-link" href="https://vinco-rc.com/?generator=wing" target="_blank" rel="noopener noreferrer">Wing geometry tool</a>
+  <a class="workspace-link" href="ml-airfoil/#comparison" target="_blank" rel="noopener" title="Compare panel, CFD, wind-tunnel and ML results">◈ Aero comparison</a>
   <a class="workspace-link" href="../hydrofoil-cavitation-lab/" target="_blank" rel="noopener noreferrer">Cavitation</a>
 </nav>
 <div id="app" hidden>
@@ -4494,7 +4495,8 @@ const Lecture03BeamCases = Object.freeze({
       <button class="workspace-link" type="button" data-stage="wing" aria-pressed="false">Wing</button>
       <button class="workspace-link" type="button" data-stage="metal" aria-pressed="false">Full-scale wing</button>
       <details class="bl-companion"><summary class="workspace-link">Wing geometry tool</summary><div class="bl-companion-pop" data-companion="vinco"></div></details>
-      <a class="workspace-link" href="../hydrofoil-cavitation-lab/" target="_blank" rel="noopener noreferrer">Cavitation</a>
+      <a class="workspace-link" href="ml-airfoil/#comparison" target="_blank" rel="noopener" title="Compare panel, CFD, wind-tunnel and ML results">◈ Aero comparison</a>
+  <a class="workspace-link" href="../hydrofoil-cavitation-lab/" target="_blank" rel="noopener noreferrer">Cavitation</a>
     </nav>
     <div class="bl-start-guide"><button type="button" class="bl-btn bl-btn-primary" id="beamGuideOpen">User manual · Start here</button><span>1 · Length, material &amp; mesh → 2 · Section shape &amp; dimensions → 3 · Supports → 4 · Loads &amp; values → 5 · Solve</span></div>
     <p class="bl-intro">Results belong to the last <b>solved</b> model. Changes remain pending until you press <b>Solve</b>.</p>
@@ -23204,7 +23206,8 @@ const METAL_REFERENCE = {
     <button class="workspace-link" type="button" id="mBackWing">Wing</button>
     <button class="workspace-link" type="button" aria-current="page" id="mCurrentWing">Full-scale wing</button>
     <a class="workspace-link" href="https://vinco-rc.com/?generator=wing" target="_blank" rel="noopener noreferrer">Wing geometry tool</a>
-    <a class="workspace-link" href="../hydrofoil-cavitation-lab/" target="_blank" rel="noopener noreferrer">Cavitation</a>
+    <a class="workspace-link" href="ml-airfoil/#comparison" target="_blank" rel="noopener" title="Compare panel, CFD, wind-tunnel and ML results">◈ Aero comparison</a>
+  <a class="workspace-link" href="../hydrofoil-cavitation-lab/" target="_blank" rel="noopener noreferrer">Cavitation</a>
     <a class="workspace-link" href="${MODEL3D}" target="_blank" rel="noopener">Aircraft 3-D ↗</a>
     <a class="workspace-link" href="${REPO}" target="_blank" rel="noopener">CAD &amp; reference files ↗</a>
   </nav>
@@ -25239,8 +25242,8 @@ window.WingAeroStructResults = (() => {
     const foilAlpha=el('input',{id:'wxFoilAlpha',type:'number',min:'-15',max:'15',step:'.5',value:'4','aria-label':'2D angle of attack relative to section chord, degrees'});
     const foilN=el('input',{id:'wxFoilN',type:'number',min:'16',max:'512',step:'1',value:'160','aria-label':'2D panels per surface',title:'16–512 panels per side; total contour panels = twice this value. Dense solves become slower as the count increases.'});
     const foilSolve=el('button',{type:'button',class:'btn primary',id:'wxFoilSolve',text:'Solve 2D airfoil'});
-    const foilML=el('button',{type:'button',class:'btn',id:'wxFoilADAPT',text:'Compare with ADAPT · ML'});
-    const foilMLScope=el('span',{class:'note',text:'ADAPT: Re > 1,000,000 · recorded cases only.'});
+    const foilML=el('button',{type:'button',class:'btn',id:'wxFoilADAPT',text:'◈ Compare panel / CFD / experiment / ML'});
+    const foilMLScope=el('span',{class:'note',text:'Reference coverage varies · no CFD is run here.'});
     foilML.addEventListener('click',()=>{try{
       if(foilReadPending)throw Error('Wait for the airfoil file to finish loading.');
       if(!foilAlpha.value.trim())throw Error('Enter a 2D angle of attack.');
@@ -26963,7 +26966,7 @@ if(typeof module!=='undefined'&&module.exports)module.exports=WingDesignAdvisor;
 })();
 
 </script>
-<script src="ml-airfoil/handoff.js?v=2ca1324ebff3"></script>
+<script src="ml-airfoil/handoff.js?v=39f901a9b7a2"></script>
 <script src="nonlinear/flexible-ui.js?v=8b80ac5adf5b"></script>
 </body>
 </html>

@@ -15,7 +15,7 @@ def weights(surface_u,surface_l,np):
  return w
 
 def main():
- p=argparse.ArgumentParser();p.add_argument('--upstream',type=Path,required=True);p.add_argument('--output',type=Path,required=True);p.add_argument('--clark-y',type=Path);p.add_argument('--custom-name',default='Clark Y');p.add_argument('--alpha-step',type=float,default=4.);a=p.parse_args();assert 0<a.alpha_step<=4 and abs(round(4/a.alpha_step)*a.alpha_step-4)<1e-9
+ p=argparse.ArgumentParser();p.add_argument('--upstream',type=Path,required=True);p.add_argument('--output',type=Path,required=True);p.add_argument('--clark-y',type=Path);p.add_argument('--custom-name',default='Clark Y');p.add_argument('--alpha-step',type=float,default=4.);p.add_argument('--alpha-max',type=float,default=4.);p.add_argument('--alpha-min',type=float,default=0.);p.add_argument('--mach',type=float,default=.15);p.add_argument('--only-custom',action='store_true');p.add_argument('--airfoil');p.add_argument('--additional-geometry',type=Path);a=p.parse_args();assert 0<a.alpha_step<=4 and 0<a.alpha_max<=12 and abs(round(a.alpha_max/a.alpha_step)*a.alpha_step-a.alpha_max)<1e-9
  for name,expected in EXPECTED.items():
   assert hashlib.sha256((a.upstream/'ADAPT/model'/name).read_bytes()).hexdigest()==expected,'Unexpected upstream checkpoint'
  import numpy as np,torch,gpytorch,pandas,scipy,sklearn
@@ -44,16 +44,19 @@ def main():
  spec=importlib.util.spec_from_file_location('upstream_adapt',source);adapt=importlib.util.module_from_spec(spec);spec.loader.exec_module(adapt)
  model,_=adapt.unpack_model(model_version='pca',output_device=torch.device('cpu'))
  candidates=[('NACA 0012','NACA 0012'),('NACA 2412','NACA 2412'),('NACA 4412','NACA 4412')]
+ if a.only_custom:candidates=[]
  if a.clark_y:candidates.append((a.custom_name,str(a.clark_y)))
+ if a.additional_geometry:candidates.append(('NACA 0012 (NASA TMR geometry)',str(a.additional_geometry)))
+ if a.airfoil:candidates=[p for p in candidates if p[0]==a.airfoil]
  cases=[];start=time.perf_counter()
  for name,geometry in candidates:
-  for alpha in [round(i*a.alpha_step,8) for i in range(round(4/a.alpha_step)+1)]:
+  for alpha in [round(a.alpha_min+i*a.alpha_step,8) for i in range(round((a.alpha_max-a.alpha_min)/a.alpha_step)+1)]:
    x=torch.tensor((1-np.cos(np.linspace(0,np.pi,81)))/2)
-   inp=adapt.input_data(geometry,alpha=alpha,mach=.15,manual_points=[x,x],num_auto_points=len(x),output_device=torch.device('cpu'),model_version='pca')
+   inp=adapt.input_data(geometry,alpha=alpha,mach=a.mach,manual_points=[x,x],num_auto_points=len(x),output_device=torch.device('cpu'),model_version='pca')
    result=model.predict(inp,get_coeff=False,num_weights=1);dist=result['cp_distribution'];mean=dist.mean.detach().cpu().numpy();cov=dist.covariance_matrix.detach().cpu().numpy()
    upper=np.column_stack([x.numpy(),inp.splines[0](x.numpy())]);lower=np.column_stack([x.numpy(),inp.splines[1](x.numpy())]);w=weights(upper,lower,np)
-   case={'airfoil':name,'alphaDeg':alpha,'mach':.15,'nominalRe':3e6,'upper':upper.tolist(),'lower':lower.tolist(),'cpMean':mean.tolist(),'cpStd':np.sqrt(np.diag(cov)).tolist(),'forceMoment':{'order':['CA','CN','CmQuarterNoseUp'],'mean':(w@mean).tolist(),'covariance':(w@cov@w.T).tolist()}}
+   case={'airfoil':name,'alphaDeg':alpha,'mach':a.mach,'nominalRe':3e6,'upper':upper.tolist(),'lower':lower.tolist(),'cpMean':mean.tolist(),'cpStd':np.sqrt(np.diag(cov)).tolist(),'forceMoment':{'order':['CA','CN','CmQuarterNoseUp'],'mean':(w@mean).tolist(),'covariance':(w@cov@w.T).tolist()}}
    cases.append(case);print(name,alpha,case['forceMoment']['mean'],flush=True)
  output={'format':'wing-lam-screen-v1','upstream':{'repo':'https://github.com/hwlee924/Large-Airfoil-Model','commit':COMMIT,'sourceBlob':'9ebeb52726f438e1422f1e4b22b3acfc3dcaecd9','weightsSha256':EXPECTED},'paper':'https://doi.org/10.1016/j.ast.2026.113783','versions':{m.__name__:m.__version__ for m in [np,torch,gpytorch,pandas,scipy,sklearn]},'execution':'Actual local CPU inference with upstream PCA ADAPT; 1 checkpoint, no retraining. Joint covariance propagated through pressure integration. Not independent experimental validation.','domain':'Published Re > 1e6; alpha [-4,12] deg; Mach [0,.9]. Re is context only and not consumed by ADAPT. No low-Re calibration, friction/total drag, finite-wing lift or structural approval.','runtimeSeconds':time.perf_counter()-start,'cases':cases}
- a.output.parent.mkdir(parents=True,exist_ok=True);a.output.write_text(json.dumps(output,indent=2)+'\n',encoding='utf-8')
+ a.output.parent.mkdir(parents=True,exist_ok=True);a.output.write_text(json.dumps(output,separators=(',',':'))+'\n',encoding='utf-8')
 if __name__=='__main__':main()

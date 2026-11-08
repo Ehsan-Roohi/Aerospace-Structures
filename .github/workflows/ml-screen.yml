@@ -24,3 +24,4 @@ jobs:
           node scripts/lam/test_handoff.cjs
           node scripts/lam/test_page.cjs
           node scripts/lam/test_help.cjs
+          node scripts/lam/test_comparison.cjs

@@ -2,9 +2,13 @@
 'use strict';const $=id=>document.getElementById(id),S=window.WingMLScreen,fmt=x=>Number(x.toPrecision(4)).toString();let data;
 try{const response=await fetch('demo.json');if(!response.ok)throw Error('Model output is unavailable.');data=await response.json();if(data.format!=='wing-lam-screen-v1'||!data.cases.length)throw Error('Unsupported inference file.');data.cases.forEach(S.validate);}catch(e){$('status').textContent=e.message;return;}
 for(const name of [...new Set(data.cases.map(r=>r.airfoil))]){const o=document.createElement('option');o.value=o.textContent=name;$('foil').append(o);}
-$('foil').value='Clark Y';$('provenance').textContent=`Upstream commit ${data.upstream.commit}. ${data.execution} Runtime for the recorded batch: ${fmt(data.runtimeSeconds)} s.`;
+const query=new URLSearchParams(location.search),requestedFoil=query.get('airfoil'),requestedAlpha=query.get('alpha');
+function requestedOption(id,value,label){const select=$(id);if(![...select.options].some(o=>o.value===value)){const o=document.createElement('option');o.value=value;o.textContent=label+' · no recorded prediction';select.append(o);}select.value=value;}
+$('foil').value='Clark Y';if(requestedFoil)requestedOption('foil',requestedFoil,requestedFoil);if(requestedAlpha!==null)requestedOption('alpha',requestedAlpha,requestedAlpha+'°');
+$('provenance').textContent=`Upstream commit ${data.upstream.commit}. ${data.execution} Runtime for the recorded batch: ${fmt(data.runtimeSeconds)} s.`;
 function selected(){return data.cases.find(r=>r.airfoil===$('foil').value&&r.alphaDeg===+$('alpha').value);}
 function render(){try{
+ if(!selected()){$('status').textContent=`No recorded ADAPT prediction for ${$('foil').value} at α ${$('alpha').value}°. No other airfoil or nearest angle has been substituted. Select an available recorded case explicitly.`;$('rows').replaceChildren();$('plot').replaceChildren();$('plotNote').textContent='The current section/angle was transferred from Wing Lab. Available records: Clark Y, NACA 0012/2412/4412 at 0° or 4°, Mach 0.15.';$('dat').disabled=true;return;}$('dat').disabled=false;
  const opts={re:+$('re').value,xsc:+$('xsc').value,zsc:+$('zsc').value},minCL=+$('clmin').value,cases=data.cases.filter(r=>r.alphaDeg===+$('alpha').value).map(r=>({r,a:S.assess(r,opts)})),ok=cases.every(c=>c.a.scope.eligible);if(!Number.isFinite(minCL))throw Error('Enter a finite lift target.');if(!Number.isFinite(opts.re)||opts.re<=0)throw Error('Enter a finite positive Reynolds number.');
  $('status').textContent=ok?'Within published input ranges. Section screening only; compare lift as well as moment.':'OUTSIDE PUBLISHED DOMAIN: design scores withheld. Pressure plot is a high-Re reference, not a prediction validated at your Reynolds number.';
  $('rows').replaceChildren();if(ok)cases.sort((x,y)=>Number(y.a.lift.mean-2*y.a.lift.std>=minCL)-Number(x.a.lift.mean-2*x.a.lift.std>=minCL)||x.a.torqueScore-y.a.torqueScore);

@@ -1,7 +1,7 @@
 name: ML airfoil screening and course links
 on:
   push:
-    branches: [main, codex/wing-lam-integration]
+    branches: [main, codex/wing-lam-integration, codex/adapt-airfoil-entry]
     paths: ['scripts/lam/**', 'docs/wing-panel-stress-analyzer/ml-airfoil/**', 'README.md', 'PROJECT.md', 'docs/index.html', '.github/workflows/ml-screen.yml']
   workflow_dispatch:
 jobs:
@@ -16,6 +16,7 @@ jobs:
       - name: Analytic pressure transfer and real-inference integrity
         run: |
           node scripts/lam/test_screen.cjs
+          node scripts/lam/test_handoff.cjs
           node scripts/lam/check_demo.cjs
       - name: Scope-aware browser controller
         env:

@@ -25239,10 +25239,21 @@ window.WingAeroStructResults = (() => {
     const foilAlpha=el('input',{id:'wxFoilAlpha',type:'number',min:'-15',max:'15',step:'.5',value:'4','aria-label':'2D angle of attack relative to section chord, degrees'});
     const foilN=el('input',{id:'wxFoilN',type:'number',min:'16',max:'512',step:'1',value:'160','aria-label':'2D panels per surface',title:'16–512 panels per side; total contour panels = twice this value. Dense solves become slower as the count increases.'});
     const foilSolve=el('button',{type:'button',class:'btn primary',id:'wxFoilSolve',text:'Solve 2D airfoil'});
+    const foilML=el('button',{type:'button',class:'btn',id:'wxFoilADAPT',text:'Compare with ADAPT · ML'});
+    const foilMLScope=el('span',{class:'note',text:'ADAPT: Re > 1,000,000 · recorded cases only.'});
+    foilML.addEventListener('click',()=>{try{
+      if(foilReadPending)throw Error('Wait for the airfoil file to finish loading.');
+      if(!foilAlpha.value.trim())throw Error('Enter a 2D angle of attack.');
+      let profile;
+      if(foilMode.value==='independent')profile=independentSection(16).profile;
+      else{if(!foilEta.value.trim())throw Error('Enter a section station.');profile=window.WingAirfoilPanel2D.section(ui.state().geometry,+foilEta.value,16).profile;}
+      const href=window.WingMLHandoff.url(profile,+foilAlpha.value,WingAirfoils,document.baseURI);
+      window.open(href,'_blank','noopener');
+    }catch(e){foilMLScope.textContent=e.message;}});
     const foilCompare3D=el('button',{type:'button',class:'btn',id:'wxFoilCompare3D',text:'3D Cp near this station',title:'Compare with an actually solved finite-wing strip; a 3D aerodynamic solve is required.'});
     const sectionCompare2D=el('button',{type:'button',class:'btn',id:'wxSectionCompare2D',text:'Independent 2D at this station',hidden:true});
     const foilWing=el('span',{id:'wxFoilWing',class:'wx-ar-tools',hidden:true},el('label',{},'Use rib / station ',foilRib),el('label',{},'Section η ',foilEta),el('label',{},'y from root (mm) ',foilY),foilCompare3D);
-    const foilControls=el('div',{class:'wx-ar-tools',id:'wxFoilControls',hidden:true},el('label',{},'Geometry ',foilMode),foilIndependent,foilWing,el('label',{},'α to chord (°) ',foilAlpha),el('label',{},'Panels / side ',foilN),foilSolve,foilStation);
+    const foilControls=el('div',{class:'wx-ar-tools',id:'wxFoilControls',hidden:true},el('label',{},'Geometry ',foilMode),foilIndependent,foilWing,el('label',{},'α to chord (°) ',foilAlpha),el('label',{},'Panels / side ',foilN),foilSolve,foilML,foilMLScope,foilStation);
     let foil2D=null,foilBusy=false,foilMessage='Choose an airfoil or upload DAT coordinates, enter α and press Solve 2D airfoil. No wing is required.';
     const canvas = el('canvas', { id: 'wxArCanvas', role: 'img', tabindex: '0', 'aria-label': 'Aerodynamic result' });
     const html = el('div', { id: 'wxArHtml', class: 'wx-ar-html', hidden: true });
@@ -26952,6 +26963,7 @@ if(typeof module!=='undefined'&&module.exports)module.exports=WingDesignAdvisor;
 })();
 
 </script>
-<script src="nonlinear/flexible-ui.js?v=f2ed85b7d212"></script>
+<script src="ml-airfoil/handoff.js?v=2ca1324ebff3"></script>
+<script src="nonlinear/flexible-ui.js?v=8b80ac5adf5b"></script>
 </body>
 </html>

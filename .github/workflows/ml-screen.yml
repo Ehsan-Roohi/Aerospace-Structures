@@ -16,6 +16,7 @@ jobs:
       - name: Analytic pressure transfer and real-inference integrity
         run: |
           node scripts/lam/test_screen.cjs
+          node scripts/lam/test_panel_accuracy.cjs
           node scripts/lam/check_demo.cjs
       - name: Scope-aware browser controller
         env:

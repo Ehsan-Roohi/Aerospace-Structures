@@ -1,0 +1,181 @@
+{
+  "format": "wing-panel-accuracy-v1",
+  "geometryModuleSha256": "a464cf7c47750e93b57dde8d3f8046c7697d60be94d5a29a0ba791362c688bab",
+  "analyticCase": "Symmetric Joukowski map z=zeta+1/zeta, circle centre -0.1, radius 1.1, alpha 4deg. Exact CL from Kutta circulation; exact Cp from complex-potential derivative. All panel midpoint parameters included, no edge samples dropped.",
+  "joukowski": [
+    {
+      "panelsPerSurface": 80,
+      "cl": 0.47813983028449225,
+      "exactCL": 0.47813765553790555,
+      "absClError": 0.0000021747465867028026,
+      "cpMaxAbsError": 0.011192986379646552,
+      "cpRmsError": 0.0020315761382615153,
+      "absPressureDrag": 0.00017229499095850614
+    },
+    {
+      "panelsPerSurface": 160,
+      "cl": 0.47813854738858813,
+      "exactCL": 0.47813765553790555,
+      "absClError": 8.918506825827954e-7,
+      "cpMaxAbsError": 0.0066536844042359156,
+      "cpRmsError": 0.0009517495780189401,
+      "absPressureDrag": 0.00004461306753900801
+    },
+    {
+      "panelsPerSurface": 320,
+      "cl": 0.4781379117395267,
+      "exactCL": 0.47813765553790555,
+      "absClError": 2.5620162114048384e-7,
+      "cpMaxAbsError": 0.0038439398220471432,
+      "cpRmsError": 0.0004343495857960926,
+      "absPressureDrag": 0.00001137700466481012
+    }
+  ],
+  "reproducedScreenshotCase": {
+    "airfoil": "NACA 4412 · TR-613 (M 0.059)",
+    "alphaDeg": 3.9,
+    "oldMaxAbsCpNearTE": 1.8640051591966098,
+    "newMaxAbsCpNearTE": 0.5639040462613998,
+    "meshes": [
+      {
+        "panelsPerSurface": 80,
+        "cl": 0.9877156018433426,
+        "cmQuarter": -0.11688979414483275,
+        "pressureDrag": -0.00015622654365635147
+      },
+      {
+        "panelsPerSurface": 160,
+        "cl": 0.9877576923275846,
+        "cmQuarter": -0.11688938513162046,
+        "pressureDrag": -0.00004010896853025303
+      },
+      {
+        "panelsPerSurface": 320,
+        "cl": 0.9877672456094423,
+        "cmQuarter": -0.11688915575552113,
+        "pressureDrag": -0.000010139452730872911
+      }
+    ],
+    "fixedProbeDifferences160to320": [
+      {
+        "x": 0.001,
+        "upper": 0.008363644428356354,
+        "lower": 0.010520179667324547
+      },
+      {
+        "x": 0.005,
+        "upper": 0.0035862163790674195,
+        "lower": 0.000753893899549718
+      },
+      {
+        "x": 0.01,
+        "upper": 0.00117913774644407,
+        "lower": 0.0005459682167263669
+      },
+      {
+        "x": 0.25,
+        "upper": 0.000024453520529821304,
+        "lower": 0.000058669229145852375
+      },
+      {
+        "x": 0.5,
+        "upper": 0.00006078209952231628,
+        "lower": 0.000027425787627072262
+      },
+      {
+        "x": 0.9,
+        "upper": 0.00003756152711301142,
+        "lower": 0.000029917574325438734
+      },
+      {
+        "x": 0.99,
+        "upper": 0.0003073681029694131,
+        "lower": 0.00024280058883591193
+      },
+      {
+        "x": 0.995,
+        "upper": 0.0006479258166744994,
+        "lower": 0.0005355135079166407
+      }
+    ],
+    "geometryNote": "Analytic NACA normal-offset geometry with a smooth x⁴ thickness correction to a closed trailing edge. This sharp-edge approximation differs from the finite-gap geometry used by ADAPT; agreement is not an exact-geometry validation."
+  },
+  "nasa": [
+    {
+      "alphaDeg": 0,
+      "cfdCL": -0.0000068553224298,
+      "meshes": [
+        {
+          "panelsPerSurface": 80,
+          "cl": 1.2288054688364136e-13,
+          "cmQuarter": -2.7338916720742734e-14,
+          "pressureDrag": -0.00015730117668866553
+        },
+        {
+          "panelsPerSurface": 160,
+          "cl": -2.2811573051513545e-13,
+          "cmQuarter": 5.351225511969135e-14,
+          "pressureDrag": -0.000040294909474532676
+        },
+        {
+          "panelsPerSurface": 320,
+          "cl": 4.982474678606914e-12,
+          "cmQuarter": -1.1601509971481032e-12,
+          "pressureDrag": -0.000010179660870953709
+        }
+      ],
+      "note": "Differences from viscous reference CFD include model form; not experimental errors."
+    },
+    {
+      "alphaDeg": 10,
+      "cfdCL": 1.0909146672,
+      "meshes": [
+        {
+          "panelsPerSurface": 80,
+          "cl": 1.2003548147979026,
+          "cmQuarter": -0.012955060730976716,
+          "pressureDrag": -0.0001678016124073145
+        },
+        {
+          "panelsPerSurface": 160,
+          "cl": 1.2003281796256007,
+          "cmQuarter": -0.012937561080270532,
+          "pressureDrag": -0.0000432144475612517
+        },
+        {
+          "panelsPerSurface": 320,
+          "cl": 1.2003196667098808,
+          "cmQuarter": -0.012933315193975968,
+          "pressureDrag": -0.000010915061633393064
+        }
+      ],
+      "note": "Differences from viscous reference CFD include model form; not experimental errors."
+    },
+    {
+      "alphaDeg": 15,
+      "cfdCL": 1.5460981214,
+      "meshes": [
+        {
+          "panelsPerSurface": 80,
+          "cl": 1.7891083552358806,
+          "cmQuarter": -0.018939031784791432,
+          "pressureDrag": -0.0001800281669702697
+        },
+        {
+          "panelsPerSurface": 160,
+          "cl": 1.7890656516831827,
+          "cmQuarter": -0.0189134490069582,
+          "pressureDrag": -0.00004661725737048483
+        },
+        {
+          "panelsPerSurface": 320,
+          "cl": 1.7890521152978898,
+          "cmQuarter": -0.018907241935848786,
+          "pressureDrag": -0.000011772164496937076
+        }
+      ],
+      "note": "Differences from viscous reference CFD include model form; not experimental errors."
+    }
+  ],
+  "limits": "The analytic test checks inviscid numerics, not viscosity/stall. Native NACA panel geometry is analytic with explicit smooth closed-TE thickness correction; ML keeps its original sampled finite-gap geometry. Sharp finite-angle TE point Cp tends to 1; fixed x/c probes, not last-panel values, assess mesh convergence."
+}

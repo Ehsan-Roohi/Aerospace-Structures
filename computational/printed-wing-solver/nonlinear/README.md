@@ -111,8 +111,7 @@ and records source provenance. No network scientific solver is required.
 ## Scope and reference
 
 This remains an attached, incompressible, inviscid potential-flow / elastic-beam
-model. There is no viscous drag, separation, stall, section distortion, transverse
-shear deformation, material plasticity/failure, buckling, restrained-warping stress,
+model. There is no viscous drag, separation, stall, section distortion, material plasticity/failure, buckling, restrained-warping stress,
 flutter or divergence/stable-branch certificate. Root restraints are equivalent
 axis clamps; nominal end-zone stresses are excluded. Exact zero-chord tips are
 not enabled in this finite-rotation model. Numerical convergence does not validate
@@ -123,6 +122,7 @@ The finite-rotation representation follows established spatial-beam mechanics;
 see Vetter et al., *Finite Element Simulation of Dense Wire Packings*, sections
 2.1–2.3, [author preprint](https://romanvetter.ethz.ch/publications/papers/2/preprint.pdf).
 The current static shooting implementation and verification tests are independent
-code; the paper's wire-contact and dynamic model are not executed here. No external
-consultation advice is claimed: browser consultation was blocked because the
-Windows Firefox URL-policy enforcement was unavailable in this turn.
+code; the paper's wire-contact and dynamic model are not executed here.
+Solid-foam sections include transverse shear through Reissner kinematics; hollow sections use Kirchhoff kinematics without transverse shear. Deformed-angle acceptance is assessed separately from numerical resolution using freestream projected into the actual material section plane. The 8° warning and 15° refusal are model policies, not measured stall boundaries. Results above 8° remain diagnostic and are not accepted. Lift reversal is reported without claiming stall or divergence. The shear-displacement estimate is an upper bound, not actual error. No automatic load factor is applied.
+
+The source review by Opus 5.5 Max and Fable 5.1 Max prompted these scope/workflow repairs. Their divergence extrapolations are not implemented as stability certificates; fixed-point nonconvergence alone does not prove physical divergence.

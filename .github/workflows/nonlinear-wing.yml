@@ -62,6 +62,7 @@ jobs:
         run: |
           node computational/printed-wing-solver/nonlinear/test_flexible_ui.cjs
           node computational/printed-wing-solver/nonlinear/test_flexible_foam_ui.cjs
+          node computational/printed-wing-solver/nonlinear/test_deformed_scope.cjs
           node computational/printed-wing-solver/nonlinear/test_rod_error_ui.cjs
   solid-section-references:
     runs-on: ubuntu-latest
@@ -109,7 +110,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        case: ['spar5:50', 'foam:10', 'foam-rods:15', 'foam-spars:15']
+        case: ['spar5:50', 'foam:10', 'foam-rods:15', 'foam-spars:15', 'foam-spars:30']
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

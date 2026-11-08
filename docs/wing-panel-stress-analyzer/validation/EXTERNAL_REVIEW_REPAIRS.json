@@ -1,0 +1,29 @@
+{
+  "release": "0.5.2",
+  "reviewed_snapshot": "9c43d0567a826a4fd2ffef165561128b7e909006",
+  "reviewers": [
+    "Opus 5.5 Max",
+    "Fable 5.1 Max"
+  ],
+  "changes": [
+    "Bonded inserts in solid foam can start the supported coupled solve; unsupported sliding foam contact remains refused.",
+    "Actual deformed chord/thickness plane determines section-relative geometric incidence; 241 stations plus geometry/beam stations.",
+    "Numerical admission and angle-policy acceptance have separate result fields. Beyond the 8 degree warning the result is diagnostic only; beyond 15 degrees it is also explicitly outside the refusal limit. Neither threshold is a measured stall boundary.",
+    "Matched rigid/flexible freestream-normal lift and sign-change diagnostics; no inferred stability certificate.",
+    "Construction-aware one-way guidance, selected-flow stiffness labels, Reissner scope and conservative shear-bound labels."
+  ],
+  "tests": [
+    "Native imported bonded foam rods/spars and unsupported contact cases",
+    "Section-angle sign, oblique rigid-rotation invariance, spanwise projection and policy thresholds",
+    "Controller shows diagnostic angle refusal even when numerical checks pass",
+    "Full 900 mm foam-spars 30 m/s regression: numerical checks may pass but angle-policy acceptance must fail",
+    "Original 15 m/s rods/spars displacement values preserved within 0.0001 mm"
+  ],
+  "provenance_note": "Earlier kit receipts retain their actual source commits; they are not silently restamped. The matched-case workflow re-executes the native physics for this release.",
+  "limits": [
+    "No experiment or ANSYS match",
+    "No stall, material failure, flutter or divergence certificate",
+    "Nonconvergence is not labelled proof of physical divergence",
+    "A conservative shear bound is not actual error"
+  ]
+}

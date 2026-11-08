@@ -1,6 +1,6 @@
 {
   "application": "Wing Panel Stress Analyzer (Wing AeroStruct)",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "source_archive": "wing-aerostruct-0.3.0-dev-review.zip",
   "source_sha256": "bc6986c744568a516fd22bdd3b9508550625b82a77cd924adf52dfaa5156a54d",
   "original_base": "5ab2498",
@@ -69,7 +69,7 @@
       "Separate structural validation page: independent CalculiX comparison, signed displacement/rotation and raw stress profiles, matched sample CSV and reproducible decks",
       "Top-level Cavitation link opens the separate 2D research application from the Wing, Beam and Full-scale wing workspace menus"
     ],
-    "page_sha256": "e34afee49a617b0326befc8ba510a5c9848d525162a75bd84908480f5217f5be",
+    "page_sha256": "a4b3f78b773348c19c94b99c2a33a178b3bc8901a494c2a14fd4ad7cf3320e60",
     "source_port": "ui/01-wing-aerostruct-ui-sources.patch",
     "independent_review": "validation/UI_RELEASE_REVIEW.json",
     "surface_review": "validation/UI_SURFACE_REVIEW.json",
@@ -143,7 +143,7 @@
     ],
     "scope": "Navigation only; generated-page overlay opens the separate 2D research application. Numerical solver sources and the original Wing Lab page are unchanged."
   },
-  "flexible_solver_version": "finite-rotation-coupled-2",
+  "flexible_solver_version": "finite-rotation-coupled-3",
   "flexible_solver": {
     "source": "computational/printed-wing-solver/nonlinear",
     "builder": "computational/printed-wing-solver/nonlinear/build_flexible_solver.py",

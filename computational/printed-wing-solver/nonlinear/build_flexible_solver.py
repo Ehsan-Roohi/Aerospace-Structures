@@ -57,7 +57,7 @@ for name in ['index.html','wing-lab.html']:
  text=text.replace('</body>',f'<script src="nonlinear/flexible-ui.js?v={ui_hash}"></script>\n</body>')
  p.write_text(text,encoding='utf-8',newline='\n')
 b=json.loads((A/'BUILD.json').read_text(encoding='utf-8'))
-b.update(version='0.5.2',builtAt=datetime.datetime.now(datetime.timezone.utc).isoformat(),pageSha256=sha((A/'index.html').read_bytes()))
+b.update(version='0.5.3',builtAt=datetime.datetime.now(datetime.timezone.utc).isoformat(),pageSha256=sha((A/'index.html').read_bytes()))
 b['workers']['wing-aero']={'bundle':aero_bundle_hash,'worker':aero_worker_hash}
 b['workers']['flexible-wing']={'bundle':bundle_hash,'worker':worker_hash}
 b['flexibleWingScope']='Geometrically exact static two-way pressure/beam solver, with refined transverse shear in solid foam; numerical admission is not a material, stability or experimental validation.'
@@ -68,7 +68,7 @@ b['flexibleWingSources']={str(p.relative_to(R)).replace('\\','/'):sha(p.read_tex
 (A/'BUILD.json').write_text(json.dumps(b,indent=2)+'\n',encoding='utf-8')
 p=A/'RELEASE.json'
 release=json.loads(p.read_text(encoding='utf-8'))
-release.update(version='0.5.2',flexible_solver_version='finite-rotation-coupled-3')
+release.update(version='0.5.3',flexible_solver_version='finite-rotation-coupled-3')
 release['scope']='Educational attached inviscid 3D potential-flow pressures and nominal beam stresses, with separate legacy rigid-load models and an optional finite-rotation static two-way beam solver (Kirchhoff for hollow wings; shear-deformable Reissner for solid foam) for positive-chord tips. No viscous/stall model, section distortion, material failure, stability or experimental validation.'
 release['ui_release']['page_sha256']=b['pageSha256']
 release['flexible_solver']={'source':'computational/printed-wing-solver/nonlinear','builder':'computational/printed-wing-solver/nonlinear/build_flexible_solver.py','scope':b['flexibleWingScope'],'review':'validation/NONLINEAR_FLEXIBLE_WING_REVIEW.json'}

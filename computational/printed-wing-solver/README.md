@@ -54,7 +54,7 @@ The student notebook downloads `printed_wing_solver.py` from the `main` branch w
 
 ### Full-scale metal wing: Dewoitine D.520
 
-Pathway step **8 · Full-scale metal wing** (or [`wing-lab.html#d520`](https://ehsan-roohi.github.io/Aerospace-Structures/wing-lab.html#d520)) opens a second workspace for a real stressed-skin wing, preset to the 1940 Dewoitine D.520 ([project folder](../d520-wing/README.md)). The engine is `web/metal_wing_engine.js` (SI units); the workspace is `web/metal_wing_ui.js`.
+Pathway step **8 · Full-scale metal wing** (or [`wing-lab.html#d520`](https://ehsan-roohi.github.io/Aerospace-Structures/wing-panel-stress-analyzer/#d520)) opens a second workspace for a real stressed-skin wing, preset to the 1940 Dewoitine D.520 ([project folder](../d520-wing/README.md)). The engine is `web/metal_wing_engine.js` (SI units); the workspace is `web/metal_wing_ui.js`.
 
 | Step | Method |
 |---|---|
@@ -117,7 +117,7 @@ UI regression checks: `node computational/printed-wing-solver/web/test_teaching_
 
 Ribs change lumped mass, flight inertia relief, modal mass and the approximate skin-support calculation; their local diaphragm stiffness is **not** included in the beam's distributed EI/GJ. Therefore adding a rib does not, by itself, reduce fixed-load static deflection in this model. Custom positions are a browser-only numerical extension: they do not modify the Python solver, CAD notebook, STL or G-code. Approved layouts must be transferred to CAD before printing. Tests: `node computational/printed-wing-solver/web/test_rib_design.mjs`.
 
-[Launch Wing Lab online](https://ehsan-roohi.github.io/Aerospace-Structures/wing-lab.html) — no download or installation required. Wing Lab is a single-file browser app in the style of an FEA package: study tree, property panel, 3-D viewport with stress, displacement and factor-of-safety fringe plots, deformed shape, exploded and see-through views, section clipping, animated modes, diagrams, checks, a joint comparison, a predict-then-run exercise and a design challenge. Internet access is required to load three.js from a CDN. Alternatively, download [`docs/wing-lab.html`](../../docs/wing-lab.html) and open it in a modern browser.
+[Launch Wing Lab online](https://ehsan-roohi.github.io/Aerospace-Structures/wing-panel-stress-analyzer/) — no download or installation required. Wing Lab is a single-file browser app in the style of an FEA package: study tree, property panel, 3-D viewport with stress, displacement and factor-of-safety fringe plots, deformed shape, exploded and see-through views, section clipping, animated modes, diagrams, checks, a joint comparison, a predict-then-run exercise and a design challenge. Internet access is required to load three.js from a CDN. Alternatively, download [`docs/wing-lab.html`](../../docs/wing-lab.html) and open it in a modern browser.
 
 Its engine, [`web/engine.js`](web/engine.js), is a JavaScript port of `printed_wing_solver.py`. The shell section is meshed with a mapped ring of triangles instead of `sectionproperties`; the browser also supports custom interior-rib positions. The unchanged baseline cases are checked against the Python solver:
 

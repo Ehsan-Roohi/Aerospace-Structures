@@ -1,0 +1,23 @@
+name: ML airfoil screening and course links
+on:
+  push:
+    branches: [main, codex/wing-lam-integration]
+    paths: ['scripts/lam/**', 'docs/wing-panel-stress-analyzer/ml-airfoil/**', 'README.md', 'PROJECT.md', 'docs/index.html', '.github/workflows/ml-screen.yml']
+  workflow_dispatch:
+jobs:
+  checked-inference-and-controller:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --prefix /tmp/ml-ui-test --no-audit --no-fund jsdom@26
+      - name: Analytic pressure transfer and real-inference integrity
+        run: |
+          node scripts/lam/test_screen.cjs
+          node scripts/lam/check_demo.cjs
+      - name: Scope-aware browser controller
+        env:
+          MIE446_JSDOM_MODULE: /tmp/ml-ui-test/node_modules/jsdom
+        run: node scripts/lam/test_page.cjs

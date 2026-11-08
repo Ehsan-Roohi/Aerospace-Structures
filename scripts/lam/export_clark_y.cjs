@@ -1,0 +1,1 @@
+const fs=require('node:fs'),E=require('../../computational/printed-wing-solver/web/wing_airfoils.js');const p=E.preset('clarky');const coords=[...p.upper.slice().reverse(),...p.lower.slice(1)];fs.writeFileSync('output/lam-current/clark-y.csv',coords.map(r=>r.join(',')).join('\n'));

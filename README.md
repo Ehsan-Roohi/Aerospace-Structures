@@ -54,6 +54,8 @@ Lectures 01, 02, 03 and 04 and the independent wing-structure lecture are releas
 
 ## Homework and wing design / fabrication
 
+- **[Numerical project — Wright Flyer Half-Wing Truss](assignments/numerical-project/README.md)** · [Handout PDF](assignments/numerical-project/MIE446_Numerical_Project_Wright_Flyer_Truss.pdf) · [Word](assignments/numerical-project/MIE446_Numerical_Project_Wright_Flyer_Truss.docx). Point loads, distributed lift, and cable area sensitivity; includes the rubric and confidential peer-review template.
+
 - **[All homework and submission information](ASSIGNMENTS.md)**
 - **[Homework 1 — questions (PDF)](assignments/homework-01/MIE446_HW1_Surface_Pressure.pdf)**
 - **[Homework 1 — data (Excel)](assignments/homework-01/MIE446_HW1_NACA2412_Data.xlsx)**

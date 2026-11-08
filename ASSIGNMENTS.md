@@ -6,6 +6,14 @@ This page collects released assignment files, the revised September 26 syllabus 
 
 ## Released assignment files
 
+### Numerical project Wright Flyer Half-Wing Truss
+
+**Team project · 100-point rubric · 25% of the course grade.**
+
+- [Project instructions and files](assignments/numerical-project/README.md) · [PDF](assignments/numerical-project/MIE446_Numerical_Project_Wright_Flyer_Truss.pdf) · [Word](assignments/numerical-project/MIE446_Numerical_Project_Wright_Flyer_Truss.docx).
+- Point loads by hand and Truss Lab; distributed lift; cable area sensitivity and design recommendation.
+- Submit one team report and three editable JSON files through Canvas. Submit [confidential peer reviews](https://docs.google.com/spreadsheets/d/1y1TQGVhIM_GbtjsNJary0vvnWiupnYr3EUsBTIBiZ2Y/edit) separately using private copies of the template. See Canvas for the deadline.
+
 ### Homework 1 - Surface pressure, lift, and pressure drag
 
 - **[Download the homework PDF](assignments/homework-01/MIE446_HW1_Surface_Pressure.pdf)**

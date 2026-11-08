@@ -2,6 +2,8 @@
 
 [Course home](README.md) · [Lecture notebooks](notebooks/README.md)
 
+- **[Jersey barriers: geometry, impact loads and aerospace crashworthiness](JERSEY_BARRIER.md)** · [Illustrated reading](https://ehsan-roohi.github.io/Aerospace-Structures/case-studies/jersey-barrier/)
+
 Optional readings; assignment requirements are listed in [ASSIGNMENTS.md](ASSIGNMENTS.md).
 
 - **[Turkey Vulture in the Amherst sky: soaring flight, thermals, wing loads, feeding and migration](TURKEY_VULTURE_SOARING.md)** · New field case study · 8 November 2026

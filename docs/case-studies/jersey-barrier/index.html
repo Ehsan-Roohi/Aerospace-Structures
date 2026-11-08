@@ -1,0 +1,407 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Jersey Barriers · MIE 446</title><style>body{margin:0;background:#edf3f7;color:#18364a;font:18px/1.75 system-ui}main{max-width:1000px;margin:auto;background:white;padding:40px}h1{line-height:1.2}h2{color:#125c73;margin-top:2em}a{color:#086886}img{max-width:100%;height:auto}table{border-collapse:collapse;display:block;overflow:auto}td,th{border:1px solid #ccd7df;padding:12px;text-align:left}.math.display{display:block;overflow:auto;padding:16px;background:#f1f6fa} @media(max-width:640px){main{padding:20px}body{font-size:16px}}</style><script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script></head><body><main><h1
+id="jersey-barriers-geometry-impact-loads-and-aerospace-crashworthiness">Jersey
+Barriers: Geometry, Impact Loads and Aerospace Crashworthiness</h1>
+<p><strong>MIE 446 · Aerospace Structures · UMass Amherst</strong><br />
+Engineering enrichment reading · 8 November 2026</p>
+<p><a
+href="https://ehsan-roohi.github.io/Aerospace-Structures/case-studies/jersey-barrier/">Illustrated
+web reading</a> · <a
+href="https://github.com/Ehsan-Roohi/Aerospace-Structures/blob/main/READINGS.md">Course
+readings</a> · <a
+href="https://ehsan-roohi.github.io/Aerospace-Structures/wing-lab.html">BeamLab</a></p>
+<h2
+id="why-study-a-highway-barrier-in-an-aerospace-structures-course">1.
+Why study a highway barrier in an aerospace structures course?</h2>
+<p>A concrete median barrier is a lesson in load-path design. Its job is
+to contain and redirect a vehicle while controlling consequences for its
+occupants. A very strong barrier can still produce an undesirable
+vehicle response. This is the same distinction aerospace engineers make
+between structural integrity and crashworthiness: a structure must
+transmit loads, preserve survival space and manage the force history
+experienced by people.</p>
+<p>This original lesson was prompted by Amir Abdolmaleki’s <a
+href="https://www.zoomit.ir/zoomplus/470631-jersey-barrier-highway-design-history/">Zoomit
+article on Jersey barriers</a>, published 8 November 2026. It is an
+independent engineering treatment, rather than a translation. Historical
+and hardware statements below are tied to transportation-agency sources;
+calculations are explicitly illustrative.</p>
+<p><strong>Learning objectives:</strong> resolve oblique impact
+velocity; estimate impulse and energy; distinguish temporary energy
+storage from irreversible dissipation; interpret contact geometry and
+rollover tradeoffs; connect impact loads to beam bending and aircraft
+energy absorbers.</p>
+<h2 id="history-and-the-importance-of-the-slope-break">2. History and
+the importance of the slope break</h2>
+<p>NJDOT’s historical timeline records the scientifically designed
+median barrier in 1959 [1]. The name refers to New Jersey, not to the
+material. The starting article also describes earlier development in the
+1950s; the 1959 milestone is the date independently supported here. Not
+every concrete divider has the New Jersey profile.</p>
+<p>The conventional safety shape begins with an approximately 76 mm
+vertical reveal. A lower face at approximately 55 degrees to the
+horizontal meets a nearly vertical upper face at approximately 84
+degrees. The conventional New Jersey slope break is about 330 mm above
+pavement; for the F-shape it is about 254 mm. These heights include the
+reveal [2,3]. Confusing the lower sloped-face height with its elevation
+above the roadway gives an incorrect drawing.</p>
+<figure>
+<img src="profiles.svg"
+alt="Conceptual comparison of barrier face geometry" />
+<figcaption aria-hidden="true">Conceptual comparison of barrier face
+geometry</figcaption>
+</figure>
+<p><em>Figure 1. Original face-profile schematic, with slopes and
+breakpoint elevations based on [2,3]. Both profiles are drawn to a
+common illustrative 813 mm height and common top-face position. Widths,
+reinforcement and foundations are not specified; this is not a
+construction drawing.</em></p>
+<p>The F-shape lowers the slope break to reduce vehicle lifting and
+rollover propensity. FHWA discusses both this improvement and
+alternatives such as single-slope barriers [2]. Shape is only one system
+parameter: installation, joints, anchorage, height, vehicle geometry and
+available deflection space also matter. A free-standing precast barrier
+does not have the same boundary conditions as an embedded continuous
+barrier.</p>
+<h2 id="oblique-impact-the-relevant-velocity-component">3. Oblique
+impact: the relevant velocity component</h2>
+<p>Let <span class="math inline">\(x\)</span> run along the barrier and
+<span class="math inline">\(y\)</span> point toward it. Let the approach
+angle <span class="math inline">\(\theta\)</span> be measured
+<strong>from the barrier direction</strong>, not from its normal. A
+vehicle of mass <span class="math inline">\(m\)</span> and speed <span
+class="math inline">\(v\)</span> has</p>
+<p><span class="math display">\[v_x=v\cos\theta,\qquad v_n=v\sin\theta.
+\tag{1}\]</span></p>
+<p>The initial translational energy separates into</p>
+<p><span class="math display">\[K=\frac12mv^2=K_x+K_n,\qquad
+K_n=\frac12mv^2\sin^2\theta. \tag{2}\]</span></p>
+<p>Thus a shallow-angle encounter does not require eliminating the
+entire forward kinetic energy to redirect the vehicle. At 10 degrees,
+the normal component accounts for only about 3.0% of the translational
+energy; at 25 degrees it is about 17.9%. Nevertheless, increasing speed
+or angle can sharply increase impact severity.</p>
+<p>For this simplified two-dimensional impact, define an effective
+normal restitution coefficient <span class="math inline">\(e\)</span> by
+<span class="math inline">\(v_{y,\mathrm{out}}=-e v_n\)</span>. Then the
+magnitude of the normal impulse is</p>
+<p><span
+class="math display">\[J_n=\left|m(v_{y,\mathrm{out}}-v_n)\right|=m(1+e)v_n,
+\qquad \overline F_n=\frac{J_n}{\Delta t}. \tag{3}\]</span></p>
+<p>Equation (3) is a momentum balance, not a peak-force prediction. Real
+vehicle contact involves yaw, roll, distributed contact and time-varying
+forces. A rebound with <span class="math inline">\(e&gt;0\)</span>
+requires more normal impulse than simply removing the incoming normal
+velocity. The effective <span class="math inline">\(e\)</span> is a
+teaching parameter, not a universal barrier property.</p>
+<h2 id="worked-example-speed-angle-and-contact-duration">4. Worked
+example: speed, angle and contact duration</h2>
+<p>Use an illustrative <span class="math inline">\(m=1500\)</span> kg
+vehicle, <span class="math inline">\(v=100\)</span> km/h, <span
+class="math inline">\(e=0\)</span>, and <span
+class="math inline">\(\Delta t=0.15\)</span> s. These are classroom
+inputs, not a specification or a crash-test record.</p>
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 26%" />
+<col style="width: 26%" />
+<col style="width: 26%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Approach angle</th>
+<th style="text-align: right;">Normal speed</th>
+<th style="text-align: right;">Initial normal energy</th>
+<th style="text-align: right;">Mean normal force</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>10 degrees</td>
+<td style="text-align: right;">4.82 m/s</td>
+<td style="text-align: right;">17.45 kJ</td>
+<td style="text-align: right;">48.2 kN</td>
+</tr>
+<tr class="even">
+<td>25 degrees</td>
+<td style="text-align: right;">11.74 m/s</td>
+<td style="text-align: right;">103.36 kJ</td>
+<td style="text-align: right;">117.4 kN</td>
+</tr>
+</tbody>
+</table>
+<p>The total initial kinetic energy is 578.70 kJ in both cases. The
+25-degree case has about 5.92 times the normal energy of the 10-degree
+case. Halving the assumed contact duration doubles the mean force in
+this impulse model. Neither mean force can be used directly as an
+occupant injury metric; seats, restraints, vehicle deformation and the
+acceleration pulse determine occupant response.</p>
+<figure>
+<img src="energy.svg"
+alt="Normal impact energy as a function of approach angle" />
+<figcaption aria-hidden="true">Normal impact energy as a function of
+approach angle</figcaption>
+</figure>
+<p><em>Figure 2. Original calculation from Equation (2), for the stated
+1500 kg, 100 km/h example. This is a parameter study, not measured
+barrier performance.</em></p>
+<h2 id="what-the-sloped-face-doesand-where-the-energy-goes">5. What the
+sloped face does—and where the energy goes</h2>
+<p>For a locally planar face inclined at <span
+class="math inline">\(\alpha\)</span> above the road, a frictionless
+normal reaction <span class="math inline">\(N\)</span> on the vehicle
+has outward horizontal and upward vertical magnitudes</p>
+<p><span class="math display">\[F_h=N\sin\alpha,\qquad F_z=N\cos\alpha,
+\qquad \frac{F_z}{F_h}=\cot\alpha. \tag{4}\]</span></p>
+<p>The ratio is about 0.700 at 55 degrees and 0.105 at 84 degrees. The
+lower face can therefore provide a larger lifting component relative to
+its horizontal component. This is a <strong>local force
+decomposition</strong>, not a complete tire-contact or rollover model.
+Friction, tire compliance and changing contact points modify the
+resultant.</p>
+<p>Raising the vehicle’s center of mass by <span
+class="math inline">\(\Delta h\)</span> stores gravitational energy</p>
+<p><span class="math display">\[\Delta U_g=mg\Delta h.
+\tag{5}\]</span></p>
+<p>For the 1500 kg example, a hypothetical 0.10 m center-of-mass rise
+stores 1.47 kJ, about 8.4% of the 10-degree normal energy. The assumed
+rise is not inferred from the barrier slope-break height: a tire
+climbing 0.10 m does not mean the whole vehicle’s center of mass rises
+by that amount.</p>
+<p><strong>Lifting is energy conversion, not irreversible
+dissipation.</strong> As the vehicle descends, gravitational energy can
+return to motion. A useful mechanical energy accounting is</p>
+<p><span class="math display">\[K_{\rm in}+U_{\rm in}=K_{\rm out}+U_{\rm
+out}+E_{\rm diss}. \tag{6}\]</span></p>
+<p>Include vehicle and barrier translational/rotational kinetic energies
+in <span class="math inline">\(K\)</span>, and gravitational and
+recoverable elastic energies in <span class="math inline">\(U\)</span>.
+Dissipation includes plastic deformation, friction, damping, fracture
+and other irreversible processes. Barrier displacement can also transfer
+energy to the pavement and connected segments. The concrete does not
+need to crush extensively for the overall collision to dissipate
+energy.</p>
+<h2 id="why-lifting-can-become-a-rollover-problem">6. Why lifting can
+become a rollover problem</h2>
+<p>A lateral contact force acting at a height produces a roll moment,
+while vertical contact forces can also create a moment through their
+lateral lever arm. The general roll balance about the vehicle center of
+mass is</p>
+<p><span
+class="math display">\[I_x\ddot\phi=\sum_i(y_iF_{z,i}-z_iF_{y,i})+M_{\rm
+suspension}. \tag{7}\]</span></p>
+<p>Here <span class="math inline">\(y_i,z_i\)</span> locate each contact
+relative to the center of mass, <span class="math inline">\(I_x\)</span>
+is roll inertia, and <span class="math inline">\(\phi\)</span> is roll
+angle. Tire unloading, suspension travel and contact migration make this
+a transient multibody problem.</p>
+<p>A separate, elementary static tipping analogy for a rigid vehicle on
+level ground gives</p>
+<p><span class="math display">\[\frac{a_y}{g}\approx\frac{b}{2h_{\rm
+CG}}, \tag{8}\]</span></p>
+<p>where <span class="math inline">\(b\)</span> is track width and <span
+class="math inline">\(h_{\rm CG}\)</span> is center-of-mass height. This
+follows by equating the lateral inertial overturning moment <span
+class="math inline">\(ma_yh_{\rm CG}\)</span> with the gravitational
+restoring moment <span class="math inline">\(mg b/2\)</span>. <strong>It
+is not a Jersey-barrier rollover criterion.</strong> An impact changes
+the support geometry and introduces angular momentum; a barrier can trip
+a vehicle in ways Equation (8) does not represent. This distinction
+explains why geometry comparisons require full-scale testing and
+validated vehicle models [2,4].</p>
+<h2 id="from-contact-force-to-bending-joints-and-foundations">7. From
+contact force to bending, joints and foundations</h2>
+<p>The load path is vehicle → contact face → reinforced concrete segment
+→ connections/anchorage → pavement or foundation. For one highly
+idealized horizontal barrier span of length <span
+class="math inline">\(L\)</span>, simply supported at its ends and
+loaded by a central transverse force <span
+class="math inline">\(P\)</span>,</p>
+<p><span class="math display">\[M_{\max}=\frac{PL}{4},\qquad
+\delta_{\max}=\frac{PL^3}{48EI},
+\qquad \sigma_{\rm elastic}=\frac{M_{\max}c}{I}. \tag{9}\]</span></p>
+<p>This is a useful <strong>BeamLab surrogate</strong>, not a model of a
+particular installed barrier. For lateral bending, use the second moment
+of area about the vertical bending axis. Real concrete cracking,
+reinforcement, shear, connection slip, distributed pavement contact and
+dynamic inertia can invalidate the uncracked elastic model.</p>
+<p>A local linear dynamic representation is</p>
+<p><span class="math display">\[\mathbf M\ddot{\mathbf u}+\mathbf
+C\dot{\mathbf u}+\mathbf K\mathbf u=\mathbf f(t). \tag{10}\]</span></p>
+<p>The ratio of pulse duration to the relevant natural period helps
+determine whether a static approximation is defensible. A suddenly
+applied force is not interchangeable with a slowly applied force of the
+same magnitude. For temporary barriers, segment connections and
+deflection clearance are central parts of the system; do not assume zero
+lateral displacement just because the material is concrete.</p>
+<h2 id="the-aerospace-connection-managing-a-forcedisplacement-curve">8.
+The aerospace connection: managing a force–displacement curve</h2>
+<p>Aircraft subfloors, landing gear and seats manage energy through
+different mechanisms, but the governing work relation is shared:</p>
+<p><span class="math display">\[E_{\rm abs}=\int_0^s
+F(\delta)\,d\delta,\qquad
+\overline F=\frac{E_{\rm abs}}{s}. \tag{11}\]</span></p>
+<p>For an absorber that arrests a selected mass with initial relative
+speed <span class="math inline">\(v_0\)</span>, with gravity and other
+work neglected, <span class="math inline">\(E_{\rm
+abs}=mv_0^2/2\)</span>. Increasing available stroke <span
+class="math inline">\(s\)</span> can reduce the required mean force.
+This energy-based force average over displacement is different from the
+time average in Equation (3). For a constant-force idealization,</p>
+<p><span class="math display">\[a=\frac{v_0^2}{2s}.
+\tag{12}\]</span></p>
+<p>An illustrative 300 kg effective mass at 6 m/s has 5.4 kJ of kinetic
+energy. A 0.30 m stroke requires an 18 kN mean resisting force; a 0.10 m
+stroke requires 54 kN. These correspond to 6.12 and 18.35 times <span
+class="math inline">\(g\)</span> for the idealized net deceleration.
+They are not occupant limits or aircraft certification results. For a
+downward vertical crush, gravitational work must be included: <span
+class="math inline">\(\overline F_{\rm contact}s=mv_0^2/2+mgs\)</span>
+under the constant-force model.</p>
+<p>NASA’s 2022 eVTOL subfloor study uses component- and vehicle-level
+finite-element analysis to develop lightweight energy absorbers and plan
+validation [5]. Its 2026 technical memorandum documents a combined
+test-and-analysis development approach [6]. These are direct aerospace
+research connections: design the deformation mechanism, evaluate the
+load pulse and survival space, and validate the model
+experimentally.</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Highway-barrier question</th>
+<th>Aerospace counterpart</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Can the system contain and redirect the vehicle?</td>
+<td>Can the structure maintain a survivable load path and cabin
+volume?</td>
+</tr>
+<tr class="even">
+<td>Does the profile induce unacceptable roll or rebound?</td>
+<td>Does asymmetric crushing create pitch, roll or local intrusion?</td>
+</tr>
+<tr class="odd">
+<td>How do connections and anchorage transmit impact?</td>
+<td>How do floor beams, joints and seat attachments transmit loads?</td>
+</tr>
+<tr class="even">
+<td>How much deflection space is available?</td>
+<td>How much crush or landing-gear stroke is available?</td>
+</tr>
+<tr class="odd">
+<td>Does a full-scale test support the model?</td>
+<td>Do component and aircraft-level impact tests support
+predictions?</td>
+</tr>
+</tbody>
+</table>
+<p>The analogy concerns mechanics, not interchangeability of design
+standards.</p>
+<h2 id="what-counts-as-evidence-of-a-safe-system">9. What counts as
+evidence of a safe system?</h2>
+<p>FHWA evaluates barrier test performance through structural adequacy,
+occupant risk and post-impact vehicle trajectory [4]. Passing one
+selected test does not establish safe behavior for all vehicles,
+approach angles, installations or impact speeds. Distinguish a rigid
+embedded barrier from a portable connected system, and a water-filled
+channelizing device from a specifically tested containment barrier [2].
+Exposed ends and transitions also need appropriate treatment.</p>
+<p>Our equations estimate components of the response. They do not
+replace the prescribed test matrix or a validated nonlinear impact
+simulation. In an FE study, report material models, reinforcement,
+tire/contact assumptions, mesh sensitivity, connections, boundary
+conditions, energy balance and comparison with experimental
+force/acceleration/displacement histories. A plausible animation alone
+is weak validation.</p>
+<h2 id="classroom-activity-impact-loads-and-beamlab">10. Classroom
+activity: impact loads and BeamLab</h2>
+<p>Work in teams. Use the <a
+href="https://ehsan-roohi.github.io/Aerospace-Structures/wing-lab.html">course
+BeamLab</a> as an elastic beam comparison tool; do not interpret its
+output as a barrier crash simulation.</p>
+<ol type="1">
+<li>Recalculate the table for 80 and 120 km/h. Explain the different
+speed scaling of impulse and energy.</li>
+<li>At 100 km/h and 10 degrees, compare <span
+class="math inline">\(e=0\)</span> and <span
+class="math inline">\(e=0.2\)</span> with the same 0.15 s duration.
+State what physical information is missing before choosing either
+restitution value.</li>
+<li>Build a simply supported 3 m beam with a central 10 kN force. Use
+<span class="math inline">\(E=30\)</span> GPa and a rectangular
+surrogate section 0.20 m wide in the loading direction and 0.80 m high.
+For lateral bending, <span
+class="math inline">\(I=0.80(0.20)^3/12\)</span>. Predict the maximum
+moment and deflection before checking BeamLab. These dimensions are
+fictional and not a barrier section.</li>
+<li>Halve the span, then double the loading-direction width. Predict
+each deflection ratio from Equation (9). Discuss why joints and pavement
+contact may dominate a real installation.</li>
+<li>Sketch an aircraft energy absorber’s force–displacement curve with
+the same area but a lower peak force. Identify the extra stroke required
+and possible constraints.</li>
+</ol>
+<p><strong>Instructor check:</strong> the beam surrogate gives <span
+class="math inline">\(I=5.333\times10^{-4}\)</span> m<span
+class="math inline">\(^4\)</span>, <span
+class="math inline">\(M_{\max}=7.50\)</span> kN m, <span
+class="math inline">\(\delta_{\max}=0.352\)</span> mm and an
+extreme-fiber elastic stress of 1.41 MPa. Halving <span
+class="math inline">\(L\)</span> reduces deflection by eight; doubling
+section width in the loading direction increases <span
+class="math inline">\(I\)</span> by eight. These checks assume the same
+material and load.</p>
+<h2 id="references-and-further-reading">References and further
+reading</h2>
+<ol type="1">
+<li><strong>New Jersey Department of Transportation</strong>, <a
+href="https://www.nj.gov/transportation/about/50thanniversary/firsts.shtm">Transportation
+Firsts</a>. Official historical timeline; the 1959 Jersey-barrier
+milestone.</li>
+<li><strong>Federal Highway Administration</strong>, <a
+href="https://highways.fhwa.dot.gov/safety/rwd/reduce-crash-severity/frequently-asked-questions-barriers-terminals-transitions-attenuators-and">Frequently
+Asked Questions: Barriers, Terminals, Transitions, Attenuators, and
+Bridge Railings</a>. See concrete-profile comparison, portable barriers
+and channelizers. Agency guidance; terminology and installation
+context.</li>
+<li><strong>FHWA</strong> (23 April 2013), <a
+href="https://safety.fhwa.dot.gov/roadway_dept/countermeasures/docs/Concrete_Apr2013Saferlogo.pdf">Cast-In-Place
+Concrete Barriers</a>. Profile geometry and historical test-level
+information. Use for geometry, not as proof that every installation
+meets present requirements.</li>
+<li><strong>FHWA</strong> (2011), <a
+href="https://highways.dot.gov/safety/rwd/reduce-crash-severity/hardware-eligibility-letters/safety-eligibility-letter-b-225">Safety
+Eligibility Letter B-225</a>. A specific crash-test assessment
+illustrating structural adequacy, occupant risk and vehicle-trajectory
+evaluation; not a blanket approval of all Jersey barriers.</li>
+<li><strong>Jacob Putnam / NASA Langley</strong> (2022), <a
+href="https://ntrs.nasa.gov/citations/20220006968">Development of Energy
+Absorbing Subfloor Concepts to Improve Crashworthiness of eVTOL
+Aircraft</a>. VFS 78 presentation; NTRS 20220006968. Aerospace primary
+research.</li>
+<li><strong>NASA</strong> (2026), <a
+href="https://ntrs.nasa.gov/citations/20260000121">Combined Test and
+Analysis Approach to Develop Energy Absorbing Systems for eVTOL
+Aircraft</a>, NASA/TM-20260000121. <a
+href="https://doi.org/10.64631/OLAI1113">DOI: 10.64631/OLAI1113</a>.
+Aerospace technical memorandum.</li>
+<li><strong>Charles F. McDevitt</strong> (2000), <em>Basics of Concrete
+Barriers</em>, FHWA, Public Roads 63(5). <a
+href="https://trid.trb.org/View/651882">TRB bibliographic record and
+abstract</a>. Useful historical technical reading; the original FHWA web
+route currently redirects to a site-maintenance page.</li>
+<li><strong>Amir Abdolmaleki / Zoomit</strong> (8 November 2026), <a
+href="https://www.zoomit.ir/zoomplus/470631-jersey-barrier-highway-design-history/">Starting
+popular-science article</a>. Motivation for this lesson; not the source
+of the original calculations.</li>
+</ol>
+<p><em>All numerical examples are educational calculations. No crash
+simulations or physical experiments were performed for this lesson.
+Original diagrams and calculations accompany the page.</em></p>
+</main></body></html>

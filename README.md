@@ -45,4 +45,4 @@ Design and compare in Wing Lab → save JSON and export STL → inspect every sl
 
 ## Further reading and support
 
-[Engineering readings and case studies](READINGS.md) · **[New: Turkey Vulture soaring, thermals and migration](TURKEY_VULTURE_SOARING.md)** · [Teaching team](SYLLABUS.md#2-people-communication-and-resources) · [AI-use policy](SYLLABUS.md#ai-statement-learning-and-engineering-judgment-in-the-age-of-ai) · [Source code](src/mie446_wing) · [Tests](tests)
+[Engineering readings and case studies](READINGS.md) · **[Jersey barriers and aerospace crashworthiness](JERSEY_BARRIER.md)** · **[New: Turkey Vulture soaring, thermals and migration](TURKEY_VULTURE_SOARING.md)** · [Teaching team](SYLLABUS.md#2-people-communication-and-resources) · [AI-use policy](SYLLABUS.md#ai-statement-learning-and-engineering-judgment-in-the-age-of-ai) · [Source code](src/mie446_wing) · [Tests](tests)

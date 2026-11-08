@@ -1,7 +1,7 @@
 name: Nonlinear flexible-wing verification
 on:
   push:
-    branches: [main, codex/nonlinear-coupled-wing]
+    branches: [main, codex/nonlinear-coupled-wing, codex/foam-rod-ui-admission]
     paths:
       - 'computational/printed-wing-solver/nonlinear/**'
       - 'docs/wing-panel-stress-analyzer/nonlinear/**'
@@ -61,6 +61,7 @@ jobs:
           MIE446_JSDOM_MODULE: /tmp/flexible-ui-test/node_modules/jsdom
         run: |
           node computational/printed-wing-solver/nonlinear/test_flexible_ui.cjs
+          node computational/printed-wing-solver/nonlinear/test_flexible_foam_ui.cjs
           node computational/printed-wing-solver/nonlinear/test_rod_error_ui.cjs
   solid-section-references:
     runs-on: ubuntu-latest

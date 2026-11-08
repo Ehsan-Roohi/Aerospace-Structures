@@ -1,8 +1,8 @@
 {
   "product": "MIE 446 Wing AeroStruct",
-  "version": "0.5.4",
+  "version": "0.5.5",
   "status": "Qualified educational solver; explicit 2D/3D section context and tested structural design guidance",
-  "builtAt": "2026-11-08T13:23:45.951716+00:00",
+  "builtAt": "2026-11-08T13:55:15.738590+00:00",
   "page": "index.html",
   "pageSha256": "60979dc24801ff4affdd72fa8afaf8ca6f3285d7ea572ebe1e0319296741efb3",
   "workers": {
@@ -431,6 +431,6 @@
     "computational/printed-wing-solver/nonlinear/wing_nonlinear_beam.js": "482a7ca37890551e3e8a1e0ace60aefde9cb8e51985956d9db41ede4353997e6",
     "computational/printed-wing-solver/nonlinear/wing_flexible_solver.js": "97971b1918268f0c0ffc2d6bc214d0a6b817472643a0b434d18bfa9068b0dcad",
     "computational/printed-wing-solver/nonlinear/flexible-ui.js": "499f0327c127f24d3004b9a9c2a179bf07132fbc3a3d8db02c6d3c31ccf4ff7e",
-    "computational/printed-wing-solver/nonlinear/build_flexible_solver.py": "08876e09e33f9ebdba0a330ca1a6a8314e18a5f6d00afa105856eef19c47819a"
+    "computational/printed-wing-solver/nonlinear/build_flexible_solver.py": "65f96a471a49e46f120be111bcbf1522d60fcb8ac7a0e6aac74941ecce4e998a"
   }
 }

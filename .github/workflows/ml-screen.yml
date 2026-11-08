@@ -1,7 +1,7 @@
 name: ML airfoil screening and course links
 on:
   push:
-    branches: [main, codex/wing-lam-integration, codex/adapt-airfoil-entry]
+    branches: [main, codex/wing-lam-integration, codex/adapt-airfoil-entry, codex/adapt-help-cfd]
     paths: ['scripts/lam/**', 'docs/wing-panel-stress-analyzer/ml-airfoil/**', 'README.md', 'PROJECT.md', 'docs/index.html', '.github/workflows/ml-screen.yml']
   workflow_dispatch:
 jobs:
@@ -23,3 +23,4 @@ jobs:
         run: |
           node scripts/lam/test_handoff.cjs
           node scripts/lam/test_page.cjs
+          node scripts/lam/test_help.cjs

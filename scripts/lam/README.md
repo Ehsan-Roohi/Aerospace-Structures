@@ -24,3 +24,11 @@ The script restricts checkpoint globals, verifies exact upstream source/checkpoi
 ## Limits that matter here
 
 The published domain is alpha -4 to 12 degrees, Mach 0 to 0.9 and Re > 1e6. Re is not an ADAPT input. **No ranking is shown at Re 400,000**, typical of the previous Aeroclub example. High-Re uncertainty bands cannot establish low-Re validity. The tool reports section pressure loads, not finite-wing lift/induced drag, total viscous drag, stall certification, structural stress, divergence or flight safety. The recorded runs are a reproducibility and integration check, not an independent experimental validation of ADAPT. Original ASPIRE data may overlap training and therefore cannot automatically serve as held-out validation.
+
+## Three-method worked example
+
+The in-app Help uses NASA TMR CFL3D/SA reference data, alpha 0 degrees, Mach .15 and Re 6 million, on the NASA sharp-edge NACA 0012 definition (original section extended to x=1.008930411365 and rescaled). Source pages and raw-file hashes are in `cfd-comparison.json`. CFD was downloaded, not re-solved here, and is not experimental truth. All 513 contour points are retained. The source warns of high numerical error very near the trailing edge.
+
+Generate the NASA contour from that formula with 401 cosine stations per surface, retaining the leading-edge coordinate separately on both branches for the upstream CSV surface splitter. Run `export_adapt.py --clark-y NASA_CONTOUR.csv --custom-name "NACA 0012 (NASA TMR geometry)" --upstream UPSTREAM --output output/lam-current/cfd-matched-inference.json`. Re is comparison context only and not consumed by ADAPT. Download `n0012cp_cfl3d_sa.dat` and `n0012clcd_cfl3d_sa.dat` from https://tmbwg.github.io/turbmodels/NACA0012_validation/ to `output/lam-current/`, then run `node scripts/lam/build_cfd_example.cjs`. The generator checks the ML surface representation against the actual NASA formula to 1e-6 chord and executes the current panel code on that formula.
+
+The help distinguishes Cp comparisons from total drag, shows the surrogate's nonzero lift in a symmetric case, and provides checked examples for the lift screen, reference-point moment transfer and low-Re withholding. Run `test_help.cjs` for source coverage, geometry, arithmetic and UI actions.

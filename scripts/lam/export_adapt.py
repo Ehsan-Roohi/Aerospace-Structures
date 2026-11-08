@@ -15,7 +15,7 @@ def weights(surface_u,surface_l,np):
  return w
 
 def main():
- p=argparse.ArgumentParser();p.add_argument('--upstream',type=Path,required=True);p.add_argument('--output',type=Path,required=True);p.add_argument('--clark-y',type=Path);a=p.parse_args()
+ p=argparse.ArgumentParser();p.add_argument('--upstream',type=Path,required=True);p.add_argument('--output',type=Path,required=True);p.add_argument('--clark-y',type=Path);p.add_argument('--custom-name',default='Clark Y');a=p.parse_args()
  for name,expected in EXPECTED.items():
   assert hashlib.sha256((a.upstream/'ADAPT/model'/name).read_bytes()).hexdigest()==expected,'Unexpected upstream checkpoint'
  import numpy as np,torch,gpytorch,pandas,scipy,sklearn
@@ -44,7 +44,7 @@ def main():
  spec=importlib.util.spec_from_file_location('upstream_adapt',source);adapt=importlib.util.module_from_spec(spec);spec.loader.exec_module(adapt)
  model,_=adapt.unpack_model(model_version='pca',output_device=torch.device('cpu'))
  candidates=[('NACA 0012','NACA 0012'),('NACA 2412','NACA 2412'),('NACA 4412','NACA 4412')]
- if a.clark_y:candidates.append(('Clark Y',str(a.clark_y)))
+ if a.clark_y:candidates.append((a.custom_name,str(a.clark_y)))
  cases=[];start=time.perf_counter()
  for name,geometry in candidates:
   for alpha in [0.,4.]:

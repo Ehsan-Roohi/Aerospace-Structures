@@ -1,6 +1,6 @@
 (async()=>{
 'use strict';const $=id=>document.getElementById(id),S=window.WingMLScreen,fmt=x=>Number(x.toPrecision(4)).toString();let data;
-try{const response=await fetch('demo.json');if(!response.ok)throw Error('Model output is unavailable.');data=await response.json();if(data.format!=='wing-lam-screen-v1'||!data.cases.length)throw Error('Unsupported inference file.');data.cases.forEach(S.validate);}catch(e){$('status').textContent=e.message;return;}
+try{const response=await fetch('demo.json?v=angles-41');if(!response.ok)throw Error('Model output is unavailable.');data=await response.json();if(data.format!=='wing-lam-screen-v1'||!data.cases.length)throw Error('Unsupported inference file.');data.cases.forEach(S.validate);}catch(e){$('status').textContent=e.message;return;}
 for(const name of [...new Set(data.cases.map(r=>r.airfoil))]){const o=document.createElement('option');o.value=o.textContent=name;$('foil').append(o);}
 for(const angle of [...new Set(data.cases.map(r=>r.alphaDeg))].sort((a,b)=>a-b)){const o=document.createElement('option');o.value=String(angle);o.textContent=angle.toFixed(1)+'°';$('alpha').append(o);}
 $('alphaSlider').addEventListener('input',()=>{$('alpha').value=$('alphaSlider').value;$('alpha').dispatchEvent(new Event('input',{bubbles:true}));});

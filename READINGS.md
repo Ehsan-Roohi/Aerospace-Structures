@@ -4,6 +4,8 @@
 
 Optional readings; assignment requirements are listed in [ASSIGNMENTS.md](ASSIGNMENTS.md).
 
+- **[Turkey Vulture in the Amherst sky: soaring flight, thermals, wing loads, feeding and migration](TURKEY_VULTURE_SOARING.md)** · New field case study · 8 November 2026
+
 - [Menar Jonban: coupled vibration and flexible supports](MENAR_JONBAN.md)
 - [Navigation without GPS: sensors, uncertainty and the structural connection](NAVIGATION_WITHOUT_GPS.md)
 - [The Blue LED: thirty years of materials, manufacturing and multiphysics engineering](BLUE_LED.md)

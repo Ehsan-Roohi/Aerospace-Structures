@@ -4,7 +4,7 @@
 
 - **[Jersey barriers: geometry, impact loads and aerospace crashworthiness](JERSEY_BARRIER.md)** · [Illustrated reading](https://ehsan-roohi.github.io/Aerospace-Structures/case-studies/jersey-barrier/)
 
-- **[Hollywood above the factory: Boeing Plant 2 camouflage, lightweight structures and roof load paths](AIRCRAFT_FACTORY_CAMOUFLAGE.md)** · [Illustrated reading with Persian photo captions](https://ehsan-roohi.github.io/Aerospace-Structures/case-studies/aircraft-factory-camouflage/)
+- **[Hollywood above the factory: Boeing Plant 2 camouflage, lightweight structures and roof load paths](AIRCRAFT_FACTORY_CAMOUFLAGE.md)** · [Illustrated reading with engineering diagrams](https://ehsan-roohi.github.io/Aerospace-Structures/case-studies/aircraft-factory-camouflage/)
 
 Optional readings; assignment requirements are listed in [ASSIGNMENTS.md](ASSIGNMENTS.md).
 

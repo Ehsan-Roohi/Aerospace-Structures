@@ -14,7 +14,7 @@ Original engineering case study prompted by [Puyesh Pourmohammad’s Zoomit arti
 - Understand why reducing cable sag increases horizontal support force.
 - Cross-check a hypothetical worked example in Beam Lab, with explicit model limitations.
 
-The illustrated page contains eight historical photographs displayed from the requested Zoomit article, original Persian captions and English engineering commentary, four original SVG schematics, a span-sensitivity calculator, a worked activity and eight linked references. Source-image rights are retained by their owners; external images are not relicensed by the repository. See [image provenance](docs/case-studies/aircraft-factory-camouflage/image-sources.json).
+The illustrated page contains eight source images, with five historical photographs separated from three illustrative/stylized views displayed from the requested Zoomit article, original Persian captions and English engineering commentary, four original SVG schematics, a span-sensitivity calculator, a worked activity and eight linked references. Source-image rights are retained by their owners; external images are not relicensed by the repository. See [image provenance](docs/case-studies/aircraft-factory-camouflage/image-sources.json).
 
 The historical camouflage was not armor. Neither the photographs nor this lesson establish an enemy reconnaissance success rate or the structural capacity of the actual roof. All numerical examples are hypothetical, not recovered Plant 2 design data.
 

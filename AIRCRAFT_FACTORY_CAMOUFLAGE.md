@@ -14,7 +14,7 @@ Original engineering case study prompted by [Puyesh Pourmohammad’s Zoomit arti
 - Understand why reducing cable sag increases horizontal support force.
 - Cross-check a hypothetical worked example in Beam Lab, with explicit model limitations.
 
-The illustrated page contains eight source images, with five historical photographs separated from three illustrative/stylized views displayed from the requested Zoomit article, original Persian captions and English engineering commentary, four original SVG schematics, a span-sensitivity calculator, a worked activity and eight linked references. Source-image rights are retained by their owners; external images are not relicensed by the repository. See [image provenance](docs/case-studies/aircraft-factory-camouflage/image-sources.json).
+The illustrated page contains eight source images, with five historical photographs separated from three illustrative/stylized views displayed from the requested Zoomit article, English captions and engineering commentary, twelve original SVG schematics, a span-sensitivity calculator, a worked activity and nine linked references. Source-image rights are retained by their owners; external images are not relicensed by the repository. See [image provenance](docs/case-studies/aircraft-factory-camouflage/image-sources.json).
 
 The historical camouflage was not armor. Neither the photographs nor this lesson establish an enemy reconnaissance success rate or the structural capacity of the actual roof. All numerical examples are hypothetical, not recovered Plant 2 design data.
 
@@ -27,3 +27,9 @@ The historical camouflage was not armor. Neither the photographs nor this lesson
 - [NARA image 68151726 through Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Boeing_factory_No_2_NARA-68151726.jpg)
 - [MIT OpenCourseWare: shear and bending moment diagrams, David Roylance](https://ocw.mit.edu/courses/3-11-mechanics-of-materials-fall-1999/resources/mit3_11f99_statics/)
 - [Smithsonian: aircraft disguises and factory concealment](https://airandspace.si.edu/stories/editorial/fear-and-concealment-military-aircraft-disguises-and-transformations)
+
+## Expanded illustrated edition
+
+The English-only reading now contains 20 figures: eight externally hosted source images and twelve original engineering diagrams. Expanded sections cover viewing geometry, tributary area, wind pressure, drainage, fastener demand, member stability and analytical model limitations. The live span-sensitivity control accompanies a worked beam, cable and anchor-demand activity.
+
+- [NASA RP-1228: Fastener Design Manual](https://ntrs.nasa.gov/citations/19900009424)

@@ -8,6 +8,14 @@
 
 Optional readings; assignment requirements are listed in [ASSIGNMENTS.md](ASSIGNMENTS.md).
 
+## Optional aerospace technology reports
+
+- **[Falcon 9: the engineering of return](FALCON_9_REUSABILITY.md)** · [Complete illustrated report and four official videos](https://ehsan-roohi.github.io/Aerospace-Structures/case-studies/falcon-9/)
+- **[Fighter generations: beyond the label](FIGHTER_GENERATIONS.md)** · [Complete illustrated report: generations 1–6](https://ehsan-roohi.github.io/Aerospace-Structures/case-studies/fighter-generations/)
+
+## Other engineering readings
+
+
 - **[Turkey Vulture in the Amherst sky: soaring flight, thermals, wing loads, feeding and migration](TURKEY_VULTURE_SOARING.md)** · New field case study · 8 November 2026
 
 - [Menar Jonban: coupled vibration and flexible supports](MENAR_JONBAN.md)

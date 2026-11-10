@@ -45,4 +45,7 @@ Design and compare in Wing Lab → save JSON and export STL → inspect every sl
 
 ## Further reading and support
 
+Optional aerospace technology reports: **[Falcon 9 and reusable launch engineering](FALCON_9_REUSABILITY.md)** · **[Fighter generations 1–6](FIGHTER_GENERATIONS.md)**
+
+
 [Engineering readings and case studies](READINGS.md) · **[New: Hollywood, Boeing factory camouflage and lightweight structures](AIRCRAFT_FACTORY_CAMOUFLAGE.md)** · **[Jersey barriers and aerospace crashworthiness](JERSEY_BARRIER.md)** · **[New: Turkey Vulture soaring, thermals and migration](TURKEY_VULTURE_SOARING.md)** · [Teaching team](SYLLABUS.md#2-people-communication-and-resources) · [AI-use policy](SYLLABUS.md#ai-statement-learning-and-engineering-judgment-in-the-age-of-ai) · [Source code](src/mie446_wing) · [Tests](tests)

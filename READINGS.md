@@ -10,6 +10,9 @@ Optional readings; assignment requirements are listed in [ASSIGNMENTS.md](ASSIGN
 
 ## Optional aerospace technology reports
 
+- **[Skyreach: hybrid VTOL, 18-hour endurance, aerodynamics, engines and structural loads](SKYREACH_CARGO_DRONE.md)** · [Illustrated reading and official videos](https://ehsan-roohi.github.io/Aerospace-Structures/case-studies/skyreach/)
+
+
 - **[Falcon 9: the engineering of return](FALCON_9_REUSABILITY.md)** · [Complete illustrated report and four official videos](https://ehsan-roohi.github.io/Aerospace-Structures/case-studies/falcon-9/)
 - **[Fighter generations: beyond the label](FIGHTER_GENERATIONS.md)** · [Complete illustrated report: generations 1–6](https://ehsan-roohi.github.io/Aerospace-Structures/case-studies/fighter-generations/)
 
@@ -40,3 +43,7 @@ Optional readings; assignment requirements are listed in [ASSIGNMENTS.md](ASSIGN
 - [How did OpenAI solve Navier–Stokes in 88 hours? — full Zoomit translation](NAVIER_STOKES_AI.md)
 - [The Gimli Glider: an aerospace-structures case study](GIMLI_GLIDER.md)
 - [Turkish Airlines Flight 981 and structural failure propagation](TURKISH_AIRLINES_FLIGHT_981.md)
+
+## Semiconductor technology and manufacturing
+
+- **[The 2 nm challenge: Taiwan, China and Japan](TWO_NANOMETER_CHIPS.md)** · [Illustrated web reading](https://ehsan-roohi.github.io/Aerospace-Structures/case-studies/2nm-chips/) · GAA, EUV, SRAM, yield, industrial learning and source-qualified comparison.

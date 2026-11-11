@@ -1,0 +1,541 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Skyreach: flight endurance and engineering · MIE 446</title><style>body{margin:0;background:#edf3f7;color:#18364a;font:18px/1.75 system-ui}main{max-width:1050px;margin:auto;background:white;padding:40px}h1{line-height:1.2}h2{color:#125c73;margin-top:2em}a{color:#086886}img{max-width:100%;height:auto}table{border-collapse:collapse;display:block;overflow:auto}td,th{border:1px solid #ccd7df;padding:10px;text-align:left}.math.display{display:block;overflow:auto;padding:16px;background:#f1f6fa}.video{width:100%;aspect-ratio:16/9;border:0}nav{padding:12px;background:#edf3f7} @media(max-width:640px){main{padding:20px}body{font-size:16px}}</style><script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script></head><body><main><nav><a href="https://github.com/Ehsan-Roohi/Aerospace-Structures/blob/main/READINGS.md">All readings</a> · <a href="../skyreach/">Skyreach</a> · <a href="../2nm-chips/">2 nm chips</a></nav><h1
+id="skyreach-why-a-hybrid-cargo-drone-can-fly-for-18-hours">Skyreach:
+Why a Hybrid Cargo Drone Can Fly for 18 Hours</h1>
+<p><strong>MIE 446 · Aerospace Structures · UMass Amherst</strong><br />
+Independent engineering case study · 11 November 2026</p>
+<p><a
+href="https://ehsan-roohi.github.io/Aerospace-Structures/case-studies/skyreach/">Web
+reading</a> · <a
+href="https://github.com/Ehsan-Roohi/Aerospace-Structures/blob/main/READINGS.md">Course
+readings</a> · <a
+href="https://ehsan-roohi.github.io/Aerospace-Structures/wing-lab.html">BeamLab</a></p>
+<h2 id="the-question-behind-the-headline">1. The question behind the
+headline</h2>
+<p>How can an aircraft take off like a multicopter yet remain airborne
+far longer than a typical battery drone? The answer is a division of
+labor: electric rotors provide vertical lift briefly; a wing supports
+the aircraft during cruise; liquid fuel supplies cruise energy. An
+onboard generator replenishes the lift battery, but does not create
+energy.</p>
+<p>This original lesson was prompted by <a
+href="https://www.zoomit.ir/aviation-aerospace/470952-skyways-skyreach-cargo-drone-unveiled/">Zoomit’s
+Skyreach article</a>. The article was retrieved directly after the
+initial search-service access failed; this is an original engineering
+treatment, not a translation. Aircraft-specific statements below come
+from the manufacturer [1–3], while equations and examples are
+independent classroom analysis. Manufacturer performance figures are
+design claims, not independently validated measurements.</p>
+<p><strong>Learning goals:</strong> explain hover versus wingborne
+power; distinguish fuel from payload; derive drag and power trends;
+trace loads through an airframe; assess engine–generator–battery
+coupling; distinguish endurance from range.</p>
+<figure>
+<img
+src="https://www.skyways.com/v3b2-preview/media/env-black/arrival/first-d1x.webp?v=c757c590"
+alt="Official Skyreach studio rendering, front three-quarter view" />
+<figcaption aria-hidden="true">Official Skyreach studio rendering, front
+three-quarter view</figcaption>
+</figure>
+<p><em>Figure 1. Official Skyways product visualization [2]. External
+appearance does not establish internal spar geometry, materials or
+structural margins.</em></p>
+<h2 id="what-has-actually-been-announced">2. What has actually been
+announced?</h2>
+<p>Skyways announced Skyreach on 9 November 2026, with customer flights
+planned for December. Its earlier development name was V3 Block 2 [1].
+The distinction matters: experience with earlier aircraft does not
+independently demonstrate every performance claim of the new model.</p>
+<table>
+<thead>
+<tr class="header">
+<th>Published quantity</th>
+<th style="text-align: right;">US units</th>
+<th style="text-align: right;">SI conversion</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Maximum gross takeoff mass</td>
+<td style="text-align: right;">360 lb</td>
+<td style="text-align: right;">163.3 kg</td>
+</tr>
+<tr class="even">
+<td>Estimated empty mass [3]</td>
+<td style="text-align: right;">255 lb</td>
+<td style="text-align: right;">115.7 kg</td>
+</tr>
+<tr class="odd">
+<td>Useful load</td>
+<td style="text-align: right;">100+ lb</td>
+<td style="text-align: right;">45.4+ kg</td>
+</tr>
+<tr class="even">
+<td>Fuel capacity</td>
+<td style="text-align: right;">86 lb</td>
+<td style="text-align: right;">39.0 kg</td>
+</tr>
+<tr class="odd">
+<td>Wingspan</td>
+<td style="text-align: right;">22 ft</td>
+<td style="text-align: right;">6.706 m</td>
+</tr>
+<tr class="even">
+<td>Length</td>
+<td style="text-align: right;">9.5 ft</td>
+<td style="text-align: right;">2.896 m</td>
+</tr>
+<tr class="odd">
+<td>Cargo volume</td>
+<td style="text-align: right;">7.0 ft³</td>
+<td style="text-align: right;">0.198 m³, about 198 L</td>
+</tr>
+<tr class="even">
+<td>Nominal cruise speed</td>
+<td style="text-align: right;">70 knots</td>
+<td style="text-align: right;">36.0 m/s, 129.6 km/h</td>
+</tr>
+<tr class="odd">
+<td>Maximum endurance claim</td>
+<td style="text-align: right;">18+ h</td>
+<td style="text-align: right;">Mission-dependent</td>
+</tr>
+</tbody>
+</table>
+<p>Sources: product page [2] and dated specification sheet [3]. Masses
+are published in pounds; the corresponding weight force is mass
+multiplied by gravitational acceleration.</p>
+<p><strong>Useful load is not all cargo.</strong> Fuel and cargo share
+the available mass budget. Batteries and installed equipment must be
+counted consistently with the manufacturer’s empty-weight definition;
+that definition is not fully itemized publicly. Subtracting the rounded
+empty mass from maximum mass gives about 105 lb, broadly consistent with
+the advertised 100+ lb, but not a precision loading instruction.</p>
+<table>
+<thead>
+<tr class="header">
+<th>Cargo</th>
+<th style="text-align: right;">One-way design range</th>
+<th>Primary source</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>10 lb / 4.54 kg</td>
+<td style="text-align: right;">1,300+ mi / 2,092+ km</td>
+<td>[1–3]</td>
+</tr>
+<tr class="even">
+<td>50 lb / 22.68 kg</td>
+<td style="text-align: right;">780+ mi / 1,255+ km</td>
+<td>[3]</td>
+</tr>
+<tr class="odd">
+<td>80 lb / 36.29 kg</td>
+<td style="text-align: right;">280+ mi / 451+ km</td>
+<td>Launch release [1]</td>
+</tr>
+<tr class="even">
+<td>90 lb / 40.82 kg</td>
+<td style="text-align: right;">140+ mi / 225+ km</td>
+<td>Product page [2]</td>
+</tr>
+</tbody>
+</table>
+<p>These are different loading points, not conflicting estimates for the
+same cargo. Do not join them into a certified performance curve. The
+dated sheet specifies 70 KTAS, 2,000 ft density altitude, no wind and a
+45-minute fuel reserve, and explicitly says the aircraft remains in
+flight test and figures may change [3]. A round trip without refueling
+must budget both legs and reserve.</p>
+<h2 id="watch-the-aircraft-and-its-development">3. Watch the aircraft
+and its development</h2>
+<p>The following titles and identifiers were checked against the <a
+href="https://www.youtube.com/@skyways_official/videos">official Skyways
+YouTube channel</a>. Promotional or development footage is not a test
+report. GitHub Markdown provides clickable thumbnails; the web edition
+includes players and fallback links.</p>
+<iframe class="video" loading="lazy" src="https://www.youtube-nocookie.com/embed/KROJ9-dUIqk" title="Official Skyways video KROJ9-dUIqk" allow="encrypted-media; picture-in-picture" allowfullscreen></iframe><p><a href="https://www.youtube.com/watch?v=KROJ9-dUIqk"><img
+src="https://i.ytimg.com/vi/KROJ9-dUIqk/hqdefault.jpg"
+alt="Introducing Skyways Skyreach" /></a></p>
+<p><strong><a
+href="https://www.youtube.com/watch?v=KROJ9-dUIqk">Introducing Skyways
+Skyreach</a></strong> — identify lift rotors, cruise propeller, wing,
+cargo bay and landing gear. Which components are useful primarily during
+takeoff?</p>
+<iframe class="video" loading="lazy" src="https://www.youtube-nocookie.com/embed/HduWl_6-BH4" title="Official Skyways video HduWl_6-BH4" allow="encrypted-media; picture-in-picture" allowfullscreen></iframe><p><a href="https://www.youtube.com/watch?v=HduWl_6-BH4"><img
+src="https://i.ytimg.com/vi/HduWl_6-BH4/hqdefault.jpg"
+alt="Stress Testing" /></a></p>
+<p><strong><a href="https://www.youtube.com/watch?v=HduWl_6-BH4">V3 B2:
+Stress Testing — Chapter 4</a></strong> — distinguish a visible test
+setup from evidence of load magnitude, instrumentation, calibration and
+acceptance criteria. The title alone does not establish
+qualification.</p>
+<iframe class="video" loading="lazy" src="https://www.youtube-nocookie.com/embed/r0Hmt6UIwP4" title="Official Skyways video r0Hmt6UIwP4" allow="encrypted-media; picture-in-picture" allowfullscreen></iframe><p><a href="https://www.youtube.com/watch?v=r0Hmt6UIwP4"><img
+src="https://i.ytimg.com/vi/r0Hmt6UIwP4/hqdefault.jpg"
+alt="Integration to Hops" /></a></p>
+<p><strong><a href="https://www.youtube.com/watch?v=r0Hmt6UIwP4">V3 B2:
+Integration to Hops — Chapter 3</a></strong> — examine the transition
+from integrated hardware to early flight testing. Earlier development
+configuration should not automatically be treated as the final
+production configuration.</p>
+<p><strong>Further official videos:</strong> <a
+href="https://www.youtube.com/watch?v=1PA-A6q-2bg">Taking Shape —
+Chapter 2</a> and <a
+href="https://www.youtube.com/watch?v=WGRif-oXg68">Building Blocks —
+Chapter 1</a>. The manufacturer’s <a
+href="https://drive.google.com/drive/folders/1-Qo-XoGFlgmJzzSXi3s8fScj5YpxenCU">media
+folder</a> is linked from its launch announcement [1].</p>
+<h2 id="aerodynamics-and-fluids-why-wings-change-the-energy-budget">4.
+Aerodynamics and fluids: why wings change the energy budget</h2>
+<p>In steady level cruise, lift approximately balances weight and thrust
+balances drag:</p>
+<p><span class="math display">\[L=W=mg,\qquad T=D,\qquad L=\tfrac12\rho
+V^2SC_L.\]</span></p>
+<p>Air accelerated downward produces lift, whether by a wing or rotor. A
+wing benefits from forward motion and distributes its aerodynamic
+loading over its span. A hovering aircraft must continuously generate
+all lift through its rotors.</p>
+<p>A useful preliminary drag model is</p>
+<p><span class="math display">\[C_D=C_{D0}+kC_L^2,\qquad k=\frac{1}{\pi
+e\,AR},\qquad AR=\frac{b^2}{S},\]</span></p>
+<p><span class="math display">\[D(V)=\tfrac12\rho
+V^2SC_{D0}+\frac{2kW^2}{\rho V^2S},\qquad
+P_{shaft}=\frac{DV}{\eta_p}.\]</span></p>
+<p>Here <span class="math inline">\(S\)</span> is wing reference area,
+<span class="math inline">\(e\)</span> span efficiency and <span
+class="math inline">\(\eta_p\)</span> propeller efficiency. The first
+term is the simplified parasite drag; the second is induced drag. Slow
+flight raises the induced contribution; fast flight sharply raises
+parasite power. A larger span can reduce induced drag at fixed lift and
+speed, but brings bending, mass and stiffness penalties. Published span
+alone does not determine aspect ratio: wing area is also required.</p>
+<p>For constant propeller efficiency and fuel consumption per shaft
+energy, propeller-aircraft endurance favors minimum power, approximately
+maximum <span class="math inline">\(C_L^{3/2}/C_D\)</span>. Still-air
+range favors minimum drag, approximately maximum <span
+class="math inline">\(C_L/C_D\)</span>. They occur at different speeds.
+For the parabolic polar, minimum drag has <span
+class="math inline">\(C_L=\sqrt{C_{D0}/k}\)</span>, while minimum power
+has <span class="math inline">\(C_L=\sqrt{3C_{D0}/k}\)</span>, subject
+to stall and operational limits.</p>
+<figure>
+<img src="power.svg" alt="Normalized cruise power curve" />
+<figcaption aria-hidden="true">Normalized cruise power
+curve</figcaption>
+</figure>
+<p><em>Figure 2. Original analytical illustration: <span
+class="math inline">\(P/P_0=(r^3+1/r)/2\)</span>, where <span
+class="math inline">\(r=V/V_{MD}\)</span> and <span
+class="math inline">\(P_0\)</span> is power at minimum-drag speed. This
+normalized parabolic-polar model is not measured Skyreach performance.
+Minimum power occurs at <span
+class="math inline">\(r=3^{-1/4}\approx0.760\)</span>.</em></p>
+<h3 id="hover-and-transition">Hover and transition</h3>
+<p>Ideal actuator-disk momentum theory gives</p>
+<p><span class="math display">\[v_i=\sqrt{\frac{T}{2\rho A}},\qquad
+P_{i}=Tv_i=\frac{T^{3/2}}{\sqrt{2\rho A}}.\]</span></p>
+<p><span class="math inline">\(A\)</span> is effective disk area.
+Coaxial rotors have overlapping flow fields: counting each rotor disk as
+fully independent area gives an optimistic estimate. Real power
+additionally includes blade profile drag, interference and
+motor/controller losses.</p>
+<p>At an illustrative 163.3 kg, <span
+class="math inline">\(\rho=1.225\)</span> kg/m³ and
+<strong>assumed</strong>, nonoverlapping effective area <span
+class="math inline">\(A=4\)</span> m², ideal hover power is about 20.5
+kW. Actual Skyreach disk area and measured hover power are not supplied
+here. This calculation demonstrates scaling, not its specification.
+Doubling area reduces ideal induced power by <span
+class="math inline">\(1/\sqrt2\)</span>.</p>
+<p>During transition, wing lift grows with speed and rotor thrust can
+decrease. The total vertical force must continue to support weight;
+pitching moments, rotor–wing interference and control authority also
+matter. An idealized cruise calculation cannot validate this transient
+phase. Air density changes affect rotor power, stall margin and engine
+performance simultaneously.</p>
+<h2 id="engines-and-electrical-power-what-hybrid-means-here">5. Engines
+and electrical power: what “hybrid” means here</h2>
+<p>The product page describes eight electric lift motors and a
+two-stroke heavy-fuel cruise engine with an integrated generator. The
+generator recharges the lift battery in flight [2]. Heavy-fuel
+compatibility refers to fuel chemistry; burning Jet A does
+<strong>not</strong> make this a turbojet. The public description
+identifies an engine, not a disclosed engine model, displacement, rated
+power or complete transmission schematic.</p>
+<figure>
+<img src="energy-loads.svg"
+alt="Conceptual energy and mission diagram" />
+<figcaption aria-hidden="true">Conceptual energy and mission
+diagram</figcaption>
+</figure>
+<p><em>Figure 3. Original functional schematic based on [1–3]. The
+engine provides cruise propulsion and generator power; the precise
+mechanical/electrical arrangement is not specified. Generator charging
+ultimately consumes fuel. Load-path sketch is conceptual.</em></p>
+<p>A bookkeeping equation is</p>
+<p><span class="math display">\[P_{engine}\gtrsim
+P_{cruise,shaft}+\frac{P_{electrical}}{\eta_g},\]</span></p>
+<p>where generator efficiency is <span
+class="math inline">\(\eta_g\)</span>. Charging, avionics, payload
+systems and cooling all impose demands. Conversion losses cannot be
+ignored or credited twice. An advertised electrical payload-power
+capability does not mean it can be used continuously without reducing
+range.</p>
+<p>A two-stroke cycle offers a power event each crankshaft revolution
+and can support compact power plants, but installed performance depends
+on scavenging, combustion, lubrication, cooling, vibration and generator
+loading. Those general principles do not establish Skyreach’s brake
+efficiency. Recharging the battery while cruising can restore energy
+needed for landing; sufficient state of charge, thermal margin and
+reserve must be maintained throughout the mission.</p>
+<h2 id="why-endurance-is-so-long">6. Why endurance is so long</h2>
+<p>Four effects work together:</p>
+<ol type="1">
+<li><strong>Wingborne cruise:</strong> the rotors need not support full
+weight for the entire mission.</li>
+<li><strong>Liquid fuel:</strong> a large chemical-energy store can be
+carried for a given mass.</li>
+<li><strong>Small cargo at maximum range:</strong> more of the allowable
+takeoff mass remains available for fuel.</li>
+<li><strong>Moderate cruise speed:</strong> avoiding excessive speed
+limits parasite power; the operating optimum depends on the full
+aircraft and engine maps.</li>
+</ol>
+<p>For transparent order-of-magnitude reasoning, assume fuel lower
+heating value <span class="math inline">\(43\)</span> MJ/kg and a
+battery pack specific energy <span class="math inline">\(0.20\)</span>
+kWh/kg. These are illustrative inputs, <strong>not measured Skyreach
+values</strong>. Fuel contains <span
+class="math inline">\(43/3.6\approx11.94\)</span> kWh/kg chemically. At
+an assumed 25% shaft efficiency this becomes about 2.99 kWh/kg; a
+battery at assumed 90% electrical-to-shaft efficiency yields about 0.18
+kWh/kg. The ratio is about 16.6 for these assumptions, before engine,
+tank, generator and battery packaging masses. Comparing fuel chemical
+energy directly with battery delivered shaft energy would exaggerate the
+advantage.</p>
+<p>An assumed 39 kg of fuel stores about 466 kWh chemically or 116 kWh
+at the assumed shaft efficiency. Dividing by 18 h gives approximately
+6.5 kW. This is an energy-budget plausibility illustration, not a
+prediction: reserve fuel, climb, VTOL, charging, changing weight and
+actual engine efficiency must all be accounted for.</p>
+<p>For an ideal propeller aircraft at constant <span
+class="math inline">\(L/D\)</span>, propeller efficiency and
+shaft-specific fuel consumption,</p>
+<p><span class="math display">\[R=\frac{\eta_p}{g
+c_P}\frac{L}{D}\ln\left(\frac{m_i}{m_f}\right),\]</span></p>
+<p>where <span class="math inline">\(c_P=\dot m_f/P_{shaft}\)</span> in
+kg/J. Using a weight-based consumption definition changes where <span
+class="math inline">\(g\)</span> appears. Replacing fuel with cargo
+reduces the fuel fraction and therefore range even if takeoff mass stays
+constant. Real performance must be integrated over a mission with engine
+and propeller maps.</p>
+<p>Multiplying 70 knots by 18 h gives 1,260 nautical miles, about 2,334
+km. This does not prove a contradiction with a 2,092+ km headline range:
+published maxima need not refer to the same profile, usable fuel or
+reserve convention. Range depends on groundspeed; endurance depends on
+time aloft. Headwind reduces distance covered per hour without improving
+stored energy.</p>
+<h2 id="structural-engineering-the-loads-change-with-flight-phase">7.
+Structural engineering: the loads change with flight phase</h2>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Phase</th>
+<th>Dominant load path</th>
+<th>Engineering question</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Hover</td>
+<td>Rotor thrust → mounts/booms → primary structure → supported
+masses</td>
+<td>Local bending, fasteners, thrust asymmetry and vibration</td>
+</tr>
+<tr class="even">
+<td>Cruise</td>
+<td>Distributed wing lift → ribs/skin/spars → wing root → fuselage</td>
+<td>Bending, shear, torsion and aeroelastic deformation</td>
+</tr>
+<tr class="odd">
+<td>Transition</td>
+<td>Combined wing, rotor and inertia loads</td>
+<td>Which combination governs attachments?</td>
+</tr>
+<tr class="even">
+<td>Landing</td>
+<td>Ground reactions → gear attachments → airframe</td>
+<td>Impact energy, local crushing and load redistribution</td>
+</tr>
+<tr class="odd">
+<td>Cargo handling</td>
+<td>Restraints/floor/interface → primary structure</td>
+<td>Concentrated loads and center-of-mass limits</td>
+</tr>
+</tbody>
+</table>
+<p>No public internal structural drawing, laminate schedule or
+allowable-stress dataset was found in the cited sources. Composite
+construction, exact spar dimensions and numerical safety factors must
+not be invented from a photograph.</p>
+<p>For a semispan <span class="math inline">\(\ell\)</span>, coordinate
+<span class="math inline">\(y\)</span> outward from the root and net
+transverse load <span class="math inline">\(q(y)\)</span>,</p>
+<p><span class="math display">\[V_{root}=\int_0^\ell q(y)\,dy,\qquad
+M_{root}=\int_0^\ell yq(y)\,dy.\]</span></p>
+<p>A first beam model uses <span
+class="math inline">\(\sigma_x=Mz/I\)</span> and <span
+class="math inline">\(EIw&#39;&#39;&#39;&#39;=q\)</span>; an offset load
+also gives torque <span class="math inline">\(\mathcal T=Fe\)</span> and
+twist rate <span class="math inline">\(d\theta/dy=\mathcal
+T/(GJ)\)</span>. Wing mass and mounted hardware provide inertia relief
+in maneuver loading and also add local loads. Rotor mounts may govern in
+hover even when aerodynamic lift governs in cruise.</p>
+<p>For uniform lift with total <span
+class="math inline">\(L=nW\)</span>, a massless-wing illustration gives
+<span class="math inline">\(M_{root}=nWb/8\)</span> per wing. At 163.3
+kg and 6.706 m span, this is about 1.34 kN·m at <span
+class="math inline">\(n=1\)</span> and 2.68 kN·m at
+<strong>assumed</strong> <span class="math inline">\(n=2\)</span>. The
+latter is a classroom case, not a published aircraft load factor.
+Elliptical lift instead gives <span
+class="math inline">\(M_{root}=nWb/(3\pi)\)</span>, about 1.14 kN·m at
+<span class="math inline">\(n=1\)</span>. Load distribution matters even
+at identical total lift.</p>
+<p>A longer wing increases bending lever arm. Increasing section depth
+can improve bending stiffness efficiently, but packaging, airfoil
+thickness, buckling, joints and manufacturing constrain it. A light
+structure also needs torsional stiffness. NASA’s adaptive-wing
+discussion [4] illustrates why aerodynamic efficiency and aeroelastic
+response must be considered together; it does not describe Skyreach’s
+actual aeroelastic design.</p>
+<p>Dynamic modes satisfy <span
+class="math inline">\(K\phi=\omega^2M\phi\)</span>. Engine and rotor
+harmonics can excite structural modes. Checking one natural frequency
+cannot establish flutter clearance: flutter couples aerodynamic forces,
+inertia and elasticity and requires appropriate analysis and test.</p>
+<h2 id="cargo-fuel-burn-and-balance">8. Cargo, fuel burn and
+balance</h2>
+<p>The aircraft center of mass is</p>
+<p><span class="math display">\[x_{CG}=\frac{\sum_i m_i x_i}{\sum_i
+m_i}.\]</span></p>
+<p>Fuel burn changes both numerator and denominator. Cargo installation
+or release can abruptly change balance. For a retained aircraft of mass
+<span class="math inline">\(m_a\)</span> at <span
+class="math inline">\(x_a\)</span> carrying cargo <span
+class="math inline">\(m_c\)</span> at <span
+class="math inline">\(x_c\)</span>,</p>
+<p><span
+class="math display">\[x_{CG,before}=\frac{m_ax_a+m_cx_c}{m_a+m_c},\qquad
+x_{CG,after}=x_a.\]</span></p>
+<p>As an illustrative example, 10 kg located 0.5 m ahead of the retained
+150 kg aircraft’s center shifts the combined center forward by 31 mm;
+releasing it reverses that shift. Actual allowable limits are
+unavailable here. Pitch trim and static margin require
+aerodynamic-center and stability information as well as mass
+balance.</p>
+<p>A cargo-bay opening interrupts the shell load path; frames,
+reinforced edges and closures must transfer loads around it. Heavy
+compact cargo and low-density bulky cargo challenge different
+constraints: mass limit and 198 L volume are separate restrictions.
+Repeated VTOL cycles, vibration, moisture and marine exposure introduce
+fatigue, corrosion and inspection considerations even for flights that
+remain within static limits.</p>
+<h2 id="beamlab-activity-and-answer-checks">9. BeamLab activity and
+answer checks</h2>
+<p>Use <a
+href="https://ehsan-roohi.github.io/Aerospace-Structures/wing-lab.html">BeamLab</a>
+to study a <strong>generic equivalent semispan</strong>, not a
+reconstructed Skyreach wing.</p>
+<ol type="1">
+<li>Select a cantilever of length 3.3528 m; use constant illustrative
+<span class="math inline">\(EI=50,000\)</span> N·m².</li>
+<li>Apply an upward uniform load totaling <span
+class="math inline">\(W/2\approx800.7\)</span> N, or <span
+class="math inline">\(q\approx238.8\)</span> N/m. If the interface
+requires downward-positive load, reverse all force signs
+consistently.</li>
+<li>Compare root shear and moment with <span
+class="math inline">\(q\ell\)</span> and <span
+class="math inline">\(q\ell^2/2\)</span>. The magnitudes should be about
+800.7 N and 1,342 N·m.</li>
+<li>Compare tip displacement with <span
+class="math inline">\(q\ell^4/(8EI)\approx0.0754\)</span> m. Explain the
+constant-stiffness, small-deflection and massless-wing assumptions.</li>
+<li>Double loading: shear, moment and linear deflection should double.
+Double <span class="math inline">\(EI\)</span>: deflection halves but
+statically determinate reactions do not change.</li>
+<li>Add an <strong>assumed</strong> 5 kg hardware mass at 2 m from the
+root as a downward 49 N gravity load in the 1g case. Root moment changes
+by about 98 N·m. Then discuss why hover thrust at the same mount creates
+a different case.</li>
+<li>Draw a separate torsion free-body diagram for an assumed 200 N force
+offset by 0.15 m: torque is 30 N·m. A bending-only beam calculation
+cannot report the resulting twist without <span
+class="math inline">\(GJ\)</span> and a torsion model.</li>
+</ol>
+<p>Submit one free-body diagram, input table, shear/moment/deflection
+plots and a short explanation of how the model differs from the actual
+aircraft. This is optional enrichment, not a new graded assignment.</p>
+<h2 id="what-remains-unknown">10. What remains unknown?</h2>
+<p>A defensible performance reconstruction requires wing area and polar,
+propeller map, actual engine fuel-consumption map, usable fuel/reserves,
+battery usable energy, hover duration and measured mission data.
+Structural assessment additionally needs material properties, section
+geometry, joints, mass distribution and load envelopes. The headline and
+video do not supply these.</p>
+<p>A separate FAA announcement [5] authorizes a specified offshore
+operation using the <strong>V2</strong>, not blanket certification of
+Skyreach or proof of its maximum range. Likewise, lower-cost claims
+require a named comparator, utilization and maintenance accounting
+before they can be used in an engineering cost model.</p>
+<h2 id="references-and-media-provenance">References and media
+provenance</h2>
+<p>All online sources checked 11 November 2026. Manufacturer data retain
+their qualification as design specifications.</p>
+<ol type="1">
+<li>Skyways, <a
+href="https://www.skyways.com/newsroom/skyways-launches-skyreach-begins-customer-flights">Skyreach
+launch announcement</a>, 9 November 2026. Launch timing, development
+name and mission/loading statements.</li>
+<li>Skyways, <a href="https://www.skyways.com/skyreach">Skyreach product
+page</a>. Architecture, current specifications and official product
+visualization.</li>
+<li>Skyways, <a
+href="https://www.skyways.com/downloads/Skyways%20Spec%20Sheet%202026-11-04.pdf">Skyreach
+specification sheet, dated 4 November 2026</a>, two pages. Empty weight,
+range conditions, reserve and flight-test caveat. The dated sheet and
+live product page may change independently.</li>
+<li>NASA, <a
+href="https://www.nasa.gov/aeronautics/nasa-boeing-test-aircraft-wings/">NASA,
+Boeing Test How to Improve Performance of Longer, Narrower Aircraft
+Wings</a>, 18 December 2025. General aerodynamic–structural tradeoffs,
+not Skyreach validation.</li>
+<li>FAA, <a
+href="https://www.faa.gov/newsroom/faa-advances-american-drone-dominance-first-its-kind-authorization-long-range-drone">Authorization
+for long-range offshore drone operations</a>, 9 November 2026.
+Aircraft-specific scope: V2.</li>
+<li>Skyways, <a
+href="https://www.youtube.com/@skyways_official/videos">official video
+channel</a>. Video titles/IDs listed in Section 3; external playback
+availability can change.</li>
+<li>Zoomit, <a
+href="https://www.zoomit.ir/aviation-aerospace/470952-skyways-skyreach-cargo-drone-unveiled/">starting
+article</a>. User-supplied starting article, retrieved directly on 11
+November 2026.</li>
+</ol>
+<p><strong>Equation background:</strong> J. D. Anderson,
+<em>Introduction to Flight</em> (lift, drag and propeller-aircraft
+performance); J. G. Leishman, <em>Principles of Helicopter
+Aerodynamics</em> (actuator-disk hover theory); T. H. G. Megson,
+<em>Aircraft Structures for Engineering Students</em> (beam and
+thin-walled structural models). These textbook references identify
+standard theory; aircraft-specific inputs above are sourced separately.
+Original figures and calculations are teaching models, not manufacturer
+drawings.</p>
+</main></body></html>

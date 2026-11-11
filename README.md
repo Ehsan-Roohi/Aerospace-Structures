@@ -45,6 +45,11 @@ Design and compare in Wing Lab → save JSON and export STL → inspect every sl
 
 ## Further reading and support
 
+**Separate technology section:** [2 nm chips: why Taiwan leads, and the different challenges facing China and Japan](TWO_NANOMETER_CHIPS.md) · [Web reading](https://ehsan-roohi.github.io/Aerospace-Structures/case-studies/2nm-chips/)
+
+- **[Skyreach: hybrid VTOL, 18-hour endurance, aerodynamics, engines and structural loads](SKYREACH_CARGO_DRONE.md)** · [Illustrated reading and official videos](https://ehsan-roohi.github.io/Aerospace-Structures/case-studies/skyreach/)
+
+
 Optional aerospace technology reports: **[Falcon 9 and reusable launch engineering](FALCON_9_REUSABILITY.md)** · **[Fighter generations 1–6](FIGHTER_GENERATIONS.md)**
 
 

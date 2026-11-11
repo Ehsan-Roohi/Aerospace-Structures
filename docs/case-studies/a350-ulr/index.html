@@ -410,55 +410,246 @@ real aircraft limit without the actual mass stations and envelope.</li>
 <p>Submit a free-body diagram, shear/moment plots and a short statement
 separating source-confirmed modifications from your model assumptions.
 This is optional course enrichment, not a new grading requirement.</p>
+<h2
+id="was-there-enough-lift-and-engine-thrust-to-take-off-at-the-higher-weight">12.
+Was there enough lift and engine thrust to take off at the higher
+weight?</h2>
+<h3 id="separate-capacity-actual-mass-and-dispatch-limits">12.1 Separate
+capacity, actual mass and dispatch limits</h3>
+<p>The new tank’s 16.72-tonne illustrative fuel content is <strong>not
+automatically the increase in certified MTOW or the increase in every
+flight’s takeoff mass</strong>. Passenger/baggage mass, other fuel
+loads, installed-system mass and reserves also change the loading
+budget. The actual mass and takeoff speeds of the record mission were
+not published in the sources examined. Neither its duration nor its
+13-person complement identifies that mass.</p>
+<p>The successful test flights demonstrate takeoff and flight in the
+tested configurations. They do not, alone, establish performance at
+every weight, temperature, airport elevation or runway condition. The
+public material does not supply the ULR’s approved takeoff-performance
+database. Consequently, the defensible answer is <strong>capability
+demonstrated at tested conditions, with operational weight limited by
+the complete performance envelope</strong>, rather than an unqualified
+claim that maximum fuel is always usable.</p>
+<h3 id="can-an-unchanged-size-wing-generate-more-lift">12.2 Can an
+unchanged-size wing generate more lift?</h3>
+<p>Yes, within its aerodynamic, control and structural limits. At a
+fixed wing area <span class="math inline">\(S\)</span>,</p>
+<p><span class="math display">\[L=\tfrac12\rho V_a^2S C_L.\]</span></p>
+<p>More lift can come from greater airspeed or a greater lift
+coefficient, within the available high-lift configuration. Slats/flaps
+increase lift capability but also alter drag. Raising incidence
+indefinitely is impossible because stall, rotation geometry and control
+margins constrain it. No reviewed source establishes a ULR-specific new
+wing area or high-lift redesign.</p>
+<p>At a specified configuration and <span
+class="math inline">\(C_{L,\max}\)</span>, the elementary stall-speed
+scaling is</p>
+<p><span class="math display">\[V_s\approx\sqrt{\frac{2W}{\rho S
+C_{L,\max}}},\qquad
+\frac{V_{s,2}}{V_{s,1}}=\sqrt{\frac{W_2}{W_1}}.\]</span></p>
+<p>This is an aerodynamic scaling, not the certified definition or
+schedule for every takeoff V-speed. If characteristic lift-off speeds
+retain the same aerodynamic margin, a similar square-root trend applies.
+Actual <span class="math inline">\(V_1\)</span>, <span
+class="math inline">\(V_R\)</span>, <span
+class="math inline">\(V_{LOF}\)</span> and <span
+class="math inline">\(V_2\)</span> are separately established; they are
+not interchangeable. [10]</p>
+<p>For a <strong>generic loading example</strong>, let mass increase
+from 300 to 316.72 tonnes, keeping density, wing area and lift
+coefficient fixed. The ratio is 1.05573, so the airspeed ratio is
+<strong>1.02749</strong>: approximately <strong>2.75% more
+speed</strong> supplies <strong>5.57% more lift</strong>. An assumed
+170-knot characteristic speed would scale to about 174.7 knots. Neither
+speed is a published A350-ULR rotation speed.</p>
+<p>At unchanged speed instead, <span class="math inline">\(C_L\)</span>
+would need to increase by 5.57%. Whether that margin exists cannot be
+established without the actual configuration’s lift curve and margins.
+Thus a moderately heavier derivative does not necessarily need a larger
+wing, but its performance must be substantiated.</p>
+<h3
+id="was-the-engine-powerful-enough-and-did-airbus-install-a-stronger-one">12.3
+Was the engine powerful enough, and did Airbus install a stronger
+one?</h3>
+<p>Rolls-Royce gives the Trent XWB-97 a nominal rating of <strong>97,000
+lbf</strong>, approximately <strong>431.5 kN per engine</strong>, and
+identifies it as the A350-1000 engine [11]. The ULR retains that model
+[6]. The reviewed evidence does not establish a new ULR-only thrust
+rating. The XWB-84-to-XWB-97 changes described in the 2018 engine
+announcement belong to the -900/-1000 engine distinction; they must not
+be misrepresented as changes made for Sunrise.</p>
+<p>Using twice the nominal rating only as a reference, the generic
+300-to-316.72-tonne example gives</p>
+<p><span
+class="math display">\[\left(\frac{T}{W}\right)_{300t}\approx0.293,
+\qquad
+\left(\frac{T}{W}\right)_{316.72t}\approx0.278.\]</span></p>
+<p>That is a <strong>5.28% decrease</strong> in thrust-to-weight ratio
+at unchanged thrust. A fixed-wing aircraft does not need <span
+class="math inline">\(T/W&gt;1\)</span>: the wing supplies the principal
+upward force; thrust provides acceleration and overcomes drag. However,
+these rating-based ratios do not prove takeoff performance. Installed
+thrust changes with airspeed and ambient conditions, and installation
+losses and system demands matter. [10]</p>
+<p>A heavier configuration can therefore use the same engine model if it
+remains inside demonstrated/approved limits, perhaps with less allowable
+thrust reduction or more runway required. This is an engineering
+possibility, not evidence of a particular Qantas thrust-setting
+procedure.</p>
+<h3
+id="acceleration-and-runway-length-are-often-the-harder-questions">12.4
+Acceleration and runway length are often the harder questions</h3>
+<p>For a simplified level, still-air ground roll,</p>
+<p><span
+class="math display">\[m\frac{dV_g}{dt}=T-D-\mu_r(W-L),\]</span></p>
+<p>where <span class="math inline">\(\mu_r\)</span> is an effective
+rolling-resistance coefficient. In this still-air model <span
+class="math inline">\(V_a=V_g\)</span>; with wind, aerodynamic forces
+depend on air-relative velocity while distance traveled along the runway
+depends on groundspeed.</p>
+<p>A corresponding ground-roll model is</p>
+<p><span class="math display">\[s_g=\int_0^{V_{g,LOF}}
+\frac{m V_g}{T-D-\mu_r(W-L)}\,dV_g.\]</span></p>
+<p>Mass increases inertia. Lift and drag change during acceleration, and
+the available net force must remain sufficient to reach lift-off speed.
+Rotation and the airborne segment add distance beyond this simplified
+roll.</p>
+<p>If the net accelerating force were constant and unchanged, <span
+class="math inline">\(s_g\approx mV_{LOF}^2/(2F_{\rm net})\)</span>.
+Combining that approximation with <span
+class="math inline">\(V_{LOF}^2\propto W\)</span> gives <span
+class="math inline">\(s_g\propto W^2\)</span>. The example’s 5.57% mass
+increase would then imply approximately <strong>11.46% more ground-roll
+distance</strong>. This is a sensitivity illustration,
+<strong>not</strong> an A350 runway prediction; real thrust, drag and
+lift histories invalidate the constant-force assumption.</p>
+<p>At a correspondingly scaled speed, kinetic energy <span
+class="math inline">\(mV^2/2\)</span> also rises by 11.46%.
+Rejected-takeoff capability must consider the actual decision speed,
+brakes, tires, runway and stopping assumptions; it cannot be inferred
+from the lift equation.</p>
+<figure>
+<img src="takeoff-scaling.svg"
+alt="Original takeoff sensitivity curves" />
+<figcaption aria-hidden="true">Original takeoff sensitivity
+curves</figcaption>
+</figure>
+<p><em>Figure 4. Original analytical sensitivities at fixed aerodynamic
+configuration. The square-of-mass curve is an idealized
+constant-net-force ground-roll/energy scaling, not certified takeoff
+distance.</em></p>
+<h3 id="the-decisive-test-includes-losing-one-engine">12.5 The decisive
+test includes losing one engine</h3>
+<p>For a shallow, approximately steady climb,</p>
+<p><span
+class="math display">\[\sin\gamma\approx\frac{T-D}{W}.\]</span></p>
+<p>With one engine inoperative, use the surviving installed thrust and
+the appropriate drag, including failure/configuration effects. Applying
+a clean cruise <span class="math inline">\(L/D\)</span> to takeoff would
+miss flap, gear and failure-related drag.</p>
+<p>EASA CS 25.121(b) specifies a minimum <strong>2.4% steady climb
+gradient</strong> for a twin in the defined gear-retracted takeoff
+configuration at <span class="math inline">\(V_2\)</span>, with the
+critical engine inoperative. This is a gradient, not a 2.4-degree climb
+angle, and other segments and net flight-path/obstacle requirements also
+matter. This reading uses the published CS-25 text to explain the
+performance question, not to certify the derivative or determine its
+exact amendment basis. [10]</p>
+<p>More weight reduces excess-thrust margin. On a hot day or at a
+high-elevation airport, lower density raises the required true airspeed
+for a given lift state and available engine thrust may also be lower. A
+runway adequate on a cool sea-level day is not automatically adequate
+elsewhere. Headwind, slope, runway condition and obstacles further
+change the allowable loading.</p>
+<h3 id="what-would-close-the-numerical-aircraft-specific-question">12.6
+What would close the numerical aircraft-specific question?</h3>
+<p>A real calculation needs the approved flight-manual/performance data
+for the precise variant, actual takeoff mass and CG, flap/bleed/anti-ice
+configuration, runway lengths and slope, pressure altitude, temperature,
+wind, surface condition, obstacles and applicable engine-failure cases.
+Airbus’s airport-planning material is useful context but is not a
+substitute for dispatch performance data [12].</p>
+<p>For a given flight, the allowable takeoff mass is constrained by the
+most restrictive applicable structural, runway, climb/obstacle, brake
+and tire limit. If the desired fuel-plus-payload exceeds it, the
+operator must change loading or operating conditions, or use a different
+mission plan. Additional tank volume does not override those
+constraints.</p>
+<p><strong>Answer to the original question:</strong> the same-size wing
+can generate the extra lift at a modestly higher airspeed, and the
+existing XWB-97 can serve the ULR without a demonstrated new engine
+rating. What cannot be inferred from the headline is the remaining
+margin at maximum loading or the exact required runway. Those are
+performance-envelope questions, not consequences of the range record
+alone.</p>
 <h2 id="references-and-media">References and media</h2>
 <p>Sources accessed 11 November 2026. Bracketed numbers identify
 aircraft-specific evidence. All structural/fluid/performance
 calculations above are original idealized teaching analysis; their
 stated inputs are not proprietary aircraft data.</p>
 <ol type="1">
-<li><strong>Airbus, 9 November 2026.</strong> <a
+<li><p><strong>Airbus, 9 November 2026.</strong> <a
 href="https://www.airbus.com/en/newsroom/press-releases/2026-11-airbus-a350-1000ulr-for-qantas-breaks-world-distance-record">A350-1000ULR
 for Qantas breaks world distance record</a>. Record context, people
-aboard and latest delivery outlook.</li>
-<li><strong>Guinness World Records.</strong> <a
+aboard and latest delivery outlook.</p></li>
+<li><p><strong>Guinness World Records.</strong> <a
 href="https://www.guinnessworldrecords.com/world-records/farthest-flight-by-a-commercial-aircraft">Farthest
 flight by a commercial aircraft</a>. Formal record distance and date;
-not a detailed aircraft engineering specification.</li>
-<li><strong>Airbus, June 2026.</strong> <a
+not a detailed aircraft engineering specification.</p></li>
+<li><p><strong>Airbus, June 2026.</strong> <a
 href="https://www.airbus.com/en/newsroom/stories/2026-06-countdown-to-the-worlds-longest-commercial-flights-the-airbus-a350-1000ulr">Countdown
 to the world’s longest commercial flights</a>. Structural RCT
 integration, MTOW direction, FQMS, NGAC; official infographic and
-first-flight video on the source page.</li>
-<li><strong>Airbus, July 2026.</strong> <a
+first-flight video on the source page.</p></li>
+<li><p><strong>Airbus, July 2026.</strong> <a
 href="https://www.airbus.com/en/newsroom/stories/2026-07-extending-the-horizon-inside-the-a350-1000ulrs-longest-development-flight">Inside
 the A350-1000ULR’s longest development flight</a>. Detailed 20,900 L
 capacity, development-test distinction and crew-rest module. Its
 preliminary route-distance figure is superseded here by [1,2]. The
-source also hosts landing footage.</li>
-<li><strong>Airbus, June 2026.</strong> <a
+source also hosts landing footage.</p></li>
+<li><p><strong>Airbus, June 2026.</strong> <a
 href="https://www.airbus.com/en/newsroom/stories/2026-06-flight-testing-the-a350-1000ulr">Flight
 testing the A350-1000ULR</a>. Tank instrumentation, test equipment and
-localized galley cooling.</li>
-<li><strong>Rolls-Royce, 2026.</strong> <a
+localized galley cooling.</p></li>
+<li><p><strong>Rolls-Royce, 2026.</strong> <a
 href="https://www.rolls-royce.com/media/our-stories/discover/2026/powering-new-horizons-the-trent-xwb-97-joins-ultra-long-range-operations">The
 Trent XWB-97 joins Ultra Long Range operations</a>. Engine identity and
 operating context. Its earlier delivery-year wording is superseded by
-[1].</li>
-<li><strong>Airbus.</strong> <a
+[1].</p></li>
+<li><p><strong>Airbus.</strong> <a
 href="https://www.aircraft.airbus.com/en/aircraft/a350/a350-1000">A350-1000
 product information</a>. Baseline engine, configuration-dependent
 weights and geometry. Live specifications evolve; no unverified
-baseline-to-ULR numerical weight delta is asserted.</li>
-<li><strong>Qantas, June 2026.</strong> <a
+baseline-to-ULR numerical weight delta is asserted.</p></li>
+<li><p><strong>Qantas, June 2026.</strong> <a
 href="https://www.qantasnewsroom.com.au/media-releases/project-sunrise-onboard-experience-june-2026">Project
 Sunrise onboard experience</a>. Seat allocation, Wellbeing Zone and
-passenger-service context.</li>
-<li><strong>Zoomit, 11 November 2026.</strong> <a
+passenger-service context.</p></li>
+<li><p><strong>Zoomit, 11 November 2026.</strong> <a
 href="https://www.zoomit.ir/aviation-aerospace/470965-skyways-skyreach-cargo-vtol-drone/">Starting
 article: Airbus distance record</a>. Retrieved directly; its aircraft
 identity comes from page content, not the misleading URL slug. Used as
 the news prompt, not as proof of undisclosed structural or engine
-changes.</li>
+changes.</p></li>
+<li><p><strong>EASA.</strong> <a
+href="https://www.easa.europa.eu/en/document-library/easy-access-rules/online-publications/easy-access-rules-large-aeroplanes-cs-25?page=6">Easy
+Access Rules for Large Aeroplanes, CS-25, performance provisions</a>,
+published revision January 2023. Sections 25.101, 25.107, 25.109, 25.113
+and 25.121 provide the performance framework discussed here. The
+aircraft-specific certification basis and approved limitations remain
+separate.</p></li>
+<li><p><strong>Rolls-Royce, 4 February 2018.</strong> <a
+href="https://www.rolls-royce.com/media/press-releases/2018/04-02-2018-rr-trent-xwb-97-prepares-for-entry-into-service.aspx">Trent
+XWB-97 prepares for entry into service</a>. Manufacturer source for the
+97,000 lbf nominal thrust and the historical -84/-97
+distinction.</p></li>
+<li><p><strong>Airbus.</strong> <a
+href="https://mediaassets.airbus.com/pm_38_787_787482-4sir0n2x4f.pdf?fileName=a350-aircraft-characteristics-airport-and-maintenance-planning.pdf">Aircraft
+Characteristics: Airport and Maintenance Planning, A350</a>. Public
+planning reference located through Airbus’s indexed documentation. No
+ULR-specific runway distance is extracted or claimed from it
+here.</p></li>
 </ol>
 <p><strong>Theory background:</strong> T. H. G. Megson, <em>Aircraft
 Structures for Engineering Students</em> (load paths, bending and

@@ -45,6 +45,8 @@ Design and compare in Wing Lab → save JSON and export STL → inspect every sl
 
 ## Further reading and support
 
+- **[The Moon, cislunar infrastructure and future space security](CISLUNAR_SPACE_SECURITY.md)** · [Illustrated engineering reading](https://ehsan-roohi.github.io/Aerospace-Structures/case-studies/cislunar-security/)
+
 - **[Jet streams: faster flights, subsonic airliners and gust loads](JET_STREAMS_FLIGHT_SPEED_AND_LOADS.md)** · [Illustrated reading and NASA animation](https://ehsan-roohi.github.io/Aerospace-Structures/case-studies/jet-streams/)
 
 **Separate technology section:** [2 nm chips: why Taiwan leads, and the different challenges facing China and Japan](TWO_NANOMETER_CHIPS.md) · [Web reading](https://ehsan-roohi.github.io/Aerospace-Structures/case-studies/2nm-chips/)

@@ -10,6 +10,8 @@ Optional readings; assignment requirements are listed in [ASSIGNMENTS.md](ASSIGN
 
 ## Optional aerospace technology reports
 
+- **[Jet streams: faster flights, subsonic airliners and gust loads](JET_STREAMS_FLIGHT_SPEED_AND_LOADS.md)** · [Illustrated reading and NASA animation](https://ehsan-roohi.github.io/Aerospace-Structures/case-studies/jet-streams/)
+
 - **[Skyreach: hybrid VTOL, 18-hour endurance, aerodynamics, engines and structural loads](SKYREACH_CARGO_DRONE.md)** · [Illustrated reading and official videos](https://ehsan-roohi.github.io/Aerospace-Structures/case-studies/skyreach/)
 
 

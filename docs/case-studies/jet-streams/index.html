@@ -1,0 +1,409 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Jet streams, flight speed and structural loads · MIE 446</title><style>body{margin:0;background:#edf3f7;color:#18364a;font:18px/1.75 system-ui}main{max-width:1050px;margin:auto;background:white;padding:40px}h1{line-height:1.2}h2{color:#125c73;margin-top:2em}a{color:#086886}img,video{max-width:100%;height:auto}video{width:100%}table{border-collapse:collapse;display:block;overflow:auto}td,th{border:1px solid #ccd7df;padding:10px;text-align:left}.math.display{display:block;overflow:auto;padding:16px;background:#f1f6fa}nav{padding:12px;background:#edf3f7}@media(max-width:640px){main{padding:20px}body{font-size:16px}}</style><script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script></head><body><main><nav><a href="https://github.com/Ehsan-Roohi/Aerospace-Structures/blob/main/READINGS.md">All course readings</a> · <a href="../../wing-lab.html">BeamLab</a></nav><h1
+id="jet-streams-faster-flights-subsonic-airliners-and-gust-loads">Jet
+Streams: Faster Flights, Subsonic Airliners and Gust Loads</h1>
+<p><strong>MIE 446 · Aerospace Structures · UMass Amherst</strong><br />
+Engineering case study · 11 November 2026</p>
+<p><a
+href="https://ehsan-roohi.github.io/Aerospace-Structures/case-studies/jet-streams/">Illustrated
+web reading</a> · <a
+href="https://github.com/Ehsan-Roohi/Aerospace-Structures/blob/main/READINGS.md">Course
+readings</a> · <a
+href="https://ehsan-roohi.github.io/Aerospace-Structures/wing-lab.html">BeamLab</a></p>
+<h2 id="the-news-and-the-engineering-question">1. The news and the
+engineering question</h2>
+<p>Pete Syme’s <a
+href="https://www.businessinsider.com/supercharged-jet-streams-long-haul-high-speeds-shorter-flight-times-2026-11">Business
+Insider report of 10 November 2026</a> describes unusually fast Pacific
+crossings: United Flight 2 reportedly reached 767 mph groundspeed, while
+Flight 876 exceeded 785 mph. Flight 2 arrived 85 minutes ahead of
+schedule. These are attributed news figures, not independently
+reconstructed flight records. The article distinguishes the
+wind-assisted ground motion from supersonic flight [1].</p>
+<p>This reading develops the underlying mechanics independently. It is
+not a translation or reproduction of the news article. The central
+questions are: What velocity determines Mach number? Why can the return
+flight be slower? When does the atmosphere change structural loads? How
+should a wind-assisted flight be compared with a gust encounter?</p>
+<p><strong>Learning objectives:</strong> use velocity addition;
+distinguish true airspeed from groundspeed; calculate Mach number and
+flight time; explain jet-stream formation and shear; estimate a
+vertical-gust load increment; connect aerodynamic loads to beam bending
+and dynamic response.</p>
+<h2 id="three-velocities-two-reference-frames">2. Three velocities, two
+reference frames</h2>
+<p>For an aircraft, air mass and Earth,</p>
+<p><span class="math display">\[\boldsymbol V_g=\boldsymbol
+V_a+\boldsymbol U,\]</span></p>
+<p>where <span class="math inline">\(\boldsymbol V_g\)</span> is
+aircraft velocity relative to the ground, <span
+class="math inline">\(\boldsymbol V_a\)</span> is aircraft velocity
+relative to the local air and <span class="math inline">\(\boldsymbol
+U\)</span> is wind relative to the ground [2]. For perfectly aligned
+tailwind,</p>
+<p><span class="math display">\[V_g=V_a+U.\]</span></p>
+<p>A ground observer sees the aircraft’s progress over Earth. The wing
+encounters the local airflow, so lift, drag, compressibility and local
+Mach number depend on air-relative motion. A uniform moving air mass
+does not become an additional headwind at the wing simply because an
+observer changes reference frame.</p>
+<figure>
+<img src="velocity.svg"
+alt="Airspeed and tailwind add to groundspeed" />
+<figcaption aria-hidden="true">Airspeed and tailwind add to
+groundspeed</figcaption>
+</figure>
+<p><em>Figure 1. Original velocity-addition diagram for an illustrative
+airspeed of 250 m/s and aligned tailwind of 100 m/s. The result is 350
+m/s groundspeed. It is not a reconstruction of either reported
+flight.</em></p>
+<p>True airspeed (TAS), indicated airspeed and equivalent airspeed are
+also different quantities. This lesson uses TAS in the wind triangle and
+actual local density in aerodynamic force equations. Indicated airspeed
+must not be substituted without the appropriate air-data
+corrections.</p>
+<h3 id="crosswind-requires-vector-addition">Crosswind requires vector
+addition</h3>
+<p>Choose <span class="math inline">\(x\)</span> along the intended
+ground track and <span class="math inline">\(y\)</span> across it. For
+wind components <span class="math inline">\((U_x,U_y)\)</span> and a
+heading adjusted to hold that track,</p>
+<p><span class="math display">\[V_{a,y}=-U_y,\qquad
+V_g=U_x+\sqrt{V_a^2-U_y^2}.\]</span></p>
+<p>This forward-going solution assumes <span
+class="math inline">\(|U_y|\le V_a\)</span> and positive along-track
+groundspeed. At <span class="math inline">\(V_a=250\)</span> m/s, <span
+class="math inline">\(U_x=80\)</span> m/s and <span
+class="math inline">\(U_y=60\)</span> m/s, groundspeed is about 322.7
+m/s, rather than 330 m/s. Some airspeed is used to counter crosswind;
+scalar addition is valid only for aligned vectors.</p>
+<h2 id="why-a-high-groundspeed-does-not-mean-supersonic-flight">3. Why a
+high groundspeed does not mean supersonic flight</h2>
+<p>The relevant Mach number is</p>
+<p><span class="math display">\[M=\frac{V_a}{a},\qquad a=\sqrt{\gamma
+RT}.\]</span></p>
+<p>For an illustrative dry-air state <span
+class="math inline">\(T=216.65\)</span> K, <span
+class="math inline">\(\gamma=1.4\)</span> and <span
+class="math inline">\(R=287.05\)</span> J/(kg·K), the sound speed is
+about 295.1 m/s. An aircraft with <span
+class="math inline">\(V_a=250\)</span> m/s has <span
+class="math inline">\(M\approx0.847\)</span>. Add a 100 m/s tailwind:
+groundspeed becomes 350 m/s, about 783 mph, while air-relative Mach
+remains 0.847.</p>
+<p>Comparing groundspeed with the sound speed at sea level mixes
+reference frames and atmospheric states. Groundspeed divided by local
+sound speed would be about 1.19 in this example, but that number is not
+the aircraft’s aerodynamic Mach number. Sound also travels with the
+moving air mass. A high groundspeed alone is therefore not evidence of a
+sonic boom.</p>
+<p>Dynamic pressure makes the same distinction explicit:</p>
+<p><span class="math display">\[q_\infty=\frac12\rho V_a^2,\qquad
+L=q_\infty SC_L,\qquad D=q_\infty SC_D.\]</span></p>
+<p>At an <strong>assumed</strong> <span
+class="math inline">\(\rho=0.38\)</span> kg/m³ and <span
+class="math inline">\(V_a=250\)</span> m/s, dynamic pressure is 11.875
+kPa. Incorrectly using the 350 m/s groundspeed would give 23.275 kPa, an
+overestimate of 96%. The uniform tailwind does not nearly double wing
+loading. At steady level flight, total lift remains approximately equal
+to weight.</p>
+<h2 id="what-creates-a-jet-stream">4. What creates a jet stream?</h2>
+<p>Jet streams are concentrated bands of upper-level wind. Their
+midlatitude flow is generally eastward, but their paths meander and
+their local direction can differ substantially. NOAA relates their
+strength and position to the boundaries between warm and cold air, with
+especially strong jets in winter [3]. Uneven heating and Earth’s
+rotation both matter; “warm air rises” alone is not a complete
+explanation of a predominantly horizontal current.</p>
+<p>At large scales away from the equator, geostrophic balance relates
+horizontal pressure gradients to wind:</p>
+<p><span class="math display">\[f\,\boldsymbol k\times\boldsymbol
+U_g=-\frac1\rho\nabla_h p.\]</span></p>
+<p>Here <span class="math inline">\(f=2\Omega\sin\varphi\)</span> is the
+Coriolis parameter, and <span class="math inline">\(\boldsymbol
+k\)</span> points upward. Combining approximate geostrophic and
+hydrostatic balance yields the thermal-wind relation in pressure
+coordinates:</p>
+<p><span class="math display">\[\frac{\partial\boldsymbol
+U_g}{\partial\ln p}=-\frac{R}{f}\boldsymbol k\times\nabla_p
+T.\]</span></p>
+<p>For eastward velocity <span class="math inline">\(u_g\)</span> and
+northward coordinate <span class="math inline">\(y\)</span>,</p>
+<p><span class="math display">\[\frac{\partial u_g}{\partial\ln
+p}=\frac{R}{f}\frac{\partial T}{\partial y}.\]</span></p>
+<p>In a Northern Hemisphere region where temperature decreases
+northward, the right-hand side is negative. Pressure also decreases
+upward, so eastward wind tends to strengthen with height. This sign
+check is useful. Thermal wind describes <strong>vertical shear of the
+geostrophic wind</strong>, not a separate physical wind added to it [4].
+Tropical, curved, rapidly accelerating and small-scale flows require
+more care than this balanced approximation.</p>
+<h2 id="watch-the-jet-move-official-nasa-visualization">5. Watch the jet
+move: official NASA visualization</h2>
+<p><a href="https://svs.gsfc.nasa.gov/3864/"><img
+src="https://svs.gsfc.nasa.gov/vis/a000000/a003800/a003864/jetstream.00600.jpg"
+alt="NASA polar jet-stream visualization" /></a></p>
+<p><em>Figure 2. Credit: NASA/Goddard Space Flight Center Scientific
+Visualization Studio. This animation uses MERRA data for June–July 1988;
+it is an educational historical visualization, <strong>not the November
+2026 wind field</strong> [5].</em></p>
+<p><strong><a href="https://svs.gsfc.nasa.gov/3864/">Watch on NASA
+SVS</a></strong> · <a
+href="https://www.youtube.com/watch?v=m0TuC34WSR8">Official YouTube
+version linked by NASA</a> · <a
+href="https://svs.gsfc.nasa.gov/vis/a000000/a003800/a003864/jetstream.mp4">NASA
+MP4</a></p>
+<p>While watching, identify a ridge, a trough and a strong wind
+corridor. Explain why an aircraft could gain more from a slightly longer
+curved track than from the shortest geographic path. The web reading
+includes a video player; the links remain available if embedded playback
+is blocked.</p>
+<video controls preload="none" poster="https://svs.gsfc.nasa.gov/vis/a000000/a003800/a003864/jetstream.00600.jpg" aria-label="NASA historical polar jet stream animation"><source src="https://svs.gsfc.nasa.gov/vis/a000000/a003800/a003864/jetstream.mp4" type="video/mp4"><p><a href="https://svs.gsfc.nasa.gov/3864/">Watch the animation on NASA SVS</a></p></video><h2 id="flight-time-fuel-and-the-slow-return-journey">6. Flight time,
+fuel and the slow return journey</h2>
+<p>For constant airspeed, aligned constant wind and fixed ground
+distance <span class="math inline">\(D\)</span>,</p>
+<p><span class="math display">\[t=\frac{D}{V_a+U}.\]</span></p>
+<p>For an illustrative 6,000 km leg at 900 km/h TAS:</p>
+<table>
+<thead>
+<tr class="header">
+<th>Along-track wind</th>
+<th style="text-align: right;">Groundspeed</th>
+<th style="text-align: right;">Idealized flight time</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>200 km/h headwind</td>
+<td style="text-align: right;">700 km/h</td>
+<td style="text-align: right;">8.57 h</td>
+</tr>
+<tr class="even">
+<td>Calm</td>
+<td style="text-align: right;">900 km/h</td>
+<td style="text-align: right;">6.67 h</td>
+</tr>
+<tr class="odd">
+<td>200 km/h tailwind</td>
+<td style="text-align: right;">1,100 km/h</td>
+<td style="text-align: right;">5.45 h</td>
+</tr>
+</tbody>
+</table>
+<p>These examples exclude climb, descent, routing changes, taxi time and
+changing winds. A peak groundspeed is not an average speed for the whole
+route. Scheduled early arrival also depends on departure timing and
+timetable padding; it cannot be attributed entirely to wind.</p>
+<figure>
+<img src="flight-time.svg"
+alt="Wind changes flight time asymmetrically" />
+<figcaption aria-hidden="true">Wind changes flight time
+asymmetrically</figcaption>
+</figure>
+<p><em>Figure 3. Original calculation for the table’s assumed distance
+and TAS. The same wind magnitude costs more time as a headwind than it
+saves as a tailwind.</em></p>
+<p>For equal-distance outbound/return legs with the same wind magnitude
+<span class="math inline">\(U&lt;V_a\)</span>,</p>
+<p><span
+class="math display">\[t_{round}=\frac{D}{V_a+U}+\frac{D}{V_a-U}=\frac{2DV_a}{V_a^2-U^2}&gt;\frac{2D}{V_a}.\]</span></p>
+<p>Thus opposing wind effects do not cancel in total travel time. Actual
+routes and winds need not be symmetric.</p>
+<p>At roughly unchanged cruise fuel flow, less time aloft reduces trip
+fuel. A schematic cost integral is</p>
+<p><span class="math display">\[m_f\approx\int_{route}\frac{\dot
+m_f(s)}{V_{g,track}(s)}\,ds.\]</span></p>
+<p>The route length, wind, fuel flow, altitude, aircraft mass,
+temperature and airspeed all change together in real flight planning. A
+detour benefits fuel only if the resulting time and fuel-flow savings
+outweigh added distance and other constraints. The atmosphere provides
+favorable transport; the aircraft still needs thrust to overcome
+air-relative drag. This is not an engine-efficiency improvement caused
+by groundspeed.</p>
+<h2 id="strong-wind-and-turbulence-are-different-quantities">7. Strong
+wind and turbulence are different quantities</h2>
+<p><strong>Uniform wind:</strong> moving through a spatially uniform,
+steady air mass at fixed TAS does not create an additional aerodynamic
+force solely because the air mass is moving relative to Earth.</p>
+<p><strong>Wind shear:</strong> spatial or temporal changes in wind can
+change the air-relative velocity seen by the aircraft. Shear also
+provides energy for some atmospheric instabilities.</p>
+<p><strong>Turbulent gusts:</strong> unsteady three-dimensional velocity
+fluctuations can change incidence and pressure distribution, producing
+transient forces and moments.</p>
+<p>The National Weather Service identifies jet-adjacent shear as an
+important clear-air turbulence environment [6]. A high wind-speed core
+is not automatically the most turbulent location, and crossing a jet
+boundary does not guarantee a specific turbulence severity. Vertical
+shear, stability, waves and the local flow structure matter.</p>
+<p>One idealized stability indicator is the gradient Richardson
+number,</p>
+<p><span class="math display">\[Ri=\frac{N^2}{(\partial U/\partial
+z)^2+(\partial V/\partial z)^2},\qquad
+N^2=\frac{g}{\theta}\frac{\partial\theta}{\partial z}.\]</span></p>
+<p><span class="math inline">\(\theta\)</span> is potential temperature
+and <span class="math inline">\(N\)</span> the buoyancy frequency for
+the dry stratified model. Strong shear lowers <span
+class="math inline">\(Ri\)</span>, while stable stratification raises
+it. In idealized inviscid parallel-flow theory, <span
+class="math inline">\(Ri&gt;1/4\)</span> everywhere is a sufficient
+stability condition under specific assumptions; <span
+class="math inline">\(Ri&lt;1/4\)</span> somewhere does not prove
+turbulence will occur. This is not an operational turbulence
+forecast.</p>
+<p>Prosser et al. (2023) analyzed reanalysis-based clear-air-turbulence
+diagnostics over 1979–2020 and reported increases in several regions
+[7]. Such climatological evidence is distinct from attributing this
+particular November 2026 wind event to climate change. Diagnosed
+turbulence trends also are not a direct record of structural damage or
+passenger injuries.</p>
+<h2 id="how-a-vertical-gust-reaches-the-wing-structure">8. How a
+vertical gust reaches the wing structure</h2>
+<p>For a simplified sharp-edged vertical gust of speed <span
+class="math inline">\(w_g\)</span> and forward TAS <span
+class="math inline">\(V_a\)</span>, a small-angle estimate is</p>
+<p><span
+class="math display">\[\Delta\alpha\approx\frac{w_g}{V_a},\qquad \Delta
+C_L\approx a_L\Delta\alpha,\]</span></p>
+<p><span class="math display">\[\Delta L\approx\frac12\rho V_a S a_L
+w_g,\qquad \Delta n\approx\frac{\rho V_a a_L w_g}{2(W/S)}.\]</span></p>
+<p><span class="math inline">\(a_L=dC_L/d\alpha\)</span> is per radian,
+<span class="math inline">\(W/S\)</span> is wing loading in N/m² and
+<span class="math inline">\(n=L/W\)</span>. The sign follows gust
+direction. This is a linear, quasi-steady illustration, not a
+transport-aircraft gust certification calculation. It omits unsteady
+aerodynamics, gust penetration, gust shape, compressibility corrections,
+structural flexibility, control response and gust alleviation.</p>
+<p>With <strong>assumed</strong> <span
+class="math inline">\(\rho=0.38\)</span> kg/m³, <span
+class="math inline">\(V_a=250\)</span> m/s, <span
+class="math inline">\(a_L=5.0\)</span> rad⁻¹, <span
+class="math inline">\(w_g=5\)</span> m/s and <span
+class="math inline">\(W/S=6,000\)</span> N/m²,</p>
+<p><span class="math display">\[\Delta\alpha\approx0.020\
+\mathrm{rad}=1.15^\circ,\qquad\Delta n\approx0.198.\]</span></p>
+<p>The simplified lift-equivalent increment is about 0.20g. If <span
+class="math inline">\(S=100\)</span> m², the baseline weight is 600 kN
+and the gust lift increment is 118.75 kN. These are invented classroom
+inputs, not Boeing 787 specifications or measurements of the reported
+flights.</p>
+<figure>
+<img src="gust-loads.svg"
+alt="Uniform tailwind compared with vertical gust and bending load path" />
+<figcaption aria-hidden="true">Uniform tailwind compared with vertical
+gust and bending load path</figcaption>
+</figure>
+<p><em>Figure 4. Original conceptual load-path diagram. Uniform tailwind
+changes ground motion; a vertical gust changes incidence and can perturb
+lift, bending and torsion. Arrow lengths and wing shape are
+schematic.</em></p>
+<p>The incremental spanwise load <span
+class="math inline">\(\Delta\ell(y)\)</span> creates an incremental root
+bending moment</p>
+<p><span class="math display">\[\Delta
+M_{root}=\int_0^{b/2}y\,\Delta\ell(y)\,dy.\]</span></p>
+<p>If the full-wing increment is uniformly distributed, <span
+class="math inline">\(\Delta M_{root}=\Delta L\,b/8\)</span> per root.
+Taking an <strong>assumed</strong> span <span
+class="math inline">\(b=30\)</span> m gives 445.3 kN·m. A real wing also
+has distributed mass, engine inertia, torsion, elastic deformation and
+an aerodynamic load shape; the value is not a stress prediction without
+section geometry and material data.</p>
+<p>A representative structural model is</p>
+<p><span
+class="math display">\[M_s\ddot{\boldsymbol\eta}+C_s\dot{\boldsymbol\eta}+K_s\boldsymbol\eta=\boldsymbol
+F_g(t).\]</span></p>
+<p><span class="math inline">\(\boldsymbol\eta\)</span> contains
+structural degrees of freedom or modal amplitudes. The frequency content
+and spatial coherence of the gust determine which modes are excited.
+FAA’s dynamic-gust guidance explicitly concerns aircraft and engine
+responses [8]; it provides the appropriate context beyond the simple
+static estimate. Repeated load cycles can also contribute to fatigue, so
+peak bending moment alone does not describe lifetime effects.</p>
+<h2 id="optional-beamlab-activity">9. Optional BeamLab activity</h2>
+<p>Use <a
+href="https://ehsan-roohi.github.io/Aerospace-Structures/wing-lab.html">BeamLab</a>
+for a <strong>generic equivalent semispan</strong>, not a model of the
+aircraft in the article.</p>
+<ol type="1">
+<li>Choose a 15 m cantilever. Apply the illustrative gust increment as a
+uniform upward load of <span class="math inline">\(\Delta
+L/b=3,958.3\)</span> N/m. If the interface uses downward-positive loads,
+reverse signs consistently.</li>
+<li>Check the incremental root shear: 59.375 kN. Check the incremental
+root moment: 445.313 kN·m. These are gust increments; add a separately
+defined baseline load for total response.</li>
+<li>Use an <strong>assumed</strong> constant <span
+class="math inline">\(EI=2\times10^8\)</span> N·m². The Euler–Bernoulli
+tip-deflection increment is <span
+class="math inline">\(q\ell^4/(8EI)\approx0.125\)</span> m.</li>
+<li>Double <span class="math inline">\(w_g\)</span> in the linear gust
+model. The load, bending moment and deflection increments double. Double
+<span class="math inline">\(EI\)</span>: deflection halves, while
+cantilever reactions remain unchanged.</li>
+<li>Keep TAS, density and the gust fixed while changing a uniform
+tailwind from 0 to 100 m/s. Explain why this static aerodynamic load
+model gives unchanged gust loads but different travel times. A real gust
+field’s encounter frequency requires its spatial/temporal definition and
+advection, not groundspeed alone.</li>
+<li>Discuss what is missing: wing mass/inertia relief, aeroelasticity,
+controls, lift distribution, joint stresses, torsion and fatigue. A
+static BeamLab result cannot certify a turbulence encounter.</li>
+</ol>
+<p>Submit a free-body diagram, a table of assumptions, incremental
+shear/moment/deflection plots and a short explanation of the velocity
+used in each equation. This is optional enrichment, not a new graded
+assignment.</p>
+<h2 id="references-and-provenance">10. References and provenance</h2>
+<p>Sources checked 11 November 2026. News figures are attributed; all
+numerical classroom examples and schematic figures are original
+calculations. This reading is educational, not a substitute for
+aircraft-specific operating or certification procedures.</p>
+<ol type="1">
+<li>Pete Syme, <a
+href="https://www.businessinsider.com/supercharged-jet-streams-long-haul-high-speeds-shorter-flight-times-2026-11">If
+you’re catching a long-haul flight this week, get ready for some serious
+speed</a>, <em>Business Insider</em>, 10 November 2026. Starting news
+report; flight numbers and measured-speed claims are not independently
+reconstructed here.</li>
+<li>NASA Glenn Research Center, <a
+href="https://www1.grc.nasa.gov/beginners-guide-to-aeronautics/relative-velocity/">Relative
+Velocity</a>. Air-relative and ground-relative velocity; see also <a
+href="https://www1.grc.nasa.gov/beginners-guide-to-aeronautics/cruise-conditions/">Cruise
+Conditions</a>.</li>
+<li>NOAA, <a href="https://www.noaa.gov/jetstream/global/jet-stream">The
+Jet Stream</a>. Structure, seasonal behavior and air-mass
+boundaries.</li>
+<li>NOAA Physical Sciences Laboratory, <a
+href="https://psl.noaa.gov/enso/glossary.html">Climate Glossary: thermal
+wind</a>. Temperature gradients and vertical wind differences. The
+signed pressure-coordinate equations above are the standard
+geostrophic/hydrostatic derivation, with axes explicitly stated.</li>
+<li>NASA/Goddard Space Flight Center Scientific Visualization Studio, <a
+href="https://svs.gsfc.nasa.gov/3864/">The Polar Jet Stream, ID
+3864</a>, released 3 October 2011. NASA MERRA-based historical animation
+and credited still; source page supplies official video links.</li>
+<li>National Weather Service, <a
+href="https://www.weather.gov/source/zhu/ZHU_Training_Page/turbulence_stuff/turbulence/turbulence.htm">Turbulence
+training</a>. Shear and clear-air turbulence near jets; see also <a
+href="https://www.weather.gov/zme/safety_turb">Turbulence safety
+overview</a>.</li>
+<li>M. C. Prosser, P. D. Williams, G. J. Marlton and R. G. Harrison,
+“Evidence for Large Increases in Clear-Air Turbulence Over the Past Four
+Decades,” <em>Geophysical Research Letters</em> <strong>50</strong>,
+e2023GL103814 (2023). <a
+href="https://doi.org/10.1029/2023GL103814">DOI:
+10.1029/2023GL103814</a>. Reanalysis/diagnostic trend evidence; not an
+attribution study of the event in [1].</li>
+<li>FAA, <a
+href="https://www.faa.gov/regulations_policies/advisory_circulars/index.cfm/go/document.information/documentID/1024906">AC
+25.341-1: Dynamic Gust Loads</a>, issued 12 December 2014; listed active
+when checked. Guidance on dynamic gust and continuous-turbulence loads;
+the classroom formula here is not a substitute for its analysis.</li>
+</ol>
+<p><strong>Theory background:</strong> J. D. Anderson, <em>Introduction
+to Flight</em> (relative velocity, Mach number and aerodynamic loads);
+J. R. Holton and G. J. Hakim, <em>An Introduction to Dynamic
+Meteorology</em> (geostrophic/thermal-wind balance and stratified
+shear); T. H. G. Megson, <em>Aircraft Structures for Engineering
+Students</em> (beam bending, dynamics and aeroelastic load paths).</p>
+</main></body></html>

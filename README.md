@@ -45,6 +45,8 @@ Design and compare in Wing Lab → save JSON and export STL → inspect every sl
 
 ## Further reading and support
 
+- **[A350-1000 → A350-1000ULR: structural changes, fuel systems and the 24-hour record](A350_ULR_STRUCTURAL_CHANGES.md)** · [Illustrated reading and BeamLab exercise](https://ehsan-roohi.github.io/Aerospace-Structures/case-studies/a350-ulr/)
+
 - **[The Moon, cislunar infrastructure and future space security](CISLUNAR_SPACE_SECURITY.md)** · [Illustrated engineering reading](https://ehsan-roohi.github.io/Aerospace-Structures/case-studies/cislunar-security/)
 
 - **[Jet streams: faster flights, subsonic airliners and gust loads](JET_STREAMS_FLIGHT_SPEED_AND_LOADS.md)** · [Illustrated reading and NASA animation](https://ehsan-roohi.github.io/Aerospace-Structures/case-studies/jet-streams/)

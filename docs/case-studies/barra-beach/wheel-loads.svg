@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 450" role="img" aria-labelledby="title desc">
+<title id="title">Wheel loading and contact pressure</title><desc id="desc">Two hypothetical contact patches under equal load and a conceptual aircraft ground-force diagram.</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#16788a"/></marker></defs>
+<rect width="100%" height="100%" fill="#f1f6fa"/><g font-family="Arial,sans-serif" fill="#18364a"><text x="28" y="36" font-size="24" font-weight="bold">Wheel load, footprint and ground forces</text>
+<text x="28" y="65" font-size="16">Conceptual diagrams • not an aircraft geometry or tire specification</text>
+<text x="30" y="104" font-size="19" font-weight="bold">Equal wheel load: 22.07 kN</text>
+<path d="M30 265H410" stroke="#b5945f" stroke-width="5"/>
+<ellipse cx="125" cy="208" rx="44" ry="55" fill="#d5e6ed" stroke="#18364a" stroke-width="3"/>
+<ellipse cx="310" cy="221" rx="74" ry="42" fill="#d5e6ed" stroke="#18364a" stroke-width="3"/>
+<path d="M125 125V190" stroke="#16788a" stroke-width="3" marker-end="url(#arrow)"/><path d="M310 125V190" stroke="#16788a" stroke-width="3" marker-end="url(#arrow)"/>
+<path d="M100 265H150M260 265H360" stroke="#b45922" stroke-width="8"/>
+<text x="125" y="302" text-anchor="middle" font-size="17">A = 0.060 m²</text>
+<text x="310" y="302" text-anchor="middle" font-size="17">A = 0.120 m²</text>
+<text x="125" y="328" text-anchor="middle" font-size="19" font-weight="bold">368 kPa</text>
+<text x="310" y="328" text-anchor="middle" font-size="19" font-weight="bold">184 kPa</text>
+<text x="30" y="378" font-size="17">Average pressure = wheel load / contact area</text>
+<text x="30" y="404" font-size="15">Patch widths are schematic; values refer to area.</text>
+<path d="M440 95V420" stroke="#c3d4dc"/>
+<text x="480" y="104" font-size="19" font-weight="bold">Quasi-static vertical balance: N = W − L</text>
+<rect x="565" y="211" width="225" height="45" rx="20" fill="#c9dfe6" stroke="#18364a" stroke-width="2"/>
+<path d="M605 255V301M755 255V301" stroke="#18364a" stroke-width="4"/>
+<circle cx="605" cy="311" r="14" fill="#18364a"/><circle cx="755" cy="311" r="14" fill="#18364a"/>
+<path d="M480 327H920" stroke="#b5945f" stroke-width="5"/>
+<circle cx="675" cy="231" r="5" fill="#b45922"/>
+<g stroke="#16788a" stroke-width="3" marker-end="url(#arrow)"><path d="M675 218V135"/><path d="M700 240V307"/><path d="M605 379V334"/><path d="M755 379V334"/><path d="M780 231H895"/><path d="M588 317H510"/></g>
+<text x="687" y="155" font-size="19">L</text><text x="709" y="289" font-size="19">W</text>
+<text x="582" y="404" font-size="17">N main</text><text x="731" y="404" font-size="17">N nose</text>
+<text x="810" y="218" font-size="17">Thrust</text><text x="485" y="298" font-size="16">Resistance</text>
+<text x="480" y="433" font-size="15">Rearward ground force also produces a pitching moment.</text></g></svg>

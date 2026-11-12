@@ -10,6 +10,8 @@ Optional readings; assignment requirements are listed in [ASSIGNMENTS.md](ASSIGN
 
 ## Optional aerospace technology reports
 
+- **[Barra Airport: how an aircraft lands on a beach](BARRA_BEACH_RUNWAY.md)** · [Illustrated reading and BeamLab exercise](https://ehsan-roohi.github.io/Aerospace-Structures/case-studies/barra-beach/) · Sand bearing, tire pressure, touchdown loads, takeoff resistance, tidal operations and aircraft suitability.
+
 - **[A350-1000 → A350-1000ULR: structural changes, fuel systems and the 24-hour record](A350_ULR_STRUCTURAL_CHANGES.md)** · [Illustrated reading and BeamLab exercise](https://ehsan-roohi.github.io/Aerospace-Structures/case-studies/a350-ulr/)
 
 - **[The Moon, cislunar infrastructure and future space security](CISLUNAR_SPACE_SECURITY.md)** · [Illustrated engineering reading](https://ehsan-roohi.github.io/Aerospace-Structures/case-studies/cislunar-security/)
@@ -53,3 +55,4 @@ Optional readings; assignment requirements are listed in [ASSIGNMENTS.md](ASSIGN
 ## Semiconductor technology and manufacturing
 
 - **[The 2 nm challenge: Taiwan, China and Japan](TWO_NANOMETER_CHIPS.md)** · [Illustrated web reading](https://ehsan-roohi.github.io/Aerospace-Structures/case-studies/2nm-chips/) · GAA, EUV, SRAM, yield, industrial learning and source-qualified comparison.
+

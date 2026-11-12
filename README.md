@@ -45,6 +45,8 @@ Design and compare in Wing Lab → save JSON and export STL → inspect every sl
 
 ## Further reading and support
 
+- **[Barra Airport: beach landings, sand mechanics and landing-gear loads](BARRA_BEACH_RUNWAY.md)** · [Illustrated reading, aircraft comparison and BeamLab exercise](https://ehsan-roohi.github.io/Aerospace-Structures/case-studies/barra-beach/)
+
 - **[A350-1000 → A350-1000ULR: structural changes, fuel systems and the 24-hour record](A350_ULR_STRUCTURAL_CHANGES.md)** · [Illustrated reading and BeamLab exercise](https://ehsan-roohi.github.io/Aerospace-Structures/case-studies/a350-ulr/)
 
 - **[The Moon, cislunar infrastructure and future space security](CISLUNAR_SPACE_SECURITY.md)** · [Illustrated engineering reading](https://ehsan-roohi.github.io/Aerospace-Structures/case-studies/cislunar-security/)
@@ -60,3 +62,4 @@ Optional aerospace technology reports: **[Falcon 9 and reusable launch engineeri
 
 
 [Engineering readings and case studies](READINGS.md) · **[New: Hollywood, Boeing factory camouflage and lightweight structures](AIRCRAFT_FACTORY_CAMOUFLAGE.md)** · **[Jersey barriers and aerospace crashworthiness](JERSEY_BARRIER.md)** · **[New: Turkey Vulture soaring, thermals and migration](TURKEY_VULTURE_SOARING.md)** · [Teaching team](SYLLABUS.md#2-people-communication-and-resources) · [AI-use policy](SYLLABUS.md#ai-statement-learning-and-engineering-judgment-in-the-age-of-ai) · [Source code](src/mie446_wing) · [Tests](tests)
+

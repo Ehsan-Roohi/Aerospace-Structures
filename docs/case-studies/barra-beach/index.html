@@ -1,0 +1,880 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Barra: beach landings, aircraft and structural loads · MIE 446</title><meta name="description" content="How aircraft land on tidal sand: wheel pressure, landing gear loads, takeoff resistance, Twin Otter suitability and a BeamLab exercise."><style>
+*{box-sizing:border-box}body{margin:0;background:#edf3f7;color:#18364a;font:18px/1.75 system-ui}
+main{max-width:1080px;margin:auto;background:white;padding:42px}h1{font-size:2.5rem;line-height:1.15;max-width:850px}
+h2{color:#125c73;margin-top:2.3em;line-height:1.3}h3{line-height:1.4}a{color:#086886;text-underline-offset:3px}
+img{display:block;max-width:100%;height:auto;margin:auto}figure{margin:2em 0}figcaption{font-size:.85em;color:#506675}
+table{border-collapse:collapse;display:block;overflow:auto;max-width:100%;font-size:.92em;margin:1.3em 0}
+td,th{border:1px solid #ccd7df;padding:10px 12px;text-align:left;min-width:100px}th{background:#edf5f7}
+.math.display{display:block;overflow:auto;padding:16px;background:#f1f6fa}nav{padding:12px 18px;background:#edf3f7}
+#TOC{margin:2em 0;padding:18px 24px;border-left:4px solid #17788a;background:#f5f8fa}#TOC ul{margin:0;padding-left:20px}
+@media(max-width:640px){main{padding:20px}body{font-size:16px}h1{font-size:2rem}td,th{padding:8px}}
+@media print{body{background:white;font-size:11pt}main{max-width:none;padding:0}nav,#TOC{display:none}h2{break-after:avoid}figure,table{break-inside:avoid}}
+</style><script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script></head><body><main><nav><a href="https://github.com/Ehsan-Roohi/Aerospace-Structures/blob/main/READINGS.md">All readings</a> · <a href="../../wing-lab.html">BeamLab</a> · <a href="https://github.com/Ehsan-Roohi/Aerospace-Structures/blob/main/BARRA_BEACH_RUNWAY.md">GitHub text</a></nav>
+
+
+<h1 id="barra-airport-how-an-aircraft-lands-on-a-beach">Barra Airport:
+How an Aircraft Lands on a Beach</h1>
+<p><strong>MIE 446 · Aerospace Structures · University of Massachusetts
+Amherst</strong><br />
+Independent engineering case study · 12 November 2026</p>
+<p><a
+href="https://ehsan-roohi.github.io/Aerospace-Structures/case-studies/barra-beach/">Illustrated
+web reading</a> · <a
+href="https://github.com/Ehsan-Roohi/Aerospace-Structures/blob/main/READINGS.md">Course
+readings</a> · <a
+href="https://ehsan-roohi.github.io/Aerospace-Structures/wing-lab.html">BeamLab</a></p>
+<h2 id="the-engineering-question">1. The engineering question</h2>
+<p>An aircraft touches down on a Scottish beach, rolls through wet sand,
+and taxis toward a terminal. Later, the sea covers the runway. Why do
+the wheels not disappear into the sand? What prevents the nose gear from
+digging in? Can any small aircraft do this—and could an airliner do
+it?</p>
+<p>Barra works because the aircraft, beach, operating window and
+maintenance system are considered together. Short takeoff and landing
+capability is valuable, but it is only one part of the answer. A surface
+that supports a stationary aircraft may still produce excessive rolling
+resistance, damaging impact loads or inadequate directional control.</p>
+<p>This original lesson was prompted by <a
+href="https://www.zoomit.ir/aviation-aerospace/471013-barra-airport-tidal-beach-runway/">Zoomit’s
+article on Barra’s tidal runway</a>, retrieved on 12 November 2026. It
+extends the topic using airport publications, manufacturer data and
+engineering analysis; it is not a translation or reproduction. All
+numerical examples below are explicitly hypothetical unless a source is
+identified.</p>
+<p><strong>Learning goals:</strong> connect wheel loading to ground
+pressure; distinguish firm coastal sand from loose sand; explain
+touchdown and takeoff force balances; trace landing loads into the
+airframe; evaluate aircraft suitability; and separate a classroom model
+from operational performance data.</p>
+<p><strong>Scope:</strong> this is a structures and mechanics lesson,
+not a flying procedure. Aircraft flight manuals, operator procedures,
+the current AIP/NOTAMs and airport permission determine an actual
+flight.</p>
+<details><summary>Explore the lesson: 14 sections</summary><nav id="TOC" role="doc-toc">
+<ul>
+<li><a href="#barra-airport-how-an-aircraft-lands-on-a-beach"
+id="toc-barra-airport-how-an-aircraft-lands-on-a-beach">Barra Airport:
+How an Aircraft Lands on a Beach</a>
+<ul>
+<li><a href="#the-engineering-question"
+id="toc-the-engineering-question">1. The engineering question</a></li>
+<li><a href="#what-is-unusual-about-barra"
+id="toc-what-is-unusual-about-barra">2. What is unusual about
+Barra?</a></li>
+<li><a href="#why-some-beach-sand-can-support-an-aircraft"
+id="toc-why-some-beach-sand-can-support-an-aircraft">3. Why some beach
+sand can support an aircraft</a></li>
+<li><a href="#why-tire-size-wheel-load-and-lift-matter"
+id="toc-why-tire-size-wheel-load-and-lift-matter">4. Why tire size,
+wheel load and lift matter</a></li>
+<li><a href="#how-arrival-on-sand-works-the-physical-sequence"
+id="toc-how-arrival-on-sand-works-the-physical-sequence">5. How arrival
+on sand works: the physical sequence</a></li>
+<li><a href="#where-the-landing-loads-go"
+id="toc-where-the-landing-loads-go">6. Where the landing loads
+go</a></li>
+<li><a href="#why-getting-airborne-again-may-be-harder-than-landing"
+id="toc-why-getting-airborne-again-may-be-harder-than-landing">7. Why
+getting airborne again may be harder than landing</a></li>
+<li><a href="#why-the-twin-otter-fits-this-mission"
+id="toc-why-the-twin-otter-fits-this-mission">8. Why the Twin Otter fits
+this mission</a></li>
+<li><a href="#what-other-aircraft-can-land-on-sand"
+id="toc-what-other-aircraft-can-land-on-sand">9. What other aircraft can
+land on sand?</a></li>
+<li><a
+href="#water-sand-and-salt-attack-different-parts-of-the-aircraft"
+id="toc-water-sand-and-salt-attack-different-parts-of-the-aircraft">10.
+Water, sand and salt attack different parts of the aircraft</a></li>
+<li><a href="#a-runway-that-appears-and-disappears"
+id="toc-a-runway-that-appears-and-disappears">11. A runway that appears
+and disappears</a></li>
+<li><a href="#worked-structural-exercise-a-landing-gear-attachment"
+id="toc-worked-structural-exercise-a-landing-gear-attachment">12. Worked
+structural exercise: a landing-gear attachment</a></li>
+<li><a href="#discussion-questions" id="toc-discussion-questions">13.
+Discussion questions</a></li>
+<li><a href="#evidence-boundaries-and-references"
+id="toc-evidence-boundaries-and-references">14. Evidence boundaries and
+references</a></li>
+</ul></li>
+</ul>
+</nav></details>
+<h2 id="what-is-unusual-about-barra">2. What is unusual about
+Barra?</h2>
+<p>Barra Airport, ICAO <strong>EGPR</strong>, uses the tidal beach of
+Traigh Mhòr in Scotland’s Outer Hebrides. HIAL describes it as the
+world’s only airport where scheduled flights use a tidal beach runway.
+The distinction concerns <strong>scheduled service on a tidal
+beach</strong>, not the claim that aircraft never land on beaches
+elsewhere. Three marked runway axes offer choices for changing winds.
+HIAL records the first arrival in 1933 and the first scheduled service
+on 7 August 1936; Loganair operates the Glasgow connection with Twin
+Otters [1,2].</p>
+<p>The UK AIP edition effective 29 October 2026 gives the following
+dimensions and declared distances [3]. These are a dated teaching
+snapshot, not a current dispatch table.</p>
+<table>
+<colgroup>
+<col style="width: 13%" />
+<col style="width: 17%" />
+<col style="width: 17%" />
+<col style="width: 17%" />
+<col style="width: 17%" />
+<col style="width: 17%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Runway direction</th>
+<th style="text-align: right;">Physical length × width</th>
+<th style="text-align: right;">TORA</th>
+<th style="text-align: right;">TODA</th>
+<th style="text-align: right;">ASDA</th>
+<th style="text-align: right;">LDA</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>07</td>
+<td style="text-align: right;">799 × 60 m</td>
+<td style="text-align: right;">799 m</td>
+<td style="text-align: right;">799 m</td>
+<td style="text-align: right;">799 m</td>
+<td style="text-align: right;">799 m</td>
+</tr>
+<tr class="even">
+<td>25</td>
+<td style="text-align: right;">799 × 60 m</td>
+<td style="text-align: right;">799 m</td>
+<td style="text-align: right;">799 m</td>
+<td style="text-align: right;">799 m</td>
+<td style="text-align: right;">799 m</td>
+</tr>
+<tr class="odd">
+<td>11</td>
+<td style="text-align: right;">680 × 46 m</td>
+<td style="text-align: right;">667 m</td>
+<td style="text-align: right;">667 m</td>
+<td style="text-align: right;">667 m</td>
+<td style="text-align: right;">617 m</td>
+</tr>
+<tr class="even">
+<td>29</td>
+<td style="text-align: right;">680 × 46 m</td>
+<td style="text-align: right;">667 m</td>
+<td style="text-align: right;">667 m</td>
+<td style="text-align: right;">667 m</td>
+<td style="text-align: right;">597 m</td>
+</tr>
+<tr class="odd">
+<td>15</td>
+<td style="text-align: right;">846 × 46 m</td>
+<td style="text-align: right;">799 m</td>
+<td style="text-align: right;">799 m</td>
+<td style="text-align: right;">799 m</td>
+<td style="text-align: right;">796 m</td>
+</tr>
+<tr class="even">
+<td>33</td>
+<td style="text-align: right;">846 × 46 m</td>
+<td style="text-align: right;">799 m</td>
+<td style="text-align: right;">799 m</td>
+<td style="text-align: right;">799 m</td>
+<td style="text-align: right;">776 m</td>
+</tr>
+</tbody>
+</table>
+<p>TORA is takeoff run available; TODA is takeoff distance available;
+ASDA is accelerate-stop distance available; LDA is landing distance
+available. <strong>Visible beach length, physical runway length and
+declared usable distance are different quantities.</strong> Marker
+posts, displaced thresholds and obstacle clearance matter. The 846 m
+physical runway is not an 846 m landing allowance in both
+directions.</p>
+<p>More consequential than the dimensions is the AIP’s warning that
+beach support, braking and contamination cannot be assumed constant or
+predictable. Hard sand ridges and standing water can also be present [3,
+§2.20]. Thus, “firm sand” describes a possible operating condition, not
+a guaranteed pavement specification.</p>
+<h2 id="why-some-beach-sand-can-support-an-aircraft">3. Why some beach
+sand can support an aircraft</h2>
+<h3 id="grains-carry-loads-through-a-skeleton">Grains carry loads
+through a skeleton</h3>
+<p>Sand consists of grains with voids between them. Load is transmitted
+through grain contacts. Packing density, grain size distribution,
+drainage, water-table position and loading history affect the resulting
+strength and deformation. The surface color or the fact that it is wet
+does not supply a bearing-capacity value.</p>
+<p>For a saturated soil, effective stress is</p>
+<p><span class="math display">\[\sigma&#39;=\sigma-u,\]</span></p>
+<p>where <span class="math inline">\(\sigma\)</span> is total
+compressive stress and <span class="math inline">\(u\)</span> is
+pore-water pressure. A simple drained shear-strength model is</p>
+<p><span
+class="math display">\[\tau_f=c&#39;+\sigma&#39;_n\tan\phi&#39;.\]</span></p>
+<p>For clean sand, effective cohesion <span
+class="math inline">\(c&#39;\)</span> is commonly approximated as zero;
+friction and confinement are central. Increased pore pressure reduces
+effective contact stress for a fixed total stress. USACE discusses these
+effective-stress and drained-strength principles [8]. This model does
+not establish the local parameters at Barra.</p>
+<h3 id="damp-is-not-the-same-as-submerged">Damp is not the same as
+submerged</h3>
+<p>Partially saturated sand can develop capillary suction, adding
+apparent strength. Fully saturated sand below the water table does not
+receive the same air–water meniscus contribution. Research on sandy
+coastal soils explicitly relates bearing capacity to moisture, suction
+and sediment characteristics [9]. That study concerns a North Carolina
+beach, not a measurement campaign at Barra.</p>
+<p>Tidal processes can redistribute and rearrange sediment, but a
+receding tide is not an inspection certificate. A relatively dense,
+drained patch and a soft waterlogged patch can coexist. An apparently
+firm crust can also hide weaker material. It is therefore incorrect to
+say either “wet sand is always stronger” or “the tide compresses the
+entire runway to a known strength.”</p>
+<h3 id="bearing-capacity-is-not-the-whole-question">Bearing capacity is
+not the whole question</h3>
+<p>The soil must resist local shear failure, but acceptable operation
+also requires limited rutting, adequate traction, manageable rolling
+resistance and tolerable roughness. A soil can avoid catastrophic
+bearing failure yet deform enough to make takeoff impossible.
+Conversely, a hard ridge can carry the wheel easily while delivering an
+unacceptable shock.</p>
+<h2 id="why-tire-size-wheel-load-and-lift-matter">4. Why tire size,
+wheel load and lift matter</h2>
+<p>For one wheel, the average contact pressure is</p>
+<p><span class="math display">\[\bar p=\frac{N_w}{A_c},\]</span></p>
+<p>where <span class="math inline">\(N_w\)</span> is wheel normal load
+and <span class="math inline">\(A_c\)</span> is the actual tire–ground
+contact area. Pressure varies across the patch. Inflation pressure helps
+set tire deformation and patch size, but carcass stiffness, wheel load,
+tire geometry and soil deformation prevent a universal equality between
+inflation pressure and ground pressure.</p>
+<p>Large tires can spread load and negotiate small irregularities more
+effectively. Lower inflation pressure may enlarge a footprint
+<strong>within the approved tire and aircraft limits</strong>;
+arbitrarily deflating tires is not a solution. Excessive deflection can
+create heat, sidewall damage, bead problems and reduced clearance. Tire
+size also adds mass and aerodynamic drag.</p>
+<p><strong>Illustrative example—not Twin Otter tire data:</strong> take
+<span class="math inline">\(m=5,000\)</span> kg, <span
+class="math inline">\(g=9.81\)</span> m/s², and two main wheels carrying
+90% of the stationary weight equally. Each main wheel carries</p>
+<p><span class="math display">\[N_w=0.45mg=22.07\
+\mathrm{kN}.\]</span></p>
+<table>
+<thead>
+<tr class="header">
+<th>Assumed contact patch per main wheel</th>
+<th style="text-align: right;">Average pressure</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>0.060 m²</td>
+<td style="text-align: right;">368 kPa</td>
+</tr>
+<tr class="even">
+<td>0.120 m²</td>
+<td style="text-align: right;">184 kPa</td>
+</tr>
+</tbody>
+</table>
+<p>Doubling footprint halves average pressure at fixed load. This
+comparison does <strong>not</strong> mean that changing inflation
+pressure always doubles the real footprint.</p>
+<p>During approximately level ground motion,</p>
+<p><span class="math display">\[N_{total}\approx W-L.\]</span></p>
+<p>If lift still carries 60% of weight, and we retain the same assumed
+load fractions and 0.120 m² patches, pressure falls to about 73.6 kPa
+per main wheel. Real patches and gear load fractions change with lift,
+attitude, pitching moment and braking; the fixed-patch calculation
+isolates the effect of unloading. During touchdown, vertical
+acceleration must be included instead of using this quasi-static
+equation.</p>
+<figure>
+<img src="wheel-loads.svg"
+alt="Wheel pressure and aircraft ground forces" />
+<figcaption aria-hidden="true">Wheel pressure and aircraft ground
+forces</figcaption>
+</figure>
+<p><em>Figure 1. Original schematic. A wider footprint reduces average
+pressure at the same load. Lift unloads the wheels during the ground
+run; rearward ground forces introduce pitching moments as well as
+slowing the aircraft.</em></p>
+<h2 id="how-arrival-on-sand-works-the-physical-sequence">5. How arrival
+on sand works: the physical sequence</h2>
+<h3 id="approach-airspeed-and-ground-speed-do-different-jobs">Approach:
+airspeed and ground speed do different jobs</h3>
+<p>The wing responds to airspeed; the distance covered along the beach
+depends on ground speed. In a simplified aligned headwind,</p>
+<p><span class="math display">\[V_g=V_a-U_h,\qquad L=\tfrac12\rho
+V_a^2SC_L.\]</span></p>
+<p>At an illustrative <span class="math inline">\(V_a=30\)</span> m/s, a
+steady 5 m/s headwind reduces ground speed from 30 to 25 m/s.
+Translational kinetic energy relative to the ground changes by <span
+class="math inline">\((25/30)^2=0.694\)</span>, about a <strong>31%
+reduction</strong>. This is an energy comparison, not a prediction of
+landing-distance reduction: gusts, touchdown position and braking also
+change performance.</p>
+<p>For wind speed <span class="math inline">\(U\)</span> making angle
+<span class="math inline">\(\theta\)</span> to the runway direction, the
+aligned and crosswind components are <span
+class="math inline">\(U\cos\theta\)</span> and <span
+class="math inline">\(U\sin\theta\)</span>. Several runway orientations
+improve the available choice, although they do not eliminate crosswind,
+terrain-induced turbulence or surface limitations.</p>
+<h3 id="flare-and-touchdown-limit-vertical-energy">Flare and touchdown:
+limit vertical energy</h3>
+<p>Touchdown must manage downward velocity as well as forward speed. The
+vertical kinetic energy is</p>
+<p><span class="math display">\[E_z=\tfrac12m v_z^2.\]</span></p>
+<p>Doubling sink speed quadruples that energy. It must be handled
+through tire deflection, landing-gear compliance and damping, airframe
+deformation, and some soil deformation. The purpose is not simply a
+comfortable arrival: excessive local wheel load promotes rutting and
+large attachment loads.</p>
+<p>The FAA’s general soft-field discussion explains the value of a
+gentle transfer from wing support to wheel support, with particular care
+for nose-gear loading [6]. It supplies general principles, not a Twin
+Otter-specific power, flap or touchdown procedure. Prolonging a float to
+achieve a soft touchdown can consume too much runway; softness and
+stopping distance must be satisfied together.</p>
+<h3
+id="rollout-protect-the-nose-gear-and-maintain-directional-control">Rollout:
+protect the nose gear and maintain directional control</h3>
+<p>As lift decays, the ground supports more weight. A small, heavily
+loaded nosewheel can sink or encounter a ridge. The associated rearward
+force creates a nose-down pitching tendency and increased drag. Unequal
+resistance beneath the left and right main wheels produces yaw. A wheel
+entering a soft patch is therefore a coupled vertical, longitudinal and
+directional event.</p>
+<p>Approved reverse-pitch operation can provide deceleration without
+depending entirely on tire–ground braking. It does not remove spray,
+ingestion or directional-control concerns. A blanket instruction to use
+maximum reverse, avoid all braking, or apply a generic soft-field
+technique is inappropriate: the aircraft’s approved procedure
+governs.</p>
+<h3 id="taxi-lower-speed-is-not-zero-risk">Taxi: lower speed is not zero
+risk</h3>
+<p>Once the wing carries little weight, wheel loading approaches its
+static level. Soft patches can increase breakaway resistance after a
+stop; tight turns introduce scrub and side load. The aircraft must
+follow suitable assessed ground routes, not merely aim for the shortest
+route to the building. A safe touchdown does not prove that taxiing and
+the subsequent departure are feasible.</p>
+<h2 id="where-the-landing-loads-go">6. Where the landing loads go</h2>
+<p>At touchdown, the load path starts at the tire contact patch, passes
+through the wheel and axle into the landing-gear members and
+attachments, then enters local frames, bulkheads and skin. Inertial
+loads from the fuselage, passengers, engines and wings balance these
+reactions throughout the aircraft. <strong>A vertical force at a wheel
+does not travel only vertically:</strong> offsets create bending and
+torsion.</p>
+<p>For a vertical one-degree-of-freedom model, an average-force energy
+balance over downward stopping distance <span
+class="math inline">\(s\)</span> gives</p>
+<p><span class="math display">\[\bar N\approx W-\bar L+\frac{m
+v_z^2}{2s}.\]</span></p>
+<p>Assumptions: negligible rebound, an effective mass <span
+class="math inline">\(m\)</span> translating vertically, lift
+represented by its displacement-average, and <span
+class="math inline">\(s\)</span> including the modeled system’s stopping
+displacement. This is <strong>not peak force</strong>, a certification
+load case, or permission to count uncertain sand sinkage as reliable
+shock absorption.</p>
+<p>With the hypothetical 5,000 kg aircraft, <span
+class="math inline">\(\bar L=0.6W\)</span> and <span
+class="math inline">\(s=0.30\)</span> m:</p>
+<table>
+<thead>
+<tr class="header">
+<th>Sink speed</th>
+<th style="text-align: right;">Vertical kinetic energy</th>
+<th style="text-align: right;">Average total ground reaction</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1.0 m/s</td>
+<td style="text-align: right;">2.50 kJ</td>
+<td style="text-align: right;">27.95 kN</td>
+</tr>
+<tr class="even">
+<td>2.0 m/s</td>
+<td style="text-align: right;">10.0 kJ</td>
+<td style="text-align: right;">52.95 kN</td>
+</tr>
+</tbody>
+</table>
+<p>Notice that <strong>energy quadruples, but total reaction does
+not</strong> because the <span class="math inline">\(W-\bar L\)</span>
+term remains. Peak load depends on the force–deflection history,
+damping, tire behavior and pitch/roll response. A hard ridge can shorten
+the effective stopping time and raise peak loads substantially.</p>
+<p>A rearward wheel force <span class="math inline">\(F_x\)</span>
+acting a height <span class="math inline">\(h\)</span> below the center
+of mass creates a pitching moment of magnitude approximately <span
+class="math inline">\(F_xh\)</span>. In a simplified level braking model
+with wheelbase <span class="math inline">\(\ell\)</span>, no aerodynamic
+pitching moment and negligible pitch acceleration,</p>
+<p><span class="math display">\[\Delta N_{nose}\approx\frac{m a
+h}{\ell}.\]</span></p>
+<p>For <span class="math inline">\(a=2\)</span> m/s², <span
+class="math inline">\(h=1.5\)</span> m and <span
+class="math inline">\(\ell=4\)</span> m, the hypothetical aircraft
+transfers about <strong>3.75 kN</strong> onto the nose gear. These are
+assumed geometry values, not Twin Otter dimensions. Aerodynamic drag,
+thrust-line height, elevator forces and actual gear geometry modify the
+result.</p>
+<p>For a gear member, an elementary first screen is</p>
+<p><span
+class="math display">\[\sigma\approx\frac{N}{A_s}\pm\frac{Mc}{I},\qquad
+M=Fe.\]</span></p>
+<p>Here <span class="math inline">\(A_s\)</span> is structural area,
+<span class="math inline">\(e\)</span> the load offset, <span
+class="math inline">\(I\)</span> the appropriate second moment and <span
+class="math inline">\(c\)</span> the extreme-fiber distance. This screen
+must eventually be supplemented by joint bearing, bolt shear, local
+buckling, fatigue, torsion and multiaxial stress assessment.</p>
+<h2 id="why-getting-airborne-again-may-be-harder-than-landing">7. Why
+getting airborne again may be harder than landing</h2>
+<p>Soft ground dissipates energy and can help slow a landing aircraft.
+During takeoff that same dissipation opposes acceleration. A useful
+ground-run balance is</p>
+<p><span class="math display">\[m\dot V_g=T-D-R_s,\qquad
+R_s\approx\mu_{eff}(W-L),\]</span></p>
+<p>where <span class="math inline">\(\mu_{eff}\)</span> is an
+<strong>effective rolling-resistance parameter</strong>, not a measured
+braking-friction coefficient. It lumps tire rolling losses and soil
+deformation into a deliberately crude model. A deeper rut, plowing soil
+ahead of a tire and repeated passage can make resistance nonlinear and
+history-dependent. It is not generally proportional to normal load with
+a constant coefficient.</p>
+<p>If forces were constant from rest to target ground speed <span
+class="math inline">\(V_*\)</span>,</p>
+<p><span
+class="math display">\[s_g\approx\frac{mV_*^2}{2[T-D-\mu_{eff}(W-L)]}.\]</span></p>
+<p>The expression is meaningful only when the denominator is positive.
+Real takeoff requires integrating changing thrust, drag, lift and soil
+forces, followed by assessing climb and obstacle clearance.</p>
+<p><strong>Toy sensitivity example:</strong> <span
+class="math inline">\(m=5,000\)</span> kg, <span
+class="math inline">\(T=12\)</span> kN, <span
+class="math inline">\(D=2\)</span> kN, <span
+class="math inline">\(L=0.30W\)</span>, <span
+class="math inline">\(V_*=30\)</span> m/s. These constants are selected
+to reveal sensitivity, not to represent Barra or the Twin Otter.</p>
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 26%" />
+<col style="width: 26%" />
+<col style="width: 26%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Assumed <span class="math inline">\(\mu_{eff}\)</span></th>
+<th style="text-align: right;">Soil/rolling resistance</th>
+<th style="text-align: right;">Net accelerating force</th>
+<th style="text-align: right;">Constant-force ground run</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>0.03</td>
+<td style="text-align: right;">1.03 kN</td>
+<td style="text-align: right;">8.97 kN</td>
+<td style="text-align: right;">251 m</td>
+</tr>
+<tr class="even">
+<td>0.12</td>
+<td style="text-align: right;">4.12 kN</td>
+<td style="text-align: right;">5.88 kN</td>
+<td style="text-align: right;">383 m</td>
+</tr>
+<tr class="odd">
+<td>0.25</td>
+<td style="text-align: right;">8.58 kN</td>
+<td style="text-align: right;">1.42 kN</td>
+<td style="text-align: right;">1,589 m</td>
+</tr>
+</tbody>
+</table>
+<p>Within this toy model, <span
+class="math inline">\(\mu_{eff}=(T-D)/(W-L)\approx0.291\)</span> removes
+the positive acceleration margin. That is a mathematical threshold for
+these assumed constants, not a soil criterion or a usable aircraft
+limit.</p>
+<figure>
+<img src="takeoff-sensitivity.svg"
+alt="Sensitivity of an illustrative takeoff ground run to rolling resistance" />
+<figcaption aria-hidden="true">Sensitivity of an illustrative takeoff
+ground run to rolling resistance</figcaption>
+</figure>
+<p><em>Figure 2. Original calculation using the stated constant-force
+model. Near zero net force, predicted distance becomes extremely
+sensitive. No measured Barra surface coefficient is implied.</em></p>
+<p>The FAA explains that soft surfaces can seriously impair acceleration
+[7]. Becoming airborne briefly in ground effect is also not proof of
+adequate climb capability: the aircraft must sustain flight beyond the
+near-ground aerodynamic benefit and clear obstacles. An attractive
+landing video does not demonstrate the return-flight performance
+margin.</p>
+<h2 id="why-the-twin-otter-fits-this-mission">8. Why the Twin Otter fits
+this mission</h2>
+<p>HIAL identifies the Twin Otter as the aircraft used on Barra’s
+scheduled connection [2]. Transport Scotland’s procurement announcement
+specified two <strong>DHC-6-400</strong> aircraft for the island routes
+[5]. The manufacturer publishes the following representative Series 400
+landplane data [4].</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Feature</th>
+<th>Manufacturer information</th>
+<th>Engineering relevance</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Configuration</td>
+<td>Twin turboprop utility aircraft, up to 19 passengers</td>
+<td>Useful transport capacity in a relatively small aircraft</td>
+</tr>
+<tr class="even">
+<td>Engines</td>
+<td>Two PT6A-34; 620 shp flat-rated per engine</td>
+<td>Shaft power drives propellers; power alone does not establish
+takeoff distance</td>
+</tr>
+<tr class="odd">
+<td>Maximum takeoff mass</td>
+<td>5,670 kg</td>
+<td>Upper aircraft mass specification, not an allowable mass for every
+beach condition</td>
+</tr>
+<tr class="even">
+<td>Propellers</td>
+<td>Reversible pitch</td>
+<td>Provides an additional means of ground deceleration within approved
+procedures</td>
+</tr>
+<tr class="odd">
+<td>Ground-roll reference</td>
+<td>244 m takeoff; 169 m landing</td>
+<td>Illustrates short-field capability, but excludes part of a complete
+field-length calculation</td>
+</tr>
+<tr class="even">
+<td>Field length at 50 ft</td>
+<td>455 m takeoff at MTOW; 460 m landing at MLW, labeled SFAR 23</td>
+<td>Shows why ground roll and total distance must not be
+interchanged</td>
+</tr>
+</tbody>
+</table>
+<p>The same sheet gives separate STOL figures subject to local
+regulatory approval. None of these advertised values is a wet-sand
+correction, a current AFM dispatch calculation or proof that the
+aircraft can operate at maximum mass on every Barra runway.</p>
+<p>Several physical design choices are useful. A high wing with elevated
+engines gives clearance between propulsion components and the ground,
+although it does not prevent spray ingestion. Low-speed capability
+reduces the speed and energy that must be managed near touchdown. Fixed
+landing gear provides accessible components without retracting
+contaminated wheels into wheel wells. The HITRANS engineering study
+explicitly identifies the maintenance advantage of fixed gear in this
+environment [10].</p>
+<p>Twin engines provide redundancy, but “two engines” does not mean
+unrestricted engine-out climb at any weight or condition. Runway
+performance, obstacle clearance, loading and approved operational
+requirements must still be satisfied.</p>
+<h2 id="what-other-aircraft-can-land-on-sand">9. What other aircraft can
+land on sand?</h2>
+<p>There is no universal list of aircraft that can land on any beach.
+The correct question is: <strong>which aircraft, in which configuration
+and loading, on which assessed surface, under which operating
+approval?</strong></p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Aircraft or category</th>
+<th>What the evidence supports</th>
+<th>What it does not establish</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>DHC-6 Twin Otter</strong></td>
+<td>Documented scheduled Barra service; manufacturer STOL and
+utility-aircraft characteristics [2,4,5]</td>
+<td>Permission for arbitrary beaches, weights or tides</td>
+</tr>
+<tr class="even">
+<td><strong>BN-2 Islander</strong></td>
+<td>Manufacturer describes unprepared-surface capability [11]; a 2013
+HITRANS study considered an Oban–Barra service using the Islander
+[10]</td>
+<td>That it is today’s scheduled Barra aircraft or that every variant
+has identical beach capability</td>
+</tr>
+<tr class="odd">
+<td><strong>Light bush aircraft with approved large tires</strong></td>
+<td>Low mass, low speed and a suitable footprint can be favorable by the
+mechanics developed here</td>
+<td>A generic “bush aircraft” label is not a Barra approval or verified
+performance dataset</td>
+</tr>
+<tr class="even">
+<td><strong>Ordinary light nosewheel trainers</strong></td>
+<td>Low total mass may help</td>
+<td>Small tires, nosewheel loading, propeller clearance and absent
+surface-specific data can still prevent suitability</td>
+</tr>
+<tr class="odd">
+<td><strong>Larger regional turboprops</strong></td>
+<td>Some designs have capabilities on particular unpaved surfaces</td>
+<td>Gravel or grass capability does not automatically demonstrate wet
+tidal-sand capability</td>
+</tr>
+<tr class="even">
+<td><strong>Conventional passenger jets, such as A320/737
+classes</strong></td>
+<td>Multiple wheels distribute substantial loads on designed pavement
+systems</td>
+<td>Their normal runway performance and configurations do not establish
+suitability for Barra’s short tidal beach</td>
+</tr>
+<tr class="odd">
+<td><strong>Floatplanes / amphibians</strong></td>
+<td>Approved float configurations support water operations</td>
+<td>A wheeled beach landing and a water landing are different
+operations; installing floats does not bypass airport or sea-state
+constraints</td>
+</tr>
+</tbody>
+</table>
+<p>Except for the specifically cited aircraft evidence, the table is an
+<strong>engineering screening discussion</strong>, not a type-approval
+register.</p>
+<p>Why not simply bring a larger aircraft with more wheels? A
+multi-wheel gear can reduce load per tire, but total mass, speed,
+footprint dimensions, subsurface stress overlap, turning forces and
+required runway distance remain important. In elementary elastic
+half-space reasoning, stress spreads deeper as a loaded area gets wider.
+Matching average surface pressure alone therefore does not reproduce the
+same subsurface response.</p>
+<p>Likewise, a powerful engine cannot compensate for every unsuitable
+surface. It may overcome some drag but cannot guarantee nose-gear
+survival, directional control, acceptable rut depth, adequate stopping
+distance or freedom from debris ingestion. Short-field capability and
+soft-field capability overlap, but they answer different questions.</p>
+<h2 id="water-sand-and-salt-attack-different-parts-of-the-aircraft">10.
+Water, sand and salt attack different parts of the aircraft</h2>
+<p><strong>Water</strong> can add splash and displacement drag, alter
+tire contact and conceal surface depressions. Water-related loss of
+friction is not captured by a single dry-sand coefficient. Simple
+hydroplaning-speed formulas developed for particular pavement and tire
+conditions should not be treated as universal thresholds for an
+irregular permeable beach.</p>
+<p><strong>Sand</strong> can abrade coatings, propeller leading edges
+and exposed components. When carried by spray it reaches areas far
+beyond the contact patch. Debris ingestion can damage engines; ground
+clearance reduces some exposure paths but does not eliminate them.</p>
+<p><strong>Salt</strong> promotes corrosion in susceptible materials and
+joints when moisture is present. Pitting, crevices and dissimilar-metal
+connections deserve attention. A small pit can become a fatigue stress
+concentration, so an aircraft that remains strong enough after one
+landing may still accumulate important life-cycle damage.</p>
+<p>The 2013 HITRANS report documents an intensive cleaning, inspection
+and lubrication burden for the Barra operation, including airframe and
+engine washing [10, Appendix D]. This is historical engineering
+evidence, not a claim that a particular 2013 wash frequency is today’s
+maintenance instruction. Current approved maintenance documents govern
+methods and intervals.</p>
+<h2 id="a-runway-that-appears-and-disappears">11. A runway that appears
+and disappears</h2>
+<p>A tide table predicts water level. An airport operating decision must
+also account for the actual surface, weather, visibility, obstacles,
+available services and the time needed to complete the movement. HIAL
+makes opening availability tide-dependent, requires advance coordination
+and lists no refuelling service at Barra [12].</p>
+<p>For teaching, define usable operation as the intersection of several
+conditions:</p>
+<p><span class="math display">\[\mathcal O=\mathcal T\cap\mathcal
+S\cap\mathcal W\cap\mathcal A,\]</span></p>
+<p>where <span class="math inline">\(\mathcal T\)</span> is the
+acceptable tidal interval, <span class="math inline">\(\mathcal
+S\)</span> the acceptable surface state, <span
+class="math inline">\(\mathcal W\)</span> acceptable weather, and <span
+class="math inline">\(\mathcal A\)</span> aircraft/operator/airport
+availability and approval. This set notation explains why exposed sand
+alone is insufficient.</p>
+<p>Without local refuelling, aircraft may need to arrive carrying fuel
+for further flight and reserves. That raises landing mass and reduces
+payload allowance. In mass accounting,</p>
+<p><span
+class="math display">\[m_{aircraft}+m_{crew}+m_{payload}+m_{fuel}\leq
+m_{allowable},\]</span></p>
+<p>with consistent empty/operating-mass definitions. The allowable mass
+may be lower than the structural maximum because of landing, takeoff or
+climb performance. Carrying 19 seats does not promise 19 saleable seats
+on every flight.</p>
+<p>A delay can consume the available tidal window. Increasing thrust or
+accepting a more forceful touchdown does not restore a runway that is
+becoming unavailable. Reliable service comes from scheduling and
+contingency margins as well as aircraft design.</p>
+<h2 id="worked-structural-exercise-a-landing-gear-attachment">12. Worked
+structural exercise: a landing-gear attachment</h2>
+<p>Use a <strong>hypothetical</strong> cantilever representing a gear
+attachment, not the actual Twin Otter gear. Take length <span
+class="math inline">\(\ell=0.40\)</span> m, a solid rectangular section
+<span class="math inline">\(b=0.060\)</span> m, <span
+class="math inline">\(h=0.10\)</span> m, elastic modulus <span
+class="math inline">\(E=70\)</span> GPa and end load <span
+class="math inline">\(F=20\)</span> kN, acting in the direction that
+bends about <span class="math inline">\(I=bh^3/12\)</span>.</p>
+<p><span class="math display">\[I=5.0\times10^{-6}\ \mathrm{m^4},\quad
+M_{root}=F\ell=8.0\ \mathrm{kN\,m},\]</span></p>
+<p><span class="math display">\[\sigma_{max}=\frac{M_{root}(h/2)}{I}=80\
+\mathrm{MPa},\qquad
+\delta_{tip}=\frac{F\ell^3}{3EI}=1.22\ \mathrm{mm}.\]</span></p>
+<ol type="1">
+<li>In <a
+href="https://ehsan-roohi.github.io/Aerospace-Structures/wing-lab.html">BeamLab</a>,
+model the cantilever with these values and compare reactions, bending
+moment and deflection with the equations. If the interface expects <span
+class="math inline">\(EI\)</span>, enter <span
+class="math inline">\(350,000\)</span> N·m². Keep all dimensions in
+consistent units.</li>
+<li>Double the force. Explain why the linear model doubles stress and
+deflection, while a real tire–soil–gear system may not remain
+linear.</li>
+<li>Add an independent 4 kN end load in the weak-axis direction.
+Calculate <span class="math inline">\(I_{weak}=hb^3/12\)</span>, the
+second bending stress, and the largest corner normal stress. State
+explicitly that this is two-plane bending, not torsion unless a load
+offset is introduced.</li>
+<li>Reduce the section height by 10% while retaining the original
+vertical load. Predict the change in stress and deflection before
+running the model.</li>
+<li>Discuss the missing physics: joint flexibility, shock-absorber
+behavior, transient impact, corrosion pits, fatigue, tire compliance and
+spatially variable soil.</li>
+</ol>
+<p><strong>Check values:</strong> the weak-axis contribution is 26.7
+MPa, giving a maximum combined corner magnitude of about 106.7 MPa when
+the bending contributions add. Reducing height to 90 mm raises primary
+bending stress to 98.8 MPa and deflection to 1.67 mm. These are elastic
+calculations; no yield strength or allowable fatigue stress has been
+assigned, so they do not demonstrate structural safety.</p>
+<h2 id="discussion-questions">13. Discussion questions</h2>
+<ol type="1">
+<li>Two aircraft have equal average tire contact pressure but different
+mass and footprint dimensions. Why might their rutting and subsurface
+stresses differ?</li>
+<li>How can a wet beach be firm in one location and weak only a few
+metres away? Identify the measurements needed before assigning soil
+parameters.</li>
+<li>Why can retaining aerodynamic lift reduce wheel pressure yet
+complicate braking and directional control?</li>
+<li>Why does twice the touchdown sink speed produce four times the
+vertical energy but not necessarily four times the total gear
+reaction?</li>
+<li>Could a powerful aircraft land successfully but be unable to depart?
+Use the takeoff equation to distinguish thrust, surface resistance and
+climb requirements.</li>
+<li>Why is an advertised 169 m landing ground roll not evidence that any
+169 m patch of beach is adequate?</li>
+<li>Why might a fixed-gear aircraft be preferable despite its
+aerodynamic drag penalty?</li>
+<li>How do fuel reserves and a missing refuelling facility couple runway
+performance to passenger capacity?</li>
+</ol>
+<h2 id="evidence-boundaries-and-references">14. Evidence boundaries and
+references</h2>
+<p>Airport facts come from HIAL and the dated UK AIP. Aircraft
+specifications come from a manufacturer landplane sheet. HITRANS
+supplies historical service and maintenance context. The pressure,
+impact, acceleration, wind-energy and beam examples are original
+teaching calculations with stated assumptions; no local sand strength,
+tire pressure, approved aircraft operating weight or proprietary
+flight-manual correction is inferred.</p>
+<ol type="1">
+<li><strong>HIAL</strong>, <a
+href="https://www.hial.co.uk/barra-airport/airport-information-4">About
+Barra Airport</a>. Tidal-beach operation and public-beach context.</li>
+<li><strong>HIAL</strong>, <a
+href="https://www.hial.co.uk/hial-group/airport-history-pages/3">Barra
+Airport’s History</a> and <a
+href="https://www.hial.co.uk/news/article/267/barra-celebrates-90-years-on-the-sand">90
+years on the sand, 7 August 2026</a>. History, runway arrangement and
+Twin Otter service.</li>
+<li><strong>NATS UK AIP</strong>, <a
+href="https://www.aurora.nats.co.uk/htmlAIP/Publications/2026-10-29-AIRAC/html/eAIP/EG-AD-2.EGPR-en-GB.html">EGPR,
+edition effective 29 October 2026</a>, §§2.3, 2.12, 2.13 and 2.20.
+Retrieved directly from the official HTML publication. For operations
+consult the <a href="https://nats-uk.ead-it.com/">UK AIS publication
+service</a>, its effective edition and NOTAMs; later editions may revise
+runway identifiers and other information.</li>
+<li><strong>De Havilland Canada</strong>, <a
+href="https://dehavilland.events/wp-content/uploads/2023/10/DHC_Twin_Otter_WHEELS_Spec_Sheet_v13.pdf">DHC-6
+Twin Otter Series 400—Wheels specification sheet, October 2023</a>.
+Manufacturer reference figures, not an AFM.</li>
+<li><strong>Transport Scotland</strong>, <a
+href="https://www.transport.gov.scot/news/contract-award-for-replacement-pso-planes/">Contract
+award for replacement PSO planes</a>. DHC6-400 procurement for island
+routes.</li>
+<li><strong>FAA</strong>, <a
+href="https://www.faa.gov/sites/faa.gov/files/regulations_policies/handbooks_manuals/aviation/airplane_handbook/10_afh_ch9.pdf">Airplane
+Flying Handbook, Chapter 9: Approaches and Landings</a>, soft-field
+approach and landing discussion. General training principles.</li>
+<li><strong>FAA</strong>, <a
+href="https://www.faa.gov/sites/faa.gov/files/regulations_policies/handbooks_manuals/aviation/airplane_handbook/07_afh_ch6.pdf">Airplane
+Flying Handbook, Chapter 6: Takeoffs and Departure Climbs</a>.
+Soft-field acceleration and ground-effect considerations.</li>
+<li><strong>US Army Corps of Engineers</strong>, <a
+href="https://www.publications.usace.army.mil/Portals/76/Users/182/86/2486/EM%201110-2-2502.pdf">EM
+1110-2-2502: Flood Walls and Other Hydraulic Retaining Walls</a>,
+Chapter 5. General effective-stress and soil-strength background; not an
+airport pavement design manual.</li>
+<li><strong>ASCE, Journal of Geotechnical and Geoenvironmental
+Engineering</strong>, <a
+href="https://doi.org/10.1061/JGGEFK.GTENG-11339">A Framework for
+Assessing the Bearing Capacity of Sandy Coastal Soils from Remotely
+Sensed Moisture Contents</a>. Moisture/suction/bearing-capacity
+framework; a different coastal site. Abstract and indexed technical
+excerpts consulted.</li>
+<li><strong>HITRANS</strong>, <a
+href="https://hitrans.org.uk/wp-content/uploads/2014/01/Regional_Air_Opportunities_Study.pdf">Regional
+Air Service Development Opportunities Study, December 2013</a>, §2.4.2,
+discussion of Oban–Barra, and Appendix D. Historical
+aircraft-suitability and corrosion/maintenance evidence.</li>
+<li><strong>Britten-Norman</strong>, <a
+href="https://britten-norman.com/lighter-islander-delivered-to-fln/">New
+lighter Islander delivered to FLN</a>. Manufacturer account of
+unprepared-surface capability.</li>
+<li><strong>HIAL</strong>, <a
+href="https://www.hial.co.uk/barra-airport/general-aviation-1">General
+Aviation at Barra</a>, <a
+href="https://www.hial.co.uk/general-aviation-7/general-aviation-4">general
+aviation permission information</a> and <a
+href="https://www.hial.co.uk/barra-airport/airport-information-4/2">opening
+hours</a>. Contact, permission, tide-dependent availability and lack of
+refuelling.</li>
+</ol>
+<p>Sources checked 12 November 2026. The linked Zoomit article is the
+topic prompt; the engineering explanation and illustrations are
+original.</p>
+</main></body></html>

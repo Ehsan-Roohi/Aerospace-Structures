@@ -45,6 +45,8 @@ Design and compare in Wing Lab → save JSON and export STL → inspect every sl
 
 ## Further reading and support
 
+- **[ETH morphing composite drone: compliant wings, fibre placement and aeroelasticity](MORPHING_COMPOSITE_WING.md)** · [Illustrated lesson and flight video](https://ehsan-roohi.github.io/Aerospace-Structures/case-studies/morphing-wing/)
+
 - **[Barra Airport: beach landings, sand mechanics and landing-gear loads](BARRA_BEACH_RUNWAY.md)** · [Illustrated reading, aircraft comparison and BeamLab exercise](https://ehsan-roohi.github.io/Aerospace-Structures/case-studies/barra-beach/)
 
 - **[A350-1000 → A350-1000ULR: structural changes, fuel systems and the 24-hour record](A350_ULR_STRUCTURAL_CHANGES.md)** · [Illustrated reading and BeamLab exercise](https://ehsan-roohi.github.io/Aerospace-Structures/case-studies/a350-ulr/)

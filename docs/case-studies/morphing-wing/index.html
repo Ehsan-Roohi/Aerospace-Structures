@@ -1,0 +1,256 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Morphing composite wings · MIE 446</title><style>body{margin:0;background:#edf3f7;color:#18364a;font:18px/1.75 system-ui}main{max-width:1050px;margin:auto;background:white;padding:40px}h1{line-height:1.2}h2{color:#125c73;margin-top:2em}a{color:#086886}img{max-width:100%;height:auto}table{border-collapse:collapse;display:block;overflow:auto}td,th{border:1px solid #ccd7df;padding:10px;text-align:left}.math.display{display:block;overflow:auto;padding:16px;background:#f1f6fa}.video{width:100%;aspect-ratio:16/9;border:0}@media(max-width:640px){main{padding:20px}body{font-size:16px}}</style><script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script></head><body><main><h1
+id="morphing-composite-wings-stiff-enough-to-fly-flexible-enough-to-steer">Morphing
+composite wings: stiff enough to fly, flexible enough to steer</h1>
+<p><strong>MIE 446 · Aerospace Structures · University of Massachusetts
+Amherst</strong><br />
+Engineering case study · 14 November 2026</p>
+<p><a
+href="https://ehsan-roohi.github.io/Aerospace-Structures/case-studies/morphing-wing/">Illustrated
+web edition</a> · <a href="https://github.com/Ehsan-Roohi/Aerospace-Structures/blob/main/READINGS.md">Course readings</a> · <a
+href="https://ehsan-roohi.github.io/Aerospace-Structures/wing-panel-stress-analyzer/">Wing
+Lab</a></p>
+<h2 id="the-aircraft-behind-the-social-media-post">1. The aircraft
+behind the social-media post</h2>
+<p>This is a 2019–2020 ETH Zurich/9T Labs research demonstrator, not a
+newly announced aircraft. Leo Baumann developed it with Dominic Keidel
+and Urban Fasel in Paolo Ermanni’s CMASLab. The associated paper
+describes a 2 m-span drone with additively manufactured composite
+primary and morphing structures [1–3].</p>
+<p>The ETH account reports a continuous wing skin, eight wing servos and
+up to 48 mm trailing-edge travel. The wing and V-tail provide three-axis
+control. Static checks preceded a three-minute maiden flight with rolls
+and loops. The wing skin was an exception to the printed structure;
+electronics were not printed. Thermoplastic parts allow reheating and
+joining; carbon-fibre placement provides directional stiffness [1].</p>
+<p>These observations demonstrate manufacture and flight control. They
+do not establish a certified load envelope, fatigue life or a measured
+whole-aircraft drag-reduction percentage.</p>
+<figure>
+<img
+src="https://mavt.ethz.ch/news-and-events/d-mavt-news/2020/01/take-off-for-a-composite-morphing-aircraft/_jcr_content/wide_content/textimage/image.imageformat.text50percent.851026340.png"
+alt="ETH demonstrator with deformed main wing" />
+<figcaption aria-hidden="true">ETH demonstrator with deformed main
+wing</figcaption>
+</figure>
+<p><em>Figure 1. ETH Zurich photograph, linked from its original news
+page [1]. Credit and copyright remain with the original rights holder.
+The geometry is actual project hardware.</em></p>
+<h2 id="watch-the-demonstrator">2. Watch the demonstrator</h2><iframe class="video" loading="lazy" src="https://www.youtube-nocookie.com/embed/RuSsGf7qe4c" title="ETH and 9T Labs morphing composite drone" allow="encrypted-media; picture-in-picture" allowfullscreen></iframe>
+<p><a href="https://www.youtube.com/watch?v=RuSsGf7qe4c"><img
+src="https://i.ytimg.com/vi/RuSsGf7qe4c/hqdefault.jpg"
+alt="Watch: 3D printed morphing composite drone" /></a></p>
+<p><strong><a href="https://www.youtube.com/watch?v=RuSsGf7qe4c">3D
+printed morphing composite drone — project video</a></strong>. This
+video is linked from coauthor Urban Fasel’s composite-structures project
+page [3]. Watch the skin deform continuously, then distinguish ground
+actuation from flight footage. A successful manoeuvre demonstrates
+control authority at that condition; it does not measure efficiency
+against a hinged-wing comparator. The web edition includes a video
+player and a direct playback link.</p>
+<h2 id="how-a-wing-can-be-both-stiff-and-compliant">3. How a wing can be
+both stiff and compliant</h2>
+<p>A wing needs different stiffnesses for different motions. Global
+bending stiffness supports aerodynamic loads. Torsional stiffness helps
+maintain incidence and avoid control reversal or aeroelastic
+instability. Local chordwise compliance permits commanded camber change.
+Making every part flexible would compromise the first two
+requirements.</p>
+<p>In a conventional control surface, motion is concentrated at a hinge.
+In a compliant mechanism, strain is distributed through selected members
+and the skin. The load path is still lift → skin/ribs → spar/root →
+fuselage. The actuator introduces an additional load path through its
+mount and the compliant region. Compatibility between these paths
+determines the actual shape.</p>
+<figure>
+<img src="morphing-section.svg"
+alt="Conceptual comparison of a hinged and morphing section" />
+<figcaption aria-hidden="true">Conceptual comparison of a hinged and
+morphing section</figcaption>
+</figure>
+<p><em>Figure 2. Original teaching schematic, not an ETH drawing or a
+computed aerodynamic solution. Curves indicate the geometric idea
+only.</em></p>
+<p>For a linear beam approximation,</p>
+<p><span class="math display">\[EI\,w&#39;&#39;&#39;&#39;(y)=q(y),\qquad
+M=EI\kappa,\qquad \sigma_x=Mz/I.\]</span></p>
+<p>Here <span class="math inline">\(E\)</span> is an effective modulus,
+<span class="math inline">\(I\)</span> the section second moment, <span
+class="math inline">\(q\)</span> the distributed load and <span
+class="math inline">\(\kappa\)</span> the curvature. A composite lattice
+and deforming skin generally need a richer anisotropic, possibly
+nonlinear model. A single beam cannot resolve local member strain or
+skin wrinkling.</p>
+<p>For a thin compliant strip in simple bending, the outer-fibre strain
+is approximately</p>
+<p><span
+class="math display">\[\epsilon_{max}\simeq\frac{t}{2R}.\]</span></p>
+<p>A smaller bend radius <span class="math inline">\(R\)</span> or
+thicker strip <span class="math inline">\(t\)</span> increases strain.
+Compliance achieved through geometry must still satisfy strain, fatigue
+and manufacturing limits. This formula is a small-strain kinematic
+illustration, not an allowable for the printed material.</p>
+<h2 id="why-fibre-direction-matters">4. Why fibre direction matters</h2>
+<p>Continuous fibres carry load efficiently along their direction; a
+polymer-rich region is comparatively compliant. Designers can align
+reinforcement with primary loads while leaving selected directions more
+deformable. Printed fibre continuity, turn radius, voids, interlayer
+adhesion, temperature and joints can govern performance as strongly as
+nominal fibre modulus.</p>
+<p>Classical laminate theory expresses the coupling as</p>
+<p><span class="math display">\[\begin{bmatrix}\mathbf N\\\mathbf
+M\end{bmatrix}=\begin{bmatrix}\mathbf A&amp;\mathbf B\\\mathbf
+B&amp;\mathbf
+D\end{bmatrix}\begin{bmatrix}\boldsymbol\epsilon^0\\\boldsymbol\kappa\end{bmatrix}.\]</span></p>
+<p>The laminate matrices describe membrane stiffness, bending stiffness
+and their coupling. They should not be confused with aerodynamic drag
+<span class="math inline">\(D\)</span>. Coupling can help create a
+desired deformation, but an unsymmetric layup can also produce unwanted
+twist or thermal warpage. Laminate theory requires material properties
+and an appropriate homogenisation model before it can represent a
+printed structure.</p>
+<h2 id="aerodynamics-when-smooth-deformation-helps">5. Aerodynamics:
+when smooth deformation helps</h2>
+<p>A continuous surface avoids a sharp hinge-line change and can reduce
+gap-related losses. Variable camber also allows adaptation to lift
+demand. It does not follow that every deflection lowers total drag:
+camber changes pressure gradients, transition, separation and pitching
+moment. Deflected conventional surfaces do not account for a fixed
+substantial fraction of drag on every aircraft.</p>
+<p>At matched flight conditions,</p>
+<p><span class="math display">\[L=\tfrac12\rho V^2SC_L,\qquad
+D=\tfrac12\rho V^2SC_D,\qquad P_{shaft}=DV/\eta_p.\]</span></p>
+<p>An efficiency comparison must match lift, speed, Reynolds number and
+trim. A change in <span class="math inline">\(C_D\)</span> at unmatched
+lift is not a fair aircraft comparison. Actuator mass, electrical power,
+skin strain energy and maintenance also belong in the system assessment.
+The source material reviewed here does not justify inserting an
+arbitrary drag-saving percentage.</p>
+<p>Distributed actuation can reshape spanwise lift. For semispan <span
+class="math inline">\(\ell\)</span>,</p>
+<p><span class="math display">\[M_{root}=\int_0^\ell
+y\,q(y)\,dy.\]</span></p>
+<p>At fixed total lift, moving load inboard reduces this bending moment,
+but the associated induced drag, trim and stall margins must also be
+considered. Load alleviation and minimum drag need not select the same
+shape.</p>
+<h2 id="actuation-control-and-aeroelasticity">6. Actuation, control and
+aeroelasticity</h2>
+<p>For a simplified deformation coordinate <span
+class="math inline">\(\delta\)</span>, equilibrium can be written</p>
+<p><span
+class="math display">\[F_{act}=k_{eff}\delta+F_{aero}(\delta,V).\]</span></p>
+<p>This is a conceptual static relation with signed generalized forces.
+It shows why unloaded ground displacement is insufficient to predict
+flight displacement. Increased airspeed changes aerodynamic stiffness
+and actuator demand. Motors must provide force, travel and bandwidth;
+the structure must retain control authority under load.</p>
+<p>Symmetric and differential wing commands can influence lift and roll,
+while a V-tail mixes pitch and yaw commands. Actual control mixing
+depends on the aircraft derivatives and coupling. Flexible control
+surfaces also introduce modes: <span class="math inline">\(\mathbf
+K\phi=\omega^2\mathbf M\phi\)</span> describes the structural problem,
+while flutter requires unsteady aerodynamic coupling. A static test
+alone cannot establish flutter clearance.</p>
+<h2 id="what-an-engineering-qualification-would-require">7. What an
+engineering qualification would require</h2>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Question</th>
+<th>Evidence needed</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Does the intended shape occur under load?</td>
+<td>Actuation/shape measurements at representative pressure
+distributions</td>
+</tr>
+<tr class="even">
+<td>Is strength adequate?</td>
+<td>Defined limit and ultimate loads, strain measurements and failure
+criteria</td>
+</tr>
+<tr class="odd">
+<td>Will the skin remain smooth?</td>
+<td>Wrinkling, local buckling and manufacturing-tolerance checks</td>
+</tr>
+<tr class="even">
+<td>Does it remain controllable?</td>
+<td>Loaded control derivatives, actuator saturation and failure
+response</td>
+</tr>
+<tr class="odd">
+<td>Is it durable?</td>
+<td>Repeated morphing, joint degradation, creep and environmental
+exposure</td>
+</tr>
+<tr class="even">
+<td>Does it save energy?</td>
+<td>Matched-lift/trim drag comparison and mission-level actuation/mass
+accounting</td>
+</tr>
+</tbody>
+</table>
+<p>These are general assessment questions, not claims that the ETH team
+omitted every corresponding analysis. A short flight video cannot answer
+them by itself.</p>
+<h2 id="optional-classroom-exercise">8. Optional classroom exercise</h2>
+<p>Use a generic cantilever in Wing Lab, not a reconstructed ETH wing.
+Assume a 1 m semispan, <span class="math inline">\(q=20\)</span> N/m and
+<span class="math inline">\(EI=100\)</span> N·m². The magnitudes are</p>
+<p><span class="math display">\[V_{root}=20\ \mathrm N,\quad
+M_{root}=10\ \mathrm{N\,m},\quad w_{tip}=q\ell^4/(8EI)=0.025\ \mathrm
+m.\]</span></p>
+<p>Halving <span class="math inline">\(EI\)</span> doubles deflection
+while reactions remain unchanged for this statically determinate model.
+Explain why that does not demonstrate a better morphing wing: compliance
+must be provided in the commanded deformation mode while retaining
+adequate stiffness elsewhere.</p>
+<p>For an independent strip example, <span
+class="math inline">\(t=0.5\)</span> mm and <span
+class="math inline">\(R=100\)</span> mm give <span
+class="math inline">\(\epsilon_{max}\approx0.25\%\)</span>. This is a
+calculated strain, not a material safety margin. Submit a load-path
+sketch, two beam comparisons and a paragraph identifying what the beam
+model cannot establish. This is optional enrichment, not a new graded
+assignment or flight-build instruction.</p>
+<h2 id="references-and-media-provenance">References and media
+provenance</h2>
+<ol type="1">
+<li>ETH Zurich D-MAVT, <a
+href="https://mavt.ethz.ch/news-and-events/d-mavt-news/2020/01/take-off-for-a-composite-morphing-aircraft.html">Take-off
+for a composite morphing aircraft</a>, 28 January 2020. Source for
+aircraft photograph, actuation and reported flight observations.</li>
+<li>U. Fasel, D. Keidel, L. Baumann, G. Cavolina, M. Eichenhofer and P.
+Ermanni, <em>Composite additive manufacturing of morphing aerospace
+structures</em>, <strong>Manufacturing Letters 23</strong>, 85–88
+(2020). <a href="https://doi.org/10.1016/j.mfglet.2019.12.004">DOI</a> ·
+<a
+href="https://www.research-collection.ethz.ch/items/185790f6-5d05-4fad-bdde-164ee1a3e788">ETH
+repository</a> · <a
+href="https://spaces-cdn.owlstown.com/blobs/hii8sa1dii95euermjffs3cklqzt">Author-hosted
+paper</a>. Online publication was December 2019; journal issue was
+2020.</li>
+<li>Urban Fasel, <a
+href="https://www.urbanfasel.com/projects/842-composite-structures">Composite
+structures</a> and <a
+href="https://www.urbanfasel.com/projects/841-morphing-wings">Morphing
+wings</a>. Author-maintained context and video provenance.</li>
+<li>SCCER Mobility / ETH, <a
+href="https://www.sccer-mobility.ethz.ch/aboutus/sccer_events/Morphing-composite-drone/index.html">Morphing
+composite drone</a>, 24 February 2020.</li>
+</ol>
+<p><strong>Theory background:</strong> T. H. G. Megson, <em>Aircraft
+Structures for Engineering Students</em> (beam mechanics); R. M. Jones,
+<em>Mechanics of Composite Materials</em> (laminate mechanics); J. D.
+Anderson, <em>Introduction to Flight</em> (lift, drag and aircraft
+performance). Equations, schematic and classroom examples above are
+independent teaching explanations. External media are attributed and
+linked, not relicensed as original course artwork. Sources checked 14
+November 2026.</p>
+</main></body></html>

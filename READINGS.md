@@ -10,6 +10,8 @@ Optional readings; assignment requirements are listed in [ASSIGNMENTS.md](ASSIGN
 
 ## Optional aerospace technology reports
 
+- **[ETH morphing composite drone: compliant wings, fibre placement and aeroelasticity](MORPHING_COMPOSITE_WING.md)** · [Illustrated lesson and flight video](https://ehsan-roohi.github.io/Aerospace-Structures/case-studies/morphing-wing/)
+
 - **[Barra Airport: how an aircraft lands on a beach](BARRA_BEACH_RUNWAY.md)** · [Illustrated reading and BeamLab exercise](https://ehsan-roohi.github.io/Aerospace-Structures/case-studies/barra-beach/) · Sand bearing, tire pressure, touchdown loads, takeoff resistance, tidal operations and aircraft suitability.
 
 - **[A350-1000 → A350-1000ULR: structural changes, fuel systems and the 24-hour record](A350_ULR_STRUCTURAL_CHANGES.md)** · [Illustrated reading and BeamLab exercise](https://ehsan-roohi.github.io/Aerospace-Structures/case-studies/a350-ulr/)

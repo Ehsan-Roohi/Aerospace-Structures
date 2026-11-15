@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 570" role="img" aria-labelledby="title desc">
+<title id="title">Conceptual radial-flux PMSM</title><desc id="desc">Stator windings surrounding a magnet rotor with a controlled air gap</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#176b87"/></marker></defs>
+<rect width="100%" height="100%" fill="#f2f6f9"/><g font-family="Arial,sans-serif" fill="#193449">
+<text x="30" y="42" font-size="28" text-anchor="start" font-weight="bold" fill="#193449">Where motor torque comes from</text>
+<text x="30" y="73" font-size="17" text-anchor="start" font-weight="normal" fill="#193449">Generic radial-flux cross-section; actual CE-25A machine type is not public</text>
+<circle cx="330" cy="320" r="183" fill="#d6e2e8" stroke="#193449" stroke-width="4"/>
+<circle cx="330" cy="320" r="133" fill="#fff" stroke="#8ba5b5" stroke-width="2"/>
+<circle cx="485.0" cy="320.0" r="15" fill="#d2944d" stroke="#925b20" stroke-width="2"/>
+<circle cx="464.233937586588" cy="397.5" r="15" fill="#d2944d" stroke="#925b20" stroke-width="2"/>
+<circle cx="407.5" cy="454.233937586588" r="15" fill="#d2944d" stroke="#925b20" stroke-width="2"/>
+<circle cx="330.0" cy="475.0" r="15" fill="#d2944d" stroke="#925b20" stroke-width="2"/>
+<circle cx="252.50000000000003" cy="454.233937586588" r="15" fill="#d2944d" stroke="#925b20" stroke-width="2"/>
+<circle cx="195.766062413412" cy="397.5" r="15" fill="#d2944d" stroke="#925b20" stroke-width="2"/>
+<circle cx="175.0" cy="320.0" r="15" fill="#d2944d" stroke="#925b20" stroke-width="2"/>
+<circle cx="195.766062413412" cy="242.50000000000006" r="15" fill="#d2944d" stroke="#925b20" stroke-width="2"/>
+<circle cx="252.49999999999994" cy="185.76606241341204" r="15" fill="#d2944d" stroke="#925b20" stroke-width="2"/>
+<circle cx="329.99999999999994" cy="165.0" r="15" fill="#d2944d" stroke="#925b20" stroke-width="2"/>
+<circle cx="407.5" cy="185.76606241341202" r="15" fill="#d2944d" stroke="#925b20" stroke-width="2"/>
+<circle cx="464.23393758658796" cy="242.49999999999994" r="15" fill="#d2944d" stroke="#925b20" stroke-width="2"/>
+<circle cx="330" cy="320" r="118" fill="#c2d5de" stroke="#176b87" stroke-width="3"/>
+<circle cx="424.0" cy="320.0" r="17" fill="#c85e50"/>
+<text x="424.0" y="326.0" font-size="16" text-anchor="middle" font-weight="bold" fill="#fff">N</text>
+<circle cx="330.0" cy="414.0" r="17" fill="#4c83b4"/>
+<text x="330.0" y="420.0" font-size="16" text-anchor="middle" font-weight="bold" fill="#fff">S</text>
+<circle cx="236.0" cy="320.0" r="17" fill="#c85e50"/>
+<text x="236.0" y="326.0" font-size="16" text-anchor="middle" font-weight="bold" fill="#fff">N</text>
+<circle cx="330.0" cy="226.0" r="17" fill="#4c83b4"/>
+<text x="330.0" y="232.0" font-size="16" text-anchor="middle" font-weight="bold" fill="#fff">S</text>
+<circle cx="330" cy="320" r="31" fill="#193449"/>
+<path d="M330 165L580 160" stroke="#176b87" stroke-width="3" fill="none"/>
+<text x="600" y="168" font-size="21" text-anchor="start" font-weight="bold" fill="#193449">Stator + copper windings</text>
+<path d="M457 300L580 270" stroke="#176b87" stroke-width="3" fill="none"/>
+<text x="600" y="278" font-size="21" text-anchor="start" font-weight="bold" fill="#193449">Small running air gap</text>
+<path d="M400 378L580 375" stroke="#176b87" stroke-width="3" fill="none"/>
+<text x="600" y="383" font-size="21" text-anchor="start" font-weight="bold" fill="#193449">Rotor + permanent magnets</text>
+<path d="M330 320L580 475" stroke="#176b87" stroke-width="3" fill="none"/>
+<text x="600" y="483" font-size="21" text-anchor="start" font-weight="bold" fill="#193449">Shaft → fan</text>
+<text x="600" y="202" font-size="17" text-anchor="start" font-weight="normal" fill="#193449">Controlled stator field produces torque.</text>
+<text x="600" y="413" font-size="17" text-anchor="start" font-weight="normal" fill="#193449">Rotor torque has an equal stator reaction.</text>
+<text x="30" y="548" font-size="18" text-anchor="start" font-weight="normal" fill="#193449">Housing and mounts transmit reaction torque to the airframe; bearings preserve alignment.</text>
+</g></svg>

@@ -1,0 +1,1222 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="An illustrated CE-25A engineering lesson on electric motors, inverters, ducted fans, battery energy, cooling and wing structural loads. Includes reproducible teaching calculations.">
+<title>CE-25A: electric motors, fans and structures · MIE 446</title>
+<style>
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:#edf3f7;color:#193449;font:18px/1.78 system-ui,sans-serif}main{max-width:1100px;margin:auto;background:white;padding:36px 54px 72px}h1{font-size:clamp(2rem,4vw,3.1rem);line-height:1.16;letter-spacing:-.035em;max-width:940px;color:#123d53;margin:1em 0 .55em}h2{font-size:1.65rem;line-height:1.3;color:#125c73;margin-top:2.8em;border-top:1px solid #dce6ec;padding-top:1em;scroll-margin-top:20px}h3{line-height:1.4;margin-top:1.8em}a{color:#086886;text-underline-offset:3px;overflow-wrap:anywhere}nav{display:flex;flex-wrap:wrap;gap:8px 20px;border-bottom:1px solid #cddde6;padding:12px 0 18px;font-size:.88em}nav a{text-decoration:none}img{display:block;max-width:100%;height:auto;margin:auto;border-radius:5px}figure{margin:2.1em 0}figcaption{font-size:.84em;color:#526b7c;line-height:1.6;margin-top:12px}figure+p{font-size:.88em;color:#526b7c}table{border-collapse:collapse;display:block;overflow:auto;max-width:100%;font-size:.88em;margin:1.5em 0}td,th{border:1px solid #cbd9e2;padding:11px 13px;text-align:left;min-width:120px;vertical-align:top}th{background:#eaf2f6;color:#173d50}tbody tr:nth-child(even){background:#f6f9fb}pre{overflow:auto;padding:16px;background:#f2f6f9}code{font-size:.9em}p,li{overflow-wrap:break-word}.math.display{display:block;overflow-x:auto;overflow-y:hidden;padding:18px 12px;background:#f2f6f9;border-left:3px solid #1f7a91;margin:1.2em 0}#TOC{background:#f2f7fa;padding:20px 26px;border-left:4px solid #17788a;margin:2em 0;font-size:.9em}#TOC>ul{columns:2;column-gap:35px;margin:0;padding-left:20px}#TOC li{margin:.2em 0;break-inside:avoid}#TOC ul ul{display:none}.kicker{font-size:.8em;text-transform:uppercase;letter-spacing:.12em;color:#17788a;font-weight:700}.lead-note{padding:16px 20px;background:#eaf4f6;border-radius:8px;color:#254a5b;font-size:.94em}section[dir=rtl]{text-align:right}footer{margin-top:3em;border-top:1px solid #dce6ec;padding-top:20px;color:#526b7c;font-size:.85em}a:focus-visible{outline:3px solid #d39235;outline-offset:4px}@media(max-width:680px){main{padding:22px 20px 45px}body{font-size:16px}#TOC>ul{columns:1}h2{font-size:1.45rem}td,th{padding:9px;min-width:110px}.math.display{padding:12px 6px}}@media print{body{background:white;font-size:10.5pt}main{max-width:none;padding:0}nav,#TOC,.kicker{display:none}h1{font-size:25pt}h2{break-after:avoid;font-size:17pt}figure,table{break-inside:avoid}a{color:inherit}img{max-height:650px}footer{display:none}}
+</style>
+<script>window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},options:{enableMenu:false}};</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+</head><body><main><nav aria-label="Course navigation"><a href="https://github.com/Ehsan-Roohi/Aerospace-Structures">Course home</a><a href="https://github.com/Ehsan-Roohi/Aerospace-Structures/blob/main/READINGS.md">All readings</a><a href="../../wing-panel-stress-analyzer/#wing">Wing Lab</a><a href="https://github.com/Ehsan-Roohi/Aerospace-Structures/blob/main/CE25A_ELECTRIC_AIRCRAFT.md">Markdown source</a></nav>
+<p class="kicker">MIE 446 · Propulsion meets structures</p>
+<p class="lead-note">Nine original engineering figures, two programme photographs and reproducible calculations. Aircraft facts and assumed teaching examples are identified throughout.</p>
+
+
+
+<h1
+id="comac-ce-25a-electric-motors-ducted-fans-and-the-structure-that-carries-them">COMAC
+CE-25A: Electric Motors, Ducted Fans and the Structure That Carries
+Them</h1>
+<p><strong>MIE 446 · Aerospace Structures · University of Massachusetts
+Amherst</strong><br />
+Independent engineering reading · Evidence checked 15 November 2026</p>
+<p><a
+href="https://ehsan-roohi.github.io/Aerospace-Structures/case-studies/ce25a/">Illustrated
+web reading</a> · <a
+href="https://github.com/Ehsan-Roohi/Aerospace-Structures/blob/main/READINGS.md">All
+course readings</a> · <a
+href="https://ehsan-roohi.github.io/Aerospace-Structures/wing-panel-stress-analyzer/#wing">Wing
+Lab</a></p>
+<aside id="TOC" role="doc-toc">
+<ul>
+<li><a
+href="#comac-ce-25a-electric-motors-ducted-fans-and-the-structure-that-carries-them"
+id="toc-comac-ce-25a-electric-motors-ducted-fans-and-the-structure-that-carries-them">COMAC
+CE-25A: Electric Motors, Ducted Fans and the Structure That Carries
+Them</a>
+<ul>
+<li><a href="#the-engineering-question"
+id="toc-the-engineering-question">1. The engineering question</a></li>
+<li><a href="#what-is-known-about-the-aircraft"
+id="toc-what-is-known-about-the-aircraft">2. What is known about the
+aircraft?</a></li>
+<li><a href="#follow-the-energy-force-and-heat"
+id="toc-follow-the-energy-force-and-heat">3. Follow the energy, force
+and heat</a></li>
+<li><a href="#inside-an-electric-motor-where-torque-comes-from"
+id="toc-inside-an-electric-motor-where-torque-comes-from">4. Inside an
+electric motor: where torque comes from</a></li>
+<li><a href="#torque-speed-and-the-continuous-rating"
+id="toc-torque-speed-and-the-continuous-rating">5. Torque, speed and the
+continuous rating</a></li>
+<li><a href="#what-the-inverter-and-controller-actually-do"
+id="toc-what-the-inverter-and-controller-actually-do">6. What the
+inverter and controller actually do</a></li>
+<li><a
+href="#high-voltage-current-and-why-wiring-belongs-in-the-mass-budget"
+id="toc-high-voltage-current-and-why-wiring-belongs-in-the-mass-budget">7.
+High voltage, current and why wiring belongs in the mass budget</a></li>
+<li><a href="#cooling-a-few-percentage-points-become-kilowatts"
+id="toc-cooling-a-few-percentage-points-become-kilowatts">8. Cooling: a
+few percentage points become kilowatts</a></li>
+<li><a href="#from-shaft-torque-to-thrust-the-ducted-fan"
+id="toc-from-shaft-torque-to-thrust-the-ducted-fan">9. From shaft torque
+to thrust: the ducted fan</a></li>
+<li><a href="#what-comacs-patent-tells-usand-its-limit"
+id="toc-what-comacs-patent-tells-usand-its-limit">10. What COMAC’s
+patent tells us—and its limit</a></li>
+<li><a href="#motor-mechanics-rotor-bearings-shaft-and-containment"
+id="toc-motor-mechanics-rotor-bearings-shaft-and-containment">11. Motor
+mechanics: rotor, bearings, shaft and containment</a></li>
+<li><a href="#can-the-motors-supply-enough-power-to-fly"
+id="toc-can-the-motors-supply-enough-power-to-fly">12. Can the motors
+supply enough power to fly?</a></li>
+<li><a
+href="#battery-technology-cell-performance-is-not-pack-performance"
+id="toc-battery-technology-cell-performance-is-not-pack-performance">13.
+Battery technology: cell performance is not pack performance</a></li>
+<li><a href="#why-battery-mass-stays-with-the-aircraft"
+id="toc-why-battery-mass-stays-with-the-aircraft">14. Why battery mass
+stays with the aircraft</a></li>
+<li><a href="#structure-the-wing-is-an-electrical-propulsion-platform"
+id="toc-structure-the-wing-is-an-electrical-propulsion-platform">15.
+Structure: the wing is an electrical propulsion platform</a></li>
+<li><a href="#a-small-beam-model-with-a-large-lesson"
+id="toc-a-small-beam-model-with-a-large-lesson">16. A small beam model
+with a large lesson</a></li>
+<li><a href="#vibration-aeroelasticity-and-small-clearances"
+id="toc-vibration-aeroelasticity-and-small-clearances">17. Vibration,
+aeroelasticity and small clearances</a></li>
+<li><a href="#ten-motors-useful-redundancy-with-shared-dependencies"
+id="toc-ten-motors-useful-redundancy-with-shared-dependencies">18. Ten
+motors: useful redundancy with shared dependencies</a></li>
+<li><a href="#materials-and-manufacturing-choices"
+id="toc-materials-and-manufacturing-choices">19. Materials and
+manufacturing choices</a></li>
+<li><a href="#mission-operations-and-the-evidence-still-needed"
+id="toc-mission-operations-and-the-evidence-still-needed">20. Mission
+operations and the evidence still needed</a></li>
+<li><a href="#classroom-calculations-and-wing-lab-activity"
+id="toc-classroom-calculations-and-wing-lab-activity">21. Classroom
+calculations and Wing Lab activity</a></li>
+<li><a href="#خلاصه-فارسی" id="toc-خلاصه-فارسی">22. خلاصهٔ فارسی</a></li>
+<li><a href="#sources-and-figure-credits"
+id="toc-sources-and-figure-credits">23. Sources and figure
+credits</a></li>
+</ul></li>
+</ul>
+</aside><h2 id="the-engineering-question">1. The engineering question</h2>
+<p>The CE-25A puts an unusual propulsion system on a familiar kind of
+vehicle: a wingborne passenger aeroplane. Its electric motors turn
+ducted fans distributed across the wings. Understanding this aircraft
+therefore requires three linked explanations: how electrical energy
+becomes shaft torque, how the fan converts that torque into thrust, and
+how the wing carries both aerodynamic and propulsion loads.</p>
+<p>This original lesson was prompted by <a
+href="https://www.pedal.ir/flight/748315-ce-25a-electric-plane/">Pedal’s
+Persian report</a>, which was read directly. It develops the engineering
+independently rather than reproducing the article. The latest programme
+announcement, COMAC’s published patent, motor manufacturers’ data and
+NASA research are the supporting sources.</p>
+<p><strong>How to read the numbers:</strong> aircraft facts are
+identified as reported programme information; generic diagrams explain
+engineering principles; every calculation using undisclosed quantities
+is labelled a <strong>classroom assumption</strong>. A worked example is
+not a reverse-engineered CE-25A specification.</p>
+<figure>
+<img
+src="https://www.stdaily.com/web/gdxw/pic/2026-11/14/613218_20a8fbd8-ea35-4d5b-ae90-4bfbe98e251dcopy.jpg"
+alt="CE-25A on the ground, showing its wing-mounted ducted fan installation" />
+<figcaption aria-hidden="true">CE-25A on the ground, showing its
+wing-mounted ducted fan installation</figcaption>
+</figure>
+<p><em>Figure 1. Real CE-25A photograph supplied by COMAC and published
+by Science and Technology Daily [R2]. The image is externally hosted;
+credit and rights remain with its owner. Visible shape does not reveal
+the internal motor, battery or wing construction.</em></p>
+<h2 id="what-is-known-about-the-aircraft">2. What is known about the
+aircraft?</h2>
+<p>COMAC’s announcement of 14 November 2026, reproduced with COMAC
+attribution by Zijing [R1], describes the first crewed flight in
+Binzhou: two pilots and a flight-test engineer were aboard. It reports
+16 min 38 s airborne and 60.4 km, following an uncrewed maiden flight on
+2 February and 19 uncrewed autonomous validation flights. These are
+flight-test milestones, not a demonstration of a full passenger mission
+at the advertised range.</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Quantity</th>
+<th>Latest reported value or status</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Developer and partners</td>
+<td>COMAC, CATL, Shanghai Jiao Tong University and other partners</td>
+<td>Programme participants</td>
+</tr>
+<tr class="even">
+<td>Passenger capacity</td>
+<td>19</td>
+<td>Intended capacity; the reported crewed test carried three crew
+members</td>
+</tr>
+<tr class="odd">
+<td>Maximum takeoff mass</td>
+<td>10,000 kg</td>
+<td>A mass limit, not the published mass of that test flight</td>
+</tr>
+<tr class="even">
+<td>Cruise speed</td>
+<td>300 km/h = 83.33 m/s</td>
+<td>Reported cruise figure</td>
+</tr>
+<tr class="odd">
+<td>Cruise altitude</td>
+<td>2,400 m</td>
+<td>Reported figure</td>
+</tr>
+<tr class="even">
+<td>Range</td>
+<td>400 km</td>
+<td>Programme figure; payload, reserves and weather conditions are not
+itemized</td>
+</tr>
+<tr class="odd">
+<td>Propulsion</td>
+<td>Above-wing distributed electric ducted fans</td>
+<td>Ten visible fan units, five per side, in the released
+photographs</td>
+</tr>
+<tr class="even">
+<td>Certification</td>
+<td>Type-certificate application accepted, according to the
+announcement</td>
+<td>Acceptance is not issuance of a type certificate</td>
+</tr>
+</tbody>
+</table>
+<p>Source: [R1–R2]. The designation’s “25” refers to the intended
+CCAR-25 transport-category framework. It does not prove completed
+compliance testing or airline-service approval.</p>
+<p><strong>A correction to the headline:</strong> CE-25A is not the
+world’s first all-electric aeroplane to fly. EASA certified the two-seat
+Pipistrel Velis Electro in June 2020 [R3]. CE-25A’s significance is its
+larger, 19-passenger intended role and distributed ducted-fan
+integration.</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Important unpublished information</th>
+<th>Why it matters</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Motor maker/model, topology, continuous/peak ratings, speed and
+cooling maps</td>
+<td>Determines available shaft power and thermal endurance</td>
+</tr>
+<tr class="even">
+<td>Inverter ratings, bus voltage and electrical segregation</td>
+<td>Determines current, losses and fault tolerance</td>
+</tr>
+<tr class="odd">
+<td>Fan dimensions, blade number, pressure ratio and installed
+efficiency maps</td>
+<td>Determines thrust, noise and inlet sensitivity</td>
+</tr>
+<tr class="even">
+<td>Installed battery capacity, pack mass and usable energy</td>
+<td>Determines payload and mission endurance</td>
+</tr>
+<tr class="odd">
+<td>Structural materials, laminate schedules, spar geometry and
+allowables</td>
+<td>Determines stress, stiffness, fatigue and mass</td>
+</tr>
+<tr class="even">
+<td>Flight-test payload, energy consumption and measured range</td>
+<td>Needed to validate mission claims</td>
+</tr>
+</tbody>
+</table>
+<p>No exact motor or battery rating is assigned to CE-25A in this
+lesson. In particular, a widely repeated <strong>200 kW per
+motor</strong> estimate and a <strong>500 Wh/kg installed pack</strong>
+should not be presented as confirmed aircraft specifications.</p>
+<h2 id="follow-the-energy-force-and-heat">3. Follow the energy, force
+and heat</h2>
+<figure>
+<img src="./power-chain.svg"
+alt="Generic electric aircraft power chain and separate heat rejection path" />
+<figcaption aria-hidden="true">Generic electric aircraft power chain and
+separate heat rejection path</figcaption>
+</figure>
+<p><em>Figure 2. Generic engineering architecture. This is not CE-25A’s
+wiring diagram. Energy passes through protection, power electronics, the
+motor and the fan; losses leave as heat.</em></p>
+<p>A battery supplies direct current. Protection and distribution
+hardware connect it to an inverter. The inverter switches that DC supply
+into controlled multiphase currents. The motor converts electrical power
+into mechanical torque. The shaft turns a fan, which adds momentum to
+air. The resulting aerodynamic forces act on the fan, duct, motor
+support and wing.</p>
+<p>Three efficiencies must remain distinct:</p>
+<p><span class="math display">\[
+\eta_m=\frac{P_{\rm shaft}}{P_{\rm motor,in}},\qquad
+\eta_i=\frac{P_{\rm motor,in}}{P_{\rm DC}},\qquad
+\eta_p=\frac{TV}{P_{\rm shaft}}.
+\]</span></p>
+<p>Here <span class="math inline">\(T\)</span> is installed thrust and
+<span class="math inline">\(V\)</span> is flight speed. At steady
+cruise, the approximate useful-thrust power is <span
+class="math inline">\(TV\)</span>. Thus, ignoring auxiliary loads and
+wiring losses, useful propulsive power divided by DC input is <span
+class="math inline">\(\eta_i\eta_m\eta_p\)</span>. A 96% efficient motor
+does not make the complete aircraft 96% efficient. At zero flight speed,
+<span class="math inline">\(TV=0\)</span> even though a running fan
+produces static thrust; this definition of propulsive efficiency is not
+a static-thrust merit figure.</p>
+<h2 id="inside-an-electric-motor-where-torque-comes-from">4. Inside an
+electric motor: where torque comes from</h2>
+<p>CE-25A’s internal motor design is unpublished. A permanent-magnet
+synchronous motor (PMSM) is a useful teaching example because it shows
+the main electromagnetic and mechanical issues. Other choices include
+induction and reluctance machines. None is identified here as the
+installed CE-25A type.</p>
+<p>In a PMSM, current in stator windings creates a rotating magnetic
+field. Permanent magnets on or inside the rotor supply rotor flux. The
+controller places the stator field at an angle relative to the rotor
+field so that electromagnetic forces generate torque. There are no
+piston strokes, combustion chamber or turbine hot section. There are
+still bearings, insulation, rotating hardware and substantial thermal
+constraints.</p>
+<figure>
+<img src="./motor-section.svg"
+alt="Conceptual permanent-magnet motor section with stator, rotor, air gap and load path" />
+<figcaption aria-hidden="true">Conceptual permanent-magnet motor section
+with stator, rotor, air gap and load path</figcaption>
+</figure>
+<p><em>Figure 3. Generic radial-flux PMSM cross-section, not a CE-25A
+cutaway. Real pole/slot counts, magnet arrangements and cooling passages
+vary.</em></p>
+<p>The rotor receives driving torque; the stator experiences equal and
+opposite reaction torque. That reaction reaches the motor housing,
+mounts and airframe. A motor may have fewer moving components than a
+combustion engine, but its attachment still has to carry shaft torque,
+fan thrust, maneuver loads and vibration.</p>
+<h3 id="radial-flux-axial-flux-and-induction">Radial flux, axial flux
+and induction</h3>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Candidate machine</th>
+<th>Electromagnetic arrangement</th>
+<th>Structural and integration tradeoff</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Radial-flux PMSM</td>
+<td>Flux crosses a cylindrical air gap</td>
+<td>Cylindrical packaging; rotor retention, bearing alignment and radial
+gap control matter</td>
+</tr>
+<tr class="even">
+<td>Axial-flux PMSM</td>
+<td>Flux crosses a disc-shaped air gap</td>
+<td>Short axial length; disc stiffness, axial magnetic forces and gap
+uniformity matter</td>
+</tr>
+<tr class="odd">
+<td>Induction motor</td>
+<td>Stator field induces rotor currents</td>
+<td>Avoids permanent magnets; rotor loss and cooling require
+attention</td>
+</tr>
+<tr class="even">
+<td>Reluctance-based motor</td>
+<td>Torque follows rotor magnetic anisotropy</td>
+<td>Magnet-free variants are possible; torque ripple, acoustics and
+control depend on design</td>
+</tr>
+</tbody>
+</table>
+<p>Flux direction is not a measure of efficiency by itself. Winding
+utilization, saturation, leakage, rotor stress, losses, manufacturing
+and cooling determine the complete result. A high advertised kW/kg also
+depends on whether the quoted mass includes the controller, coolant,
+housing and mechanical attachments.</p>
+<h2 id="torque-speed-and-the-continuous-rating">5. Torque, speed and the
+continuous rating</h2>
+<p>The mechanical identity is</p>
+<p><span class="math display">\[P_{\rm shaft}=Q\omega,\qquad
+\omega=\frac{2\pi n}{60},\]</span></p>
+<p>where <span class="math inline">\(Q\)</span> is shaft torque in N·m
+and <span class="math inline">\(n\)</span> is rotational speed in rpm.
+<strong>Classroom example:</strong> a 200 kW shaft output needs
+approximately 637 N·m at 3,000 rpm, or 318 N·m at 6,000 rpm. These are
+two possible operating points, not a CE-25A motor rating.</p>
+<p>Increasing speed can reduce the torque required for a given power. It
+can also raise iron losses, bearing demands, rotor stress, fan tip speed
+and acoustic frequency. Reducing motor diameter may help packaging while
+making rotor cooling or torque production harder. Motor and fan
+therefore have to be selected together.</p>
+<p>The most useful motor specification is a map, not one power number.
+It should show continuous and time-limited output versus speed, supply
+voltage and cooling conditions. A short peak rating can support
+acceleration or takeoff; cruise and prolonged climb must respect
+continuous thermal limits.</p>
+<figure>
+<img src="./torque-speed.svg"
+alt="Illustrative constant torque and constant power motor operating envelope" />
+<figcaption aria-hidden="true">Illustrative constant torque and constant
+power motor operating envelope</figcaption>
+</figure>
+<p><em>Figure 4. Hypothetical envelope: 200 kW at a 3,000 rpm base
+speed, with idealized constant power above base speed. Actual voltage,
+thermal and mechanical limits can shorten this region. This is not a
+CE-25A performance map.</em></p>
+<p>Real comparator data help explain this distinction. EMRAX’s current
+268 product page lists 210 kW peak at 4,500 rpm and up to 101 kW
+continuous, explicitly dependent on duty cycle, cooling and controller
+capability [R5]. Safran’s ENGINeUS 100 announcement lists 125 kW
+maximum, integrated electronics, air cooling and 5 kW/kg [R6]. Neither
+product is identified as CE-25A equipment. Neither maximum figure should
+be silently re-labelled as continuous output.</p>
+<h2 id="what-the-inverter-and-controller-actually-do">6. What the
+inverter and controller actually do</h2>
+<p>An inverter is an active power converter, not merely an on/off
+switch. Its semiconductor bridges switch the DC bus rapidly; motor
+inductance and control determine the resulting phase currents.
+Pulse-width modulation controls their effective voltages. The DC-link
+capacitor, gate drivers, current sensors, rotor-position measurement and
+protection logic are part of the system.</p>
+<p>For a generic three-phase PMSM, electrical frequency is</p>
+<p><span class="math display">\[f_e=p\frac{n}{60},\]</span></p>
+<p>where <span class="math inline">\(p\)</span> is pole-pair count. At
+6,000 rpm, a hypothetical four-pole-pair motor has 400 Hz electrical
+frequency. This differs from the inverter’s switching frequency and the
+fan’s blade-passing frequency.</p>
+<p>Field-oriented control describes currents on axes rotating with the
+rotor. The <span class="math inline">\(d\)</span> axis aligns with rotor
+magnetic flux and the <span class="math inline">\(q\)</span> axis lies
+perpendicular to it. With a conventional amplitude-invariant
+transformation and peak-valued <span
+class="math inline">\(d\)</span>–<span class="math inline">\(q\)</span>
+currents, electromagnetic torque is</p>
+<p><span class="math display">\[
+Q_e=\frac32p\left[\psi_f i_q+(L_d-L_q)i_di_q\right].
+\]</span></p>
+<p>The first term is magnet torque; the second is reluctance torque when
+the axis inductances differ. For a nearly non-salient surface-magnet
+machine, <span class="math inline">\(L_d\approx L_q\)</span>, so torque
+mainly follows <span class="math inline">\(i_q\)</span>. This standard
+motor model is introduced in MIT’s electric-machines notes [R7]; no
+CE-25A parameter values are assumed.</p>
+<figure>
+<img src="./motor-control.svg"
+alt="Generic field-oriented motor control with current and rotor-position feedback" />
+<figcaption aria-hidden="true">Generic field-oriented motor control with
+current and rotor-position feedback</figcaption>
+</figure>
+<p><em>Figure 5. Conceptual control hierarchy. The flight controller
+requests thrust; an intermediate model or schedule converts this into a
+motor operating command. Motor current control does not directly measure
+aircraft thrust.</em></p>
+<p>The corresponding simplified voltage relations are</p>
+<p><span class="math display">\[
+v_d=R_s i_d+L_d\dot i_d-\omega_eL_qi_q,
+\]</span> <span class="math display">\[
+v_q=R_s i_q+L_q\dot i_q+\omega_e(L_di_d+\psi_f).
+\]</span></p>
+<p>At high speed, back electromotive force increases. The available bus
+voltage then limits achievable current and torque. Applying negative
+<span class="math inline">\(i_d\)</span> can weaken the net flux and
+extend the speed range, but it uses current capacity, changes losses and
+must respect magnet-demagnetization limits. It is not free extra
+power.</p>
+<p>Aircraft control adds another layer: it must coordinate motor limits
+with fan behavior, airspeed, inlet distortion, battery state and
+cooling. A request for more thrust may encounter a current limit, a
+temperature limit, a minimum safe battery voltage or an aerodynamic
+limit. The supervisory controller has to manage the resulting shortfall
+predictably.</p>
+<h2
+id="high-voltage-current-and-why-wiring-belongs-in-the-mass-budget">7.
+High voltage, current and why wiring belongs in the mass budget</h2>
+<p>For a DC branch, <span class="math inline">\(I\approx P_{\rm
+DC}/V_{\rm DC}\)</span>. <strong>Classroom example:</strong> a 2 MW
+electrical demand draws 4,000 A at 500 V or 2,000 A at 1,000 V. These
+are total-system examples, not CE-25A voltages or measured power.</p>
+<p>At unchanged conductor resistance, Joule heating is</p>
+<p><span class="math display">\[P_{\rm cable}=I^2R.\]</span></p>
+<p>Doubling voltage for fixed power halves current and reduces that
+resistance’s loss by a factor of four. But insulation, clearances,
+connectors, contactors and arc control become more demanding. At reduced
+ambient pressure, electrical insulation behavior and partial-discharge
+susceptibility require specific testing. A design cannot choose voltage
+from cable mass alone.</p>
+<p>The aircraft-level mass budget includes the motor, inverter, cables,
+protection, sensors, cooling hardware and mechanical installation.
+Moving electronics into the nacelle shortens phase wiring but exposes
+the controller to vibration and local thermal conditions. Locating it
+centrally changes cable losses, electromagnetic interference and
+maintenance access. No location is universally superior.</p>
+<p>NASA’s X-57 controller research provides a concrete component-level
+reference: a 14 kW, approximately 1 kg SiC-based high-lift
+inverter/controller with a measured 98.3% efficiency is described in
+[R8]. Its rating applies to that tested device. It does not establish
+CE-25A efficiency, and NASA’s X-57 programme closed before first flight
+[R9].</p>
+<h2 id="cooling-a-few-percentage-points-become-kilowatts">8. Cooling: a
+few percentage points become kilowatts</h2>
+<p>Suppose a hypothetical motor delivers 200 kW at <span
+class="math inline">\(\eta_m=0.96\)</span>, and its inverter has <span
+class="math inline">\(\eta_i=0.98\)</span>. Then</p>
+<p><span class="math display">\[P_{m,\rm in}=\frac{200}{0.96}=208.33\ {
+\rm kW},\]</span></p>
+<p><span class="math display">\[\dot Q_m=8.33\ {\rm kW},\qquad
+\dot Q_i=\frac{208.33}{0.98}-208.33=4.25\ {\rm kW}.\]</span></p>
+<p>Ten such units, if simultaneously at that operating point, reject
+approximately <strong>126 kW</strong> from the motors and inverters
+alone. Battery and cable losses add to this. The arithmetic is
+illustrative; it is not a CE-25A heat budget.</p>
+<p>Copper loss approximately follows <span class="math inline">\(3I_{\rm
+rms}^2R_s\)</span> for balanced phase windings. Iron loss depends on
+magnetic flux variation, electrical frequency and material. Bearings,
+seals, windage and rotor losses add heat. Winding insulation and magnets
+have temperature limits, and the hottest spot may be far above the
+housing temperature.</p>
+<p>A first thermal model is</p>
+<p><span class="math display">\[C_{\rm th}\frac{dT_m}{dt}=\dot Q_{\rm
+loss}-hA(T_m-T_\infty),\]</span></p>
+<p>where <span class="math inline">\(C_{\rm th}\)</span> is lumped heat
+capacity. It explains why a brief high-power operation may be acceptable
+while the same power is unsustainable continuously. Real design needs
+separate thermal nodes for windings, rotor, housing, coolant and
+electronics.</p>
+<p>Fan airflow can help cooling, but the difficult case may be a hot-day
+ground hold, low-speed climb, reduced fan operation after a fault or a
+blocked cooling path. Liquid cooling can improve heat transfer but adds
+coolant, pumps, heat exchangers, plumbing and additional failure modes.
+CE-25A’s actual motor cooling method remains unspecified in the reviewed
+sources.</p>
+<h2 id="from-shaft-torque-to-thrust-the-ducted-fan">9. From shaft torque
+to thrust: the ducted fan</h2>
+<p>An electric ducted fan is an air-moving propulsor powered by an
+electric motor. Its appearance does not make it a gas-turbine engine. In
+an idealized one-dimensional control volume,</p>
+<p><span class="math display">\[T=\dot
+m(V_e-V_0)+(p_e-p_0)A_e.\]</span></p>
+<p>Thrust depends on mass flow, velocity change and exit pressure. The
+rotor adds energy and swirl; downstream vanes may recover part of the
+swirl and also support the hub. The duct has its own pressure forces and
+aerodynamic drag, which must be included when measuring installed
+thrust.</p>
+<figure>
+<img src="./fan-wing.svg"
+alt="Conceptual ducted fan, motor support, accelerated stream and blown flap" />
+<figcaption aria-hidden="true">Conceptual ducted fan, motor support,
+accelerated stream and blown flap</figcaption>
+</figure>
+<p><em>Figure 6. Generic fan–wing interaction. The drawing explains a
+design mechanism; it does not specify CE-25A’s fan dimensions or flap
+mechanism.</em></p>
+<p>For an ideal, pressure-matched actuator disc at forward speed,</p>
+<p><span class="math display">\[T=2\rho A v_i(V_0+v_i),\qquad
+P_{\rm ideal}=T(V_0+v_i),\]</span></p>
+<p>so ideal propulsive efficiency is <span
+class="math inline">\(V_0/(V_0+v_i)\)</span>. At static conditions,
+<span class="math inline">\(P_{\rm ideal}=T^{3/2}/\sqrt{2\rho
+A}\)</span>. These relations show why accelerating a larger mass flow by
+a smaller velocity increment can be efficient. They exclude profile
+loss, swirl, inlet losses, tip clearance, duct drag and wing
+interaction.</p>
+<p>Splitting one total disc area into ten equal discs does not by itself
+lower ideal induced power. Increasing total effective area can help;
+additional ducts, surfaces, supports and electrical hardware can offset
+that gain. Installed performance needs a coupled aerodynamic and
+powertrain assessment.</p>
+<h3 id="fan-speed-is-a-structural-and-acoustic-choice">Fan speed is a
+structural and acoustic choice</h3>
+<p>The approximate helical tip Mach number is</p>
+<p><span class="math display">\[M_{\rm tip}\approx\frac{\sqrt{(\pi
+Dn/60)^2+V_0^2}}{a}.\]</span></p>
+<p>For a hypothetical 0.8 m diameter fan at 6,000 rpm, <span
+class="math inline">\(V_0=83.33\)</span> m/s and <span
+class="math inline">\(a=330\)</span> m/s, this gives approximately
+<strong>0.80</strong>. The diameter and speed are assumptions.
+Compressibility and noise can become significant even when the aircraft
+itself is flying slowly.</p>
+<figure>
+<img src="./tip-mach.svg"
+alt="Helical fan tip Mach number as a function of rpm for three assumed diameters" />
+<figcaption aria-hidden="true">Helical fan tip Mach number as a function
+of rpm for three assumed diameters</figcaption>
+</figure>
+<p><em>Figure 7. Independent sensitivity calculation with assumed
+diameters. This is a kinematic estimate, not an acoustic prediction or a
+fan certification limit.</em></p>
+<p>Blade-passing frequency is <span class="math inline">\(f_{\rm
+BPF}=Bn/60\)</span>. Eight hypothetical blades at 6,000 rpm give 800 Hz.
+Electric operation eliminates combustion noise, while fan tones, inlet
+turbulence, stator interaction and airframe vibration remain. Ten
+sources can interact acoustically; low noise requires measurement rather
+than inference from the absence of combustion.</p>
+<h2 id="what-comacs-patent-tells-usand-its-limit">10. What COMAC’s
+patent tells us—and its limit</h2>
+<p>COMAC’s patent CN115489716B [R4], with a 2022 priority date,
+describes a wing integrated with ducted fans. Its examples include five
+units per side, motor support through a hub and vanes, smooth wing–duct
+interfaces, and blown flaps. It also discusses a T-tail and differential
+propulsion for control.</p>
+<p>This is primary evidence of COMAC’s published design thinking. It is
+not a released CE-25A production drawing, proof that every claimed
+feature was built, or measured evidence for the patent’s performance
+claims. Patent embodiments and the flying prototype must be kept
+separate.</p>
+<p>The underlying lift mechanism is understandable without treating the
+patent as test data. A powered stream can raise local velocity and
+change wing circulation and separation. Turning a jet downward creates a
+reaction component upward. Flap angle, jet attachment and duct–wing
+geometry influence the result. Simply replacing freestream velocity by
+fan-exit velocity in the entire wing’s lift equation would overpredict
+lift because only part of the wing sees the powered stream and the flow
+is nonuniform.</p>
+<p>NASA’s review of distributed electric propulsion [R10] describes the
+opportunities in propulsion–airframe coupling, including blown surfaces
+and control authority. Those are design opportunities, not guaranteed
+percentage improvements for CE-25A. Boundary-layer ingestion and
+upper-surface blowing are also different mechanisms; an above-wing fan
+installation does not automatically establish useful boundary-layer
+ingestion.</p>
+<h2 id="motor-mechanics-rotor-bearings-shaft-and-containment">11. Motor
+mechanics: rotor, bearings, shaft and containment</h2>
+<p>An aircraft motor designer must account for more than electromagnetic
+torque:</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Component</th>
+<th>Main demand</th>
+<th>Consequence of inadequate design</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Rotor and magnet retention</td>
+<td>Centrifugal loading, temperature and overspeed</td>
+<td>Magnet release, rotor damage or imbalance</td>
+</tr>
+<tr class="even">
+<td>Shaft</td>
+<td>Torque, bending and transient loads</td>
+<td>Excess stress or fatigue</td>
+</tr>
+<tr class="odd">
+<td>Bearings and supports</td>
+<td>Radial/axial loads, alignment, lubricant condition</td>
+<td>Wear, heat, seizure or vibration</td>
+</tr>
+<tr class="even">
+<td>Motor housing</td>
+<td>Reaction torque, mount forces and thermal deformation</td>
+<td>Cracking or loss of air-gap control</td>
+</tr>
+<tr class="odd">
+<td>Fan blades and hub</td>
+<td>Centrifugal force, aerodynamic bending and foreign-object loads</td>
+<td>Fatigue or blade damage</td>
+</tr>
+<tr class="even">
+<td>Duct and installation</td>
+<td>Pressure loads, stiffness, clearance and debris trajectory</td>
+<td>Rubbing, secondary damage or inadequate protection</td>
+</tr>
+</tbody>
+</table>
+<p>For a solid circular shaft carrying pure torque,</p>
+<p><span class="math display">\[\tau_{\max}=\frac{16Q}{\pi
+d^3}.\]</span></p>
+<p>Using <span class="math inline">\(Q=637\)</span> N·m and an assumed
+allowable shear stress of 100 MPa gives a torsion-only diameter near
+<strong>31.9 mm</strong>. That is not a finished shaft design: bending,
+keyways, hollow construction, fatigue, material scatter, temperature and
+safety margins can govern.</p>
+<p>Rotor centrifugal stresses scale broadly with <span
+class="math inline">\(\rho_{\rm material}\omega^2r^2\)</span>. Doubling
+speed can multiply characteristic centrifugal stress by four.
+Differential thermal expansion changes fits and running clearances. A
+duct intended for aerodynamic efficiency must not be assumed to contain
+a released blade or rotor fragment; containment and trajectory
+protection need their own substantiation.</p>
+<h2 id="can-the-motors-supply-enough-power-to-fly">12. Can the motors
+supply enough power to fly?</h2>
+<p>The useful cruise estimate begins with the whole aircraft, not motor
+advertising. In steady level flight, <span
+class="math inline">\(L\approx W\)</span> and <span
+class="math inline">\(T\approx D\)</span>. If lift-to-drag ratio is
+<span class="math inline">\(K=L/D\)</span>,</p>
+<p><span class="math display">\[D\approx\frac{mg}{K},\qquad
+P_{\rm shaft}\approx\frac{mgV}{K\eta_p}.\]</span></p>
+<p><strong>Classroom assumptions:</strong> <span
+class="math inline">\(m=10,000\)</span> kg, <span
+class="math inline">\(V=300\)</span> km/h, <span
+class="math inline">\(K=14\)</span>, <span
+class="math inline">\(\eta_p=0.80\)</span>, <span
+class="math inline">\(\eta_m=0.96\)</span>, <span
+class="math inline">\(\eta_i=0.98\)</span>, and 20 kW of auxiliary DC
+load. Only the mass limit and nominal speed are published programme
+figures; the other inputs are illustrative. Using maximum mass does not
+assert that the aircraft flew at that mass.</p>
+<table>
+<thead>
+<tr class="header">
+<th>Calculated quantity</th>
+<th style="text-align: right;">Illustrative result</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Weight</td>
+<td style="text-align: right;">98.07 kN</td>
+</tr>
+<tr class="even">
+<td>Required thrust in level cruise</td>
+<td style="text-align: right;">7.00 kN</td>
+</tr>
+<tr class="odd">
+<td>Useful aerodynamic power, <span
+class="math inline">\(DV\)</span></td>
+<td style="text-align: right;">583.7 kW</td>
+</tr>
+<tr class="even">
+<td>Total fan shaft power</td>
+<td style="text-align: right;">729.7 kW</td>
+</tr>
+<tr class="odd">
+<td>Battery-terminal demand including auxiliaries</td>
+<td style="text-align: right;">795.6 kW</td>
+</tr>
+<tr class="even">
+<td>Equal-share shaft power per unit, if all ten share equally</td>
+<td style="text-align: right;">73.0 kW</td>
+</tr>
+<tr class="odd">
+<td>Still-air time for 400 km at 300 km/h</td>
+<td style="text-align: right;">1.333 h</td>
+</tr>
+<tr class="even">
+<td>Cruise-only electrical energy for that time</td>
+<td style="text-align: right;">1,060.8 kWh</td>
+</tr>
+</tbody>
+</table>
+<p>These numbers are internally consistent consequences of the
+assumptions. They cannot determine actual motor ratings. Takeoff, climb,
+cooling, control margin and failure conditions may set higher
+requirements. If <span class="math inline">\(K\)</span> is 10 rather
+than 14, the same model raises battery demand to about 1,106 kW; at
+<span class="math inline">\(K=18\)</span>, it falls to about 623 kW.</p>
+<p>For a steady climb, an additional useful term is <span
+class="math inline">\(W\dot h\)</span>:</p>
+<p><span class="math display">\[P_{\rm shaft}\approx\frac{DV+W\dot
+h}{\eta_p}.\]</span></p>
+<p>At 10 tonnes and an assumed 3 m/s climb rate, <span
+class="math inline">\(W\dot h\approx294\)</span> kW. Holding the other
+illustrative conditions constant adds about 368 kW of shaft power.
+Actual climb speed, drag and efficiency differ from cruise; this is a
+scaling argument, not a climb-performance prediction.</p>
+<h2 id="battery-technology-cell-performance-is-not-pack-performance">13.
+Battery technology: cell performance is not pack performance</h2>
+<p>CATL’s 2023 announcement described a condensed battery with up to 500
+Wh/kg and development work with electric-aircraft partners [R11]. That
+statement does not identify the installed CE-25A cell, pack energy,
+usable fraction, lifetime or thermal performance. The term “condensed”
+also should not automatically be replaced by “all-solid-state.”</p>
+<p>For analysis, define <span class="math inline">\(e_{\rm
+cell}\)</span> as cell specific energy and <span
+class="math inline">\(f_{\rm cell}\)</span> as the fraction of complete
+pack mass occupied by those cells. Then, approximately,</p>
+<p><span class="math display">\[e_{\rm pack}=f_{\rm cell}e_{\rm
+cell}.\]</span></p>
+<p>Enclosures, interconnects, cooling, monitoring, mounting and
+propagation protection occupy the remaining mass. With a purely
+illustrative <span class="math inline">\(f_{\rm cell}=0.70\)</span>, a
+500 Wh/kg cell would produce 350 Wh/kg at pack level before accounting
+for usable-energy limits. Neither value is an established CE-25A pack
+specification.</p>
+<p>If a mission needs <span class="math inline">\(E_{\rm
+mission}\)</span> and the allowable usable fraction is <span
+class="math inline">\(f_u\)</span>,</p>
+<p><span class="math display">\[m_b=\frac{E_{\rm mission}}{f_u e_{\rm
+pack}}.\]</span></p>
+<p>For a hypothetical <strong>600 kWh</strong> mission and <span
+class="math inline">\(f_u=0.80\)</span>:</p>
+<table>
+<thead>
+<tr class="header">
+<th>Assumed pack specific energy</th>
+<th style="text-align: right;">Required battery mass</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>250 Wh/kg</td>
+<td style="text-align: right;">3,000 kg</td>
+</tr>
+<tr class="even">
+<td>350 Wh/kg</td>
+<td style="text-align: right;">2,143 kg</td>
+</tr>
+<tr class="odd">
+<td>450 Wh/kg</td>
+<td style="text-align: right;">1,667 kg</td>
+</tr>
+</tbody>
+</table>
+<p>The 600 kWh exercise is separate from the previous 400 km cruise
+example. Using that example’s 1,060.8 kWh cruise energy at 350 Wh/kg and
+<span class="math inline">\(f_u=0.80\)</span> would require
+approximately <strong>3,788 kg</strong>, before adding the mission’s
+climb, taxi and explicit reserve energy. A remaining energy fraction and
+a regulatory mission reserve are different concepts; both must be
+defined without double counting.</p>
+<figure>
+<img src="./battery-mass.svg"
+alt="Battery mass sensitivity to mission energy and pack specific energy" />
+<figcaption aria-hidden="true">Battery mass sensitivity to mission
+energy and pack specific energy</figcaption>
+</figure>
+<p><em>Figure 8. Independent mass sensitivity for assumed usable
+fraction 0.80. Curves describe a calculation, not available CE-25A
+batteries or a verified payload–range diagram.</em></p>
+<p>Specific energy alone is insufficient. Peak power, voltage sag,
+temperature, aging and cell-to-cell variation matter. A simple
+loaded-voltage relation <span class="math inline">\(V\approx V_{\rm
+oc}-IR_{\rm int}\)</span> explains why a battery with energy remaining
+can still be unable to meet a high-power request. Internal resistance
+also generates <span class="math inline">\(I^2R_{\rm int}\)</span> heat.
+Repeated high-power cycles can therefore impose a more restrictive
+operating envelope than stored energy alone suggests.</p>
+<h2 id="why-battery-mass-stays-with-the-aircraft">14. Why battery mass
+stays with the aircraft</h2>
+<p>Discharging a battery does not remove an operationally meaningful
+amount of its mass. Unlike fuel burn, electrical energy use therefore
+does not substantially reduce landing mass or wing loading. Battery
+housings and supports must also carry landing and crash loads throughout
+the mission.</p>
+<p>For an idealized battery aircraft at constant mass, with auxiliaries
+and reserve energy omitted,</p>
+<p><span class="math display">\[R\approx\frac{e_{\rm
+pack}f_u\eta_i\eta_m\eta_p}{g}
+\frac{L}{D}\frac{m_b}{m},\]</span></p>
+<p>where <span class="math inline">\(e_{\rm pack}\)</span> is in
+<strong>J/kg</strong>, so Wh/kg must be multiplied by 3,600. This
+follows from usable battery energy divided by electrical energy per
+metre of level flight. It is not the fuel-burning Breguet logarithmic
+range formula.</p>
+<p>Increasing battery fraction raises available energy but competes with
+payload and structure. If additional batteries raise total mass, drag
+and climb energy also increase. The simple formula assumes fixed
+aerodynamic efficiency and does not close that design loop. A credible
+mission model must iterate mass, structural sizing, thermal management
+and energy.</p>
+<p>Climbing 10 tonnes through 2,400 m adds about <strong>65.4
+kWh</strong> of gravitational potential energy. At the example’s
+combined efficiency, the associated electrical contribution is about
+86.9 kWh, before drag during climb. Descent can trade altitude for
+reduced propulsion demand; it should not be assumed to regenerate all
+that energy through an aircraft fan.</p>
+<h2 id="structure-the-wing-is-an-electrical-propulsion-platform">15.
+Structure: the wing is an electrical propulsion platform</h2>
+<p>The released photographs show an integrated installation; they do not
+disclose whether a particular load-bearing part is aluminium, carbon
+composite or another material. A defensible structural explanation
+starts from loads and load paths.</p>
+<p>Wing pressure loads pass through skins and ribs to spars and the
+wing–fuselage connection. Each fan installation adds thrust, weight,
+reaction torque, inertial forces and vibration. Cables and cooling
+equipment need supports and access. Removing or reshaping structural
+material for ducts can reduce the depth and continuity available to
+carry bending and torsion.</p>
+<figure>
+<img src="./load-path.svg"
+alt="Generic wing box and motor attachment showing thrust, weight and reaction torque" />
+<figcaption aria-hidden="true">Generic wing box and motor attachment
+showing thrust, weight and reaction torque</figcaption>
+</figure>
+<p><em>Figure 9. Generic load path: fan/hub and duct forces → attachment
+structure → ribs and spars → wing root → fuselage. Geometry and
+materials are illustrative.</em></p>
+<p>For span coordinate <span class="math inline">\(y\)</span>, a
+simplified net upward line load is</p>
+<p><span
+class="math display">\[q(y)=\ell(y)-n_zg\,m&#39;(y),\]</span></p>
+<p>with local propulsion installation masses included in <span
+class="math inline">\(m&#39;\)</span> or applied separately as point
+loads. Root bending moment is obtained from the net load’s moment about
+the root. Outboard installation mass can relieve some positive-maneuver
+bending while still adding ground, landing, negative-load and dynamic
+demands. It is not correct to conclude that every added fan always
+increases every wing-bending case.</p>
+<p>An offset force creates torsion about the shear center. For a local
+chordwise structural coordinate <span class="math inline">\(x\)</span>,
+vertical coordinate <span class="math inline">\(z\)</span> and spanwise
+torsion axis <span class="math inline">\(y\)</span>,</p>
+<p><span class="math display">\[M_y=r_zF_x-r_xF_z.\]</span></p>
+<p>Thus thrust applied above the relevant axis and lift applied away
+from the shear center can both twist a wing section. Shaft reaction
+torque acts about the shaft axis, generally close to the flight
+direction; it should not automatically be added to spanwise wing torsion
+as a scalar. A three-dimensional mount load set preserves the axes.</p>
+<p>Elementary stress estimates remain useful:</p>
+<p><span class="math display">\[\sigma\approx\frac{Mz}{I},\qquad
+\tau_{\rm closed\ cell}\approx\frac{M_t}{2A_m t}.\]</span></p>
+<p>The second expression assumes a thin-walled, single-cell closed
+section with uniform thickness. Cut-outs, joints, multi-cell wings,
+local buckling and anisotropic composite behavior require a more
+detailed analysis. NASA’s distributed-propulsion structural study [R12]
+illustrates why propulsion integration and structural mass must be
+assessed together; it does not provide CE-25A structural dimensions.</p>
+<h2 id="a-small-beam-model-with-a-large-lesson">16. A small beam model
+with a large lesson</h2>
+<p>Consider an <strong>assumed</strong> 8 m cantilever half-wing with a
+uniform upward load of 6 kN/m. Place five <strong>assumed</strong> 60 kg
+complete fan installations at 0.8, 1.8, 2.8, 3.8 and 4.8 m. At a 1 g
+inertia factor, the root moment is</p>
+<p><span class="math display">\[M_0=\frac{wL^2}{2}-\sum_j
+m_jgy_j.\]</span></p>
+<p>The uniform-load contribution is 192.0 kN·m; the installation
+contribution is 8.24 kN·m in the opposite direction, giving
+<strong>183.76 kN·m</strong>. The root vertical reaction magnitude
+follows from 48.0 kN upward loading minus 2.942 kN installation weight:
+<strong>45.06 kN</strong>.</p>
+<figure>
+<img src="./wing-beam.svg"
+alt="Calculated shear and bending moment for an assumed half-wing load case" />
+<figcaption aria-hidden="true">Calculated shear and bending moment for
+an assumed half-wing load case</figcaption>
+</figure>
+<p><em>Figure 10. Elementary cantilever model. Moments are plotted as
+bending demand from outboard loads; shear uses the same upward-positive
+outboard-load convention. This is not CE-25A geometry, a complete
+maneuver load case, or an airworthiness calculation.</em></p>
+<p>For fixed thickness and similar material distribution, reducing beam
+depth lowers bending stiffness strongly. Duct integration therefore
+requires attention to spar continuity and section depth, not simply
+stronger material. An original wing box with continuous closed cells can
+be structurally preferable to an equally light arrangement interrupted
+by repeated openings. The actual topology must be inspected before
+drawing a conclusion.</p>
+<h2 id="vibration-aeroelasticity-and-small-clearances">17. Vibration,
+aeroelasticity and small clearances</h2>
+<p>Distributed propulsion creates several excitation families: rotor
+imbalance at shaft frequency, electromagnetic harmonics, fan
+blade-passing tones, unsteady inlet forces and maneuver transients. Each
+can couple to a mount, duct, wing or control-surface mode.</p>
+<p>An illustrative single-mode equation is</p>
+<p><span class="math display">\[m_{\rm eff}\ddot x+c\dot
+x+kx=F_0\cos(\Omega t).\]</span></p>
+<p>Moving a natural frequency away from one operating speed is not
+sufficient when the motor sweeps through a broad speed range. Damping,
+excitation amplitude, transient crossings and fatigue accumulation also
+matter. Added propulsor mass changes mode shapes and frequencies;
+aerodynamic coupling and control response can change damping.</p>
+<p>A spinning rotor has angular momentum. A maneuver can impose a
+gyroscopic moment with magnitude of order <span
+class="math inline">\(I_r\omega\Omega_{\rm maneuver}\)</span>, depending
+on axis orientation. Rotor balance and bearing support influence both
+vibration and required clearance. Thermal expansion, wing bending, mount
+deformation and rotor runout all contribute to the minimum running
+gap.</p>
+<p>Structural flexibility can also change fan-inlet alignment and
+blown-wing loading, which in turn changes deformation. Assessing this
+feedback requires aeroelastic and propulsion interaction models. A
+static stress margin alone cannot establish flutter clearance or
+rotor–duct clearance through the operating envelope.</p>
+<h2 id="ten-motors-useful-redundancy-with-shared-dependencies">18. Ten
+motors: useful redundancy with shared dependencies</h2>
+<p>If ten units initially supply equal thrust, losing one removes 10% of
+nominal thrust before redistribution. The remaining nine must each
+increase thrust by <span class="math inline">\(10/9\)</span>, or 11.1%,
+merely to restore the original total. Whether they can do so depends on
+operating margins and fan performance, not the arithmetic alone.</p>
+<p>For a fan at lateral offset <span class="math inline">\(y\)</span>, a
+thrust change gives a yaw-moment magnitude approximately</p>
+<p><span class="math display">\[|\Delta N|=|y\,\Delta T|.\]</span></p>
+<p>A failed unit can also alter local blown lift, creating roll and a
+changed stall margin. A seized fan, freely windmilling fan and
+electrically braked fan have different drag. Restoring total thrust does
+not necessarily restore the original wing flow or handling
+qualities.</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Fault</th>
+<th>Local effect</th>
+<th>Wider dependency to examine</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>One inverter trips</td>
+<td>One motor loses commanded torque</td>
+<td>Shared bus disturbance; braking and windmilling behavior</td>
+</tr>
+<tr class="even">
+<td>Motor bearing seizure</td>
+<td>Drag and local mechanical loading</td>
+<td>Rotor/duct damage and adjacent installations</td>
+</tr>
+<tr class="odd">
+<td>Battery-zone fault</td>
+<td>Lost energy or power</td>
+<td>Which motors share that source and protection zone?</td>
+</tr>
+<tr class="even">
+<td>Common controller or command fault</td>
+<td>Incorrect or absent commands</td>
+<td>Independence of control and power supply</td>
+</tr>
+<tr class="odd">
+<td>Cooling-system fault</td>
+<td>Power derating</td>
+<td>Number of units sharing the cooling path</td>
+</tr>
+</tbody>
+</table>
+<p>The table is a generic engineering analysis, not a report of CE-25A
+failures or its redundancy design. NASA’s published X-57 motor/inverter
+failure-mode presentation is a useful primary starting point for deeper
+study [R13]. Demonstrating continued safe flight requires the actual
+power architecture, isolation logic and flight dynamics.</p>
+<h2 id="materials-and-manufacturing-choices">19. Materials and
+manufacturing choices</h2>
+<p>No substantiated CE-25A wing material breakdown was found in the
+reviewed primary material. The practical choices can still be
+taught:</p>
+<ul>
+<li><strong>Metal wing boxes:</strong> familiar joining and inspection
+methods; local stress concentration, fatigue, corrosion and electrical
+bonding need attention.</li>
+<li><strong>Composite wing boxes:</strong> directional stiffness can be
+tailored; joints, impact damage, delamination, electrical paths and
+thermal behavior need explicit design.</li>
+<li><strong>Metal/composite interfaces:</strong> thermal expansion
+mismatch, galvanic isolation, fastener preload and load transfer can
+govern the joint.</li>
+<li><strong>Duct construction:</strong> aerodynamic shape must remain
+stable while providing access, erosion resistance, acoustic treatment
+and any separately required fragment protection.</li>
+<li><strong>Battery enclosures:</strong> load retention, electrical
+isolation, heat transfer and vent routing compete with mass and
+maintenance requirements.</li>
+</ul>
+<p>Integration quality matters more than a material label. A light
+component can demand a heavy supporting structure; a slightly heavier
+motor with better cooling and lower installation loads can sometimes
+reduce total aircraft mass.</p>
+<h2 id="mission-operations-and-the-evidence-still-needed">20. Mission
+operations and the evidence still needed</h2>
+<p>A practical route analysis needs more than nominal range: passenger
+and baggage mass, ambient temperature, wind, climb, diversion, holding,
+battery aging, minimum state of charge and turnaround infrastructure all
+affect dispatch.</p>
+<p><strong>Classroom charging example:</strong> replenishing 600 kWh in
+30 minutes requires an average 1.2 MW into the battery. At an assumed
+95% charger efficiency, average grid input is about 1.26 MW, before site
+auxiliaries. That does not demonstrate a battery can accept this
+charging rate or maintain it near full charge. Multiple aircraft can
+multiply airport demand, and cooling can constrain turnaround time.</p>
+<p>The programme announcement’s accepted type-certificate application is
+an early certification status, not a completed approval. The actual
+certification basis and compliance programme must govern. FAA AC 20-184A
+is a current <strong>US comparator</strong> for
+rechargeable-lithium-battery installation guidance [R14], not proof of
+CE-25A compliance or the Chinese programme’s applicable
+requirements.</p>
+<p>For a technically persuasive public demonstration, the most useful
+next disclosures would be a defined payload–range mission, measured
+battery energy and temperature histories, continuous propulsion ratings,
+installed fan maps, fault-case performance, and substantiated
+structural/fatigue evidence. These would let engineers test the
+architecture’s advantages quantitatively.</p>
+<h2 id="classroom-calculations-and-wing-lab-activity">21. Classroom
+calculations and Wing Lab activity</h2>
+<p><a href="./calculations.py">Download the calculation script</a> · <a
+href="./calculations.json">Calculated results with input
+assumptions</a></p>
+<p>Run the standard-library script with
+<code>python calculations.py</code>. It reproduces the torque, thermal,
+tip-speed, cruise-energy, battery-mass, shaft and beam examples. It is a
+teaching model, with no CE-25A calibration or performance-validation
+claim. The figure/page builder is <a
+href="https://github.com/Ehsan-Roohi/Aerospace-Structures/blob/main/scripts/build_ce25a_reading.py">scripts/build_ce25a_reading.py</a>,
+requiring NumPy, Matplotlib and Pandoc.</p>
+<ol type="1">
+<li>In <a
+href="https://ehsan-roohi.github.io/Aerospace-Structures/wing-panel-stress-analyzer/#wing">Wing
+Lab</a>, build a cantilever beam or wing with a clearly documented
+assumed span and load. Save a baseline before adding propulsion
+loads.</li>
+<li>Add the five installation masses from Section 16 if the selected
+model supports point loads. Otherwise reproduce the supplied script’s
+beam results; document any distributed-load approximation used in the
+app.</li>
+<li>Compare root reaction and bending with the hand calculation. Explain
+why this particular positive-lift case shows bending relief.</li>
+<li>Introduce a separate mount load case for thrust offset and shaft
+reaction torque. State the axes; do not replace all three-dimensional
+loads with a single vertical force.</li>
+<li>Increase installation mass, vary location, and examine stiffness
+sensitivity. Compare operating, ground and landing cases
+separately.</li>
+<li>Explain which results a static beam model cannot supply: local
+joints, duct distortion, fragment containment, thermal expansion,
+electromagnetic behavior and flutter.</li>
+</ol>
+<p><strong>Questions for discussion:</strong> Why can an electric
+aircraft have a highly efficient motor and a short range? Why is
+continuous power more informative than peak power for cruise? Can a duct
+act as a fan guard without being fragment containment? Why can losing
+one motor affect both yaw and lift? Which public measurement would most
+reduce uncertainty in a 400 km mission assessment?</p>
+<section lang="fa" dir="rtl"><h2 id="خلاصه-فارسی">22. خلاصهٔ فارسی</h2>
+<p>هواپیمای CE-25A کامک برای حمل ۱۹ مسافر در مسیرهای کوتاه طراحی شده و
+از فن‌های برقی کانال‌دار روی بال استفاده می‌کند. پرواز سرنشین‌دار اعلام‌شده
+در ۱۴ نوامبر ۲۰۲۶ یک مرحلهٔ آزمایشی است؛ برد ۴۰۰ کیلومتر با ظرفیت کامل
+مسافر در این پرواز اثبات نشده است.</p>
+<p>در موتور برقی، میدان مغناطیسی استاتور و روتور گشتاور می‌سازند. اینورتر
+برق مستقیم باتری را به جریان‌های کنترل‌شدهٔ موتور تبدیل می‌کند و فن با
+شتاب‌دادن به هوا رانش تولید می‌کند. توان اوج با توان پیوسته فرق دارد؛ حتی
+چند درصد تلفات در موتورهای پرتوان، گرمای زیادی ایجاد می‌کند. مدل، سازنده،
+توان، دور و روش خنک‌کاری موتورهای واقعی CE-25A در منابع بررسی‌شده اعلام
+نشده است؛ توضیحات موتور آهنربای دائم و اعداد ۲۰۰ کیلووات در این متن
+آموزشی هستند.</p>
+<p>بال علاوه بر برآ، وزن تجهیزات، رانش، گشتاور عکس‌العمل موتور و ارتعاشات
+را تحمل می‌کند. پوستهٔ فن نیز صرفاً به‌دلیل کانال‌بودن، محفظهٔ تأییدشدهٔ مهار
+شکست پره محسوب نمی‌شود. وجود ده موتور فرصت افزونگی فراهم می‌کند، اما
+باتری، کابل، کنترل و خنک‌کاری مشترک می‌توانند وابستگی مشترک ایجاد
+کنند.</p>
+<p>چگالی انرژی سلول با باتری نصب‌شده برابر نیست. ظرفیت قابل‌استفاده، جرم
+محفظه و خنک‌کاری، توان لحظه‌ای و ذخیرهٔ انرژی مأموریت هم اهمیت دارند.
+محاسبات و شکل‌های این درس برای فهم این روابط هستند و مشخصات محرمانهٔ
+هواپیما را بازسازی نمی‌کنند.</p>
+</section><h2 id="sources-and-figure-credits">23. Sources and figure credits</h2>
+<p>All links checked or retrieved on 15 November 2026. Primary technical
+sources are used for engineering comparisons. Photographs remain
+externally hosted with source attribution. All nine engineering
+diagrams/plots are original teaching illustrations; none is a COMAC
+drawing.</p>
+<p><a id="r1"></a><strong>R1. COMAC programme announcement, 14 November
+2026</strong>, reproduced by Zijing with source explicitly identified as
+COMAC: <a
+href="https://zijing.com.cn/web/article/1571164301130391552/web/content_1571164301130391552.html">我国10吨级电动商用飞机完成首次有人驾驶智能飞行</a>.
+Source for the current programme figures and reported flight milestones;
+not a flight-test data package.</p>
+<p><a id="r2"></a><strong>R2. Science and Technology Daily, 14 November
+2026.</strong> <a
+href="https://www.stdaily.com/web/gdxw/2026-11/14/content_613218.html">COMAC-supplied
+photographs and report</a>. <a
+href="https://res.bauhk.com/contentcloud/44/REPRINT/MEDIA/PICTURE/2026/11/14/30e91e7bde63412baee3c7f8491a1012_wh1080x678.webp">Flight
+photograph from the COMAC release, hosted by Zijing</a>. Images are
+credited to COMAC, not released as course-owned photography. <a
+href="https://www.chinanews.com/sh/shipin/cns-d/2026/11-14/news1074887.shtml">COMAC-supplied
+flight video carried by China News Service</a>.</p>
+<p><a id="r3"></a><strong>R3. EASA, 10 June 2020.</strong> <a
+href="https://www.easa.europa.eu/en/newsroom-and-events/press-releases/easa-certifies-electric-aircraft-first-type-certification-fully">Velis
+Electro type certification</a>. Historical correction to the “first
+electric aeroplane” claim.</p>
+<p><a id="r4"></a><strong>R4. COMAC patent CN115489716B.</strong> <a
+href="https://patents.google.com/patent/CN115489716B/en">Wings and
+electric aircraft with integrated distributed ducted fans</a>. Priority
+22 September 2022; granted publication 29 December 2023. English text is
+machine-translated; a patent embodiment is not confirmation of prototype
+implementation.</p>
+<p><a id="r5"></a><strong>R5. EMRAX.</strong> <a
+href="https://emrax.com/e-motors/emrax-268/">EMRAX 268 current product
+data</a>. Comparator only; peak and continuous values depend on
+operating conditions. No CE-25A supplier relationship is asserted.</p>
+<p><a id="r6"></a><strong>R6. Safran, 3 February 2025.</strong> <a
+href="https://www.safran-group.com/pressroom/safran-obtains-easa-certification-first-electric-motor-new-air-mobility-2025-02-03">ENGINeUS
+100 certification announcement</a>. Comparator only; no CE-25A supplier
+relationship is asserted.</p>
+<p><a id="r7"></a><strong>R7. James L. Kirtley Jr., MIT OpenCourseWare,
+6.685 Electric Machines.</strong> <a
+href="https://ocw.mit.edu/courses/6-685-electric-machines-fall-2013/c5edfb0f28f7c1b1b4d1588f179074c6_MIT6_685F13_chapter7.pdf">Course
+Notes 7: Permanent Magnet “Brushless DC” Motors</a>. Background on
+machine models and current/voltage operating limits; diagrams and worked
+examples here are independently constructed.</p>
+<p><a id="r8"></a><strong>R8. Kowalewski et al., NASA, 2024.</strong> <a
+href="https://ntrs.nasa.gov/citations/20240006334">NASA’s X-57 High Lift
+Motor Controller: Detailed Design, Test Results, and Outcomes</a>.
+Primary experimental controller reference, not CE-25A data.</p>
+<p><a id="r9"></a><strong>R9. NASA.</strong> <a
+href="https://www.nasa.gov/x-57-maxwell/">X-57 Maxwell programme
+overview</a>. Confirms programme closeout before first flight; useful
+context when comparing electric-aircraft demonstrations.</p>
+<p><a id="r10"></a><strong>R10. Kim, Perry and Ansell, 2018.</strong> <a
+href="https://ntrs.nasa.gov/citations/20180004729">A Review of
+Distributed Electric Propulsion Concepts for Air Vehicle Technology</a>.
+NASA/academic technical paper on propulsion–airframe coupling.</p>
+<p><a id="r11"></a><strong>R11. CATL, 19 April 2023.</strong> <a
+href="https://www.catl.com/en/news/6015.html">Condensed-battery
+announcement</a>. Manufacturer technology claim; not an installed CE-25A
+pack specification.</p>
+<p><a id="r12"></a><strong>R12. Mukhopadhyay, Ozoroski and McMillin,
+AIAA SciTech 2018.</strong> <a
+href="https://ntrs.nasa.gov/citations/20190000712">Structural
+Configuration Analysis of Advanced Flight Vehicle Concepts with
+Distributed Hybrid-Electric Propulsion</a>. Primary structural study of
+other concepts; not a CE-25A structural report.</p>
+<p><a id="r13"></a><strong>R13. Clarke and Terry, NASA, 2024.</strong>
+<a href="https://ntrs.nasa.gov/citations/20240003366">X-57 Cruise Motor
+and Inverter Failure Modes</a>. Primary failure-mode presentation for a
+different programme.</p>
+<p><a id="r14"></a><strong>R14. FAA AC 20-184A</strong>, issued 18
+September 2026. <a
+href="https://www.faa.gov/regulations_policies/advisory_circulars/index.cfm/go/document.information/documentID/1045700">Guidance
+on Testing and Installation of Rechargeable Lithium Battery and Battery
+Systems on Aircraft</a>. US guidance comparator; not CE-25A’s Chinese
+certification basis.</p>
+<figure>
+<img
+src="https://res.bauhk.com/contentcloud/44/REPRINT/MEDIA/PICTURE/2026/11/14/30e91e7bde63412baee3c7f8491a1012_wh1080x678.webp"
+alt="CE-25A in flight with its T-tail and underside visible" />
+<figcaption aria-hidden="true">CE-25A in flight with its T-tail and
+underside visible</figcaption>
+</figure>
+<p><em>Figure 11. Flight photograph from the COMAC release [R1–R2],
+externally hosted by Zijing. A real aircraft image provides
+configuration context; internal structure cannot be inferred from paint
+or external panels.</em></p>
+<footer>University of Massachusetts Amherst · MIE 446 · Independent classroom engineering analysis · Evidence checked 15 November 2026</footer></main></body></html>

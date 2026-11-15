@@ -1,0 +1,78 @@
+{
+  "status": "Teaching calculations, not CE-25A specifications or validation",
+  "input_status": {
+    "published_programme_figures_used": [
+      "mass limit 10000 kg",
+      "nominal cruise 300 km/h",
+      "range figure 400 km"
+    ],
+    "all_other_numerical_inputs": "Independent classroom assumptions",
+    "scope": "Cruise estimate excludes taxi, climb, diversion and explicit reserve energy"
+  },
+  "assumptions": {
+    "mass_kg": 10000.0,
+    "speed_kmh": 300.0,
+    "range_km": 400.0,
+    "lift_to_drag": 14.0,
+    "propulsive_efficiency": 0.8,
+    "motor_efficiency": 0.96,
+    "inverter_efficiency": 0.98,
+    "auxiliary_kw": 20.0,
+    "motor_example_shaft_kw": 200.0,
+    "tip_example_diameter_m": 0.8,
+    "tip_example_rpm": 6000.0,
+    "tip_example_sound_speed_ms": 330.0,
+    "battery_usable_fraction": 0.8,
+    "separate_battery_example_mission_kwh": 600.0,
+    "beam_length_m": 8.0,
+    "beam_upward_line_load_Nm": 6000.0,
+    "beam_installation_mass_kg_each": 60.0,
+    "beam_installation_locations_m": [
+      0.8,
+      1.8,
+      2.8,
+      3.8,
+      4.8
+    ],
+    "shaft_assumed_allowable_shear_Pa": 100000000.0
+  },
+  "results": {
+    "weight_N": 98066.5,
+    "cruise_thrust_N": 7004.75,
+    "useful_aerodynamic_power_kw": 583.7291666666666,
+    "cruise_shaft_kw": 729.6614583333333,
+    "equal_share_shaft_kw_each_of_ten": 72.96614583333333,
+    "cruise_battery_kw_with_auxiliaries": 795.575529691043,
+    "cruise_time_h": 1.3333333333333333,
+    "cruise_only_energy_kwh": 1060.7673729213907,
+    "cruise_only_battery_mass_at_350Whkg_fu_0p8_kg": 3788.4549032906816,
+    "cruise_battery_kw_sensitivity_LD": {
+      "10": 1105.8057415674602,
+      "14": 795.575529691043,
+      "18": 623.2254119819223
+    },
+    "motor_200kW_torque_at_3000rpm_Nm": 636.6197723675814,
+    "motor_200kW_torque_at_6000rpm_Nm": 318.3098861837907,
+    "motor_loss_kw_at_200kW_shaft": 8.333333333333343,
+    "inverter_loss_kw_at_200kW_shaft": 4.2517006802721085,
+    "ten_unit_motor_and_inverter_loss_kw": 125.85034013605451,
+    "tip_example_helical_Mach": 0.8023720149819713,
+    "eight_blades_6000rpm_BPF_Hz": 800.0,
+    "four_pole_pairs_6000rpm_electrical_Hz": 400.0,
+    "torsion_only_solid_shaft_diameter_m": 0.03188722632854789,
+    "battery_mass_600kWh_by_pack_Whkg": {
+      "250": 3000.0,
+      "350": 2142.8571428571427,
+      "450": 1666.6666666666667
+    },
+    "climb_2400m_potential_energy_kwh": 65.37766666666667,
+    "climb_2400m_electrical_potential_contribution_kwh": 86.86445932539684,
+    "climb_3ms_additional_shaft_kw": 367.749375,
+    "beam_root_uniform_moment_Nm": 192000.0,
+    "beam_installation_relief_Nm": 8237.586,
+    "beam_net_root_moment_Nm": 183762.414,
+    "beam_net_root_shear_N": 45058.005,
+    "charging_600kWh_30min_battery_kw": 1200.0,
+    "charging_600kWh_30min_grid_kw_at_eta0p95": 1263.157894736842
+  }
+}

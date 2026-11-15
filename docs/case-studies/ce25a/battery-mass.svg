@@ -1,0 +1,310 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns:xlink="http://www.w3.org/1999/xlink" width="728.39952pt" height="339.59952pt" viewBox="0 0 728.39952 339.59952" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ <title>Battery mass from mission energy and assumed pack specific energy</title>
+ <metadata>
+  <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+   <cc:Work>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:title>Battery mass from mission energy and assumed pack specific energy</dc:title>
+    <dc:date>2026-11-15T07:05:52.976554</dc:date>
+    <dc:description>Independent classroom assumptions; not CE-25A performance data</dc:description>
+    <dc:format>image/svg+xml</dc:format>
+    <dc:creator>
+     <cc:Agent>
+      <dc:title>Matplotlib v3.10.8, https://matplotlib.org/</dc:title>
+     </cc:Agent>
+    </dc:creator>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="figure_1">
+  <g id="patch_1">
+   <path d="M 0 339.59952 
+L 728.39952 339.59952 
+L 728.39952 0 
+L 0 0 
+z
+" style="fill: #ffffff"/>
+  </g>
+  <g id="axes_1">
+   <g id="patch_2">
+    <path d="M 56.840938 300.107645 
+L 721.19952 300.107645 
+L 721.19952 23.287687 
+L 56.840938 23.287687 
+z
+" style="fill: #f2f6f9"/>
+   </g>
+   <g id="matplotlib.axis_1">
+    <g id="xtick_1">
+     <g id="line2d_1">
+      <path d="M 87.039055 300.107645 
+L 87.039055 23.287687 
+" clip-path="url(#p0656e1c2e7)" style="fill: none; stroke: #d3dfe7; stroke-opacity: 0.8; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_2">
+      <defs>
+       <path id="m49cfbbe2f1" d="M 0 0 
+L 0 3.5 
+" style="stroke: #000000; stroke-width: 0.8"/>
+      </defs>
+      <g>
+       <use xlink:href="#m49cfbbe2f1" x="87.039055" y="300.107645" style="stroke: #000000; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_1">
+      <text style="font-size: 11px; font-family: 'DejaVu Sans'; text-anchor: middle" x="87.039055" y="315.465926" transform="rotate(-0 87.039055 315.465926)">200</text>
+     </g>
+    </g>
+    <g id="xtick_2">
+     <g id="line2d_3">
+      <path d="M 196.850391 300.107645 
+L 196.850391 23.287687 
+" clip-path="url(#p0656e1c2e7)" style="fill: none; stroke: #d3dfe7; stroke-opacity: 0.8; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_4">
+      <g>
+       <use xlink:href="#m49cfbbe2f1" x="196.850391" y="300.107645" style="stroke: #000000; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_2">
+      <text style="font-size: 11px; font-family: 'DejaVu Sans'; text-anchor: middle" x="196.850391" y="315.465926" transform="rotate(-0 196.850391 315.465926)">400</text>
+     </g>
+    </g>
+    <g id="xtick_3">
+     <g id="line2d_5">
+      <path d="M 306.661727 300.107645 
+L 306.661727 23.287687 
+" clip-path="url(#p0656e1c2e7)" style="fill: none; stroke: #d3dfe7; stroke-opacity: 0.8; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_6">
+      <g>
+       <use xlink:href="#m49cfbbe2f1" x="306.661727" y="300.107645" style="stroke: #000000; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_3">
+      <text style="font-size: 11px; font-family: 'DejaVu Sans'; text-anchor: middle" x="306.661727" y="315.465926" transform="rotate(-0 306.661727 315.465926)">600</text>
+     </g>
+    </g>
+    <g id="xtick_4">
+     <g id="line2d_7">
+      <path d="M 416.473063 300.107645 
+L 416.473063 23.287687 
+" clip-path="url(#p0656e1c2e7)" style="fill: none; stroke: #d3dfe7; stroke-opacity: 0.8; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_8">
+      <g>
+       <use xlink:href="#m49cfbbe2f1" x="416.473063" y="300.107645" style="stroke: #000000; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_4">
+      <text style="font-size: 11px; font-family: 'DejaVu Sans'; text-anchor: middle" x="416.473063" y="315.465926" transform="rotate(-0 416.473063 315.465926)">800</text>
+     </g>
+    </g>
+    <g id="xtick_5">
+     <g id="line2d_9">
+      <path d="M 526.284399 300.107645 
+L 526.284399 23.287687 
+" clip-path="url(#p0656e1c2e7)" style="fill: none; stroke: #d3dfe7; stroke-opacity: 0.8; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_10">
+      <g>
+       <use xlink:href="#m49cfbbe2f1" x="526.284399" y="300.107645" style="stroke: #000000; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_5">
+      <text style="font-size: 11px; font-family: 'DejaVu Sans'; text-anchor: middle" x="526.284399" y="315.465926" transform="rotate(-0 526.284399 315.465926)">1000</text>
+     </g>
+    </g>
+    <g id="xtick_6">
+     <g id="line2d_11">
+      <path d="M 636.095735 300.107645 
+L 636.095735 23.287687 
+" clip-path="url(#p0656e1c2e7)" style="fill: none; stroke: #d3dfe7; stroke-opacity: 0.8; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_12">
+      <g>
+       <use xlink:href="#m49cfbbe2f1" x="636.095735" y="300.107645" style="stroke: #000000; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_6">
+      <text style="font-size: 11px; font-family: 'DejaVu Sans'; text-anchor: middle" x="636.095735" y="315.465926" transform="rotate(-0 636.095735 315.465926)">1200</text>
+     </g>
+    </g>
+    <g id="text_7">
+     <text style="font-size: 11px; font-family: 'DejaVu Sans'; text-anchor: middle; fill: #193449" x="389.020229" y="330.111864" transform="rotate(-0 389.020229 330.111864)">Electrical mission energy required (kWh)</text>
+    </g>
+   </g>
+   <g id="matplotlib.axis_2">
+    <g id="ytick_1">
+     <g id="line2d_13">
+      <path d="M 56.840938 268.709629 
+L 721.19952 268.709629 
+" clip-path="url(#p0656e1c2e7)" style="fill: none; stroke: #d3dfe7; stroke-opacity: 0.8; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_14">
+      <defs>
+       <path id="mb7a95773d8" d="M 0 0 
+L -3.5 0 
+" style="stroke: #000000; stroke-width: 0.8"/>
+      </defs>
+      <g>
+       <use xlink:href="#mb7a95773d8" x="56.840938" y="268.709629" style="stroke: #000000; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_8">
+      <text style="font-size: 11px; font-family: 'DejaVu Sans'; text-anchor: end" x="49.840938" y="272.88877" transform="rotate(-0 49.840938 272.88877)">1000</text>
+     </g>
+    </g>
+    <g id="ytick_2">
+     <g id="line2d_15">
+      <path d="M 56.840938 226.375226 
+L 721.19952 226.375226 
+" clip-path="url(#p0656e1c2e7)" style="fill: none; stroke: #d3dfe7; stroke-opacity: 0.8; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_16">
+      <g>
+       <use xlink:href="#mb7a95773d8" x="56.840938" y="226.375226" style="stroke: #000000; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_9">
+      <text style="font-size: 11px; font-family: 'DejaVu Sans'; text-anchor: end" x="49.840938" y="230.554367" transform="rotate(-0 49.840938 230.554367)">2000</text>
+     </g>
+    </g>
+    <g id="ytick_3">
+     <g id="line2d_17">
+      <path d="M 56.840938 184.040823 
+L 721.19952 184.040823 
+" clip-path="url(#p0656e1c2e7)" style="fill: none; stroke: #d3dfe7; stroke-opacity: 0.8; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_18">
+      <g>
+       <use xlink:href="#mb7a95773d8" x="56.840938" y="184.040823" style="stroke: #000000; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_10">
+      <text style="font-size: 11px; font-family: 'DejaVu Sans'; text-anchor: end" x="49.840938" y="188.219964" transform="rotate(-0 49.840938 188.219964)">3000</text>
+     </g>
+    </g>
+    <g id="ytick_4">
+     <g id="line2d_19">
+      <path d="M 56.840938 141.70642 
+L 721.19952 141.70642 
+" clip-path="url(#p0656e1c2e7)" style="fill: none; stroke: #d3dfe7; stroke-opacity: 0.8; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_20">
+      <g>
+       <use xlink:href="#mb7a95773d8" x="56.840938" y="141.70642" style="stroke: #000000; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_11">
+      <text style="font-size: 11px; font-family: 'DejaVu Sans'; text-anchor: end" x="49.840938" y="145.885561" transform="rotate(-0 49.840938 145.885561)">4000</text>
+     </g>
+    </g>
+    <g id="ytick_5">
+     <g id="line2d_21">
+      <path d="M 56.840938 99.372017 
+L 721.19952 99.372017 
+" clip-path="url(#p0656e1c2e7)" style="fill: none; stroke: #d3dfe7; stroke-opacity: 0.8; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_22">
+      <g>
+       <use xlink:href="#mb7a95773d8" x="56.840938" y="99.372017" style="stroke: #000000; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_12">
+      <text style="font-size: 11px; font-family: 'DejaVu Sans'; text-anchor: end" x="49.840938" y="103.551158" transform="rotate(-0 49.840938 103.551158)">5000</text>
+     </g>
+    </g>
+    <g id="ytick_6">
+     <g id="line2d_23">
+      <path d="M 56.840938 57.037614 
+L 721.19952 57.037614 
+" clip-path="url(#p0656e1c2e7)" style="fill: none; stroke: #d3dfe7; stroke-opacity: 0.8; stroke-width: 0.8; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_24">
+      <g>
+       <use xlink:href="#mb7a95773d8" x="56.840938" y="57.037614" style="stroke: #000000; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_13">
+      <text style="font-size: 11px; font-family: 'DejaVu Sans'; text-anchor: end" x="49.840938" y="61.216755" transform="rotate(-0 49.840938 61.216755)">6000</text>
+     </g>
+    </g>
+    <g id="text_14">
+     <text style="font-size: 11px; font-family: 'DejaVu Sans'; text-anchor: middle; fill: #193449" x="15.558281" y="161.697666" transform="rotate(-90 15.558281 161.697666)">Battery pack mass (kg)</text>
+    </g>
+   </g>
+   <g id="line2d_25">
+    <path d="M 87.039055 268.709629 
+L 691.001403 35.870413 
+L 691.001403 35.870413 
+" clip-path="url(#p0656e1c2e7)" style="fill: none; stroke: #b34b25; stroke-width: 2.7; stroke-linecap: square"/>
+   </g>
+   <g id="line2d_26">
+    <path d="M 87.039055 280.805173 
+L 691.001403 114.491447 
+L 691.001403 114.491447 
+" clip-path="url(#p0656e1c2e7)" style="fill: none; stroke: #176b87; stroke-width: 2.7; stroke-linecap: square"/>
+   </g>
+   <g id="line2d_27">
+    <path d="M 87.039055 287.52492 
+L 691.001403 158.169799 
+L 691.001403 158.169799 
+" clip-path="url(#p0656e1c2e7)" style="fill: none; stroke: #147d72; stroke-width: 2.7; stroke-linecap: square"/>
+   </g>
+   <g id="patch_3">
+    <path d="M 56.840938 300.107645 
+L 56.840938 23.287687 
+" style="fill: none; stroke: #9aafbd; stroke-width: 0.8; stroke-linejoin: miter; stroke-linecap: square"/>
+   </g>
+   <g id="patch_4">
+    <path d="M 56.840938 300.107645 
+L 721.19952 300.107645 
+" style="fill: none; stroke: #9aafbd; stroke-width: 0.8; stroke-linejoin: miter; stroke-linecap: square"/>
+   </g>
+   <g id="text_15">
+    <text style="font-size: 13.2px; font-family: 'DejaVu Sans'; text-anchor: middle; fill: #193449" x="389.020229" y="17.287687" transform="rotate(-0 389.020229 17.287687)">Battery mass sensitivity | usable fraction = 0.80; no installed CE-25A pack claim</text>
+   </g>
+   <g id="legend_1">
+    <g id="line2d_28">
+     <path d="M 66.740938 37.695969 
+L 77.740938 37.695969 
+L 88.740938 37.695969 
+" style="fill: none; stroke: #b34b25; stroke-width: 2.7; stroke-linecap: square"/>
+    </g>
+    <g id="text_16">
+     <text style="font-size: 11px; font-family: 'DejaVu Sans'; text-anchor: start; fill: #193449" x="97.540938" y="41.545969" transform="rotate(-0 97.540938 41.545969)">Assumed pack 250 Wh/kg</text>
+    </g>
+    <g id="line2d_29">
+     <path d="M 66.740938 53.841906 
+L 77.740938 53.841906 
+L 88.740938 53.841906 
+" style="fill: none; stroke: #176b87; stroke-width: 2.7; stroke-linecap: square"/>
+    </g>
+    <g id="text_17">
+     <text style="font-size: 11px; font-family: 'DejaVu Sans'; text-anchor: start; fill: #193449" x="97.540938" y="57.691906" transform="rotate(-0 97.540938 57.691906)">Assumed pack 350 Wh/kg</text>
+    </g>
+    <g id="line2d_30">
+     <path d="M 66.740938 69.987844 
+L 77.740938 69.987844 
+L 88.740938 69.987844 
+" style="fill: none; stroke: #147d72; stroke-width: 2.7; stroke-linecap: square"/>
+    </g>
+    <g id="text_18">
+     <text style="font-size: 11px; font-family: 'DejaVu Sans'; text-anchor: start; fill: #193449" x="97.540938" y="73.837844" transform="rotate(-0 97.540938 73.837844)">Assumed pack 450 Wh/kg</text>
+    </g>
+   </g>
+  </g>
+ </g>
+ <defs>
+  <clipPath id="p0656e1c2e7">
+   <rect x="56.840938" y="23.287687" width="664.358582" height="276.819958"/>
+  </clipPath>
+ </defs>
+</svg>

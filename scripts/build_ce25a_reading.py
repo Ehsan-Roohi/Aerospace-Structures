@@ -207,9 +207,13 @@ def build_page():
     rendered=subprocess.run(["pandoc","--from=markdown+tex_math_dollars+raw_html","--to=html5","--mathjax","--toc","--toc-depth=2","--standalone","--metadata","title=CE-25A electric motors and structures"],input=source,text=True,capture_output=True,check=True).stdout
     body=re.search(r"<body[^>]*>(.*)</body>",rendered,re.S).group(1)
     body=re.sub(r'<header id="title-block-header">.*?</header>',"",body,flags=re.S)
-    toc_match=re.search(r'<nav id="TOC".*?</nav>',body,re.S)
-    toc=toc_match.group(0).replace('<nav id="TOC"','<aside id="TOC"').replace('</nav>','</aside>') if toc_match else ""
     body=re.sub(r'<nav id="TOC".*?</nav>',"",body,flags=re.S)
+    headings=re.findall(r'<h2 id="([^"]+)">(.*?)</h2>',body,re.S)
+    toc='<aside id="TOC" aria-label="Article sections"><strong>Explore the 23 sections</strong><ul>'
+    for anchor,label in headings:
+        label=re.sub(r'<[^>]+>', '', label)
+        toc+=f'<li><a href="#{html.escape(anchor,quote=True)}">{label}</a></li>'
+    toc+='</ul></aside>'
     pos=body.find('<h2')
     body=body[:pos]+toc+body[pos:]
     fa=re.search(r'(<h2 id="[^"]*">22\..*?</h2>)(.*?)(?=<h2)',body,re.S)

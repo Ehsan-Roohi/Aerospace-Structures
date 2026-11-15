@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>Catching Starship | MIE 446</title>
+  <style>
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+  </style>
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script src="/usr/share/javascript/mathjax/MathJax.js"
+  type="text/javascript"></script>
+<style>body{max-width:1040px;margin:40px auto;padding:0 24px;color:#183247;font:18px/1.65 system-ui;background:#fbfcfe}img{max-width:100%;height:auto}h1,h2{line-height:1.2;color:#123a55}h2{margin-top:2em}a{color:#006a88}figure{margin:24px 0}figcaption{font-size:15px} @media(max-width:600px){body{font-size:16px;padding:0 16px}}</style></head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Catching Starship | MIE 446</h1>
+</header>
+<h1
+id="catching-starship-guidance-contact-loads-and-the-launch-tower-structure">Catching
+Starship: guidance, contact loads and the launch-tower structure</h1>
+<p><strong>MIE 446 · Aerospace Structures · University of Massachusetts
+Amherst</strong><br />
+Engineering case study · Updated 14 November 2026 (US Eastern time)</p>
+<p><a
+href="https://ehsan-roohi.github.io/Aerospace-Structures/case-studies/starship-catch/">Illustrated
+web edition</a> · <a href="https://github.com/Ehsan-Roohi/Aerospace-Structures/blob/main/READINGS.md">Course readings</a></p>
+<h2 id="what-happened-and-what-has-not-yet-been-demonstrated">1. What
+happened, and what has not yet been demonstrated</h2>
+<p>Zoomit’s linked report describes the first tower-arm catch of
+Starship’s upper stage on Flight 15 [1]. Contemporary reporting places
+the catch at approximately 4:20 p.m. EST on 14 November, after about
+22.5 hours and 14 orbits. The upper stage returned to Starbase; the
+Super Heavy booster did not complete its planned tower recovery [3].
+This is a milestone in upper-stage recovery, not evidence that both
+stages were recovered on this mission or that routine, low-maintenance
+reuse has already been achieved.</p>
+<p>SpaceX’s mission plan identified 26 Starlink V3 payloads and an
+upper-stage return conditional on vehicle health. It also described
+heat-shield inspection imagery and improvements to tile retention and
+gap heating [2]. Distinguish the plan on the mission page from the
+observed result in the dated reporting. The milestone is the tower catch
+of an orbital upper stage; sweeping claims that no spacecraft or orbital
+vehicle had previously returned intact would be incorrect.</p>
+<h2 id="watch-the-hardware-then-identify-the-stages">2. Watch the
+hardware, then identify the stages</h2>
+<p><strong><a
+href="https://www.spacex.com/launches/starship-flight-15">Flight 15
+official mission page and webcast</a></strong> — current mission context
+and playback access [2].</p>
+<p><strong><a href="https://www.youtube.com/watch?v=hI9HQfCAw64">SpaceX
+Flight 5 official video</a></strong> — a clearly labelled historical
+comparison: this shows the Super Heavy booster catch on 13 October 2024,
+not the Flight 15 upper-stage catch [4].</p>
+<p><a href="https://www.youtube.com/watch?v=hI9HQfCAw64"><img
+src="https://i.ytimg.com/vi/hI9HQfCAw64/hqdefault.jpg"
+alt="Watch the historical Flight 5 booster catch" /></a></p>
+<p><em>Video thumbnail links to SpaceX’s original footage; rights remain
+with its owner. For Flight 15 imagery, use the official mission page
+above.</em></p>
+<p>Super Heavy is the first-stage booster. Ship is the upper stage that
+reaches orbital speed and experiences atmospheric entry on return.
+Recovering Ship couples orbital targeting, thermal protection,
+aerodynamic control, engine restart and structural capture. A booster
+recovery and an orbital upper-stage recovery therefore share a tower
+concept but have different flight histories, thermal states and load
+envelopes.</p>
+<h2 id="the-sequence-remove-energy-before-touching-the-tower">3. The
+sequence: remove energy before touching the tower</h2>
+<figure>
+<img src="sequence.svg"
+alt="Conceptual recovery sequence" />
+<figcaption aria-hidden="true">Conceptual recovery sequence</figcaption>
+</figure>
+<p><em>Figure 1. Original educational schematic; not a SpaceX
+trajectory, scale drawing or reconstruction of flight
+telemetry.</em></p>
+<ol type="1">
+<li><strong>Target the return corridor.</strong> A deorbit manoeuvre
+changes the orbit so that the vehicle encounters the atmosphere at the
+intended location. Landing-site access depends on orbital geometry and
+timing; it is not simply a vertical fall back to the launch pad.</li>
+<li><strong>Manage atmospheric entry.</strong> Drag dissipates most of
+the orbital kinetic energy. The heat shield protects the underlying
+structure while aerodynamic surfaces control attitude and trajectory.
+Peak heating and peak aerodynamic load need not occur together.</li>
+<li><strong>Transition to powered vertical descent.</strong> Aerodynamic
+control authority decreases with dynamic pressure. Engine thrust and
+attitude control must establish a low-speed, near-vertical final
+approach. The exact Flight 15 control laws and timing are not published
+in the sources reviewed here.</li>
+<li><strong>Enter the capture envelope.</strong> Vehicle position,
+lateral velocity, attitude, vertical speed and tower readiness must all
+be compatible. If they are not, a safe diversion is preferable to
+forcing contact.</li>
+<li><strong>Transfer load.</strong> The engines reduce the remaining
+descent speed; the receiving interfaces and tower then support the
+vehicle. Engine shutdown, contact and support engagement form a coupled
+transient.</li>
+</ol>
+<p><strong>The arms do not stop a rocket arriving at orbital
+speed.</strong> For an illustrative orbital speed of 7.8 km/s, specific
+kinetic energy is about 30 MJ/kg. At 1 m/s it is only 0.5 J/kg.
+Atmosphere and propulsion must remove almost all of the incoming energy
+before structural capture.</p>
+<h2 id="flight-mechanics-and-controlstructure-interaction">4. Flight
+mechanics and control–structure interaction</h2>
+<p>NASA gives the rocket-thrust relation and aerodynamic force
+definitions [5–7]. For a simplified near-vertical descent, with upward
+positive,</p>
+<p><span class="math display">\[m\dot v_z=T_z+D_z+R_z-mg,\]</span></p>
+<p>where <span class="math inline">\(R_z=0\)</span> before contact and
+represents tower support after contact. Aerodynamic force is signed; it
+opposes the relative airflow, not necessarily a fixed axis. Thrust is
+approximately</p>
+<p><span class="math display">\[T=\dot m_p
+v_e+(p_e-p_a)A_e,\]</span></p>
+<p>and aerodynamic scales are</p>
+<p><span class="math display">\[q=\tfrac12\rho V^2,\qquad D=qC_DA,\qquad
+M_a=qA\ell C_m.\]</span></p>
+<p>The vehicle and tower form a moving-target problem: the rocket
+translates and rotates, while the arms and tower deflect under wind and
+load. A lateral offset <span class="math inline">\(e\)</span> combined
+with support force <span class="math inline">\(F\)</span> introduces an
+additional moment of order <span class="math inline">\(Fe\)</span>. A
+nominally vertical approach can therefore generate torsion, lateral
+bending and unequal contact reactions.</p>
+<p>A conceptual capture condition is <span
+class="math inline">\(|e|+\ell|\theta|+u_{\rm tower}+\epsilon_{\rm
+sensing}&lt;c\)</span>, where <span class="math inline">\(c\)</span> is
+available clearance, <span class="math inline">\(\ell|\theta|\)</span>
+is the small-angle displacement from attitude error, <span
+class="math inline">\(u_{\rm tower}\)</span> is tower motion, and <span
+class="math inline">\(\epsilon_{\rm sensing}\)</span> is an uncertainty
+allowance. This conservative teaching expression is not SpaceX’s actual
+guidance criterion. No certified capture tolerance is inferred from
+video.</p>
+<h2 id="follow-the-load-all-the-way-into-the-ground">5. Follow the load
+all the way into the ground</h2>
+<figure>
+<img src="load-path.svg"
+alt="Conceptual structural load path" />
+<figcaption aria-hidden="true">Conceptual structural load
+path</figcaption>
+</figure>
+<p><em>Figure 2. Original equivalent load-path model. Contact geometry,
+support hardware and stiffness values are schematic; this is not a
+disclosed SpaceX engineering drawing.</em></p>
+<p>The engineering load path is vehicle structure → designated capture
+interfaces → arms and their supporting carriage/mechanisms → tower →
+foundation → ground. The heat-shield surface is not an assumed primary
+support interface. Concentrated reactions require local reinforcement
+and must connect to load-carrying structure; global strength alone
+cannot establish local bearing, attachment or shell-buckling safety.</p>
+<p>For an ideal two-support model separated by <span
+class="math inline">\(b\)</span>, a total vertical reaction <span
+class="math inline">\(F\)</span> with eccentricity <span
+class="math inline">\(e\)</span> gives</p>
+<p><span class="math display">\[R_L=\frac F2-\frac{Fe}{b},\qquad
+R_R=\frac F2+\frac{Fe}{b}.\]</span></p>
+<p>Thus equal sharing requires a centred load. Contact at one side first
+can generate a larger temporary imbalance than this static model
+predicts. For a cantilever-like equivalent arm of reach <span
+class="math inline">\(L\)</span> carrying reaction <span
+class="math inline">\(R\)</span>,</p>
+<p><span class="math display">\[M_{\rm root}=RL,\quad \sigma_{\rm
+bend}=\frac{M_{\rm root}c}{I},\quad
+\delta=\frac{RL^3}{3EI}.\]</span></p>
+<p>Actual arms are three-dimensional assemblies: joint compliance,
+bracing, torsion, mechanisms and dynamic amplification matter. These
+formulas teach the consequences of reach and stiffness; they do not
+certify the tower. Doubling reach doubles root bending moment and
+increases elastic deflection eightfold if load and section stiffness are
+unchanged.</p>
+<h2 id="why-contact-speed-and-stopping-distance-matter">6. Why contact
+speed and stopping distance matter</h2>
+<p>During a short capture interval, approximate mass as constant and
+neglect aerodynamic force. If residual downward speed <span
+class="math inline">\(v_c\)</span> is removed over effective downward
+stopping travel <span class="math inline">\(s\)</span>, work–energy
+gives an average upward support load</p>
+<p><span class="math display">\[\bar F=mg-\bar
+T+\frac{mv_c^2}{2s}.\]</span></p>
+<p>Here <span class="math inline">\(\bar T\)</span> is an appropriately
+work-averaged upward thrust during the stroke. With engines off, <span
+class="math inline">\(\bar F/(mg)=1+v_c^2/(2gs)\)</span>. The effective
+travel may include structural deflection and motion in receiving
+hardware; <strong>no particular damper design or stroke is claimed for
+SpaceX</strong>. Peak force depends on the force–displacement law and
+can exceed this average.</p>
+<figure>
+<img src="load-sensitivity.svg"
+alt="Illustrative catch load sensitivity" />
+<figcaption aria-hidden="true">Illustrative catch load
+sensitivity</figcaption>
+</figure>
+<p><em>Figure 3. Engine-off average load factor from the equation above.
+These are classroom parameters, not measured Starship contact speeds or
+hardware travels.</em></p>
+<p><strong>Worked example:</strong> assume <span
+class="math inline">\(m=120{,}000\)</span> kg, <span
+class="math inline">\(v_c=1\)</span> m/s and <span
+class="math inline">\(s=0.25\)</span> m, with no residual thrust. Weight
+is 1.177 MN and average support force is 1.417 MN, or 1.20 times weight.
+Two ideal equal supports each carry about 0.709 MN. Increasing speed to
+2 m/s gives 2.137 MN total, or 1.82 times weight. These masses and
+strokes are assumptions, not Flight 15 measurements.</p>
+<p>For an assumed 10 m equivalent arm reach, the first case produces
+about 7.09 MN·m root moment per arm. A peak contact history, section
+properties, attachment allowables and fatigue spectrum would still be
+required for design.</p>
+<h2 id="thermal-recovery-is-also-a-structural-problem">7. Thermal
+recovery is also a structural problem</h2>
+<p>The returning Ship is thermally nonuniform. A freely expanding member
+has <span class="math inline">\(\Delta L=\alpha L\Delta T\)</span>; a
+fully restrained, uniform, linear-elastic member has an ideal thermal
+stress magnitude <span class="math inline">\(E\alpha\Delta T\)</span>.
+Real restraint is partial, temperature changes through thickness, and
+hot material properties differ from room-temperature values. Thermal
+distortion changes local clearances and contact alignment.</p>
+<p>Heat-shield integrity, attachment loads, flap actuation and tank/skin
+temperature are coupled. Passing entry does not automatically establish
+remaining structural life. Inspection must consider tile damage, local
+deformation, attachment condition, welds, residual strain and the
+cumulative ascent/entry/catch load cycle. The classroom distinction is
+<strong>successful recovery versus demonstrated turnaround and
+repeatable life</strong>.</p>
+<h2 id="why-use-a-tower-instead-of-landing-legs">8. Why use a tower
+instead of landing legs?</h2>
+<p>Moving part of the landing-support function to the ground can reduce
+carried landing hardware and facilitate handling at the launch site.
+However, the vehicle still needs catch interfaces and reinforcement. The
+benefit must be evaluated against tower cost, inspection, availability,
+weather limits and the possibility that an unsuccessful approach damages
+shared ground infrastructure.</p>
+<p>A tower catch is a systems trade: airborne mass, structural margins,
+guidance accuracy and operational reliability are exchanged against one
+another. A successful demonstration does not by itself determine cost
+per flight. That requires measured refurbishment work, component life,
+launch cadence and failure/repair statistics.</p>
+<h2 id="mie-446-exercise">9. MIE 446 exercise</h2>
+<p>Use the worked example to compare <span
+class="math inline">\(v_c=0.5,1,2\)</span> m/s and <span
+class="math inline">\(s=0.1,0.25,0.5\)</span> m. Calculate total
+reaction, equal-share reactions and root moments. Then introduce <span
+class="math inline">\(e/b=0.1\)</span> and quantify how far each
+reaction moves from equal sharing. Clearly distinguish average and peak
+force.</p>
+<p>In Beam Lab, represent one arm as an equivalent cantilever and
+compare reach and stiffness effects. In a truss model, apply support
+reactions to load-carrying joints and trace axial force to the tower.
+State which real effects each simplification omits: contact timing,
+plasticity, torsion, connection flexibility, temperature and
+vehicle–tower motion. Finally explain why conservation of energy alone
+cannot give peak contact force.</p>
+<h2 id="sources-and-media">Sources and media</h2>
+<ol type="1">
+<li><a
+href="https://www.zoomit.ir/aviation-aerospace/471141-spacex-chopsticks-catch-starship-upper-stage-flight-15/">Zoomit:
+linked Flight 15 report</a>. Read in Persian; this lesson is an original
+engineering synthesis, not a translation or reproduction.</li>
+<li><a href="https://www.spacex.com/launches/starship-flight-15">SpaceX:
+Flight 15 mission plan and webcast</a>. Primary source for planned
+sequence, readiness checks and heat-shield provisions.</li>
+<li><a
+href="https://www.space.com/news/live/spacex-starship-flight-15-live-updates-nov-14-2026-starship-first-double-landing-attempt">Space.com:
+Flight 15 live updates, 14 November 2026</a>. Dated reporting of the
+catch and booster diversion; early explanations of the booster anomaly
+evolved and should not be treated as a final investigation.</li>
+<li><a href="https://www.spacex.com/launches/starship-flight-5">SpaceX:
+Flight 5 mission report</a> and <a
+href="https://www.youtube.com/watch?v=hI9HQfCAw64">official video</a>.
+Historical booster comparison only.</li>
+<li><a
+href="https://www1.grc.nasa.gov/beginners-guide-to-aeronautics/rocket-thrust-equation/">NASA
+Glenn: rocket thrust equation</a>.</li>
+<li><a
+href="https://www1.grc.nasa.gov/beginners-guide-to-aeronautics/drag-equation/">NASA
+Glenn: drag equation</a>.</li>
+<li><a
+href="https://www1.grc.nasa.gov/beginners-guide-to-aeronautics/rocket-aerodynamics/">NASA
+Glenn: rocket aerodynamics</a>.</li>
+</ol>
+<p>All three engineering figures are original course schematics. Public
+sources do not provide enough information to infer certified catch
+loads, allowable stresses, capture tolerances or fatigue life; numerical
+examples above are explicitly hypothetical.</p>
+</body>
+</html>

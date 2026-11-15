@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 480" role="img" aria-labelledby="title desc">
+<title id="title">Motor control hierarchy</title><desc id="desc">Thrust request, speed or torque schedule, current control and motor with two feedback loops</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#176b87"/></marker></defs>
+<rect width="100%" height="100%" fill="#f2f6f9"/><g font-family="Arial,sans-serif" fill="#193449">
+<text x="30" y="42" font-size="28" text-anchor="start" font-weight="bold" fill="#193449">Thrust control and motor current control</text>
+<text x="30" y="73" font-size="17" text-anchor="start" font-weight="normal" fill="#193449">Conceptual control hierarchy, not a CE-25A controller implementation</text>
+<rect x="30" y="150" width="225" height="100" rx="12" fill="#fff" stroke="#a1b7c6" stroke-width="2"/>
+<text x="142.5" y="193.5" font-size="18" text-anchor="middle" font-weight="bold" fill="#193449">Flight control</text>
+<text x="142.5" y="218.5" font-size="18" text-anchor="middle" font-weight="normal" fill="#193449">Thrust request</text>
+<rect x="292" y="150" width="225" height="100" rx="12" fill="#fff" stroke="#a1b7c6" stroke-width="2"/>
+<text x="404.5" y="193.5" font-size="18" text-anchor="middle" font-weight="bold" fill="#193449">Fan / motor map</text>
+<text x="404.5" y="218.5" font-size="18" text-anchor="middle" font-weight="normal" fill="#193449">Torque or rpm</text>
+<rect x="554" y="150" width="225" height="100" rx="12" fill="#fff" stroke="#a1b7c6" stroke-width="2"/>
+<text x="666.5" y="193.5" font-size="18" text-anchor="middle" font-weight="bold" fill="#193449">Current control</text>
+<text x="666.5" y="218.5" font-size="18" text-anchor="middle" font-weight="normal" fill="#193449">Inverter</text>
+<rect x="816" y="150" width="225" height="100" rx="12" fill="#fff" stroke="#a1b7c6" stroke-width="2"/>
+<text x="928.5" y="193.5" font-size="18" text-anchor="middle" font-weight="bold" fill="#193449">Motor + fan</text>
+<text x="928.5" y="218.5" font-size="18" text-anchor="middle" font-weight="normal" fill="#193449">Torque / flow</text>
+<path d="M255 200L286 200" stroke="#176b87" stroke-width="3" fill="none" marker-end="url(#arrow)"/>
+<path d="M517 200L548 200" stroke="#176b87" stroke-width="3" fill="none" marker-end="url(#arrow)"/>
+<path d="M779 200L810 200" stroke="#176b87" stroke-width="3" fill="none" marker-end="url(#arrow)"/>
+<path d="M920 250V320H665V255" fill="none" stroke="#176b87" stroke-width="3" marker-end="url(#arrow)"/>
+<text x="790" y="310" font-size="17" text-anchor="middle" font-weight="normal" fill="#193449">Phase-current feedback</text>
+<path d="M975 250V385H610V255" fill="none" stroke="#176b87" stroke-width="3" marker-end="url(#arrow)"/>
+<text x="790" y="375" font-size="17" text-anchor="middle" font-weight="normal" fill="#193449">Rotor-position / speed feedback</text>
+<text x="30" y="444" font-size="18" text-anchor="start" font-weight="normal" fill="#193449">Battery, temperature and voltage limits can restrict the achievable thrust request.</text>
+</g></svg>

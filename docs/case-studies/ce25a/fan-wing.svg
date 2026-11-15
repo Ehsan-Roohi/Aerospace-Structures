@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 540" role="img" aria-labelledby="title desc">
+<title id="title">Ducted fan and wing interaction</title><desc id="desc">Cross-section of generic duct, rotor, support vanes, motor and wing with a deflected flap</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#176b87"/></marker></defs>
+<rect width="100%" height="100%" fill="#f2f6f9"/><g font-family="Arial,sans-serif" fill="#193449">
+<text x="30" y="42" font-size="28" text-anchor="start" font-weight="bold" fill="#193449">A motor turns the fan; the installation shapes the flow</text>
+<text x="30" y="73" font-size="17" text-anchor="start" font-weight="normal" fill="#193449">Generic concept: rotor, motor support and a powered stream near a flap</text>
+<path d="M120 175Q190 135 300 145L700 145Q760 150 815 180L798 200Q745 177 700 178L290 178Q200 168 130 205Z" fill="#c5d7df" stroke="#193449" stroke-width="2"/>
+<path d="M130 325Q200 360 300 350L700 350Q760 345 815 315L798 295Q745 318 700 317L290 317Q200 327 130 295Z" fill="#c5d7df" stroke="#193449" stroke-width="2"/>
+<rect x="320" y="180" width="14" height="135" fill="#b34b25"/><ellipse cx="464" cy="247" rx="90" ry="35" fill="#8fb1c4" stroke="#193449" stroke-width="2"/>
+<path d="M334 247L550 247" stroke="#193449" stroke-width="6" fill="none"/>
+<path d="M520 212L550 178" stroke="#193449" stroke-width="5" fill="none"/>
+<path d="M520 282L550 317" stroke="#193449" stroke-width="5" fill="none"/>
+<path d="M110 375Q280 320 740 360L860 395L970 455L950 474L830 420L700 402Q310 400 110 375Z" fill="#b6c9d3" stroke="#193449" stroke-width="2"/>
+<path d="M30 217L270 217" stroke="#176b87" stroke-width="3" fill="none" marker-end="url(#arrow)"/>
+<path d="M30 275L270 275" stroke="#176b87" stroke-width="3" fill="none" marker-end="url(#arrow)"/>
+<path d="M590 215H790Q870 225 950 305" fill="none" stroke="#176b87" stroke-width="3" marker-end="url(#arrow)"/>
+<path d="M590 278H790Q870 288 950 368" fill="none" stroke="#176b87" stroke-width="3" marker-end="url(#arrow)"/>
+<text x="200" y="120" font-size="18" text-anchor="middle" font-weight="normal" fill="#193449">Inlet lip</text>
+<path d="M200 126L170 166" stroke="#176b87" stroke-width="3" fill="none"/>
+<text x="285" y="466" font-size="18" text-anchor="middle" font-weight="normal" fill="#193449">Rotor</text>
+<path d="M285 440L327 315" stroke="#176b87" stroke-width="3" fill="none"/>
+<text x="462" y="120" font-size="18" text-anchor="middle" font-weight="normal" fill="#193449">Motor + hub</text>
+<path d="M465 127L465 210" stroke="#176b87" stroke-width="3" fill="none"/>
+<text x="630" y="120" font-size="18" text-anchor="middle" font-weight="normal" fill="#193449">Support vanes</text>
+<path d="M625 126L550 180" stroke="#176b87" stroke-width="3" fill="none"/>
+<text x="865" y="500" font-size="18" text-anchor="middle" font-weight="normal" fill="#193449">Deflected flap / turned stream</text>
+<text x="30" y="520" font-size="17" text-anchor="start" font-weight="normal" fill="#193449">Duct pressure forces, inlet losses, tip clearance and wing interference affect installed thrust.</text>
+</g></svg>

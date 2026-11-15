@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 540" role="img" aria-labelledby="title desc">
+<title id="title">Propulsor installation load path</title><desc id="desc">Fan and motor loads transfer through brackets, ribs and spars into the wing root</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#176b87"/></marker></defs>
+<rect width="100%" height="100%" fill="#f2f6f9"/><g font-family="Arial,sans-serif" fill="#193449">
+<text x="30" y="42" font-size="28" text-anchor="start" font-weight="bold" fill="#193449">Motor and fan loads enter a wing box</text>
+<text x="30" y="73" font-size="17" text-anchor="start" font-weight="normal" fill="#193449">Conceptual local attachment; axes must be retained in a three-dimensional load analysis</text>
+<path d="M115 295L600 245L930 310L425 375Z" fill="#d9e6ec" stroke="#193449" stroke-width="3"/>
+<path d="M115 295V390L425 470V375M425 470L930 405V310" fill="#b9ced9" stroke="#193449" stroke-width="3"/>
+<path d="M250 281.0L340 400.0" stroke="#6f98aa" stroke-width="3" fill="none"/>
+<path d="M425 284.5L515 396.5" stroke="#6f98aa" stroke-width="3" fill="none"/>
+<path d="M600 288.0L690 393.0" stroke="#6f98aa" stroke-width="3" fill="none"/>
+<path d="M775 291.5L865 389.5" stroke="#6f98aa" stroke-width="3" fill="none"/>
+<path d="M200 305L880 320" stroke="#176b87" stroke-width="8" fill="none"/>
+<path d="M210 370L880 395" stroke="#176b87" stroke-width="8" fill="none"/>
+<rect x="430" y="125" width="230" height="95" rx="12" fill="#e4f0f1" stroke="#a1b7c6" stroke-width="2"/>
+<text x="545.0" y="166.0" font-size="18" text-anchor="middle" font-weight="bold" fill="#193449">Motor / fan</text>
+<text x="545.0" y="191.0" font-size="18" text-anchor="middle" font-weight="normal" fill="#193449">Attachment frame</text>
+<path d="M475 220L430 285" stroke="#193449" stroke-width="7" fill="none"/>
+<path d="M620 220L650 308" stroke="#193449" stroke-width="7" fill="none"/>
+<path d="M660 170L855 170" stroke="#176b87" stroke-width="3" fill="none" marker-end="url(#arrow)"/>
+<text x="770" y="150" font-size="20" text-anchor="middle" font-weight="bold" fill="#193449">Thrust</text>
+<path d="M545 220L545 295" stroke="#176b87" stroke-width="3" fill="none" marker-end="url(#arrow)"/>
+<text x="595" y="275" font-size="17" text-anchor="start" font-weight="normal" fill="#193449">Weight / inertia</text>
+<path d="M430 160C365 110 365 220 425 205" fill="none" stroke="#b34b25" stroke-width="3"/>
+<text x="125" y="180" font-size="20" text-anchor="start" font-weight="bold" fill="#b34b25">Reaction torque</text>
+<text x="80" y="440" font-size="18" text-anchor="start" font-weight="normal" fill="#193449">Wing root</text>
+<path d="M175 430L130 385" stroke="#176b87" stroke-width="3" fill="none"/>
+<text x="735" y="450" font-size="18" text-anchor="middle" font-weight="normal" fill="#193449">Spars + ribs + skins</text>
+<text x="30" y="517" font-size="17" text-anchor="start" font-weight="normal" fill="#193449">Concentrated mount loads, thermal deformation and inspection access shape the structural design.</text>
+</g></svg>

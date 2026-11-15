@@ -10,6 +10,8 @@ Optional readings; assignment requirements are listed in [ASSIGNMENTS.md](ASSIGN
 
 ## Optional aerospace technology reports
 
+- **[COMAC CE-25A: electric motors, ducted fans and aircraft structures](CE25A_ELECTRIC_AIRCRAFT.md)** · [Illustrated lesson with nine engineering figures and two programme photographs](https://ehsan-roohi.github.io/Aerospace-Structures/case-studies/ce25a/) · Detailed motor/inverter operation, continuous versus peak power, heat rejection, batteries, thrust and wing loads; downloadable calculation script.
+
 - **[Catching Starship: guidance, contact loads and tower structures](STARSHIP_TOWER_CATCH.md)** · [Illustrated engineering lesson, diagrams and official footage](https://ehsan-roohi.github.io/Aerospace-Structures/case-studies/starship-catch/)
 
 - **[ETH morphing composite drone: compliant wings, fibre placement and aeroelasticity](MORPHING_COMPOSITE_WING.md)** · [Illustrated lesson and flight video](https://ehsan-roohi.github.io/Aerospace-Structures/case-studies/morphing-wing/)
@@ -59,4 +61,5 @@ Optional readings; assignment requirements are listed in [ASSIGNMENTS.md](ASSIGN
 ## Semiconductor technology and manufacturing
 
 - **[The 2 nm challenge: Taiwan, China and Japan](TWO_NANOMETER_CHIPS.md)** · [Illustrated web reading](https://ehsan-roohi.github.io/Aerospace-Structures/case-studies/2nm-chips/) · GAA, EUV, SRAM, yield, industrial learning and source-qualified comparison.
+
 

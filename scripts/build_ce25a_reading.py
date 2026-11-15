@@ -208,7 +208,9 @@ def build_page():
     body=re.search(r"<body[^>]*>(.*)</body>",rendered,re.S).group(1)
     body=re.sub(r'<header id="title-block-header">.*?</header>',"",body,flags=re.S)
     body=re.sub(r'<nav id="TOC".*?</nav>',"",body,flags=re.S)
-    headings=re.findall(r'<h2 id="([^"]+)">(.*?)</h2>',body,re.S)
+    headings=re.findall(r'<h2\b[^>]*\bid="([^"]+)"[^>]*>(.*?)</h2>',body,re.S)
+    if len(headings) != 23:
+        raise ValueError(f"Expected all 23 article sections, found {len(headings)}")
     toc='<aside id="TOC" aria-label="Article sections"><strong>Explore the 23 sections</strong><ul>'
     for anchor,label in headings:
         label=re.sub(r'<[^>]+>', '', label)

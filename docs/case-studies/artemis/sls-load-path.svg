@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="640" viewBox="0 0 1120 640" role="img" aria-labelledby="title desc">
+ <title id="title">SLS: thrust, bending and pressure act together</title><desc id="desc">Generic launch-vehicle load map. SLS core dimensions and engine data are source-labelled.</desc>
+ <defs><marker id="a" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0 0 L0 6 L9 3 Z" fill="#17788a"/></marker></defs>
+ <rect width="1120" height="640" rx="16" fill="#eef5f8"/>
+ <style>text{font-family:Arial,sans-serif;fill:#17394a}text[fill="white"]{fill:#fff}.title{font-size:30px;font-weight:bold}.sub{font-size:18px;fill:#496372}.label{font-size:22px;font-weight:bold}.small{font-size:18px}.box{fill:white;stroke:#b9cdd9;stroke-width:2}.arr{fill:none;stroke:#17788a;stroke-width:4;marker-end:url(#a)}</style>
+ <text x="44" y="54" class="title">SLS: thrust, bending and pressure act together</text><text x="44" y="87" class="sub">Generic launch-vehicle load map. SLS core dimensions and engine data are source-labelled.</text>
+ <rect x="440" y="150" width="210" height="335" rx="30" fill="#d6a16c" stroke="#98673e" stroke-width="3"/>
+<path d="M440 150L545 115L650 150" fill="#dce7ed" stroke="#6b8696" stroke-width="3"/>
+<rect x="350" y="220" width="52" height="275" rx="20" fill="white" stroke="#6b8696" stroke-width="3"/><rect x="687" y="220" width="52" height="275" rx="20" fill="white" stroke="#6b8696" stroke-width="3"/>
+<path d="M402 270H440M402 455H440M650 270H687M650 455H687" stroke="#17394a" stroke-width="9"/>
+<path class="arr" d="M490 553V465M600 553V465M375 553V465M713 553V465"/>
+<text x="68" y="165" class="label">Axial load</text><text x="68" y="202" class="small">Payload inertia travels</text><text x="68" y="231" class="small">through adapters and shell.</text>
+<text x="68" y="335" class="label">Bending</text><text x="68" y="372" class="small">Aerodynamics and winds</text><text x="68" y="401" class="small">produce bending moments.</text><path class="arr" d="M285 350H433"/>
+<text x="780" y="190" class="label">Internal pressure</text><text x="780" y="227" class="small">Hoop and axial tension</text><text x="780" y="256" class="small">in thin tank walls.</text>
+<text x="780" y="352" class="label">Attachments</text><text x="780" y="389" class="small">Booster and engine forces</text><text x="780" y="418" class="small">need local reinforcement.</text>
+<text x="418" y="580" class="small">Engine thrust and booster thrust</text>
+ <text x="44" y="610" class="sub">MIE 446 · Original teaching schematic · Geometry and thicknesses are not to scale</text></svg>

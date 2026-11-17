@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="640" viewBox="0 0 1120 640" role="img" aria-labelledby="title desc">
+ <title id="title">A lunar landing is a transient structural event</title><desc id="desc">Generic rigid lander model; no Starship or Blue Moon dimensions are implied.</desc>
+ <defs><marker id="a" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0 0 L0 6 L9 3 Z" fill="#17788a"/></marker></defs>
+ <rect width="1120" height="640" rx="16" fill="#eef5f8"/>
+ <style>text{font-family:Arial,sans-serif;fill:#17394a}text[fill="white"]{fill:#fff}.title{font-size:30px;font-weight:bold}.sub{font-size:18px;fill:#496372}.label{font-size:22px;font-weight:bold}.small{font-size:18px}.box{fill:white;stroke:#b9cdd9;stroke-width:2}.arr{fill:none;stroke:#17788a;stroke-width:4;marker-end:url(#a)}</style>
+ <text x="44" y="54" class="title">A lunar landing is a transient structural event</text><text x="44" y="87" class="sub">Generic rigid lander model; no Starship or Blue Moon dimensions are implied.</text>
+ <path d="M50 510L1070 510" stroke="#8a9ba5" stroke-width="5"/><rect x="400" y="175" width="290" height="220" rx="28" fill="white" stroke="#416679" stroke-width="3"/>
+<path d="M430 365L300 510M660 365L790 510" stroke="#416679" stroke-width="9"/><path d="M265 510H335M755 510H825" stroke="#416679" stroke-width="12"/>
+<circle cx="545" cy="280" r="9" fill="#bb653e"/><path class="arr" d="M545 290V450"/><text x="568" y="332" class="label">mg</text>
+<path class="arr" d="M300 490V390M790 490V390"/><text x="190" y="380" class="label">Reaction R₁</text><text x="805" y="380" class="label">Reaction R₂</text>
+<path d="M545 280L875 280L875 510" stroke="#bb653e" stroke-width="3" stroke-dasharray="8 6"/><text x="895" y="310" class="small">CG height h</text>
+<path d="M300 545H790" stroke="#17394a" stroke-width="2"/><text x="413" y="575" class="small">Support width 2b</text>
+<text x="64" y="151" class="label">Moon gravity ≈ 1.62 m/s²</text><text x="70" y="208" class="small">Lower weight does not remove</text><text x="70" y="241" class="small">touchdown kinetic energy.</text>
+<text x="760" y="152" class="label">Static tipping estimate</text><text x="760" y="193" class="small">tan θ = b / h</text><text x="760" y="225" class="small">Dynamic events also need</text><text x="760" y="256" class="small">leg, soil and control models.</text>
+ <text x="44" y="610" class="sub">MIE 446 · Original teaching schematic · Geometry and thicknesses are not to scale</text></svg>

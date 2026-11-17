@@ -45,6 +45,10 @@ Design and compare in Wing Lab → save JSON and export STL → inspect every sl
 
 ## Further reading and support
 
+- **[Dream Chaser: composite structures, thermal protection, propulsion and runway recovery](DREAM_CHASER_SPACEPLANE.md)** · [Illustrated reading with NASA photographs and two official videos](https://ehsan-roohi.github.io/Aerospace-Structures/case-studies/dream-chaser/) · FAA approval, dated specifications, load paths and worked examples.
+
+- **[Artemis: SLS, Orion, lunar landers and the current Moon-return architecture](ARTEMIS_MOON_ARCHITECTURE.md)** · [Illustrated reading with mission graphics and official films](https://ehsan-roohi.github.io/Aerospace-Structures/case-studies/artemis/) · Updated mission sequence, engine specifications, structural loading, thermal protection and classroom exercises.
+
 - **[COMAC CE-25A: electric motors, ducted fans and aircraft structures](CE25A_ELECTRIC_AIRCRAFT.md)** · [Illustrated engineering lesson and reproducible calculations](https://ehsan-roohi.github.io/Aerospace-Structures/case-studies/ce25a/) · Motor torque and control, inverters, cooling, battery energy, fan–wing integration and structural load paths.
 
 - **[Catching Starship: guidance, contact loads and tower structures](STARSHIP_TOWER_CATCH.md)** · [Illustrated engineering lesson, diagrams and official footage](https://ehsan-roohi.github.io/Aerospace-Structures/case-studies/starship-catch/)
@@ -68,5 +72,6 @@ Optional aerospace technology reports: **[Falcon 9 and reusable launch engineeri
 
 
 [Engineering readings and case studies](READINGS.md) · **[New: Hollywood, Boeing factory camouflage and lightweight structures](AIRCRAFT_FACTORY_CAMOUFLAGE.md)** · **[Jersey barriers and aerospace crashworthiness](JERSEY_BARRIER.md)** · **[New: Turkey Vulture soaring, thermals and migration](TURKEY_VULTURE_SOARING.md)** · [Teaching team](SYLLABUS.md#2-people-communication-and-resources) · [AI-use policy](SYLLABUS.md#ai-statement-learning-and-engineering-judgment-in-the-age-of-ai) · [Source code](src/mie446_wing) · [Tests](tests)
+
 
 

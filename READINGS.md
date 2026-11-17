@@ -10,6 +10,10 @@ Optional readings; assignment requirements are listed in [ASSIGNMENTS.md](ASSIGN
 
 ## Optional aerospace technology reports
 
+- **[Dream Chaser: composite structures, thermal protection, propulsion and runway recovery](DREAM_CHASER_SPACEPLANE.md)** · [Illustrated reading with NASA photographs and two official videos](https://ehsan-roohi.github.io/Aerospace-Structures/case-studies/dream-chaser/) · FAA approval, dated specifications, load paths and worked examples.
+
+- **[Artemis: SLS, Orion, lunar landers and the current Moon-return architecture](ARTEMIS_MOON_ARCHITECTURE.md)** · [Illustrated reading with mission graphics and official films](https://ehsan-roohi.github.io/Aerospace-Structures/case-studies/artemis/) · Updated mission sequence, engine specifications, structural loading, thermal protection and classroom exercises.
+
 - **[COMAC CE-25A: electric motors, ducted fans and aircraft structures](CE25A_ELECTRIC_AIRCRAFT.md)** · [Illustrated lesson with nine engineering figures and two programme photographs](https://ehsan-roohi.github.io/Aerospace-Structures/case-studies/ce25a/) · Detailed motor/inverter operation, continuous versus peak power, heat rejection, batteries, thrust and wing loads; downloadable calculation script.
 
 - **[Catching Starship: guidance, contact loads and tower structures](STARSHIP_TOWER_CATCH.md)** · [Illustrated engineering lesson, diagrams and official footage](https://ehsan-roohi.github.io/Aerospace-Structures/case-studies/starship-catch/)
@@ -61,5 +65,6 @@ Optional readings; assignment requirements are listed in [ASSIGNMENTS.md](ASSIGN
 ## Semiconductor technology and manufacturing
 
 - **[The 2 nm challenge: Taiwan, China and Japan](TWO_NANOMETER_CHIPS.md)** · [Illustrated web reading](https://ehsan-roohi.github.io/Aerospace-Structures/case-studies/2nm-chips/) · GAA, EUV, SRAM, yield, industrial learning and source-qualified comparison.
+
 
 

@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="640" viewBox="0 0 1120 640" role="img" aria-labelledby="title desc">
+ <title id="title">Runway recovery starts with an energy budget</title><desc id="desc">Illustrative masses and speeds. These are calculations, not measured Dream Chaser flight data.</desc>
+ <defs><marker id="a" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0 0 L0 6 L9 3 Z" fill="#17788a"/></marker></defs>
+ <rect width="1120" height="640" rx="16" fill="#eef5f8"/>
+ <style>text{font-family:Arial,sans-serif;fill:#17394a}text[fill="white"]{fill:#fff}.title{font-size:30px;font-weight:bold}.sub{font-size:18px;fill:#496372}.label{font-size:22px;font-weight:bold}.small{font-size:18px}.box{fill:white;stroke:#b9cdd9;stroke-width:2}.arr{fill:none;stroke:#17788a;stroke-width:4;marker-end:url(#a)}</style>
+ <text x="44" y="54" class="title">Runway recovery starts with an energy budget</text><text x="44" y="87" class="sub">Illustrative masses and speeds. These are calculations, not measured Dream Chaser flight data.</text>
+ <rect class="box" x="55" y="135" width="480" height="350" rx="14"/><rect class="box" x="585" y="135" width="480" height="350" rx="14"/>
+<text x="85" y="182" class="label">Orbital translation</text><text x="85" y="230" class="small">Assume m = 10,000 kg; V = 7,800 m/s</text><text x="85" y="290" class="title">½ mV² = 304 GJ</text><text x="85" y="350" class="small">Atmospheric drag removes most energy.</text><text x="85" y="390" class="small">Heat is distributed among gas, wake</text><text x="85" y="425" class="small">and vehicle; 304 GJ is not tile heat input.</text>
+<text x="615" y="182" class="label">Final ground roll</text><text x="615" y="230" class="small">Assume same m; V = 80 m/s</text><text x="615" y="290" class="title">½ mV² = 32 MJ</text><text x="615" y="350" class="small">Braking, aerodynamic drag and rolling</text><text x="615" y="390" class="small">resistance dissipate remaining energy.</text><text x="615" y="425" class="small">Ground roll is a separate load case.</text>
+<text x="55" y="547" class="label">Speed ratio = 97.5 · Kinetic-energy ratio = 9,506 at equal mass</text>
+ <text x="44" y="610" class="sub">MIE 446 · Original teaching schematic · Geometry and thicknesses are not to scale</text></svg>

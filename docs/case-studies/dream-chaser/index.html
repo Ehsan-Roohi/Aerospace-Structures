@@ -1,0 +1,775 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Composite structures, reusable TPS, orbital propulsion and runway recovery.">
+<meta name="theme-color" content="#123d53">
+<title>Dream Chaser: structures, propulsion and mission engineering · MIE 446</title>
+<link rel="stylesheet" href="../spaceflight.css">
+<script>window.MathJax={tex:{inlineMath:[['\\(','\\)']],displayMath:[['\\[','\\]']]},options:{enableMenu:false}};</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+</head><body><main id="top"><nav aria-label="Course navigation">
+<a href="https://github.com/Ehsan-Roohi/Aerospace-Structures">Course home</a>
+<a href="https://github.com/Ehsan-Roohi/Aerospace-Structures/blob/main/READINGS.md">All readings</a>
+<a href="../../wing-panel-stress-analyzer/#wing">Wing Lab</a>
+<a href="../artemis/">Artemis reading</a>
+<a href="https://github.com/Ehsan-Roohi/Aerospace-Structures/blob/main/DREAM_CHASER_SPACEPLANE.md">Markdown source</a></nav>
+<p class="kicker">MIE 446 · Spaceflight engineering</p><div class="evidence"><span>Checked 17 November 2026</span><span>19 source entries</span><span>Photographs · video · worked examples</span></div>
+
+
+
+<section id="dream-chaser-a-spaceplane-built-around-the-return-journey"
+class="level1">
+<h1>Dream Chaser: A Spaceplane Built Around the Return Journey</h1>
+<p><strong>MIE 446 · Aerospace Structures · University of Massachusetts
+Amherst</strong><br />
+Independent engineering reading · Evidence checked <strong>17 November
+2026</strong></p>
+<p><a
+href="https://ehsan-roohi.github.io/Aerospace-Structures/case-studies/dream-chaser/">Illustrated
+web reading</a> · <a
+href="https://github.com/Ehsan-Roohi/Aerospace-Structures/blob/main/READINGS.md">All
+readings</a> · <a href="../artemis/">Companion: Artemis</a></p>
+<p>Dream Chaser combines a pressurized cargo vehicle, a reusable
+thermal-protection system and an unpowered runway recovery system. Its
+value proposition depends on all three working together: carrying useful
+payload, surviving orbital entry, and returning experiments to an
+accessible runway. This lesson develops the engineering behind <a
+href="https://www.zoomit.ir/aviation-aerospace/471284-dream-chaser-space-plane-faa-landing-approval/">the
+linked Zoomit report</a> independently, using FAA, NASA and manufacturer
+sources.</p>
+<p><strong>Learning goals:</strong> trace launch and landing forces
+through a spaceplane; distinguish hot-surface protection from
+load-carrying structure; explain orbital thrusters and lifting-body
+flight; calculate illustrative entry energy and landing reactions;
+assess what a licensing milestone actually demonstrates.</p>
+<figure>
+<a href="./flight-2017.jpg" aria-label="Open full-size image"><img loading="eager" fetchpriority="high" decoding="async" src="./flight-2017.jpg"
+alt="Dream Chaser approach and landing test article during its 2017 free-flight campaign" /></a>
+<figcaption aria-hidden="true">Dream Chaser approach and landing test
+article during its 2017 free-flight campaign</figcaption>
+</figure>
+<p><em>Historical test photograph: NASA, 11 November 2017
+<a class="citation" href="#d12">[D12]</a>. This atmospheric
+approach-and-landing article is not a photograph of Tenacity returning
+from orbit.</em></p>
+<details id="TOC" open><summary>Explore this reading</summary><ul><li><a href="#what-the-new-faa-approval-means">1. What the new FAA approval means</a></li><li><a href="#specifications-identify-the-configuration-before-comparing-numbers">2. Specifications: identify the configuration before comparing numbers</a></li><li><a href="#why-a-lifting-body-has-wings">3. Why a lifting body has wings</a></li><li><a href="#the-load-carrying-structure">4. The load-carrying structure</a></li><li><a href="#foldable-wings-are-structural-joints">5. Foldable wings are structural joints</a></li><li><a href="#thermal-protection-preserve-a-cooler-primary-structure">6. Thermal protection: preserve a cooler primary structure</a></li><li><a href="#propulsion-rocket-ascent-orbital-thrusters-then-a-glide">7. Propulsion: rocket ascent, orbital thrusters, then a glide</a></li><li><a href="#entry-energy-and-the-runway-load-case">8. Entry energy and the runway load case</a></li><li><a href="#what-testing-has-demonstrated">9. What testing has demonstrated</a></li><li><a href="#watch-the-hardware-and-the-landing">10. Watch the hardware and the landing</a></li><li><a href="#exercises-and-engineering-decisions">11. Exercises and engineering decisions</a></li><li><a href="#خلاصه-فارسی">12. خلاصهٔ فارسی</a></li><li><a href="#sources-and-media-credits">13. Sources and media credits</a></li></ul></details><section id="what-the-new-faa-approval-means" class="level2">
+<h2>1. What the new FAA approval means</h2>
+<p>The FAA’s <strong>9 November 2026</strong> statement identifies a
+Part 450 vehicle-operator license for Dream Chaser to reenter and land
+at <strong>Vandenberg Space Force Base, California</strong>. It gives a
+five-year term and permits up to four reentries annually, provided the
+vehicle configuration and mission profile remain the same. The FAA
+describes spring 2027 as Sierra Space’s target for the first mission
+<a class="citation" href="#d1">[D1]</a>.</p>
+<p>That is a reentry authorization, not an announcement of an orbital
+flight already completed, a passenger certification, or approval for
+arbitrary airport operations. Environmental review and vehicle licensing
+are distinct steps. The FAA environmental page considers both Florida’s
+Shuttle Landing Facility and Vandenberg; this wider study scope should
+not be substituted for the location specified in the new licensing
+statement <a class="citation" href="#d1">[D1–D2]</a>.</p>
+<p>The first mission is now a <strong>free-flying
+demonstration</strong>, rather than the originally advertised first
+delivery to the International Space Station. NASA’s September 2025
+contract modification removed its obligation to order a fixed number of
+resupply flights. NASA may still order station missions after a
+successful demonstration <a class="citation" href="#d3">[D3]</a>. Sierra
+Space subsequently announced national-security and commercial payload
+contracts for the inaugural flight in September 2026
+<a class="citation" href="#d4">[D4]</a>.</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Question</th>
+<th>Status at the evidence date</th>
+<th>Engineering implication</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>First orbital flight completed?</td>
+<td>No completed orbital flight is established by the cited
+announcements</td>
+<td>Runway tests cannot establish orbital TPS performance</td>
+</tr>
+<tr class="even">
+<td>First-flight target</td>
+<td>Spring 2027, according to FAA
+<a class="citation" href="#d1">[D1]</a></td>
+<td>A target remains contingent on readiness and launch
+arrangements</td>
+</tr>
+<tr class="odd">
+<td>First-flight purpose</td>
+<td>Free-flyer demonstration
+<a class="citation" href="#d3">[D3–D5]</a></td>
+<td>Station proximity and berthing operations require their own
+evidence</td>
+</tr>
+<tr class="even">
+<td>New license location</td>
+<td>Vandenberg <a class="citation" href="#d1">[D1]</a></td>
+<td>Do not extend this approval to every compatible runway</td>
+</tr>
+<tr class="odd">
+<td>Reentry license term / frequency</td>
+<td>Five years; up to four per year under stated conditions
+<a class="citation" href="#d1">[D1]</a></td>
+<td>Authorization is not a prediction of utilization</td>
+</tr>
+<tr class="even">
+<td>NASA resupply commitment</td>
+<td>No fixed flight-count obligation after the modification
+<a class="citation" href="#d3">[D3]</a></td>
+<td>Historical “at least six missions” statements are superseded</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section
+id="specifications-identify-the-configuration-before-comparing-numbers"
+class="level2">
+<h2>2. Specifications: identify the configuration before comparing
+numbers</h2>
+<p>Cargo <strong>Tenacity</strong> is uncrewed. Earlier crew-transport
+concepts and their abort systems should not be treated as the equipment
+installed on this vehicle. NASA describes the cargo system as two
+elements: the returning Dream Chaser and the expendable <strong>Shooting
+Star</strong> module <a class="citation" href="#d5">[D5]</a>.</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Item</th>
+<th>Publicly documented value or arrangement</th>
+<th>Scope / source</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Vehicle class</td>
+<td>Reusable lifting-body spaceplane for low Earth orbit</td>
+<td>Cargo architecture <a class="citation" href="#d5">[D5]</a></td>
+</tr>
+<tr class="even">
+<td>Returning vehicle length</td>
+<td>Approximately 30 ft / 9.1 m</td>
+<td>Published primary-structure description
+<a class="citation" href="#d6">[D6]</a></td>
+</tr>
+<tr class="odd">
+<td>Bare primary structure dimensions</td>
+<td>About 30 × 15 × 6 ft / 9.1 × 4.6 × 1.8 m</td>
+<td>Structure description, not an operational deployed wingspan
+<a class="citation" href="#d6">[D6]</a></td>
+</tr>
+<tr class="even">
+<td>Bare primary structure mass</td>
+<td>Approximately 2,200 lb / 998 kg</td>
+<td>Does not include the fully equipped vehicle or payload
+<a class="citation" href="#d6">[D6]</a></td>
+</tr>
+<tr class="odd">
+<td>Primary structural material</td>
+<td>Carbon-fiber-reinforced polymer, with advanced woven
+construction</td>
+<td>Manufacturer’s structural account
+<a class="citation" href="#d6">[D6]</a></td>
+</tr>
+<tr class="even">
+<td>Cargo launch packaging</td>
+<td>Wings folded inside a five-meter fairing</td>
+<td>Published Vulcan cargo integration concept
+<a class="citation" href="#d5">[D5]</a></td>
+</tr>
+<tr class="odd">
+<td>Launch architecture</td>
+<td>Rocket ascent, followed by autonomous spacecraft operations</td>
+<td>Not horizontal takeoff <a class="citation" href="#d5">[D5]</a></td>
+</tr>
+<tr class="even">
+<td>Companion cargo module</td>
+<td>Shooting Star; disposed of before entry</td>
+<td>One-use module in the station-resupply architecture
+<a class="citation" href="#d5">[D5]</a></td>
+</tr>
+<tr class="odd">
+<td>Recovery</td>
+<td>Atmospheric glide to runway</td>
+<td>Unpowered approach demonstrated by an earlier article
+<a class="citation" href="#d12">[D12]</a></td>
+</tr>
+<tr class="even">
+<td>Reuse objective</td>
+<td>Up to 15 missions in NASA’s 2023 description</td>
+<td>Design objective; not a demonstrated service life
+<a class="citation" href="#d5">[D5]</a></td>
+</tr>
+<tr class="odd">
+<td>Advertised low-g return</td>
+<td>About 1.5 g</td>
+<td>Sierra Space capability claim; not a complete load spectrum
+<a class="citation" href="#d7">[D7]</a></td>
+</tr>
+<tr class="even">
+<td>Advertised payload access</td>
+<td>Approximately one hour after runway landing</td>
+<td>Manufacturer logistics target
+<a class="citation" href="#d7">[D7]</a></td>
+</tr>
+<tr class="odd">
+<td>Recent acoustic test</td>
+<td>April 2026; 90-speaker arrangement, wings stowed</td>
+<td>Manufacturer test report
+<a class="citation" href="#d8">[D8]</a></td>
+</tr>
+<tr class="even">
+<td>Final flight mass, laminate schedule, allowables</td>
+<td>Not specified in the primary sources used here</td>
+<td>Not inferred from photographs</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Payload figures need particular care.</strong> NASA’s
+December 2023 station-mission description gives a future delivery
+capability of up to <strong>11,500 lb (about 5,216 kg)</strong>, return
+of <strong>over 3,500 lb (over 1,588 kg)</strong> and disposal of
+<strong>over 8,700 lb (over 3,946 kg)</strong>
+<a class="citation" href="#d5">[D5]</a>. Sierra Space’s current Tenacity
+page displays <strong>8,000 lb upmass</strong>, <strong>2,245 lb
+return</strong> and <strong>7,365 lb disposal</strong>, while its prose
+also advertises “6+ tons” of delivery capacity
+<a class="citation" href="#d7">[D7]</a>. These statements do not form a
+single consistent mass budget.</p>
+<table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 26%" />
+<col style="width: 26%" />
+<col style="width: 26%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Published figure set</th>
+<th style="text-align: right;">Upmass</th>
+<th style="text-align: right;">Return</th>
+<th style="text-align: right;">Disposal</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>NASA, 15 December 2023; station architecture</td>
+<td style="text-align: right;">Up to 11,500 lb ≈ 5,216 kg</td>
+<td style="text-align: right;">Over 3,500 lb ≈ 1,588 kg</td>
+<td style="text-align: right;">Over 8,700 lb ≈ 3,946 kg</td>
+</tr>
+<tr class="even">
+<td>Sierra Space live Tenacity display, checked 17 November 2026</td>
+<td style="text-align: right;">8,000 lb ≈ 3,629 kg</td>
+<td style="text-align: right;">2,245 lb ≈ 1,018 kg</td>
+<td style="text-align: right;">7,365 lb ≈ 3,341 kg</td>
+</tr>
+</tbody>
+</table>
+<p>Use each set with its date and configuration. Do not add delivery,
+return and disposal capacities together, assume they are simultaneously
+attainable, or assign them to the first free-flyer mission. No public
+reconciliation of the differing figures is supplied by these pages.</p>
+</section>
+<section id="why-a-lifting-body-has-wings" class="level2">
+<h2>3. Why a lifting body has wings</h2>
+<p>A lifting body obtains a substantial part of its lift from the shape
+of the fuselage. Small wings and control surfaces still help manage
+stability, trim and maneuvering. NASA identifies the HL-20 as a
+predecessor of the Dream Chaser concept [D5, D13].</p>
+<p>In atmosphere, lift and drag can be written</p>
+<p><span class="math display">\[L=\tfrac12\rho V^2SC_L,\qquad
+D=\tfrac12\rho V^2SC_D.\]</span></p>
+<p>The reference area and coefficient definitions must accompany a
+reported value of <span class="math inline">\(C_L\)</span> or <span
+class="math inline">\(C_D\)</span>. A photograph does not supply either.
+At a specified flight condition, bank angle rotates the lift vector and
+helps control the ground track; angle of attack changes aerodynamic
+forces and heating. In thin upper-atmosphere conditions, aerodynamic
+surfaces become weak, so reaction-control thrusters provide attitude
+authority. During descent, aerodynamic control becomes more effective as
+dynamic pressure grows.</p>
+<p>More lift can increase crossrange and shape deceleration, but does
+not give an unlimited choice of landing sites. Orbital plane, available
+energy, weather, range constraints and landing authorization all
+matter.</p>
+</section>
+<section id="the-load-carrying-structure" class="level2">
+<h2>4. The load-carrying structure</h2>
+<figure>
+<a href="./load-paths.svg" aria-label="Open full-size image"><img loading="lazy" decoding="async" src="./load-paths.svg"
+alt="Engineering map of ascent, orbital-pressure, and entry-and-landing load paths" /></a>
+<figcaption aria-hidden="true">Engineering map of ascent,
+orbital-pressure, and entry-and-landing load paths</figcaption>
+</figure>
+<p><em>Original conceptual diagram. It identifies engineering load
+cases, not the locations of actual Dream Chaser frames or
+fasteners.</em></p>
+<p>The manufacturer’s primary-structure account describes a pressurized
+CFRP structure manufactured by Lockheed Martin, including advanced
+three-dimensional woven construction and reduced penetrations through
+the hot lower aeroshell <a class="citation" href="#d6">[D6]</a>. NASA
+separately reports pressure testing of the composite and bonded
+structure <a class="citation" href="#d9">[D9]</a>. Those are meaningful
+pieces of evidence; they do not disclose ply-by-ply design data.</p>
+<p>The key structural questions change throughout a mission:</p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Load case</th>
+<th>Applied loading</th>
+<th>Components that must transfer it</th>
+<th>Failure mechanisms to investigate</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Launch</td>
+<td>Acceleration, acoustic pressure, interface vibration</td>
+<td>Payload mounts, shell, frames, launch adapter</td>
+<td>Panel vibration, local bearing failure, buckling, joint damage</td>
+</tr>
+<tr class="even">
+<td>Pressurized orbit</td>
+<td>Cabin-to-vacuum pressure difference</td>
+<td>Pressure skin, bonded joints, hatch and window surrounds</td>
+<td>Leakage, joint peel, delamination, stress concentration</td>
+</tr>
+<tr class="odd">
+<td>Maneuver</td>
+<td>Thruster forces and control moments</td>
+<td>Engine attachments and supporting structure</td>
+<td>Local fatigue, eccentric loading, distortion</td>
+</tr>
+<tr class="even">
+<td>Entry</td>
+<td>Distributed aerodynamic pressure and thermal gradients</td>
+<td>Aeroshell, control surfaces, wing hinges, frames</td>
+<td>Thermal mismatch, bond degradation, aeroelastic response</td>
+</tr>
+<tr class="odd">
+<td>Landing</td>
+<td>Vertical impact, braking, side loads</td>
+<td>Landing supports, attachments, fuselage and cargo restraints</td>
+<td>Local overload, load redistribution, cumulative damage</td>
+</tr>
+</tbody>
+</table>
+<p>A pressure vessel wants a smooth, nearly closed load path. Cargo
+hatches, landing-support attachments and wing interfaces interrupt that
+path. CFRP permits directional stiffness and strength, but “composite”
+alone does not specify a pressure-shell allowable. Fiber orientation,
+resin temperature capability, joint design, manufacturing defects and
+repeated environmental exposure matter.</p>
+<p>For a classroom cylindrical-shell approximation,</p>
+<p><span class="math display">\[\sigma_\theta=\frac{\Delta
+p\,r}{t},\qquad
+\sigma_x=\frac{\Delta p\,r}{2t}.\]</span></p>
+<p>This explains why pressure produces circumferential and axial
+tension. A noncircular, stiffened, anisotropic lifting-body shell needs
+a more complete analysis; these expressions are not Dream Chaser stress
+predictions.</p>
+<figure>
+<a href="./pressure-test-2020.jpg" aria-label="Open full-size image"><img loading="lazy" decoding="async" src="./pressure-test-2020.jpg"
+alt="Dream Chaser pressure-test article inside Kennedy’s processing facility" /></a>
+<figcaption aria-hidden="true">Dream Chaser pressure-test article inside
+Kennedy’s processing facility</figcaption>
+</figure>
+<p><em>NASA photograph, June 2020
+<a class="citation" href="#d9">[D9]</a>. A pressure-test article
+validates selected structural behavior; it is not a complete
+flight-qualified spacecraft.</em></p>
+</section>
+<section id="foldable-wings-are-structural-joints" class="level2">
+<h2>5. Foldable wings are structural joints</h2>
+<p>Stowing wings helps fit a payload fairing. After deployment, the
+joints must carry aerodynamic loads with adequate strength, stiffness
+and alignment. As an engineering inference, any such mechanism needs
+verified deployment, load transfer and acceptable free play throughout
+its intended life. The cited public sources do not disclose Tenacity’s
+detailed latch geometry or hinge allowables.</p>
+<p>For a generic outboard panel with a resultant lift <span
+class="math inline">\(F\)</span> acting a distance <span
+class="math inline">\(\ell\)</span> from a joint, the joint bending
+moment is <span class="math inline">\(M=F\ell\)</span>. A small lift
+resultant acting over a large arm can therefore govern local
+reinforcement. Actuator torque needed to deploy a wing and the moment
+carried by its locked joint are different design requirements.</p>
+<p>Hinge flexibility also affects control-surface effectiveness and
+vibration. A rigid-wing aerodynamic model cannot by itself establish the
+aeroelastic stability of a deployed assembly.</p>
+</section>
+<section id="thermal-protection-preserve-a-cooler-primary-structure"
+class="level2">
+<h2>6. Thermal protection: preserve a cooler primary structure</h2>
+<figure>
+<a href="./thermal-stack.svg" aria-label="Open full-size image"><img loading="lazy" decoding="async" src="./thermal-stack.svg"
+alt="Generic reusable thermal protection stack separating the hot surface from the pressure structure" /></a>
+<figcaption aria-hidden="true">Generic reusable thermal protection stack
+separating the hot surface from the pressure structure</figcaption>
+</figure>
+<p>NASA describes reusable silica-based insulation and
+<strong>TUFROC-derived</strong> protection for several Dream Chaser
+regions <a class="citation" href="#d10">[D10–D11]</a>. TUFROC combines a
+high-temperature surface system with an insulating base. Its published
+material capability is not the allowable temperature of the underlying
+CFRP shell, and a test-coupon limit is not a guarantee for every flight
+location.</p>
+<p>The TPS has to tolerate aerodynamic loading, oxidation, vibration,
+attachment strain and inspection. A tile can remain intact while an
+attachment or underlying region becomes too hot; conversely, the outer
+surface can be extremely hot while insulation keeps the load-carrying
+structure far cooler.</p>
+<p>A useful <strong>trend model</strong>, at fixed gas and correlation
+assumptions, is</p>
+<p><span class="math display">\[\dot q_{\rm stag}\propto
+\sqrt{\frac{\rho}{R_n}}\,V^3.\]</span></p>
+<p>It links stagnation-region convective heating to density, nose radius
+and velocity <a class="citation" href="#d18">[D18]</a>. It is not a
+whole-vehicle temperature calculation. Laminar-to-turbulent transition,
+local shape, catalytic properties, radiation and the time history of the
+trajectory need separate treatment.</p>
+<p>For free thermal expansion, <span class="math inline">\(\Delta
+L=\alpha L\Delta T\)</span>. Differential expansion between a tile,
+attachment and shell can produce local stress even without a large
+external force. This is why material selection, gap design and
+attachment compliance belong in the structural lesson.</p>
+</section>
+<section id="propulsion-rocket-ascent-orbital-thrusters-then-a-glide"
+class="level2">
+<h2>7. Propulsion: rocket ascent, orbital thrusters, then a glide</h2>
+<p>Dream Chaser does not use an air-breathing jet engine to accelerate
+to orbit. Its launch vehicle supplies ascent energy. Onboard propulsion
+supports attitude changes, orbital maneuvers and deorbit; the final
+runway approach is a glide.</p>
+<p>Sierra Space’s hardware catalogue identifies the
+<strong>VRP110-B</strong>, initially developed for Dream Chaser, as a
+high-test-peroxide/kerosene thruster with three advertised thrust levels
+<a class="citation" href="#d14">[D14]</a>.</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Catalogue parameter</th>
+<th>Published value</th>
+<th>Interpretation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Propellants</td>
+<td>High-test peroxide, plus kerosene in bipropellant operation</td>
+<td>A spacecraft thruster family, not a turbofan</td>
+</tr>
+<tr class="even">
+<td>Thrust levels</td>
+<td>42, 65 and 113 lbf ≈ 187, 289 and 503 N</td>
+<td>Catalogue values; installation count is not specified here</td>
+</tr>
+<tr class="odd">
+<td>Lower-thrust mode</td>
+<td>Catalytic peroxide decomposition</td>
+<td>Monopropellant operation</td>
+</tr>
+<tr class="even">
+<td>Higher-thrust mode</td>
+<td>Kerosene injection with peroxide-derived oxidizing flow</td>
+<td>Bipropellant operation</td>
+</tr>
+<tr class="odd">
+<td>Chamber concept</td>
+<td>VORTEX flow arrangement</td>
+<td>Manufacturer design description</td>
+</tr>
+</tbody>
+</table>
+<p>These catalogue facts are not a verified inventory of the
+first-flight propulsion installation. Older crew-abort engine concepts
+and other engines on the same catalogue page must not be added to
+Tenacity’s specifications.</p>
+<p>For peroxide decomposition, the conceptual chemical relation is <span
+class="math inline">\(2H_2O_2\rightarrow2H_2O+O_2\)</span> with heat
+release. The hot products can expand through a nozzle. Introducing fuel
+permits a different operating mode. The manufacturer’s “non-toxic”
+terminology is a comparison with conventional toxic spacecraft
+propellants; concentrated peroxide remains a reactive oxidizer.</p>
+<p>The general rocket-thrust equation is</p>
+<p><span class="math display">\[F=\dot m V_e+(p_e-p_a)A_e.\]</span></p>
+<p>No atmospheric oxygen is required for a rocket carrying its oxidizer
+<a class="citation" href="#d17">[D17]</a>. An off-center thruster also
+produces <span class="math inline">\(\boldsymbol{\tau}=\mathbf
+r\times\mathbf F\)</span>, so attitude control is a structural mounting
+and mass-properties problem as well as a guidance problem.</p>
+</section>
+<section id="entry-energy-and-the-runway-load-case" class="level2">
+<h2>8. Entry energy and the runway load case</h2>
+<figure>
+<a href="./flight-energy.svg" aria-label="Open full-size image"><img loading="lazy" decoding="async" src="./flight-energy.svg"
+alt="Illustrative comparison of orbital translational kinetic energy and ground-roll kinetic energy" /></a>
+<figcaption aria-hidden="true">Illustrative comparison of orbital
+translational kinetic energy and ground-roll kinetic energy</figcaption>
+</figure>
+<p><strong>Classroom assumptions, not Dream Chaser flight data:</strong>
+take <span class="math inline">\(m=10{,}000\)</span> kg, orbital speed
+<span class="math inline">\(V_o=7{,}800\)</span> m/s and runway speed
+<span class="math inline">\(V_r=80\)</span> m/s. Then</p>
+<p><span class="math display">\[E_o=\tfrac12mV_o^2=304.2\ {\rm
+GJ},\qquad
+E_r=\tfrac12mV_r^2=32.0\ {\rm MJ}.\]</span></p>
+<p>The ratio is about 9,506 at equal mass. The first number is
+translational kinetic energy, not the heat absorbed by the tiles.
+Atmospheric gas, wake, radiation and vehicle heating share the energy
+budget; gravitational potential and changing mass also belong in a full
+trajectory analysis.</p>
+<p>For a simple vertical touchdown model with downward speed <span
+class="math inline">\(v_z\)</span>, effective stopping stroke <span
+class="math inline">\(s\)</span>, and approximately constant aerodynamic
+lift <span class="math inline">\(\bar L\)</span> during the stroke,</p>
+<p><span class="math display">\[\bar R=mg-\bar
+L+\frac{mv_z^2}{2s}.\]</span></p>
+<p>It follows from vertical work–energy with ground reaction <span
+class="math inline">\(\bar R\)</span>. Neglecting residual lift gives a
+deliberately simplified classroom example: <span
+class="math inline">\(v_z=1\)</span> m/s, <span
+class="math inline">\(s=0.20\)</span> m and <span
+class="math inline">\(m=10{,}000\)</span> kg produce <strong>123.1 kN
+average total ground reaction</strong>, or <strong>1.255 times
+weight</strong>. It does not establish peak force or an individual
+landing-support load.</p>
+<p>Doubling <span class="math inline">\(v_z\)</span> quadruples the
+impact-energy term. Unequal support timing, local stiffness, side loads
+and cargo location can increase a particular attachment’s demand. The
+advertised 1.5 g return figure cannot replace these calculations.</p>
+</section>
+<section id="what-testing-has-demonstrated" class="level2">
+<h2>9. What testing has demonstrated</h2>
+<figure>
+<a href="./tenacity-vibration.jpg" aria-label="Open full-size image"><img loading="lazy" decoding="async" src="./tenacity-vibration.jpg"
+alt="Tenacity stacked with Shooting Star on a vibration test table" /></a>
+<figcaption aria-hidden="true">Tenacity stacked with Shooting Star on a
+vibration test table</figcaption>
+</figure>
+<p><em>NASA photograph of the flight-system stack during ground
+environmental testing, reproduced in the September 2025 contract update
+<a class="citation" href="#d3">[D3]</a>. This is hardware testing, not
+an orbital flight.</em></p>
+<p>NASA’s 2017 account establishes successful autonomous atmospheric
+approach and landing by a test article
+<a class="citation" href="#d12">[D12]</a>. NASA’s 2024
+environmental-test report describes the stacked system being shaken at
+its Ohio test facility <a class="citation" href="#d15">[D15]</a>. Sierra
+Space’s April 2026 report describes acoustic testing with the wings
+stowed in the launch configuration
+<a class="citation" href="#d8">[D8]</a>.</p>
+<p>These tests answer different questions. Pressure tests address the
+pressure structure; vibration and acoustic tests address specified
+environmental loads; a drop test addresses the last phase of atmospheric
+flight. An orbital demonstration must connect ascent, deployment,
+navigation, spacecraft operation, deorbit, entry and recovery in one
+mission. Repeated flights and inspections are then needed to establish
+operational life and turnaround effort.</p>
+</section>
+<section id="watch-the-hardware-and-the-landing" class="level2">
+<h2>10. Watch the hardware and the landing</h2>
+<section id="video-1-nasa-atmospheric-free-flight-test-2017"
+class="level3">
+<h3>Video 1 · NASA atmospheric free-flight test, 2017</h3>
+<video controls preload="none" playsinline poster="./flight-2017.jpg" aria-label="NASA Dream Chaser approach and landing test, 2017">
+
+<source src="https://images-assets.nasa.gov/video/AFRC-2017-11649-1-DreamChaser_ALT-2_FreeFlight_music/AFRC-2017-11649-1-DreamChaser_ALT-2_FreeFlight_music~medium.mp4" type="video/mp4">
+Your browser cannot play this video. Use the NASA video link below.
+
+</video>
+<p><a
+href="https://images.nasa.gov/details/AFRC-2017-11649-1-DreamChaser_ALT-2_FreeFlight_music">Open
+NASA’s free-flight video</a> · <a
+href="https://www.nasa.gov/humans-in-space/commercial-space/free-flight-completes-crucial-milestone-for-dream-chaser/">NASA
+test explanation</a>. Observe the helicopter release, glide and
+touchdown. This is atmospheric test footage, not reentry from orbit.</p>
+</section>
+<section id="video-2-nasa-runway-tow-tests-2017" class="level3">
+<h3>Video 2 · NASA runway tow tests, 2017</h3>
+<video controls preload="none" playsinline aria-label="NASA Dream Chaser ground tow tests, 2017">
+
+<source src="https://images-assets.nasa.gov/video/AFRC-2017-11526-DreamChaserTaxiTest-5-20-2017/AFRC-2017-11526-DreamChaserTaxiTest-5-20-2017~medium.mp4" type="video/mp4">
+Your browser cannot play this video. Use the NASA video link below.
+
+</video>
+<p><a
+href="https://images.nasa.gov/details/AFRC-2017-11526-DreamChaserTaxiTest-5-20-2017">Open
+NASA’s tow-test video</a>. Watch ground tracking and landing-support
+behavior. A tow test does not test orbital entry heating.</p>
+</section>
+</section>
+<section id="exercises-and-engineering-decisions" class="level2">
+<h2>11. Exercises and engineering decisions</h2>
+<ol type="1">
+<li><strong>Read a specification critically.</strong> Convert both
+payload sets in Section 2 to kilograms. Write the clarification you
+would request before accepting a mass budget. Distinguish vehicle dry
+mass, cargo mass and total system mass.</li>
+<li><strong>Pressure-shell model.</strong> Assume <span
+class="math inline">\(\Delta p=70\)</span> kPa, <span
+class="math inline">\(r=1.2\)</span> m and <span
+class="math inline">\(t=4\)</span> mm. Calculate cylindrical membrane
+stresses, then list three reasons the model is insufficient for a
+composite lifting-body shell.</li>
+<li><strong>Heating sensitivity.</strong> At fixed density and nose
+radius, increase speed by 10%. Use the trend relation to find the
+heating-rate ratio. Then double nose radius at fixed speed and
+density.</li>
+<li><strong>Landing reaction.</strong> Repeat the no-lift example for
+<span class="math inline">\(v_z=0.5,1,2\)</span> m/s and <span
+class="math inline">\(s=0.10,0.20,0.40\)</span> m. Identify which
+assumption would matter most before using the result for design.</li>
+<li><strong>Wing-joint exercise.</strong> Model a generic outboard panel
+in <a
+href="https://ehsan-roohi.github.io/Aerospace-Structures/wing-panel-stress-analyzer/#wing">Wing
+Lab</a> as a 1.5 m cantilever carrying a 5 kN tip load. Calculate root
+moment, then explain what hinge flexibility and torsion add to the
+problem. These are assumed teaching dimensions.</li>
+<li><strong>Qualification decision.</strong> Choose the next evidence
+required to substantiate each claim: reusable for 15 missions, one-hour
+payload access, acceptable bond-line temperature, and reliable wing
+deployment. Name a measurable quantity for every claim.</li>
+</ol>
+<p><strong>Selected checks:</strong> cylindrical hoop/axial stresses are
+<strong>21 / 10.5 MPa</strong>; the heating ratios are
+<strong>1.331</strong> and <strong>0.707</strong>; generic wing-root
+moment is <strong>7.5 kN·m</strong>. Run the accompanying <a
+href="../spaceflight_calculations.py">calculation script</a> to
+reproduce these and the energy/landing examples. None is a certified
+vehicle load.</p>
+</section>
+<section id="خلاصه-فارسی" class="level2" dir="rtl" lang="fa"><h2>12. خلاصهٔ فارسی</h2>
+<p>دریم‌چیسر یک فضاپیمای باری بدون سرنشین است که با موشک به مدار می‌رود و
+در بازگشت، مانند گلایدر روی باند می‌نشیند. بدنهٔ کامپوزیتی آن باید فشار
+داخلی و بارهای پرتاب و فرود را تحمل کند؛ سامانهٔ حفاظت حرارتی نیز وظیفه
+دارد دمای سازه را در محدودهٔ مجاز نگه دارد. تا تاریخ بررسی، نخستین پرواز
+مداری هنوز انجام نشده و بهار ۲۰۲۷ هدف اعلام‌شده است. مجوز جدید FAA مشخصاً
+بازگشت به وندنبرگ را پوشش می‌دهد. مأموریت اول اکنون یک پرواز مستقل
+آزمایشی است و تضمین قدیمی تعداد پروازهای تدارکاتی ناسا دیگر معتبر نیست.
+اعداد ظرفیت بار در منابع رسمی یکسان نیستند و باید همراه تاریخ و پیکربندی
+نقل شوند؛ محاسبات این درس نیز مثال آموزشی‌اند، نه مشخصات تأییدشدهٔ
+پرواز.</p>
+</section>
+<section id="sources-and-media-credits" class="level2">
+<h2>13. Sources and media credits</h2>
+<p>Primary sources are used for the engineering and program claims.
+Older documents are retained for hardware history, with their obsolete
+schedules excluded. All sources were checked on 17 November 2026.</p>
+<p><a id="d1"></a><strong>D1.</strong> <a
+href="https://www.faa.gov/newsroom/statements/general-statements">FAA,
+General Statements: “FAA Issues Reentry License for Sierra Space Dream
+Chaser,” 9 November 2026</a>. License scope, frequency, duration and
+spring-2027 target.</p>
+<p><a id="d2"></a><strong>D2.</strong> <a
+href="https://www.faa.gov/space/stakeholder_engagement/Sierra_at_SLF_VSFB">FAA,
+Sierra Space at Shuttle Landing Facility and Vandenberg:
+environmental-review record</a>. Environmental alternatives and the
+distinction between review and licensing; older Atlas V text is
+historical.</p>
+<p><a id="d3"></a><strong>D3.</strong> <a
+href="https://www.nasa.gov/missions/station/nasa-sierra-space-modify-commercial-resupply-services-contract/">NASA,
+commercial resupply contract modification, 25 September 2025</a>.
+Current ordering framework and free-flight transition; its former
+late-2026 target is superseded by D1.</p>
+<p><a id="d4"></a><strong>D4.</strong> <a
+href="https://www.sierraspace.com/press-releases/sierra-space-secures-national-security-and-commercial-payload-contracts-for-dream-chaser-inaugural-flight/">Sierra
+Space, inaugural-flight payload contracts, 2 September 2026</a>.</p>
+<p><a id="d5"></a><strong>D5.</strong> <a
+href="https://www.nasa.gov/missions/station/commercial-resupply/sierra-spaces-dream-chaser-new-station-resupply-spacecraft-for-nasa/">NASA,
+Dream Chaser station-resupply architecture, 15 December 2023</a>. Cargo
+architecture and dated capacity figures; its ISS debut schedule is
+obsolete.</p>
+<p><a id="d6"></a><strong>D6.</strong> <a
+href="https://www.sncorp.com/news-archive/dream-chaser-spacecraft-primary-structure-arrives-in-colorado">SNC,
+primary structure arrives in Colorado, 15 October 2019</a>. CFRP
+structure, approximate bare-structure size/mass and woven construction;
+old launch dates are obsolete.</p>
+<p><a id="d7"></a><strong>D7.</strong> <a
+href="https://www.sierraspace.com/dream-chaser-spaceplane/uncrewed-cargo-spacecraft/">Sierra
+Space, Tenacity uncrewed cargo vehicle</a>. Live capability claims and
+internally differing payload descriptions.</p>
+<p><a id="d8"></a><strong>D8.</strong> <a
+href="https://www.sierraspace.com/press-releases/sierra-spaces-dream-chaser-spaceplane-successfully-completed-milestone-at-nasas-kennedy-space-center/">Sierra
+Space, acoustic-test milestone, 14 April 2026</a>.</p>
+<p><a id="d9"></a><strong>D9.</strong> <a
+href="https://www.nasa.gov/blogs/kennedy/2020/06/11/dream-chaser-spaceplane-pressure-test-article-arrives-at-kennedy-space-center/">NASA,
+pressure-test article at Kennedy, 11 June 2020</a>. Composite/bonded
+pressure structure and photograph.</p>
+<p><a id="d10"></a><strong>D10.</strong> <a
+href="https://www.nasa.gov/general/thermal-protection-materials-branch-reusable-materials/">NASA
+Ames, reusable thermal-protection materials</a>. TUFROC system and Dream
+Chaser applicability.</p>
+<p><a id="d11"></a><strong>D11.</strong> <a
+href="https://ntrs.nasa.gov/api/citations/20190030273/downloads/20190030273.pdf">NASA,
+TUFROC technical presentation, 2019, PDF</a>. Surface/base construction
+and test context.</p>
+<p><a id="d12"></a><strong>D12.</strong> <a
+href="https://www.nasa.gov/humans-in-space/commercial-space/free-flight-completes-crucial-milestone-for-dream-chaser/">NASA,
+successful atmospheric free flight, 13 November 2017</a>. Historical
+test and photograph; NASA video identifiers are linked above.</p>
+<p><a id="d13"></a><strong>D13.</strong> <a
+href="https://www.nasa.gov/hl-20-2/">NASA Langley, HL-20 lifting-body
+history</a>. Design ancestry, not certification of the later
+vehicle.</p>
+<p><a id="d14"></a><strong>D14.</strong> <a
+href="https://www.sierraspace.com/space-technology/spaceflight-hardware/propulsion/">Sierra
+Space, propulsion hardware catalogue</a>. VRP110-B and
+dual-mode/tri-mode thruster descriptions.</p>
+<p><a id="d15"></a><strong>D15.</strong> <a
+href="https://www.nasa.gov/missions/station/first-look-spaceplane-stacked-and-shaken-at-nasa-test-facility/">NASA,
+spaceplane stacked and shaken, 2024</a>. Environmental-test context.</p>
+<p><a id="d16"></a><strong>D16.</strong> <a
+href="https://techport.nasa.gov/projects/147005">NASA TechPort, low-cost
+high-temperature reusable TPS development</a>. Development work is not
+evidence that every material is installed on Tenacity.</p>
+<p><a id="d17"></a><strong>D17.</strong> <a
+href="https://www1.grc.nasa.gov/beginners-guide-to-aeronautics/rocket-thrust-equation/">NASA
+Glenn, rocket-thrust equation</a>.</p>
+<p><a id="d18"></a><strong>D18.</strong> <a
+href="https://ntrs.nasa.gov/api/citations/19720003329/downloads/19720003329.pdf">Sutton
+and Graves, NASA TR R-376, 1971, <em>A General Stagnation-Point
+Convective-Heating Equation for Arbitrary Gas Mixtures</em>, PDF</a>.
+Basis of the heating trend; a trajectory-specific model still requires
+the applicable correlation assumptions.</p>
+<p><a id="d19"></a><strong>D19.</strong> <a
+href="https://www.zoomit.ir/aviation-aerospace/471284-dream-chaser-space-plane-faa-landing-approval/">Zoomit,
+the Persian report supplied by the reader</a>. Starting point for this
+independent course reading.</p>
+<p><strong>Media:</strong> the three photographs are credited to NASA at
+their original source pages. They are resized for web reading. The three
+SVG engineering diagrams are original course schematics; they are not
+manufacturer drawings. Videos stream from NASA and remain externally
+hosted. No NASA or manufacturer endorsement is implied.</p>
+</section>
+</section>
+
+<footer><p><a href="../artemis/">Continue with Artemis</a> · <a href="https://github.com/Ehsan-Roohi/Aerospace-Structures/blob/main/READINGS.md">Browse all readings</a></p>
+<p>Dr. Ehsan Roohi Golkhatmi · University of Massachusetts Amherst. Independent educational analysis. Agency photographs, planning graphics and videos retain their stated credits.</p>
+<p><a class="backtop" href="#top">Back to top ↑</a></p></footer></main></body></html>

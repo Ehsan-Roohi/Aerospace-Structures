@@ -3,9 +3,31 @@
 **MIE 446 · Aerospace Structures · University of Massachusetts Amherst**  
 Japan’s Offshore Curtain project · 19 November 2026
 
-**[Watch the original BBC TechXplore film (2 min 50 s)][bbc]** · [Illustrated lesson and load calculator][web] · [Course readings](READINGS.md)
+**[Watch the original BBC TechXplore film (2 min 50 s)][bbc]** · [Project photographs](#project-photographs) · [Illustrated lesson and load calculator][web] · [Course readings](READINGS.md)
 
 A yellow inflatable wing flies across the screen. The harder engineering question comes a few seconds later, when the researchers explain what they want it to carry. A mesh curtain suspended offshore would exert drag on humid air moving toward a rainband. The equal and opposite force must travel through fabric, attachment points and tethers to a mooring. Could a curtain that a kite can actually hold create a wake strong enough to change a storm?
+
+## Project photographs
+
+Watch [the original BBC video, *Japan’s using giant kites to change the weather* (2:50)][bbc] to see the kite in motion. The first three photographs trace the carrier from the wing to its ground station. The fourth shows the offshore curtain model.
+
+[![The Toyota flight team stands and kneels beside the yellow, fabric-covered kite in a hangar.][photo-wing]][photo-wing]
+
+**The flight-tested wing.** The team poses with the inflatable carrier after a six-hour flight in March 2023. The people beside it give a sense of the span. The yellow tubes support the fabric between them. [Photograph by Toyota Frontier Research Center, Fig. 6][toyota-controls]
+
+[![Front view of the yellow kite against a dark background, with the small control surfaces near both tips circled in red.][photo-controls]][photo-controls]
+
+**Control surfaces on the flexible wing.** Toyota’s annotations mark the small movable surfaces it calls *coverts*. Deflecting a surface on one side changes the aerodynamic force there, producing a moment that helps the kite recover its attitude in a gust. [Photograph by Toyota Frontier Research Center, Fig. 5][toyota-controls]
+
+[![An operator inside Toyota’s ground station watches the outdoor test from a window beside monitors and a hand control.][photo-winch]][photo-winch]
+
+**The ground end of the tether.** At the Iwata test site in Shizuoka, a team member controls the winding of the line. The winch takes up or pays out line under tension. In the force diagram below, the ground attachment is where the horizontal and vertical reactions act. [Photograph by Toyota Times, field report][toyota-ground]
+
+[![Expo exhibit with a yellow textile sample at lower left and a small transparent wind tunnel at center-right beneath blue panels.][photo-expo]][photo-expo]
+
+**The curtain model in Osaka.** In this 2025 exhibition, look at the clear tunnel in the center-right for the scale model and at the lower left for the yellow kite material. The Kyoto laboratory used a separate setup to measure the velocity behind a net. [Photograph by Toyota Frontier Research Center, Expo 2025 report][toyota-expo]
+
+**Inside the Kyoto wind tunnel.** The research paper shows the 25 cm square net laid flat and then mounted on four wires in its adjustable frame. On the next page, a laser sheet illuminates tracer particles in the wake so their motion can be measured. [Specimen and mounting frame, Photos 1–2, p. 208][kyoto-specimen] · [Laser measurement, Photo 3, p. 209][kyoto-laser]
 
 ## Watch the film
 
@@ -154,6 +176,8 @@ For the Kyushu case, $(76.0-115.2)/115.2=-0.340$ to three significant figures. R
 
 ## خلاصهٔ فارسی
 
+[تماشای مستقیم ویدئوی BBC (۲ دقیقه و ۵۰ ثانیه)][bbc] · [چهار عکس واقعی از بال، سطوح کنترل، ایستگاه زمینی و مدل پرده](#project-photographs) · [عکس توری و قاب نگهدارنده در تونل باد کیوتو][kyoto-specimen]
+
 ویدئوی BBC طرح دانشگاه کیوتو و تویوتا را نشان می‌دهد. بادبادک با نیروی برآ یک پردهٔ توری را در هوا نگه می‌دارد. نیروی پسا از تارهای توری به کابل‌های لبه، سپس به طناب‌های مهار و تکیه‌گاه منتقل می‌شود. هدف این است که تغییر سرعت و مسیر هوای مرطوبِ ورودی، محل یا شدت بارش سنگین را تغییر دهد. در مثال آموزشی، افزایش باد از ۱۵ به ۲۰ متر بر ثانیه کشش معادل مهار را از ۵٫۷۵ به ۱۱٫۰۷ کیلونیوتن می‌رساند.
 
 عدد ۲۰ تا ۳۰ درصد در ویدئو هدف پروژه است. در بازسازی عددی رخداد کیوشو، بیشینهٔ بارش انباشتهٔ سه‌ساعته در محدودهٔ بررسی، بسته به جای پرده، از ۳۴٫۰ درصد کاهش تا ۱۹٫۲ درصد افزایش تغییر کرد. برای ارزیابی طرح باید هم بار وارد بر مهار و هم تغییر بارش در حوضه‌های همسایه اندازه‌گیری شود. [فیلم اصلی BBC][bbc] · [مقالهٔ کیوتو][kyushu]
@@ -173,6 +197,15 @@ For the Kyushu case, $(76.0-115.2)/115.2=-0.340$ to three significant figures. R
 Figures 1 and 2 are original teaching illustrations. Figure 3 plots the reported numerical endpoints from the two Kyoto studies. The BBC and Toyota host their respective films.
 
 [bbc]: https://www.bbc.com/reel/video/p0pkcgx1/watch
+[photo-wing]: https://global.toyota/pages/global_toyota/mobility/frontier-research/2023/10/27/1300/006.jpg
+[photo-controls]: https://global.toyota/pages/global_toyota/mobility/frontier-research/2023/10/27/1300/005.jpg
+[photo-winch]: https://toyotatimes.jp/en/upload_images/series_beyondmobility_012_4.jpg
+[photo-expo]: https://global.toyota/pages/global_toyota/mobility/frontier-research/2025/11/26/1300_Exhibition/008.jpg
+[toyota-controls]: https://global.toyota/en/mobility/frontier-research/39936917.html
+[toyota-ground]: https://toyotatimes.jp/en/series/beyondmobility/012.html
+[toyota-expo]: https://global.toyota/en/mobility/frontier-research/43525432.html
+[kyoto-specimen]: https://repository.kulib.kyoto-u.ac.jp/server/api/core/bitstreams/9202347c-6b0a-4bc9-81c9-53eb11d6d244/content#page=3
+[kyoto-laser]: https://repository.kulib.kyoto-u.ac.jp/server/api/core/bitstreams/9202347c-6b0a-4bc9-81c9-53eb11d6d244/content#page=4
 [web]: https://ehsan-roohi.github.io/Aerospace-Structures/case-studies/offshore-curtain/
 [calculator]: https://ehsan-roohi.github.io/Aerospace-Structures/case-studies/offshore-curtain/#load-calculator
 [syndicated]: https://www.yahoo.com/news/videos/japans-using-giant-kites-change-100000820.html

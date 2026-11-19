@@ -6,6 +6,11 @@ MIE 446 Aerospace Structures · Team project
 
 Analyze the point-load case by hand and software, compare it with distributed lift, then study cable area sensitivity and recommend a design. The handout includes all geometry, properties, loading diagrams, deliverables, and the 100-point assessment rubric. The numerical project contributes 25% of the course grade.
 
+## Stage 1 hand analysis
+
+- [Cable compatibility guide (PDF)](MIE446_Wright_Flyer_Cable_Compatibility_Guide.pdf) — Write the two bay equations and check which cables carry tension.
+- [Watch the crossed-cable truss example (8 min 40 s)](https://youtu.be/zofFpnYhQ18) — See the compatibility check for one bay before applying it to the Wright Flyer.
+
 Submit one team report and three editable JSON files through Canvas. Each student submits a separate confidential peer review using the [Google Sheets template](https://docs.google.com/spreadsheets/d/1y1TQGVhIM_GbtjsNJary0vvnWiupnYr3EUsBTIBiZ2Y/edit): make a private copy, complete it, and submit it separately in Canvas. Do not enter ratings in the shared template or upload student work to this public repository.
 
 Canvas is authoritative for the deadline and submission links.

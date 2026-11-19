@@ -10,6 +10,8 @@ Optional readings; assignment requirements are listed in [ASSIGNMENTS.md](ASSIGN
 
 ## Optional aerospace technology reports
 
+- **[Can a kite change where heavy rain falls?](OFFSHORE_CURTAIN_KITE.md)** · [BBC film guide, illustrated lesson and tether-load calculator](https://ehsan-roohi.github.io/Aerospace-Structures/case-studies/offshore-curtain/) · Japan’s Offshore Curtain, inflatable wings, cable sag and simulated rainfall redistribution.
+
 - **[Dream Chaser: composite structures, thermal protection, propulsion and runway recovery](DREAM_CHASER_SPACEPLANE.md)** · [Illustrated reading with NASA photographs and two official videos](https://ehsan-roohi.github.io/Aerospace-Structures/case-studies/dream-chaser/) · FAA approval, dated specifications, load paths and worked examples.
 
 - **[Artemis: SLS, Orion, lunar landers and the current Moon-return architecture](ARTEMIS_MOON_ARCHITECTURE.md)** · [Illustrated reading with mission graphics and official films](https://ehsan-roohi.github.io/Aerospace-Structures/case-studies/artemis/) · Updated mission sequence, engine specifications, structural loading, thermal protection and classroom exercises.

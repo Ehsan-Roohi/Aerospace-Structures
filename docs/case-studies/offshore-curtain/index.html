@@ -1,0 +1,346 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Can a kite change where heavy rain falls? · MIE 446</title>
+<meta name="description" content="Study Japan’s offshore curtain with the BBC film, wind tunnel evidence, tether mechanics, an interactive load calculation and two rainfall simulations.">
+<link rel="stylesheet" href="../spaceflight.css"><style>main{max-width:1080px}.byline,.contents,.source-note{color:#526b7c}
+.top-nav{justify-content:space-between}.top-nav strong{color:#173d50}
+.actions{display:flex;align-items:center;gap:14px 22px;flex-wrap:wrap;margin:1.45rem 0}
+.watch{display:inline-flex;align-items:center;gap:.65rem;padding:.6rem 1.05rem;background:#145768;color:white;border-radius:5px;text-decoration:none;font-weight:700}
+.watch:hover,.watch:focus-visible{background:#0f4251;color:white}.watch span{font-size:.77em}
+.contents{margin-top:1.5rem;border-top:1px solid #cddde6;padding-top:1rem}
+.table-scroll{overflow-x:auto;margin:1.35em 0}.table-scroll table{display:table;margin:0;width:100%}.table-scroll:focus-visible,input:focus-visible{outline:3px solid #a86420;outline-offset:3px}
+.table-scroll td,.table-scroll th{min-width:6.1rem}.table-scroll th{vertical-align:bottom}
+math[display=block]{display:block;overflow-x:auto;padding:1rem .8rem;border-left:3px solid #258578;background:#f2f7f6;text-align:left;font-size:1.12em}
+.calculator,.flight-film{border:1px solid #b9d1d3;border-radius:6px;padding:1.35em;margin:1.7em 0}
+.calculator{background:#f3f8f7}.calculator h3{margin:0;color:#12565a}.calculator p,.flight-film p{font-size:.93em}
+.sliders,.results{display:grid;gap:1.2em}.sliders{grid-template-columns:repeat(2,minmax(0,1fr));margin:1.4em 0}
+.sliders label{display:block;color:#224954;font-size:.92em;font-weight:620}.sliders output{float:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:#106d61;margin:.8em 0 0;cursor:pointer}
+.results{grid-template-columns:repeat(4,minmax(0,1fr));gap:.55em;border-top:1px solid #bfd1ce;padding:1.05em 0 0;margin:0}
+.results dt{font-size:.79em;color:#405e65}.results dd{font-weight:700;color:#155b54;margin:.25em 0;font-variant-numeric:tabular-nums;font-size:1.19em}
+.lift-message{color:#793c19;margin-bottom:0}.flight-film{margin:1.5em 0}.flight-film summary{cursor:pointer;color:#145768;font-weight:650}
+figure img{width:100%;object-fit:contain}figure{margin:1.8em 0}#persian{font-family:Tahoma,sans-serif}footer{margin-top:2em}
+@media(max-width:660px){.results{grid-template-columns:repeat(2,minmax(0,1fr))}.sliders{grid-template-columns:1fr}.calculator,.flight-film{padding:1em}.top-nav{justify-content:flex-start}}
+@media print{.actions,.contents,.flight-film,.calculator{display:none}.table-scroll{overflow:visible}.table-scroll td,.table-scroll th{min-width:0}}</style></head>
+<body><main id="top"><nav class="top-nav" aria-label="Course navigation"><strong>MIE 446 · Aerospace Structures</strong>
+<a href="https://github.com/Ehsan-Roohi/Aerospace-Structures/blob/main/READINGS.md">All readings</a><a href="https://github.com/Ehsan-Roohi/Aerospace-Structures/blob/main/OFFSHORE_CURTAIN_KITE.md">GitHub edition</a>
+<a href="../../wing-panel-stress-analyzer/#wing">Wing Lab</a></nav>
+<h1 id="can-a-kite-change-where-heavy-rain-falls">Can a kite change where heavy rain falls?</h1>
+<p class="byline">Japan’s Offshore Curtain project · 19 November 2026</p>
+<p class="actions"><a class="watch" href="https://www.bbc.com/reel/video/p0pkcgx1/watch"><span aria-hidden="true">▶</span> Watch the BBC film · 2:50</a><a href="#load-calculator">Try the load calculator</a></p>
+<p>A yellow inflatable wing flies across the screen. The harder engineering question comes a few seconds later, when the researchers explain what they want it to carry. A mesh curtain suspended offshore would exert drag on humid air moving toward a rainband. The equal and opposite force must travel through fabric, attachment points and tethers to a mooring. Could a curtain that a kite can actually hold create a wake strong enough to change a storm?</p>
+<nav class="contents" aria-label="Sections"><a href="#watch-the-film">Film guide</a><a href="#from-mesh-pressure-to-the-mooring">Load path</a><a href="#what-does-a-30-reduction-mean">Rainfall results</a><a href="#classroom-exercises">Exercises</a><a href="#persian" lang="fa">خلاصهٔ فارسی</a></nav>
+<h2 id="watch-the-film">Watch the film</h2>
+<p>In <a href="https://www.bbc.com/reel/video/p0pkcgx1/watch"><em>Japan’s using giant kites to change the weather</em></a>, BBC TechXplore presenter Paul Carter follows the Japanese team’s proposal. These three moments connect the footage to the mechanics below.</p>
+<div class="table-scroll" tabindex="0" role="region" aria-label="Scrollable data table"><table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Approximate time</th>
+<th>What to look for</th>
+<th>Question for the viewer</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>0:55–1:05</td>
+<td>The report introduces the Kyoto researcher and shows an airborne kite.</td>
+<td>Where does the force opposing the wind come from?</td>
+</tr>
+<tr class="even">
+<td>1:29–1:50</td>
+<td>The researchers explain the proposed mesh payload and identify compressed air as part of the kite structure.</td>
+<td>Which part produces lift, which part adds drag, and which part maintains the wing’s shape?</td>
+</tr>
+<tr class="odd">
+<td>About 2:24</td>
+<td>The closing discussion describes the limited role envisioned for the intervention.</td>
+<td>What field measurement would support a claim about rain falling on a community?</td>
+</tr>
+</tbody>
+</table></div>
+<p>BBC presents a <strong>20–30% reduction in heavy rain as an aim</strong>. Toyota’s related, earlier flight programme provides a different kind of evidence. In a February 2024 trial at Fukushima Sky Park, its instrumented kite stayed aloft for <strong>12 h 26 min</strong>. Winds occasionally exceeded 30 m/s near 600 m during the day, and the flight ended when the wind subsided. That trial documents the behaviour of the carrier. The rainfall numbers below come from weather models. <a href="https://www.bbc.com/reel/video/p0pkcgx1/watch">BBC film</a> · <a href="https://global.toyota/en/mobility/frontier-research/41355237.html">Toyota flight report, Movies 2–4 and Figs. 6–9</a></p>
+<details class="flight-film">
+<summary>Watch Toyota’s companion footage of kite takeoff</summary>
+<p>Toyota’s Movie 2 shows the carrier ascending in turbulent wind during the Fukushima trial. The crew’s goal in this flight was to test the carrier and its controls.</p>
+<iframe title="Toyota Frontier Research Center: kite takeoff at Fukushima Sky Park" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" src="https://www.youtube.com/embed/UmmOdd0zGaI?rel=0" allowfullscreen></iframe>
+<p><a href="https://global.toyota/en/mobility/frontier-research/41355237.html">View Movie 2 and the flight measurements on Toyota’s website</a></p>
+</details>
+<h2 id="what-the-studies-measured">What the studies measured</h2>
+<div class="table-scroll" tabindex="0" role="region" aria-label="Scrollable data table"><table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Investigation</th>
+<th>Quantity and scale</th>
+<th>What the result supports</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Toyota Mothership flight tests</td>
+<td>An early inflatable prototype had about <strong>7 m²</strong> of wing area. The programme reached <strong>1,000 m above ground in May 2020</strong>. The 2024 endurance trial was a separate flight.</td>
+<td>A tethered inflatable carrier can operate aloft. Its wind envelope, attitude control, joints and electrical supply matter. <a href="https://www.toyota-global.com/innovation/partner_robot/news/202201_01.html">Toyota materials and flight history</a></td>
+</tr>
+<tr class="even">
+<td>Kyoto wind tunnel</td>
+<td><strong>0.25 m × 0.25 m</strong> net specimens. The main comparison used <strong>5.0 m/s</strong>. Researchers measured velocity at multiple downstream positions and also tested inclined nets.</td>
+<td>The net creates a measurable wake. Among the nets compared, lower solidity could move the point of minimum mean speed farther downstream. <a href="https://www.dpri.kyoto-u.ac.jp/nenpo/no68/ronbunB/a68b0p23.pdf">Wind-tunnel study, Table 1 and Figs. 3–4</a></td>
+</tr>
+<tr class="odd">
+<td>JST engineering design study</td>
+<td>One proposed configuration lists a <strong>102 m span</strong>, <strong>1,500 m²</strong> kite planform, <strong>800 kg</strong> per kite and a <strong>1 km × 1 km</strong> mesh of <strong>10.8 t</strong>. Its preliminary model assumed <strong>99.99% open area</strong>.</td>
+<td>These are design-study inputs. Flight and wake measurements at this scale would be needed to connect them to a rainfall prediction. <a href="https://www.jst.go.jp/moonshot/sympo/20251030/pdf/22_yamaguchi.pdf">JST presentation, “Engineering design” slide</a></td>
+</tr>
+<tr class="even">
+<td>Kyoto weather simulations</td>
+<td>Researchers reconstructed historical rainbands and introduced a parameterized momentum loss upstream. The response changed with placement and event.</td>
+<td>The calculations test how a rainband responds to an assumed disturbance. They also identify cases in which the peak rainfall increases. <a href="https://www.dpri.kyoto-u.ac.jp/nenpo/no67/ronbunB/a67b0p14.pdf">Northern Kyushu study</a> · <a href="https://www.dpri.kyoto-u.ac.jp/hapyo/26/pdf/B304.pdf">Kameoka study</a></td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="from-mesh-pressure-to-the-mooring">From mesh pressure to the mooring</h2>
+<figure><img src="./curtain-forces.png" alt="Front view of a curtain between two kites with tethers to moorings. A separate side-view free-body diagram shows lift upward, drag downwind, weight downward and line tension toward the anchor." /><figcaption>Figure 1. The front view shows one possible support arrangement. The side view combines the airborne components into a single free body. Its tension arrow represents the resultant of the ground-line forces. The two drawings have different viewing directions and schematic dimensions.</figcaption></figure>
+<p>The wind loads the strands. Their tensile forces collect at the reinforced edges, corner fittings and bridles. The lifting wings carry the hanging weight and maintain altitude while the tethers transmit the resultant load to the winches and moorings. A line pulls along its local tangent. A slack segment cannot share load until it straightens. A symmetric front view alone gives too little information to divide the total tension equally between physical lines. <a href="https://rain-c.dpri.kyoto-u.ac.jp/en/list/1-4/">Project hardware description</a> · <a href="https://www1.grc.nasa.gov/beginners-guide-to-aeronautics/four-forces-on-a-kite/">NASA kite force balance</a></p>
+<h3 id="how-much-drag-does-the-net-add">How much drag does the net add?</h3>
+<p>Let <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>U</mi><annotation encoding="application/x-tex">U</annotation></semantics></math> be the horizontal apparent wind speed at the hardware and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ρ</mi><annotation encoding="application/x-tex">\rho</annotation></semantics></math> the air density. For a stationary, face-on panel with approximately uniform inflow, define the effective mesh drag coefficient <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>C</mi><mrow><mi>D</mi><mo>,</mo><mi>m</mi></mrow></msub><annotation encoding="application/x-tex">C_{D,m}</annotation></semantics></math> using the <strong>gross outline area</strong>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>A</mi><mi>m</mi></msub><annotation encoding="application/x-tex">A_m</annotation></semantics></math>, including its openings. With dynamic pressure <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>q</mi><annotation encoding="application/x-tex">q</annotation></semantics></math>,</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>q</mi><mo>=</mo><mfrac displaystyle="false"><mn>1</mn><mn>2</mn></mfrac><mi>ρ</mi><msup><mi>U</mi><mn>2</mn></msup><mo>,</mo><mspace width="2.0em"></mspace><msub><mi>D</mi><mi>m</mi></msub><mo>=</mo><mi>q</mi><msub><mi>C</mi><mrow><mi>D</mi><mo>,</mo><mi>m</mi></mrow></msub><msub><mi>A</mi><mi>m</mi></msub><mo>,</mo><mspace width="2.0em"></mspace><msub><mover><mi>p</mi><mo accent="true">‾</mo></mover><mi>m</mi></msub><mo>=</mo><msub><mi>D</mi><mi>m</mi></msub><mi>/</mi><msub><mi>A</mi><mi>m</mi></msub><mi>.</mi></mrow><annotation encoding="application/x-tex">
+q=\tfrac12\rho U^2,\qquad D_m=q C_{D,m} A_m,\qquad \bar p_m=D_m/A_m .
+</annotation></semantics></math></p>
+<p>Here <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mover><mi>p</mi><mo accent="true">‾</mo></mover><mi>m</mi></msub><annotation encoding="application/x-tex">\bar p_m</annotation></semantics></math> is the equivalent mean load per unit outline area. A measured coefficient based on gross area already includes the effect of the openings. Multiplying by the solid fraction a second time would underestimate drag. A coefficient determined using yarn area needs conversion to the chosen reference area. An inclined or billowing net also changes the direction of the load and the area exposed to the wind.</p>
+<p>For a flat square mesh with clear opening <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>a</mi><annotation encoding="application/x-tex">a</annotation></semantics></math> and projected yarn width <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>d</mi><annotation encoding="application/x-tex">d</annotation></semantics></math>, the open-area fraction is <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ϕ</mi><mo>=</mo><msup><mrow><mo stretchy="true" form="prefix">[</mo><mi>a</mi><mi>/</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>a</mi><mo>+</mo><mi>d</mi><mo stretchy="true" form="postfix">)</mo></mrow><mo stretchy="true" form="postfix">]</mo></mrow><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">\phi=[a/(a+d)]^2</annotation></semantics></math> and the solidity is <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mo>−</mo><mi>ϕ</mi></mrow><annotation encoding="application/x-tex">1-\phi</annotation></semantics></math>. For example, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>a</mi><mo>=</mo><mn>5.0</mn></mrow><annotation encoding="application/x-tex">a=5.0</annotation></semantics></math> mm and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>d</mi><mo>=</mo><mn>0.9</mn></mrow><annotation encoding="application/x-tex">d=0.9</annotation></semantics></math> mm give <strong>71.82% open area</strong> and <strong>28.18% solidity</strong>, matching specimen 6 in Kyoto’s table. To infer drag, measure the net force as well as the geometry. Wake measurements downstream reveal how quickly faster surrounding air mixes back in. <a href="https://www.dpri.kyoto-u.ac.jp/nenpo/no68/ronbunB/a68b0p23.pdf">Kyoto wind-tunnel study, Eq. 4 and Table 1</a></p>
+<p>A scale check exposes the main design trade-off. Over a square kilometre, even <strong>1 Pa</strong> of mean effective pressure produces <strong>1 MN</strong> of force. The 1 Pa is a unit-load example. The key missing measurement at full scale is the pressure a realizable mesh sustains while giving the desired velocity deficit.</p>
+<h3 id="global-equilibrium-and-the-minimum-wind-for-lift">Global equilibrium and the minimum wind for lift</h3>
+<p>Let <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>S</mi><mi>k</mi></msub><annotation encoding="application/x-tex">S_k</annotation></semantics></math> be the total lifting planform, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>C</mi><mi>L</mi></msub><annotation encoding="application/x-tex">C_L</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>C</mi><mrow><mi>D</mi><mo>,</mo><mi>k</mi></mrow></msub><annotation encoding="application/x-tex">C_{D,k}</annotation></semantics></math> the kite coefficients, and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>m</mi><annotation encoding="application/x-tex">m</annotation></semantics></math> the airborne mass represented at the bridle. Neglect vertical aerodynamic force on the screen, line sag, line drag and acceleration. For horizontal wind,</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>L</mi><mo>=</mo><mi>q</mi><msub><mi>S</mi><mi>k</mi></msub><msub><mi>C</mi><mi>L</mi></msub><mo>,</mo><mspace width="2.0em"></mspace><msub><mi>D</mi><mi>k</mi></msub><mo>=</mo><mi>q</mi><msub><mi>S</mi><mi>k</mi></msub><msub><mi>C</mi><mrow><mi>D</mi><mo>,</mo><mi>k</mi></mrow></msub><mo>,</mo><mspace width="2.0em"></mspace><mi>W</mi><mo>=</mo><mi>m</mi><mi>g</mi><mi>.</mi></mrow><annotation encoding="application/x-tex">
+L=q S_k C_L,\qquad D_k=q S_k C_{D,k},\qquad W=mg .
+</annotation></semantics></math></p>
+<p>For a taut, straight equivalent tether making an angle <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>θ</mi><annotation encoding="application/x-tex">\theta</annotation></semantics></math> above the horizontal from the anchor to the kite, equilibrium gives</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>H</mi><mo>=</mo><msub><mi>D</mi><mi>m</mi></msub><mo>+</mo><msub><mi>D</mi><mi>k</mi></msub><mo>,</mo><mspace width="2.0em"></mspace><mi>V</mi><mo>=</mo><mi>L</mi><mo>−</mo><mi>W</mi><mo>,</mo><mspace width="2.0em"></mspace><mi>T</mi><mo>=</mo><msqrt><mrow><msup><mi>H</mi><mn>2</mn></msup><mo>+</mo><msup><mi>V</mi><mn>2</mn></msup></mrow></msqrt><mo>,</mo><mspace width="2.0em"></mspace><mo>tan</mo><mi>θ</mi><mo>=</mo><mi>V</mi><mi>/</mi><mi>H</mi><mi>.</mi></mrow><annotation encoding="application/x-tex">
+H=D_m+D_k,\qquad V=L-W,\qquad T=\sqrt{H^2+V^2},\qquad \tan\theta=V/H .
+</annotation></semantics></math></p>
+<p>The mooring feels a downwind pull <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>H</mi><annotation encoding="application/x-tex">H</annotation></semantics></math> and an upward pull <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>V</mi><annotation encoding="application/x-tex">V</annotation></semantics></math>. A positive line elevation requires <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>L</mi><mo>&gt;</mo><mi>W</mi></mrow><annotation encoding="application/x-tex">L&gt;W</annotation></semantics></math>, which gives <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi><mo>&gt;</mo><msqrt><mrow><mn>2</mn><mi>m</mi><mi>g</mi><mi>/</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>ρ</mi><msub><mi>S</mi><mi>k</mi></msub><msub><mi>C</mi><mi>L</mi></msub><mo stretchy="true" form="postfix">)</mo></mrow></mrow></msqrt></mrow><annotation encoding="application/x-tex">U&gt;\sqrt{2mg/(\rho S_k C_L)}</annotation></semantics></math> for constant positive <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>C</mi><mi>L</mi></msub><annotation encoding="application/x-tex">C_L</annotation></semantics></math>. There is a second requirement for steady flight: the aerodynamic, weight and bridle moments must balance. A real wing can pitch, change angle of attack or lose lift even when the force calculation allows an equilibrium. <a href="https://www1.grc.nasa.gov/beginners-guide-to-aeronautics/four-forces-on-a-kite/">NASA force balance</a> · <a href="https://www.grc.nasa.gov/www/k-12/airplane/kitetor.html">NASA kite torque</a></p>
+<p><strong>Can the proposed wings lift the mesh mass?</strong> Use two 1,500 m² wings in the published design sketch and count 800 kg per wing plus the 10,800 kg net. Those components weigh <strong>121.6 kN</strong>. As an explicit classroom assumption, take <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>C</mi><mi>L</mi></msub><mo>=</mo><mn>0.80</mn></mrow><annotation encoding="application/x-tex">C_L=0.80</annotation></semantics></math>, uniform horizontal wind and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ρ</mi><mo>=</mo><mn>1.20</mn></mrow><annotation encoding="application/x-tex">\rho=1.20</annotation></semantics></math> kg/m³. At 10 m/s the two wings produce <strong>144.0 kN</strong> of lift, leaving only <strong>22.4 kN</strong> for all further downward loads. At 8 m/s the same estimate gives <strong>92.2 kN</strong>, below even the stated component weight. For a specified angle the requirement is <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>L</mi><mo>=</mo><mi>W</mi><mo>+</mo><mi>D</mi><mo>tan</mo><mi>θ</mi></mrow><annotation encoding="application/x-tex">L=W+D\tan\theta</annotation></semantics></math>; tether weight, line drag and uncounted fittings tighten that budget. The published wing and mesh dimensions make this lower-bound calculation possible. A measured lift curve and full-system test would be needed to establish an actual operating envelope. <a href="https://www.jst.go.jp/moonshot/sympo/20251030/pdf/22_yamaguchi.pdf">JST design sketch</a></p>
+<h3 id="worked-example-a-gust-and-the-anchor-load">Worked example: a gust and the anchor load</h3>
+<p>Use a <strong>classroom system</strong> with <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ρ</mi><mo>=</mo><mn>1.20</mn></mrow><annotation encoding="application/x-tex">\rho=1.20</annotation></semantics></math> kg/m³, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>g</mi><mo>=</mo><mn>9.81</mn></mrow><annotation encoding="application/x-tex">g=9.81</annotation></semantics></math> m/s², <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>A</mi><mi>m</mi></msub><mo>=</mo><mn>100</mn></mrow><annotation encoding="application/x-tex">A_m=100</annotation></semantics></math> m², <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>S</mi><mi>k</mi></msub><mo>=</mo><mn>40</mn></mrow><annotation encoding="application/x-tex">S_k=40</annotation></semantics></math> m², <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>C</mi><mrow><mi>D</mi><mo>,</mo><mi>m</mi></mrow></msub><mo>=</mo><mn>0.32</mn></mrow><annotation encoding="application/x-tex">C_{D,m}=0.32</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>C</mi><mi>L</mi></msub><mo>=</mo><mn>0.90</mn></mrow><annotation encoding="application/x-tex">C_L=0.90</annotation></semantics></math>, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>C</mi><mrow><mi>D</mi><mo>,</mo><mi>k</mi></mrow></msub><mo>=</mo><mn>0.12</mn></mrow><annotation encoding="application/x-tex">C_{D,k}=0.12</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>m</mi><mo>=</mo><mn>200</mn></mrow><annotation encoding="application/x-tex">m=200</annotation></semantics></math> kg. Both aerodynamic coefficients for the kite use <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>S</mi><mi>k</mi></msub><annotation encoding="application/x-tex">S_k</annotation></semantics></math>. The assumed coefficients belong only to this example. Each table row is a new quasi-steady equilibrium.</p>
+<div class="table-scroll" tabindex="0" role="region" aria-label="Scrollable data table"><table>
+<colgroup>
+<col style="width: 8%" />
+<col style="width: 11%" />
+<col style="width: 11%" />
+<col style="width: 11%" />
+<col style="width: 11%" />
+<col style="width: 11%" />
+<col style="width: 11%" />
+<col style="width: 11%" />
+<col style="width: 11%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Wind</th>
+<th style="text-align: right;">Dynamic pressure</th>
+<th style="text-align: right;">Mesh drag</th>
+<th style="text-align: right;">Kite drag</th>
+<th style="text-align: right;">Lift</th>
+<th style="text-align: right;">Horizontal pull</th>
+<th style="text-align: right;">Upward pull</th>
+<th style="text-align: right;">Resultant tension</th>
+<th style="text-align: right;">Line elevation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>15 m/s</td>
+<td style="text-align: right;">135 Pa</td>
+<td style="text-align: right;">4.320 kN</td>
+<td style="text-align: right;">0.648 kN</td>
+<td style="text-align: right;">4.860 kN</td>
+<td style="text-align: right;">4.968 kN</td>
+<td style="text-align: right;">2.898 kN</td>
+<td style="text-align: right;"><strong>5.751 kN</strong></td>
+<td style="text-align: right;"><strong>30.3°</strong></td>
+</tr>
+<tr class="even">
+<td>20 m/s</td>
+<td style="text-align: right;">240 Pa</td>
+<td style="text-align: right;">7.680 kN</td>
+<td style="text-align: right;">1.152 kN</td>
+<td style="text-align: right;">8.640 kN</td>
+<td style="text-align: right;">8.832 kN</td>
+<td style="text-align: right;">6.678 kN</td>
+<td style="text-align: right;"><strong>11.072 kN</strong></td>
+<td style="text-align: right;"><strong>37.1°</strong></td>
+</tr>
+</tbody>
+</table></div>
+<p>At 15 m/s, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>W</mi><mo>=</mo><mn>1.962</mn></mrow><annotation encoding="application/x-tex">W=1.962</annotation></semantics></math> kN, so the vertical component is <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>4.860</mn><mo>−</mo><mn>1.962</mn><mo>=</mo><mn>2.898</mn></mrow><annotation encoding="application/x-tex">4.860-1.962=2.898</annotation></semantics></math> kN. The 33% rise in speed increases mesh drag by <strong>78%</strong> and total tension by <strong>93%</strong>. Weight stays constant while lift rises, so the line steepens. Below <strong>9.53 m/s</strong> this model has insufficient lift for a positive tether elevation. A sudden gust also excites motion, so the 20 m/s row cannot establish the transient peak.</p>
+<figure><img src="./wind-loads.png" alt="Mesh drag and resultant tether tension versus wind for the classroom example. Tension is shown only above the 9.53 m/s lift threshold." /><figcaption>Figure 2. The dashed line is the aerodynamic drag of a panel held face-on. Below the lift threshold it still describes a supported panel, while the assumed airborne equilibrium is unavailable.</figcaption></figure>
+<section id="load-calculator" class="calculator" aria-labelledby="calculator-title">
+<h3 id="calculator-title">Explore the tether load</h3>
+<p>Vary the apparent wind and the gross-area mesh drag coefficient. The kite area, coefficients and airborne mass are fixed at the values in the worked example.</p>
+<div id="controls" hidden>
+<div class="sliders">
+<div><label for="wind">Wind speed <output id="wind-value" for="wind">15 m/s</output></label>
+<input id="wind" type="range" min="5" max="25" step="0.5" value="15" aria-valuetext="15 metres per second"></div>
+<div><label for="cd">Mesh drag coefficient <output id="cd-value" for="cd">0.32</output></label>
+<input id="cd" type="range" min="0" max="0.8" step="0.01" value="0.32"></div>
+</div>
+<div aria-live="polite" aria-atomic="true">
+<dl class="results">
+<div><dt>Mesh drag</dt><dd id="mesh">4.32 kN</dd></div>
+<div><dt>Lift minus weight</dt><dd id="surplus">2.90 kN</dd></div>
+<div><dt>Tether tension</dt><dd id="tension">5.75 kN</dd></div>
+<div><dt>Line elevation</dt><dd id="angle">30.3°</dd></div>
+</dl><p id="lift-message" class="lift-message" hidden></p></div>
+</div>
+<noscript>The table above gives the results for 15 and 20 m/s. Enable JavaScript to vary the inputs.</noscript>
+</section>
+<h2 id="fabric-edge-cables-and-transient-loads">Fabric, edge cables and transient loads</h2>
+<p><strong>The inflatable wing.</strong> Toyota describes a gas-holding inner membrane and a textile outer structure. Internal pressure puts the fabric in tension, helping the tube keep the section that gives the wing its aerodynamic shape. For a closed, straight cylindrical segment of radius <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>r</mi><annotation encoding="application/x-tex">r</annotation></semantics></math> at gauge pressure <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>p</mi><mi>i</mi></msub><annotation encoding="application/x-tex">p_i</annotation></semantics></math>, an axial cut gives the hoop membrane force per unit length <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>N</mi><mi>θ</mi></msub><mo>=</mo><msub><mi>p</mi><mi>i</mi></msub><mi>r</mi></mrow><annotation encoding="application/x-tex">N_\theta=p_i r</annotation></semantics></math>. A cut across the tube gives the axial membrane force <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>N</mi><mi>z</mi></msub><mo>=</mo><msub><mi>p</mi><mi>i</mi></msub><mi>r</mi><mi>/</mi><mn>2</mn></mrow><annotation encoding="application/x-tex">N_z=p_i r/2</annotation></semantics></math>. At an illustrative <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>p</mi><mi>i</mi></msub><mo>=</mo><mn>30</mn></mrow><annotation encoding="application/x-tex">p_i=30</annotation></semantics></math> kPa and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>r</mi><mo>=</mo><mn>0.15</mn></mrow><annotation encoding="application/x-tex">r=0.15</annotation></semantics></math> m, the resultants are <strong>4.50 kN/m around the tube</strong> and <strong>2.25 kN/m along it</strong>. Stitching transfers these loads across seams. Toyota documented yarn movement at stitched joints during early trials. Bending, local wrinkles and seam direction require separate checks. <a href="https://www.toyota-global.com/innovation/partner_robot/news/202201_01.html">Toyota fabric development</a> · <a href="https://www.purdue.edu/freeform/me323/wp-content/uploads/sites/2/2019/11/Lecture30_annotated.pdf">Thin-wall equilibrium, Purdue</a></p>
+<p><strong>The edge cable.</strong> Consider a 10 m span with supports level in the plane of loading. Suppose it carries the pressure from a 2 m tributary strip of net. At 15 m/s the equivalent pressure from the worked example is 43.2 Pa, giving a transverse load <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>w</mi><mo>=</mo><mn>86.4</mn></mrow><annotation encoding="application/x-tex">w=86.4</annotation></semantics></math> N per metre of projected span. Let <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>f</mi><annotation encoding="application/x-tex">f</annotation></semantics></math> be sag in the direction of the applied load. Equilibrium of a flexible cable under uniform load per projected length gives</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>H</mi><mi>e</mi></msub><mo>=</mo><mfrac><mrow><mi>w</mi><msup><mo>ℓ</mo><mn>2</mn></msup></mrow><mrow><mn>8</mn><mi>f</mi></mrow></mfrac><mo>,</mo><mspace width="2.0em"></mspace><msub><mi>R</mi><mi>e</mi></msub><mo>=</mo><mfrac><mrow><mi>w</mi><mo>ℓ</mo></mrow><mn>2</mn></mfrac><mo>,</mo><mspace width="2.0em"></mspace><msub><mi>T</mi><mi>e</mi></msub><mo>=</mo><msqrt><mrow><msubsup><mi>H</mi><mi>e</mi><mn>2</mn></msubsup><mo>+</mo><msubsup><mi>R</mi><mi>e</mi><mn>2</mn></msubsup></mrow></msqrt><mi>.</mi></mrow><annotation encoding="application/x-tex">
+H_e=\frac{w\ell^2}{8f},\qquad R_e=\frac{w\ell}{2},\qquad
+T_e=\sqrt{H_e^2+R_e^2}.
+</annotation></semantics></math></p>
+<p>With <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>f</mi><mo>=</mo><mn>0.50</mn></mrow><annotation encoding="application/x-tex">f=0.50</annotation></semantics></math> m, the chordwise component is <strong>2.160 kN</strong>, the transverse component at each end is <strong>0.432 kN</strong>, and the attachment tension is <strong>2.203 kN</strong>. Halving sag to 0.25 m doubles <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>H</mi><mi>e</mi></msub><annotation encoding="application/x-tex">H_e</annotation></semantics></math> and raises the end tension to <strong>4.342 kN</strong> under the same net pressure. Tying the panel flatter has a measurable cost for its fittings. These are internal load-path forces. They are already accounted for when the entire assembly is isolated as a free body. <a href="https://eng.libretexts.org/Bookshelves/Mechanical_Engineering/Introduction_to_Aerospace_Structures_and_Materials_%28Alderliesten%29/02%3A_Analysis_of_Statically_Determinate_Structures/06%3A_Arches_and_Cables/6.02%3A_Cables">Parabolic cable derivation</a></p>
+<p><strong>A gust, a lull and a moving anchor.</strong> The real tether carries distributed weight and aerodynamic drag, so its end tangents and tensions can differ. Its elastic extension is approximately <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Δ</mi><mo>ℓ</mo><mo>=</mo><mo>∫</mo><mi>T</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>s</mi><mo stretchy="true" form="postfix">)</mo></mrow><mi>/</mi><mrow><mo stretchy="true" form="prefix">(</mo><mi>E</mi><mi>A</mi><mo stretchy="true" form="postfix">)</mo></mrow><mspace width="0.167em"></mspace><mi>d</mi><mi>s</mi></mrow><annotation encoding="application/x-tex">\Delta\ell=\int T(s)/(EA)\,ds</annotation></semantics></math>, where <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>E</mi><mi>A</mi></mrow><annotation encoding="application/x-tex">EA</annotation></semantics></math> is measured axial stiffness. A lull can let a branch slacken, and a subsequent gust can retension it rapidly. A vessel’s heave changes the boundary motion as well. A useful next model couples tension-only line elements, a deforming net, wing attitude and winch motion. Synchronized measurements of tether tension, wind, line angle and net shape would distinguish a quasi-steady load increase from a short retensioning peak. <a href="https://www.grc.nasa.gov/www/k-12/airplane/kitesag.html">NASA control-line sag</a> · <a href="https://global.toyota/en/mobility/frontier-research/41355237.html">Toyota flight instrumentation</a></p>
+<h2 id="from-a-wake-to-a-rainband">From a wake to a rainband</h2>
+<p>The mesh allows humid air to pass through its openings and around its edges. It transfers momentum to the structure, changes local wind speed and can redirect flow. Define a <strong>fixed vertical sampling area</strong> <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>𝒜</mi><annotation encoding="application/x-tex">\mathcal A</annotation></semantics></math> with landward normal <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>𝐧</mi><annotation encoding="application/x-tex">\mathbf n</annotation></semantics></math>. Its landward vapour transport is</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mover><mi>m</mi><mo accent="true">̇</mo></mover><mi>v</mi></msub><mo>=</mo><msub><mo>∫</mo><mi>𝒜</mi></msub><mi>ρ</mi><mspace width="0.167em"></mspace><msub><mi>q</mi><mi>v</mi></msub><mspace width="0.167em"></mspace><mrow><mo stretchy="true" form="prefix">(</mo><mi>𝐮</mi><mo>⋅</mo><mi>𝐧</mi><mo stretchy="true" form="postfix">)</mo></mrow><mspace width="0.167em"></mspace><mi>d</mi><mi>A</mi><mo>,</mo></mrow><annotation encoding="application/x-tex">
+\dot m_v=\int_{\mathcal A}\rho\,q_v\,(\mathbf u\cdot\mathbf n)\,dA ,
+</annotation></semantics></math></p>
+<p>where <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>q</mi><mi>v</mi></msub><annotation encoding="application/x-tex">q_v</annotation></semantics></math> is specific humidity in kg of vapour per kg of moist air. For a uniform 100 m² patch with <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ρ</mi><mo>=</mo><mn>1.20</mn></mrow><annotation encoding="application/x-tex">\rho=1.20</annotation></semantics></math> kg/m³ and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>q</mi><mi>v</mi></msub><mo>=</mo><mn>0.014</mn></mrow><annotation encoding="application/x-tex">q_v=0.014</annotation></semantics></math>, a decrease in normal speed from 10 to 8 m/s lowers the flux from <strong>16.80 to 13.44 kg/s</strong>. The 3.36 kg/s difference is a local transport change. Air can bypass that sampling patch, and the vapour remains in the atmospheric water budget.</p>
+<p>A <strong>back-building rainband</strong> repeatedly forms new convective cells on its upstream side. A change in the location or timing of low-level convergence can change which ground locations receive repeated showers. For a whole atmospheric volume, change in stored water depends on all inflows and outflows, surface evaporation and precipitation. Determining rainfall therefore requires physics for vertical motion, condensation and the transport and fallout of hydrometeors, as well as the inflow change. <a href="https://www.dpri.kyoto-u.ac.jp/nenpo/no67/ronbunB/a67b0p14.pdf">Kyushu model, Figs. 3-3 and 5-1 to 5-4</a> · <a href="https://www.dpri.kyoto-u.ac.jp/hapyo/26/pdf/B304.pdf">Kameoka model</a></p>
+<p><strong>How can a weather grid represent a net smaller than its cells?</strong> A class model can apply an opposing force per unit volume in a cell of volume <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>V</mi><mi>c</mi></msub><annotation encoding="application/x-tex">V_c</annotation></semantics></math>. For a planar screen of outline area <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>A</mi><mi>m</mi></msub><annotation encoding="application/x-tex">A_m</annotation></semantics></math> with unit normal <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>𝐧</mi><annotation encoding="application/x-tex">\mathbf n</annotation></semantics></math> and incident normal speed <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>u</mi><mi>n</mi></msub><annotation encoding="application/x-tex">u_n</annotation></semantics></math>, one possible approximation is</p>
+<p><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>𝐬</mi><mi>m</mi></msub><mo>=</mo><mi>−</mi><mfrac><mi>ρ</mi><mn>2</mn></mfrac><mspace width="0.167em"></mspace><msub><mi>C</mi><mrow><mi>D</mi><mo>,</mo><mi>m</mi></mrow></msub><mspace width="0.167em"></mspace><mfrac><msub><mi>A</mi><mi>m</mi></msub><msub><mi>V</mi><mi>c</mi></msub></mfrac><mspace width="0.167em"></mspace><mrow><mo stretchy="true" form="prefix">|</mo><msub><mi>u</mi><mi>n</mi></msub><mo stretchy="true" form="postfix">|</mo></mrow><msub><mi>u</mi><mi>n</mi></msub><mspace width="0.167em"></mspace><mi>𝐧</mi><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\mathbf s_m=-\frac{\rho}{2}\, C_{D,m}\,\frac{A_m}{V_c}\,|u_n|u_n\,\mathbf n .
+</annotation></semantics></math></p>
+<p>The units are N/m³. Integrating this source over the cell gives the drag on the air, equal and opposite to the mesh load in face-on flow. For a screen spread over cells, assign each cell its share of area to conserve total force. The approximation still needs a velocity convention and calibration against an inclined, deformable screen. Kyoto’s original weather study used a resistance model developed for wind-turbine wakes. The subsequent wind-tunnel paper identifies net inclination and the spatial distribution of the wake as reasons to improve that representation. <a href="https://www.dpri.kyoto-u.ac.jp/nenpo/no67/ronbunB/a67b0p14.pdf">Kyushu model</a> · <a href="https://www.dpri.kyoto-u.ac.jp/nenpo/no68/ronbunB/a68b0p23.pdf">Wind-tunnel study, §1.1</a></p>
+<h3 id="what-does-a-30-reduction-mean">What does a 30% reduction mean?</h3>
+<p>Use the spatial maximum of accumulated rain over the study region during a specified three-hour interval. Compute the percentage difference from the control run as <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>100</mn><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>P</mi><mrow><mi mathvariant="normal">c</mi><mi mathvariant="normal">u</mi><mi mathvariant="normal">r</mi><mi mathvariant="normal">t</mi><mi mathvariant="normal">a</mi><mi mathvariant="normal">i</mi><mi mathvariant="normal">n</mi></mrow></msub><mo>−</mo><msub><mi>P</mi><mrow><mi mathvariant="normal">c</mi><mi mathvariant="normal">o</mi><mi mathvariant="normal">n</mi><mi mathvariant="normal">t</mi><mi mathvariant="normal">r</mi><mi mathvariant="normal">o</mi><mi mathvariant="normal">l</mi></mrow></msub><mo stretchy="true" form="postfix">)</mo></mrow><mi>/</mi><msub><mi>P</mi><mrow><mi mathvariant="normal">c</mi><mi mathvariant="normal">o</mi><mi mathvariant="normal">n</mi><mi mathvariant="normal">t</mi><mi mathvariant="normal">r</mi><mi mathvariant="normal">o</mi><mi mathvariant="normal">l</mi></mrow></msub></mrow><annotation encoding="application/x-tex">100(P_{\mathrm{curtain}}-P_{\mathrm{control}})/P_{\mathrm{control}}</annotation></semantics></math>. A negative value means that <strong>the regional peak accumulation was lower</strong>. The peak can move between grid cells.</p>
+<div class="table-scroll" tabindex="0" role="region" aria-label="Scrollable data table"><table>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 26%" />
+<col style="width: 26%" />
+<col style="width: 26%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Modelled historical event</th>
+<th style="text-align: right;">Control peak</th>
+<th style="text-align: right;">Lower peak in the trials</th>
+<th style="text-align: right;">Reported range as placement varied</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Northern Kyushu, July 2017</td>
+<td style="text-align: right;">115.2 mm</td>
+<td style="text-align: right;">76.0 mm</td>
+<td style="text-align: right;"><strong>−34.0% to +19.2%</strong>. The upper endpoint was 137.3 mm. <a href="https://www.dpri.kyoto-u.ac.jp/nenpo/no67/ronbunB/a67b0p14.pdf">Study, §5 and Fig. 5-2</a></td>
+</tr>
+<tr class="even">
+<td>Kameoka, 2012</td>
+<td style="text-align: right;">190.9 mm</td>
+<td style="text-align: right;">130.3 mm</td>
+<td style="text-align: right;"><strong>−31.8% to +22.2%</strong>. The study also examined intervention timing. <a href="https://www.dpri.kyoto-u.ac.jp/hapyo/26/pdf/B304.pdf">Study, Figs. 2–5</a></td>
+</tr>
+</tbody>
+</table></div>
+<figure><img src="./rainfall-ranges.png" alt="For the modelled regional peak three-hour rainfall, Kyushu placements range from a 34.0 percent reduction to a 19.2 percent increase, and Kameoka placements range from a 31.8 percent reduction to a 22.2 percent increase." /><figcaption>Figure 3. Endpoints of the published placement experiments. The lines show the span between tested outcomes. The studies give these endpoints without assigning probabilities to them.</figcaption></figure>
+<p>For the Kyushu case, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mo stretchy="true" form="prefix">(</mo><mn>76.0</mn><mo>−</mo><mn>115.2</mn><mo stretchy="true" form="postfix">)</mo></mrow><mi>/</mi><mn>115.2</mn><mo>=</mo><mi>−</mi><mn>0.340</mn></mrow><annotation encoding="application/x-tex">(76.0-115.2)/115.2=-0.340</annotation></semantics></math> to three significant figures. Reporting only that favourable case would hide both a <strong>possible increase</strong> and a difference between the meteorological metric and the public concern. A basin can still flood if a shifted rain core falls over a vulnerable tributary. Evaluating exposure requires the rain maps, catchment response and uncertainty across forecast members. <a href="https://www.dpri.kyoto-u.ac.jp/nenpo/no67/ronbunB/a67b0p14.pdf">Kyushu study</a> · <a href="https://www.jst.go.jp/moonshot/en/program/goal8/appeal/83_yamaguchi_ap01.html">JST research programme</a></p>
+<h2 id="what-experiment-would-connect-these-scales">What experiment would connect these scales?</h2>
+<div class="table-scroll" tabindex="0" role="region" aria-label="Scrollable data table"><table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Question</th>
+<th>Measurement or comparison</th>
+<th>Decision the evidence could support</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Can the hardware reproduce the resistance assumed by the weather model?</td>
+<td>Measure screen-normal force, shape and wake velocity simultaneously for several incidences and solidities. Report the reference area, turbulence, yarn Reynolds number and tunnel blockage.</td>
+<td>Calibrate a momentum-loss model against both force and wake recovery. A single centreline reading cannot determine total drag.</td>
+</tr>
+<tr class="even">
+<td>Will a suspended net retain that wake in changing winds?</td>
+<td>Combine synchronized upwind/downwind wind profiles with net shape, angle, tether tension and mooring motion. Compare with matched periods without the screen.</td>
+<td>Determine whether the required resistance and the available structural and lift margins coexist.</td>
+</tr>
+<tr class="odd">
+<td>Does a reduction in the targeted peak benefit the surrounding catchments?</td>
+<td>Compare ensembles with and without the intervention under matched initial conditions. Track peak and basin-mean accumulation, timing, neighbouring basins and runoff.</td>
+<td>Estimate how often a reduction at one site accompanies an increase elsewhere. Field evaluation also needs an independently justified comparison for what the weather would have done without intervention.</td>
+</tr>
+</tbody>
+</table></div>
+<h2 id="classroom-exercises">Classroom exercises</h2>
+<ol type="1">
+<li><strong>Infer a coefficient.</strong> A load cell measuring only a face-on, 100 m² screen reads 3.00 kN at 15 m/s in air of density 1.20 kg/m³. Find the gross-area <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>C</mi><mrow><mi>D</mi><mo>,</mo><mi>m</mi></mrow></msub><annotation encoding="application/x-tex">C_{D,m}</annotation></semantics></math>. Explain which additional forces you would have to subtract if you used an anchor load cell instead.</li>
+<li><strong>Trade drag for altitude margin.</strong> At 15 m/s, halve the example mesh coefficient to 0.16, keeping projected area, weight and kite coefficients fixed. Predict which way the tether angle moves before computing the new tension. Would this change alone justify a claim about rainfall?</li>
+<li><strong>Inspect a load path.</strong> A fitting can carry 3.00 kN in the idealized edge-cable problem. Solve for the minimum sag consistent with that limit under the stated uniform load. Identify a measurement needed before applying the result to a fabric assembly.</li>
+<li><strong>Interpret a displaced peak.</strong> Sketch two catchments and a rain core moving from one to the other. Construct an example in which the regional maximum decreases but the second catchment receives more rain. Name two additional metrics you would show a flood manager.</li>
+</ol>
+<p><strong>Numerical checks.</strong> (1) <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>C</mi><mrow><mi>D</mi><mo>,</mo><mi>m</mi></mrow></msub><mo>=</mo><mn>0.222</mn></mrow><annotation encoding="application/x-tex">C_{D,m}=0.222</annotation></semantics></math>. (2) <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>H</mi><mo>=</mo><mn>2.808</mn></mrow><annotation encoding="application/x-tex">H=2.808</annotation></semantics></math> kN, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>V</mi><mo>=</mo><mn>2.898</mn></mrow><annotation encoding="application/x-tex">V=2.898</annotation></semantics></math> kN, <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>T</mi><mo>=</mo><mn>4.035</mn></mrow><annotation encoding="application/x-tex">T=4.035</annotation></semantics></math> kN and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>θ</mi><mo>=</mo><msup><mn>45.9</mn><mo>∘</mo></msup></mrow><annotation encoding="application/x-tex">\theta=45.9^\circ</annotation></semantics></math>. (3) <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>H</mi><mrow><mi>e</mi><mo>,</mo><mo>max</mo></mrow></msub><mo>=</mo><msqrt><mrow><msup><mn>3000</mn><mn>2</mn></msup><mo>−</mo><msup><mn>432</mn><mn>2</mn></msup></mrow></msqrt></mrow><annotation encoding="application/x-tex">H_{e,\max}=\sqrt{3000^2-432^2}</annotation></semantics></math> N and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>f</mi><mo>min</mo></msub><mo>≈</mo><mn>0.364</mn></mrow><annotation encoding="application/x-tex">f_{\min}\approx0.364</annotation></semantics></math> m. The prescribed load, allowable fitting load and load sharing would all need experimental support.</p>
+<section dir="rtl" lang="fa" id="persian"><h2>خلاصهٔ فارسی</h2>
+<p>ویدئوی BBC طرح دانشگاه کیوتو و تویوتا را نشان می‌دهد. بادبادک با نیروی برآ یک پردهٔ توری را در هوا نگه می‌دارد. نیروی پسا از تارهای توری به کابل‌های لبه، سپس به طناب‌های مهار و تکیه‌گاه منتقل می‌شود. هدف این است که تغییر سرعت و مسیر هوای مرطوبِ ورودی، محل یا شدت بارش سنگین را تغییر دهد. در مثال آموزشی، افزایش باد از ۱۵ به ۲۰ متر بر ثانیه کشش معادل مهار را از ۵٫۷۵ به ۱۱٫۰۷ کیلونیوتن می‌رساند.</p>
+<p>عدد ۲۰ تا ۳۰ درصد در ویدئو هدف پروژه است. در بازسازی عددی رخداد کیوشو، بیشینهٔ بارش انباشتهٔ سه‌ساعته در محدودهٔ بررسی، بسته به جای پرده، از ۳۴٫۰ درصد کاهش تا ۱۹٫۲ درصد افزایش تغییر کرد. برای ارزیابی طرح باید هم بار وارد بر مهار و هم تغییر بارش در حوضه‌های همسایه اندازه‌گیری شود. <a href="https://www.bbc.com/reel/video/p0pkcgx1/watch">فیلم اصلی BBC</a> · <a href="https://www.dpri.kyoto-u.ac.jp/nenpo/no67/ronbunB/a67b0p14.pdf">مقالهٔ کیوتو</a></p>
+</section>
+<h2 id="sources-and-films">Sources and films</h2>
+<ul>
+<li>BBC TechXplore, Paul Carter, 18 November 2026. <a href="https://www.bbc.com/reel/video/p0pkcgx1/watch">Original BBC Reel, 2:50</a> · <a href="https://www.yahoo.com/news/videos/japans-using-giant-kites-change-100000820.html">BBC’s syndicated listing</a>.</li>
+<li>Kyoto University and Toyota Frontier Research Center. <a href="https://rain-c.dpri.kyoto-u.ac.jp/en/list/1-4/">Shizumeru Task 1-4, system architecture and feasibility objective</a>.</li>
+<li>K. Yamaguchi, S. Nishimura and E. Nakakita (2024). <a href="https://www.dpri.kyoto-u.ac.jp/nenpo/no67/ronbunB/a67b0p14.pdf">Weather Modification Simulation of Line-Shaped Convective System Torrential Rainfall by Introducing Offshore Curtain</a>. <em>DPRI Annuals</em>, 67 B, 156–167.</li>
+<li>K. Yamaguchi, K. Suzuki, K. Nishijima and E. Nakakita (2025). <a href="https://www.dpri.kyoto-u.ac.jp/nenpo/no68/ronbunB/a68b0p23.pdf">Wind Tunnel Experiment of the Wind Velocity Field behind a Square Net</a>. <em>DPRI Annuals</em>, 68 B, 206–212.</li>
+<li>S. Nishimura, K. Yamaguchi and E. Nakakita. <a href="https://www.dpri.kyoto-u.ac.jp/hapyo/26/pdf/B304.pdf">Placement Design of Offshore Curtain for Controlling Heavy Rainfall from Line Shaped Convective System</a>. Kyoto DPRI research presentation B304, 2026.</li>
+<li>Japan Science and Technology Agency. <a href="https://www.jst.go.jp/moonshot/sympo/20251030/pdf/22_yamaguchi.pdf">2025 symposium slides, including the engineering design study</a> · <a href="https://www.jst.go.jp/moonshot/en/program/goal8/appeal/83_yamaguchi_ap01.html">Moonshot Goal 8 progress report, July 2026</a>.</li>
+<li>Toyota Frontier Research Center. <a href="https://www.toyota-global.com/innovation/partner_robot/news/202201_01.html">Inflatable construction, seams and early altitude trial</a> · <a href="https://global.toyota/en/mobility/frontier-research/41355237.html">Fukushima endurance flight, instrumentation and original footage</a>.</li>
+<li>NASA Glenn Research Center. <a href="https://www1.grc.nasa.gov/beginners-guide-to-aeronautics/four-forces-on-a-kite/">Forces on a kite</a> · <a href="https://www.grc.nasa.gov/www/k-12/airplane/kitetor.html">Moments about the bridle</a> · <a href="https://www.grc.nasa.gov/www/k-12/airplane/kitesag.html">Distributed line weight and sag</a>.</li>
+<li>Purdue University and Engineering LibreTexts. <a href="https://www.purdue.edu/freeform/me323/wp-content/uploads/sites/2/2019/11/Lecture30_annotated.pdf">Thin cylindrical pressure vessels</a> · <a href="https://eng.libretexts.org/Bookshelves/Mechanical_Engineering/Introduction_to_Aerospace_Structures_and_Materials_%28Alderliesten%29/02%3A_Analysis_of_Statically_Determinate_Structures/06%3A_Arches_and_Cables/6.02%3A_Cables">Cable equilibrium under distributed load</a>.</li>
+</ul>
+<p>Figures 1 and 2 are original teaching illustrations. Figure 3 plots the reported numerical endpoints from the two Kyoto studies. The BBC and Toyota host their respective films.</p>
+<footer><a href="#top">Back to top</a> · University of Massachusetts Amherst</footer></main>
+<script>const wind = document.getElementById("wind");
+const cd = document.getElementById("cd");
+const put = (id, text) => { document.getElementById(id).textContent = text; };
+const force = (newtons) => (newtons / 1000).toFixed(2) + " kN";
+
+function updateLoads() {
+  const speed = wind.valueAsNumber;
+  const meshCd = cd.valueAsNumber;
+  const dynamicPressure = 0.5 * 1.20 * speed ** 2;
+  const meshDrag = dynamicPressure * 100 * meshCd;
+  const horizontalPull = meshDrag + dynamicPressure * 40 * 0.12;
+  const verticalPull = dynamicPressure * 40 * 0.90 - 200 * 9.81;
+  const airborne = verticalPull > 0;
+  put("wind-value", speed + " m/s");
+  wind.setAttribute("aria-valuetext", speed + " metres per second");
+  put("cd-value", meshCd.toFixed(2));
+  put("mesh", force(meshDrag));
+  put("surplus", force(verticalPull));
+  put("tension", airborne ? force(Math.hypot(horizontalPull, verticalPull)) : "—");
+  put("angle", airborne ? (Math.atan2(verticalPull, horizontalPull) * 180 / Math.PI).toFixed(1) + "°" : "—");
+  const message = document.getElementById("lift-message");
+  message.hidden = airborne;
+  message.textContent = airborne ? "" : "The assumed kite needs more lift for a positive tether elevation. Mesh drag is the force on a panel held in the wind.";
+}
+wind.addEventListener("input", updateLoads);
+cd.addEventListener("input", updateLoads);
+updateLoads();
+document.getElementById("controls").hidden = false;</script></body></html>
